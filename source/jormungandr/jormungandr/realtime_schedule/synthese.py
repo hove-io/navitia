@@ -143,7 +143,7 @@ class Synthese(RealtimeProxy):
         logging.getLogger(__name__).debug("synthese response: {}".format(r.text))
         passages = self._get_synthese_passages(r.content)
 
-        return self._find_route_point(route_point, passages)
+        return self._find_route_point_passages(route_point, passages)
 
     def _make_url(self, route_point, count=None, from_dt=None):
         """
@@ -226,7 +226,7 @@ class Synthese(RealtimeProxy):
         dt = pytz.utc.localize(dt)
         return dt.astimezone(self.timezone)
 
-    def _find_route_point(self, route_point, passages):
+    def _find_route_point_passages(self, route_point, passages):
         """
         To find the right passage in synthese:
 
