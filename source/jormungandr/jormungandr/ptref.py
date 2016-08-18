@@ -96,3 +96,6 @@ class PtRef(object):
                 yield o
 
             req.ptref.start_page += 1
+            if req.ptref.count > result.pagination.itemsOnPage:
+                # we did not get as much results as planned, we can stop
+                return
