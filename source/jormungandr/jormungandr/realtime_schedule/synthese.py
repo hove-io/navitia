@@ -78,7 +78,7 @@ class Synthese(RealtimeProxy):
     def __init__(self, id, service_url, timezone, object_id_tag=None, destination_id_tag=None, instance=None,
                  timeout=10, redis_host=None, redis_db=0,
                  redis_port=6379, redis_password=None, max_requests_by_second=15,
-                 redis_namespace='jormungandr.rate_limiter'):
+                 redis_namespace='jormungandr.rate_limiter', **kwargs):
         self.service_url = service_url
         self.timeout = timeout  # timeout in seconds
         self.rt_system_id = id

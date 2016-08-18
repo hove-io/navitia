@@ -37,7 +37,7 @@ import logging
 
 class AtosProvider(BssProvider):
 
-    def __init__(self, id_ao, network, url, operators={'keolis'}, timeout=5):
+    def __init__(self, id_ao, network, url, operators={'keolis'}, timeout=5, **kwargs):
         self.id_ao = id_ao
         self.network = network.lower()
         self.WS_URL = url
