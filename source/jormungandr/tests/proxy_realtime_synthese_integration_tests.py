@@ -67,13 +67,36 @@ class TestSyntheseSchedules(AbstractTestFixture):
     def test_stop_schedule_good_id(self):
         """
         test for a route point with good codes (but with multiple codes on the route)
-        we should be able to find the synthese realtime
+        we should be able to find all the synthese passages and aggregate them
         """
         mock_requests = MockRequests({
             'http://bob.com?SERVICE=tdg&roid=syn_stoppoint1&rn=10000&date=2016-01-02 08:00':
             ("""<?xml version="1.0" encoding="UTF-8"?>
                 <timeTable>
                   <journey routeId="syn_cute_routeA1" dateTime="2016-Jan-02 09:17:17" blink="0" realTime="yes"
+                  waiting_time="00:07:10">
+                    <stop id="syn_stoppoint1"/>
+                    <line id="syn_lineA">
+                      <network id="syn_network" name="nice_network" image=""/>
+                    </line>
+                  </journey>
+                <journey routeId="syn_cute_routeA1" dateTime="2016-Jan-02 10:17:17" blink="0" realTime="yes"
+                  waiting_time="00:07:10">
+                    <stop id="syn_stoppoint1"/>
+                    <line id="syn_lineA">
+                      <network id="syn_network" name="nice_network" image=""/>
+                    </line>
+                  </journey>
+                <!-- another of the route's code-->
+                <journey routeId="syn_routeA1" dateTime="2016-Jan-02 11:17:17" blink="0" realTime="yes"
+                  waiting_time="00:07:10">
+                    <stop id="syn_stoppoint1"/>
+                    <line id="syn_lineA">
+                      <network id="syn_network" name="nice_network" image=""/>
+                    </line>
+                  </journey>
+                <!-- an unkown route's code, should not be considered-->
+                <journey routeId="unknown_route" dateTime="2016-Jan-02 12:17:17" blink="0" realTime="yes"
                   waiting_time="00:07:10">
                     <stop id="syn_stoppoint1"/>
                     <line id="syn_lineA">
@@ -88,9 +111,12 @@ class TestSyntheseSchedules(AbstractTestFixture):
             response = self.query_region(query)
             scs = get_not_null(response, 'stop_schedules')
             assert len(scs) == 1
-            assert _get_schedule(response, 'SP_1', 'A1') == [{
-                'rt': True, 'dt': '20160102T091717'
-            }]
+            print(_get_schedule(response, 'SP_1', 'A1'))
+            assert _get_schedule(response, 'SP_1', 'A1') == [
+                {'rt': True, 'dt': '20160102T091717'},
+                {'rt': True, 'dt': '20160102T101717'},
+                {'rt': True, 'dt': '20160102T111717'},
+            ]
 
     def test_stop_schedule_bad_id_one_route_good_line(self):
         """

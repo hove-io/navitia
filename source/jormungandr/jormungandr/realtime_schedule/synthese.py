@@ -234,9 +234,9 @@ class Synthese(RealtimeProxy):
         this stop, the next passages.
         The tricky part is to find the which route concerns our routepoint
 
-         * we first look if by miracle we can find a route with the synthese code of our route in it's
+         * we first look if by miracle we can find some routes with the synthese code of our route in it's
          external codes (it can have several if the route is a fusion of many routes)
-            -> if we found the route, we return it's passages
+            -> if we found the routes (we can have more than one), we concatenate their passages
          * else we query navitia to get all routes that pass by the stoppoint for the line of the route point
             * if we get only one route, we search for this route's line in the synthese response
                 (because lines synthese code are move coherent)
@@ -246,11 +246,14 @@ class Synthese(RealtimeProxy):
         log = logging.getLogger(__name__)
         stop_point_id = str(route_point.fetch_stop_id(self.object_id_tag))
         is_same_route = lambda syn_rp: syn_rp.syn_route_id in route_point.fetch_all_route_id(self.object_id_tag)
-        p = next((p for syn_rp, p in passages.items()
-                  if is_same_route(syn_rp) and stop_point_id == syn_rp.syn_stop_point_id), None)
+        route_passages = [p for syn_rp, p in passages.items()
+                          if is_same_route(syn_rp) and stop_point_id == syn_rp.syn_stop_point_id]
 
-        if p:
-            return p
+        if route_passages:
+            return sorted(list(itertools.chain(*route_passages)), key=lambda p: p.datetime)
+
+        log.debug('impossible to find the route in synthese response, '
+                  'looking for the line {}'.format(route_point.fetch_line_uri()))
 
         routes_gen = self.instance.ptref.get_objs(type_pb2.ROUTE,
                                                   'stop_point.uri = {stop} and line.uri = {line}'.format(
@@ -266,7 +269,7 @@ class Synthese(RealtimeProxy):
                              route_point.fetch_line_id(self.object_id_tag)]
 
             if line_passages:
-                return itertools.chain(*line_passages)
+                return sorted(list(itertools.chain(*line_passages)), key=lambda p: p.datetime)
 
             log.debug('stoppoint {sp} has {nb_r} routes for line {l} ({l_codes}) in navitia and {nb_syn_r} '
                       'in synthese (lines: {syn_lines})'
