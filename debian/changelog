@@ -1,3 +1,9 @@
+navitia2 (2.15.1) unstable; urgency=low
+
+  * jormun: fix a kwargs on the wrong place :( <https://github.com/CanalTP/navitia/pull/1729>
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Fri, 19 Aug 2016 17:08:08 +0100
+
 navitia2 (2.15.0) unstable; urgency=medium
 
   * jormungandr: add a ratelimiter to timeo
