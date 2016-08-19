@@ -423,3 +423,25 @@ def tag_by_mode_test():
     bssc = helpers_tests.get_bss_car_journey()
     _tag_journey_by_mode(bssc)
     assert 'car' in bssc.tags
+
+def tag_direct_path_test():
+    response = response_pb2.Response()
+
+    # test with one walk and one pt
+    journey_walk = response.journeys.add()
+    section = journey_walk.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    journey_bike = response.journeys.add()
+    section = journey_bike.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    journey_pt = response.journeys.add()
+    section = journey_pt.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    new_default.tag_direct_path(response)
+    assert 'non_pt_walking' in response.journeys[0].tags
+    assert 'non_pt' in response.journeys[0].tags
+    assert 'non_pt_bike' in response.journeys[1].tags
+    assert 'non_pt' in response.journeys[1].tags
+    assert not response.journeys[2].tags
