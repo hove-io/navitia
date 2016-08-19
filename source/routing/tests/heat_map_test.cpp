@@ -66,12 +66,13 @@ BOOST_AUTO_TEST_CASE(print_map_test) {
      */
     std::vector<SingleCoord> header;
     std::vector<std::pair <SingleCoord, std::vector<navitia::time_duration>>> body;
-    for (int i = 0; i < 3; i++) {
-        header.push_back((SingleCoord(i + 4, 1)));
+    int length =3;
+    for (int i = 0; i < length; i++) {
+        header.push_back((SingleCoord(i + length + 1, 1)));
         std::vector<navitia::time_duration> local_duration;
         auto lon = SingleCoord(i, 1);
-        for (int j = 0; j < 3; j++) {
-            local_duration.push_back(navitia::minutes(j + i * 3));
+        for (int j = 0; j < length; j++) {
+            local_duration.push_back(navitia::minutes(j + i * length));
         }
         auto local_body = std::make_pair(lon, local_duration);
         body.push_back(std::move(local_body));

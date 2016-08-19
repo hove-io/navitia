@@ -544,10 +544,10 @@ def is_valid_single_coord(coord, is_valid_type, name):
     min_type = get_not_null(coord, 'min_' + name)
     middle_type = get_not_null(coord, 'middle_' + name)
     max_type = get_not_null(coord, 'max_' + name)
-    is_valid_type(min_type)
-    is_valid_type(middle_type)
-    is_valid_type(max_type)
+    for t in [min_type, middle_type, max_type]:
+        is_valid_type(t)
     assert min_type <= middle_type <= max_type
+    return True
 
 
 def is_valid_header(header):
@@ -558,6 +558,7 @@ def is_valid_header(header):
 def is_valid_duration(duration):
     if duration is not None:
         get_valid_unsigned_int(duration)
+    return True
 
 
 def is_valid_body(body):
@@ -565,6 +566,7 @@ def is_valid_body(body):
         is_valid_single_coord(pair['lon'], is_valid_lon, 'lon')
         for duration in pair['row']:
             is_valid_duration(duration['duration'])
+    return True
 
 
 def is_valid_matrix(matrix):
@@ -574,6 +576,7 @@ def is_valid_matrix(matrix):
     body = matrix['body']
     assert body
     is_valid_body(body)
+    return True
 
 
 def is_valid_heat_maps(heat_map, tester, query):
@@ -587,6 +590,7 @@ def is_valid_heat_maps(heat_map, tester, query):
         if 'to' in g:
             is_valid_place(g['to'])
         assert ('from' in g) ^ ('to' in g)
+    return True
 
 
 def is_valid_section(section, query):

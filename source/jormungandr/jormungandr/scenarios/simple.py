@@ -48,7 +48,7 @@ def get_pb_data_freshness(request):
         return type_pb2.BASE_SCHEDULE
 
 
-def isochrone_common(self, request, instance, journey_req):
+def isochrone_common(isochrone, request, instance, journey_req):
 
     if request.get("origin"):
         origin = journey_req.origin.add()
@@ -75,14 +75,14 @@ def isochrone_common(self, request, instance, journey_req):
     sn_params.bss_speed = request["bss_speed"]
 
     journey_req.max_transfers = request["max_transfers"]
-    self.origin_modes = request["origin_mode"]
-    self.destination_modes = request["destination_mode"]
+    isochrone.origin_modes = request["origin_mode"]
+    isochrone.destination_modes = request["destination_mode"]
     if "forbidden_uris[]" in request and request["forbidden_uris[]"]:
         for forbidden_uri in request["forbidden_uris[]"]:
             journey_req.forbidden_uris.append(forbidden_uri)
 
-    journey_req.streetnetwork_params.origin_mode = self.origin_modes[0]
-    journey_req.streetnetwork_params.destination_mode = self.destination_modes[0]
+    journey_req.streetnetwork_params.origin_mode = isochrone.origin_modes[0]
+    journey_req.streetnetwork_params.destination_mode = isochrone.destination_modes[0]
 
 class Scenario(object):
     """

@@ -54,7 +54,7 @@ struct SingleCoord {
 };
 
 struct HeatMap {
-    std::vector <SingleCoord> header;
+    std::vector<SingleCoord> header;
     std::vector<std::pair <SingleCoord, std::vector<navitia::time_duration>>> body;
     HeatMap(const std::vector <SingleCoord>& header,
             const std::vector<std::pair <SingleCoord, std::vector<navitia::time_duration>>>& body):

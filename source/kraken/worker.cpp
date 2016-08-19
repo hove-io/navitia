@@ -756,7 +756,6 @@ boost::optional<pbnavitia::Response> Worker::set_journeys_args(const pbnavitia::
     try{
         arg = fill_journeys(request);
     }catch(const navitia::coord_conversion_exception& e) {
-        std::cout << "je suis dans l'exception" << std::endl;
         pbnavitia::Response r;
         fill_pb_error(pbnavitia::Error::bad_format, e.what(), r.mutable_error());
         return r;
