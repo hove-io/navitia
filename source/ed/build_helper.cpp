@@ -101,8 +101,13 @@ nt::VehicleJourney* VJ::make() {
         if (search_route == b.routes_by_line[line->uri].end()) {
             route = new navitia::type::Route();
             route->idx = pt_data.routes.size();
-            route->name = _route_name.empty() ? line_name : _route_name;
-            route->uri = route->name + ":" + std::to_string(pt_data.routes.size());;
+            if (_route_name.empty()) {
+                route->name = line_name;
+                route->uri = route->name + ":" + std::to_string(pt_data.routes.size());;
+            } else {
+                route->name = _route_name;
+                route->uri = _route_name;
+            }
             route->line = line;
             line->route_list.push_back(route);
             b.routes_by_line[line->uri][_route_name] = route;

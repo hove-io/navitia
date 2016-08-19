@@ -24,6 +24,8 @@ add_executable(null_status_test null_status_test.cpp)
 
 add_executable(main_routing_without_pt_test main_routing_without_pt_test.cpp)
 
+add_executable(multiple_schedules multiple_schedules.cpp)
+
 
 target_link_libraries(main_routing_test ${ALL_LIBS})
 target_link_libraries(main_ptref_test ${ALL_LIBS})
@@ -35,3 +37,4 @@ target_link_libraries(main_autocomplete_test ${ALL_LIBS})
 target_link_libraries(main_stif_test ${ALL_LIBS})
 target_link_libraries(null_status_test ${ALL_LIBS})
 target_link_libraries(main_routing_without_pt_test ${ALL_LIBS})
+target_link_libraries(multiple_schedules ${ALL_LIBS})

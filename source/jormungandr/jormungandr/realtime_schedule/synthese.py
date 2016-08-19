@@ -29,6 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
+import itertools
 
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy
 from jormungandr.schedule import RealTimePassage
@@ -42,6 +43,7 @@ from jormungandr import cache, app
 from datetime import datetime, time
 from jormungandr.utils import timestamp_to_datetime
 from navitiacommon.ratelimit import RateLimiter
+from navitiacommon import type_pb2
 import redis
 
 class FakeRateLimiter(object):
@@ -53,9 +55,10 @@ class FakeRateLimiter(object):
 
 class SyntheseRoutePoint(object):
 
-    def __init__(self, rt_id=None, sp_id=None):
+    def __init__(self, rt_id=None, sp_id=None, line_id=None):
         self.syn_route_id = rt_id
         self.syn_stop_point_id = sp_id
+        self.syn_line_id = line_id
 
     def __key(self):
         return (self.syn_route_id, self.syn_stop_point_id)
@@ -108,7 +111,7 @@ class Synthese(RealtimeProxy):
         """
         try:
             if not self.rate_limiter.acquire(self.rt_system_id, block=False):
-                return None#this should not be cached :(
+                return None  #this should not be cached :(
             return self.breaker.call(requests.get, url, timeout=self.timeout)
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Synthese RT service dead, using base '
@@ -138,11 +141,9 @@ class Synthese(RealtimeProxy):
             return None
 
         logging.getLogger(__name__).debug("synthese response: {}".format(r.text))
-        stop_point_id = str(route_point.fetch_stop_id(self.object_id_tag))
-        route_id = str(route_point.fetch_route_id(self.object_id_tag))
-        route_point = SyntheseRoutePoint(route_id, stop_point_id)
-        m = self._get_synthese_passages(r.content)
-        return m.get(route_point)# if there is nothing from synthese, we keep the base
+        passages = self._get_synthese_passages(r.content)
+
+        return self._find_route_point_passages(route_point, passages)
 
     def _make_url(self, route_point, count=None, from_dt=None):
         """
@@ -164,26 +165,26 @@ class Synthese(RealtimeProxy):
             dt=self._timestamp_to_date(from_dt).strftime('%Y-%m-%d %H:%M')) if from_dt else ''
 
         url = "{base_url}?SERVICE=tdg&roid={stop_id}{count}{date}".format(base_url=self.service_url,
-                                                                    stop_id=stop_id,
-                                                                    count=count_param,
-                                                                    date=dt_param)
+                                                                          stop_id=stop_id,
+                                                                          count=count_param,
+                                                                          date=dt_param)
 
         return url
 
     def _get_value(self, item, xpath, val):
         value = item.find(xpath)
-        if value == None:
+        if value is None:
             logging.getLogger(__name__).debug("Path not found: {path}".format(path=xpath))
             return None
         return value.get(val)
 
     def _get_real_time_passage(self, xml_journey):
-        '''
+        """
         :return RealTimePassage: object real time passage
         :param xml_journey: journey information
         exceptions :
             ValueError: Unable to parse datetime, day is out of range for month (for example)
-        '''
+        """
         dt = date_time_format(xml_journey.get('dateTime'))
         utc_dt = self.timezone.normalize(self.timezone.localize(dt)).astimezone(pytz.utc)
         passage = RealTimePassage(utc_dt)
@@ -203,7 +204,9 @@ class Synthese(RealtimeProxy):
     def _get_synthese_passages(self, xml):
         result = {}
         for xml_journey in self._build(xml):
-            route_point = SyntheseRoutePoint(xml_journey.get('routeId'), self._get_value(xml_journey, 'stop', 'id'))
+            route_point = SyntheseRoutePoint(xml_journey.get('routeId'),
+                                             self._get_value(xml_journey, 'stop', 'id'),
+                                             self._get_value(xml_journey, 'line', 'id'))
             if route_point not in result:
                 result[route_point] = []
             passage = self._get_real_time_passage(xml_journey)
@@ -222,3 +225,65 @@ class Synthese(RealtimeProxy):
         dt = datetime.utcfromtimestamp(timestamp)
         dt = pytz.utc.localize(dt)
         return dt.astimezone(self.timezone)
+
+    def _find_route_point_passages(self, route_point, passages):
+        """
+        To find the right passage in synthese:
+
+        As a reminder we query synthese only for a stoppoint and we get, for all the routes that pass by
+        this stop, the next passages.
+        The tricky part is to find the which route concerns our routepoint
+
+         * we first look if by miracle we can find some routes with the synthese code of our route in it's
+         external codes (it can have several if the route is a fusion of many routes)
+            -> if we found the routes (we can have more than one), we concatenate their passages
+         * else we query navitia to get all routes that pass by the stoppoint for the line of the route point
+            * if we get only one route, we search for this route's line in the synthese response
+                (because lines synthese code are move coherent)
+                -> we concatenate all synthese passages on this line
+         -> else we return the base schedule
+        """
+        log = logging.getLogger(__name__)
+        stop_point_id = str(route_point.fetch_stop_id(self.object_id_tag))
+        is_same_route = lambda syn_rp: syn_rp.syn_route_id in route_point.fetch_all_route_id(self.object_id_tag)
+        route_passages = [p for syn_rp, p in passages.items()
+                          if is_same_route(syn_rp) and stop_point_id == syn_rp.syn_stop_point_id]
+
+        if route_passages:
+            return sorted(list(itertools.chain(*route_passages)), key=lambda p: p.datetime)
+
+        log.debug('impossible to find the route in synthese response, '
+                  'looking for the line {}'.format(route_point.fetch_line_uri()))
+
+        routes_gen = self.instance.ptref.get_objs(type_pb2.ROUTE,
+                                                  'stop_point.uri = {stop} and line.uri = {line}'.format(
+                                                      stop=route_point.pb_stop_point.uri,
+                                                      line=route_point.fetch_line_uri()))
+
+        first_routes = list(itertools.islice(routes_gen, 2))
+
+        if len(first_routes) == 1:
+            # there is only one route that pass through our stoppoint for the line of the routepoint
+            # we can concatenate all synthese's route of this line
+            line_passages = [p for syn_rp, p in passages.items() if syn_rp.syn_line_id ==
+                             route_point.fetch_line_id(self.object_id_tag)]
+
+            if line_passages:
+                return sorted(list(itertools.chain(*line_passages)), key=lambda p: p.datetime)
+
+            log.debug('stoppoint {sp} has {nb_r} routes for line {l} ({l_codes}) in navitia and {nb_syn_r} '
+                      'in synthese (lines: {syn_lines})'
+                      .format(sp=route_point.pb_stop_point.uri,
+                              nb_r=len(first_routes),
+                              l=route_point.fetch_line_uri(),
+                              l_codes=route_point.fetch_line_id(self.object_id_tag),
+                              nb_syn_r=len(passages),
+                              syn_lines=[l.syn_line_id for l in passages.keys()]))
+
+        if passages:
+            log.info('impossible to find a valid passage for {} (passage = {})'
+                     .format(route_point, passages))
+
+        return None
+
+
