@@ -526,6 +526,13 @@ class TestPtRef(AbstractTestFixture):
         assert code == 400
         assert get_not_null(response, 'error')['message'] == 'ptref : Filters: Unable to find object'
 
+    def test_pt_ref_internal_method(self):
+        from jormungandr import i_manager
+        from navitiacommon import type_pb2
+        i = i_manager.instances['main_ptref_test']
+
+        assert len([r for r in i.ptref.get_objs(type_pb2.ROUTE)]) == 3
+
 
 @dataset({"main_ptref_test": {}, "main_routing_test": {}})
 class TestPtRefRoutingAndPtrefCov(AbstractTestFixture):

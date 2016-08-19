@@ -47,11 +47,19 @@ namespace navitia{
         struct StreetNetwork;
     }
     class time_duration;
+    struct PbCreator;
 }
 
 namespace navitia { namespace routing {
 
 struct RAPTOR;
+
+void add_direct_path(PbCreator& pb_creator,
+                     const georef::Path& path,
+                     const type::EntryPoint& origin,
+                     const type::EntryPoint& destination,
+                     const std::vector<bt::ptime>& datetimes,
+                     const bool clockwise);
 
 pbnavitia::Response make_response(RAPTOR &raptor,
                                   const type::EntryPoint &origin,

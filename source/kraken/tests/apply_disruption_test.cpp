@@ -1570,7 +1570,7 @@ BOOST_AUTO_TEST_CASE(add_line_section_impact_on_line_with_repeated_stops) {
     navitia::apply_disruption(
         b.impact(nt::RTLevel::Adapted, "line_section_sa1_sa5_routesA1-2-3")
          .severity(nt::disruption::Effect::NO_SERVICE)
-         .on_line_section("line:A", "stop_area:2", "stop_area:5", {"route:A1:0", "route:A2:1", "route:A3:2"})
+         .on_line_section("line:A", "stop_area:2", "stop_area:5", {"route:A1", "route:A2", "route:A3"})
          .application_periods(btp("20160404T000000"_dt, "20160409T240000"_dt))
          .get_disruption(),
          *b.data->pt_data, *b.data->meta
@@ -1582,10 +1582,10 @@ BOOST_AUTO_TEST_CASE(add_line_section_impact_on_line_with_repeated_stops) {
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 6);
 
     // Make sur only the first two routes are impacted
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes_map["route:A1:0"]->get_impacts().size(), 1);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes_map["route:A2:1"]->get_impacts().size(), 1);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes_map["route:A3:2"]->get_impacts().size(), 0);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes_map["route:A4:3"]->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes_map["route:A1"]->get_impacts().size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes_map["route:A2"]->get_impacts().size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes_map["route:A3"]->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes_map["route:A4"]->get_impacts().size(), 0);
 
     // Check the original vjs
     auto* vj = b.get<nt::VehicleJourney>("vj:1");
@@ -1643,10 +1643,10 @@ BOOST_AUTO_TEST_CASE(add_line_section_impact_on_line_with_repeated_stops) {
     navitia::delete_disruption("line_section_sa1_sa5_routesA1-2-3", *b.data->pt_data, *b.data->meta);
 
     // Make sur there is no impacts anymore
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes_map["route:A1:0"]->get_impacts().size(), 0);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes_map["route:A2:1"]->get_impacts().size(), 0);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes_map["route:A3:2"]->get_impacts().size(), 0);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes_map["route:A4:3"]->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes_map["route:A1"]->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes_map["route:A2"]->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes_map["route:A3"]->get_impacts().size(), 0);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes_map["route:A4"]->get_impacts().size(), 0);
 
     // Check the original vjs
     vj = b.get<nt::VehicleJourney>("vj:1");

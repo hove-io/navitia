@@ -48,7 +48,7 @@ def parking_space_availability_jcdecaux_support_poi_test():
     """
     Jcdecaux bss provider support
     """
-    provider = JcdecauxProvider(u"Vélib'", 'Paris', 'api_key')
+    provider = JcdecauxProvider(u"vélib'", 'Paris', 'api_key', {'JCDecaux'})
     assert provider.support_poi(poi)
     poi['properties']['operator'] = 'Bad_operator'
     assert not provider.support_poi(poi)
@@ -66,7 +66,7 @@ def parking_space_availability_jcdecaux_get_informations_test():
         'available_bike_stands': 4,
         'available_bikes': 8
     }
-    provider = JcdecauxProvider(u"Vélib'", 'Paris', 'api_key')
+    provider = JcdecauxProvider(u"vélib'", 'Paris', 'api_key', {'jcdecaux'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
     assert provider.get_informations(poi) == Stands(4, 8)
     provider._call_webservice = MagicMock(return_value=None)
@@ -79,6 +79,6 @@ def parking_space_availability_jcdecaux_get_informations_unauthorized_test():
     webservice_unauthorized_response = {
         'error': 'Unauthorized'
     }
-    provider = JcdecauxProvider(u"Vélib'", 'Paris', 'unauthorized_api_key')
+    provider = JcdecauxProvider(u"vélib'", 'Paris', 'unauthorized_api_key', {'jcdecaux'})
     provider._call_webservice = MagicMock(return_value=webservice_unauthorized_response)
     assert provider.get_informations(poi) is None

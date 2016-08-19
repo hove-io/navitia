@@ -38,6 +38,7 @@ from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy
 from jormungandr.schedule import RealTimePassage
 from datetime import datetime, time
 from jormungandr.utils import timestamp_to_datetime
+from navitiacommon.ratelimit import RateLimiter, FakeRateLimiter
 
 
 def _to_duration(hour_str):
@@ -59,10 +60,10 @@ class Timeo(RealtimeProxy):
     """
 
     def __init__(self, id, service_url, service_args, timezone,
-                 object_id_tag=None, destination_id_tag=None, instance=None, timeout=10):
+                 object_id_tag=None, destination_id_tag=None, instance=None, timeout=10, **kwargs):
         self.service_url = service_url
         self.service_args = service_args
-        self.timeout = timeout  # timeout in seconds
+        self.timeout = timeout  #timeout in seconds
         self.rt_system_id = id
         self.object_id_tag = object_id_tag if object_id_tag else id
         self.destination_id_tag = destination_id_tag
@@ -72,6 +73,17 @@ class Timeo(RealtimeProxy):
 
         # Note: if the timezone is not know, pytz raise an error
         self.timezone = pytz.timezone(timezone)
+
+        if kwargs.get('redis_host') and kwargs.get('rate_limit_count'):
+            self.rate_limiter = RateLimiter(conditions=[{'requests': kwargs.get('rate_limit_count'),
+                                                         'seconds': kwargs.get('rate_limit_duration', 1)}],
+                                            redis_host=kwargs.get('redis_host'),
+                                            redis_port=kwargs.get('redis_port', 6379),
+                                            redis_db=kwargs.get('redis_db', 0),
+                                            redis_password=kwargs.get('redis_password'),
+                                            redis_namespace=kwargs.get('redis_namespace', 'jormungandr.rate_limiter'))
+        else:
+            self.rate_limiter = FakeRateLimiter()
 
 
     def __repr__(self):
@@ -90,6 +102,8 @@ class Timeo(RealtimeProxy):
         The call is also cached
         """
         try:
+            if not self.rate_limiter.acquire(self.rt_system_id, block=False):
+                return None
             return self.breaker.call(requests.get, url, timeout=self.timeout)
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Timeo RT service dead, using base '
