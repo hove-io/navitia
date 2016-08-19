@@ -444,4 +444,6 @@ def tag_direct_path_test():
     section.street_network.mode = response_pb2.Bike
     new_default.tag_direct_path(response)
     assert 'is_walking_direct_path' in response.journeys[0].tags
+    assert 'non_pt' in response.journeys[0].tags
     assert 'is_bike_direct_path' in response.journeys[1].tags
+    assert 'non_pt' in response.journeys[1].tags
