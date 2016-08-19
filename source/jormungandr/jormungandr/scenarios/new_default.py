@@ -188,8 +188,8 @@ def tag_ecologic(resp):
                 j.tags.append('ecologic')
 
 def tag_direct_path(resp):
-    street_network_mode_tag_map = {response_pb2.Walking: ['is_walking_direct_path', 'non_pt'],
-                                   response_pb2.Bike: ['is_bike_direct_path', 'non_pt'],
+    street_network_mode_tag_map = {response_pb2.Walking: ['non_pt_walking', 'non_pt'],
+                                   response_pb2.Bike: ['non_pt_bike', 'non_pt'],
                                    response_pb2.Bss: ['non_pt'],
                                    response_pb2.Car: ['non_pt']}
     for j in resp.journeys:
