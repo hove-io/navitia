@@ -1,3 +1,20 @@
+navitia2 (2.15.0) unstable; urgency=medium
+
+  * jormungandr: add a ratelimiter to timeo
+    <https://github.com/CanalTP/navitia/pull/1728>
+  * Jormungandr: add is_walking_direct_path and is_bike_direct_path tags
+    on a journey  <https://github.com/CanalTP/navitia/pull/1727>
+  * All: Add direct path api for experimental
+    <https://github.com/CanalTP/navitia/pull/1719>
+  * RT proxy: custom Synthese route lookup
+    <https://github.com/CanalTP/navitia/pull/1725>
+  * jormun: Improve resilience to configuration update on connectors
+    <https://github.com/CanalTP/navitia/pull/1726>
+  * Atos connector updated. New connectors added.
+    <https://github.com/CanalTP/navitia/pull/1724>
+
+ -- Antoine Desbordes <antoine.desbordes@gmail.com>  Fri, 19 Aug 2016 16:20:35 +0200
+
 navitia2 (2.14.0) unstable; urgency=low
 
   * Jormun: Fix 500 error when token contains unicode character  <https://github.com/CanalTP/navitia/pull/1715>
