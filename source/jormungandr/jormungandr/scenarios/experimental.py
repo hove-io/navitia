@@ -109,6 +109,10 @@ class Scenario(new_default.Scenario):
     def __init__(self):
         super(Scenario, self).__init__()
 
+    def _get_direct_path(self, instance, mode, origin, destination, datetime, clockwise):
+        # TODO: cache by (mode, origin, destination) and redate with datetime and clockwise
+        return instance.georef.direct_path(mode, origin, destination, datetime, clockwise)
+
     def call_kraken(self, request_type, request, instance, krakens_call):
         """
         For all krakens_call, call the kraken and aggregate the responses
@@ -160,7 +164,15 @@ class Scenario(new_default.Scenario):
                                    g.destinations_fallback[arr_mode])
 
             resp.append(local_resp)
+            direct_path = self._get_direct_path(instance,
+                                                dep_mode,
+                                                request['origin'],
+                                                request['destination'],
+                                                request['datetime'],
+                                                request['clockwise'])
+            resp.append(direct_path)
             logger.debug("for mode %s|%s we have found %s journeys", dep_mode, arr_mode, len(local_resp.journeys))
+            logger.debug("for mode %s|%s we have found %s direct path", dep_mode, arr_mode, len(direct_path.journeys))
 
         for r in resp:
             fill_uris(r)
