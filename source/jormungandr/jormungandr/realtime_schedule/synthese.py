@@ -42,16 +42,10 @@ import requests as requests
 from jormungandr import cache, app
 from datetime import datetime, time
 from jormungandr.utils import timestamp_to_datetime
-from navitiacommon.ratelimit import RateLimiter
+from navitiacommon.ratelimit import RateLimiter, FakeRateLimiter
 from navitiacommon import type_pb2
 import redis
 
-class FakeRateLimiter(object):
-    def __init__(self, *args, **kwargs):
-        pass
-
-    def acquire(self, *args, **kwargs):
-        return True
 
 class SyntheseRoutePoint(object):
 

@@ -265,3 +265,12 @@ if __name__ == '__main__':
         rate(key, block=False) # alternative interface
         time.sleep(1)
 
+class FakeRateLimiter(object):
+    """
+    emulate a ratelimiter but do nothing :)
+    """
+    def __init__(self, *args, **kwargs):
+        pass
+
+    def acquire(self, *args, **kwargs):
+        return True
