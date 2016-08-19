@@ -195,7 +195,7 @@ def tag_direct_path(resp):
     for j in resp.journeys:
         # if there is only one section
         if len(j.sections) == 1:
-            if hasattr(j.sections[0], 'street_network'):
+            if j.sections[0].type == response_pb2.STREET_NETWORK and hasattr(j.sections[0], 'street_network'):
                 tag = street_network_mode_tag_map.get(j.sections[0].street_network.mode)
                 if tag:
                     j.tags.extend(tag)

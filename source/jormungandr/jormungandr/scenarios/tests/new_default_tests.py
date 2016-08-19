@@ -429,21 +429,19 @@ def tag_direct_path_test():
 
     # test with one walk and one pt
     journey_walk = response.journeys.add()
-    journey_walk.departure_date_time = 100000
-    journey_walk.arrival_date_time = 101500
-    journey_walk.duration = 1500
     section = journey_walk.sections.add()
     section.type = response_pb2.STREET_NETWORK
     section.street_network.mode = response_pb2.Walking
     journey_bike = response.journeys.add()
-    journey_bike.departure_date_time = 100500
-    journey_bike.arrival_date_time = 103000
-    journey_bike.duration = 2500
     section = journey_bike.sections.add()
     section.type = response_pb2.STREET_NETWORK
     section.street_network.mode = response_pb2.Bike
+    journey_pt = response.journeys.add()
+    section = journey_pt.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
     new_default.tag_direct_path(response)
     assert 'is_walking_direct_path' in response.journeys[0].tags
     assert 'non_pt' in response.journeys[0].tags
     assert 'is_bike_direct_path' in response.journeys[1].tags
     assert 'non_pt' in response.journeys[1].tags
+    assert not response.journeys[2].tags
