@@ -123,6 +123,7 @@ class Scenario(new_default.Scenario):
                 g.origins_fallback[dep_mode] = instance.georef.get_stop_points(request['origin'],
                         dep_mode,
                         get_max_fallback_duration(request, dep_mode))
+
                 #logger.debug('origins %s: %s', dep_mode, g.origins_fallback[dep_mode])
 
             if arr_mode not in g.destinations_fallback:

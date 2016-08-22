@@ -127,6 +127,7 @@ struct PathFinder {
     void init(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor);
 
     void start_distance_dijkstra(navitia::time_duration radius);
+    void start_target_all_dijkstra(const std::vector<vertex_t>& targets);
 
     /// compute the reachable stop points within the radius
     routing::map_stop_point_duration
@@ -200,11 +201,17 @@ private:
     crow_fly_find_nearest_stop_points(navitia::time_duration radius,
                                       const proximitylist::ProximityList<type::idx_t>& pl);
 
+    enum class Dijkastra_Type{
+        Distance, // stop dijkastra when distance is reached
+        Target_All // stop disjkastra when all targets are reached
+    };
+
     template<typename K, typename U, typename G>
     boost::container::flat_map<K, navitia::time_duration>
     start_dijkstra_and_fill_duration_map(const navitia::time_duration& radius,
             const std::vector<U>& destinations,
-            const G& projection_getter);
+            const G& projection_getter,
+            Dijkastra_Type dijkastra_type);
 
 #ifdef _DEBUG_DIJKSTRA_QUANTUM_
     void dump_dijkstra_for_quantum(const ProjectionData& target);
@@ -277,10 +284,13 @@ struct distance_visitor : public boost::dijkstra_visitor<> {
      */
     template<typename G>
     void examine_vertex(typename boost::graph_traits<G>::vertex_descriptor u, const G&) {
+
         if (durations[u] > max_duration)
             throw DestinationFound();
     }
+
 };
+
 
 #ifdef _DEBUG_DIJKSTRA_QUANTUM_
 
@@ -330,9 +340,9 @@ struct printer_distance_visitor : public distance_visitor {
 
 //Visitor who stops (throw a DestinationFound exception) when all targets has been visited
 struct target_all_visitor : public boost::dijkstra_visitor<> {
-    std::vector<vertex_t> destinations;
+    std::set<vertex_t> destinations;
     size_t nbFound = 0;
-    target_all_visitor(std::vector<vertex_t> destinations) : destinations(destinations){}
+    target_all_visitor(const std::vector<vertex_t>& destinations) : destinations(destinations.begin(), destinations.end()){}
     template <typename graph_type>
     void finish_vertex(vertex_t u, const graph_type&){
         if (std::find(destinations.begin(), destinations.end(), u) != destinations.end()) {

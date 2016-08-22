@@ -236,6 +236,19 @@ void PathFinder::start_distance_dijkstra(navitia::time_duration radius) {
 
 }
 
+void PathFinder::start_target_all_dijkstra(const std::vector<vertex_t>& targets) {
+    if (! starting_edge.found)
+        return ;
+    computation_launch = true;
+    try {
+        dijkstra(starting_edge[source_e], target_all_visitor{targets});
+    } catch(const DestinationFound&){}
+
+    try {
+        dijkstra(starting_edge[target_e], target_all_visitor{targets});
+    } catch(const DestinationFound&){}
+}
+
 std::vector<std::pair<type::idx_t, type::GeographicalCoord>>
 PathFinder::crow_fly_find_nearest_stop_points(navitia::time_duration radius,
                                               const proximitylist::ProximityList<type::idx_t>& pl) {
@@ -261,43 +274,69 @@ struct ProjectionGetterOnFly{
     }
 };
 
-static routing::SpIdx get_id(routing::SpIdx idx) { return idx; }
+static routing::SpIdx get_id(const routing::SpIdx& idx) { return idx; }
 static std::string get_id(const type::GeographicalCoord& coord) { return coord.uri(); }
 
 template<typename K, typename U, typename G>
 boost::container::flat_map<K, navitia::time_duration>
 PathFinder::start_dijkstra_and_fill_duration_map(const navitia::time_duration& radius,
         const std::vector<U>& destinations,
-        const G& projection_getter){
+        const G& projection_getter,
+        Dijkastra_Type dijkastra_type){
     boost::container::flat_map<K, navitia::time_duration> result;
-    start_distance_dijkstra(radius);
+    std::vector<std::pair<K, georef::ProjectionData>> projection_found_dests;
+    for (const auto& dest: destinations) {
+        auto projection = projection_getter(dest);
+        // the stop point has been projected on the graph?
+        if(projection.found) {
+            projection_found_dests.push_back({get_id(dest), projection});
+        }
+    }
+    // if there are no stop_points projected on the graph, there is no need to start the dijkstra
+    if (projection_found_dests.empty()) {
+        return result;
+    }
+    switch (dijkastra_type) {
+        case PathFinder::Dijkastra_Type::Target_All:
+        {
+            std::vector<vertex_t> targets;
+            std::transform(projection_found_dests.begin(), projection_found_dests.end(), std::back_inserter(targets),
+                           [](const std::pair<K, georef::ProjectionData>& projection) {
+                return projection.second[source_e];
+            });
+            start_target_all_dijkstra(targets);
+            break;
+        }
+        case PathFinder::Dijkastra_Type::Distance:
+        default:
+            start_distance_dijkstra(radius);
+            break;
+    }
 #ifdef _DEBUG_DIJKSTRA_QUANTUM_
     dump_dijkstra_for_quantum(starting_edge);
 #endif
-    for (const auto& dest: destinations) {
-        const auto projection = projection_getter(dest);
-        // the stop point has been projected on the graph?
-        if(projection.found){
-            //if our two points are projected on the same edge the Dijkstra won't give us the correct value
-            // we need to handle this case separately
-            if(is_projected_on_same_edge(starting_edge, projection)){
-                //We calculate the duration for going to the edge, then to the projected destination on the edge
-                //and finally to the destination
-                auto duration = path_duration_on_same_edge(starting_edge, projection);
-                if(duration <= radius){
-                    result[get_id(dest)] = duration;
-                }
-            }else{
-                navitia::time_duration best_dist = bt::pos_infin;
-                if (distances[projection[source_e]] < bt::pos_infin) {
-                    best_dist = distances[projection[source_e]] + crow_fly_duration(projection.distances[source_e]);
-                }
-                if (distances[projection[target_e]] < bt::pos_infin) {
-                    best_dist = std::min(best_dist, distances[projection[target_e]] + crow_fly_duration(projection.distances[target_e]));
-                }
-                if (best_dist <= radius) {
-                    result[get_id(dest)] = best_dist;
-                }
+    for (const auto& dest: projection_found_dests) {
+        //if our two points are projected on the same edge the Dijkstra won't give us the correct value
+        // we need to handle this case separately
+        auto& projection = dest.second;
+        auto& id = dest.first;
+        if(is_projected_on_same_edge(starting_edge, projection)){
+            //We calculate the duration for going to the edge, then to the projected destination on the edge
+            //and finally to the destination
+            auto duration = path_duration_on_same_edge(starting_edge, projection);
+            if(duration <= radius){
+                result[id] = duration;
+            }
+        }else{
+            navitia::time_duration best_dist = bt::pos_infin;
+            if (distances[projection[source_e]] < bt::pos_infin) {
+                best_dist = distances[projection[source_e]] + crow_fly_duration(projection.distances[source_e]);
+            }
+            if (distances[projection[target_e]] < bt::pos_infin) {
+                best_dist = std::min(best_dist, distances[projection[target_e]] + crow_fly_duration(projection.distances[target_e]));
+            }
+            if (best_dist <= radius) {
+                result[id] = best_dist;
             }
         }
     }
@@ -342,7 +381,8 @@ PathFinder::find_nearest_stop_points(navitia::time_duration radius,
         dest_sp_idx.push_back(routing::SpIdx{e.first});
     }
     ProjectionGetterByCache projection_getter{mode, geo_ref.projected_stop_points};
-    return start_dijkstra_and_fill_duration_map<routing::SpIdx, routing::SpIdx, ProjectionGetterByCache>(radius, dest_sp_idx, projection_getter);
+    return start_dijkstra_and_fill_duration_map<routing::SpIdx, routing::SpIdx, ProjectionGetterByCache>(
+            radius, dest_sp_idx, projection_getter, PathFinder::Dijkastra_Type::Distance);
 }
 
 boost::container::flat_map<PathFinder::coord_uri, navitia::time_duration>
@@ -353,7 +393,8 @@ PathFinder::get_duration_with_dijkstra(const navitia::time_duration& radius,
     }
     auto offset = geo_ref.offsets[mode];
     ProjectionGetterOnFly projection_getter{geo_ref, offset};
-    return start_dijkstra_and_fill_duration_map<PathFinder::coord_uri, type::GeographicalCoord, ProjectionGetterOnFly>(radius, dest_coords, projection_getter);
+    return start_dijkstra_and_fill_duration_map<PathFinder::coord_uri, type::GeographicalCoord, ProjectionGetterOnFly>(
+            radius, dest_coords, projection_getter, PathFinder::Dijkastra_Type::Target_All);
 }
 
 navitia::time_duration PathFinder::get_distance(type::idx_t target_idx) {

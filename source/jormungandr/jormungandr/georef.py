@@ -39,12 +39,10 @@ class Kraken(object):
         # we use place_nearby of kraken at the first place to get stop_points around the place, then call the
         # one_to_many(or many_to_one according to the arg "reverse") service to take street network into consideration
         # TODO: reverse is not handled as so far
-
         places_crowfly = self.get_crow_fly(place, mode, max_duration, max_nb_crowfly)
         destinations = []
         for p in places_crowfly:
             destinations.append(p.uri)
-
         sn_routing_matrix = self.get_streetnetwork_routing_matrix([place],
                                                                   destinations,
                                                                   mode,

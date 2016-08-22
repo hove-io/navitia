@@ -887,13 +887,12 @@ pbnavitia::Response Worker::street_network_routing_matrix(const pbnavitia::Stree
         auto entry_point = type::EntryPoint{origin_type, dest.place(), 0};
         type::GeographicalCoord coord{};
         try{
-            coord = coord_of_entry_point(entry_point, data);
+            dest_coords.push_back(coord_of_entry_point(entry_point, data));
         }catch(const navitia::coord_conversion_exception& e) {
             pbnavitia::Response r;
             fill_pb_error(pbnavitia::Error::bad_format, e.what(), r.mutable_error());
             return r;
         }
-        dest_coords.push_back(coord);
     }
 
     pbnavitia::Response r;
