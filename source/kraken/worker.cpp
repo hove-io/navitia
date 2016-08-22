@@ -442,13 +442,15 @@ pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest 
                                request.depth(), request.count(),request.start_page(), *data, current_datetime);
 }
 
-type::StreetNetworkParams Worker::streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams & request,
-        const boost::shared_ptr<const navitia::type::Data> data,
-        const bool use_second){
+static type::StreetNetworkParams
+streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams& request,
+                                    const boost::shared_ptr<const navitia::type::Data>& data,
+                                    const bool is_origin)
+{
     type::StreetNetworkParams result;
     std::string uri;
 
-    if(use_second){
+    if (is_origin) {
         result.mode = type::static_data::get()->modeByCaption(request.origin_mode());
         result.set_filter(request.origin_filter());
     }else{
@@ -582,6 +584,33 @@ pbnavitia::Response Worker::place_code(const pbnavitia::PlaceCodeRequest &reques
     return pb_creator.get_response();
 }
 
+static type::EntryPoint
+create_entry_point(const ::pbnavitia::LocationContext& location,
+                   const ::pbnavitia::StreetNetworkParams& sn_params,
+                   const boost::shared_ptr<const navitia::type::Data>& data,
+                   const bool is_origin)
+{
+    Type_e entry_point_type = data->get_type_of_id(location.place());
+    type::EntryPoint entry_point = type::EntryPoint(entry_point_type,
+                                                    location.place(),
+                                                    location.access_duration());
+    switch (entry_point.type) {
+    case type::Type_e::Address:
+    case type::Type_e::Coord:
+    case type::Type_e::Admin:
+    case type::Type_e::StopArea:
+    case type::Type_e::POI:
+        entry_point.streetnetwork_params =
+            streetnetwork_params_of_entry_point(sn_params, data, is_origin);
+        // StopPoint doesn't use street network
+    case type::Type_e::StopPoint:
+        entry_point.coordinates = coord_of_entry_point(entry_point, data);
+        break;
+    default: break;
+    }
+    return entry_point;
+}
+
 JourneysArg::JourneysArg(const std::vector<type::EntryPoint>& origins,
              const type::AccessibiliteParams& accessibilite_params,
              const std::vector<std::string>& forbidden,
@@ -595,28 +624,12 @@ navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest &req
     const auto data = data_manager.get_data();
     std::vector<type::EntryPoint> origins;
     for(int i = 0; i < request.origin().size(); i++) {
-        Type_e origin_type = data->get_type_of_id(request.origin(i).place());
-        type::EntryPoint origin = type::EntryPoint(origin_type, request.origin(i).place(), request.origin(i).access_duration());
-
-        if (origin.type == type::Type_e::Address || origin.type == type::Type_e::Admin
-                || origin.type == type::Type_e::StopArea || origin.type == type::Type_e::StopPoint
-                || origin.type == type::Type_e::POI) {
-            origin.coordinates = coord_of_entry_point(origin, data);
-        }
-        origins.push_back(origin);
+        origins.push_back(create_entry_point(request.origin(i), request.streetnetwork_params(), data, true));
     }
 
     std::vector<type::EntryPoint> destinations;
     for (int i = 0; i < request.destination().size(); i++) {
-        Type_e destination_type = data->get_type_of_id(request.destination(i).place());
-        type::EntryPoint destination = type::EntryPoint(destination_type, request.destination(i).place(), request.destination(i).access_duration());
-
-        if (destination.type == type::Type_e::Address || destination.type == type::Type_e::Admin
-                || destination.type == type::Type_e::StopArea || destination.type == type::Type_e::StopPoint
-                || destination.type == type::Type_e::POI) {
-            destination.coordinates = coord_of_entry_point(destination, data);
-        }
-        destinations.push_back(destination);
+        destinations.push_back(create_entry_point(request.destination(i), request.streetnetwork_params(), data, false));
     }
 
 
@@ -628,27 +641,6 @@ navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest &req
     std::vector<uint64_t> datetimes;
     for(int i = 0; i < request.datetimes_size(); ++i) {
         datetimes.push_back(request.datetimes(i));
-    }
-
-    /// params for departure fallback
-    for(size_t i = 0; i < origins.size(); i++) {
-        type::EntryPoint &origin = origins[i];
-        if ((origin.type == type::Type_e::Address)
-                || (origin.type == type::Type_e::Coord) || (origin.type == type::Type_e::Admin)
-                || (origin.type == type::Type_e::POI) || (origin.type == type::Type_e::StopArea)) {
-            origin.streetnetwork_params = this->streetnetwork_params_of_entry_point(
-                        request.streetnetwork_params(), data);
-        }
-    }
-    /// params for arrival fallback
-    for(size_t i = 0; i < destinations.size(); i++) {
-        type::EntryPoint &destination = destinations[i];
-        if ((destination.type == type::Type_e::Address) || (destination.type == type::Type_e::Coord)
-                || (destination.type == type::Type_e::Admin) || (destination.type == type::Type_e::POI)
-                || (destination.type == type::Type_e::StopArea)) {
-            destination.streetnetwork_params = this->streetnetwork_params_of_entry_point(
-                        request.streetnetwork_params(), data, false);
-        }
     }
 
     /// Accessibility params
@@ -924,6 +916,32 @@ pbnavitia::Response Worker::street_network_routing_matrix(const pbnavitia::Stree
     return r;
 }
 
+pbnavitia::Response Worker::direct_path(const pbnavitia::Request& request) {
+    const auto data = data_manager.get_data();
+    init_worker_data(data);
+    const auto& dp_request = request.direct_path();
+    const auto origin = create_entry_point(dp_request.origin(),
+                                           dp_request.streetnetwork_params(),
+                                           data,
+                                           true);
+    const auto destination = create_entry_point(dp_request.destination(),
+                                                dp_request.streetnetwork_params(),
+                                                data,
+                                                false);
+    const auto geo_path = street_network_worker->get_direct_path(origin, destination);
+
+    const auto current_datetime = bt::from_time_t(request._current_datetime());
+    PbCreator pb_creator(*data, current_datetime, null_time_period);
+    routing::add_direct_path(pb_creator,
+                             geo_path,
+                             origin,
+                             destination,
+                             {bt::from_time_t(dp_request.datetime())},
+                             dp_request.clockwise());
+
+    return pb_creator.get_response();
+}
+
 pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     pbnavitia::Response response ;
     // These api can respond even if the data isn't loaded
@@ -967,8 +985,11 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     case pbnavitia::geo_status: response = geo_status(); break;
     case pbnavitia::car_co2_emission:
         response = car_co2_emission_on_crow_fly(request.car_co2_emission()); break;
+    case pbnavitia::direct_path:
+        response = direct_path(request); break;
     case pbnavitia::street_network_routing_matrix:
         response = street_network_routing_matrix(request.sn_routing_matrix()); break;
+
     default:
         LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
         fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", response.mutable_error());
@@ -984,6 +1005,7 @@ pbnavitia::Response Worker::nearest_stop_points(const pbnavitia::NearestStopPoin
     this->init_worker_data(data);
 
     //todo check the request
+
     double speed = 0;
     switch(type::static_data::get()->modeByCaption(request.mode())){
         case type::Mode_e::Bike:

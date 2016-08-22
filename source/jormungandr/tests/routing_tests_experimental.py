@@ -82,6 +82,30 @@ class TestJourneysExperimental(AbstractTestFixture):
         check_journeys(response)
         self.is_valid_journey_response(response, journey_basic_query)
 
+    def test_journey_direct_path(self):
+        query = journey_basic_query + \
+                "&first_section_mode[]=bss" + \
+                "&first_section_mode[]=walking" + \
+                "&first_section_mode[]=bike" + \
+                "&first_section_mode[]=car" + \
+                "&debug=true"
+        response = self.query_region(query)
+        check_journeys(response)
+        eq_(len(response['journeys']), 6)
+
+        # first is bike
+        assert('bike' in response['journeys'][0]['tags'])
+        eq_(len(response['journeys'][0]['sections']), 1)
+
+        # second is car
+        assert('car' in response['journeys'][1]['tags'])
+        eq_(len(response['journeys'][1]['sections']), 3)
+
+        # last is walking
+        assert('walking' in response['journeys'][-1]['tags'])
+        eq_(len(response['journeys'][-1]['sections']), 1)
+
+
     def test_error_on_journeys(self):
         """ if we got an error with kraken, an error should be returned"""
 

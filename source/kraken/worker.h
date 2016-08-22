@@ -86,7 +86,6 @@ class Worker {
 
         pbnavitia::Response dispatch(const pbnavitia::Request & request);
 
-        type::StreetNetworkParams streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams & request, const boost::shared_ptr<const navitia::type::Data> data, const bool use_second = true);
 
         void init_worker_data(const boost::shared_ptr<const navitia::type::Data> data);
 
@@ -120,12 +119,13 @@ class Worker {
         pbnavitia::Response graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest &request,
                                                const boost::posix_time::ptime& current_datetime);
         pbnavitia::Response car_co2_emission_on_crow_fly(const pbnavitia::CarCO2EmissionRequest& request);
+        pbnavitia::Response direct_path(const pbnavitia::Request& request);
+
         /*
          * Given N origins and M destinations and street network mode, it returns a NxM matrix which contains durations
          * from origin to destination by taking street network
          * */
         pbnavitia::Response street_network_routing_matrix(const pbnavitia::StreetNetworkRoutingMatrixRequest& request);
-
 };
 
 }

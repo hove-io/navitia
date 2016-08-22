@@ -173,8 +173,11 @@ class RoutePoint(object):
         return hash(self.__key())
 
     @staticmethod
-    def _get_code(obj, object_id_tag):
-        tags = [c.value for c in obj.codes if c.type == object_id_tag]
+    def _get_all_codes(obj, object_id_tag):
+        return [c.value for c in obj.codes if c.type == object_id_tag]
+
+    def _get_code(self, obj, object_id_tag):
+        tags = self._get_all_codes(obj, object_id_tag)
         if len(tags) < 1:
             return None
         if len(tags) > 1:
@@ -192,6 +195,9 @@ class RoutePoint(object):
 
     def fetch_route_id(self, object_id_tag):
         return self._get_code(self.pb_route, object_id_tag)
+
+    def fetch_all_route_id(self, object_id_tag):
+        return self._get_all_codes(self.pb_route, object_id_tag)
 
     def fetch_line_code(self):
         return self.pb_route.line.code

@@ -79,7 +79,7 @@ bool StreetNetwork::departure_launched() const {return departure_path_finder.com
 bool StreetNetwork::arrival_launched() const {return arrival_path_finder.computation_launch;}
 
 routing::map_stop_point_duration
-StreetNetwork::find_nearest_stop_points(navitia::time_duration radius,
+StreetNetwork::find_nearest_stop_points(const navitia::time_duration& radius,
                                         const proximitylist::ProximityList<type::idx_t>& pl,
                                         bool use_second) {
     // delegate to the arrival or departure pathfinder
@@ -213,7 +213,7 @@ void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mod
     }
 }
 
-void PathFinder::start_distance_dijkstra(navitia::time_duration radius) {
+void PathFinder::start_distance_dijkstra(const navitia::time_duration& radius) {
     if (! starting_edge.found)
         return ;
     computation_launch = true;
@@ -250,7 +250,7 @@ void PathFinder::start_target_all_dijkstra(const std::vector<vertex_t>& targets)
 }
 
 std::vector<std::pair<type::idx_t, type::GeographicalCoord>>
-PathFinder::crow_fly_find_nearest_stop_points(navitia::time_duration radius,
+PathFinder::crow_fly_find_nearest_stop_points(const navitia::time_duration& radius,
                                               const proximitylist::ProximityList<type::idx_t>& pl) {
     // Searching for all the elements that are less than radius meters awyway in crow fly
     float crow_fly_dist = radius.total_seconds() * speed_factor * georef::default_speed[mode];
@@ -344,7 +344,7 @@ PathFinder::start_dijkstra_and_fill_duration_map(const navitia::time_duration& r
 }
 
 routing::map_stop_point_duration
-PathFinder::find_nearest_stop_points(navitia::time_duration radius,
+PathFinder::find_nearest_stop_points(const navitia::time_duration& radius,
                                      const proximitylist::ProximityList<type::idx_t>& pl) {
     auto elements = crow_fly_find_nearest_stop_points(radius, pl);
 
@@ -525,7 +525,10 @@ void PathFinder::add_custom_projections_to_path(Path& p, bool append_to_begin, c
     }
 }
 
-Path PathFinder::get_path(const ProjectionData& target, std::pair<navitia::time_duration, ProjectionData::Direction> nearest_edge) {
+Path
+PathFinder::get_path(const ProjectionData& target,
+                     const std::pair<navitia::time_duration, ProjectionData::Direction>& nearest_edge)
+{
     if (! computation_launch || ! target.found || nearest_edge.first == bt::pos_infin)
         return {};
 

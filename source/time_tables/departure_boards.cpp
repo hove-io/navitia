@@ -136,6 +136,21 @@ static bool line_closed (const time_duration& duration,
     return false;
 }
 
+static std::vector<routing::JppIdx> get_jpp_from_route_point(const stop_point_route& sp_route,
+                                                             const navitia::routing::dataRAPTOR& data_raptor) {
+    const auto& jpps = data_raptor.jpps_from_sp[sp_route.first];
+    std::vector<routing::JppIdx> routepoint_jpps;
+    for (const auto& jpp_from_sp: jpps) {
+        const routing::JppIdx& jpp_idx = jpp_from_sp.idx;
+        const auto& jpp = data_raptor.jp_container.get(jpp_idx);
+        const auto& jp = data_raptor.jp_container.get(jpp.jp_idx);
+        if (jp.route_idx != sp_route.second) { continue; }
+
+        routepoint_jpps.push_back(jpp_idx);
+    }
+    return routepoint_jpps;
+}
+
 void departure_board(PbCreator& pb_creator, const std::string& request,
                 boost::optional<const std::string> calendar_id,
                 const std::vector<std::string>& forbidden_uris,
@@ -171,40 +186,25 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
     }
     size_t total_result = sps_routes.size();
     sps_routes = paginate(sps_routes, count, start_page);
-    //Trie des vecteurs de date_times stop_times
     auto sort_predicate = [](routing::datetime_stop_time dt1, routing::datetime_stop_time dt2) {
                     return dt1.first < dt2.first;
                 };
-    // On regroupe entre eux les stop_times appartenant
-    // au meme couple (stop_point, route)
-    // On veut en effet afficher les départs regroupés par route
-    // (une route étant une vague direction commerciale
+    // we group the stoptime belonging to the same pair (stop_point, route)
+    // since we want to display the departures grouped by route
+    // the route being a loose commercial direction
     for (const auto& sp_route: sps_routes) {
-        std::vector<routing::datetime_stop_time> stop_times;
         const type::StopPoint* stop_point = pb_creator.data.pt_data->stop_points[sp_route.first.val];
         const type::Route* route = pb_creator.data.pt_data->routes[sp_route.second.val];
-        const auto& jpps = pb_creator.data.dataRaptor->jpps_from_sp[sp_route.first];
-        std::vector<routing::JppIdx> routepoint_jpps;
-        for (const auto& jpp_from_sp: jpps) {
-            const routing::JppIdx& jpp_idx = jpp_from_sp.idx;
-            const auto& jpp = pb_creator.data.dataRaptor->jp_container.get(jpp_idx);
-            const auto& jp = pb_creator.data.dataRaptor->jp_container.get(jpp.jp_idx);
-            if (jp.route_idx != sp_route.second) { continue; }
+        const auto routepoint_jpps = get_jpp_from_route_point(sp_route, *pb_creator.data.dataRaptor);
 
-            routepoint_jpps.push_back(jpp_idx);
-        }
-
-        std::vector<routing::datetime_stop_time> tmp;
+        std::vector<routing::datetime_stop_time> stop_times;
         if (! calendar_id) {
             stop_times = routing::get_stop_times(routing::StopEvent::pick_up, routepoint_jpps, handler.date_time,
                     handler.max_datetime, items_per_route_point, pb_creator.data, rt_level);
+            std::sort(stop_times.begin(), stop_times.end(), sort_predicate);
         } else {
             stop_times = routing::get_calendar_stop_times(routepoint_jpps, DateTimeUtils::hour(handler.date_time),
                     DateTimeUtils::hour(handler.max_datetime), pb_creator.data, *calendar_id);
-        }
-        if ( ! calendar_id) {
-            std::sort(stop_times.begin(), stop_times.end(), sort_predicate);
-        } else {
             // for calendar we want the first stop time to start from handler.date_time
             std::sort(stop_times.begin(), stop_times.end(), routing::CalendarScheduleSort(handler.date_time));
             if (stop_times.size() > items_per_route_point) {
@@ -213,16 +213,18 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
         }
 
         //we compute the route status
-        for (const auto& jpp_from_sp: jpps) {
-            const routing::JppIdx& jpp_idx = jpp_from_sp.idx;
-            const auto& jpp = pb_creator.data.dataRaptor->jp_container.get(jpp_idx);
-            const auto& jp = pb_creator.data.dataRaptor->jp_container.get(jpp.jp_idx);
-            const auto& last_jpp = pb_creator.data.dataRaptor->jp_container.get(jp.jpps.back());
-            if (sp_route.first == last_jpp.sp_idx) {
-                if (stop_point->stop_area == route->destination) {
-                    response_status[sp_route] = pbnavitia::ResponseStatus::terminus;
-                } else {
+        if (stop_point->stop_area == route->destination) {
+            response_status[sp_route] = pbnavitia::ResponseStatus::terminus;
+        } else {
+            // we try to find if the stop point is a terminus for at least one jp passing through the stop
+            // in this case, the stop is a partial terminus
+            for (const auto& jpp_idx: routepoint_jpps) {
+                const auto& jpp = pb_creator.data.dataRaptor->jp_container.get(jpp_idx);
+                const auto& jp = pb_creator.data.dataRaptor->jp_container.get(jpp.jp_idx);
+                const auto& last_jpp = pb_creator.data.dataRaptor->jp_container.get(jp.jpps.back());
+                if (sp_route.first == last_jpp.sp_idx) {
                     response_status[sp_route] = pbnavitia::ResponseStatus::partial_terminus;
+                    break;
                 }
             }
         }
