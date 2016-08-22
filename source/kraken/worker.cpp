@@ -923,13 +923,12 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     case pbnavitia::calendars : response = calendars(request.calendars(), current_datetime); break;
     case pbnavitia::place_code : response = place_code(request.place_code()); break;
     case pbnavitia::nearest_stop_points : response = nearest_stop_points(request.nearest_stop_points()); break;
-
     case pbnavitia::geo_status: response = geo_status(); break;
     case pbnavitia::car_co2_emission:
         response = car_co2_emission_on_crow_fly(request.car_co2_emission()); break;
     case pbnavitia::direct_path:
         response = direct_path(request); break;
-case pbnavitia::graphical_isochrone: response = graphical_isochrone(request.isochrone(), current_datetime); break;
+    case pbnavitia::graphical_isochrone: response = graphical_isochrone(request.isochrone(), current_datetime); break;
     case pbnavitia::heat_map: response = heat_map(request.heat_map(), current_datetime); break;
     default:
         LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));

@@ -199,20 +199,16 @@ static std::vector<georef::vertex_t> init_vertex(const georef::GeoRef & worker,
                                                  const std::vector<type::StopPoint*>& stop_points,
                                                  std::vector<navitia::time_duration>& distances,
                                                  const DateTime& init_dt,
-                                                 RAPTOR& raptor,
+                                                 const RAPTOR& raptor,
                                                  const type::Mode_e& mode,
                                                  const type::GeographicalCoord& coord_origin,
                                                  const bool clockwise,
                                                  const DateTime& bound,
-                                                 const DateTime& max_duration,
-                                                 const double speed,
-                                                 BoundBox& box) {
-    const auto distance_500m = (500 / type::GeographicalCoord::EARTH_RADIUS_IN_METERS) * N_RAD_TO_DEG;
+                                                 const double speed) {
     std::vector<georef::vertex_t> initialized_points;
     nt::idx_t offset = worker.offsets[mode];
     auto proj = georef::ProjectionData(coord_origin, worker, offset, worker.pl);
     if (proj.found) {
-        box.set_box(coord_origin, walking_distance(max_duration, 0, speed) + distance_500m);
         init_distances(distances, proj, 0, initialized_points, speed);
     }
     for(const type::StopPoint* sp: stop_points) {
@@ -223,13 +219,45 @@ static std::vector<georef::vertex_t> init_vertex(const georef::GeoRef & worker,
             const auto& proj = projections[mode];
             if(proj.found) {
                 const double duration = best_lbl - init_dt;
-                box.set_box(sp->coord, walking_distance(max_duration, duration, speed) + distance_500m);
                 init_distances(distances, proj, duration, initialized_points, speed);
             }
         }
     }
     return initialized_points;
 }
+
+static BoundBox find_boundary_box(const georef::GeoRef & worker,
+                                  const std::vector<type::StopPoint*>& stop_points,
+                                  const DateTime& init_dt,
+                                  const RAPTOR& raptor,
+                                  const type::Mode_e& mode,
+                                  const type::GeographicalCoord& coord_origin,
+                                  const bool clockwise,
+                                  const DateTime& bound,
+                                  const DateTime& max_duration,
+                                  const double speed) {
+    auto box = BoundBox();
+    const auto distance_500m = (500 / type::GeographicalCoord::EARTH_RADIUS_IN_METERS) * N_RAD_TO_DEG;
+    nt::idx_t offset = worker.offsets[mode];
+    auto proj = georef::ProjectionData(coord_origin, worker, offset, worker.pl);
+    if (proj.found) {
+        box.set_box(coord_origin, walking_distance(max_duration, 0, speed) + distance_500m);
+    }
+    for(const type::StopPoint* sp: stop_points) {
+        SpIdx sp_idx(*sp);
+        const auto& best_lbl = raptor.best_labels_pts[sp_idx];
+        if (in_bound(best_lbl, bound, clockwise)) {
+            const auto& projections = worker.projected_stop_points[sp->idx];
+            const auto& proj = projections[mode];
+            if(proj.found) {
+                const double duration = best_lbl - init_dt;
+                box.set_box(sp->coord, walking_distance(max_duration, duration, speed) + distance_500m);
+            }
+        }
+    }
+    return box;
+}
+
 
 std::string build_raster_isochrone(const georef::GeoRef& worker,
                                    const double& speed,
@@ -246,15 +274,17 @@ std::string build_raster_isochrone(const georef::GeoRef& worker,
     distances.assign(n, bt::pos_infin);
     std::vector<georef::vertex_t> predecessors;
     predecessors.resize(n);
-    auto box = BoundBox();
+    auto box = find_boundary_box(worker, stop_points, init_dt, raptor, mode, coord_origin,
+                                 clockwise, bound, duration, speed);
     auto init_points = init_vertex(worker, stop_points, distances, init_dt, raptor, mode, coord_origin,
-                                   clockwise, bound, duration, speed, box);
+                                   clockwise, bound, speed);
     auto start = init_points.begin();
     auto end = init_points.end();
     double speed_factor = speed / georef::default_speed[mode];
     auto visitor = georef::distance_visitor(navitia::seconds(duration), distances);
     auto index_map = boost::identity_property_map();
     using filtered_graph = boost::filtered_graph<georef::Graph, boost::keep_all, georef::TransportationModeFilter>;
+    // We cannot make a dijkstra multi start with old boost version
 #if BOOST_VERSION >= 105500
     try {
         boost::dijkstra_shortest_paths_no_init(filtered_graph(worker.graph, {},
