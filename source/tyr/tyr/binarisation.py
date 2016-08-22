@@ -457,6 +457,8 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
         argv = ["-o", output_file, "--connection-string", connection_string]
         if 'CITIES_DATABASE_URI' in current_app.config and current_app.config['CITIES_DATABASE_URI']:
             argv.extend(["--cities-connection-string", current_app.config['CITIES_DATABASE_URI']])
+        if instance.full_sn_geometries:
+            argv.extend(['--full_street_network_geometries', 'true'])
 
         res = None
         with collect_metric('ed2nav', job, None):
