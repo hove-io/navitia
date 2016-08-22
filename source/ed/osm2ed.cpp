@@ -164,15 +164,11 @@ void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &tags,
                                    const std::vector<uint64_t> & nodes_refs) {
     const auto properties = parse_way_tags(tags);
     const auto name_it = tags.find("name");
-    const bool is_street = properties.any();
+    bool is_street = properties.any();
     auto it_way = cache.ways.find(OSMWay(osm_id));
     const bool is_used_by_relation = it_way != cache.ways.end(),
                is_hn = tags.find("addr:housenumber") != tags.end(),
                is_poi = tags.find("amenity") != tags.end() || tags.find("leisure") != tags.end();
-
-    if (!is_street && !is_used_by_relation && !is_hn && !is_poi) {
-        return;
-    }
 
     const auto name = name_it != tags.end() ? name_it->second : "";
 
@@ -181,6 +177,10 @@ void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &tags,
     if (access == "private" && name.empty()) {
         ++filtered_private_way;
         LOG4CPLUS_TRACE(logger, "filtering a private access way " << osm_id);
+        is_street = false;
+    }
+
+    if (!is_street && !is_used_by_relation && !is_hn && !is_poi) {
         return;
     }
 
