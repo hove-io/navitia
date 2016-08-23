@@ -56,7 +56,7 @@ class JcdecauxProvider(BssProvider):
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_JCDECAUX', 30))
     def _call_webservice(self, station_id):
         try:
-            data = self.breaker.call(requests.get, self.WS_URL_TEMPLATE.format(station_id, self.contract, self.api_key), timeout=self.timeout)
+            data = self.breaker.call(requests.get, self.WS_URL_TEMPLATE.format(station_id, self.contract, self.api_key), timeout=self.timeout, **kwargs)
             return data.json()
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('JCDecaux service dead (error: {})'.format(e))
