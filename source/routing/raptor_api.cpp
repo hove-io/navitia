@@ -1218,8 +1218,8 @@ static void add_heat_map(const std::string& heat_map,
                          type::EntryPoint center,
                          bool clockwise) {
     auto pb_heat_map = pb_creator.add_heat_maps();
-    pb_heat_map->mutable_matrix();
-    pb_heat_map->set_matrix(heat_map);
+    pb_heat_map->mutable_heat_matrix();
+    pb_heat_map->set_heat_matrix(heat_map);
     add_origin_destination(pb_creator, center, clockwise, pb_heat_map);
 }
 

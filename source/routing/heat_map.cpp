@@ -86,7 +86,7 @@ static std::string print_single_coord(const SingleCoord& coord,
     std::stringstream ss;
     ss << R"(")" << type << R"(":{)";
     ss << R"("min_)" << type << R"(":)" << coord.min_coord;
-    ss << R"(,"middle_)" << type << R"(":)" << coord.min_coord + coord.step / 2;
+    ss << R"(,"center_)" << type << R"(":)" << coord.min_coord + coord.step / 2;
     ss << R"(,"max_)" << type << R"(":)" << coord.min_coord + coord.step;
     ss << "}";
     return ss.str();

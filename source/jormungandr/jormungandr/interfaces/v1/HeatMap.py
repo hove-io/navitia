@@ -45,14 +45,13 @@ from jormungandr.utils import date_to_timestamp
 from jormungandr.resources_utc import ResourceUtc
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.interfaces.parsers import option_value
-from jormungandr.interfaces.parsers import float_gt_0
 from jormungandr.interfaces.v1.Journeys import dt_represents
 from jormungandr.interfaces.parsers import unsigned_integer
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, dt_represents, compute_possible_region
 
 
 heat_map = {
-    "matrix": JsonString(),
+    "heat_matrix": JsonString(),
     'from': PbField(place, attribute='origin'),
     "to": PbField(place, attribute="destination")
 }

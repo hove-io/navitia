@@ -80,14 +80,14 @@ BOOST_AUTO_TEST_CASE(print_map_test) {
     auto heat_map = HeatMap(header, body);
     heat_map.body[2].second[2] = bt::pos_infin;
 
-    const auto heat_map_string = R"({"header":[{"lat":{"min_lat":4,"middle_lat":4.5,"max_lat":5}},)"
-                                 R"({"lat":{"min_lat":5,"middle_lat":5.5,"max_lat":6}},)"
-                                 R"({"lat":{"min_lat":6,"middle_lat":6.5,"max_lat":7}}],)"
-                                 R"("body":[{"lon":{"min_lon":0,"middle_lon":0.5,"max_lon":1},)"
+    const auto heat_map_string = R"({"header":[{"lat":{"min_lat":4,"center_lat":4.5,"max_lat":5}},)"
+                                 R"({"lat":{"min_lat":5,"center_lat":5.5,"max_lat":6}},)"
+                                 R"({"lat":{"min_lat":6,"center_lat":6.5,"max_lat":7}}],)"
+                                 R"("body":[{"lon":{"min_lon":0,"center_lon":0.5,"max_lon":1},)"
                                  R"("row":[{"duration":0},{"duration":60},{"duration":120}]},)"
-                                 R"({"lon":{"min_lon":1,"middle_lon":1.5,"max_lon":2},)"
+                                 R"({"lon":{"min_lon":1,"center_lon":1.5,"max_lon":2},)"
                                  R"("row":[{"duration":180},{"duration":240},{"duration":300}]},)"
-                                 R"({"lon":{"min_lon":2,"middle_lon":2.5,"max_lon":3},)"
+                                 R"({"lon":{"min_lon":2,"center_lon":2.5,"max_lon":3},)"
                                  R"("row":[{"duration":360},{"duration":420},{"duration":null}]}]})";
     BOOST_CHECK(heat_map_string == print_grid(heat_map));
 }
