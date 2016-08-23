@@ -153,6 +153,9 @@ class Scenario(new_default.Scenario):
                                                    request['clockwise'],
                                                    journey_parameters)
 
+            if local_resp.HasField(b"error"):
+                return [local_resp]
+
             # for log purpose we put and id in each journeys
             for idx, j in enumerate(local_resp.journeys):
                 j.internal_id = "{resp}-{j}".format(resp=self.nb_kraken_calls, j=idx)

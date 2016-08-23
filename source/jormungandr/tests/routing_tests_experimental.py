@@ -113,7 +113,6 @@ class TestJourneysExperimental(AbstractTestFixture):
             .format(from_coord="0.0000898312;0.0000898312",  # coordinate of S in the dataset
             to_coord="0.00188646;0.00071865",  # coordinate of R in the dataset
             datetime="20110614T080000")  # 2011 should not be in the production period
-
         response, status = self.query_no_assert("v1/coverage/main_routing_test/" + query_out_of_production_bound)
 
         assert status != 200, "the response should not be valid"
