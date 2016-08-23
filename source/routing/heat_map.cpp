@@ -177,39 +177,30 @@ static std::string build_grid(const georef::GeoRef& worker,
     return print_grid(heat_map);
 }
 
-static void init_distances(std::vector<navitia::time_duration>& distances,
-                           const georef::ProjectionData& proj,
-                           const DateTime duration,
-                           std::vector<georef::vertex_t>& initialized_points,
-                           const double speed) {
-    distances[proj[source_e]] = navitia::seconds(duration + proj.distances[source_e] / speed);
-    distances[proj[target_e]] = navitia::seconds(duration + proj.distances[target_e] / speed);
-    initialized_points.push_back(proj[source_e]);
-    initialized_points.push_back(proj[target_e]);
-}
-
 static double walking_distance(const DateTime& max_duration,
                                const DateTime& duration,
                                const double speed) {
     return (max_duration - duration) * speed / type::GeographicalCoord::EARTH_RADIUS_IN_METERS * N_RAD_TO_DEG;
 }
 
-
-static std::vector<georef::vertex_t> init_vertex(const georef::GeoRef & worker,
-                                                 const std::vector<type::StopPoint*>& stop_points,
-                                                 std::vector<navitia::time_duration>& distances,
-                                                 const DateTime& init_dt,
-                                                 const RAPTOR& raptor,
-                                                 const type::Mode_e& mode,
-                                                 const type::GeographicalCoord& coord_origin,
-                                                 const bool clockwise,
-                                                 const DateTime& bound,
-                                                 const double speed) {
-    std::vector<georef::vertex_t> initialized_points;
+static std::vector<navitia::time_duration> init_distance(const georef::GeoRef & worker,
+                                                         const std::vector<type::StopPoint*>& stop_points,
+                                                         const DateTime& init_dt,
+                                                         const RAPTOR& raptor,
+                                                         const type::Mode_e& mode,
+                                                         const type::GeographicalCoord& coord_origin,
+                                                         const bool clockwise,
+                                                         const DateTime& bound,
+                                                         const double speed,
+                                                         const DateTime& duration) {
+    std::vector<navitia::time_duration> distances;
+    size_t n = boost::num_vertices(worker.graph);
+    distances.assign(n, bt::pos_infin);
     nt::idx_t offset = worker.offsets[mode];
     auto proj = georef::ProjectionData(coord_origin, worker, offset, worker.pl);
     if (proj.found) {
-        init_distances(distances, proj, 0, initialized_points, speed);
+        distances[proj[source_e]] = navitia::seconds(duration + proj.distances[source_e] / speed);
+        distances[proj[target_e]] = navitia::seconds(duration + proj.distances[target_e] / speed);
     }
     for(const type::StopPoint* sp: stop_points) {
         SpIdx sp_idx(*sp);
@@ -219,7 +210,37 @@ static std::vector<georef::vertex_t> init_vertex(const georef::GeoRef & worker,
             const auto& proj = projections[mode];
             if(proj.found) {
                 const double duration = best_lbl - init_dt;
-                init_distances(distances, proj, duration, initialized_points, speed);
+                distances[proj[source_e]] = navitia::seconds(duration + proj.distances[source_e] / speed);
+                distances[proj[target_e]] = navitia::seconds(duration + proj.distances[target_e] / speed);
+            }
+        }
+    }
+    return distances;
+}
+
+static std::vector<georef::vertex_t> init_vertex(const georef::GeoRef & worker,
+                                                 const std::vector<type::StopPoint*>& stop_points,
+                                                 const RAPTOR& raptor,
+                                                 const type::Mode_e& mode,
+                                                 const type::GeographicalCoord& coord_origin,
+                                                 const bool clockwise,
+                                                 const DateTime& bound) {
+    std::vector<georef::vertex_t> initialized_points;
+    nt::idx_t offset = worker.offsets[mode];
+    auto proj = georef::ProjectionData(coord_origin, worker, offset, worker.pl);
+    if (proj.found) {
+        initialized_points.push_back(proj[source_e]);
+        initialized_points.push_back(proj[target_e]);
+    }
+    for(const type::StopPoint* sp: stop_points) {
+        SpIdx sp_idx(*sp);
+        const auto& best_lbl = raptor.best_labels_pts[sp_idx];
+        if (in_bound(best_lbl, bound, clockwise)) {
+            const auto& projections = worker.projected_stop_points[sp->idx];
+            const auto& proj = projections[mode];
+            if(proj.found) {
+                initialized_points.push_back(proj[source_e]);
+                initialized_points.push_back(proj[target_e]);
             }
         }
     }
@@ -269,15 +290,15 @@ std::string build_raster_isochrone(const georef::GeoRef& worker,
                                    const bool clockwise,
                                    const DateTime bound) {
     const auto& stop_points = raptor.data.pt_data->stop_points;
-    std::vector<navitia::time_duration> distances;
-    size_t n = boost::num_vertices(worker.graph);
-    distances.assign(n, bt::pos_infin);
     std::vector<georef::vertex_t> predecessors;
+    size_t n = boost::num_vertices(worker.graph);
     predecessors.resize(n);
     auto box = find_boundary_box(worker, stop_points, init_dt, raptor, mode, coord_origin,
                                  clockwise, bound, duration, speed);
-    auto init_points = init_vertex(worker, stop_points, distances, init_dt, raptor, mode, coord_origin,
-                                   clockwise, bound, speed);
+    auto init_points = init_vertex(worker, stop_points, raptor, mode, coord_origin,
+                                   clockwise, bound);
+    auto distances = init_distance(worker, stop_points, init_dt, raptor, mode, coord_origin,
+                                   clockwise, bound, speed, duration);
     auto start = init_points.begin();
     auto end = init_points.end();
     double speed_factor = speed / georef::default_speed[mode];
