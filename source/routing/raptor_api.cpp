@@ -1089,8 +1089,12 @@ make_response(RAPTOR &raptor,
         int time = datetime.time_of_day().total_seconds();
         DateTime init_dt = DateTimeUtils::set(day, time);
 
-        if(max_duration!=std::numeric_limits<uint32_t>::max()) {
-            bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
+        if(max_duration != std::numeric_limits<uint32_t>::max()) {
+            if (clockwise) {
+                bound = init_dt + max_duration;
+            } else {
+                bound = init_dt > max_duration ? init_dt - max_duration : 0;
+            }
         }
         std::vector<Path> tmp = raptor.compute_all(
             departures, destinations, init_dt, rt_level, transfer_penalty, bound, max_transfers,
