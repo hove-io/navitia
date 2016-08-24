@@ -480,6 +480,9 @@ std::string OSMNode::to_geographic_point() const{
 void OSMCache::build_way_map() {
     constexpr double max_double = std::numeric_limits<double>::max();
     for (auto way_it = ways.begin(); way_it != ways.end(); ++way_it) {
+        if(way_it->properties.none()){
+            continue;//it's not a street, we aren't interested by this way
+        }
         double max_lon = max_double,
                max_lat = max_double,
                min_lon = max_double,
@@ -884,6 +887,11 @@ void PoiHouseNumberVisitor::fill_housenumber(const uint64_t osm_id,
         candidate_way = find_way(tags, lon, lat);
     }
     if (candidate_way == nullptr) {
+        return;
+    }
+    if (candidate_way->way_ref->properties.none()){//the way isn't a street, we don't have it in the database
+        auto logger = log4cplus::Logger::getInstance("log");
+        LOG4CPLUS_ERROR(logger,"impossible to associate house number to way " << candidate_way->way_ref->osm_id);
         return;
     }
     house_numbers.push_back(OSMHouseNumber(str_to_int(it_hn->second), lon, lat, candidate_way->way_ref));
