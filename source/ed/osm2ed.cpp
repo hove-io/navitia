@@ -306,7 +306,7 @@ void OSMCache::insert_ways(){
     size_t n_inserted = 0;
     const size_t max_n_inserted = 50000;
     for (const auto& way : ways) {
-        if (!way.is_used()) {
+        if (!way.is_used() || way.properties.none()) {
             continue;
         }
         std::vector<std::string> values;
@@ -446,7 +446,7 @@ void OSMCache::insert_rel_way_admins() {
     for (const auto& map_ways : this->way_admin_map) {
         for (const auto& admin_ways : map_ways.second) {
             for (const auto& way : admin_ways.second) {
-                if (!way->is_used()) {
+                if (!way->is_used() || way->properties.none()) {
                     continue;
                 }
                 for (const auto& admin: admin_ways.first) {
