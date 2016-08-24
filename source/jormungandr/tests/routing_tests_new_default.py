@@ -66,24 +66,24 @@ class TestJourneysNewDefault(AbstractTestFixture):
     the new default scenario override the way the prev/next link are created
     """
     @staticmethod
-    def check_next_datetime_link(dt, response):
+    def check_next_datetime_link(dt, response, clockwise):
         if not response.get('journeys'):
             return
         """default next behaviour is 1s after the best or the soonest"""
         j_to_compare = min_from_criteria(generate_pt_journeys(response),
-                                         new_default_pagination_journey_comparator(clockwise=True))
+                                         new_default_pagination_journey_comparator(clockwise=clockwise))
 
         j_departure = get_valid_datetime(j_to_compare['departure_date_time'])
         eq_(j_departure + timedelta(seconds=1), dt)
 
     @staticmethod
-    def check_previous_datetime_link(dt, response):
+    def check_previous_datetime_link(dt, response, clockwise):
         # All journeys in file with clockwise=true
         if not response.get('journeys'):
             return
         """default previous behaviour is 1s before the best or the latest """
         j_to_compare = min_from_criteria(generate_pt_journeys(response),
-                                         new_default_pagination_journey_comparator(clockwise=True))
+                                         new_default_pagination_journey_comparator(clockwise=clockwise))
 
         j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
         eq_(j_departure - timedelta(seconds=1), dt)
@@ -140,6 +140,29 @@ class TestJourneysNewDefault(AbstractTestFixture):
 
         next = query_from_str(links.get("next").get("href"))
         assert next.get("datetime") == "20120614T080044"
+        assert next.get("datetime_represents") == "departure"
+
+    def test_datetime_represents_arrival(self):
+        """
+        Checks journeys when datetime == start date of production datetime.
+        """
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
+                "min_nb_journeys=3&_night_bus_filter_base_factor=86400&_override_scenario=new_default&"\
+                "datetime_represents=arrival"\
+                .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T185500")
+        response = self.query_region(query)
+        check_journeys(response)
+        self.is_valid_journey_response(response, query)
+        assert len(response["journeys"]) >= 3
+
+        links = get_links_dict(response)
+        prev = query_from_str(links.get("prev").get("href"))
+
+        assert prev.get("datetime") == "20120614T180221"
+        assert prev.get("datetime_represents") == "arrival"
+
+        next = query_from_str(links.get("next").get("href"))
+        assert next.get("datetime") == "20120614T180044"
         assert next.get("datetime_represents") == "departure"
 
     def test_first_bss_last_bss_section_mode(self):

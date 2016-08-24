@@ -64,23 +64,23 @@ class TestJourneysExperimental(AbstractTestFixture):
         i_manager.instances['main_routing_test']._scenario = self.old_scenario
 
     @staticmethod
-    def check_next_datetime_link(dt, response):
+    def check_next_datetime_link(dt, response, clockwise):
         if not response.get('journeys'):
             return
         """default next behaviour is 1s after the best or the soonest"""
         j_to_compare = min_from_criteria(generate_pt_journeys(response),
-                                         new_default_pagination_journey_comparator(clockwise=True))
+                                         new_default_pagination_journey_comparator(clockwise=clockwise))
 
         j_departure = get_valid_datetime(j_to_compare['departure_date_time'])
         eq_(j_departure + timedelta(seconds=1), dt)
 
     @staticmethod
-    def check_previous_datetime_link(dt, response):
+    def check_previous_datetime_link(dt, response, clockwise):
         if not response.get('journeys'):
             return
         """default previous behaviour is 1s before the best or the latest """
         j_to_compare = min_from_criteria(generate_pt_journeys(response),
-                                         new_default_pagination_journey_comparator(clockwise=False))
+                                         new_default_pagination_journey_comparator(clockwise=clockwise))
 
         j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
         eq_(j_departure - timedelta(seconds=1), dt)

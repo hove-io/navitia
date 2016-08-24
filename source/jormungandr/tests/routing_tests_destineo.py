@@ -70,7 +70,7 @@ class TestJourneysDestineo(AbstractTestFixture):
         i_manager.instances['main_routing_test']._scenario = self.old_scenario
 
     @staticmethod
-    def check_next_datetime_link(dt, response):
+    def check_next_datetime_link(dt, response, clockwise):
         if not response.get('journeys'):
             return
         """destineo prev/next link mechanism is different"""
@@ -81,7 +81,7 @@ class TestJourneysDestineo(AbstractTestFixture):
         eq_(j_departure + timedelta(minutes=1), dt)
 
     @staticmethod
-    def check_previous_datetime_link(dt, response):
+    def check_previous_datetime_link(dt, response, clockwise):
         if not response.get('journeys'):
             return
         """destineo prev/next link mechanism is different"""

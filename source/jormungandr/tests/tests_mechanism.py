@@ -234,6 +234,7 @@ class AbstractTestFixture:
 
     def check_journeys_links(self, response, query_dict):
         journeys_links = get_links_dict(response)
+        clockwise = query_dict.get('datetime_represents', 'departure') == "departure"
         for l in ["prev", "next", "first", "last"]:
             assert l in journeys_links
             url = journeys_links[l]['href']
@@ -242,21 +243,15 @@ class AbstractTestFixture:
             for k, v in additional_args.items():
                 if k == 'datetime':
                     if l == 'next':
-                        self.check_next_datetime_link(get_valid_datetime(v), response)
+                        self.check_next_datetime_link(get_valid_datetime(v), response, clockwise)
                     elif l == 'prev':
-                        self.check_previous_datetime_link(get_valid_datetime(v), response)
+                        self.check_previous_datetime_link(get_valid_datetime(v), response, clockwise)
                     continue
                 if k == 'datetime_represents':
-                    query_dt_rep = query_dict.get('datetime_represents', 'departure')
                     if l in ['prev', 'last']:
-                        # the datetime_represents is negated
-                        if query_dt_rep == 'departure':
-                            assert v == 'arrival'
-                        else:
-                            assert v == 'departure'
+                        assert v == 'arrival'
                     else:
-                        assert query_dt_rep == v
-
+                        assert v == 'departure'
                     continue
 
                 eq_(query_dict[k], v)
@@ -309,7 +304,7 @@ class AbstractTestFixture:
             assert 'debug' not in response
 
     @staticmethod
-    def check_next_datetime_link(dt, response):
+    def check_next_datetime_link(dt, response, clockwise):
         if not response.get('journeys'):
             return
         """default next behaviour is 1 min after the best or the soonest"""
@@ -320,7 +315,7 @@ class AbstractTestFixture:
         eq_(j_departure + timedelta(minutes=1), dt)
 
     @staticmethod
-    def check_previous_datetime_link(dt, response):
+    def check_previous_datetime_link(dt, response, clockwise):
         if not response.get('journeys'):
             return
         """default previous behaviour is 1 min before the best or the latest """
