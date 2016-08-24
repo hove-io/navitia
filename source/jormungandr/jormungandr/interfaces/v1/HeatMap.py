@@ -48,12 +48,14 @@ from jormungandr.interfaces.parsers import option_value
 from jormungandr.interfaces.v1.Journeys import dt_represents
 from jormungandr.interfaces.parsers import unsigned_integer
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, dt_represents, compute_possible_region
+from jormungandr.interfaces.v1.fields import DateTime
 
 
 heat_map = {
     "heat_matrix": JsonString(),
     'from': PbField(place, attribute='origin'),
-    "to": PbField(place, attribute="destination")
+    "to": PbField(place, attribute="destination"),
+    'requested_date_time': DateTime()
 }
 
 
@@ -69,6 +71,8 @@ class HeatMap(JourneyCommon):
 
     def __init__(self):
         super(HeatMap, self).__init__()
+        parser_get = self.parsers["get"]
+        parser_get.add_argument("resolution", type=unsigned_integer, default=500)
 
     @marshal_with(heat_maps)
     @ManageError()

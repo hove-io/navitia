@@ -49,6 +49,7 @@ from jormungandr.interfaces.parsers import float_gt_0
 from jormungandr.interfaces.v1.Journeys import dt_represents
 from jormungandr.interfaces.parsers import unsigned_integer
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, dt_represents, compute_possible_region
+from jormungandr.interfaces.v1.fields import DateTime
 
 
 graphical_isochrone = {
@@ -57,6 +58,7 @@ graphical_isochrone = {
     "min_duration": fields.Integer(),
     'from': PbField(place, attribute='origin'),
     "to": PbField(place, attribute="destination"),
+    'requested_date_time': DateTime()
 }
 
 
