@@ -56,7 +56,6 @@ class Kraken(object):
                         durations[(durations > -1) & (durations < max_duration)].flatten()))
 
     def place(self, place):
-
         req = request_pb2.Request()
         req.requested_api = type_pb2.place_uri
         req.place_uri.uri = place

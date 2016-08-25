@@ -236,19 +236,6 @@ void PathFinder::start_distance_dijkstra(const navitia::time_duration& radius) {
 
 }
 
-void PathFinder::start_target_all_dijkstra(const std::vector<vertex_t>& targets) {
-    if (! starting_edge.found)
-        return ;
-    computation_launch = true;
-    try {
-        dijkstra(starting_edge[source_e], target_all_visitor{targets});
-    } catch(const DestinationFound&){}
-
-    try {
-        dijkstra(starting_edge[target_e], target_all_visitor{targets});
-    } catch(const DestinationFound&){}
-}
-
 std::vector<std::pair<type::idx_t, type::GeographicalCoord>>
 PathFinder::crow_fly_find_nearest_stop_points(const navitia::time_duration& radius,
                                               const proximitylist::ProximityList<type::idx_t>& pl) {
@@ -268,7 +255,7 @@ struct ProjectionGetterByCache{
 
 struct ProjectionGetterOnFly{
     const GeoRef& geo_ref;
-    const nt::idx_t& offset;
+    const nt::idx_t offset;
     const georef::ProjectionData operator()(const type::GeographicalCoord& coord) const{
         return georef::ProjectionData{coord, geo_ref, offset, geo_ref.pl};
     }
@@ -281,8 +268,7 @@ template<typename K, typename U, typename G>
 boost::container::flat_map<K, navitia::time_duration>
 PathFinder::start_dijkstra_and_fill_duration_map(const navitia::time_duration& radius,
         const std::vector<U>& destinations,
-        const G& projection_getter,
-        Dijkastra_Type dijkastra_type){
+        const G& projection_getter){
     boost::container::flat_map<K, navitia::time_duration> result;
     std::vector<std::pair<K, georef::ProjectionData>> projection_found_dests;
     for (const auto& dest: destinations) {
@@ -296,22 +282,9 @@ PathFinder::start_dijkstra_and_fill_duration_map(const navitia::time_duration& r
     if (projection_found_dests.empty()) {
         return result;
     }
-    switch (dijkastra_type) {
-        case PathFinder::Dijkastra_Type::Target_All:
-        {
-            std::vector<vertex_t> targets;
-            std::transform(projection_found_dests.begin(), projection_found_dests.end(), std::back_inserter(targets),
-                           [](const std::pair<K, georef::ProjectionData>& projection) {
-                return projection.second[source_e];
-            });
-            start_target_all_dijkstra(targets);
-            break;
-        }
-        case PathFinder::Dijkastra_Type::Distance:
-        default:
-            start_distance_dijkstra(radius);
-            break;
-    }
+
+    start_distance_dijkstra(radius);
+
 #ifdef _DEBUG_DIJKSTRA_QUANTUM_
     dump_dijkstra_for_quantum(starting_edge);
 #endif
@@ -350,7 +323,6 @@ PathFinder::find_nearest_stop_points(const navitia::time_duration& radius,
 
     routing::map_stop_point_duration result;
     if (! starting_edge.found){
-
         LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("Logger"), "starting_edge not found!");
         // if no street network, return stop_points that are within
         // radius distance (with sqrt(2) security factor)
@@ -382,7 +354,7 @@ PathFinder::find_nearest_stop_points(const navitia::time_duration& radius,
     }
     ProjectionGetterByCache projection_getter{mode, geo_ref.projected_stop_points};
     return start_dijkstra_and_fill_duration_map<routing::SpIdx, routing::SpIdx, ProjectionGetterByCache>(
-            radius, dest_sp_idx, projection_getter, PathFinder::Dijkastra_Type::Distance);
+            radius, dest_sp_idx, projection_getter);
 }
 
 boost::container::flat_map<PathFinder::coord_uri, navitia::time_duration>
@@ -394,7 +366,7 @@ PathFinder::get_duration_with_dijkstra(const navitia::time_duration& radius,
     auto offset = geo_ref.offsets[mode];
     ProjectionGetterOnFly projection_getter{geo_ref, offset};
     return start_dijkstra_and_fill_duration_map<PathFinder::coord_uri, type::GeographicalCoord, ProjectionGetterOnFly>(
-            radius, dest_coords, projection_getter, PathFinder::Dijkastra_Type::Target_All);
+            radius, dest_coords, projection_getter);
 }
 
 navitia::time_duration PathFinder::get_distance(type::idx_t target_idx) {

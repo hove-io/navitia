@@ -86,7 +86,6 @@ class Worker {
 
         pbnavitia::Response dispatch(const pbnavitia::Request & request);
 
-
         void init_worker_data(const boost::shared_ptr<const navitia::type::Data> data);
 
         void metadatas(pbnavitia::Response& response);
