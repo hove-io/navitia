@@ -67,7 +67,7 @@ struct ProximityList
     };
 
     /// Contient toutes les coordonnées de manière à trouver rapidement
-    std::vector<Item> items{};
+    std::vector<Item> items;
 
     /// Rajoute un nouvel élément. Attention, il faut appeler build avant de pouvoir utiliser la structure
     void add(GeographicalCoord coord, T element){
