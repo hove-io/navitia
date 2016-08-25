@@ -1,7 +1,7 @@
 <a name="isochrones"></a>![Isochrones](/images/isochrons.png)Isochrones
 ===================================
 
->[Try it on Navitia playground (click on "MAP" buttons for "wow effect")](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fisochrones%3Ffrom%3D2.377097%3B48.846905%26datetime%3D20160505T080000%26max_duration%3D2000%26min_duration%3D1000)
+>[Try it on Navitia playground (click on "MAP" buttons for "wow effect")](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fisochrones%3Ffrom%3D2.377097%253B48.846905%26datetime%3D20160505T080000%26boundary_duration%255B%255D%3D600%26boundary_duration%255B%255D%3D900%26boundary_duration%255B%255D%3D1200%26boundary_duration%255B%255D%3D1500%26boundary_duration%255B%255D%3D1800%26boundary_duration%255B%255D%3D2100%26boundary_duration%255B%255D%3D2400%26boundary_duration%255B%255D%3D2700%26boundary_duration%255B%255D%3D3000%26)
 
 
 Whether using a specific set of coordinates or a general location, you can find places within 
