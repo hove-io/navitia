@@ -47,6 +47,43 @@ def get_pb_data_freshness(request):
     else:
         return type_pb2.BASE_SCHEDULE
 
+
+def isochrone_common(isochrone, request, instance, journey_req):
+
+    if request.get("origin"):
+        origin = journey_req.origin.add()
+        origin.place = request["origin"]
+        origin.access_duration = 0
+        journey_req.clockwise = True
+    if request.get("destination"):
+        destination = journey_req.destination.add()
+        destination.place = request["destination"]
+        destination.access_duration = 0
+        journey_req.clockwise = False
+    journey_req.datetimes.append(request["datetime"])
+    journey_req.wheelchair = request["wheelchair"] or False
+    journey_req.realtime_level = get_pb_data_freshness(request)
+    updated_common_journey_request_with_default(request, instance)
+    sn_params = journey_req.streetnetwork_params
+    sn_params.max_walking_duration_to_pt = request["max_walking_duration_to_pt"]
+    sn_params.max_bike_duration_to_pt = request["max_bike_duration_to_pt"]
+    sn_params.max_bss_duration_to_pt = request["max_bss_duration_to_pt"]
+    sn_params.max_car_duration_to_pt = request["max_car_duration_to_pt"]
+    sn_params.walking_speed = request["walking_speed"]
+    sn_params.bike_speed = request["bike_speed"]
+    sn_params.car_speed = request["car_speed"]
+    sn_params.bss_speed = request["bss_speed"]
+
+    journey_req.max_transfers = request["max_transfers"]
+    isochrone.origin_modes = request["origin_mode"]
+    isochrone.destination_modes = request["destination_mode"]
+    if "forbidden_uris[]" in request and request["forbidden_uris[]"]:
+        for forbidden_uri in request["forbidden_uris[]"]:
+            journey_req.forbidden_uris.append(forbidden_uri)
+
+    journey_req.streetnetwork_params.origin_mode = isochrone.origin_modes[0]
+    journey_req.streetnetwork_params.destination_mode = isochrone.destination_modes[0]
+
 class Scenario(object):
     """
     the most basic scenario, it's so simple it don't implements journeys!
@@ -203,42 +240,12 @@ class Scenario(object):
 
     def graphical_isochrones(self, request, instance):
         req = request_pb2.Request()
-        req.requested_api = type_pb2.graphical_isochrone
         req._current_datetime = date_to_timestamp(request["_current_datetime"])
         journey_req = req.isochrone.journeys_request
+        isochrone_common(self, request, instance, journey_req)
+        req.requested_api = type_pb2.graphical_isochrone
+        journey_req = req.isochrone.journeys_request
 
-        if "origin" in request and request["origin"]:
-            origin = journey_req.origin.add()
-            origin.place = request["origin"]
-            origin.access_duration = 0
-            journey_req.clockwise = True
-        if "destination" in request and request["destination"]:
-            destination = journey_req.destination.add()
-            destination.place = request["destination"]
-            destination.access_duration = 0
-            journey_req.clockwise = False
-        request["datetime"] = [request["datetime"]]
-        for dte in request["datetime"]:
-            journey_req.datetimes.append(dte)
-        journey_req.wheelchair = request["wheelchair"] or False
-        journey_req.realtime_level = get_pb_data_freshness(request)
-        updated_common_journey_request_with_default(request, instance)
-        sn_params = journey_req.streetnetwork_params
-        sn_params.max_walking_duration_to_pt = request["max_walking_duration_to_pt"]
-        sn_params.max_bike_duration_to_pt = request["max_bike_duration_to_pt"]
-        sn_params.max_bss_duration_to_pt = request["max_bss_duration_to_pt"]
-        sn_params.max_car_duration_to_pt = request["max_car_duration_to_pt"]
-        sn_params.walking_speed = request["walking_speed"]
-        sn_params.bike_speed = request["bike_speed"]
-        sn_params.car_speed = request["car_speed"]
-        sn_params.bss_speed = request["bss_speed"]
-
-        journey_req.max_transfers = request["max_transfers"]
-        self.origin_modes = request["origin_mode"]
-        self.destination_modes = request["destination_mode"]
-        if "forbidden_uris[]" in request and request["forbidden_uris[]"]:
-            for forbidden_uri in request["forbidden_uris[]"]:
-                journey_req.forbidden_uris.append(forbidden_uri)
         if request.get("max_duration"):
             journey_req.max_duration = request["max_duration"]
         else:
@@ -251,9 +258,16 @@ class Scenario(object):
                     req.isochrone.boundary_duration.append(duration)
         req.isochrone.boundary_duration.insert(0, journey_req.max_duration)
         req.isochrone.boundary_duration.append(request["min_duration"])
+        resp = instance.send_and_receive(req)
+        return resp
 
-        journey_req.streetnetwork_params.origin_mode = self.origin_modes[0]
-        journey_req.streetnetwork_params.destination_mode = self.destination_modes[0]
+    def heat_maps(self, request, instance):
+        req = request_pb2.Request()
+        req._current_datetime = date_to_timestamp(request["_current_datetime"])
+        journey_req = req.heat_map.journeys_request
+        isochrone_common(self, request, instance, journey_req)
+        req.requested_api = type_pb2.heat_map
+        req.heat_map.journeys_request.max_duration = request["max_duration"]
         resp = instance.send_and_receive(req)
         return resp
 

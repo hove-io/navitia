@@ -4,7 +4,8 @@ SET(BOOST_LIBS
 
 SET(ROUTING_SRC
   routing.cpp raptor_solution_reader.cpp raptor.cpp raptor_api.cpp
-  next_stop_time.cpp dataraptor.cpp journey_pattern_container.cpp get_stop_times.cpp isochrone.cpp)
+  next_stop_time.cpp dataraptor.cpp journey_pattern_container.cpp get_stop_times.cpp
+  isochrone.cpp heat_map.cpp)
 
 add_library(routing ${ROUTING_SRC})
 target_link_libraries(routing types fare georef utils autocomplete ${BOOST_LIBS})

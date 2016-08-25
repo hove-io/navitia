@@ -33,7 +33,7 @@ from flask.ext.restful import fields, reqparse, marshal_with, abort
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.fields import error,\
     PbField, NonNullList, NonNullNested,\
-    feed_publisher, Links, JsonString, place, NonNullString, \
+    feed_publisher, Links, JsonString, place, NonNullString,\
     ListLit, beta_warning
 from jormungandr.interfaces.parsers import date_time_format
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
@@ -45,39 +45,32 @@ from jormungandr.utils import date_to_timestamp
 from jormungandr.resources_utc import ResourceUtc
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.interfaces.parsers import option_value
-from jormungandr.interfaces.parsers import float_gt_0
 from jormungandr.interfaces.v1.Journeys import dt_represents
 from jormungandr.interfaces.parsers import unsigned_integer
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, dt_represents, compute_possible_region
 
 
-graphical_isochrone = {
-    "geojson": JsonString(),
-    "max_duration": fields.Integer(),
-    "min_duration": fields.Integer(),
+heat_map = {
+    "heat_matrix": JsonString(),
     'from': PbField(place, attribute='origin'),
-    "to": PbField(place, attribute="destination"),
+    "to": PbField(place, attribute="destination")
 }
 
 
-graphical_isochrones = {
-    "isochrones": NonNullList(NonNullNested(graphical_isochrone), attribute="graphical_isochrones"),
+heat_maps = {
+    "heat_maps": NonNullList(NonNullNested(heat_map)),
     "error": PbField(error, attribute='error'),
-    "feed_publishers": fields.List(NonNullNested(feed_publisher)),
     "links": fields.List(Links()),
     "warnings": ListLit([fields.Nested(beta_warning)]),
 }
 
 
-class GraphicalIsochrone(JourneyCommon):
+class HeatMap(JourneyCommon):
 
     def __init__(self):
-        super(GraphicalIsochrone, self).__init__()
-        parser_get = self.parsers["get"]
-        parser_get.add_argument("min_duration", type=unsigned_integer, default=0)
-        parser_get.add_argument("boundary_duration[]", type=unsigned_integer, action="append")
+        super(HeatMap, self).__init__()
 
-    @marshal_with(graphical_isochrones)
+    @marshal_with(heat_maps)
     @ManageError()
     def get(self, region=None, uri=None):
 
@@ -87,8 +80,8 @@ class GraphicalIsochrone(JourneyCommon):
 
         if not (args['destination'] or args['origin']):
             abort(400, message="you should provide a 'from' or a 'to' argument")
-        if not args['max_duration'] and not args["boundary_duration[]"]:
-            abort(400, message="you should provide a 'boundary_duration[]' or a 'max_duration' argument")
+        if not args['max_duration']:
+            abort(400, message="you should provide a 'max_duration' argument")
         if args['destination'] and args['origin']:
             abort(400, message="you cannot provide a 'from' and a 'to' argument")
 
@@ -97,6 +90,6 @@ class GraphicalIsochrone(JourneyCommon):
         new_datetime = self.convert_to_utc(original_datetime)
         args['datetime'] = date_to_timestamp(new_datetime)
 
-        response = i_manager.dispatch(args, "graphical_isochrones", self.region)
+        response = i_manager.dispatch(args, "heat_maps", self.region)
 
         return response

@@ -58,6 +58,12 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
 type::Polygon circle(const type::GeographicalCoord& center,
                      const double& radius);
 
+template<typename T>
+bool in_bound(const T & begin, const T & end, bool clockwise) {
+    return (clockwise && begin < end) ||
+            (!clockwise && begin > end);
+}
+
 DateTime build_bound(const bool clockwise,
                      const DateTime duration,
                      const DateTime init_dt);
@@ -93,4 +99,4 @@ std::vector<Isochrone> build_isochrones(RAPTOR& raptor,
                                         const std::vector<DateTime>& boundary_duration,
                                         const DateTime init_dt);
 
-}}
+}} //namespace navitia::routing

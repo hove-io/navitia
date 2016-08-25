@@ -415,14 +415,14 @@ class SectionGeoJson(fields.Raw):
         return response
 
 
-class MultiPolyGeoJson(fields.Raw):
+class JsonString(fields.Raw):
     def __init__(self, **kwargs):
-        super(MultiPolyGeoJson, self).__init__(**kwargs)
+        super(JsonString, self).__init__(**kwargs)
 
     def format(self, value):
 
-        geojson = str(value)
-        response = ujson.loads(geojson)
+        json = str(value)
+        response = ujson.loads(json)
 
         return response
 
