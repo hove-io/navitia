@@ -111,7 +111,7 @@ std::vector<navitia::time_duration> init_distance(const georef::GeoRef & worker,
                                                   const double speed,
                                                   const DateTime& duration);
 
-HeatMap fill_heat_map(BoundBox box,
+HeatMap fill_heat_map(const BoundBox& box,
                       const double height_step,
                       const double width_step,
                       const georef::GeoRef& worker,

@@ -62,29 +62,27 @@ static void print_lat(std::stringstream& ss,
 
 static void print_datetime(std::stringstream& ss,
                            navitia::time_duration duration) {
-    ss << R"({"duration":)";
     if (duration.is_pos_infinity()) {
         ss << R"(null)";
     } else {
         ss << duration.total_seconds();
     }
-    ss << "}";
 }
 
 static void print_body(std::stringstream& ss,
                        std::pair <SingleCoord, std::vector<navitia::time_duration>> pair) {
     ss <<"{";
     ss << print_single_coord(pair.first, "lon");
-    ss << R"(,"row":[)";
+    ss << R"(,"duration":[)";
     separated_by_coma(ss, print_datetime, pair.second);
     ss << R"(]})";
 }
 
 std::string print_grid(const HeatMap& heat_map) {
     std::stringstream ss;
-    ss << R"({"header":[)";
+    ss << R"({"line_headers":[)";
     separated_by_coma(ss, print_lat, heat_map.header);
-    ss << R"(],"body":[)";
+    ss << R"(],"lines":[)";
     separated_by_coma(ss, print_body, heat_map.body);
     ss << "]}";
     return ss.str();
@@ -110,25 +108,33 @@ struct Projection {
     Projection(): distance(boost::none){}
 };
 
-static std::vector<size_t> find_boundary(const std::pair <int, int>& rank_source,
+struct Boundary {
+    size_t max_lon;
+    size_t max_lat;
+    size_t min_lon;
+    size_t min_lat;
+    Boundary(size_t max_lon,
+             size_t max_lat,
+             size_t min_lon,
+             size_t min_lat): max_lon(max_lon), max_lat(max_lat), min_lon(min_lon), min_lat(min_lat){}
+};
+
+static int get_rank(int source, int target, int offset, size_t step) {
+    int rank = std::min(source, target) + offset;
+    rank = std::max(rank, 0);
+    return std::min<size_t>(rank, step - 1);
+}
+
+static Boundary find_boundary(const std::pair <int, int>& rank_source,
                                          const std::pair <int, int>& rank_target,
                                          const size_t offset_lon,
                                          const size_t offset_lat,
                                          const size_t step) {
-    std::vector<size_t> boundary;
-    int begin_lon_box = std::min(rank_source.first, rank_target.first) - offset_lon;
-    begin_lon_box = std::max(begin_lon_box, 0);
-    boundary.push_back(std::min<size_t>(begin_lon_box, step - 1));
-    int end_lon_box = std::max(rank_source.first, rank_target.first) + offset_lon;
-    end_lon_box = std::max(end_lon_box, 0);
-    boundary.push_back(std::min<size_t>(end_lon_box, step - 1));
-    int begin_lat_box = std::min(rank_source.second, rank_target.second) - offset_lat;
-    begin_lat_box = std::max(begin_lat_box, 0);
-    boundary.push_back(std::min<size_t>(begin_lat_box, step - 1));
-    int end_lat_box = std::max(rank_source.second, rank_target.second) + offset_lat;
-    end_lat_box = std::max(end_lat_box, 0);
-    boundary.push_back(std::min<size_t>(end_lat_box, step - 1));
-    return boundary;
+    auto end_lon_box = get_rank(rank_source.first, rank_target.first, + offset_lon, step);
+    auto end_lat_box = get_rank(rank_source.second, rank_target.second, + offset_lat, step);
+    auto begin_lon_box = get_rank(rank_source.first, rank_target.first, - offset_lon, step);
+    auto begin_lat_box = get_rank(rank_source.second, rank_target.second, - offset_lat, step);
+    return Boundary(end_lon_box, end_lat_box, begin_lon_box, begin_lat_box);
 }
 
 static std::vector<std::vector<Projection>> find_projection(BoundBox box,
@@ -159,18 +165,16 @@ static std::vector<std::vector<Projection>> find_projection(BoundBox box,
             const auto& target = worker.graph[v].coord;
             const auto rank_target = find_rank(box, target, height_step, width_step);
             const auto boundary = find_boundary(rank_source, rank_target, offset_lon, offset_lat, step);
-            for (uint lon_rank = boundary[0]; lon_rank <= boundary[1]; lon_rank++) {
-                for (uint lat_rank = boundary[2]; lat_rank <= boundary[3]; lat_rank++) {
+            for (uint lon_rank = boundary.min_lon; lon_rank <= boundary.max_lon; lon_rank++) {
+                for (uint lat_rank = boundary.min_lat; lat_rank <= boundary.max_lat; lat_rank++) {
                     auto center = type::GeographicalCoord(heat_map.body[lon_rank].first.min_coord + width_step/2,
                                                           heat_map.header[lat_rank].min_coord + height_step / 2);
-                    if(box.contains(center)) {
-                        auto proj = center.approx_project(source, target, coslat);
-                        if (!dist_pixel[lon_rank][lat_rank].distance ||
-                             (proj.second < min_dist && proj.second < *dist_pixel[lon_rank][lat_rank].distance)) {
-                            dist_pixel[lon_rank][lat_rank].distance = proj.second;
-                            dist_pixel[lon_rank][lat_rank].source = it->element;
-                            dist_pixel[lon_rank][lat_rank].target = v;
-                        }
+                    auto proj = center.approx_project(source, target, coslat);
+                    if (!dist_pixel[lon_rank][lat_rank].distance ||
+                            (proj.second < min_dist && proj.second < *dist_pixel[lon_rank][lat_rank].distance)) {
+                        dist_pixel[lon_rank][lat_rank].distance = proj.second;
+                        dist_pixel[lon_rank][lat_rank].source = it->element;
+                        dist_pixel[lon_rank][lat_rank].target = v;
                     }
                 }
             }
@@ -179,7 +183,7 @@ static std::vector<std::vector<Projection>> find_projection(BoundBox box,
     return dist_pixel;
 }
 
-HeatMap fill_heat_map(BoundBox box,
+HeatMap fill_heat_map(const BoundBox& box,
                       const double height_step,
                       const double width_step,
                       const georef::GeoRef& worker,

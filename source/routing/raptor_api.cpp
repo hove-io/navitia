@@ -1188,11 +1188,11 @@ static void print_polygon(std::stringstream& os, const type::Polygon& polygon) {
 }
 
 template<typename T>
-static void add_origin_destination(PbCreator& pb_creator,
-                                   type::EntryPoint center,
-                                   bool clockwise,
-                                   bt::ptime datetime,
-                                   T pb) {
+static void add_common_isochrone(PbCreator& pb_creator,
+                                 type::EntryPoint center,
+                                 bool clockwise,
+                                 bt::ptime datetime,
+                                 T pb) {
     if (clockwise) {
         pb_creator.fill(&center, pb->mutable_origin(), 2);
     } else {
@@ -1217,7 +1217,7 @@ static void add_graphical_isochrone(const type::MultiPolygon& shape,
     pb_isochrone->set_geojson(geojson.str());
     pb_isochrone->set_min_duration(min_duration);
     pb_isochrone->set_max_duration(max_duration);
-    add_origin_destination(pb_creator, center, clockwise, datetime, pb_isochrone);
+    add_common_isochrone(pb_creator, center, clockwise, datetime, pb_isochrone);
 }
 
 static void add_heat_map(const std::string& heat_map,
@@ -1228,7 +1228,7 @@ static void add_heat_map(const std::string& heat_map,
     auto pb_heat_map = pb_creator.add_heat_maps();
     pb_heat_map->mutable_heat_matrix();
     pb_heat_map->set_heat_matrix(heat_map);
-    add_origin_destination(pb_creator, center, clockwise, datetime, pb_heat_map);
+    add_common_isochrone(pb_creator, center, clockwise, datetime, pb_heat_map);
 }
 
 struct IsochroneCommon {

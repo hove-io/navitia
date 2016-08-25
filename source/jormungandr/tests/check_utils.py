@@ -566,22 +566,22 @@ def is_valid_duration(duration):
 
 def is_valid_body(body):
     max_type = body[0]['cell_lon']['min_lon']
-    length = len(body[0]['row'])
+    length = len(body[0]['duration'])
     for pair in body:
         is_valid_single_coord(pair['cell_lon'], is_valid_lon, 'lon')
         assert pair['cell_lon']['min_lon'] == max_type
         max_type = pair['cell_lon']['max_lon']
-        assert length == len(pair['row'])
-        for duration in pair['row']:
-            is_valid_duration(duration['duration'])
+        assert length == len(pair['duration'])
+        for duration in pair['duration']:
+            is_valid_duration(duration)
     return True
 
 
 def is_valid_matrix(matrix):
-    header = matrix['header']
+    header = matrix['line_headers']
     assert header
     is_valid_header(header)
-    body = matrix['body']
+    body = matrix['lines']
     assert body
     is_valid_body(body)
     return True
