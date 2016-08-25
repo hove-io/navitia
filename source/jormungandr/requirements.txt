@@ -34,3 +34,4 @@ future==0.15.2
 suds==0.4
 --no-binary=gevent,greenlet #the wheel is built against python 2.7.4 and debian is on 2.7.3 :(
 gevent==1.1.2
+Flask-Cache==0.13.1
