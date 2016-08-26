@@ -29,6 +29,8 @@ www.navitia.io
 */
 
 #pragma once
+#include <cstring>
+#include <stdlib.h>
 #include "type/data.h"
 #include "kraken/data_manager.h"
 #include "kraken/kraken_zmq.h"
@@ -43,6 +45,16 @@ www.navitia.io
 
 namespace po = boost::program_options;
 
+char * workspace() {
+    // WORKSPACE is defined on jenkins platform
+    char * ws = getenv("WORKSPACE");
+    if (!ws) {
+        // otherwise, use HOME
+        ws = getenv("HOME");
+    };
+    return ws;
+}
+
 
 /**
  * Pratically the same behavior as a real kraken, but with already loaded data
@@ -56,7 +68,9 @@ struct mock_kraken {
         boost::thread_group threads;
         // Prepare our context and sockets
         zmq::context_t context(1);
-        const std::string zmq_socket = "ipc:///tmp/" + name;
+        std::string zmq_socket = "ipc://";
+        zmq_socket += workspace();
+        zmq_socket += '/' + name;
         LoadBalancer lb(context);
         lb.bind(zmq_socket, "inproc://workers");
 
