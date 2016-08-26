@@ -130,7 +130,8 @@ pbnavitia::Response make_heat_map(RAPTOR &raptor,
                                   const nt::RTLevel rt_level,
                                   georef::StreetNetwork & worker,
                                   const double& speed,
-                                  navitia::type::Mode_e mode);
+                                  const navitia::type::Mode_e mode,
+                                  const uint32_t resolution);
 
 
 }}

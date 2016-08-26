@@ -39,52 +39,13 @@ www.navitia.io
 
 namespace navitia { namespace routing {
 
-struct BoundBox {
-    type::GeographicalCoord max = type::GeographicalCoord(-180, -90);
-    type::GeographicalCoord min = type::GeographicalCoord(180, 90);
-
-    void set_box(const type::GeographicalCoord& coord,
-                 const double offset) {
-        const auto lon_max = std::max(coord.lon() + offset, this->max.lon());
-        const auto lat_max = std::max(coord.lat() + offset, this->max.lat());
-        const auto lon_min = std::min(coord.lon() - offset, this->min.lon());
-        const auto lat_min = std::min(coord.lat() - offset, this->min.lat());
-        this->max = type::GeographicalCoord(lon_max, lat_max);
-        this->min = type::GeographicalCoord(lon_min, lat_min);
-    }
-};
-
 const auto source_e = georef::ProjectionData::Direction::Source;
 const auto target_e = georef::ProjectionData::Direction::Target;
-
-static navitia::time_duration set_duration(const georef::ProjectionData& projected_edge,
-                                           const type::GeographicalCoord& center,
-                                           const std::vector<navitia::time_duration>& distances,
-                                           const double speed,
-                                           const double max_duration) {
-    if (!projected_edge.found) {
-        return bt::pos_infin;
-    }
-    const auto distance_source = distances[projected_edge[source_e]];
-    const auto distance_target = distances[projected_edge[target_e]];
-    const auto coslat = cos(center.lat());
-    const auto distance_center = sqrt(projected_edge.projected.approx_sqr_distance(center, coslat));
-    const auto duration_center = navitia::milliseconds( distance_center / speed * 1e3);
-    const auto proj_source = navitia::milliseconds(projected_edge.distances[source_e] / speed * 1e3);
-    const auto proj_target = navitia::milliseconds(projected_edge.distances[target_e] / speed * 1e3);
-    navitia::time_duration duration;
-    duration = std::min(distance_source + proj_source,
-                        distance_target + proj_target + duration_center);
-    if (duration.total_seconds() > max_duration) {
-        duration = bt::pos_infin;
-    }
-    return duration;
-}
 
 static std::string print_single_coord(const SingleCoord& coord,
                                       const std::string& type) {
     std::stringstream ss;
-    ss << R"(")" << type << R"(":{)";
+    ss << R"(")" << "cell_" << type << R"(":{)";
     ss << R"("min_)" << type << R"(":)" << coord.min_coord;
     ss << R"(,"center_)" << type << R"(":)" << coord.min_coord + coord.step / 2;
     ss << R"(,"max_)" << type << R"(":)" << coord.min_coord + coord.step;
@@ -101,79 +62,175 @@ static void print_lat(std::stringstream& ss,
 
 static void print_datetime(std::stringstream& ss,
                            navitia::time_duration duration) {
-    ss << R"({"duration":)";
     if (duration.is_pos_infinity()) {
         ss << R"(null)";
     } else {
         ss << duration.total_seconds();
     }
-    ss << "}";
 }
 
 static void print_body(std::stringstream& ss,
                        std::pair <SingleCoord, std::vector<navitia::time_duration>> pair) {
     ss <<"{";
     ss << print_single_coord(pair.first, "lon");
-    ss << R"(,"row":[)";
+    ss << R"(,"duration":[)";
     separated_by_coma(ss, print_datetime, pair.second);
     ss << R"(]})";
 }
 
 std::string print_grid(const HeatMap& heat_map) {
-    std::stringstream header;
-    std::stringstream body;
-    header << R"({"header":[)";
-    separated_by_coma(header, print_lat, heat_map.header);
-    body << R"(],"body":[)";
-    separated_by_coma(body, print_body, heat_map.body);
-    body << "]}";
-    return header.str() + body.str();
+    std::stringstream ss;
+    ss << R"({"line_headers":[)";
+    separated_by_coma(ss, print_lat, heat_map.header);
+    ss << R"(],"lines":[)";
+    separated_by_coma(ss, print_body, heat_map.body);
+    ss << "]}";
+    return ss.str();
 }
 
-static HeatMap fill_heat_map(const uint step,
-                             const BoundBox& box,
-                             const double height_step,
-                             const double width_step,
-                             const georef::GeoRef& worker,
-                             const double min_dist,
-                             const double max_duration,
-                             const double speed,
-                             const std::vector<navitia::time_duration>& distances,
-                             const nt::idx_t offset) {
-    std::vector<SingleCoord> header;
-    std::vector<std::pair <SingleCoord, std::vector<navitia::time_duration>>> body;
-    for (uint i = 0; i < step; i++) {
-        std::vector<navitia::time_duration> local_duration;
-        auto lon = SingleCoord(box.min.lon() + i * width_step, width_step);
-        for (uint j = 0; j < step; j++) {
-            if (i == 0) {
-                header.push_back(SingleCoord((box.min.lat() + j * height_step), height_step));
+static std::pair <int, int> find_rank(const BoundBox& box,
+                                       const type::GeographicalCoord& coord,
+                                       const double height_step,
+                                       const double width_step) {
+    const auto lon_rank = floor((coord.lon() - box.min.lon()) / width_step);
+    const auto lat_rank = floor((coord.lat() - box.min.lat()) / height_step);
+    return std::make_pair(lon_rank, lat_rank);
+}
+
+struct Projection {
+    boost::optional<double> distance;
+    georef::vertex_t source;
+    georef::vertex_t target;
+    Projection(double distance,
+               georef::vertex_t source,
+               georef::vertex_t target): distance(distance), source(source), target(target){}
+
+    Projection(): distance(boost::none){}
+};
+
+struct Boundary {
+    size_t max_lon;
+    size_t max_lat;
+    size_t min_lon;
+    size_t min_lat;
+    Boundary(size_t max_lon,
+             size_t max_lat,
+             size_t min_lon,
+             size_t min_lat): max_lon(max_lon), max_lat(max_lat), min_lon(min_lon), min_lat(min_lat){}
+};
+
+static int get_rank(int source, int target, int offset, size_t step) {
+    int rank = std::min(source, target) + offset;
+    rank = std::max(rank, 0);
+    return std::min<size_t>(rank, step - 1);
+}
+
+static Boundary find_boundary(const std::pair <int, int>& rank_source,
+                                         const std::pair <int, int>& rank_target,
+                                         const size_t offset_lon,
+                                         const size_t offset_lat,
+                                         const size_t step) {
+    auto end_lon_box = get_rank(rank_source.first, rank_target.first, + offset_lon, step);
+    auto end_lat_box = get_rank(rank_source.second, rank_target.second, + offset_lat, step);
+    auto begin_lon_box = get_rank(rank_source.first, rank_target.first, - offset_lon, step);
+    auto begin_lat_box = get_rank(rank_source.second, rank_target.second, - offset_lat, step);
+    return Boundary(end_lon_box, end_lat_box, begin_lon_box, begin_lat_box);
+}
+
+static std::vector<std::vector<Projection>> find_projection(BoundBox box,
+                                                      const double height_step,
+                                                       const double width_step,
+                                                       const georef::GeoRef& worker,
+                                                       const double min_dist,
+                                                       const HeatMap& heat_map,
+                                                       const size_t step) {
+    std::vector<std::vector<Projection>> dist_pixel = {step,{step, Projection()}};
+    const size_t offset_lon = floor(min_dist / (width_step * N_DEG_TO_DISTANCE)) + 1;
+    const size_t offset_lat = floor(min_dist / (height_step * N_DEG_TO_DISTANCE)) + 1;
+    auto begin = std::lower_bound(worker.pl.items.begin(), worker.pl.items.end(), box.min.lon(),
+                                  [](const proximitylist::ProximityList<georef::vertex_t>::Item & i, double min){
+        return i.coord.lon() <= min;
+    });
+    auto end = std::upper_bound(begin, worker.pl.items.end(), box.max.lon(),
+                                [](double max, const proximitylist::ProximityList<georef::vertex_t>::Item & i){
+        return max <= i.coord.lon();
+    });
+    const auto coslat = cos(begin->coord.lat() * type::GeographicalCoord::N_DEG_TO_RAD);
+    for(auto it = begin; it != end; ++it) {
+        const auto& source = it->coord;
+        if (!box.contains(source)) {continue;}
+        const auto rank_source = find_rank(box, source, height_step, width_step);
+        BOOST_FOREACH (georef::edge_t e, boost::out_edges(it->element, worker.graph)) {
+            const auto v = target(e, worker.graph);
+            const auto& target = worker.graph[v].coord;
+            const auto rank_target = find_rank(box, target, height_step, width_step);
+            const auto boundary = find_boundary(rank_source, rank_target, offset_lon, offset_lat, step);
+            for (uint lon_rank = boundary.min_lon; lon_rank <= boundary.max_lon; lon_rank++) {
+                for (uint lat_rank = boundary.min_lat; lat_rank <= boundary.max_lat; lat_rank++) {
+                    auto center = type::GeographicalCoord(heat_map.body[lon_rank].first.min_coord + width_step/2,
+                                                          heat_map.header[lat_rank].min_coord + height_step / 2);
+                    auto proj = center.approx_project(source, target, coslat);
+                    if (!dist_pixel[lon_rank][lat_rank].distance ||
+                            (proj.second < min_dist && proj.second < *dist_pixel[lon_rank][lat_rank].distance)) {
+                        dist_pixel[lon_rank][lat_rank].distance = proj.second;
+                        dist_pixel[lon_rank][lat_rank].source = it->element;
+                        dist_pixel[lon_rank][lat_rank].target = v;
+                    }
+                }
             }
-            auto start_coord = type::GeographicalCoord(lon.min_coord + width_step / 2, header[j].min_coord + height_step / 2);
-            auto projected_edge = georef::ProjectionData(start_coord, worker, offset, worker.pl, min_dist);
-            auto dur = set_duration(projected_edge, start_coord, distances, speed, max_duration);
-            local_duration.push_back(dur);
         }
-        auto local_body = std::make_pair(lon, local_duration);
-        body.push_back(std::move(local_body));
     }
-    return HeatMap(header, body);
+    return dist_pixel;
+}
+
+HeatMap fill_heat_map(const BoundBox& box,
+                      const double height_step,
+                      const double width_step,
+                      const georef::GeoRef& worker,
+                      const double min_dist,
+                      const double max_duration,
+                      const double speed,
+                      const std::vector<navitia::time_duration>& distances,
+                      const size_t step) {
+    auto heat_map = HeatMap(step, box, height_step, width_step);
+    auto projection = find_projection(box, height_step, width_step, worker, min_dist, heat_map, step);
+    for (size_t i = 0; i < step; i++){
+        for (size_t j = 0; j < step; j++){
+            auto& duration = heat_map.body[i].second[j];
+            if (projection[i][j].distance) {
+                auto center = type::GeographicalCoord(heat_map.body[i].first.min_coord + width_step/2,
+                                                      heat_map.header[j].min_coord + height_step / 2);
+                const auto source = worker.graph[projection[i][j].source].coord;
+                const auto target = worker.graph[projection[i][j].target].coord;
+                const auto coslat = center.lat() * type::GeographicalCoord::N_DEG_TO_RAD;
+                const auto duration_to_source = distances[projection[i][j].source] +
+                        navitia::milliseconds(sqrt(center.approx_sqr_distance(source, coslat)) / speed * 1e3);
+                const auto duration_to_target = distances[projection[i][j].target] +
+                        navitia::milliseconds(sqrt(center.approx_sqr_distance(target, coslat)) / speed * 1e3);
+                const auto new_duration = std::min(duration_to_source, duration_to_target);
+                if (new_duration.total_seconds() < max_duration) {
+                    duration = new_duration;
+                }
+            } else {
+                duration = bt::pos_infin;
+            }
+        }
+    }
+    return heat_map;
 }
 
 static std::string build_grid(const georef::GeoRef& worker,
-                              BoundBox& box,
-                              const nt::Mode_e& mode,
+                              const BoundBox& box,
                               const std::vector<navitia::time_duration>& distances,
                               const double speed,
-                              const double max_duration) {
-    const auto step = 150;
-    nt::idx_t offset = worker.offsets[mode];
-    double width_step = (box.max.lon() - box.min.lon()) / step;
-    double height_step = (box.max.lat() - box.min.lat()) / step;
+                              const double max_duration,
+                              const uint resolution) {
+    double width_step = (box.max.lon() - box.min.lon()) / resolution;
+    double height_step = (box.max.lat() - box.min.lat()) / resolution;
     auto min_dist = std::max(500., width_step * N_DEG_TO_DISTANCE);
     min_dist = std::max(min_dist, height_step * N_DEG_TO_DISTANCE);
-    auto heat_map = fill_heat_map(step, box, height_step, width_step, worker, min_dist, max_duration,
-                                  speed, distances, offset);
+    auto heat_map = fill_heat_map(box, height_step, width_step, worker, min_dist, max_duration,
+                                  speed, distances, resolution);
     return print_grid(heat_map);
 }
 
@@ -183,16 +240,16 @@ static double walking_distance(const DateTime& max_duration,
     return (max_duration - duration) * speed / type::GeographicalCoord::EARTH_RADIUS_IN_METERS * N_RAD_TO_DEG;
 }
 
-static std::vector<navitia::time_duration> init_distance(const georef::GeoRef & worker,
-                                                         const std::vector<type::StopPoint*>& stop_points,
-                                                         const DateTime& init_dt,
-                                                         const RAPTOR& raptor,
-                                                         const type::Mode_e& mode,
-                                                         const type::GeographicalCoord& coord_origin,
-                                                         const bool clockwise,
-                                                         const DateTime& bound,
-                                                         const double speed,
-                                                         const DateTime& duration) {
+std::vector<navitia::time_duration> init_distance(const georef::GeoRef & worker,
+                                                  const std::vector<type::StopPoint*>& stop_points,
+                                                  const DateTime& init_dt,
+                                                  const RAPTOR& raptor,
+                                                  const type::Mode_e& mode,
+                                                  const type::GeographicalCoord& coord_origin,
+                                                  const bool clockwise,
+                                                  const DateTime& bound,
+                                                  const double speed,
+                                                  const DateTime& duration) {
     std::vector<navitia::time_duration> distances;
     size_t n = boost::num_vertices(worker.graph);
     distances.assign(n, bt::pos_infin);
@@ -288,7 +345,8 @@ std::string build_raster_isochrone(const georef::GeoRef& worker,
                                    const type::GeographicalCoord& coord_origin,
                                    const DateTime duration,
                                    const bool clockwise,
-                                   const DateTime bound) {
+                                   const DateTime bound,
+                                   const uint resolution) {
     const auto& stop_points = raptor.data.pt_data->stop_points;
     std::vector<georef::vertex_t> predecessors;
     size_t n = boost::num_vertices(worker.graph);
@@ -319,7 +377,7 @@ std::string build_raster_isochrone(const georef::GeoRef& worker,
                                                visitor);
     } catch (georef::DestinationFound){};
 #endif
-    return build_grid(worker, box, mode, distances, speed, duration);
+    return build_grid(worker, box, distances, speed, duration, resolution);
 }
 
 }} //namespace navitia::routing

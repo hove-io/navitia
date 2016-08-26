@@ -34,7 +34,7 @@ from jormungandr import i_manager
 from jormungandr.interfaces.v1.fields import error,\
     PbField, NonNullList, NonNullNested,\
     feed_publisher, Links, JsonString, place, NonNullString,\
-    ListLit, beta_warning
+    ListLit, beta_endpoint
 from jormungandr.interfaces.parsers import date_time_format
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.timezone import set_request_timezone
@@ -48,12 +48,14 @@ from jormungandr.interfaces.parsers import option_value
 from jormungandr.interfaces.v1.Journeys import dt_represents
 from jormungandr.interfaces.parsers import unsigned_integer
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, dt_represents, compute_possible_region
+from jormungandr.interfaces.v1.fields import DateTime
 
 
 heat_map = {
     "heat_matrix": JsonString(),
     'from': PbField(place, attribute='origin'),
-    "to": PbField(place, attribute="destination")
+    "to": PbField(place, attribute="destination"),
+    'requested_date_time': DateTime()
 }
 
 
@@ -61,7 +63,7 @@ heat_maps = {
     "heat_maps": NonNullList(NonNullNested(heat_map)),
     "error": PbField(error, attribute='error'),
     "links": fields.List(Links()),
-    "warnings": ListLit([fields.Nested(beta_warning)]),
+    "warnings": ListLit([fields.Nested(beta_endpoint)]),
 }
 
 
@@ -69,6 +71,8 @@ class HeatMap(JourneyCommon):
 
     def __init__(self):
         super(HeatMap, self).__init__()
+        parser_get = self.parsers["get"]
+        parser_get.add_argument("resolution", type=unsigned_integer, default=500)
 
     @marshal_with(heat_maps)
     @ManageError()

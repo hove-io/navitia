@@ -48,9 +48,11 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         response = self.query(query)
         origin = Point(0.0000898312, 0.0000898312)
         max_duration = response['isochrones'][0]['max_duration']
+        requested_datetime = response['isochrones'][0]['requested_date_time']
         d = response['isochrones'][0]['geojson']
         multi_poly = asShape(d)
 
+        assert requested_datetime == '20120614T080000'
         assert max_duration == 3600
         assert multi_poly.contains(origin)
         is_valid_graphical_isochrone(response, self.tester, query)

@@ -34,7 +34,7 @@ from jormungandr import i_manager
 from jormungandr.interfaces.v1.fields import error,\
     PbField, NonNullList, NonNullNested,\
     feed_publisher, Links, JsonString, place, NonNullString, \
-    ListLit, beta_warning
+    ListLit, beta_endpoint
 from jormungandr.interfaces.parsers import date_time_format
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.timezone import set_request_timezone
@@ -49,6 +49,7 @@ from jormungandr.interfaces.parsers import float_gt_0
 from jormungandr.interfaces.v1.Journeys import dt_represents
 from jormungandr.interfaces.parsers import unsigned_integer
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, dt_represents, compute_possible_region
+from jormungandr.interfaces.v1.fields import DateTime
 
 
 graphical_isochrone = {
@@ -57,6 +58,7 @@ graphical_isochrone = {
     "min_duration": fields.Integer(),
     'from': PbField(place, attribute='origin'),
     "to": PbField(place, attribute="destination"),
+    'requested_date_time': DateTime()
 }
 
 
@@ -65,7 +67,7 @@ graphical_isochrones = {
     "error": PbField(error, attribute='error'),
     "feed_publishers": fields.List(NonNullNested(feed_publisher)),
     "links": fields.List(Links()),
-    "warnings": ListLit([fields.Nested(beta_warning)]),
+    "warnings": ListLit([fields.Nested(beta_endpoint)]),
 }
 
 
