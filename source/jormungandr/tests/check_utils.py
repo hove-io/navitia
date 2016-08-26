@@ -525,6 +525,7 @@ def is_valid_multipolygon_geojson(geojson):
 def is_valid_graphical_isochrone(isochrone, tester, query):
 
     for g in get_not_null(isochrone, 'isochrones'):
+        get_valid_datetime(g['requested_date_time'])
         geojson = g['geojson']
         assert geojson
         is_valid_multipolygon_geojson(geojson)
@@ -590,6 +591,7 @@ def is_valid_matrix(matrix):
 def is_valid_heat_maps(heat_map, tester, query):
 
     for g in get_not_null(heat_map, 'heat_maps'):
+        get_valid_datetime(g['requested_date_time'])
         matrix = g['heat_matrix']
         assert matrix
         is_valid_matrix(matrix)

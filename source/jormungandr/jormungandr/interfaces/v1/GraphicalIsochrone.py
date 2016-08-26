@@ -34,7 +34,7 @@ from jormungandr import i_manager
 from jormungandr.interfaces.v1.fields import error,\
     PbField, NonNullList, NonNullNested,\
     feed_publisher, Links, JsonString, place, NonNullString, \
-    ListLit, beta_warning
+    ListLit, beta_endpoint
 from jormungandr.interfaces.parsers import date_time_format
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.timezone import set_request_timezone
@@ -67,7 +67,7 @@ graphical_isochrones = {
     "error": PbField(error, attribute='error'),
     "feed_publishers": fields.List(NonNullNested(feed_publisher)),
     "links": fields.List(Links()),
-    "warnings": ListLit([fields.Nested(beta_warning)]),
+    "warnings": ListLit([fields.Nested(beta_endpoint)]),
 }
 
 

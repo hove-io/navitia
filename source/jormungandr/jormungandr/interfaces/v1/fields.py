@@ -745,11 +745,6 @@ error = {
     'message': fields.String()
 }
 
-beta_warning = {
-    'id': Lit("beta_api"),
-    'message': Lit("This service is under construction. You can help through github.com/CanalTP/navitia"),
-}
-
 beta_endpoint = {
     'id': Lit("beta_endpoint"),
     'message': Lit("This service is under construction. You can help through github.com/CanalTP/navitia"),
