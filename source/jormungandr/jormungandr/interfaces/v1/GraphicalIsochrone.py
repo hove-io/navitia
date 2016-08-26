@@ -58,7 +58,9 @@ graphical_isochrone = {
     "min_duration": fields.Integer(),
     'from': PbField(place, attribute='origin'),
     "to": PbField(place, attribute="destination"),
-    'requested_date_time': DateTime()
+    'requested_date_time': DateTime(),
+    'min_date_time': DateTime(),
+    'max_date_time': DateTime()
 }
 
 
