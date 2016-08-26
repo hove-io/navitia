@@ -34,7 +34,7 @@ from jormungandr import i_manager
 from jormungandr.interfaces.v1.fields import error,\
     PbField, NonNullList, NonNullNested,\
     feed_publisher, Links, JsonString, place, NonNullString,\
-    ListLit, beta_warning
+    ListLit, beta_endpoint
 from jormungandr.interfaces.parsers import date_time_format
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.timezone import set_request_timezone
@@ -63,7 +63,7 @@ heat_maps = {
     "heat_maps": NonNullList(NonNullNested(heat_map)),
     "error": PbField(error, attribute='error'),
     "links": fields.List(Links()),
-    "warnings": ListLit([fields.Nested(beta_warning)]),
+    "warnings": ListLit([fields.Nested(beta_endpoint)]),
 }
 
 
