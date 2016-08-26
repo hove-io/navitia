@@ -526,6 +526,8 @@ def is_valid_graphical_isochrone(isochrone, tester, query):
 
     for g in get_not_null(isochrone, 'isochrones'):
         get_valid_datetime(g['requested_date_time'])
+        get_valid_datetime(g['min_date_time'])
+        get_valid_datetime(g['max_date_time'])
         geojson = g['geojson']
         assert geojson
         is_valid_multipolygon_geojson(geojson)

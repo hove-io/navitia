@@ -1207,7 +1207,10 @@ static void add_graphical_isochrone(const type::MultiPolygon& shape,
                                     PbCreator& pb_creator,
                                     type::EntryPoint center,
                                     bool clockwise,
-                                    bt::ptime datetime) {
+                                    bt::ptime datetime,
+                                    const type::Data &d,
+                                    DateTime min_date_time,
+                                    DateTime max_date_time) {
     std::stringstream geojson;
     geojson << R"({"type":"MultiPolygon","coordinates":[)";
     separated_by_coma(geojson, print_polygon, shape);
@@ -1217,6 +1220,8 @@ static void add_graphical_isochrone(const type::MultiPolygon& shape,
     pb_isochrone->set_geojson(geojson.str());
     pb_isochrone->set_min_duration(min_duration);
     pb_isochrone->set_max_duration(max_duration);
+    pb_isochrone->set_min_date_time(navitia::to_posix_timestamp(min_date_time, d));
+    pb_isochrone->set_max_date_time(navitia::to_posix_timestamp(max_date_time, d));
     add_common_isochrone(pb_creator, center, clockwise, datetime, pb_isochrone);
 }
 
@@ -1286,6 +1291,12 @@ static boost::optional<pbnavitia::Response> fill_isochrone_common(IsochroneCommo
     return boost::none;
 }
 
+DateTime make_isochrone_date (const DateTime& init_dt,
+                             const DateTime& offset,
+                             const bool clockwise) {
+        return init_dt + (clockwise ? 1: -1) * offset;
+}
+
 pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
                                             const boost::posix_time::ptime& current_datetime,
                                             type::EntryPoint center,
@@ -1312,8 +1323,10 @@ pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
                                                         isochrone_common.departures,
                                                         speed, boundary_duration, isochrone_common.init_dt);
     for (const auto& iso: isochrone) {
+        auto min_date_time = make_isochrone_date(isochrone_common.init_dt, iso.min_duration, clockwise);
+        auto max_date_time = make_isochrone_date(isochrone_common.init_dt, iso.max_duration, clockwise);
         add_graphical_isochrone(iso.shape, iso.min_duration, iso.max_duration, pb_creator, center,
-                                clockwise, isochrone_common.datetime);
+                                clockwise, isochrone_common.datetime, raptor.data, min_date_time, max_date_time);
     }
 
     return pb_creator.get_response();
