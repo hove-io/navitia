@@ -1291,7 +1291,7 @@ static boost::optional<pbnavitia::Response> fill_isochrone_common(IsochroneCommo
     return boost::none;
 }
 
-DateTime set_isochrone_date (const DateTime& init_dt,
+DateTime make_isochrone_date (const DateTime& init_dt,
                              const DateTime& offset,
                              const bool clockwise) {
         return init_dt + (clockwise ? 1: -1) * offset;
@@ -1323,8 +1323,8 @@ pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
                                                         isochrone_common.departures,
                                                         speed, boundary_duration, isochrone_common.init_dt);
     for (const auto& iso: isochrone) {
-        auto min_date_time = set_isochrone_date(isochrone_common.init_dt, iso.min_duration, clockwise);
-        auto max_date_time = set_isochrone_date(isochrone_common.init_dt, iso.max_duration, clockwise);
+        auto min_date_time = make_isochrone_date(isochrone_common.init_dt, iso.min_duration, clockwise);
+        auto max_date_time = make_isochrone_date(isochrone_common.init_dt, iso.max_duration, clockwise);
         add_graphical_isochrone(iso.shape, iso.min_duration, iso.max_duration, pb_creator, center,
                                 clockwise, isochrone_common.datetime, raptor.data, min_date_time, max_date_time);
     }
