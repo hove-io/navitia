@@ -63,28 +63,6 @@ class Kraken(object):
         response = self.instance.send_and_receive(req)
         return response.places[0]
 
-    def direct_path(self, mode, origin, destination, datetime, clockwise):
-        logger = logging.getLogger(__name__)
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.direct_path
-        req.direct_path.origin.place = origin
-        req.direct_path.origin.access_duration = 0
-        req.direct_path.destination.place = destination
-        req.direct_path.destination.access_duration = 0
-        req.direct_path.datetime = datetime
-        req.direct_path.clockwise = clockwise
-        req.direct_path.streetnetwork_params.origin_mode = mode
-        req.direct_path.streetnetwork_params.destination_mode = mode
-        req.direct_path.streetnetwork_params.walking_speed = self.instance.walking_speed
-        req.direct_path.streetnetwork_params.max_walking_duration_to_pt = self.instance.max_walking_duration_to_pt
-        req.direct_path.streetnetwork_params.bike_speed = self.instance.bike_speed
-        req.direct_path.streetnetwork_params.max_bike_duration_to_pt = self.instance.max_bike_duration_to_pt
-        req.direct_path.streetnetwork_params.bss_speed = self.instance.bss_speed
-        req.direct_path.streetnetwork_params.max_bss_duration_to_pt = self.instance.max_bss_duration_to_pt
-        req.direct_path.streetnetwork_params.car_speed = self.instance.car_speed
-        req.direct_path.streetnetwork_params.max_car_duration_to_pt = self.instance.max_car_duration_to_pt
-        return self.instance.send_and_receive(req)
-
     def get_car_co2_emission_on_crow_fly(self, origin, destination):
         logger = logging.getLogger(__name__)
         req = request_pb2.Request()
