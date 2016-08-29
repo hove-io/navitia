@@ -525,6 +525,9 @@ def is_valid_multipolygon_geojson(geojson):
 def is_valid_graphical_isochrone(isochrone, tester, query):
 
     for g in get_not_null(isochrone, 'isochrones'):
+        get_valid_datetime(g['requested_date_time'])
+        get_valid_datetime(g['min_date_time'])
+        get_valid_datetime(g['max_date_time'])
         geojson = g['geojson']
         assert geojson
         is_valid_multipolygon_geojson(geojson)
@@ -550,11 +553,11 @@ def is_valid_single_coord(coord, is_valid_type, name):
 
 
 def is_valid_header(header):
-    max_type = header[0]['lat']['min_lat']
+    max_type = header[0]['cell_lat']['min_lat']
     for lat in header:
-        is_valid_single_coord(lat['lat'], is_valid_lat, 'lat')
-        assert lat['lat']['min_lat'] == max_type
-        max_type = lat['lat']['max_lat']
+        is_valid_single_coord(lat['cell_lat'], is_valid_lat, 'lat')
+        assert lat['cell_lat']['min_lat'] == max_type
+        max_type = lat['cell_lat']['max_lat']
     return True
 
 
@@ -565,23 +568,23 @@ def is_valid_duration(duration):
 
 
 def is_valid_body(body):
-    max_type = body[0]['lon']['min_lon']
-    length = len(body[0]['lon'])
+    max_type = body[0]['cell_lon']['min_lon']
+    length = len(body[0]['duration'])
     for pair in body:
-        is_valid_single_coord(pair['lon'], is_valid_lon, 'lon')
-        assert pair['lon']['min_lon'] == max_type
-        max_type = pair['lon']['max_lon']
-        assert length == len(pair['lon'])
-        for duration in pair['row']:
-            is_valid_duration(duration['duration'])
+        is_valid_single_coord(pair['cell_lon'], is_valid_lon, 'lon')
+        assert pair['cell_lon']['min_lon'] == max_type
+        max_type = pair['cell_lon']['max_lon']
+        assert length == len(pair['duration'])
+        for duration in pair['duration']:
+            is_valid_duration(duration)
     return True
 
 
 def is_valid_matrix(matrix):
-    header = matrix['header']
+    header = matrix['line_headers']
     assert header
     is_valid_header(header)
-    body = matrix['body']
+    body = matrix['lines']
     assert body
     is_valid_body(body)
     return True
@@ -590,6 +593,7 @@ def is_valid_matrix(matrix):
 def is_valid_heat_maps(heat_map, tester, query):
 
     for g in get_not_null(heat_map, 'heat_maps'):
+        get_valid_datetime(g['requested_date_time'])
         matrix = g['heat_matrix']
         assert matrix
         is_valid_matrix(matrix)

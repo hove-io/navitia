@@ -267,6 +267,8 @@ class Scenario(object):
         journey_req = req.heat_map.journeys_request
         isochrone_common(self, request, instance, journey_req)
         req.requested_api = type_pb2.heat_map
+        max_resolution = 1000
+        req.heat_map.resolution = min(request["resolution"], max_resolution)
         req.heat_map.journeys_request.max_duration = request["max_duration"]
         resp = instance.send_and_receive(req)
         return resp

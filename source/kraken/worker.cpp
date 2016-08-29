@@ -819,7 +819,8 @@ pbnavitia::Response Worker::heat_map(const pbnavitia::HeatMapRequest& request,
                                            arg.accessibilite_params, arg.forbidden,
                                            request_journey.clockwise(), arg.rt_level,
                                            *street_network_worker,
-                                           request_journey.streetnetwork_params().walking_speed(), mode);
+                                           request_journey.streetnetwork_params().walking_speed(), mode,
+                                           request.resolution());
 }
 
 pbnavitia::Response Worker::car_co2_emission_on_crow_fly(const pbnavitia::CarCO2EmissionRequest& request) {

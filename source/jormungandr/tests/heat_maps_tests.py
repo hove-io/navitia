@@ -45,8 +45,10 @@ class TestHeatMap(AbstractTestFixture):
     def test_from_heat_map_coord(self):
         query = "v1/coverage/main_routing_test/" + heat_map_basic_query
         response = self.query(query)
+        requested_datetime = response['heat_maps'][0]['requested_date_time']
 
         is_valid_heat_maps(response, self.tester, query)
+        assert requested_datetime == '20120614T080000'
 
     def test_to_heat_map_coord(self):
         query = "v1/coverage/main_routing_test/heat_maps?to={}&datetime={}&max_duration={}"

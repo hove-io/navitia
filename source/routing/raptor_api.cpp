@@ -1188,15 +1188,17 @@ static void print_polygon(std::stringstream& os, const type::Polygon& polygon) {
 }
 
 template<typename T>
-static void add_origin_destination(PbCreator& pb_creator,
-                                   type::EntryPoint center,
-                                   bool clockwise,
-                                   T pb) {
+static void add_common_isochrone(PbCreator& pb_creator,
+                                 type::EntryPoint center,
+                                 bool clockwise,
+                                 bt::ptime datetime,
+                                 T pb) {
     if (clockwise) {
         pb_creator.fill(&center, pb->mutable_origin(), 2);
     } else {
         pb_creator.fill(&center, pb->mutable_destination(), 2);
     }
+    pb->set_requested_date_time(navitia::to_posix_timestamp(datetime));
 }
 
 static void add_graphical_isochrone(const type::MultiPolygon& shape,
@@ -1204,7 +1206,11 @@ static void add_graphical_isochrone(const type::MultiPolygon& shape,
                                     const int& max_duration,
                                     PbCreator& pb_creator,
                                     type::EntryPoint center,
-                                    bool clockwise) {
+                                    bool clockwise,
+                                    bt::ptime datetime,
+                                    const type::Data &d,
+                                    DateTime min_date_time,
+                                    DateTime max_date_time) {
     std::stringstream geojson;
     geojson << R"({"type":"MultiPolygon","coordinates":[)";
     separated_by_coma(geojson, print_polygon, shape);
@@ -1214,17 +1220,20 @@ static void add_graphical_isochrone(const type::MultiPolygon& shape,
     pb_isochrone->set_geojson(geojson.str());
     pb_isochrone->set_min_duration(min_duration);
     pb_isochrone->set_max_duration(max_duration);
-    add_origin_destination(pb_creator, center, clockwise, pb_isochrone);
+    pb_isochrone->set_min_date_time(navitia::to_posix_timestamp(min_date_time, d));
+    pb_isochrone->set_max_date_time(navitia::to_posix_timestamp(max_date_time, d));
+    add_common_isochrone(pb_creator, center, clockwise, datetime, pb_isochrone);
 }
 
 static void add_heat_map(const std::string& heat_map,
                          PbCreator& pb_creator,
                          type::EntryPoint center,
-                         bool clockwise) {
+                         bool clockwise,
+                         bt::ptime datetime) {
     auto pb_heat_map = pb_creator.add_heat_maps();
     pb_heat_map->mutable_heat_matrix();
     pb_heat_map->set_heat_matrix(heat_map);
-    add_origin_destination(pb_creator, center, clockwise, pb_heat_map);
+    add_common_isochrone(pb_creator, center, clockwise, datetime, pb_heat_map);
 }
 
 struct IsochroneCommon {
@@ -1235,12 +1244,13 @@ struct IsochroneCommon {
     DateTime init_dt;
     type::EntryPoint center;
     DateTime bound;
+    bt::ptime datetime;
     IsochroneCommon(){}
     IsochroneCommon(const bool clockwise, const type::GeographicalCoord& coord_origin,
                     const map_stop_point_duration& departures, const double speed, const DateTime init_dt,
-                    const type::EntryPoint& center, const DateTime bound):clockwise(clockwise),
+                    const type::EntryPoint& center, const DateTime bound, bt::ptime datetime):clockwise(clockwise),
         coord_origin(coord_origin), departures(departures), speed(speed), init_dt(init_dt),
-        center(center), bound(bound){}
+        center(center), bound(bound), datetime(datetime){}
 };
 
 static boost::optional<pbnavitia::Response> fill_isochrone_common(IsochroneCommon& isochrone_common,
@@ -1277,8 +1287,14 @@ static boost::optional<pbnavitia::Response> fill_isochrone_common(IsochroneCommo
     raptor.isochrone(departures, init_dt, bound, max_transfers,
                      accessibilite_params, forbidden, clockwise, rt_level);
     type::GeographicalCoord coord_origin = center.coordinates;
-    isochrone_common = IsochroneCommon(clockwise, coord_origin, departures, speed, init_dt, center, bound);
+    isochrone_common = IsochroneCommon(clockwise, coord_origin, departures, speed, init_dt, center, bound, datetime);
     return boost::none;
+}
+
+DateTime make_isochrone_date (const DateTime& init_dt,
+                             const DateTime& offset,
+                             const bool clockwise) {
+        return init_dt + (clockwise ? 1: -1) * offset;
 }
 
 pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
@@ -1307,7 +1323,10 @@ pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
                                                         isochrone_common.departures,
                                                         speed, boundary_duration, isochrone_common.init_dt);
     for (const auto& iso: isochrone) {
-        add_graphical_isochrone(iso.shape, iso.min_duration, iso.max_duration, pb_creator, center, clockwise);
+        auto min_date_time = make_isochrone_date(isochrone_common.init_dt, iso.min_duration, clockwise);
+        auto max_date_time = make_isochrone_date(isochrone_common.init_dt, iso.max_duration, clockwise);
+        add_graphical_isochrone(iso.shape, iso.min_duration, iso.max_duration, pb_creator, center,
+                                clockwise, isochrone_common.datetime, raptor.data, min_date_time, max_date_time);
     }
 
     return pb_creator.get_response();
@@ -1325,7 +1344,8 @@ pbnavitia::Response make_heat_map(RAPTOR &raptor,
                                   const nt::RTLevel rt_level,
                                   georef::StreetNetwork & worker,
                                   const double& speed,
-                                  navitia::type::Mode_e mode) {
+                                  const navitia::type::Mode_e mode,
+                                  const uint32_t resolution) {
 
     PbCreator pb_creator(raptor.data, current_datetime, null_time_period);
     IsochroneCommon isochrone_common;
@@ -1336,8 +1356,9 @@ pbnavitia::Response make_heat_map(RAPTOR &raptor,
         return *resp;
     }
     auto heat_map = build_raster_isochrone(worker.geo_ref, speed, mode, isochrone_common.init_dt, raptor,
-                                            isochrone_common.coord_origin, max_duration, clockwise, isochrone_common.bound);
-    add_heat_map(heat_map, pb_creator, center, clockwise);
+                                           isochrone_common.coord_origin, max_duration, clockwise,
+                                           isochrone_common.bound, resolution);
+    add_heat_map(heat_map, pb_creator, center, clockwise, isochrone_common.datetime);
 
     return pb_creator.get_response();
 }
