@@ -60,8 +60,8 @@ FIND_PATH(PQXX_INCLUDE_DIR pqxx/pqxx)
 FIND_LIBRARY(PQXX_LIB pqxx)
 
 #add current compilation dir to include path to handle config.h
-include_directories("${CMAKE_CURRENT_BINARY_DIR}"
-                     "${CMAKE_SOURCE_DIR}"
+include_directories(SYSTEM "${CMAKE_CURRENT_BINARY_DIR}")
+include_directories("${CMAKE_SOURCE_DIR}"
                      "${CMAKE_SOURCE_DIR}/../"
                      "${Boost_INCLUDE_DIRS}"
                      "${CMAKE_SOURCE_DIR}/third_party/SimpleAmqpClient/src/"
