@@ -33,22 +33,17 @@ from importlib import import_module
 import logging
 
 
-class RoutingProxyManager(object):
-    """
-    class managing routing proxy
-    """
-
-    def __init__(self, instance, routing_proxy_configuration):
-        self.routing_proxy_manager = None
+class StreetNetwork(object):
+    @staticmethod
+    def get_street_network(instance, street_network_configuration):
         log = logging.getLogger(__name__)
-
         try:
-            cls = routing_proxy_configuration['class']
+            cls = street_network_configuration['class']
         except KeyError, TypeError:
             log.warn('impossible to build a routing, missing mandatory field in configuration')
 
-        routing_name = routing_proxy_configuration.get('name', 'Routing_name')
-        args = routing_proxy_configuration.get('args', {})
+        routing_name = street_network_configuration.get('name', 'Routing_name')
+        args = street_network_configuration.get('args', {})
 
         try:
             if '.' not in cls:
@@ -61,11 +56,9 @@ class RoutingProxyManager(object):
             log.warn('impossible to build routing {}, cannot find class: {}'.format(routing_name, cls))
 
         try:
-            routing_proxy = attr(instance=instance, **args)  # all services must have an ID
+            street_network = attr(instance=instance,
+                                  service_url=args.get('service_url', None),
+                                  service_args=args.get('service_args', None))
         except TypeError as e:
             log.warn('impossible to build routing proxy {}, wrong arguments: {}'.format(routing_name, e.message))
-
-        self.routing_proxy_manager = routing_proxy
-
-    def get_routing_proxy(self):
-        return self.routing_proxy_manager
+        return street_network

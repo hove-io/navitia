@@ -31,6 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from navitiacommon import request_pb2, response_pb2, type_pb2
 import logging
 
+
 class Kraken(object):
 
     def __init__(self, instance):

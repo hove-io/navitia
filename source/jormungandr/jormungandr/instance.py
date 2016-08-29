@@ -49,7 +49,7 @@ from shapely import geometry
 from flask import g
 import flask
 import pybreaker
-from jormungandr import georef, planner, schedule, realtime_schedule, ptref, routing
+from jormungandr import georef, planner, schedule, realtime_schedule, ptref, street_network
 
 type_to_pttype = {
       "stop_area": request_pb2.PlaceCodeRequest.StopArea,
@@ -69,7 +69,7 @@ def _init_g():
 
 class Instance(object):
 
-    def __init__(self, context, name, zmq_socket, routing_proxy_configuration, realtime_proxies_configuration=[]):
+    def __init__(self, context, name, zmq_socket, street_network_configuration, realtime_proxies_configuration=[]):
         self.geom = None
         self._sockets = queue.Queue()
         self.socket_path = zmq_socket
@@ -86,7 +86,7 @@ class Instance(object):
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S'])
         self.georef = georef.Kraken(self)
         self.planner = planner.Kraken(self)
-        self.routing_proxy_manager = routing.RoutingProxyManager(self, routing_proxy_configuration)
+        self.street_network = street_network.StreetNetwork.get_street_network(self, street_network_configuration)
         self.ptref = ptref.PtRef(self)
 
         self.schedule = schedule.MixedSchedule(self)

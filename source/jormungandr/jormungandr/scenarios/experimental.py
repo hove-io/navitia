@@ -111,7 +111,7 @@ class Scenario(new_default.Scenario):
 
     def _get_direct_path(self, instance, mode, origin, destination, datetime, clockwise):
         # TODO: cache by (mode, origin, destination) and redate with datetime and clockwise
-        return instance.routing_proxy_manager.get_routing_proxy().get(mode, origin, destination, datetime, clockwise)
+        return instance.street_network.get(mode, origin, destination, datetime, clockwise)
 
     def call_kraken(self, request_type, request, instance, krakens_call):
         """

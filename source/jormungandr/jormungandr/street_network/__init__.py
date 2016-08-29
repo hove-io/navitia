@@ -31,6 +31,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from jormungandr.routing.kraken import Kraken
-from jormungandr.routing.routing_proxy_manager import RoutingProxyManager
+from jormungandr.street_network.kraken import Kraken
+from jormungandr.street_network.street_network import StreetNetwork
 

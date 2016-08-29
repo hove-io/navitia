@@ -30,7 +30,6 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from navitiacommon import request_pb2, response_pb2, type_pb2
 import logging
-from jormungandr.routing.abstract_routing import AbstractRouting
 import pybreaker
 import requests as requests
 from jormungandr import app
@@ -40,14 +39,20 @@ from exceptions import NotImplementedError
 from jormungandr.exceptions import UnableToParse, TechnicalError
 
 
-class Valhalla(AbstractRouting):
+class Valhalla(object):
 
-    def __init__(self, instance, **kwargs):
+    def __init__(self, instance, service_url, service_args):
         self.instance = instance
-        self.args = kwargs
+        self.service_url = service_url
+        self.service_args = service_args
+        # kilometres is default units
+        if 'units' not in self.service_args:
+            self.service_args['units'] = 'kilometers'
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_VALHALLA_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_VALHALLA_TIMEOUT_S'])
-        self.convert_distances = {'kilometers': 1000.0, 'miles': 1609.34}
+
+    def __to_metre(self, distance):
+        return distance * 1000.0
 
     def get(self, mode, origin, destination, datetime, clockwise):
         return self.__direct_path(mode, origin, destination, datetime, clockwise)
@@ -69,7 +74,7 @@ class Valhalla(AbstractRouting):
         if len(coord) == 3:
             return {"lat": coord[2], "lon": coord[1], "type": "break"}
         else:
-            logging.getLogger(__name__).error('Invalide coord: {}'.format(coords))
+            logging.getLogger(__name__).error('Invalid coord: {}'.format(coords))
             UnableToParse("Unable to parse coords {} ".format(coords))
 
     def __decode(self, encoded):
@@ -110,7 +115,7 @@ class Valhalla(AbstractRouting):
         resp.status_code = 200
         resp.response_type = response_pb2.ITINERARY_FOUND
         locations = json_resp['trip']['locations']
-        coefficient = self.convert_distances.get(json_resp['trip']['units'])
+
         for leg in json_resp['trip']['legs']:
             shape = self.__decode(leg['shape'])
             journey = resp.journeys.add()
@@ -127,7 +132,7 @@ class Valhalla(AbstractRouting):
 
             section.id = 'section_0'
             section.duration = journey.duration
-            section.length = int(leg['summary']['length'] * coefficient)
+            section.length = int(self.__to_metre(leg['summary']['length']))
             section.origin.name = leg['maneuvers'][0]['street_names'][0]
             section.origin.uri = '{};{}'.format(locations[0]['lon'], locations[0]['lat'])
             section.origin.embedded_type = type_pb2.ADDRESS
@@ -142,14 +147,14 @@ class Valhalla(AbstractRouting):
             section.destination.address.coord.lat = locations[1]['lat']
             section.destination.address.label = section.destination.name
 
-            section.street_network.length = leg['summary']['length'] * coefficient
+            section.street_network.length = self.__to_metre(leg['summary']['length'])
             section.street_network.duration = leg['summary']['time']
             section.street_network.mode = map_mode[mode]
             for maneuver in leg['maneuvers']:
                 path_item = section.street_network.path_items.add()
                 if 'street_names' in maneuver and len(maneuver['street_names']) > 0:
                     path_item.name = maneuver['street_names'][0]
-                path_item.length = maneuver['length'] * coefficient
+                path_item.length = self.__to_metre(maneuver['length'])
                 path_item.duration = maneuver['time']
 
             for sh in shape:
@@ -168,12 +173,12 @@ class Valhalla(AbstractRouting):
         if mode not in map_mode:
             logging.getLogger(__name__).error('Valhalla, mode {} not implemented'.format(mode))
             raise NotImplementedError()
-        url = {
+        args = {
             "locations": [self.__format_coord(origin), self.__format_coord(destination)],
             "costing": map_mode.get(mode),
-            "directions_options": self.args.get('service_args')
+            "directions_options": self.service_args
         }
-        return '{}/route?json={}'.format(self.args.get('service_url'), json.dumps(url))
+        return '{}/route?json={}'.format(self.service_url, json.dumps(args))
 
     def __direct_path(self, mode, origin, destination, datetime, clockwise):
         url = self.__format_url(mode, origin, destination)
