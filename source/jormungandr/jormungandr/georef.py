@@ -35,6 +35,7 @@ class Kraken(object):
 
     def __init__(self, instance):
         self.instance = instance
+        
     def get_stop_points(self, place, mode, max_duration, reverse=False, max_nb_crowfly=5000):
         # we use place_nearby of kraken at the first place to get stop_points around the place, then call the
         # one_to_many(or many_to_one according to the arg "reverse") service to take street network into consideration

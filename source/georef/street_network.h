@@ -328,7 +328,7 @@ struct printer_distance_visitor : public distance_visitor {
 
 //Visitor who stops (throw a DestinationFound exception) when all targets has been visited
 struct target_all_visitor : public boost::dijkstra_visitor<> {
-    std::set<vertex_t> destinations;
+    std::vector<vertex_t> destinations;
     size_t nbFound = 0;
     target_all_visitor(const std::vector<vertex_t>& destinations) : destinations(destinations.begin(), destinations.end()){}
     template <typename graph_type>

@@ -751,9 +751,6 @@ boost::optional<pbnavitia::Response> Worker::set_journeys_args(const pbnavitia::
                                                                const std::string& name) {
     const auto data = data_manager.get_data();
     this->init_worker_data(data);
-
-
-
     try{
         arg = fill_journeys(request);
     }catch(const navitia::coord_conversion_exception& e) {
@@ -856,7 +853,7 @@ pbnavitia::Response Worker::car_co2_emission_on_crow_fly(const pbnavitia::CarCO2
         return r;
     }
     fill_pb_error(pbnavitia::Error::no_solution,
-                "physical_mode:Car doesn't contain any information about co2 emission", r.mutable_error());
+                  "physical_mode:Car doesn't contain any information about co2 emission", r.mutable_error());
     return r;
 }
 
@@ -876,8 +873,6 @@ static type::EntryPoint make_sn_entry_point(const std::string& place,
     case type::Type_e::POI:
         entry_point.coordinates = coord_of_entry_point(entry_point, data); // StopPoint doesn't use street network
         break;
-    default:
-        break;
     }
     switch (entry_point.type) {
     case type::Type_e::Address:
@@ -886,8 +881,6 @@ static type::EntryPoint make_sn_entry_point(const std::string& place,
     case type::Type_e::POI:
     case type::Type_e::StopArea:
         entry_point.streetnetwork_params.mode = type::static_data::get()->modeByCaption(mode);
-        break;
-    default:
         break;
     }
     auto mode_enum = entry_point.streetnetwork_params.mode;

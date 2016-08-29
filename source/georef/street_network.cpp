@@ -306,7 +306,8 @@ PathFinder::start_dijkstra_and_fill_duration_map(const navitia::time_duration& r
                 best_dist = distances[projection[source_e]] + crow_fly_duration(projection.distances[source_e]);
             }
             if (distances[projection[target_e]] < bt::pos_infin) {
-                best_dist = std::min(best_dist, distances[projection[target_e]] + crow_fly_duration(projection.distances[target_e]));
+                best_dist = std::min(best_dist, distances[projection[target_e]]
+                                                          + crow_fly_duration(projection.distances[target_e]));
             }
             if (best_dist <= radius) {
                 result[id] = best_dist;
