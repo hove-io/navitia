@@ -576,10 +576,23 @@ class TestIsochrone(AbstractTestFixture):
 @dataset({"main_routing_without_pt_test": {'priority': 42}, "main_routing_test": {'priority': 10}})
 class TestWithoutPt(AbstractTestFixture):
     """
-    Test if we still responds when one kraken is dead
+    Test if we still responds when one kraken has no pt solution
     """
-    def test_one_region_wihout_pt(self):
+    def test_one_region_without_pt(self):
         response = self.query("v1/"+journey_basic_query+"&debug=true",
+                              display=False)
+        eq_(len(response['journeys']), 2)
+        eq_(len(response['journeys'][0]['sections']), 3)
+        eq_(response['journeys'][0]['sections'][1]['type'], 'public_transport')
+        eq_(len(response['debug']['regions_called']), 2)
+        eq_(response['debug']['regions_called'][0], "main_routing_without_pt_test")
+        eq_(response['debug']['regions_called'][1], "main_routing_test")
+
+    """
+    Test if we still responds when one kraken has no pt solution using new_default
+    """
+    def test_one_region_without_pt_new_default(self):
+        response = self.query("v1/"+journey_basic_query+"&debug=true&_override_scenario=new_default",
                               display=False)
         eq_(len(response['journeys']), 2)
         eq_(len(response['journeys'][0]['sections']), 3)
