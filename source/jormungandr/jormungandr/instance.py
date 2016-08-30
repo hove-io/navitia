@@ -34,7 +34,7 @@ from contextlib import contextmanager
 import queue
 from threading import Lock
 from flask.ext.restful import abort
-import zmq
+from zmq import green as zmq
 from navitiacommon import response_pb2, request_pb2, type_pb2
 from navitiacommon.default_values import get_value_or_default
 from jormungandr.timezone import set_request_instance_timezone
@@ -313,13 +313,15 @@ class Instance(object):
     def _send_and_receive(self,
                          request,
                          timeout=app.config.get('INSTANCE_TIMEOUT', 10000),
-                         quiet=False):
+                         quiet=False,
+                         **kwargs):
         with self.socket(self.context) as socket:
             try:
                 request.request_id = flask.request.id
             except RuntimeError:
                 #we aren't in a flask context, so there is no request
-                pass
+                if 'request_id' in kwargs:
+                    request.request_id = kwargs['request_id']
             socket.send(request.SerializeToString())
             if socket.poll(timeout=timeout) > 0:
                 pb = socket.recv()
