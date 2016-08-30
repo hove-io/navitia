@@ -356,7 +356,7 @@ class Scenario(object):
         soonest_departure_ts = min(j.departure_date_time for j in resp.journeys)
         soonest_departure = timestamp_to_datetime(soonest_departure_ts)
         if soonest_departure:
-            soonest_departure.replace(hour=0, minute=0)
+            soonest_departure = soonest_departure.replace(hour=0, minute=0, second=0)
             params['datetime'] = dt_to_str(soonest_departure)
             params['datetime_represents'] = 'departure'
             add_link(resp, rel='first', **params)
@@ -364,7 +364,7 @@ class Scenario(object):
         tardiest_arrival_ts = max(j.arrival_date_time for j in resp.journeys)
         tardiest_arrival = timestamp_to_datetime(tardiest_arrival_ts)
         if tardiest_arrival:
-            tardiest_arrival.replace(hour=23, minute=59)
+            tardiest_arrival = tardiest_arrival.replace(hour=23, minute=59, second=59)
             params['datetime'] = dt_to_str(tardiest_arrival)
             params['datetime_represents'] = 'arrival'
             add_link(resp, rel='last', **params)

@@ -247,6 +247,10 @@ class AbstractTestFixture:
                         self.check_next_datetime_link(get_valid_datetime(v), response, clockwise)
                     elif l == 'prev':
                         self.check_previous_datetime_link(get_valid_datetime(v), response, clockwise)
+                    elif l == 'first':
+                        assert v.endswith('T000000')
+                    elif l == 'last':
+                        assert v.endswith('T235959')
                     continue
                 if k == 'datetime_represents':
                     if l in ['prev', 'last']:
