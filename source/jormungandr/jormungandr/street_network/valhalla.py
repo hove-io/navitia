@@ -123,6 +123,7 @@ class Valhalla(object):
         if valhalla_mode == 'bicycle':
             costing_options['cycling_speed'] = self.__get_speed(valhalla_mode)
         return costing_options
+
     def __get_response(self, json_resp, datetime, mode):
         map_mode = {
             "walking": response_pb2.Walking,
@@ -174,6 +175,8 @@ class Valhalla(object):
                     path_item.name = maneuver['street_names'][0]
                 path_item.length = self.__to_metre(maneuver['length'])
                 path_item.duration = maneuver['time']
+                # TODO: calculate direction
+                path_item.direction = 0
 
             for sh in shape:
                 coord = section.street_network.coordinates.add()
