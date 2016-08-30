@@ -107,6 +107,22 @@ class Valhalla(object):
             #hand back the list of coordinates
         return decoded
 
+    def __get_speed(self, valhalla_mode):
+        map_speed = {
+            "pedestrian": self.instance.walking_speed * 3.6,
+            "bicycle": self.instance.bike_speed * 3.6
+        }
+        return map_speed.get(valhalla_mode)
+
+    def __get_costing_options(self, valhalla_mode):
+        costing_options = self.costing_options.get(valhalla_mode, None)
+        if not costing_options:
+            return None
+        if valhalla_mode == 'pedestrian':
+            costing_options['walking_speed'] = self.__get_speed(valhalla_mode)
+        if valhalla_mode == 'bicycle':
+            costing_options['cycling_speed'] = self.__get_speed(valhalla_mode)
+        return costing_options
     def __get_response(self, json_resp, datetime, mode):
         map_mode = {
             "walking": response_pb2.Walking,
@@ -175,12 +191,18 @@ class Valhalla(object):
         if mode not in map_mode:
             logging.getLogger(__name__).error('Valhalla, mode {} not implemented'.format(mode))
             raise NotImplementedError()
+        valhalla_mode = map_mode.get(mode)
         args = {
             "locations": [self.__format_coord(origin), self.__format_coord(destination)],
-            "costing": map_mode.get(mode),
+            "costing": valhalla_mode,
             "directions_options": self.directions_options
         }
-        return '{}/route?json={}'.format(self.service_url, json.dumps(args))
+        if valhalla_mode in self.costing_options:
+            costing_options = self.__get_costing_options(valhalla_mode)
+            if costing_options and len(costing_options) > 0:
+                args["costing_options"] = costing_options
+
+        return '{}/route?json={}&api_key={}'.format(self.service_url, json.dumps(args), self.api_key)
 
     def __direct_path(self, mode, origin, destination, datetime, clockwise):
         url = self.__format_url(mode, origin, destination)
