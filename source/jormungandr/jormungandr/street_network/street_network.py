@@ -52,6 +52,7 @@ class StreetNetwork(object):
             module_path, name = cls.rsplit('.', 1)
             module = import_module(module_path)
             attr = getattr(module, name)
+            log.info('{} service used for direct_path'.format(name))
         except ImportError:
             log.warn('impossible to build routing {}, cannot find class: {}'.format(routing_name, cls))
 
