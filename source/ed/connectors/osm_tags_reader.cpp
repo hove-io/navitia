@@ -42,6 +42,9 @@ static void update_if_unknown(int& target, const int& source) {
 }
 
 std::bitset<8> parse_way_tags(const std::map<std::string, std::string> & tags){
+    // if no highway tag, we can do nothing on it
+    if (! tags.count("highway")) { return {}; }
+
     constexpr int unknown = -1;
     constexpr int foot_forbiden = 0;
     constexpr int foot_allowed = 1;
@@ -59,7 +62,6 @@ std::bitset<8> parse_way_tags(const std::map<std::string, std::string> & tags){
     constexpr int bike_lane = 3;
     constexpr int bike_busway = 4;
     constexpr int bike_track = 5;
-
 
     int car_direct = unknown;
     int car_reverse = unknown;
