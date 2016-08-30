@@ -45,7 +45,6 @@ class Kraken(object):
         return self.__direct_path(mode, origin, destination, datetime, clockwise)
 
     def __direct_path(self, mode, origin, destination, datetime, clockwise):
-        logger = logging.getLogger(__name__)
         req = request_pb2.Request()
         req.requested_api = type_pb2.direct_path
         req.direct_path.origin.place = origin
