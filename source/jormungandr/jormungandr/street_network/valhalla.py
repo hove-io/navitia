@@ -37,6 +37,7 @@ import json
 from flask_restful import abort
 from exceptions import NotImplementedError
 from jormungandr.exceptions import UnableToParse, TechnicalError
+from flask import g
 
 
 class Valhalla(object):
@@ -152,19 +153,9 @@ class Valhalla(object):
             section.id = 'section_0'
             section.duration = journey.duration
             section.length = int(self.__to_metre(leg['summary']['length']))
-            section.origin.name = leg['maneuvers'][0]['street_names'][0]
-            section.origin.uri = '{};{}'.format(locations[0]['lon'], locations[0]['lat'])
-            section.origin.embedded_type = type_pb2.ADDRESS
-            section.origin.address.coord.lon = locations[0]['lon']
-            section.origin.address.coord.lat = locations[0]['lat']
-            section.origin.address.label = section.destination.name
 
-            section.destination.name = leg['maneuvers'][len(leg['maneuvers'])-2]['street_names'][0]
-            section.destination.uri = '{};{}'.format(locations[1]['lon'], locations[1]['lat'])
-            section.destination.embedded_type = type_pb2.ADDRESS
-            section.destination.address.coord.lon = locations[1]['lon']
-            section.destination.address.coord.lat = locations[1]['lat']
-            section.destination.address.label = section.destination.name
+            section.origin.CopyFrom(g.requested_origin)
+            section.destination.CopyFrom(g.requested_destination)
 
             section.street_network.length = self.__to_metre(leg['summary']['length'])
             section.street_network.duration = leg['summary']['time']
