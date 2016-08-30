@@ -134,15 +134,16 @@ class Valhalla(object):
         resp = response_pb2.Response()
         resp.status_code = 200
         resp.response_type = response_pb2.ITINERARY_FOUND
-        locations = json_resp['trip']['locations']
 
         for leg in json_resp['trip']['legs']:
-            shape = self.__decode(leg['shape'])
             journey = resp.journeys.add()
             journey.duration = leg['summary']['time']
             journey.departure_date_time = datetime
             journey.arrival_date_time = datetime + journey.duration
             journey.durations.total = journey.duration
+
+            if mode == 'walking':
+                journey.durations.walking = journey.duration
 
             section = journey.sections.add()
             section.type = response_pb2.STREET_NETWORK
@@ -169,6 +170,7 @@ class Valhalla(object):
                 # TODO: calculate direction
                 path_item.direction = 0
 
+            shape = self.__decode(leg['shape'])
             for sh in shape:
                 coord = section.street_network.coordinates.add()
                 coord.lon = sh[0]
