@@ -52,10 +52,10 @@ krakens_dir = os.environ['KRAKEN_BUILD_DIR'] + '/tests'
 
 
 class FakeModel(object):
-    def __init__(self, priority, is_free):
+    def __init__(self, priority, is_free, scenario='default'):
         self.priority = priority
         self.is_free = is_free
-        self.scenario = 'default'
+        self.scenario = scenario
 
 
 class AbstractTestFixture:
@@ -129,9 +129,10 @@ class AbstractTestFixture:
             priority = cls.data_sets[name].get('priority', 0)
             logging.info('instance %s has priority %s', name, priority)
             is_free = cls.data_sets[name].get('is_free', False)
+            scenario = cls.data_sets[name].get('scenario', 'default')
             cls.mocks.append(mock.patch.object(i_manager.instances[name],
                                                'get_models',
-                                               return_value=FakeModel(priority, is_free)))
+                                               return_value=FakeModel(priority, is_free, scenario)))
 
         for m in cls.mocks:
             m.start()

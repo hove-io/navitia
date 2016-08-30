@@ -585,7 +585,7 @@ pbnavitia::Response Worker::place_code(const pbnavitia::PlaceCodeRequest &reques
 }
 
 static type::EntryPoint
-create_entry_point(const ::pbnavitia::LocationContext& location,
+create_journeys_entry_point(const ::pbnavitia::LocationContext& location,
                    const ::pbnavitia::StreetNetworkParams& sn_params,
                    const boost::shared_ptr<const navitia::type::Data>& data,
                    const bool is_origin)
@@ -619,19 +619,18 @@ JourneysArg::JourneysArg(std::vector<type::EntryPoint> origins,
                          std::vector<uint64_t> datetimes): origins(origins), accessibilite_params(accessibilite_params),
     forbidden(forbidden), rt_level(rt_level),destinations(destinations),
     datetimes(datetimes){}
-
 JourneysArg::JourneysArg(){}
 
 navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest &request) {
     const auto data = data_manager.get_data();
     std::vector<type::EntryPoint> origins;
     for(int i = 0; i < request.origin().size(); i++) {
-        origins.push_back(create_entry_point(request.origin(i), request.streetnetwork_params(), data, true));
+        origins.push_back(create_journeys_entry_point(request.origin(i), request.streetnetwork_params(), data, true));
     }
 
     std::vector<type::EntryPoint> destinations;
     for (int i = 0; i < request.destination().size(); i++) {
-        destinations.push_back(create_entry_point(request.destination(i), request.streetnetwork_params(), data, false));
+        destinations.push_back(create_journeys_entry_point(request.destination(i), request.streetnetwork_params(), data, false));
     }
 
 
@@ -752,7 +751,6 @@ boost::optional<pbnavitia::Response> Worker::set_journeys_args(const pbnavitia::
                                                                const std::string& name) {
     const auto data = data_manager.get_data();
     this->init_worker_data(data);
-
     try{
         arg = fill_journeys(request);
     }catch(const navitia::coord_conversion_exception& e) {
@@ -845,6 +843,7 @@ pbnavitia::Response Worker::car_co2_emission_on_crow_fly(const pbnavitia::CarCO2
     auto distance = origin.distance_to(destin);
     pbnavitia::Response r;
     auto car_mode = data->pt_data->physical_modes_map.find("physical_mode:Car");
+
     if (car_mode != data->pt_data->physical_modes_map.end() &&
             car_mode->second->co2_emission) {
         auto co2_emission = r.mutable_car_co2_emission();
@@ -858,15 +857,111 @@ pbnavitia::Response Worker::car_co2_emission_on_crow_fly(const pbnavitia::CarCO2
     return r;
 }
 
+static type::EntryPoint make_sn_entry_point(const std::string& place,
+        const std::string& mode,
+        const int speed,
+        const int max_duration,
+        const boost::shared_ptr<const navitia::type::Data> data) {
+    Type_e origin_type = data->get_type_of_id(place);
+    auto entry_point = type::EntryPoint{origin_type, place, 0};
+
+    switch (entry_point.type) {
+    case type::Type_e::Address:
+    case type::Type_e::Admin:
+    case type::Type_e::StopArea:
+    case type::Type_e::StopPoint:
+    case type::Type_e::POI:
+        entry_point.coordinates = coord_of_entry_point(entry_point, data); // StopPoint doesn't use street network
+        break;
+    }
+    switch (entry_point.type) {
+    case type::Type_e::Address:
+    case type::Type_e::Coord:
+    case type::Type_e::Admin:
+    case type::Type_e::POI:
+    case type::Type_e::StopArea:
+        entry_point.streetnetwork_params.mode = type::static_data::get()->modeByCaption(mode);
+        break;
+    }
+    auto mode_enum = entry_point.streetnetwork_params.mode;
+    switch(mode_enum){
+        case type::Mode_e::Bike:
+        case type::Mode_e::Car:
+        case type::Mode_e::Bss:
+            entry_point.streetnetwork_params.offset = data->geo_ref->offsets[mode_enum];
+            entry_point.streetnetwork_params.speed_factor = speed / georef::default_speed[mode_enum];
+            break;
+        default:
+            entry_point.streetnetwork_params.offset = data->geo_ref->offsets[type::Mode_e::Walking];
+            entry_point.streetnetwork_params.speed_factor = speed / georef::default_speed[type::Mode_e::Walking];
+            break;
+    }
+    if (entry_point.streetnetwork_params.speed_factor <= 0) {
+        throw navitia::recoverable_exception("invalid speed factor");
+    }
+    entry_point.streetnetwork_params.max_duration = navitia::seconds(max_duration);
+
+    return entry_point;
+}
+
+pbnavitia::Response Worker::street_network_routing_matrix(const pbnavitia::StreetNetworkRoutingMatrixRequest& request) {
+    const auto data = data_manager.get_data();
+    this->init_worker_data(data);
+
+    std::vector<type::GeographicalCoord> dest_coords;
+
+    // In this loop, we try to get the coordinates of all destinations
+    for (const auto& dest: request.destinations()) {
+        Type_e origin_type = data->get_type_of_id(dest.place());
+        auto entry_point = type::EntryPoint{origin_type, dest.place(), 0};
+        type::GeographicalCoord coord{};
+        try{
+            dest_coords.push_back(coord_of_entry_point(entry_point, data));
+        }catch(const navitia::coord_conversion_exception& e) {
+            pbnavitia::Response r;
+            fill_pb_error(pbnavitia::Error::bad_format, e.what(), r.mutable_error());
+            return r;
+        }
+    }
+
+    pbnavitia::Response r;
+    for (const auto& origin: request.origins()) {
+        type::EntryPoint entry_point;
+        try{
+            entry_point = make_sn_entry_point(origin.place(), request.mode(), request.speed(), request.max_duration(), data);
+        }catch(const navitia::coord_conversion_exception& e) {
+            pbnavitia::Response r;
+            fill_pb_error(pbnavitia::Error::bad_format, e.what(), r.mutable_error());
+            return r;
+        }
+
+        street_network_worker->init(entry_point, {});
+        auto nearest = street_network_worker->departure_path_finder.get_duration_with_dijkstra(
+                navitia::time_duration::from_boost_duration(boost::posix_time::seconds(request.max_duration())),
+                dest_coords);
+
+        auto* row = r.mutable_sn_routing_matrix()->add_rows();
+        for(auto coord : dest_coords) {
+            auto it = nearest.find(coord.uri());
+            if (it != nearest.end()) {
+                row->add_duration(it->second.total_seconds());
+            }else {
+                row->add_duration(-1);
+            }
+        }
+    }
+    return r;
+}
+
 pbnavitia::Response Worker::direct_path(const pbnavitia::Request& request) {
     const auto data = data_manager.get_data();
     init_worker_data(data);
     const auto& dp_request = request.direct_path();
-    const auto origin = create_entry_point(dp_request.origin(),
+    const auto origin = create_journeys_entry_point(dp_request.origin(),
                                            dp_request.streetnetwork_params(),
                                            data,
                                            true);
-    const auto destination = create_entry_point(dp_request.destination(),
+    const auto destination = create_journeys_entry_point(dp_request.destination(),
                                                 dp_request.streetnetwork_params(),
                                                 data,
                                                 false);
@@ -931,6 +1026,8 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
         response = direct_path(request); break;
     case pbnavitia::graphical_isochrone: response = graphical_isochrone(request.isochrone(), current_datetime); break;
     case pbnavitia::heat_map: response = heat_map(request.heat_map(), current_datetime); break;
+    case pbnavitia::street_network_routing_matrix:
+        response = street_network_routing_matrix(request.sn_routing_matrix()); break;
     default:
         LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
         fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", response.mutable_error());
@@ -947,48 +1044,28 @@ pbnavitia::Response Worker::nearest_stop_points(const pbnavitia::NearestStopPoin
 
     //todo check the request
 
-    type::EntryPoint entry_point;
-    Type_e origin_type = data->get_type_of_id(request.place());
-    entry_point = type::EntryPoint(origin_type, request.place(), 0);
-
-    if (entry_point.type == type::Type_e::Address || entry_point.type == type::Type_e::Admin
-            || entry_point.type == type::Type_e::StopArea || entry_point.type == type::Type_e::StopPoint
-            || entry_point.type == type::Type_e::POI) {
-        try{
-            entry_point.coordinates = coord_of_entry_point(entry_point, data);
-        }catch(const navitia::coord_conversion_exception& e) {
-            pbnavitia::Response r;
-            fill_pb_error(pbnavitia::Error::bad_format, e.what(), r.mutable_error());
-            return r;
-        }
-    }
-    if ((entry_point.type == type::Type_e::Address)
-            || (entry_point.type == type::Type_e::Coord) || (entry_point.type == type::Type_e::Admin)
-            || (entry_point.type == type::Type_e::POI) || (entry_point.type == type::Type_e::StopArea)) {
-
-        entry_point.streetnetwork_params.mode = type::static_data::get()->modeByCaption(request.mode());
-        entry_point.streetnetwork_params.set_filter(request.filter());
-    }
-    switch(entry_point.streetnetwork_params.mode){
+    double speed = 0;
+    switch(type::static_data::get()->modeByCaption(request.mode())){
         case type::Mode_e::Bike:
-            entry_point.streetnetwork_params.offset = data->geo_ref->offsets[type::Mode_e::Bike];
-            entry_point.streetnetwork_params.speed_factor = request.bike_speed() / georef::default_speed[type::Mode_e::Bike];
+            speed = request.bike_speed();
             break;
         case type::Mode_e::Car:
-            entry_point.streetnetwork_params.offset = data->geo_ref->offsets[type::Mode_e::Car];
-            entry_point.streetnetwork_params.speed_factor = request.car_speed() / georef::default_speed[type::Mode_e::Car];
+            speed = request.car_speed();
             break;
         case type::Mode_e::Bss:
-            entry_point.streetnetwork_params.offset = data->geo_ref->offsets[type::Mode_e::Bss];
-            entry_point.streetnetwork_params.speed_factor = request.bss_speed() / georef::default_speed[type::Mode_e::Bss];
+            speed = request.bss_speed();
             break;
         default:
-            entry_point.streetnetwork_params.offset = data->geo_ref->offsets[type::Mode_e::Walking];
-            entry_point.streetnetwork_params.speed_factor = request.walking_speed() / georef::default_speed[type::Mode_e::Walking];
+            speed = request.walking_speed();
             break;
     }
-    if (entry_point.streetnetwork_params.speed_factor <= 0) {
-        throw navitia::recoverable_exception("invalid speed factor");
+    type::EntryPoint entry_point;
+    try{
+        entry_point = make_sn_entry_point(request.place(), request.mode(), speed, request.max_duration(), data);
+    }catch(const navitia::coord_conversion_exception& e) {
+        pbnavitia::Response r;
+        fill_pb_error(pbnavitia::Error::bad_format, e.what(), r.mutable_error());
+        return r;
     }
     entry_point.streetnetwork_params.max_duration = navitia::seconds(request.max_duration());
     street_network_worker->init(entry_point, {});

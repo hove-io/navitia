@@ -70,7 +70,6 @@ StreetNetwork::StreetNetwork(const GeoRef &geo_ref) :
 
 void StreetNetwork::init(const type::EntryPoint& start, boost::optional<const type::EntryPoint&> end) {
     departure_path_finder.init(start.coordinates, start.streetnetwork_params.mode, start.streetnetwork_params.speed_factor);
-
     if (end) {
         arrival_path_finder.init((*end).coordinates, (*end).streetnetwork_params.mode, (*end).streetnetwork_params.speed_factor);
     }
@@ -242,14 +241,87 @@ PathFinder::crow_fly_find_nearest_stop_points(const navitia::time_duration& radi
                                               const proximitylist::ProximityList<type::idx_t>& pl) {
     // Searching for all the elements that are less than radius meters awyway in crow fly
     float crow_fly_dist = radius.total_seconds() * speed_factor * georef::default_speed[mode];
-
     return pl.find_within(start_coord, crow_fly_dist);
+}
+
+
+struct ProjectionGetterByCache{
+    const nt::Mode_e mode;
+    const std::vector<GeoRef::ProjectionByMode>& projection_cache;
+    const georef::ProjectionData& operator()(const routing::SpIdx& idx) const{
+        return projection_cache[idx.val][mode];
+    }
+};
+
+struct ProjectionGetterOnFly{
+    const GeoRef& geo_ref;
+    const nt::idx_t offset;
+    const georef::ProjectionData operator()(const type::GeographicalCoord& coord) const{
+        return georef::ProjectionData{coord, geo_ref, offset, geo_ref.pl};
+    }
+};
+
+static routing::SpIdx get_id(const routing::SpIdx& idx) { return idx; }
+static std::string get_id(const type::GeographicalCoord& coord) { return coord.uri(); }
+
+template<typename K, typename U, typename G>
+boost::container::flat_map<K, navitia::time_duration>
+PathFinder::start_dijkstra_and_fill_duration_map(const navitia::time_duration& radius,
+        const std::vector<U>& destinations,
+        const G& projection_getter){
+    boost::container::flat_map<K, navitia::time_duration> result;
+    std::vector<std::pair<K, georef::ProjectionData>> projection_found_dests;
+    for (const auto& dest: destinations) {
+        auto projection = projection_getter(dest);
+        // the stop point has been projected on the graph?
+        if(projection.found) {
+            projection_found_dests.push_back({get_id(dest), projection});
+        }
+    }
+    // if there are no stop_points projected on the graph, there is no need to start the dijkstra
+    if (projection_found_dests.empty()) {
+        return result;
+    }
+
+    start_distance_dijkstra(radius);
+
+#ifdef _DEBUG_DIJKSTRA_QUANTUM_
+    dump_dijkstra_for_quantum(starting_edge);
+#endif
+    for (const auto& dest: projection_found_dests) {
+        //if our two points are projected on the same edge the Dijkstra won't give us the correct value
+        // we need to handle this case separately
+        auto& projection = dest.second;
+        auto& id = dest.first;
+        if(is_projected_on_same_edge(starting_edge, projection)){
+            //We calculate the duration for going to the edge, then to the projected destination on the edge
+            //and finally to the destination
+            auto duration = path_duration_on_same_edge(starting_edge, projection);
+            if(duration <= radius){
+                result[id] = duration;
+            }
+        }else{
+            navitia::time_duration best_dist = bt::pos_infin;
+            if (distances[projection[source_e]] < bt::pos_infin) {
+                best_dist = distances[projection[source_e]] + crow_fly_duration(projection.distances[source_e]);
+            }
+            if (distances[projection[target_e]] < bt::pos_infin) {
+                best_dist = std::min(best_dist, distances[projection[target_e]]
+                                                          + crow_fly_duration(projection.distances[target_e]));
+            }
+            if (best_dist <= radius) {
+                result[id] = best_dist;
+            }
+        }
+    }
+    return result;
 }
 
 routing::map_stop_point_duration
 PathFinder::find_nearest_stop_points(const navitia::time_duration& radius,
                                      const proximitylist::ProximityList<type::idx_t>& pl) {
     auto elements = crow_fly_find_nearest_stop_points(radius, pl);
+
     routing::map_stop_point_duration result;
     if (! starting_edge.found){
         LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("Logger"), "starting_edge not found!");
@@ -277,41 +349,25 @@ PathFinder::find_nearest_stop_points(const navitia::time_duration& radius,
     if (elements.empty()) {
         return result;
     }
-
-    start_distance_dijkstra(radius);
-#ifdef _DEBUG_DIJKSTRA_QUANTUM_
-    dump_dijkstra_for_quantum(starting_edge);
-#endif
-
-    const auto max = bt::pos_infin;
-    for (auto element: elements) {
-        ProjectionData projection = this->geo_ref.projected_stop_points[element.first][mode];
-        // the stop point has been projected on the graph?
-        if(projection.found){
-            //if our two points are projected on the same edge the Dijkstra won't give us the correct value
-            // we need to handle this case separately
-            if(is_projected_on_same_edge(starting_edge, projection)){
-                //We calculate the duration for going to the edge, then to the projected destination on the edge
-                //and finally to the destination
-                auto duration = path_duration_on_same_edge(starting_edge, projection);
-                if(duration <= radius){
-                    result[routing::SpIdx(element.first)] = duration;
-                }
-            }else{
-                navitia::time_duration best_dist = max;
-                if (distances[projection[source_e]] < max) {
-                    best_dist = distances[projection[source_e]] + crow_fly_duration(projection.distances[source_e]);
-                }
-                if (distances[projection[target_e]] < max) {
-                    best_dist = std::min(best_dist, distances[projection[target_e]] + crow_fly_duration(projection.distances[target_e]));
-                }
-                if (best_dist <= radius) {
-                    result[routing::SpIdx(element.first)] = best_dist;
-                }
-            }
-        }
+    std::vector<routing::SpIdx> dest_sp_idx;
+    for (const auto& e: elements) {
+        dest_sp_idx.push_back(routing::SpIdx{e.first});
     }
-    return result;
+    ProjectionGetterByCache projection_getter{mode, geo_ref.projected_stop_points};
+    return start_dijkstra_and_fill_duration_map<routing::SpIdx, routing::SpIdx, ProjectionGetterByCache>(
+            radius, dest_sp_idx, projection_getter);
+}
+
+boost::container::flat_map<PathFinder::coord_uri, navitia::time_duration>
+PathFinder::get_duration_with_dijkstra(const navitia::time_duration& radius,
+                                       const std::vector<type::GeographicalCoord>& dest_coords){
+    if (dest_coords.empty()) {
+        return {};
+    }
+    auto offset = geo_ref.offsets[mode];
+    ProjectionGetterOnFly projection_getter{geo_ref, offset};
+    return start_dijkstra_and_fill_duration_map<PathFinder::coord_uri, type::GeographicalCoord, ProjectionGetterOnFly>(
+            radius, dest_coords, projection_getter);
 }
 
 navitia::time_duration PathFinder::get_distance(type::idx_t target_idx) {
