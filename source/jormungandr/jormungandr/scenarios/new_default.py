@@ -188,11 +188,13 @@ def tag_ecologic(resp):
                 j.tags.append('ecologic')
 
 def tag_direct_path(resp):
-    street_network_mode_tag_map = {response_pb2.Walking: ['non_pt_walking', 'non_pt'],
-                                   response_pb2.Bike: ['non_pt_bike', 'non_pt'],
-                                   response_pb2.Bss: ['non_pt'],
-                                   response_pb2.Car: ['non_pt']}
+    street_network_mode_tag_map = {response_pb2.Walking: ['non_pt_walking'],
+                                   response_pb2.Bike: ['non_pt_bike']}
     for j in resp.journeys:
+        if all(s.type != response_pb2.PUBLIC_TRANSPORT for s in j.sections):
+            j.tags.extend(['non_pt'])
+
+        # TODO: remove that (and street_network_mode_tag_map) when NMP stops using it
         # if there is only one section
         if len(j.sections) == 1:
             if j.sections[0].type == response_pb2.STREET_NETWORK and hasattr(j.sections[0], 'street_network'):

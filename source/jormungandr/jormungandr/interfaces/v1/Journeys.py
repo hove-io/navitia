@@ -467,7 +467,9 @@ class Journeys(JourneyCommon):
                 responses[r] = response
                 continue
 
-            if all(map(lambda j: j.type in ("non_pt_walk", "non_pt_bike", "non_pt_bss", "car"), response.journeys)):
+            non_pt_types = ("non_pt_walk", "non_pt_bike", "non_pt_bss", "car")
+            if all(j.type in non_pt_types for j in response.journeys) or \
+               all("non_pt" in j.tags for j in response.journeys):
                 responses[r] = response
                 continue
 
