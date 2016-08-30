@@ -56,9 +56,14 @@ class StreetNetwork(object):
             log.warn('impossible to build routing {}, cannot find class: {}'.format(routing_name, cls))
 
         try:
+            service_args = args.get('service_args', None)
+            if service_args:
+                directions_options = service_args.get('directions_options', None)
+            else:
+                directions_options = None
             street_network = attr(instance=instance,
                                   service_url=args.get('service_url', None),
-                                  service_args=args.get('service_args', None))
+                                  directions_options=directions_options)
         except TypeError as e:
             log.warn('impossible to build routing proxy {}, wrong arguments: {}'.format(routing_name, e.message))
         return street_network

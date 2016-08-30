@@ -41,13 +41,13 @@ from jormungandr.exceptions import UnableToParse, TechnicalError
 
 class Valhalla(object):
 
-    def __init__(self, instance, service_url, service_args):
+    def __init__(self, instance, service_url, directions_options):
         self.instance = instance
         self.service_url = service_url
-        self.service_args = service_args
+        self.directions_options = directions_options
         # kilometres is default units
-        if 'units' not in self.service_args:
-            self.service_args['units'] = 'kilometers'
+        if 'units' not in self.directions_options:
+            self.directions_options['units'] = 'kilometers'
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_VALHALLA_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_VALHALLA_TIMEOUT_S'])
 
@@ -109,7 +109,7 @@ class Valhalla(object):
         map_mode = {
             "walking": response_pb2.Walking,
             "car": response_pb2.Car,
-            "bicycle": response_pb2.Bike
+            "bike": response_pb2.Bike
         }
         resp = response_pb2.Response()
         resp.status_code = 200
@@ -176,7 +176,7 @@ class Valhalla(object):
         args = {
             "locations": [self.__format_coord(origin), self.__format_coord(destination)],
             "costing": map_mode.get(mode),
-            "directions_options": self.service_args
+            "directions_options": self.directions_options
         }
         return '{}/route?json={}'.format(self.service_url, json.dumps(args))
 
