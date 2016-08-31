@@ -44,6 +44,11 @@ from urlparse import urlparse
 
 DATETIME_FORMAT = "%Y%m%dT%H%M%S"
 
+
+def kilometres_to_metres(distance):
+    return distance * 1000.0
+
+
 def is_url(url):
     if not url or url.strip() == '':
         return False
