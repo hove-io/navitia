@@ -306,7 +306,7 @@ void OSMCache::insert_ways(){
     size_t n_inserted = 0;
     const size_t max_n_inserted = 50000;
     for (const auto& way : ways) {
-        if (!way.is_used() || way.properties.none()) {
+        if (!way.is_used() || !way.is_street()) {
             continue;
         }
         std::vector<std::string> values;
@@ -446,7 +446,7 @@ void OSMCache::insert_rel_way_admins() {
     for (const auto& map_ways : this->way_admin_map) {
         for (const auto& admin_ways : map_ways.second) {
             for (const auto& way : admin_ways.second) {
-                if (!way->is_used() || way->properties.none()) {
+                if (!way->is_used() || !way->is_street()) {
                     continue;
                 }
                 for (const auto& admin: admin_ways.first) {
@@ -480,7 +480,7 @@ std::string OSMNode::to_geographic_point() const{
 void OSMCache::build_way_map() {
     constexpr double max_double = std::numeric_limits<double>::max();
     for (auto way_it = ways.begin(); way_it != ways.end(); ++way_it) {
-        if(way_it->properties.none()){
+        if(!way_it->is_street()){
             continue;//it's not a street, we aren't interested by this way
         }
         double max_lon = max_double,
@@ -889,7 +889,7 @@ void PoiHouseNumberVisitor::fill_housenumber(const uint64_t osm_id,
     if (candidate_way == nullptr) {
         return;
     }
-    if (candidate_way->way_ref->properties.none()){//the way isn't a street, we don't have it in the database
+    if (!candidate_way->way_ref->is_street()){//the way isn't a street, we don't have it in the database
         auto logger = log4cplus::Logger::getInstance("log");
         LOG4CPLUS_ERROR(logger,"impossible to associate house number to way " << candidate_way->way_ref->osm_id);
         return;

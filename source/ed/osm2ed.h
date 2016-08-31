@@ -242,6 +242,10 @@ struct OSMWay {
     bool is_used() const {
         return way_ref == nullptr || this == way_ref;
     }
+
+    bool is_street() const{
+        return this->properties.any();
+    }
 };
 
 struct OSMHouseNumber {
