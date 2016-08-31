@@ -40,34 +40,43 @@ class StreetNetwork(object):
         try:
             cls = street_network_configuration['class']
         except KeyError, TypeError:
-            log.warn('impossible to build a routing, missing mandatory field in configuration')
+            log.critical('impossible to build a routing, missing mandatory field in configuration')
+            raise
 
-        routing_name = street_network_configuration.get('name', 'Routing_name')
         args = street_network_configuration.get('args', {})
+        service_args = args.get('service_args', None)
+        if service_args:
+            directions_options = service_args.get('directions_options', None)
+        else:
+            directions_options = None
+        service_url = args.get('service_url', None)
+        costing_options = args.get('costing_options', None)
+        api_key = args.get('api_key', None)
+        for to_del in ['service_args', 'service_url', 'costing_options', 'api_key']:
+            if to_del in args:
+                del args[to_del]
 
         try:
             if '.' not in cls:
-                log.warn('impossible to build routing {}, wrongly formated class: {}'.format(routing_name, cls))
+                log.critical('impossible to build StreetNetwork, wrongly formated class: {}'.format(cls))
+                raise
 
             module_path, name = cls.rsplit('.', 1)
             module = import_module(module_path)
             attr = getattr(module, name)
-            log.info('{} service used for direct_path'.format(name))
         except ImportError:
-            log.warn('impossible to build routing {}, cannot find class: {}'.format(routing_name, cls))
+            log.critical('impossible to build StreetNetwork, cannot find class: {}'.format(cls))
+            raise
 
         try:
-            service_args = args.get('service_args', None)
-            if service_args:
-                directions_options = service_args.get('directions_options', None)
-            else:
-                directions_options = None
-
-            street_network = attr(instance=instance,
-                                  service_url=args.get('service_url', None),
-                                  directions_options=directions_options,
-                                  costing_options=args.get('costing_options', None),
-                                  api_key=args.get('api_key', None))
+            log.info('** StreetNetwork {} used for direct_path **'.format(name))
+            return attr(instance=instance,
+                        service_url=service_url,
+                        directions_options=directions_options,
+                        costing_options=costing_options,
+                        api_key=api_key,
+                        **args)
         except TypeError as e:
-            log.warn('impossible to build routing proxy {}, wrong arguments: {}'.format(routing_name, e.message))
-        return street_network
+            log.critical('impossible to build StreetNetwork {}, wrong arguments: {}'.format(name, e.message))
+        raise
+

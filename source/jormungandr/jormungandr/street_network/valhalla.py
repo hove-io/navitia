@@ -42,15 +42,17 @@ from flask import g
 
 class Valhalla(object):
 
-    def __init__(self, instance, service_url, directions_options, costing_options, api_key=None):
+    def __init__(self, instance,
+                 service_url, directions_options,
+                 costing_options, api_key=None,
+                 **kwargs):
         self.instance = instance
         self.service_url = service_url
         self.directions_options = directions_options
         self.costing_options = costing_options
         self.api_key = api_key
         # kilometres is default units
-        if 'units' not in self.directions_options:
-            self.directions_options['units'] = 'kilometers'
+        self.directions_options['units'] = 'kilometers'
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_VALHALLA_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_VALHALLA_TIMEOUT_S'])
 
