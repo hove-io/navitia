@@ -43,6 +43,8 @@ import numpy as np
 import collections
 from jormungandr.utils import date_to_timestamp
 from jormungandr.scenarios.simple import get_pb_data_freshness
+import gevent
+import flask
 
 SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
 JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
@@ -715,21 +717,27 @@ class Scenario(simple.Scenario):
         # TODO: call first bss|bss and do not call walking|walking if no bss in first results
         resp = []
         logger = logging.getLogger(__name__)
+        futures = []
+        def worker(dep_mode, arr_mode, instance, request, request_id):
+            return (dep_mode, arr_mode, instance.send_and_receive(request, request_id=request_id))
+
         for dep_mode, arr_mode in krakens_call:
             pb_request = create_pb_request(request_type, request, dep_mode, arr_mode)
-            self.nb_kraken_calls += 1
 
-            local_resp = instance.send_and_receive(pb_request)
+            #we spawn a new green thread, it won't have access to our thread local request object so we set request_id
+            futures.append(gevent.spawn(worker, dep_mode, arr_mode, instance, pb_request, request_id=flask.request.id))
 
+        for future in gevent.iwait(futures):
+            dep_mode, arr_mode, local_resp = future.get()
             # for log purpose we put and id in each journeys
+            self.nb_kraken_calls += 1
             for idx, j in enumerate(local_resp.journeys):
                 j.internal_id = "{resp}-{j}".format(resp=self.nb_kraken_calls, j=idx)
 
+            fill_uris(local_resp)
             resp.append(local_resp)
             logger.debug("for mode %s|%s we have found %s journeys", dep_mode, arr_mode, len(local_resp.journeys))
 
-        for r in resp:
-            fill_uris(r)
         return resp
 
     def __on_journeys(self, requested_type, request, instance):
