@@ -40,7 +40,7 @@ class Kraken(object):
                  **kwargs):
         self.instance = instance
 
-    def get(self, mode, origin, destination, datetime, clockwise):
+    def direct_path(self, mode, origin, destination, datetime, clockwise):
         return self.__direct_path(mode, origin, destination, datetime, clockwise)
 
     def __direct_path(self, mode, origin, destination, datetime, clockwise):

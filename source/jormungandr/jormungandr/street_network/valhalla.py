@@ -69,7 +69,7 @@ class Valhalla(object):
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_VALHALLA_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_VALHALLA_TIMEOUT_S'])
 
-    def get(self, mode, origin, destination, datetime, clockwise):
+    def direct_path(self, mode, origin, destination, datetime, clockwise):
         return self.__direct_path(mode, origin, destination, datetime, clockwise)
 
     def __call_valhalla(self, url):
