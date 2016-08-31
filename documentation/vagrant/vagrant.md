@@ -451,11 +451,7 @@ Go into /dev/vagrant/Vagrantfile and comment out the rows with config.vm.synced_
 After you install the Guest additions, stop the VM, uncomment and restart.
 
 2. Make sure to set locale otherwise postgres will give an error! (if you see a locale warning while setting up postgres, this is it)
-To set your locale, run:
-```sh
-sudo dpkg-reconfigure locales
-```
-Scroll down the list, select yours (for example en_GB.UTF-8) and select OK.
+To set your locale, run `sudo dpkg-reconfigure locales`, scroll down the list, select yours (for example en_GB.UTF-8) and select OK.
 
 3. `[ERROR] - Data loading failed: Unable to connect to chaos database: FATAL:  database "chaos" does not exist`
 Edit kraken.ini to remove the config sections [BROKER] and [CHAOS] to test that it works without it, or create a proper chaos database.
