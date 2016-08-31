@@ -36,8 +36,9 @@ from jormungandr import app
 import json
 from flask_restful import abort
 from exceptions import NotImplementedError
-from jormungandr.exceptions import UnableToParse, TechnicalError
+from jormungandr.exceptions import UnableToParse, TechnicalError, InvalidArguments
 from flask import g
+from jormungandr.utils import is_url, kilometres_to_metres
 
 
 class Valhalla(object):
@@ -47,17 +48,26 @@ class Valhalla(object):
                  costing_options, api_key=None,
                  **kwargs):
         self.instance = instance
+
+        if not is_url(service_url):
+            raise ValueError('service_url is invalid, you give {}'.format(service_url))
+
         self.service_url = service_url
+
+        if not directions_options or len(directions_options) == 0:
+            raise ValueError('directions_options is invalid, you give {}'.format(directions_options))
+
         self.directions_options = directions_options
+
+        if not costing_options or len(costing_options) == 0:
+            raise ValueError('costing_options is invalid, you give {}'.format(costing_options))
+
         self.costing_options = costing_options
         self.api_key = api_key
         # kilometres is default units
         self.directions_options['units'] = 'kilometers'
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_VALHALLA_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_VALHALLA_TIMEOUT_S'])
-
-    def __to_metre(self, distance):
-        return distance * 1000.0
 
     def get(self, mode, origin, destination, datetime, clockwise):
         return self.__direct_path(mode, origin, destination, datetime, clockwise)
@@ -155,19 +165,19 @@ class Valhalla(object):
 
             section.id = 'section_0'
             section.duration = journey.duration
-            section.length = int(self.__to_metre(leg['summary']['length']))
+            section.length = int(kilometres_to_metres(leg['summary']['length']))
 
             section.origin.CopyFrom(g.requested_origin)
             section.destination.CopyFrom(g.requested_destination)
 
-            section.street_network.length = self.__to_metre(leg['summary']['length'])
+            section.street_network.length = kilometres_to_metres(leg['summary']['length'])
             section.street_network.duration = leg['summary']['time']
             section.street_network.mode = map_mode[mode]
             for maneuver in leg['maneuvers']:
                 path_item = section.street_network.path_items.add()
                 if 'street_names' in maneuver and len(maneuver['street_names']) > 0:
                     path_item.name = maneuver['street_names'][0]
-                path_item.length = self.__to_metre(maneuver['length'])
+                path_item.length = kilometres_to_metres(maneuver['length'])
                 path_item.duration = maneuver['time']
                 # TODO: calculate direction
                 path_item.direction = 0

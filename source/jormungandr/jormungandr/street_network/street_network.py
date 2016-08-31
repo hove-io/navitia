@@ -33,7 +33,23 @@ from importlib import import_module
 import logging
 
 
+def get_args(**kwargs):
+    args = {}
+    for key, value in kwargs.items():
+        if key == 'service_args':
+            for k, v in value.items():
+                if k != 'directions_options':
+                    if key not in args:
+                        args[key] = {}
+                    args[key][k] = {}
+        else:
+            if key not in ['service_url',  'costing_options', 'api_key']:
+                args[key] = value
+    return args
+
+
 class StreetNetwork(object):
+
     @staticmethod
     def get_street_network(instance, street_network_configuration):
         log = logging.getLogger(__name__)
@@ -41,7 +57,7 @@ class StreetNetwork(object):
             cls = street_network_configuration['class']
         except KeyError, TypeError:
             log.critical('impossible to build a routing, missing mandatory field in configuration')
-            raise
+            raise KeyError('impossible to build a routing, missing mandatory field in configuration')
 
         args = street_network_configuration.get('args', {})
         service_args = args.get('service_args', None)
@@ -52,31 +68,23 @@ class StreetNetwork(object):
         service_url = args.get('service_url', None)
         costing_options = args.get('costing_options', None)
         api_key = args.get('api_key', None)
-        for to_del in ['service_args', 'service_url', 'costing_options', 'api_key']:
-            if to_del in args:
-                del args[to_del]
 
         try:
             if '.' not in cls:
                 log.critical('impossible to build StreetNetwork, wrongly formated class: {}'.format(cls))
-                raise
+                raise ValueError('impossible to build StreetNetwork, wrongly formated class: {}'.format(cls))
 
             module_path, name = cls.rsplit('.', 1)
             module = import_module(module_path)
             attr = getattr(module, name)
-        except ImportError:
+        except AttributeError:
             log.critical('impossible to build StreetNetwork, cannot find class: {}'.format(cls))
-            raise
+            raise AttributeError('impossible to build StreetNetwork, cannot find class: {}'.format(cls))
 
-        try:
-            log.info('** StreetNetwork {} used for direct_path **'.format(name))
-            return attr(instance=instance,
-                        service_url=service_url,
-                        directions_options=directions_options,
-                        costing_options=costing_options,
-                        api_key=api_key,
-                        **args)
-        except TypeError as e:
-            log.critical('impossible to build StreetNetwork {}, wrong arguments: {}'.format(name, e.message))
-        raise
-
+        log.info('** StreetNetwork {} used for direct_path **'.format(name))
+        return attr(instance=instance,
+                    service_url=service_url,
+                    directions_options=directions_options,
+                    costing_options=costing_options,
+                    api_key=api_key,
+                    **get_args(**args))
