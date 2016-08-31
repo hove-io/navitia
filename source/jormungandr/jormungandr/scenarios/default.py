@@ -153,7 +153,11 @@ class Scenario(simple.Scenario):
             for all combinaison of departure and arrival mode we call kraken
         """
         logger = logging.getLogger(__name__)
-        futures = {}
+        futures = []
+
+        def worker(o_mode, d_mode, instance, request, request_id):
+            return (o_mode, d_mode, instance.send_and_receive(request, request_id=request_id))
+
         for o_mode, d_mode in itertools.product(self.origin_modes, self.destination_modes):
             #since we use multiple green thread we have to copy the request
             local_req = copy.deepcopy(req)
@@ -164,13 +168,10 @@ class Scenario(simple.Scenario):
                 req.journeys.streetnetwork_params.enable_direct_path = False
             else:
                 req.journeys.streetnetwork_params.enable_direct_path = True
-            futures[(o_mode, d_mode)] = gevent.spawn(instance.send_and_receive,
-                                                         local_req,
-                                                         request_id=flask.request.id)
+            futures.append(gevent.spawn(worker, o_mode, d_mode, instance, local_req, request_id=flask.request.id))
 
-        gevent.joinall(futures.values())
-        for (o_mode, d_mode), future in futures.items():
-            local_resp = future.get()
+        for future in gevent.iwait(futures):
+            o_mode, d_mode, local_resp = future.get()
             if local_resp.response_type == response_pb2.ITINERARY_FOUND:
 
                 # if a specific tag was provided, we tag the journeys
@@ -184,6 +185,7 @@ class Scenario(simple.Scenario):
                     request_type = "arrival" if req.journeys.clockwise else "departure"
                     qualifier_one(local_resp.journeys, request_type)
 
+                fill_uris(local_resp)
                 if not resp:
                     resp = local_resp
                 else:
@@ -192,7 +194,6 @@ class Scenario(simple.Scenario):
                 resp = local_resp
             logger.debug("for mode %s|%s we have found %s journeys: %s", o_mode, d_mode, len(local_resp.journeys), [j.type for j in local_resp.journeys])
 
-        fill_uris(resp)
         return resp
 
     def change_request(self, pb_req, resp, forbidden_uris=[]):
