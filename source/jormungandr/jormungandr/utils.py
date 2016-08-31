@@ -39,7 +39,17 @@ from builtins import range, zip
 from importlib import import_module
 import logging
 from jormungandr.exceptions import ConfigException
+from urlparse import urlparse
+
+
 DATETIME_FORMAT = "%Y%m%dT%H%M%S"
+
+def is_url(url):
+    if not url or url.strip() == '':
+        return False
+    url_parsed = urlparse(url)
+    return url_parsed.scheme.strip() != '' and url_parsed.netloc.strip() != ''
+
 
 def str_to_time_stamp(str):
     """
