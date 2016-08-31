@@ -38,7 +38,7 @@ from flask_restful import abort
 from exceptions import NotImplementedError
 from jormungandr.exceptions import UnableToParse, TechnicalError, InvalidArguments
 from flask import g
-from jormungandr.utils import is_url, kilometres_to_metres
+from jormungandr.utils import is_url, kilometers_to_metres
 
 
 class Valhalla(object):
@@ -165,19 +165,19 @@ class Valhalla(object):
 
             section.id = 'section_0'
             section.duration = journey.duration
-            section.length = int(kilometres_to_metres(leg['summary']['length']))
+            section.length = int(kilometers_to_metres(leg['summary']['length']))
 
             section.origin.CopyFrom(g.requested_origin)
             section.destination.CopyFrom(g.requested_destination)
 
-            section.street_network.length = kilometres_to_metres(leg['summary']['length'])
+            section.street_network.length = kilometers_to_metres(leg['summary']['length'])
             section.street_network.duration = leg['summary']['time']
             section.street_network.mode = map_mode[mode]
             for maneuver in leg['maneuvers']:
                 path_item = section.street_network.path_items.add()
                 if 'street_names' in maneuver and len(maneuver['street_names']) > 0:
                     path_item.name = maneuver['street_names'][0]
-                path_item.length = kilometres_to_metres(maneuver['length'])
+                path_item.length = kilometers_to_metres(maneuver['length'])
                 path_item.duration = maneuver['time']
                 # TODO: calculate direction
                 path_item.direction = 0
