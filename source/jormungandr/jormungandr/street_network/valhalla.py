@@ -45,7 +45,7 @@ class Valhalla(object):
 
     def __init__(self, instance,
                  service_url, directions_options,
-                 costing_options, api_key=None,
+                 costing_options, timeout=10, api_key=None,
                  **kwargs):
         self.instance = instance
 
@@ -64,6 +64,7 @@ class Valhalla(object):
 
         self.costing_options = costing_options
         self.api_key = api_key
+        self.timeout = timeout
         # kilometres is default units
         self.directions_options['units'] = 'kilometers'
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_VALHALLA_FAIL'],
@@ -75,7 +76,7 @@ class Valhalla(object):
     def __call_valhalla(self, url):
         logging.getLogger(__name__).debug('Valhalla routing service , call url : {}'.format(url))
         try:
-            return self.breaker.call(requests.get, url, timeout=10)
+            return self.breaker.call(requests.get, url, timeout=self.timeout)
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Valhalla routing service dead (error: {})'.format(e))
         except requests.Timeout as t:

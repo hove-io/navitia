@@ -27,7 +27,6 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 import pytest
-import pytz
 from jormungandr.street_network.street_network import StreetNetwork
 from jormungandr.street_network.kraken import Kraken
 from jormungandr.street_network.valhalla import Valhalla

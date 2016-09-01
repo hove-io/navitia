@@ -36,7 +36,7 @@ class Kraken(object):
 
     def __init__(self, instance,
                  service_url, directions_options,
-                 costing_options, api_key=None,
+                 costing_options, timeout=10, api_key=None,
                  **kwargs):
         self.instance = instance
 

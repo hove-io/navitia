@@ -43,7 +43,7 @@ def get_args(**kwargs):
                         args[key] = {}
                     args[key][k] = {}
         else:
-            if key not in ['service_url',  'costing_options', 'api_key']:
+            if key not in ['service_url',  'costing_options', 'api_key', 'timeout']:
                 args[key] = value
     return args
 
@@ -68,6 +68,7 @@ class StreetNetwork(object):
         service_url = args.get('service_url', None)
         costing_options = args.get('costing_options', None)
         api_key = args.get('api_key', None)
+        timeout = args.get('timeout', 10)
 
         try:
             if '.' not in cls:
@@ -86,5 +87,6 @@ class StreetNetwork(object):
                     service_url=service_url,
                     directions_options=directions_options,
                     costing_options=costing_options,
+                    timeout=timeout,
                     api_key=api_key,
                     **get_args(**args))
