@@ -278,6 +278,21 @@ Example:
     vehicle journey, "since" is included and "until" is excluded.
 </aside>
 
+#### disable_geojson
+
+By default geojson part of an object are returned in navitia's responses, this parameter allows you to
+remove them, it's useful when searching lines that you don't want to display on a map.
+
+<aside class="notice">
+    Geojson objects can be very large, 1MB is not unheard of, and they don't compress very well.
+    So this parameter is mostly here for reducing your downloading times and helping your json parser.
+    It's almost mandatory on mobile devices since most cellular networks are still relatively slow.
+</aside>
+
+Examples :
+
+-   <https://api.navitia.io/v1/coverage/fr-idf/lines?disable_geojson=true>
+
 ### <a name="filter"></a>Filter
 
 It is possible to apply a filter to the returned collection, using

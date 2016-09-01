@@ -354,6 +354,9 @@ class MultiLineString(fields.Raw):
         super(MultiLineString, self).__init__(**kwargs)
 
     def output(self, key, obj):
+        if hasattr(g, 'disable_geojson') and g.disable_geojson:
+            return None
+
         val = fields.get_value(key if self.attribute is None else self.attribute, obj)
 
         lines = []
