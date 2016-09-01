@@ -146,12 +146,25 @@ class Scenario(new_default.Scenario):
         for dep_mode, arr_mode in krakens_call:
             #todo: this is probably shared between multiple thread
             self.nb_kraken_calls += 1
+            direct_path = self._get_direct_path(instance,
+                                                dep_mode,
+                                                request['origin'],
+                                                request['destination'],
+                                                request['datetime'],
+                                                request['clockwise'])
+            if direct_path.journeys:
+                journey_parameters.direct_path_duration = direct_path.journeys[0].durations.total
+                resp.append(direct_path)
 
             local_resp = instance.planner.journeys(g.origins_fallback[dep_mode],
                                                    g.destinations_fallback[arr_mode],
                                                    request['datetime'],
                                                    request['clockwise'],
                                                    journey_parameters)
+
+            if local_resp.HasField(b"error") and local_resp.error.id == response_pb2.Error.error_id.\
+                    Value('no_solution') and direct_path.journeys:
+                local_resp.ClearField(b"error")
 
             if local_resp.HasField(b"error"):
                 return [local_resp]
@@ -168,13 +181,6 @@ class Scenario(new_default.Scenario):
                                    g.destinations_fallback[arr_mode])
 
             resp.append(local_resp)
-            direct_path = self._get_direct_path(instance,
-                                                dep_mode,
-                                                request['origin'],
-                                                request['destination'],
-                                                request['datetime'],
-                                                request['clockwise'])
-            resp.append(direct_path)
             logger.debug("for mode %s|%s we have found %s journeys", dep_mode, arr_mode, len(local_resp.journeys))
             logger.debug("for mode %s|%s we have found %s direct path", dep_mode, arr_mode, len(direct_path.journeys))
 
