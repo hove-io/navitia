@@ -32,22 +32,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from importlib import import_module
 import logging
 
-
-def get_args(**kwargs):
-    args = {}
-    for key, value in kwargs.items():
-        if key == 'service_args':
-            for k, v in value.items():
-                if k != 'directions_options':
-                    if key not in args:
-                        args[key] = {}
-                    args[key][k] = {}
-        else:
-            if key not in ['service_url',  'costing_options', 'api_key', 'timeout']:
-                args[key] = value
-    return args
-
-
 class StreetNetwork(object):
 
     @staticmethod
