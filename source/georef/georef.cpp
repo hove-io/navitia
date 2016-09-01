@@ -169,16 +169,23 @@ nt::GeographicalCoord Way::nearest_coord(const int number, const Graph& graph) c
 nt::MultiLineString Way::make_multiline(const Graph& graph) const {
     nt::MultiLineString multiline;
     for (auto edge: this->edges) {
-        Edge e = graph[boost::edge(edge.first, edge.second, graph).first];
         /*
-            Check if the edge way is the same that the current way.
-            Since boost::edge return only one edge between two vertices, if there is parallel edges, we aren't
-            sure it's the right one, and the geom_idx could be out of bounds.
-        */
-        if(e.geom_idx != nt::invalid_idx && e.way_idx == this->idx)
-            multiline.push_back(this->geoms[e.geom_idx]);
-        else
-            multiline.push_back({graph[edge.first].coord, graph[edge.second].coord});
+         * Loop on every out_edges from edge.first and keep all edges ending at edge.second.
+         * Mandatory if we want all parallel edges.
+         */
+        BOOST_FOREACH(const auto out_edge, boost::out_edges(edge.first, graph)) {
+            if(target(out_edge, graph) == edge.second) {
+                Edge e = graph[out_edge];
+                // Keep only edges on the current way
+                if(e.way_idx == this->idx) {
+                    if(e.geom_idx != nt::invalid_idx) {
+                        multiline.push_back(this->geoms[e.geom_idx]);
+                    } else {
+                        multiline.push_back({graph[edge.first].coord, graph[edge.second].coord});
+                    }
+                }
+            }
+        }
         boost::range::sort(multiline.back());
     }
     auto cmp = [](const nt::LineString& a, const nt::LineString& b) -> bool {
@@ -327,12 +334,13 @@ ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const GeoR
 }
 
 void ProjectionData::init(const type::GeographicalCoord & coord, const GeoRef & sn, edge_t nearest_edge) {
-    // On cherche les coordonnées des extrémités de ce segment
+    // We retrieve both vertices of nearest_edge from the graph to get their coordinates
     vertices[Direction::Source] = boost::source(nearest_edge, sn.graph);
     vertices[Direction::Target] = boost::target(nearest_edge, sn.graph);
     const type::GeographicalCoord& vertex1_coord = sn.graph[vertices[Direction::Source]].coord;
     const type::GeographicalCoord& vertex2_coord = sn.graph[vertices[Direction::Target]].coord;
-    // On projette le nœud sur le segment
+    // We project the point on nearest_edge geometry if it exists, on a straight line between vertices otherwise.
+    // We store distance from the projected point to each vertex since the pt routing is done from them and not the exact coord.
     Edge e = sn.graph[nearest_edge];
     if(e.geom_idx != nt::invalid_idx) {
         auto& geom = sn.ways[e.way_idx]->geoms[e.geom_idx];
@@ -341,7 +349,6 @@ void ProjectionData::init(const type::GeographicalCoord & coord, const GeoRef & 
         distances[Direction::Target] = type::real_distance_from_extremity(geom, projected, true);
     } else {
         this->projected = coord.project(vertex1_coord, vertex2_coord).first;
-        // On calcule la distance « initiale » déjà parcourue avant d'atteindre ces extrémité d'où on effectue le calcul d'itinéraire
         distances[Direction::Source] = projected.distance_to(vertex1_coord);
         distances[Direction::Target] = projected.distance_to(vertex2_coord);
     }
