@@ -69,6 +69,11 @@ def parking_space_availability_atos_support_poi_test():
     poi['properties']['operator'] = 'Bad_operator'
     assert not provider.support_poi(poi)
 
+    invalid_poi = {}
+    assert not provider.support_poi(invalid_poi)
+    invalid_poi = {'properties': {}}
+    assert not provider.support_poi(invalid_poi)
+
 def parking_space_availability_atos_get_informations_test():
     """
     Atos validate return good stands informations or None if an error occured
@@ -81,6 +86,12 @@ def parking_space_availability_atos_get_informations_test():
     provider = AtosProvider(u'10', u'vélitul', u'https://webservice.atos.com?wsdl', {'keolis'})
     provider.get_all_stands = MagicMock(return_value=all_stands)
     assert provider.get_informations(poi) == stands
+    invalid_poi = {}
+    assert provider.get_informations(invalid_poi) is None
+
+    poi_blur_ref = {'properties': {'ref': '02'}}
+    assert provider.get_informations(poi_blur_ref) == stands
+
     provider.get_all_stands = MagicMock(side_effect=WebFault('fake fault', 'mock'))
     assert provider.get_informations(poi) is None
 
