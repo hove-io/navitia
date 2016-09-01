@@ -99,7 +99,8 @@ pbnavitia::Response make_pt_response(RAPTOR &raptor,
                                      const navitia::time_duration& transfer_penalty,
                                      uint32_t max_duration=std::numeric_limits<uint32_t>::max(),
                                      uint32_t max_transfers=std::numeric_limits<uint32_t>::max(),
-                                     uint32_t max_extra_second_pass = 0);
+                                     uint32_t max_extra_second_pass = 0,
+                                     const boost::optional<navitia::time_duration>& direct_path_duration = boost::none);
 
 routing::map_stop_point_duration
 get_stop_points( const type::EntryPoint &ep, const type::Data& data,

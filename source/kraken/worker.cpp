@@ -701,7 +701,8 @@ pbnavitia::Response Worker::journeys(const pbnavitia::JourneysRequest &request, 
                     request.clockwise(), arg.accessibilite_params,
                     arg.forbidden, arg.rt_level, current_datetime,
                     seconds{request.walking_transfer_penalty()}, request.max_duration(),
-                    request.max_transfers(), request.max_extra_second_pass());
+                    request.max_transfers(), request.max_extra_second_pass(),
+                    request.has_direct_path_duration() ? boost::optional<time_duration>(seconds{request.direct_path_duration()}) : boost::optional<time_duration>());
         default:
             return routing::make_response(*planner, arg.origins[0], arg.destinations[0], arg.datetimes,
                     request.clockwise(), arg.accessibilite_params,
@@ -872,6 +873,7 @@ static type::EntryPoint make_sn_entry_point(const std::string& place,
     case type::Type_e::StopPoint:
     case type::Type_e::POI:
         entry_point.coordinates = coord_of_entry_point(entry_point, data); // StopPoint doesn't use street network
+    default:
         break;
     }
     switch (entry_point.type) {
@@ -881,6 +883,7 @@ static type::EntryPoint make_sn_entry_point(const std::string& place,
     case type::Type_e::POI:
     case type::Type_e::StopArea:
         entry_point.streetnetwork_params.mode = type::static_data::get()->modeByCaption(mode);
+    default:
         break;
     }
     auto mode_enum = entry_point.streetnetwork_params.mode;
