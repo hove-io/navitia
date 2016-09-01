@@ -34,10 +34,7 @@ import logging
 
 class Kraken(object):
 
-    def __init__(self, instance,
-                 service_url, directions_options,
-                 costing_options, timeout=10, api_key=None,
-                 **kwargs):
+    def __init__(self, instance, url, **kwargs):
         self.instance = instance
 
     def direct_path(self, mode, origin, destination, datetime, clockwise):

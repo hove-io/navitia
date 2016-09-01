@@ -47,9 +47,7 @@ def get_pt_object(type, lon, lat):
 
 def decode_func_test():
     valhalla = Valhalla(instance=None,
-                        service_url='http://bob.com',
-                        directions_options={'bob': 'pib'},
-                        costing_options={'bib': 'bom'})
+                        url='http://bob.com')
     assert valhalla._decode('qyss{Aco|sCF?kBkHeJw[') == [[2.439938, 48.572841],
                                                          [2.439938, 48.572837],
                                                          [2.440088, 48.572891],
@@ -61,9 +59,7 @@ def get_speed_func_test():
     instance.walking_speed = 1
     instance.bike_speed = 2
     valhalla = Valhalla(instance=instance,
-                        service_url='http://bob.com',
-                        directions_options={'bob': 'pib'},
-                        costing_options={'bib': 'bom'})
+                        url='http://bob.com')
     assert valhalla._get_speed('pedestrian') == 3.6 * 1
     assert valhalla._get_speed('bicycle') == 3.6 * 2
 
@@ -71,9 +67,7 @@ def get_speed_func_test():
 def get_costing_options_func_with_empty_costing_options_test():
     instance = AbstractObject()
     valhalla = Valhalla(instance=instance,
-                        service_url='http://bob.com',
-                        directions_options={'bob': 'pib'},
-                        costing_options={'bib': 'bom'})
+                        url='http://bob.com')
     valhalla.costing_options = None
     assert valhalla._get_costing_options('bib') == None
 
@@ -81,8 +75,7 @@ def get_costing_options_func_with_empty_costing_options_test():
 def get_costing_options_func_with_unkown_costing_options_test():
     instance = AbstractObject()
     valhalla = Valhalla(instance=instance,
-                        service_url='http://bob.com',
-                        directions_options={'bob': 'pib'},
+                        url='http://bob.com',
                         costing_options={'bib': 'bom'})
     assert valhalla._get_costing_options('bib') == {'bib': 'bom'}
 
@@ -92,8 +85,7 @@ def get_costing_options_func_test():
     instance.walking_speed = 1
     instance.bike_speed = 2
     valhalla = Valhalla(instance=instance,
-                        service_url='http://bob.com',
-                        directions_options={'bob': 'pib'},
+                        url='http://bob.com',
                         costing_options={'bib': 'bom'})
     pedestrian = valhalla._get_costing_options('pedestrian')
     assert len(pedestrian) == 2
@@ -113,8 +105,7 @@ def get_costing_options_func_test():
 def format_coord_func_invalid_pt_object_test():
     instance = AbstractObject()
     valhalla = Valhalla(instance=instance,
-                        service_url='http://bob.com',
-                        directions_options={'bob': 'pib'},
+                        url='http://bob.com',
                         costing_options={'bib': 'bom'})
     with pytest.raises(InvalidArguments) as excinfo:
         valhalla._format_coord(AbstractObject())
@@ -125,8 +116,7 @@ def format_coord_func_valid_coord_test():
     instance = AbstractObject()
     pt_object = get_pt_object(type_pb2.ADDRESS, 1.12, 13.15)
     valhalla = Valhalla(instance=instance,
-                        service_url='http://bob.com',
-                        directions_options={'bob': 'pib'},
+                        url='http://bob.com',
                         costing_options={'bib': 'bom'})
 
     coord = valhalla._format_coord(pt_object)
@@ -143,8 +133,7 @@ def format_url_func_with_walking_mode_test():
     origin = get_pt_object(type_pb2.ADDRESS, 1.0, 1.0)
     destination = get_pt_object(type_pb2.ADDRESS, 2.0, 2.0)
     valhalla = Valhalla(instance=instance,
-                        service_url='http://bob.com',
-                        directions_options={'bob': 'pib'},
+                        url='http://bob.com',
                         costing_options={'bib': 'bom'})
     assert valhalla._format_url("walking", origin,
                                 destination) == 'http://bob.com/route?json=' \
@@ -153,7 +142,7 @@ def format_url_func_with_walking_mode_test():
                                                 '[{"lat": 1.0, "type": "break", "lon": 1.0}, ' \
                                                 '{"lat": 2.0, "type": "break", "lon": 2.0}], ' \
                                                 '"costing": "pedestrian", ' \
-                                                '"directions_options": {"units": "kilometers", "bob": "pib"}}&' \
+                                                '"directions_options": {"units": "kilometers", "language": "fr-FR"}}&' \
                                                 'api_key=None'
 
 
@@ -166,17 +155,15 @@ def format_url_func_with_bike_mode_test():
     destination = get_pt_object(type_pb2.ADDRESS, 2.0, 2.0)
 
     valhalla = Valhalla(instance=instance,
-                        service_url='http://bob.com',
-                        directions_options={'bob': 'pib'},
+                        url='http://bob.com',
                         costing_options={'bib': 'bom'})
     valhalla.costing_options = None
     assert valhalla._format_url("bike", origin,
-                                destination) == 'http://bob.com/route?json={"costing_options": ' \
-                                                '{"bicycle": {"cycling_speed": 7.2}}, ' \
+                                destination) == 'http://bob.com/route?json=' \
+                                                '{"costing_options": {"bicycle": {"cycling_speed": 7.2}}, ' \
                                                 '"locations": [{"lat": 1.0, "type": "break", "lon": 1.0}, ' \
-                                                '{"lat": 2.0, "type": "break", "lon": 2.0}], ' \
-                                                '"costing": "bicycle", ' \
-                                                '"directions_options": {"units": "kilometers", "bob": "pib"}}&' \
+                                                '{"lat": 2.0, "type": "break", "lon": 2.0}], "costing": "bicycle", ' \
+                                                '"directions_options": {"units": "kilometers", "language": "fr-FR"}}&' \
                                                 'api_key=None'
 
 
@@ -189,24 +176,21 @@ def format_url_func_with_car_mode_test():
     destination = get_pt_object(type_pb2.ADDRESS, 2.0, 2.0)
 
     valhalla = Valhalla(instance=instance,
-                        service_url='http://bob.com',
-                        directions_options={'bob': 'pib'},
+                        url='http://bob.com',
                         costing_options={'bib': 'bom'})
     valhalla.costing_options = None
     assert valhalla._format_url("car", origin,
-                                destination) == 'http://bob.com/route?json={"locations": ' \
-                                                '[{"lat": 1.0, "type": "break", "lon": 1.0}, ' \
-                                                '{"lat": 2.0, "type": "break", "lon": 2.0}], ' \
-                                                '"costing": "auto", ' \
-                                                '"directions_options": {"units": "kilometers", "bob": "pib"}}&' \
+                                destination) == 'http://bob.com/route?json=' \
+                                                '{"locations": [{"lat": 1.0, "type": "break", "lon": 1.0}, ' \
+                                                '{"lat": 2.0, "type": "break", "lon": 2.0}], "costing": "auto", ' \
+                                                '"directions_options": {"units": "kilometers", "language": "fr-FR"}}&' \
                                                 'api_key=None'
 
 
 def format_url_func_invalid_mode_test():
     instance = AbstractObject()
     valhalla = Valhalla(instance=instance,
-                        service_url='http://bob.com',
-                        directions_options={'bob': 'pib'},
+                        url='http://bob.com',
                         costing_options={'bib': 'bom'})
     with pytest.raises(InvalidArguments) as excinfo:
         origin = get_pt_object(type_pb2.ADDRESS, 1.0, 1.0)

@@ -60,16 +60,7 @@ class StreetNetwork(object):
             raise KeyError('impossible to build a routing, missing mandatory field in configuration')
 
         args = street_network_configuration.get('args', {})
-        service_args = args.get('service_args', None)
-        if service_args:
-            directions_options = service_args.get('directions_options', None)
-        else:
-            directions_options = None
         service_url = args.get('service_url', None)
-        costing_options = args.get('costing_options', None)
-        api_key = args.get('api_key', None)
-        timeout = args.get('timeout', 10)
-
         try:
             if '.' not in cls:
                 log.critical('impossible to build StreetNetwork, wrongly formated class: {}'.format(cls))
@@ -83,10 +74,4 @@ class StreetNetwork(object):
             raise AttributeError('impossible to build StreetNetwork, cannot find class: {}'.format(cls))
 
         log.info('** StreetNetwork {} used for direct_path **'.format(name))
-        return attr(instance=instance,
-                    service_url=service_url,
-                    directions_options=directions_options,
-                    costing_options=costing_options,
-                    timeout=timeout,
-                    api_key=api_key,
-                    **get_args(**args))
+        return attr(instance=instance, url=service_url, **args)

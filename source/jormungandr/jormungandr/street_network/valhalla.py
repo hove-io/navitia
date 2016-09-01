@@ -44,27 +44,19 @@ from copy import deepcopy
 
 class Valhalla(object):
 
-    def __init__(self, instance,
-                 service_url, directions_options,
-                 costing_options, timeout=10, api_key=None,
-                 **kwargs):
+    def __init__(self, instance, url, **kwargs):
         self.instance = instance
-
-        if not is_url(service_url):
-            raise ValueError('service_url is invalid, you give {}'.format(service_url))
-
-        self.service_url = service_url
-
-        if not directions_options or len(directions_options) == 0:
-            raise ValueError('directions_options is invalid, you give {}'.format(directions_options))
-
-        self.directions_options = directions_options
-
-        self.costing_options = costing_options
-        self.api_key = api_key
-        self.timeout = timeout
+        if not is_url(url):
+            raise ValueError('service_url is invalid, you give {}'.format(url))
+        self.service_url = url
+        self.api_key = kwargs.get('api_key', None)
+        self.timeout = kwargs.get('timeout', 10)
+        self.costing_options = kwargs.get('costing_options', None)
         # kilometres is default units
-        self.directions_options['units'] = 'kilometers'
+        self.directions_options = {
+            'units': 'kilometers',
+            'language': kwargs.get('language', 'fr-FR')
+        }
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_VALHALLA_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_VALHALLA_TIMEOUT_S'])
 
