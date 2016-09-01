@@ -117,7 +117,7 @@ class Scenario(new_default.Scenario):
 
     def _get_direct_path(self, instance, mode, origin, destination, datetime, clockwise):
         # TODO: cache by (mode, origin, destination) and redate with datetime and clockwise
-        return instance.street_network.direct_path(mode, origin, destination, datetime, clockwise)
+        return instance.street_network_service.direct_path(mode, origin, destination, datetime, clockwise)
 
     def call_kraken(self, request_type, request, instance, krakens_call):
         """

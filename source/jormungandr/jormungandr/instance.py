@@ -86,7 +86,8 @@ class Instance(object):
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S'])
         self.georef = georef.Kraken(self)
         self.planner = planner.Kraken(self)
-        self.street_network = street_network.StreetNetwork.get_street_network(self, street_network_configuration)
+        self.street_network_service = street_network.StreetNetwork.get_street_network(self,
+                                                                                      street_network_configuration)
         self.ptref = ptref.PtRef(self)
 
         self.schedule = schedule.MixedSchedule(self)
