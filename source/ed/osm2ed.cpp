@@ -336,9 +336,9 @@ void OSMCache::insert_edges() {
     lotus.prepare_bulk_insert("georef.edge", {"source_node_id",
             "target_node_id", "way_id", "the_geog", "pedestrian_allowed",
             "cycles_allowed", "cars_allowed"});
-    std::stringstream geog;
-    geog << std::cout.precision(10);
-    std::vector<std::string> coords;
+    nt::LineString coords;
+    std::stringstream wkt;
+    wkt.precision(10);
     size_t n_inserted = 0;
     const size_t max_n_inserted = 20000;
     for (const auto& way : ways) {
@@ -355,30 +355,23 @@ void OSMCache::insert_edges() {
                 // If a node is only used by one way we can simplify the and reduce the number of edges, we don't need
                 // to have the perfect representation of the way on the graph, but we have the correct representation
                 // in the linestring
-                coords.push_back(node->coord_to_string());
-                geog.str("");
-                geog << "LINESTRING(" << *(coords.begin());
-                for(auto c = coords.begin() + 1 ; c < coords.end() ; c++) {
-                    geog << ", " << *c;
-                }
-                geog << ")";
+                coords.push_back({node->lon(), node->lat()});
+                wkt.str("");
+                wkt << boost::geometry::wkt(coords);
                 lotus.insert({std::to_string(prev_node->osm_id),
                         std::to_string(node->osm_id), std::to_string(ref_way_id),
-                        geog.str(), std::to_string(way.properties[OSMWay::FOOT_FWD]),
+                        wkt.str(), std::to_string(way.properties[OSMWay::FOOT_FWD]),
                         std::to_string(way.properties[OSMWay::CYCLE_FWD]),
                         std::to_string(way.properties[OSMWay::CAR_FWD])});
                 // In most of the case we need the reversal,
                 // that'll be wrong for some in case in car
                 // We need to work on it
-                geog.str("");
-                geog << "LINESTRING(" << *(coords.rbegin());
-                for(auto c = coords.rbegin() + 1; c < coords.rend() ; c++) {
-                    geog << ", " << *c;
-                }
-                geog << ")";
+                std::reverse(coords.begin(), coords.end());
+                wkt.str("");
+                wkt << boost::geometry::wkt(coords);
                 lotus.insert({std::to_string(node->osm_id),
                         std::to_string(prev_node->osm_id), std::to_string(ref_way_id),
-                        geog.str(), std::to_string(way.properties[OSMWay::FOOT_BWD]),
+                        wkt.str(), std::to_string(way.properties[OSMWay::FOOT_BWD]),
                         std::to_string(way.properties[OSMWay::CYCLE_BWD]),
                         std::to_string(way.properties[OSMWay::CAR_BWD])});
                 prev_node = nodes.end();
@@ -388,7 +381,7 @@ void OSMCache::insert_edges() {
                 coords.clear();
                 prev_node = node;
             }
-            coords.push_back(node->coord_to_string());
+            coords.push_back({node->lon(), node->lat()});
         }
         if ((n_inserted % max_n_inserted) == 0) {
             lotus.finish_bulk_insert();
