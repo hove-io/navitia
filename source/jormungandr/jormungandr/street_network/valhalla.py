@@ -60,9 +60,6 @@ class Valhalla(object):
 
         self.directions_options = directions_options
 
-        if not costing_options or len(costing_options) == 0:
-            raise ValueError('costing_options is invalid, you give {}'.format(costing_options))
-
         self.costing_options = costing_options
         self.api_key = api_key
         self.timeout = timeout
@@ -83,13 +80,21 @@ class Valhalla(object):
             logging.getLogger(__name__).exception('Valhalla routing error')
         return None
 
-    def _format_coord(self, coords):
-        coord = coords.split(':')
-        if len(coord) == 3:
-            return {"lat": coord[2], "lon": coord[1], "type": "break"}
-        else:
-            logging.getLogger(__name__).error('Invalid coord: {}'.format(coords))
-            raise UnableToParse("Unable to parse coords {} ".format(coords))
+    def _format_coord(self, pt_object):
+        if not isinstance(pt_object, type_pb2.PtObject):
+            logging.getLogger(__name__).error('Invalid pt_object')
+            raise InvalidArguments('Invalid pt_object')
+        map_coord = {
+            type_pb2.STOP_POINT: pt_object.stop_point.coord,
+            type_pb2.STOP_AREA: pt_object.stop_area.coord,
+            type_pb2.ADDRESS: pt_object.address.coord,
+            type_pb2.ADMINISTRATIVE_REGION: pt_object.administrative_region.coord
+        }
+        coord = map_coord.get(pt_object.embedded_type, None)
+        if not coord:
+            logging.getLogger(__name__).error('Invalid coord for ptobject type: {}'.format(pt_object.embedded_type))
+            raise UnableToParse('Invalid coord for ptobject type: {}'.format(pt_object.embedded_type))
+        return {"lat": coord.lat, "lon": coord.lon, "type": "break"}
 
     def _decode(self, encoded):
         # See: https://mapzen.com/documentation/mobility/decoding/#python
@@ -195,7 +200,7 @@ class Valhalla(object):
 
         return resp
 
-    def _format_url(self, mode, origin, destination):
+    def _format_url(self, mode, pt_object_origin, pt_object_destination):
         map_mode = {
             "walking": "pedestrian",
             "car": "auto",
@@ -206,7 +211,7 @@ class Valhalla(object):
             raise InvalidArguments('Valhalla, mode {} not implemented'.format(mode))
         valhalla_mode = map_mode.get(mode)
         args = {
-            "locations": [self._format_coord(origin), self._format_coord(destination)],
+            "locations": [self._format_coord(pt_object_origin), self._format_coord(pt_object_destination)],
             "costing": valhalla_mode,
             "directions_options": self.directions_options
         }
@@ -218,7 +223,7 @@ class Valhalla(object):
         return '{}/route?json={}&api_key={}'.format(self.service_url, json.dumps(args), self.api_key)
 
     def direct_path(self, mode, origin, destination, datetime, clockwise):
-        url = self._format_url(mode, origin, destination)
+        url = self._format_url(mode, g.requested_origin, g.requested_destination)
         r = self._call_valhalla(url)
         if not r:
             raise TechnicalError('impossible to access valhalla service')

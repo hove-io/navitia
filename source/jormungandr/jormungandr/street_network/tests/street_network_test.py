@@ -96,34 +96,30 @@ def valhalla_class_with_empty_directions_options_test():
 
 
 def valhalla_class_without_costing_options_test():
-    with pytest.raises(ValueError) as excinfo:
-        valhalla_url = {
-            'class': 'jormungandr.street_network.valhalla.Valhalla',
-            'args': {
-                "service_url": "http://localhost:8002",
-                "service_args": {
-                    "directions_options": {"language": "fr-FR"}
-                }
+    valhalla_url = {
+        'class': 'jormungandr.street_network.valhalla.Valhalla',
+        'args': {
+            "service_url": "http://localhost:8002",
+            "service_args": {
+                "directions_options": {"language": "fr-FR"}
             }
         }
-        StreetNetwork.get_street_network(None, valhalla_url)
-    assert 'costing_options is invalid, you give None' in str(excinfo.value)
+    }
+    assert isinstance(StreetNetwork.get_street_network(None, valhalla_url), Valhalla)
 
 
 def valhalla_class_with_empty_costing_options_test():
-    with pytest.raises(ValueError) as excinfo:
-        valhalla_url = {
-            'class': 'jormungandr.street_network.valhalla.Valhalla',
-            'args': {
-                "service_url": "http://localhost:8002",
-                "service_args": {
-                    "directions_options": {"language": "fr-FR"},
-                },
-                "costing_options": {}
-            }
+    valhalla_url = {
+        'class': 'jormungandr.street_network.valhalla.Valhalla',
+        'args': {
+            "service_url": "http://localhost:8002",
+            "service_args": {
+                "directions_options": {"language": "fr-FR"},
+            },
+            "costing_options": {}
         }
-        StreetNetwork.get_street_network(None, valhalla_url)
-    assert 'costing_options is invalid, you give ' in str(excinfo.value)
+    }
+    assert isinstance(StreetNetwork.get_street_network(None, valhalla_url), Valhalla)
 
 
 def valhalla_class_with_url_valid_test():
