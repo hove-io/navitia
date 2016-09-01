@@ -1428,8 +1428,12 @@ EdReader::get_duration (nt::Mode_e mode, float len, uint64_t source, uint64_t ta
 void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work, bool export_georef_edges_geometries) {
     std::string request = "select e.source_node_id, target_node_id, e.way_id, "
                           "ST_LENGTH(the_geog) AS leng, e.pedestrian_allowed as pede, "
-                          "e.cycles_allowed as bike,e.cars_allowed as car, "
-                          "ST_ASTEXT(the_geog) AS geometry from georef.edge e;";
+                          "e.cycles_allowed as bike,e.cars_allowed as car";
+    // Don't call ST_ASTEXT if not needed since it's slow
+    if(export_georef_edges_geometries) {
+        request += ", ST_ASTEXT(the_geog) AS geometry";
+    }
+    request += " from georef.edge e;";
     pqxx::result result = work.exec(request);
     size_t nb_edges_no_way = 0;
     int nb_walking_edges(0), nb_biking_edges(0), nb_driving_edges(0);
