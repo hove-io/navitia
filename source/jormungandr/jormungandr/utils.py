@@ -52,6 +52,15 @@ def str_to_time_stamp(str):
     return date_to_timestamp(date)
 
 
+def str_to_dt(str):
+    """
+    convert a string to a datetime
+    the string must be in the YYYYMMDDTHHMMSS format
+    like 20170534T124500
+    """
+    return datetime.strptime(str, DATETIME_FORMAT)
+
+
 def date_to_timestamp(date):
     """
     convert a datatime objet to a posix timestamp (number of seconds from 1070/1/1)
