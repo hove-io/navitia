@@ -51,8 +51,8 @@ class JcdecauxProvider(BssProvider):
 
     def support_poi(self, poi):
         properties = poi.get('properties', {})
-        return properties.get('operator').lower() in self.operators and \
-               properties.get('network').lower() == self.network
+        return properties.get('operator', '').lower() in self.operators and \
+               properties.get('network', '').lower() == self.network
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_JCDECAUX', 30))
     def _call_webservice(self, station_id):
