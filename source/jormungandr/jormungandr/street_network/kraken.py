@@ -41,9 +41,6 @@ class Kraken(object):
         self.instance = instance
 
     def direct_path(self, mode, origin, destination, datetime, clockwise):
-        return self.__direct_path(mode, origin, destination, datetime, clockwise)
-
-    def __direct_path(self, mode, origin, destination, datetime, clockwise):
         req = request_pb2.Request()
         req.requested_api = type_pb2.direct_path
         req.direct_path.origin.place = origin

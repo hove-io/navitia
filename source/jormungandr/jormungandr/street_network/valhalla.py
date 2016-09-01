@@ -39,6 +39,7 @@ from exceptions import NotImplementedError
 from jormungandr.exceptions import UnableToParse, TechnicalError, InvalidArguments
 from flask import g
 from jormungandr.utils import is_url, kilometers_to_metres
+from copy import deepcopy
 
 
 class Valhalla(object):
@@ -70,10 +71,7 @@ class Valhalla(object):
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_VALHALLA_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_VALHALLA_TIMEOUT_S'])
 
-    def direct_path(self, mode, origin, destination, datetime, clockwise):
-        return self.__direct_path(mode, origin, destination, datetime, clockwise)
-
-    def __call_valhalla(self, url):
+    def _call_valhalla(self, url):
         logging.getLogger(__name__).debug('Valhalla routing service , call url : {}'.format(url))
         try:
             return self.breaker.call(requests.get, url, timeout=self.timeout)
@@ -85,15 +83,15 @@ class Valhalla(object):
             logging.getLogger(__name__).exception('Valhalla routing error')
         return None
 
-    def __format_coord(self, coords):
+    def _format_coord(self, coords):
         coord = coords.split(':')
         if len(coord) == 3:
             return {"lat": coord[2], "lon": coord[1], "type": "break"}
         else:
             logging.getLogger(__name__).error('Invalid coord: {}'.format(coords))
-            UnableToParse("Unable to parse coords {} ".format(coords))
+            raise UnableToParse("Unable to parse coords {} ".format(coords))
 
-    def __decode(self, encoded):
+    def _decode(self, encoded):
         # See: https://mapzen.com/documentation/mobility/decoding/#python
         inv = 1.0 / 1e6
         decoded = []
@@ -121,24 +119,30 @@ class Valhalla(object):
             #hand back the list of coordinates
         return decoded
 
-    def __get_speed(self, valhalla_mode):
+    def _get_speed(self, valhalla_mode):
         map_speed = {
             "pedestrian": self.instance.walking_speed * 3.6,
             "bicycle": self.instance.bike_speed * 3.6
         }
         return map_speed.get(valhalla_mode)
 
-    def __get_costing_options(self, valhalla_mode):
-        costing_options = self.costing_options.get(valhalla_mode, None)
+    def _get_costing_options(self, valhalla_mode):
+        costing_options = deepcopy(self.costing_options)
+        if valhalla_mode not in ['pedestrian', 'bicycle']:
+            return costing_options
         if not costing_options:
-            return None
+            costing_options = {}
         if valhalla_mode == 'pedestrian':
-            costing_options['walking_speed'] = self.__get_speed(valhalla_mode)
+            if 'pedestrian' not in costing_options:
+                costing_options['pedestrian'] = {}
+            costing_options['pedestrian']['walking_speed'] = self._get_speed(valhalla_mode)
         if valhalla_mode == 'bicycle':
-            costing_options['cycling_speed'] = self.__get_speed(valhalla_mode)
+            if 'bicycle' not in costing_options:
+                costing_options['bicycle'] = {}
+            costing_options['bicycle']['cycling_speed'] = self._get_speed(valhalla_mode)
         return costing_options
 
-    def __get_response(self, json_resp, datetime, mode):
+    def _get_response(self, json_resp, datetime, mode):
         map_mode = {
             "walking": response_pb2.Walking,
             "car": response_pb2.Car,
@@ -183,7 +187,7 @@ class Valhalla(object):
                 # TODO: calculate direction
                 path_item.direction = 0
 
-            shape = self.__decode(leg['shape'])
+            shape = self._decode(leg['shape'])
             for sh in shape:
                 coord = section.street_network.coordinates.add()
                 coord.lon = sh[0]
@@ -191,7 +195,7 @@ class Valhalla(object):
 
         return resp
 
-    def __format_url(self, mode, origin, destination):
+    def _format_url(self, mode, origin, destination):
         map_mode = {
             "walking": "pedestrian",
             "car": "auto",
@@ -199,23 +203,23 @@ class Valhalla(object):
         }
         if mode not in map_mode:
             logging.getLogger(__name__).error('Valhalla, mode {} not implemented'.format(mode))
-            raise NotImplementedError()
+            raise InvalidArguments('Valhalla, mode {} not implemented'.format(mode))
         valhalla_mode = map_mode.get(mode)
         args = {
-            "locations": [self.__format_coord(origin), self.__format_coord(destination)],
+            "locations": [self._format_coord(origin), self._format_coord(destination)],
             "costing": valhalla_mode,
             "directions_options": self.directions_options
         }
-        if valhalla_mode in self.costing_options:
-            costing_options = self.__get_costing_options(valhalla_mode)
-            if costing_options and len(costing_options) > 0:
-                args["costing_options"] = costing_options
+
+        costing_options = self._get_costing_options(valhalla_mode)
+        if costing_options and len(costing_options) > 0:
+            args["costing_options"] = costing_options
 
         return '{}/route?json={}&api_key={}'.format(self.service_url, json.dumps(args), self.api_key)
 
-    def __direct_path(self, mode, origin, destination, datetime, clockwise):
-        url = self.__format_url(mode, origin, destination)
-        r = self.__call_valhalla(url)
+    def direct_path(self, mode, origin, destination, datetime, clockwise):
+        url = self._format_url(mode, origin, destination)
+        r = self._call_valhalla(url)
         if not r:
             raise TechnicalError('impossible to access valhalla service')
         resp_json = r.json()
@@ -225,4 +229,4 @@ class Valhalla(object):
             resp.status_code = r.status_code
             resp.error.message = resp_json['trip']['status_message']
             return resp
-        return self.__get_response(resp_json, datetime, mode)
+        return self._get_response(resp_json, datetime, mode)
