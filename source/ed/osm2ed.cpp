@@ -164,15 +164,11 @@ void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &tags,
                                    const std::vector<uint64_t> & nodes_refs) {
     const auto properties = parse_way_tags(tags);
     const auto name_it = tags.find("name");
-    const bool is_street = properties.any();
+    bool is_street = properties.any();
     auto it_way = cache.ways.find(OSMWay(osm_id));
     const bool is_used_by_relation = it_way != cache.ways.end(),
                is_hn = tags.find("addr:housenumber") != tags.end(),
                is_poi = tags.find("amenity") != tags.end() || tags.find("leisure") != tags.end();
-
-    if (!is_street && !is_used_by_relation && !is_hn && !is_poi) {
-        return;
-    }
 
     const auto name = name_it != tags.end() ? name_it->second : "";
 
@@ -181,6 +177,10 @@ void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &tags,
     if (access == "private" && name.empty()) {
         ++filtered_private_way;
         LOG4CPLUS_TRACE(logger, "filtering a private access way " << osm_id);
+        is_street = false;
+    }
+
+    if (!is_street && !is_used_by_relation && !is_hn && !is_poi) {
         return;
     }
 
@@ -306,7 +306,7 @@ void OSMCache::insert_ways(){
     size_t n_inserted = 0;
     const size_t max_n_inserted = 50000;
     for (const auto& way : ways) {
-        if (!way.is_used()) {
+        if (!way.is_used() || !way.is_street()) {
             continue;
         }
         std::vector<std::string> values;
@@ -446,7 +446,7 @@ void OSMCache::insert_rel_way_admins() {
     for (const auto& map_ways : this->way_admin_map) {
         for (const auto& admin_ways : map_ways.second) {
             for (const auto& way : admin_ways.second) {
-                if (!way->is_used()) {
+                if (!way->is_used() || !way->is_street()) {
                     continue;
                 }
                 for (const auto& admin: admin_ways.first) {
@@ -480,6 +480,9 @@ std::string OSMNode::to_geographic_point() const{
 void OSMCache::build_way_map() {
     constexpr double max_double = std::numeric_limits<double>::max();
     for (auto way_it = ways.begin(); way_it != ways.end(); ++way_it) {
+        if(!way_it->is_street()){
+            continue;//it's not a street, we aren't interested by this way
+        }
         double max_lon = max_double,
                max_lat = max_double,
                min_lon = max_double,
@@ -884,6 +887,11 @@ void PoiHouseNumberVisitor::fill_housenumber(const uint64_t osm_id,
         candidate_way = find_way(tags, lon, lat);
     }
     if (candidate_way == nullptr) {
+        return;
+    }
+    if (!candidate_way->way_ref->is_street()){//the way isn't a street, we don't have it in the database
+        auto logger = log4cplus::Logger::getInstance("log");
+        LOG4CPLUS_ERROR(logger,"impossible to associate house number to way " << candidate_way->way_ref->osm_id);
         return;
     }
     house_numbers.push_back(OSMHouseNumber(str_to_int(it_hn->second), lon, lat, candidate_way->way_ref));
