@@ -51,6 +51,7 @@ static const double CO2_ESTIMATION_COEFF = 1.35;
 
 namespace navitia {
 
+namespace {
 // local exception, only used in this file
 struct coord_conversion_exception : public recoverable_exception
 {
@@ -58,8 +59,9 @@ struct coord_conversion_exception : public recoverable_exception
     coord_conversion_exception() = default;
     coord_conversion_exception(const coord_conversion_exception&) = default;
     coord_conversion_exception& operator=(const coord_conversion_exception&) = default;
-    virtual ~coord_conversion_exception() noexcept{};
+    virtual ~coord_conversion_exception() noexcept {}
 };
+}
 
 static type::GeographicalCoord coord_of_entry_point(
         const type::EntryPoint & entry_point,
@@ -602,7 +604,9 @@ create_journeys_entry_point(const ::pbnavitia::LocationContext& location,
     case type::Type_e::POI:
         entry_point.streetnetwork_params =
             streetnetwork_params_of_entry_point(sn_params, data, is_origin);
-        // StopPoint doesn't use street network
+        entry_point.coordinates = coord_of_entry_point(entry_point, data);
+        break;
+    // StopPoint doesn't use street network
     case type::Type_e::StopPoint:
         entry_point.coordinates = coord_of_entry_point(entry_point, data);
         break;

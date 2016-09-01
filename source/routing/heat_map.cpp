@@ -357,14 +357,14 @@ std::string build_raster_isochrone(const georef::GeoRef& worker,
                                    clockwise, bound);
     auto distances = init_distance(worker, stop_points, init_dt, raptor, mode, coord_origin,
                                    clockwise, bound, speed, duration);
+    // We cannot make a dijkstra multi start with old boost version
+#if BOOST_VERSION >= 105500
     auto start = init_points.begin();
     auto end = init_points.end();
     double speed_factor = speed / georef::default_speed[mode];
     auto visitor = georef::distance_visitor(navitia::seconds(duration), distances);
     auto index_map = boost::identity_property_map();
     using filtered_graph = boost::filtered_graph<georef::Graph, boost::keep_all, georef::TransportationModeFilter>;
-    // We cannot make a dijkstra multi start with old boost version
-#if BOOST_VERSION >= 105500
     try {
         boost::dijkstra_shortest_paths_no_init(filtered_graph(worker.graph, {},
                                                               georef::TransportationModeFilter(mode, worker)),
@@ -375,7 +375,7 @@ std::string build_raster_isochrone(const georef::GeoRef& worker,
                                                georef::SpeedDistanceCombiner(speed_factor),
                                                navitia::seconds(0),
                                                visitor);
-    } catch (georef::DestinationFound){};
+    } catch (georef::DestinationFound) {}
 #endif
     return build_grid(worker, box, distances, speed, duration, resolution);
 }
