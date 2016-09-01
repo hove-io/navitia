@@ -261,6 +261,29 @@ class TestPtRef(AbstractTestFixture):
 
         self._test_links(response, 'lines')
 
+    def test_line_without_shape(self):
+        """test line formating with shape disabled"""
+        response = self.query_region("v1/lines?disable_geojson=true")
+        lines = get_not_null(response, 'lines')
+
+        assert len(lines) == 3
+        l = lines[0]
+        is_valid_line(l, depth_check=1)
+        #we don't want a geojson since we have desactivate them
+        assert 'geojson' not in l
+
+        response = self.query_region("v1/lines")
+        lines = get_not_null(response, 'lines')
+
+        assert len(lines) == 3
+        l = lines[0]
+        is_valid_line(l, depth_check=1)
+
+        #we check our geojson, just to be safe :)
+        assert 'geojson' in l
+        geo = get_not_null(l, 'geojson')
+        shape(geo)
+
     def test_line_groups(self):
         """test line group formating"""
         # Test for each possible range to ensure main_line is always at a depth of 0
