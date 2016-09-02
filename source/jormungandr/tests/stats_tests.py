@@ -88,17 +88,18 @@ class MockWrapper:
         #Verify elements of request.journeys
         assert len(stat.journeys) == 2
 
-        assert stat.journeys[0].requested_date_time == str_to_time_stamp("20120614T080000") #1339653600
-        assert stat.journeys[0].departure_date_time == str_to_time_stamp("20120614T080043") #1339653643
-        assert stat.journeys[0].arrival_date_time == str_to_time_stamp("20120614T080222") #1339653742
+        #datetimes stored in UTC, no matter instance or jormun TZ (here instance is UTC)
+        assert stat.journeys[0].requested_date_time == str_to_time_stamp("20120614T080000")
+        assert stat.journeys[0].departure_date_time == str_to_time_stamp("20120614T080043")
+        assert stat.journeys[0].arrival_date_time == str_to_time_stamp("20120614T080222")
         assert stat.journeys[0].duration == 99
         assert stat.journeys[0].type == "best"
         assert stat.journeys[0].nb_transfers == 0
 
         #Verify elements of request.journeys.sections
         assert len(stat.journeys[0].sections) == 3
-        assert stat.journeys[0].sections[1].departure_date_time == str_to_time_stamp("20120614T080100") #1339653660
-        assert stat.journeys[0].sections[1].arrival_date_time == str_to_time_stamp("20120614T080102") #1339653662
+        assert stat.journeys[0].sections[1].departure_date_time == str_to_time_stamp("20120614T080100")
+        assert stat.journeys[0].sections[1].arrival_date_time == str_to_time_stamp("20120614T080102")
         assert stat.journeys[0].sections[1].duration == 2
         assert stat.journeys[0].sections[1].from_embedded_type == "stop_area"
         assert stat.journeys[0].sections[1].from_id == "stopB"
@@ -115,8 +116,8 @@ class MockWrapper:
         assert abs(stat.journeys[0].sections[1].to_coord.lat - 0.000718649585564) < epsilon
         assert abs(stat.journeys[0].sections[1].to_coord.lon - 0.00107797437835) < epsilon
         assert len(stat.journeys[1].sections) == 1
-        assert stat.journeys[1].sections[0].departure_date_time == str_to_time_stamp("20120614T080000") #1339653600
-        assert stat.journeys[1].sections[0].arrival_date_time == str_to_time_stamp("20120614T080435") #1339653875
+        assert stat.journeys[1].sections[0].departure_date_time == str_to_time_stamp("20120614T080000")
+        assert stat.journeys[1].sections[0].arrival_date_time == str_to_time_stamp("20120614T080435")
         assert stat.journeys[1].sections[0].duration == 275
         assert stat.journeys[1].sections[0].from_embedded_type == "address"
         assert stat.journeys[1].sections[0].from_id == "8.98312e-05;8.98312e-05"
@@ -127,7 +128,8 @@ class MockWrapper:
         assert stat.journeys[1].sections[0].to_name == "rue ag"
         assert stat.journeys[1].sections[0].type == "street_network"
 
-        eq_(stat.journey_request.requested_date_time, 1339653600)
+        #journey_request is stored UTC no matter instance or jormun TZ (but instance TZ is in UTC)
+        eq_(stat.journey_request.requested_date_time, str_to_time_stamp("20120614T080000"))
         eq_(stat.journey_request.clockwise, True)
         eq_(stat.journey_request.departure_insee, '03430')
         eq_(stat.journey_request.departure_admin, 'admin:74435')

@@ -1291,9 +1291,9 @@ static boost::optional<pbnavitia::Response> fill_isochrone_common(IsochroneCommo
     return boost::none;
 }
 
-DateTime make_isochrone_date (const DateTime& init_dt,
-                             const DateTime& offset,
-                             const bool clockwise) {
+static DateTime make_isochrone_date (const DateTime& init_dt,
+                                     const DateTime& offset,
+                                     const bool clockwise) {
         return init_dt + (clockwise ? 1: -1) * offset;
 }
 
