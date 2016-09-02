@@ -1,3 +1,9 @@
+navitia2 (2.16.1) unstable; urgency=low
+
+  * Proto: fix after releaseV2.16.0 navitia-proto <https://github.com/CanalTP/navitia/pull/1751>  
+
+ -- xlqian <patrick.qian@canaltp.fr>  Fri, 02 Sep 2016 18:09:18 +0100
+
 navitia2 (2.16.0) unstable; urgency=low
 
   * Stat: fix TZ bug when launching tests on a London platform  <https://github.com/CanalTP/navitia/pull/1749>
