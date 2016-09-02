@@ -32,6 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from importlib import import_module
 import logging
 
+
 class StreetNetwork(object):
 
     @staticmethod
