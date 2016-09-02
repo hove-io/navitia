@@ -70,7 +70,7 @@ class Kraken(object):
         for uri in journey_parameters.forbidden_uris:
             req.journeys.forbidden_uris.append(uri)
 
-        if journey_parameters.direct_path_duration:
+        if journey_parameters.direct_path_duration is not None:
             req.journeys.direct_path_duration = journey_parameters.direct_path_duration
 
         return self.instance.send_and_receive(req)

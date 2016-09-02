@@ -162,8 +162,8 @@ class Scenario(new_default.Scenario):
                                                    request['clockwise'],
                                                    journey_parameters)
 
-            if local_resp.HasField(b"error") and local_resp.error.id == response_pb2.Error.error_id.\
-                    Value('no_solution') and direct_path.journeys:
+            if local_resp.HasField(b"error") and local_resp.error.id == response_pb2.Error.error_id.Value('no_solution') \
+                    and direct_path.journeys:
                 local_resp.ClearField(b"error")
 
             if local_resp.HasField(b"error"):
