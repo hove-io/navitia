@@ -28,14 +28,13 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from navitiacommon import request_pb2, response_pb2, type_pb2
+from navitiacommon import response_pb2, type_pb2
 import logging
 import pybreaker
 import requests as requests
 from jormungandr import app
 import json
 from flask_restful import abort
-from exceptions import NotImplementedError
 from jormungandr.exceptions import UnableToParse, TechnicalError, InvalidArguments
 from flask import g
 from jormungandr.utils import is_url, kilometers_to_metres
@@ -141,7 +140,7 @@ class Valhalla(object):
             costing_options['bicycle']['cycling_speed'] = self._get_speed(valhalla_mode)
         return costing_options
 
-    def _get_response(self, json_resp, datetime, mode):
+    def _get_response(self, json_resp, mode, pt_object_origin, pt_object_destination, datetime):
         map_mode = {
             "walking": response_pb2.Walking,
             "car": response_pb2.Car,
@@ -171,8 +170,8 @@ class Valhalla(object):
             section.duration = journey.duration
             section.length = int(kilometers_to_metres(leg['summary']['length']))
 
-            section.origin.CopyFrom(g.requested_origin)
-            section.destination.CopyFrom(g.requested_destination)
+            section.origin.CopyFrom(pt_object_origin)
+            section.destination.CopyFrom(pt_object_destination)
 
             section.street_network.length = kilometers_to_metres(leg['summary']['length'])
             section.street_network.duration = leg['summary']['time']
@@ -228,4 +227,4 @@ class Valhalla(object):
             resp.status_code = r.status_code
             resp.error.message = resp_json['trip']['status_message']
             return resp
-        return self._get_response(resp_json, datetime, mode)
+        return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, datetime)
