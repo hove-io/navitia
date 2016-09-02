@@ -53,6 +53,43 @@ def decode_func_test():
                                                          [2.440548, 48.57307]]
 
 
+def response_valid():
+    return {
+        "trip": {
+            "summary": {
+                "time": 6,
+                "length": 0.052
+            },
+            "units": "kilometers",
+            "legs": [
+                {
+                    "shape": "qyss{Aco|sCF?kBkHeJw[",
+                    "summary": {
+                        "time": 6,
+                        "length": 0.052
+                    },
+                    "maneuvers": [
+                        {
+                            "end_shape_index": 3,
+                            "time": 6,
+                            "length": 0.052,
+                            "begin_shape_index": 0
+                        },
+                        {
+                            "begin_shape_index": 3,
+                            "time": 0,
+                            "end_shape_index": 3,
+                            "length": 0
+                        }
+                    ]
+                }
+            ],
+            "status_message": "Found route between points",
+            "status": 0
+        }
+    }
+
+
 def get_speed_func_test():
     instance = MagicMock()
     instance.walking_speed = 1
@@ -224,40 +261,7 @@ def get_response_func_with_unknown_exception_test():
     valhalla = Valhalla(instance=instance,
                         url='http://bob.com',
                         costing_options={'bib': 'bom'})
-    resp_json = {
-        "trip": {
-            "summary": {
-                "time": 6,
-                "length": 0.052
-            },
-            "units": "kilometers",
-            "legs": [
-                {
-                    "shape": "qyss{Aco|sCF?kBkHeJw[",
-                    "summary": {
-                        "time": 6,
-                        "length": 0.052
-                    },
-                    "maneuvers": [
-                        {
-                            "end_shape_index": 3,
-                            "time": 6,
-                            "length": 0.052,
-                            "begin_shape_index": 0
-                        },
-                        {
-                            "begin_shape_index": 3,
-                            "time": 0,
-                            "end_shape_index": 3,
-                            "length": 0
-                        }
-                    ]
-                }
-            ],
-            "status_message": "Found route between points",
-            "status": 0
-        }
-    }
+    resp_json = response_valid()
     origin = get_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
     destination = get_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
     response = valhalla._get_response(resp_json, 'walking',
@@ -312,40 +316,7 @@ def direct_path_func_with_valid_response_valhalla_test():
     valhalla = Valhalla(instance=instance,
                         url='http://bob.com',
                         costing_options={'bib': 'bom'})
-    resp_json = {
-        "trip": {
-            "summary": {
-                "time": 6,
-                "length": 0.052
-            },
-            "units": "kilometers",
-            "legs": [
-                {
-                    "shape": "qyss{Aco|sCF?kBkHeJw[",
-                    "summary": {
-                        "time": 6,
-                        "length": 0.052
-                    },
-                    "maneuvers": [
-                        {
-                            "end_shape_index": 3,
-                            "time": 6,
-                            "length": 0.052,
-                            "begin_shape_index": 0
-                        },
-                        {
-                            "begin_shape_index": 3,
-                            "time": 0,
-                            "end_shape_index": 3,
-                            "length": 0
-                        }
-                    ]
-                }
-            ],
-            "status_message": "Found route between points",
-            "status": 0
-        }
-    }
+    resp_json = response_valid()
 
     valhalla.breaker = MagicMock()
     response = requests.Response()
