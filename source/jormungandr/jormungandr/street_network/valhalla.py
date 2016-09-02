@@ -218,13 +218,13 @@ class Valhalla(object):
     def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise):
         url = self._format_url(mode, pt_object_origin, pt_object_destination)
         r = self._call_valhalla(url)
-        if not r:
+        if r == None:
             raise TechnicalError('impossible to access valhalla service')
-        resp_json = r.json()
         if r.status_code != 200:
             logging.getLogger(__name__).error('Valhalla service unavailable, impossible to query : {}'.format(r.url))
             resp = response_pb2.Response()
             resp.status_code = r.status_code
-            resp.error.message = resp_json['trip']['status_message']
+            resp.error.message = 'Valhalla service unavailable, impossible to query : {}'.format(r.url)
             return resp
+        resp_json = r.json()
         return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, datetime)

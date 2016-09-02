@@ -28,13 +28,12 @@
 # www.navitia.io
 import pytest
 from jormungandr.street_network.valhalla import Valhalla
-from jormungandr.exceptions import UnableToParse, InvalidArguments
-from navitiacommon import type_pb2
-
-
-class AbstractObject(object):
-    pass
-
+from jormungandr.exceptions import UnableToParse, InvalidArguments, TechnicalError
+from navitiacommon import type_pb2, response_pb2
+import pybreaker
+from mock import MagicMock
+import requests as requests
+from jormungandr.utils import str_to_time_stamp
 
 def get_pt_object(type, lon, lat):
     pt_object = type_pb2.PtObject()
@@ -55,7 +54,7 @@ def decode_func_test():
 
 
 def get_speed_func_test():
-    instance = AbstractObject()
+    instance = MagicMock()
     instance.walking_speed = 1
     instance.bike_speed = 2
     valhalla = Valhalla(instance=instance,
@@ -65,7 +64,7 @@ def get_speed_func_test():
 
 
 def get_costing_options_func_with_empty_costing_options_test():
-    instance = AbstractObject()
+    instance = MagicMock()
     valhalla = Valhalla(instance=instance,
                         url='http://bob.com')
     valhalla.costing_options = None
@@ -73,7 +72,7 @@ def get_costing_options_func_with_empty_costing_options_test():
 
 
 def get_costing_options_func_with_unkown_costing_options_test():
-    instance = AbstractObject()
+    instance = MagicMock()
     valhalla = Valhalla(instance=instance,
                         url='http://bob.com',
                         costing_options={'bib': 'bom'})
@@ -81,7 +80,7 @@ def get_costing_options_func_with_unkown_costing_options_test():
 
 
 def get_costing_options_func_test():
-    instance = AbstractObject()
+    instance = MagicMock()
     instance.walking_speed = 1
     instance.bike_speed = 2
     valhalla = Valhalla(instance=instance,
@@ -103,17 +102,17 @@ def get_costing_options_func_test():
 
 
 def format_coord_func_invalid_pt_object_test():
-    instance = AbstractObject()
+    instance = MagicMock()
     valhalla = Valhalla(instance=instance,
                         url='http://bob.com',
                         costing_options={'bib': 'bom'})
     with pytest.raises(InvalidArguments) as excinfo:
-        valhalla._format_coord(AbstractObject())
+        valhalla._format_coord(MagicMock())
     assert '400: Bad Request' in str(excinfo.value)
 
 
 def format_coord_func_valid_coord_test():
-    instance = AbstractObject()
+    instance = MagicMock()
     pt_object = get_pt_object(type_pb2.ADDRESS, 1.12, 13.15)
     valhalla = Valhalla(instance=instance,
                         url='http://bob.com',
@@ -127,7 +126,7 @@ def format_coord_func_valid_coord_test():
 
 
 def format_url_func_with_walking_mode_test():
-    instance = AbstractObject()
+    instance = MagicMock()
     instance.walking_speed = 1
     instance.bike_speed = 2
     origin = get_pt_object(type_pb2.ADDRESS, 1.0, 1.0)
@@ -147,7 +146,7 @@ def format_url_func_with_walking_mode_test():
 
 
 def format_url_func_with_bike_mode_test():
-    instance = AbstractObject()
+    instance = MagicMock()
     instance.walking_speed = 1
     instance.bike_speed = 2
 
@@ -168,7 +167,7 @@ def format_url_func_with_bike_mode_test():
 
 
 def format_url_func_with_car_mode_test():
-    instance = AbstractObject()
+    instance = MagicMock()
     instance.walking_speed = 1
     instance.bike_speed = 2
 
@@ -188,7 +187,7 @@ def format_url_func_with_car_mode_test():
 
 
 def format_url_func_invalid_mode_test():
-    instance = AbstractObject()
+    instance = MagicMock()
     valhalla = Valhalla(instance=instance,
                         url='http://bob.com',
                         costing_options={'bib': 'bom'})
@@ -198,3 +197,176 @@ def format_url_func_invalid_mode_test():
         valhalla._format_url("bob", origin, destination)
     assert '400: Bad Request' == str(excinfo.value)
     assert 'InvalidArguments' == str(excinfo.typename)
+
+
+def call_valhalla_func_with_circuit_breaker_error_test():
+    instance = MagicMock()
+    valhalla = Valhalla(instance=instance,
+                        url='http://bob.com',
+                        costing_options={'bib': 'bom'})
+    valhalla.breaker = MagicMock()
+    valhalla.breaker.call = MagicMock(side_effect=pybreaker.CircuitBreakerError())
+    assert valhalla._call_valhalla(valhalla.service_url) == None
+
+
+def call_valhalla_func_with_unknown_exception_test():
+    instance = MagicMock()
+    valhalla = Valhalla(instance=instance,
+                        url='http://bob.com',
+                        costing_options={'bib': 'bom'})
+    valhalla.breaker = MagicMock()
+    valhalla.breaker.call = MagicMock(side_effect=ValueError())
+    assert valhalla._call_valhalla(valhalla.service_url) == None
+
+
+def get_response_func_with_unknown_exception_test():
+    instance = MagicMock()
+    valhalla = Valhalla(instance=instance,
+                        url='http://bob.com',
+                        costing_options={'bib': 'bom'})
+    resp_json = {
+        "trip": {
+            "summary": {
+                "time": 6,
+                "length": 0.052
+            },
+            "units": "kilometers",
+            "legs": [
+                {
+                    "shape": "qyss{Aco|sCF?kBkHeJw[",
+                    "summary": {
+                        "time": 6,
+                        "length": 0.052
+                    },
+                    "maneuvers": [
+                        {
+                            "end_shape_index": 3,
+                            "time": 6,
+                            "length": 0.052,
+                            "begin_shape_index": 0
+                        },
+                        {
+                            "begin_shape_index": 3,
+                            "time": 0,
+                            "end_shape_index": 3,
+                            "length": 0
+                        }
+                    ]
+                }
+            ],
+            "status_message": "Found route between points",
+            "status": 0
+        }
+    }
+    origin = get_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
+    destination = get_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
+    response = valhalla._get_response(resp_json, 'walking',
+                                      origin,
+                                      destination,
+                                      str_to_time_stamp('20161010T152000'))
+    assert response.status_code == 200
+    assert response.response_type == response_pb2.ITINERARY_FOUND
+    assert len(response.journeys) == 1
+    assert response.journeys[0].duration == 6
+    assert len(response.journeys[0].sections) == 1
+    assert response.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
+    assert response.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
+    assert response.journeys[0].sections[0].length == 52
+    assert response.journeys[0].sections[0].destination == destination
+
+
+def direct_path_func_without_response_valhalla_test():
+    instance = MagicMock()
+    valhalla = Valhalla(instance=instance,
+                        url='http://bob.com',
+                        costing_options={'bib': 'bom'})
+    valhalla.breaker = MagicMock()
+    valhalla._call_valhalla = MagicMock(return_value=None)
+    valhalla._format_url = MagicMock(return_value=valhalla.service_url)
+    with pytest.raises(TechnicalError) as excinfo:
+        valhalla.direct_path(None, None, None, None, None)
+    assert '500: Internal Server Error' == str(excinfo.value)
+    assert 'TechnicalError' == str(excinfo.typename)
+
+
+def direct_path_func_with_status_code_400_response_valhalla_test():
+    instance = MagicMock()
+    valhalla = Valhalla(instance=instance,
+                        url='http://bob.com',
+                        costing_options={'bib': 'bom'})
+    valhalla.breaker = MagicMock()
+    response = requests.Response()
+    response.status_code = 400
+    response.url = valhalla.service_url
+    valhalla._call_valhalla = MagicMock(return_value=response)
+    valhalla._format_url = MagicMock(return_value=valhalla.service_url)
+
+    nav_resp = valhalla.direct_path(None, None, None, None, None)
+
+    assert response.status_code == nav_resp.status_code
+    assert nav_resp.error.message == 'Valhalla service unavailable, impossible to query : http://bob.com'
+
+
+def direct_path_func_with_valid_response_valhalla_test():
+    instance = MagicMock()
+    valhalla = Valhalla(instance=instance,
+                        url='http://bob.com',
+                        costing_options={'bib': 'bom'})
+    resp_json = {
+        "trip": {
+            "summary": {
+                "time": 6,
+                "length": 0.052
+            },
+            "units": "kilometers",
+            "legs": [
+                {
+                    "shape": "qyss{Aco|sCF?kBkHeJw[",
+                    "summary": {
+                        "time": 6,
+                        "length": 0.052
+                    },
+                    "maneuvers": [
+                        {
+                            "end_shape_index": 3,
+                            "time": 6,
+                            "length": 0.052,
+                            "begin_shape_index": 0
+                        },
+                        {
+                            "begin_shape_index": 3,
+                            "time": 0,
+                            "end_shape_index": 3,
+                            "length": 0
+                        }
+                    ]
+                }
+            ],
+            "status_message": "Found route between points",
+            "status": 0
+        }
+    }
+
+    valhalla.breaker = MagicMock()
+    response = requests.Response()
+    response.status_code = 200
+    response.json = resp_json
+    response.url = valhalla.service_url
+    valhalla._call_valhalla = MagicMock(return_value=response)
+    valhalla._format_url = MagicMock(return_value=valhalla.service_url)
+
+    origin = get_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
+    destination = get_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
+    valhalla_response = valhalla._get_response(resp_json, 'walking',
+                                      origin,
+                                      destination,
+                                      str_to_time_stamp('20161010T152000'))
+    assert valhalla_response.status_code == 200
+    assert valhalla_response.response_type == response_pb2.ITINERARY_FOUND
+    assert len(valhalla_response.journeys) == 1
+    assert valhalla_response.journeys[0].duration == 6
+    assert len(valhalla_response.journeys[0].sections) == 1
+    assert valhalla_response.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
+    assert valhalla_response.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
+    assert valhalla_response.journeys[0].sections[0].length == 52
+    assert valhalla_response.journeys[0].sections[0].destination == destination
