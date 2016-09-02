@@ -52,10 +52,10 @@ krakens_dir = os.environ['KRAKEN_BUILD_DIR'] + '/tests'
 
 
 class FakeModel(object):
-    def __init__(self, priority, is_free):
+    def __init__(self, priority, is_free, scenario='default'):
         self.priority = priority
         self.is_free = is_free
-        self.scenario = 'default'
+        self.scenario = scenario
 
 
 class AbstractTestFixture:
@@ -129,9 +129,10 @@ class AbstractTestFixture:
             priority = cls.data_sets[name].get('priority', 0)
             logging.info('instance %s has priority %s', name, priority)
             is_free = cls.data_sets[name].get('is_free', False)
+            scenario = cls.data_sets[name].get('scenario', 'default')
             cls.mocks.append(mock.patch.object(i_manager.instances[name],
                                                'get_models',
-                                               return_value=FakeModel(priority, is_free)))
+                                               return_value=FakeModel(priority, is_free, scenario)))
 
         for m in cls.mocks:
             m.start()
@@ -234,6 +235,7 @@ class AbstractTestFixture:
 
     def check_journeys_links(self, response, query_dict):
         journeys_links = get_links_dict(response)
+        clockwise = query_dict.get('datetime_represents', 'departure') == "departure"
         for l in ["prev", "next", "first", "last"]:
             assert l in journeys_links
             url = journeys_links[l]['href']
@@ -242,21 +244,19 @@ class AbstractTestFixture:
             for k, v in additional_args.items():
                 if k == 'datetime':
                     if l == 'next':
-                        self.check_next_datetime_link(get_valid_datetime(v), response)
+                        self.check_next_datetime_link(get_valid_datetime(v), response, clockwise)
                     elif l == 'prev':
-                        self.check_previous_datetime_link(get_valid_datetime(v), response)
+                        self.check_previous_datetime_link(get_valid_datetime(v), response, clockwise)
+                    elif l == 'first':
+                        assert v.endswith('T000000')
+                    elif l == 'last':
+                        assert v.endswith('T235959')
                     continue
                 if k == 'datetime_represents':
-                    query_dt_rep = query_dict.get('datetime_represents', 'departure')
                     if l in ['prev', 'last']:
-                        # the datetime_represents is negated
-                        if query_dt_rep == 'departure':
-                            assert v == 'arrival'
-                        else:
-                            assert v == 'departure'
+                        assert v == 'arrival'
                     else:
-                        assert query_dt_rep == v
-
+                        assert v == 'departure'
                     continue
 
                 eq_(query_dict[k], v)
@@ -309,7 +309,7 @@ class AbstractTestFixture:
             assert 'debug' not in response
 
     @staticmethod
-    def check_next_datetime_link(dt, response):
+    def check_next_datetime_link(dt, response, clockwise):
         if not response.get('journeys'):
             return
         """default next behaviour is 1 min after the best or the soonest"""
@@ -320,7 +320,7 @@ class AbstractTestFixture:
         eq_(j_departure + timedelta(minutes=1), dt)
 
     @staticmethod
-    def check_previous_datetime_link(dt, response):
+    def check_previous_datetime_link(dt, response, clockwise):
         if not response.get('journeys'):
             return
         """default previous behaviour is 1 min before the best or the latest """

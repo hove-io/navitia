@@ -246,6 +246,13 @@ def update_autocomplete():
 
 
 @celery.task()
+def purge_datasets():
+    instances = models.Instance.query_existing().all()
+    for instance in instances:
+        purge_instance(instance.id, current_app.config['DATASET_MAX_BACKUPS_TO_KEEP'])
+
+
+@celery.task()
 def purge_instance(instance_id, nb_to_keep):
     instance = models.Instance.query.get(instance_id)
     logger = get_instance_logger(instance)

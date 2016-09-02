@@ -118,5 +118,20 @@ pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor_max,
                                             georef::StreetNetwork & worker,
                                             const double& speed) ;
 
+pbnavitia::Response make_heat_map(RAPTOR &raptor,
+                                  const boost::posix_time::ptime& current_datetime,
+                                  type::EntryPoint center,
+                                  const uint64_t departure_datetime,
+                                  DateTime max_duration,
+                                  uint32_t max_transfers,
+                                  const type::AccessibiliteParams& accessibilite_params,
+                                  const std::vector<std::string>& forbidden,
+                                  bool clockwise,
+                                  const nt::RTLevel rt_level,
+                                  georef::StreetNetwork & worker,
+                                  const double& speed,
+                                  const navitia::type::Mode_e mode,
+                                  const uint32_t resolution);
+
 
 }}

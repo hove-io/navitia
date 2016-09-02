@@ -33,7 +33,7 @@ from flask import json
 
 from shapely import geometry
 import configparser
-import zmq
+from zmq import green as zmq
 from threading import Thread, Event
 from navitiacommon import type_pb2, request_pb2, models
 import glob

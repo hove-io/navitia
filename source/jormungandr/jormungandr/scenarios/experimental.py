@@ -127,6 +127,7 @@ class Scenario(new_default.Scenario):
                 g.origins_fallback[dep_mode] = instance.georef.get_stop_points(request['origin'],
                         dep_mode,
                         get_max_fallback_duration(request, dep_mode))
+
                 #logger.debug('origins %s: %s', dep_mode, g.origins_fallback[dep_mode])
 
             if arr_mode not in g.destinations_fallback:
@@ -151,6 +152,9 @@ class Scenario(new_default.Scenario):
                                                    request['datetime'],
                                                    request['clockwise'],
                                                    journey_parameters)
+
+            if local_resp.HasField(b"error"):
+                return [local_resp]
 
             # for log purpose we put and id in each journeys
             for idx, j in enumerate(local_resp.journeys):
@@ -177,8 +181,6 @@ class Scenario(new_default.Scenario):
         for r in resp:
             fill_uris(r)
         return resp
-
-
 
     def isochrone(self, request, instance):
         return self.__on_journeys(type_pb2.ISOCHRONE, request, instance)

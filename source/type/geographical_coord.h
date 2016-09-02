@@ -83,7 +83,7 @@ struct GeographicalCoord{
       * We use the Haversine frmula
       * http://en.wikipedia.org/wiki/Law_of_haversines
       *
-      * If the coordinate ara not in degree, thus we use euclidean distance
+      * If the coordinate is not in degree, thus we use euclidean distance
       */
     double distance_to(const GeographicalCoord & other) const;
 
@@ -94,7 +94,15 @@ struct GeographicalCoord{
        Si le point projeté tombe en dehors du segment, alors ça tombe sur le nœud le plus proche
        htCommercialtp://paulbourke.net/geometry/pointline/
        */
+
+    template<typename F>
+    std::pair<GeographicalCoord, float> project_common(GeographicalCoord segment_start,
+                                                                          GeographicalCoord segment_end,
+                                                                          F f) const;
+
     std::pair<type::GeographicalCoord, float> project(GeographicalCoord segment_start, GeographicalCoord segment_end) const;
+
+    std::pair<GeographicalCoord, float> approx_project(GeographicalCoord segment_start, GeographicalCoord segment_end, double coslat) const;
 
     /** Calcule la distance au carré grand arc entre deux points de manière approchée
 

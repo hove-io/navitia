@@ -68,8 +68,9 @@ class Timeo(RealtimeProxy):
         self.object_id_tag = object_id_tag if object_id_tag else id
         self.destination_id_tag = destination_id_tag
         self.instance = instance
-        self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_TIMEO_FAIL'],
-                                                reset_timeout=app.config['CIRCUIT_BREAKER_TIMEO_TIMEOUT_S'])
+        fail_max = kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_TIMEO_FAIL'])
+        reset_timeout = kwargs.get('circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_TIMEO_TIMEOUT_S'])
+        self.breaker = pybreaker.CircuitBreaker(fail_max=fail_max, reset_timeout=reset_timeout)
 
         # Note: if the timezone is not know, pytz raise an error
         self.timezone = pytz.timezone(timezone)

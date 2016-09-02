@@ -525,6 +525,9 @@ def is_valid_multipolygon_geojson(geojson):
 def is_valid_graphical_isochrone(isochrone, tester, query):
 
     for g in get_not_null(isochrone, 'isochrones'):
+        get_valid_datetime(g['requested_date_time'])
+        get_valid_datetime(g['min_date_time'])
+        get_valid_datetime(g['max_date_time'])
         geojson = g['geojson']
         assert geojson
         is_valid_multipolygon_geojson(geojson)
@@ -538,6 +541,68 @@ def is_valid_graphical_isochrone(isochrone, tester, query):
 
     for feed_publisher in get_not_null(isochrone, 'feed_publishers'):
         is_valid_feed_publisher(feed_publisher)
+
+
+def is_valid_single_coord(coord, is_valid_type, name):
+    min_type = get_not_null(coord, 'min_' + name)
+    center_type = get_not_null(coord, 'center_' + name)
+    max_type = get_not_null(coord, 'max_' + name)
+    for t in [min_type, center_type, max_type]:
+        is_valid_type(t)
+    assert min_type <= center_type <= max_type
+
+
+def is_valid_header(header):
+    max_type = header[0]['cell_lat']['min_lat']
+    for lat in header:
+        is_valid_single_coord(lat['cell_lat'], is_valid_lat, 'lat')
+        assert lat['cell_lat']['min_lat'] == max_type
+        max_type = lat['cell_lat']['max_lat']
+    return True
+
+
+def is_valid_duration(duration):
+    if duration is not None:
+        get_valid_unsigned_int(duration)
+    return True
+
+
+def is_valid_body(body):
+    max_type = body[0]['cell_lon']['min_lon']
+    length = len(body[0]['duration'])
+    for pair in body:
+        is_valid_single_coord(pair['cell_lon'], is_valid_lon, 'lon')
+        assert pair['cell_lon']['min_lon'] == max_type
+        max_type = pair['cell_lon']['max_lon']
+        assert length == len(pair['duration'])
+        for duration in pair['duration']:
+            is_valid_duration(duration)
+    return True
+
+
+def is_valid_matrix(matrix):
+    header = matrix['line_headers']
+    assert header
+    is_valid_header(header)
+    body = matrix['lines']
+    assert body
+    is_valid_body(body)
+    return True
+
+
+def is_valid_heat_maps(heat_map, tester, query):
+
+    for g in get_not_null(heat_map, 'heat_maps'):
+        get_valid_datetime(g['requested_date_time'])
+        matrix = g['heat_matrix']
+        assert matrix
+        is_valid_matrix(matrix)
+        if 'from' in g:
+            is_valid_place(g['from'])
+        if 'to' in g:
+            is_valid_place(g['to'])
+        assert ('from' in g) ^ ('to' in g)
+    return True
 
 
 def is_valid_section(section, query):
@@ -1012,6 +1077,9 @@ journey_basic_query = "journeys?from={from_coord}&to={to_coord}&datetime={dateti
     .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T080000")
 isochrone_basic_query = "isochrones?from={from_coord}&datetime={datetime}&max_duration={max_duration}"\
     .format(from_coord=s_coord, datetime="20120614T080000", max_duration="3600")
+heat_map_basic_query = "heat_maps?from={from_coord}&datetime={datetime}&max_duration={max_duration}"\
+    .format(from_coord=s_coord, datetime="20120614T080000", max_duration="3600")
+
 
 def get_all_disruptions(elem, response):
     """

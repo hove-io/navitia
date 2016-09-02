@@ -37,7 +37,7 @@ from jormungandr import i_manager, timezone, global_autocomplete, bss_provider_m
 from jormungandr.interfaces.v1.fields import disruption_marshaller
 from jormungandr.interfaces.v1.make_links import add_id_links
 from jormungandr.interfaces.v1.fields import place, NonNullList, NonNullNested, PbField, pagination,\
-                                             error, feed_publisher, Lit, ListLit, beta_warning
+                                             error, feed_publisher, Lit, ListLit, beta_endpoint
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type, date_time_format
@@ -177,7 +177,7 @@ class GeocodejsonFeature(fields.Raw):
 
 geocodejson = {
     "places": fields.List(GeocodejsonFeature, attribute='features'),
-    "warnings": ListLit([fields.Nested(beta_warning)]),
+    "warnings": ListLit([fields.Nested(beta_endpoint)]),
 }
 
 

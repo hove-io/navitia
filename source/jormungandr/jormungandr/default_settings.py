@@ -105,3 +105,4 @@ CIRCUIT_BREAKER_CLEVERAGE_TIMEOUT_S = 60  # the circuit breaker retries after th
 
     
 GRAPHICAL_ISOCHRONE = False
+HEAT_MAP = False

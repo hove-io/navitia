@@ -132,6 +132,10 @@ struct PathFinder {
     routing::map_stop_point_duration
     find_nearest_stop_points(const navitia::time_duration& radius,
                              const proximitylist::ProximityList<type::idx_t>& pl);
+    using coord_uri = std::string;
+    boost::container::flat_map<coord_uri, navitia::time_duration>
+    get_duration_with_dijkstra(const navitia::time_duration& radius,
+                               const std::vector<type::GeographicalCoord>& entry_points);
 
     /// compute the distance from the starting point to the target stop point
     navitia::time_duration get_distance(type::idx_t target_idx);
@@ -194,6 +198,12 @@ private:
     std::vector<std::pair<type::idx_t, type::GeographicalCoord>>
     crow_fly_find_nearest_stop_points(const navitia::time_duration& radius,
                                       const proximitylist::ProximityList<type::idx_t>& pl);
+
+    template<typename K, typename U, typename G>
+    boost::container::flat_map<K, navitia::time_duration>
+    start_dijkstra_and_fill_duration_map(const navitia::time_duration& radius,
+            const std::vector<U>& destinations,
+            const G& projection_getter);
 
 #ifdef _DEBUG_DIJKSTRA_QUANTUM_
     void dump_dijkstra_for_quantum(const ProjectionData& target);
@@ -320,7 +330,7 @@ struct printer_distance_visitor : public distance_visitor {
 struct target_all_visitor : public boost::dijkstra_visitor<> {
     std::vector<vertex_t> destinations;
     size_t nbFound = 0;
-    target_all_visitor(std::vector<vertex_t> destinations) : destinations(destinations){}
+    target_all_visitor(const std::vector<vertex_t>& destinations) : destinations(destinations.begin(), destinations.end()){}
     template <typename graph_type>
     void finish_vertex(vertex_t u, const graph_type&){
         if (std::find(destinations.begin(), destinations.end(), u) != destinations.end()) {

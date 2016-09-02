@@ -42,7 +42,7 @@ def check_journeys(resp):
     assert not resp.get('journeys') or sum([1 for j in resp['journeys'] if j['type'] == "best"]) == 1
 
 
-@dataset({"main_routing_test": {}})
+@dataset({"main_routing_test": {'scenario': 'experimental'}})
 class TestJourneysExperimental(AbstractTestFixture):
     """
     Test the experiental scenario
@@ -52,35 +52,24 @@ class TestJourneysExperimental(AbstractTestFixture):
     NOTE: for the moment we cannot import all routing tests, so we only get 2, but we need to add some more
     """
 
-    def setup(self):
-        logging.debug('setup for experimental')
-        from jormungandr import i_manager
-        dest_instance = i_manager.instances['main_routing_test']
-        self.old_scenario = dest_instance._scenario
-        dest_instance._scenario = jormungandr.scenarios.experimental.Scenario()
-
-    def teardown(self):
-        from jormungandr import i_manager
-        i_manager.instances['main_routing_test']._scenario = self.old_scenario
-
     @staticmethod
-    def check_next_datetime_link(dt, response):
+    def check_next_datetime_link(dt, response, clockwise):
         if not response.get('journeys'):
             return
         """default next behaviour is 1s after the best or the soonest"""
         j_to_compare = min_from_criteria(generate_pt_journeys(response),
-                                         new_default_pagination_journey_comparator(clockwise=True))
+                                         new_default_pagination_journey_comparator(clockwise=clockwise))
 
         j_departure = get_valid_datetime(j_to_compare['departure_date_time'])
         eq_(j_departure + timedelta(seconds=1), dt)
 
     @staticmethod
-    def check_previous_datetime_link(dt, response):
+    def check_previous_datetime_link(dt, response, clockwise):
         if not response.get('journeys'):
             return
         """default previous behaviour is 1s before the best or the latest """
         j_to_compare = min_from_criteria(generate_pt_journeys(response),
-                                         new_default_pagination_journey_comparator(clockwise=False))
+                                         new_default_pagination_journey_comparator(clockwise=clockwise))
 
         j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
         eq_(j_departure - timedelta(seconds=1), dt)
@@ -124,7 +113,6 @@ class TestJourneysExperimental(AbstractTestFixture):
             .format(from_coord="0.0000898312;0.0000898312",  # coordinate of S in the dataset
             to_coord="0.00188646;0.00071865",  # coordinate of R in the dataset
             datetime="20110614T080000")  # 2011 should not be in the production period
-
         response, status = self.query_no_assert("v1/coverage/main_routing_test/" + query_out_of_production_bound)
 
         assert status != 200, "the response should not be valid"

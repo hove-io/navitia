@@ -1,3 +1,25 @@
+navitia2 (2.16.0) unstable; urgency=low
+
+  * Stat: fix TZ bug when launching tests on a London platform  <https://github.com/CanalTP/navitia/pull/1749>
+  * Jormungandr: add a parameters to remove geojson from lines responses  <https://github.com/CanalTP/navitia/pull/1747> 
+  * Osm2ed: fix a bug with private way part of an administrative boundary  <https://github.com/CanalTP/navitia/pull/1730>
+  * Jormungandr: add support for async call to kraken  <https://github.com/CanalTP/navitia/pull/1743>
+  * Jormungandr: fix first and last links in journeys  <https://github.com/CanalTP/navitia/pull/1745>
+  * Doc: how to compile and use navitia with vagrant (on mac)  <https://github.com/CanalTP/navitia/pull/1740>
+  * Jormungandr: fix journeys without coverage using new_default  <https://github.com/CanalTP/navitia/pull/1742>
+  * Osm2ed: use only highway for routing  <https://github.com/CanalTP/navitia/pull/1744>
+  * Experimental: add street network routing matrix api for experimental  <https://github.com/CanalTP/navitia/pull/1721>
+  * Tyr: execute purge of instances automatically every night  <https://github.com/CanalTP/navitia/pull/1739>
+  * Jormungandr: configuration of circuit breaker per connector instances  <https://github.com/CanalTP/navitia/pull/1734>
+  * Update isochrones.md  <https://github.com/CanalTP/navitia/pull/1735>
+  * OpenDataBar URL correction  <https://github.com/CanalTP/navitia/pull/1738>
+  * Isochrone: Add min_date_time and max_date_time in json  <https://github.com/CanalTP/navitia/pull/1737>
+  * Heat_maps: Improve processing time and add few params  <https://github.com/CanalTP/navitia/pull/1733>
+  * Heat_maps: add new API  <https://github.com/CanalTP/navitia/pull/1718>
+  * All: Journey for the first day of production period and datetime_represents=arrival  <https://github.com/CanalTP/navitia/pull/1732>
+
+ -- xlqian <patrick.qian@canaltp.fr>  Fri, 02 Sep 2016 17:09:11 +0100
+
 navitia2 (2.15.1) unstable; urgency=low
 
   * jormun: fix a kwargs on the wrong place :( <https://github.com/CanalTP/navitia/pull/1729>

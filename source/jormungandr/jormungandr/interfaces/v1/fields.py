@@ -354,6 +354,9 @@ class MultiLineString(fields.Raw):
         super(MultiLineString, self).__init__(**kwargs)
 
     def output(self, key, obj):
+        if hasattr(g, 'disable_geojson') and g.disable_geojson:
+            return None
+
         val = fields.get_value(key if self.attribute is None else self.attribute, obj)
 
         lines = []
@@ -415,14 +418,14 @@ class SectionGeoJson(fields.Raw):
         return response
 
 
-class MultiPolyGeoJson(fields.Raw):
+class JsonString(fields.Raw):
     def __init__(self, **kwargs):
-        super(MultiPolyGeoJson, self).__init__(**kwargs)
+        super(JsonString, self).__init__(**kwargs)
 
     def format(self, value):
 
-        geojson = str(value)
-        response = ujson.loads(geojson)
+        json = str(value)
+        response = ujson.loads(json)
 
         return response
 
@@ -745,8 +748,8 @@ error = {
     'message': fields.String()
 }
 
-beta_warning = {
-    'id': Lit("beta_api"),
+beta_endpoint = {
+    'id': Lit("beta_endpoint"),
     'message': Lit("This service is under construction. You can help through github.com/CanalTP/navitia"),
 }
 

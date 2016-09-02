@@ -31,7 +31,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask.ext.restful import fields, reqparse, marshal_with, abort
 from jormungandr import i_manager
-from jormungandr.interfaces.v1.fields import Links, MultiPolyGeoJson
+from jormungandr.interfaces.v1.fields import Links
 from jormungandr.interfaces.v1.fields import error,\
     PbField, NonNullList, NonNullNested,\
     feed_publisher

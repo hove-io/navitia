@@ -1833,6 +1833,10 @@ pbnavitia::GraphicalIsochrone* PbCreator::add_graphical_isochrones() {
     return response.add_graphical_isochrones();
 }
 
+pbnavitia::HeatMap* PbCreator::add_heat_maps() {
+    return response.add_heat_maps();
+}
+
 bool PbCreator::has_error(){
     return response.has_error();
 }
