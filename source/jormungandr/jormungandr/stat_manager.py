@@ -106,6 +106,11 @@ def find_destination_admin(journey):
     return find_admin(journey['sections'][-1]['to'])
 
 
+def tz_str_to_utc_timestamp(dt_str, timezone):
+    dt = timezone.normalize(timezone.localize(utils.str_to_dt(dt_str)))
+    return utils.date_to_timestamp(dt.astimezone(pytz.utc))
+
+
 class StatManager(object):
 
     def __init__(self):
@@ -300,16 +305,13 @@ class StatManager(object):
 
         tz = utils.get_timezone()
         if 'requested_date_time' in resp_journey:
-            dt = tz.normalize(tz.localize(utils.str_to_dt(resp_journey['requested_date_time'])))
-            stat_journey.requested_date_time = utils.date_to_timestamp(dt.astimezone(pytz.utc))
+            stat_journey.requested_date_time = tz_str_to_utc_timestamp(resp_journey['requested_date_time'], tz)
 
         if 'departure_date_time' in resp_journey:
-            dt = tz.normalize(tz.localize(utils.str_to_dt(resp_journey['departure_date_time'])))
-            stat_journey.departure_date_time = utils.date_to_timestamp(dt.astimezone(pytz.utc))
+            stat_journey.departure_date_time = tz_str_to_utc_timestamp(resp_journey['departure_date_time'], tz)
 
         if 'arrival_date_time' in resp_journey:
-            dt = tz.normalize(tz.localize(utils.str_to_dt(resp_journey['arrival_date_time'])))
-            stat_journey.arrival_date_time = utils.date_to_timestamp(dt.astimezone(pytz.utc))
+            stat_journey.arrival_date_time = tz_str_to_utc_timestamp(resp_journey['arrival_date_time'], tz)
 
         if 'duration' in resp_journey:
             stat_journey.duration = resp_journey['duration']
@@ -358,8 +360,8 @@ class StatManager(object):
         journey_request = stat_request.journey_request
         if hasattr(g, 'stat_interpreted_parameters') and g.stat_interpreted_parameters['original_datetime']:
             tz = utils.get_timezone()
-            utc_dt = tz.normalize(tz.localize(g.stat_interpreted_parameters['original_datetime'])).astimezone(pytz.utc)
-            journey_request.requested_date_time = utils.date_to_timestamp(utc_dt)
+            dt = tz.normalize(tz.localize(g.stat_interpreted_parameters['original_datetime']))
+            journey_request.requested_date_time = utils.date_to_timestamp(dt.astimezone(pytz.utc))
             journey_request.clockwise = g.stat_interpreted_parameters['clockwise']
         if 'journeys' in call_result[0] and call_result[0]['journeys']:
             first_journey = call_result[0]['journeys'][0]
@@ -395,12 +397,10 @@ class StatManager(object):
     def fill_section(self, stat_section, resp_section, previous_section):
         tz = utils.get_timezone()
         if 'departure_date_time' in resp_section:
-            dt = tz.normalize(tz.localize(utils.str_to_dt(resp_section['departure_date_time'])))
-            stat_section.departure_date_time = utils.date_to_timestamp(dt.astimezone(pytz.utc))
+            stat_section.departure_date_time = tz_str_to_utc_timestamp(resp_section['departure_date_time'], tz)
 
         if 'arrival_date_time' in resp_section:
-            dt = tz.normalize(tz.localize(utils.str_to_dt(resp_section['arrival_date_time'])))
-            stat_section.arrival_date_time = utils.date_to_timestamp(dt.astimezone(pytz.utc))
+            stat_section.arrival_date_time = tz_str_to_utc_timestamp(resp_section['arrival_date_time'], tz)
 
         if 'duration' in resp_section:
             stat_section.duration = resp_section['duration']
