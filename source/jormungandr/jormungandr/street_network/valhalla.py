@@ -216,8 +216,8 @@ class Valhalla(object):
 
         return '{}/route?json={}&api_key={}'.format(self.service_url, json.dumps(args), self.api_key)
 
-    def direct_path(self, mode, origin, destination, datetime, clockwise):
-        url = self._format_url(mode, g.requested_origin, g.requested_destination)
+    def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise):
+        url = self._format_url(mode, pt_object_origin, pt_object_destination)
         r = self._call_valhalla(url)
         if not r:
             raise TechnicalError('impossible to access valhalla service')

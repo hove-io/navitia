@@ -115,9 +115,11 @@ class Scenario(new_default.Scenario):
     def __init__(self):
         super(Scenario, self).__init__()
 
-    def _get_direct_path(self, instance, mode, origin, destination, datetime, clockwise):
+    def _get_direct_path(self, instance, mode, pt_object_origin,
+                         pt_object_destination, datetime, clockwise):
         # TODO: cache by (mode, origin, destination) and redate with datetime and clockwise
-        return instance.street_network_service.direct_path(mode, origin, destination, datetime, clockwise)
+        return instance.street_network_service.direct_path(mode, pt_object_origin,
+                                                           pt_object_destination, datetime, clockwise)
 
     def call_kraken(self, request_type, request, instance, krakens_call):
         """
@@ -154,8 +156,8 @@ class Scenario(new_default.Scenario):
             self.nb_kraken_calls += 1
             direct_path = self._get_direct_path(instance,
                                                 dep_mode,
-                                                request['origin'],
-                                                request['destination'],
+                                                g.requested_origin,
+                                                g.requested_destination,
                                                 request['datetime'],
                                                 request['clockwise'])
             if direct_path.journeys:

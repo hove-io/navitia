@@ -39,12 +39,18 @@ class Kraken(object):
                  api_key=None, **kwargs):
         self.instance = instance
 
-    def direct_path(self, mode, origin, destination, datetime, clockwise):
+    def _get_uri(self, pt_object):
+        if pt_object.embedded_type == type_pb2.ADDRESS:
+            coords = pt_object.uri.split(';')
+            return "coord:{}:{}".format(coords[0], coords[1])
+        return pt_object.uri
+
+    def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise):
         req = request_pb2.Request()
         req.requested_api = type_pb2.direct_path
-        req.direct_path.origin.place = origin
+        req.direct_path.origin.place = self._get_uri(pt_object_origin)
         req.direct_path.origin.access_duration = 0
-        req.direct_path.destination.place = destination
+        req.direct_path.destination.place = self._get_uri(pt_object_destination)
         req.direct_path.destination.access_duration = 0
         req.direct_path.datetime = datetime
         req.direct_path.clockwise = clockwise
