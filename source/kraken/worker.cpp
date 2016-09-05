@@ -873,6 +873,7 @@ static type::EntryPoint make_sn_entry_point(const std::string& place,
     case type::Type_e::StopPoint:
     case type::Type_e::POI:
         entry_point.coordinates = coord_of_entry_point(entry_point, data); // StopPoint doesn't use street network
+        break;
     default:
         break;
     }
@@ -883,6 +884,7 @@ static type::EntryPoint make_sn_entry_point(const std::string& place,
     case type::Type_e::POI:
     case type::Type_e::StopArea:
         entry_point.streetnetwork_params.mode = type::static_data::get()->modeByCaption(mode);
+        break;
     default:
         break;
     }
