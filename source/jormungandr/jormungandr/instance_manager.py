@@ -113,9 +113,8 @@ class InstanceManager(object):
                 with open(file_name) as f:
                     config_data = json.load(f)
                     name = config_data['key']
-                    default_street_network_configuration = {'class': 'jormungandr.street_network.kraken.Kraken'}
                     instance = Instance(self.context, name, config_data['zmq_socket'],
-                                        config_data.get('street_network', default_street_network_configuration),
+                                        config_data.get('street_network', None),
                                         config_data.get('realtime_proxies', []))
             else:
                 logging.getLogger(__name__).warn('impossible to init an instance with the configuration '

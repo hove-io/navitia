@@ -69,7 +69,9 @@ def _init_g():
 
 class Instance(object):
 
-    def __init__(self, context, name, zmq_socket, street_network_configuration, realtime_proxies_configuration=[]):
+    def __init__(self, context, name, zmq_socket, street_network_configuration=None, realtime_proxies_configuration=[]):
+        if not street_network_configuration:
+            street_network_configuration = {'class': 'jormungandr.street_network.kraken.Kraken'}
         self.geom = None
         self._sockets = queue.Queue()
         self.socket_path = zmq_socket
