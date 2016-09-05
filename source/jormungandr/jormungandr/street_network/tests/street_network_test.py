@@ -46,30 +46,30 @@ def valhalla_class_without_url_test():
 
 def valhalla_class_wit_empty_url_test():
     with pytest.raises(ValueError) as excinfo:
-        valhalla_empty_url = {
+        kraken_conf = {
             'class': 'jormungandr.street_network.valhalla.Valhalla',
             'args': {
                 "service_url": ""
             }
         }
-        StreetNetwork.get_street_network(None, valhalla_empty_url)
+        StreetNetwork.get_street_network(None, kraken_conf)
     assert 'service_url is invalid, you give ' in str(excinfo.value)
 
 
 def valhalla_class_with_invalid_url_test():
     with pytest.raises(ValueError) as excinfo:
-        valhalla_empty_url = {
+        kraken_conf = {
             'class': 'jormungandr.street_network.valhalla.Valhalla',
             'args': {
                 "service_url": "bob"
             }
         }
-        StreetNetwork.get_street_network(None, valhalla_empty_url)
+        StreetNetwork.get_street_network(None, kraken_conf)
     assert 'service_url is invalid, you give bob' in str(excinfo.value)
 
 
 def valhalla_class_without_costing_options_test():
-    valhalla_url = {
+    kraken_conf = {
         'class': 'jormungandr.street_network.valhalla.Valhalla',
         'args': {
             "service_url": "http://localhost:8002",
@@ -78,11 +78,11 @@ def valhalla_class_without_costing_options_test():
             }
         }
     }
-    assert isinstance(StreetNetwork.get_street_network(None, valhalla_url), Valhalla)
+    assert isinstance(StreetNetwork.get_street_network(None, kraken_conf), Valhalla)
 
 
 def valhalla_class_with_empty_costing_options_test():
-    valhalla_url = {
+    kraken_conf = {
         'class': 'jormungandr.street_network.valhalla.Valhalla',
         'args': {
             "service_url": "http://localhost:8002",
@@ -92,11 +92,11 @@ def valhalla_class_with_empty_costing_options_test():
             "costing_options": {}
         }
     }
-    assert isinstance(StreetNetwork.get_street_network(None, valhalla_url), Valhalla)
+    assert isinstance(StreetNetwork.get_street_network(None, kraken_conf), Valhalla)
 
 
 def valhalla_class_with_url_valid_test():
-    valhalla_url = {
+    kraken_conf = {
         'class': 'jormungandr.street_network.valhalla.Valhalla',
         'args': {
             "service_url": "http://localhost:8002",
@@ -110,12 +110,12 @@ def valhalla_class_with_url_valid_test():
             }
         }
     }
-    assert isinstance(StreetNetwork.get_street_network(None, valhalla_url), Valhalla)
+    assert isinstance(StreetNetwork.get_street_network(None, kraken_conf), Valhalla)
 
 
 def street_network_without_class_test():
     with pytest.raises(KeyError) as excinfo:
-        valhalla_url = {
+        kraken_conf = {
             'args': {
                 "service_url": "http://localhost:8002",
                 "service_args": {
@@ -128,13 +128,13 @@ def street_network_without_class_test():
             }
             }
         }
-        StreetNetwork.get_street_network(None, valhalla_url)
+        StreetNetwork.get_street_network(None, kraken_conf)
     assert 'impossible to build a routing, missing mandatory field in configuration' in str(excinfo.value)
 
 
 def valhalla_class_with_class_invalid_test():
     with pytest.raises(ValueError) as excinfo:
-        valhalla_url = {
+        kraken_conf = {
             'class': 'jormungandr',
             'args': {
                 "service_url": "http://localhost:8002",
@@ -148,13 +148,13 @@ def valhalla_class_with_class_invalid_test():
             }
             }
         }
-        StreetNetwork.get_street_network(None, valhalla_url)
+        StreetNetwork.get_street_network(None, kraken_conf)
     assert 'impossible to build StreetNetwork, wrongly formated class: jormungandr' in str(excinfo.value)
 
 
 def valhalla_class_with_class_not_exist_test():
     with pytest.raises(AttributeError) as excinfo:
-        valhalla_url = {
+        kraken_conf = {
             'class': 'jormungandr.street_network.valhalla.bob',
             'args': {
                 "service_url": "http://localhost:8002",
@@ -168,6 +168,6 @@ def valhalla_class_with_class_not_exist_test():
             }
             }
         }
-        StreetNetwork.get_street_network(None, valhalla_url)
+        StreetNetwork.get_street_network(None, kraken_conf)
     assert 'impossible to build StreetNetwork, cannot find class: jormungandr.street_network.valhalla.bob' \
            in str(excinfo.value)

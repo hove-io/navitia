@@ -161,12 +161,12 @@ class TestValhallaDirectPath(AbstractTestFixture):
         # walking from kraken
         assert('walking' in response['journeys'][3]['tags'])
         assert len(response['journeys'][3]['sections']) == 3
-        assert response['journeys'][3]['duration'] == 86
+        assert response['journeys'][3]['duration'] == 83
 
         # walking from kraken
         assert('walking' in response['journeys'][4]['tags'])
         assert len(response['journeys'][4]['sections']) == 3
-        assert response['journeys'][4]['duration'] == 94
+        assert response['journeys'][4]['duration'] == 86
 
         # walking from kraken
         assert('walking' in response['journeys'][5]['tags'])
