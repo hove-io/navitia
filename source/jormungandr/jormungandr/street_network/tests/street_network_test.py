@@ -126,11 +126,11 @@ def valhalla_class_with_class_invalid_test():
             'class': 'jormungandr',
             'args': {
                 "service_url": "http://localhost:8002",
-            "costing_options": {
-                "pedestrian": {
-                    "walking_speed": 50.1
+                "costing_options": {
+                    "pedestrian": {
+                        "walking_speed": 50.1
+                    }
                 }
-            }
             }
         }
         StreetNetwork.get_street_network(None, kraken_conf)
@@ -143,11 +143,11 @@ def valhalla_class_with_class_not_exist_test():
             'class': 'jormungandr.street_network.valhalla.bob',
             'args': {
                 "service_url": "http://localhost:8002",
-            "costing_options": {
-                "pedestrian": {
-                    "walking_speed": 50.1
+                "costing_options": {
+                    "pedestrian": {
+                        "walking_speed": 50.1
+                    }
                 }
-            }
             }
         }
         StreetNetwork.get_street_network(None, kraken_conf)
