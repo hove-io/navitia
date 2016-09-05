@@ -138,7 +138,7 @@ class TestValhallaDirectPath(AbstractTestFixture):
         "&debug=true&_override_scenario=experimental"
         response = self.query_region(query)
         check_journeys(response)
-        assert len(response['journeys']) == 6
+        assert len(response['journeys']) == 3
 
         # car from valhalla
         assert('car' in response['journeys'][0]['tags'])
@@ -155,17 +155,3 @@ class TestValhallaDirectPath(AbstractTestFixture):
         assert len(response['journeys'][2]['sections']) == 1
         assert response['journeys'][2]['duration'] == 20
 
-        # walking from kraken
-        assert('walking' in response['journeys'][3]['tags'])
-        assert len(response['journeys'][3]['sections']) == 3
-        assert response['journeys'][3]['duration'] == 83
-
-        # walking from kraken
-        assert('walking' in response['journeys'][4]['tags'])
-        assert len(response['journeys'][4]['sections']) == 3
-        assert response['journeys'][4]['duration'] == 86
-
-        # walking from kraken
-        assert('walking' in response['journeys'][5]['tags'])
-        assert len(response['journeys'][5]['sections']) == 3
-        assert response['journeys'][5]['duration'] == 99
