@@ -155,6 +155,8 @@ class Scenario(new_default.Scenario):
             if direct_path.journeys:
                 journey_parameters.direct_path_duration = direct_path.journeys[0].durations.total
                 resp.append(direct_path)
+            else:
+                journey_parameters.direct_path_duration = None
 
             local_resp = instance.planner.journeys(g.origins_fallback[dep_mode],
                                                    g.destinations_fallback[arr_mode],
