@@ -50,16 +50,17 @@ class AtosProvider(BssProvider):
 
     def support_poi(self, poi):
         properties = poi.get('properties', {})
-        return properties.get('operator').lower() in self.operators and \
-               properties.get('network').lower() == self.network
+        return properties.get('operator', '').lower() in self.operators and \
+               properties.get('network', '').lower() == self.network
 
     def get_informations(self, poi):
         logging.debug('building stands')
         try:
             all_stands = self.get_all_stands()
-            ref = poi.get('properties', {}).get('ref').lstrip('0')
-            stands = all_stands.get(ref)
-            return stands
+            ref = poi.get('properties', {}).get('ref')
+            if ref:
+                stands = all_stands.get(ref.lstrip('0'))
+                return stands
         except:
             #suds raide a lot of crap... don't want to handle all of them
             logging.getLogger(__name__).exception('transport error during call to %s bss provider', self.id_ao)
