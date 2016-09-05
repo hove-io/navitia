@@ -178,7 +178,7 @@ def format_url_func_with_walking_mode_test():
                                                 '[{"lat": 1.0, "type": "break", "lon": 1.0}, ' \
                                                 '{"lat": 2.0, "type": "break", "lon": 2.0}], ' \
                                                 '"costing": "pedestrian", ' \
-                                                '"directions_options": {"units": "kilometers", "language": "fr-FR"}}&' \
+                                                '"directions_options": {"units": "kilometers"}}&' \
                                                 'api_key=None'
 
 
@@ -199,7 +199,7 @@ def format_url_func_with_bike_mode_test():
                                                 '{"costing_options": {"bicycle": {"cycling_speed": 7.2}}, ' \
                                                 '"locations": [{"lat": 1.0, "type": "break", "lon": 1.0}, ' \
                                                 '{"lat": 2.0, "type": "break", "lon": 2.0}], "costing": "bicycle", ' \
-                                                '"directions_options": {"units": "kilometers", "language": "fr-FR"}}&' \
+                                                '"directions_options": {"units": "kilometers"}}&' \
                                                 'api_key=None'
 
 
@@ -219,7 +219,7 @@ def format_url_func_with_car_mode_test():
                                 destination) == 'http://bob.com/route?json=' \
                                                 '{"locations": [{"lat": 1.0, "type": "break", "lon": 1.0}, ' \
                                                 '{"lat": 2.0, "type": "break", "lon": 2.0}], "costing": "auto", ' \
-                                                '"directions_options": {"units": "kilometers", "language": "fr-FR"}}&' \
+                                                '"directions_options": {"units": "kilometers"}}&' \
                                                 'api_key=None'
 
 

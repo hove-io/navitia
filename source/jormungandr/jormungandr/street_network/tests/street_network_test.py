@@ -73,9 +73,6 @@ def valhalla_class_without_costing_options_test():
         'class': 'jormungandr.street_network.valhalla.Valhalla',
         'args': {
             "service_url": "http://localhost:8002",
-            "service_args": {
-                "directions_options": {"language": "fr-FR"}
-            }
         }
     }
     assert isinstance(StreetNetwork.get_street_network(None, kraken_conf), Valhalla)
@@ -86,9 +83,6 @@ def valhalla_class_with_empty_costing_options_test():
         'class': 'jormungandr.street_network.valhalla.Valhalla',
         'args': {
             "service_url": "http://localhost:8002",
-            "service_args": {
-                "directions_options": {"language": "fr-FR"},
-            },
             "costing_options": {}
         }
     }
@@ -100,9 +94,6 @@ def valhalla_class_with_url_valid_test():
         'class': 'jormungandr.street_network.valhalla.Valhalla',
         'args': {
             "service_url": "http://localhost:8002",
-            "service_args": {
-                "directions_options": {"language": "fr-FR"}
-            },
             "costing_options": {
                 "pedestrian": {
                     "walking_speed": 50.1
@@ -118,9 +109,6 @@ def street_network_without_class_test():
         kraken_conf = {
             'args': {
                 "service_url": "http://localhost:8002",
-                "service_args": {
-                    "directions_options": {"language": "fr-FR"},
-                },
             "costing_options": {
                 "pedestrian": {
                     "walking_speed": 50.1
@@ -138,9 +126,6 @@ def valhalla_class_with_class_invalid_test():
             'class': 'jormungandr',
             'args': {
                 "service_url": "http://localhost:8002",
-                "service_args": {
-                    "directions_options": {"language": "fr-FR"},
-                },
             "costing_options": {
                 "pedestrian": {
                     "walking_speed": 50.1
@@ -158,9 +143,6 @@ def valhalla_class_with_class_not_exist_test():
             'class': 'jormungandr.street_network.valhalla.bob',
             'args': {
                 "service_url": "http://localhost:8002",
-                "service_args": {
-                    "directions_options": {"language": "fr-FR"},
-                },
             "costing_options": {
                 "pedestrian": {
                     "walking_speed": 50.1

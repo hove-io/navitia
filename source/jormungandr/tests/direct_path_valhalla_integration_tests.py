@@ -37,7 +37,6 @@ MOCKED_VALHALLA_CONF = {
     "class": "tests.direct_path_valhalla_integration_tests.MockValhalla",
     "args": {
         "service_url": "http://bob.com",
-        "language": "fr-FR",
         "costing_options": {
             "bicycle": {
                 "bicycle_type": "Hybrid",
@@ -102,10 +101,8 @@ def check_journeys(resp):
 
 class MockValhalla(Valhalla):
 
-    def __init__(self, instance, url,
-                 timeout=10, language='fr-FR',
-                 api_key=None, **kwargs):
-        Valhalla.__init__(self, instance, url, timeout, language, api_key, **kwargs)
+    def __init__(self, instance, url, timeout=10, api_key=None, **kwargs):
+        Valhalla.__init__(self, instance, url, timeout, api_key, **kwargs)
 
     def _format_url(self, mode, pt_object_origin, pt_object_destination):
         return mode
