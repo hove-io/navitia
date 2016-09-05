@@ -45,7 +45,7 @@ from urlparse import urlparse
 DATETIME_FORMAT = "%Y%m%dT%H%M%S"
 
 
-def kilometers_to_metres(distance):
+def kilometers_to_meters(distance):
     return distance * 1000.0
 
 
