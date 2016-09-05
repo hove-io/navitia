@@ -98,17 +98,18 @@ class AbstractTestFixture:
 
     @classmethod
     def create_dummy_json(cls):
-        conf_template_str = ('{{ \n'
-                             '    "key": "{instance_name}",\n'
-                             '    "zmq_socket": "ipc:///tmp/{instance_name}",\n'
-                             '    "realtime_proxies": {proxy_conf}\n'
-                             '}}')
         for name in cls.krakens_pool:
-            proxy_conf = cls.data_sets[name].get('proxy_conf', '[]')
+            instance_config = {
+                "key": name,
+                "zmq_socket": "ipc:///tmp/{instance_name}".format(instance_name=name),
+                "realtime_proxies": cls.data_sets[name].get('proxy_conf', [])
+            }
+            street_network = cls.data_sets[name].get('street_network', None)
+            if street_network:
+                instance_config['street_network'] = street_network
             with open(os.path.join(krakens_dir, name) + '.json', 'w') as f:
                 logging.debug("writing ini file {} for {}".format(f.name, name))
-                r = conf_template_str.format(instance_name=name, proxy_conf=proxy_conf)
-                f.write(r)
+                f.write(json.dumps(instance_config, indent=4))
 
         #we set the env var that will be used to init jormun
         return [

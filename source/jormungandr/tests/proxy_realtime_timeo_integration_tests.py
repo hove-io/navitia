@@ -124,19 +124,25 @@ class MockTimeo(Timeo):
     def _make_url(self, route_point, count=None, from_dt=None):
         return route_point.pb_stop_point.uri
 
+MOCKED_PROXY_CONF = [
+    {
+        "object_id_tag": "KisioDigital",
+        "id": "KisioDigital",
+        "class": "tests.proxy_realtime_timeo_integration_tests.MockTimeo",
+        "args": {
+            "destination_id_tag": "KisioDigital",
+            "timezone": "Europe/Paris",
+            "service_url": "http://XXXX",
+            "timeout": 15,
+            "service_args": {
+                "serviceID": "X",
+                "EntityID": "XX",
+                "Media": "XXX"
+            }
+        }
+    }
+]
 
-MOCKED_PROXY_CONF = ('[{ "object_id_tag": "KisioDigital",'
-                     '"id": "KisioDigital",'
-                     '"class": "tests.proxy_realtime_timeo_integration_tests.MockTimeo",'
-                     '"args": {'
-                     '"destination_id_tag": "KisioDigital",'
-                     '"timezone": "Europe/Paris",'
-                     '"service_url": "http://XXXX",'
-                     '"timeout": 15,'
-                     '"service_args": {'
-                     '"serviceID": "X",'
-                     '"EntityID": "XX",'
-                     '"Media": "XXX"}}}]')
 
 @dataset({"basic_schedule_test": {"proxy_conf": MOCKED_PROXY_CONF}})
 class TestDepartures(AbstractTestFixture):
