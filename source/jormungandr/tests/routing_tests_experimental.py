@@ -91,7 +91,7 @@ class TestJourneysExperimental(AbstractTestFixture):
                 "&debug=true"
         response = self.query_region(query)
         check_journeys(response)
-        eq_(len(response['journeys']), 6)
+        eq_(len(response['journeys']), 4)
 
         # first is bike
         assert('bike' in response['journeys'][0]['tags'])

@@ -963,7 +963,8 @@ pbnavitia::Response make_pt_response(RAPTOR &raptor,
                                      const navitia::time_duration& transfer_penalty,
                                      uint32_t max_duration,
                                      uint32_t max_transfers,
-                                     uint32_t max_extra_second_pass){
+                                     uint32_t max_extra_second_pass,
+                                     const boost::optional<navitia::time_duration>& direct_path_duration){
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     PbCreator pb_creator(raptor.data, current_datetime, null_time_period);
     std::vector<bt::ptime> datetimes;
@@ -1005,7 +1006,7 @@ pbnavitia::Response make_pt_response(RAPTOR &raptor,
     }
     std::vector<Path> pathes = raptor.compute_all(
             departures, arrivals, init_dt, rt_level, transfer_penalty, bound, max_transfers,
-            accessibilite_params, forbidden, clockwise, {}, max_extra_second_pass);
+            accessibilite_params, forbidden, clockwise, direct_path_duration, max_extra_second_pass);
 
     for(auto & path : pathes) {
         path.request_time = datetime;
