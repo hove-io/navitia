@@ -100,9 +100,9 @@ class AbstractTestFixture:
     def create_dummy_json(cls):
         conf_template_str = ('{{ \n'
                              '    "key": "{instance_name}",\n'
-                             '    "zmq_socket": "ipc:///tmp/{instance_name}",\n'
+                             '    "zmq_socket": "ipc://%s/{instance_name}",\n'
                              '    "realtime_proxies": {proxy_conf}\n'
-                             '}}')
+                             '}}' % (os.environ.get('WORKSPACE') or os.environ.get('HOME')))
         for name in cls.krakens_pool:
             proxy_conf = cls.data_sets[name].get('proxy_conf', '[]')
             with open(os.path.join(krakens_dir, name) + '.json', 'w') as f:
