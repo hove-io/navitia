@@ -34,6 +34,8 @@ import pybreaker
 from mock import MagicMock
 import requests as requests
 from jormungandr.utils import str_to_time_stamp
+import requests_mock
+
 
 def get_pt_object(type, lon, lat):
     pt_object = type_pb2.PtObject()
@@ -313,31 +315,31 @@ def direct_path_func_with_status_code_400_response_valhalla_test():
 
 def direct_path_func_with_valid_response_valhalla_test():
     instance = MagicMock()
+    instance.walking_speed = 1.12
     valhalla = Valhalla(instance=instance,
                         url='http://bob.com',
                         costing_options={'bib': 'bom'})
     resp_json = response_valid()
 
-    valhalla.breaker = MagicMock()
-    response = requests.Response()
-    response.status_code = 200
-    response.json = resp_json
-    response.url = valhalla.service_url
-    valhalla._call_valhalla = MagicMock(return_value=response)
-    valhalla._format_url = MagicMock(return_value=valhalla.service_url)
-
     origin = get_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
     destination = get_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
-    valhalla_response = valhalla._get_response(resp_json, 'walking',
-                                      origin,
-                                      destination,
-                                      str_to_time_stamp('20161010T152000'))
-    assert valhalla_response.status_code == 200
-    assert valhalla_response.response_type == response_pb2.ITINERARY_FOUND
-    assert len(valhalla_response.journeys) == 1
-    assert valhalla_response.journeys[0].duration == 6
-    assert len(valhalla_response.journeys[0].sections) == 1
-    assert valhalla_response.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
-    assert valhalla_response.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
-    assert valhalla_response.journeys[0].sections[0].length == 52
-    assert valhalla_response.journeys[0].sections[0].destination == destination
+    with requests_mock.Mocker() as req:
+        url = 'http://bob.com/route?json={"costing_options": {"pedestrian": {"walking_speed": 4.032000000000001}, ' \
+              '"bib": "bom"}, "locations": [{"lat": 48.572841, "type": "break", "lon": 2.439938}, ' \
+              '{"lat": 48.57307, "type": "break", "lon": 2.440548}], "costing": "pedestrian", ' \
+              '"directions_options": {"units": "kilometers"}}&api_key=None'
+        req.get(url, json=resp_json)
+        valhalla_response = valhalla.direct_path('walking',
+                                          origin,
+                                          destination,
+                                          str_to_time_stamp('20161010T152000'),
+                                          True)
+        assert valhalla_response.status_code == 200
+        assert valhalla_response.response_type == response_pb2.ITINERARY_FOUND
+        assert len(valhalla_response.journeys) == 1
+        assert valhalla_response.journeys[0].duration == 6
+        assert len(valhalla_response.journeys[0].sections) == 1
+        assert valhalla_response.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
+        assert valhalla_response.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
+        assert valhalla_response.journeys[0].sections[0].length == 52
+        assert valhalla_response.journeys[0].sections[0].destination == destination
