@@ -50,8 +50,10 @@ navitia::time_duration PathFinder::crow_fly_duration(const double distance) cons
 }
 
 static bool is_projected_on_same_edge(const ProjectionData& p1, const ProjectionData& p2){
-    return (p1[source_e] == p2[source_e] && p1[target_e] == p2[target_e])
-                || (p1[source_e] == p2[target_e] && p1[target_e] == p2[source_e]);
+    // On the same edge if both use the same two vertices, are on the same way with the same duration
+    return (((p1[source_e] == p2[source_e] && p1[target_e] == p2[target_e])
+                || (p1[source_e] == p2[target_e] && p1[target_e] == p2[source_e]))
+            && p1.edge.duration == p2.edge.duration && p1.edge.way_idx == p2.edge.way_idx);
 }
 
 navitia::time_duration PathFinder::path_duration_on_same_edge(const ProjectionData& p1, const ProjectionData& p2){
@@ -467,8 +469,7 @@ void PathFinder::add_custom_projections_to_path(Path& p, bool append_to_begin, c
         return (append_to_begin ? p.path_items.push_front(item) : p.path_items.push_back(item));
     };
 
-    edge_t start_e = boost::edge(projection[source_e], projection[target_e], geo_ref.graph).first;
-    Edge start_edge = geo_ref.graph[start_e];
+    Edge start_edge = projection.edge;
     nt::LineString coords_to_add;
     /*
         Cut the projected edge.
@@ -492,7 +493,6 @@ void PathFinder::add_custom_projections_to_path(Path& p, bool append_to_begin, c
     }
 
     auto duration = crow_fly_duration(projection.distances[d]);
-
     //we need to update the total length
     p.duration += duration;
 
@@ -583,8 +583,23 @@ PathFinder::get_path(const ProjectionData& target,
     if (! computation_launch || ! target.found || nearest_edge.first == bt::pos_infin)
         return {};
 
-    Path result;
-    if(is_projected_on_same_edge(starting_edge, target)){
+    Path result = this->build_path(target[nearest_edge.second]);
+    add_projections_to_path(result, true);
+    //we need to put the end projections too
+    add_custom_projections_to_path(result, false, target, nearest_edge.second);
+
+    /*
+     * If we are on the same edge and a direct path is faster. It is not always the case, like if we have :
+     *                      |
+     * ,-----------------A--|
+     * |                    |
+     * '-----------------B--|
+     *                      |
+     * Even if A and B are on the same edge it's faster to use the result of build_path taking the vertical edge.
+     */
+    if(is_projected_on_same_edge(starting_edge, target) && path_duration_on_same_edge(starting_edge, target) <= result.duration){
+        result.path_items.clear();
+        result.duration = {};
         PathItem item;
         item.duration = path_duration_on_same_edge(starting_edge, target);
 
@@ -592,21 +607,14 @@ PathFinder::get_path(const ProjectionData& target,
         if (! edge_pair.second) {
             throw navitia::exception("impossible to find an edge");
         }
-        Edge edge = geo_ref.graph[edge_pair.first];
-        item.way_idx = edge.way_idx;
+
+        item.way_idx = starting_edge.edge.way_idx;
         item.transportation = geo_ref.get_caracteristic(edge_pair.first);
-        nt::LineString geom = path_coordinates_on_same_edge(edge, starting_edge, target);
+        nt::LineString geom = path_coordinates_on_same_edge(starting_edge.edge, starting_edge, target);
         item.coordinates.insert(item.coordinates.begin(), geom.begin(), geom.end());
         result.path_items.push_back(item);
         result.duration += item.duration;
-    }else{
-        result = this->build_path(target[nearest_edge.second]);
-        add_projections_to_path(result, true);
-
-        //we need to put the end projections too
-        add_custom_projections_to_path(result, false, target, nearest_edge.second);
     }
-
 
     return result;
 }

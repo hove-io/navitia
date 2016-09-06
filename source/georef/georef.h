@@ -369,6 +369,10 @@ struct ProjectionData {
     /// 2 possible nodes (each end of the edge where the coordinate has been projected)
     flat_enum_map<Direction, vertex_t> vertices;
 
+    // The edge we projected on. Needed since we can't be sure to get the right edge with only the source and the target because
+    // of parallel edges.
+    Edge edge;
+
     /// has the projection been successful?
     bool found = false;
 
@@ -388,7 +392,7 @@ struct ProjectionData {
     ProjectionData(const type::GeographicalCoord & coord, const GeoRef &sn, type::idx_t offset, const proximitylist::ProximityList<vertex_t> &prox, double horizon = 500);
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & vertices & projected & distances & found & real_coord;
+        ar & vertices & projected & distances & found & real_coord & edge;
     }
 
     void init(const type::GeographicalCoord & coord, const GeoRef & sn, edge_t nearest_edge);

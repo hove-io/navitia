@@ -341,9 +341,9 @@ void ProjectionData::init(const type::GeographicalCoord & coord, const GeoRef & 
     const type::GeographicalCoord& vertex2_coord = sn.graph[vertices[Direction::Target]].coord;
     // We project the point on nearest_edge geometry if it exists, on a straight line between vertices otherwise.
     // We store distance from the projected point to each vertex since the pt routing is done from them and not the exact coord.
-    Edge e = sn.graph[nearest_edge];
-    if(e.geom_idx != nt::invalid_idx) {
-        auto& geom = sn.ways[e.way_idx]->geoms[e.geom_idx];
+    edge = sn.graph[nearest_edge];
+    if(edge.geom_idx != nt::invalid_idx) {
+        auto& geom = sn.ways[edge.way_idx]->geoms[edge.geom_idx];
         this->projected = type::project(geom, coord);
         distances[Direction::Source] = type::real_distance_from_extremity(geom, projected, false);
         distances[Direction::Target] = type::real_distance_from_extremity(geom, projected, true);
