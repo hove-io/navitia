@@ -20,6 +20,39 @@ The only arguments are the ones of [paging](#paging).
 | `coverage/{lon;lat}`                    | Information about a specific region |
 
 
+<a name="datasets"></a>Datasets
+-------------------------------
+
+Very simple endpoint providing the sets of data that are used in the given coverage.
+Contributor associated to every dataset is also provided.
+Very usefull to know all the datas that form a coverage.
+
+The only arguments are the ones of [paging](#paging).
+
+### Accesses
+
+| url | Result |
+|----------------------------------------------|-------------------------------------------|
+| `coverage/{region_id}/datasets               | List of the datasets of a specific region |
+| `coverage/{region_id}/datasets/{dataset_id}  | Information about a specific dataset      |
+
+
+<a name="contributors"></a>Contributors
+-------------------------------
+
+Very simple endpoint providing the contributors of data for the given coverage.
+Very usefull to know which contributors are used in the datasets forming a coverage.
+
+The only arguments are the ones of [paging](#paging).
+
+### Accesses
+
+| url | Result |
+|--------------------------------------------------|-----------------------------------------------|
+| `coverage/{region_id}/contributors               | List of the contributors of a specific region |
+| `coverage/{region_id}/contributors/{dataset_id}  | Information about a specific contributor      |
+
+
 <a name="coord"></a>Inverted geocoding
 --------------------------------------
 ``` shell
