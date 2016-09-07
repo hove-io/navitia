@@ -34,13 +34,18 @@ from tests.check_utils import get_not_null
 from .tests_mechanism import AbstractTestFixture, dataset
 
 
-MOCKED_PROXY_CONF = ('[{ "object_id_tag": "KisioDigital",'
-                     '"id": "KisioDigital",'
-                     '"class": "jormungandr.realtime_schedule.synthese.Synthese",'
-                     '"args": {'
-                     '"timezone": "UTC",'
-                     '"service_url": "http://bob.com",'
-                     '"timeout": 15}}]')
+MOCKED_PROXY_CONF = [
+    {
+        "object_id_tag": "KisioDigital",
+        "id": "KisioDigital",
+        "class": "jormungandr.realtime_schedule.synthese.Synthese",
+        "args": {
+            "timezone": "UTC",
+            "service_url": "http://bob.com",
+            "timeout": 15
+        }
+    }
+]
 
 
 def _get_schedule(sched, sp_uri, route_uri):

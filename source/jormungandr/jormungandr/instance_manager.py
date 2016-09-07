@@ -114,6 +114,7 @@ class InstanceManager(object):
                     config_data = json.load(f)
                     name = config_data['key']
                     instance = Instance(self.context, name, config_data['zmq_socket'],
+                                        config_data.get('street_network', None),
                                         config_data.get('realtime_proxies', []))
             else:
                 logging.getLogger(__name__).warn('impossible to init an instance with the configuration '

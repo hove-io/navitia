@@ -39,6 +39,7 @@ from flask import g
 
 from jormungandr import app
 
+
 def create_crowfly(_from, to, begin, end, mode='walking'):
     section = response_pb2.Section()
     section.type = response_pb2.CROW_FLY
@@ -51,12 +52,14 @@ def create_crowfly(_from, to, begin, end, mode='walking'):
     section.id = unicode(uuid.uuid4())
     return section
 
+
 class SectionSorter(object):
     def __call__(self, a, b):
         if a.begin_date_time != b.begin_date_time:
             return -1 if a.begin_date_time < b.begin_date_time else 1
         else:
             return -1 if a.end_date_time < b.end_date_time else 1
+
 
 def get_max_fallback_duration(request, mode):
     if mode == 'walking':
@@ -68,6 +71,7 @@ def get_max_fallback_duration(request, mode):
     if mode == 'car':
         return request['max_car_duration_to_pt']
     raise ValueError('unknown mode: {}'.format(mode))
+
 
 def build_journey(journey, _from, to, origins, destinations):
     departure = journey.sections[0].origin
@@ -86,6 +90,7 @@ def build_journey(journey, _from, to, origins, destinations):
                        journey.sections[0].begin_date_time)])
     journey.sections.sort(SectionSorter())
 
+
 #TODO: make this work, it's dynamically imported, so the function is register too late
 #@app.before_request
 def _init_g():
@@ -93,6 +98,7 @@ def _init_g():
     g.destinations_fallback = {}
     g.requested_origin = None
     g.requested_destination = None
+
 
 def create_parameters(request):
     return JourneyParameters(max_duration=request['max_duration'],
@@ -109,9 +115,11 @@ class Scenario(new_default.Scenario):
     def __init__(self):
         super(Scenario, self).__init__()
 
-    def _get_direct_path(self, instance, mode, origin, destination, datetime, clockwise):
+    def _get_direct_path(self, instance, mode, pt_object_origin,
+                         pt_object_destination, datetime, clockwise):
         # TODO: cache by (mode, origin, destination) and redate with datetime and clockwise
-        return instance.georef.direct_path(mode, origin, destination, datetime, clockwise)
+        return instance.street_network_service.direct_path(mode, pt_object_origin,
+                                                           pt_object_destination, datetime, clockwise)
 
     def call_kraken(self, request_type, request, instance, krakens_call):
         """
@@ -148,8 +156,8 @@ class Scenario(new_default.Scenario):
             self.nb_kraken_calls += 1
             direct_path = self._get_direct_path(instance,
                                                 dep_mode,
-                                                request['origin'],
-                                                request['destination'],
+                                                g.requested_origin,
+                                                g.requested_destination,
                                                 request['datetime'],
                                                 request['clockwise'])
             if direct_path.journeys:
