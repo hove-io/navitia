@@ -155,16 +155,20 @@ StreetNetwork::get_direct_path(const type::EntryPoint& origin, const type::Entry
                                           geo_ref,
                                           geo_ref.offsets[dest_mode],
                                           geo_ref.pl);
+
     if (! dest_edge.found) { return Path(); }
+
     const auto max_dur = origin.streetnetwork_params.max_duration
         + destination.streetnetwork_params.max_duration;
     direct_path_finder.init(origin.coordinates,
                             origin.streetnetwork_params.mode,
                             origin.streetnetwork_params.speed_factor);
+
     direct_path_finder.start_distance_dijkstra(max_dur);
     const auto dest_vertex = direct_path_finder.find_nearest_vertex(dest_edge, true);
     const auto res = direct_path_finder.get_path(dest_edge, dest_vertex);
     if (res.duration > max_dur) { return Path(); }
+
     return res;
 }
 
@@ -263,6 +267,7 @@ struct ProjectionGetterOnFly{
 
 static routing::SpIdx get_id(const routing::SpIdx& idx) { return idx; }
 static std::string get_id(const type::GeographicalCoord& coord) { return coord.uri(); }
+
 
 template<typename K, typename U, typename G>
 boost::container::flat_map<K, navitia::time_duration>
@@ -364,7 +369,13 @@ PathFinder::get_duration_with_dijkstra(const navitia::time_duration& radius,
     if (dest_coords.empty()) {
         return {};
     }
-    auto offset = geo_ref.offsets[mode];
+    nt::idx_t offset;
+    if(mode == type::Mode_e::Car){
+        //on direct path with car we want to arrive on the walking graph
+        offset = geo_ref.offsets[nt::Mode_e::Walking];
+    } else {
+        offset = geo_ref.offsets[mode];
+    }
     ProjectionGetterOnFly projection_getter{geo_ref, offset};
     return start_dijkstra_and_fill_duration_map<PathFinder::coord_uri, type::GeographicalCoord, ProjectionGetterOnFly>(
             radius, dest_coords, projection_getter);
@@ -391,6 +402,7 @@ std::pair<navitia::time_duration, ProjectionData::Direction> PathFinder::find_ne
 
     if (distances[target[source_e]] == max) //if one distance has not been reached, both have not been reached
         return {max, source_e};
+
 
     if (handle_on_node) {
         //handle if the projection is done on a node

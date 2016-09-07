@@ -39,7 +39,6 @@ from flask import g
 
 from jormungandr import app
 
-
 def create_crowfly(_from, to, begin, end, mode='walking'):
     section = response_pb2.Section()
     section.type = response_pb2.CROW_FLY
@@ -52,14 +51,12 @@ def create_crowfly(_from, to, begin, end, mode='walking'):
     section.id = unicode(uuid.uuid4())
     return section
 
-
 class SectionSorter(object):
     def __call__(self, a, b):
         if a.begin_date_time != b.begin_date_time:
             return -1 if a.begin_date_time < b.begin_date_time else 1
         else:
             return -1 if a.end_date_time < b.end_date_time else 1
-
 
 def get_max_fallback_duration(request, mode):
     if mode == 'walking':
@@ -73,32 +70,14 @@ def get_max_fallback_duration(request, mode):
     raise ValueError('unknown mode: {}'.format(mode))
 
 
-def build_journey(journey, _from, to, origins, destinations):
-    departure = journey.sections[0].origin
-    arrival = journey.sections[-1].destination
-
-    journey.duration = journey.duration + origins[departure.uri] + destinations[arrival.uri]
-    journey.departure_date_time = journey.departure_date_time - origins[departure.uri]
-    journey.arrival_date_time = journey.arrival_date_time + destinations[arrival.uri]
-
-    #it's not possible to insert in a protobuf list, so we add the sections at the end, then we sort them
-    journey.sections.extend([
-        create_crowfly(arrival, to, journey.sections[-1].end_date_time,
-                       journey.arrival_date_time)])
-    journey.sections.extend([
-        create_crowfly(_from, departure, journey.departure_date_time,
-                       journey.sections[0].begin_date_time)])
-    journey.sections.sort(SectionSorter())
-
-
 #TODO: make this work, it's dynamically imported, so the function is register too late
 #@app.before_request
 def _init_g():
     g.origins_fallback = {}
     g.destinations_fallback = {}
+    g.fallback_direct_path = {}
     g.requested_origin = None
     g.requested_destination = None
-
 
 def create_parameters(request):
     return JourneyParameters(max_duration=request['max_duration'],
@@ -110,16 +89,61 @@ def create_parameters(request):
                              forbidden_uris=request['forbidden_uris[]'])
 
 
+def _rename_journey_sections_ids(start_idx, sections):
+    for s in sections:
+        s.id = "dp_section_{}".format(start_idx)
+        start_idx += 1
+
+
+def _extend_pt_sections_with_direct_path(pt_journey, dp_journey):
+    if getattr(dp_journey, 'journeys', []) and hasattr(dp_journey.journeys[0], 'sections'):
+        _rename_journey_sections_ids(len(pt_journey.sections), dp_journey.journeys[0].sections)
+        pt_journey.sections.extend(dp_journey.journeys[0].sections)
 class Scenario(new_default.Scenario):
 
     def __init__(self):
         super(Scenario, self).__init__()
 
-    def _get_direct_path(self, instance, mode, pt_object_origin,
-                         pt_object_destination, datetime, clockwise):
+    def _get_direct_path(self, instance, mode, origin, destination, datetime, clockwise):
         # TODO: cache by (mode, origin, destination) and redate with datetime and clockwise
         return instance.street_network_service.direct_path(mode, pt_object_origin,
                                                            pt_object_destination, datetime, clockwise)
+
+    def _build_journey(self, journey, instance, _from, to, dep_mode, arr_mode):
+        origins = g.origins_fallback[dep_mode]
+        destinations = g.destinations_fallback[arr_mode]
+
+        departure = journey.sections[0].origin
+        arrival = journey.sections[-1].destination
+
+        journey.duration = journey.duration + origins[departure.uri] + destinations[arrival.uri]
+        journey.departure_date_time = journey.departure_date_time - origins[departure.uri]
+        journey.arrival_date_time = journey.arrival_date_time + destinations[arrival.uri]
+
+        if not g.fallback_direct_path.get((_from, departure.uri)):
+            g.fallback_direct_path[(_from, departure.uri)] = self._get_direct_path(instance,
+                                                                                   dep_mode,
+                                                                                   _from,
+                                                                                   departure.uri,
+                                                                                   journey.departure_date_time,
+                                                                                   True)
+
+        if not g.fallback_direct_path.get((arrival.uri, to)):
+             g.fallback_direct_path[(arrival.uri, to)] = self._get_direct_path(instance,
+                                                                               arr_mode,
+                                                                               arrival.uri,
+                                                                               to,
+                                                                               journey.arrival_date_time,
+                                                                               False)
+        import copy
+        departure_direct_path = copy.deepcopy(g.fallback_direct_path[(_from, departure.uri)])
+        arrival_direct_path = copy.deepcopy(g.fallback_direct_path[(arrival.uri, to)])
+
+        #it's not possible to insert in a protobuf list, so we add the sections at the end, then we sort them
+        _extend_pt_sections_with_direct_path(journey, departure_direct_path)
+        _extend_pt_sections_with_direct_path(journey, arrival_direct_path)
+
+        journey.sections.sort(SectionSorter())
 
     def call_kraken(self, request_type, request, instance, krakens_call):
         """
@@ -136,13 +160,11 @@ class Scenario(new_default.Scenario):
                         dep_mode,
                         get_max_fallback_duration(request, dep_mode))
 
-                #logger.debug('origins %s: %s', dep_mode, g.origins_fallback[dep_mode])
 
             if arr_mode not in g.destinations_fallback:
                 g.destinations_fallback[arr_mode] = instance.georef.get_stop_points(request['destination'],
                         arr_mode,
                         get_max_fallback_duration(request, arr_mode), reverse=True)
-                #logger.debug('destinations %s: %s', arr_mode, g.destinations_fallback[arr_mode])
 
         if not g.requested_origin:
             g.requested_origin = instance.georef.place(request['origin'])
@@ -175,7 +197,6 @@ class Scenario(new_default.Scenario):
             if local_resp.HasField(b"error") and local_resp.error.id == response_pb2.Error.error_id.Value('no_solution') \
                     and direct_path.journeys:
                 local_resp.ClearField(b"error")
-
             if local_resp.HasField(b"error"):
                 return [local_resp]
 
@@ -184,11 +205,12 @@ class Scenario(new_default.Scenario):
                 j.internal_id = "{resp}-{j}".format(resp=self.nb_kraken_calls, j=idx)
 
             for journey in local_resp.journeys:
-                build_journey(journey,
-                                   g.requested_origin,
-                                   g.requested_destination,
-                                   g.origins_fallback[dep_mode],
-                                   g.destinations_fallback[arr_mode])
+                self._build_journey(journey,
+                                    instance,
+                                    request['origin'],
+                                    request['destination'],
+                                    dep_mode,
+                                    arr_mode)
 
             resp.append(local_resp)
             logger.debug("for mode %s|%s we have found %s journeys", dep_mode, arr_mode, len(local_resp.journeys))

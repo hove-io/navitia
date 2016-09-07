@@ -590,7 +590,8 @@ static type::EntryPoint
 create_journeys_entry_point(const ::pbnavitia::LocationContext& location,
                    const ::pbnavitia::StreetNetworkParams& sn_params,
                    const boost::shared_ptr<const navitia::type::Data>& data,
-                   const bool is_origin)
+                   const bool is_origin,
+                   const bool use_sn_for_sp=false)
 {
     Type_e entry_point_type = data->get_type_of_id(location.place());
     type::EntryPoint entry_point = type::EntryPoint(entry_point_type,
@@ -608,6 +609,10 @@ create_journeys_entry_point(const ::pbnavitia::LocationContext& location,
         break;
     // StopPoint doesn't use street network
     case type::Type_e::StopPoint:
+        if (use_sn_for_sp) {
+            entry_point.streetnetwork_params =
+                streetnetwork_params_of_entry_point(sn_params, data, is_origin);
+        }
         entry_point.coordinates = coord_of_entry_point(entry_point, data);
         break;
     default: break;
@@ -900,6 +905,7 @@ static type::EntryPoint make_sn_entry_point(const std::string& place,
             entry_point.streetnetwork_params.offset = data->geo_ref->offsets[mode_enum];
             entry_point.streetnetwork_params.speed_factor = speed / georef::default_speed[mode_enum];
             break;
+        case type::Mode_e::Walking:
         default:
             entry_point.streetnetwork_params.offset = data->geo_ref->offsets[type::Mode_e::Walking];
             entry_point.streetnetwork_params.speed_factor = speed / georef::default_speed[type::Mode_e::Walking];
@@ -926,6 +932,7 @@ pbnavitia::Response Worker::street_network_routing_matrix(const pbnavitia::Stree
         type::GeographicalCoord coord{};
         try{
             dest_coords.push_back(coord_of_entry_point(entry_point, data));
+
         }catch(const navitia::coord_conversion_exception& e) {
             pbnavitia::Response r;
             fill_pb_error(pbnavitia::Error::bad_format, e.what(), r.mutable_error());
@@ -944,7 +951,9 @@ pbnavitia::Response Worker::street_network_routing_matrix(const pbnavitia::Stree
             return r;
         }
 
-        street_network_worker->init(entry_point, {});
+        street_network_worker->departure_path_finder.init(entry_point.coordinates,
+                entry_point.streetnetwork_params.mode,
+                entry_point.streetnetwork_params.speed_factor);
         auto nearest = street_network_worker->departure_path_finder.get_duration_with_dijkstra(
                 navitia::time_duration::from_boost_duration(boost::posix_time::seconds(request.max_duration())),
                 dest_coords);
@@ -969,11 +978,13 @@ pbnavitia::Response Worker::direct_path(const pbnavitia::Request& request) {
     const auto origin = create_journeys_entry_point(dp_request.origin(),
                                            dp_request.streetnetwork_params(),
                                            data,
+                                           true,
                                            true);
     const auto destination = create_journeys_entry_point(dp_request.destination(),
                                                 dp_request.streetnetwork_params(),
                                                 data,
-                                                false);
+                                                false,
+                                                true);
     const auto geo_path = street_network_worker->get_direct_path(origin, destination);
 
     const auto current_datetime = bt::from_time_t(request._current_datetime());
