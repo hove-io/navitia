@@ -155,9 +155,7 @@ StreetNetwork::get_direct_path(const type::EntryPoint& origin, const type::Entry
                                           geo_ref,
                                           geo_ref.offsets[dest_mode],
                                           geo_ref.pl);
-
     if (! dest_edge.found) { return Path(); }
-
     const auto max_dur = origin.streetnetwork_params.max_duration
         + destination.streetnetwork_params.max_duration;
     direct_path_finder.init(origin.coordinates,
@@ -168,7 +166,6 @@ StreetNetwork::get_direct_path(const type::EntryPoint& origin, const type::Entry
     const auto dest_vertex = direct_path_finder.find_nearest_vertex(dest_edge, true);
     const auto res = direct_path_finder.get_path(dest_edge, dest_vertex);
     if (res.duration > max_dur) { return Path(); }
-
     return res;
 }
 
@@ -267,7 +264,6 @@ struct ProjectionGetterOnFly{
 
 static routing::SpIdx get_id(const routing::SpIdx& idx) { return idx; }
 static std::string get_id(const type::GeographicalCoord& coord) { return coord.uri(); }
-
 
 template<typename K, typename U, typename G>
 boost::container::flat_map<K, navitia::time_duration>
@@ -402,7 +398,6 @@ std::pair<navitia::time_duration, ProjectionData::Direction> PathFinder::find_ne
 
     if (distances[target[source_e]] == max) //if one distance has not been reached, both have not been reached
         return {max, source_e};
-
 
     if (handle_on_node) {
         //handle if the projection is done on a node
