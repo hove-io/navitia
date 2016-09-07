@@ -64,7 +64,7 @@ namespace navitia { namespace type {
 
 wrong_version::~wrong_version() noexcept {}
 
-const unsigned int Data::data_version = 60; //< *INCREMENT* every time serialized data are modified
+const unsigned int Data::data_version = 61; //< *INCREMENT* every time serialized data are modified
 
 Data::Data(size_t data_identifier) :
     data_identifier(data_identifier),
@@ -440,6 +440,9 @@ static void build_datasets(navitia::type::VehicleJourney* vj){
         if(st.stop_point){
             st.stop_point->dataset_list.insert(vj->dataset);
         }
+    }
+    if(vj->route && vj->route->line && vj->route->line->network){
+        vj->route->line->network->dataset_list.insert(vj->dataset);
     }
 }
 
