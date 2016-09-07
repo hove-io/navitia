@@ -99,12 +99,14 @@ def _extend_pt_sections_with_direct_path(pt_journey, dp_journey):
     if getattr(dp_journey, 'journeys', []) and hasattr(dp_journey.journeys[0], 'sections'):
         _rename_journey_sections_ids(len(pt_journey.sections), dp_journey.journeys[0].sections)
         pt_journey.sections.extend(dp_journey.journeys[0].sections)
+
+
 class Scenario(new_default.Scenario):
 
     def __init__(self):
         super(Scenario, self).__init__()
 
-    def _get_direct_path(self, instance, mode, origin, destination, datetime, clockwise):
+    def _get_direct_path(self, instance, mode, pt_object_origin, pt_object_destination, datetime, clockwise):
         # TODO: cache by (mode, origin, destination) and redate with datetime and clockwise
         return instance.street_network_service.direct_path(mode, pt_object_origin,
                                                            pt_object_destination, datetime, clockwise)
@@ -120,24 +122,26 @@ class Scenario(new_default.Scenario):
         journey.departure_date_time = journey.departure_date_time - origins[departure.uri]
         journey.arrival_date_time = journey.arrival_date_time + destinations[arrival.uri]
 
-        if not g.fallback_direct_path.get((_from, departure.uri)):
-            g.fallback_direct_path[(_from, departure.uri)] = self._get_direct_path(instance,
-                                                                                   dep_mode,
-                                                                                   _from,
-                                                                                   departure.uri,
-                                                                                   journey.departure_date_time,
-                                                                                   True)
+        departure_dp_key = (dep_mode, _from.uri, departure.uri, journey.departure_date_time, True)
+        if not g.fallback_direct_path.get(departure_dp_key):
+            g.fallback_direct_path[departure_dp_key] = self._get_direct_path(instance,
+                                                                             dep_mode,
+                                                                             _from,
+                                                                             departure,
+                                                                             journey.departure_date_time,
+                                                                             True)
 
-        if not g.fallback_direct_path.get((arrival.uri, to)):
-             g.fallback_direct_path[(arrival.uri, to)] = self._get_direct_path(instance,
-                                                                               arr_mode,
-                                                                               arrival.uri,
-                                                                               to,
-                                                                               journey.arrival_date_time,
-                                                                               False)
+        arrival_dp_key = (arr_mode, arrival.uri, to.uri, journey.arrival_date_time, False)
+        if not g.fallback_direct_path.get(arrival_dp_key):
+             g.fallback_direct_path[arrival_dp_key] = self._get_direct_path(instance,
+                                                                              arr_mode,
+                                                                              arrival,
+                                                                              to,
+                                                                              journey.arrival_date_time,
+                                                                              False)
         import copy
-        departure_direct_path = copy.deepcopy(g.fallback_direct_path[(_from, departure.uri)])
-        arrival_direct_path = copy.deepcopy(g.fallback_direct_path[(arrival.uri, to)])
+        departure_direct_path = copy.deepcopy(g.fallback_direct_path[departure_dp_key])
+        arrival_direct_path = copy.deepcopy(g.fallback_direct_path[arrival_dp_key])
 
         #it's not possible to insert in a protobuf list, so we add the sections at the end, then we sort them
         _extend_pt_sections_with_direct_path(journey, departure_direct_path)
@@ -207,8 +211,8 @@ class Scenario(new_default.Scenario):
             for journey in local_resp.journeys:
                 self._build_journey(journey,
                                     instance,
-                                    request['origin'],
-                                    request['destination'],
+                                    g.requested_origin,
+                                    g.requested_destination,
                                     dep_mode,
                                     arr_mode)
 
