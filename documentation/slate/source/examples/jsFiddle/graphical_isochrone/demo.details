@@ -22,10 +22,12 @@ description: |
   https://groups.google.com/d/forum/navitia
   www.navitia.io
 authors:
-   - CanalTP
+  - CanalTP
 resources:
-   - https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/leaflet.js
-   - https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/leaflet.css
+  - https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/leaflet.js
+  - https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/leaflet.css
+  - https://cdn.rawgit.com/CanalTP/navitia/dev/documentation/slate/source/examples/jsFiddle/resources/feedback.css
+  - https://cdn.rawgit.com/CanalTP/navitia/dev/documentation/slate/source/examples/jsFiddle/resources/feedback.js
 wrap: b
 normalize_css: no
 ...

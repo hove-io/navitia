@@ -22,6 +22,9 @@ description: |
   https://groups.google.com/d/forum/navitia
   www.navitia.io
 authors:
-   - CanalTP
+  - CanalTP
+resources:
+  - https://cdn.rawgit.com/CanalTP/navitia/dev/documentation/slate/source/examples/jsFiddle/resources/feedback.css
+  - https://cdn.rawgit.com/CanalTP/navitia/dev/documentation/slate/source/examples/jsFiddle/resources/feedback.js
 normalize_css: no
 ...
