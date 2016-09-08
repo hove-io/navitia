@@ -393,6 +393,146 @@ BOOST_AUTO_TEST_CASE(accurate_path_geometries) {
     BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[2].coordinates.begin(), p.path_items[2].coordinates.end());
 }
 
+/*
+ * We have this graph :
+ *
+ *                             .-----.
+ *                             |     |
+ *                             |     |
+ *                             |     |
+ *        x1                   |     |
+ *   .------.                x4|     |x5
+ * x3|      |                  |     |
+ *   |      a------------------b-----c---------d
+ *   |      |
+ *   '------'
+ *        x2
+ */
+BOOST_AUTO_TEST_CASE(parallel_and_same_vertex_edges) {
+    GraphBuilder b;
+    b("a", 50, 50)("b", 200, 50)("c", 250, 50)("d", 350, 50);
+    b("a", "a", 200_s, true)("a", "b", 200_s, true)("b", "c", 300_s, true)("b", "c", 50_s, true)("c", "d", 120_s, true);
+
+    nt::GeographicalCoord x1(40, 100, false);
+    nt::GeographicalCoord x2(40, 0, false);
+    nt::GeographicalCoord x3(0, 70, false);
+    nt::GeographicalCoord x4(200, 70, false);
+    nt::GeographicalCoord x5(250, 70, false);
+
+    nt::LineString geom;
+    geom.push_back(nt::GeographicalCoord(50, 50, false));
+    geom.push_back(nt::GeographicalCoord(200, 50, false));
+    b.add_geom(b.get("a", "b"), geom);
+    std::reverse(geom.begin(), geom.end());
+    b.add_geom(b.get("b", "a"), geom);
+
+    geom.clear();
+    geom.push_back(nt::GeographicalCoord(250, 50, false));
+    geom.push_back(nt::GeographicalCoord(350, 50, false));
+    b.add_geom(b.get("c", "d"), geom);
+    std::reverse(geom.begin(), geom.end());
+    b.add_geom(b.get("d", "c"), geom);
+
+    geom.clear();
+    geom.push_back(nt::GeographicalCoord(50, 50, false));
+    geom.push_back(nt::GeographicalCoord(50, 100, false));
+    geom.push_back(nt::GeographicalCoord(0, 100, false));
+    geom.push_back(nt::GeographicalCoord(0, 0, false));
+    geom.push_back(nt::GeographicalCoord(50, 0, false));
+    geom.push_back(nt::GeographicalCoord(50, 50, false));
+    BOOST_FOREACH(const auto out_edge, boost::out_edges(b.get("a"), b.geo_ref.graph)) {
+        if(boost::target(out_edge, b.geo_ref.graph) == b.get("a")) {
+            b.add_geom(out_edge, geom);
+            std::reverse(geom.begin(), geom.end());
+        }
+    }
+
+    nt::LineString long_geom_bc, short_geom_bc;
+    long_geom_bc.push_back(nt::GeographicalCoord(200, 50, false));
+    long_geom_bc.push_back(nt::GeographicalCoord(200, 200, false));
+    long_geom_bc.push_back(nt::GeographicalCoord(250, 200, false));
+    long_geom_bc.push_back(nt::GeographicalCoord(250, 50, false));
+    short_geom_bc.push_back(nt::GeographicalCoord(200, 50, false));
+    short_geom_bc.push_back(nt::GeographicalCoord(250, 50, false));
+
+    BOOST_FOREACH(const auto out_edge, boost::out_edges(b.get("b"), b.geo_ref.graph)) {
+        if(boost::target(out_edge, b.geo_ref.graph) == b.get("c")) {
+            b.add_geom(out_edge, b.geo_ref.graph[out_edge].duration.total_seconds() == 50 ? short_geom_bc : long_geom_bc);
+        }
+    }
+    std::reverse(long_geom_bc.begin(), long_geom_bc.end());
+    std::reverse(short_geom_bc.begin(), short_geom_bc.end());
+    BOOST_FOREACH(const auto out_edge, boost::out_edges(b.get("c"), b.geo_ref.graph)) {
+        if(boost::target(out_edge, b.geo_ref.graph) == b.get("b")) {
+            b.add_geom(out_edge, b.geo_ref.graph[out_edge].duration.total_seconds() == 50 ? short_geom_bc : long_geom_bc);
+        }
+    }
+
+    b.geo_ref.init();
+
+    auto edge_x1 = b.geo_ref.nearest_edge(x1);
+    BOOST_REQUIRE_EQUAL(boost::source(edge_x1, b.geo_ref.graph), b.get("a"));
+    BOOST_REQUIRE_EQUAL(boost::target(edge_x1, b.geo_ref.graph), b.get("a"));
+    auto edge_x4 = b.geo_ref.nearest_edge(x4);
+    BOOST_REQUIRE_EQUAL(boost::source(edge_x4, b.geo_ref.graph), b.get("b"));
+    BOOST_REQUIRE_EQUAL(boost::target(edge_x4, b.geo_ref.graph), b.get("c"));
+    BOOST_REQUIRE_EQUAL(b.geo_ref.graph[edge_x4].duration.total_seconds(), 300);
+
+    StreetNetwork worker(b.geo_ref);
+    auto origin = nt::EntryPoint();;
+    auto destination = nt::EntryPoint();
+    origin.streetnetwork_params.max_duration = 3600_s;
+    destination.streetnetwork_params.max_duration = 3600_s;
+
+    // x1 to x2, we should not use the direct path on the edge
+    origin.coordinates = x1;
+    destination.coordinates = x2;
+    worker.init(origin, {destination});
+    Path p = worker.get_direct_path(origin, destination);
+    BOOST_REQUIRE_EQUAL(p.path_items.size(), 1);
+    nt::LineString expectedGeom;
+    expectedGeom.push_back(nt::GeographicalCoord(40, 100, false));
+    expectedGeom.push_back(nt::GeographicalCoord(50, 100, false));
+    expectedGeom.push_back(nt::GeographicalCoord(50, 50, false)); // Last point of the start projection
+    expectedGeom.push_back(nt::GeographicalCoord(50, 50, false)); // Returned by build_path, only one coordinate, the vertex
+    expectedGeom.push_back(nt::GeographicalCoord(50, 50, false)); // First part of the end projection
+    expectedGeom.push_back(nt::GeographicalCoord(50, 0, false));
+    expectedGeom.push_back(nt::GeographicalCoord(40, 0, false));
+    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[0].coordinates.begin(), p.path_items[0].coordinates.end());
+
+    // x1 to x3, we should use the direct path on the edge
+    destination.coordinates = x3;
+    worker.init(origin, {destination});
+    p = worker.get_direct_path(origin, destination);
+    BOOST_REQUIRE_EQUAL(p.path_items.size(), 1);
+    expectedGeom.clear();
+    expectedGeom.push_back(nt::GeographicalCoord(40, 100, false));
+    expectedGeom.push_back(nt::GeographicalCoord(0, 100, false));
+    expectedGeom.push_back(nt::GeographicalCoord(0, 70, false));
+    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[0].coordinates.begin(), p.path_items[0].coordinates.end());
+
+    // x4 to x5, we should use the shorter parallel edge
+    origin.coordinates = x4;
+    destination.coordinates = x5;
+    worker.init(origin, {destination});
+    p = worker.get_direct_path(origin, destination);
+    BOOST_REQUIRE_EQUAL(p.path_items.size(), 3);
+
+    expectedGeom.clear();
+    expectedGeom.push_back(nt::GeographicalCoord(200, 70, false));
+    expectedGeom.push_back(nt::GeographicalCoord(200, 50, false));
+    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[0].coordinates.begin(), p.path_items[0].coordinates.end());
+    expectedGeom.clear();
+    expectedGeom.push_back(nt::GeographicalCoord(200, 50, false));
+    expectedGeom.push_back(nt::GeographicalCoord(200, 50, false));
+    expectedGeom.push_back(nt::GeographicalCoord(250, 50, false));
+    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[1].coordinates.begin(), p.path_items[1].coordinates.end());
+    expectedGeom.clear();
+    expectedGeom.push_back(nt::GeographicalCoord(250, 50, false));
+    expectedGeom.push_back(nt::GeographicalCoord(250, 70, false));
+    BOOST_CHECK_EQUAL_COLLECTIONS(expectedGeom.begin(), expectedGeom.end(), p.path_items[2].coordinates.begin(), p.path_items[2].coordinates.end());
+}
+
 //not used for the moment so it is not possible anymore (but it would not be difficult to do again)
 // Est-ce que le calcul de plusieurs nœuds vers plusieurs nœuds fonctionne
 //BOOST_AUTO_TEST_CASE(compute_route_n_n){

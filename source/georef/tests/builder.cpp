@@ -65,6 +65,11 @@ GraphBuilder & GraphBuilder::add_edge(std::string source_name, std::string targe
     Edge edge;
     edge.duration = dur.is_negative() ? navitia::seconds(0) : dur;
 
+    Way* way = new Way();
+    way->idx = this->geo_ref.ways.size();
+    this->geo_ref.ways.push_back(way);
+    edge.way_idx = way->idx;
+
     boost::add_edge(source, target, edge, this->geo_ref.graph);
     if(bidirectionnal)
         boost::add_edge(target, source, edge, this->geo_ref.graph);
