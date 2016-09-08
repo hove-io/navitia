@@ -59,8 +59,9 @@ static bool is_projected_on_same_edge(const ProjectionData& p1, const Projection
 navitia::time_duration PathFinder::path_duration_on_same_edge(const ProjectionData& p1, const ProjectionData& p2){
     // Don't compute distance between p1 and p2, instead use distance from one of the vertex, to speed up the process (especially if we use geometries).
     // We make sure to use the distance from the same vertex by checking if p1 and p2 are not projected on reversed edges.
+    bool is_reversed(p1[source_e] != p2[source_e] || (p1[source_e] == p1[target_e] && p1.edge.geom_idx != p2.edge.geom_idx));
     return crow_fly_duration(p1.real_coord.distance_to(p1.projected)
-                             + fabs(p1.distances[target_e] - p2.distances[p1[source_e] != p2[source_e] ? source_e : target_e])
+                             + fabs(p1.distances[target_e] - p2.distances[is_reversed ? source_e : target_e])
                              + p2.projected.distance_to(p2.real_coord));
 }
 
@@ -78,7 +79,9 @@ nt::LineString PathFinder::path_coordinates_on_same_edge(
          * If p2 is projected on the reversed edge, we are using the distance from source_e in order to compare distance to the same vertex.
          * If the distance to the target from the starting point is lower than the one from the ending point we are reversing the geometry.
          */
-        bool edge_dest_reversed(p1[source_e] != p2[source_e]);
+        bool edge_dest_reversed(
+            p1[source_e] != p2[source_e] || (p1[source_e] == p1[target_e] && p1.edge.geom_idx != p2.edge.geom_idx)
+        );
         bool reverse(p1.distances[target_e] < p2.distances[edge_dest_reversed ? source_e : target_e]);
         const nt::GeographicalCoord &startBlade = (reverse ? p2.projected : p1.projected);
         const nt::GeographicalCoord &endBlade = (reverse ? p1.projected : p2.projected);
@@ -480,13 +483,15 @@ void PathFinder::add_custom_projections_to_path(Path& p, bool append_to_begin, c
         The third parameter tell if we want the geometry before or after p.
         If the direction is target_e, we want the end, otherwise the start.
     */
-    Way* way = geo_ref.ways[start_edge.way_idx];
-    if(start_edge.geom_idx != nt::invalid_idx) {
-        coords_to_add = type::split_line_at_point(
-            way->geoms[start_edge.geom_idx],
-            projection.projected,
-            d == target_e
-        );
+    if(start_edge.way_idx != nt::invalid_idx) {
+        Way* way = geo_ref.ways[start_edge.way_idx];
+        if(start_edge.geom_idx != nt::invalid_idx) {
+            coords_to_add = type::split_line_at_point(
+                way->geoms[start_edge.geom_idx],
+                projection.projected,
+                d == target_e
+            );
+        }
     }
     if(coords_to_add.empty()) {
         coords_to_add.push_back(projection.projected);
@@ -584,20 +589,34 @@ PathFinder::get_path(const ProjectionData& target,
         return {};
 
     Path result = this->build_path(target[nearest_edge.second]);
+    auto base_duration = result.duration;
     add_projections_to_path(result, true);
     //we need to put the end projections too
     add_custom_projections_to_path(result, false, target, nearest_edge.second);
 
     /*
-     * If we are on the same edge and a direct path is faster. It is not always the case, like if we have :
-     *                      |
-     * ,-----------------A--|
-     * |                    |
-     * '-----------------B--|
-     *                      |
+     * If we are on the same edge a non direct path might be faster, like if we have :
+     *
+     *                      |              .--------C-.
+     * ,-----------------A--|              |          |
+     * |                    |      or      |          |--------------
+     * '-----------------B--|              |          |
+     *                      |              '--------D-'
+     *
      * Even if A and B are on the same edge it's faster to use the result of build_path taking the vertical edge.
+     * It's a bit different for an edge with the same vertex for source and target. For C and D we need to only take the one edge
+     * but passing by the vertex.
+     * To take a direct path on the same edge we need to :
+     *  - have two point projected on the same edge,
+     *  AND
+     *   - have an edge with a different vertex for source and target AND have build_path return a duration of 0 second
+     *   OR
+     *   - have a path duration on the same edge smaller than the duration of the complete path returned by Dijkstra
      */
-    if(is_projected_on_same_edge(starting_edge, target) && path_duration_on_same_edge(starting_edge, target) <= result.duration){
+    if(is_projected_on_same_edge(starting_edge, target) &&
+       ((!base_duration.total_seconds() && starting_edge[source_e] != starting_edge[target_e]) ||
+        path_duration_on_same_edge(starting_edge, target) <= result.duration)
+    ){
         result.path_items.clear();
         result.duration = {};
         PathItem item;
@@ -627,7 +646,10 @@ void PathFinder::add_projections_to_path(Path& p, bool append_to_begin) const {
     const auto& coord_to_consider = append_to_begin ? path_item_to_consider.coordinates.front(): path_item_to_consider.coordinates.back();
 
     ProjectionData::Direction direction;
-    if (coord_to_consider == geo_ref.graph[starting_edge[source_e]].coord) {
+    // If source and target are the same keep the closest one
+    if(starting_edge[source_e] == starting_edge[target_e]) {
+        direction = starting_edge.distances[source_e] < starting_edge.distances[target_e] ? source_e : target_e;
+    } else if (coord_to_consider == geo_ref.graph[starting_edge[source_e]].coord) {
         direction = source_e;
     } else if (coord_to_consider == geo_ref.graph[starting_edge[target_e]].coord) {
         direction = target_e;
@@ -645,7 +667,6 @@ std::pair<navitia::time_duration, ProjectionData::Direction> PathFinder::update_
     assert(boost::edge(target[source_e], target[target_e], geo_ref.graph).second );
 
     computation_launch = true;
-
     if (distances[target[source_e]] == max || distances[target[target_e]] == max) {
         bool found = false;
         try {
