@@ -115,6 +115,41 @@ class MockValhalla(Valhalla):
         return response
 
 
+'''
+Example of response one_to_many api:
+
+{
+  "locations": [
+    [
+      {
+        "lon": 2.428405,
+        "lat": 48.625626
+      },
+      {
+        "lon": 2.428379,
+        "lat": 48.625679
+      }
+    ]
+  ],
+  "units": "kilometers",
+  "one_to_many": [
+    [
+      {
+        "distance": 0,
+        "time": 0,
+        "to_index": 0,
+        "from_index": 0
+      },
+      {
+        "distance": 0.227,
+        "time": 177,
+        "to_index": 1,
+        "from_index": 0
+      }
+    ]
+  ]
+}
+
 
 @dataset({"main_routing_test": {"street_network": MOCKED_VALHALLA_CONF}})
 class TestValhallaDirectPath(AbstractTestFixture):
@@ -154,4 +189,4 @@ class TestValhallaDirectPath(AbstractTestFixture):
         assert('walking' in response['journeys'][2]['tags'])
         assert len(response['journeys'][2]['sections']) == 1
         assert response['journeys'][2]['duration'] == 20
-
+'''
