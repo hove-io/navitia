@@ -816,7 +816,7 @@ Here is the structure of a standard journey request:
 <https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={date_time_to_leave}> .
 
 <a
-    href="http://jsfiddle.net/gh/get/jquery/2.2.2/CanalTP/navitia/tree/documentation/slate/source/examples/jsFiddle/journeys/"
+    href="https://jsfiddle.net/kisiodigital/0oj74vnz/"
     target="_blank"
     class="button button-blue">
     Code it yourself on JSFiddle
@@ -842,7 +842,7 @@ If you want to retreive every possible journey from a single point at a time, yo
 It will retrieve all the journeys from the resource (in order to make *[isochrone tables](https://en.wikipedia.org/wiki/Isochrone_map)*).
 
 <a
-    href="http://jsfiddle.net/gh/get/jquery/2.2.2/CanalTP/navitia/tree/documentation/slate/source/examples/jsFiddle/isochron/"
+    href="https://jsfiddle.net/kisiodigital/x6207t6f/"
     target="_blank"
     class="button button-blue">
     Code it yourself on JSFiddle
