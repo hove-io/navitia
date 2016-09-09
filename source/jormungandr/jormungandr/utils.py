@@ -45,6 +45,12 @@ from urlparse import urlparse
 DATETIME_FORMAT = "%Y%m%dT%H%M%S"
 
 
+def get_uri_pt_object(pt_object):
+    if pt_object.embedded_type == type_pb2.ADDRESS:
+        coords = pt_object.uri.split(';')
+        return "coord:{}:{}".format(coords[0], coords[1])
+    return pt_object.uri
+
 def kilometers_to_meters(distance):
     return distance * 1000.0
 
