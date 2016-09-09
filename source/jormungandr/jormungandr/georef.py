@@ -49,6 +49,7 @@ class Kraken(object):
                                                                   destinations,
                                                                   mode,
                                                                   max_duration)
+
         if not sn_routing_matrix.rows[0].duration:
             return {}
         import numpy as np

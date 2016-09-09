@@ -146,7 +146,7 @@ Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
 
 Path
 StreetNetwork::get_direct_path(const type::EntryPoint& origin, const type::EntryPoint& destination) {
-    auto dest_mode = destination.streetnetwork_params.mode;
+    auto dest_mode = origin.streetnetwork_params.mode;
     if(dest_mode == type::Mode_e::Car){
         //on direct path with car we want to arrive on the walking graph
         dest_mode = type::Mode_e::Walking;

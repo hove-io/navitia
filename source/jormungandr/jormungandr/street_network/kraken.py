@@ -30,23 +30,6 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from navitiacommon import request_pb2, type_pb2
 
-
-def _reverse_journeys(res):
-    if not getattr(res, "journeys"):
-        return res
-    for j in res.journeys:
-        if not getattr(j, "sections"):
-            continue
-        previous_section_begin = j.arrival_date_time
-        for s in j.sections:
-            from copy import deepcopy
-            s.origin.CopyFrom(deepcopy(s.destination))
-            s.destination.CopyFrom(deepcopy(s.origin))
-            s.end_date_time = previous_section_begin
-            previous_section_begin = s.begin_date_time = s.end_date_time - s.duration
-    return res
-
-
 class Kraken(object):
 
     def __init__(self, instance, url, timeout=10, api_key=None, **kwargs):
@@ -58,7 +41,7 @@ class Kraken(object):
             return "coord:{}:{}".format(coords[0], coords[1])
         return pt_object.uri
 
-    def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise, reverse_sections = False):
+    def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise):
         req = request_pb2.Request()
         req.requested_api = type_pb2.direct_path
         req.direct_path.origin.place = self._get_uri(pt_object_origin)
@@ -77,5 +60,4 @@ class Kraken(object):
         req.direct_path.streetnetwork_params.max_bss_duration_to_pt = self.instance.max_bss_duration_to_pt
         req.direct_path.streetnetwork_params.car_speed = self.instance.car_speed
         req.direct_path.streetnetwork_params.max_car_duration_to_pt = self.instance.max_car_duration_to_pt
-        return self.instance.send_and_receive(req) if not reverse_sections \
-            else _reverse_journeys(self.instance.send_and_receive(req))
+        return self.instance.send_and_receive(req)
