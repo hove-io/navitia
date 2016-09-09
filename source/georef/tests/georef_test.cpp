@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -1278,7 +1278,7 @@ BOOST_AUTO_TEST_CASE(transportation_mode_creation) {
 BOOST_AUTO_TEST_CASE(geolocalization) {
     //     (0,100)    rue AB   (100,100)
     //      A +--------------------+ B
-    //        |             
+    //        |
     //        | + D (10,80): 2 rue AB
     //        | + E (10,70): 3 rue AC
     // rue AC |
@@ -1405,7 +1405,7 @@ BOOST_AUTO_TEST_CASE(find_nearest_on_same_edge){
      */
 
     b("a", 0, 0)("b", 100, 0)("c", 300, 0)("d", 400, 0);
-    b("a", "b", 100_s)("b", "a", 100_s)("b", "c", 200_s)("c", "b", 200_s)("c", "d", 100_s)("d", "c", 100_s);
+    b("a", "b", 100_s, true)("b", "c", 200_s, true)("c", "d", 100_s, true);
 
     GeographicalCoord c0(120, 10, false);
     GeographicalCoord c1(250, 20, false);
