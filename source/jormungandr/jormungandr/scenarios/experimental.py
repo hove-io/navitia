@@ -94,7 +94,6 @@ def _rename_journey_sections_ids(start_idx, sections):
         s.id = "dp_section_{}".format(start_idx)
         start_idx += 1
 
-
 def _extend_pt_sections_with_direct_path(pt_journey, dp_journey):
     if getattr(dp_journey, 'journeys', []) and hasattr(dp_journey.journeys[0], 'sections'):
         _rename_journey_sections_ids(len(pt_journey.sections), dp_journey.journeys[0].sections)
@@ -106,10 +105,10 @@ class Scenario(new_default.Scenario):
     def __init__(self):
         super(Scenario, self).__init__()
 
-    def _get_direct_path(self, instance, mode, pt_object_origin, pt_object_destination, datetime, clockwise):
+    def _get_direct_path(self, instance, mode, pt_object_origin, pt_object_destination, datetime, clockwise, reverse_sections = False):
         # TODO: cache by (mode, origin, destination) and redate with datetime and clockwise
         return instance.street_network_service.direct_path(mode, pt_object_origin,
-                                                           pt_object_destination, datetime, clockwise)
+                                                           pt_object_destination, datetime, clockwise, reverse_sections)
 
     def _build_journey(self, journey, instance, _from, to, dep_mode, arr_mode):
         origins = g.origins_fallback[dep_mode]
@@ -133,12 +132,19 @@ class Scenario(new_default.Scenario):
 
         arrival_dp_key = (arr_mode, arrival.uri, to.uri, journey.arrival_date_time, False)
         if not g.fallback_direct_path.get(arrival_dp_key):
-             g.fallback_direct_path[arrival_dp_key] = self._get_direct_path(instance,
-                                                                              arr_mode,
-                                                                              arrival,
-                                                                              to,
-                                                                              journey.arrival_date_time,
-                                                                              False)
+            o = arrival
+            d = to
+            reverse_sections = False
+            if arr_mode == 'car':
+                o, d, reverse_sections = d, o, True
+            g.fallback_direct_path[arrival_dp_key] = self._get_direct_path(instance,
+                                                                           arr_mode,
+                                                                           o,
+                                                                           d,
+                                                                           journey.arrival_date_time,
+                                                                           False,
+                                                                           reverse_sections)
+
         import copy
         departure_direct_path = copy.deepcopy(g.fallback_direct_path[departure_dp_key])
         arrival_direct_path = copy.deepcopy(g.fallback_direct_path[arrival_dp_key])
@@ -191,7 +197,6 @@ class Scenario(new_default.Scenario):
                 resp.append(direct_path)
             else:
                 journey_parameters.direct_path_duration = None
-
             local_resp = instance.planner.journeys(g.origins_fallback[dep_mode],
                                                    g.destinations_fallback[arr_mode],
                                                    request['datetime'],

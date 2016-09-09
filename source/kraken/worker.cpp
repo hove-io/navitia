@@ -980,6 +980,7 @@ pbnavitia::Response Worker::direct_path(const pbnavitia::Request& request) {
                                            data,
                                            true,
                                            true);
+
     const auto destination = create_journeys_entry_point(dp_request.destination(),
                                                 dp_request.streetnetwork_params(),
                                                 data,

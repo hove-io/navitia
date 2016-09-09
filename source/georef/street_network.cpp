@@ -146,7 +146,7 @@ Path StreetNetwork::get_path(type::idx_t idx, bool use_second) {
 
 Path
 StreetNetwork::get_direct_path(const type::EntryPoint& origin, const type::EntryPoint& destination) {
-    auto dest_mode = origin.streetnetwork_params.mode;
+    auto dest_mode = destination.streetnetwork_params.mode;
     if(dest_mode == type::Mode_e::Car){
         //on direct path with car we want to arrive on the walking graph
         dest_mode = type::Mode_e::Walking;
@@ -372,6 +372,7 @@ PathFinder::get_duration_with_dijkstra(const navitia::time_duration& radius,
     } else {
         offset = geo_ref.offsets[mode];
     }
+
     ProjectionGetterOnFly projection_getter{geo_ref, offset};
     return start_dijkstra_and_fill_duration_map<PathFinder::coord_uri, type::GeographicalCoord, ProjectionGetterOnFly>(
             radius, dest_coords, projection_getter);
@@ -510,6 +511,7 @@ PathFinder::get_path(const ProjectionData& target,
                      const std::pair<navitia::time_duration, ProjectionData::Direction>& nearest_edge)
 {
     if (! computation_launch || ! target.found || nearest_edge.first == bt::pos_infin)
+
         return {};
 
     Path result;
