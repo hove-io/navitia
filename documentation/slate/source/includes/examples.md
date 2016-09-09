@@ -100,7 +100,7 @@ In the ``links`` section there is for example this link: ``"href": "https://api.
 
 This link is about lines (according to its ``rel`` attribute) and is templated which means that it needs additional parameters.<br>
 The parameters are identified with the ``{`` ``}`` syntax.
-In this case it needs a region id. This id can the found in the ``regions`` section.
+In this case it needs a region id. This id can be found in the ``regions`` section.
 
 To query for the public transport lines of New York we thus have to call: <https://api.navitia.io/v1/coverage/us-ny/lines>
 
