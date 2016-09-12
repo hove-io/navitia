@@ -554,9 +554,9 @@ static void add_pathes(PbCreator& pb_creator,
             const auto& departure_stop_point = path.items.front().stop_points.front();
             georef::Path sn_departure_path = worker.get_path(departure_stop_point->idx);
 
-            if (is_same_stop_point(origin, departure_stop_point)) {
+            if (is_same_stop_point(origin, *departure_stop_point)) {
                 // nothing in this case
-            } else if (use_crow_fly(origin, departure_stop_point, sn_departure_path, pb_creator.data)){
+            } else if (use_crow_fly(origin, *departure_stop_point, sn_departure_path, pb_creator.data)){
                 type::EntryPoint destination_tmp(type::Type_e::StopPoint, departure_stop_point->uri);
                 destination_tmp.coordinates = departure_stop_point->coord;
                 pb_creator.action_period = bt::time_period (path.items.front().departures.front(),
@@ -619,9 +619,9 @@ static void add_pathes(PbCreator& pb_creator,
             const auto arrival_stop_point = path.items.back().stop_points.back();
             georef::Path sn_arrival_path = worker.get_path(arrival_stop_point->idx, true);
 
-            if (is_same_stop_point(destination, arrival_stop_point)) {
+            if (is_same_stop_point(destination, *arrival_stop_point)) {
                 // nothing in this case
-            } else if (use_crow_fly(destination, arrival_stop_point, sn_arrival_path, pb_creator.data)) {
+            } else if (use_crow_fly(destination, *arrival_stop_point, sn_arrival_path, pb_creator.data)) {
                 type::EntryPoint origin_tmp(type::Type_e::StopPoint, arrival_stop_point->uri);
                 origin_tmp.coordinates = arrival_stop_point->coord;
                 pb_creator.action_period = bt::time_period(path.items.back().departures.back(),
