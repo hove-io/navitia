@@ -126,3 +126,20 @@ class Kraken(object):
         req.sn_routing_matrix.speed = speed_switcher.get(streetnetwork_mode, self.instance.walking_speed)
         req.sn_routing_matrix.max_duration = max_duration
         return self.instance.send_and_receive(req).sn_routing_matrix
+
+    def get_stop_points_for_stop_area(self, uri):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.PTREFERENTIAL
+        req.ptref.requested_type = type_pb2.STOP_POINT
+        req.ptref.count = 100
+        req.ptref.start_page = 0
+        req.ptref.depth = 1
+        req.ptref.filter = 'stop_area.uri = {uri}'.format(uri=uri)
+
+        result = self.instance.send_and_receive(req)
+        if len(result.stop_points) == 0:
+            logging.getLogger(__name__).info('PtRef, Unable to find stop_point with filter {}'.
+                                             format(req.ptref.filter))
+            return None
+        return result.stop_points
+
