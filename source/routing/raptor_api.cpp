@@ -554,7 +554,9 @@ static void add_pathes(PbCreator& pb_creator,
             const auto& departure_stop_point = path.items.front().stop_points.front();
             georef::Path sn_departure_path = worker.get_path(departure_stop_point->idx);
 
-            if (use_crow_fly(origin, departure_stop_point, sn_departure_path, pb_creator.data)){
+            if (is_same_stop_point(origin, departure_stop_point)) {
+                // nothing in this case
+            } else if (use_crow_fly(origin, departure_stop_point, sn_departure_path, pb_creator.data)){
                 type::EntryPoint destination_tmp(type::Type_e::StopPoint, departure_stop_point->uri);
                 destination_tmp.coordinates = departure_stop_point->coord;
                 pb_creator.action_period = bt::time_period (path.items.front().departures.front(),
@@ -617,7 +619,9 @@ static void add_pathes(PbCreator& pb_creator,
             const auto arrival_stop_point = path.items.back().stop_points.back();
             georef::Path sn_arrival_path = worker.get_path(arrival_stop_point->idx, true);
 
-            if (use_crow_fly(destination, arrival_stop_point, sn_arrival_path, pb_creator.data)) {
+            if (is_same_stop_point(destination, arrival_stop_point)) {
+                // nothing in this case
+            } else if (use_crow_fly(destination, arrival_stop_point, sn_arrival_path, pb_creator.data)) {
                 type::EntryPoint origin_tmp(type::Type_e::StopPoint, arrival_stop_point->uri);
                 origin_tmp.coordinates = arrival_stop_point->coord;
                 pb_creator.action_period = bt::time_period(path.items.back().departures.back(),
@@ -840,6 +844,7 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
     if (ep.type == type::Type_e::Address
                 || ep.type == type::Type_e::Coord
                 || ep.type == type::Type_e::StopArea
+                || ep.type == type::Type_e::StopPoint
                 || ep.type == type::Type_e::POI) {
 
         if (ep.type == type::Type_e::StopArea) {
@@ -853,6 +858,16 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
                     }
                 }
             }
+        }
+
+        if (ep.type == type::Type_e::StopPoint) {
+            auto it = data.pt_data->stop_points_map.find(ep.uri);
+            if (it != data.pt_data->stop_points_map.end()){
+                const SpIdx sp_idx{*it->second};
+                concerned_path_finder.distance_to_entry_point[sp_idx] = {};
+                result[sp_idx] = {};
+            }
+            return result;// TODO: remove this for sn on sp
         }
 
         // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
@@ -888,11 +903,6 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
             if(result.find(sp_idx) == result.end()) {
                 result[sp_idx] = idx_duration.second;
             }
-        }
-    } else if (ep.type == type::Type_e::StopPoint) {
-        auto it = data.pt_data->stop_points_map.find(ep.uri);
-        if (it != data.pt_data->stop_points_map.end()){
-            result[SpIdx{*it->second}] = {};
         }
     } else if(ep.type == type::Type_e::Admin) {
         //for an admin, we want to leave from it's main stop areas if we have some, else we'll leave from the center of the admin

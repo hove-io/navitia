@@ -134,6 +134,8 @@ struct Path {
 
 bool operator==(const PathItem & a, const PathItem & b);
 
+bool is_same_stop_point(const type::EntryPoint&, const type::StopPoint*);
+
 /**
  * Choose if we must use a crowfly or a streetnework for a section.
  * This function is called for the first and last section of a journey.

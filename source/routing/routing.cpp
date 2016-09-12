@@ -64,10 +64,13 @@ std::string PathItem::print() const {
     return ss.str();
 }
 
+bool is_same_stop_point(const type::EntryPoint& point, const type::StopPoint* stop_point) {
+    return point.type == type::Type_e::StopPoint && point.uri == stop_point->uri;
+}
 
 bool use_crow_fly(const type::EntryPoint& point, const type::StopPoint* stop_point,
                   const georef::Path& street_network_path, const type::Data& data) {
-    if (point.type == type::Type_e::StopPoint && point.uri == stop_point->uri) {
+    if (is_same_stop_point(point, stop_point)) {
         return false;
     }
     if (street_network_path.path_items.empty()) {

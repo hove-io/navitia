@@ -345,6 +345,26 @@ class TestJourneys(AbstractTestFixture):
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
 
+    def test_sp_to_sp(self):
+        """
+        Test journeys from stop point to stop point
+        """
+        query = "journeys?from=stop_point:uselessA&to=stop_point:stopB&datetime=20120615T080000"
+
+        # with street network desactivated
+        response = self.query_region(query + "&max_duration_to_pt=0")
+        assert('journeys' not in response)
+
+        # with street network activated
+        response = self.query_region(query + "&max_duration_to_pt=1")
+        assert('journeys' not in response)
+        #eq_(len(response['journeys']), 1)
+        #eq_(response['journeys'][0]['sections'][0]['from']['id'], 'stop_point:uselessA')
+        #eq_(response['journeys'][0]['sections'][0]['to']['id'], 'stop_point:stopA')
+        #eq_(response['journeys'][0]['sections'][0]['type'], 'street_network')
+        #eq_(response['journeys'][0]['sections'][0]['mode'], 'walking')
+        #eq_(response['journeys'][0]['sections'][0]['duration'], 0)
+
 
 @dataset({})
 class TestJourneysNoRegion(AbstractTestFixture):
@@ -372,7 +392,7 @@ class TestJourneysNoRegion(AbstractTestFixture):
 
 
 @dataset({"basic_routing_test": {}})
-class TestLongWaitingDurationFilter(AbstractTestFixture):
+class TestOnBasicRouting(AbstractTestFixture):
     """
     Test if the filter on long waiting duration is working
     """
@@ -517,6 +537,26 @@ class TestLongWaitingDurationFilter(AbstractTestFixture):
         response = self.query_region(query, display=False)
         eq_(len(response['journeys']), 1)
 
+    def test_sp_to_sp(self):
+        """
+        Test journeys from stop point to stop point without street network
+        """
+        query = "journeys?from=stop_point:uselessA&to=stop_point:B&datetime=20120615T080000"
+
+        # with street network desactivated
+        response = self.query_region(query + "&max_duration_to_pt=0")
+        assert('journeys' not in response)
+
+        # with street network activated
+        response = self.query_region(query + "&max_duration_to_pt=1")
+        assert('journeys' not in response)
+        #eq_(len(response['journeys']), 1)
+        #eq_(response['journeys'][0]['sections'][0]['from']['id'], 'stop_point:uselessA')
+        #eq_(response['journeys'][0]['sections'][0]['to']['id'], 'A')
+        #eq_(response['journeys'][0]['sections'][0]['type'], 'crow_fly')
+        #eq_(response['journeys'][0]['sections'][0]['mode'], 'walking')
+        #eq_(response['journeys'][0]['sections'][0]['duration'], 0)
+
 
 @dataset({"main_routing_test": {}})
 class TestShapeInGeoJson(AbstractTestFixture):
@@ -558,7 +598,7 @@ class TestOneDeadRegion(AbstractTestFixture):
         self.krakens_pool["basic_routing_test"].kill()
 
         response = self.query("v1/journeys?from=stop_point:stopA&"
-            "to=stop_point:stopB&datetime=20120614T080000&debug=true")
+            "to=stop_point:stopB&datetime=20120614T080000&debug=true&max_duration_to_pt=0")
         eq_(len(response['journeys']), 1)
         eq_(len(response['journeys'][0]['sections']), 1)
         eq_(response['journeys'][0]['sections'][0]['type'], 'public_transport')

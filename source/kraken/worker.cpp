@@ -588,7 +588,7 @@ pbnavitia::Response Worker::place_code(const pbnavitia::PlaceCodeRequest &reques
 
 static type::EntryPoint
 create_journeys_entry_point(const ::pbnavitia::LocationContext& location,
-                   const ::pbnavitia::StreetNetworkParams& sn_params,
+                   const ::pbnavitia::StreetNetworkParams* sn_params,
                    const boost::shared_ptr<const navitia::type::Data>& data,
                    const bool is_origin)
 {
@@ -602,12 +602,13 @@ create_journeys_entry_point(const ::pbnavitia::LocationContext& location,
     case type::Type_e::Admin:
     case type::Type_e::StopArea:
     case type::Type_e::POI:
-        entry_point.streetnetwork_params =
-            streetnetwork_params_of_entry_point(sn_params, data, is_origin);
-        entry_point.coordinates = coord_of_entry_point(entry_point, data);
-        break;
-    // StopPoint doesn't use street network
     case type::Type_e::StopPoint:
+        if (sn_params
+            && entry_point.type != type::Type_e::StopPoint// TODO: remove this for sn on sp
+            ) {
+            entry_point.streetnetwork_params =
+                streetnetwork_params_of_entry_point(*sn_params, data, is_origin);
+        }
         entry_point.coordinates = coord_of_entry_point(entry_point, data);
         break;
     default: break;
@@ -628,13 +629,14 @@ JourneysArg::JourneysArg(){}
 navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest &request) {
     const auto data = data_manager.get_data();
     std::vector<type::EntryPoint> origins;
+    const auto& sn_params = request.has_streetnetwork_params() ? &request.streetnetwork_params() : nullptr;
     for(int i = 0; i < request.origin().size(); i++) {
-        origins.push_back(create_journeys_entry_point(request.origin(i), request.streetnetwork_params(), data, true));
+        origins.push_back(create_journeys_entry_point(request.origin(i), sn_params, data, true));
     }
 
     std::vector<type::EntryPoint> destinations;
     for (int i = 0; i < request.destination().size(); i++) {
-        destinations.push_back(create_journeys_entry_point(request.destination(i), request.streetnetwork_params(), data, false));
+        destinations.push_back(create_journeys_entry_point(request.destination(i), sn_params, data, false));
     }
 
 
@@ -873,20 +875,11 @@ static type::EntryPoint make_sn_entry_point(const std::string& place,
     switch (entry_point.type) {
     case type::Type_e::Address:
     case type::Type_e::Admin:
+    case type::Type_e::Coord:
     case type::Type_e::StopArea:
     case type::Type_e::StopPoint:
     case type::Type_e::POI:
-        entry_point.coordinates = coord_of_entry_point(entry_point, data); // StopPoint doesn't use street network
-        break;
-    default:
-        break;
-    }
-    switch (entry_point.type) {
-    case type::Type_e::Address:
-    case type::Type_e::Coord:
-    case type::Type_e::Admin:
-    case type::Type_e::POI:
-    case type::Type_e::StopArea:
+        entry_point.coordinates = coord_of_entry_point(entry_point, data);
         entry_point.streetnetwork_params.mode = type::static_data::get()->modeByCaption(mode);
         break;
     default:
@@ -967,13 +960,13 @@ pbnavitia::Response Worker::direct_path(const pbnavitia::Request& request) {
     init_worker_data(data);
     const auto& dp_request = request.direct_path();
     const auto origin = create_journeys_entry_point(dp_request.origin(),
-                                           dp_request.streetnetwork_params(),
-                                           data,
-                                           true);
+                                                    &dp_request.streetnetwork_params(),
+                                                    data,
+                                                    true);
     const auto destination = create_journeys_entry_point(dp_request.destination(),
-                                                dp_request.streetnetwork_params(),
-                                                data,
-                                                false);
+                                                         &dp_request.streetnetwork_params(),
+                                                         data,
+                                                         false);
     const auto geo_path = street_network_worker->get_direct_path(origin, destination);
 
     const auto current_datetime = bt::from_time_t(request._current_datetime());
