@@ -41,6 +41,7 @@ from jormungandr.timezone import get_timezone
 from jormungandr.utils import timestamp_to_str
 from navitiacommon import response_pb2, type_pb2
 import ujson
+import operator
 
 
 class Lit(fields.Raw):

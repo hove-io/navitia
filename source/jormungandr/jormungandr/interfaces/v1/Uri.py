@@ -377,6 +377,7 @@ def stop_areas(is_collection):
     return StopAreas
 
 
+
 def connections(is_collection):
     class Connections(Uri):
 
@@ -512,8 +513,16 @@ def lines(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
-            collections = marshal_with(OrderedDict(self.collections),
-                                       display_null=False)
+            from jormungandr.interfaces.v1.serializer import serialize_with, LineSerializer, ErrorSerializer, DisruptionSerializer, FeedPublisherSerializer, PaginationSerializer
+            import serpy
+            class Serializer(serpy.Serializer):
+                pagination = PaginationSerializer(attr='pagination', display_none=True, required=True)
+                lines = LineSerializer(many=True)
+                error = ErrorSerializer(display_none=False)
+                disruptions = DisruptionSerializer(attr='impacts', many=True)
+                feed_publishers = FeedPublisherSerializer(many=True, display_none=False)
+
+            collections = serialize_with(Serializer)
             self.method_decorators.insert(1, collections)
             self.parsers["get"].add_argument("original_id", type=unicode,
                             description="original uri of the object you"

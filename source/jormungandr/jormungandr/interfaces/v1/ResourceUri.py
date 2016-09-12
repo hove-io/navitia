@@ -116,6 +116,8 @@ class add_computed_resources(object):
                 data, code, header = unpack(response)
             else:
                 data = response
+            if 'links' not in data:
+                return response
             collection = None
             kwargs["_external"] = True
             templated = True
