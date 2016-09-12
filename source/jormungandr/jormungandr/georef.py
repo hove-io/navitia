@@ -140,6 +140,5 @@ class Kraken(object):
         if len(result.stop_points) == 0:
             logging.getLogger(__name__).info('PtRef, Unable to find stop_point with filter {}'.
                                              format(req.ptref.filter))
-            return None
         return result.stop_points
 

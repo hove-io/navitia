@@ -114,8 +114,6 @@ def update_crowfly_duration(instance, fallback_list, mode, stop_area_uri):
     if 'stop_area' not in stop_area_uri:
         return
     stop_points = instance.georef.get_stop_points_for_stop_area(stop_area_uri)
-    if not stop_points:
-        return
     for stop_point in stop_points:
         if fallback_list[mode].get(stop_point.uri):
             fallback_list[mode][stop_point.uri] = 0
