@@ -64,11 +64,11 @@ std::string PathItem::print() const {
     return ss.str();
 }
 
-bool is_same_stop_point(const type::EntryPoint& point, const type::StopPoint* stop_point) {
-    return point.type == type::Type_e::StopPoint && point.uri == stop_point->uri;
+bool is_same_stop_point(const type::EntryPoint& point, const type::StopPoint& stop_point) {
+    return point.type == type::Type_e::StopPoint && point.uri == stop_point.uri;
 }
 
-bool use_crow_fly(const type::EntryPoint& point, const type::StopPoint* stop_point,
+bool use_crow_fly(const type::EntryPoint& point, const type::StopPoint& stop_point,
                   const georef::Path& street_network_path, const type::Data& data) {
     if (is_same_stop_point(point, stop_point)) {
         return false;
@@ -79,14 +79,14 @@ bool use_crow_fly(const type::EntryPoint& point, const type::StopPoint* stop_poi
     if(point.type == type::Type_e::StopArea){
         //if we have a stop area in the request,
         //we only do a crowfly section if the used stop point belongs to this stop area
-        return point.uri == stop_point->stop_area->uri;
+        return point.uri == stop_point.stop_area->uri;
     }else if(point.type == type::Type_e::Admin){
         //we handle the main_stop_area of an admin here
         //we want a crowfly for all main_stop_areas of an admin,
         //even if the stop_area is not in the admin
         auto admin = data.geo_ref->admins[data.geo_ref->admin_map[point.uri]];
         auto it = find_if(begin(admin->main_stop_areas), end(admin->main_stop_areas),
-                [stop_point](const type::StopArea* stop_area){return stop_area == stop_point->stop_area;});
+                [stop_point](const type::StopArea* stop_area){return stop_area == stop_point.stop_area;});
         return it != end(admin->main_stop_areas);
     }else{
         //if the request is on any other type we don't want a crowfly section

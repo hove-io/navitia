@@ -1794,46 +1794,46 @@ BOOST_AUTO_TEST_CASE(use_crow_fly){
 
     ep.type = navitia::type::Type_e::Address;
     ep.uri = "foo";
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp, empty_sn_path, data));
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, filled_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, sp, empty_sn_path, data));
+    BOOST_CHECK(! nr::use_crow_fly(ep, sp, filled_sn_path, data));
 
     ep.type = navitia::type::Type_e::POI;
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp, empty_sn_path, data));
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, filled_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, sp, empty_sn_path, data));
+    BOOST_CHECK(! nr::use_crow_fly(ep, sp, filled_sn_path, data));
 
     ep.type = navitia::type::Type_e::Coord;
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp, empty_sn_path, data));
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, filled_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, sp, empty_sn_path, data));
+    BOOST_CHECK(! nr::use_crow_fly(ep, sp, filled_sn_path, data));
 
     ep.type = navitia::type::Type_e::StopArea;
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp, empty_sn_path, data));
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, filled_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, sp, empty_sn_path, data));
+    BOOST_CHECK(! nr::use_crow_fly(ep, sp, filled_sn_path, data));
 
     ep.type = navitia::type::Type_e::Admin;
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp, empty_sn_path, data));
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, filled_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, sp, empty_sn_path, data));
+    BOOST_CHECK(! nr::use_crow_fly(ep, sp, filled_sn_path, data));
 
     ep.type = navitia::type::Type_e::Admin;
     ep.uri = "admin";
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp, empty_sn_path, data));
-    BOOST_CHECK(!nr::use_crow_fly(ep, &sp, filled_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, sp, empty_sn_path, data));
+    BOOST_CHECK(!nr::use_crow_fly(ep, sp, filled_sn_path, data));
 
     ep.type = navitia::type::Type_e::StopArea;
     ep.uri = "sa:foo";
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp, empty_sn_path, data));
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp, filled_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, sp, empty_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, sp, filled_sn_path, data));
 
     ep.type = navitia::type::Type_e::Admin;
     ep.uri = "admin";
     navitia::type::StopPoint sp2;
     navitia::type::StopArea sa2;
     sp2.stop_area = &sa2;
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp2, empty_sn_path, data));
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp2, filled_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, sp2, empty_sn_path, data));
+    BOOST_CHECK(! nr::use_crow_fly(ep, sp2, filled_sn_path, data));
 
     admin->main_stop_areas.push_back(&sa2);
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp2, empty_sn_path, data));
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp2, filled_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, sp2, empty_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, sp2, filled_sn_path, data));
 }
 
 struct isochrone_fixture {

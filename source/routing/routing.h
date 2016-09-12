@@ -134,7 +134,7 @@ struct Path {
 
 bool operator==(const PathItem & a, const PathItem & b);
 
-bool is_same_stop_point(const type::EntryPoint&, const type::StopPoint*);
+bool is_same_stop_point(const type::EntryPoint&, const type::StopPoint&);
 
 /**
  * Choose if we must use a crowfly or a streetnework for a section.
@@ -147,7 +147,7 @@ bool is_same_stop_point(const type::EntryPoint&, const type::StopPoint*);
  * @param street_network_path: the street network path between point and stop_point
  * @param data: reference datas of the instance
  */
-bool use_crow_fly(const type::EntryPoint& point, const type::StopPoint* stop_point,
+bool use_crow_fly(const type::EntryPoint& point, const type::StopPoint& stop_point,
                   const georef::Path& street_network_path, const type::Data& data);
 
 
