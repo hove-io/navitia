@@ -79,6 +79,7 @@ def _init_g():
     g.requested_origin = None
     g.requested_destination = None
 
+
 def create_parameters(request):
     return JourneyParameters(max_duration=request['max_duration'],
                              max_transfers=request['max_transfers'],
@@ -117,6 +118,7 @@ def _reverse_journeys(res):
             s.end_date_time = previous_section_begin
             previous_section_begin = s.begin_date_time = s.end_date_time - s.duration
     return res
+
 
 class Scenario(new_default.Scenario):
 
