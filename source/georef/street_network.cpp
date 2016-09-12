@@ -511,7 +511,6 @@ PathFinder::get_path(const ProjectionData& target,
                      const std::pair<navitia::time_duration, ProjectionData::Direction>& nearest_edge)
 {
     if (! computation_launch || ! target.found || nearest_edge.first == bt::pos_infin)
-
         return {};
 
     Path result;
