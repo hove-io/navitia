@@ -867,7 +867,6 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
                 concerned_path_finder.distance_to_entry_point[sp_idx] = {};
                 result[sp_idx] = {};
             }
-            return result;// TODO: remove this for sn on sp
         }
 
         // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
