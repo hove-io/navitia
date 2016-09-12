@@ -602,10 +602,10 @@ create_journeys_entry_point(const ::pbnavitia::LocationContext& location,
     case type::Type_e::Admin:
     case type::Type_e::StopArea:
     case type::Type_e::POI:
-    // We allow, from a stop_point, use street_network in case of direct_path
     case type::Type_e::StopPoint:
-        if (sn_params){
-            entry_point.streetnetwork_params = streetnetwork_params_of_entry_point(*sn_params, data, is_origin);
+        if (sn_params) {
+            entry_point.streetnetwork_params =
+                streetnetwork_params_of_entry_point(*sn_params, data, is_origin);
         }
         entry_point.coordinates = coord_of_entry_point(entry_point, data);
         break;
@@ -627,19 +627,18 @@ JourneysArg::JourneysArg(){}
 navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest &request) {
     const auto data = data_manager.get_data();
     std::vector<type::EntryPoint> origins;
+    const auto* sn_params = request.has_streetnetwork_params() ? &request.streetnetwork_params() : nullptr;
     for(int i = 0; i < request.origin().size(); i++) {
-        const auto* sn_params = request.has_streetnetwork_params() &&
-                data->get_type_of_id(request.origin(i).place()) != type::Type_e::StopPoint
-                    ? &request.streetnetwork_params() : nullptr;
-        origins.push_back(create_journeys_entry_point(request.origin(i), sn_params, data, true));
+        const auto* cur_sn_params = sn_params;// TODO: remove this for sn on sp
+        if (data->get_type_of_id(request.origin(i).place()) == type::Type_e::StopPoint) { cur_sn_params = nullptr; }// TODO: remove this for sn on sp
+        origins.push_back(create_journeys_entry_point(request.origin(i), cur_sn_params, data, true));// TODO: remove cur_ for sn on sp
     }
 
     std::vector<type::EntryPoint> destinations;
     for (int i = 0; i < request.destination().size(); i++) {
-        const auto* sn_params = request.has_streetnetwork_params() &&
-                data->get_type_of_id(request.destination(i).place()) != type::Type_e::StopPoint
-                    ? &request.streetnetwork_params() : nullptr;
-        destinations.push_back(create_journeys_entry_point(request.destination(i), sn_params, data, false));
+        const auto* cur_sn_params = sn_params;// TODO: remove this for sn on sp
+        if (data->get_type_of_id(request.destination(i).place()) == type::Type_e::StopPoint) { cur_sn_params = nullptr; }// TODO: remove this for sn on sp
+        destinations.push_back(create_journeys_entry_point(request.destination(i), cur_sn_params, data, false));// TODO: remove cur_ for sn on sp
     }
 
 
@@ -878,20 +877,11 @@ static type::EntryPoint make_sn_entry_point(const std::string& place,
     switch (entry_point.type) {
     case type::Type_e::Address:
     case type::Type_e::Admin:
+    case type::Type_e::Coord:
     case type::Type_e::StopArea:
     case type::Type_e::StopPoint:
     case type::Type_e::POI:
-        entry_point.coordinates = coord_of_entry_point(entry_point, data); // StopPoint doesn't use street network
-        break;
-    default:
-        break;
-    }
-    switch (entry_point.type) {
-    case type::Type_e::Address:
-    case type::Type_e::Coord:
-    case type::Type_e::Admin:
-    case type::Type_e::POI:
-    case type::Type_e::StopArea:
+        entry_point.coordinates = coord_of_entry_point(entry_point, data);
         entry_point.streetnetwork_params.mode = type::static_data::get()->modeByCaption(mode);
         break;
     default:
@@ -905,7 +895,6 @@ static type::EntryPoint make_sn_entry_point(const std::string& place,
             entry_point.streetnetwork_params.offset = data->geo_ref->offsets[mode_enum];
             entry_point.streetnetwork_params.speed_factor = speed / georef::default_speed[mode_enum];
             break;
-        case type::Mode_e::Walking:
         default:
             entry_point.streetnetwork_params.offset = data->geo_ref->offsets[type::Mode_e::Walking];
             entry_point.streetnetwork_params.speed_factor = speed / georef::default_speed[type::Mode_e::Walking];
@@ -932,7 +921,6 @@ pbnavitia::Response Worker::street_network_routing_matrix(const pbnavitia::Stree
         type::GeographicalCoord coord{};
         try{
             dest_coords.push_back(coord_of_entry_point(entry_point, data));
-
         }catch(const navitia::coord_conversion_exception& e) {
             pbnavitia::Response r;
             fill_pb_error(pbnavitia::Error::bad_format, e.what(), r.mutable_error());
@@ -976,7 +964,6 @@ pbnavitia::Response Worker::direct_path(const pbnavitia::Request& request) {
     init_worker_data(data);
     const auto& dp_request = request.direct_path();
     const auto* sn_params = dp_request.has_streetnetwork_params() ? &dp_request.streetnetwork_params() : nullptr;
-
     const auto origin = create_journeys_entry_point(dp_request.origin(),
                                            sn_params,
                                            data,

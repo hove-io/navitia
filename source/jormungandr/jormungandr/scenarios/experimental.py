@@ -39,6 +39,7 @@ from flask import g
 
 from jormungandr import app
 
+
 def create_crowfly(_from, to, begin, end, mode='walking'):
     section = response_pb2.Section()
     section.type = response_pb2.CROW_FLY
@@ -51,12 +52,14 @@ def create_crowfly(_from, to, begin, end, mode='walking'):
     section.id = unicode(uuid.uuid4())
     return section
 
+
 class SectionSorter(object):
     def __call__(self, a, b):
         if a.begin_date_time != b.begin_date_time:
             return -1 if a.begin_date_time < b.begin_date_time else 1
         else:
             return -1 if a.end_date_time < b.end_date_time else 1
+
 
 def get_max_fallback_duration(request, mode):
     if mode == 'walking':
@@ -89,6 +92,14 @@ def create_parameters(request):
                              walking_transfer_penalty=request['_walking_transfer_penalty'],
                              forbidden_uris=request['forbidden_uris[]'])
 
+
+def update_crowfly_duration(instance, fallback_list, mode, stop_area_uri):
+    if 'stop_area' not in stop_area_uri:
+        return
+    stop_points = instance.georef.get_stop_points_for_stop_area(stop_area_uri)
+    for stop_point in stop_points:
+        if fallback_list[mode].get(stop_point.uri):
+            fallback_list[mode][stop_point.uri] = 0
 
 def _rename_journey_sections_ids(start_idx, sections):
     for s in sections:
@@ -193,10 +204,20 @@ class Scenario(new_default.Scenario):
                         get_max_fallback_duration(request, dep_mode))
 
 
+                #logger.debug('origins %s: %s', dep_mode, g.origins_fallback[dep_mode])
+
+            #Fetch all the stop points of this stop_area and replaces all the durations by 0 in the table
+            #g.origins_fallback[dep_mode]
+            update_crowfly_duration(instance, g.origins_fallback, dep_mode,  request['origin'])
+
             if arr_mode not in g.destinations_fallback:
                 g.destinations_fallback[arr_mode] = instance.georef.get_stop_points(request['destination'],
                         arr_mode,
                         get_max_fallback_duration(request, arr_mode), reverse=True)
+                #logger.debug('destinations %s: %s', arr_mode, g.destinations_fallback[arr_mode])
+            #Fetch all the stop points of this stop_area and replaces all the durations by 0 in the table
+            #g.destinations_fallback[arr_mode]
+            update_crowfly_duration(instance, g.destinations_fallback, arr_mode, request['destination'])
 
         if not g.requested_origin:
             g.requested_origin = instance.georef.place(request['origin'])

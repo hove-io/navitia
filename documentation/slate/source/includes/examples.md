@@ -100,7 +100,7 @@ In the ``links`` section there is for example this link: ``"href": "https://api.
 
 This link is about lines (according to its ``rel`` attribute) and is templated which means that it needs additional parameters.<br>
 The parameters are identified with the ``{`` ``}`` syntax.
-In this case it needs a region id. This id can the found in the ``regions`` section. 
+In this case it needs a region id. This id can be found in the ``regions`` section.
 
 To query for the public transport lines of New York we thus have to call: <https://api.navitia.io/v1/coverage/us-ny/lines>
 
@@ -109,7 +109,7 @@ Easy isn't it?
 
 
 <a
-    href="http://jsfiddle.net/gh/get/jquery/2.2.2/CanalTP/navitia/tree/documentation/slate/source/examples/jsFiddle/lines/"
+    href="https://jsfiddle.net/kisiodigital/vLugkLgw/"
     target="_blank"
     class="button button-blue">
     Code it yourself on JSFiddle
@@ -195,7 +195,7 @@ a journey can be faster than an other but requires more changes or more walking.
 
 This API has more options explained in the reference as:
 
-* The dates are given in the basic form of the ISO 8601 datetime format: ``YYYYMMDDTHHMM``. 
+* The dates are given in the basic form of the ISO 8601 datetime format: ``YYYYMMDDTHHMM``.
   For example, if you want to compute a journey on friday, April 22 ``datetime=20160422T0800``
   <https://api.navitia.io/v1/journeys?from=-122.47787733594924;37.71696489300146&to=-122.41539259473815;37.78564348914185&datetime=20160422T0800>
 

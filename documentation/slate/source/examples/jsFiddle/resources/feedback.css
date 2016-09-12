@@ -1,0 +1,56 @@
+@import 'https://fonts.googleapis.com/css?family=Open+Sans';
+
+.jsfiddle {
+    border: 8px solid #E6EBEE;
+    color: #546873;
+    border-width: 8px 0;
+    background: #FFF;
+    width: 100%;
+    min-height: 100px;
+    box-sizing: border-box;
+    display: flex;
+    font-family: 'Open Sans', sans-serif;
+}
+
+.flex-item {
+    margin: auto;
+}
+
+.icon-wrapper {
+    padding: 0 40px 0 30px;
+}
+
+.icon-wrapper img {
+    width: 60px;
+    height: 60px;
+    border-radius: 30px;
+    background: #E6EBEE;
+    display: block;
+}
+
+.jsfiddle p {
+    flex-grow: 1;
+    font-size: 1.2em;
+}
+
+.jsfiddle p.alone {
+    text-align: center;
+}
+
+.button-wrapper {
+    padding: 0 20px;
+}
+
+.button {
+    display: inline-block;
+    text-align: center;
+    color: #FFF;
+    text-decoration: none;
+    background: #B3CB2B;
+    border-radius: 4px;
+    width: 100px;
+    height: 36px;
+    line-height: 36px;
+    margin-right: 20px;
+    text-transform: uppercase;
+}

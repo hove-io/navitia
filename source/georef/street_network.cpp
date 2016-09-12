@@ -321,6 +321,8 @@ PathFinder::start_dijkstra_and_fill_duration_map(const navitia::time_duration& r
 routing::map_stop_point_duration
 PathFinder::find_nearest_stop_points(const navitia::time_duration& radius,
                                      const proximitylist::ProximityList<type::idx_t>& pl) {
+    if (radius == navitia::seconds(0)) { return {}; }
+
     auto elements = crow_fly_find_nearest_stop_points(radius, pl);
 
     routing::map_stop_point_duration result;

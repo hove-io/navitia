@@ -852,6 +852,8 @@ BOOST_FIXTURE_TEST_CASE(direct_path_exactly_the_limit, direct_path_routing_api_d
                         to_duration(B.distance_to(S), navitia::type::Mode_e::Walking);
     tested_map[navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:stopA"]))] =
                         a_s_dur;
+    tested_map[navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:uselessA"]))] =
+                        a_s_dur;
     BOOST_CHECK_EQUAL_COLLECTIONS(sp.cbegin(), sp.cend(), tested_map.cbegin(), tested_map.cend());
 }
 
@@ -867,6 +869,8 @@ BOOST_FIXTURE_TEST_CASE(direct_path_over_the_limit, direct_path_routing_api_data
     tested_map[navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:stopB"]))] =
                         to_duration(B.distance_to(S), navitia::type::Mode_e::Walking);
     tested_map[navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:stopA"]))] =
+                        a_s_dur;
+    tested_map[navitia::routing::SpIdx(*(b.data->pt_data->stop_points_map["stop_point:uselessA"]))] =
                         a_s_dur;
     BOOST_CHECK_EQUAL_COLLECTIONS(sp.cbegin(), sp.cend(), tested_map.cbegin(), tested_map.cend());
 }
@@ -1790,46 +1794,46 @@ BOOST_AUTO_TEST_CASE(use_crow_fly){
 
     ep.type = navitia::type::Type_e::Address;
     ep.uri = "foo";
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp, empty_sn_path, data));
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, filled_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, sp, empty_sn_path, data));
+    BOOST_CHECK(! nr::use_crow_fly(ep, sp, filled_sn_path, data));
 
     ep.type = navitia::type::Type_e::POI;
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp, empty_sn_path, data));
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, filled_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, sp, empty_sn_path, data));
+    BOOST_CHECK(! nr::use_crow_fly(ep, sp, filled_sn_path, data));
 
     ep.type = navitia::type::Type_e::Coord;
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp, empty_sn_path, data));
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, filled_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, sp, empty_sn_path, data));
+    BOOST_CHECK(! nr::use_crow_fly(ep, sp, filled_sn_path, data));
 
     ep.type = navitia::type::Type_e::StopArea;
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp, empty_sn_path, data));
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, filled_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, sp, empty_sn_path, data));
+    BOOST_CHECK(! nr::use_crow_fly(ep, sp, filled_sn_path, data));
 
     ep.type = navitia::type::Type_e::Admin;
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp, empty_sn_path, data));
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp, filled_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, sp, empty_sn_path, data));
+    BOOST_CHECK(! nr::use_crow_fly(ep, sp, filled_sn_path, data));
 
     ep.type = navitia::type::Type_e::Admin;
     ep.uri = "admin";
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp, empty_sn_path, data));
-    BOOST_CHECK(!nr::use_crow_fly(ep, &sp, filled_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, sp, empty_sn_path, data));
+    BOOST_CHECK(!nr::use_crow_fly(ep, sp, filled_sn_path, data));
 
     ep.type = navitia::type::Type_e::StopArea;
     ep.uri = "sa:foo";
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp, empty_sn_path, data));
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp, filled_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, sp, empty_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, sp, filled_sn_path, data));
 
     ep.type = navitia::type::Type_e::Admin;
     ep.uri = "admin";
     navitia::type::StopPoint sp2;
     navitia::type::StopArea sa2;
     sp2.stop_area = &sa2;
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp2, empty_sn_path, data));
-    BOOST_CHECK(! nr::use_crow_fly(ep, &sp2, filled_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, sp2, empty_sn_path, data));
+    BOOST_CHECK(! nr::use_crow_fly(ep, sp2, filled_sn_path, data));
 
     admin->main_stop_areas.push_back(&sa2);
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp2, empty_sn_path, data));
-    BOOST_CHECK(nr::use_crow_fly(ep, &sp2, filled_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, sp2, empty_sn_path, data));
+    BOOST_CHECK(nr::use_crow_fly(ep, sp2, filled_sn_path, data));
 }
 
 struct isochrone_fixture {

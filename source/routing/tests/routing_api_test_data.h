@@ -406,7 +406,8 @@ struct routing_api_data {
 
 
         b.generate_dummy_basis();
-        b.sa("stopA", A.lon(), A.lat());
+        b.sa("stopA", A.lon(), A.lat())
+            ("stop_point:uselessA", A.lon(), A.lat());
         b.sa("stopB", B.lon(), B.lat());
         if (activate_pt) {
             //we add a very fast bus (2 seconds) to be faster than walking and biking
