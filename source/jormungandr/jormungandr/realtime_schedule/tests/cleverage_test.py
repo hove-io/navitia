@@ -79,8 +79,9 @@ class MockRequests(object):
         return MockResponse(self.responses[url][0], self.responses[url][1], url)
 
 
+@pytest.fixture(scope="module")
 def mock_good_response():
-    mock_response = [
+    return [
         {
             "name": "Lianes 5",
             "code": "05",
@@ -183,16 +184,16 @@ def mock_good_response():
                 }
             ]
         }]
-    return mock_response
 
 
+@pytest.fixture(scope="module")
 def mock_empty_response():
-    mock_response = []
-    return mock_response
+    return []
 
 
+@pytest.fixture(scope="module")
 def mock_missing_line_response():
-    mock_response = [
+    return [
         {
             "name": "Lianes 4",
             "code": "04",
@@ -244,12 +245,11 @@ def mock_missing_line_response():
                 }
             ]
         }]
-    return mock_response
 
 
 @pytest.fixture(scope="module")
 def mock_theoric_response():
-    mock_response = [
+    return [
         {
             "name": "Lianes 5",
             "code": "05",
@@ -352,7 +352,6 @@ def mock_theoric_response():
                 }
             ]
         }]
-    return mock_response
 
 
 class MockRoutePoint(object):
@@ -367,7 +366,7 @@ class MockRoutePoint(object):
         return self._hardcoded_line_code
 
 
-def next_passage_for_route_point_test():
+def next_passage_for_route_point_test(mock_good_response):
     """
     test the whole next_passage_for_route_point
     mock the http call to return a good response, we should get some next_passages
@@ -377,7 +376,7 @@ def next_passage_for_route_point_test():
 
     mock_requests = MockRequests({
         'http://bob.com/stop_tutu':
-            (mock_good_response(), 200)
+            (mock_good_response, 200)
     })
 
     route_point = MockRoutePoint(line_code='05', stop_id='stop_tutu')
@@ -388,10 +387,12 @@ def next_passage_for_route_point_test():
         assert len(passages) == 2
 
         assert passages[0].datetime == datetime.datetime(2016, 4, 11, 14, 37, 15, tzinfo=pytz.UTC)
+        assert passages[0].is_real_time
         assert passages[1].datetime == datetime.datetime(2016, 4, 11, 14, 45, 35, tzinfo=pytz.UTC)
+        assert passages[1].is_real_time
 
 
-def next_passage_for_route_point_local_timezone_test():
+def next_passage_for_route_point_local_timezone_test(mock_good_response):
     """
     test the whole next_passage_for_route_point
     mock the http call to return a good response, we should get some next_passages
@@ -401,7 +402,7 @@ def next_passage_for_route_point_local_timezone_test():
 
     mock_requests = MockRequests({
         'http://bob.com/stop_tutu':
-            (mock_good_response(), 200)
+            (mock_good_response, 200)
     })
 
     route_point = MockRoutePoint(line_code='05', stop_id='stop_tutu')
@@ -412,10 +413,12 @@ def next_passage_for_route_point_local_timezone_test():
         assert len(passages) == 2
 
         assert passages[0].datetime == datetime.datetime(2016, 4, 11, 12, 37, 15, tzinfo=pytz.UTC)
+        assert passages[0].is_real_time
         assert passages[1].datetime == datetime.datetime(2016, 4, 11, 12, 45, 35, tzinfo=pytz.UTC)
+        assert passages[1].is_real_time
 
 
-def next_passage_for_empty_response_test():
+def next_passage_for_empty_response_test(mock_empty_response):
     """
     test the whole next_passage_for_route_point
     mock the http call to return a empty response, we should get no departure
@@ -425,7 +428,7 @@ def next_passage_for_empty_response_test():
 
     mock_requests = MockRequests({
         'http://bob.com/stop_tutu':
-            (mock_empty_response(), 200)
+            (mock_empty_response, 200)
     })
 
     route_point = MockRoutePoint(line_code='05', stop_id='stop_tutu')
@@ -436,7 +439,7 @@ def next_passage_for_empty_response_test():
         assert passages is None
 
 
-def next_passage_for_missing_line_response_test():
+def next_passage_for_missing_line_response_test(mock_missing_line_response):
     """
     test the whole next_passage_for_route_point
     mock the http call to return a response without wanted line  we should get no departure
@@ -446,7 +449,7 @@ def next_passage_for_missing_line_response_test():
 
     mock_requests = MockRequests({
         'http://bob.com/stop_tutu':
-            (mock_missing_line_response(), 200)
+            (mock_missing_line_response, 200)
     })
 
     route_point = MockRoutePoint(line_code='05', stop_id='stop_tutu')
@@ -475,9 +478,12 @@ def next_passage_with_theoric_time_response_test(mock_theoric_response):
     with mock.patch('requests.get', mock_requests.get):
         passages = cleverage.next_passage_for_route_point(route_point)
 
-        assert len(passages) == 1
+        assert len(passages) == 2
 
-        assert passages[0].datetime == datetime.datetime(2016, 4, 11, 14, 45, 35, tzinfo=pytz.UTC)
+        assert passages[0].datetime == datetime.datetime(2016, 4, 11, 14, 37, 15, tzinfo=pytz.UTC)
+        assert not passages[0].is_real_time
+        assert passages[1].datetime == datetime.datetime(2016, 4, 11, 14, 45, 35, tzinfo=pytz.UTC)
+        assert passages[1].is_real_time
 
 
 def status_test():
