@@ -35,7 +35,7 @@ import requests as requests
 from jormungandr import app
 import json
 from flask_restful import abort
-from jormungandr.exceptions import UnableToParse, TechnicalError, InvalidArguments, ApiNotFound
+from jormungandr.exceptions import UnableToParse, TechnicalError, InvalidArguments
 from flask import g
 from jormungandr.utils import is_url, kilometers_to_meters
 from copy import deepcopy
