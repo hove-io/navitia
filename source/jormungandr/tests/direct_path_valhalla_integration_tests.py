@@ -32,6 +32,7 @@ from jormungandr.street_network.valhalla import Valhalla
 from jormungandr.scenarios import experimental
 import requests as requests
 from mock import MagicMock
+import json
 
 MOCKED_VALHALLA_CONF = {
     "class": "tests.direct_path_valhalla_integration_tests.MockValhalla",
@@ -55,10 +56,10 @@ journey_basic_query = "journeys?from={from_coord}&to={to_coord}&datetime={dateti
     .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T080000")
 
 
-def response_valid(mode):
-    map_mod = {"walking": 20,
-               "car": 5,
-               "bike": 10}
+def route_response(mode):
+    map_mod = {"pedestrian": 20,
+               "auto": 5,
+               "bicycle": 10}
     return {
         "trip": {
             "summary": {
@@ -95,8 +96,53 @@ def response_valid(mode):
     }
 
 
+def one_to_many_response():
+    return {
+        "locations": [
+            [
+                {
+                    "lon": 2.428405,
+                    "lat": 48.625626
+                },
+                {
+                    "lon": 2.428379,
+                    "lat": 48.625679
+                }
+            ]
+        ],
+        "units": "kilometers",
+        "one_to_many": [
+            [
+                {
+                    "distance": 0,
+                    "time": 0,
+                    "to_index": 0,
+                    "from_index": 0
+                },
+                {
+                    "distance": 0.227,
+                    "time": 177,
+                    "to_index": 1,
+                    "from_index": 0
+                }
+            ]
+        ]
+    }
+
+
+def response_valid(api, mode):
+    if api == 'route':
+        return route_response(mode)
+    elif api == 'one_to_many':
+        return one_to_many_response()
+
+
 def check_journeys(resp):
     assert not resp.get('journeys') or sum([1 for j in resp['journeys'] if j['type'] == "best"]) == 1
+
+
+def get_api(url):
+    return url.split('/')[-1]
 
 
 class MockValhalla(Valhalla):
@@ -104,65 +150,21 @@ class MockValhalla(Valhalla):
     def __init__(self, instance, url, timeout=10, api_key=None, **kwargs):
         Valhalla.__init__(self, instance, url, timeout, api_key, **kwargs)
 
-    def _format_url(self, mode, pt_object_origin, pt_object_destination):
-        return mode
+    def _format_url(self, mode, pt_object_origin, pt_object_destination, api='route'):
+        return '{}/{}'.format(self.service_url, api)
 
-    def _call_valhalla(self, mode):
+    def _call_valhalla(self, url, method=requests.post, data=None):
+        mode = json.loads(data).get('costing') if data else None
+        api = get_api(url)
         response = requests.Response()
         response.status_code = 200
-        response.json = MagicMock(return_value=response_valid(mode))
+        response.json = MagicMock(return_value=response_valid(api, mode))
         response.url = self.service_url
         return response
 
 
-'''
-Example of response one_to_many api:
-
-{
-  "locations": [
-    [
-      {
-        "lon": 2.428405,
-        "lat": 48.625626
-      },
-      {
-        "lon": 2.428379,
-        "lat": 48.625679
-      }
-    ]
-  ],
-  "units": "kilometers",
-  "one_to_many": [
-    [
-      {
-        "distance": 0,
-        "time": 0,
-        "to_index": 0,
-        "from_index": 0
-      },
-      {
-        "distance": 0.227,
-        "time": 177,
-        "to_index": 1,
-        "from_index": 0
-      }
-    ]
-  ]
-}
-
-
-@dataset({"main_routing_test": {"street_network": MOCKED_VALHALLA_CONF}})
+@dataset({'main_routing_test': {'scenario': 'experimental', 'street_network': MOCKED_VALHALLA_CONF}})
 class TestValhallaDirectPath(AbstractTestFixture):
-
-    def setup(self):
-        from jormungandr import i_manager
-        dest_instance = i_manager.instances['main_routing_test']
-        self.old_scenario = dest_instance._scenario
-        dest_instance._scenario = experimental.Scenario()
-
-    def teardown(self):
-        from jormungandr import i_manager
-        i_manager.instances['main_routing_test']._scenario = self.old_scenario
 
     def test_journey_with_bike_direct_path(self):
         query = journey_basic_query + \
@@ -170,7 +172,7 @@ class TestValhallaDirectPath(AbstractTestFixture):
                 "&first_section_mode[]=walking" + \
                 "&first_section_mode[]=bike" + \
                 "&first_section_mode[]=car" + \
-        "&debug=true&_override_scenario=experimental"
+                "&debug=true"
         response = self.query_region(query)
         check_journeys(response)
         assert len(response['journeys']) == 3
@@ -189,4 +191,3 @@ class TestValhallaDirectPath(AbstractTestFixture):
         assert('walking' in response['journeys'][2]['tags'])
         assert len(response['journeys'][2]['sections']) == 1
         assert response['journeys'][2]['duration'] == 20
-'''
