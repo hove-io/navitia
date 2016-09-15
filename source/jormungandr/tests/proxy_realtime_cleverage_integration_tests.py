@@ -74,8 +74,6 @@ class TestCleverageSchedules(AbstractTestFixture):
     query_template = 'stop_points/{sp}/stop_schedules?data_freshness=realtime&_current_datetime=20160102T0800'
 
     def test_stop_schedule_with_realtime_only(self):
-        """
-        """
         mock_requests = MockRequests({
             'http://XXXX/syn_stoppoint1':
                 ([
@@ -144,8 +142,6 @@ class TestCleverageSchedules(AbstractTestFixture):
             ]
 
     def test_stop_schedule_with_theoric_and_realtime(self):
-        """
-        """
         mock_requests = MockRequests({
             'http://XXXX/syn_stoppoint1':
                 ([
