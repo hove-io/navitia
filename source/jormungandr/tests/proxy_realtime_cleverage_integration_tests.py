@@ -209,6 +209,7 @@ class TestCleverageSchedules(AbstractTestFixture):
             assert len(scs) == 1
             # 2016-01-02 08:17:00
             assert _get_schedule(response, 'SP_1', 'code A') == [
-                {'rt': True, 'dt': '20160102T081717'}
+                {'rt': True, 'dt': '20160102T081717'},
+                {'rt': False, 'dt': '20160102T091717'}
             ]
 

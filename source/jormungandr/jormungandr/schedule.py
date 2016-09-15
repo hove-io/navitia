@@ -93,7 +93,10 @@ def _update_stop_schedule(stop_schedule, next_realtime_passages):
         new_dt.time = int(time)
         new_dt.date = date_to_timestamp(midnight)
 
-        new_dt.realtime_level = type_pb2.REALTIME
+        if passage.is_real_time:
+            new_dt.realtime_level = type_pb2.REALTIME
+        else:
+            new_dt.realtime_level = type_pb2.BASE_SCHEDULE
 
         # we also add the direction in the note
         if passage.direction:
