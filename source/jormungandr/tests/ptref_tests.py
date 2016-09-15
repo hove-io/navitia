@@ -311,6 +311,22 @@ class TestPtRef(AbstractTestFixture):
         lg = line_groups[0]
         is_valid_line_group(lg)
 
+    def test_line_with_active_disruption(self):
+        """test disruption is active"""
+        response = self.query_region("v1/lines/line:A?_current_datetime=20140115T235959")
+
+        disruptions = get_not_null(response, 'disruptions')
+
+        assert len(disruptions) == 1
+        d = disruptions[0]
+
+        # in pt_ref, the status is always active as the checked
+        # period is the validity period
+        assert d["status"] == "active"
+
+        messages = get_not_null(d, 'messages')
+        assert(messages[0]['text']) == 'Disruption on Line line:A'
+
     def test_line_codes(self):
         """test line formating"""
         response = self.query_region("v1/lines/line:A?show_codes=true")
