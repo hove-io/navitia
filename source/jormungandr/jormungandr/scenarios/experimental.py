@@ -101,6 +101,7 @@ def update_crowfly_duration(instance, fallback_list, mode, stop_area_uri):
         if fallback_list[mode].get(stop_point.uri):
             fallback_list[mode][stop_point.uri] = 0
 
+
 def _rename_journey_sections_ids(start_idx, sections):
     for s in sections:
         s.id = "dp_section_{}".format(start_idx)
@@ -136,10 +137,19 @@ class Scenario(new_default.Scenario):
     def __init__(self):
         super(Scenario, self).__init__()
 
-    def _get_direct_path(self, instance, mode, pt_object_origin, pt_object_destination, datetime, clockwise):
+    def _get_direct_path(self, instance, mode, pt_object_origin, pt_object_destination, datetime, clockwise, reverse_sections=False):
         # TODO: cache by (mode, origin, destination) and redate with datetime and clockwise
-        return instance.street_network_service.direct_path(mode, pt_object_origin,
-                                                           pt_object_destination, datetime, clockwise)
+        dp_key = (mode, pt_object_origin.uri, pt_object_destination.uri, datetime, clockwise, reverse_sections)
+        dp = g.fallback_direct_path.get(dp_key)
+        if not dp:
+            dp = g.fallback_direct_path[dp_key] = instance.street_network_service.direct_path(mode,
+                                                                                              pt_object_origin,
+                                                                                              pt_object_destination,
+                                                                                              datetime,
+                                                                                              clockwise)
+            if reverse_sections:
+                _reverse_journeys(dp)
+        return dp
 
     def _build_journey(self, journey, instance, _from, to, dep_mode, arr_mode):
         import copy
@@ -150,34 +160,31 @@ class Scenario(new_default.Scenario):
         arrival = journey.sections[-1].destination
         last_section_end = journey.sections[-1].end_date_time
 
-        journey.duration = journey.duration + origins[departure.uri] + destinations[arrival.uri]
         journey.departure_date_time = journey.departure_date_time - origins[departure.uri]
         journey.arrival_date_time = journey.arrival_date_time + destinations[arrival.uri]
-
-        departure_dp_key = (dep_mode, _from.uri, departure.uri, journey.departure_date_time, True)
 
         if _from.uri != departure.uri:
             if origins[departure.uri] == 0:
                 journey.sections.extend([create_crowfly(_from, departure, journey.departure_date_time,
                                          journey.sections[0].begin_date_time)])
-            elif not g.fallback_direct_path.get(departure_dp_key):
-                g.fallback_direct_path[departure_dp_key] = self._get_direct_path(instance,
-                                                                                 dep_mode,
-                                                                                 _from,
-                                                                                 departure,
-                                                                                 journey.departure_date_time,
-                                                                                 True)
+            else:
+                departure_dp = self._get_direct_path(instance,
+                                                     dep_mode,
+                                                     _from,
+                                                     departure,
+                                                     journey.departure_date_time,
+                                                     True)
             if origins[departure.uri] != 0:
-                departure_direct_path = copy.deepcopy(g.fallback_direct_path[departure_dp_key])
+                journey.duration += origins[departure.uri]
+                departure_direct_path = copy.deepcopy(departure_dp)
+                journey.durations.walking += departure_direct_path.journeys[0].durations.walking
                 _extend_pt_sections_with_direct_path(journey, departure_direct_path)
-
-        arrival_dp_key = (arr_mode, arrival.uri, to.uri, journey.arrival_date_time, False)
 
         if to.uri != arrival.uri:
             if destinations[arrival.uri] == 0:
                 journey.sections.extend([create_crowfly(arrival, to, last_section_end,
                                                         journey.arrival_date_time)])
-            elif not g.fallback_direct_path.get(arrival_dp_key):
+            else:
                 o = arrival
                 d = to
                 reverse_sections = False
@@ -188,13 +195,15 @@ class Scenario(new_default.Scenario):
                                                    o,
                                                    d,
                                                    journey.arrival_date_time,
-                                                   False)
-                if reverse_sections:
-                    dp_journey = _reverse_journeys(dp_journey)
-                g.fallback_direct_path[arrival_dp_key] = dp_journey
+                                                   False,
+                                                   reverse_sections)
             if destinations[arrival.uri] != 0:
-                arrival_direct_path = copy.deepcopy(g.fallback_direct_path[arrival_dp_key])
+                journey.duration += destinations[arrival.uri]
+                arrival_direct_path = copy.deepcopy(dp_journey)
+                journey.durations.walking += arrival_direct_path.journeys[0].durations.walking
                 _extend_pt_sections_with_direct_path(journey, arrival_direct_path)
+
+        journey.durations.total = journey.duration
         #it's not possible to insert in a protobuf list, so we add the sections at the end, then we sort them
         journey.sections.sort(SectionSorter())
 
