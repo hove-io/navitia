@@ -868,7 +868,7 @@ pbnavitia::Response Worker::car_co2_emission_on_crow_fly(const pbnavitia::CarCO2
 
 static type::EntryPoint make_sn_entry_point(const std::string& place,
         const std::string& mode,
-        const int speed,
+        const float speed,
         const int max_duration,
         const boost::shared_ptr<const navitia::type::Data> data) {
     Type_e origin_type = data->get_type_of_id(place);
