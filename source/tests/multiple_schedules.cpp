@@ -60,6 +60,10 @@ int main(int argc, const char* const argv[]) {
 
     b.data->compute_labels();
 
+    b.get<nt::Line>("A")->code = "code A";
+    b.get<nt::Line>("B")->code = "code B";
+    b.get<nt::Line>("C")->code = "code C";
+
     b.get<nt::Line>("A")->properties["realtime_system"] = "KisioDigital";
     b.get<nt::Line>("B")->properties["realtime_system"] = "KisioDigital";
     b.get<nt::Line>("C")->properties["realtime_system"] = "KisioDigital";

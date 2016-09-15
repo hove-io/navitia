@@ -755,7 +755,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
 
     def test_headsign_display_info_journeys(self):
         """test basic print of headsign in section for journeys"""
-        response = self.query_region('journeys?from=stop_point:stopB&to=stop_point:stopA&datetime=20120615T000000')
+        response = self.query_region('journeys?from=stop_point:stopB&to=stop_point:stopA&datetime=20120615T000000&max_duration_to_pt=0')
         assert 'error' not in response
         journeys = get_not_null(response, 'journeys')
         eq_(len(journeys), 1)
@@ -852,7 +852,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
 
     def test_attributs_in_display_info_journeys(self):
         """test some attributs in  display_information of a section for journeys"""
-        response = self.query_region('journeys?from=stop_point:stopB&to=stop_point:stopA&datetime=20120615T000000')
+        response = self.query_region('journeys?from=stop_point:stopB&to=stop_point:stopA&datetime=20120615T000000&max_duration_to_pt=0')
         assert 'error' not in response
         journeys = get_not_null(response, 'journeys')
         eq_(len(journeys), 1)
