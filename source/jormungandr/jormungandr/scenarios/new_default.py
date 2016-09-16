@@ -43,8 +43,9 @@ import numpy as np
 import collections
 from jormungandr.utils import date_to_timestamp
 from jormungandr.scenarios.simple import get_pb_data_freshness
-import gevent
+import gevent, gevent.pool
 import flask
+from jormungandr import app
 
 SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
 JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
@@ -721,11 +722,11 @@ class Scenario(simple.Scenario):
         def worker(dep_mode, arr_mode, instance, request, request_id):
             return (dep_mode, arr_mode, instance.send_and_receive(request, request_id=request_id))
 
+        pool = gevent.pool.Pool(app.config.get('GREENLET_POOL_SIZE', 3))
         for dep_mode, arr_mode in krakens_call:
             pb_request = create_pb_request(request_type, request, dep_mode, arr_mode)
-
             #we spawn a new green thread, it won't have access to our thread local request object so we set request_id
-            futures.append(gevent.spawn(worker, dep_mode, arr_mode, instance, pb_request, request_id=flask.request.id))
+            futures.append(pool.spawn(worker, dep_mode, arr_mode, instance, pb_request, request_id=flask.request.id))
 
         for future in gevent.iwait(futures):
             dep_mode, arr_mode, local_resp = future.get()
