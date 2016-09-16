@@ -256,7 +256,7 @@ class Scenario(new_default.Scenario):
                                                                           g.requested_destination, arr_mode,
                                                                           get_max_fallback_duration(request, arr_mode),
                                                                           reverse=True)
-             #Fetch all the stop points of this stop_area and replaces all the durations by 0 in the table
+            #Fetch all the stop points of this stop_area and replaces all the durations by 0 in the table
             #g.destinations_fallback[arr_mode]
             _update_crowfly_duration(instance, g.destinations_fallback, arr_mode, request['destination'],
                                      crow_fly_stop_points)
