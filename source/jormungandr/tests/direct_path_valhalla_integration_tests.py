@@ -116,7 +116,7 @@ class MockValhalla(Valhalla):
 
 
 
-@dataset({"main_routing_test": {"street_network": MOCKED_VALHALLA_CONF}})
+@dataset({"main_routing_test": {'scenario': 'experimental', "street_network": MOCKED_VALHALLA_CONF}})
 class TestValhallaDirectPath(AbstractTestFixture):
 
     def setup(self):

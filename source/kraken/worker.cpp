@@ -939,7 +939,9 @@ pbnavitia::Response Worker::street_network_routing_matrix(const pbnavitia::Stree
             return r;
         }
 
-        street_network_worker->init(entry_point, {});
+        street_network_worker->departure_path_finder.init(entry_point.coordinates,
+                entry_point.streetnetwork_params.mode,
+                entry_point.streetnetwork_params.speed_factor);
         auto nearest = street_network_worker->departure_path_finder.get_duration_with_dijkstra(
                 navitia::time_duration::from_boost_duration(boost::posix_time::seconds(request.max_duration())),
                 dest_coords);
@@ -961,14 +963,16 @@ pbnavitia::Response Worker::direct_path(const pbnavitia::Request& request) {
     const auto data = data_manager.get_data();
     init_worker_data(data);
     const auto& dp_request = request.direct_path();
+    const auto* sn_params = dp_request.has_streetnetwork_params() ? &dp_request.streetnetwork_params() : nullptr;
     const auto origin = create_journeys_entry_point(dp_request.origin(),
-                                                    &dp_request.streetnetwork_params(),
-                                                    data,
-                                                    true);
+                                           sn_params,
+                                           data,
+                                           true);
+
     const auto destination = create_journeys_entry_point(dp_request.destination(),
-                                                         &dp_request.streetnetwork_params(),
-                                                         data,
-                                                         false);
+                                                sn_params,
+                                                data,
+                                                false);
     const auto geo_path = street_network_worker->get_direct_path(origin, destination);
 
     const auto current_datetime = bt::from_time_t(request._current_datetime());

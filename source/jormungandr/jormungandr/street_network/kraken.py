@@ -30,7 +30,6 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from navitiacommon import request_pb2, type_pb2
 
-
 class Kraken(object):
 
     def __init__(self, instance, url, timeout=10, api_key=None, **kwargs):
