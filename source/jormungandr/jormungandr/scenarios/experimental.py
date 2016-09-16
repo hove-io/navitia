@@ -36,7 +36,7 @@ import uuid
 from jormungandr.scenarios.utils import fill_uris
 from jormungandr.planner import JourneyParameters
 from flask import g
-
+from jormungandr.utils import get_uri_pt_object
 from jormungandr import app
 
 
@@ -151,6 +151,24 @@ class Scenario(new_default.Scenario):
                 _reverse_journeys(dp)
         return dp
 
+    def _get_stop_points(self, instance, place, mode, max_duration, reverse=False, max_nb_crowfly=5000):
+        # we use place_nearby of kraken at the first place to get stop_points around the place, then call the
+        # one_to_many(or many_to_one according to the arg "reverse") service to take street network into consideration
+        # TODO: reverse is not handled as so far
+        places_crowfly = instance.georef.get_crow_fly(get_uri_pt_object(place), mode, max_duration, max_nb_crowfly)
+
+        sn_routing_matrix = instance.street_network_service.get_street_network_routing_matrix([place],
+                                                                                             places_crowfly,
+                                                                                             mode,
+                                                                                             max_duration)
+        if not sn_routing_matrix.rows[0].duration:
+            return {}
+        import numpy as np
+        durations = np.array(sn_routing_matrix.rows[0].duration)
+        valid_duration_idx = np.argwhere((durations > -1) & (durations < max_duration)).flatten()
+        return dict(zip([places_crowfly[i].uri for i in valid_duration_idx],
+                        durations[(durations > -1) & (durations < max_duration)].flatten()))
+
     def _extend_journey(self, instance, pt_journey, mode, pb_from, pb_to, departure_date_time, nm, clockwise,
                         reverse_sections=False):
         import copy
@@ -218,30 +236,30 @@ class Scenario(new_default.Scenario):
         logger = logging.getLogger(__name__)
         logger.debug('datetime: %s', request['datetime'])
         crow_fly_stop_points = set()
+        if not g.requested_origin:
+            g.requested_origin = instance.georef.place(request['origin'])
+        if not g.requested_destination:
+            g.requested_destination = instance.georef.place(request['destination'])
+
         for dep_mode, arr_mode in krakens_call:
             if dep_mode not in g.origins_fallback:
-                g.origins_fallback[dep_mode] = instance.georef.get_stop_points(request['origin'],
-                        dep_mode,
-                        get_max_fallback_duration(request, dep_mode))
+                g.origins_fallback[dep_mode] = self._get_stop_points(instance,
+                                                                     g.requested_origin, dep_mode,
+                                                                     get_max_fallback_duration(request, dep_mode))
             #Fetch all the stop points of this stop_area and replaces all the durations by 0 in the table
             #g.origins_fallback[dep_mode]
             _update_crowfly_duration(instance, g.origins_fallback, dep_mode,  request['origin'],
                                      crow_fly_stop_points)
 
             if arr_mode not in g.destinations_fallback:
-                g.destinations_fallback[arr_mode] = instance.georef.get_stop_points(request['destination'],
-                        arr_mode,
-                        get_max_fallback_duration(request, arr_mode), reverse=True)
-            #Fetch all the stop points of this stop_area and replaces all the durations by 0 in the table
+               g.destinations_fallback[arr_mode] = self._get_stop_points(instance,
+                                                                          g.requested_destination, arr_mode,
+                                                                          get_max_fallback_duration(request, arr_mode),
+                                                                          reverse=True)
+             #Fetch all the stop points of this stop_area and replaces all the durations by 0 in the table
             #g.destinations_fallback[arr_mode]
             _update_crowfly_duration(instance, g.destinations_fallback, arr_mode, request['destination'],
                                      crow_fly_stop_points)
-
-        if not g.requested_origin:
-            g.requested_origin = instance.georef.place(request['origin'])
-        if not g.requested_destination:
-            g.requested_destination = instance.georef.place(request['destination'])
-
         resp = []
         journey_parameters = create_parameters(request)
         for dep_mode, arr_mode in krakens_call:

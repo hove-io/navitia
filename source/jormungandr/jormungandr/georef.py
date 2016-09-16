@@ -36,27 +36,6 @@ class Kraken(object):
 
     def __init__(self, instance):
         self.instance = instance
-        
-    def get_stop_points(self, place, mode, max_duration, reverse=False, max_nb_crowfly=5000):
-        # we use place_nearby of kraken at the first place to get stop_points around the place, then call the
-        # one_to_many(or many_to_one according to the arg "reverse") service to take street network into consideration
-        # TODO: reverse is not handled as so far
-        places_crowfly = self.get_crow_fly(place, mode, max_duration, max_nb_crowfly)
-        destinations = []
-        for p in places_crowfly:
-            destinations.append(p.uri)
-        sn_routing_matrix = self.get_streetnetwork_routing_matrix([place],
-                                                                  destinations,
-                                                                  mode,
-                                                                  max_duration)
-
-        if not sn_routing_matrix.rows[0].duration:
-            return {}
-        import numpy as np
-        durations = np.array(sn_routing_matrix.rows[0].duration)
-        valid_duration_idx = np.argwhere((durations > -1) & (durations < max_duration)).flatten()
-        return dict(zip([destinations[i] for i in valid_duration_idx],
-                        durations[(durations > -1) & (durations < max_duration)].flatten()))
 
     def place(self, place):
         req = request_pb2.Request()
@@ -103,43 +82,3 @@ class Kraken(object):
         # we are only interested in public transports
         req.places_nearby.types.append(type_pb2.STOP_POINT)
         return self.instance.send_and_receive(req).places_nearby
-
-    def get_streetnetwork_routing_matrix(self, origins, destinations, streetnetwork_mode, max_duration):
-        # TODO: reverse is not handled as so far
-        speed_switcher = {
-            "walking": self.instance.walking_speed,
-            "bike": self.instance.bike_speed,
-            "car": self.instance.car_speed,
-            "bss": self.instance.bss_speed,
-        }
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.street_network_routing_matrix
-        for o in origins:
-            orig = req.sn_routing_matrix.origins.add()
-            orig.place = o
-            orig.access_duration = 0
-        for d in destinations:
-            dest = req.sn_routing_matrix.destinations.add()
-            dest.place = d
-            dest.access_duration = 0
-
-        req.sn_routing_matrix.mode = streetnetwork_mode
-        req.sn_routing_matrix.speed = speed_switcher.get(streetnetwork_mode, self.instance.walking_speed)
-        req.sn_routing_matrix.max_duration = max_duration
-        return self.instance.send_and_receive(req).sn_routing_matrix
-
-    def get_stop_points_for_stop_area(self, uri):
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.PTREFERENTIAL
-        req.ptref.requested_type = type_pb2.STOP_POINT
-        req.ptref.count = 100
-        req.ptref.start_page = 0
-        req.ptref.depth = 1
-        req.ptref.filter = 'stop_area.uri = {uri}'.format(uri=uri)
-
-        result = self.instance.send_and_receive(req)
-        if len(result.stop_points) == 0:
-            logging.getLogger(__name__).info('PtRef, Unable to find stop_point with filter {}'.
-                                             format(req.ptref.filter))
-        return result.stop_points
-

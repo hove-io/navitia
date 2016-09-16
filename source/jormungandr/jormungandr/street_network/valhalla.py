@@ -35,7 +35,7 @@ import requests as requests
 from jormungandr import app
 import json
 from flask_restful import abort
-from jormungandr.exceptions import UnableToParse, TechnicalError, InvalidArguments
+from jormungandr.exceptions import UnableToParse, TechnicalError, InvalidArguments, ApiNotFound
 from flask import g
 from jormungandr.utils import is_url, kilometers_to_meters
 from copy import deepcopy
@@ -58,10 +58,10 @@ class Valhalla(object):
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_VALHALLA_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_VALHALLA_TIMEOUT_S'])
 
-    def _call_valhalla(self, url):
+    def _call_valhalla(self, url, method=requests.post, data=None):
         logging.getLogger(__name__).debug('Valhalla routing service , call url : {}'.format(url))
         try:
-            return self.breaker.call(requests.get, url, timeout=self.timeout)
+            return self.breaker.call(method, url, timeout=self.timeout, data=data, headers={'api_key': self.api_key})
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Valhalla routing service dead (error: {})'.format(e))
         except requests.Timeout as t:
@@ -70,7 +70,7 @@ class Valhalla(object):
             logging.getLogger(__name__).exception('Valhalla routing error')
         return None
 
-    def _format_coord(self, pt_object):
+    def _get_coord(self, pt_object):
         if not isinstance(pt_object, type_pb2.PtObject):
             logging.getLogger(__name__).error('Invalid pt_object')
             raise InvalidArguments('Invalid pt_object')
@@ -84,7 +84,18 @@ class Valhalla(object):
         if not coord:
             logging.getLogger(__name__).error('Invalid coord for ptobject type: {}'.format(pt_object.embedded_type))
             raise UnableToParse('Invalid coord for ptobject type: {}'.format(pt_object.embedded_type))
-        return {"lat": coord.lat, "lon": coord.lon, "type": "break"}
+        return coord
+
+    def _format_coord(self, pt_object, api='route'):
+        if api not in ['route', 'one_to_many']:
+            logging.getLogger(__name__).error('Valhalla routing service , invalid api {}'.format(api))
+            raise ApiNotFound('Valhalla routing service , invalid api {}'.format(api))
+
+        coord = self._get_coord(pt_object)
+        dict_coord = {"lat": coord.lat, "lon": coord.lon}
+        if api == 'route':
+            dict_coord["type"] = "break"
+        return dict_coord
 
     def _decode(self, encoded):
         # See: https://mapzen.com/documentation/mobility/decoding/#python
@@ -190,38 +201,68 @@ class Valhalla(object):
 
         return resp
 
-    def _format_url(self, mode, pt_object_origin, pt_object_destination):
+    def _get_valhalla_mode(self, kraken_mode):
         map_mode = {
             "walking": "pedestrian",
             "car": "auto",
             "bike": "bicycle"
         }
-        if mode not in map_mode:
-            logging.getLogger(__name__).error('Valhalla, mode {} not implemented'.format(mode))
-            raise InvalidArguments('Valhalla, mode {} not implemented'.format(mode))
-        valhalla_mode = map_mode.get(mode)
+        if kraken_mode not in map_mode:
+            logging.getLogger(__name__).error('Valhalla, mode {} not implemented'.format(kraken_mode))
+            raise InvalidArguments('Valhalla, mode {} not implemented'.format(kraken_mode))
+        return map_mode.get(kraken_mode)
+
+    def _make_data(self, mode, pt_object_origin, pt_object_destinations, api='route', max_duration=None):
+
+        valhalla_mode = self._get_valhalla_mode(mode)
+        destinations = [self._format_coord(destination, api) for destination in pt_object_destinations]
         args = {
-            "locations": [self._format_coord(pt_object_origin), self._format_coord(pt_object_destination)],
-            "costing": valhalla_mode,
-            "directions_options": self.directions_options
+            'locations': [self._format_coord(pt_object_origin)] + destinations,
+            'costing': valhalla_mode
         }
 
         costing_options = self._get_costing_options(valhalla_mode)
-        if costing_options and len(costing_options) > 0:
-            args["costing_options"] = costing_options
+        if costing_options:
+            args['costing_options'] = costing_options
 
-        return '{}/route?json={}&api_key={}'.format(self.service_url, json.dumps(args), self.api_key)
+        if api == 'route':
+            args['directions_options'] = self.directions_options
+        if api == 'one_to_many':
+            for key, value in self.directions_options.items():
+                args[key] = value
+        return json.dumps(args)
+
+    def check_response(self, response):
+        if response == None:
+            raise TechnicalError('impossible to access valhalla service')
+        if response.status_code != 200:
+            logging.getLogger(__name__).error('Valhalla service unavailable, impossible to query : {}'.
+                                              format(response.url))
+            raise TechnicalError('Valhalla service unavailable, impossible to query : {}'.
+                                 format(response.url))
 
     def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise):
-        url = self._format_url(mode, pt_object_origin, pt_object_destination)
-        r = self._call_valhalla(url)
-        if r == None:
-            raise TechnicalError('impossible to access valhalla service')
-        if r.status_code != 200:
-            logging.getLogger(__name__).error('Valhalla service unavailable, impossible to query : {}'.format(r.url))
-            resp = response_pb2.Response()
-            resp.status_code = r.status_code
-            resp.error.message = 'Valhalla service unavailable, impossible to query : {}'.format(r.url)
-            return resp
+        data = self._make_data(mode, pt_object_origin, [pt_object_destination], 'route')
+        r = self._call_valhalla('{}/{}'.format(self.service_url, 'route'), requests.post, data)
+        self.check_response(r)
         resp_json = r.json()
         return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, datetime)
+
+    def _get_matrix(self, json_response):
+        sn_routing_matrix = response_pb2.StreetNetworkRoutingMatrix()
+        for one_to_many in json_response['one_to_many']:
+            row = sn_routing_matrix.rows.add()
+            for one in one_to_many[1:]:
+                if one['time']:
+                    time = one['time']
+                else:
+                    time = 0
+                row.duration.append(time)
+        return sn_routing_matrix
+
+    def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration):
+        data = self._make_data(mode, origins[0], destinations, 'one_to_many')
+        r = self._call_valhalla('{}/{}'.format(self.service_url, 'one_to_many'), requests.post, data)
+        self.check_response(r)
+        resp_json = r.json()
+        return self._get_matrix(resp_json)
