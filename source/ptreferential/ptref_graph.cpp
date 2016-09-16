@@ -145,6 +145,11 @@ Jointures::Jointures() {
     boost::add_edge(vertex_map.at(Type_e::Dataset), vertex_map.at(Type_e::Route), Edge(2), g);
     // From a StopPoint we can have datasets
     boost::add_edge(vertex_map.at(Type_e::Dataset), vertex_map.at(Type_e::StopPoint), Edge(3), g);
+    // We use a weight to avoid the usage of this path: we want it to be used only when we look for the dataset
+    // or the contributor of a network. If we want the vehicle_journeys of a network we have to use the path:
+    // Network -> Line -> Route -> VJ with a cost a 3 and not the path using the dataset:
+    // Network -> Dataset -> VJ that has a cost of 4
+    boost::add_edge(vertex_map.at(Type_e::Dataset), vertex_map.at(Type_e::Network), Edge(3), g);
 
     // edges for the impacts. for the moment we only need unilateral links,
     // we don't need from an impact all the impacted objects

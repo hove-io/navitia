@@ -277,10 +277,11 @@ struct Network : public Header, HasMessages {
     int sort = std::numeric_limits<int>::max();
 
     std::vector<Line*> line_list;
+    std::set<Dataset*> dataset_list;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & idx & name & uri & address_name & address_number & address_type_name
-            & mail & website & fax & sort & line_list & impacts;
+            & mail & website & fax & sort & line_list & impacts & dataset_list;
     }
 
     Indexes get(Type_e type, const PT_Data & data) const;

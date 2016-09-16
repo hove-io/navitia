@@ -161,6 +161,7 @@ StreetNetwork::get_direct_path(const type::EntryPoint& origin, const type::Entry
     direct_path_finder.init(origin.coordinates,
                             origin.streetnetwork_params.mode,
                             origin.streetnetwork_params.speed_factor);
+
     direct_path_finder.start_distance_dijkstra(max_dur);
     const auto dest_vertex = direct_path_finder.find_nearest_vertex(dest_edge, true);
     const auto res = direct_path_finder.get_path(dest_edge, dest_vertex);
@@ -320,6 +321,8 @@ PathFinder::start_dijkstra_and_fill_duration_map(const navitia::time_duration& r
 routing::map_stop_point_duration
 PathFinder::find_nearest_stop_points(const navitia::time_duration& radius,
                                      const proximitylist::ProximityList<type::idx_t>& pl) {
+    if (radius == navitia::seconds(0)) { return {}; }
+
     auto elements = crow_fly_find_nearest_stop_points(radius, pl);
 
     routing::map_stop_point_duration result;
@@ -364,7 +367,14 @@ PathFinder::get_duration_with_dijkstra(const navitia::time_duration& radius,
     if (dest_coords.empty()) {
         return {};
     }
-    auto offset = geo_ref.offsets[mode];
+    nt::idx_t offset;
+    if(mode == type::Mode_e::Car){
+        //on direct path with car we want to arrive on the walking graph
+        offset = geo_ref.offsets[nt::Mode_e::Walking];
+    } else {
+        offset = geo_ref.offsets[mode];
+    }
+
     ProjectionGetterOnFly projection_getter{geo_ref, offset};
     return start_dijkstra_and_fill_duration_map<PathFinder::coord_uri, type::GeographicalCoord, ProjectionGetterOnFly>(
             radius, dest_coords, projection_getter);

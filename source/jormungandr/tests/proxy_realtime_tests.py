@@ -39,9 +39,13 @@ import pytz
 from .check_utils import is_valid_stop_date_time, get_not_null
 
 
-MOCKED_PROXY_CONF = (' [{"id": "KisioDigital",\n'
-                     ' "class": "tests.proxy_realtime_tests.MockedTestProxy",\n'
-                     ' "args": { } }]')
+MOCKED_PROXY_CONF = [
+    {
+        "id": "KisioDigital",
+        "class": "tests.proxy_realtime_tests.MockedTestProxy",
+        "args": {}
+    }
+]
 
 
 class MockedTestProxy(realtime_proxy.RealtimeProxy):
@@ -225,11 +229,14 @@ class TestDepartures(AbstractTestFixture):
             assert len(stop_sched['date_times']) == 2
 
 
-MOCKED_PROXY_CONF = (' [{"id": "KisioDigital",\n'
-                     ' "object_id_tag": "AnotherSource", \n'
-                     ' "class": "tests.proxy_realtime_tests.MockedTestProxy",\n'
-                     ' "args": { } }]')
-
+MOCKED_PROXY_CONF = [
+    {
+        "id": "KisioDigital",
+        "object_id_tag": "AnotherSource",
+        "class": "tests.proxy_realtime_tests.MockedTestProxy",
+        "args": {}
+    }
+]
 
 @dataset({"basic_schedule_test": {"proxy_conf": MOCKED_PROXY_CONF}})
 class TestDeparturesWithAnotherSource(AbstractTestFixture):

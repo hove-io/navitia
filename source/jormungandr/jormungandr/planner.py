@@ -29,13 +29,15 @@ class JourneyParameters(object):
                  forbidden_uris=None,
                  realtime_level='base_schedule',
                  max_extra_second_pass=None,
-                 walking_transfer_penalty=120):
+                 walking_transfer_penalty=120,
+                 direct_path_duration=None):
         self.max_duration = max_duration
         self.max_transfers = max_transfers
         self.wheelchair = wheelchair
         self.forbidden_uris = set(forbidden_uris) if forbidden_uris else set()
         self.realtime_level = realtime_level
         self.max_extra_second_pass = max_extra_second_pass
+        self.direct_path_duration = direct_path_duration
 
 
 class Kraken(object):
@@ -67,5 +69,8 @@ class Kraken(object):
 
         for uri in journey_parameters.forbidden_uris:
             req.journeys.forbidden_uris.append(uri)
+
+        if journey_parameters.direct_path_duration is not None:
+            req.journeys.direct_path_duration = journey_parameters.direct_path_duration
 
         return self.instance.send_and_receive(req)

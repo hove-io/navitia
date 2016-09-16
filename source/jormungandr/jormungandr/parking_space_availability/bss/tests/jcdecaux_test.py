@@ -59,6 +59,11 @@ def parking_space_availability_jcdecaux_support_poi_test():
     poi['properties']['operator'] = 'Bad_operator'
     assert not provider.support_poi(poi)
 
+    invalid_poi = {}
+    assert not provider.support_poi(invalid_poi)
+    invalid_poi = {'properties': {}}
+    assert not provider.support_poi(invalid_poi)
+
 def parking_space_availability_jcdecaux_get_informations_test():
     """
     Jcdecaux validate return good stands informations or None if an error occured
@@ -72,6 +77,8 @@ def parking_space_availability_jcdecaux_get_informations_test():
     assert provider.get_informations(poi) == Stands(4, 8)
     provider._call_webservice = MagicMock(return_value=None)
     assert provider.get_informations(poi) is None
+    invalid_poi = {}
+    assert provider.get_informations(invalid_poi) is None
 
 def parking_space_availability_jcdecaux_get_informations_unauthorized_test():
     """

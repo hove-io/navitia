@@ -1,3 +1,23 @@
+navitia2 (2.17.0) unstable; urgency=low
+ 
+ * Kraken: parameter type modified to float  <https://github.com/CanalTP/navitia/pull/1764>
+ * Jormungandr: use valhalla service  <https://github.com/CanalTP/navitia/pull/1741>
+ * Kraken and jormungandr: Add direct path duration to raptor call for Scenario Experimental  <https://github.com/CanalTP/navitia/pull/1750>
+ * Doc: Use JSFiddle directly to avoid bug with external resources not executed on page load  <https://github.com/CanalTP/navitia/pull/1756>
+ * Jormungandr: handle starting/ending to a stop area in scenario experimental  <https://github.com/CanalTP/navitia/pull/1761>
+ * Kraken: Fix disruption status when calling /lines  <https://github.com/CanalTP/navitia/pull/1766>
+ * Experimental & Valhalla: one_to_many called in valhalla service  <https://github.com/CanalTP/navitia/pull/1757>
+ * Experimental: Use direct path in building journeys  <https://github.com/CanalTP/navitia/pull/1753>
+ * Jormun: limit number of concurrent greenlet  <https://github.com/CanalTP/navitia/pull/1767>
+ * Kraken: add a log for slow request  <https://github.com/CanalTP/navitia/pull/1765>
+ * Realtime cleverage: considerations of theoric time   <https://github.com/CanalTP/navitia/pull/1763>
+ * Routing: (almost) support street network when starting to a stop_point  <https://github.com/CanalTP/navitia/pull/1760>
+ * Doc: Add contributors and datasets endpoints  <https://github.com/CanalTP/navitia/pull/1752>
+ * Kraken: improve performance of add_contributor  <https://github.com/CanalTP/navitia/pull/1754>
+ * Jormungandr: fix a few error on bss connectors  <https://github.com/CanalTP/navitia/pull/1748>
+
+ -- xlqian <patrick.qian@canaltp.fr>  Fri, 16 Sep 2016 14:09:56 +0100
+
 navitia2 (2.16.1) unstable; urgency=low
 
   * Proto: fix after releaseV2.16.0 navitia-proto <https://github.com/CanalTP/navitia/pull/1751>  

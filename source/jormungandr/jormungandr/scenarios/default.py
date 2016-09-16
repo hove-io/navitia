@@ -48,7 +48,7 @@ from jormungandr.scenarios.helpers import select_best_journey_by_time, select_be
 from jormungandr.scenarios.helpers import fallback_mode_comparator
 from jormungandr.utils import pb_del_if, date_to_timestamp
 import flask
-import gevent
+import gevent, gevent.pool
 
 non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
@@ -158,6 +158,7 @@ class Scenario(simple.Scenario):
         def worker(o_mode, d_mode, instance, request, request_id):
             return (o_mode, d_mode, instance.send_and_receive(request, request_id=request_id))
 
+        pool = gevent.pool.Pool(current_app.config.get('GREENLET_POOL_SIZE', 3))
         for o_mode, d_mode in itertools.product(self.origin_modes, self.destination_modes):
             #since we use multiple green thread we have to copy the request
             local_req = copy.deepcopy(req)
@@ -168,7 +169,7 @@ class Scenario(simple.Scenario):
                 req.journeys.streetnetwork_params.enable_direct_path = False
             else:
                 req.journeys.streetnetwork_params.enable_direct_path = True
-            futures.append(gevent.spawn(worker, o_mode, d_mode, instance, local_req, request_id=flask.request.id))
+            futures.append(pool.spawn(worker, o_mode, d_mode, instance, local_req, request_id=flask.request.id))
 
         for future in gevent.iwait(futures):
             o_mode, d_mode, local_resp = future.get()

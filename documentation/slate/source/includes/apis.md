@@ -9,6 +9,12 @@ Also known as `/coverage` service.
 You can easily navigate through regions covered by navitia.io, with the
 coverage api. The shape of the region is provided in GeoJSON.
 
+In Navitia, a coverage is a combination of multiple [datasets](#datasets)
+provided by different [contributors](#contributors)
+(typically data provided by a transport authority in GTFS format).
+The combination of datasets used by a coverage is arbitrarily determined
+but we try to use something that makes sense and has a reasonnable amount of data (country).
+
 The only arguments are the ones of [paging](#paging).
 
 ### Accesses
@@ -18,6 +24,48 @@ The only arguments are the ones of [paging](#paging).
 | `coverage`                              | List of the areas covered by navitia|
 | `coverage/{region_id}`                  | Information about a specific region |
 | `coverage/{lon;lat}`                    | Information about a specific region |
+
+
+<a name="datasets"></a>Datasets
+-------------------------------
+
+Very simple endpoint providing the sets of data that are used in the given coverage.
+
+Those datasets (typically from transport authority in GTFS format), each provided by a
+unique [contributor](#contributors) are forming a [coverage](#coverage).
+
+Contributor providing the dataset is also provided in the response.
+Very usefull to know all the datas that form a coverage.
+
+The only arguments are the ones of [paging](#paging).
+
+### Accesses
+
+| url | Result |
+|----------------------------------------------|-------------------------------------------|
+| `coverage/{region_id}/datasets               | List of the datasets of a specific region |
+| `coverage/{region_id}/datasets/{dataset_id}  | Information about a specific dataset      |
+
+
+<a name="contributors"></a>Contributors
+-------------------------------
+
+Very simple endpoint providing the contributors of data for the given coverage.
+
+A contributor is a data provider (typically a transport authority), and can provide multiple [datasets](#datasets).
+For example, the contributor Italian Railways will provide a dataset for the national train and some others for the regional trains.
+We will try to put them in the same [coverage](#coverage) so that we assemble them in the same journey search, using both.
+
+Very usefull to know which contributors are used in the datasets forming a coverage.
+
+The only arguments are the ones of [paging](#paging).
+
+### Accesses
+
+| url | Result |
+|--------------------------------------------------|-----------------------------------------------|
+| `coverage/{region_id}/contributors               | List of the contributors of a specific region |
+| `coverage/{region_id}/contributors/{dataset_id}  | Information about a specific contributor      |
 
 
 <a name="coord"></a>Inverted geocoding
@@ -816,7 +864,7 @@ Here is the structure of a standard journey request:
 <https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={date_time_to_leave}> .
 
 <a
-    href="http://jsfiddle.net/gh/get/jquery/2.2.2/CanalTP/navitia/tree/documentation/slate/source/examples/jsFiddle/journeys/"
+    href="https://jsfiddle.net/kisiodigital/0oj74vnz/"
     target="_blank"
     class="button button-blue">
     Code it yourself on JSFiddle
@@ -842,7 +890,7 @@ If you want to retreive every possible journey from a single point at a time, yo
 It will retrieve all the journeys from the resource (in order to make *[isochrone tables](https://en.wikipedia.org/wiki/Isochrone_map)*).
 
 <a
-    href="http://jsfiddle.net/gh/get/jquery/2.2.2/CanalTP/navitia/tree/documentation/slate/source/examples/jsFiddle/isochron/"
+    href="https://jsfiddle.net/kisiodigital/x6207t6f/"
     target="_blank"
     class="button button-blue">
     Code it yourself on JSFiddle

@@ -39,7 +39,28 @@ from builtins import range, zip
 from importlib import import_module
 import logging
 from jormungandr.exceptions import ConfigException
+from urlparse import urlparse
+
+
 DATETIME_FORMAT = "%Y%m%dT%H%M%S"
+
+
+def get_uri_pt_object(pt_object):
+    if pt_object.embedded_type == type_pb2.ADDRESS:
+        coords = pt_object.uri.split(';')
+        return "coord:{}:{}".format(coords[0], coords[1])
+    return pt_object.uri
+
+def kilometers_to_meters(distance):
+    return distance * 1000.0
+
+
+def is_url(url):
+    if not url or url.strip() == '':
+        return False
+    url_parsed = urlparse(url)
+    return url_parsed.scheme.strip() != '' and url_parsed.netloc.strip() != ''
+
 
 def str_to_time_stamp(str):
     """
