@@ -131,7 +131,7 @@ static type::EntryPoint make_entry_point(const std::string& entry_id, const type
         entry = type::EntryPoint(data.get_type_of_id(entry_id), entry_id);
     }
 
-    entry.coordinates = coord_of_entry_point(entry, data);
+    entry.coordinates = coord_of_entry_point(entry, *data);
     return entry;
 }
 
