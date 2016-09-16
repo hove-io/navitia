@@ -191,3 +191,4 @@ class TestValhallaDirectPath(AbstractTestFixture):
         assert('walking' in response['journeys'][2]['tags'])
         assert len(response['journeys'][2]['sections']) == 1
         assert response['journeys'][2]['duration'] == 20
+

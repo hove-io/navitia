@@ -49,11 +49,11 @@ static pbnavitia::Response extract_data(const type::Data& data,
     const auto& action_period = data.meta->production_period();
         switch(requested_type){
         case Type_e::ValidityPattern:
-            return get_response(data.get_data<nt::ValidityPattern>(rows), data, depth, current_time);
+            return get_response(data.get_data<nt::ValidityPattern>(rows), data, depth, current_time, action_period);
         case Type_e::Line:
-            return get_response(data.get_data<nt::Line>(rows), data, depth, current_time);
+            return get_response(data.get_data<nt::Line>(rows), data, depth, current_time, action_period);
         case Type_e::LineGroup:
-            return get_response(data.get_data<nt::LineGroup>(rows), data, depth, current_time);
+            return get_response(data.get_data<nt::LineGroup>(rows), data, depth, current_time, action_period);
         case Type_e::JourneyPattern:{
             navitia::PbCreator pb_creator(data, current_time, action_period);
             for(const auto& idx : rows){

@@ -59,6 +59,8 @@ po::options_description get_options_description(const boost::optional<std::strin
                                   "timeout in ms for loading realtime data from kirin")
         ("GENERAL.kirin_retry_timeout", po::value<int>()->default_value(5*60*1000),
                                   "timeout in ms before retrying to load realtime data")
+        ("GENERAL.slow_request_duration", po::value<int>()->default_value(1000),
+                                  "request running a least this number of milliseconds are logged")
 
         ("GENERAL.display_contributors", display_contributors ?
              po::value<bool>()->default_value(*display_contributors) : po::value<bool>()->default_value(false),
@@ -178,6 +180,10 @@ bool Configuration::display_contributors() const{
         return false;
     }
     return vm["GENERAL.display_contributors"].as<bool>();
+}
+
+int Configuration::slow_request_duration() const{
+    return vm["GENERAL.slow_request_duration"].as<int>();
 }
 
 size_t Configuration::raptor_cache_size() const{
