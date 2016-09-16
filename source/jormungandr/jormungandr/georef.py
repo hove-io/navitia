@@ -82,3 +82,18 @@ class Kraken(object):
         # we are only interested in public transports
         req.places_nearby.types.append(type_pb2.STOP_POINT)
         return self.instance.send_and_receive(req).places_nearby
+
+    def get_stop_points_for_stop_area(self, uri):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.PTREFERENTIAL
+        req.ptref.requested_type = type_pb2.STOP_POINT
+        req.ptref.count = 100
+        req.ptref.start_page = 0
+        req.ptref.depth = 1
+        req.ptref.filter = 'stop_area.uri = {uri}'.format(uri=uri)
+
+        result = self.instance.send_and_receive(req)
+        if len(result.stop_points) == 0:
+            logging.getLogger(__name__).info('PtRef, Unable to find stop_point with filter {}'.
+                                             format(req.ptref.filter))
+        return result.stop_points
