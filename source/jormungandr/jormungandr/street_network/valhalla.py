@@ -232,15 +232,19 @@ class Valhalla(object):
                 args[key] = value
         return json.dumps(args)
 
+    def check_response(self, response):
+        if response == None:
+            raise TechnicalError('impossible to access valhalla service')
+        if response.status_code != 200:
+            logging.getLogger(__name__).error('Valhalla service unavailable, impossible to query : {}'.
+                                              format(response.url))
+            raise TechnicalError('Valhalla service unavailable, impossible to query : {}'.
+                                 format(response.url))
 
     def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise):
         data = self._make_data(mode, pt_object_origin, [pt_object_destination], 'route')
         r = self._call_valhalla('{}/{}'.format(self.service_url, 'route'), requests.post, data)
-        if r == None:
-            raise TechnicalError('impossible to access valhalla service')
-        if r.status_code != 200:
-            logging.getLogger(__name__).error('Valhalla service unavailable, impossible to query : {}'.format(r.url))
-            raise TechnicalError('Valhalla service unavailable, impossible to query : {}'.format(r.url))
+        self.check_response(r)
         resp_json = r.json()
         return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, datetime)
 
@@ -259,10 +263,6 @@ class Valhalla(object):
     def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration):
         data = self._make_data(mode, origins[0], destinations, 'one_to_many')
         r = self._call_valhalla('{}/{}'.format(self.service_url, 'one_to_many'), requests.post, data)
-        if r == None:
-            raise TechnicalError('impossible to access valhalla service')
-        if r.status_code != 200:
-            logging.getLogger(__name__).error('Valhalla service unavailable, impossible to query : {}'.format(r.url))
-            raise TechnicalError('Valhalla service unavailable, impossible to query : {}'.format(r.url))
+        self.check_response(r)
         resp_json = r.json()
         return self._get_matrix(resp_json)
