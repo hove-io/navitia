@@ -133,4 +133,10 @@ class Worker {
         pbnavitia::Response street_network_routing_matrix(const pbnavitia::StreetNetworkRoutingMatrixRequest& request);
 };
 
+type::EntryPoint make_sn_entry_point(const std::string& place,
+        const std::string& mode,
+        const float speed,
+        const int max_duration,
+        const navitia::type::Data& data);
+
 }

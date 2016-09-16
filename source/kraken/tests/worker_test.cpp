@@ -38,6 +38,7 @@ www.navitia.io
 #include "kraken/configuration.h"
 #include "kraken/worker.h"
 #include "type/pt_data.h"
+#include "georef/georef.h"
 
 
 struct logger_initialized {
@@ -169,4 +170,20 @@ BOOST_FIXTURE_TEST_CASE(wheelchair_on_stop_tests, fixture) {
     pbnavitia::Response resp = w.dispatch(no_wheelchair_request);
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::NO_SOLUTION);
+}
+
+BOOST_AUTO_TEST_CASE(make_sn_entry_point_tests) {
+    ed::builder b("20150314");
+    std::string place = "stop_area_A";
+    std::string mode = "walking";
+    float speed = 1.12;
+    const int max_duration = 1800;
+    auto entry_point = navitia::make_sn_entry_point(place, mode, speed, max_duration, *b.data);
+    auto new_speed = entry_point.streetnetwork_params.speed_factor * navitia::georef::default_speed[entry_point.streetnetwork_params.mode];
+    BOOST_CHECK_CLOSE(1.12, new_speed, 1e-5);
+
+    speed = 1.00;
+    entry_point = navitia::make_sn_entry_point(place, mode, speed, max_duration, *b.data);
+    new_speed = entry_point.streetnetwork_params.speed_factor * navitia::georef::default_speed[entry_point.streetnetwork_params.mode];
+    BOOST_CHECK_CLOSE(1.0, new_speed, 1e-5);
 }
