@@ -629,16 +629,12 @@ navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest &req
     std::vector<type::EntryPoint> origins;
     const auto* sn_params = request.has_streetnetwork_params() ? &request.streetnetwork_params() : nullptr;
     for(int i = 0; i < request.origin().size(); i++) {
-        const auto* cur_sn_params = sn_params;// TODO: remove this for sn on sp
-        if (data->get_type_of_id(request.origin(i).place()) == type::Type_e::StopPoint) { cur_sn_params = nullptr; }// TODO: remove this for sn on sp
-        origins.push_back(create_journeys_entry_point(request.origin(i), cur_sn_params, data, true));// TODO: remove cur_ for sn on sp
+        origins.push_back(create_journeys_entry_point(request.origin(i), sn_params, data, true));
     }
 
     std::vector<type::EntryPoint> destinations;
     for (int i = 0; i < request.destination().size(); i++) {
-        const auto* cur_sn_params = sn_params;// TODO: remove this for sn on sp
-        if (data->get_type_of_id(request.destination(i).place()) == type::Type_e::StopPoint) { cur_sn_params = nullptr; }// TODO: remove this for sn on sp
-        destinations.push_back(create_journeys_entry_point(request.destination(i), cur_sn_params, data, false));// TODO: remove cur_ for sn on sp
+        destinations.push_back(create_journeys_entry_point(request.destination(i), sn_params, data, false));
     }
 
 
