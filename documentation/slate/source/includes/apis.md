@@ -648,6 +648,7 @@ Differents kind of objects can be returned (sorted as):
   yep      | q           | string    | The search term        |
   nop      | type[]      | array of string | Type of objects you want to query It takes one the following values: [`stop_area`, `address`, `administrative_region`, `poi`, `stop_point`] | [`stop_area`, `address`, `poi`, `administrative_region`]
   nop      | admin_uri[] | array of string | If filled, it will filter the search within the given admin uris
+  nop      | disable_geojson | boolean | remove geojson from the response | False
 
 
 
@@ -706,6 +707,7 @@ coordinates, returning a [places](#place) collection.
   nop      | type[]      | array of string | Type of objects you want to query | [`stop_area`, `stop_point`, `poi`, `administrative_region`]
   nop      | admin_uri[] | array of string | If filled, will filter the search within the given admin uris       |
   nop      | filter      | string          | Use to filter returned objects. for example: places_type.id=theater |
+  nop      | disable_geojson | boolean     | remove geojson from the response  | False
 
 Filters can be added:
 
@@ -1240,6 +1242,7 @@ nop      | duration           | int       | Maximum duration in seconds between 
 nop      | items_per_schedule | int       | Maximum number of columns per schedule.                                                  |
 nop      | forbidden_uris[]   | id        | If you want to avoid lines, modes, networks, etc.                                        |
 nop      | data_freshness     | enum      | Define the freshness of data to use<br><ul><li>realtime</li><li>base_schedule</li></ul>  | base_schedule
+nop      | disable_geojson    | boolean   | remove geojson fields from the response                                                  | False
 
 ### Objects
 
@@ -1369,6 +1372,7 @@ nop      | duration         | int                            | Maximum duration 
 nop      | forbidden_uris[] | id                             | If you want to avoid lines, modes, networks, etc.    |
 nop      | items_per_schedule | int       | Maximum number of datetimes per schedule.                                                  |
 nop      | data_freshness   | enum                           | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> | base_schedule
+nop      | disable_geojson | boolean                | remove geojson fields from the response | False
 
 
 ### <a name="stop-schedule"></a>Stop_schedule object
@@ -1464,6 +1468,7 @@ nop      | from_datetime    | [iso-date-time](#iso-date-time) | The date_time fr
 nop      | duration         | int                             | Maximum duration in seconds between from_datetime and the retrieved datetimes.                            | 86400
 nop      | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc.    |
 nop      | data_freshness   | enum                            | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> | realtime
+nop      | disable_geojson | boolean                | remove geojson fields from the response | False
 
 
 ### Departure objects

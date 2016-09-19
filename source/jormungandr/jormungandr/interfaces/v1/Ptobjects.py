@@ -86,12 +86,16 @@ class Ptobjects(ResourceUri):
                                                      " Note: it will mainly change the disruptions that concern "
                                                      "the object The timezone should be specified in the format,"
                                                      " else we consider it as UTC")
+        self.parsers['get'].add_argument("disable_geojson", type=bool, default=False,
+                            description="remove geojson from the response")
 
     @marshal_with(pt_objects)
     def get(self, region=None, lon=None, lat=None):
         self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
         args = self.parsers["get"].parse_args()
+        if args['disable_geojson']:
+            g.disable_geojson = True
         self._register_interpreted_parameters(args)
         if len(args['q']) == 0:
             abort(400, message="Search word absent")

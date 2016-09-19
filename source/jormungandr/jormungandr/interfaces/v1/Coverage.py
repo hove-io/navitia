@@ -30,7 +30,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask.ext.restful import Resource, fields, marshal_with
+from flask.ext.restful import Resource, fields, marshal_with, reqparse
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.StatedResource import StatedResource
 from jormungandr.interfaces.v1.make_links import add_coverage_link, add_coverage_link, add_collection_links, clean_links
@@ -68,7 +68,17 @@ class Coverage(StatedResource):
     @add_collection_links(collections)
     @marshal_with(regions_fields)
     def get(self, region=None, lon=None, lat=None):
+
+        parser = reqparse.RequestParser()
+        parser.add_argument("disable_geojson", type=bool, default=False)
+
+        args = parser.parse_args()
+
         resp = i_manager.regions(region, lon, lat)
         if 'region' in resp:
             resp['regions'] = sorted(resp['regions'], cmp=lambda reg1, reg2: cmp(reg1.get('name'), reg2.get('name')))
+        if args['disable_geojson']:
+            for r in resp['regions']:
+                if 'shape' in r:
+                    del r['shape']
         return resp, 200
