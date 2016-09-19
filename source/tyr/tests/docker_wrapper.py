@@ -86,7 +86,7 @@ class PostgresDocker(object):
         self.docker.stop(container=self.container_id)
 
         logging.getLogger(__name__).info("removing the temporary docker")
-        self.docker.remove_container(container=self.container_id)
+        self.docker.remove_container(container=self.container_id, v=True)
 
         # test to be sure the docker is removed at the end
         for cont in self.docker.containers(all=True):
