@@ -203,8 +203,30 @@ class TestJourneysExperimental(AbstractTestFixture):
         check_journeys(response)
         jrnys = response['journeys']
         assert len(jrnys) == 2
-        assert jrnys[0]['sections'][0]['type'] == 'crow_fly'
-        assert jrnys[0]['sections'][2]['type'] == 'crow_fly'
+        section_0 = jrnys[0]['sections'][0]
+        assert section_0['type'] == 'crow_fly'
+        assert section_0['from']['id'] == 'stopA'
+        assert section_0['to']['id'] == 'stop_point:stopA'
+
+        section_2 = jrnys[0]['sections'][2]
+        assert section_2['type'] == 'crow_fly'
+        assert section_2['from']['id'] == 'stop_point:stopB'
+        assert section_2['to']['id'] == 'stopB'
+
+    def test_journey_stop_area_to_stop_point(self):
+        """
+        When the departure is stop_area:A and the destination is stop_point:B belonging to stop_area:B
+        """
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
+            .format(from_sa='stopA', to_sa='stop_point:stopB', datetime="20120614T080000")
+        response = self.query("v1/coverage/main_routing_test/" + query)
+        check_journeys(response)
+        jrnys = response['journeys']
+
+        j = next((j for j in jrnys if j['type'] == 'non_pt_walk'), None)
+        assert j
+        assert j['sections'][0]['from']['id'] == 'stopA'
+        assert j['sections'][0]['to']['id'] == 'stop_point:stopB'
 
 
 @dataset({"main_ptref_test": {}})
