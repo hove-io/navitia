@@ -193,6 +193,19 @@ class TestJourneysExperimental(AbstractTestFixture):
         #and no journey is to be provided
         assert 'journeys' not in response or len(response['journeys']) == 0
 
+    def test_crow_fly_sections(self):
+        """
+        When the departure is a stop_area...
+        """
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
+            .format(from_sa='stopA', to_sa='stopB', datetime="20120614T080000")
+        response = self.query("v1/coverage/main_routing_test/" + query)
+        check_journeys(response)
+        jrnys = response['journeys']
+        assert len(jrnys) == 2
+        assert jrnys[0]['sections'][0]['type'] == 'crow_fly'
+        assert jrnys[0]['sections'][2]['type'] == 'crow_fly'
+
 
 @dataset({"main_ptref_test": {}})
 class TestJourneysExperimentalWithPtref(AbstractTestFixture):
