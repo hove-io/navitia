@@ -215,6 +215,28 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["stop_schedules"][0]["stop_point"]["id"] == "stop1"
         assert response["stop_schedules"][0]["route"]["line"]["id"] == "line:A"
 
+        shape(get_not_null(response["stop_schedules"][0]["route"]["line"], 'geojson'))
+        shape(get_not_null(response["stop_schedules"][0]["route"], 'geojson'))
+
+    def test_no_geojson(self):
+        """
+        stop_schedule without geojson
+        """
+        response = self.query_region("stop_areas/stop1/stop_schedules?"
+                                     "from_datetime=20120615T080000&disable_geojson=true")
+
+        assert "stop_schedules" in response
+        # all datetime in the response should be datetime
+        is_valid_stop_schedule(response["stop_schedules"], self.tester, only_time=False)
+        assert len(response["stop_schedules"]) == 1, "there should be only one elt"
+
+        # after the structure check, we check some test specific stuff
+        assert response["stop_schedules"][0]["stop_point"]["id"] == "stop1"
+        assert response["stop_schedules"][0]["route"]["line"]["id"] == "line:A"
+
+        assert 'geojson' not in response["stop_schedules"][0]["route"]["line"]
+        assert 'geojson' not in response["stop_schedules"][0]["route"]
+
     def test_partial_terminus(self):
         """
         Partial Terminus
