@@ -124,6 +124,9 @@ class User(db.Model):
     type = db.Column(db.Enum('with_free_instances', 'without_free_instances', 'super_user', name='user_type'),
                              default='with_free_instances', nullable=False)
 
+    shape = db.Column(db.Text, nullable=True)
+
+
     def __init__(self, login=None, email=None, block_until=None, keys=None, authorizations=None):
         self.login = login
         self.email = email
