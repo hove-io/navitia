@@ -390,7 +390,7 @@ class SectionGeoJson(fields.Raw):
 
     def output(self, key, obj):
         coords = []
-        if not obj.HasField(b"type"):
+        if not obj.HasField(str("type")):
             logging.getLogger(__name__).warn("trying to output wrongly formated object as geojson, we skip")
             return
 
@@ -410,7 +410,7 @@ class SectionGeoJson(fields.Raw):
             "type": "LineString",
             "coordinates": [],
             "properties": [{
-                "length": 0 if not obj.HasField(b"length") else obj.length
+                "length": 0 if not obj.HasField(str("length")) else obj.length
             }]
         }
         for coord in coords:
@@ -431,7 +431,7 @@ class JsonString(fields.Raw):
 
 class Durations(fields.Raw):
     def output(self, key, obj):
-        if not obj.HasField(b"durations"):
+        if not obj.HasField(str("durations")):
             return
         return {
             'total': obj.durations.total,

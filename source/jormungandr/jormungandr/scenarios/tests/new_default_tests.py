@@ -272,7 +272,7 @@ def merge_responses_on_errors_test():
     
     merged_response = new_default.merge_responses(r)
     
-    assert merged_response.HasField(b'error')
+    assert merged_response.HasField(str('error'))
     assert merged_response.error.id == response_pb2.Error.no_solution
     # both messages must be in the composite error
     assert resp1.error.message in merged_response.error.message

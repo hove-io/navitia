@@ -359,7 +359,7 @@ def similar_journeys_vj_generator(journey):
         if s.type == response_pb2.PUBLIC_TRANSPORT:
             yield "pt:" + s.pt_display_informations.uris.vehicle_journey
         elif s.type == response_pb2.STREET_NETWORK:
-            yield "sn:" + unicode(s.street_network.mode)
+            yield "sn:" + str(s.street_network.mode)
 
 
 def similar_journeys_line_generator(journey):
@@ -372,7 +372,7 @@ def similar_journeys_line_generator(journey):
         if s.type == response_pb2.PUBLIC_TRANSPORT:
             yield "pt:" + s.pt_display_informations.uris.line
         elif s.type == response_pb2.STREET_NETWORK:
-            yield "sn:" + unicode(s.street_network.mode)
+            yield "sn:" + str(s.street_network.mode)
 
 
 def fallback_duration(journey):

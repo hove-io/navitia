@@ -156,7 +156,7 @@ class InstanceManager(object):
 
         api_func = getattr(scenario, api)
         resp = api_func(arguments, instance)
-        if hasattr(resp, b"publication_date") and instance.publication_date != resp.publication_date:
+        if hasattr(resp, str("publication_date")) and instance.publication_date != resp.publication_date:
             self._clear_cache()
             instance.publication_date = resp.publication_date
         return resp

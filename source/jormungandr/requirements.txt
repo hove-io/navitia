@@ -18,8 +18,7 @@ pyzmq==15.4.0
 redis==2.9.1
 six==1.10.0
 kombu==3.0.8
-python-dateutil==1.5
-Flask-Cache==0.13.1
+python-dateutil==2.5.3
 pytz==2013.9
 retrying==1.2.3
 aniso8601==0.82
@@ -35,3 +34,4 @@ future==0.15.2
 suds==0.4
 --no-binary=gevent,greenlet #the wheel is built against python 2.7.4 and debian is on 2.7.3 :(
 gevent==1.1.2
+Flask-Cache==0.13.1

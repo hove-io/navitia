@@ -28,7 +28,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from past.builtins import long
+from past.builtins import long, unicode
 
 from google.protobuf.descriptor import FieldDescriptor
 

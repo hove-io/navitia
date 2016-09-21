@@ -33,7 +33,7 @@ import logging
 import math
 import redis
 import time
-from itertools import izip
+from builtins import zip
 
 class RateLimiter(object):
     """
@@ -211,7 +211,7 @@ class RateLimiter(object):
 
             timestamp = time.time()
 
-            for boundry_timestamp, (requests, seconds) in izip(boundry_timestamps, self.conditions):
+            for boundry_timestamp, (requests, seconds) in zip(boundry_timestamps, self.conditions):
                 # if we dont yet have n number of requests boundry_timestamp will be None and this condition wont be limiting
                 if boundry_timestamp is not None:
                     boundry_timestamp = float(boundry_timestamp)

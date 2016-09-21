@@ -65,7 +65,7 @@ def create_admin_field(geocoding):
         return None
     admin_list = geocoding.get('admin', {})
     response = []
-    for level, name in admin_list.iteritems():
+    for level, name in admin_list.items():
         response.append({
             "insee": None,
             "name": name,

@@ -32,7 +32,6 @@ import pytest
 from jormungandr.parking_space_availability.bss.atos import AtosProvider
 from jormungandr.parking_space_availability.bss.stands import Stands
 from mock import MagicMock
-from urllib2 import URLError
 from suds import WebFault
 
 poi = {
@@ -126,5 +125,5 @@ def parking_space_availability_atos_get_all_stands_urlerror_test():
     """
     provider = AtosProvider(u'10', u'vélitul', u'https://error.fake.com?wsdl', {'keolis'})
 
-    with pytest.raises(URLError):
+    with pytest.raises(Exception):
         provider.get_all_stands()

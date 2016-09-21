@@ -291,7 +291,7 @@ def fill_uris(resp):
         for section in journey.sections:
             if section.type != response_pb2.PUBLIC_TRANSPORT:
                 continue
-            if section.HasField(b"pt_display_informations"):
+            if section.HasField(str("pt_display_informations")):
                 uris = section.uris
                 pt_infos = section.pt_display_informations
                 uris.vehicle_journey = pt_infos.uris.vehicle_journey

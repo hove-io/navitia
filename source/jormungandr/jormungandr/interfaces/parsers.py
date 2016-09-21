@@ -62,7 +62,7 @@ def date_time_format(value):
 
         return d
     except ValueError as e:
-        raise ValueError("Unable to parse datetime, {}".format(e.message))
+        raise ValueError("Unable to parse datetime, {}".format(e))
 
 
 def unsigned_integer(value):
@@ -73,4 +73,4 @@ def unsigned_integer(value):
 
         return d
     except ValueError as e:
-        raise ValueError("Unable to evaluate, {}".format(e.message))
+        raise ValueError("Unable to evaluate, {}".format(e))
