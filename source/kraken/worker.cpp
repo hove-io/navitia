@@ -56,7 +56,6 @@ namespace {
 struct coord_conversion_exception : public recoverable_exception
 {
     coord_conversion_exception(const std::string& msg): recoverable_exception(msg) {}
-    coord_conversion_exception() = default;
     coord_conversion_exception(const coord_conversion_exception&) = default;
     coord_conversion_exception& operator=(const coord_conversion_exception&) = default;
     virtual ~coord_conversion_exception() noexcept {}
