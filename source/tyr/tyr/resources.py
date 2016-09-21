@@ -101,7 +101,8 @@ instance_fields = {
     'night_bus_filter_max_factor': fields.Raw,
     'night_bus_filter_base_factor': fields.Raw,
     'priority': fields.Raw,
-    'bss_provider': fields.Boolean
+    'bss_provider': fields.Boolean,
+    'full_sn_geometries': fields.Boolean,
 }
 
 api_fields = {
@@ -396,6 +397,8 @@ class Instance(flask_restful.Resource):
                             location=('json', 'values'), default=instance.priority)
         parser.add_argument('bss_provider', type=bool, help='bss provider activation',
                             location=('json', 'values'), default=instance.bss_provider)
+        parser.add_argument('full_sn_geometries', type=bool, help='activation of full geometries',
+                            location=('json', 'values'), default=instance.full_sn_geometries)
         args = parser.parse_args()
 
         try:
@@ -429,7 +432,8 @@ class Instance(flask_restful.Resource):
                                        'night_bus_filter_base_factor',
                                        'successive_physical_mode_to_limit_id',
                                        'priority',
-                                       'bss_provider'])
+                                       'bss_provider',
+                                       'full_sn_geometries'])
             db.session.commit()
         except Exception:
             logging.exception("fail")

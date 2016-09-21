@@ -149,6 +149,11 @@ GeographicalCoord project(const LineString&, const GeographicalCoord&);
 // Project a point on a multiline.  The returned point is the nearest point on the multiline.
 GeographicalCoord project(const MultiLineString&, const GeographicalCoord&);
 
+// Split a LineString at a certain point which is on the LineString. Return the preceding / following LineString.
+LineString split_line_at_point(const LineString&, const GeographicalCoord&, bool end_of_geom=false);
+
+double real_distance_from_extremity(const LineString&, const GeographicalCoord&, bool);
+
 }}// namespace navitia::type
 
 // Registering GeographicalCoord as a boost::geometry::point

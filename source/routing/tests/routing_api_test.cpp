@@ -1709,7 +1709,7 @@ BOOST_AUTO_TEST_CASE(projection_on_one_way) {
     boost::add_edge(AA, CC, ng::Edge(e_idx++, navitia::seconds(1000)), b.data->geo_ref->graph);
     boost::add_edge(CC, DD, ng::Edge(e_idx++, navitia::seconds(10)), b.data->geo_ref->graph);
 
-    b.data->geo_ref->ways[0]->edges.push_back(std::make_pair(AA, BB));
+    b.data->geo_ref->ways[0]->edges.push_back(std::make_pair(BB, AA));
     b.data->geo_ref->ways[1]->edges.push_back(std::make_pair(BB, CC));
     b.data->geo_ref->ways[2]->edges.push_back(std::make_pair(AA, CC));
     b.data->geo_ref->ways[3]->edges.push_back(std::make_pair(CC, DD));
