@@ -8,12 +8,53 @@ from tyr import app
 import urllib
 
 
+@pytest.fixture(scope="module")
+def geojson():
+    return """{
+      "type": "FeatureCollection",
+      "features": [
+        {
+          "type": "Feature",
+          "properties": {},
+          "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+              [
+                [
+                  -0.7728195190429688,
+                  48.09069328919107
+                ],
+                [
+                  -0.7470703125,
+                  48.09138125544017
+                ],
+                [
+                  -0.7271575927734374,
+                  48.081060795303706
+                ],
+                [
+                  -0.7714462280273438,
+                  48.07096767633642
+                ],
+                [
+                  -0.7728195190429688,
+                  48.09069328919107
+                ]
+              ]
+            ]
+          }
+        }
+      ]
+    }"""
+
+
 @pytest.fixture
-def create_user():
+def create_user(geojson):
     with app.app_context():
         user = models.User('test', 'test@example.com')
         user.end_point = models.EndPoint.get_default()
         user.billing_plan = models.BillingPlan.get_default(user.end_point)
+        user.shape = geojson
         models.db.session.add(user)
         models.db.session.commit()
         return user.id
