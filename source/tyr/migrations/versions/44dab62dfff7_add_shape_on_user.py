@@ -1,4 +1,4 @@
-"""empty message
+"""add a shape for the user
 
 Revision ID: 44dab62dfff7
 Revises: 162b4fa5836a
