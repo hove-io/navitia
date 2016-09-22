@@ -4,6 +4,7 @@ git+https://github.com/CanalTP/flask-restful.git@632369d1a3d42c5cc87e58faf491c2f
 Flask-SQLAlchemy==1.0
 Flask-Script==0.6.7
 GeoAlchemy2==0.2.4
+geojson==1.3.3
 Jinja2==2.8
 Mako==0.9.1
 MarkupSafe==0.23
