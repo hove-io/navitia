@@ -8,53 +8,49 @@ from tyr import app
 import urllib
 
 
-@pytest.fixture(scope="module")
-def geojson():
-    return """{
-      "type": "FeatureCollection",
-      "features": [
-        {
-          "type": "Feature",
-          "properties": {},
-          "geometry": {
-            "type": "Polygon",
-            "coordinates": [
-              [
-                [
-                  -0.7728195190429688,
-                  48.09069328919107
-                ],
-                [
-                  -0.7470703125,
-                  48.09138125544017
-                ],
-                [
-                  -0.7271575927734374,
-                  48.081060795303706
-                ],
-                [
-                  -0.7714462280273438,
-                  48.07096767633642
-                ],
-                [
-                  -0.7728195190429688,
-                  48.09069328919107
-                ]
-              ]
-            ]
-          }
-        }
-      ]
-    }"""
-
+@pytest.fixture
+def geojsonfixture():
+    return {u"type": u"FeatureCollection",
+         u"features": [
+             {u"type": u"Feature",
+              u"geometry": {u"type": u"Point", u"coordinates": [102.0, 0.5]},
+              u"properties": {u"prop0": u"value0"}
+              },
+             {u"type": u"Feature",
+              u"geometry": {
+                  u"type": u"LineString",
+                  u"coordinates": [
+                      [102.0, 0.0], [103.0, 1.0], [104.0, 0.0], [105.0, 1.0]
+                  ]
+              },
+              u"properties": {
+                  u"prop0": u"value0",
+                  u"prop1": 0.0
+              }
+              },
+             {u"type": u"Feature",
+              u"geometry": {
+                  u"type": u"Polygon",
+                  u"coordinates": [
+                      [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
+                       [100.0, 1.0], [100.0, 0.0]]
+                  ]
+              },
+              u"properties": {
+                  u"prop0": u"value0",
+                  u"prop1": {u"this": u"that"}
+              }
+              }
+         ]
+         }
 
 @pytest.fixture
-def create_user(geojson):
+def create_user(geojsonfixture):
     with app.app_context():
         user = models.User('test', 'test@example.com')
         user.end_point = models.EndPoint.get_default()
         user.billing_plan = models.BillingPlan.get_default(user.end_point)
-        user.shape = geojson
+        user.shape = json.dumps(geojsonfixture)
         models.db.session.add(user)
         models.db.session.commit()
         return user.id
@@ -114,11 +110,11 @@ def test_get_users_empty():
     resp = api_get('/v0/users/')
     assert resp == []
 
-def test_add_user(mock_rabbit):
+def test_add_user(mock_rabbit, geojsonfixture):
     """
     creation of a user passing arguments as a json
     """
-    user = {'login': 'user1', 'email': 'user1@example.com'}
+    user = {'login': 'user1', 'email': 'user1@example.com', 'shape': geojsonfixture}
     resp = api_post('/v0/users/', data=json.dumps(user), content_type='application/json')
     def check(u):
         for k,_ in user.iteritems():
@@ -126,6 +122,7 @@ def test_add_user(mock_rabbit):
         assert u['end_point']['name'] == 'navitia.io'
         assert u['type'] == 'with_free_instances'
         assert u['block_until'] == None
+
     check(resp)
 
     resp = api_get('/v0/users/')
