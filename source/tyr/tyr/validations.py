@@ -8,14 +8,21 @@ def datetime_format(value):
 
     return datetime.strptime(value, "%Y%m%dT%H%M%SZ")
 
+def is_geometry_valid(geometry):
+    geometry_str = json.dumps(geometry)
+    valid = geojson.is_valid(geojson.loads(geometry_str))
+    return not valid['valid'] == 'no'
 
 def json_format(value):
     if value:
+        is_valid_object = True
         features= value.get('features')
-        for feature in features:
-            geometry = feature.get('geometry')
-            geometry_str = json.dumps(geometry)
-            valid = geojson.is_valid(geojson.loads(geometry_str))
-            if valid['valid'] == 'no':
-                flask_restful.abort(400, message=valid['message'])
+        if not features:
+            is_valid_object = is_geometry_valid(value)
+        else:
+            for feature in features:
+                geometry = feature.get('geometry')
+                is_valid_object = is_valid_object and is_geometry_valid(geometry)
+        if not is_valid_object:
+                flask_restful.abort(400, message='invalid geometry')
     return value
