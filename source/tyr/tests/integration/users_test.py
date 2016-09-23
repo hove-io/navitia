@@ -7,13 +7,102 @@ from tyr.rabbit_mq_handler import RabbitMqHandler
 from tyr import app
 import urllib
 
+@pytest.fixture
+def geojson_feature_collection():
+    return {"type": "FeatureCollection",
+         "features": [
+             {"type": "Feature",
+              "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
+              "properties": {"prop0": "value0"}
+              },
+             {"type": "Feature",
+              "geometry": {
+                  "type": "LineString",
+                  "coordinates": [
+                      [102.0, 0.0], [103.0, 1.0], [104.0, 0.0], [105.0, 1.0]
+                  ]
+              },
+              "properties": {
+                  "prop0": "value0",
+                  "prop1": 0.0
+              }
+              },
+             {"type": "Feature",
+              "geometry": {
+                  "type": "Polygon",
+                  "coordinates": [
+                      [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
+                       [100.0, 1.0], [100.0, 0.0]]
+                  ]
+              },
+              "properties": {
+                  "prop0": "value0",
+                  "prop1": {"this": "that"}
+              }
+              }
+         ]
+         }
 
 @pytest.fixture
-def create_user():
+def geojson_feature():
+    return {"features": [
+             {"type": "Feature",
+              "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
+              "properties": {"prop0": "value0"}
+              },
+             {"type": "Feature",
+              "geometry": {
+                  "type": "LineString",
+                  "coordinates": [
+                      [102.0, 0.0], [103.0, 1.0], [104.0, 0.0], [105.0, 1.0]
+                  ]
+              },
+              "properties": {
+                  "prop0": "value0",
+                  "prop1": 0.0
+              }
+              },
+             {"type": "Feature",
+              "geometry": {
+                  "type": "Polygon",
+                  "coordinates": [
+                      [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
+                       [100.0, 1.0], [100.0, 0.0]]
+                  ]
+              },
+              "properties": {
+                  "prop0": "value0",
+                  "prop1": {"this": "that"}
+              }
+              }
+         ]
+         }
+
+@pytest.fixture
+def geojson():
+    return {"type": "Feature",
+              "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
+              "properties": {"prop0": "value0"}
+            }
+
+@pytest.fixture
+def invalid_geojsonfixture():
+    return {"type": "FeatureCollection",
+         "features": [
+             {"type": "Feature",
+              "geometry": {"type": "Point", "coordinates": []},
+              "properties": {"prop0": "value0"}
+              },
+         ]
+         }
+
+@pytest.fixture
+def create_user(geojson_feature_collection):
     with app.app_context():
         user = models.User('test', 'test@example.com')
         user.end_point = models.EndPoint.get_default()
         user.billing_plan = models.BillingPlan.get_default(user.end_point)
+        user.shape = json.dumps(geojson_feature_collection)
         models.db.session.add(user)
         models.db.session.commit()
         return user.id
@@ -68,29 +157,82 @@ def create_multiple_users(request):
 
     return d
 
-
 def test_get_users_empty():
     resp = api_get('/v0/users/')
     assert resp == []
 
-def test_add_user(mock_rabbit):
+def test_add_user(mock_rabbit, geojson_feature_collection):
     """
     creation of a user passing arguments as a json
     """
-    user = {'login': 'user1', 'email': 'user1@example.com'}
-    resp = api_post('/v0/users/', data=json.dumps(user), content_type='application/json')
+    user = {'login': 'user1', 'email': 'user1@example.com', 'shape': geojson_feature_collection}
+    data = json.dumps(user)
+    resp = api_post('/v0/users/', data= data, content_type='application/json')
     def check(u):
         for k,_ in user.iteritems():
             assert u[k] == user[k]
         assert u['end_point']['name'] == 'navitia.io'
         assert u['type'] == 'with_free_instances'
         assert u['block_until'] == None
+
     check(resp)
 
     resp = api_get('/v0/users/')
     assert len(resp) == 1
     check(resp[0])
     assert mock_rabbit.called
+
+def test_add_user_with_geojson_feature(mock_rabbit, geojson_feature):
+    """
+    creation of a user passing arguments as a json
+    """
+    user = {'login': 'user1', 'email': 'user1@example.com', 'shape': geojson_feature}
+    data = json.dumps(user)
+    resp = api_post('/v0/users/', data= data, content_type='application/json')
+    def check(u):
+        for k,_ in user.iteritems():
+            assert u[k] == user[k]
+        assert u['end_point']['name'] == 'navitia.io'
+        assert u['type'] == 'with_free_instances'
+        assert u['block_until'] == None
+
+    check(resp)
+
+    resp = api_get('/v0/users/')
+    assert len(resp) == 1
+    check(resp[0])
+    assert mock_rabbit.called
+
+def test_add_user_with_geojson(mock_rabbit, geojson):
+    """
+    creation of a user passing arguments as a json
+    """
+    user = {'login': 'user1', 'email': 'user1@example.com', 'shape': geojson}
+    data = json.dumps(user)
+    resp = api_post('/v0/users/', data= data, content_type='application/json')
+    def check(u):
+        for k,_ in user.iteritems():
+            assert u[k] == user[k]
+        assert u['end_point']['name'] == 'navitia.io'
+        assert u['type'] == 'with_free_instances'
+        assert u['block_until'] == None
+
+    check(resp)
+
+    resp = api_get('/v0/users/')
+    assert len(resp) == 1
+    check(resp[0])
+    assert mock_rabbit.called
+
+def test_add_user_with_invalid_geojson(mock_rabbit, invalid_geojsonfixture):
+    """
+    creation of a user passing arguments as a json
+    """
+    user = {'login': 'user1', 'email': 'user1@example.com', 'shape': invalid_geojsonfixture}
+    data = json.dumps(user)
+    resp, status = api_post('/v0/users/', check=False, data= data, content_type='application/json')
+    assert status == 400
+    assert mock_rabbit.call_count == 0
 
 def test_add_user_with_plus(mock_rabbit):
     """

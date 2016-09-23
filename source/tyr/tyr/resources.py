@@ -32,6 +32,7 @@
 from flask import abort, current_app, url_for, request
 import flask_restful
 from flask_restful import fields, marshal_with, marshal, reqparse, inputs
+
 import sqlalchemy
 from validate_email import validate_email
 from datetime import datetime
@@ -45,11 +46,19 @@ from navitiacommon.default_traveler_profile_params import default_traveler_profi
 from navitiacommon import models, utils
 from navitiacommon.models import db
 from functools import wraps
-from validations import datetime_format
+from validations import datetime_format, json_format
 from tasks import create_autocomplete_depot, remove_autocomplete_depot
+import json
 
 __ALL__ = ['Api', 'Instance', 'User', 'Key']
 
+
+class JsonString(fields.Raw):
+    def __init__(self, **kwargs):
+        super(JsonString, self).__init__(**kwargs)
+
+    def format(self, value):
+        return json.loads(value)
 
 class FieldDate(fields.Raw):
     def format(self, value):
@@ -134,7 +143,8 @@ user_fields = {
     'block_until': FieldDate,
     'type': fields.Raw(),
     'end_point': fields.Nested(end_point_fields),
-    'billing_plan': fields.Nested(billing_plan_fields)
+    'billing_plan': fields.Nested(billing_plan_fields),
+    'shape': JsonString()
 }
 
 user_fields_full = {
@@ -149,7 +159,8 @@ user_fields_full = {
         'api': fields.Nested(api_fields)
     })),
     'end_point': fields.Nested(end_point_fields),
-    'billing_plan': fields.Nested(billing_plan_fields)
+    'billing_plan': fields.Nested(billing_plan_fields),
+    'shape': JsonString()
 }
 
 jobs_fields = {
@@ -490,6 +501,7 @@ class User(flask_restful.Resource):
                             help='type of user: [with_free_instances, without_free_instances, super_user]',
                             location=('json', 'values'),
                             choices=['with_free_instances', 'without_free_instances', 'super_user'])
+        parser.add_argument('shape', type=json_format,required=False, location=('json', 'values'))
         args = parser.parse_args()
 
         if not validate_email(args['email'],
@@ -519,6 +531,7 @@ class User(flask_restful.Resource):
             user.type = args['type']
             user.end_point = end_point
             user.billing_plan = billing_plan
+            user.shape = json.dumps(args['shape'])
             db.session.add(user)
             db.session.commit()
 
@@ -548,6 +561,7 @@ class User(flask_restful.Resource):
                             help='block until argument is not correct', location=('json', 'values'))
         parser.add_argument('billing_plan_id', type=int, default=user.billing_plan_id,
                             help='billing id of the end_point', location=('json', 'values'))
+        parser.add_argument('shape', required=False, location=('json', 'values'))
         args = parser.parse_args()
 
         if not validate_email(args['email'],
@@ -572,6 +586,7 @@ class User(flask_restful.Resource):
             user.block_until = args['block_until']
             user.end_point = end_point
             user.billing_plan = billing_plan
+            user.shape = args['shape']
             db.session.commit()
 
             tyr_user_event = TyrUserEvent()
