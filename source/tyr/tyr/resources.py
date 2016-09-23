@@ -38,6 +38,7 @@ from datetime import datetime
 from itertools import combinations, chain
 from tyr_user_event import TyrUserEvent
 from tyr_end_point_event import EndPointEventMessage, TyrEventsRabbitMq
+from tyr.helper import load_instance_config
 import logging
 
 from navitiacommon import models, parser_args_type
@@ -1113,3 +1114,26 @@ class AutocompleteParameter(flask_restful.Resource):
             raise
         return ({}, 204)
 
+class Data(flask_restful.Data)
+    def post(self, instance_name):
+        instance = models.Instance.query.get(name=instance_name)
+        if instance is None:
+            return {'message': 'bad instance {}'.format(instance_name)}, 404
+
+        if not request.files:
+            return {'message': 'the Data file is missing'}, 400
+        content = request.files['file']
+        logger = logging.getLogger(__name__)
+        logger.info('content received: %s', content)
+
+        instance_config = load_instance_config(instance_name)
+
+        if not os.path.exists(instance_config.source_directory):
+            return ({'error': 'input folder unavailable'}, 500)
+
+        content.save(os.path.join(input_dir, content.filename + ".tmp"))
+        full_file_name = os.path.join(os.path.realpath(input_dir), content.filename)
+
+        shutil.move(full_file_name + ".tmp", full_file_name)
+
+        return {'message': 'OK'}, 200
