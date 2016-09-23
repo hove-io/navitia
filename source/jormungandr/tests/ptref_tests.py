@@ -225,7 +225,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_line(self):
         """test line formating"""
-        response = self.query_region("v1/lines?disable_geojson=false")
+        response = self.query_region("v1/lines")
 
         lines = get_not_null(response, 'lines')
 
@@ -281,6 +281,22 @@ class TestPtRef(AbstractTestFixture):
 
         #we check our geojson, just to be safe :)
         assert 'geojson' in l
+        geo = get_not_null(l, 'geojson')
+        shape(geo)
+
+    def test_line_with_shape(self):
+        """test line formating with shape explicitly enabled"""
+        response = self.query_region("v1/lines?disable_geojson=false")
+
+        lines = get_not_null(response, 'lines')
+
+        assert len(lines) == 3
+
+        l = lines[0]
+
+        is_valid_line(l, depth_check=1)
+
+        # Test that the geojson is indeed there
         geo = get_not_null(l, 'geojson')
         shape(geo)
 
