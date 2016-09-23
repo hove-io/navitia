@@ -11,7 +11,7 @@ def datetime_format(value):
 def is_geometry_valid(geometry):
     geometry_str = json.dumps(geometry)
     valid = geojson.is_valid(geojson.loads(geometry_str))
-    return valid and (valid['valid'] == 'yes' or valid['valid'] == '')
+    return 'valid' in valid and (valid['valid'] == 'yes' or valid['valid'] == '')
 
 def json_format(value):
     if value:
