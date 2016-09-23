@@ -46,10 +46,9 @@ from navitiacommon.default_traveler_profile_params import default_traveler_profi
 from navitiacommon import models, utils
 from navitiacommon.models import db
 from functools import wraps
-from validations import datetime_format
+from validations import datetime_format, json_format
 from tasks import create_autocomplete_depot, remove_autocomplete_depot
-from geojson import is_valid, FeatureCollection
-import ast
+import json
 
 __ALL__ = ['Api', 'Instance', 'User', 'Key']
 
@@ -59,7 +58,7 @@ class JsonString(fields.Raw):
         super(JsonString, self).__init__(**kwargs)
 
     def format(self, value):
-        return ast.literal_eval(value)
+        return json.loads(value)
 
 class FieldDate(fields.Raw):
     def format(self, value):
@@ -502,7 +501,7 @@ class User(flask_restful.Resource):
                             help='type of user: [with_free_instances, without_free_instances, super_user]',
                             location=('json', 'values'),
                             choices=['with_free_instances', 'without_free_instances', 'super_user'])
-        parser.add_argument('shape', required=False, location=('json', 'values'))
+        parser.add_argument('shape', type=json_format,required=False, location=('json', 'values'))
         args = parser.parse_args()
 
         if not validate_email(args['email'],
@@ -527,18 +526,12 @@ class User(flask_restful.Resource):
         if not billing_plan:
             return ({'error': 'billing plan doesn\'t exist'}, 400)
 
-        if args['shape']:
-            features =  ast.literal_eval(args['shape'])
-            validation = is_valid(FeatureCollection(features))
-            if validation['valid'] == 'no':
-                return ({'error': validation['message']}, 400)
-
         try:
             user = models.User(login=args['login'], email=args['email'], block_until=args['block_until'])
             user.type = args['type']
             user.end_point = end_point
             user.billing_plan = billing_plan
-            user.shape = args['shape']
+            user.shape = json.dumps(args['shape'])
             db.session.add(user)
             db.session.commit()
 
@@ -584,12 +577,6 @@ class User(flask_restful.Resource):
 
         if not billing_plan:
             return ({'error': 'billing_plan doesn\'t exist'}, 400)
-
-        if args['shape']:
-            features =  ast.literal_eval(args['shape'])
-            validation = is_valid(FeatureCollection(features))
-            if validation['valid'] == 'no':
-                return ({'error': validation['message']}, 400)
 
         try:
             last_login = user.login
