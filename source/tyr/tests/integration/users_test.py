@@ -146,20 +146,9 @@ def test_add_user_with_invalid_geojson(mock_rabbit, invalid_geojsonfixture):
     """
     user = {'login': 'user1', 'email': 'user1@example.com', 'shape': invalid_geojsonfixture}
     data = json.dumps(user)
-    resp = api_post('/v0/users/', data= data, content_type='application/json')
-    def check(u):
-        for k,_ in user.iteritems():
-            assert u[k] == user[k]
-        assert u['end_point']['name'] == 'navitia.io'
-        assert u['type'] == 'with_free_instances'
-        assert u['block_until'] == None
-
-    check(resp)
-
-    resp = api_get('/v0/users/')
-    assert len(resp) == 1
-    check(resp[0])
-    assert mock_rabbit.called
+    resp, status = api_post('/v0/users/', check=False, data= data, content_type='application/json')
+    assert status == 400
+    assert mock_rabbit.call_count == 0
 
 def test_add_user_with_plus(mock_rabbit):
     """
