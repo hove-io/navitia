@@ -70,7 +70,7 @@ api.add_resource(resources.AutocompleteParameter,
                  '/v0/autocomplete_parameters/',
                  '/v0/autocomplete_parameters/<string:name>')
 
-api.add_resource(resources.Data, '/v0/data/instances/<string:name>/')
+api.add_resource(resources.Data, '/v0/data/instances/<string:instance_name>/')
 
 
 @app.errorhandler(Exception)

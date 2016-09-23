@@ -40,6 +40,8 @@ from tyr_user_event import TyrUserEvent
 from tyr_end_point_event import EndPointEventMessage, TyrEventsRabbitMq
 from tyr.helper import load_instance_config
 import logging
+import os
+import shutil
 
 from navitiacommon import models, parser_args_type
 from navitiacommon.default_traveler_profile_params import default_traveler_profile_params, acceptable_traveler_types
@@ -1114,9 +1116,9 @@ class AutocompleteParameter(flask_restful.Resource):
             raise
         return ({}, 204)
 
-class Data(flask_restful.Data)
+class Data(flask_restful.Resource):
     def post(self, instance_name):
-        instance = models.Instance.query.get(name=instance_name)
+        instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
         if instance is None:
             return {'message': 'bad instance {}'.format(instance_name)}, 404
 
@@ -1126,13 +1128,12 @@ class Data(flask_restful.Data)
         logger = logging.getLogger(__name__)
         logger.info('content received: %s', content)
 
-        instance_config = load_instance_config(instance_name)
-
-        if not os.path.exists(instance_config.source_directory):
+        instance = load_instance_config('fr')
+        if not os.path.exists(instance.source_directory):
             return ({'error': 'input folder unavailable'}, 500)
 
-        content.save(os.path.join(input_dir, content.filename + ".tmp"))
-        full_file_name = os.path.join(os.path.realpath(input_dir), content.filename)
+        content.save(os.path.join(instance.source_directory, content.filename + ".tmp"))
+        full_file_name = os.path.join(os.path.realpath(instance.source_directory), content.filename)
 
         shutil.move(full_file_name + ".tmp", full_file_name)
 
