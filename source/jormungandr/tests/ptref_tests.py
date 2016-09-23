@@ -225,7 +225,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_line(self):
         """test line formating"""
-        response = self.query_region("v1/lines")
+        response = self.query_region("v1/lines?disable_geojson=false")
 
         lines = get_not_null(response, 'lines')
 
