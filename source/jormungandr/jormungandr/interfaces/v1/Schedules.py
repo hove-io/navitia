@@ -110,7 +110,7 @@ class Schedules(ResourceUri, ResourceUtc):
                                             " Default is the current date and it is mainly used for debug.")
         parser_get.add_argument("items_per_schedule", type=natural, default=10000,
                                 description="maximum number of date_times per schedule")
-        parser_get.add_argument("disable_geojson", type=bool, default=False,
+        parser_get.add_argument("disable_geojson", type=boolean, default=False,
                             description="remove geojson from the response")
 
         self.method_decorators.append(complete_links(self))
