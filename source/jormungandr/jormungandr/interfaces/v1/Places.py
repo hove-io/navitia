@@ -32,6 +32,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask import Flask, request
 from flask.ext.restful import Resource, fields, reqparse, abort
+from flask.ext.restful.inputs import boolean
 from flask.globals import g
 from jormungandr import i_manager, timezone, global_autocomplete, bss_provider_manager
 from jormungandr.interfaces.v1.fields import disruption_marshaller
@@ -225,7 +226,7 @@ class Places(ResourceUri):
                                                      " Note: it will mainly change the disruptions that concern "
                                                      "the object The timezone should be specified in the format,"
                                                      " else we consider it as UTC")
-        self.parsers['get'].add_argument("disable_geojson", type=bool, default=False,
+        self.parsers['get'].add_argument("disable_geojson", type=boolean, default=False,
                             description="remove geojson from the response")
 
     def get(self, region=None, lon=None, lat=None):
@@ -260,9 +261,9 @@ class PlaceUri(ResourceUri):
         self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
-        self.parsers["get"].add_argument("bss_stands", type=bool, default=True,
+        self.parsers["get"].add_argument("bss_stands", type=boolean, default=True,
                                          description="Show bss stands availability")
-        self.parsers['get'].add_argument("disable_geojson", type=bool, default=False,
+        self.parsers['get'].add_argument("disable_geojson", type=boolean, default=False,
                             description="remove geojson from the response")
         args = self.parsers["get"].parse_args()
         if args["bss_stands"]:
@@ -321,7 +322,7 @@ class PlacesNearby(ResourceUri):
         self.parsers["get"].add_argument("start_page", type=int, default=0,
                                          description="The page number of the\
                                          ptref result")
-        self.parsers["get"].add_argument("bss_stands", type=bool, default=True,
+        self.parsers["get"].add_argument("bss_stands", type=boolean, default=True,
                                          description="Show bss stands availability")
 
         self.parsers["get"].add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
@@ -330,7 +331,7 @@ class PlacesNearby(ResourceUri):
                                                      " Note: it will mainly change the disruptions that concern "
                                                      "the object The timezone should be specified in the format,"
                                                      " else we consider it as UTC")
-        self.parsers['get'].add_argument("disable_geojson", type=bool, default=False,
+        self.parsers['get'].add_argument("disable_geojson", type=boolean, default=False,
                             description="remove geojson from the response")
         args = self.parsers["get"].parse_args()
         if args["bss_stands"]:

@@ -31,6 +31,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask.ext.restful import Resource, fields, marshal_with, reqparse
+from flask.ext.restful.inputs import boolean
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.StatedResource import StatedResource
 from jormungandr.interfaces.v1.make_links import add_coverage_link, add_coverage_link, add_collection_links, clean_links
@@ -70,7 +71,7 @@ class Coverage(StatedResource):
     def get(self, region=None, lon=None, lat=None):
 
         parser = reqparse.RequestParser()
-        parser.add_argument("disable_geojson", type=bool, default=False)
+        parser.add_argument("disable_geojson", type=boolean, default=False)
 
         args = parser.parse_args()
 

@@ -105,7 +105,7 @@ class Uri(ResourceUri, ResourceUtc):
                             description="filters objects not valid before this date")
         parser.add_argument("until", type=date_time_format,
                             description="filters objects not valid after this date")
-        parser.add_argument("disable_geojson", type=bool, default=False,
+        parser.add_argument("disable_geojson", type=boolean, default=False,
                             description="remove geojson from the response")
 
         if is_collection:
@@ -544,7 +544,7 @@ def pois(is_collection):
             self.parsers["get"].add_argument("original_id", type=unicode,
                             description="original uri of the object you"
                                     "want to query")
-            self.parsers["get"].add_argument("bss_stands", type=bool, default=True,
+            self.parsers["get"].add_argument("bss_stands", type=boolean, default=True,
                                              description="Show bss stands availability")
             args = self.parsers["get"].parse_args()
             if args["bss_stands"]:
