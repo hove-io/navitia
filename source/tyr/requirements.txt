@@ -19,7 +19,7 @@ billiard==3.3.0.13
 celery==3.1.7
 configobj==4.7.2
 itsdangerous==0.24
-kombu==3.0.8
+kombu==3.0.30
 protobuf
 psycopg2
 pydns==2.3.6
