@@ -185,6 +185,9 @@ class User(db.Model):
 
         return False
 
+    def has_shape(self):
+        return self.shape is not None
+
 class Key(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
