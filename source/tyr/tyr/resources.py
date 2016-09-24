@@ -1138,3 +1138,6 @@ class Data(flask_restful.Resource):
         shutil.move(full_file_name + ".tmp", full_file_name)
 
         return {'message': 'OK'}, 200
+
+    def get(self, instance_name):
+        return ({'error': 'service unavailable'}, 400)
