@@ -131,7 +131,7 @@ def mock_rabbit():
         yield m
 
 @pytest.fixture
-def create_multiple_users(request):
+def create_multiple_users(request, geojson_feature_collection):
     with app.app_context():
         end_point = models.EndPoint()
         end_point.name = 'myEndPoint'
@@ -142,6 +142,7 @@ def create_multiple_users(request):
         user1 = models.User('foo', 'foo@example.com')
         user1.end_point = end_point
         user1.billing_plan = billing_plan
+        user1.shape = json.dumps(geojson_feature_collection)
 
         user2 = models.User('foodefault', 'foo@example.com')
         user2.end_point = models.EndPoint.get_default()
@@ -425,17 +426,20 @@ def test_update_invalid_user(mock_rabbit):
     assert status == 404
     assert mock_rabbit.call_count == 0
 
-def test_update_user(create_multiple_users, mock_rabbit):
+def test_update_user(create_multiple_users, mock_rabbit, geojson_feature):
     """
     we update a user
     """
-    user = {'login': 'user1', 'email': 'user1@example.com'}
+    user = {'login': 'user1', 'email': 'user1@example.com', 'shape': geojson_feature}
     resp = api_put('/v0/users/{}'.format(create_multiple_users['user1']), data=json.dumps(user),
                    content_type='application/json')
-
-    assert resp['id'] == create_multiple_users['user1']
-    assert resp['login'] == user['login']
-    assert resp['email'] == user['email']
+    def check(u):
+        for k,_ in user.iteritems():
+            assert u[k] == user[k]
+        assert resp['id'] == create_multiple_users['user1']
+        assert resp['login'] == user['login']
+        assert resp['email'] == user['email']
+    check(resp)
     assert mock_rabbit.called
 
 def test_update_block_until(create_multiple_users, mock_rabbit):
@@ -448,6 +452,33 @@ def test_update_block_until(create_multiple_users, mock_rabbit):
     assert resp['id'] == create_multiple_users['user1']
     assert resp['block_until'] == '2016-01-28T11:12:00'
     assert mock_rabbit.called
+
+def test_update_shape(create_multiple_users, mock_rabbit, geojson_feature):
+    """
+    we update a user
+    """
+    user = {'shape': geojson_feature}
+    resp = api_put('/v0/users/{}'.format(create_multiple_users['user1']), data=json.dumps(user),
+                   content_type='application/json')
+    def check(u):
+        for k,_ in user.iteritems():
+            assert u[k] == user[k]
+        assert resp['id'] == create_multiple_users['user1']
+    check(resp)
+    assert mock_rabbit.called
+
+
+def test_update_shape_with_none(create_multiple_users, mock_rabbit):
+    """
+    we update a user
+    """
+    user = {'shape': ''}
+    resp = api_put('/v0/users/{}'.format(create_multiple_users['user1']), data=json.dumps(user),
+                   content_type='application/json')
+    assert resp['id'] == create_multiple_users['user1']
+    assert resp['shape'] == None
+    assert mock_rabbit.called
+
 
 def test_full_registration_then_deletion(create_instance, mock_rabbit):
     """
