@@ -511,7 +511,7 @@ def test_get_user_with_shape(create_user, geojson_feature_collection):
     We start by creating the user with a shape,
     and we test that the attribute shape is returned and has_shape = True
     """
-    resp = api_get('/v0/users/1')
+    resp = api_get('/v0/users/{}'.format(create_user))
 
     assert resp['has_shape'] == True
     assert resp['shape'] == geojson_feature_collection
@@ -523,7 +523,7 @@ def test_get_user_with_shape_and_disable_geojson_param_true(create_user, geojson
     We request the user with parameter disable_geojson=true
     We test that shape = {} and has_shape = True
     """
-    resp = api_get('/v0/users/1?disable_geojson=true')
+    resp = api_get('/v0/users/{}?disable_geojson=true'.format(create_user))
 
     assert resp['has_shape'] == True
     assert resp['shape'] == {}
@@ -533,7 +533,7 @@ def test_get_user_without_shape(create_user_without_shape):
     We start by creating the user without shape,
     and we test that  shape = None and has_shape = False
     """
-    resp = api_get('/v0/users/1')
+    resp = api_get('/v0/users/{}'.format(create_user_without_shape))
     print resp['shape']
     print geojson_feature
     assert resp['has_shape'] == False
@@ -546,7 +546,7 @@ def test_get_user_without_shape_and_disable_geojson_param_true(create_user_witho
     We request the user with parameter disable_geojson=true
     We test that shape = None and has_shape = False
     """
-    resp = api_get('/v0/users/1?disable_geojson=true')
+    resp = api_get('/v0/users/{}?disable_geojson=true'.format(create_user_without_shape))
 
     assert resp['has_shape'] == False
     assert resp['shape'] == None
