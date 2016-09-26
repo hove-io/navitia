@@ -612,7 +612,7 @@ class User(flask_restful.Resource):
                             help='block until argument is not correct', location=('json', 'values'))
         parser.add_argument('billing_plan_id', type=int, default=user.billing_plan_id,
                             help='billing id of the end_point', location=('json', 'values'))
-        parser.add_argument('shape', required=False, location=('json', 'values'))
+        parser.add_argument('shape', type=json_format,required=False, location=('json', 'values'))
         args = parser.parse_args()
 
         if not validate_email(args['email'],
@@ -637,7 +637,7 @@ class User(flask_restful.Resource):
             user.block_until = args['block_until']
             user.end_point = end_point
             user.billing_plan = billing_plan
-            user.shape = args['shape']
+            user.shape = json.dumps(args['shape'])
             db.session.commit()
 
             tyr_user_event = TyrUserEvent()
