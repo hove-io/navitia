@@ -32,9 +32,10 @@ from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
 from nose.tools import eq_
 
+def check_journeys(resp):
+    assert not resp.get('journeys') or sum([1 for j in resp['journeys'] if j['type'] == "best"]) == 1
 
-@dataset({"main_routing_test": {}})
-class TestJourneys(AbstractTestFixture):
+class Journeys():
     """
     Test the structure of the journeys response
     """
@@ -43,7 +44,7 @@ class TestJourneys(AbstractTestFixture):
         #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
         #not to use the jormungandr database
         response = self.query_region(journey_basic_query, display=True)
-
+        check_journeys(response)
         self.is_valid_journey_response(response, journey_basic_query)
 
         feed_publishers = get_not_null(response, "feed_publishers")
@@ -85,7 +86,7 @@ class TestJourneys(AbstractTestFixture):
         """Filter to get the best journey, we should have only one journey, the best one"""
         query = "{query}&type=best".format(query=journey_basic_query)
         response = self.query_region(query)
-
+        check_journeys(response)
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) == 1
 
@@ -146,6 +147,7 @@ class TestJourneys(AbstractTestFixture):
         query = journey_basic_query + "&first_section_mode=walking&first_section_mode=bss"
         response = self.query_region(query)
 
+        check_journeys(response)
         self.is_valid_journey_response(response, query)
         #Note: we need to mock the kraken instances to check that only one call has been made and not 2
         #(only one for bss because walking should not have been added since it duplicate bss)
@@ -172,6 +174,7 @@ class TestJourneys(AbstractTestFixture):
                 "min_nb_journeys=3&_night_bus_filter_base_factor=86400"\
                 .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
         response = self.query_region(query)
+        check_journeys(response)
         self.is_valid_journey_response(response, query)
         assert len(response["journeys"]) >= 3
 
@@ -202,6 +205,7 @@ class TestJourneys(AbstractTestFixture):
             .format(from_coord=s_coord, to_coord=r_coord, d="20120614T0800")
 
         response = self.query_region(query)
+        check_journeys(response)
         self.is_valid_journey_response(response, journey_basic_query)
 
         #and the second should be 0 initialized
@@ -215,6 +219,7 @@ class TestJourneys(AbstractTestFixture):
             .format(from_coord=s_coord, to_coord=r_coord, d="20120614T08")
 
         response = self.query_region(query)
+        check_journeys(response)
         self.is_valid_journey_response(response, journey_basic_query)
 
         #and the second should be 0 initialized
@@ -335,6 +340,7 @@ class TestJourneys(AbstractTestFixture):
                     _night_bus_filter_max_factor=2.8)
 
         response = self.query_region(query)
+        check_journeys(response)
         self.is_valid_journey_response(response, query)
 
         query = "journeys?from={from_coord}&to={to_coord}&datetime={d}&" \
@@ -365,8 +371,7 @@ class TestJourneys(AbstractTestFixture):
         eq_(response['journeys'][0]['sections'][0]['duration'], 0)
 
 
-@dataset({})
-class TestJourneysNoRegion(AbstractTestFixture):
+class JourneysNoRegion():
     """
     If no region loaded we must have a polite error while asking for a journey
     """
@@ -390,8 +395,7 @@ class TestJourneysNoRegion(AbstractTestFixture):
         assert error_regexp.match(response['error']['message'])
 
 
-@dataset({"basic_routing_test": {}})
-class TestOnBasicRouting(AbstractTestFixture):
+class OnBasicRouting():
     """
     Test if the filter on long waiting duration is working
     """
@@ -556,8 +560,7 @@ class TestOnBasicRouting(AbstractTestFixture):
         eq_(response['journeys'][0]['sections'][0]['duration'], 0)
 
 
-@dataset({"main_routing_test": {}})
-class TestShapeInGeoJson(AbstractTestFixture):
+class ShapeInGeoJson():
     """
     Test if the shape is used in the GeoJson
     """
@@ -586,8 +589,7 @@ class TestShapeInGeoJson(AbstractTestFixture):
         eq_(response['journeys'][1]['durations']['walking'], 275)
 
 
-@dataset({"main_routing_test": {}, "basic_routing_test": {'check_killed': False}})
-class TestOneDeadRegion(AbstractTestFixture):
+class OneDeadRegion():
     """
     Test if we still responds when one kraken is dead
     """
@@ -604,15 +606,13 @@ class TestOneDeadRegion(AbstractTestFixture):
         eq_(response['debug']['regions_called'][0], "main_routing_test")
 
 
-@dataset({"basic_routing_test": {}})
-class TestIsochrone(AbstractTestFixture):
+class Isochrone():
     def test_isochrone(self):
         response = self.query_region("journeys?from=I1&datetime=20120615T070000&max_duration=36000")
         assert(len(response['journeys']) == 2)
 
 
-@dataset({"main_routing_without_pt_test": {'priority': 42}, "main_routing_test": {'priority': 10}})
-class TestWithoutPt(AbstractTestFixture):
+class WithoutPt():
     """
     Test if we still responds when one kraken has no pt solution
     """
@@ -638,3 +638,34 @@ class TestWithoutPt(AbstractTestFixture):
         eq_(len(response['debug']['regions_called']), 2)
         eq_(response['debug']['regions_called'][0], "main_routing_without_pt_test")
         eq_(response['debug']['regions_called'][1], "main_routing_test")
+
+
+
+@dataset({"main_routing_test": {}})
+class TestJourneys(Journeys, AbstractTestFixture):
+    pass
+
+@dataset({})
+class JourneysNoRegion(JourneysNoRegion, AbstractTestFixture):
+    pass
+
+
+@dataset({"basic_routing_test": {}})
+class TestOnBasicRouting(OnBasicRouting, AbstractTestFixture):
+    pass
+
+@dataset({"main_routing_test": {}})
+class TestShapeInGeoJson(ShapeInGeoJson, AbstractTestFixture):
+    pass
+
+@dataset({"main_routing_test": {}, "basic_routing_test": {'check_killed': False}})
+class TestOneDeadRegion(OneDeadRegion, AbstractTestFixture):
+    pass
+
+@dataset({"basic_routing_test": {}})
+class TestIsochrone(Isochrone, AbstractTestFixture):
+    pass
+
+@dataset({"main_routing_without_pt_test": {'priority': 42}, "main_routing_test": {'priority': 10}})
+class TestWithoutPt(WithoutPt, AbstractTestFixture):
+    pass
