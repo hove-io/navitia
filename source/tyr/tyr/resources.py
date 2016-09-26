@@ -30,13 +30,13 @@
 # www.navitia.io
 
 from flask import abort, current_app, url_for, request
+from flask.globals import g
 import flask_restful
 from flask_restful import fields, marshal_with, marshal, reqparse, inputs
 
 import sqlalchemy
 from validate_email import validate_email
 from datetime import datetime
-from itertools import combinations, chain
 from tyr_user_event import TyrUserEvent
 from tyr_end_point_event import EndPointEventMessage, TyrEventsRabbitMq
 import logging
@@ -53,19 +53,32 @@ import json
 __ALL__ = ['Api', 'Instance', 'User', 'Key']
 
 
-class JsonString(fields.Raw):
-    def __init__(self, **kwargs):
-        super(JsonString, self).__init__(**kwargs)
-
-    def format(self, value):
-        return json.loads(value)
-
 class FieldDate(fields.Raw):
     def format(self, value):
         if value:
             return value.isoformat()
         else:
             return 'null'
+
+
+class HasShape(fields.Raw):
+    def output(self, key, obj):
+        return obj.has_shape()
+
+
+class Shape(fields.Raw):
+    def __init__(self, **kwargs):
+        super(Shape, self).__init__(**kwargs)
+
+    def output(self, key, obj):
+        if hasattr(g, 'disable_geojson') and g.disable_geojson and obj.has_shape():
+            return {}
+
+        if obj.shape is not None:
+            return json.loads(obj.shape)
+
+        return obj.shape
+
 
 end_point_fields = {
     'id': fields.Raw,
@@ -144,7 +157,8 @@ user_fields = {
     'type': fields.Raw(),
     'end_point': fields.Nested(end_point_fields),
     'billing_plan': fields.Nested(billing_plan_fields),
-    'shape': JsonString()
+    'has_shape': HasShape,
+    'shape': Shape
 }
 
 user_fields_full = {
@@ -160,7 +174,8 @@ user_fields_full = {
     })),
     'end_point': fields.Nested(end_point_fields),
     'billing_plan': fields.Nested(billing_plan_fields),
-    'shape': JsonString()
+    'has_shape': HasShape,
+    'shape': Shape
 }
 
 jobs_fields = {
@@ -454,11 +469,19 @@ class Instance(flask_restful.Resource):
 
 class User(flask_restful.Resource):
     def get(self, user_id=None):
+        parser = reqparse.RequestParser()
+        parser.add_argument('disable_geojson', type=bool,
+                            default=False,
+                            help='remove geojson from the response'
+                            )
         if user_id:
+            args = parser.parse_args()
+            if args['disable_geojson']:
+                g.disable_geojson = True
             user = models.User.query.get_or_404(user_id)
+
             return marshal(user, user_fields_full)
         else:
-            parser = reqparse.RequestParser()
             parser.add_argument('login', type=unicode, required=False,
                     case_sensitive=False, help='login')
             parser.add_argument('email', type=unicode, required=False,
@@ -468,13 +491,17 @@ class User(flask_restful.Resource):
             parser.add_argument('end_point_id', type=int)
             parser.add_argument('block_until', type=datetime_format, required=False,
                     case_sensitive=False)
+
             args = parser.parse_args()
+            if args['disable_geojson']:
+                g.disable_geojson = True
 
             if args['key']:
                 logging.debug(args['key'])
                 users = models.User.get_from_token(args['key'], datetime.now())
                 return marshal(users, user_fields)
             else:
+                del args['disable_geojson']
                 # dict comprehension would be better, but it's not in python 2.6
                 filter_params = dict((k, v) for k, v in args.items() if v)
 
@@ -482,7 +509,8 @@ class User(flask_restful.Resource):
                     users = models.User.query.filter_by(**filter_params).all()
                     return marshal(users, user_fields)
                 else:
-                    return marshal(models.User.query.all(), user_fields)
+                    users = models.User.query.all()
+                    return marshal(users, user_fields)
 
     def post(self):
         user = None
