@@ -32,8 +32,10 @@ from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
 from nose.tools import eq_
 
+
 def check_journeys(resp):
     assert not resp.get('journeys') or sum([1 for j in resp['journeys'] if j['type'] == "best"]) == 1
+
 
 class Journeys():
     """
@@ -66,7 +68,7 @@ class Journeys():
         response, status = self.query_no_assert("v1/coverage/main_routing_test/" + query_out_of_production_bound)
 
         assert status != 200, "the response should not be valid"
-
+        check_journeys(response)
         assert response['error']['id'] == "date_out_of_bounds"
         assert response['error']['message'] == "date is not in data production period"
 
@@ -160,6 +162,19 @@ class Journeys():
             url = links[l]['href']
             url_dict = query_from_str(url)
             assert url_dict['first_section_mode'] == ['walking', 'bss']
+
+    def test_datetime_represents_arrival(self):
+        """
+        Checks journeys when datetime == start date of production datetime.
+        """
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
+                "min_nb_journeys=3&_night_bus_filter_base_factor=86400&"\
+                "datetime_represents=arrival"\
+                .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T185500")
+        response = self.query_region(query)
+        check_journeys(response)
+        self.is_valid_journey_response(response, query)
+        assert len(response["journeys"]) >= 3
 
     def test_min_nb_journeys(self):
         """Checks if min_nb_journeys works.
@@ -462,7 +477,6 @@ class OnBasicRouting():
             assert error["message"] == "Unable to parse datetime, Not naive datetime (tzinfo is already set)"
             assert error["id"] == "unable_to_parse"
 
-
     def test_journeys_without_show_codes(self):
         '''
         Test journeys api without show_codes.
@@ -515,7 +529,6 @@ class OnBasicRouting():
         eq_(response['journeys'][0]['arrival_date_time'], u'20120615T151000')
         eq_(response['journeys'][0]['type'], "best")
 
-
     def test_max_attemps(self):
         """
         Kraken always retrieves journeys with non_pt_duration > max_non_pt_duration
@@ -526,7 +539,6 @@ class OnBasicRouting():
 
         response = self.query_region(query, display=False)
         assert(not "journeys" in response or len(response['journeys']) ==  0)
-
 
     def test_max_attemps_debug(self):
         """
@@ -630,7 +642,7 @@ class WithoutPt():
     Test if we still responds when one kraken has no pt solution using new_default
     """
     def test_one_region_without_pt_new_default(self):
-        response = self.query("v1/"+journey_basic_query+"&debug=true&_override_scenario=new_default",
+        response = self.query("v1/"+journey_basic_query+"&debug=true",
                               display=False)
         eq_(len(response['journeys']), 2)
         eq_(len(response['journeys'][0]['sections']), 3)
@@ -640,13 +652,21 @@ class WithoutPt():
         eq_(response['debug']['regions_called'][1], "main_routing_test")
 
 
+class JourneysWithPtref():
+    """Test the new default scenario with ptref_test data"""
+
+    def test_strange_line_name(self):
+        response = self.query("v1/coverage/main_ptref_test/journeys?from=stop_area:stop2&to=stop_area:stop1"
+                              "&datetime=20140107T100000")
+        check_journeys(response)
+        eq_(len(response['journeys']), 1)
 
 @dataset({"main_routing_test": {}})
 class TestJourneys(Journeys, AbstractTestFixture):
     pass
 
 @dataset({})
-class JourneysNoRegion(JourneysNoRegion, AbstractTestFixture):
+class TestJourneysNoRegion(JourneysNoRegion, AbstractTestFixture):
     pass
 
 
@@ -668,4 +688,8 @@ class TestIsochrone(Isochrone, AbstractTestFixture):
 
 @dataset({"main_routing_without_pt_test": {'priority': 42}, "main_routing_test": {'priority': 10}})
 class TestWithoutPt(WithoutPt, AbstractTestFixture):
+    pass
+
+@dataset({"main_ptref_test": {"scenario": "default"}})
+class TestJourneysWithPtref(JourneysWithPtref, AbstractTestFixture):
     pass
