@@ -67,7 +67,6 @@ Procfile:
 web: ./manage_tyr.py runserver
 worker: celery worker -A tyr.tasks
 scheduler: celery beat -A tyr.tasks
-reloader_at: ./manage_tyr.py at_reloader
 ```
 
 .env:
@@ -289,9 +288,9 @@ Look for a user with his email:
             "id": 1
         },
         "end_point": {
-            "default": false, 
-            "hostnames": [], 
-            "id": 1, 
+            "default": false,
+            "hostnames": [],
+            "id": 1,
             "name": "foo"
         },
         "type": "with_free_instances",
@@ -317,9 +316,9 @@ Get all users for a specific endpoint
             "id": 1
         },
         "end_point": {
-            "default": false, 
-            "hostnames": [], 
-            "id": 1, 
+            "default": false,
+            "hostnames": [],
+            "id": 1,
             "name": "foo"
         },
         "type": "with_free_instances",
@@ -349,9 +348,9 @@ Get all a user information:
     "keys": [],
     "login": "alex",
     "end_point": {
-        "default": false, 
-        "hostnames": [], 
-        "id": 1, 
+        "default": false,
+        "hostnames": [],
+        "id": 1,
         "name": "foo"
     },
 }
@@ -662,4 +661,3 @@ A little help if you want to add a new POI type and keep all the default ones:
     curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:townhall?name=Mairie' -X POST
     curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/leisure:garden?name=Jardin' -X POST
     curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/leisure:park?name=Zone+Parc.+Zone+verte+ouverte,+pour+déambuler.+habituellement+municipale' -X POST
-

@@ -1,4 +1,3 @@
 web: ./manage_tyr.py runserver
 worker: celery worker -A tyr.tasks
 scheduler: celery beat -A tyr.tasks
-reloader_at: ./manage_tyr.py at_reloader
