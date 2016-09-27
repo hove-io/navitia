@@ -1,4 +1,4 @@
-from tests.check_utils import api_get, api_post, api_delete, api_put, _dt
+from tests.check_utils import api_get, api_post, api_delete, api_put, _dt, _to_json
 import json
 import pytest
 import os
@@ -15,14 +15,20 @@ def create_instance_fr():
         return instance.id
 
 def test_post_pbf(create_instance_fr):
+    assert (not os.path.isfile('/tmp/empty_pbf.osm.pbf'))
+
     filename = 'empty_pbf.osm.pbf'
     path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tests/fixtures/', filename)
-    files = {'file': (open(path, 'rb'), filename)}
-
-    tester = app.test_client()
-    resp = tester.post('/v0/data/instances/fr', data=files)
+    f = open(path, 'rb')
+    try:
+        files = {'file': (f, filename)}
+        tester = app.test_client()
+        resp = tester.post('/v0/data/instances/fr', data=files)
+    finally:
+        f.close()
     assert resp.status_code == 200
     assert os.path.isfile('/tmp/empty_pbf.osm.pbf')
+
     os.remove('/tmp/empty_pbf.osm.pbf')
     assert (not os.path.isfile('/tmp/empty_pbf.osm.pbf'))
 
@@ -31,7 +37,14 @@ def test_post_no_file(create_instance_fr):
     resp = tester.post('/v0/data/instances/fr')
     assert resp.status_code == 404
 
+def test_post_bad_instance(create_instance_fr):
+    tester = app.test_client()
+    resp = tester.post('/v0/data/instances/fr_ko')
+    assert resp.status_code == 404
+
 def test_get(create_instance_fr):
     tester = app.test_client()
     resp = tester.get('/v0/data/instances/fr')
     assert resp.status_code == 400
+    r = _to_json(resp.data, True)
+    assert r.get('error') == 'service unavailable'

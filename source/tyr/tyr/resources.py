@@ -38,7 +38,7 @@ from datetime import datetime
 from itertools import combinations, chain
 from tyr_user_event import TyrUserEvent
 from tyr_end_point_event import EndPointEventMessage, TyrEventsRabbitMq
-from tyr.helper import load_instance_config
+from tyr.helper import load_instance_config, get_instance_logger
 import logging
 import os
 import shutil
@@ -1119,16 +1119,14 @@ class AutocompleteParameter(flask_restful.Resource):
 class Data(flask_restful.Resource):
     def post(self, instance_name):
         instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
-        if instance is None:
-            return {'message': 'bad instance {}'.format(instance_name)}, 404
 
         if not request.files:
             return {'message': 'the Data file is missing'}, 400
         content = request.files['file']
-        logger = logging.getLogger(__name__)
+        logger = get_instance_logger(instance)
         logger.info('content received: %s', content)
 
-        instance = load_instance_config('fr')
+        instance = load_instance_config(instance_name)
         if not os.path.exists(instance.source_directory):
             return ({'error': 'input folder unavailable'}, 500)
 
