@@ -28,7 +28,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-import json
+import ujson
 import geojson
 
 def depth_argument(value, name):
@@ -84,7 +84,7 @@ def _make_interval_argument(max_value, min_value):
 
 def geojson_argument(value):
     def is_geometry_valid(geometry):
-        geometry_str = json.dumps(geometry)
+        geometry_str = ujson.dumps(geometry)
         valid = geojson.is_valid(geojson.loads(geometry_str))
         return 'valid' in valid and (valid['valid'] == 'yes' or valid['valid'] == '')
 
