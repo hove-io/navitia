@@ -46,7 +46,7 @@ from navitiacommon.default_traveler_profile_params import default_traveler_profi
 from navitiacommon import models, utils
 from navitiacommon.models import db
 from functools import wraps
-from validations import datetime_format, json_format
+from validations import datetime_format
 from tasks import create_autocomplete_depot, remove_autocomplete_depot
 import json
 
@@ -501,7 +501,7 @@ class User(flask_restful.Resource):
                             help='type of user: [with_free_instances, without_free_instances, super_user]',
                             location=('json', 'values'),
                             choices=['with_free_instances', 'without_free_instances', 'super_user'])
-        parser.add_argument('shape', type=json_format,required=False, location=('json', 'values'))
+        parser.add_argument('shape', type=parser_args_type.geojson_argument, required=False, location=('json', 'values'))
         args = parser.parse_args()
 
         if not validate_email(args['email'],
