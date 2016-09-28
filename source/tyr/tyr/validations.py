@@ -24,5 +24,5 @@ def json_format(value):
                 geometry = feature.get('geometry')
                 is_valid_object = is_valid_object and is_geometry_valid(geometry)
         if not is_valid_object:
-                flask_restful.abort(400, message='invalid geometry')
+            raise ValueError('invalid geometry')
     return value
