@@ -57,14 +57,18 @@ class GeocodeJson(AbstractAutocomplete):
 
     # TODO: To be deleted when bragi is modified
     @delete_attribute_autocomplete()
-    def get(self, request, instance):
+    def get(self, request, instance, shape):
         if not self.external_api:
             raise TechnicalError('global autocomplete not configured')
 
         q = request['q']
         url = '{endpoint}?q={q}'.format(endpoint=self.external_api, q=q)
         try:
-            raw_response = requests.get(url, timeout=self.timeout)
+            if shape:
+                raw_response = requests.post(url, timeout=self.timeout, json=shape)
+            else:
+                raw_response = requests.get(url, timeout=self.timeout)
+
         except requests.Timeout:
             logging.getLogger(__name__).error('autocomplete request timeout')
             raise TechnicalError('external autocomplete service timeout')
