@@ -76,12 +76,12 @@ add_custom_command (OUTPUT ${JORMUNGANDR_TEST_PY}
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}/chaos-proto" VERBATIM
     DEPENDS ${PROTO_FILES})
 
-add_custom_target(protobuf_files DEPENDS ${PROTO_HDRS} ${PROTO_SRCS}
+add_custom_target(protobuf_files ALL DEPENDS ${PROTO_HDRS} ${PROTO_SRCS}
                   ${NAVITIACOMMON_PROTO_PY} ${MONITOR_KRAKEN_PROTO_PY} ${JORMUNGANDR_TEST_PY})
 set_source_files_properties(${PROTO_HDRS} ${PROTO_SRCS} PROPERTIES GENERATED TRUE)
 
 
-add_library(pb_lib ${PROTO_SRCS} pb_converter.cpp ${NAVITIACOMMON_PROTO_PY} ${MONITOR_KRAKEN_PROTO_PY} ${JORMUNGANDR_TEST_PY})
+add_library(pb_lib ${PROTO_SRCS} pb_converter.cpp)
 target_link_libraries(pb_lib vptranslator pthread ${PROTOBUF_LIBRARY})
 
 add_library(types type.cpp message.cpp datetime.cpp geographical_coord.cpp timezone_manager.cpp validity_pattern.cpp type_utils.h)
