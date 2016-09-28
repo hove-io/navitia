@@ -28,7 +28,8 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-
+import json
+import geojson
 
 def depth_argument(value, name):
     conv_value = int(value)
@@ -79,5 +80,28 @@ def _make_interval_argument(max_value, min_value):
         v = int(value)
         return min(max(v, min_value), max_value)
     return to_return
+
+
+def geojson_argument(value):
+    def is_geometry_valid(geometry):
+        geometry_str = json.dumps(geometry)
+        valid = geojson.is_valid(geojson.loads(geometry_str))
+        return 'valid' in valid and (valid['valid'] == 'yes' or valid['valid'] == '')
+
+    if value:
+        is_valid_object = isinstance(value, dict)
+        if not is_valid_object:
+            raise ValueError('invalid geojson')
+        features= value.get('features')
+        if not features:
+            is_valid_object = is_geometry_valid(value)
+        else:
+            for feature in features:
+                geometry = feature.get('geometry')
+                is_valid_object = is_valid_object and is_geometry_valid(geometry)
+        if not is_valid_object:
+            raise ValueError('invalid geometry')
+    return value
+
 
 default_count_arg_type = _make_interval_argument(max_value=1000, min_value=0)
