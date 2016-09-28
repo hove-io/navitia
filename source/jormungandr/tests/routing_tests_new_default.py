@@ -37,12 +37,12 @@ import jormungandr.scenarios.new_default
 from jormungandr.scenarios.qualifier import min_from_criteria
 from .routing_tests import JourneysWithPtref, check_journeys
 from .routing_tests import JourneysNoRegion, OnBasicRouting, ShapeInGeoJson, Isochrone, WithoutPt,\
-    OneDeadRegion, Journeys
+    OneDeadRegion, Journeys, DirectPath
 
 
 
 @dataset({"main_routing_test": {"scenario": "new_default"}})
-class TestJourneysNewDefault(Journeys, AbstractTestFixture):
+class TestJourneysNewDefault(Journeys,  DirectPath, AbstractTestFixture):
     """
     Test the new default scenario
     All the tests are defined in "TestJourneys" class, we only change the scenario
@@ -77,7 +77,7 @@ class TestJourneysNewDefault(Journeys, AbstractTestFixture):
 
     def test_best_filtering(self):
         """Filter to get the best journey, we should have only one journey, the best one"""
-        #TODO: corection
+        #TODO: to correct
         assert 1==1
 
     def test_journeys_wheelchair_profile(self):
@@ -87,22 +87,22 @@ class TestJourneysNewDefault(Journeys, AbstractTestFixture):
         so we have to wait for the bus at 18h to leave
         """
 
-        #TODO correction
+        #TODO to correct
         assert 1==1
 
     def test_not_existent_filtering(self):
         """if we filter with a real type but not present, we don't get any journey, but we got a nice error"""
-        #TODO corectio
+        #TODO to correct
         assert 1==1
 
     def test_other_filtering(self):
         """the basic query return a non pt walk journey and a best journey. we test the filtering of the non pt"""
-        #TODO coorection
+        #TODO to correct
         assert 1 == 1
 
     def test_speed_factor_direct_path(self):
         """We test the coherence of the non pt walk solution with a speed factor"""
-        #TODO coorection
+        #TODO to correct
         assert 1 == 1
 
     def test_first_bss_last_bss_section_mode(self):
@@ -257,8 +257,9 @@ class TestNewDefaultJourneysWithPtref(JourneysWithPtref, AbstractTestFixture):
 class TestNewDefaultJourneysNoRegion(JourneysNoRegion, AbstractTestFixture):
     pass
 
+
+#TODO: to correct
 '''
-TODO: corretion
 @dataset({"basic_routing_test": {"scenario": "new_default"}})
 class TestNewDefaultOnBasicRouting(OnBasicRouting, AbstractTestFixture):
     pass
