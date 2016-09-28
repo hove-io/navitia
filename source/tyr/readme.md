@@ -87,6 +87,13 @@ pip install -r requirements_dev.txt
 ```
 You will need docker on your machine, it will be used for spawning a database.
 
+You will also need the python protobuf files from Navitia, so you should use CMake target `protobuf_files` for that :
+```
+cd <path/to/build/directory>
+cmake <path/to/navitia/repo>/source/
+make protobuf_files
+```
+
 then run the test:
 ```
 PYTHONPATH=../navitiacommon py.test tests
