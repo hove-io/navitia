@@ -108,6 +108,16 @@ def create_user(geojson_feature_collection):
         return user.id
 
 @pytest.fixture
+def create_user_without_shape():
+    with app.app_context():
+        user = models.User('test', 'test@example.com')
+        user.end_point = models.EndPoint.get_default()
+        user.billing_plan = models.BillingPlan.get_default(user.end_point)
+        models.db.session.add(user)
+        models.db.session.commit()
+        return user.id
+
+@pytest.fixture
 def create_instance():
     with app.app_context():
         instance = models.Instance('instance')
@@ -494,3 +504,49 @@ def test_deletion_keys_and_auth(create_instance, mock_rabbit):
                            content_type='application/json')
     assert len(resp_auth['authorizations']) == 0
     assert mock_rabbit.called
+
+
+def test_get_user_with_shape(create_user, geojson_feature_collection):
+    """
+    We start by creating the user with a shape,
+    and we test that the attribute shape is returned and has_shape = True
+    """
+    resp = api_get('/v0/users/{}'.format(create_user))
+
+    assert resp['has_shape'] == True
+    assert resp['shape'] == geojson_feature_collection
+
+
+def test_get_user_with_shape_and_disable_geojson_param_true(create_user, geojson_feature_collection):
+    """
+    We start by creating the user with a shape.
+    We request the user with parameter disable_geojson=true
+    We test that shape = {} and has_shape = True
+    """
+    resp = api_get('/v0/users/{}?disable_geojson=true'.format(create_user))
+
+    assert resp['has_shape'] == True
+    assert resp['shape'] == {}
+
+def test_get_user_without_shape(create_user_without_shape):
+    """
+    We start by creating the user without shape,
+    and we test that  shape = None and has_shape = False
+    """
+    resp = api_get('/v0/users/{}'.format(create_user_without_shape))
+    print resp['shape']
+    print geojson_feature
+    assert resp['has_shape'] == False
+    assert resp['shape'] == None
+
+
+def test_get_user_without_shape_and_disable_geojson_param_true(create_user_without_shape):
+    """
+    We start by creating the user without shape.
+    We request the user with parameter disable_geojson=true
+    We test that shape = None and has_shape = False
+    """
+    resp = api_get('/v0/users/{}?disable_geojson=true'.format(create_user_without_shape))
+
+    assert resp['has_shape'] == False
+    assert resp['shape'] == None
