@@ -487,7 +487,7 @@ BOOST_AUTO_TEST_CASE(parallel_and_same_vertex_edges) {
     // x1 to x2, we should not use the direct path on the edge
     origin.coordinates = x1;
     destination.coordinates = x2;
-    worker.init(origin, {destination});
+    worker.init(origin, destination);
     Path p = worker.get_direct_path(origin, destination);
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 1);
     nt::LineString expectedGeom;
@@ -502,7 +502,7 @@ BOOST_AUTO_TEST_CASE(parallel_and_same_vertex_edges) {
 
     // x1 to x3, we should use the direct path on the edge
     destination.coordinates = x3;
-    worker.init(origin, {destination});
+    worker.init(origin, destination);
     p = worker.get_direct_path(origin, destination);
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 1);
     expectedGeom.clear();
@@ -514,7 +514,7 @@ BOOST_AUTO_TEST_CASE(parallel_and_same_vertex_edges) {
     // x4 to x5, we should use the shorter parallel edge
     origin.coordinates = x4;
     destination.coordinates = x5;
-    worker.init(origin, {destination});
+    worker.init(origin, destination);
     p = worker.get_direct_path(origin, destination);
     BOOST_REQUIRE_EQUAL(p.path_items.size(), 3);
 
