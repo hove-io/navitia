@@ -98,8 +98,9 @@ def _update_crowfly_duration(instance, fallback_list, mode, stop_area_uri, crow_
         return
     stop_points = instance.georef.get_stop_points_for_stop_area(stop_area_uri)
     for stop_point in stop_points:
-        fallback_list[mode][stop_point.uri] = 0
-        crow_fly_stop_points.add(stop_point.uri)
+        if mode in fallback_list:
+            fallback_list[mode][stop_point.uri] = 0
+            crow_fly_stop_points.add(stop_point.uri)
 
 
 def _rename_journey_sections_ids(start_idx, sections):
