@@ -98,9 +98,8 @@ def _update_crowfly_duration(instance, fallback_list, mode, stop_area_uri, crow_
         return
     stop_points = instance.georef.get_stop_points_for_stop_area(stop_area_uri)
     for stop_point in stop_points:
-        if fallback_list[mode].get(stop_point.uri):
-            fallback_list[mode][stop_point.uri] = 0
-            crow_fly_stop_points.add(stop_point.uri)
+        fallback_list[mode][stop_point.uri] = 0
+        crow_fly_stop_points.add(stop_point.uri)
 
 
 def _rename_journey_sections_ids(start_idx, sections):
@@ -155,6 +154,14 @@ class Scenario(new_default.Scenario):
         # we use place_nearby of kraken at the first place to get stop_points around the place, then call the
         # one_to_many(or many_to_one according to the arg "reverse") service to take street network into consideration
         # TODO: reverse is not handled as so far
+
+        # When max_duration is 0, there is no need to compute the fallback to pt, except if place is a stop_point or a
+        # stop_area
+        if max_duration == 0:
+            if 'stop_point' in place.uri:
+                return {place.uri: 0}
+            else:
+                return {}
         places_crowfly = instance.georef.get_crow_fly(get_uri_pt_object(place), mode, max_duration, max_nb_crowfly)
 
         sn_routing_matrix = instance.street_network_service.get_street_network_routing_matrix([place],
@@ -248,7 +255,7 @@ class Scenario(new_default.Scenario):
                                                                      get_max_fallback_duration(request, dep_mode))
             #Fetch all the stop points of this stop_area and replaces all the durations by 0 in the table
             #g.origins_fallback[dep_mode]
-            _update_crowfly_duration(instance, g.origins_fallback, dep_mode,  request['origin'],
+            _update_crowfly_duration(instance, g.origins_fallback, dep_mode, request['origin'],
                                      crow_fly_stop_points)
 
             if arr_mode not in g.destinations_fallback:
@@ -276,8 +283,14 @@ class Scenario(new_default.Scenario):
                 resp.append(direct_path)
             else:
                 journey_parameters.direct_path_duration = None
-            local_resp = instance.planner.journeys(g.origins_fallback[dep_mode],
-                                                   g.destinations_fallback[arr_mode],
+
+            fall_back_origins = g.origins_fallback[dep_mode]
+            fall_back_destinations = g.destinations_fallback[arr_mode]
+            if not fall_back_origins or not fall_back_destinations:
+                continue
+
+            local_resp = instance.planner.journeys(fall_back_origins,
+                                                   fall_back_destinations,
                                                    request['datetime'],
                                                    request['clockwise'],
                                                    journey_parameters)
