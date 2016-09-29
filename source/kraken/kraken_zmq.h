@@ -48,7 +48,7 @@ inline pbnavitia::Response make_internal_error(const std::exception& e) {
     return response;
 }
 
-void respond(zmq::socket_t& socket,
+static void respond(zmq::socket_t& socket,
              const std::string& address,
              const pbnavitia::Response& response){
     zmq::message_t reply(response.ByteSize());

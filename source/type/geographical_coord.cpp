@@ -155,7 +155,7 @@ LineString split_line_at_point(const LineString& ls, const GeographicalCoord& bl
             float ab = coord->distance_to(*(coord + 1));
             float ac = blade.distance_to(*coord);
             float bc = blade.distance_to(*(coord + 1));
-            if(abs(ac + bc - ab) < 0.1) {
+            if(std::abs(ac + bc - ab) < 0.1) {
                 if(end_of_geom) {
                     result.push_back(blade);
                     result.insert(result.end(), coord + 1, ls.end());

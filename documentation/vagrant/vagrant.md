@@ -144,8 +144,11 @@ cmake -DCMAKE_BUILD_TYPE=Release ../../source/navitia/source
 # make sure the component you use finishes compiling first for data processing!
 make -j4 fusio2ed && make gtfs2ed && make -j4 osm2ed && make -j4 ed2nav
 
-# now build the rest
-make -j4 kraken && make -j4
+# now build kraken and generate python protobuf files (in navitiacommon)
+make -j4 kraken && make protobuf_files
+
+# then if you want to compile the rest (mostly for unit testing)
+make -j4
 ```
 
 While long compile is running, you can open another tab (still using vagrant):

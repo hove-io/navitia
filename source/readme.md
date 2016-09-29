@@ -85,6 +85,14 @@ Tools for autocomplete
 ### navitiacommon
 navitia python model.
 
+The directory will also contain the protobuf files from Navitia (python and cpp).
+So you might need to use CMake target protobuf_files to generate them :
+```
+cd <path/to/build/directory>
+cmake <path/to/navitia/repo>/source/
+make protobuf_files
+```
+
 Shared by all python modules
 
 :snake: **python module**
@@ -182,3 +190,16 @@ Module to transform a ValidityPattern (a year bitset) to a nice string like "val
 
 :zap: **cpp module**
 
+
+
+# Testing
+
+
+## Unit tests
+
+To run unit tests, you have to compile all Navitia then run tests :
+```
+cd <path/to/build/directory>
+cmake <path/to/navitia/repo>/source/
+make && make test
+```

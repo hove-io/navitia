@@ -98,7 +98,9 @@ To help you in the building of your project, we have implemented tools to query 
 About the data
 --------------
 
-The street network is extracted from [OpenStreetMap](http://www.openstreetmap.org). The public transport data are provided by networks that provide their timetables as open data. Some data improvements are achieved by Kisio Digital and are published back there <https://navitia.opendatasoft.com>
+The street network is extracted from [OpenStreetMap](http://www.openstreetmap.org). The public transport data are provided by networks that provide their timetables as open data. Some data improvements are achieved by Kisio Digital and are published back there <https://navitia.opendatasoft.com>.
+
+Want to know if your city is in Navitia? Know if a special contributor is used? You can either search in [datasets](#datasets) of the different [coverages](#coverage). Or use the filter provided on our data catalog <https://navitia.opendatasoft.com>.
 
 <aside class="success">
     We are gradually supporting more and more cities. If your city has open public transport data and is missing, drop us a note.
@@ -109,7 +111,7 @@ The street network is extracted from [OpenStreetMap](http://www.openstreetmap.or
 Getting help
 ------------
 
-All available functions are documented in [integration part](#navitia-documentation-v1-interface)
+All available functions are documented in [integration part](#interface)
 
 A mailing list is available to ask question: <a href="mailto:navitia@googlegroups.com">navitia@googlegroups.com</a>
 

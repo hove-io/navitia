@@ -76,7 +76,7 @@ class Coverage(StatedResource):
         args = parser.parse_args()
 
         resp = i_manager.regions(region, lon, lat)
-        if 'region' in resp:
+        if 'regions' in resp:
             resp['regions'] = sorted(resp['regions'], cmp=lambda reg1, reg2: cmp(reg1.get('name'), reg2.get('name')))
         if args['disable_geojson']:
             for r in resp['regions']:
