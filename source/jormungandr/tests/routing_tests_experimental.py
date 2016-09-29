@@ -105,7 +105,7 @@ class TestJourneysExperimental(AbstractTestFixture):
         assert('walking' in response['journeys'][-1]['tags'])
         eq_(len(response['journeys'][-1]['sections']), 1)
 
-    def test_max_duration_pt_equals_to_0(self):
+    def test_max_duration_to_pt_equals_to_0(self):
         query = journey_basic_query + \
             "&first_section_mode[]=bss" + \
             "&first_section_mode[]=walking" + \
@@ -134,7 +134,7 @@ class TestJourneysExperimental(AbstractTestFixture):
         assert('walking' in response['journeys'][-1]['tags'])
         eq_(len(response['journeys'][-1]['sections']), 1)
 
-    def test_max_duration_pt_equals_to_0_from_stop_point(self):
+    def test_max_duration_to_pt_equals_to_0_from_stop_point(self):
         query = "journeys?from=stop_point%3AstopA&to=stop_point%3AstopC&datetime=20120614T080000" \
                 "&_override_scenario=experimental"
         response = self.query_region(query)
@@ -146,6 +146,34 @@ class TestJourneysExperimental(AbstractTestFixture):
         check_journeys(response)
         eq_(len(response['journeys']), 2)
 
+    def test_max_duration_equals_to_0(self):
+        query = journey_basic_query + \
+            "&first_section_mode[]=bss" + \
+            "&first_section_mode[]=walking" + \
+            "&first_section_mode[]=bike" + \
+            "&first_section_mode[]=car" + \
+            "&debug=true"
+        response = self.query_region(query)
+        check_journeys(response)
+        eq_(len(response['journeys']), 4)
+
+        query += "&max_duration=0"
+        response = self.query_region(query)
+        check_journeys(response)
+        # the pt journey is eliminated
+        eq_(len(response['journeys']), 3)
+
+        # first is bike
+        assert('bike' in response['journeys'][0]['tags'])
+        eq_(len(response['journeys'][0]['sections']), 1)
+
+        # second is car
+        assert('car' in response['journeys'][1]['tags'])
+        eq_(len(response['journeys'][1]['sections']), 3)
+
+        # last is walking
+        assert('walking' in response['journeys'][-1]['tags'])
+        eq_(len(response['journeys'][-1]['sections']), 1)
 
     def test_error_on_journeys(self):
         """ if we got an error with kraken, an error should be returned"""
