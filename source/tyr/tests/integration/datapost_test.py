@@ -23,7 +23,7 @@ def test_post_pbf(create_instance_fr):
     try:
         files = {'file': (f, filename)}
         tester = app.test_client()
-        resp = tester.post('/v0/data/instances/fr', data=files)
+        resp = tester.post('/v0/jobs/fr', data=files)
     finally:
         f.close()
     assert resp.status_code == 200
@@ -34,17 +34,10 @@ def test_post_pbf(create_instance_fr):
 
 def test_post_no_file(create_instance_fr):
     tester = app.test_client()
-    resp = tester.post('/v0/data/instances/fr')
+    resp = tester.post('/v0/jobs/fr')
     assert resp.status_code == 404
 
 def test_post_bad_instance(create_instance_fr):
     tester = app.test_client()
-    resp = tester.post('/v0/data/instances/fr_ko')
+    resp = tester.post('/v0/jobs/fr_ko')
     assert resp.status_code == 404
-
-def test_get(create_instance_fr):
-    tester = app.test_client()
-    resp = tester.get('/v0/data/instances/fr')
-    assert resp.status_code == 400
-    r = _to_json(resp.data, True)
-    assert r.get('error') == 'service unavailable'

@@ -227,6 +227,26 @@ class Job(flask_restful.Resource):
             query = query.filter(models.Instance.name == instance_name)
         return {'jobs': query.order_by(models.Job.created_at.desc()).limit(30)}
 
+    def post(self, instance_name):
+        instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
+
+        if not request.files:
+            return {'message': 'the Data file is missing'}, 400
+        content = request.files['file']
+        logger = get_instance_logger(instance)
+        logger.info('content received: %s', content)
+
+        instance = load_instance_config(instance_name)
+        if not os.path.exists(instance.source_directory):
+            return ({'error': 'input folder unavailable'}, 500)
+
+        full_file_name = os.path.join(os.path.realpath(instance.source_directory), content.filename)
+        content.save(full_file_name + ".tmp")
+        shutil.move(full_file_name + ".tmp", full_file_name)
+
+        return {'message': 'OK'}, 200
+        
+
 class PoiType(flask_restful.Resource):
     @marshal_with(poi_types_fields)
     def get(self, instance_name):
@@ -1115,27 +1135,3 @@ class AutocompleteParameter(flask_restful.Resource):
             logging.exception("fail")
             raise
         return ({}, 204)
-
-class Data(flask_restful.Resource):
-    def post(self, instance_name):
-        instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
-
-        if not request.files:
-            return {'message': 'the Data file is missing'}, 400
-        content = request.files['file']
-        logger = get_instance_logger(instance)
-        logger.info('content received: %s', content)
-
-        instance = load_instance_config(instance_name)
-        if not os.path.exists(instance.source_directory):
-            return ({'error': 'input folder unavailable'}, 500)
-
-        content.save(os.path.join(instance.source_directory, content.filename + ".tmp"))
-        full_file_name = os.path.join(os.path.realpath(instance.source_directory), content.filename)
-
-        shutil.move(full_file_name + ".tmp", full_file_name)
-
-        return {'message': 'OK'}, 200
-
-    def get(self, instance_name):
-        return ({'error': 'service unavailable'}, 400)
