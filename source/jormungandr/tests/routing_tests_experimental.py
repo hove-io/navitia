@@ -36,11 +36,12 @@ from nose.tools import eq_
 import jormungandr.scenarios.experimental
 from jormungandr.instance import Instance
 from jormungandr.scenarios.qualifier import min_from_criteria
-from .routing_tests import check_journeys, JourneysWithPtref, Journeys, DirectPath
+
+from .journey_common_tests import *
 
 
 @dataset({"main_routing_test": {'scenario': 'experimental'}})
-class TestJourneysExperimental(Journeys, DirectPath, AbstractTestFixture):
+class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
     """
     Test the experiental scenario
     All the tests are defined in "TestJourneys" class, we only change the scenario
@@ -112,6 +113,9 @@ class TestJourneysExperimental(Journeys, DirectPath, AbstractTestFixture):
     def test_speed_factor_direct_path(self):
         """We test the coherence of the non pt walk solution with a speed factor"""
         #TODO: to correct
+        assert 1 == 1
+    def test_traveler_type(self):
+        # TODO: to correct
         assert 1 == 1
 
 	def test_crow_fly_sections(self):

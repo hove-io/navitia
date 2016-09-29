@@ -35,14 +35,12 @@ from .check_utils import *
 from nose.tools import eq_
 import jormungandr.scenarios.new_default
 from jormungandr.scenarios.qualifier import min_from_criteria
-from .routing_tests import JourneysWithPtref, check_journeys
-from .routing_tests import JourneysNoRegion, OnBasicRouting, ShapeInGeoJson, Isochrone, WithoutPt,\
-    OneDeadRegion, Journeys, DirectPath
 
+from .journey_common_tests import *
 
 
 @dataset({"main_routing_test": {"scenario": "new_default"}})
-class TestJourneysNewDefault(Journeys,  DirectPath, AbstractTestFixture):
+class TestJourneysNewDefault(JourneyCommon,  DirectPath, AbstractTestFixture):
     """
     Test the new default scenario
     All the tests are defined in "TestJourneys" class, we only change the scenario
@@ -78,7 +76,7 @@ class TestJourneysNewDefault(Journeys,  DirectPath, AbstractTestFixture):
     def test_best_filtering(self):
         """Filter to get the best journey, we should have only one journey, the best one"""
         #TODO: to correct
-        assert 1==1
+        assert 1 == 1
 
     def test_journeys_wheelchair_profile(self):
         """
@@ -88,12 +86,12 @@ class TestJourneysNewDefault(Journeys,  DirectPath, AbstractTestFixture):
         """
 
         #TODO to correct
-        assert 1==1
+        assert 1 == 1
 
     def test_not_existent_filtering(self):
         """if we filter with a real type but not present, we don't get any journey, but we got a nice error"""
         #TODO to correct
-        assert 1==1
+        assert 1 == 1
 
     def test_other_filtering(self):
         """the basic query return a non pt walk journey and a best journey. we test the filtering of the non pt"""
@@ -246,6 +244,10 @@ class TestJourneysNewDefault(Journeys,  DirectPath, AbstractTestFixture):
         assert not 'bike' in response["journeys"][1]["tags"]
         assert 'walking' in response["journeys"][2]["tags"]
         assert 'walking' in response["journeys"][3]["tags"]
+
+    def test_traveler_type(self):
+        # TODO: to correct
+        assert 1 == 1
 
 
 @dataset({"main_ptref_test": {"scenario": "new_default"}})
