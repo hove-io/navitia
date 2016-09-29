@@ -49,7 +49,6 @@ from functools import wraps
 from flask_restful import marshal, marshal_with
 import datetime
 from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
-import authentication
 
 
 #global marshal
