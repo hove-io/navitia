@@ -39,7 +39,10 @@ from validate_email import validate_email
 from datetime import datetime
 from tyr_user_event import TyrUserEvent
 from tyr_end_point_event import EndPointEventMessage, TyrEventsRabbitMq
+from tyr.helper import load_instance_config, get_instance_logger
 import logging
+import os
+import shutil
 
 from navitiacommon import models, parser_args_type
 from navitiacommon.default_traveler_profile_params import default_traveler_profile_params, acceptable_traveler_types
@@ -249,6 +252,26 @@ class Job(flask_restful.Resource):
             query = query.join(models.Instance)
             query = query.filter(models.Instance.name == instance_name)
         return {'jobs': query.order_by(models.Job.created_at.desc()).limit(30)}
+
+    def post(self, instance_name):
+        instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
+
+        if not request.files:
+            return {'message': 'the Data file is missing'}, 400
+        content = request.files['file']
+        logger = get_instance_logger(instance)
+        logger.info('content received: %s', content)
+
+        instance = load_instance_config(instance_name)
+        if not os.path.exists(instance.source_directory):
+            return ({'error': 'input folder unavailable'}, 500)
+
+        full_file_name = os.path.join(os.path.realpath(instance.source_directory), content.filename)
+        content.save(full_file_name + ".tmp")
+        shutil.move(full_file_name + ".tmp", full_file_name)
+
+        return {'message': 'OK'}, 200
+        
 
 class PoiType(flask_restful.Resource):
     @marshal_with(poi_types_fields)
@@ -1155,4 +1178,3 @@ class AutocompleteParameter(flask_restful.Resource):
             logging.exception("fail")
             raise
         return ({}, 204)
-
