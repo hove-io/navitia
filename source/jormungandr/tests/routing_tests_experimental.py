@@ -134,6 +134,19 @@ class TestJourneysExperimental(AbstractTestFixture):
         assert('walking' in response['journeys'][-1]['tags'])
         eq_(len(response['journeys'][-1]['sections']), 1)
 
+    def test_max_duration_pt_equals_to_0_from_stop_point(self):
+        query = "journeys?from=stop_point%3AstopA&to=stop_point%3AstopC&datetime=20120614T080000" \
+                "&_override_scenario=experimental"
+        response = self.query_region(query)
+        check_journeys(response)
+        eq_(len(response['journeys']), 2)
+
+        query += "&max_duration_to_pt=0"
+        response = self.query_region(query)
+        check_journeys(response)
+        eq_(len(response['journeys']), 2)
+
+
     def test_error_on_journeys(self):
         """ if we got an error with kraken, an error should be returned"""
 
