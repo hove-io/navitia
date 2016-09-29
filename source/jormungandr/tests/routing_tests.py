@@ -30,14 +30,13 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
-from nose.tools import eq_
 from .journey_common_tests import *
-
 
 
 @dataset({"main_routing_test": {}})
 class TestJourneys(JourneyCommon, AbstractTestFixture):
     pass
+
 
 @dataset({})
 class TestJourneysNoRegion(JourneysNoRegion, AbstractTestFixture):
@@ -48,21 +47,16 @@ class TestJourneysNoRegion(JourneysNoRegion, AbstractTestFixture):
 class TestOnBasicRouting(OnBasicRouting, AbstractTestFixture):
     pass
 
-@dataset({"main_routing_test": {}})
-class TestShapeInGeoJson(ShapeInGeoJson, AbstractTestFixture):
-    pass
 
 @dataset({"main_routing_test": {}, "basic_routing_test": {'check_killed': False}})
 class TestOneDeadRegion(OneDeadRegion, AbstractTestFixture):
     pass
 
-@dataset({"basic_routing_test": {}})
-class TestIsochrone(Isochrone, AbstractTestFixture):
-    pass
 
 @dataset({"main_routing_without_pt_test": {'priority': 42}, "main_routing_test": {'priority': 10}})
 class TestWithoutPt(WithoutPt, AbstractTestFixture):
     pass
+
 
 @dataset({"main_ptref_test": {"scenario": "default"}})
 class TestJourneysWithPtref(JourneysWithPtref, AbstractTestFixture):

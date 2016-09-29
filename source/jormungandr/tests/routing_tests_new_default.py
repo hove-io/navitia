@@ -27,15 +27,12 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-import logging
 from datetime import timedelta
 from .tests_mechanism import AbstractTestFixture
 from .tests_mechanism import dataset
 from .check_utils import *
 from nose.tools import eq_
-import jormungandr.scenarios.new_default
 from jormungandr.scenarios.qualifier import min_from_criteria
-
 from .journey_common_tests import *
 
 
@@ -266,18 +263,13 @@ class TestNewDefaultJourneysNoRegion(JourneysNoRegion, AbstractTestFixture):
 class TestNewDefaultOnBasicRouting(OnBasicRouting, AbstractTestFixture):
     pass
 '''
-@dataset({"main_routing_test": {"scenario": "new_default"}})
-class TestNewDefaultShapeInGeoJson(ShapeInGeoJson, AbstractTestFixture):
-    pass
+
 
 @dataset({"main_routing_test": {"scenario": "new_default"},
           "basic_routing_test": {'check_killed': False, "scenario": "new_default"}})
 class TestNewDefaultOneDeadRegion(OneDeadRegion, AbstractTestFixture):
     pass
 
-@dataset({"basic_routing_test": {"scenario": "new_default"}})
-class TestNewDefaultIsochrone(Isochrone, AbstractTestFixture):
-    pass
 
 @dataset({"main_routing_without_pt_test": {'priority': 42, "scenario": "new_default"},
           "main_routing_test": {'priority': 10, "scenario": "new_default"}})

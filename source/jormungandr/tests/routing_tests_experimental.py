@@ -28,15 +28,11 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from .tests_mechanism import AbstractTestFixture
-import logging
 from datetime import timedelta
 from .tests_mechanism import dataset
 from .check_utils import *
 from nose.tools import eq_
-import jormungandr.scenarios.experimental
-from jormungandr.instance import Instance
 from jormungandr.scenarios.qualifier import min_from_criteria
-
 from .journey_common_tests import *
 
 
@@ -114,6 +110,7 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
         """We test the coherence of the non pt walk solution with a speed factor"""
         #TODO: to correct
         assert 1 == 1
+
     def test_traveler_type(self):
         # TODO: to correct
         assert 1 == 1

@@ -414,6 +414,28 @@ class JourneyCommon():
         assert any(bike_in_journey(journey_fast_walker) for journey_fast_walker in response_fast_walker['journeys'])
         assert all(no_bike_in_journey(journey) for journey in basic_response['journeys'])
 
+    def test_shape_in_geojson(self):
+        """
+        Test if, in the first journey, the second section:
+         - is public_transport
+         - len of stop_date_times is 2
+         - len of geojson/coordinates is 3 (and thus,
+           stop_date_times is not used to create the geojson)
+        """
+        response = self.query_region(journey_basic_query, display=False)
+        #print response['journeys'][0]['sections'][1]
+        eq_(len(response['journeys']), 2)
+        eq_(len(response['journeys'][0]['sections']), 3)
+        eq_(response['journeys'][0]['co2_emission']['value'], 0.58)
+        eq_(response['journeys'][0]['co2_emission']['unit'], 'gEC')
+        eq_(response['journeys'][0]['sections'][1]['type'], 'public_transport')
+        eq_(len(response['journeys'][0]['sections'][1]['stop_date_times']), 2)
+        eq_(len(response['journeys'][0]['sections'][1]['geojson']['coordinates']), 3)
+        eq_(response['journeys'][0]['sections'][1]['co2_emission']['value'], 0.58)
+        eq_(response['journeys'][0]['sections'][1]['co2_emission']['unit'], 'gEC')
+        eq_(response['journeys'][1]['duration'], 275)
+        eq_(response['journeys'][1]['durations']['total'], 275)
+        eq_(response['journeys'][1]['durations']['walking'], 275)
 
 class DirectPath():
     def test_journey_direct_path(self):
@@ -625,35 +647,9 @@ class OnBasicRouting():
         eq_(response['journeys'][0]['sections'][0]['mode'], 'walking')
         eq_(response['journeys'][0]['sections'][0]['duration'], 0)
 
-
-class ShapeInGeoJson():
-    """
-    Test if the shape is used in the GeoJson
-    """
-
-    def test_shape_in_geojson(self):
-        """
-        Test if, in the first journey, the second section:
-         - is public_transport
-         - len of stop_date_times is 2
-         - len of geojson/coordinates is 3 (and thus,
-           stop_date_times is not used to create the geojson)
-        """
-        response = self.query_region(journey_basic_query, display=False)
-        #print response['journeys'][0]['sections'][1]
-        eq_(len(response['journeys']), 2)
-        eq_(len(response['journeys'][0]['sections']), 3)
-        eq_(response['journeys'][0]['co2_emission']['value'], 0.58)
-        eq_(response['journeys'][0]['co2_emission']['unit'], 'gEC')
-        eq_(response['journeys'][0]['sections'][1]['type'], 'public_transport')
-        eq_(len(response['journeys'][0]['sections'][1]['stop_date_times']), 2)
-        eq_(len(response['journeys'][0]['sections'][1]['geojson']['coordinates']), 3)
-        eq_(response['journeys'][0]['sections'][1]['co2_emission']['value'], 0.58)
-        eq_(response['journeys'][0]['sections'][1]['co2_emission']['unit'], 'gEC')
-        eq_(response['journeys'][1]['duration'], 275)
-        eq_(response['journeys'][1]['durations']['total'], 275)
-        eq_(response['journeys'][1]['durations']['walking'], 275)
-
+    def test_isochrone(self):
+        response = self.query_region("journeys?from=I1&datetime=20120615T070000&max_duration=36000")
+        assert(len(response['journeys']) == 2)
 
 class OneDeadRegion():
     """
@@ -670,12 +666,6 @@ class OneDeadRegion():
         eq_(response['journeys'][0]['sections'][0]['type'], 'public_transport')
         eq_(len(response['debug']['regions_called']), 1)
         eq_(response['debug']['regions_called'][0], "main_routing_test")
-
-
-class Isochrone():
-    def test_isochrone(self):
-        response = self.query_region("journeys?from=I1&datetime=20120615T070000&max_duration=36000")
-        assert(len(response['journeys']) == 2)
 
 
 class WithoutPt():
@@ -710,11 +700,10 @@ class JourneysWithPtref():
     """Test the new default scenario with ptref_test data"""
 
     def test_strange_line_name(self):
-        #TODO: correction
+        # TODO: to correct
         assert 1 == 1
         '''
-        response = self.query_region("journeys?from=stop_area:stop2&to=stop_area:stop1"
-                              "&datetime=20140107T100000")
+        response = self.query_region("journeys?from=stop_area:stop2&to=stop_area:stop&datetime=20140107T100000")
         check_journeys(response)
         eq_(len(response['journeys']), 1)
         '''
