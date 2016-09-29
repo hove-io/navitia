@@ -197,7 +197,7 @@ def test_add_user_with_geojson_feature(mock_rabbit, geojson_feature):
     """
     creation of a user passing arguments as a json
     """
-    user = {'login': 'user1', 'email': 'user1@example.com', 'shape': geojson_feature, 'has_shape': False}
+    user = {'login': 'user1', 'email': 'user1@example.com', 'shape': geojson_feature, 'has_shape': True}
     data = json.dumps(user)
     resp = api_post('/v0/users/', data= data, content_type='application/json')
     def check(u):
@@ -239,7 +239,7 @@ def test_add_user_with_invalid_geojson(mock_rabbit, invalid_geojsonfixture):
     """
     creation of a user passing arguments as a json
     """
-    user = {'login': 'user1', 'email': 'user1@example.com', 'shape': invalid_geojsonfixture, 'has_shape': False}
+    user = {'login': 'user1', 'email': 'user1@example.com', 'shape': invalid_geojsonfixture, 'has_shape': True}
     data = json.dumps(user)
     resp, status = api_post('/v0/users/', check=False, data= data, content_type='application/json')
     assert status == 400
