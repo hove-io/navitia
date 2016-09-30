@@ -163,6 +163,8 @@ struct PT_Data : boost::noncopyable{
     /** Définis les idx des différents objets */
     void index();
 
+    void clean_weak_impacts();
+
     Indexes
     get_impacts_idx(const std::vector<boost::shared_ptr<disruption::Impact>>& impacts) const;
 

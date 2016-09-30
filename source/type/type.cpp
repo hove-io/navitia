@@ -74,9 +74,6 @@ std::vector<boost::shared_ptr<disruption::Impact>> HasMessages::get_applicable_m
         const boost::posix_time::time_period& action_period) const {
     std::vector<boost::shared_ptr<disruption::Impact>> result;
 
-    //we cleanup the released pointer (not in the loop for code clarity)
-    clean_up_weak_ptr(impacts);
-
     for (auto impact : this->impacts) {
         auto impact_acquired = impact.lock();
         if (! impact_acquired) {
@@ -91,7 +88,6 @@ std::vector<boost::shared_ptr<disruption::Impact>> HasMessages::get_applicable_m
 }
 
 std::vector<boost::shared_ptr<disruption::Impact>> HasMessages::get_impacts() const {
-    clean_up_weak_ptr(impacts);
     std::vector<boost::shared_ptr<disruption::Impact>> result;
     for (const auto impact: impacts) {
         auto impact_sptr = impact.lock();
@@ -104,9 +100,6 @@ std::vector<boost::shared_ptr<disruption::Impact>> HasMessages::get_impacts() co
 std::vector<boost::shared_ptr<disruption::Impact>> HasMessages::get_publishable_messages(
             const boost::posix_time::ptime& current_time) const{
     std::vector<boost::shared_ptr<disruption::Impact>> result;
-
-    //we cleanup the released pointer (not in the loop for code clarity)
-    clean_up_weak_ptr(impacts);
 
     for (auto impact : this->impacts) {
         auto impact_acquired = impact.lock();
@@ -123,9 +116,6 @@ std::vector<boost::shared_ptr<disruption::Impact>> HasMessages::get_publishable_
 bool HasMessages::has_applicable_message(
         const boost::posix_time::ptime& current_time,
         const boost::posix_time::time_period& action_period) const {
-    //we cleanup the released pointer (not in the loop for code clarity)
-    clean_up_weak_ptr(impacts);
-
     for (auto impact : this->impacts) {
         auto impact_acquired = impact.lock();
         if (! impact_acquired) {
@@ -139,9 +129,6 @@ bool HasMessages::has_applicable_message(
 }
 
 bool HasMessages::has_publishable_message(const boost::posix_time::ptime& current_time) const{
-    //we cleanup the released pointer (not in the loop for code clarity)
-    clean_up_weak_ptr(impacts);
-
     for (auto impact : this->impacts) {
         auto impact_acquired = impact.lock();
         if (! impact_acquired) {
@@ -154,6 +141,9 @@ bool HasMessages::has_publishable_message(const boost::posix_time::ptime& curren
     return false;
 }
 
+void HasMessages::clean_weak_impacts() {
+    clean_up_weak_ptr(impacts);
+}
 
 StopTime StopTime::clone() const{
     StopTime ret{arrival_time, departure_time, stop_point};

@@ -81,7 +81,7 @@ template<class T> int T::* idx_getter(){return &T::idx;}
 
 struct HasMessages{
 protected:
-    mutable std::vector<boost::weak_ptr<disruption::Impact>> impacts;
+    std::vector<boost::weak_ptr<disruption::Impact>> impacts;
 public:
     void add_impact(const boost::shared_ptr<disruption::Impact>& i) {impacts.push_back(i);}
 
@@ -109,6 +109,8 @@ public:
             impacts.erase(it);
         }
     }
+
+    void clean_weak_impacts();
 };
 
 enum class ConnectionType {
