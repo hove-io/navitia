@@ -247,8 +247,11 @@ class Places(ResourceUri):
             response = i_manager.dispatch(args, "places", instance_name=instance)
         else:
             if global_autocomplete:
-                user = authentication.get_user(token=authentication.get_token())
-                bragi_response = global_autocomplete.get(args, None, user.shape)
+                user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=True)
+                shape = None
+                if user:
+                    shape = user.shape
+                bragi_response = global_autocomplete.get(args, None, shape=shape)
                 response = marshal(bragi_response, geocodejson)
             else:
                 raise TechnicalError('world wide autocompletion service not available')
