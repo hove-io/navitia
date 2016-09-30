@@ -201,6 +201,15 @@ void PT_Data::index(){
     ITERATE_NAVITIA_PT_TYPES(INDEX)
 }
 
+void PT_Data::clean_weak_impacts() {
+    for (const auto& obj: stop_points) { obj->clean_weak_impacts(); }
+    for (const auto& obj: stop_areas) { obj->clean_weak_impacts(); }
+    for (const auto& obj: networks) { obj->clean_weak_impacts(); }
+    for (const auto& obj: lines) { obj->clean_weak_impacts(); }
+    for (const auto& obj: routes) { obj->clean_weak_impacts(); }
+    for (const auto& obj: meta_vjs) { obj->clean_weak_impacts(); }
+}
+
 Indexes
 PT_Data::get_impacts_idx(const std::vector<boost::shared_ptr<disruption::Impact>>& impacts) const {
     Indexes result;

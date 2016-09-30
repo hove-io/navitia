@@ -190,6 +190,7 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         }
     }
     if (data) {
+        data->pt_data->clean_weak_impacts();
         LOG4CPLUS_INFO(logger, "rebuilding data raptor");
         data->build_raptor(conf.raptor_cache_size());
         data_manager.set_data(std::move(data));
