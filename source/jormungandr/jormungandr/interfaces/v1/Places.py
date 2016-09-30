@@ -247,7 +247,7 @@ class Places(ResourceUri):
             response = i_manager.dispatch(args, "places", instance_name=instance)
         else:
             if global_autocomplete:
-                user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=True)
+                user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=False)
                 shape = None
                 if user:
                     shape = user.shape
