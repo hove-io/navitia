@@ -493,14 +493,14 @@ class Instance(flask_restful.Resource):
 class User(flask_restful.Resource):
     def get(self, user_id=None):
         parser = reqparse.RequestParser()
-        parser.add_argument('disable_geojson', type=bool,
-                            default=False,
+        parser.add_argument('disable_geojson',
+                            type=inputs.boolean,
+                            default=True,
                             help='remove geojson from the response'
                             )
         if user_id:
             args = parser.parse_args()
-            if args['disable_geojson']:
-                g.disable_geojson = True
+            g.disable_geojson = args['disable_geojson']
             user = models.User.query.get_or_404(user_id)
 
             return marshal(user, user_fields_full)
@@ -516,8 +516,7 @@ class User(flask_restful.Resource):
                     case_sensitive=False)
 
             args = parser.parse_args()
-            if args['disable_geojson']:
-                g.disable_geojson = True
+            g.disable_geojson = args['disable_geojson']
 
             if args['key']:
                 logging.debug(args['key'])
