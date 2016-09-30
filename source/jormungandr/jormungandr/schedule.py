@@ -245,6 +245,7 @@ class MixedSchedule(object):
             log.info('impossible to find {}, no realtime added'.format(rt_system_code))
             return None
 
+        next_rt_passages = None
         try:
             next_rt_passages = rt_system.next_passage_for_route_point(route_point,
                                                                       request['items_per_schedule'],
