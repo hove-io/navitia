@@ -168,6 +168,7 @@ void DisruptionDatabaseReader::finalize() {
     if (disruption && disruption->id() != "") {
         make_and_apply_disruption(*disruption, pt_data, meta);
     }
+    pt_data.clean_weak_impacts();
 }
 
 }
