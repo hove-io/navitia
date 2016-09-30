@@ -35,6 +35,10 @@ from nose.tools import eq_
 from jormungandr.scenarios.qualifier import min_from_criteria
 from .journey_common_tests import *
 
+'''
+This unit runs all the common tests in journey_common_tests.py along with locals tests added in this
+unit for scenario experimental
+'''
 
 @dataset({"main_routing_test": {'scenario': 'experimental'}})
 class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):

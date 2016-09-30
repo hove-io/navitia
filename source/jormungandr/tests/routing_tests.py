@@ -33,6 +33,10 @@ from .check_utils import *
 from .journey_common_tests import *
 
 
+'''
+This unit runs all the common tests in journey_common_tests.py.
+'''
+
 @dataset({"main_routing_test": {}})
 class TestJourneys(JourneyCommon, AbstractTestFixture):
     pass
