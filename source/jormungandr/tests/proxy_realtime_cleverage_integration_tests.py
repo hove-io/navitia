@@ -54,12 +54,20 @@ MOCKED_PROXY_CONF = [
 ]
 
 
-def _get_schedule(sched, sp_uri, line_code):
+def _get_departure(dep, sp_uri, line_code):
+    """ small helper that extract the information from a route point departures """
+    return [
+        {'rt': r['stop_date_time']['data_freshness'] == 'realtime', 'dt': r['stop_date_time']['departure_date_time']}
+        for r in dep if r['stop_point']['id'] == sp_uri and r['route']['line']['code'] == line_code
+        ]
+
+
+def _get_schedule(scs, sp_uri, line_code):
     """ small helper that extract the information from a route point stop schedule """
     return [
         {'rt': r['data_freshness'] == 'realtime', 'dt': r['date_time']}
         for r in next(rp_sched['date_times']
-                      for rp_sched in sched['stop_schedules']
+                      for rp_sched in scs
                       if rp_sched['stop_point']['id'] == sp_uri
                       and rp_sched['route']['line']['code'] == line_code)
         ]
@@ -71,7 +79,8 @@ class TestCleverageSchedules(AbstractTestFixture):
     integration tests for cleverage
 
     """
-    query_template = 'stop_points/{sp}/stop_schedules?data_freshness=realtime&_current_datetime=20160102T0800'
+    query_template_scs = 'stop_points/{sp}/stop_schedules?data_freshness=realtime&_current_datetime=20160102T0800'
+    query_template_dep = 'stop_points/{sp}/departures?data_freshness=realtime&_current_datetime=20160102T0800'
 
     def test_stop_schedule_with_realtime_only(self):
         mock_requests = MockRequests({
@@ -131,12 +140,21 @@ class TestCleverageSchedules(AbstractTestFixture):
                  ], 200)
         })
         with mock.patch('requests.get', mock_requests.get):
-            query = self.query_template.format(sp='SP_1')
+            query = self.query_template_scs.format(sp='SP_1')
             response = self.query_region(query)
             scs = get_not_null(response, 'stop_schedules')
             assert len(scs) == 1
             # 2016-01-02 08:17:00
-            assert _get_schedule(response, 'SP_1', 'code A') == [
+            assert _get_schedule(scs, 'SP_1', 'code A') == [
+                {'rt': True, 'dt': '20160102T081717'},
+                {'rt': True, 'dt': '20160102T091717'}
+            ]
+
+            query = self.query_template_dep.format(sp='SP_1')
+            response = self.query_region(query)
+            dep = get_not_null(response, 'departures')
+            assert len(dep) == 2
+            assert _get_departure(dep, 'SP_1', 'code A') == [
                 {'rt': True, 'dt': '20160102T081717'},
                 {'rt': True, 'dt': '20160102T091717'}
             ]
@@ -199,13 +217,21 @@ class TestCleverageSchedules(AbstractTestFixture):
                  ], 200)
         })
         with mock.patch('requests.get', mock_requests.get):
-            query = self.query_template.format(sp='SP_1')
+            query = self.query_template_scs.format(sp='SP_1')
             response = self.query_region(query)
             scs = get_not_null(response, 'stop_schedules')
             assert len(scs) == 1
             # 2016-01-02 08:17:00
-            assert _get_schedule(response, 'SP_1', 'code A') == [
+            assert _get_schedule(scs, 'SP_1', 'code A') == [
                 {'rt': True, 'dt': '20160102T081717'},
                 {'rt': False, 'dt': '20160102T091717'}
             ]
 
+            query = self.query_template_dep.format(sp='SP_1')
+            response = self.query_region(query)
+            dep = get_not_null(response, 'departures')
+            assert len(dep) == 2
+            assert _get_departure(dep, 'SP_1', 'code A') == [
+                {'rt': True, 'dt': '20160102T081717'},
+                {'rt': False, 'dt': '20160102T091717'}
+            ]

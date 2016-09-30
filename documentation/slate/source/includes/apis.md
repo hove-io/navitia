@@ -1116,7 +1116,7 @@ You just have to verify that the coordinates of the geocoded object are inside t
 
 Other parameters to come...
 
-<a name="route-schedules"></a>Route Schedules and time tables
+<a name="route-schedules"></a>Route Schedules
 -------------------------------------------------------------
 
 ``` shell
@@ -1222,7 +1222,7 @@ HTTP/1.1 200 OK
 
 Also known as `/route_schedules` service.
 
-This endpoint gives you access to schedules of routes, with a response made
+This endpoint gives you access to schedules of routes (so a kind of time table), with a response made
 of an array of [route_schedule](#route-schedule), and another one of [note](#note). You can
 access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource}/route_schedules>
 
@@ -1276,8 +1276,8 @@ date_times | Array of [pt-date-time](#pt-date-time) | Array of public transport 
 stop_point | [stop_point](#stop-point)              | The stop point of the row
 
 
-<a name="stop-schedules"></a>Stop Schedules and other kind of time tables
--------------------------------------------------------------------------
+<a name="stop-schedules"></a>Stop Schedules
+-------------------------------------------
 
 >[Try it on Navitia playground (click on "EXT" buttons to see times)](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253AGDLYO%2Fstop_schedules%3Fitems_per_schedule%3D2%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
