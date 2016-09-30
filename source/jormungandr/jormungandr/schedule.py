@@ -148,7 +148,11 @@ def _update_passages(passages, route_point, template, next_realtime_passages):
         new_passage = deepcopy(template)
         new_passage.stop_date_time.arrival_date_time = date_to_timestamp(rt_passage.datetime)
         new_passage.stop_date_time.departure_date_time = date_to_timestamp(rt_passage.datetime)
-        new_passage.stop_date_time.data_freshness = type_pb2.REALTIME
+
+        if rt_passage.is_real_time:
+            new_passage.stop_date_time.data_freshness = type_pb2.REALTIME
+        else:
+            new_passage.stop_date_time.data_freshness = type_pb2.BASE_SCHEDULE
 
         # we also add the direction in the note
         if rt_passage.direction:
