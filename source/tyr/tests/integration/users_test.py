@@ -452,11 +452,7 @@ def test_update_block_until(create_multiple_users, mock_rabbit, geojson_feature_
                    content_type='application/json')
     assert resp['id'] == create_multiple_users['user1']
     assert resp['block_until'] == '2016-01-28T11:12:00'
-
-    def check_geojson(shape):
-        for k,_ in shape.iteritems():
-            assert geojson_feature_collection[k] == shape[k]
-    check_geojson(resp['shape'])
+    assert resp['shape'] == geojson_feature_collection
     assert mock_rabbit.called
 
 def test_update_shape(create_multiple_users, mock_rabbit, geojson_feature):
@@ -494,10 +490,7 @@ def test_update_shape_with_empty(create_multiple_users, mock_rabbit, geojson_fea
     resp = api_put('/v0/users/{}'.format(create_multiple_users['user1']), data=json.dumps(user),
                    content_type='application/json')
     assert resp['id'] == create_multiple_users['user1']
-    def check_geojson(shape):
-        for k,_ in shape.iteritems():
-            assert geojson_feature_collection[k] == shape[k]
-    check_geojson(resp['shape'])
+    assert resp['shape'] == geojson_feature_collection
     assert mock_rabbit.called
 
 
