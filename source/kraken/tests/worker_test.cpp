@@ -74,6 +74,32 @@ static pbnavitia::Request create_request(bool wheelchair, const std::string& des
     return req;
 }
 
+static pbnavitia::Request create_request_for_pt_planner(bool clockwise, const std::string& datetime, const std::string& destination) {
+    pbnavitia::Request req;
+    req.set_requested_api(pbnavitia::pt_planner);
+    pbnavitia::JourneysRequest* j = req.mutable_journeys();
+    j->set_clockwise(clockwise);
+    j->set_wheelchair(false);
+    j->set_realtime_level(pbnavitia::BASE_SCHEDULE);
+    j->set_max_duration(std::numeric_limits<int32_t>::max());
+    j->set_max_transfers(42);
+    j->add_datetimes(navitia::test::to_posix_timestamp(datetime));//"20150314T080000"
+    auto sn_params = j->mutable_streetnetwork_params();
+    sn_params->set_origin_mode("walking");
+    sn_params->set_destination_mode("walking");
+    sn_params->set_walking_speed(1);
+    sn_params->set_bike_speed(1);
+    sn_params->set_car_speed(1);
+    sn_params->set_bss_speed(1);
+    pbnavitia::LocationContext* from = j->add_origin();
+    from->set_place("stop_point:A");
+    from->set_access_duration(1800);
+    pbnavitia::LocationContext* to = j->add_destination();
+    to->set_place(destination);
+    to->set_access_duration(1800);
+    return req;
+}
+
 /**
   * Accessibility tests
   *
@@ -186,4 +212,25 @@ BOOST_AUTO_TEST_CASE(make_sn_entry_point_tests) {
     entry_point = navitia::make_sn_entry_point(place, mode, speed, max_duration, *b.data);
     new_speed = entry_point.streetnetwork_params.speed_factor * navitia::georef::default_speed[entry_point.streetnetwork_params.mode];
     BOOST_CHECK_CLOSE(1.0, new_speed, 1e-5);
+}
+
+
+BOOST_FIXTURE_TEST_CASE(journey_on_first_day_of_production_tests, fixture) {
+    //request with datetime represents departure(clockwise=true)
+    auto dep_after_request = create_request_for_pt_planner(true, "20150314T080000", "stop_point:B");
+
+    // we ask for a journey with clockwise=true, we arrive at 9h
+    pbnavitia::Response resp = w.dispatch(dep_after_request);
+
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+    pbnavitia::Journey journey = resp.journeys(0);
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20150314T100000"));
+
+    //request with datetime represents arrival(clockwise=false)
+    dep_after_request = create_request_for_pt_planner(false, "20150314T100000", "stop_point:B");
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+    journey = resp.journeys(0);
+    BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20150314T100000"));
 }
