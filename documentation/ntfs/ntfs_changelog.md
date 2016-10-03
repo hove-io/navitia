@@ -1,13 +1,13 @@
 # Changelog du format NTFS
 
-* Version 0.1 du 15/12/2014 : 
+* Version 0.1 du 15/12/2014 :
     * Ajout de la gestion des codes externes et des propriétés complémentaires génériques par objet
 * Version 0.2 du 20/02/2015 :
     * Ajout des heures d'ouverture et de fermeture de la ligne
     * Ajout du taux d'émission de CO2 par mode physique et de la liste exhaustive des modes physiques
     * Ajout du type de circulation (fichier trips) pour permettre de spécifier le type de TAD
     * Ajout du fichier admin_stations.txt
-    * Ajout de la gestion du TAD Zonal 
+    * Ajout de la gestion du TAD Zonal
         * Ajout d'une URL dans le fichier odt_conditions.txt
         * Ajout dans le fichier stops.txt des zones géographiques et du type de zone
     * Ajout de 2 fichiers sur la gestion des propriétés complémentaires sur les objets
@@ -38,4 +38,6 @@
     * Fichier frames.txt rennomé à datasets.txt
     * Attribut frame_id remplacé par dataset_id dans le fichier trips.txt
     * Attribut frame_id supprimé dans le fichier stops.txt
-
+* Version 0.6.2 du 20/06/2016
+    * ajout de l'exention fares pour la gestion des tarifs
+    * ajout des temps d'embarquement et de débarquement dans le fichier stop_times.txt.
