@@ -21,7 +21,7 @@ Les fichiers sont formatés de la manière suivante :
 Fichier | Contrainte | Commentaire
 --- | --- | ---
 prices.csv | Optionnel | Liste des tickets et le prix appliqué (plein tarif uniquement)
-fare.csv | Optionnel | Spécifications tarifaires des tickets déclarés dans le fichier **proces.csv**
+fare.csv | Optionnel | Spécifications tarifaires des tickets déclarés dans le fichier **prices.csv**
 od_fares.csv | Optionnel | Liste des tickets dont le tarif est définit par une Origine-Destination
 
 ## prices.csv
