@@ -79,7 +79,8 @@ class TravelerProfile(object):
                               ('destination_mode',           self.last_section_mode),
                               ('wheelchair',                 self.wheelchair))
 
-        def override((arg, profile_attr)):
+        def override(pair):
+            arg, profile_attr = pair
             # we use profile's attr only when it's not defined in args(aka: the request)
             if args.get(arg) is None:
                 args[arg] = profile_attr

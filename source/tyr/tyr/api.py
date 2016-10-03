@@ -70,7 +70,6 @@ api.add_resource(resources.AutocompleteParameter,
                  '/v0/autocomplete_parameters/',
                  '/v0/autocomplete_parameters/<string:name>')
 
-
 @app.errorhandler(Exception)
 def error_handler(exception):
     """

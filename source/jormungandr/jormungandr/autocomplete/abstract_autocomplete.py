@@ -40,7 +40,7 @@ class AbstractAutocomplete(object):
     __metaclass__ = ABCMeta
 
     @abstractmethod
-    def get(self, query, instance):
+    def get(self, query, instance, shape):
         pass
 
     @abstractmethod

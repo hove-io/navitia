@@ -76,7 +76,7 @@ class RealtimeProxyManager(object):
                 rt_proxy = attr(id=proxy_id, object_id_tag=object_id_tag,
                                 instance=instance, **args)  # all services must have an ID
             except TypeError as e:
-                log.warn('impossible to build rt proxy {}, wrong arguments: {}'.format(proxy_id, e.message))
+                log.warn('impossible to build rt proxy {}, wrong arguments: {}'.format(proxy_id, e))
                 continue
 
             self.realtime_proxies[proxy_id] = rt_proxy

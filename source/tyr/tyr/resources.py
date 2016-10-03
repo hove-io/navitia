@@ -30,15 +30,19 @@
 # www.navitia.io
 
 from flask import abort, current_app, url_for, request
+from flask.globals import g
 import flask_restful
 from flask_restful import fields, marshal_with, marshal, reqparse, inputs
+
 import sqlalchemy
 from validate_email import validate_email
 from datetime import datetime
-from itertools import combinations, chain
 from tyr_user_event import TyrUserEvent
 from tyr_end_point_event import EndPointEventMessage, TyrEventsRabbitMq
+from tyr.helper import load_instance_config, get_instance_logger
 import logging
+import os
+import shutil
 
 from navitiacommon import models, parser_args_type
 from navitiacommon.default_traveler_profile_params import default_traveler_profile_params, acceptable_traveler_types
@@ -47,6 +51,8 @@ from navitiacommon.models import db
 from functools import wraps
 from validations import datetime_format
 from tasks import create_autocomplete_depot, remove_autocomplete_depot
+import ujson
+from navitiacommon import parser_args_type
 
 __ALL__ = ['Api', 'Instance', 'User', 'Key']
 
@@ -57,6 +63,26 @@ class FieldDate(fields.Raw):
             return value.isoformat()
         else:
             return 'null'
+
+
+class HasShape(fields.Raw):
+    def output(self, key, obj):
+        return obj.has_shape()
+
+
+class Shape(fields.Raw):
+    def __init__(self, **kwargs):
+        super(Shape, self).__init__(**kwargs)
+
+    def output(self, key, obj):
+        if hasattr(g, 'disable_geojson') and g.disable_geojson and obj.has_shape():
+            return {}
+
+        if obj.shape is not None:
+            return ujson.loads(obj.shape)
+
+        return obj.shape
+
 
 end_point_fields = {
     'id': fields.Raw,
@@ -101,7 +127,8 @@ instance_fields = {
     'night_bus_filter_max_factor': fields.Raw,
     'night_bus_filter_base_factor': fields.Raw,
     'priority': fields.Raw,
-    'bss_provider': fields.Boolean
+    'bss_provider': fields.Boolean,
+    'full_sn_geometries': fields.Boolean,
 }
 
 api_fields = {
@@ -133,7 +160,9 @@ user_fields = {
     'block_until': FieldDate,
     'type': fields.Raw(),
     'end_point': fields.Nested(end_point_fields),
-    'billing_plan': fields.Nested(billing_plan_fields)
+    'billing_plan': fields.Nested(billing_plan_fields),
+    'has_shape': HasShape,
+    'shape': Shape
 }
 
 user_fields_full = {
@@ -148,7 +177,9 @@ user_fields_full = {
         'api': fields.Nested(api_fields)
     })),
     'end_point': fields.Nested(end_point_fields),
-    'billing_plan': fields.Nested(billing_plan_fields)
+    'billing_plan': fields.Nested(billing_plan_fields),
+    'has_shape': HasShape,
+    'shape': Shape
 }
 
 jobs_fields = {
@@ -222,6 +253,26 @@ class Job(flask_restful.Resource):
             query = query.join(models.Instance)
             query = query.filter(models.Instance.name == instance_name)
         return {'jobs': query.order_by(models.Job.created_at.desc()).limit(30)}
+
+    def post(self, instance_name):
+        instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
+
+        if not request.files:
+            return {'message': 'the Data file is missing'}, 400
+        content = request.files['file']
+        logger = get_instance_logger(instance)
+        logger.info('content received: %s', content)
+
+        instance = load_instance_config(instance_name)
+        if not os.path.exists(instance.source_directory):
+            return ({'error': 'input folder unavailable'}, 500)
+
+        full_file_name = os.path.join(os.path.realpath(instance.source_directory), content.filename)
+        content.save(full_file_name + ".tmp")
+        shutil.move(full_file_name + ".tmp", full_file_name)
+
+        return {'message': 'OK'}, 200
+        
 
 class PoiType(flask_restful.Resource):
     @marshal_with(poi_types_fields)
@@ -396,6 +447,8 @@ class Instance(flask_restful.Resource):
                             location=('json', 'values'), default=instance.priority)
         parser.add_argument('bss_provider', type=bool, help='bss provider activation',
                             location=('json', 'values'), default=instance.bss_provider)
+        parser.add_argument('full_sn_geometries', type=bool, help='activation of full geometries',
+                            location=('json', 'values'), default=instance.full_sn_geometries)
         args = parser.parse_args()
 
         try:
@@ -429,7 +482,8 @@ class Instance(flask_restful.Resource):
                                        'night_bus_filter_base_factor',
                                        'successive_physical_mode_to_limit_id',
                                        'priority',
-                                       'bss_provider'])
+                                       'bss_provider',
+                                       'full_sn_geometries'])
             db.session.commit()
         except Exception:
             logging.exception("fail")
@@ -439,11 +493,19 @@ class Instance(flask_restful.Resource):
 
 class User(flask_restful.Resource):
     def get(self, user_id=None):
+        parser = reqparse.RequestParser()
+        parser.add_argument('disable_geojson',
+                            type=inputs.boolean,
+                            default=True,
+                            help='remove geojson from the response'
+                            )
         if user_id:
+            args = parser.parse_args()
+            g.disable_geojson = args['disable_geojson']
             user = models.User.query.get_or_404(user_id)
+
             return marshal(user, user_fields_full)
         else:
-            parser = reqparse.RequestParser()
             parser.add_argument('login', type=unicode, required=False,
                     case_sensitive=False, help='login')
             parser.add_argument('email', type=unicode, required=False,
@@ -453,13 +515,16 @@ class User(flask_restful.Resource):
             parser.add_argument('end_point_id', type=int)
             parser.add_argument('block_until', type=datetime_format, required=False,
                     case_sensitive=False)
+
             args = parser.parse_args()
+            g.disable_geojson = args['disable_geojson']
 
             if args['key']:
                 logging.debug(args['key'])
                 users = models.User.get_from_token(args['key'], datetime.now())
                 return marshal(users, user_fields)
             else:
+                del args['disable_geojson']
                 # dict comprehension would be better, but it's not in python 2.6
                 filter_params = dict((k, v) for k, v in args.items() if v)
 
@@ -467,7 +532,8 @@ class User(flask_restful.Resource):
                     users = models.User.query.filter_by(**filter_params).all()
                     return marshal(users, user_fields)
                 else:
-                    return marshal(models.User.query.all(), user_fields)
+                    users = models.User.query.all()
+                    return marshal(users, user_fields)
 
     def post(self):
         user = None
@@ -486,6 +552,7 @@ class User(flask_restful.Resource):
                             help='type of user: [with_free_instances, without_free_instances, super_user]',
                             location=('json', 'values'),
                             choices=['with_free_instances', 'without_free_instances', 'super_user'])
+        parser.add_argument('shape', type=parser_args_type.geojson_argument(None), required=False, location=('json', 'values'))
         args = parser.parse_args()
 
         if not validate_email(args['email'],
@@ -515,6 +582,7 @@ class User(flask_restful.Resource):
             user.type = args['type']
             user.end_point = end_point
             user.billing_plan = billing_plan
+            user.shape = ujson.dumps(args['shape'])
             db.session.add(user)
             db.session.commit()
 
@@ -544,6 +612,8 @@ class User(flask_restful.Resource):
                             help='block until argument is not correct', location=('json', 'values'))
         parser.add_argument('billing_plan_id', type=int, default=user.billing_plan_id,
                             help='billing id of the end_point', location=('json', 'values'))
+        parser.add_argument('shape', type=parser_args_type.geojson_argument(ujson.loads(user.shape)),
+                            default=ujson.loads(user.shape), required=False, location=('json', 'values'))
         args = parser.parse_args()
 
         if not validate_email(args['email'],
@@ -568,6 +638,7 @@ class User(flask_restful.Resource):
             user.block_until = args['block_until']
             user.end_point = end_point
             user.billing_plan = billing_plan
+            user.shape = ujson.dumps(args['shape'])
             db.session.commit()
 
             tyr_user_event = TyrUserEvent()
@@ -1108,4 +1179,3 @@ class AutocompleteParameter(flask_restful.Resource):
             logging.exception("fail")
             raise
         return ({}, 204)
-

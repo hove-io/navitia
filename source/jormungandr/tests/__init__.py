@@ -27,4 +27,4 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-import tests_mechanism
+from . import tests_mechanism

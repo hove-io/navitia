@@ -50,14 +50,60 @@ navitia::time_duration PathFinder::crow_fly_duration(const double distance) cons
 }
 
 static bool is_projected_on_same_edge(const ProjectionData& p1, const ProjectionData& p2){
-    return (p1[source_e] == p2[source_e] && p1[target_e] == p2[target_e])
-                || (p1[source_e] == p2[target_e] && p1[target_e] == p2[source_e]);
+    // On the same edge if both use the same two vertices, are on the same way with the same duration
+    return (((p1[source_e] == p2[source_e] && p1[target_e] == p2[target_e])
+                || (p1[source_e] == p2[target_e] && p1[target_e] == p2[source_e]))
+            && p1.edge.duration == p2.edge.duration && p1.edge.way_idx == p2.edge.way_idx);
 }
 
 navitia::time_duration PathFinder::path_duration_on_same_edge(const ProjectionData& p1, const ProjectionData& p2){
+    // Don't compute distance between p1 and p2, instead use distance from one of the vertex, to speed up the process (especially if we use geometries).
+    // We make sure to use the distance from the same vertex by checking if p1 and p2 are not projected on reversed edges.
+    bool is_reversed(p1[source_e] != p2[source_e] || (p1[source_e] == p1[target_e] && p1.edge.geom_idx != p2.edge.geom_idx));
     return crow_fly_duration(p1.real_coord.distance_to(p1.projected)
-                             + p1.projected.distance_to(p2.projected)
+                             + fabs(p1.distances[target_e] - p2.distances[is_reversed ? source_e : target_e])
                              + p2.projected.distance_to(p2.real_coord));
+}
+
+nt::LineString PathFinder::path_coordinates_on_same_edge(
+    const Edge &e,
+    const ProjectionData &p1,
+    const ProjectionData &p2
+){
+    nt::LineString result;
+    if(e.geom_idx != nt::invalid_idx) {
+        const Way* way = this->geo_ref.ways[e.way_idx];
+        /*
+         * Check if we want source or target distance (handle reverse edges).
+         * The edge e in parameter is representing p1, we are always using target_e for this one.
+         * If p2 is projected on the reversed edge, we are using the distance from source_e in order to compare distance to the same vertex.
+         * If the distance to the target from the starting point is lower than the one from the ending point we are reversing the geometry.
+         */
+        bool edge_dest_reversed(
+            p1[source_e] != p2[source_e] || (p1[source_e] == p1[target_e] && p1.edge.geom_idx != p2.edge.geom_idx)
+        );
+        bool reverse(p1.distances[target_e] < p2.distances[edge_dest_reversed ? source_e : target_e]);
+        const nt::GeographicalCoord &startBlade = (reverse ? p2.projected : p1.projected);
+        const nt::GeographicalCoord &endBlade = (reverse ? p1.projected : p2.projected);
+        result = type::split_line_at_point(
+            type::split_line_at_point(
+                way->geoms[e.geom_idx],
+                startBlade,
+                true
+            ),
+            endBlade,
+            false
+        );
+        if(reverse)
+            std::reverse(result.begin(), result.end());
+    }
+
+    if(result.empty()) {
+        result.push_back(p1.projected);
+        result.push_back(p2.projected);
+    }
+
+    return result;
 }
 
 
@@ -436,11 +482,32 @@ void PathFinder::add_custom_projections_to_path(Path& p, bool append_to_begin, c
         return (append_to_begin ? p.path_items.push_front(item) : p.path_items.push_back(item));
     };
 
-    edge_t start_e = boost::edge(projection[source_e], projection[target_e], geo_ref.graph).first;
-    Edge start_edge = geo_ref.graph[start_e];
+    Edge start_edge = projection.edge;
+    nt::LineString coords_to_add;
+    /*
+        Cut the projected edge.
+        We have a point p and a direction d.
+        Our chunk is something like
+                 _______/\           target_e
+        start_e /         \__p______/
+        The third parameter tell if we want the geometry before or after p.
+        If the direction is target_e, we want the end, otherwise the start.
+    */
+    if(start_edge.way_idx != nt::invalid_idx) {
+        Way* way = geo_ref.ways[start_edge.way_idx];
+        if(start_edge.geom_idx != nt::invalid_idx) {
+            coords_to_add = type::split_line_at_point(
+                way->geoms[start_edge.geom_idx],
+                projection.projected,
+                d == target_e
+            );
+        }
+    }
+    if(coords_to_add.empty()) {
+        coords_to_add.push_back(projection.projected);
+    }
 
     auto duration = crow_fly_duration(projection.distances[d]);
-
     //we need to update the total length
     p.duration += duration;
 
@@ -495,15 +562,31 @@ void PathFinder::add_custom_projections_to_path(Path& p, bool append_to_begin, c
         item_to_update(p).duration += duration;
     }
 
+    /*
+        Define the way we want to add the coordinates to the item to update
+        There is 4 possibilities :
+         - If we append to the beginning :
+           * if the projection is directed to target_e we're adding the coords to the beginning as is,
+           * otherwise we're reversing the coords before adding them
+         - If we append to the end :
+           * if the projection is directed to source_e we're adding the coords to the end as is,
+           * otherwise we're reversing the coords before adding them
+    */
     auto& coord_list = item_to_update(p).coordinates;
     if (append_to_begin) {
         if (coord_list.empty() || coord_list.front() != projection.projected) {
-            coord_list.push_front(projection.projected);
+            if(d == target_e)
+                coord_list.insert(coord_list.begin(), coords_to_add.begin(), coords_to_add.end());
+            else
+                coord_list.insert(coord_list.begin(), coords_to_add.rbegin(), coords_to_add.rend());
         }
     }
     else {
         if (coord_list.empty() || coord_list.back() != projection.projected) {
-            coord_list.push_back(projection.projected);
+            if(d == target_e)
+                coord_list.insert(coord_list.end(), coords_to_add.rbegin(), coords_to_add.rend());
+            else
+                coord_list.insert(coord_list.end(), coords_to_add.begin(), coords_to_add.end());
         }
     }
 }
@@ -515,30 +598,52 @@ PathFinder::get_path(const ProjectionData& target,
     if (! computation_launch || ! target.found || nearest_edge.first == bt::pos_infin)
         return {};
 
-    Path result;
-    if(is_projected_on_same_edge(starting_edge, target)){
+    Path result = this->build_path(target[nearest_edge.second]);
+    auto base_duration = result.duration;
+    add_projections_to_path(result, true);
+    //we need to put the end projections too
+    add_custom_projections_to_path(result, false, target, nearest_edge.second);
+
+    /*
+     * If we are on the same edge a non direct path might be faster, like if we have :
+     *
+     *                      |              .--------C-.
+     * ,-----------------A--|              |          |
+     * |                    |      or      |          |--------------
+     * '-----------------B--|              |          |
+     *                      |              '--------D-'
+     *
+     * Even if A and B are on the same edge it's faster to use the result of build_path taking the vertical edge.
+     * It's a bit different for an edge with the same vertex for source and target. For C and D we need to only take the one edge
+     * but passing by the vertex.
+     * To take a direct path on the same edge we need to :
+     *  - have two point projected on the same edge,
+     *  AND
+     *   - have an edge with a different vertex for source and target AND have build_path return a duration of 0 second
+     *   OR
+     *   - have a path duration on the same edge smaller than the duration of the complete path returned by Dijkstra
+     */
+    if(is_projected_on_same_edge(starting_edge, target) &&
+       ((!base_duration.total_seconds() && starting_edge[source_e] != starting_edge[target_e]) ||
+        path_duration_on_same_edge(starting_edge, target) <= result.duration)
+    ){
+        result.path_items.clear();
+        result.duration = {};
         PathItem item;
         item.duration = path_duration_on_same_edge(starting_edge, target);
-        item.coordinates.push_back(starting_edge.projected);
-        item.coordinates.push_back(target.projected);
 
         auto edge_pair = boost::edge(starting_edge[source_e], starting_edge[target_e], geo_ref.graph);
         if (! edge_pair.second) {
             throw navitia::exception("impossible to find an edge");
         }
-        Edge edge = geo_ref.graph[edge_pair.first];
-        item.way_idx = edge.way_idx;
+
+        item.way_idx = starting_edge.edge.way_idx;
         item.transportation = geo_ref.get_caracteristic(edge_pair.first);
+        nt::LineString geom = path_coordinates_on_same_edge(starting_edge.edge, starting_edge, target);
+        item.coordinates.insert(item.coordinates.begin(), geom.begin(), geom.end());
         result.path_items.push_back(item);
         result.duration += item.duration;
-    }else{
-        result = this->build_path(target[nearest_edge.second]);
-        add_projections_to_path(result, true);
-
-        //we need to put the end projections too
-        add_custom_projections_to_path(result, false, target, nearest_edge.second);
     }
-
 
     return result;
 }
@@ -551,7 +656,10 @@ void PathFinder::add_projections_to_path(Path& p, bool append_to_begin) const {
     const auto& coord_to_consider = append_to_begin ? path_item_to_consider.coordinates.front(): path_item_to_consider.coordinates.back();
 
     ProjectionData::Direction direction;
-    if (coord_to_consider == geo_ref.graph[starting_edge[source_e]].coord) {
+    // If source and target are the same keep the closest one
+    if(starting_edge[source_e] == starting_edge[target_e]) {
+        direction = starting_edge.distances[source_e] < starting_edge.distances[target_e] ? source_e : target_e;
+    } else if (coord_to_consider == geo_ref.graph[starting_edge[source_e]].coord) {
         direction = source_e;
     } else if (coord_to_consider == geo_ref.graph[starting_edge[target_e]].coord) {
         direction = target_e;
@@ -569,7 +677,6 @@ std::pair<navitia::time_duration, ProjectionData::Direction> PathFinder::update_
     assert(boost::edge(target[source_e], target[target_e], geo_ref.graph).second );
 
     computation_launch = true;
-
     if (distances[target[source_e]] == max || distances[target[target_e]] == max) {
         bool found = false;
         try {
@@ -652,7 +759,13 @@ Path create_path(const GeoRef& geo_ref,
         }
 
         nt::GeographicalCoord coord = geo_ref.graph[v].coord;
-        path_item.coordinates.push_back(coord);
+        if(edge.geom_idx != nt::invalid_idx)
+        {
+            auto geometry = geo_ref.ways[edge.way_idx]->geoms[edge.geom_idx];
+            path_item.coordinates.insert(path_item.coordinates.end(), geometry.begin(), geometry.end());
+        }
+        else
+            path_item.coordinates.push_back(coord);
         last_way = edge.way_idx;
         last_transport_carac = transport_carac;
         path_item.way_idx = edge.way_idx;

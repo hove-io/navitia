@@ -357,13 +357,12 @@ class TestJourneys(AbstractTestFixture):
 
         # with street network activated
         response = self.query_region(query + "&max_duration_to_pt=1")
-        assert('journeys' not in response)
-        #eq_(len(response['journeys']), 1)
-        #eq_(response['journeys'][0]['sections'][0]['from']['id'], 'stop_point:uselessA')
-        #eq_(response['journeys'][0]['sections'][0]['to']['id'], 'stop_point:stopA')
-        #eq_(response['journeys'][0]['sections'][0]['type'], 'street_network')
-        #eq_(response['journeys'][0]['sections'][0]['mode'], 'walking')
-        #eq_(response['journeys'][0]['sections'][0]['duration'], 0)
+        eq_(len(response['journeys']), 1)
+        eq_(response['journeys'][0]['sections'][0]['from']['id'], 'stop_point:uselessA')
+        eq_(response['journeys'][0]['sections'][0]['to']['id'], 'stop_point:stopA')
+        eq_(response['journeys'][0]['sections'][0]['type'], 'street_network')
+        eq_(response['journeys'][0]['sections'][0]['mode'], 'walking')
+        eq_(response['journeys'][0]['sections'][0]['duration'], 0)
 
 
 @dataset({})
@@ -549,13 +548,12 @@ class TestOnBasicRouting(AbstractTestFixture):
 
         # with street network activated
         response = self.query_region(query + "&max_duration_to_pt=1")
-        assert('journeys' not in response)
-        #eq_(len(response['journeys']), 1)
-        #eq_(response['journeys'][0]['sections'][0]['from']['id'], 'stop_point:uselessA')
-        #eq_(response['journeys'][0]['sections'][0]['to']['id'], 'A')
-        #eq_(response['journeys'][0]['sections'][0]['type'], 'crow_fly')
-        #eq_(response['journeys'][0]['sections'][0]['mode'], 'walking')
-        #eq_(response['journeys'][0]['sections'][0]['duration'], 0)
+        eq_(len(response['journeys']), 1)
+        eq_(response['journeys'][0]['sections'][0]['from']['id'], 'stop_point:uselessA')
+        eq_(response['journeys'][0]['sections'][0]['to']['id'], 'A')
+        eq_(response['journeys'][0]['sections'][0]['type'], 'crow_fly')
+        eq_(response['journeys'][0]['sections'][0]['mode'], 'walking')
+        eq_(response['journeys'][0]['sections'][0]['duration'], 0)
 
 
 @dataset({"main_routing_test": {}})

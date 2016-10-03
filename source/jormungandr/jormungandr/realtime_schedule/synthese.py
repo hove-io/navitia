@@ -190,7 +190,7 @@ class Synthese(RealtimeProxy):
         try:
             root = et.fromstring(xml)
         except et.ParseError as e:
-            logging.getLogger(__name__).error("invalid xml: {}".format(e.message))
+            logging.getLogger(__name__).error("invalid xml: {}".format(e))
             raise
         for xml_journey in root.findall('journey'):
             yield xml_journey

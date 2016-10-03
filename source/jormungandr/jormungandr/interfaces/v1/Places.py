@@ -32,8 +32,9 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask import Flask, request
 from flask.ext.restful import Resource, fields, reqparse, abort
+from flask.ext.restful.inputs import boolean
 from flask.globals import g
-from jormungandr import i_manager, timezone, global_autocomplete, bss_provider_manager
+from jormungandr import i_manager, timezone, global_autocomplete, bss_provider_manager, authentication
 from jormungandr.interfaces.v1.fields import disruption_marshaller
 from jormungandr.interfaces.v1.make_links import add_id_links
 from jormungandr.interfaces.v1.fields import place, NonNullList, NonNullNested, PbField, pagination,\
@@ -65,7 +66,7 @@ def create_admin_field(geocoding):
         return None
     admin_list = geocoding.get('admin', {})
     response = []
-    for level, name in admin_list.iteritems():
+    for level, name in admin_list.items():
         response.append({
             "insee": None,
             "name": name,
@@ -225,12 +226,17 @@ class Places(ResourceUri):
                                                      " Note: it will mainly change the disruptions that concern "
                                                      "the object The timezone should be specified in the format,"
                                                      " else we consider it as UTC")
+        self.parsers['get'].add_argument("disable_geojson", type=boolean, default=False,
+                            description="remove geojson from the response")
 
     def get(self, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
         self._register_interpreted_parameters(args)
         if len(args['q']) == 0:
             abort(400, message="Search word absent")
+
+        if args['disable_geojson']:
+            g.disable_geojson = True
 
         # If a region or coords are asked, we do the search according
         # to the region, else, we do a word wide search
@@ -241,7 +247,11 @@ class Places(ResourceUri):
             response = i_manager.dispatch(args, "places", instance_name=instance)
         else:
             if global_autocomplete:
-                bragi_response = global_autocomplete.get(args, None)
+                user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=False)
+                shape = None
+                if user:
+                    shape = user.shape
+                bragi_response = global_autocomplete.get(args, None, shape=shape)
                 response = marshal(bragi_response, geocodejson)
             else:
                 raise TechnicalError('world wide autocompletion service not available')
@@ -255,11 +265,15 @@ class PlaceUri(ResourceUri):
         self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
-        self.parsers["get"].add_argument("bss_stands", type=bool, default=True,
+        self.parsers["get"].add_argument("bss_stands", type=boolean, default=True,
                                          description="Show bss stands availability")
+        self.parsers['get'].add_argument("disable_geojson", type=boolean, default=False,
+                            description="remove geojson from the response")
         args = self.parsers["get"].parse_args()
         if args["bss_stands"]:
             self.method_decorators.insert(1, ManageStands(self, 'places'))
+        if args['disable_geojson']:
+            g.disable_geojson = True
 
     @marshal_with(places)
     def get(self, id, region=None, lon=None, lat=None):
@@ -312,7 +326,7 @@ class PlacesNearby(ResourceUri):
         self.parsers["get"].add_argument("start_page", type=int, default=0,
                                          description="The page number of the\
                                          ptref result")
-        self.parsers["get"].add_argument("bss_stands", type=bool, default=True,
+        self.parsers["get"].add_argument("bss_stands", type=boolean, default=True,
                                          description="Show bss stands availability")
 
         self.parsers["get"].add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
@@ -321,6 +335,8 @@ class PlacesNearby(ResourceUri):
                                                      " Note: it will mainly change the disruptions that concern "
                                                      "the object The timezone should be specified in the format,"
                                                      " else we consider it as UTC")
+        self.parsers['get'].add_argument("disable_geojson", type=boolean, default=False,
+                            description="remove geojson from the response")
         args = self.parsers["get"].parse_args()
         if args["bss_stands"]:
             self.method_decorators.insert(1, ManageStands(self, 'places_nearby'))
@@ -330,6 +346,8 @@ class PlacesNearby(ResourceUri):
         self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
         args = self.parsers["get"].parse_args()
+        if args['disable_geojson']:
+            g.disable_geojson = True
         if uri:
             if uri[-1] == '/':
                 uri = uri[:-1]

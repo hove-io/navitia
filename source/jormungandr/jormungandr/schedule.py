@@ -109,22 +109,22 @@ def _update_stop_schedule(stop_schedule, next_realtime_passages):
 
 def _create_template_from_passage(passage):
     template = deepcopy(passage)
-    template.pt_display_informations.ClearField(b"headsign")
-    template.pt_display_informations.ClearField(b"direction")
-    template.pt_display_informations.ClearField(b"physical_mode")
-    template.pt_display_informations.ClearField(b"description")
-    template.pt_display_informations.ClearField(b"uris")
-    template.pt_display_informations.ClearField(b"has_equipments")
+    template.pt_display_informations.ClearField(str("headsign"))
+    template.pt_display_informations.ClearField(str("direction"))
+    template.pt_display_informations.ClearField(str("physical_mode"))
+    template.pt_display_informations.ClearField(str("description"))
+    template.pt_display_informations.ClearField(str("uris"))
+    template.pt_display_informations.ClearField(str("has_equipments"))
     del template.pt_display_informations.messages[:]
     del template.pt_display_informations.impact_uris[:]
     del template.pt_display_informations.notes[:]
     del template.pt_display_informations.headsigns[:]
-    template.stop_date_time.ClearField(b"arrival_date_time")
-    template.stop_date_time.ClearField(b"departure_date_time")
-    template.stop_date_time.ClearField(b"base_arrival_date_time")
-    template.stop_date_time.ClearField(b"base_departure_date_time")
-    template.stop_date_time.ClearField(b"properties")
-    template.stop_date_time.ClearField(b"data_freshness")
+    template.stop_date_time.ClearField(str("arrival_date_time"))
+    template.stop_date_time.ClearField(str("departure_date_time"))
+    template.stop_date_time.ClearField(str("base_arrival_date_time"))
+    template.stop_date_time.ClearField(str("base_departure_date_time"))
+    template.stop_date_time.ClearField(str("properties"))
+    template.stop_date_time.ClearField(str("data_freshness"))
     return template
 
 

@@ -185,6 +185,13 @@ struct PathFinder {
     //return the duration between two projection on the same edge
     navitia::time_duration path_duration_on_same_edge(const ProjectionData& p1, const ProjectionData& p2);
 
+    //return the real geometry between two projection on the same edge
+    type::LineString path_coordinates_on_same_edge(
+        const Edge& e,
+        const ProjectionData& p1,
+        const ProjectionData& p2
+    );
+
 private:
     ///return the time the travel the distance at the current speed (used for projections)
     navitia::time_duration crow_fly_duration(const double val) const;

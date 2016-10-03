@@ -49,12 +49,18 @@ struct GraphBuilder{
     /// upsert an edge
     GraphBuilder& add_edge(std::string source_name, std::string target_name, navitia::time_duration dur = {}, bool bidirectionnal = false);
 
+    GraphBuilder& add_geom(edge_t edge_ref, const nt::LineString& geom);
+
     /// Syntaxic sugar on node creation
     GraphBuilder& operator()(std::string node_name, float x, float y) { return add_vertex(node_name, x, y);}
 
     /// Syntaxic sugar on edge creation
     GraphBuilder& operator()(std::string source_name, std::string target_name, navitia::time_duration dur = {}, bool bidirectionnal = false) {
         return add_edge(source_name, target_name, dur, bidirectionnal);
+    }
+
+    GraphBuilder& operator()(edge_t edge_ref, const nt::LineString& geom) {
+        return add_geom(edge_ref, geom);
     }
 
     vertex_t get(const std::string & node_name);

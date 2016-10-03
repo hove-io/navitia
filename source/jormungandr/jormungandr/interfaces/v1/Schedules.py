@@ -110,6 +110,8 @@ class Schedules(ResourceUri, ResourceUtc):
                                             " Default is the current date and it is mainly used for debug.")
         parser_get.add_argument("items_per_schedule", type=natural, default=10000,
                                 description="maximum number of date_times per schedule")
+        parser_get.add_argument("disable_geojson", type=boolean, default=False,
+                            description="remove geojson from the response")
 
         self.method_decorators.append(complete_links(self))
 
@@ -121,6 +123,9 @@ class Schedules(ResourceUri, ResourceUtc):
             args['forbidden_uris[]'].append(forbid_id)
 
         args["nb_stoptimes"] = args["count"]
+
+        if args['disable_geojson']:
+            g.disable_geojson = True
 
         # retrocompatibility
         if args['max_date_times'] is not None:

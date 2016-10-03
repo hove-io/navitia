@@ -69,7 +69,7 @@ class SectionLinks(fields.Raw):
     def output(self, key, obj):
         links = None
         try:
-            if obj.HasField(b"uris"):
+            if obj.HasField(str("uris")):
                 links = obj.uris.ListFields()
         except ValueError:
             return None
@@ -78,7 +78,7 @@ class SectionLinks(fields.Raw):
             for type_, value in links:
                 response.append({"type": type_.name, "id": value})
 
-        if obj.HasField(b'pt_display_informations'):
+        if obj.HasField(str('pt_display_informations')):
             for value in obj.pt_display_informations.notes:
                 response.append({"type": 'notes', "id": value.uri, 'value': value.note})
         return response
@@ -453,7 +453,7 @@ class Journeys(JourneyCommon):
 
             response = i_manager.dispatch(args, api, instance_name=self.region)
 
-            if response.HasField(b'error') \
+            if response.HasField(str('error')) \
                     and len(possible_regions) != 1:
                 logging.getLogger(__name__).debug("impossible to find journeys for the region {},"
                                                  " we'll try the next possible region ".format(r))
@@ -476,7 +476,7 @@ class Journeys(JourneyCommon):
             return response
 
         for response in responses.values():
-            if not response.HasField(b"error"):
+            if not response.HasField(str("error")):
                 return response
 
 

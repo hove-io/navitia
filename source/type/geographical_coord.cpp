@@ -140,6 +140,50 @@ GeographicalCoord project(const MultiLineString& multiline, const GeographicalCo
     return projected;
 }
 
+LineString split_line_at_point(const LineString& ls, const GeographicalCoord& blade, bool end_of_geom) {
+    LineString result;
+    if(ls.size() > 1) {
+        for(auto coord = ls.begin(); coord < ls.end() - 1; coord++) {
+            /* Check if blade is between the current chunk of geometry
+               We have a chunk a---------b, we want to know if c is in the segment
+               We compute the distances ab, ac, and cb.
+               There are three possibilities:
+               - The 3 points form a triangle => ac+bc > ab
+               - They are collinear and c is outside the ab segment => ac+bc > ab
+               - They are collinear and c is inside the ab segment => ac+bc = ab
+            */
+            float ab = coord->distance_to(*(coord + 1));
+            float ac = blade.distance_to(*coord);
+            float bc = blade.distance_to(*(coord + 1));
+            if(std::abs(ac + bc - ab) < 0.1) {
+                if(end_of_geom) {
+                    result.push_back(blade);
+                    result.insert(result.end(), coord + 1, ls.end());
+                }
+                else {
+                    result.insert(result.begin(), ls.begin(), coord +1);
+                    result.push_back(blade);
+                }
+                break;
+            }
+        }
+    }
+    return result;
+}
+
+double real_distance_from_extremity(const LineString& ls, const GeographicalCoord& c, bool distance_from_target) {
+    LineString splitted_geom(split_line_at_point(ls, c, distance_from_target));
+
+    double distance(0);
+    if(splitted_geom.size() > 1) {
+        for(auto it = splitted_geom.begin(); it < splitted_geom.end() - 1 ; it++) {
+            distance += fabs(it->distance_to(*(it+1)));
+        }
+    }
+
+    return distance;
+}
+
 }}// namespace navitia::type
 
 navitia::type::GeographicalCoord in_the_right_interval(double lon, double lat) {

@@ -429,6 +429,13 @@ def bragi_geocodejson_compatibility_test():
     assert region_list.get(4) == 'Nord-Pas-de-Calais-Picardie'
     assert region_list.get(7) == 'Saint-Quentin'
 
+
+def geojson():
+    return {"type": "Feature",
+              "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
+              "properties": {"prop0": "value0"}
+            }
+
 def bragi_call_test():
     """
     test the whole autocomplete with a geocodejson service
@@ -452,7 +459,16 @@ def bragi_call_test():
 
     # we mock the http call to return the hard coded mock_response
     with mock.patch('requests.get', mock_requests.get):
-        raw_response = bragi.get({'q': 'rue bobette'}, instance=None)
+        raw_response = bragi.get({'q': 'rue bobette'}, instance=None, shape=None)
+        places = get_response(raw_response).get('places')
+        assert len(places) == 4
+        bragi_house_jaures_response_check(places[0])
+        bragi_house_lefebvre_response_check(places[1])
+        bragi_street_response_check(places[2])
+        bragi_admin_response_check(places[3])
+
+    with mock.patch('requests.post', mock_requests.get):
+        raw_response = bragi.get({'q': 'rue bobette'}, instance=None, shape=geojson())
         places = get_response(raw_response).get('places')
         assert len(places) == 4
         bragi_house_jaures_response_check(places[0])

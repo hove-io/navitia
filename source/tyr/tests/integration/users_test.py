@@ -7,9 +7,108 @@ from tyr.rabbit_mq_handler import RabbitMqHandler
 from tyr import app
 import urllib
 
+@pytest.fixture
+def geojson_feature_collection():
+    return {"type": "FeatureCollection",
+         "features": [
+             {"type": "Feature",
+              "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
+              "properties": {"prop0": "value0"}
+              },
+             {"type": "Feature",
+              "geometry": {
+                  "type": "LineString",
+                  "coordinates": [
+                      [102.0, 0.0], [103.0, 1.0], [104.0, 0.0], [105.0, 1.0]
+                  ]
+              },
+              "properties": {
+                  "prop0": "value0",
+                  "prop1": 0.0
+              }
+              },
+             {"type": "Feature",
+              "geometry": {
+                  "type": "Polygon",
+                  "coordinates": [
+                      [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
+                       [100.0, 1.0], [100.0, 0.0]]
+                  ]
+              },
+              "properties": {
+                  "prop0": "value0",
+                  "prop1": {"this": "that"}
+              }
+              }
+         ]
+         }
 
 @pytest.fixture
-def create_user():
+def geojson_feature():
+    return {"features": [
+             {"type": "Feature",
+              "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
+              "properties": {"prop0": "value0"}
+              },
+             {"type": "Feature",
+              "geometry": {
+                  "type": "LineString",
+                  "coordinates": [
+                      [102.0, 0.0], [103.0, 1.0], [104.0, 0.0], [105.0, 1.0]
+                  ]
+              },
+              "properties": {
+                  "prop0": "value0",
+                  "prop1": 0.0
+              }
+              },
+             {"type": "Feature",
+              "geometry": {
+                  "type": "Polygon",
+                  "coordinates": [
+                      [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
+                       [100.0, 1.0], [100.0, 0.0]]
+                  ]
+              },
+              "properties": {
+                  "prop0": "value0",
+                  "prop1": {"this": "that"}
+              }
+              }
+         ]
+         }
+
+@pytest.fixture
+def geojson():
+    return {"type": "Feature",
+              "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
+              "properties": {"prop0": "value0"}
+            }
+
+@pytest.fixture
+def invalid_geojsonfixture():
+    return {"type": "FeatureCollection",
+         "features": [
+             {"type": "Feature",
+              "geometry": {"type": "Point", "coordinates": []},
+              "properties": {"prop0": "value0"}
+              },
+         ]
+         }
+
+@pytest.fixture
+def create_user(geojson_feature_collection):
+    with app.app_context():
+        user = models.User('test', 'test@example.com')
+        user.end_point = models.EndPoint.get_default()
+        user.billing_plan = models.BillingPlan.get_default(user.end_point)
+        user.shape = json.dumps(geojson_feature_collection)
+        models.db.session.add(user)
+        models.db.session.commit()
+        return user.id
+
+@pytest.fixture
+def create_user_without_shape():
     with app.app_context():
         user = models.User('test', 'test@example.com')
         user.end_point = models.EndPoint.get_default()
@@ -32,7 +131,7 @@ def mock_rabbit():
         yield m
 
 @pytest.fixture
-def create_multiple_users(request):
+def create_multiple_users(request, geojson_feature_collection):
     with app.app_context():
         end_point = models.EndPoint()
         end_point.name = 'myEndPoint'
@@ -43,6 +142,7 @@ def create_multiple_users(request):
         user1 = models.User('foo', 'foo@example.com')
         user1.end_point = end_point
         user1.billing_plan = billing_plan
+        user1.shape = json.dumps(geojson_feature_collection)
 
         user2 = models.User('foodefault', 'foo@example.com')
         user2.end_point = models.EndPoint.get_default()
@@ -68,29 +168,91 @@ def create_multiple_users(request):
 
     return d
 
-
 def test_get_users_empty():
     resp = api_get('/v0/users/')
     assert resp == []
 
-def test_add_user(mock_rabbit):
+def test_add_user(mock_rabbit, geojson_feature_collection):
     """
     creation of a user passing arguments as a json
     """
-    user = {'login': 'user1', 'email': 'user1@example.com'}
-    resp = api_post('/v0/users/', data=json.dumps(user), content_type='application/json')
+    user = {'login': 'user1', 'email': 'user1@example.com', 'shape': geojson_feature_collection, 'has_shape': True}
+    data = json.dumps(user)
+    resp = api_post('/v0/users/', data=data, content_type='application/json')
     def check(u):
-        for k,_ in user.iteritems():
+        gen = (k for k in user if k is not 'shape')
+        for k in gen:
             assert u[k] == user[k]
         assert u['end_point']['name'] == 'navitia.io'
         assert u['type'] == 'with_free_instances'
         assert u['block_until'] == None
+
     check(resp)
+    assert resp['shape'] == geojson_feature_collection
 
     resp = api_get('/v0/users/')
     assert len(resp) == 1
     check(resp[0])
+    assert resp[0]['shape'] == {}
     assert mock_rabbit.called
+
+def test_add_user_with_geojson_feature(mock_rabbit, geojson_feature):
+    """
+    creation of a user passing arguments as a json
+    """
+    user = {'login': 'user1', 'email': 'user1@example.com', 'shape': geojson_feature, 'has_shape': True}
+    data = json.dumps(user)
+    resp = api_post('/v0/users/', data=data, content_type='application/json')
+    def check(u):
+        gen = (k for k in user if k is not 'shape')
+        for k in gen:
+            assert u[k] == user[k]
+        assert u['end_point']['name'] == 'navitia.io'
+        assert u['type'] == 'with_free_instances'
+        assert u['block_until'] == None
+
+    check(resp)
+    assert resp['shape'] == geojson_feature
+
+    resp = api_get('/v0/users/')
+    assert len(resp) == 1
+    check(resp[0])
+    assert resp[0]['shape'] == {}
+    assert mock_rabbit.called
+
+def test_add_user_with_geojson(mock_rabbit, geojson):
+    """
+    creation of a user passing arguments as a json
+    """
+    user = {'login': 'user1', 'email': 'user1@example.com', 'shape': geojson, 'has_shape': True}
+    data = json.dumps(user)
+    resp = api_post('/v0/users/', data=data, content_type='application/json')
+    def check(u):
+        gen = (k for k in user if k is not 'shape')
+        for k in gen:
+            assert u[k] == user[k]
+        assert u['end_point']['name'] == 'navitia.io'
+        assert u['type'] == 'with_free_instances'
+        assert u['block_until'] == None
+
+    check(resp)
+    assert resp['shape'] == geojson
+
+    resp = api_get('/v0/users/')
+    assert len(resp) == 1
+    check(resp[0])
+    assert resp[0]['shape'] == {}
+    assert mock_rabbit.called
+
+def test_add_user_with_invalid_geojson(mock_rabbit, invalid_geojsonfixture):
+    """
+    creation of a user passing arguments as a json
+    """
+    user = {'login': 'user1', 'email': 'user1@example.com', 'shape': invalid_geojsonfixture, 'has_shape': True}
+    data = json.dumps(user)
+    resp, status = api_post('/v0/users/', check=False, data=data, content_type='application/json')
+    assert status == 400
+    assert mock_rabbit.call_count == 0
 
 def test_add_user_with_plus(mock_rabbit):
     """
@@ -273,20 +435,24 @@ def test_update_invalid_user(mock_rabbit):
     assert status == 404
     assert mock_rabbit.call_count == 0
 
-def test_update_user(create_multiple_users, mock_rabbit):
+def test_update_user(create_multiple_users, mock_rabbit, geojson_feature):
     """
     we update a user
     """
-    user = {'login': 'user1', 'email': 'user1@example.com'}
+    user = {'login': 'user1', 'email': 'user1@example.com', 'shape': geojson_feature}
     resp = api_put('/v0/users/{}'.format(create_multiple_users['user1']), data=json.dumps(user),
                    content_type='application/json')
+    def check(u):
+        for k,_ in user.iteritems():
+            assert u[k] == user[k]
+        assert resp['id'] == create_multiple_users['user1']
+        assert resp['login'] == user['login']
+        assert resp['email'] == user['email']
 
-    assert resp['id'] == create_multiple_users['user1']
-    assert resp['login'] == user['login']
-    assert resp['email'] == user['email']
+    check(resp)
     assert mock_rabbit.called
 
-def test_update_block_until(create_multiple_users, mock_rabbit):
+def test_update_block_until(create_multiple_users, mock_rabbit, geojson_feature_collection):
     """
     we update a user
     """
@@ -295,7 +461,47 @@ def test_update_block_until(create_multiple_users, mock_rabbit):
                    content_type='application/json')
     assert resp['id'] == create_multiple_users['user1']
     assert resp['block_until'] == '2016-01-28T11:12:00'
+    assert resp['shape'] == geojson_feature_collection
     assert mock_rabbit.called
+
+def test_update_shape(create_multiple_users, mock_rabbit, geojson_feature):
+    """
+    we update a user
+    """
+    user = {'shape': geojson_feature}
+    resp = api_put('/v0/users/{}'.format(create_multiple_users['user1']), data=json.dumps(user),
+                   content_type='application/json')
+    def check(u):
+        for k,_ in user.iteritems():
+            assert u[k] == user[k]
+        assert resp['id'] == create_multiple_users['user1']
+    check(resp)
+    assert mock_rabbit.called
+
+
+def test_update_shape_with_none(create_multiple_users, mock_rabbit):
+    """
+    we update a user
+    """
+    user = {'shape': None}
+    resp = api_put('/v0/users/{}'.format(create_multiple_users['user1']), data=json.dumps(user),
+                   content_type='application/json')
+    assert resp['id'] == create_multiple_users['user1']
+    assert resp['shape'] == None
+    assert mock_rabbit.called
+
+
+def test_update_shape_with_empty(create_multiple_users, mock_rabbit, geojson_feature_collection):
+    """
+    we update a user
+    """
+    user = {'shape': {}}
+    resp = api_put('/v0/users/{}'.format(create_multiple_users['user1']), data=json.dumps(user),
+                   content_type='application/json')
+    assert resp['id'] == create_multiple_users['user1']
+    assert resp['shape'] == geojson_feature_collection
+    assert mock_rabbit.called
+
 
 def test_full_registration_then_deletion(create_instance, mock_rabbit):
     """
@@ -352,3 +558,84 @@ def test_deletion_keys_and_auth(create_instance, mock_rabbit):
                            content_type='application/json')
     assert len(resp_auth['authorizations']) == 0
     assert mock_rabbit.called
+
+
+def test_get_user_with_shape(create_user, geojson_feature_collection):
+    """
+    We start by creating the user with a shape,
+    and we test that the attribute shape={} and has_shape = True
+    """
+    print api_get('/v0/users')
+    resp = api_get('/v0/users/{}'.format(create_user))
+
+    assert resp['has_shape'] == True
+    assert resp['shape'] == {}
+
+
+def test_get_user_with_shape_and_disable_geojson_param_false(create_user, geojson_feature_collection):
+    """
+    We start by creating the user with a shape.
+    We request the user with parameter disable_geojson=true
+    We test that shape = geojson and has_shape = True
+    """
+    resp = api_get('/v0/users/{}?disable_geojson=false'.format(create_user))
+
+    assert resp['has_shape'] == True
+    assert resp['shape'] == geojson_feature_collection
+
+def test_get_user_without_shape(create_user_without_shape):
+    """
+    We start by creating the user without shape,
+    and we test that  shape = None and has_shape = False
+    """
+    resp = api_get('/v0/users/{}'.format(create_user_without_shape))
+    print resp['shape']
+    print geojson_feature
+    assert resp['has_shape'] == False
+    assert resp['shape'] == None
+
+
+def test_get_user_without_shape_and_disable_geojson_param_false(create_user_without_shape):
+    """
+    We start by creating the user without shape.
+    We request the user with parameter disable_geojson=true
+    We test that shape = None and has_shape = False
+    """
+    resp = api_get('/v0/users/{}?disable_geojson=false'.format(create_user_without_shape))
+
+    assert resp['has_shape'] == False
+    assert resp['shape'] == None
+
+
+def test_get_users(create_multiple_users):
+    """
+    We start by creating a user with a shape and a user without shape,
+    we test that:
+    user1.has_shape = True
+    user1.shape = {}
+    user2.has_shape = False
+    user2.shape = None
+    """
+    resp = api_get('/v0/users')
+
+    assert resp[0]['has_shape'] == True
+    assert resp[0]['shape'] == {}
+    assert resp[1]['has_shape'] == False
+    assert resp[1]['shape'] == None
+
+
+def test_get_users_with_disable_geojson_false(create_multiple_users, geojson_feature_collection):
+    """
+    We start by creating a user with a shape and a user without shape,
+    we test that requesting /users?disable_geojson=false:
+    user1.has_shape = True
+    user1.shape = geojson
+    user2.has_shape = False
+    user2.shape = None
+    """
+    resp = api_get('/v0/users?disable_geojson=false')
+
+    assert resp[0]['has_shape'] == False
+    assert resp[0]['shape'] == None
+    assert resp[1]['has_shape'] == True
+    assert resp[1]['shape'] == geojson_feature_collection

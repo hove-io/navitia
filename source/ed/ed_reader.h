@@ -56,7 +56,7 @@ struct EdReader{
         }
     }
 
-    void fill(navitia::type::Data& nav_data, const double min_non_connected_graph_ratio);
+    void fill(navitia::type::Data& nav_data, const double min_non_connected_graph_ratio, const bool export_georef_edges_geometries);
 
     //for admin main stop areas, we need this temporary map
     //(we can't use an index since the link is between georef and navitia, and those modules are loaded separatly)
@@ -144,7 +144,7 @@ private:
     void fill_ways(navitia::type::Data& data, pqxx::work& work);
     void fill_house_numbers(navitia::type::Data& data, pqxx::work& work);
     void fill_vertex(navitia::type::Data& data, pqxx::work& work);
-    void fill_graph(navitia::type::Data& data, pqxx::work& work);
+    void fill_graph(navitia::type::Data& data, pqxx::work& work, bool export_georef_edges_geometries);
     boost::optional<navitia::time_res_traits::sec_type>
     get_duration (nt::Mode_e mode, float len, uint64_t source, uint64_t target);
     void fill_vector_to_ignore(navitia::type::Data& data, pqxx::work& work, const double percent_delete);
