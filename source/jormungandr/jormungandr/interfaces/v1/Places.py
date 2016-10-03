@@ -34,7 +34,7 @@ from flask import Flask, request
 from flask.ext.restful import Resource, fields, reqparse, abort
 from flask.ext.restful.inputs import boolean
 from flask.globals import g
-from jormungandr import i_manager, timezone, global_autocomplete, bss_provider_manager
+from jormungandr import i_manager, timezone, global_autocomplete, bss_provider_manager, authentication
 from jormungandr.interfaces.v1.fields import disruption_marshaller
 from jormungandr.interfaces.v1.make_links import add_id_links
 from jormungandr.interfaces.v1.fields import place, NonNullList, NonNullNested, PbField, pagination,\
@@ -247,7 +247,11 @@ class Places(ResourceUri):
             response = i_manager.dispatch(args, "places", instance_name=instance)
         else:
             if global_autocomplete:
-                bragi_response = global_autocomplete.get(args, None)
+                user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=False)
+                shape = None
+                if user:
+                    shape = user.shape
+                bragi_response = global_autocomplete.get(args, None, shape=shape)
                 response = marshal(bragi_response, geocodejson)
             else:
                 raise TechnicalError('world wide autocompletion service not available')
