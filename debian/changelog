@@ -1,3 +1,27 @@
+navitia2 (2.18.0) unstable; urgency=low
+
+  * autocomplete: Use user shape in autocomplete  <https://github.com/CanalTP/navitia/pull/1793>
+  * Georef: Accurate street network geometries  <https://github.com/CanalTP/navitia/pull/1717>
+  * Doc: fix JSFiddle resource name  <https://github.com/CanalTP/navitia/pull/1778>
+  * Tyr: Update shape on user  <https://github.com/CanalTP/navitia/pull/1787>
+  * Tyr: List users with shape  <https://github.com/CanalTP/navitia/pull/1789>
+  * Tyr: add ujson in requirements  <https://github.com/CanalTP/navitia/pull/1794>
+  * Tyr: fix tests relative path  <https://github.com/CanalTP/navitia/pull/1796>
+  * Tyr: [Api users] disable_geojson=True by default  <https://github.com/CanalTP/navitia/pull/1797>
+  * CMake: add python protobuf files to CMake protobuf target  <https://github.com/CanalTP/navitia/pull/1779>
+  * Tyr: post data  <https://github.com/CanalTP/navitia/pull/1784>
+  * Tyr: change shape validation error  <https://github.com/CanalTP/navitia/pull/1792>
+  * georef: remove curly brackets  <https://github.com/CanalTP/navitia/pull/1790>
+  * Tyr: requirements  <https://github.com/CanalTP/navitia/pull/1785>
+  * Jormun: Can't explicitly disable bss_stands or disable_geojson  <https://github.com/CanalTP/navitia/pull/1783>
+  * tyr: Add shape on user  <https://github.com/CanalTP/navitia/pull/1780>
+  * Jormungandr: change for python 3  <https://github.com/CanalTP/navitia/pull/1720>
+  * jormun: remove geojson from stop_schedule too!  <https://github.com/CanalTP/navitia/pull/1772>
+  * Test: clean up volumes after teardown  <https://github.com/CanalTP/navitia/pull/1770>
+  * routing: activate street network at stop points  <https://github.com/CanalTP/navitia/pull/1762>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Mon, 03 Oct 2016 12:10:11 +0100
+
 navitia2 (2.17.1) unstable; urgency=low
 
   * Kraken: Stop collecting weak_ptr lazily  <https://github.com/CanalTP/navitia/pull/1801>
