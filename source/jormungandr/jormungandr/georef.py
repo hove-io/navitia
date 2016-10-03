@@ -93,7 +93,18 @@ class Kraken(object):
         req.ptref.filter = 'stop_area.uri = {uri}'.format(uri=uri)
 
         result = self.instance.send_and_receive(req)
-        if len(result.stop_points) == 0:
+        if not result.stop_points:
             logging.getLogger(__name__).info('PtRef, Unable to find stop_point with filter {}'.
                                              format(req.ptref.filter))
+        return result.stop_points
+
+    def get_stop_points_from_uri(self, uri):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.PTREFERENTIAL
+        req.ptref.requested_type = type_pb2.STOP_POINT
+        req.ptref.count = 100
+        req.ptref.start_page = 0
+        req.ptref.depth = 1
+        req.ptref.filter = 'stop_point.uri = {uri}'.format(uri=stop_point_uri)
+        result = self.instance.send_and_receive(req)
         return result.stop_points

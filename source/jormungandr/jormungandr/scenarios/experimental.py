@@ -45,7 +45,7 @@ def create_crowfly(_from, to, begin, end, mode='walking'):
     section.type = response_pb2.CROW_FLY
     section.origin.CopyFrom(_from)
     section.destination.CopyFrom(to)
-    section.duration = end-begin;
+    section.duration = end-begin
     section.begin_date_time = begin
     section.end_date_time = end
     section.street_network.mode = response_pb2.Walking
@@ -159,7 +159,7 @@ class Scenario(new_default.Scenario):
         # When max_duration is 0, there is no need to compute the fallback to pt, except if place is a stop_point or a
         # stop_area
         if max_duration == 0:
-            if 'stop_point' in place.uri:
+            if instance.georef.get_stop_points_from_uri(place.uri):
                 return {place.uri: 0}
             else:
                 return {}
