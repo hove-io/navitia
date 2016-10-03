@@ -105,6 +105,6 @@ class Kraken(object):
         req.ptref.count = 100
         req.ptref.start_page = 0
         req.ptref.depth = 1
-        req.ptref.filter = 'stop_point.uri = {uri}'.format(uri=stop_point_uri)
+        req.ptref.filter = 'stop_point.uri = {uri}'.format(uri=uri)
         result = self.instance.send_and_receive(req)
         return result.stop_points
