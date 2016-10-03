@@ -1029,7 +1029,9 @@ direction       | int                    | Angle (in degree) between the previou
 <a name="isochrones_api"></a>Isochrones (currently in Beta)
 ---------------------------------------
 
->[Try it on Navitia playground (click on "MAP" buttons for "wow effect")](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fisochrones%3Ffrom%3D2.377097%3B48.846905%26datetime%3D20160505T080000%26max_duration%3D2000%26min_duration%3D1000)
+>[Try a simple example on Navitia playground](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fisochrones%3Ffrom%3D2.377097%3B48.846905%26max_duration%3D2000%26min_duration%3D1000)
+
+>[Try a multi-color example on Navitia playground (click on "MAP" buttons for "wow effect")](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fisochrones%3Ffrom%3D2.377097%253B48.846905%26boundary_duration%255B%255D%3D1000%26boundary_duration%255B%255D%3D2000%26boundary_duration%255B%255D%3D3000%26&token=3b036afe-0110-4202-b9ed-99718476c2e0)
 
 ``` shell
 # Request
@@ -1110,11 +1112,18 @@ You just have to verify that the coordinates of the geocoded object are inside t
 | nop       | from                    | id            | The id of the departure of your journey. Required to compute isochrones "departure after" |               |
 | nop       | to                      | id            | The id of the arrival of your journey. Required to compute isochrones "arrival before"    |               |
 | yep       | datetime                | [iso-date-time](#iso-date-time) | Date and time to go                                                                          |               |
+| yep       | boundary_duration[]  | int   | A duration delineating a reachable area (in seconds). Using multiple boundary makes map more readable |      |
 | nop       | forbidden_uris[]        | id            | If you want to avoid lines, modes, networks, etc.</br> Note: the forbidden_uris[] concern only the public transport objects. You can't for example forbid the use of the bike with them, you have to set the fallback modes for this (`first_section_mode[]` and `last_section_mode[]`)                                                 |               |
 | nop       | first_section_mode[]    | array of string   | Force the first section mode if the first section is not a public transport one. It takes one the following values: `walking`, `car`, `bike`, `bss`.<br>`bss` stands for bike sharing system.<br>It's an array, you can give multiple modes.<br><br>Note: choosing `bss` implicitly allows the `walking` mode since you might have to walk to the bss station.<br> Note 2: The parameter is inclusive, not exclusive, so if you want to forbid a mode, you need to add all the other modes.<br> Eg: If you never want to use a `car`, you need: `first_section_mode[]=walking&first_section_mode[]=bss&first_section_mode[]=bike&last_section_mode[]=walking&last_section_mode[]=bss&last_section_mode[]=bike` | walking |
 | nop       | last_section_mode[]     | array of string   | Same as first_section_mode but for the last section  | walking     |
 
-Other parameters to come...
+### Other parameters
+
+| Required  | Name                 | Type  | Description                                                  | Default value |
+|-----------|----------------------|-------|--------------------------------------------------------------|---------------|
+| nop       | min_duration         | int   | Minimum duration delineating the reachable area (in seconds) |      |
+| nop       | max_duration         | int   | Maximum duration delineating the reachable area (in seconds) |      |
+
 
 <a name="route-schedules"></a>Route Schedules
 -------------------------------------------------------------
