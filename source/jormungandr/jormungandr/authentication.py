@@ -192,3 +192,20 @@ def abort_request(user=None):
         flask_restful.abort(403)
     else:
         flask_restful.abort(401)
+
+def get_used_coverages():
+    """
+    return the list of coverages used to generate the response
+    """
+    if 'region' in request.view_args:
+        return [request.view_args['region']]
+    elif hasattr(g, 'used_coverages'):
+        return g.used_coverages
+    else:
+        return []
+
+def register_used_coverages(coverages):
+    if hasattr(coverages, '__iter__'):
+        g.used_coverages = coverages
+    else:
+        g.used_coverages = [coverages]
