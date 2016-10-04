@@ -45,7 +45,7 @@ def create_crowfly(_from, to, begin, end, mode='walking'):
     section.type = response_pb2.CROW_FLY
     section.origin.CopyFrom(_from)
     section.destination.CopyFrom(to)
-    section.duration = end-begin;
+    section.duration = end-begin
     section.begin_date_time = begin
     section.end_date_time = end
     section.street_network.mode = response_pb2.Walking
@@ -98,7 +98,7 @@ def _update_crowfly_duration(instance, fallback_list, mode, stop_area_uri, crow_
         return
     stop_points = instance.georef.get_stop_points_for_stop_area(stop_area_uri)
     for stop_point in stop_points:
-        if fallback_list[mode].get(stop_point.uri):
+        if mode in fallback_list:
             fallback_list[mode][stop_point.uri] = 0
             crow_fly_stop_points.add(stop_point.uri)
 
@@ -155,6 +155,14 @@ class Scenario(new_default.Scenario):
         # we use place_nearby of kraken at the first place to get stop_points around the place, then call the
         # one_to_many(or many_to_one according to the arg "reverse") service to take street network into consideration
         # TODO: reverse is not handled as so far
+
+        # When max_duration is 0, there is no need to compute the fallback to pt, except if place is a stop_point or a
+        # stop_area
+        if max_duration == 0:
+            if instance.georef.get_stop_points_from_uri(place.uri):
+                return {place.uri: 0}
+            else:
+                return {}
         places_crowfly = instance.georef.get_crow_fly(get_uri_pt_object(place), mode, max_duration, max_nb_crowfly)
 
         sn_routing_matrix = instance.street_network_service.get_street_network_routing_matrix([place],
@@ -242,20 +250,20 @@ class Scenario(new_default.Scenario):
             g.requested_destination = instance.georef.place(request['destination'])
 
         for dep_mode, arr_mode in krakens_call:
-            if dep_mode not in g.origins_fallback:
+            if dep_mode not in g.origins_fallback and request.get('max_duration', 0):
                 g.origins_fallback[dep_mode] = self._get_stop_points(instance,
                                                                      g.requested_origin, dep_mode,
                                                                      get_max_fallback_duration(request, dep_mode))
             #Fetch all the stop points of this stop_area and replaces all the durations by 0 in the table
             #g.origins_fallback[dep_mode]
-            _update_crowfly_duration(instance, g.origins_fallback, dep_mode,  request['origin'],
+            _update_crowfly_duration(instance, g.origins_fallback, dep_mode, request['origin'],
                                      crow_fly_stop_points)
 
-            if arr_mode not in g.destinations_fallback:
+            if arr_mode not in g.destinations_fallback and request.get('max_duration', 0):
                g.destinations_fallback[arr_mode] = self._get_stop_points(instance,
-                                                                          g.requested_destination, arr_mode,
-                                                                          get_max_fallback_duration(request, arr_mode),
-                                                                          reverse=True)
+                                                                         g.requested_destination, arr_mode,
+                                                                         get_max_fallback_duration(request, arr_mode),
+                                                                         reverse=True)
             #Fetch all the stop points of this stop_area and replaces all the durations by 0 in the table
             #g.destinations_fallback[arr_mode]
             _update_crowfly_duration(instance, g.destinations_fallback, arr_mode, request['destination'],
@@ -276,8 +284,14 @@ class Scenario(new_default.Scenario):
                 resp.append(direct_path)
             else:
                 journey_parameters.direct_path_duration = None
-            local_resp = instance.planner.journeys(g.origins_fallback[dep_mode],
-                                                   g.destinations_fallback[arr_mode],
+
+            fall_back_origins = g.origins_fallback.get(dep_mode)
+            fall_back_destinations = g.destinations_fallback.get(arr_mode)
+            if not fall_back_origins or not fall_back_destinations or not request.get('max_duration', 0):
+                continue
+
+            local_resp = instance.planner.journeys(fall_back_origins,
+                                                   fall_back_destinations,
                                                    request['datetime'],
                                                    request['clockwise'],
                                                    journey_parameters)
