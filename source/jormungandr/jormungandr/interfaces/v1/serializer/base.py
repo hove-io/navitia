@@ -70,6 +70,11 @@ class EnumField(serpy.Field):
         enum = value.DESCRIPTOR.fields_by_name[self.attr].enum_type.values_by_number
         return enum[getattr(value, self.attr)].name.lower()
 
+class EnumListField(EnumField):
+    def to_value(self, obj):
+        enum = obj.DESCRIPTOR.fields_by_name[self.attr].enum_type.values_by_number
+        return [enum[value].name.lower() for value in getattr(obj, self.attr)]
+
 
 class GenericSerializer(PbNestedSerializer):
     id = serpy.Field(attr='uri')

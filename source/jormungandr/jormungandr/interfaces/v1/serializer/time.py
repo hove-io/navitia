@@ -30,6 +30,8 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import serpy
 from datetime import datetime
+from jormungandr.interfaces.v1.serializer.base import PbField, PbNestedSerializer
+from jormungandr.utils import timestamp_to_str
 
 
 # a time null value is represented by the max value (since 0 is a perfectly valid value)
@@ -45,3 +47,15 @@ class LocalTimeField(serpy.Field):
         if value == __date_time_null_value__:
             return ""
         return datetime.utcfromtimestamp(value).strftime('%H%M%S')
+
+class DateTimeField(PbField):
+    """
+    custom date format from timestamp
+    """
+    def to_value(self, value):
+        return timestamp_to_str(value)
+
+class PeriodSerializer(PbNestedSerializer):
+    begin = DateTimeField()
+    end = DateTimeField()
+

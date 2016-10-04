@@ -31,18 +31,103 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import serpy
 from jormungandr.interfaces.v1.serializer.base import PbNestedSerializer, GenericSerializer, EnumField
 from jormungandr.interfaces.v1.serializer.fields import *
+import logging
 
+
+class Equipments(EnumListField):
+    """
+    hack for equiments their is a useless level in the proto
+    """
+    def as_getter(self, serializer_field_name, serializer_cls):
+        #For enum we need the full object :(
+        return lambda x: x.has_equipments
 
 class ChannelSerializer(PbNestedSerializer):
     content_type = serpy.Field()
     id = serpy.Field()
     name = serpy.Field()
-    #types = EnumField(attr='channel_types')
+    types = EnumListField(attr='channel_types')
 
 
 class MessageSerializer(PbNestedSerializer):
     text = serpy.Field()
     channel = ChannelSerializer()
+
+class SeveritySerializer(PbNestedSerializer):
+    name = serpy.Field()
+    effect = serpy.Field()
+    color = serpy.Field()
+    priority = serpy.Field()
+
+class PtObjectSerializer(serpy.Serializer):
+    id = serpy.Field(attr='uri')
+    name = serpy.Field()
+    quality = serpy.Field(required=False)
+    stop_area = serpy.MethodField(display_none=False)
+    line = serpy.MethodField(display_none=False)
+    network = serpy.MethodField(display_none=False)
+    route = serpy.MethodField(display_none=False)
+    commercial_mode = serpy.MethodField(display_none=False)
+    trip = serpy.MethodField(display_none=False)
+    embedded_type = EnumField(attr='embedded_type')
+
+    def get_trip(self, obj):
+        if obj.HasField(str('trip')):
+            return TripSerializer(obj.trip, display_none=False).data
+        else:
+            return None
+
+    def get_commercial_mode(self, obj):
+        if obj.HasField(str('commercial_mode')):
+            return CommercialModeSerializer(obj.commercial_mode, display_none=False).data
+        else:
+            return None
+
+    def get_route(self, obj):
+        if obj.HasField(str('route')):
+            return RouteSerializer(obj.route, display_none=False).data
+        else:
+            return None
+
+    def get_network(self, obj):
+        if obj.HasField(str('network')):
+            return NetworkSerializer(obj.network, display_none=False).data
+        else:
+            return None
+
+    def get_line(self, obj):
+        if obj.HasField(str('line')):
+            return LineSerializer(obj.line, display_none=False).data
+        else:
+            return None
+
+    def get_stop_area(self, obj):
+        if obj.HasField(str('stop_area')):
+            return StopAreaSerializer(obj.stop_area, display_none=False).data
+        else:
+            return None
+
+class TripSerializer(GenericSerializer):
+    pass
+
+class ImpactedStopSerializer(PbNestedSerializer):
+    stop_point = serpy.MethodField(display_none=False)
+    base_arrival_time = LocalTimeField(attr='base_stop_time.arrival_time')
+    base_departure_time = LocalTimeField(attr='base_stop_time.departure_time')
+    amended_arrival_time = LocalTimeField(attr='amended_stop_time.arrival_time')
+    amended_departure_time = LocalTimeField(attr='amended_stop_time.departure_time')
+    cause = serpy.Field()
+    stop_time_effect = EnumField(attr='effect')
+
+    def get_stop_point(self, obj):
+        if obj.HasField(str('stop_point')):
+            return StopPointSerializer(obj.stop_point, display_none=False).data
+        else:
+            return None
+
+class ImpactedSerializer(PbNestedSerializer):
+    pt_object = PtObjectSerializer(display_none=False)
+    impacted_stops = ImpactedStopSerializer(many=True, display_none=False)
 
 
 class DisruptionSerializer(PbNestedSerializer):
@@ -50,17 +135,18 @@ class DisruptionSerializer(PbNestedSerializer):
     disruption_id = serpy.Field(attr='disruption_uri')
     impact_id = serpy.Field(attr='uri')
     title = serpy.Field(),
-    #application_periods": NonNullList(NonNullNested(period))
+    application_periods = PeriodSerializer(many=True)
     status = EnumField(attr='status')
-    #updated_at": DateTime()
-    #tags = serpy.Serializer(many=True)
+    updated_at = DateTimeField()
+    tags = serpy.Serializer(many=True, display_none=False)
     cause = serpy.Field()
-    #severity": NonNullNested(disruption_severity)
+    severity = SeveritySerializer()
     messages = MessageSerializer(many=True)
-    #impacted_objects": NonNullList(NonNullNested(impacted_object))
+    impacted_objects = ImpactedSerializer(many=True, display_none=False)
     uri = serpy.Field(attr='uri')
     disruption_uri = serpy.Field()
     contributor = serpy.Field()
+
 
 
 class AdminSerializer(GenericSerializer):
@@ -80,8 +166,27 @@ class CommercialModeSerializer(GenericSerializer):
     physical_modes = PhysicalModeSerializer(many=True, display_none=False)
 
 
+class StopPointSerializer(GenericSerializer):
+    comments = CommentSerializer(many=True, display_none=False)
+    comment = FirstCommentField(attr='comments', display_none=False)
+    codes = CodeSerializer(many=True)
+    label = serpy.Field()
+    coord = CoordSerializer(required=False)
+    links = LinkSerializer(attr='impact_uris')
+    commercial_modes = CommercialModeSerializer(many=True, display_none=False)
+    physical_modes = PhysicalModeSerializer(many=True, display_none=False)
+    administrative_regions = AdminSerializer(many=True, display_none=False)
+    stop_area = serpy.MethodField(display_none=False)
+    equipments = Equipments(attr='has_equipments')
+
+    def get_stop_area(self, obj):
+        if obj.HasField(str('stop_area')):
+            return StopAreaSerializer(obj.stop_area, display_none=False).data
+        else:
+            return None
+
 class StopAreaSerializer(GenericSerializer):
-    comments = CommentSerializer(many=True)
+    comments = CommentSerializer(many=True, display_none=False)
     comment = FirstCommentField(attr='comments', display_none=False)
     codes = CodeSerializer(many=True)
     timezone = serpy.Field()
@@ -91,7 +196,7 @@ class StopAreaSerializer(GenericSerializer):
     commercial_modes = CommercialModeSerializer(many=True, display_none=False)
     physical_modes = PhysicalModeSerializer(many=True, display_none=False)
     administrative_regions = AdminSerializer(many=True, display_none=False)
-    #stop_points
+    stop_points = StopPointSerializer(many=True, display_none=False)
 
 
 class PlaceSerializer(serpy.Serializer):
@@ -99,16 +204,12 @@ class PlaceSerializer(serpy.Serializer):
     name = serpy.Field()
     quality = serpy.Field(required=False)
     stop_area = StopAreaSerializer(display_none=False)
+    stop_point = StopPointSerializer(display_none=False)
+    administrative_region = AdminSerializer(display_none=False)
     embedded_type = EnumField(attr='embedded_type')
-
-#place = {
-#    "stop_point": PbField(stop_point),
-#    "stop_area": PbField(stop_area),
 #    "address": PbField(address),
 #    "poi": PbField(poi),
-#    "administrative_region": PbField(admin),
-#    "embedded_type": enum_type(),
-#}
+
 class NetworkSerializer(GenericSerializer):
     lines = serpy.MethodField(display_none=False)
     links = LinkSerializer(attr='impact_uris')
@@ -121,17 +222,17 @@ class RouteSerializer(GenericSerializer):
     is_frequence = serpy.StrField()
     direction_type = serpy.Field()
     physical_modes = PhysicalModeSerializer(many=True, display_none=False)
-    comments = CommentSerializer(many=True)
+    comments = CommentSerializer(many=True, display_none=False)
     codes = CodeSerializer(many=True, display_none=False)
     direction = PlaceSerializer()
     geojson = MultiLineStringField(display_none=False)
     links = LinkSerializer(attr='impact_uris')
     line = serpy.MethodField(display_none=False)
-#route["stop_points"] = NonNullList(NonNullNested(stop_point))
+    stop_points = StopPointSerializer(many=True, display_none=False)
 
     def get_line(self, obj):
         if obj.HasField(str('line')):
-            return LineSerializer(obj.line).data
+            return LineSerializer(obj.line, display_none=False).data
         else:
             return None
 
@@ -158,8 +259,8 @@ class LineSerializer(GenericSerializer):
     codes = CodeSerializer(many=True, required=False)
     physical_modes = PhysicalModeSerializer(many=True)
     commercial_mode = CommercialModeSerializer(display_none=False)
-    routes = RouteSerializer(many=True)
-    network = NetworkSerializer()
+    routes = RouteSerializer(many=True, display_none=False)
+    network = NetworkSerializer(display_none=False)
     opening_time = LocalTimeField()
     closing_time = LocalTimeField()
     properties = PropertySerializer(many=True, display_none=False)
