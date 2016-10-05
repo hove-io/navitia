@@ -227,7 +227,7 @@ class TestJourneysExperimental(AbstractTestFixture):
         assert j
         assert j['sections'][0]['from']['id'] == 'stopA'
         assert j['sections'][0]['to']['id'] == 'stop_point:stopB'
-
+        assert 'walking' in j['tags']
 
 @dataset({"main_ptref_test": {}})
 class TestJourneysExperimentalWithPtref(AbstractTestFixture):
