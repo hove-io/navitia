@@ -69,7 +69,13 @@ def _init_g():
 
 class Instance(object):
 
-    def __init__(self, context, name, zmq_socket, street_network_configuration=None, realtime_proxies_configuration=[]):
+    def __init__(self,
+                 context,
+                 name,
+                 zmq_socket,
+                 street_network_configuration=None,
+                 realtime_proxies_configuration=[],
+                 zmq_socket_type='persistent'):
         if not street_network_configuration:
             street_network_configuration = {'class': 'jormungandr.street_network.kraken.Kraken'}
         self.geom = None
@@ -77,7 +83,6 @@ class Instance(object):
         self.socket_path = zmq_socket
         self._scenario = None
         self._scenario_name = None
-        self.nb_created_socket = 0
         self.lock = Lock()
         self.context = context
         self.name = name
@@ -96,6 +101,7 @@ class Instance(object):
         self.realtime_proxy_manager = realtime_schedule.RealtimeProxyManager(realtime_proxies_configuration, self)
         from jormungandr.autocomplete.kraken import Kraken
         self.autocomplete = Kraken()
+        self.zmq_socket_type = zmq_socket_type
 
     def get_models(self):
         if self.name not in g.instances_model:
@@ -291,19 +297,25 @@ class Instance(object):
     @contextmanager
     def socket(self, context):
         socket = None
-        try:
-            socket = self._sockets.get(block=False)
-        except queue.Empty:
+        if self.zmq_socket_type == 'transient':
             socket = context.socket(zmq.REQ)
             socket.connect(self.socket_path)
-            self.lock.acquire()
-            self.nb_created_socket += 1
-            self.lock.release()
-        try:
-            yield socket
-        finally:
-            if not socket.closed:
-                self._sockets.put(socket)
+            try:
+                yield socket
+            finally:
+                if not socket.closed:
+                    socket.close()
+        else:
+            try:
+                socket = self._sockets.get(block=False)
+            except queue.Empty:
+                socket = context.socket(zmq.REQ)
+                socket.connect(self.socket_path)
+            try:
+                yield socket
+            finally:
+                if not socket.closed:
+                    self._sockets.put(socket)
 
     def send_and_receive(self, *args, **kwargs):
         """
