@@ -252,20 +252,22 @@ class Scenario(new_default.Scenario):
                 g.origins_fallback[dep_mode] = self._get_stop_points(instance,
                                                                      g.requested_origin, dep_mode,
                                                                      get_max_fallback_duration(request, dep_mode))
-            #Fetch all the stop points of this stop_area and replaces all the durations by 0 in the table
-            #g.origins_fallback[dep_mode]
-            _update_crowfly_duration(instance, g.origins_fallback, dep_mode, request['origin'],
-                                     crow_fly_stop_points)
+
+                #Fetch all the stop points of this stop_area and replaces all the durations by 0 in the table
+                #g.origins_fallback[dep_mode]
+                _update_crowfly_duration(instance, g.origins_fallback, dep_mode, request['origin'],
+                                         crow_fly_stop_points)
 
             if arr_mode not in g.destinations_fallback and request.get('max_duration', 0):
                g.destinations_fallback[arr_mode] = self._get_stop_points(instance,
                                                                          g.requested_destination, arr_mode,
                                                                          get_max_fallback_duration(request, arr_mode),
                                                                          reverse=True)
-            #Fetch all the stop points of this stop_area and replaces all the durations by 0 in the table
-            #g.destinations_fallback[arr_mode]
-            _update_crowfly_duration(instance, g.destinations_fallback, arr_mode, request['destination'],
-                                     crow_fly_stop_points)
+
+               #Fetch all the stop points of this stop_area and replaces all the durations by 0 in the table
+               #g.destinations_fallback[arr_mode]
+               _update_crowfly_duration(instance, g.destinations_fallback, arr_mode, request['destination'],
+                                        crow_fly_stop_points)
         resp = []
         journey_parameters = create_parameters(request)
         for dep_mode, arr_mode in krakens_call:
@@ -279,7 +281,10 @@ class Scenario(new_default.Scenario):
                                                 request['clockwise'])
             if direct_path.journeys:
                 journey_parameters.direct_path_duration = direct_path.journeys[0].durations.total
-                resp.append(direct_path)
+                #Since _get_direct_method returns a reference instead of an object we don't add in response
+                #if already exists.
+                if direct_path not in resp:
+                    resp.append(direct_path)
             else:
                 journey_parameters.direct_path_duration = None
 
