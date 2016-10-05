@@ -93,6 +93,9 @@ class InstanceManager(object):
         self.instances = {}
         self.context = zmq.Context()
 
+    def __repr__(self):
+        return '<InstanceManager>'
+
     def initialisation(self):
         """ Charge la configuration à partir d'un fichier ini indiquant
             les chemins des fichiers contenant :
