@@ -176,7 +176,7 @@ class InstanceManager(object):
 
         gevent.wait(futures)
         for future in futures:
-            #we check if an instance need the cache to be purged
+            #we check if an instance needs the cache to be purged
             if future.get():
                 self._clear_cache()
                 break;

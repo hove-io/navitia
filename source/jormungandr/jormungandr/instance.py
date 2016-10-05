@@ -83,7 +83,7 @@ class Instance(object):
         self.name = name
         self.timezone = None  # timezone will be fetched from the kraken
         self.publication_date = -1
-        self.is_initialized = False#kraken hasn't been call yet we don't have geom nor timezone
+        self.is_initialized = False #kraken hasn't been called yet we don't have geom nor timezone
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_INSTANCE_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S'])
         self.georef = georef.Kraken(self)
