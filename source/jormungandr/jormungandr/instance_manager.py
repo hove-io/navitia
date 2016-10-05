@@ -43,7 +43,7 @@ from jormungandr.exceptions import ApiNotFound, RegionNotFound,\
     DeadSocketException, InvalidArguments
 from jormungandr import authentication, cache, app
 from jormungandr.instance import Instance
-
+import gevent
 
 def instances_comparator(instance1, instance2):
     """
@@ -154,11 +154,11 @@ class InstanceManager(object):
         if not hasattr(scenario, api) or not callable(getattr(scenario, api)):
             raise ApiNotFound(api)
 
+        publication_date = instance.publication_date
         api_func = getattr(scenario, api)
         resp = api_func(arguments, instance)
-        if hasattr(resp, str("publication_date")) and instance.publication_date != resp.publication_date:
+        if instance.publication_date != publication_date:
             self._clear_cache()
-            instance.publication_date = resp.publication_date
         return resp
 
     def init_kraken_instances(self):
@@ -175,9 +175,10 @@ class InstanceManager(object):
         """
         fetch krakens metadata
         """
-        while not self.thread_event.is_set():
+        while not self.thread_event.is_set() and [i for i in self.instances.values() if not i.is_initialized]:
             self.init_kraken_instances()
             self.thread_event.wait(timer)
+        logging.getLogger(__name__).debug('end of ping thread')
 
     def stop(self):
         if not self.thread_event.is_set():
@@ -254,8 +255,7 @@ class InstanceManager(object):
         response = {'regions': []}
         regions = []
         if region or lon or lat:
-            regions.append(self.get_region(region_str=region, lon=lon,
-                                           lat=lat))
+            regions.append(self.get_region(region_str=region, lon=lon, lat=lat))
         else:
             regions = self.get_regions()
         for key_region in regions:

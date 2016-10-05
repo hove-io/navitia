@@ -144,7 +144,7 @@ class AbstractTestFixture:
             try:
                 retrying.Retrying(stop_max_delay=5000,
                                   wait_fixed=10,
-                                  retry_on_result=lambda x: not instance.is_up).call(instance.init)
+                                  retry_on_result=lambda x: not instance.is_initialized).call(instance.init)
             except RetryError:
                 logging.exception('impossible to start kraken {}'.format(name))
                 assert False, 'impossible to start a kraken'

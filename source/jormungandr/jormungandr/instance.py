@@ -83,7 +83,7 @@ class Instance(object):
         self.name = name
         self.timezone = None  # timezone will be fetched from the kraken
         self.publication_date = -1
-        self.is_up = True
+        self.is_initialized = False#kraken hasn't been call yet we don't have geom nor timezone
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_INSTANCE_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S'])
         self.georef = georef.Kraken(self)
@@ -355,7 +355,7 @@ class Instance(object):
         Does this instance has this id
         """
         try:
-            return self.is_up and len(self.get_id(id_).places) > 0
+            return len(self.get_id(id_).places) > 0
         except DeadSocketException:
             return False
 
@@ -364,7 +364,7 @@ class Instance(object):
 
     def has_point(self, p):
         try:
-            return self.is_up and self.geom and self.geom.contains(p)
+            return self.geom and self.geom.contains(p)
         except DeadSocketException:
             return False
 
@@ -399,14 +399,17 @@ class Instance(object):
         """
         update the property of an instance from a response if the metadatas field if present
         """
+        #after a successful call we consider the instance initialised even if no data were loaded
+        self.is_initialized = True
         if response.HasField(str("metadatas")) and response.publication_date != self.publication_date:
+            logging.getLogger(__name__).debug('updating metadata for %s', self.name)
             with self.lock as lock:
+                self.publication_date = response.publication_date
                 if response.metadatas.shape and response.metadatas.shape != "":
                     try:
                         self.geom = wkt.loads(response.metadatas.shape)
                     except ReadingError:
                         self.geom = None
-                    self.is_up = True
                 else:
                     self.geom = None
                 self.timezone = response.metadatas.timezone
@@ -417,17 +420,16 @@ class Instance(object):
         Get and store variables of the instance.
         Returns True if we need to clear the cache, False otherwise.
         """
+        pub_date = self.publication_date
         req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS
         try:
             resp = self.send_and_receive(req, timeout=1000, quiet=True)
-            self.update_property(resp)
             #the instance is automatically updated on a call
-            if resp.HasField(str('publication_date')) and self.publication_date != resp.publication_date:
-                self.publication_date = resp.publication_date
+            if self.publication_date != pub_date:
                 return True
         except DeadSocketException:
             #we don't do anything on error, a new session will be established to an available kraken on
             # the next request. We don't want to purge all our cache for a small error.
-            self.is_up = False
+            logging.getLogger(__name__).debug('timeout on init for %s', self.name)
         return False
