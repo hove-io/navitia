@@ -427,10 +427,7 @@ class Instance(object):
                 self.publication_date = resp.publication_date
                 return True
         except DeadSocketException:
-            #but if there is a error, we reset the geom manually
-            self.geom = None
+            #we don't do anything on error, a new session will be established to an available kraken on
+            # the next request. We don't want to purge all our cache for a small error.
             self.is_up = False
-            if self.publication_date != -1:
-                self.publication_date = -1
-                return True
         return False
