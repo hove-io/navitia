@@ -52,6 +52,6 @@ class ManageStands(object):
                         response[self.attribute] = bss_provider_manager.handle_places(response[self.attribute])
                     except:
                         logger = logging.getLogger(__name__)
-                        logger.exception('Error while handlong BSS realtime availability')
+                        logger.exception('Error while handling BSS realtime availability')
             return response, status, e
         return wrapper
