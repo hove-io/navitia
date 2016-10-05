@@ -94,8 +94,6 @@ def create_parameters(request):
 
 
 def _update_crowfly_duration(instance, fallback_list, mode, stop_area_uri, crow_fly_stop_points):
-    if 'stop_area' not in stop_area_uri:
-        return
     stop_points = instance.georef.get_stop_points_for_stop_area(stop_area_uri)
     for stop_point in stop_points:
         if mode in fallback_list:
