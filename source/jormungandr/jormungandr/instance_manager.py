@@ -43,7 +43,7 @@ from jormungandr.exceptions import ApiNotFound, RegionNotFound,\
     DeadSocketException, InvalidArguments
 from jormungandr import authentication, cache, app
 from jormungandr.instance import Instance
-
+import gevent
 
 def instances_comparator(instance1, instance2):
     """
@@ -92,6 +92,9 @@ class InstanceManager(object):
         self.start_ping = start_ping
         self.instances = {}
         self.context = zmq.Context()
+
+    def __repr__(self):
+        return '<InstanceManager>'
 
     def initialisation(self):
         """ Charge la configuration à partir d'un fichier ini indiquant
@@ -155,30 +158,38 @@ class InstanceManager(object):
         if not hasattr(scenario, api) or not callable(getattr(scenario, api)):
             raise ApiNotFound(api)
 
+        publication_date = instance.publication_date
         api_func = getattr(scenario, api)
         resp = api_func(arguments, instance)
-        if hasattr(resp, str("publication_date")) and instance.publication_date != resp.publication_date:
+        if instance.publication_date != publication_date:
             self._clear_cache()
-            instance.publication_date = resp.publication_date
         return resp
 
     def init_kraken_instances(self):
         """
         Call all kraken instances (as found in the instances dir) and store it's metadata
         """
+        futures = []
         purge_cache_needed = False
         for instance in self.instances.values():
-            purge_cache_needed = instance.init() or purge_cache_needed
-        if purge_cache_needed:
-            self._clear_cache()
+            if not instance.is_initialized:
+                futures.append(gevent.spawn(instance.init))
+
+        gevent.wait(futures)
+        for future in futures:
+            #we check if an instance needs the cache to be purged
+            if future.get():
+                self._clear_cache()
+                break;
 
     def thread_ping(self, timer=10):
         """
         fetch krakens metadata
         """
-        while not self.thread_event.is_set():
+        while not self.thread_event.is_set() and [i for i in self.instances.values() if not i.is_initialized]:
             self.init_kraken_instances()
             self.thread_event.wait(timer)
+        logging.getLogger(__name__).debug('end of ping thread')
 
     def stop(self):
         if not self.thread_event.is_set():
@@ -255,8 +266,7 @@ class InstanceManager(object):
         response = {'regions': []}
         regions = []
         if region or lon or lat:
-            regions.append(self.get_region(region_str=region, lon=lon,
-                                           lat=lat))
+            regions.append(self.get_region(region_str=region, lon=lon, lat=lat))
         else:
             regions = self.get_regions()
         for key_region in regions:
