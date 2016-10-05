@@ -284,6 +284,7 @@ class Scenario(new_default.Scenario):
                 #Since _get_direct_method returns a reference instead of an object we don't add in response
                 #if already exists.
                 if direct_path not in resp:
+                    direct_path.journeys[0].internal_id = "dp_{resp}-{j}".format(resp=self.nb_kraken_calls, j=0)
                     resp.append(direct_path)
             else:
                 journey_parameters.direct_path_duration = None

@@ -165,14 +165,17 @@ class TestJourneysExperimental(AbstractTestFixture):
 
         # first is bike
         assert('bike' in response['journeys'][0]['tags'])
+        eq_(response['journeys'][0]['debug']['internal_id'], 'dp_16-0')
         eq_(len(response['journeys'][0]['sections']), 1)
 
         # second is car
         assert('car' in response['journeys'][1]['tags'])
+        eq_(response['journeys'][1]['debug']['internal_id'], "dp_17-0")
         eq_(len(response['journeys'][1]['sections']), 3)
 
         # last is walking
         assert('walking' in response['journeys'][-1]['tags'])
+        eq_(response['journeys'][-1]['debug']['internal_id'], "dp_15-0")
         eq_(len(response['journeys'][-1]['sections']), 1)
 
     def test_error_on_journeys(self):
@@ -228,6 +231,7 @@ class TestJourneysExperimental(AbstractTestFixture):
         assert j['sections'][0]['from']['id'] == 'stopA'
         assert j['sections'][0]['to']['id'] == 'stop_point:stopB'
         assert 'walking' in j['tags']
+
 
 @dataset({"main_ptref_test": {}})
 class TestJourneysExperimentalWithPtref(AbstractTestFixture):
