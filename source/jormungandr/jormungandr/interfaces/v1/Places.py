@@ -49,7 +49,7 @@ from functools import wraps
 from flask_restful import marshal, marshal_with
 import datetime
 from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
-import ujson
+import ujson as json
 
 
 #global marshal
@@ -251,7 +251,7 @@ class Places(ResourceUri):
                 user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=False)
                 shape = None
                 if user and user.shape :
-                    shape = ujson.loads(user.shape)
+                    shape = json.loads(user.shape)
                 bragi_response = global_autocomplete.get(args, None, shape=shape)
                 response = marshal(bragi_response, geocodejson)
             else:
