@@ -36,7 +36,7 @@ from navitiacommon import stat_pb2
 from datetime import datetime
 import logging
 from jormungandr import app
-from jormungandr.authentication import get_user, get_token, get_app_name
+from jormungandr.authentication import get_user, get_token, get_app_name, get_used_coverages
 from jormungandr import utils
 import re
 from threading import Lock
@@ -231,8 +231,6 @@ class StatManager(object):
         """
         g.stat_interpreted_parameters = args
 
-    def register_regions(self, regions):
-        g.stat_regions = regions
 
     def fill_parameters(self, stat_request):
         for key in request.args:
@@ -277,13 +275,11 @@ class StatManager(object):
 
 
     def fill_coverages(self, stat_request):
-        if 'region' in request.view_args:
-            stat_coverage = stat_request.coverages.add()
-            stat_coverage.region_id = request.view_args['region']
-        elif hasattr(g, 'stat_regions'):
-            for region_id in g.stat_regions:
+        coverages = get_used_coverages()
+        if coverages:
+            for coverage in coverages:
                 stat_coverage = stat_request.coverages.add()
-                stat_coverage.region_id = region_id
+                stat_coverage.region_id = coverage
         else:
             # We need an empty coverage.
             stat_request.coverages.add()

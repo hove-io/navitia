@@ -31,6 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from flask import request
 from werkzeug.exceptions import HTTPException
 import logging
+from jormungandr.new_relic import record_exception
 
 
 __all__ = ["RegionNotFound", "DeadSocketException", "ApiNotFound",
@@ -145,15 +146,3 @@ def log_exception(sender, exception, **extra):
         logger.exception(error)
         record_exception()
 
-def record_exception():
-    """
-    record the exception currently handled to newrelic
-    """
-    try:
-        import newrelic.agent
-        newrelic.agent.record_exception()#will record the exception currently handled
-    except ImportError:
-        pass
-    except:
-        logger = logging.getLogger(__name__)
-        logger.exception('failure while registering exception to newrelic')
