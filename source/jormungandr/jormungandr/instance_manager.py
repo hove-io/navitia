@@ -168,11 +168,18 @@ class InstanceManager(object):
         """
         Call all kraken instances (as found in the instances dir) and store it's metadata
         """
+        futures = []
         purge_cache_needed = False
         for instance in self.instances.values():
-            purge_cache_needed = instance.init() or purge_cache_needed
-        if purge_cache_needed:
-            self._clear_cache()
+            if not instance.is_initialized:
+                futures.append(gevent.spawn(instance.init))
+
+        gevent.wait(futures)
+        for future in futures:
+            #we check if an instance need the cache to be purged
+            if future.get():
+                self._clear_cache()
+                break;
 
     def thread_ping(self, timer=10):
         """
