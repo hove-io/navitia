@@ -29,7 +29,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from .tests_mechanism import AbstractTestFixture
 from datetime import timedelta
-from .tests_mechanism import dataset
+from .tests_mechanism import config
 from .check_utils import *
 from nose.tools import eq_
 from jormungandr.scenarios.qualifier import min_from_criteria
@@ -40,7 +40,7 @@ This unit runs all the common tests in journey_common_tests.py along with locals
 unit for scenario experimental
 '''
 
-@dataset({"main_routing_test": {'scenario': 'experimental'}})
+@config({'scenario': 'experimental'})
 class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
     """
     Test the experiental scenario
@@ -247,7 +247,7 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
         assert j['sections'][0]['to']['id'] == 'stop_point:stopB'
         assert 'walking' in j['tags']
 
-@dataset({"main_ptref_test": {"scenario": "experimental"}})
+@config({"scenario": "experimental"})
 class TestExperimentalJourneysWithPtref(JourneysWithPtref, AbstractTestFixture):
     pass
 

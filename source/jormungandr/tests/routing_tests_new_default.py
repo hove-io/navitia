@@ -29,7 +29,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from datetime import timedelta
 from .tests_mechanism import AbstractTestFixture
-from .tests_mechanism import dataset
+from .tests_mechanism import config
 from .check_utils import *
 from nose.tools import eq_
 from jormungandr.scenarios.qualifier import min_from_criteria
@@ -40,7 +40,7 @@ This unit runs all the common tests in journey_common_tests.py along with locals
 unit for scenario new_default
 '''
 
-@dataset({"main_routing_test": {"scenario": "new_default"}})
+@config({"scenario": "new_default"})
 class TestJourneysNewDefault(JourneyCommon,  DirectPath, AbstractTestFixture):
     """
     Test the new default scenario
@@ -251,12 +251,12 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, AbstractTestFixture):
         assert 1 == 1
 
 
-@dataset({"main_ptref_test": {"scenario": "new_default"}})
+@config({"scenario": "new_default"})
 class TestNewDefaultJourneysWithPtref(JourneysWithPtref, AbstractTestFixture):
     pass
 
 
-@dataset({})
+@config({"scenario": "new_default"})
 class TestNewDefaultJourneysNoRegion(JourneysNoRegion, AbstractTestFixture):
     pass
 
@@ -269,13 +269,11 @@ class TestNewDefaultOnBasicRouting(OnBasicRouting, AbstractTestFixture):
 '''
 
 
-@dataset({"main_routing_test": {"scenario": "new_default"},
-          "basic_routing_test": {'check_killed': False, "scenario": "new_default"}})
+@config({"scenario": "new_default"})
 class TestNewDefaultOneDeadRegion(OneDeadRegion, AbstractTestFixture):
     pass
 
 
-@dataset({"main_routing_without_pt_test": {'priority': 42, "scenario": "new_default"},
-          "main_routing_test": {'priority': 10, "scenario": "new_default"}})
+@config({"scenario": "new_default"})
 class TestNewDefaultWithoutPt(WithoutPt, AbstractTestFixture):
     pass

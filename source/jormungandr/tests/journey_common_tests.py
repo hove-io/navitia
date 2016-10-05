@@ -37,7 +37,7 @@ from .check_utils import *
 def check_journeys(resp):
     assert not resp.get('journeys') or sum([1 for j in resp['journeys'] if j['type'] == "best"]) == 1
 
-
+@dataset({"main_routing_test": {}})
 class JourneyCommon():
 
     """
@@ -437,6 +437,8 @@ class JourneyCommon():
         eq_(response['journeys'][1]['durations']['total'], 275)
         eq_(response['journeys'][1]['durations']['walking'], 275)
 
+
+@dataset({"main_routing_test": {}})
 class DirectPath():
     def test_journey_direct_path(self):
         query = journey_basic_query + \
@@ -461,7 +463,7 @@ class DirectPath():
         assert('walking' in response['journeys'][-1]['tags'])
         eq_(len(response['journeys'][-1]['sections']), 1)
 
-
+@dataset({})
 class JourneysNoRegion():
     """
     If no region loaded we must have a polite error while asking for a journey
@@ -486,6 +488,7 @@ class JourneysNoRegion():
         assert error_regexp.match(response['error']['message'])
 
 
+@dataset({"basic_routing_test": {}})
 class OnBasicRouting():
     """
     Test if the filter on long waiting duration is working
@@ -651,6 +654,9 @@ class OnBasicRouting():
         response = self.query_region("journeys?from=I1&datetime=20120615T070000&max_duration=36000")
         assert(len(response['journeys']) == 2)
 
+
+@dataset({"main_routing_test": {},
+          "basic_routing_test": {'check_killed': False}})
 class OneDeadRegion():
     """
     Test if we still responds when one kraken is dead
@@ -667,7 +673,7 @@ class OneDeadRegion():
         eq_(len(response['debug']['regions_called']), 1)
         eq_(response['debug']['regions_called'][0], "main_routing_test")
 
-
+@dataset({"main_routing_without_pt_test": {'priority': 42}, "main_routing_test": {'priority': 10}})
 class WithoutPt():
     """
     Test if we still responds when one kraken has no pt solution
@@ -696,6 +702,7 @@ class WithoutPt():
         eq_(response['debug']['regions_called'][1], "main_routing_test")
 
 
+@dataset({"main_ptref_test": {}})
 class JourneysWithPtref():
     """Test the new default scenario with ptref_test data"""
 

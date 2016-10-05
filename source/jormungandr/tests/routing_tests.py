@@ -28,7 +28,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from .tests_mechanism import AbstractTestFixture, dataset
+from .tests_mechanism import AbstractTestFixture, config
 from .check_utils import *
 from .journey_common_tests import *
 
@@ -37,31 +37,31 @@ from .journey_common_tests import *
 This unit runs all the common tests in journey_common_tests.py.
 '''
 
-@dataset({"main_routing_test": {}})
-class TestJourneys(JourneyCommon, AbstractTestFixture):
+@config()
+class TestJourneysDefault(JourneyCommon, AbstractTestFixture):
     pass
 
 
-@dataset({})
-class TestJourneysNoRegion(JourneysNoRegion, AbstractTestFixture):
+@config()
+class TestJourneysNoRegionDefault(JourneysNoRegion, AbstractTestFixture):
     pass
 
 
-@dataset({"basic_routing_test": {"scenario": "default"}})
-class TestOnBasicRouting(OnBasicRouting, AbstractTestFixture):
+@config()
+class TestOnBasicRoutingDefault(OnBasicRouting, AbstractTestFixture):
     pass
 
 
-@dataset({"main_routing_test": {}, "basic_routing_test": {'check_killed': False}})
-class TestOneDeadRegion(OneDeadRegion, AbstractTestFixture):
+@config()
+class TestOneDeadRegionDefault(OneDeadRegion, AbstractTestFixture):
     pass
 
 
-@dataset({"main_routing_without_pt_test": {'priority': 42}, "main_routing_test": {'priority': 10}})
-class TestWithoutPt(WithoutPt, AbstractTestFixture):
+@config()
+class TestWithoutPtDefault(WithoutPt, AbstractTestFixture):
     pass
 
 
-@dataset({"main_ptref_test": {"scenario": "default"}})
-class TestJourneysWithPtref(JourneysWithPtref, AbstractTestFixture):
+@config()
+class TestJourneysWithPtrefDefault(JourneysWithPtref, AbstractTestFixture):
     pass
