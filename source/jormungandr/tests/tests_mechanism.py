@@ -358,8 +358,8 @@ def config(configs=None):
         for c in cls.__bases__:
             if hasattr(c, "data_sets"):
                 for key in c.data_sets:
-                    orig_config = c.data_sets[key]
-                    configs.update(orig_config)
-                    cls.data_sets.update({key: configs})
+                    orig_config = copy.deepcopy(c.data_sets[key])
+                    orig_config.update(configs)
+                    cls.data_sets.update({key: orig_config})
         return cls
     return deco
