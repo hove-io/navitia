@@ -205,7 +205,7 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
         assert any(bike_in_journey(journey_fast_walker) for journey_fast_walker in response_fast_walker['journeys'])
         assert all(no_bike_in_journey(journey) for journey in basic_response['journeys'])
 
-	def test_crow_fly_sections(self):
+    def test_crow_fly_sections(self):
         """
         When the departure is a stop_area...
         """
@@ -224,8 +224,8 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
         assert section_2['type'] == 'crow_fly'
         assert section_2['from']['id'] == 'stop_point:stopB'
         assert section_2['to']['id'] == 'stopB'
-    
-	def test_max_duration_to_pt_equals_to_0(self):
+
+    def test_max_duration_to_pt_equals_to_0(self):
         query = journey_basic_query + \
             "&first_section_mode[]=bss" + \
             "&first_section_mode[]=walking" + \
@@ -265,8 +265,8 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
         response = self.query_region(query)
         check_journeys(response)
         eq_(len(response['journeys']), 2)
-    
-	def test_max_duration_equals_to_0(self):
+
+    def test_max_duration_equals_to_0(self):
         query = journey_basic_query + \
             "&first_section_mode[]=bss" + \
             "&first_section_mode[]=walking" + \
@@ -285,18 +285,19 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
 
         # first is bike
         assert('bike' in response['journeys'][0]['tags'])
-        eq_(response['journeys'][0]['debug']['internal_id'], 'dp_16-0')
+        eq_(response['journeys'][0]['debug']['internal_id'], 'dp_43-0')
         eq_(len(response['journeys'][0]['sections']), 1)
 
         # second is car
         assert('car' in response['journeys'][1]['tags'])
-        eq_(response['journeys'][1]['debug']['internal_id'], "dp_17-0")
+        eq_(response['journeys'][1]['debug']['internal_id'], "dp_44-0")
         eq_(len(response['journeys'][1]['sections']), 3)
 
         # last is walking
         assert('walking' in response['journeys'][-1]['tags'])
-        eq_(response['journeys'][-1]['debug']['internal_id'], "dp_15-0")
+        eq_(response['journeys'][-1]['debug']['internal_id'], "dp_42-0")
         eq_(len(response['journeys'][-1]['sections']), 1)
+
     def test_crow_fly_sections(self):
         """
         When the departure is a stop_area...
@@ -316,8 +317,8 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
         assert section_2['type'] == 'crow_fly'
         assert section_2['from']['id'] == 'stop_point:stopB'
         assert section_2['to']['id'] == 'stopB'
-    
-	def test_journey_stop_area_to_stop_point(self):
+
+    def test_journey_stop_area_to_stop_point(self):
         """
         When the departure is stop_area:A and the destination is stop_point:B belonging to stop_area:B
         """
