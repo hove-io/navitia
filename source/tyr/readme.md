@@ -105,7 +105,16 @@ honcho run py.test tests
 
 ## Data integration
 
-TODO
+You can get the last data integrations using the jobs endpoint
+
+    GET $HOST/v0/jobs/
+
+You may want to specify an instance to filter these jobs :
+
+    GET $HOST/v0/jobs/<INSTANCE>
+
+A job is created when a new dataset is detected by tyr_beat.
+You can also trigger a data integration by posting your dataset to the job endpoint filtered by instance.
 
 ## Authentication
 
