@@ -701,16 +701,12 @@ class WithoutPt():
         eq_(response['debug']['regions_called'][0], "main_routing_without_pt_test")
         eq_(response['debug']['regions_called'][1], "main_routing_test")
 
-
+from unittest import skip
 @dataset({"main_ptref_test": {}})
 class JourneysWithPtref():
     """Test the new default scenario with ptref_test data"""
-
+    @skip("temporarily disabled")
     def test_strange_line_name(self):
-        # TODO: to correct
-        assert 1 == 1
-        '''
         response = self.query_region("journeys?from=stop_area:stop2&to=stop_area:stop&datetime=20140107T100000")
         check_journeys(response)
         eq_(len(response['journeys']), 1)
-        '''
