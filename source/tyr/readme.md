@@ -377,10 +377,10 @@ Get all a user information:
 
 name             | description                                                                          | required | default        |
 -----------------|--------------------------------------------------------------------------------------|----------|----------------|
-disable_geojson  | if true the shape will be fully displayed (otherwise displaying: `null` or `{}`)     | nope     | false          |
+disable_geojson  | if false the shape will be fully displayed (otherwise displaying: `null` or `{}`)    | nope     | true          |
 
 
-Example for `disable_geojson=true` (see default above for `false`)
+Example for `disable_geojson=false` (see default above for `true`)
 
     GET $HOST/v0/users?disable_geojson=false
 
@@ -426,8 +426,6 @@ Example for `disable_geojson=true` (see default above for `false`)
                 }
             }
         },
-        "has_shape": true,
-        "shape": {},
         "billing_plan": {
             "max_request_count": 3000,
             "name": "foo",
