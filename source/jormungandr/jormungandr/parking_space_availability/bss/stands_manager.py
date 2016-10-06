@@ -48,10 +48,10 @@ class ManageStands(object):
             if status == 200 and self.attribute in response:
                 instance = i_manager.instances.get(self.resource.region)
                 if instance and instance.bss_provider:
-                    handle_bss = bss_provider_manager.handle_journeys if self.attribute == 'journeys' \
+                    add_bss_availability = bss_provider_manager.handle_journeys if self.attribute == 'journeys' \
                         else bss_provider_manager.handle_places
                     try:
-                        response[self.attribute] = handle_bss(response[self.attribute])
+                        response[self.attribute] = add_bss_availability(response[self.attribute])
                     except:
                         logger = logging.getLogger(__name__)
                         logger.exception('Error while handling BSS realtime availability')

@@ -378,7 +378,7 @@ class Journeys(JourneyCommon):
         parser_get.add_argument("_night_bus_filter_max_factor", type=float)
         parser_get.add_argument("_min_car", type=int)
         parser_get.add_argument("_min_bike", type=int)
-        parser_get.add_argument("bss_stands", type=boolean, default=True, description="Show bss stands availability")
+        parser_get.add_argument("bss_stands", type=boolean, default=False, description="Show bss stands availability")
 
         self.method_decorators.append(complete_links(self))
 

@@ -41,14 +41,6 @@ class BssProviderManager(object):
             arguments = configuration.get('args', {})
             self.bss_providers.append(self._init_class(configuration['class'], arguments))
 
-    def handle_journeys(self, journeys):
-        for section in (section for journey in journeys for section in journey['sections']):
-            for place in (section[from_to] for from_to in ('from', 'to') if from_to in section):
-                if 'poi' in place:
-                    place['poi'] = self.handle_poi(place['poi'])
-
-        return journeys
-
     def handle_places(self, places):
         for place in places or []:
             if 'poi_type' in place:
@@ -56,6 +48,14 @@ class BssProviderManager(object):
             elif 'embedded_type' in place and place['embedded_type'] == 'poi':
                 place['poi'] = self.handle_poi(place['poi'])
         return places
+
+    def handle_journeys(self, journeys):
+        # iterate through each 'from' and 'to' place for each section
+        for place in (s[from_to] for j in journeys for s in j['sections'] for from_to in ('from', 'to') if from_to in s):
+            if 'poi' in place:
+                place['poi'] = self.handle_poi(place['poi'])
+
+        return journeys
 
     def handle_poi(self, item):
         if 'poi_type' in item and item['poi_type']['id'] == 'poi_type:amenity:bicycle_rental':
