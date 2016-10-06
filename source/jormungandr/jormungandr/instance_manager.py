@@ -218,7 +218,14 @@ class InstanceManager(object):
             except:
                 raise InvalidArguments(object_id)
             return self._all_keys_of_coord(flon, flat)
-        instances = [i.name for i in self.instances.values() if i.has_id(object_id)]
+        instances = []
+        futures = {}
+        for name, instance in self.instances.items():
+            futures[name] = gevent.spawn(instance.has_id, object_id)
+        for name, future in futures.items():
+            if future.get():
+                instances.append(name)
+
         if not instances:
             raise RegionNotFound(object_id=object_id)
         return instances
