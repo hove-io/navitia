@@ -35,7 +35,7 @@ from .check_utils import *
 
 
 def check_journeys(resp):
-    assert not resp.get('journeys') or sum([1 for j in resp['journeys'] if j['type'] == "best"]) == 1
+    assert not resp.get('journeys') or sum((1 for j in resp['journeys'] if j['type'] == "best")) == 1
 
 @dataset({"main_routing_test": {}})
 class JourneyCommon():
