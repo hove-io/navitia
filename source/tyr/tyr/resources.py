@@ -75,6 +75,9 @@ class Shape(fields.Raw):
         super(Shape, self).__init__(**kwargs)
 
     def output(self, key, obj):
+        if obj.shape == 'null':
+            obj.shape = None
+
         if hasattr(g, 'disable_geojson') and g.disable_geojson and obj.has_shape():
             return {}
 

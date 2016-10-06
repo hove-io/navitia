@@ -172,6 +172,43 @@ def test_get_users_empty():
     resp = api_get('/v0/users/')
     assert resp == []
 
+
+def test_add_user_without_shape(mock_rabbit):
+    """
+    creation of a user without shape
+    When we get this user, we should see
+    shape = None and has_shape = False
+    """
+    user = {'login': 'user1', 'email': 'user1@example.com'}
+    data = json.dumps(user)
+    resp = api_post('/v0/users/', data=data, content_type='application/json')
+    def check(u):
+        gen = (k for k in user if k is not 'shape')
+        for k in gen:
+            assert u[k] == user[k]
+        assert u['end_point']['name'] == 'navitia.io'
+        assert u['type'] == 'with_free_instances'
+        assert u['block_until'] == None
+
+    check(resp)
+    assert resp['shape'] is None
+    assert resp['has_shape'] is False
+    assert mock_rabbit.called
+
+    # with disable_geojson=true by default
+    resp = api_get('/v0/users/')
+    assert len(resp) == 1
+    check(resp[0])
+    assert resp[0]['shape'] is None
+    assert resp[0]['has_shape'] is False
+
+    # with disable_geojson=false
+    resp = api_get('/v0/users/?disable_geojson=false')
+    assert len(resp) == 1
+    check(resp[0])
+    assert resp[0]['shape'] is None
+    assert resp[0]['has_shape'] is False
+
 def test_add_user(mock_rabbit, geojson_feature_collection):
     """
     creation of a user passing arguments as a json
