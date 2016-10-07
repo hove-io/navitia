@@ -206,3 +206,6 @@ def realtime_journey_handle_test():
     assert journey_from['poi']['stands'].available_places == 5
     assert journey_from['poi']['stands'].available_bikes == 9
     assert journey_from['poi']['stands'].total_stands == 14
+    assert journey_to['poi']['stands'].available_places == 5
+    assert journey_to['poi']['stands'].available_bikes == 9
+    assert journey_to['poi']['stands'].total_stands == 14

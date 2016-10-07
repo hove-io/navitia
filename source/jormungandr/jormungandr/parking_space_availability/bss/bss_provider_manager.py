@@ -50,11 +50,8 @@ class BssProviderManager(object):
         return places
 
     def handle_journeys(self, journeys):
-        # iterate through each 'from' and 'to' place for each section
-        for place in (s[from_to] for j in journeys for s in j['sections'] for from_to in ('from', 'to') if from_to in s):
-            if 'poi' in place:
-                place['poi'] = self.handle_poi(place['poi'])
-
+        for poi in get_from_to_pois_of_journeys(journeys):
+            self.handle_poi(poi)
         return journeys
 
     def handle_poi(self, item):
@@ -83,3 +80,10 @@ class BssProviderManager(object):
             return attr(**arguments)
         except ImportError:
             self.log.warn('impossible to build, cannot find class: {}'.format(cls))
+
+
+def get_from_to_pois_of_journeys(journeys):
+    # utility that returns 'from' and 'to' pois for each section for the given journeys
+    from_to_places = (s.get(from_to, {}) for j in journeys for s in j.get('sections', [])
+                      for from_to in ('from', 'to'))
+    return (place['poi'] for place in from_to_places if 'poi' in place)

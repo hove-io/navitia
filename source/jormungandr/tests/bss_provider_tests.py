@@ -29,6 +29,7 @@
 import mock
 from mock import PropertyMock
 from jormungandr.parking_space_availability.bss.bss_provider import BssProvider
+from jormungandr.parking_space_availability.bss.bss_provider_manager import get_from_to_pois_of_journeys
 from jormungandr.parking_space_availability.bss.stands import Stands
 from tests.check_utils import is_valid_poi, get_not_null, journey_basic_query
 from tests.tests_mechanism import AbstractTestFixture, dataset
@@ -380,12 +381,10 @@ class TestBssProvider(AbstractTestFixture):
             query = journey_basic_query + "&first_section_mode=bss&last_section_mode=bss"
             response = self.query_region(query)
             self.is_valid_journey_response(response, query)
-
             journeys = get_not_null(response, 'journeys')
-
-            for place in self._get_from_to_places_of_journeys_sections(journeys):
-                if 'poi' in place:
-                    assert 'stands' not in place['poi']
+            for poi in get_from_to_pois_of_journeys(journeys):
+                is_valid_poi(poi)
+                assert 'stands' not in poi
 
     def test_journey_sections_from_to_poi_with_stands(self):
         supported_pois = ['station_1']
@@ -393,20 +392,14 @@ class TestBssProvider(AbstractTestFixture):
             query = journey_basic_query + "&first_section_mode=bss&last_section_mode=bss&bss_stands=true"
             response = self.query_region(query)
             self.is_valid_journey_response(response, query)
-
             journeys = get_not_null(response, 'journeys')
-            for place in self._get_from_to_places_of_journeys_sections(journeys):
-                if 'poi' in place:
-                    poi = place['poi']
-                    is_valid_poi(place['poi'])
-                    if place['poi']['id'] in supported_pois:
-                        assert 'stands' in poi
-                        assert poi['stands']['available_places'] == 13
-                        assert poi['stands']['available_bikes'] == 3
-                        assert poi['stands']['total_stands'] == 16
-                    else:
-                        assert 'stands' not in poi
 
-    def _get_from_to_places_of_journeys_sections(self, journeys):
-        # utility that returns 'from' and 'to' places for each section of each given journey
-        return (s[from_to] for j in journeys for s in j['sections'] for from_to in ('from', 'to') if from_to in s)
+            for poi in get_from_to_pois_of_journeys(journeys):
+                is_valid_poi(poi)
+                if poi['id'] in supported_pois:
+                    assert 'stands' in poi
+                    assert poi['stands']['available_places'] == 13
+                    assert poi['stands']['available_bikes'] == 3
+                    assert poi['stands']['total_stands'] == 16
+                else:
+                    assert 'stands' not in poi

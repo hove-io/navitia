@@ -382,7 +382,7 @@ class Journeys(JourneyCommon):
 
         self.method_decorators.append(complete_links(self))
 
-        if parser_get.parse_args()["bss_stands"]:
+        if parser_get.parse_args().get("bss_stands"):
             self.method_decorators.insert(1, ManageStands(self, 'journeys'))
 
     @add_debug_info()
