@@ -346,3 +346,20 @@ def dataset(datasets):
         cls.data_sets = datasets
         return cls
     return deco
+
+
+def config(configs=None):
+    import copy
+    if not configs:
+        configs = {"scenario": "default"}
+
+    def deco(cls):
+        cls.data_sets = {}
+        for c in cls.__bases__:
+            if hasattr(c, "data_sets"):
+                for key in c.data_sets:
+                    orig_config = copy.deepcopy(c.data_sets[key])
+                    orig_config.update(configs)
+                    cls.data_sets.update({key: orig_config})
+        return cls
+    return deco

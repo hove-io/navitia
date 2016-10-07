@@ -28,22 +28,22 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from .tests_mechanism import AbstractTestFixture
-import logging
 from datetime import timedelta
-from .tests_mechanism import dataset
+from .tests_mechanism import config
 from .check_utils import *
 from nose.tools import eq_
-import jormungandr.scenarios.experimental
-from jormungandr.instance import Instance
 from jormungandr.scenarios.qualifier import min_from_criteria
+from .journey_common_tests import *
+from unittest import skip
+from .routing_tests import OnBasicRouting
 
+'''
+This unit runs all the common tests in journey_common_tests.py along with locals tests added in this
+unit for scenario experimental
+'''
 
-def check_journeys(resp):
-    assert not resp.get('journeys') or sum([1 for j in resp['journeys'] if j['type'] == "best"]) == 1
-
-
-@dataset({"main_routing_test": {'scenario': 'experimental'}})
-class TestJourneysExperimental(AbstractTestFixture):
+@config({'scenario': 'experimental'})
+class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
     """
     Test the experiental scenario
     All the tests are defined in "TestJourneys" class, we only change the scenario
@@ -74,36 +74,37 @@ class TestJourneysExperimental(AbstractTestFixture):
         j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
         eq_(j_departure - timedelta(seconds=1), dt)
 
-    def test_journeys(self):
-        #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
-        #not to use the jormungandr database
-        response = self.query_region(journey_basic_query)
+    @skip("temporarily disabled")
+    def test_best_filtering(self):
+        super(JourneyCommon, self).test_best_filtering()
 
-        check_journeys(response)
-        self.is_valid_journey_response(response, journey_basic_query)
+    @skip("temporarily disabled")
+    def test_datetime_represents_arrival(self):
+        super(JourneyCommon, self).test_datetime_represents_arrival()
 
-    def test_journey_direct_path(self):
-        query = journey_basic_query + \
-                "&first_section_mode[]=bss" + \
-                "&first_section_mode[]=walking" + \
-                "&first_section_mode[]=bike" + \
-                "&first_section_mode[]=car" + \
-                "&debug=true"
-        response = self.query_region(query)
-        check_journeys(response)
-        eq_(len(response['journeys']), 4)
+    @skip("temporarily disabled")
+    def test_journeys_wheelchair_profile(self):
+        super(JourneyCommon, self).test_journeys_wheelchair_profile()
 
-        # first is bike
-        assert('bike' in response['journeys'][0]['tags'])
-        eq_(len(response['journeys'][0]['sections']), 1)
+    @skip("temporarily disabled")
+    def test_not_existent_filtering(self):
+        super(JourneyCommon, self).test_not_existent_filtering()
 
-        # second is car
-        assert('car' in response['journeys'][1]['tags'])
-        eq_(len(response['journeys'][1]['sections']), 3)
+    @skip("temporarily disabled")
+    def test_other_filtering(self):
+        super(JourneyCommon, self).test_other_filtering()
 
-        # last is walking
-        assert('walking' in response['journeys'][-1]['tags'])
-        eq_(len(response['journeys'][-1]['sections']), 1)
+    @skip("temporarily disabled")
+    def test_sp_to_sp(self):
+        super(JourneyCommon, self).test_sp_to_sp()
+
+    @skip("temporarily disabled")
+    def test_speed_factor_direct_path(self):
+        super(JourneyCommon, self).test_speed_factor_direct_path()
+
+    @skip("temporarily disabled")
+    def test_traveler_type(self):
+        super(JourneyCommon, self).test_traveler_type()
 
     def test_max_duration_to_pt_equals_to_0(self):
         query = journey_basic_query + \
@@ -135,8 +136,7 @@ class TestJourneysExperimental(AbstractTestFixture):
         eq_(len(response['journeys'][-1]['sections']), 1)
 
     def test_max_duration_to_pt_equals_to_0_from_stop_point(self):
-        query = "journeys?from=stop_point%3AstopA&to=stop_point%3AstopC&datetime=20120614T080000" \
-                "&_override_scenario=experimental"
+        query = "journeys?from=stop_point%3AstopA&to=stop_point%3AstopC&datetime=20120614T080000"
         response = self.query_region(query)
         check_journeys(response)
         eq_(len(response['journeys']), 2)
@@ -165,36 +165,34 @@ class TestJourneysExperimental(AbstractTestFixture):
 
         # first is bike
         assert('bike' in response['journeys'][0]['tags'])
-        eq_(response['journeys'][0]['debug']['internal_id'], 'dp_16-0')
+        eq_(response['journeys'][0]['debug']['internal_id'], 'dp_43-0')
         eq_(len(response['journeys'][0]['sections']), 1)
 
         # second is car
         assert('car' in response['journeys'][1]['tags'])
-        eq_(response['journeys'][1]['debug']['internal_id'], "dp_17-0")
+        eq_(response['journeys'][1]['debug']['internal_id'], "dp_44-0")
         eq_(len(response['journeys'][1]['sections']), 3)
 
         # last is walking
         assert('walking' in response['journeys'][-1]['tags'])
-        eq_(response['journeys'][-1]['debug']['internal_id'], "dp_15-0")
+        eq_(response['journeys'][-1]['debug']['internal_id'], "dp_42-0")
         eq_(len(response['journeys'][-1]['sections']), 1)
 
-    def test_error_on_journeys(self):
-        """ if we got an error with kraken, an error should be returned"""
-
-        query_out_of_production_bound = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
-            .format(from_coord="0.0000898312;0.0000898312",  # coordinate of S in the dataset
-            to_coord="0.00188646;0.00071865",  # coordinate of R in the dataset
-            datetime="20110614T080000")  # 2011 should not be in the production period
-        response, status = self.query_no_assert("v1/coverage/main_routing_test/" + query_out_of_production_bound)
-
-        assert status != 200, "the response should not be valid"
-
+    def test_journey_stop_area_to_stop_point(self):
+        """
+        When the departure is stop_area:A and the destination is stop_point:B belonging to stop_area:B
+        """
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
+            .format(from_sa='stopA', to_sa='stop_point:stopB', datetime="20120614T080000")
+        response = self.query_region(query)
         check_journeys(response)
-        assert response['error']['id'] == "date_out_of_bounds"
-        assert response['error']['message'] == "date is not in data production period"
+        jrnys = response['journeys']
 
-        #and no journey is to be provided
-        assert 'journeys' not in response or len(response['journeys']) == 0
+        j = next((j for j in jrnys if j['type'] == 'non_pt_walk'), None)
+        assert j
+        assert j['sections'][0]['from']['id'] == 'stopA'
+        assert j['sections'][0]['to']['id'] == 'stop_point:stopB'
+        assert 'walking' in j['tags']
 
     def test_crow_fly_sections(self):
         """
@@ -202,7 +200,7 @@ class TestJourneysExperimental(AbstractTestFixture):
         """
         query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
             .format(from_sa='stopA', to_sa='stopB', datetime="20120614T080000")
-        response = self.query("v1/coverage/main_routing_test/" + query)
+        response = self.query_region(query)
         check_journeys(response)
         jrnys = response['journeys']
         assert len(jrnys) == 2
@@ -216,41 +214,27 @@ class TestJourneysExperimental(AbstractTestFixture):
         assert section_2['from']['id'] == 'stop_point:stopB'
         assert section_2['to']['id'] == 'stopB'
 
-    def test_journey_stop_area_to_stop_point(self):
-        """
-        When the departure is stop_area:A and the destination is stop_point:B belonging to stop_area:B
-        """
-        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
-            .format(from_sa='stopA', to_sa='stop_point:stopB', datetime="20120614T080000")
-        response = self.query("v1/coverage/main_routing_test/" + query)
-        check_journeys(response)
-        jrnys = response['journeys']
-
-        j = next((j for j in jrnys if j['type'] == 'non_pt_walk'), None)
-        assert j
-        assert j['sections'][0]['from']['id'] == 'stopA'
-        assert j['sections'][0]['to']['id'] == 'stop_point:stopB'
-        assert 'walking' in j['tags']
+@config({"scenario": "experimental"})
+class TestExperimentalJourneysWithPtref(JourneysWithPtref, AbstractTestFixture):
+    pass
 
 
-@dataset({"main_ptref_test": {}})
-class TestJourneysExperimentalWithPtref(AbstractTestFixture):
-    """Test the experimental scenario with ptref_test data"""
+@dataset({"basic_routing_test": {"scenario": "new_default"}})
+class TestNewDefaultOnBasicRouting(OnBasicRouting, AbstractTestFixture):
 
-    def setup(self):
-        logging.debug('setup for experimental')
-        from jormungandr import i_manager
-        dest_instance = i_manager.instances['main_ptref_test']
-        self.old_scenario = dest_instance._scenario
-        dest_instance._scenario = jormungandr.scenarios.experimental.Scenario()
+    @skip("temporarily disabled")
+    def test_journeys_with_show_codes(self):
+        super(OnBasicRouting, self).test_journeys_with_show_codes()
 
-    def teardown(self):
-        from jormungandr import i_manager
-        i_manager.instances['main_ptref_test']._scenario = self.old_scenario
+    @skip("temporarily disabled")
+    def test_journeys_without_show_codes(self):
+        super(OnBasicRouting, self).test_journeys_without_show_codes()
 
-    def test_strange_line_name(self):
-        response = self.query("v1/coverage/main_ptref_test/journeys"
-                              "?from=stop_area:stop2&to=stop_area:stop1"
-                              "&datetime=20140107T100000", display=True)
-        check_journeys(response)
-        eq_(len(response['journeys']), 1)
+    @skip("temporarily disabled")
+    def test_novalidjourney_on_first_call(self):
+        super(OnBasicRouting, self).test_novalidjourney_on_first_call()
+
+
+    @skip("temporarily disabled")
+    def test_novalidjourney_on_first_call_debug(self):
+        super(OnBasicRouting, self).test_novalidjourney_on_first_call_debug()
