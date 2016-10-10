@@ -36,7 +36,7 @@ class ManageStands(object):
     def __init__(self, resource, attribute):
         """
         resource: the element to apply the decorator
-        attribute: the attribute name containing the list (pois, places, places_nearby)
+        attribute: the attribute name containing the list (pois, places, places_nearby, journeys)
         """
         self.resource = resource
         self.attribute = attribute
@@ -48,10 +48,12 @@ class ManageStands(object):
             if status == 200 and self.attribute in response:
                 instance = i_manager.instances.get(self.resource.region)
                 if instance and instance.bss_provider:
+                    add_bss_availability = bss_provider_manager.handle_journeys if self.attribute == 'journeys' \
+                        else bss_provider_manager.handle_places
                     try:
-                        response[self.attribute] = bss_provider_manager.handle_places(response[self.attribute])
+                        response[self.attribute] = add_bss_availability(response[self.attribute])
                     except:
                         logger = logging.getLogger(__name__)
-                        logger.exception('Error while handlong BSS realtime availability')
+                        logger.exception('Error while handling BSS realtime availability')
             return response, status, e
         return wrapper
