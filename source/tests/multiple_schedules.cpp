@@ -78,6 +78,7 @@ int main(int argc, const char* const argv[]) {
     b.data->pt_data->codes.add(r1, "KisioDigital", "syn_routeA1");
     b.data->pt_data->codes.add(r1, "KisioDigital", "syn_cute_routeA1");
 
+    b.data->pt_data->codes.add(b.get<nt::Line>("A"), "KisioDigital", "KisioDigital A");
     b.data->pt_data->codes.add(b.get<nt::Line>("B"), "KisioDigital", "syn_lineB");
     b.data->pt_data->codes.add(b.get<nt::Line>("C"), "KisioDigital", "syn_lineC");
 
