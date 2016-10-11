@@ -106,7 +106,7 @@ class Cleverage(RealtimeProxy):
     def _get_passages(self, route_point, cleverage_resp):
         logging.getLogger(__name__).debug('cleverage response: {}'.format(cleverage_resp))
 
-        line_code = route_point.fetch_line_code()
+        line_code = route_point.fetch_line_id(self.object_id_tag)
 
         schedules = next((line['schedules'] for line in cleverage_resp if line['code'].lower() == line_code.lower()), None)
 

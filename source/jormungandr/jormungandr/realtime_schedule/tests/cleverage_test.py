@@ -359,10 +359,10 @@ class MockRoutePoint(object):
         self._hardcoded_line_code = kwars['line_code']
         self._hardcoded_stop_id = kwars['stop_id']
 
-    def fetch_stop_id(self, rt_proxy_id):
+    def fetch_stop_id(self, object_id_tag):
         return self._hardcoded_stop_id
 
-    def fetch_line_code(self):
+    def fetch_line_id(self, object_id_tag):
         return self._hardcoded_line_code
 
 
