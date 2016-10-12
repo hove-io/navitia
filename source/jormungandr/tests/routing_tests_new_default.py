@@ -75,25 +75,35 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, AbstractTestFixture):
         j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
         eq_(j_departure - timedelta(seconds=1), dt)
 
-    @skip("temporarily disabled")
     def test_best_filtering(self):
-        super(JourneyCommon, self).test_best_filtering()
+        """
+        This feature is no longer supported
+        """
+        pass
 
-    @skip("temporarily disabled")
     def test_journeys_wheelchair_profile(self):
-        super(JourneyCommon, self).test_journeys_wheelchair_profile()
+        """
+        This feature is no longer supported
+        """
+        pass
 
-    @skip("temporarily disabled")
     def test_not_existent_filtering(self):
-        super(JourneyCommon, self).test_not_existent_filtering()
+        """
+        This feature is no longer supported
+        """
+        pass
 
-    @skip("temporarily disabled")
     def test_other_filtering(self):
-        super(JourneyCommon, self).test_other_filtering()
+        """
+        This feature is no longer supported
+        """
+        pass
 
-    @skip("temporarily disabled")
     def test_speed_factor_direct_path(self):
-        super(JourneyCommon, self).test_speed_factor_direct_path()
+        """
+        This feature is no longer supported
+        """
+        pass
 
     def test_first_bss_last_bss_section_mode(self):
         query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
@@ -237,9 +247,8 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, AbstractTestFixture):
         assert 'walking' in response["journeys"][2]["tags"]
         assert 'walking' in response["journeys"][3]["tags"]
 
-    @skip("temporarily disabled")
     def test_traveler_type(self):
-        super(JourneyCommon, self).test_traveler_type()
+        super(TestJourneysNewDefault, self).test_traveler_type()
 
 
 @config({"scenario": "new_default"})

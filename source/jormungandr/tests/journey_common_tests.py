@@ -38,7 +38,7 @@ def check_journeys(resp):
     assert not resp.get('journeys') or sum((1 for j in resp['journeys'] if j['type'] == "best")) == 1
 
 @dataset({"main_routing_test": {}})
-class JourneyCommon():
+class JourneyCommon(object):
 
     """
     Test the structure of the journeys response
@@ -406,7 +406,8 @@ class JourneyCommon():
         basic_response = self.query_region(journey_basic_query)
 
         def bike_in_journey(fast_walker):
-            return any(sect_fast_walker["mode"] == 'bike' for sect_fast_walker in fast_walker['sections'])
+            return any(sect_fast_walker["mode"] == 'bike' for sect_fast_walker in fast_walker['sections']
+                       if 'mode' in sect_fast_walker)
 
         def no_bike_in_journey(journey):
             return all(section['mode'] != 'bike' for section in journey['sections'] if 'mode' in section)
@@ -439,7 +440,7 @@ class JourneyCommon():
 
 
 @dataset({"main_routing_test": {}})
-class DirectPath():
+class DirectPath(object):
     def test_journey_direct_path(self):
         query = journey_basic_query + \
                 "&first_section_mode[]=bss" + \
