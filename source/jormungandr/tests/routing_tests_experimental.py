@@ -106,10 +106,7 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
         super(TestJourneysExperimental, self).test_sp_to_sp()
 
     def test_speed_factor_direct_path(self):
-        """
-        This feature is no longer supported
-        """
-        pass
+        super(TestJourneysExperimental, self).test_speed_factor_direct_path()
 
     def test_traveler_type(self):
         super(TestJourneysExperimental, self).test_traveler_type()

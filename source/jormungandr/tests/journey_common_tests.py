@@ -113,18 +113,19 @@ class JourneyCommon(object):
         response = self.query_region("{query}&type=non_pt_walk&walking_speed=1.5".
                                      format(query=journey_basic_query))
 
-        assert len(response['journeys']) == 1
-        assert response['journeys'][0]["type"] == "non_pt_walk"
-        assert len(response['journeys'][0]['sections']) == 1
-        assert response['journeys'][0]['duration'] == response['journeys'][0]['sections'][0]['duration']
-        assert response['journeys'][0]['duration'] == 205
-        assert response['journeys'][0]['durations']['total'] == 205
-        assert response['journeys'][0]['durations']['walking'] == 205
+        journeys = response['journeys']
+        assert journeys
+        non_pt_walk_j = next((j for j in journeys if j['type'] == 'non_pt_walk'), None)
+        assert non_pt_walk_j
+        assert non_pt_walk_j['duration'] == non_pt_walk_j['sections'][0]['duration']
+        assert non_pt_walk_j['duration'] == 205
+        assert non_pt_walk_j['durations']['total'] == 205
+        assert non_pt_walk_j['durations']['walking'] == 205
 
-        assert response['journeys'][0]['departure_date_time'] == response['journeys'][0]['sections'][0]['departure_date_time']
-        assert response['journeys'][0]['departure_date_time'] == '20120614T080000'
-        assert response['journeys'][0]['arrival_date_time'] == response['journeys'][0]['sections'][0]['arrival_date_time']
-        assert response['journeys'][0]['arrival_date_time'] == '20120614T080325'
+        assert non_pt_walk_j['departure_date_time'] == non_pt_walk_j['sections'][0]['departure_date_time']
+        assert non_pt_walk_j['departure_date_time'] == '20120614T080000'
+        assert non_pt_walk_j['arrival_date_time'] == non_pt_walk_j['sections'][0]['arrival_date_time']
+        assert non_pt_walk_j['arrival_date_time'] == '20120614T080325'
 
     def test_not_existent_filtering(self):
         """if we filter with a real type but not present, we don't get any journey, but we got a nice error"""

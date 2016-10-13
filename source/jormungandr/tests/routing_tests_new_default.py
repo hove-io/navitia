@@ -100,10 +100,7 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, AbstractTestFixture):
         pass
 
     def test_speed_factor_direct_path(self):
-        """
-        This feature is no longer supported
-        """
-        pass
+        super(TestJourneysNewDefault, self).test_speed_factor_direct_path()
 
     def test_first_bss_last_bss_section_mode(self):
         query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
