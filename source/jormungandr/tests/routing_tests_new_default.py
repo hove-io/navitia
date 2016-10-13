@@ -99,9 +99,6 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, AbstractTestFixture):
         """
         pass
 
-    def test_speed_factor_direct_path(self):
-        super(TestJourneysNewDefault, self).test_speed_factor_direct_path()
-
     def test_first_bss_last_bss_section_mode(self):
         query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
                 "first_section_mode[]={first}&last_section_mode[]={last}"
@@ -243,9 +240,6 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, AbstractTestFixture):
         assert not 'bike' in response["journeys"][1]["tags"]
         assert 'walking' in response["journeys"][2]["tags"]
         assert 'walking' in response["journeys"][3]["tags"]
-
-    def test_traveler_type(self):
-        super(TestJourneysNewDefault, self).test_traveler_type()
 
 
 @config({"scenario": "new_default"})

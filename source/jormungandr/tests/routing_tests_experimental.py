@@ -105,12 +105,6 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
     def test_sp_to_sp(self):
         super(TestJourneysExperimental, self).test_sp_to_sp()
 
-    def test_speed_factor_direct_path(self):
-        super(TestJourneysExperimental, self).test_speed_factor_direct_path()
-
-    def test_traveler_type(self):
-        super(TestJourneysExperimental, self).test_traveler_type()
-
     def test_max_duration_to_pt_equals_to_0(self):
         query = journey_basic_query + \
             "&first_section_mode[]=bss" + \
