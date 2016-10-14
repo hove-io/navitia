@@ -53,6 +53,8 @@ from navitiacommon import models
 from tyr.helper import get_instance_logger, get_named_arg
 from contextlib import contextmanager
 import glob
+from redis.exceptions import ConnectionError
+import retrying
 
 
 def unzip_if_needed(filename):
@@ -103,12 +105,16 @@ class Lock(object):
             logging.debug('args: %s -- kwargs: %s', args, kwargs)
             job = models.Job.query.get(job_id)
             logger = get_instance_logger(job.instance)
-            lock = redis.lock('tyr.lock|' + job.instance.name, timeout=self.timeout)
-            if not lock.acquire(blocking=False):
+            task = args[func.func_code.co_varnames.index('self')]
+            try:
+                lock = redis.lock('tyr.lock|' + job.instance.name, timeout=self.timeout)
+                locked = lock.acquire(blocking=False)
+            except ConnectionError:
+                logging.exception('Exception with redis while locking. Retrying in 10sec')
+                task.retry(countdown=10, max_retries=10)
+            if not locked:
                 countdown = 300
-                logger.info('lock on %s retry %s in %s sec',
-                            job.instance.name, func.__name__, countdown)
-                task = args[func.func_code.co_varnames.index('self')]
+                logger.info('lock on %s retry %s in %s sec', job.instance.name, func.__name__, countdown)
                 task.retry(countdown=countdown, max_retries=10)
             else:
                 try:
@@ -116,7 +122,9 @@ class Lock(object):
                     return func(*args, **kwargs)
                 finally:
                     logger.debug('release lock on %s for %s', job.instance.name, func.__name__)
-                    lock.release()
+                    #sometimes we are disconnected from redis when we want to release the lock,
+                    #so we retry only the release
+                    retrying.Retrying(stop_max_attempt_number=5, wait_fixed=1000).call(lock.release)
         return wrapper
 
 @contextmanager
