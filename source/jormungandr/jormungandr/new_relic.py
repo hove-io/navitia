@@ -26,34 +26,27 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr import i_manager, bss_provider_manager
-from functools import wraps
 import logging
+try:
+    from newrelic import agent
+except ImportError:
+    logger = logging.getLogger(__name__)
+    logger.exception('failure while importing newrelic')
+    agent = None
 
-class ManageStands(object):
 
-    def __init__(self, resource, attribute):
-        """
-        resource: the element to apply the decorator
-        attribute: the attribute name containing the list (pois, places, places_nearby, journeys)
-        """
-        self.resource = resource
-        self.attribute = attribute
+def record_exception():
+    """
+    record the exception currently handled to newrelic
+    """
+    if agent:
+        agent.record_exception()#will record the exception currently handled
 
-    def __call__(self, f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            response, status, e = f(*args, **kwargs)
-            if status == 200 and self.attribute in response:
-                instance = i_manager.instances.get(self.resource.region)
-                if instance and instance.bss_provider:
-                    add_bss_availability = bss_provider_manager.handle_journeys if self.attribute == 'journeys' \
-                        else bss_provider_manager.handle_places
-                    try:
-                        response[self.attribute] = add_bss_availability(response[self.attribute])
-                    except:
-                        logger = logging.getLogger(__name__)
-                        logger.exception('Error while handling BSS realtime availability')
-            return response, status, e
-        return wrapper
+def record_custom_parameter(name, value):
+    """
+    add a custom parameter to the current request
+    """
+    if agent:
+        agent.add_custom_parameter(name, value)

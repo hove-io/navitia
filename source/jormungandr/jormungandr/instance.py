@@ -69,7 +69,13 @@ def _init_g():
 
 class Instance(object):
 
-    def __init__(self, context, name, zmq_socket, street_network_configuration=None, realtime_proxies_configuration=[]):
+    def __init__(self,
+                 context,
+                 name,
+                 zmq_socket,
+                 street_network_configuration=None,
+                 realtime_proxies_configuration=[],
+                 zmq_socket_type='persistent'):
         if not street_network_configuration:
             street_network_configuration = {'class': 'jormungandr.street_network.kraken.Kraken'}
         self.geom = None
@@ -77,13 +83,12 @@ class Instance(object):
         self.socket_path = zmq_socket
         self._scenario = None
         self._scenario_name = None
-        self.nb_created_socket = 0
         self.lock = Lock()
         self.context = context
         self.name = name
         self.timezone = None  # timezone will be fetched from the kraken
         self.publication_date = -1
-        self.is_up = True
+        self.is_initialized = False #kraken hasn't been called yet we don't have geom nor timezone
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_INSTANCE_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S'])
         self.georef = georef.Kraken(self)
@@ -96,6 +101,7 @@ class Instance(object):
         self.realtime_proxy_manager = realtime_schedule.RealtimeProxyManager(realtime_proxies_configuration, self)
         from jormungandr.autocomplete.kraken import Kraken
         self.autocomplete = Kraken()
+        self.zmq_socket_type = zmq_socket_type
 
     def get_models(self):
         if self.name not in g.instances_model:
@@ -291,19 +297,25 @@ class Instance(object):
     @contextmanager
     def socket(self, context):
         socket = None
-        try:
-            socket = self._sockets.get(block=False)
-        except queue.Empty:
+        if self.zmq_socket_type == 'transient':
             socket = context.socket(zmq.REQ)
             socket.connect(self.socket_path)
-            self.lock.acquire()
-            self.nb_created_socket += 1
-            self.lock.release()
-        try:
-            yield socket
-        finally:
-            if not socket.closed:
-                self._sockets.put(socket)
+            try:
+                yield socket
+            finally:
+                if not socket.closed:
+                    socket.close()
+        else:
+            try:
+                socket = self._sockets.get(block=False)
+            except queue.Empty:
+                socket = context.socket(zmq.REQ)
+                socket.connect(self.socket_path)
+            try:
+                yield socket
+            finally:
+                if not socket.closed:
+                    self._sockets.put(socket)
 
     def send_and_receive(self, *args, **kwargs):
         """
@@ -355,7 +367,7 @@ class Instance(object):
         Does this instance has this id
         """
         try:
-            return self.is_up and len(self.get_id(id_).places) > 0
+            return len(self.get_id(id_).places) > 0
         except DeadSocketException:
             return False
 
@@ -364,7 +376,7 @@ class Instance(object):
 
     def has_point(self, p):
         try:
-            return self.is_up and self.geom and self.geom.contains(p)
+            return self.geom and self.geom.contains(p)
         except DeadSocketException:
             return False
 
@@ -399,14 +411,17 @@ class Instance(object):
         """
         update the property of an instance from a response if the metadatas field if present
         """
+        #after a successful call we consider the instance initialised even if no data were loaded
+        self.is_initialized = True
         if response.HasField(str("metadatas")) and response.publication_date != self.publication_date:
+            logging.getLogger(__name__).debug('updating metadata for %s', self.name)
             with self.lock as lock:
+                self.publication_date = response.publication_date
                 if response.metadatas.shape and response.metadatas.shape != "":
                     try:
                         self.geom = wkt.loads(response.metadatas.shape)
                     except ReadingError:
                         self.geom = None
-                    self.is_up = True
                 else:
                     self.geom = None
                 self.timezone = response.metadatas.timezone
@@ -417,20 +432,16 @@ class Instance(object):
         Get and store variables of the instance.
         Returns True if we need to clear the cache, False otherwise.
         """
+        pub_date = self.publication_date
         req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS
         try:
             resp = self.send_and_receive(req, timeout=1000, quiet=True)
-            self.update_property(resp)
             #the instance is automatically updated on a call
-            if resp.HasField(str('publication_date')) and self.publication_date != resp.publication_date:
-                self.publication_date = resp.publication_date
+            if self.publication_date != pub_date:
                 return True
         except DeadSocketException:
-            #but if there is a error, we reset the geom manually
-            self.geom = None
-            self.is_up = False
-            if self.publication_date != -1:
-                self.publication_date = -1
-                return True
+            #we don't do anything on error, a new session will be established to an available kraken on
+            # the next request. We don't want to purge all our cache for a small error.
+            logging.getLogger(__name__).debug('timeout on init for %s', self.name)
         return False

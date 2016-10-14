@@ -133,7 +133,13 @@ class ReleaseManager:
             # and if distant/release contains HEAD of PR
             # (stops after 10 successive merged PR)
             if pr['merged_at']:
-                branches = self.git.branch('-r', '--contains', pr_head_sha) + '\n'
+                branches = []
+                try:
+                    branches = self.git.branch('-r', '--contains', pr_head_sha) + '\n'
+                except:
+                    print "ERROR while searching for commit in release branch: " \
+                          "Following PR added to changelog, remove it if needed.\n"
+
                 # adding separators before and after to match only branch name
                 release_branch_name = '  ' + self.remote_name + '/release\n'
                 if release_branch_name in branches:
@@ -282,7 +288,7 @@ class ReleaseManager:
         self.git.commit(m="Version %s" % self.str_version)
 
         if self.release_type == "hotfix":
-            print "now time to do your actual hotfix!"
+            print "now time to do your actual hotfix! (cherry-pick commits)"
             print "PLEASE check that \"release\" COMPILES and TESTS!"
             print "Note: you'll have to merge/tag/push manually after your fix:"
             print "  git checkout release"

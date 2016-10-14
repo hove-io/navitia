@@ -230,8 +230,8 @@ class TestSyntheseSchedules(AbstractTestFixture):
             response = self.query_region(query)
             scs = get_not_null(response, 'stop_schedules')
             assert len(scs) == 1
-            print(_get_schedule(response, 'SP_11', 'B1'))
-            assert _get_schedule(response, 'SP_11', 'B1') == [
+            sched = _get_schedule(response, 'SP_11', 'B1')
+            assert sched == [
                 {'rt': True, 'dt': '20160102T091717'},
                 {'rt': True, 'dt': '20160102T101717'},
             ]

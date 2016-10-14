@@ -161,3 +161,51 @@ def realtime_place_find_provider_test():
     manager = BssProviderManager(CONFIG)
     provider = manager.find_provider(poi)
     assert provider == manager.bss_providers[0]
+
+
+def realtime_journey_handle_test():
+    """
+    test that manager correctly populates "from" and "to" poi of a journey response
+    """
+    journeys = [
+        {
+            'sections': [
+                {
+                    'from': {
+                        'embedded_type': 'poi',
+                        'poi': {
+                            'id': 'station_1',
+                            'poi_type': {
+                                'id': 'poi_type:amenity:bicycle_rental'
+                            }
+                        },
+                        'id': 'station_1'
+                    },
+                    'to': {
+                        'embedded_type': 'poi',
+                        'poi': {
+                            'id': 'station_1',
+                            'poi_type': {
+                                'id': 'poi_type:amenity:bicycle_rental'
+                            }
+                        },
+                        'id': 'station_1'
+                    }
+                }
+            ]
+        }
+    ]
+
+    manager = BssProviderManager(CONFIG)
+    journeys_with_stand = manager.handle_journeys(journeys)
+    journey_from = journeys_with_stand[0]['sections'][0]['from']
+    journey_to = journeys_with_stand[0]['sections'][0]['to']
+    assert 'stands' in journey_from['poi']
+    assert 'stands' in journey_to['poi']
+
+    assert journey_from['poi']['stands'].available_places == 5
+    assert journey_from['poi']['stands'].available_bikes == 9
+    assert journey_from['poi']['stands'].total_stands == 14
+    assert journey_to['poi']['stands'].available_places == 5
+    assert journey_to['poi']['stands'].available_bikes == 9
+    assert journey_to['poi']['stands'].total_stands == 14

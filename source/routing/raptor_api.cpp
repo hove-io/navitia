@@ -1011,7 +1011,11 @@ pbnavitia::Response make_pt_response(RAPTOR &raptor,
     DateTime init_dt = DateTimeUtils::set(day, time);
 
     if(max_duration != std::numeric_limits<uint32_t>::max()) {
-        bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
+        if (clockwise) {
+            bound = init_dt + max_duration;
+        } else {
+            bound = init_dt > max_duration ? init_dt - max_duration : 0;
+        }
     }
     std::vector<Path> pathes = raptor.compute_all(
             departures, arrivals, init_dt, rt_level, transfer_penalty, bound, max_transfers,

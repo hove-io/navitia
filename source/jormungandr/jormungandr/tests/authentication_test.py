@@ -30,7 +30,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr import app
-from jormungandr.authentication import get_token
+from jormungandr.authentication import get_token, get_used_coverages, register_used_coverages
 import base64
 import pytest
 from werkzeug.exceptions import Unauthorized
@@ -61,3 +61,16 @@ def get_token_basic_auth_unicode_test():
 def get_token_url_test():
     with app.test_request_context('/', query_string='key=mykey'):
         assert get_token() == 'mykey'
+
+def get_used_coverages_test():
+    with app.test_request_context('/v1/coverage/fr-idf'):
+        assert get_used_coverages() == ['fr-idf']
+
+    with app.test_request_context('/v1/journeys'):
+        register_used_coverages(['fr-bre'])
+        assert get_used_coverages() == ['fr-bre']
+
+    with app.test_request_context('/v1/journeys'):
+        register_used_coverages('fr-bre')
+        assert get_used_coverages() == ['fr-bre']
+

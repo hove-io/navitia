@@ -1,3 +1,27 @@
+navitia2 (2.19.0) unstable; urgency=low
+
+  * Tyr: add retrying when redis error while locking  <https://github.com/CanalTP/navitia/pull/1825>
+  * RT-proxy: consider line object code given by conf  <https://github.com/CanalTP/navitia/pull/1821>
+  * Doc : tyr jobs API  <https://github.com/CanalTP/navitia/pull/1818>
+  * Jormungandr: expose bss realtime availability in /journeys  <https://github.com/CanalTP/navitia/pull/1819>
+  * Jormungandr: refactoring integration tests  <https://github.com/CanalTP/navitia/pull/1788>
+  * Typ: Fix shape value when is "null" in database  <https://github.com/CanalTP/navitia/pull/1817>
+  * Doc: shape management in tyr  <https://github.com/CanalTP/navitia/pull/1816>
+  * Jormungandr: make parallel call to all kraken when searching an id  <https://github.com/CanalTP/navitia/pull/1815>
+  * Experimental : add internal id for direct_path  <https://github.com/CanalTP/navitia/pull/1814>
+  * Jormungandr: removal of thread ping  <https://github.com/CanalTP/navitia/pull/1812>
+  * Jormungandr: add some information to newrelic  <https://github.com/CanalTP/navitia/pull/1803>
+  * Jormungandr: add the ability to use transient zmq socket  <https://github.com/CanalTP/navitia/pull/1808>
+  * Jormungandr: Modification for Experimental  <https://github.com/CanalTP/navitia/pull/1811>
+  * Fix on datetime represents arrival for experimental  <https://github.com/CanalTP/navitia/pull/1807>
+  * Jormungandr: Don't clear the cache on kraken error, it's only making all thing slower  <https://github.com/CanalTP/navitia/pull/1810>
+  * jormungandr: fix error on use of user shape in autocomplete  <https://github.com/CanalTP/navitia/pull/1809>
+  * Experimental: neglect fallback when max_duration_to_pt or max_duration equals zero  <https://github.com/CanalTP/navitia/pull/1795>
+  * Doc: Add isochrone.boundary_duration[] parameter  <https://github.com/CanalTP/navitia/pull/1804>
+  * Doc: NTFS 0.6.2 - Adding fare specifications  <https://github.com/CanalTP/navitia/pull/1654>
+
+ -- Abderrahim Azime <abderrahim.azime@canaltp.fr>  Fri, 14 Oct 2016 14:10:58 +0100
+
 navitia2 (2.18.0) unstable; urgency=low
 
   * autocomplete: Use user shape in autocomplete  <https://github.com/CanalTP/navitia/pull/1793>

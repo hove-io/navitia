@@ -62,6 +62,8 @@ from jormungandr.interfaces.v1.Calendars import calendar
 from navitiacommon.default_traveler_profile_params import acceptable_traveler_types
 from navitiacommon import default_values
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, dt_represents, compute_possible_region
+from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
+
 
 f_datetime = "%Y%m%dT%H%M%S"
 class SectionLinks(fields.Raw):
@@ -376,8 +378,12 @@ class Journeys(JourneyCommon):
         parser_get.add_argument("_night_bus_filter_max_factor", type=float)
         parser_get.add_argument("_min_car", type=int)
         parser_get.add_argument("_min_bike", type=int)
+        parser_get.add_argument("bss_stands", type=boolean, default=False, description="Show bss stands availability")
 
         self.method_decorators.append(complete_links(self))
+
+        if parser_get.parse_args().get("bss_stands"):
+            self.method_decorators.insert(1, ManageStands(self, 'journeys'))
 
     @add_debug_info()
     @add_fare_links()

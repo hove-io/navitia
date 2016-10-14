@@ -105,7 +105,16 @@ honcho run py.test tests
 
 ## Data integration
 
-TODO
+You can get the last data integrations using the jobs endpoint
+
+    GET $HOST/v0/jobs/
+
+You may want to specify an instance to filter these jobs :
+
+    GET $HOST/v0/jobs/<INSTANCE>
+
+A job is created when a new dataset is detected by tyr_beat.
+You can also trigger a data integration by posting your dataset to the job endpoint filtered by instance.
 
 ## Authentication
 
@@ -244,6 +253,8 @@ To get the list of users
         "id": 1,
         "login": "foo",
         "type": "with_free_instances",
+        "has_shape": false,
+        "shape": null,
         "billing_plan": {
             "max_request_count": 3000,
             "name": "foo",
@@ -263,6 +274,8 @@ To get the list of users
         "id": 3,
         "login": "alex",
         "type": "with_free_instances",
+        "has_shape": true,
+        "shape": {},
         "billing_plan": {
             "max_request_count": 3000,
             "name": "foo",
@@ -302,6 +315,8 @@ Look for a user with his email:
         },
         "type": "with_free_instances",
         "email": "foo@example.com",
+        "has_shape": false,
+        "shape": null,
         "id": 1,
         "login": "foo"
     }
@@ -330,6 +345,8 @@ Get all users for a specific endpoint
         },
         "type": "with_free_instances",
         "email": "foo@example.com",
+        "has_shape": false,
+        "shape": null,
         "id": 1,
         "login": "foo"
     }
@@ -351,6 +368,8 @@ Get all a user information:
     },
     "authorizations": [],
     "email": "alex@example.com",
+        "has_shape": false,
+        "shape": null,
     "id": 3,
     "keys": [],
     "login": "alex",
@@ -363,19 +382,92 @@ Get all a user information:
 }
 ```
 
+#### GET Parameters
+
+name             | description                                                                          | required | default        |
+-----------------|--------------------------------------------------------------------------------------|----------|----------------|
+disable_geojson  | if false the shape will be fully displayed (otherwise displaying: `null` or `{}`)    | nope     | true          |
+
+
+Example for `disable_geojson=false` (see default above for `true`)
+
+    GET $HOST/v0/users?disable_geojson=false
+
+```json
+[
+    {
+        "email": "foo@example.com",
+        "id": 1,
+        "login": "foo",
+        "type": "with_free_instances",
+        "has_shape": false,
+        "shape": null,
+        "billing_plan": {
+            "max_request_count": 3000,
+            "name": "foo",
+            "default": true,
+            "max_object_count": 60000,
+            "id": 1
+        },
+        "end_point": {
+            "default": false,
+            "hostnames": [],
+            "id": 2,
+            "name": "foo"
+        }
+    },
+    {
+        "email": "alex@example.com",
+        "id": 3,
+        "login": "alex",
+        "type": "with_free_instances",
+        "has_shape": true,
+        "shape": {
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [ [ [100, 0], [101, 0], [101, 1], [100, 1], [100, 0] ] ]
+            },
+            "properties": {
+                "prop0": "value0",
+                "prop1": {
+                    "this": "that"
+                }
+            }
+        },
+        "billing_plan": {
+            "max_request_count": 3000,
+            "name": "foo",
+            "default": true,
+            "max_object_count": 60000,
+            "id": 1
+        },
+        "end_point": {
+            "default": false,
+            "hostnames": [],
+            "id": 1,
+            "name": "alex"
+        }
+    }
+]
+```
+
+
+
 
 To create a user, parameters need to given in the query's string or in json send in the body
 
 Note: email addresses are validated via api not only on the format but on it's existence. However no email are send.
 
-#### Parameters
+#### POST Parameters
 
 name         | description                                                                          | required | default                            |
 -------------|--------------------------------------------------------------------------------------|----------|------------------------------------|
-email        | adress email of the user                                                             | true     |                                    |
-login        | login of the user                                                                    | true     |                                    |
-type         | type of the user between: [with_free_instances, without_free_instances, super_user]  | false    | with_free_instances                |
-end_point_id | the id of the endpoint for this user (in most case the default value is good enough  | false    | the default end_point (navitia.io) |
+email        | adress email of the user                                                             | yep      |                                    |
+login        | login of the user                                                                    | yep      |                                    |
+type         | type of the user between: [with_free_instances, without_free_instances, super_user]  | nope     | with_free_instances                |
+end_point_id | the id of the endpoint for this user (in most case the default value is good enough  | nope     | the default end_point (navitia.io) |
+shape        | the shape (geojson) to be used for autocomplete for this user                        | nope     | null                               |
 
 
     POST /v0/users/?email=alex@example.com&login=alex
@@ -395,6 +487,35 @@ If you use the json format as input, boolean need to be passed as string.
     "login": "alex"
 }
 ```
+
+#### PUT Parameters
+
+They are the same as POST.
+When a parameter is missing, it is not changed.
+When PUTing the exact result of a GET (using disable_geojson or not), nothing is changed.
+
+##### Shape modification
+`has_shape` is not a parameter (no effect whatsoever).
+To modify a shape, PUT the new shape (so far, simple feature only):
+```json
+{
+  "shape": {"type": "Feature",
+      "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+              [[100.0, 0.0], [101.0, 0.0], [101.0, 1.0],
+               [100.0, 1.0], [100.0, 0.0]]
+          ]
+      },
+      "properties": {
+          "prop0": "value0",
+          "prop1": {"this": "that"}
+      }
+  }
+}
+```
+To remove a shape, PUT `{"shape":null}`.
+
 
 #### Keys
 

@@ -39,7 +39,8 @@ from jormungandr.index import index
 from jormungandr.modules_loader import ModulesLoader
 import ujson
 import logging
-
+from jormungandr.new_relic import record_custom_parameter
+from jormungandr.authentication import get_user, get_token, get_app_name, get_used_coverages
 
 @rest_api.representation("text/jsonp")
 @rest_api.representation("application/jsonp")
@@ -70,6 +71,23 @@ def access_log(response, *args, **kwargs):
 def add_request_id(response, *args, **kwargs):
     response.headers['navitia-request-id'] = request.id
     return response
+
+@app.after_request
+def add_info_newrelic(response, *args, **kwargs):
+    try:
+        record_custom_parameter('navitia-request-id', request.id)
+        token = get_token()
+        user = get_user(token=token, abort_if_no_token=False)
+        app_name = get_app_name(token)
+        if user:
+            record_custom_parameter('user_id', user.id)
+        record_custom_parameter('app_name', app_name)
+        record_custom_parameter('coverages', str(sorted(get_used_coverages())))
+    except:
+        logger = logging.getLogger(__name__)
+        logger.exception('error while reporting to newrelic:')
+    return response
+
 
 
 # If modules are configured, then load and run them

@@ -33,6 +33,7 @@ from jormungandr.stat_manager import manage_stat_caller
 from jormungandr import stat_manager
 from jormungandr.quota import quota_control
 from functools import wraps
+from jormungandr.authentication import register_used_coverages
 
 
 class StatedResource(Resource):
@@ -41,8 +42,8 @@ class StatedResource(Resource):
         Resource.__init__(self, *args, **kwargs)
         self.method_decorators = []
 
+        self.method_decorators.append(self._stat_regions)
         if stat_manager.save_stat:
-            self.method_decorators.append(self._stat_regions)
             self.method_decorators.append(manage_stat_caller(stat_manager))
 
         if quota:
@@ -57,6 +58,6 @@ class StatedResource(Resource):
             result = f(*args, **kwargs)
             region = getattr(self, 'region', None)
             if region:
-                stat_manager.register_regions([region])
+                register_used_coverages([region])
             return result
         return wrapper

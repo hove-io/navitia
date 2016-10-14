@@ -88,7 +88,7 @@ class TestCleverageSchedules(AbstractTestFixture):
                 ([
                  {
                      "name": "Lianes 5",
-                     "code": "code A",
+                     "code": "KisioDigital A",
                      "type": "Bus",
                      "schedules": [
                          {
@@ -165,7 +165,7 @@ class TestCleverageSchedules(AbstractTestFixture):
                 ([
                  {
                      "name": "Lianes 5",
-                     "code": "code A",
+                     "code": "KisioDigital A",
                      "type": "Bus",
                      "schedules": [
                          {
