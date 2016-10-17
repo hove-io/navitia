@@ -161,7 +161,7 @@ def get_user(token, abort_if_no_token=True):
             #a token is mandatory for non public jormungandr
             if not current_app.config.get('PUBLIC', False):
                 if abort_if_no_token:
-                    flask_restful.abort(401, message='no token. You can get one at http://www.navitia.io')
+                    flask_restful.abort(401, message='no token. You can get one at http://www.navitia.io or contact your support if you’re using the opensource version of Navitia https://github.com/CanalTP/navitia')
                 else:
                     return None
             else:  # for public one we allow unknown user
