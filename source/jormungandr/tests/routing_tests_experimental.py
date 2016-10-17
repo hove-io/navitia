@@ -95,10 +95,6 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
         super(JourneyCommon, self).test_other_filtering()
 
     @skip("temporarily disabled")
-    def test_sp_to_sp(self):
-        super(JourneyCommon, self).test_sp_to_sp()
-
-    @skip("temporarily disabled")
     def test_speed_factor_direct_path(self):
         super(JourneyCommon, self).test_speed_factor_direct_path()
 

@@ -376,11 +376,22 @@ class JourneyCommon():
 
         # with street network desactivated
         response = self.query_region(query + "&max_duration_to_pt=0")
-        assert('journeys' not in response)
+        journeys = response.get('journeys')
+        current_region = list(self.krakens_pool)[0]
+        current_scenario = self.data_sets.get(current_region, {}).get('scenario')
+        if current_scenario in ('default', 'new_default'):
+            assert not journeys
+        elif current_scenario == 'experimental':
+            assert len(journeys) == 1
+            assert 'non_pt_walking' in journeys[0]['tags']
 
         # with street network activated
         response = self.query_region(query + "&max_duration_to_pt=1")
-        eq_(len(response['journeys']), 1)
+        if current_scenario in ('default', 'new_default'):
+            eq_(len(response['journeys']), 1)
+        elif current_scenario == 'experimental':
+            eq_(len(response['journeys']), 2)
+
         eq_(response['journeys'][0]['sections'][0]['from']['id'], 'stop_point:uselessA')
         eq_(response['journeys'][0]['sections'][0]['to']['id'], 'stop_point:stopA')
         eq_(response['journeys'][0]['sections'][0]['type'], 'street_network')
