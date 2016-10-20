@@ -2218,3 +2218,48 @@ BOOST_FIXTURE_TEST_CASE(direct_path_car, streetnetworkmode_fixture<test_speed_pr
     BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 5);
 
 }
+
+//test with network disruption too
+// we add 2 disruptions, and we check that the status of the journey is correct
+BOOST_AUTO_TEST_CASE(stop_times_with_distinct_arrival_departure) {
+    ed::builder b("20150314");
+    b.sa("A")("stop_point:A", 0, 0, false);
+    b.sa("B")("stop_point:B", 0, 0, false);
+    b.sa("C")("stop_point:C", 0, 0, false);
+    b.sa("D")("stop_point:D", 0, 0, false);
+    b.vj("l")
+        ("stop_point:A", "8:00"_t, "8:05"_t)
+        ("stop_point:B", "9:00"_t, "9:05"_t)
+        ("stop_point:C", "10:00"_t, "10:05"_t)
+        ("stop_point:D", "11:00"_t, "11:05"_t);
+
+    b.finish();
+    b.generate_dummy_basis();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+
+    nr::RAPTOR raptor(*b.data);
+
+    navitia::type::Type_e origin_type = b.data->get_type_of_id("B");
+    navitia::type::Type_e destination_type = b.data->get_type_of_id("C");
+    navitia::type::EntryPoint origin(origin_type, "B");
+    navitia::type::EntryPoint destination(destination_type, "C");
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+    pbnavitia::Response resp = make_response(raptor, origin, destination,
+                                            {ntest::to_posix_timestamp("20150314T080000")},
+                                            true, navitia::type::AccessibiliteParams(),
+                                            {}, sn_worker, nt::RTLevel::Base,
+                                            "20150314T080000"_dt, 2_min);
+
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+
+    const auto& j = resp.journeys(0);
+    BOOST_REQUIRE(j.sections_size() > 0);
+    BOOST_CHECK_EQUAL(j.departure_date_time(), j.sections(0).begin_date_time());
+    BOOST_CHECK_EQUAL(j.arrival_date_time(), j.sections(j.sections_size() - 1).end_date_time());
+    for (int i = 1; i < j.sections_size(); ++i) {
+        BOOST_CHECK_EQUAL(j.sections(i - 1).end_date_time(), j.sections(i).begin_date_time());
+    }
+}
