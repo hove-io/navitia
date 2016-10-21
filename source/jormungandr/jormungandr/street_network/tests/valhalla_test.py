@@ -37,6 +37,8 @@ from jormungandr.utils import str_to_time_stamp
 import requests_mock
 import json
 
+MOCKED_REQUEST = {'walking_speed': 1, 'bike_speed': 2}
+
 def get_pt_object(type, lon, lat):
     pt_object = type_pb2.PtObject()
     pt_object.embedded_type = type
@@ -92,22 +94,12 @@ def response_valid():
     }
 
 
-def get_speed_func_test():
-    instance = MagicMock()
-    instance.walking_speed = 1
-    instance.bike_speed = 2
-    valhalla = Valhalla(instance=instance,
-                        url='http://bob.com')
-    assert valhalla._get_speed('pedestrian') == 3.6 * 1
-    assert valhalla._get_speed('bicycle') == 3.6 * 2
-
-
 def get_costing_options_func_with_empty_costing_options_test():
     instance = MagicMock()
     valhalla = Valhalla(instance=instance,
                         url='http://bob.com')
     valhalla.costing_options = None
-    assert valhalla._get_costing_options('bib') == None
+    assert valhalla._get_costing_options('bib', MOCKED_REQUEST) == None
 
 
 def get_costing_options_func_with_unkown_costing_options_test():
@@ -115,7 +107,7 @@ def get_costing_options_func_with_unkown_costing_options_test():
     valhalla = Valhalla(instance=instance,
                         url='http://bob.com',
                         costing_options={'bib': 'bom'})
-    assert valhalla._get_costing_options('bib') == {'bib': 'bom'}
+    assert valhalla._get_costing_options('bib', MOCKED_REQUEST) == {'bib': 'bom'}
 
 
 def get_costing_options_func_test():
@@ -125,14 +117,14 @@ def get_costing_options_func_test():
     valhalla = Valhalla(instance=instance,
                         url='http://bob.com',
                         costing_options={'bib': 'bom'})
-    pedestrian = valhalla._get_costing_options('pedestrian')
+    pedestrian = valhalla._get_costing_options('pedestrian', MOCKED_REQUEST)
     assert len(pedestrian) == 2
     assert 'pedestrian' in pedestrian
     assert 'walking_speed' in pedestrian['pedestrian']
     assert pedestrian['pedestrian']['walking_speed'] == 3.6 * 1
     assert 'bib' in pedestrian
 
-    bicycle = valhalla._get_costing_options('bicycle')
+    bicycle = valhalla._get_costing_options('bicycle', MOCKED_REQUEST)
     assert len(bicycle) == 2
     assert 'bicycle' in bicycle
     assert 'cycling_speed' in bicycle['bicycle']
@@ -198,7 +190,7 @@ def format_url_func_with_walking_mode_test():
     valhalla = Valhalla(instance=instance,
                         url='http://bob.com',
                         costing_options={'bib': 'bom'})
-    data = valhalla._make_data("walking", origin, [destination])
+    data = valhalla._make_data("walking", origin, [destination], MOCKED_REQUEST)
     assert json.loads(data) == json.loads('''{
                         "costing_options": {
                           "pedestrian": {
@@ -236,7 +228,7 @@ def format_url_func_with_bike_mode_test():
                         url='http://bob.com',
                         costing_options={'bib': 'bom'})
     valhalla.costing_options = None
-    data = valhalla._make_data("bike", origin, [destination])
+    data = valhalla._make_data("bike", origin, [destination], MOCKED_REQUEST)
     assert json.loads(data) == json.loads('''
                                             {
                                               "costing_options": {
@@ -276,7 +268,7 @@ def format_url_func_with_car_mode_test():
                         url='http://bob.com',
                         costing_options={'bib': 'bom'})
     valhalla.costing_options = None
-    data = valhalla._make_data("car", origin, [destination])
+    data = valhalla._make_data("car", origin, [destination], MOCKED_REQUEST)
     assert json.loads(data) == json.loads(''' {
                                       "locations": [
                                         {
@@ -305,7 +297,7 @@ def format_url_func_invalid_mode_test():
     with pytest.raises(InvalidArguments) as excinfo:
         origin = get_pt_object(type_pb2.ADDRESS, 1.0, 1.0)
         destination = get_pt_object(type_pb2.ADDRESS, 2.0, 2.0)
-        valhalla._make_data("bob", origin, [destination])
+        valhalla._make_data("bob", origin, [destination], MOCKED_REQUEST)
     assert '400: Bad Request' == str(excinfo.value)
     assert 'InvalidArguments' == str(excinfo.typename)
 
@@ -362,7 +354,7 @@ def direct_path_func_without_response_valhalla_test():
     valhalla._call_valhalla = MagicMock(return_value=None)
     valhalla._make_data = MagicMock(return_value=None)
     with pytest.raises(TechnicalError) as excinfo:
-        valhalla.direct_path(None, None, None, None, None)
+        valhalla.direct_path(None, None, None, None, None, None)
     assert '500: Internal Server Error' == str(excinfo.value)
     assert 'TechnicalError' == str(excinfo.typename)
 
@@ -379,7 +371,7 @@ def direct_path_func_with_status_code_400_response_valhalla_test():
     valhalla._call_valhalla = MagicMock(return_value=response)
     valhalla._make_data = MagicMock(return_value=None)
     with pytest.raises(TechnicalError) as excinfo:
-        valhalla.direct_path(None, None, None, None, None)
+        valhalla.direct_path(None, None, None, None, None, None)
     assert str(excinfo.value) == '500: Internal Server Error'
     assert str(excinfo.value.data['message']) == 'Valhalla service unavailable, impossible to query : http://bob.com'
     assert str(excinfo.typename) == 'TechnicalError'
@@ -401,7 +393,8 @@ def direct_path_func_with_valid_response_valhalla_test():
                                           origin,
                                           destination,
                                           str_to_time_stamp('20161010T152000'),
-                                          True)
+                                          True,
+                                          MOCKED_REQUEST)
         assert valhalla_response.status_code == 200
         assert valhalla_response.response_type == response_pb2.ITINERARY_FOUND
         assert len(valhalla_response.journeys) == 1

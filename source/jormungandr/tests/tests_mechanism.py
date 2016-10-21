@@ -58,7 +58,7 @@ class FakeModel(object):
         self.scenario = scenario
 
 
-class AbstractTestFixture:
+class AbstractTestFixture(object):
     """
     Mother class for all integration tests
 

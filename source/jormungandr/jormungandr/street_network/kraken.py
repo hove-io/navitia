@@ -36,7 +36,7 @@ class Kraken(object):
     def __init__(self, instance, url, timeout=10, api_key=None, **kwargs):
         self.instance = instance
 
-    def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise):
+    def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise, request):
         req = request_pb2.Request()
         req.requested_api = type_pb2.direct_path
         req.direct_path.origin.place = get_uri_pt_object(pt_object_origin)
@@ -47,23 +47,23 @@ class Kraken(object):
         req.direct_path.clockwise = clockwise
         req.direct_path.streetnetwork_params.origin_mode = mode
         req.direct_path.streetnetwork_params.destination_mode = mode
-        req.direct_path.streetnetwork_params.walking_speed = self.instance.walking_speed
+        req.direct_path.streetnetwork_params.walking_speed = request['walking_speed']
         req.direct_path.streetnetwork_params.max_walking_duration_to_pt = self.instance.max_walking_duration_to_pt
-        req.direct_path.streetnetwork_params.bike_speed = self.instance.bike_speed
+        req.direct_path.streetnetwork_params.bike_speed = request['bike_speed']
         req.direct_path.streetnetwork_params.max_bike_duration_to_pt = self.instance.max_bike_duration_to_pt
-        req.direct_path.streetnetwork_params.bss_speed = self.instance.bss_speed
+        req.direct_path.streetnetwork_params.bss_speed = request['bss_speed']
         req.direct_path.streetnetwork_params.max_bss_duration_to_pt = self.instance.max_bss_duration_to_pt
-        req.direct_path.streetnetwork_params.car_speed = self.instance.car_speed
+        req.direct_path.streetnetwork_params.car_speed = request['car_speed']
         req.direct_path.streetnetwork_params.max_car_duration_to_pt = self.instance.max_car_duration_to_pt
         return self.instance.send_and_receive(req)
 
-    def get_street_network_routing_matrix(self, origins, destinations, street_network_mode, max_duration):
+    def get_street_network_routing_matrix(self, origins, destinations, street_network_mode, max_duration, request):
         # TODO: reverse is not handled as so far
         speed_switcher = {
-            "walking": self.instance.walking_speed,
-            "bike": self.instance.bike_speed,
-            "car": self.instance.car_speed,
-            "bss": self.instance.bss_speed,
+            "walking": request['walking_speed'],
+            "bike": request['bike_speed'],
+            "car": request['car_speed'],
+            "bss": request['bss_speed'],
         }
         req = request_pb2.Request()
         req.requested_api = type_pb2.street_network_routing_matrix
