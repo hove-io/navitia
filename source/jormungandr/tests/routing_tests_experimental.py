@@ -101,10 +101,6 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
         """
         pass
 
-    @skip("temporarily disabled")
-    def test_sp_to_sp(self):
-        super(TestJourneysExperimental, self).test_sp_to_sp()
-
     def test_max_duration_to_pt_equals_to_0(self):
         query = journey_basic_query + \
             "&first_section_mode[]=bss" + \
@@ -118,21 +114,8 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
 
         query += "&max_duration_to_pt=0"
         response = self.query_region(query)
-        check_journeys(response)
-        # the pt journey is eliminated
-        eq_(len(response['journeys']), 3)
-
-        # first is bike
-        assert('bike' in response['journeys'][0]['tags'])
-        eq_(len(response['journeys'][0]['sections']), 1)
-
-        # second is car
-        assert('car' in response['journeys'][1]['tags'])
-        eq_(len(response['journeys'][1]['sections']), 3)
-
-        # last is walking
-        assert('walking' in response['journeys'][-1]['tags'])
-        eq_(len(response['journeys'][-1]['sections']), 1)
+        # pas de solution
+        assert('journeys' not in response)
 
     def test_max_duration_to_pt_equals_to_0_from_stop_point(self):
         query = "journeys?from=stop_point%3AstopA&to=stop_point%3AstopC&datetime=20120614T080000"
@@ -141,9 +124,15 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
         eq_(len(response['journeys']), 2)
 
         query += "&max_duration_to_pt=0"
+        #There is no direct_path but a journey using Metro
         response = self.query_region(query)
         check_journeys(response)
-        eq_(len(response['journeys']), 2)
+        jrnys = response['journeys']
+        assert len(jrnys) == 1
+        section = jrnys[0]['sections'][0]
+        assert section['type'] == 'public_transport'
+        assert section['from']['id'] == 'stop_point:stopA'
+        assert section['to']['id'] == 'stop_point:stopC'
 
     def test_max_duration_equals_to_0(self):
         query = journey_basic_query + \
