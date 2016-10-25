@@ -143,6 +143,7 @@ BOOST_AUTO_TEST_CASE(nearest_segment){
 
     b("a", 0,10)("b", -10, 0)("c",10,0)("d",0,-10)("o",0,0)("e", 50,10);
     b("o", "a")("o","b")("o","c")("o","d")("b","o");
+    b.geo_ref.init();
 
     navitia::type::GeographicalCoord c(1,2, false);
     BOOST_CHECK(b.geo_ref.nearest_edge(c) == b.get("o", "a"));
@@ -167,6 +168,8 @@ BOOST_AUTO_TEST_CASE(real_nearest_edge){
     */
     b("a", 0, -100)("b", 0, 100)("c", 10, 0)("d", 10, 10);
     b("a", "b")("c", "d");
+    b.geo_ref.init();
+
     navitia::type::GeographicalCoord s(-10, 0, false);
     BOOST_CHECK(b.geo_ref.nearest_edge(s) == b.get("a", "b"));
 }
