@@ -63,3 +63,9 @@ class TestNullStatus(AbstractTestFixture):
         assert 'regions' in response
         assert len(response['regions']) == 1
         assert response['regions'][0]['id'] == 'null_status_test'
+
+    @raises(AssertionError)
+    def test_couverage_with_headers(self):
+        """test coverage with headers"""
+        headers = {'content-type': 'application/json'}
+        self.query("v1/coverage", headers=headers)
