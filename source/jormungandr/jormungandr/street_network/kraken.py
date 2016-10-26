@@ -48,13 +48,13 @@ class Kraken(object):
         req.direct_path.streetnetwork_params.origin_mode = mode
         req.direct_path.streetnetwork_params.destination_mode = mode
         req.direct_path.streetnetwork_params.walking_speed = request['walking_speed']
-        req.direct_path.streetnetwork_params.max_walking_duration_to_pt = self.instance.max_walking_duration_to_pt
+        req.direct_path.streetnetwork_params.max_walking_duration_to_pt = request['max_walking_duration_to_pt']
         req.direct_path.streetnetwork_params.bike_speed = request['bike_speed']
-        req.direct_path.streetnetwork_params.max_bike_duration_to_pt = self.instance.max_bike_duration_to_pt
+        req.direct_path.streetnetwork_params.max_bike_duration_to_pt = request['max_bike_duration_to_pt']
         req.direct_path.streetnetwork_params.bss_speed = request['bss_speed']
-        req.direct_path.streetnetwork_params.max_bss_duration_to_pt = self.instance.max_bss_duration_to_pt
+        req.direct_path.streetnetwork_params.max_bss_duration_to_pt = request['max_bss_duration_to_pt']
         req.direct_path.streetnetwork_params.car_speed = request['car_speed']
-        req.direct_path.streetnetwork_params.max_car_duration_to_pt = self.instance.max_car_duration_to_pt
+        req.direct_path.streetnetwork_params.max_car_duration_to_pt = request['max_car_duration_to_pt']
         return self.instance.send_and_receive(req)
 
     def get_street_network_routing_matrix(self, origins, destinations, street_network_mode, max_duration, request):
