@@ -39,7 +39,50 @@ This unit runs all the common tests in journey_common_tests.py.
 
 @config()
 class TestJourneysDefault(JourneyCommon, AbstractTestFixture):
-    pass
+
+    def test_max_duration_equals_to_0(self):
+        query = journey_basic_query + \
+            "&first_section_mode[]=bss" + \
+            "&first_section_mode[]=walking" + \
+            "&first_section_mode[]=bike" + \
+            "&first_section_mode[]=car" + \
+            "&debug=true"
+        response = self.query_region(query)
+        check_journeys(response)
+        eq_(len(response['journeys']), 4)
+
+        query += "&max_duration=0"
+        response = self.query_region(query)
+        # the pt journey is eliminated
+        eq_(len(response['journeys']), 3)
+
+        # first is bike
+        assert('non_pt_bike' == response['journeys'][0]['type'])
+        eq_(len(response['journeys'][0]['sections']), 1)
+
+        # second is empty
+        assert('' == response['journeys'][1]['type'])
+        eq_(len(response['journeys'][1]['sections']), 3)
+
+        # last is bss
+        assert('non_pt_bss' == response['journeys'][2]['type'])
+        eq_(len(response['journeys'][-1]['sections']), 5)
+
+    def test_journey_stop_area_to_stop_point(self):
+        """
+        When the departure is stop_area:A and the destination is stop_point:B belonging to stop_area:B
+        """
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
+            .format(from_sa='stopA', to_sa='stop_point:stopB', datetime="20120614T080000")
+        response = self.query_region(query)
+        check_journeys(response)
+        jrnys = response['journeys']
+
+        j = next((j for j in jrnys if j['type'] == 'non_pt_walk'), None)
+        assert j
+        assert j['sections'][0]['from']['id'] == 'stopA'
+        assert j['sections'][0]['to']['id'] == 'stop_point:stopB'
+        assert j['type'] == 'non_pt_walk'
 
 
 @config()
