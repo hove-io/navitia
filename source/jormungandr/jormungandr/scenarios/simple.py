@@ -148,6 +148,7 @@ class Scenario(object):
         req.requested_api = type_pb2.pt_objects
         req.pt_objects.q = request['q']
         req.pt_objects.depth = request['depth']
+        req.pt_objects.disable_geojson = request['disable_geojson']
         req.pt_objects.count = request['count']
         req.pt_objects.search_type = request['search_type']
         req._current_datetime = date_to_timestamp(request['_current_datetime'])

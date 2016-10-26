@@ -306,7 +306,7 @@ pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & reques
                                          const boost::posix_time::ptime& current_datetime) {
     const auto data = data_manager.get_data();
     return navitia::autocomplete::autocomplete(request.q(),
-            vector_of_pb_types(request), request.depth(), request.count(),
+            vector_of_pb_types(request), request.depth(), false, request.count(),
             vector_of_admins(request), request.search_type(), *data, current_datetime);
 }
 
@@ -314,7 +314,7 @@ pbnavitia::Response Worker::pt_object(const pbnavitia::PtobjectRequest & request
                                       const boost::posix_time::ptime& current_datetime) {
     const auto data = data_manager.get_data();
     return navitia::autocomplete::autocomplete(request.q(),
-            vector_of_pb_types(request), request.depth(), request.count(),
+            vector_of_pb_types(request), request.depth(), request.disable_geojson(), request.count(),
             vector_of_admins(request), request.search_type(), *data, current_datetime);
 }
 

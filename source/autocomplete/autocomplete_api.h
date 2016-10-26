@@ -47,6 +47,7 @@ namespace autocomplete {
 pbnavitia::Response autocomplete(const std::string &q,
                                  const std::vector<navitia::type::Type_e> &filter,
                                  uint32_t depth,
+                                 const bool disable_geojson,
                                  int nbmax,
                                  const std::vector <std::string> &admins,
                                  int search_type,
