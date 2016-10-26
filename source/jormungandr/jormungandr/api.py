@@ -80,9 +80,11 @@ def add_info_newrelic(response, *args, **kwargs):
         user = get_user(token=token, abort_if_no_token=False)
         app_name = get_app_name(token)
         if user:
-            record_custom_parameter('user_id', user.id)
-        record_custom_parameter('app_name', app_name)
-        record_custom_parameter('coverages', str(sorted(get_used_coverages())))
+            record_custom_parameter('user_id', str(user.id))
+        record_custom_parameter('token_name', app_name)
+        coverages = get_used_coverages()
+        if coverages:
+            record_custom_parameter('coverage', coverages[0])
     except:
         logger = logging.getLogger(__name__)
         logger.exception('error while reporting to newrelic:')
