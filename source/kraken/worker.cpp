@@ -363,7 +363,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
     bt::ptime from_datetime = bt::from_time_t(request.from_datetime());
     bt::ptime until_datetime = bt::from_time_t(request.until_datetime());
 
-    PbCreator pb_creator(*data, current_datetime, null_time_period);
+    PbCreator pb_creator(*data, current_datetime, null_time_period, request.disable_geojson());
     auto rt_level = get_realtime_level(request.realtime_level());
     try {
         switch(api) {
