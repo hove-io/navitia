@@ -223,6 +223,7 @@ class Scenario(object):
         req.ptref.depth = request["depth"]
         req.ptref.start_page = request["start_page"]
         req.ptref.count = request["count"]
+        req.ptref.disable_geojson = request["disable_geojson"]
         req._current_datetime = date_to_timestamp(request["_current_datetime"])
         if request["odt_level"]:
             req.ptref.odt_level = pb_odt_level[request["odt_level"]]

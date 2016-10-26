@@ -45,17 +45,18 @@ static pbnavitia::Response extract_data(const type::Data& data,
                                         const type::Type_e requested_type,
                                         const type::Indexes& rows,
                                         const int depth,
+                                        const bool disable_geojson,
                                         const boost::posix_time::ptime& current_time) {
     const auto& action_period = data.meta->production_period();
         switch(requested_type){
         case Type_e::ValidityPattern:
-            return get_response(data.get_data<nt::ValidityPattern>(rows), data, depth, current_time, action_period);
+            return get_response(data.get_data<nt::ValidityPattern>(rows), data, depth, disable_geojson, current_time, action_period);
         case Type_e::Line:
-            return get_response(data.get_data<nt::Line>(rows), data, depth, current_time, action_period);
+            return get_response(data.get_data<nt::Line>(rows), data, depth, disable_geojson, current_time, action_period);
         case Type_e::LineGroup:
-            return get_response(data.get_data<nt::LineGroup>(rows), data, depth, current_time, action_period);
+            return get_response(data.get_data<nt::LineGroup>(rows), data, depth, disable_geojson, current_time, action_period);
         case Type_e::JourneyPattern:{
-            navitia::PbCreator pb_creator(data, current_time, action_period);
+            navitia::PbCreator pb_creator(data, current_time, action_period, disable_geojson);
             for(const auto& idx : rows){
                 const auto& pair_jp = data.dataRaptor->jp_container.get_jps()[idx];
                 auto* pb_jp = pb_creator.add_journey_patterns();
@@ -64,17 +65,17 @@ static pbnavitia::Response extract_data(const type::Data& data,
             return pb_creator.get_response();
         }
         case Type_e::StopPoint:
-            return get_response(data.get_data<nt::StopPoint>(rows), data, depth, current_time, action_period);
+            return get_response(data.get_data<nt::StopPoint>(rows), data, depth, disable_geojson, current_time, action_period);
         case Type_e::StopArea:
-            return get_response(data.get_data<nt::StopArea>(rows), data, depth, current_time, action_period);
+            return get_response(data.get_data<nt::StopArea>(rows), data, depth, disable_geojson, current_time, action_period);
         case Type_e::Network:
-            return get_response(data.get_data<nt::Network>(rows), data, depth, current_time, action_period);
+            return get_response(data.get_data<nt::Network>(rows), data, depth, disable_geojson, current_time, action_period);
         case Type_e::PhysicalMode:
-            return get_response(data.get_data<nt::PhysicalMode>(rows), data, depth, current_time, action_period);
+            return get_response(data.get_data<nt::PhysicalMode>(rows), data, depth, disable_geojson, current_time, action_period);
         case Type_e::CommercialMode:
-            return get_response(data.get_data<nt::CommercialMode>(rows), data, depth, current_time, action_period);
+            return get_response(data.get_data<nt::CommercialMode>(rows), data, depth, disable_geojson, current_time, action_period);
         case Type_e::JourneyPatternPoint:{
-            navitia::PbCreator pb_creator(data, current_time, action_period);
+            navitia::PbCreator pb_creator(data, current_time, action_period, disable_geojson);
             for(const auto& idx : rows){
                 const auto& pair_jpp = data.dataRaptor->jp_container.get_jpps()[idx];
                 auto* pb_jpp = pb_creator.add_journey_pattern_points();
@@ -83,21 +84,21 @@ static pbnavitia::Response extract_data(const type::Data& data,
             return pb_creator.get_response();
         }
         case Type_e::Company:
-            return get_response(data.get_data<nt::Company>(rows), data, depth, current_time, action_period);
+            return get_response(data.get_data<nt::Company>(rows), data, depth, disable_geojson, current_time, action_period);
         case Type_e::Route:
-            return get_response(data.get_data<nt::Route>(rows), data, depth, current_time, action_period);
+            return get_response(data.get_data<nt::Route>(rows), data, depth, disable_geojson, current_time, action_period);
         case Type_e::POI:
-            return get_response(data.get_data<georef::POI>(rows), data, depth, current_time, action_period);
+            return get_response(data.get_data<georef::POI>(rows), data, depth, disable_geojson, current_time, action_period);
         case Type_e::POIType:
-            return get_response(data.get_data<georef::POIType>(rows), data, depth, current_time, action_period);
+            return get_response(data.get_data<georef::POIType>(rows), data, depth, disable_geojson, current_time, action_period);
         case Type_e::Connection:
-            return get_response(data.get_data<nt::StopPointConnection>(rows), data, depth, current_time, action_period);
+            return get_response(data.get_data<nt::StopPointConnection>(rows), data, depth, disable_geojson, current_time, action_period);
         case Type_e::VehicleJourney:
-            return get_response(data.get_data<nt::VehicleJourney>(rows), data, depth, current_time, action_period);
+            return get_response(data.get_data<nt::VehicleJourney>(rows), data, depth, disable_geojson, current_time, action_period);
         case Type_e::Calendar:
-            return get_response(data.get_data<nt::Calendar>(rows), data, depth, current_time, action_period);
+            return get_response(data.get_data<nt::Calendar>(rows), data, depth, disable_geojson, current_time, action_period);
         case Type_e::MetaVehicleJourney:{
-            navitia::PbCreator pb_creator(data, current_time, action_period);
+            navitia::PbCreator pb_creator(data, current_time, action_period, disable_geojson);
             for(const auto& idx : rows){
                 const auto* meta_vj = data.pt_data->meta_vjs[Idx<type::MetaVehicleJourney>(idx)];
                 auto* pb_trip = pb_creator.add_trips();
@@ -106,7 +107,7 @@ static pbnavitia::Response extract_data(const type::Data& data,
             return pb_creator.get_response();
         }
         case Type_e::Impact:{
-            navitia::PbCreator pb_creator(data, current_time, action_period);
+            navitia::PbCreator pb_creator(data, current_time, action_period, disable_geojson);
             for(const auto& idx : rows){
                 auto impact = data.pt_data->disruption_holder.get_weak_impacts()[idx].lock();
                 auto* pb_impact = pb_creator.add_impacts();
@@ -116,9 +117,9 @@ static pbnavitia::Response extract_data(const type::Data& data,
             return pb_creator.get_response();
         }
         case Type_e::Contributor:
-            return get_response(data.get_data<nt::Contributor>(rows), data, depth, current_time, action_period);
+            return get_response(data.get_data<nt::Contributor>(rows), data, depth, disable_geojson, current_time, action_period);
         case Type_e::Dataset:
-            return get_response(data.get_data<nt::Dataset>(rows), data, depth, current_time, action_period);
+            return get_response(data.get_data<nt::Dataset>(rows), data, depth, disable_geojson, current_time, action_period);
         default: return {};
         }
 }
@@ -129,6 +130,7 @@ pbnavitia::Response query_pb(const type::Type_e requested_type,
                              const std::vector<std::string>& forbidden_uris,
                              const type::OdtLevel_e odt_level,
                              const int depth,
+                             const bool disable_geojson,
                              const int startPage,
                              const int count,
                              const boost::optional<boost::posix_time::ptime>& since,
@@ -150,7 +152,7 @@ pbnavitia::Response query_pb(const type::Type_e requested_type,
     total_result = final_indexes.size();
     final_indexes = paginate(final_indexes, count, startPage);
 
-    pb_response = extract_data(data, requested_type, final_indexes, depth, current_datetime);
+    pb_response = extract_data(data, requested_type, final_indexes, depth, disable_geojson, current_datetime);
     auto pagination = pb_response.mutable_pagination();
     pagination->set_totalresult(total_result);
     pagination->set_startpage(startPage);
