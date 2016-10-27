@@ -623,15 +623,15 @@ static void add_pathes(PbCreator& pb_creator,
                 // nothing in this case
             } else if (use_crow_fly(destination, *arrival_stop_point, sn_arrival_path, pb_creator.data)) {
                 type::EntryPoint origin_tmp(type::Type_e::StopPoint, arrival_stop_point->uri);
+                auto dt = path.items.back().arrivals.back();
                 origin_tmp.coordinates = arrival_stop_point->coord;
-                pb_creator.action_period = bt::time_period(path.items.back().departures.back(),
-                                              path.items.back().departures.back()+bt::minutes(1));
+                pb_creator.action_period = bt::time_period(dt, dt + bt::minutes(1));
                 const time_duration& crow_fly_duration = find_or_default(SpIdx(*arrival_stop_point),
                                                 worker.arrival_path_finder.distance_to_entry_point);
                 arrival_time = arrival_time + pt::seconds(crow_fly_duration.to_posix().total_seconds());
                 pb_creator.fill_crowfly_section(origin_tmp, destination, crow_fly_duration,
                                                 get_crowfly_mode(sn_arrival_path),
-                                                path.items.back().departures.back(), pb_journey);
+                                                dt, pb_journey);
             }
             // for stop areas, we don't want to display the fallback section if start
             // from one of the stop area's stop point
