@@ -92,8 +92,23 @@ class TestJourneysNoRegionDefault(JourneysNoRegion, AbstractTestFixture):
 
 @config()
 class TestOnBasicRoutingDefault(OnBasicRouting, AbstractTestFixture):
-    pass
 
+    def test_novalidjourney_on_first_call_debug(self):
+        """
+        On this call the first call to kraken returns a journey
+        with a too long waiting duration.
+        The second call to kraken must return a valid journey
+        We had a debug argument, hence 2 journeys are returned, only one is typed
+        """
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&debug=true"\
+            .format(from_sa="A", to_sa="D", datetime="20120614T080000")
+
+        response = self.query_region(query, display=False)
+        eq_(len(response['journeys']), 2)
+        eq_(response['journeys'][0]['arrival_date_time'], "20120614T150000")
+        eq_(response['journeys'][0]['type'], "")
+        eq_(response['journeys'][1]['arrival_date_time'], "20120614T160000")
+        eq_(response['journeys'][1]['type'], "best")
 
 @config()
 class TestOneDeadRegionDefault(OneDeadRegion, AbstractTestFixture):

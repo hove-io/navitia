@@ -640,9 +640,9 @@ class OnBasicRouting():
         response = self.query_region(query, display=False)
         eq_(len(response['journeys']), 2)
         eq_(response['journeys'][0]['arrival_date_time'], "20120614T150000")
-        eq_(response['journeys'][0]['type'], "")
+        assert('to_delete' in response['journeys'][0]['tags'])
         eq_(response['journeys'][1]['arrival_date_time'], "20120614T160000")
-        eq_(response['journeys'][1]['type'], "best")
+        eq_(response['journeys'][1]['type'], "fastest")
 
     def test_datetime_error(self):
         """
@@ -810,9 +810,8 @@ class WithoutPt():
 from unittest import skip
 @dataset({"main_ptref_test": {}})
 class JourneysWithPtref():
-    """Test the new default scenario with ptref_test data"""
-    @skip("temporarily disabled")
+    """Test the all scenario with ptref_test data"""
     def test_strange_line_name(self):
-        response = self.query_region("journeys?from=stop_area:stop2&to=stop_area:stop&datetime=20140107T100000")
+        response = self.query_region("journeys?from=stop_area:stop2&to=stop_area:stop1&datetime=20140107T100000")
         check_journeys(response)
         eq_(len(response['journeys']), 1)

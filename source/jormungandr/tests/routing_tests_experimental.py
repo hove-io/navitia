@@ -76,8 +76,7 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
 
     def test_best_filtering(self):
         """
-        This feature is no longer supported
-        """
+        This feature is no longer supported"""
         pass
 
     def test_datetime_represents_arrival(self):
@@ -107,22 +106,23 @@ class TestExperimentalJourneysWithPtref(JourneysWithPtref, AbstractTestFixture):
     pass
 
 
-@dataset({"basic_routing_test": {"scenario": "new_default"}})
-class TestNewDefaultOnBasicRouting(OnBasicRouting, AbstractTestFixture):
+@config({"scenario": "experimental"})
+class TestExperimentalOnBasicRouting(OnBasicRouting, AbstractTestFixture):
+
+    def test_sp_to_sp(self):
+        """
+        Test journeys from stop point to stop point without street network
+        """
+        query = "journeys?from=stop_point:uselessA&to=stop_point:B&datetime=20120615T080000"
+
+        # with street network desactivated
+        response = self.query_region(query + "&max_duration_to_pt=0")
+        assert('journeys' not in response)
+
+        # with street network activated
+        response = self.query_region(query + "&max_duration_to_pt=1")
+        assert('journeys' not in response)
 
     @skip("temporarily disabled")
-    def test_journeys_with_show_codes(self):
-        super(OnBasicRouting, self).test_journeys_with_show_codes()
-
-    @skip("temporarily disabled")
-    def test_journeys_without_show_codes(self):
-        super(OnBasicRouting, self).test_journeys_without_show_codes()
-
-    @skip("temporarily disabled")
-    def test_novalidjourney_on_first_call(self):
-        super(OnBasicRouting, self).test_novalidjourney_on_first_call()
-
-
-    @skip("temporarily disabled")
-    def test_novalidjourney_on_first_call_debug(self):
-        super(OnBasicRouting, self).test_novalidjourney_on_first_call_debug()
+    def test_isochrone(self):
+        super(OnBasicRouting, self).test_isochrone()
