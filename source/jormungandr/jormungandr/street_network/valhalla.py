@@ -125,14 +125,7 @@ class Valhalla(object):
             #hand back the list of coordinates
         return decoded
 
-    def _get_speed(self, valhalla_mode):
-        map_speed = {
-            "pedestrian": self.instance.walking_speed * 3.6,
-            "bicycle": self.instance.bike_speed * 3.6
-        }
-        return map_speed.get(valhalla_mode)
-
-    def _get_costing_options(self, valhalla_mode):
+    def _get_costing_options(self, valhalla_mode, request):
         costing_options = deepcopy(self.costing_options)
         if valhalla_mode not in ['pedestrian', 'bicycle']:
             return costing_options
@@ -141,11 +134,11 @@ class Valhalla(object):
         if valhalla_mode == 'pedestrian':
             if 'pedestrian' not in costing_options:
                 costing_options['pedestrian'] = {}
-            costing_options['pedestrian']['walking_speed'] = self._get_speed(valhalla_mode)
-        if valhalla_mode == 'bicycle':
+            costing_options['pedestrian']['walking_speed'] = request['walking_speed'] * 3.6
+        elif valhalla_mode == 'bicycle':
             if 'bicycle' not in costing_options:
                 costing_options['bicycle'] = {}
-            costing_options['bicycle']['cycling_speed'] = self._get_speed(valhalla_mode)
+            costing_options['bicycle']['cycling_speed'] = request['bike_speed'] * 3.6
         return costing_options
 
     def _get_response(self, json_resp, mode, pt_object_origin, pt_object_destination, datetime):
@@ -212,7 +205,7 @@ class Valhalla(object):
             raise InvalidArguments('Valhalla, mode {} not implemented'.format(kraken_mode))
         return map_mode.get(kraken_mode)
 
-    def _make_data(self, mode, pt_object_origin, pt_object_destinations, api='route', max_duration=None):
+    def _make_data(self, mode, pt_object_origin, pt_object_destinations, request, api='route', max_duration=None):
 
         valhalla_mode = self._get_valhalla_mode(mode)
         destinations = [self._format_coord(destination, api) for destination in pt_object_destinations]
@@ -221,7 +214,7 @@ class Valhalla(object):
             'costing': valhalla_mode
         }
 
-        costing_options = self._get_costing_options(valhalla_mode)
+        costing_options = self._get_costing_options(valhalla_mode, request)
         if costing_options:
             args['costing_options'] = costing_options
 
@@ -241,8 +234,8 @@ class Valhalla(object):
             raise TechnicalError('Valhalla service unavailable, impossible to query : {}'.
                                  format(response.url))
 
-    def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise):
-        data = self._make_data(mode, pt_object_origin, [pt_object_destination], 'route')
+    def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise, request):
+        data = self._make_data(mode, pt_object_origin, [pt_object_destination], request, api='route')
         r = self._call_valhalla('{}/{}'.format(self.service_url, 'route'), requests.post, data)
         self.check_response(r)
         resp_json = r.json()
@@ -260,8 +253,8 @@ class Valhalla(object):
                 row.duration.append(time)
         return sn_routing_matrix
 
-    def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration):
-        data = self._make_data(mode, origins[0], destinations, 'one_to_many')
+    def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration, request):
+        data = self._make_data(mode, origins[0], destinations, request, api='one_to_many')
         r = self._call_valhalla('{}/{}'.format(self.service_url, 'one_to_many'), requests.post, data)
         self.check_response(r)
         resp_json = r.json()

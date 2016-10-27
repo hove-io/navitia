@@ -38,7 +38,7 @@ def check_journeys(resp):
     assert not resp.get('journeys') or sum((1 for j in resp['journeys'] if j['type'] == "best")) == 1
 
 @dataset({"main_routing_test": {}})
-class JourneyCommon():
+class JourneyCommon(object):
 
     """
     Test the structure of the journeys response
@@ -113,18 +113,19 @@ class JourneyCommon():
         response = self.query_region("{query}&type=non_pt_walk&walking_speed=1.5".
                                      format(query=journey_basic_query))
 
-        assert len(response['journeys']) == 1
-        assert response['journeys'][0]["type"] == "non_pt_walk"
-        assert len(response['journeys'][0]['sections']) == 1
-        assert response['journeys'][0]['duration'] == response['journeys'][0]['sections'][0]['duration']
-        assert response['journeys'][0]['duration'] == 205
-        assert response['journeys'][0]['durations']['total'] == 205
-        assert response['journeys'][0]['durations']['walking'] == 205
+        journeys = response['journeys']
+        assert journeys
+        non_pt_walk_j = next((j for j in journeys if j['type'] == 'non_pt_walk'), None)
+        assert non_pt_walk_j
+        assert non_pt_walk_j['duration'] == non_pt_walk_j['sections'][0]['duration']
+        assert non_pt_walk_j['duration'] == 205
+        assert non_pt_walk_j['durations']['total'] == 205
+        assert non_pt_walk_j['durations']['walking'] == 205
 
-        assert response['journeys'][0]['departure_date_time'] == response['journeys'][0]['sections'][0]['departure_date_time']
-        assert response['journeys'][0]['departure_date_time'] == '20120614T080000'
-        assert response['journeys'][0]['arrival_date_time'] == response['journeys'][0]['sections'][0]['arrival_date_time']
-        assert response['journeys'][0]['arrival_date_time'] == '20120614T080325'
+        assert non_pt_walk_j['departure_date_time'] == non_pt_walk_j['sections'][0]['departure_date_time']
+        assert non_pt_walk_j['departure_date_time'] == '20120614T080000'
+        assert non_pt_walk_j['arrival_date_time'] == non_pt_walk_j['sections'][0]['arrival_date_time']
+        assert non_pt_walk_j['arrival_date_time'] == '20120614T080325'
 
     def test_not_existent_filtering(self):
         """if we filter with a real type but not present, we don't get any journey, but we got a nice error"""
@@ -406,7 +407,8 @@ class JourneyCommon():
         basic_response = self.query_region(journey_basic_query)
 
         def bike_in_journey(fast_walker):
-            return any(sect_fast_walker["mode"] == 'bike' for sect_fast_walker in fast_walker['sections'])
+            return any(sect_fast_walker["mode"] == 'bike' for sect_fast_walker in fast_walker['sections']
+                       if 'mode' in sect_fast_walker)
 
         def no_bike_in_journey(journey):
             return all(section['mode'] != 'bike' for section in journey['sections'] if 'mode' in section)
@@ -438,8 +440,112 @@ class JourneyCommon():
         eq_(response['journeys'][1]['durations']['walking'], 275)
 
 
+    def test_max_duration_to_pt_equals_to_0(self):
+        query = journey_basic_query + \
+            "&first_section_mode[]=bss" + \
+            "&first_section_mode[]=walking" + \
+            "&first_section_mode[]=bike" + \
+            "&first_section_mode[]=car" + \
+            "&debug=true"
+        response = self.query_region(query)
+        check_journeys(response)
+        eq_(len(response['journeys']), 4)
+
+        query += "&max_duration_to_pt=0"
+        response, status = self.query_no_assert(query)
+        # pas de solution
+        assert status == 404
+        assert('journeys' not in response)
+
+    def test_max_duration_to_pt_equals_to_0_from_stop_point(self):
+        query = "journeys?from=stop_point%3AstopA&to=stop_point%3AstopC&datetime=20120614T080000"
+        response = self.query_region(query)
+        check_journeys(response)
+        eq_(len(response['journeys']), 2)
+
+        query += "&max_duration_to_pt=0"
+        #There is no direct_path but a journey using Metro
+        response = self.query_region(query)
+        check_journeys(response)
+        jrnys = response['journeys']
+        assert len(jrnys) == 1
+        section = jrnys[0]['sections'][0]
+        assert section['type'] == 'public_transport'
+        assert section['from']['id'] == 'stop_point:stopA'
+        assert section['to']['id'] == 'stop_point:stopC'
+
+    def test_max_duration_equals_to_0(self):
+        query = journey_basic_query + \
+            "&first_section_mode[]=bss" + \
+            "&first_section_mode[]=walking" + \
+            "&first_section_mode[]=bike" + \
+            "&first_section_mode[]=car" + \
+            "&debug=true"
+        response = self.query_region(query)
+        check_journeys(response)
+        eq_(len(response['journeys']), 4)
+
+        query += "&max_duration=0"
+        response = self.query_region(query)
+        # the pt journey is eliminated
+        eq_(len(response['journeys']), 3)
+
+        check_journeys(response)
+
+        # first is bike
+        assert('bike' in response['journeys'][0]['tags'])
+        ok_(response['journeys'][0]['debug']['internal_id'])
+        eq_(len(response['journeys'][0]['sections']), 1)
+
+        # second is car
+        assert('car' in response['journeys'][1]['tags'])
+        ok_(response['journeys'][1]['debug']['internal_id'])
+        eq_(len(response['journeys'][1]['sections']), 3)
+
+        # last is walking
+        assert('walking' in response['journeys'][-1]['tags'])
+        ok_(response['journeys'][-1]['debug']['internal_id'])
+        eq_(len(response['journeys'][-1]['sections']), 1)
+
+    def test_journey_stop_area_to_stop_point(self):
+        """
+        When the departure is stop_area:A and the destination is stop_point:B belonging to stop_area:B
+        """
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
+            .format(from_sa='stopA', to_sa='stop_point:stopB', datetime="20120614T080000")
+        response = self.query_region(query)
+        check_journeys(response)
+        jrnys = response['journeys']
+
+        j = next((j for j in jrnys if j['type'] == 'non_pt_walk'), None)
+        assert j
+        assert j['sections'][0]['from']['id'] == 'stopA'
+        assert j['sections'][0]['to']['id'] == 'stop_point:stopB'
+        assert 'walking' in j['tags']
+
+    def test_crow_fly_sections(self):
+        """
+        When the departure is a stop_area...
+        """
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
+            .format(from_sa='stopA', to_sa='stopB', datetime="20120614T080000")
+        response = self.query_region(query)
+        check_journeys(response)
+        jrnys = response['journeys']
+        assert len(jrnys) == 2
+        section_0 = jrnys[0]['sections'][0]
+        assert section_0['type'] == 'crow_fly'
+        assert section_0['from']['id'] == 'stopA'
+        assert section_0['to']['id'] == 'stop_point:stopA'
+
+        section_2 = jrnys[0]['sections'][2]
+        assert section_2['type'] == 'crow_fly'
+        assert section_2['from']['id'] == 'stop_point:stopB'
+        assert section_2['to']['id'] == 'stopB'
+
+
 @dataset({"main_routing_test": {}})
-class DirectPath():
+class DirectPath(object):
     def test_journey_direct_path(self):
         query = journey_basic_query + \
                 "&first_section_mode[]=bss" + \

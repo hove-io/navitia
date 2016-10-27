@@ -1,3 +1,15 @@
+navitia2 (2.20.0) unstable; urgency=low
+
+  * Kraken: Fix crowfly when last stop_time has arrival != departure  <https://github.com/CanalTP/navitia/pull/1831>
+  * Tyr: Revert "Revert "tyr: add retrying when redis error while locking  <https://github.com/CanalTP/navitia/pull/1828>
+  * Jormungandr: parameters in request used for direct_path  <https://github.com/CanalTP/navitia/pull/1832>
+  * Jormungandr: improvement of data collected for new relic  <https://github.com/CanalTP/navitia/pull/1833>
+  * Jormungandr: Fix except without data  <https://github.com/CanalTP/navitia/pull/1830>
+  * Jormungandr: use speed in experimental  <https://github.com/CanalTP/navitia/pull/1822>
+  * Jormungandr: Message: simplify the "no token" message  <https://github.com/CanalTP/navitia/pull/1829>
+
+ -- kadhikari <krishna.adhikari@canaltp.fr>  Thu, 27 Oct 2016 14:10:08 +0100
+
 navitia2 (2.19.0) unstable; urgency=low
 
   * Tyr: add retrying when redis error while locking  <https://github.com/CanalTP/navitia/pull/1825>

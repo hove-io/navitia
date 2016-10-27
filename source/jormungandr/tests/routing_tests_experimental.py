@@ -74,145 +74,33 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
         j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
         eq_(j_departure - timedelta(seconds=1), dt)
 
-    @skip("temporarily disabled")
     def test_best_filtering(self):
-        super(JourneyCommon, self).test_best_filtering()
+        """
+        This feature is no longer supported
+        """
+        pass
 
-    @skip("temporarily disabled")
     def test_datetime_represents_arrival(self):
-        super(JourneyCommon, self).test_datetime_represents_arrival()
+        super(TestJourneysExperimental, self).test_datetime_represents_arrival()
 
-    @skip("temporarily disabled")
     def test_journeys_wheelchair_profile(self):
-        super(JourneyCommon, self).test_journeys_wheelchair_profile()
+        """
+        This feature is no longer supported
+        """
+        pass
 
-    @skip("temporarily disabled")
     def test_not_existent_filtering(self):
-        super(JourneyCommon, self).test_not_existent_filtering()
+        """
+        This feature is no longer supported
+        """
+        pass
 
-    @skip("temporarily disabled")
     def test_other_filtering(self):
-        super(JourneyCommon, self).test_other_filtering()
-
-    @skip("temporarily disabled")
-    def test_sp_to_sp(self):
-        super(JourneyCommon, self).test_sp_to_sp()
-
-    @skip("temporarily disabled")
-    def test_speed_factor_direct_path(self):
-        super(JourneyCommon, self).test_speed_factor_direct_path()
-
-    @skip("temporarily disabled")
-    def test_traveler_type(self):
-        super(JourneyCommon, self).test_traveler_type()
-
-    def test_max_duration_to_pt_equals_to_0(self):
-        query = journey_basic_query + \
-            "&first_section_mode[]=bss" + \
-            "&first_section_mode[]=walking" + \
-            "&first_section_mode[]=bike" + \
-            "&first_section_mode[]=car" + \
-            "&debug=true"
-        response = self.query_region(query)
-        check_journeys(response)
-        eq_(len(response['journeys']), 4)
-
-        query += "&max_duration_to_pt=0"
-        response = self.query_region(query)
-        check_journeys(response)
-        # the pt journey is eliminated
-        eq_(len(response['journeys']), 3)
-
-        # first is bike
-        assert('bike' in response['journeys'][0]['tags'])
-        eq_(len(response['journeys'][0]['sections']), 1)
-
-        # second is car
-        assert('car' in response['journeys'][1]['tags'])
-        eq_(len(response['journeys'][1]['sections']), 3)
-
-        # last is walking
-        assert('walking' in response['journeys'][-1]['tags'])
-        eq_(len(response['journeys'][-1]['sections']), 1)
-
-    def test_max_duration_to_pt_equals_to_0_from_stop_point(self):
-        query = "journeys?from=stop_point%3AstopA&to=stop_point%3AstopC&datetime=20120614T080000"
-        response = self.query_region(query)
-        check_journeys(response)
-        eq_(len(response['journeys']), 2)
-
-        query += "&max_duration_to_pt=0"
-        response = self.query_region(query)
-        check_journeys(response)
-        eq_(len(response['journeys']), 2)
-
-    def test_max_duration_equals_to_0(self):
-        query = journey_basic_query + \
-            "&first_section_mode[]=bss" + \
-            "&first_section_mode[]=walking" + \
-            "&first_section_mode[]=bike" + \
-            "&first_section_mode[]=car" + \
-            "&debug=true"
-        response = self.query_region(query)
-        check_journeys(response)
-        eq_(len(response['journeys']), 4)
-
-        query += "&max_duration=0"
-        response = self.query_region(query)
-        check_journeys(response)
-        # the pt journey is eliminated
-        eq_(len(response['journeys']), 3)
-
-        # first is bike
-        assert('bike' in response['journeys'][0]['tags'])
-        eq_(response['journeys'][0]['debug']['internal_id'], 'dp_43-0')
-        eq_(len(response['journeys'][0]['sections']), 1)
-
-        # second is car
-        assert('car' in response['journeys'][1]['tags'])
-        eq_(response['journeys'][1]['debug']['internal_id'], "dp_44-0")
-        eq_(len(response['journeys'][1]['sections']), 3)
-
-        # last is walking
-        assert('walking' in response['journeys'][-1]['tags'])
-        eq_(response['journeys'][-1]['debug']['internal_id'], "dp_42-0")
-        eq_(len(response['journeys'][-1]['sections']), 1)
-
-    def test_journey_stop_area_to_stop_point(self):
         """
-        When the departure is stop_area:A and the destination is stop_point:B belonging to stop_area:B
+        This feature is no longer supported
         """
-        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
-            .format(from_sa='stopA', to_sa='stop_point:stopB', datetime="20120614T080000")
-        response = self.query_region(query)
-        check_journeys(response)
-        jrnys = response['journeys']
+        pass
 
-        j = next((j for j in jrnys if j['type'] == 'non_pt_walk'), None)
-        assert j
-        assert j['sections'][0]['from']['id'] == 'stopA'
-        assert j['sections'][0]['to']['id'] == 'stop_point:stopB'
-        assert 'walking' in j['tags']
-
-    def test_crow_fly_sections(self):
-        """
-        When the departure is a stop_area...
-        """
-        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
-            .format(from_sa='stopA', to_sa='stopB', datetime="20120614T080000")
-        response = self.query_region(query)
-        check_journeys(response)
-        jrnys = response['journeys']
-        assert len(jrnys) == 2
-        section_0 = jrnys[0]['sections'][0]
-        assert section_0['type'] == 'crow_fly'
-        assert section_0['from']['id'] == 'stopA'
-        assert section_0['to']['id'] == 'stop_point:stopA'
-
-        section_2 = jrnys[0]['sections'][2]
-        assert section_2['type'] == 'crow_fly'
-        assert section_2['from']['id'] == 'stop_point:stopB'
-        assert section_2['to']['id'] == 'stopB'
 
 @config({"scenario": "experimental"})
 class TestExperimentalJourneysWithPtref(JourneysWithPtref, AbstractTestFixture):

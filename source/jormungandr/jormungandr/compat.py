@@ -45,7 +45,7 @@ def replace_parse_arg(func):
         try:
             return func(*args, **kw)
         except BadRequest as e:
-            if isinstance(e.data, dict) and 'message' in e.data:
+            if hasattr(e, "data") and isinstance(e.data, dict) and 'message' in e.data:
                 e.data['message'] = e.data['message'].values()[0]
             raise e
 
