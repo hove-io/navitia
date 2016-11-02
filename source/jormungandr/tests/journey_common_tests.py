@@ -37,6 +37,7 @@ from .check_utils import *
 def check_journeys(resp):
     assert not resp.get('journeys') or sum((1 for j in resp['journeys'] if j['type'] == "best")) == 1
 
+
 @dataset({"main_routing_test": {}})
 class JourneyCommon(object):
 
@@ -569,6 +570,7 @@ class DirectPath(object):
         assert('walking' in response['journeys'][-1]['tags'])
         eq_(len(response['journeys'][-1]['sections']), 1)
 
+
 @dataset({})
 class JourneysNoRegion():
     """
@@ -779,6 +781,7 @@ class OneDeadRegion():
         eq_(len(response['debug']['regions_called']), 1)
         eq_(response['debug']['regions_called'][0], "main_routing_test")
 
+
 @dataset({"main_routing_without_pt_test": {'priority': 42}, "main_routing_test": {'priority': 10}})
 class WithoutPt():
     """
@@ -807,10 +810,12 @@ class WithoutPt():
         eq_(response['debug']['regions_called'][0], "main_routing_without_pt_test")
         eq_(response['debug']['regions_called'][1], "main_routing_test")
 
-from unittest import skip
+
 @dataset({"main_ptref_test": {}})
 class JourneysWithPtref():
-    """Test the all scenario with ptref_test data"""
+    """
+    Test all scenario with ptref_test data
+    """
     def test_strange_line_name(self):
         response = self.query_region("journeys?from=stop_area:stop2&to=stop_area:stop1&datetime=20140107T100000")
         check_journeys(response)

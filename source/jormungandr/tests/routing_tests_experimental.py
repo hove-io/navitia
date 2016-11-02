@@ -27,11 +27,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from .tests_mechanism import AbstractTestFixture
 from datetime import timedelta
 from .tests_mechanism import config
-from .check_utils import *
-from nose.tools import eq_
 from jormungandr.scenarios.qualifier import min_from_criteria
 from .journey_common_tests import *
 from unittest import skip
