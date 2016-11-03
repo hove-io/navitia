@@ -106,19 +106,9 @@ class TestExperimentalJourneysWithPtref(JourneysWithPtref, AbstractTestFixture):
 @config({"scenario": "experimental"})
 class TestExperimentalOnBasicRouting(OnBasicRouting, AbstractTestFixture):
 
+    @skip("temporarily disabled")
     def test_sp_to_sp(self):
-        """
-        Test journeys from stop point to stop point without street network
-        """
-        query = "journeys?from=stop_point:uselessA&to=stop_point:B&datetime=20120615T080000"
-
-        # with street network desactivated
-        response = self.query_region(query + "&max_duration_to_pt=0")
-        assert('journeys' not in response)
-
-        # with street network activated
-        response = self.query_region(query + "&max_duration_to_pt=1")
-        assert('journeys' not in response)
+        super(OnBasicRouting, self).test_sp_to_sp()
 
     @skip("temporarily disabled")
     def test_isochrone(self):
