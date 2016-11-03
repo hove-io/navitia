@@ -156,7 +156,6 @@ class Timeo(RealtimeProxy):
         for next_expected_st in next_st.get('NextExpectedStopTime', []):
             # for the moment we handle only the NextStop and the direction
             dt = self._get_dt(next_expected_st['NextStop'], current_dt)
-            print(dt)
             direction = self._get_direction_name(line_uri=line_uri,
                                                  object_code=next_expected_st.get('Terminus'),
                                                  default_value=next_expected_st.get('Destination'))
@@ -222,7 +221,6 @@ class Timeo(RealtimeProxy):
     def _get_dt(self, hour_str, current_dt):
         hour = _to_duration(hour_str)
         # we then have to complete the hour with the date to have a datetime
-        print(current_dt)
         now = current_dt
         dt = datetime.combine(now.date(), hour)
 

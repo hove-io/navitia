@@ -150,7 +150,7 @@ def get_passages_test():
     # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
     # the current day with the timeo's response
     with mock.patch('jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None):
-        passages = timeo._get_passages(mock_response, _dt("02:02"))
+        passages = timeo._get_passages(mock_response, current_dt=_dt("02:02"))
 
         assert len(passages) == 3
 
@@ -191,7 +191,7 @@ def get_passages_no_passages_test():
     # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
     # the current day with the timeo's response
     with mock.patch('jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None):
-        passages = timeo._get_passages(mock_response, _dt("02:02"))
+        passages = timeo._get_passages(mock_response, current_dt=_dt("02:02"))
 
         assert len(passages) == 0
 
@@ -211,7 +211,7 @@ def get_passages_wrong_response_test():
     # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
     # the current day with the timeo's response
     with mock.patch('jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None):
-        passages = timeo._get_passages(mock_response, _dt("02:02"))
+        passages = timeo._get_passages(mock_response, current_dt=_dt("02:02"))
 
         assert passages is None
 
