@@ -54,7 +54,10 @@ Component that loads fare data into `ed`.
 Note: fares can also be loaded with fusio2ed if the fare files are in the fusio data directory
 
 ## poi2ed
-Component that loads poi (Poi Of Interest) into `ed`.
+Component that loads POI (Point Of Interest) into `ed` from csv files.
+
+You can use poi2ed to get POI in addition of osm2ed (to get street network data) ; If you do so, osm2ed will not extract any POI from the OSM dataset and use the poi2ed dataset instead.
+I you want to switch your POI source back to OSM, you will need to set the parse_pois_from_osm boolean to true in the ed database (table navitia.parameters) and launch again an osm2ed data integration job.
 
 ## geopal2ed
 Component that loads geopal street network data into `ed`.
