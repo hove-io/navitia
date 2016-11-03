@@ -46,14 +46,6 @@ def _to_duration(hour_str):
     return time(hour=t.hour, minute=t.minute, second=t.second)
 
 
-def _get_current_date():
-    """
-    encapsulate the current date in a method to be able to mock it
-    """
-    # Note: we use now() and not utc_now() because we want a local time, the same used by timeo
-    return datetime.now()
-
-
 class Timeo(RealtimeProxy):
     """
     class managing calls to timeo external service providing real-time next passages
@@ -147,9 +139,9 @@ class Timeo(RealtimeProxy):
                                               .format(r.url))
             return None
 
-        return self._get_passages(r.json(), route_point.fetch_line_uri())
+        return self._get_passages(r.json(), current_dt, route_point.fetch_line_uri())
 
-    def _get_passages(self, timeo_resp, line_uri=None):
+    def _get_passages(self, timeo_resp, current_dt, line_uri=None):
         logging.getLogger(__name__).debug('timeo response: {}'.format(timeo_resp))
 
         st_responses = timeo_resp.get('StopTimesResponse')
@@ -163,7 +155,7 @@ class Timeo(RealtimeProxy):
         next_passages = []
         for next_expected_st in next_st.get('NextExpectedStopTime', []):
             # for the moment we handle only the NextStop and the direction
-            dt = self._get_dt(next_expected_st['NextStop'])
+            dt = self._get_dt(next_expected_st['NextStop'], current_dt)
             direction = self._get_direction_name(line_uri=line_uri,
                                                  object_code=next_expected_st.get('Terminus'),
                                                  default_value=next_expected_st.get('Destination'))
@@ -226,10 +218,10 @@ class Timeo(RealtimeProxy):
 
         return url
 
-    def _get_dt(self, hour_str):
+    def _get_dt(self, hour_str, current_dt):
         hour = _to_duration(hour_str)
         # we then have to complete the hour with the date to have a datetime
-        now = _get_current_date()
+        now = current_dt
         dt = datetime.combine(now.date(), hour)
 
         utc_dt = self.timezone.normalize(self.timezone.localize(dt)).astimezone(pytz.utc)

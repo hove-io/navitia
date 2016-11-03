@@ -150,7 +150,7 @@ class TestDepartures(AbstractTestFixture):
                      '&_current_datetime={c_dt}'
 
     def test_stop_schedule_without_rt(self):
-        query = self.query_template.format(sp='C:S0', dt='20160102T1100', data_freshness='', c_dt='20160102T1100')
+        query = self.query_template.format(sp='C:S0', dt='20160102T0900', data_freshness='', c_dt='20160102T0900')
         response = self.query_region(query)
         stop_schedules = response['stop_schedules']
         assert len(stop_schedules) == 1
@@ -158,23 +158,23 @@ class TestDepartures(AbstractTestFixture):
         assert len(stop_times) == 1
         stop_time = stop_times[0]
         assert stop_time['data_freshness'] == 'base_schedule'
-        assert stop_time['date_time'][8:] == 'T113000'
+        assert stop_time['date_time'] == '20160102T113000'
 
     def test_stop_schedule_with_rt_and_without_destination(self):
-        query = self.query_template.format(sp='S41', dt='20160102T1100', data_freshness='', c_dt='20160102T1100')
+        query = self.query_template.format(sp='S41', dt='20160102T0900', data_freshness='', c_dt='20160102T0900')
         response = self.query_region(query)
         stop_schedules = response['stop_schedules']
         assert len(stop_schedules) == 1
         stop_times = stop_schedules[0]['date_times']
         assert len(stop_times) == 2
         assert stop_times[0]['data_freshness'] == 'realtime'
-        assert stop_times[0]['date_time'][8:] == 'T080052'
+        assert stop_times[0]['date_time'] == '20160102T090052'
         links = stop_times[0]["links"]
         assert len(links) == 1
         assert links[0]['id'] == 'note:7a0967bbb281e0d1548d2d5bc6933a20'
 
         assert stop_times[1]['data_freshness'] == 'realtime'
-        assert stop_times[1]['date_time'][8:] == 'T081352'
+        assert stop_times[1]['date_time'] == '20160102T091352'
         links = stop_times[1]["links"]
         assert len(links) == 1
         assert links[0]['id'] == 'note:7a0967bbb281e0d1548d2d5bc6933a20'
@@ -186,7 +186,7 @@ class TestDepartures(AbstractTestFixture):
         assert notes[0]["id"] == "note:7a0967bbb281e0d1548d2d5bc6933a20"
 
     def test_stop_schedule_with_rt_and_with_destination(self):
-        query = self.query_template.format(sp='S42', dt='20160102T1100', data_freshness='', c_dt='20160102T1100')
+        query = self.query_template.format(sp='S42', dt='20160102T0900', data_freshness='', c_dt='20160102T0900')
 
         response = self.query_region(query)
         stop_schedules = response['stop_schedules']
@@ -194,13 +194,13 @@ class TestDepartures(AbstractTestFixture):
         stop_times = stop_schedules[0]['date_times']
         assert len(stop_times) == 2
         assert stop_times[0]['data_freshness'] == 'realtime'
-        assert stop_times[0]['date_time'][8:] == 'T080052'
+        assert stop_times[0]['date_time'] == '20160102T090052'
         links = stop_times[0]["links"]
         assert len(links) == 1
         assert links[0]['id'] == 'note:b5b328cb593ae7b1d73228345fe634fc'
 
         assert stop_times[1]['data_freshness'] == 'realtime'
-        assert stop_times[1]['date_time'][8:] == 'T081352'
+        assert stop_times[1]['date_time'] == '20160102T091352'
         links = stop_times[1]["links"]
         assert len(links) == 1
         assert links[0]['id'] == 'note:b5b328cb593ae7b1d73228345fe634fc'
@@ -212,7 +212,7 @@ class TestDepartures(AbstractTestFixture):
         assert notes[0]["id"] == "note:b5b328cb593ae7b1d73228345fe634fc"
 
     def test_stop_schedule_with_from_datetime_tomorrow(self):
-        query = self.query_template.format(sp='S42', dt='20160102T1100', data_freshness='', c_dt='20160101T1100')
+        query = self.query_template.format(sp='S42', dt='20160102T0900', data_freshness='', c_dt='20160101T0900')
         response = self.query_region(query)
         stop_schedules = response['stop_schedules']
         assert len(stop_schedules) == 3
