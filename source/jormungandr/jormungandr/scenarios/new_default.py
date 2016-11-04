@@ -694,6 +694,10 @@ class Scenario(simple.Scenario):
             # we filter unwanted journeys by side effects
             journey_filter.filter_journeys(responses, instance, api_request)
 
+            #We allow one more call to kraken if there is no valid journey.
+            if nb_journeys(responses) == 0:
+                min_journeys_calls = max(min_journeys_calls, 2)
+
         journey_filter.final_filter_journeys(responses, instance, api_request)
         pb_resp = merge_responses(responses)
 

@@ -27,11 +27,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from .tests_mechanism import AbstractTestFixture
 from datetime import timedelta
 from .tests_mechanism import config
-from .check_utils import *
-from nose.tools import eq_
 from jormungandr.scenarios.qualifier import min_from_criteria
 from .journey_common_tests import *
 from unittest import skip
@@ -76,8 +73,7 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
 
     def test_best_filtering(self):
         """
-        This feature is no longer supported
-        """
+        This feature is no longer supported"""
         pass
 
     def test_datetime_represents_arrival(self):
@@ -107,22 +103,13 @@ class TestExperimentalJourneysWithPtref(JourneysWithPtref, AbstractTestFixture):
     pass
 
 
-@dataset({"basic_routing_test": {"scenario": "new_default"}})
-class TestNewDefaultOnBasicRouting(OnBasicRouting, AbstractTestFixture):
+@config({"scenario": "experimental"})
+class TestExperimentalOnBasicRouting(OnBasicRouting, AbstractTestFixture):
 
     @skip("temporarily disabled")
-    def test_journeys_with_show_codes(self):
-        super(OnBasicRouting, self).test_journeys_with_show_codes()
+    def test_sp_to_sp(self):
+        super(OnBasicRouting, self).test_sp_to_sp()
 
     @skip("temporarily disabled")
-    def test_journeys_without_show_codes(self):
-        super(OnBasicRouting, self).test_journeys_without_show_codes()
-
-    @skip("temporarily disabled")
-    def test_novalidjourney_on_first_call(self):
-        super(OnBasicRouting, self).test_novalidjourney_on_first_call()
-
-
-    @skip("temporarily disabled")
-    def test_novalidjourney_on_first_call_debug(self):
-        super(OnBasicRouting, self).test_novalidjourney_on_first_call_debug()
+    def test_isochrone(self):
+        super(OnBasicRouting, self).test_isochrone()
