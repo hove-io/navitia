@@ -561,7 +561,9 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
 
 
     if (depth > 0) {
-        fill(&l->shape, line);
+        if(!this->pb_creator.disable_geojson) {
+            fill(&l->shape, line);
+        }
 
         fill(l->route_list, line->mutable_routes());
         fill(l->physical_mode_list, line->mutable_physical_modes());
@@ -601,7 +603,9 @@ void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::Route* rou
 
     fill(r->line, route);
 
-    fill(&r->shape, route);
+    if(!this->pb_creator.disable_geojson) {
+        fill(&r->shape, route);
+    }
 
     if (depth>2) {
         auto thermometer = navitia::timetables::Thermometer();

@@ -265,6 +265,7 @@ class MixedSchedule(object):
         req.requested_api = api
         req._current_datetime = date_to_timestamp(request['_current_datetime'])
         st = req.next_stop_times
+        st.disable_geojson = request["disable_geojson"]
         st.departure_filter = departure_filter
         st.arrival_filter = arrival_filter
         if request["from_datetime"]:
