@@ -166,6 +166,14 @@ geocode_addr = {
     "address": AddressField()
 }
 
+geocode_poi = {
+    "embedded_type": Lit("poi"),
+    "quality": Lit("0"),
+    "id": AddressId,
+    "name": fields.String(attribute='properties.geocoding.name'),
+    "administrative_regions": AdministrativeRegionField()
+}
+
 class GeocodejsonFeature(fields.Raw):
     def format(self, place):
         type_ = place.get('properties', {}).get('geocoding', {}).get('type')
@@ -174,6 +182,8 @@ class GeocodejsonFeature(fields.Raw):
             return marshal(place, geocode_admin)
         elif type_ in ('street', 'house'):
             return marshal(place, geocode_addr)
+        elif type_ == 'poi':
+            return marshal(place, geocode_poi)
 
         return place
 

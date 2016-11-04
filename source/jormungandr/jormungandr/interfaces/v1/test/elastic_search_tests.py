@@ -430,6 +430,61 @@ def bragi_geocodejson_compatibility_test():
     assert region_list.get(7) == 'Saint-Quentin'
 
 
+def bragi_poi_feature():
+    return {
+        "geometry": {
+            "coordinates": [8.9028068, 42.599235500000009],
+            "type": "Point"
+        },
+        "properties": {
+            "geocoding": {
+                "id": "poi:osm:3224270910",
+                "type": "poi",
+                "label": "Mairie de Pigna (Pigna)",
+                "name": "Mairie de Pigna",
+                "housenumber": None,
+                "street": None,
+                "postcode": None,
+                "city": "Pigna",
+                "administrative_regions": [{
+                    "id": "admin:fr:2B231",
+                    "insee": "2B231",
+                    "level": 8,
+                    "label": "Pigna",
+                    "zip_codes": ["20220"],
+                    "weight": 0,
+                    "coord": {
+                        "lat": 42.5996043,
+                        "lon": 8.9027334
+                    }
+                }]
+            }
+        }
+    }
+
+
+def bragi_poi_reading_test():
+    bragi_response = {
+        "Autocomplete": {
+            "features": [
+                bragi_poi_feature(),
+            ]
+        }
+    }
+    navitia_response = get_response(bragi_response).get('places', {})[0]
+    assert navitia_response.get('embedded_type') == "poi"
+    assert navitia_response.get('id') == 'poi:osm:3224270910'
+    assert navitia_response.get('name') == 'Mairie de Pigna'
+    assert navitia_response.get('quality') == '0'
+    assert len(navitia_response.get('administrative_regions')) == 1
+    administrative_region = navitia_response.get('administrative_regions')[0]
+    assert administrative_region.get('name') == 'Pigna'
+    assert administrative_region.get('level') == 8
+    assert administrative_region.get('coord').get('lat') == 42.5996043
+    assert administrative_region.get('coord').get('lon') == 8.9027334
+
+
+
 def geojson():
     return {"type": "Feature",
               "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
