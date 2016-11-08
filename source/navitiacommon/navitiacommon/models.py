@@ -219,6 +219,19 @@ class PoiType(db.Model):
     def __init__(self, uri, name=None, instance=None):
         self.uri = uri
         self.name = name
+
+
+class PoiTypeJson(db.Model):
+    poi_types_json = db.Column(db.Text, nullable=True)
+    instance_id = db.Column(db.Integer,
+                            db.ForeignKey('instance.id'),
+                            primary_key=True,
+                            nullable=False)
+
+    __tablename__ = 'poi_type_json'
+
+    def __init__(self, poi_types_json, instance=None):
+        self.poi_types_json = poi_types_json
         self.instance = instance
 
 
@@ -235,6 +248,9 @@ class Instance(db.Model):
 
     poi_types = db.relationship('PoiType', backref=backref('instance'),
                                lazy='dynamic', cascade='save-update, merge, delete')
+
+    poi_type_json = db.relationship('PoiTypeJson', uselist=False, backref=backref('instance'),
+                                 cascade='save-update, merge, delete, delete-orphan')
     # ============================================================
     # params for jormungandr
     # ============================================================

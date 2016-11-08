@@ -740,52 +740,110 @@ If nothing if configured, default POI are extracted. At this time the list is as
 - uri: "leisure:garden" name: "Jardin"
 - uri: "leisure:park" name: "Zone Parc. Zone verte ouverte, pour déambuler. habituellement municipale"
 
-Let say you want to see all type of poi for the instance fr-bre, you have to call the PoiTypes endpoint for this
+Let's say you want to see all poi types for the instance fr-bre, you have to call the PoiTypes endpoint for this
 instance:
 
     curl "http://localhost:5000/v0/instances/fr-bre/poi_types"
 ```json
 {
-    "poi_types": [
-        {
-            "name": "foo",
-            "uri": "foo:ba"
-        },
-        {
-            "name": "foo\u00e9",
-            "uri": "foo:baff"
-        }
-    ]
+  "poi_types": [
+    {"id": "amenity:college", "name": "École"},
+    {"id": "amenity:university", "name": "Université"},
+    {"id": "amenity:theatre", "name": "Théâtre"},
+    {"id": "amenity:hospital", "name": "Hôpital"},
+    {"id": "amenity:post_office", "name": "Bureau de poste"},
+    {"id": "amenity:bicycle_rental", "name": "Station VLS"},
+    {"id": "amenity:bicycle_parking", "name": "Parking vélo"},
+    {"id": "amenity:parking", "name": "Parking"},
+    {"id": "amenity:police", "name": "Police, gendarmerie"},
+    {"id": "amenity:townhall", "name": "Mairie"},
+    {"id": "leisure:garden", "name": "Jardin"},
+    {"id": "leisure:park", "name": "Parc, espace vert"}
+  ],
+  "rules": [
+    {
+      "osm_tags_filters": [
+        {"key": "amenity", "value": "college"}
+      ],
+      "poi_type_id": "amenity:college"
+    },
+    {
+      "osm_tags_filters": [
+        {"key": "amenity", "value": "university"}
+      ],
+      "poi_type_id": "amenity:university"
+    },
+    {
+      "osm_tags_filters": [
+        {"key": "amenity", "value": "theatre"}
+      ],
+      "poi_type_id": "amenity:theatre"
+    },
+    {
+      "osm_tags_filters": [
+        {"key": "amenity", "value": "hospital"}
+      ],
+      "poi_type_id": "amenity:hospital"
+    },
+    {
+      "osm_tags_filters": [
+        {"key": "amenity", "value": "post_office"}
+      ],
+      "poi_type_id": "amenity:post_office"
+    },
+    {
+      "osm_tags_filters": [
+        {"key": "amenity", "value": "bicycle_rental"}
+      ],
+      "poi_type_id": "amenity:bicycle_rental"
+    },
+    {
+      "osm_tags_filters": [
+        {"key": "amenity", "value": "bicycle_parking"}
+      ],
+      "poi_type_id": "amenity:bicycle_parking"
+    },
+    {
+      "osm_tags_filters": [
+        {"key": "amenity", "value": "parking"}
+      ],
+      "poi_type_id": "amenity:parking"
+    },
+    {
+      "osm_tags_filters": [
+        {"key": "amenity", "value": "police"}
+      ],
+      "poi_type_id": "amenity:police"
+    },
+    {
+      "osm_tags_filters": [
+        {"key": "amenity", "value": "townhall"}
+      ],
+      "poi_type_id": "amenity:townhall"
+    },
+    {
+      "osm_tags_filters": [
+        {"key": "leisure", "value": "garden"}
+      ],
+      "poi_type_id": "leisure:garden"
+    },
+    {
+      "osm_tags_filters": [
+        {"key": "leisure", "value": "park"}
+      ],
+      "poi_type_id": "leisure:park"
+    }
+  ]
 }
-
 ```
 
-If you want to add a poi type for an instance you have to POST it:
-
-    curl 'http://localhost:5000/v0/instances/fr-bre/poi_types/foo:baff?name=foo' -X POST
-
-The name of a poi type is optional and can also be passed in a json like this:
-
-    curl 'http://localhost:5000/v0/instances/fr-bre/poi_types/foo:json' -X POST -H 'content-type: application/json' -d '{"name": "json"}'
+If you want to add poi types for an instance you have to POST it:
+    
+    curl 'http://localhost:5000/v0/instances/fr-bre/poi_types' -X POST -H 'content-type: application/json' -d '{"poi_types": [{"id": "pdv", "name": "Point de vente"},],"rules": [{"osm_tags_filters": [{"key": "amenity:park", "value": "yes"}, {"key": "amenity", "value": "shop"}], "poi_type_id": "pdv"}]}'
 
 For updating a poi_type (only the name can be changed) you have to do the same thing with a PUT.
 
 Finally if you want to delete a poi_type you just have to use the DELETE action:
 
-    curl 'http://localhost:5000/v0/instances/fr-bre/poi_types/foo:bar' -X DELETE
+    curl 'http://localhost:5000/v0/instances/fr-bre/poi_types' -X DELETE
 
-
-A little help if you want to add a new POI type and keep all the default ones:
-
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:college?name=école' -X POST
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:university?name=université' -X POST
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:theatre?name=théâtre' -X POST
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:hospital?name=hôpital' -X POST
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:post_office?name=bureau+de+poste' -X POST
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:bicycle_rental?name=station+vls' -X POST
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:bicycle_parking?name=Parking+vélo' -X POST
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:parking?name=Parking' -X POST
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:police?name=Police,+Gendarmerie' -X POST
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:townhall?name=Mairie' -X POST
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/leisure:garden?name=Jardin' -X POST
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/leisure:park?name=Zone+Parc.+Zone+verte+ouverte,+pour+déambuler.+habituellement+municipale' -X POST
