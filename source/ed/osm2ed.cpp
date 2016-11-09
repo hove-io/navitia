@@ -40,9 +40,12 @@ www.navitia.io
 #include <boost/range/algorithm/find.hpp>
 #include <boost/range/algorithm/find_if.hpp>
 #include <boost/range/algorithm/reverse.hpp>
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/json_parser.hpp>
 
 #include "ed/connectors/osm_tags_reader.h"
 #include "ed/connectors/osm2ed_utils.h"
+#include "ed/default_poi_types.h"
 #include "ed_persistor.h"
 #include "utils/functions.h"
 #include "utils/init.h"
@@ -53,21 +56,6 @@ namespace po = boost::program_options;
 namespace pt = boost::posix_time;
 
 namespace ed { namespace connectors {
-
-bool poi_type_comp::operator()(const std::string& a, const std::string& b){
-    auto it_a = boost::range::find(order, a);
-    auto it_b = boost::range::find(order, b);
-    if(it_a != order.end() && it_b != order.end()){
-        return it_a < it_b;
-    }
-    if(it_a == order.end() && it_b != order.end()){
-        return false;
-    }
-    if(it_b == order.end() && it_a != order.end()){
-        return true;
-    }
-    return a < b;
-}
 
 /*
  * Read relations
@@ -167,8 +155,7 @@ void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &tags,
     bool is_street = properties.any();
     auto it_way = cache.ways.find(OSMWay(osm_id));
     const bool is_used_by_relation = it_way != cache.ways.end(),
-               is_hn = tags.find("addr:housenumber") != tags.end(),
-               is_poi = tags.find("amenity") != tags.end() || tags.find("leisure") != tags.end();
+               is_hn = tags.find("addr:housenumber") != tags.end();
 
     const auto name = name_it != tags.end() ? name_it->second : "";
 
@@ -180,7 +167,7 @@ void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &tags,
         is_street = false;
     }
 
-    if (!is_street && !is_used_by_relation && !is_hn && !is_poi) {
+    if (!is_street && !is_used_by_relation && !is_hn) {
         return;
     }
 
@@ -704,9 +691,7 @@ void PoiHouseNumberVisitor::node_callback(uint64_t osm_id, double lon, double la
  * We read another time ways to insert housenumbers and poi
  */
 void PoiHouseNumberVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &tags, const std::vector<uint64_t> & refs) {
-    if (tags.find("addr:housenumber") == tags.end() &&
-            tags.find("leisure") == tags.end() &&
-            tags.find("amenity") == tags.end()) {
+    if (tags.find("addr:housenumber") == tags.end() && get_applicable_poi_rule(tags) == nullptr) {
         return;
     }
     polygon_type tmp_polygon;
@@ -902,52 +887,66 @@ void PoiHouseNumberVisitor::fill_housenumber(const uint64_t osm_id,
     house_numbers.push_back(OSMHouseNumber(str_to_int(it_hn->second), lon, lat, candidate_way->way_ref));
 }
 
-void PoiHouseNumberVisitor::fill_poi(const u_int64_t osm_id, const CanalTP::Tags& tags,
-        const double lon, const double lat, OsmObjectType osm_relation_type) {
+/**
+ * the first rule that matches OSM object decides POI-type
+ * match : OSM object has all OSM tags required by rule
+ */
+const RuleOsmTag2PoiType* PoiHouseNumberVisitor::get_applicable_poi_rule(const CanalTP::Tags& tags) {
+    for (const auto& osm_rule: poi_params.rules) {
+        bool is_valid_rule = true;
+        for (const auto& osm_rule_tag: osm_rule.osm_tag_filters) {
+            const auto it_poi_tag = tags.find(osm_rule_tag.first);
+            if (it_poi_tag == tags.end() || it_poi_tag->second != osm_rule_tag.second) {
+                is_valid_rule = false;
+                break;
+            }
+        }
+        if (is_valid_rule) {
+            return &osm_rule;
+        }
+    }
+    return nullptr;
+}
+
+void PoiHouseNumberVisitor::fill_poi(const u_int64_t osm_id, const CanalTP::Tags& tags, const double lon,
+                                     const double lat, OsmObjectType osm_relation_type) {
     if (!parse_pois)
         return;
-
-    std::string ref_tag = "";
-    for(const auto& tags_type: tags_types){
-        if(tags.find(tags_type) != tags.end()){
-            ref_tag = tags_type;
-            break;
-        }
-    }
-    if (ref_tag.empty()) {
-        return;
-    }
-    //Note: Pois can come from the node or the way and we need that information to have a unique id
+    //Note: POIs can come from the node or the way and we need that information to have a unique id
     const auto poi_id = to_string(osm_relation_type) + std::to_string(osm_id);
-    auto poi_it = data.pois.find(poi_id);
-    if (poi_it != data.pois.end()){
+    if (data.pois.find(poi_id) != data.pois.end()) {
         return;
     }
-    std::string value = ref_tag + ":" + tags.at(ref_tag);
-    auto it = data.poi_types.find(value);
-    if (it == data.poi_types.end()) {
+
+    auto applicable_rule = get_applicable_poi_rule(tags);
+    if (applicable_rule == nullptr) {
         return;
     }
+
+    // we have found a POI and we know it's type
     ed::types::Poi poi;
-    poi.poi_type = it->second;
+    //type
+    poi.poi_type = data.poi_types[applicable_rule->poi_type_id];
+    //name
     if(tags.find("name") != tags.end()){
         poi.name = tags.at("name");
+    } else {
+        poi.name = poi.poi_type->name;
     }
-    for(auto st : tags){
-        if(properties_to_ignore.find(st.first) != properties_to_ignore.end()){
-            if(st.first == "addr:housenumber"){
-                poi.address_number = st.second;
-            }
-            if(st.first == "addr:street"){
-                poi.address_name = st.second;
-            }
-        }else{
-            poi.properties[st.first] = st.second;
+    //properties and other attributes
+    for(auto poi_tag: tags){
+        if(poi_tag.first == "addr:housenumber") {
+            poi.address_number = poi_tag.second;
         }
+        if(poi_tag.first == "addr:street") {
+            poi.address_name = poi_tag.second;
+        }
+        poi.properties[poi_tag.first] = poi_tag.second;
     }
     poi.id = this->n_inserted_pois + data.pois.size();
     poi.coord.set_lon(lon);
     poi.coord.set_lat(lat);
+
     data.pois[poi_id] = poi;
 }
 
@@ -970,56 +969,67 @@ void OSMCache::flag_nodes() {
 
 }}
 
-static std::map<std::string, std::string> parse_poi_types(const std::vector<std::string>& poi_types){
-    std::map<std::string, std::string> result;
-    for(auto type: poi_types){
-        std::vector<std::string> strs;
-        boost::algorithm::split(strs, type, boost::is_any_of("="));
-        if(strs.size() == 1){
-            result[strs[0]] = strs[0];
-        }else if(strs.size() == 2){
-            result[strs[0]] = strs[1];
-        }else{
-            std::cout << "poi_type: \"" << type << "\" ignored!" << std::endl;
+static ed::connectors::PoiTypeParams parse_json_poi_types(const std::string& json_params){
+    namespace pt = boost::property_tree;
+
+    pt::ptree poi_root;
+    std::istringstream iss (json_params);
+    pt::read_json(iss, poi_root);
+
+    ed::connectors::PoiTypeParams params;
+
+    for (const pt::ptree::value_type& json_poi_type: poi_root.get_child("poi_types")) {
+        std::string poi_type_id = json_poi_type.second.get<std::string>("id");
+        if (params.poi_types.find(poi_type_id) != params.poi_types.end()) {
+            throw std::invalid_argument("POI type id " + poi_type_id + " is defined multiple times");
+        }
+        params.poi_types[poi_type_id] = json_poi_type.second.get<std::string>("name");
+    }
+    if (params.poi_types.find("amenity:parking") == params.poi_types.end() ||
+        params.poi_types.find("amenity:bicycle_rental") == params.poi_types.end()) {
+        throw std::invalid_argument("The 2 POI types id=amenity:parking and "
+                                    "id=amenity:bicycle_rental must be defined");
+    }
+
+    for (const pt::ptree::value_type& json_rule: poi_root.get_child("rules")) {
+        params.rules.emplace_back();
+        auto& rule = params.rules.back();
+        rule.poi_type_id = json_rule.second.get<std::string>("poi_type_id");
+        if (params.poi_types.find(rule.poi_type_id) == params.poi_types.end()) {
+            throw std::invalid_argument("Using an undefined POI type id (" + rule.poi_type_id + ") in rules");
+        }
+        for (const pt::ptree::value_type& json_filter: json_rule.second.get_child("osm_tags_filters")) {
+            rule.osm_tag_filters[json_filter.second.get<std::string>("key")] =
+                                                    json_filter.second.get<std::string>("value");
         }
     }
-    return result;
+    return params;
 }
 
 int main(int argc, char** argv) {
     navitia::init_app();
     auto logger = log4cplus::Logger::getInstance("log");
     pt::ptime start;
-    std::string input, connection_string;
-    std::vector<std::string> poi_types;
-    std::vector<std::string> default_poi_types = {
-            "amenity:college=école",
-            "amenity:university=université",
-            "amenity:theatre=théâtre",
-            "amenity:hospital=hôpital",
-            "amenity:post_office=bureau de poste",
-            "amenity:bicycle_rental=station vls",
-            "amenity:bicycle_parking=Parking vélo",
-            "amenity:parking=Parking",
-            "amenity:police=Police, Gendarmerie",
-            "amenity:townhall=Mairie",
-            "leisure:garden=Jardin",
-            "leisure:park=Zone Parc. Zone verte ouverte, pour déambuler. habituellement municipale"
-    };
+    std::string input, connection_string, json_poi_types;
+
     po::options_description desc("Allowed options");
     desc.add_options()
         ("version,v", "Show version")
         ("help,h", "Show this message")
-        ("input,i", po::value<std::string>(&input)->required(), "Input file (must be an OSM one)")
+        ("input,i", po::value<std::string>(&input),
+                    "Input file (must be an OSM one). "
+                    "If none provided, will check that json poi-type param (if provided) is correct.")
         ("connection-string", po::value<std::string>(&connection_string)->required(),
              "Database connection parameters: host=localhost user=navitia"
              " dbname=navitia password=navitia")
-        ("poi-type,p", po::value<std::vector<std::string>>(&poi_types)->default_value(default_poi_types, ""),
-                       "a poi_type like amenity:college with optionally a name separated with an equals, "
-                       "ex: amenity:college=école");
+        ("poi-type,p", po::value<std::string>(&json_poi_types),
+                       "a json string describing poi_types and rules to build them from OSM tags");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
+
+    start = pt::microsec_clock::local_time();
+    po::notify(vm);
 
     if(vm.count("version")){
         std::cout << argv[0] << " " << navitia::config::project_version << " "
@@ -1027,14 +1037,31 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-    if(vm.count("help")) {
+    if(vm.count("help") || (! vm.count("input") && ! vm.count("poi-type"))) {
         std::cout << "Reads an OSM file and inserts it into a ed database" << std::endl;
         std::cout << desc << std::endl;
         return 1;
     }
 
-    start = pt::microsec_clock::local_time();
-    po::notify(vm);
+    // if no input file but poi-type param, just trying to parse poi-type param to check it
+    if (! vm.count("input")) {
+        try {
+            LOG4CPLUS_INFO(logger, "Checking that json poi-type parameter is correct");
+            parse_json_poi_types(json_poi_types);
+        } catch (const std::exception& e) {
+            LOG4CPLUS_ERROR(logger, std::string("Incorrect json poi-type parameter: ") + e.what());
+            return 1;
+        } catch (...) {
+            LOG4CPLUS_ERROR(logger, std::string("Incorrect json poi-type parameter: unknown problem"));
+            return 1;
+        }
+        LOG4CPLUS_INFO(logger, "json poi-type parameter OK");
+        return 0;
+    }
+
+    if (! vm.count("poi-type")) {
+        json_poi_types = ed::connectors::DEFAULT_JSON_POI_TYPES;
+    }
 
     ed::EdPersistor persistor(connection_string);
     persistor.street_network_source = "osm";
@@ -1062,7 +1089,8 @@ int main(int argc, char** argv) {
     cache.insert_rel_way_admins();
 
     ed::Georef data;
-    ed::connectors::PoiHouseNumberVisitor poi_visitor(persistor, cache, data, persistor.parse_pois, parse_poi_types(poi_types));
+    ed::connectors::PoiHouseNumberVisitor poi_visitor(persistor, cache, data, persistor.parse_pois,
+                                                      parse_json_poi_types(json_poi_types));
     CanalTP::read_osm_pbf(input, poi_visitor);
     poi_visitor.finish();
     LOG4CPLUS_INFO(logger, "compute bounding shape");
