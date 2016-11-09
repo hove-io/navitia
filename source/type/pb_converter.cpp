@@ -1809,6 +1809,10 @@ pbnavitia::NearestStopPoint* PbCreator::add_nearest_stop_points(){
     return response.add_nearest_stop_points();
 }
 
+pbnavitia::StopPoint* PbCreator::add_stop_points(){
+    return response.add_stop_points();
+}
+
 pbnavitia::JourneyPattern* PbCreator::add_journey_patterns() {
     return response.add_journey_patterns();
 }

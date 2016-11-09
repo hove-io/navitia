@@ -131,6 +131,7 @@ class Worker {
          * from origin to destination by taking street network
          * */
         pbnavitia::Response street_network_routing_matrix(const pbnavitia::StreetNetworkRoutingMatrixRequest& request);
+        pbnavitia::Response odt_stop_points(const pbnavitia::GeographicalCoord& request);
 };
 
 type::EntryPoint make_sn_entry_point(const std::string& place,
