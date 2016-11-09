@@ -1090,19 +1090,11 @@ pbnavitia::Response Worker::odt_stop_points(const pbnavitia::GeographicalCoord& 
     navitia::type::GeographicalCoord coord;
     coord.set_lon(request.lon());
     coord.set_lat(request.lat());
-
     const auto data = data_manager.get_data();
     this->init_worker_data(data);
 
     const auto& zonal_sps = data->pt_data->stop_points_by_area.find(coord);
-    std::cout << "zonal_sps size: " << zonal_sps.size() << std::endl;
-
-    PbCreator pb_creator(*data,pt::not_a_date_time,null_time_period);
-    for (const auto* odt_sp: zonal_sps){
-        auto* pb_sp = pb_creator.add_stop_points();
-        pb_creator.fill(odt_sp, pb_sp, 0);
-    }
-    return pb_creator.get_response();
+    return get_response(zonal_sps, *data);
 }
 
 }

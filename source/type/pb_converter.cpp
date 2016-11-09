@@ -1329,9 +1329,10 @@ void PbCreator::Filler::fill_pb_object(const nt::Contributor* c, pbnavitia::Feed
 
 template<typename N>
 void PbCreator::pb_fill(const std::vector<N*>& nav_list, int depth, const DumpMessage dump_message){
-    auto* pb_object = get_mutable<N>(response);
+    auto* pb_object = get_mutable<typename std::remove_cv<N>::type>(response);
     Filler(depth, dump_message, *this).fill_pb_object(nav_list, pb_object);
 }
+
 template void PbCreator::pb_fill(const std::vector<ng::POI*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<ng::POIType*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::Calendar*>& nav_list, int depth, const DumpMessage dump_message);
@@ -1346,6 +1347,7 @@ template void PbCreator::pb_fill(const std::vector<nt::PhysicalMode*>& nav_list,
 template void PbCreator::pb_fill(const std::vector<nt::Route*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::StopArea*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::StopPoint*>& nav_list, int depth, const DumpMessage dump_message);
+template void PbCreator::pb_fill(const std::vector<const nt::StopPoint*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::StopPointConnection*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::ValidityPattern*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::VehicleJourney*>& nav_list, int depth, const DumpMessage dump_message);
@@ -1807,10 +1809,6 @@ pbnavitia::TrafficReports* PbCreator::add_traffic_reports(){
 
 pbnavitia::NearestStopPoint* PbCreator::add_nearest_stop_points(){
     return response.add_nearest_stop_points();
-}
-
-pbnavitia::StopPoint* PbCreator::add_stop_points(){
-    return response.add_stop_points();
 }
 
 pbnavitia::JourneyPattern* PbCreator::add_journey_patterns() {

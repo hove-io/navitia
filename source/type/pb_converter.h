@@ -231,7 +231,6 @@ struct PbCreator {
     pbnavitia::PtObject* add_places();
     pbnavitia::TrafficReports* add_traffic_reports();
     pbnavitia::NearestStopPoint* add_nearest_stop_points();
-    pbnavitia::StopPoint* add_stop_points();
     pbnavitia::JourneyPattern* add_journey_patterns();
     pbnavitia::JourneyPatternPoint* add_journey_pattern_points();
     pbnavitia::Trip* add_trips();
