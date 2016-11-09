@@ -39,8 +39,6 @@ from flask import g
 from jormungandr.utils import get_uri_pt_object
 from jormungandr import app
 
-embedded_type_coord = {"STOP_POINT": "stop_point", "STOP_AREA": "stop_area", "ADDRESS": "address"}
-
 
 def create_crowfly(_from, to, begin, end, mode='walking'):
     section = response_pb2.Section()
@@ -269,6 +267,8 @@ class Scenario(new_default.Scenario):
         """
         logger = logging.getLogger(__name__)
         logger.debug('datetime: %s', request['datetime'])
+        #We use a dict with a key/value of stop_point.uri and is_zonal
+        #a crow_fly section is added only if stop_point is not zonal
         crow_fly_stop_points = dict()
         if not g.requested_origin:
             g.requested_origin = instance.georef.place(request['origin'])

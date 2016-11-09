@@ -114,5 +114,4 @@ class Kraken(object):
         req.requested_api = type_pb2.odt_stop_points
         req.coord.lon = coord.lon
         req.coord.lat = coord.lat
-        req.requested_api = type_pb2.odt_stop_points
         return self.instance.send_and_receive(req).stop_points
