@@ -80,11 +80,3 @@ class Kraken(object):
         req.sn_routing_matrix.speed = speed_switcher.get(street_network_mode, self.instance.walking_speed)
         req.sn_routing_matrix.max_duration = max_duration
         return self.instance.send_and_receive(req).sn_routing_matrix
-
-    def get_odt_stop_points(self, coord):
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.odt_stop_points
-        req.coord.lon = coord.lon
-        req.coord.lat = coord.lat
-        req.requested_api = type_pb2.odt_stop_points
-        return self.instance.send_and_receive(req).stop_points

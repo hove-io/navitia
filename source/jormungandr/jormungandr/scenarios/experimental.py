@@ -114,7 +114,7 @@ def _update_crowfly_duration(instance, fallback_list, mode, stop_area_uri, reque
     }
     coord = map_coord.get(requested_point.embedded_type, None)
     if coord:
-        odt_stop_points = instance.street_network_service.get_odt_stop_points(coord)
+        odt_stop_points = instance.georef.get_odt_stop_points(coord)
         for stop_point in odt_stop_points:
             if mode in fallback_list:
                 fallback_list[mode][stop_point.uri] = 0
