@@ -275,6 +275,17 @@ struct AssociateStreetRelation {
 };
 
 
+struct RuleOsmTag2PoiType {
+    std::string poi_type_id;
+    std::map<std::string, std::string> osm_tag_filters;
+};
+
+struct PoiTypeParams {
+    std::map<std::string, std::string> poi_types;
+    std::vector<RuleOsmTag2PoiType> rules;
+    const RuleOsmTag2PoiType* get_applicable_poi_rule(const CanalTP::Tags& tags) const;
+};
+
 typedef std::set<OSMWay>::const_iterator it_way;
 typedef std::map<std::set<const OSMRelation*>, std::set<it_way>> rel_ways;
 typedef std::set<OSMRelation>::const_iterator admin_type;
@@ -322,8 +333,10 @@ struct ReadWaysVisitor {
     // Read references and set if a node is used by a way
     log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
     OSMCache& cache;
+    const PoiTypeParams poi_params;
 
-    ReadWaysVisitor(OSMCache& cache) : cache(cache) {}
+    ReadWaysVisitor(OSMCache& cache, const PoiTypeParams& poi_params) :
+        cache(cache), poi_params(poi_params) {}
     ~ReadWaysVisitor();
 
     void node_callback(uint64_t , double , double , const CanalTP::Tags& ) {}
@@ -381,16 +394,6 @@ inline std::string to_string(OsmObjectType t) {
     }
 }
 
-struct RuleOsmTag2PoiType {
-    std::string poi_type_id;
-    std::map<std::string, std::string> osm_tag_filters;
-};
-
-struct PoiTypeParams {
-    std::map<std::string, std::string> poi_types;
-    std::vector<RuleOsmTag2PoiType> rules;
-};
-
 struct PoiHouseNumberVisitor {
     const size_t max_inserts_without_bulk = 20000;
     ed::EdPersistor& persistor;
@@ -420,7 +423,6 @@ struct PoiHouseNumberVisitor {
     void way_callback(uint64_t osm_id, const CanalTP::Tags &tags, const std::vector<uint64_t> & refs);
     const OSMWay* find_way_without_name(const double lon, const double lat);
     const OSMWay* find_way(const CanalTP::Tags& tags, const double lon, const double lat);
-    const RuleOsmTag2PoiType* get_applicable_poi_rule(const CanalTP::Tags& tags);
     void fill_poi(const u_int64_t osm_id, const CanalTP::Tags& tags, const double lon, const double lat, OsmObjectType t);
     void fill_housenumber(const u_int64_t osm_id, const CanalTP::Tags& tags, const double lon, const double lat);
     void insert_house_numbers();

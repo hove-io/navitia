@@ -155,6 +155,7 @@ void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &tags,
     bool is_street = properties.any();
     auto it_way = cache.ways.find(OSMWay(osm_id));
     const bool is_used_by_relation = it_way != cache.ways.end(),
+               is_poi = poi_params.get_applicable_poi_rule(tags) != nullptr,
                is_hn = tags.find("addr:housenumber") != tags.end();
 
     const auto name = name_it != tags.end() ? name_it->second : "";
@@ -167,7 +168,7 @@ void ReadWaysVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &tags,
         is_street = false;
     }
 
-    if (!is_street && !is_used_by_relation && !is_hn) {
+    if (!is_street && !is_used_by_relation && !is_hn && !is_poi) {
         return;
     }
 
@@ -691,7 +692,7 @@ void PoiHouseNumberVisitor::node_callback(uint64_t osm_id, double lon, double la
  * We read another time ways to insert housenumbers and poi
  */
 void PoiHouseNumberVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &tags, const std::vector<uint64_t> & refs) {
-    if (tags.find("addr:housenumber") == tags.end() && get_applicable_poi_rule(tags) == nullptr) {
+    if (tags.find("addr:housenumber") == tags.end() && poi_params.get_applicable_poi_rule(tags) == nullptr) {
         return;
     }
     polygon_type tmp_polygon;
@@ -891,17 +892,13 @@ void PoiHouseNumberVisitor::fill_housenumber(const uint64_t osm_id,
  * the first rule that matches OSM object decides POI-type
  * match : OSM object has all OSM tags required by rule
  */
-const RuleOsmTag2PoiType* PoiHouseNumberVisitor::get_applicable_poi_rule(const CanalTP::Tags& tags) {
-    for (const auto& osm_rule: poi_params.rules) {
-        bool is_valid_rule = true;
-        for (const auto& osm_rule_tag: osm_rule.osm_tag_filters) {
+const RuleOsmTag2PoiType* PoiTypeParams::get_applicable_poi_rule(const CanalTP::Tags& tags) const {
+    for (const auto& osm_rule: rules) {
+        auto poi_misses_a_tag = [&](const std::pair<const std::string, std::string>& osm_rule_tag) {
             const auto it_poi_tag = tags.find(osm_rule_tag.first);
-            if (it_poi_tag == tags.end() || it_poi_tag->second != osm_rule_tag.second) {
-                is_valid_rule = false;
-                break;
-            }
-        }
-        if (is_valid_rule) {
+            return (it_poi_tag == tags.end() || it_poi_tag->second != osm_rule_tag.second);
+        };
+        if (! navitia::contains_if(osm_rule.osm_tag_filters, poi_misses_a_tag)) {
             return &osm_rule;
         }
     }
@@ -918,7 +915,7 @@ void PoiHouseNumberVisitor::fill_poi(const u_int64_t osm_id, const CanalTP::Tags
         return;
     }
 
-    auto applicable_rule = get_applicable_poi_rule(tags);
+    auto applicable_rule = poi_params.get_applicable_poi_rule(tags);
     if (applicable_rule == nullptr) {
         return;
     }
@@ -1062,6 +1059,7 @@ int main(int argc, char** argv) {
     if (! vm.count("poi-type")) {
         json_poi_types = ed::connectors::DEFAULT_JSON_POI_TYPES;
     }
+    const auto poi_params = parse_json_poi_types(json_poi_types);
 
     ed::EdPersistor persistor(connection_string);
     persistor.street_network_source = "osm";
@@ -1072,7 +1070,7 @@ int main(int argc, char** argv) {
     ed::connectors::OSMCache cache(connection_string);
     ed::connectors::ReadRelationsVisitor relations_visitor(cache);
     CanalTP::read_osm_pbf(input, relations_visitor);
-    ed::connectors::ReadWaysVisitor ways_visitor(cache);
+    ed::connectors::ReadWaysVisitor ways_visitor(cache, poi_params);
     CanalTP::read_osm_pbf(input, ways_visitor);
     ed::connectors::ReadNodesVisitor node_visitor(cache);
     CanalTP::read_osm_pbf(input, node_visitor);
@@ -1089,8 +1087,8 @@ int main(int argc, char** argv) {
     cache.insert_rel_way_admins();
 
     ed::Georef data;
-    ed::connectors::PoiHouseNumberVisitor poi_visitor(persistor, cache, data, persistor.parse_pois,
-                                                      parse_json_poi_types(json_poi_types));
+    ed::connectors::PoiHouseNumberVisitor poi_visitor(persistor, cache, data,
+                                                      persistor.parse_pois, poi_params);
     CanalTP::read_osm_pbf(input, poi_visitor);
     poi_visitor.finish();
     LOG4CPLUS_INFO(logger, "compute bounding shape");
