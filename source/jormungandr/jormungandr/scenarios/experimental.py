@@ -36,7 +36,7 @@ import uuid
 from jormungandr.scenarios.utils import fill_uris
 from jormungandr.planner import JourneyParameters
 from flask import g
-from jormungandr.utils import get_uri_pt_object
+from jormungandr.utils import get_uri_pt_object, generate_id
 from jormungandr import app
 
 
@@ -99,6 +99,7 @@ def _update_crowfly_duration(instance, fallback_list, mode, stop_area_uri, crow_
         if mode in fallback_list:
             fallback_list[mode][stop_point.uri] = 0
             crow_fly_stop_points.add(stop_point.uri)
+    return crow_fly_stop_points
 
 
 def _rename_journey_sections_ids(start_idx, sections):
@@ -129,6 +130,150 @@ def _reverse_journeys(res):
             s.end_date_time = previous_section_begin
             previous_section_begin = s.begin_date_time = s.end_date_time - s.duration
     return res
+import gevent, gevent.pool
+
+
+def worker_sp(func, fallback, place, mode, instance, request, reverse, **kwargs):
+    return (mode, func(instance, fallback, place, mode, get_max_fallback_duration(request, mode),
+                 request, reverse=reverse, **kwargs))
+
+
+def worker_duration(instance, dep_arr, mode, fallback, place, crow_fly_stop_points):
+    return (dep_arr, mode, _update_crowfly_duration(instance, fallback, mode, place, crow_fly_stop_points))
+
+
+def worker_direct_path(func, fallback_direct_path, instance, mode, origin, destination, datetime,
+                       clockwise, request):
+    return (mode, func(instance, mode, origin, destination, datetime, clockwise, request,
+                       fallback_direct_path))
+
+
+def worker_journey(instance, dep_mode, arr_mode, pt_object_origin, pt_object_destination, request,
+                 fallback_direct_path, fall_back_origins, fall_back_destinations, journey_parameters,
+                 reverse_sections=False):
+    dp_key = (dep_mode, pt_object_origin.uri, pt_object_destination.uri, request['datetime'],
+              request['clockwise'], reverse_sections)
+    dp = fallback_direct_path.get(dp_key)
+    if dp.journeys:
+        journey_parameters.direct_path_duration = dp.journeys[0].durations.total
+    else:
+        journey_parameters.direct_path_duration = None
+    origins = fall_back_origins.get(dep_mode)
+    destinations = fall_back_destinations.get(arr_mode)
+    if not fall_back_origins or not fall_back_destinations or not request.get('max_duration', 0):
+        return (dep_mode, arr_mode, None)
+    return (dep_mode, arr_mode, instance.planner.journeys(origins, destinations,
+                                                          request['datetime'], request['clockwise'],
+                                                          journey_parameters))
+
+
+def worker_from(journey, instance, fisrt_section, func_extend_journey, _from, crow_fly_stop_points, request, dep_mode,
+                fallback_direct_path, origins_fallback):
+
+    departure = fisrt_section.origin
+    journey.departure_date_time = journey.departure_date_time - origins_fallback[departure.uri]
+    if _from.uri != departure.uri:
+        if departure.uri in crow_fly_stop_points:
+            journey.sections.extend([create_crowfly(_from, departure, journey.departure_date_time,
+                                     journey.sections[0].begin_date_time)])
+        else:
+            func_extend_journey(instance, journey, dep_mode, _from, departure, journey.departure_date_time,
+                                 origins_fallback, True, request, fallback_direct_path)
+    return journey
+
+
+def worker_to(journey, instance, last_section, func_extend_journey, to, crow_fly_stop_points, request, arr_mode,
+              fallback_direct_path, destinations_fallback):
+
+    arrival = last_section.destination
+    journey.arrival_date_time = journey.arrival_date_time + destinations_fallback[arrival.uri]
+    last_section_end = last_section.end_date_time
+
+    if to.uri != arrival.uri:
+        if arrival.uri in crow_fly_stop_points:
+            journey.sections.extend([create_crowfly(arrival, to, last_section_end,
+                                                    journey.arrival_date_time)])
+        else:
+            o = arrival
+            d = to
+            reverse_sections = False
+            if arr_mode == 'car':
+                o, d, reverse_sections = d, o, True
+            func_extend_journey(instance, journey, arr_mode, o, d, journey.arrival_date_time,
+                                destinations_fallback, False, request, fallback_direct_path, reverse_sections)
+    return journey
+
+
+class Worker(object):
+    def __init__(self, instance, krakens_call, request, size=app.config.get('GREENLET_POOL_SIZE', 3)):
+        self.pool = gevent.pool.Pool(size)
+        self.instance = instance
+        self.krakens_call = krakens_call
+        self.request = request
+        self.speed_switcher = {
+            "walking": instance.walking_speed,
+            "bike": instance.bike_speed,
+            "car": instance.car_speed,
+            "bss": instance.bss_speed,
+        }
+
+    def get_sp_futures(self, func, origin, destination, origins_fallback, destinations_fallback):
+        futures = []
+        for dep_mode, arr_mode in self.krakens_call:
+            futures.append(self.pool.spawn(worker_sp, func, origins_fallback, origin, dep_mode,
+                                           self.instance, self.request, False, **self.speed_switcher))
+            futures.append(self.pool.spawn(worker_sp, func, destinations_fallback, destination, arr_mode,
+                                           self.instance, self.request, True, **self.speed_switcher))
+        return futures
+
+    def get_duration_futures(self, origins_fallback, destinations_fallback, crow_fly_stop_points):
+        futures_duration = []
+        for dep_mode, arr_mode in self.krakens_call:
+            futures_duration.append(self.pool.spawn(worker_duration, self.instance, "dep", dep_mode,
+                                                             origins_fallback, self.request['origin'], crow_fly_stop_points))
+            futures_duration.append(self.pool.spawn(worker_duration, self.instance, "arr", arr_mode,
+                                                             destinations_fallback, self.request['destination'], crow_fly_stop_points))
+        return futures_duration
+
+    def get_direct_path_futures(self, func, fallback_direct_path, origin, destination):
+        futures_direct_path = []
+        for dep_mode, arr_mode in self.krakens_call:
+            futures_direct_path.append(self.pool.spawn(worker_direct_path, func,
+                                                              fallback_direct_path, self.instance,
+                                                              dep_mode, origin, destination,
+                                                              self.request['datetime'],
+                                                              self.request['clockwise'],
+                                                              self.request))
+        return futures_direct_path
+
+    def get_journey_futures(self, origin, destination, fallback_direct_path, origins_fallback,
+                            destinations_fallback, journey_parameters):
+        futures_jourenys = []
+        for dep_mode, arr_mode in self.krakens_call:
+            futures_jourenys.append(self.pool.spawn(worker_journey, self.instance,
+                                                        dep_mode, arr_mode, origin,
+                                                        destination, self.request,
+                                                        fallback_direct_path, origins_fallback, destinations_fallback,
+                                                        journey_parameters))
+        return futures_jourenys
+
+    def build_journeys(self, func_extend_journey, map_response, crow_fly_stop_points):
+        futures = []
+        for id, values in map_response.items():
+            dep_mode = values[0]
+            arr_mode = values[1]
+            journey = values[2]
+            # from
+            futures.append(self.pool.spawn(worker_from, journey, self.instance,
+                                                journey.sections[0], func_extend_journey, g.requested_origin,
+                                                crow_fly_stop_points, self.request,
+                                                dep_mode, g.fallback_direct_path, g.origins_fallback[dep_mode]))
+            # to
+            futures.append(self.pool.spawn(worker_to, journey, self.instance,
+                                                journey.sections[-1], func_extend_journey, g.requested_destination,
+                                                crow_fly_stop_points, self.request,
+                                                arr_mode, g.fallback_direct_path, g.destinations_fallback[arr_mode]))
+        return futures
 
 
 class Scenario(new_default.Scenario):
@@ -136,11 +281,12 @@ class Scenario(new_default.Scenario):
     def __init__(self):
         super(Scenario, self).__init__()
 
-    def _get_direct_path(self, instance, mode, pt_object_origin, pt_object_destination, datetime, clockwise, request, reverse_sections=False):
+    def _get_direct_path(self, instance, mode, pt_object_origin, pt_object_destination, datetime, clockwise,
+                         request, fallback_direct_path, reverse_sections=False):
         dp_key = (mode, pt_object_origin.uri, pt_object_destination.uri, datetime, clockwise, reverse_sections)
-        dp = g.fallback_direct_path.get(dp_key)
+        dp = fallback_direct_path.get(dp_key)
         if not dp:
-            dp = g.fallback_direct_path[dp_key] = instance.street_network_service.direct_path(mode,
+            dp = fallback_direct_path[dp_key] = instance.street_network_service.direct_path(mode,
                                                                                               pt_object_origin,
                                                                                               pt_object_destination,
                                                                                               datetime,
@@ -150,36 +296,45 @@ class Scenario(new_default.Scenario):
                 _reverse_journeys(dp)
         return dp
 
-    def _get_stop_points(self, instance, place, mode, max_duration, request, reverse=False, max_nb_crowfly=5000):
+    def _get_stop_points(self, instance, fallback, place, mode, max_duration, request, reverse=False, max_nb_crowfly=5000, **kwargs):
         # we use place_nearby of kraken at the first place to get stop_points around the place, then call the
         # one_to_many(or many_to_one according to the arg "reverse") service to take street network into consideration
         # TODO: reverse is not handled as so far
 
         # When max_duration is 0, there is no need to compute the fallback to pt, except if place is a stop_point or a
         # stop_area
+        if mode in fallback:
+            return
         if max_duration == 0:
             if instance.georef.get_stop_points_from_uri(place.uri):
-                return {place.uri: 0}
+                fallback[mode] = {place.uri: 0}
+                return
             else:
+                fallback[mode] = {}
                 return {}
-        places_crowfly = instance.georef.get_crow_fly(get_uri_pt_object(place), mode, max_duration, max_nb_crowfly)
+
+        places_crowfly = instance.georef.get_crow_fly(get_uri_pt_object(place), mode, max_duration,
+                                                      max_nb_crowfly, **kwargs)
 
         sn_routing_matrix = instance.street_network_service.get_street_network_routing_matrix([place],
                                                                                               places_crowfly,
                                                                                               mode,
                                                                                               max_duration,
-                                                                                              request)
+                                                                                              request,
+                                                                                              **kwargs)
         if not sn_routing_matrix.rows[0].duration:
-            return {}
+            fallback[mode] = {}
+            return
         import numpy as np
         durations = np.array(sn_routing_matrix.rows[0].duration)
         valid_duration_idx = np.argwhere((durations > -1) & (durations < max_duration)).flatten()
-        return dict(zip([places_crowfly[i].uri for i in valid_duration_idx],
+        fallback[mode] = dict(zip([places_crowfly[i].uri for i in valid_duration_idx],
                         durations[(durations > -1) & (durations < max_duration)].flatten()))
 
     def _extend_journey(self, instance, pt_journey, mode, pb_from, pb_to, departure_date_time, nm, clockwise,
-                        request, reverse_sections=False):
+                        request, fallback_direct_path, reverse_sections=False):
         import copy
+
         departure_dp = self._get_direct_path(instance,
                                              mode,
                                              pb_from,
@@ -187,6 +342,7 @@ class Scenario(new_default.Scenario):
                                              departure_date_time,
                                              clockwise,
                                              request,
+                                             fallback_direct_path,
                                              reverse_sections)
         if clockwise:
             pt_journey.duration += nm[pb_to.uri]
@@ -198,42 +354,6 @@ class Scenario(new_default.Scenario):
         departure_direct_path = copy.deepcopy(departure_dp)
         pt_journey.durations.walking += departure_direct_path.journeys[0].durations.walking
         _extend_pt_sections_with_direct_path(pt_journey, departure_direct_path)
-
-    def _build_journey(self, journey, instance, _from, to, dep_mode, arr_mode, crow_fly_stop_points, request):
-        origins = g.origins_fallback[dep_mode]
-        destinations = g.destinations_fallback[arr_mode]
-
-        departure = journey.sections[0].origin
-        arrival = journey.sections[-1].destination
-        last_section_end = journey.sections[-1].end_date_time
-
-        journey.departure_date_time = journey.departure_date_time - origins[departure.uri]
-        journey.arrival_date_time = journey.arrival_date_time + destinations[arrival.uri]
-
-        if _from.uri != departure.uri:
-            if departure.uri in crow_fly_stop_points:
-                journey.sections.extend([create_crowfly(_from, departure, journey.departure_date_time,
-                                         journey.sections[0].begin_date_time)])
-            else:
-                self._extend_journey(instance, journey, dep_mode, _from, departure, journey.departure_date_time,
-                                     origins, True, request)
-
-        if to.uri != arrival.uri:
-            if arrival.uri in crow_fly_stop_points:
-                journey.sections.extend([create_crowfly(arrival, to, last_section_end,
-                                                        journey.arrival_date_time)])
-            else:
-                o = arrival
-                d = to
-                reverse_sections = False
-                if arr_mode == 'car':
-                    o, d, reverse_sections = d, o, True
-                self._extend_journey(instance, journey, arr_mode, o, d, journey.arrival_date_time, destinations, False,
-                                     request, reverse_sections)
-
-        journey.durations.total = journey.duration
-        #it's not possible to insert in a protobuf list, so we add the sections at the end, then we sort them
-        journey.sections.sort(SectionSorter())
 
     def call_kraken(self, request_type, request, instance, krakens_call):
         """
@@ -249,85 +369,61 @@ class Scenario(new_default.Scenario):
         if not g.requested_destination:
             g.requested_destination = instance.georef.place(request['destination'])
 
-        for dep_mode, arr_mode in krakens_call:
-            if dep_mode not in g.origins_fallback and request.get('max_duration', 0):
-                g.origins_fallback[dep_mode] = self._get_stop_points(instance,
-                                                                     g.requested_origin, dep_mode,
-                                                                     get_max_fallback_duration(request, dep_mode),
-                                                                     request)
+        worker = Worker(instance, krakens_call, request)
 
-                #Fetch all the stop points of this stop_area and replaces all the durations by 0 in the table
-                #g.origins_fallback[dep_mode]
-                _update_crowfly_duration(instance, g.origins_fallback, dep_mode, request['origin'],
-                                         crow_fly_stop_points)
+        if request.get('max_duration', 0):
+            futures = worker.get_sp_futures(self._get_stop_points, g.requested_origin,
+                                            g.requested_destination, g.origins_fallback, g.destinations_fallback)
+            gevent.joinall(futures)
 
-            if arr_mode not in g.destinations_fallback and request.get('max_duration', 0):
-               g.destinations_fallback[arr_mode] = self._get_stop_points(instance,
-                                                                         g.requested_destination, arr_mode,
-                                                                         get_max_fallback_duration(request, arr_mode),
-                                                                         request,
-                                                                         reverse=True)
+            futures = worker.get_duration_futures(g.origins_fallback, g.destinations_fallback, crow_fly_stop_points)
+            gevent.joinall(futures)
 
-               #Fetch all the stop points of this stop_area and replaces all the durations by 0 in the table
-               #g.destinations_fallback[arr_mode]
-               _update_crowfly_duration(instance, g.destinations_fallback, arr_mode, request['destination'],
-                                        crow_fly_stop_points)
         resp = []
         journey_parameters = create_parameters(request)
-        for dep_mode, arr_mode in krakens_call:
-            #todo: this is probably shared between multiple thread
+
+        futures_direct_path = worker.get_direct_path_futures(self._get_direct_path, g.fallback_direct_path,
+                                                             g.requested_origin,
+                                                             g.requested_destination)
+        for future in gevent.iwait(futures_direct_path):
             self.nb_kraken_calls += 1
-            direct_path = self._get_direct_path(instance,
-                                                dep_mode,
-                                                g.requested_origin,
-                                                g.requested_destination,
-                                                request['datetime'],
-                                                request['clockwise'],
-                                                request)
-            if direct_path.journeys:
-                journey_parameters.direct_path_duration = direct_path.journeys[0].durations.total
-                #Since _get_direct_method returns a reference instead of an object we don't add in response
-                #if already exists.
-                if direct_path not in resp:
-                    direct_path.journeys[0].internal_id = "dp_{resp}-{j}".format(resp=self.nb_kraken_calls, j=0)
-                    resp.append(direct_path)
-            else:
-                journey_parameters.direct_path_duration = None
+            dep_mode, resp_direct_path = future.get()
+            if resp_direct_path.journeys:
+                if resp_direct_path not in resp:
+                    resp_direct_path.journeys[0].internal_id = str(generate_id())
+                    resp.append(resp_direct_path)
 
-            fall_back_origins = g.origins_fallback.get(dep_mode)
-            fall_back_destinations = g.destinations_fallback.get(arr_mode)
-            if not fall_back_origins or not fall_back_destinations or not request.get('max_duration', 0):
+
+
+        futures_jourenys = worker.get_journey_futures(g.requested_origin, g.requested_destination,
+                                                      g.fallback_direct_path, g.origins_fallback,
+                                                      g.destinations_fallback, journey_parameters)
+
+        map_response = dict()
+        for future in gevent.iwait(futures_jourenys):
+            dep_mode, arr_mode, local_resp = future.get()
+            if local_resp == None:
                 continue
-
-            local_resp = instance.planner.journeys(fall_back_origins,
-                                                   fall_back_destinations,
-                                                   request['datetime'],
-                                                   request['clockwise'],
-                                                   journey_parameters)
+            dp_key = (dep_mode, g.requested_origin.uri, g.requested_destination.uri, request['datetime'],
+                      request['clockwise'], False)
+            direct_path = g.fallback_direct_path.get(dp_key)
 
             if local_resp.HasField(b"error") and local_resp.error.id == response_pb2.Error.error_id.Value('no_solution') \
                     and direct_path.journeys:
                 local_resp.ClearField(b"error")
             if local_resp.HasField(b"error"):
                 return [local_resp]
-
             # for log purpose we put and id in each journeys
-            for idx, j in enumerate(local_resp.journeys):
-                j.internal_id = "{resp}-{j}".format(resp=self.nb_kraken_calls, j=idx)
-
-            for journey in local_resp.journeys:
-                self._build_journey(journey,
-                                    instance,
-                                    g.requested_origin,
-                                    g.requested_destination,
-                                    dep_mode,
-                                    arr_mode,
-                                    crow_fly_stop_points,
-                                    request)
-
+            for j in local_resp.journeys:
+                j.internal_id = str(generate_id())
+                map_response[j.internal_id] = (dep_mode, arr_mode, j)
             resp.append(local_resp)
-            logger.debug("for mode %s|%s we have found %s journeys", dep_mode, arr_mode, len(local_resp.journeys))
-            logger.debug("for mode %s|%s we have found %s direct path", dep_mode, arr_mode, len(direct_path.journeys))
+
+        bulid_journey_futures = worker.build_journeys(self._extend_journey, map_response, crow_fly_stop_points)
+        for future in gevent.iwait(bulid_journey_futures):
+            journey = future.get()
+            journey.durations.total = journey.duration
+            journey.sections.sort(SectionSorter())
 
         for r in resp:
             fill_uris(r)
