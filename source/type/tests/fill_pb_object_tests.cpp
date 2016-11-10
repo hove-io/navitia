@@ -140,6 +140,33 @@ BOOST_AUTO_TEST_CASE(physical_and_commercial_modes_stop_area) {
     BOOST_CHECK_EQUAL(stop_area->commercial_modes().size(), 1);
 }
 
+// Test that the geojson isn't in the pb object when disabling geojson output
+BOOST_AUTO_TEST_CASE(disable_geojson_on_route_line) {
+    ed::builder b("20161026");
+    b.generate_dummy_basis();
+
+    b.vj("A");
+    b.finish();
+    b.data->build_uri();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+
+    Route* r = b.data->pt_data->routes_map["A:0"];
+    auto route = new pbnavitia::Route;
+    navitia::PbCreator pb_creator(*b.data, pt::not_a_date_time, null_time_period, false);
+    pb_creator.fill(r, route, 3);
+
+    BOOST_REQUIRE(route->has_geojson());
+    BOOST_REQUIRE(route->line().has_geojson());
+
+    route->Clear();
+    navitia::PbCreator pb_creator_no_geojson(*b.data, pt::not_a_date_time, null_time_period, true);
+    pb_creator_no_geojson.fill(r, route, 3);
+
+    BOOST_REQUIRE(!route->has_geojson());
+    BOOST_REQUIRE(!route->line().has_geojson());
+}
+
 template <typename C>
 std::set<std::string> uris(const C& objs) {
     std::set<std::string> uris;

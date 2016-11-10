@@ -306,7 +306,7 @@ pbnavitia::Response Worker::autocomplete(const pbnavitia::PlacesRequest & reques
                                          const boost::posix_time::ptime& current_datetime) {
     const auto data = data_manager.get_data();
     return navitia::autocomplete::autocomplete(request.q(),
-            vector_of_pb_types(request), request.depth(), request.count(),
+            vector_of_pb_types(request), request.depth(), false, request.count(),
             vector_of_admins(request), request.search_type(), *data, current_datetime);
 }
 
@@ -314,7 +314,7 @@ pbnavitia::Response Worker::pt_object(const pbnavitia::PtobjectRequest & request
                                       const boost::posix_time::ptime& current_datetime) {
     const auto data = data_manager.get_data();
     return navitia::autocomplete::autocomplete(request.q(),
-            vector_of_pb_types(request), request.depth(), request.count(),
+            vector_of_pb_types(request), request.depth(), request.disable_geojson(), request.count(),
             vector_of_admins(request), request.search_type(), *data, current_datetime);
 }
 
@@ -363,7 +363,7 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
     bt::ptime from_datetime = bt::from_time_t(request.from_datetime());
     bt::ptime until_datetime = bt::from_time_t(request.until_datetime());
 
-    PbCreator pb_creator(*data, current_datetime, null_time_period);
+    PbCreator pb_creator(*data, current_datetime, null_time_period, request.disable_geojson());
     auto rt_level = get_realtime_level(request.realtime_level());
     try {
         switch(api) {
@@ -734,6 +734,7 @@ pbnavitia::Response Worker::pt_ref(const pbnavitia::PTRefRequest &request,
                                     forbidden_uri,
                                     get_odt_level(request.odt_level()),
                                     request.depth(),
+                                    request.disable_geojson(),
                                     request.start_page(),
                                     request.count(),
                                     boost::make_optional(request.has_since_datetime(),

@@ -253,24 +253,9 @@ class TestNewDefaultJourneysNoRegion(JourneysNoRegion, AbstractTestFixture):
 
 
 
-@dataset({"basic_routing_test": {"scenario": "new_default"}})
+@config({"scenario": "new_default"})
 class TestNewDefaultOnBasicRouting(OnBasicRouting, AbstractTestFixture):
-
-    @skip("temporarily disabled")
-    def test_journeys_with_show_codes(self):
-        super(OnBasicRouting, self).test_journeys_with_show_codes()
-
-    @skip("temporarily disabled")
-    def test_journeys_without_show_codes(self):
-        super(OnBasicRouting, self).test_journeys_without_show_codes()
-
-    @skip("temporarily disabled")
-    def test_novalidjourney_on_first_call(self):
-        super(OnBasicRouting, self).test_novalidjourney_on_first_call()
-
-    @skip("temporarily disabled")
-    def test_novalidjourney_on_first_call_debug(self):
-        super(OnBasicRouting, self).test_novalidjourney_on_first_call_debug()
+    pass
 
 @config({"scenario": "new_default"})
 class TestNewDefaultOneDeadRegion(OneDeadRegion, AbstractTestFixture):

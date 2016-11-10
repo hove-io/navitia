@@ -635,6 +635,17 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates) const {
     return this->nearest_edge(coordinates, this->pl);
 }
 
+static bool is_sn_edge(const GeoRef& georef, const edge_t& e) {
+    switch (georef.get_caracteristic(e)) {
+    case PathItem::TransportCaracteristic::Walk:
+    case PathItem::TransportCaracteristic::Bike:
+    case PathItem::TransportCaracteristic::Car:
+        return true;
+    default:
+        return false;
+    }
+}
+
 /// Get the nearest_edge with at least one vertex in the graph corresponding to the offset (walking, bike, ...)
 edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t>& prox, type::idx_t offset, double horizon) const {
     boost::optional<edge_t> res;
@@ -645,6 +656,7 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const p
 
         BOOST_FOREACH (edge_t e, boost::out_edges(u, graph)) {
             const auto v = target(e, graph);
+            if (! is_sn_edge(*this, e)) { continue; }
             const auto edge = graph[e];
             // If there is a geometry for this edge get the projected point to get the distance
             if(edge.geom_idx != nt::invalid_idx) {
