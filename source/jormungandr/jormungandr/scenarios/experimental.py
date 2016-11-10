@@ -259,7 +259,7 @@ class Worker(object):
 
     def build_journeys(self, func_extend_journey, map_response, crow_fly_stop_points):
         futures = []
-        for id, values in map_response.items():
+        for values in map_response:
             dep_mode = values[0]
             arr_mode = values[1]
             journey = values[2]
@@ -399,7 +399,7 @@ class Scenario(new_default.Scenario):
                                                       g.fallback_direct_path, g.origins_fallback,
                                                       g.destinations_fallback, journey_parameters)
 
-        map_response = dict()
+        map_response = []
         for future in gevent.iwait(futures_jourenys):
             dep_mode, arr_mode, local_resp = future.get()
             if local_resp == None:
@@ -416,7 +416,7 @@ class Scenario(new_default.Scenario):
             # for log purpose we put and id in each journeys
             for j in local_resp.journeys:
                 j.internal_id = str(generate_id())
-                map_response[j.internal_id] = (dep_mode, arr_mode, j)
+                map_response.append((dep_mode, arr_mode, j))
             resp.append(local_resp)
 
         bulid_journey_futures = worker.build_journeys(self._extend_journey, map_response, crow_fly_stop_points)
