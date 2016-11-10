@@ -230,9 +230,11 @@ class Worker(object):
         futures_duration = []
         for dep_mode, arr_mode in self.krakens_call:
             futures_duration.append(self.pool.spawn(worker_duration, self.instance, "dep", dep_mode,
-                                                             origins_fallback, self.request['origin'], crow_fly_stop_points))
+                                                             origins_fallback, self.request['origin'],
+                                                             crow_fly_stop_points))
             futures_duration.append(self.pool.spawn(worker_duration, self.instance, "arr", arr_mode,
-                                                             destinations_fallback, self.request['destination'], crow_fly_stop_points))
+                                                             destinations_fallback, self.request['destination'],
+                                                             crow_fly_stop_points))
         return futures_duration
 
     def get_direct_path_futures(self, func, fallback_direct_path, origin, destination):
@@ -296,7 +298,8 @@ class Scenario(new_default.Scenario):
                 _reverse_journeys(dp)
         return dp
 
-    def _get_stop_points(self, instance, fallback, place, mode, max_duration, request, reverse=False, max_nb_crowfly=5000, **kwargs):
+    def _get_stop_points(self, instance, fallback, place, mode, max_duration, request, reverse=False,
+                         max_nb_crowfly=5000, **kwargs):
         # we use place_nearby of kraken at the first place to get stop_points around the place, then call the
         # one_to_many(or many_to_one according to the arg "reverse") service to take street network into consideration
         # TODO: reverse is not handled as so far
@@ -335,15 +338,8 @@ class Scenario(new_default.Scenario):
                         request, fallback_direct_path, reverse_sections=False):
         import copy
 
-        departure_dp = self._get_direct_path(instance,
-                                             mode,
-                                             pb_from,
-                                             pb_to,
-                                             departure_date_time,
-                                             clockwise,
-                                             request,
-                                             fallback_direct_path,
-                                             reverse_sections)
+        departure_dp = self._get_direct_path(instance, mode, pb_from, pb_to, departure_date_time, clockwise, request,
+                                             fallback_direct_path, reverse_sections)
         if clockwise:
             pt_journey.duration += nm[pb_to.uri]
         elif not reverse_sections:
@@ -382,10 +378,10 @@ class Scenario(new_default.Scenario):
         resp = []
         journey_parameters = create_parameters(request)
 
-        futures_direct_path = worker.get_direct_path_futures(self._get_direct_path, g.fallback_direct_path,
+        futures = worker.get_direct_path_futures(self._get_direct_path, g.fallback_direct_path,
                                                              g.requested_origin,
                                                              g.requested_destination)
-        for future in gevent.iwait(futures_direct_path):
+        for future in gevent.iwait(futures):
             self.nb_kraken_calls += 1
             dep_mode, resp_direct_path = future.get()
             if resp_direct_path.journeys:
@@ -393,14 +389,12 @@ class Scenario(new_default.Scenario):
                     resp_direct_path.journeys[0].internal_id = str(generate_id())
                     resp.append(resp_direct_path)
 
-
-
-        futures_jourenys = worker.get_journey_futures(g.requested_origin, g.requested_destination,
+        futures = worker.get_journey_futures(g.requested_origin, g.requested_destination,
                                                       g.fallback_direct_path, g.origins_fallback,
                                                       g.destinations_fallback, journey_parameters)
 
         map_response = []
-        for future in gevent.iwait(futures_jourenys):
+        for future in gevent.iwait(futures):
             dep_mode, arr_mode, local_resp = future.get()
             if local_resp == None:
                 continue
@@ -419,8 +413,8 @@ class Scenario(new_default.Scenario):
                 map_response.append((dep_mode, arr_mode, j))
             resp.append(local_resp)
 
-        bulid_journey_futures = worker.build_journeys(self._extend_journey, map_response, crow_fly_stop_points)
-        for future in gevent.iwait(bulid_journey_futures):
+        futures = worker.build_journeys(self._extend_journey, map_response, crow_fly_stop_points)
+        for future in gevent.iwait(futures):
             journey = future.get()
             journey.durations.total = journey.duration
             journey.sections.sort(SectionSorter())
