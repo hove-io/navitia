@@ -476,8 +476,8 @@ def bragi_poi_reading_test():
     assert navitia_response.get('id') == 'poi:osm:3224270910'
     assert navitia_response.get('name') == 'Mairie de Pigna (Pigna)'
     assert navitia_response.get('quality') == '0'
-    assert len(navitia_response.get('administrative_regions')) == 1
-    administrative_region = navitia_response.get('administrative_regions')[0]
+    assert len(navitia_response.get('poi').get('administrative_regions')) == 1
+    administrative_region = navitia_response.get('poi').get('administrative_regions')[0]
     assert administrative_region.get('name') == 'Pigna'
     assert administrative_region.get('level') == 8
     assert administrative_region.get('coord').get('lat') == 42.5996043
