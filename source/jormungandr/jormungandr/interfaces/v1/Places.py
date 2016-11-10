@@ -169,7 +169,7 @@ geocode_addr = {
 geocode_poi = {
     "embedded_type": Lit("poi"),
     "quality": Lit("0"),
-    "id": AddressId,
+    "id": fields.String(attribute='properties.geocoding.id'),
     "name": fields.String(attribute='properties.geocoding.name'),
     "administrative_regions": AdministrativeRegionField()
 }
