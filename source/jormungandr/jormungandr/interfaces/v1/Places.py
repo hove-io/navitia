@@ -149,6 +149,35 @@ class AddressField(fields.Raw):
                 create_administrative_regions_field(geocoding) or create_admin_field(geocoding) ,
         }
 
+
+class PoiField(fields.Raw):
+    def output(self, key, obj):
+        if not obj:
+            return None
+
+        coordinates = obj.get('geometry', {}).get('coordinates', [])
+        if len(coordinates) == 2:
+            lon = coordinates[0]
+            lat = coordinates[1]
+        else:
+            lon = None
+            lat = None
+
+        geocoding = obj.get('properties', {}).get('geocoding', {})
+
+        # TODO add address, poi_type, properties attributes
+        return {
+            "id": geocoding.get('id'),
+            "coord": {
+                "lon": lon,
+                "lat": lat,
+            },
+            "label": geocoding.get('label'),
+            "name": geocoding.get('name'),
+            "administrative_regions":
+                create_administrative_regions_field(geocoding) or create_admin_field(geocoding),
+        }
+
 geocode_admin = {
     "embedded_type": Lit("administrative_region"),
     "quality": Lit("0"),
@@ -166,6 +195,14 @@ geocode_addr = {
     "address": AddressField()
 }
 
+geocode_poi = {
+    "embedded_type": Lit("poi"),
+    "quality": Lit("0"),
+    "id": fields.String(attribute='properties.geocoding.id'),
+    "name": fields.String(attribute='properties.geocoding.label'),
+    "poi": PoiField()
+}
+
 class GeocodejsonFeature(fields.Raw):
     def format(self, place):
         type_ = place.get('properties', {}).get('geocoding', {}).get('type')
@@ -174,6 +211,8 @@ class GeocodejsonFeature(fields.Raw):
             return marshal(place, geocode_admin)
         elif type_ in ('street', 'house'):
             return marshal(place, geocode_addr)
+        elif type_ == 'poi':
+            return marshal(place, geocode_poi)
 
         return place
 
