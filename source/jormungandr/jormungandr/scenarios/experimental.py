@@ -76,6 +76,8 @@ def get_max_fallback_duration(request, mode):
 #TODO: make this work, it's dynamically imported, so the function is register too late
 #@app.before_request
 def _init_g():
+    g.origins_places_crowfly = {}
+    g.destinations_places_crowfly = {}
     g.origins_fallback = {}
     g.destinations_fallback = {}
     g.fallback_direct_path = {}
@@ -130,12 +132,64 @@ def _reverse_journeys(res):
             s.end_date_time = previous_section_begin
             previous_section_begin = s.begin_date_time = s.end_date_time - s.duration
     return res
+
+
+def _get_places_crowfly(instance, places_crowfly, mode, place, max_duration, max_nb_crowfly=5000, **kwargs):
+    # When max_duration is 0, there is no need to compute the fallback to pt, except if place is a stop_point or a
+    # stop_area
+    if mode in places_crowfly:
+        return
+    if max_duration == 0:
+        if instance.georef.get_stop_points_from_uri(place.uri):
+            places_crowfly[mode] = [place]
+            return
+        else:
+            places_crowfly[mode] = []
+            return
+    places_crowfly[mode] = instance.georef.get_crow_fly(get_uri_pt_object(place), mode, max_duration,
+                                                  max_nb_crowfly, **kwargs)
+
+
+def _sn_routing_matrix(instance, fallback, place, places_crowfly, mode, max_duration, request, **kwargs):
+    # When max_duration is 0, there is no need to compute the fallback to pt, except if place is a stop_point or a
+    # stop_area
+    if mode in fallback:
+        return
+
+    if max_duration == 0:
+        if place:
+            fallback[mode] = {place.uri: 0}
+            return
+        else:
+            fallback[mode] = {}
+            return
+    places = places_crowfly[mode]
+    sn_routing_matrix = instance.street_network_service.get_street_network_routing_matrix([place],
+                                                                                          places,
+                                                                                          mode,
+                                                                                          max_duration,
+                                                                                          request,
+                                                                                          **kwargs)
+    if not sn_routing_matrix.rows[0].duration:
+        fallback[mode] = {}
+        return
+    import numpy as np
+    durations = np.array(sn_routing_matrix.rows[0].duration)
+    valid_duration_idx = np.argwhere((durations > -1) & (durations < max_duration)).flatten()
+    fallback[mode] = dict(zip([places[i].uri for i in valid_duration_idx],
+                    durations[(durations > -1) & (durations < max_duration)].flatten()))
+
+
 import gevent, gevent.pool
 
 
-def worker_sp(func, fallback, place, mode, instance, request, reverse, **kwargs):
-    return (mode, func(instance, fallback, place, mode, get_max_fallback_duration(request, mode),
-                 request, reverse=reverse, **kwargs))
+def worker_routing_matrix(instance, fallback, place, places_crowfly, mode, max_duration, request, **kwargs):
+    return(mode, _sn_routing_matrix(instance, fallback, place, places_crowfly, mode, max_duration, request, **kwargs))
+
+
+def worker_crowfly(instance, places_crowfly, place, mode, request, max_nb_crowfly=5000, **kwargs):
+    return (mode, _get_places_crowfly(instance, places_crowfly, mode, place, get_max_fallback_duration(request, mode),
+                                      max_nb_crowfly, **kwargs))
 
 
 def worker_duration(instance, dep_arr, mode, fallback, place, crow_fly_stop_points):
@@ -217,13 +271,38 @@ class Worker(object):
             "bss": instance.bss_speed,
         }
 
-    def get_sp_futures(self, func, origin, destination, origins_fallback, destinations_fallback):
+    def _get_routing_matrix_fustures(self, origin, destination, origins_fallback, destinations_fallback,
+                                     origins_places_crowfly, destinations_places_crowfly, request):
         futures = []
         for dep_mode, arr_mode in self.krakens_call:
-            futures.append(self.pool.spawn(worker_sp, func, origins_fallback, origin, dep_mode,
-                                           self.instance, self.request, False, **self.speed_switcher))
-            futures.append(self.pool.spawn(worker_sp, func, destinations_fallback, destination, arr_mode,
-                                           self.instance, self.request, True, **self.speed_switcher))
+            futures.append(self.pool.spawn(worker_routing_matrix,
+                                           self.instance,
+                                           origins_fallback,
+                                           origin,
+                                           origins_places_crowfly,
+                                           dep_mode,
+                                           get_max_fallback_duration(request, dep_mode),
+                                           self.request,
+                                           **self.speed_switcher))
+
+            futures.append(self.pool.spawn(worker_routing_matrix,
+                                           self.instance,
+                                           destinations_fallback,
+                                           destination,
+                                           destinations_places_crowfly,
+                                           arr_mode,
+                                           get_max_fallback_duration(request, arr_mode),
+                                           self.request,
+                                           **self.speed_switcher))
+        return futures
+
+    def _get_crowfly_futures(self, origin, destination, origins_crowfly, destinations_crowfly, max_nb_crowfly=5000):
+        futures = []
+        for dep_mode, arr_mode in self.krakens_call:
+            futures.append(self.pool.spawn(worker_crowfly, self.instance, origins_crowfly, origin, dep_mode,
+                                           self.request, max_nb_crowfly, **self.speed_switcher))
+            futures.append(self.pool.spawn(worker_crowfly, self.instance, destinations_crowfly, destination, arr_mode,
+                                           self.request, max_nb_crowfly, **self.speed_switcher))
         return futures
 
     def get_duration_futures(self, origins_fallback, destinations_fallback, crow_fly_stop_points):
@@ -298,42 +377,6 @@ class Scenario(new_default.Scenario):
                 _reverse_journeys(dp)
         return dp
 
-    def _get_stop_points(self, instance, fallback, place, mode, max_duration, request, reverse=False,
-                         max_nb_crowfly=5000, **kwargs):
-        # we use place_nearby of kraken at the first place to get stop_points around the place, then call the
-        # one_to_many(or many_to_one according to the arg "reverse") service to take street network into consideration
-        # TODO: reverse is not handled as so far
-
-        # When max_duration is 0, there is no need to compute the fallback to pt, except if place is a stop_point or a
-        # stop_area
-        if mode in fallback:
-            return
-        if max_duration == 0:
-            if instance.georef.get_stop_points_from_uri(place.uri):
-                fallback[mode] = {place.uri: 0}
-                return
-            else:
-                fallback[mode] = {}
-                return {}
-
-        places_crowfly = instance.georef.get_crow_fly(get_uri_pt_object(place), mode, max_duration,
-                                                      max_nb_crowfly, **kwargs)
-
-        sn_routing_matrix = instance.street_network_service.get_street_network_routing_matrix([place],
-                                                                                              places_crowfly,
-                                                                                              mode,
-                                                                                              max_duration,
-                                                                                              request,
-                                                                                              **kwargs)
-        if not sn_routing_matrix.rows[0].duration:
-            fallback[mode] = {}
-            return
-        import numpy as np
-        durations = np.array(sn_routing_matrix.rows[0].duration)
-        valid_duration_idx = np.argwhere((durations > -1) & (durations < max_duration)).flatten()
-        fallback[mode] = dict(zip([places_crowfly[i].uri for i in valid_duration_idx],
-                        durations[(durations > -1) & (durations < max_duration)].flatten()))
-
     def _extend_journey(self, instance, pt_journey, mode, pb_from, pb_to, departure_date_time, nm, clockwise,
                         request, fallback_direct_path, reverse_sections=False):
         import copy
@@ -368,8 +411,16 @@ class Scenario(new_default.Scenario):
         worker = Worker(instance, krakens_call, request)
 
         if request.get('max_duration', 0):
-            futures = worker.get_sp_futures(self._get_stop_points, g.requested_origin,
-                                            g.requested_destination, g.origins_fallback, g.destinations_fallback)
+            futures = worker._get_crowfly_futures(g.requested_origin,
+                                            g.requested_destination, g.origins_places_crowfly,
+                                            g.destinations_places_crowfly, 5000)
+            gevent.joinall(futures)
+
+            futures = worker._get_routing_matrix_fustures(g.requested_origin, g.requested_destination,
+                                                           g.origins_fallback, g.destinations_fallback,
+                                                           g.origins_places_crowfly, g.destinations_places_crowfly,
+                                                           request)
+
             gevent.joinall(futures)
 
             futures = worker.get_duration_futures(g.origins_fallback, g.destinations_fallback, crow_fly_stop_points)
