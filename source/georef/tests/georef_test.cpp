@@ -231,6 +231,7 @@ BOOST_AUTO_TEST_CASE(nearest_edge_with_geometries) {
     nt::GeographicalCoord x3(23, 2, false);
     nt::GeographicalCoord x4(15, 5, false);
     nt::GeographicalCoord x5(40, 32, false);
+    b.geo_ref.init();
 
     BOOST_CHECK(b.geo_ref.nearest_edge(x1) == b.get("b", "e"));
     BOOST_CHECK(b.geo_ref.nearest_edge(x2) == b.get("c", "d"));
