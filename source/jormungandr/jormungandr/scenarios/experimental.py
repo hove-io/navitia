@@ -93,13 +93,13 @@ def create_parameters(request):
                              forbidden_uris=request['forbidden_uris[]'])
 
 
-def _update_crowfly_duration(instance, fallback_list, mode, stop_area_uri, requested_point, crow_fly_stop_points):
+def _update_crowfly_duration(instance, fallback_list, mode, stop_area_uri, requested_point, crow_fly_stop_points, odt_stop_points):
     stop_points = instance.georef.get_stop_points_for_stop_area(stop_area_uri)
 
     if mode in fallback_list:
         for stop_point in stop_points:
             fallback_list[mode][stop_point.uri] = 0
-            crow_fly_stop_points[stop_point.uri] = False
+            crow_fly_stop_points.add(stop_point.uri)
 
         if requested_point.uri in fallback_list[mode]:
             fallback_list[mode][requested_point.uri] = 0
@@ -112,11 +112,11 @@ def _update_crowfly_duration(instance, fallback_list, mode, stop_area_uri, reque
     }
     coord = map_coord.get(requested_point.embedded_type, None)
     if coord:
-        odt_stop_points = instance.georef.get_odt_stop_points(coord)
-        for stop_point in odt_stop_points:
+        odt_sps = instance.georef.get_odt_stop_points(coord)
+        for stop_point in odt_sps:
             if mode in fallback_list:
                 fallback_list[mode][stop_point.uri] = 0
-                crow_fly_stop_points[stop_point.uri] = True
+                odt_stop_points.add(stop_point.uri)
 
 
 def _rename_journey_sections_ids(start_idx, sections):
@@ -217,7 +217,7 @@ class Scenario(new_default.Scenario):
         pt_journey.durations.walking += departure_direct_path.journeys[0].durations.walking
         _extend_pt_sections_with_direct_path(pt_journey, departure_direct_path)
 
-    def _build_journey(self, journey, instance, _from, to, dep_mode, arr_mode, crow_fly_stop_points, request):
+    def _build_journey(self, journey, instance, _from, to, dep_mode, arr_mode, crow_fly_stop_points, od_stop_points, request):
         origins = g.origins_fallback[dep_mode]
         destinations = g.destinations_fallback[arr_mode]
 
@@ -229,23 +229,21 @@ class Scenario(new_default.Scenario):
         journey.arrival_date_time = journey.arrival_date_time + destinations[arrival.uri]
 
         if _from.uri != departure.uri:
-            if departure.uri in crow_fly_stop_points:
-                if crow_fly_stop_points[departure.uri] == False:
-                    journey.sections.extend([create_crowfly(_from, departure, journey.departure_date_time,
-                                                            journey.sections[0].begin_date_time)])
-                else:
-                    journey.sections[0].origin.CopyFrom(_from)
+            if departure.uri in od_stop_points:
+                journey.sections[0].origin.CopyFrom(_from)
+            elif departure.uri in crow_fly_stop_points:
+                journey.sections.extend([create_crowfly(_from, departure, journey.departure_date_time,
+                                                        journey.sections[0].begin_date_time)])
             else:
                 self._extend_journey(instance, journey, dep_mode, _from, departure, journey.departure_date_time,
                                      origins, True, request)
 
         journey.sections.sort(SectionSorter())
         if to.uri != arrival.uri:
-            if arrival.uri in crow_fly_stop_points:
-                if crow_fly_stop_points[arrival.uri] == False:
-                    journey.sections.extend([create_crowfly(arrival, to, last_section_end, journey.arrival_date_time)])
-                else:
-                    journey.sections[-1].destination.CopyFrom(to)
+            if arrival.uri in od_stop_points:
+                journey.sections[-1].destination.CopyFrom(to)
+            elif arrival.uri in crow_fly_stop_points:
+                journey.sections.extend([create_crowfly(arrival, to, last_section_end, journey.arrival_date_time)])
             else:
                 o = arrival
                 d = to
@@ -267,9 +265,10 @@ class Scenario(new_default.Scenario):
         """
         logger = logging.getLogger(__name__)
         logger.debug('datetime: %s', request['datetime'])
-        #We use a dict with a key/value of stop_point.uri and is_zonal
-        #a crow_fly section is added only if stop_point is not zonal
-        crow_fly_stop_points = dict()
+        #crow_fly_stop_points is a set of stop_point.uri used to create a crowfly section.
+        #odt_stop_points is a set of stop_point.uri with is_zonal = true used to manage tad_zonal
+        odt_stop_points = set()
+        crow_fly_stop_points = set()
         if not g.requested_origin:
             g.requested_origin = instance.georef.place(request['origin'])
 
@@ -286,7 +285,7 @@ class Scenario(new_default.Scenario):
                 #Fetch all the stop points of this stop_area and replaces all the durations by 0 in the table
                 #g.origins_fallback[dep_mode]
                 _update_crowfly_duration(instance, g.origins_fallback, dep_mode, request['origin'], g.requested_origin,
-                                         crow_fly_stop_points)
+                                         crow_fly_stop_points, odt_stop_points)
 
             if arr_mode not in g.destinations_fallback and request.get('max_duration', 0):
                g.destinations_fallback[arr_mode] = self._get_stop_points(instance,
@@ -298,7 +297,7 @@ class Scenario(new_default.Scenario):
                #Fetch all the stop points of this stop_area and replaces all the durations by 0 in the table
                #g.destinations_fallback[arr_mode]
                _update_crowfly_duration(instance, g.destinations_fallback, arr_mode, request['destination'],
-                                        g.requested_destination, crow_fly_stop_points)
+                                        g.requested_destination, crow_fly_stop_points, odt_stop_points)
         resp = []
         journey_parameters = create_parameters(request)
         for dep_mode, arr_mode in krakens_call:
@@ -350,6 +349,7 @@ class Scenario(new_default.Scenario):
                                     dep_mode,
                                     arr_mode,
                                     crow_fly_stop_points,
+                                    odt_stop_points,
                                     request)
 
             resp.append(local_resp)
