@@ -454,3 +454,42 @@ def get_valhalla_mode_valid_mode_test():
     }
     for kraken_mode, valhalla_mode in map_mode.items():
         assert valhalla._get_valhalla_mode(kraken_mode) == valhalla_mode
+
+
+def one_to_many_valhalla_test():
+    instance = MagicMock()
+    instance.walking_speed = 1.12
+    valhalla = Valhalla(instance=instance,
+                        url='http://bob.com',
+                        costing_options={'bib': 'bom'})
+    origin = get_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
+    destination = get_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
+    response = {
+        'one_to_many': [
+            [
+                {
+                    'time': 0
+                },
+                {
+                    'time': 42
+                },
+                {
+                    'time': None
+                },
+                {
+                    'time': 1337
+                },
+            ]
+        ]
+    }
+    with requests_mock.Mocker() as req:
+        req.post('http://bob.com/one_to_many', json=response, status_code=200)
+        valhalla_response = valhalla.get_street_network_routing_matrix(
+            [origin],
+            [destination, destination, destination],
+            'walking',
+            42,
+            MOCKED_REQUEST)
+        assert valhalla_response.rows[0].duration[0] == 42
+        assert valhalla_response.rows[0].duration[1] == -1
+        assert valhalla_response.rows[0].duration[2] == 1337
