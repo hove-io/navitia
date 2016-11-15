@@ -217,7 +217,7 @@ class Scenario(new_default.Scenario):
         pt_journey.durations.walking += departure_direct_path.journeys[0].durations.walking
         _extend_pt_sections_with_direct_path(pt_journey, departure_direct_path)
 
-    def _build_journey(self, journey, instance, _from, to, dep_mode, arr_mode, crow_fly_stop_points, od_stop_points, request):
+    def _build_journey(self, journey, instance, _from, to, dep_mode, arr_mode, crow_fly_stop_points, odt_stop_points, request):
         origins = g.origins_fallback[dep_mode]
         destinations = g.destinations_fallback[arr_mode]
 
@@ -229,7 +229,7 @@ class Scenario(new_default.Scenario):
         journey.arrival_date_time = journey.arrival_date_time + destinations[arrival.uri]
 
         if _from.uri != departure.uri:
-            if departure.uri in od_stop_points:
+            if departure.uri in odt_stop_points:
                 journey.sections[0].origin.CopyFrom(_from)
             elif departure.uri in crow_fly_stop_points:
                 journey.sections.extend([create_crowfly(_from, departure, journey.departure_date_time,
@@ -240,7 +240,7 @@ class Scenario(new_default.Scenario):
 
         journey.sections.sort(SectionSorter())
         if to.uri != arrival.uri:
-            if arrival.uri in od_stop_points:
+            if arrival.uri in odt_stop_points:
                 journey.sections[-1].destination.CopyFrom(to)
             elif arrival.uri in crow_fly_stop_points:
                 journey.sections.extend([create_crowfly(arrival, to, last_section_end, journey.arrival_date_time)])
