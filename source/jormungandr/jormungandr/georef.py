@@ -79,9 +79,12 @@ class Kraken(object):
         req.places_nearby.depth = 1
         req.places_nearby.count = max_nb_crowfly
         req.places_nearby.start_page = 0
+        req.disable_feedpublisher = True
         # we are only interested in public transports
         req.places_nearby.types.append(type_pb2.STOP_POINT)
-        return self.instance.send_and_receive(req).places_nearby
+        res = self.instance.send_and_receive(req)
+        assert len(res.feed_publishers) == 0 # didn't find any better way to test that...
+        return res.places_nearby
 
     def get_stop_points_for_stop_area(self, uri):
         req = request_pb2.Request()

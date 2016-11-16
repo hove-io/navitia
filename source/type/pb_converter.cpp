@@ -304,6 +304,7 @@ std::vector<Target*> PbCreator::Filler::ptref_indexes(const Source* nav_obj) {
 
 template<typename T>
 void PbCreator::Filler::add_contributor(const T* nav) {
+    if (pb_creator.disable_feedpublisher) { return; }
     const auto& contributors = ptref_indexes<nt::Contributor>(nav);
     for(const nt::Contributor* c: contributors){
         if (! c->license.empty()){
