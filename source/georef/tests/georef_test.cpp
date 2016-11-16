@@ -1127,6 +1127,7 @@ BOOST_AUTO_TEST_CASE(build_autocomplete_test){
         way.way_type = "place";
         geo_ref.add_way(way);*/
 
+        geo_ref.init();
         geo_ref.build_autocomplete_list();
 
         result = geo_ref.find_ways("10 rue jean jaures", nbmax, false, [](int){return true;}, ghostwords);
