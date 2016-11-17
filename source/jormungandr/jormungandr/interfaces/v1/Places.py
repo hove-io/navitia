@@ -86,6 +86,16 @@ class AddressId(fields.Raw):
         geocoding = obj.get('properties', {}).get('geocoding', {})
         return delete_prefix(geocoding.get('id'), "addr:")
 
+
+def format_zip_code(zip_codes):
+    if all(zip_code == "" for zip_code in zip_codes):
+        return None
+    elif len(zip_codes) == 1:
+        return zip_codes[0]
+    else:
+        return '{}-{}'.format(min(zip_codes), max(zip_codes))
+
+
 def create_administrative_regions_field(geocoding):
     if not geocoding:
         return None
@@ -95,6 +105,7 @@ def create_administrative_regions_field(geocoding):
         coord = admin.get('coord', {})
         lat = coord.get('lat') if coord else None
         lon = coord.get('lon') if coord else None
+        zip_codes = admin.get('zip_codes', [])
         response.append({
             "insee": admin.get('insee'),
             "name": admin.get('label'),
@@ -105,7 +116,7 @@ def create_administrative_regions_field(geocoding):
             },
             "label": admin.get('label'),
             "id": admin.get('id'),
-            "zip_code": admin.get('zip_code')
+            "zip_code": format_zip_code(zip_codes)
         })
     return response
 

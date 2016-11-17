@@ -451,7 +451,7 @@ def bragi_poi_feature():
                     "insee": "2B231",
                     "level": 8,
                     "label": "Pigna",
-                    "zip_codes": ["20220"],
+                    "zip_codes": ["20220", "20221", "20222"],
                     "weight": 0,
                     "coord": {
                         "lat": 42.5996043,
@@ -491,6 +491,7 @@ def bragi_poi_reading_test():
     assert administrative_region.get('id') == 'admin:fr:2B231'
     assert administrative_region.get('coord').get('lat') == 42.5996043
     assert administrative_region.get('coord').get('lon') == 8.9027334
+    assert administrative_region.get('zip_code') == "20220-20222"
 
 
 
