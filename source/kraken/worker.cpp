@@ -32,6 +32,7 @@ www.navitia.io
 
 #include "routing/raptor_api.h"
 #include "autocomplete/autocomplete_api.h"
+
 #include "proximity_list/proximitylist_api.h"
 #include "ptreferential/ptreferential.h"
 #include "ptreferential/ptreferential_api.h"
@@ -1032,6 +1033,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     case pbnavitia::heat_map: response = heat_map(request.heat_map(), current_datetime); break;
     case pbnavitia::street_network_routing_matrix:
         response = street_network_routing_matrix(request.sn_routing_matrix()); break;
+    case pbnavitia::odt_stop_points: response = odt_stop_points(request.coord()); break;
     default:
         LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
         fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", response.mutable_error());
@@ -1082,6 +1084,17 @@ pbnavitia::Response Worker::nearest_stop_points(const pbnavitia::NearestStopPoin
         nsp->set_access_duration(item.second.total_seconds());
     }
     return pb_creator.get_response();
+}
+
+pbnavitia::Response Worker::odt_stop_points(const pbnavitia::GeographicalCoord& request) {    
+    navitia::type::GeographicalCoord coord;
+    coord.set_lon(request.lon());
+    coord.set_lat(request.lat());
+    const auto data = data_manager.get_data();
+    this->init_worker_data(data);
+
+    const auto& zonal_sps = data->pt_data->stop_points_by_area.find(coord);
+    return get_response(zonal_sps, *data);
 }
 
 }
