@@ -39,6 +39,7 @@ from jormungandr.utils import get_uri_pt_object, generate_id
 from jormungandr import app
 import gevent
 import gevent.pool
+import collections
 import gevent.monkey
 gevent.monkey.patch_socket()
 
@@ -100,11 +101,10 @@ def create_parameters(request):
 def _update_crowfly_duration(instance, mode, stop_area_uri):
     stop_points = instance.georef.get_stop_points_for_stop_area(stop_area_uri)
     crowfly = set()
-    fallback_list = dict()
+    fallback_list = collections.defaultdict(dict)
     for stop_point in stop_points:
-        if mode in fallback_list:
-            fallback_list.update({mode: {stop_point.uri: 0}})
-            crowfly.add(stop_point.uri)
+        fallback_list[mode][stop_point.uri] = 0
+        crowfly.add(stop_point.uri)
     return crowfly, fallback_list
 
 
@@ -423,12 +423,10 @@ class Scenario(new_default.Scenario):
             futures = worker.get_update_crowfly_duration_futures()
             for future in gevent.iwait(futures):
                 _, dep_arr, resp = future.get()
-                crow_fly_stop_points.union(resp[0])
-                if dep_arr == "dep":
-                    g.origins_fallback.update(resp[1])
-                else:
-                    g.destinations_fallback.update(resp[1])
-
+                crow_fly_stop_points |= resp[0]
+                fb = g.origins_fallback if dep_arr == "dep" else g.destinations_fallback
+                for mode in (mode for mode in resp[1] if mode in fb):
+                    fb[mode].update(resp[1][mode])
         resp = []
         journey_parameters = create_parameters(request)
 
