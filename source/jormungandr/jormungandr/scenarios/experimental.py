@@ -173,45 +173,7 @@ def _sn_routing_matrix(instance, place, places_crowfly, mode, max_duration, requ
     return {mode: dict(zip([places[i].uri for i in valid_duration_idx],
                        durations[(durations > -1) & (durations < max_duration)].flatten()))}
 
-
-def worker_from(journey, instance, fisrt_section, func_extend_journey, _from, crow_fly_stop_points, request, dep_mode,
-                fallback_direct_path, origins_fallback):
-
-    departure = fisrt_section.origin
-    journey.departure_date_time = journey.departure_date_time - origins_fallback[departure.uri]
-    if _from.uri != departure.uri:
-        if departure.uri in crow_fly_stop_points:
-            journey.sections.extend([create_crowfly(_from, departure, journey.departure_date_time,
-                                     journey.sections[0].begin_date_time)])
-        else:
-            func_extend_journey(instance, journey, dep_mode, _from, departure, journey.departure_date_time,
-                                origins_fallback, True, request, fallback_direct_path)
-    return journey
-
-
-def worker_to(journey, instance, last_section, func_extend_journey, to, crow_fly_stop_points, request, arr_mode,
-              fallback_direct_path, destinations_fallback):
-
-    arrival = last_section.destination
-    journey.arrival_date_time = journey.arrival_date_time + destinations_fallback[arrival.uri]
-    last_section_end = last_section.end_date_time
-
-    if to.uri != arrival.uri:
-        if arrival.uri in crow_fly_stop_points:
-            journey.sections.extend([create_crowfly(arrival, to, last_section_end,
-                                                    journey.arrival_date_time)])
-        else:
-            o = arrival
-            d = to
-            reverse_sections = False
-            if arr_mode == 'car':
-                o, d, reverse_sections = d, o, True
-            func_extend_journey(instance, journey, arr_mode, o, d, journey.arrival_date_time,
-                                destinations_fallback, False, request, fallback_direct_path, reverse_sections)
-    return journey
-
-
-class Worker(object):
+class AsyncWorker(object):
     def __init__(self, instance, krakens_call, request, size=app.config.get('GREENLET_POOL_SIZE', 3)):
         self.pool = gevent.pool.Pool(size)
         self.instance = instance
@@ -339,6 +301,43 @@ class Worker(object):
             futures_jourenys.append(self.pool.spawn(worker_journey))
             return futures_jourenys
 
+    @staticmethod
+    def _build_from(journey, instance, first_section, func_extend_journey, _from, crow_fly_stop_points, request, dep_mode,
+                    fallback_direct_path, origins_fallback):
+
+        departure = first_section.origin
+        journey.departure_date_time = journey.departure_date_time - origins_fallback[departure.uri]
+        if _from.uri != departure.uri:
+            if departure.uri in crow_fly_stop_points:
+                journey.sections.extend([create_crowfly(_from, departure, journey.departure_date_time,
+                                         journey.sections[0].begin_date_time)])
+            else:
+                func_extend_journey(instance, journey, dep_mode, _from, departure, journey.departure_date_time,
+                                    origins_fallback, True, request, fallback_direct_path)
+        return journey
+
+    @staticmethod
+    def _build_to(journey, instance, last_section, func_extend_journey, to, crow_fly_stop_points, request, arr_mode,
+                  fallback_direct_path, destinations_fallback):
+
+        arrival = last_section.destination
+        journey.arrival_date_time = journey.arrival_date_time + destinations_fallback[arrival.uri]
+        last_section_end = last_section.end_date_time
+
+        if to.uri != arrival.uri:
+            if arrival.uri in crow_fly_stop_points:
+                journey.sections.extend([create_crowfly(arrival, to, last_section_end,
+                                                        journey.arrival_date_time)])
+            else:
+                o = arrival
+                d = to
+                reverse_sections = False
+                if arr_mode == 'car':
+                    o, d, reverse_sections = d, o, True
+                func_extend_journey(instance, journey, arr_mode, o, d, journey.arrival_date_time,
+                                    destinations_fallback, False, request, fallback_direct_path, reverse_sections)
+        return journey
+
     def build_journeys(self, func_extend_journey, map_response, crow_fly_stop_points):
         futures = []
         for values in map_response:
@@ -346,12 +345,12 @@ class Worker(object):
             arr_mode = values[1]
             journey = values[2]
             # from
-            futures.append(self.pool.spawn(worker_from, journey, self.instance,
+            futures.append(self.pool.spawn(self._build_from, journey, self.instance,
                                            journey.sections[0], func_extend_journey, g.requested_origin,
                                            crow_fly_stop_points, self.request,
                                            dep_mode, g.fallback_direct_path, g.origins_fallback[dep_mode]))
             # to
-            futures.append(self.pool.spawn(worker_to, journey, self.instance,
+            futures.append(self.pool.spawn(self._build_to, journey, self.instance,
                                            journey.sections[-1], func_extend_journey, g.requested_destination,
                                            crow_fly_stop_points, self.request,
                                            arr_mode, g.fallback_direct_path, g.destinations_fallback[arr_mode]))
@@ -410,7 +409,7 @@ class Scenario(new_default.Scenario):
         if not g.requested_destination:
             g.requested_destination = instance.georef.place(request['destination'])
 
-        worker = Worker(instance, krakens_call, request)
+        worker = AsyncWorker(instance, krakens_call, request)
 
         if request.get('max_duration', 0):
             futures = worker.get_crowfly_futures(g.requested_origin, g.requested_destination)
