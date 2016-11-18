@@ -197,7 +197,7 @@ def get_used_coverages():
     """
     return the list of coverages used to generate the response
     """
-    if 'region' in request.view_args:
+    if request.view_args and 'region' in request.view_args:
         return [request.view_args['region']]
     elif hasattr(g, 'used_coverages'):
         return g.used_coverages
