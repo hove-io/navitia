@@ -30,7 +30,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 from jormungandr.scenarios import new_default
-from navitiacommon import type_pb2, response_pb2, request_pb2
+from navitiacommon import type_pb2, response_pb2
 import uuid
 from jormungandr.scenarios.utils import fill_uris
 from jormungandr.planner import JourneyParameters
@@ -40,6 +40,7 @@ from jormungandr import app
 import gevent
 import gevent.pool
 import collections
+# http://www.gevent.org/intro.html#monkey-patching
 import gevent.monkey
 gevent.monkey.patch_socket()
 
@@ -189,75 +190,70 @@ class AsyncWorker(object):
     def get_routing_matrix_futures(self, origin, destination,
                                    origins_places_crowfly,
                                    destinations_places_crowfly):
-        instance = self.instance
-        request = self.request
+        origin_futures = []
+        destination_futures = []
 
-        def worker_routing_matrix(dep_arr, place, places_crowfly, mode, **kwargs):
-            return dep_arr, _sn_routing_matrix(instance, place, places_crowfly, mode,
-                                               get_max_fallback_duration(request, mode), request, **kwargs)
-
-        futures = []
         called_modes = set()
         for dep_mode, arr_mode in self.krakens_call:
-            if dep_mode not in called_modes:
-                futures.append(self.pool.spawn(worker_routing_matrix,
-                                               "dep",
-                                               origin,
-                                               origins_places_crowfly,
-                                               dep_mode,
-                                               **self.speed_switcher))
+            if (dep_mode, origin.uri) not in called_modes:
+                origin_futures.append(self.pool.spawn(_sn_routing_matrix,
+                                                      self.instance,
+                                                      origin,
+                                                      origins_places_crowfly,
+                                                      dep_mode,
+                                                      get_max_fallback_duration(self.request, dep_mode),
+                                                      self.request,
+                                                      **self.speed_switcher))
 
-            if arr_mode not in called_modes:
-                futures.append(self.pool.spawn(worker_routing_matrix,
-                                               "arr",
-                                               destination,
-                                               destinations_places_crowfly,
-                                               arr_mode,
-                                               **self.speed_switcher))
-
+            if (arr_mode, destination.uri) not in called_modes:
+                destination_futures.append(self.pool.spawn(_sn_routing_matrix,
+                                                           self.instance,
+                                                           destination,
+                                                           destinations_places_crowfly,
+                                                           arr_mode,
+                                                           get_max_fallback_duration(self.request, arr_mode),
+                                                           self.request,
+                                                           **self.speed_switcher))
             called_modes |= {(arr_mode, destination.uri), (dep_mode, origin.uri)}
-        return futures
+        return origin_futures, destination_futures
 
     def get_crowfly_futures(self, origin, destination):
-        futures = []
-        instance = self.instance
-        request = self.request
+        origin_futures = []
+        destination_futures = []
 
-        def worker_crowfly(place, dep_arr, mode, **kwargs):
-            return dep_arr, _get_places_crowfly(instance, mode, place, get_max_fallback_duration(request, mode),
-                                                **kwargs)
         called_modes = set()
         for dep_mode, arr_mode in self.krakens_call:
-            if dep_mode not in called_modes:
-                futures.append(self.pool.spawn(worker_crowfly, origin, "dep", dep_mode,
-                                               **self.speed_switcher))
-            if arr_mode not in called_modes:
-                futures.append(self.pool.spawn(worker_crowfly, destination, "arr", arr_mode,
-                                               **self.speed_switcher))
+            if (dep_mode, origin.uri) not in called_modes:
+                origin_futures.append(self.pool.spawn(_get_places_crowfly,
+                                                      self.instance,
+                                                      dep_mode,
+                                                      origin,
+                                                      get_max_fallback_duration(self.request, dep_mode),
+                                                      **self.speed_switcher))
+            if (arr_mode, destination.uri) not in called_modes:
+                destination_futures.append(self.pool.spawn(_get_places_crowfly,
+                                                           self.instance,
+                                                           arr_mode,
+                                                           destination,
+                                                           get_max_fallback_duration(self.request, arr_mode),
+                                                           **self.speed_switcher))
 
             called_modes |= {(arr_mode, destination.uri), (dep_mode, origin.uri)}
-        return futures
+        return origin_futures, destination_futures
 
     def get_update_crowfly_duration_futures(self):
-        futures_duration = []
+        origin_futures = []
+        destination_futures = []
         origin = self.request['origin']
         destination = self.request['destination']
-        instance = self.instance
-
-        def worker_update_crowfly_duration(dep_arr, mode, place):
-            return dep_arr, _update_crowfly_duration(instance, mode, place)
-
         called_modes = set()
         for dep_mode, arr_mode in self.krakens_call:
-            if dep_mode not in called_modes:
-                futures_duration.append(self.pool.spawn(worker_update_crowfly_duration, "dep", dep_mode,
-                                                        origin))
-            if arr_mode not in called_modes:
-                futures_duration.append(self.pool.spawn(worker_update_crowfly_duration, "arr", arr_mode,
-                                                        destination))
-
+            if (dep_mode, origin) not in called_modes:
+                origin_futures.append(self.pool.spawn(_update_crowfly_duration, self.instance, dep_mode, origin))
+            if (arr_mode, destination) not in called_modes:
+                destination_futures.append(self.pool.spawn(_update_crowfly_duration, self.instance, arr_mode, destination))
             called_modes |= {(arr_mode, destination), (dep_mode, origin)}
-        return futures_duration
+        return origin_futures, destination_futures
 
     def get_direct_path_futures(self, func, fallback_direct_path, origin, destination):
         futures_direct_path = []
@@ -404,6 +400,7 @@ class Scenario(new_default.Scenario):
         logger = logging.getLogger(__name__)
         logger.debug('datetime: %s', request['datetime'])
         crow_fly_stop_points = set()
+
         if not g.requested_origin:
             g.requested_origin = instance.georef.place(request['origin'])
         if not g.requested_destination:
@@ -412,33 +409,35 @@ class Scenario(new_default.Scenario):
         worker = AsyncWorker(instance, krakens_call, request)
 
         if request.get('max_duration', 0):
-            futures = worker.get_crowfly_futures(g.requested_origin, g.requested_destination)
-            for future in gevent.iwait(futures):
-                dep_arr, resp = future.get()
-                if dep_arr == "dep":
-                    g.origins_places_crowfly.update(resp)
-                else:
-                    g.destinations_places_crowfly.update(resp)
+            orig_futures, dest_futures = worker.get_crowfly_futures(g.requested_origin, g.requested_destination)
+            gevent.joinall(orig_futures + dest_futures)
+            for future in gevent.iwait(orig_futures):
+                g.origins_places_crowfly.update(future.get())
+            for future in gevent.iwait(dest_futures):
+                g.destinations_places_crowfly.update(future.get())
 
-            futures = worker.get_routing_matrix_futures(g.requested_origin,
-                                                        g.requested_destination,
-                                                        g.origins_places_crowfly,
-                                                        g.destinations_places_crowfly)
+            orig_futures, dest_futures = worker.get_routing_matrix_futures(g.requested_origin,
+                                                                           g.requested_destination,
+                                                                           g.origins_places_crowfly,
+                                                                           g.destinations_places_crowfly)
+            gevent.joinall(orig_futures + dest_futures)
+            for future in gevent.iwait(orig_futures):
+                g.origins_fallback.update(future.get())
+            for future in gevent.iwait(dest_futures):
+                g.destinations_fallback.update(future.get())
 
-            for future in gevent.iwait(futures):
-                dep_arr, resp = future.get()
-                if dep_arr == "dep":
-                    g.origins_fallback.update(resp)
-                else:
-                    g.destinations_fallback.update(resp)
+            orig_futures, dest_futures = worker.get_update_crowfly_duration_futures()
+            gevent.joinall(orig_futures + dest_futures)
+            def _updater(_futures, fb, crow_fly_stop_points):
+                for f in gevent.iwait(_futures):
+                    resp = f.get()
+                    crow_fly_stop_points |= resp[0]
+                    for mode in (mode for mode in resp[1] if mode in fb):
+                        fb[mode].update(resp[1][mode])
 
-            futures = worker.get_update_crowfly_duration_futures()
-            for future in gevent.iwait(futures):
-                dep_arr, resp = future.get()
-                crow_fly_stop_points |= resp[0]
-                fb = g.origins_fallback if dep_arr == "dep" else g.destinations_fallback
-                for mode in (mode for mode in resp[1] if mode in fb):
-                    fb[mode].update(resp[1][mode])
+            _updater(orig_futures, g.origins_fallback, crow_fly_stop_points)
+            _updater(dest_futures, g.destinations_fallback, crow_fly_stop_points)
+
 
         resp = []
         journey_parameters = create_parameters(request)
