@@ -429,7 +429,8 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
 
 
 pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest &request,
-                                           const boost::posix_time::ptime& current_datetime) {
+                                           const boost::posix_time::ptime& current_datetime,
+                                           const bool disable_feedpublisher) {
     const auto data = data_manager.get_data();
     type::EntryPoint ep(data->get_type_of_id(request.uri()), request.uri());
     type::GeographicalCoord  coord;
@@ -440,8 +441,16 @@ pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest 
         fill_pb_error(pbnavitia::Error::bad_format, e.what(), r.mutable_error());
         return r;
     }
-    return proximitylist::find(coord, request.distance(), vector_of_pb_types(request), request.filter(),
-                               request.depth(), request.count(),request.start_page(), *data, current_datetime);
+    return proximitylist::find(coord,
+                               request.distance(),
+                               vector_of_pb_types(request),
+                               request.filter(),
+                               request.depth(),
+                               request.count(),
+                               request.start_page(),
+                               *data,
+                               current_datetime,
+                               disable_feedpublisher);
 }
 
 static type::StreetNetworkParams
@@ -1017,7 +1026,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     case pbnavitia::pt_planner:
     case pbnavitia::PLANNER: response = journeys(request.journeys(), request.requested_api(),
                                                  current_datetime); break;
-    case pbnavitia::places_nearby: response = proximity_list(request.places_nearby(), current_datetime); break;
+    case pbnavitia::places_nearby: response = proximity_list(request.places_nearby(), current_datetime, request.disable_feedpublisher()); break;
     case pbnavitia::PTREFERENTIAL: response = pt_ref(request.ptref(), current_datetime); break;
     case pbnavitia::traffic_reports : response = traffic_reports(request.traffic_reports(),
                                                                  current_datetime); break;
@@ -1040,7 +1049,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
         break;
     }
     metadatas(response);//we add the metadatas for each response
-    feed_publisher(response);
+    if (! request.disable_feedpublisher()) { feed_publisher(response); }
     return response;
 }
 

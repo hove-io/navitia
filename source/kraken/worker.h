@@ -100,7 +100,8 @@ class Worker {
         pbnavitia::Response next_stop_times(const pbnavitia::NextStopTimeRequest &request, pbnavitia::API api,
                                             const boost::posix_time::ptime& current_datetime);
         pbnavitia::Response proximity_list(const pbnavitia::PlacesNearbyRequest &request,
-                                           const boost::posix_time::ptime& current_datetime);
+                                           const boost::posix_time::ptime& current_datetime,
+                                           const bool disable_feedpublisher);
 
         JourneysArg fill_journeys(const pbnavitia::JourneysRequest &request);
         pbnavitia::Response err_msg_isochron(const std::string& err_msg, navitia::PbCreator& pb_creator);
