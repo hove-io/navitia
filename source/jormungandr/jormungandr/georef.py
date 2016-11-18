@@ -83,7 +83,9 @@ class Kraken(object):
         # we are only interested in public transports
         req.places_nearby.types.append(type_pb2.STOP_POINT)
         res = self.instance.send_and_receive(req)
-        assert len(res.feed_publishers) == 0 # didn't find any better way to test that...
+        if len(res.feed_publishers) != 0:
+            logger = logging.getLogger(__name__)
+            logger.error("feed publisher not empty: expect performance regression!")
         return res.places_nearby
 
     def get_stop_points_for_stop_area(self, uri):
