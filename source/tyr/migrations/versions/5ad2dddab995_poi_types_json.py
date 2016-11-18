@@ -1,4 +1,4 @@
-"""empty message
+"""Add poi_type_json table
 
 Revision ID: 5ad2dddab995
 Revises: c5cd5a41def

@@ -837,7 +837,7 @@ instance:
 }
 ```
 
-If you want to add poi types for an instance you have to POST it:
+If you want to add poi types for an instance you have to POST again all the json (previous AND new poi types):
     
     curl 'http://localhost:5000/v0/instances/fr-bre/poi_types' -X POST -H 'content-type: application/json' -d '{"poi_types": [{"id": "pdv", "name": "Point de vente"},],"rules": [{"osm_tags_filters": [{"key": "amenity:park", "value": "yes"}, {"key": "amenity", "value": "shop"}], "poi_type_id": "pdv"}]}'
 
