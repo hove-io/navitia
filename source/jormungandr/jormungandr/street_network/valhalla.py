@@ -229,14 +229,21 @@ class Valhalla(object):
         if response == None:
             raise TechnicalError('impossible to access valhalla service')
         if response.status_code != 200:
-            logging.getLogger(__name__).error('Valhalla service unavailable, impossible to query : {}'.
-                                              format(response.url))
+            logging.getLogger(__name__).error('Valhalla service unavailable, impossible to query : {}'
+                                              ' with response : {}'
+                                              .format(response.url, response.text))
             raise TechnicalError('Valhalla service unavailable, impossible to query : {}'.
                                  format(response.url))
 
     def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise, request):
         data = self._make_data(mode, pt_object_origin, [pt_object_destination], request, api='route')
         r = self._call_valhalla('{}/{}'.format(self.service_url, 'route'), requests.post, data)
+        if r is not None and r.status_code == 400 and r.json()['error_code'] == 442:
+            # error_code == 442 => No path could be found for input
+            resp = response_pb2.Response()
+            resp.status_code = 200
+            resp.response_type = response_pb2.NO_SOLUTION
+            return resp
         self.check_response(r)
         resp_json = r.json()
         return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, datetime)
@@ -249,7 +256,7 @@ class Valhalla(object):
                 if one['time']:
                     time = one['time']
                 else:
-                    time = 0
+                    time = -1
                 row.duration.append(time)
         return sn_routing_matrix
 

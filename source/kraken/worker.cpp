@@ -32,6 +32,7 @@ www.navitia.io
 
 #include "routing/raptor_api.h"
 #include "autocomplete/autocomplete_api.h"
+
 #include "proximity_list/proximitylist_api.h"
 #include "ptreferential/ptreferential.h"
 #include "ptreferential/ptreferential_api.h"
@@ -428,7 +429,8 @@ pbnavitia::Response Worker::next_stop_times(const pbnavitia::NextStopTimeRequest
 
 
 pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest &request,
-                                           const boost::posix_time::ptime& current_datetime) {
+                                           const boost::posix_time::ptime& current_datetime,
+                                           const bool disable_feedpublisher) {
     const auto data = data_manager.get_data();
     type::EntryPoint ep(data->get_type_of_id(request.uri()), request.uri());
     type::GeographicalCoord  coord;
@@ -439,8 +441,16 @@ pbnavitia::Response Worker::proximity_list(const pbnavitia::PlacesNearbyRequest 
         fill_pb_error(pbnavitia::Error::bad_format, e.what(), r.mutable_error());
         return r;
     }
-    return proximitylist::find(coord, request.distance(), vector_of_pb_types(request), request.filter(),
-                               request.depth(), request.count(),request.start_page(), *data, current_datetime);
+    return proximitylist::find(coord,
+                               request.distance(),
+                               vector_of_pb_types(request),
+                               request.filter(),
+                               request.depth(),
+                               request.count(),
+                               request.start_page(),
+                               *data,
+                               current_datetime,
+                               disable_feedpublisher);
 }
 
 static type::StreetNetworkParams
@@ -1016,7 +1026,7 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     case pbnavitia::pt_planner:
     case pbnavitia::PLANNER: response = journeys(request.journeys(), request.requested_api(),
                                                  current_datetime); break;
-    case pbnavitia::places_nearby: response = proximity_list(request.places_nearby(), current_datetime); break;
+    case pbnavitia::places_nearby: response = proximity_list(request.places_nearby(), current_datetime, request.disable_feedpublisher()); break;
     case pbnavitia::PTREFERENTIAL: response = pt_ref(request.ptref(), current_datetime); break;
     case pbnavitia::traffic_reports : response = traffic_reports(request.traffic_reports(),
                                                                  current_datetime); break;
@@ -1032,13 +1042,14 @@ pbnavitia::Response Worker::dispatch(const pbnavitia::Request& request) {
     case pbnavitia::heat_map: response = heat_map(request.heat_map(), current_datetime); break;
     case pbnavitia::street_network_routing_matrix:
         response = street_network_routing_matrix(request.sn_routing_matrix()); break;
+    case pbnavitia::odt_stop_points: response = odt_stop_points(request.coord()); break;
     default:
         LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
         fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", response.mutable_error());
         break;
     }
     metadatas(response);//we add the metadatas for each response
-    feed_publisher(response);
+    if (! request.disable_feedpublisher()) { feed_publisher(response); }
     return response;
 }
 
@@ -1082,6 +1093,17 @@ pbnavitia::Response Worker::nearest_stop_points(const pbnavitia::NearestStopPoin
         nsp->set_access_duration(item.second.total_seconds());
     }
     return pb_creator.get_response();
+}
+
+pbnavitia::Response Worker::odt_stop_points(const pbnavitia::GeographicalCoord& request) {    
+    navitia::type::GeographicalCoord coord;
+    coord.set_lon(request.lon());
+    coord.set_lat(request.lat());
+    const auto data = data_manager.get_data();
+    this->init_worker_data(data);
+
+    const auto& zonal_sps = data->pt_data->stop_points_by_area.find(coord);
+    return get_response(zonal_sps, *data);
 }
 
 }

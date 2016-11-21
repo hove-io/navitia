@@ -361,20 +361,45 @@ def direct_path_func_without_response_valhalla_test():
 
 def direct_path_func_with_status_code_400_response_valhalla_test():
     instance = MagicMock()
+    instance.walking_speed = 1.12
     valhalla = Valhalla(instance=instance,
                         url='http://bob.com',
                         costing_options={'bib': 'bom'})
-    valhalla.breaker = MagicMock()
-    response = requests.Response()
-    response.status_code = 400
-    response.url = valhalla.service_url
-    valhalla._call_valhalla = MagicMock(return_value=response)
-    valhalla._make_data = MagicMock(return_value=None)
-    with pytest.raises(TechnicalError) as excinfo:
-        valhalla.direct_path(None, None, None, None, None, None)
-    assert str(excinfo.value) == '500: Internal Server Error'
-    assert str(excinfo.value.data['message']) == 'Valhalla service unavailable, impossible to query : http://bob.com'
-    assert str(excinfo.typename) == 'TechnicalError'
+    origin = get_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
+    destination = get_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
+    with requests_mock.Mocker() as req:
+        with pytest.raises(TechnicalError) as excinfo:
+            req.post('http://bob.com/route', json={'error_code': 42}, status_code=400)
+            valhalla.direct_path('walking',
+                                 origin,
+                                 destination,
+                                 str_to_time_stamp('20161010T152000'),
+                                 True,
+                                 MOCKED_REQUEST)
+        assert str(excinfo.value) == '500: Internal Server Error'
+        assert str(excinfo.value.data['message']) == 'Valhalla service unavailable, impossible to query : http://bob.com/route'
+        assert str(excinfo.typename) == 'TechnicalError'
+
+
+def direct_path_func_with_no_response_valhalla_test():
+    instance = MagicMock()
+    instance.walking_speed = 1.12
+    valhalla = Valhalla(instance=instance,
+                        url='http://bob.com',
+                        costing_options={'bib': 'bom'})
+    origin = get_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
+    destination = get_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
+    with requests_mock.Mocker() as req:
+        req.post('http://bob.com/route', json={'error_code': 442}, status_code=400)
+        valhalla_response = valhalla.direct_path('walking',
+                                                 origin,
+                                                 destination,
+                                                 str_to_time_stamp('20161010T152000'),
+                                                 True,
+                                                 MOCKED_REQUEST)
+        assert valhalla_response.status_code == 200
+        assert valhalla_response.response_type == response_pb2.NO_SOLUTION
+        assert len(valhalla_response.journeys) == 0
 
 
 def direct_path_func_with_valid_response_valhalla_test():
@@ -429,3 +454,42 @@ def get_valhalla_mode_valid_mode_test():
     }
     for kraken_mode, valhalla_mode in map_mode.items():
         assert valhalla._get_valhalla_mode(kraken_mode) == valhalla_mode
+
+
+def one_to_many_valhalla_test():
+    instance = MagicMock()
+    instance.walking_speed = 1.12
+    valhalla = Valhalla(instance=instance,
+                        url='http://bob.com',
+                        costing_options={'bib': 'bom'})
+    origin = get_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
+    destination = get_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
+    response = {
+        'one_to_many': [
+            [
+                {
+                    'time': 0
+                },
+                {
+                    'time': 42
+                },
+                {
+                    'time': None
+                },
+                {
+                    'time': 1337
+                },
+            ]
+        ]
+    }
+    with requests_mock.Mocker() as req:
+        req.post('http://bob.com/one_to_many', json=response, status_code=200)
+        valhalla_response = valhalla.get_street_network_routing_matrix(
+            [origin],
+            [destination, destination, destination],
+            'walking',
+            42,
+            MOCKED_REQUEST)
+        assert valhalla_response.rows[0].duration[0] == 42
+        assert valhalla_response.rows[0].duration[1] == -1
+        assert valhalla_response.rows[0].duration[2] == 1337

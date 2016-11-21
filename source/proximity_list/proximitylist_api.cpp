@@ -74,23 +74,26 @@ static void make_pb(navitia::PbCreator& pb_creator, const std::vector<t_result>&
     }
 }
 
-template<typename T>
-void sort_cut(std::vector<T> &list, const uint32_t end_pagination,
-              const type::GeographicalCoord& coord) {
-    if(!list.empty()) {
-        auto nb_sort = (list.size() < end_pagination) ? list.size():end_pagination;
-        std::partial_sort(list.begin(), list.begin() + nb_sort, list.end(),
-            [&](idx_coord a, idx_coord b)
-            {return coord.distance_to(a.second)< coord.distance_to(b.second);});
-        list.resize(nb_sort);
-    }
+static void
+sort_cut(vector_idx_coord& list, const size_t end_pagination, const nt::GeographicalCoord& coord) {
+    const double coslat = ::cos(coord.lat() * nt::GeographicalCoord::N_DEG_TO_RAD);
+    const auto nb_sort = std::min(list.size(), end_pagination);
+    std::partial_sort(
+        list.begin(), list.begin() + nb_sort, list.end(),
+        [&](const idx_coord& a, const idx_coord& b) {
+            const auto sq_dist_a = coord.approx_sqr_distance(a.second, coslat);
+            const auto sq_dist_b = coord.approx_sqr_distance(b.second, coslat);
+            return sq_dist_a < sq_dist_b;
+        });
+    list.resize(nb_sort);
 }
 
 pbnavitia::Response find(const type::GeographicalCoord& coord, const double distance,
                          const std::vector<nt::Type_e>& types, const std::string& filter,
                          const uint32_t depth, const uint32_t count, const uint32_t start_page,
-                         const type::Data & data, const boost::posix_time::ptime& current_datetime) {
-    navitia::PbCreator pb_creator(data, current_datetime, null_time_period);
+                         const type::Data & data, const boost::posix_time::ptime& current_datetime,
+                         const bool disable_feedpublisher) {
+    navitia::PbCreator pb_creator(data, current_datetime, null_time_period, true, disable_feedpublisher);
     int total_result = 0;
     std::vector<t_result > result;
     auto end_pagination = (start_page+1) * count;
@@ -155,7 +158,7 @@ pbnavitia::Response find(const type::GeographicalCoord& coord, const double dist
             }
         }
         total_result += final_list.size();
-        sort_cut<idx_coord>(final_list, end_pagination, coord);
+        sort_cut(final_list, end_pagination, coord);
         for(auto idx_coord : final_list) {
             result.push_back(t_result(idx_coord.first, idx_coord.second, type));
         }

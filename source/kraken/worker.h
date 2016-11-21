@@ -100,7 +100,8 @@ class Worker {
         pbnavitia::Response next_stop_times(const pbnavitia::NextStopTimeRequest &request, pbnavitia::API api,
                                             const boost::posix_time::ptime& current_datetime);
         pbnavitia::Response proximity_list(const pbnavitia::PlacesNearbyRequest &request,
-                                           const boost::posix_time::ptime& current_datetime);
+                                           const boost::posix_time::ptime& current_datetime,
+                                           const bool disable_feedpublisher);
 
         JourneysArg fill_journeys(const pbnavitia::JourneysRequest &request);
         pbnavitia::Response err_msg_isochron(const std::string& err_msg, navitia::PbCreator& pb_creator);
@@ -131,6 +132,7 @@ class Worker {
          * from origin to destination by taking street network
          * */
         pbnavitia::Response street_network_routing_matrix(const pbnavitia::StreetNetworkRoutingMatrixRequest& request);
+        pbnavitia::Response odt_stop_points(const pbnavitia::GeographicalCoord& request);
 };
 
 type::EntryPoint make_sn_entry_point(const std::string& place,

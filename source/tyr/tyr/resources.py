@@ -43,6 +43,7 @@ from tyr.helper import load_instance_config, get_instance_logger
 import logging
 import os
 import shutil
+import json
 
 from navitiacommon import models, parser_args_type
 from navitiacommon.default_traveler_profile_params import default_traveler_profile_params, acceptable_traveler_types
@@ -278,51 +279,42 @@ class Job(flask_restful.Resource):
         
 
 class PoiType(flask_restful.Resource):
-    @marshal_with(poi_types_fields)
     def get(self, instance_name):
         instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
-        return {'poi_types': instance.poi_types}
 
-    @marshal_with(poi_types_fields)
-    def post(self, instance_name, uri):
+        return json.loads(instance.poi_type_json.poi_types_json)
+
+    def post(self, instance_name):
         instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
-        parser = reqparse.RequestParser()
-        parser.add_argument('name', type=unicode,  case_sensitive=False,
-                help='name displayed for this type of poi', location=('json', 'values'))
-        args = parser.parse_args()
+        poi_types_json = request.get_json(silent=False)
 
         try:
-            poi_type = models.PoiType(uri, args['name'], instance)
+            poi_type = models.PoiTypeJson(json.dumps(poi_types_json), instance)
             db.session.add(poi_type)
             db.session.commit()
         except Exception:
             logging.exception("fail")
             raise
 
-        return {'poi_types': instance.poi_types}, 201
+        return json.loads(instance.poi_type_json.poi_types_json), 200
 
-    @marshal_with(poi_types_fields)
-    def put(self, instance_name, uri):
+    def put(self, instance_name):
         instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
-        poi_type = instance.poi_types.filter_by(uri=uri).first_or_404()
-        parser = reqparse.RequestParser()
-        parser.add_argument('name', type=unicode, case_sensitive=False, default=poi_type.name,
-                help='name displayed for this type of poi', location=('json', 'values'))
-        args = parser.parse_args()
+        poi_type = instance.poi_type_json
+        poi_types_json = request.get_json(silent=False)
 
         try:
-            poi_type.name = args['name']
+            poi_type.poi_types_json = json.dumps(poi_types_json)
             db.session.commit()
         except Exception:
             logging.exception("fail")
             raise
 
-        return {'poi_types': instance.poi_types}
+        return json.loads(instance.poi_type_json.poi_types_json), 200
 
-    @marshal_with(poi_types_fields)
-    def delete(self, instance_name, uri):
+    def delete(self, instance_name):
         instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
-        poi_type = instance.poi_types.filter_by(uri=uri).first_or_404()
+        poi_type = instance.poi_type_json
         try:
             db.session.delete(poi_type)
             db.session.commit()
@@ -330,7 +322,7 @@ class PoiType(flask_restful.Resource):
             logging.exception("fail")
             raise
 
-        return {'poi_types': instance.poi_types}
+        return '', 204
 
 
 class Instance(flask_restful.Resource):

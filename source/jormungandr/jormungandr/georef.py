@@ -73,9 +73,14 @@ class Kraken(object):
         req.places_nearby.depth = 0
         req.places_nearby.count = max_nb_crowfly
         req.places_nearby.start_page = 0
+        req.disable_feedpublisher = True
         # we are only interested in public transports
         req.places_nearby.types.append(type_pb2.STOP_POINT)
-        return self.instance.send_and_receive(req).places_nearby
+        res = self.instance.send_and_receive(req)
+        if len(res.feed_publishers) != 0:
+            logger = logging.getLogger(__name__)
+            logger.error("feed publisher not empty: expect performance regression!")
+        return res.places_nearby
 
     def get_stop_points_for_stop_area(self, uri):
         req = request_pb2.Request()
@@ -102,3 +107,10 @@ class Kraken(object):
         req.ptref.filter = 'stop_point.uri = {uri}'.format(uri=uri)
         result = self.instance.send_and_receive(req)
         return result.stop_points
+
+    def get_odt_stop_points(self, coord):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.odt_stop_points
+        req.coord.lon = coord.lon
+        req.coord.lat = coord.lat
+        return self.instance.send_and_receive(req).stop_points

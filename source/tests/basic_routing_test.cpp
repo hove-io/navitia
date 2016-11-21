@@ -50,15 +50,31 @@ www.navitia.io
  *   8h     9h
  *   8h               9h
  */
+
+/* Data for tad_zonal
+ * Geographical Zone of odt:
+ * area_1 -> {(10.0, 10.0), (10.0, 15.0),(15.0, 15.0),(15.0, 10.0),(10.0, 10.0)}
+ * area_1 -> {(20.0, 20.0), (20.0, 25.0),(25.0, 25.0),(25.0, 20.0),(20.0, 20.0)}
+ * StopPoint P(12, 12), Q (22, 22): is_zonal=true
+ * admin:93700 coord : {12, 12} in zone area_1
+ * admin:75000 coord : {22, 22} in zone area_2
+ *
+ *    admin:93700   P       Q   admin:75000
+ *                  8h    8h05
+ *                  15    15h05
+ */
+
 static boost::gregorian::date_period period(std::string beg, std::string end) {
     boost::gregorian::date start_date = boost::gregorian::from_undelimited_string(beg);
     boost::gregorian::date end_date = boost::gregorian::from_undelimited_string(end); //end is not in the period
     return {start_date, end_date};
 }
 
-int main(int argc, const char* const argv[]) {
-    navitia::init_app();
+namespace bg = boost::geometry;
+typedef bg::model::point<double, 2, bg::cs::cartesian> point_t;
 
+int main(int argc, const char* const argv[]) {
+    navitia::init_app();    
     ed::builder b = {"20120614"};
     b.generate_dummy_basis();
     b.sa("A", 1., 1.)("stop_point:uselessA", 1., 1.);
@@ -100,7 +116,57 @@ int main(int argc, const char* const argv[]) {
     b.data->pt_data->datasets.push_back(ds);
     b.data->pt_data->contributors.push_back(cr);
 
+    //data for tad zonal
+    navitia::type::MultiPolygon area_1, area_2;
+    area_1.resize(1);
+    bg::append(area_1[0].outer(), point_t(10.0, 10.0));
+    bg::append(area_1[0].outer(), point_t(10.0, 15.0));
+    bg::append(area_1[0].outer(), point_t(15.0, 15.0));
+    bg::append(area_1[0].outer(), point_t(15.0, 10.0));
+    bg::append(area_1[0].outer(), point_t(10.0, 10.0));
+    area_2.resize(1);
+    bg::append(area_2[0].outer(), point_t(20.0, 20.0));
+    bg::append(area_2[0].outer(), point_t(20.0, 25.0));
+    bg::append(area_2[0].outer(), point_t(25.0, 25.0));
+    bg::append(area_2[0].outer(), point_t(25.0, 20.0));
+    bg::append(area_2[0].outer(), point_t(20.0, 20.0));
+
+    b.sa("P", 12., 12.)("stop_point:uselessP", 12., 12.);
+    b.sa("Q", 22., 22.);
+    b.vj("lpq1")("P", 8*3600)("Q", 8*3600+5*60);
+    b.vj("lpq2")("P", 15*3600)("Q", 15*3600+5*60);
+    b.data->pt_data->codes.add(b.sps.at("P"), "external_code", "stop_point:P");
+    b.data->pt_data->codes.add(b.sps.at("P"), "source", "Pin");
+
+    auto* sp = b.sps.at("P");
+    sp->is_zonal = true;
+    b.data->pt_data->stop_points_by_area.insert(area_1, sp);
+    sp = b.sps.at("Q");
+    sp->is_zonal = true;
+    b.data->pt_data->stop_points_by_area.insert(area_2, sp);
+
+    b.data->geo_ref->admins.push_back(new navitia::georef::Admin());
+    auto admin = b.data->geo_ref->admins.back();
+    admin->uri = "admin:93700";
+    admin->name = "Drancy";
+    admin->insee = "93700";
+    admin->level = 8;
+    admin->postal_codes.push_back("93700");
+    admin->coord = {12, 12};
+    admin->idx = 0;
+
+    b.data->geo_ref->admins.push_back(new navitia::georef::Admin());
+    admin = b.data->geo_ref->admins.back();
+    admin->uri = "admin:75000";
+    admin->name = "Paris";
+    admin->insee = "75000";
+    admin->level = 8;
+    admin->postal_codes.push_back("75012");
+    admin->coord = {22, 22};
+    admin->idx = 1;
+
     b.data->complete();
+    b.manage_admin();
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();

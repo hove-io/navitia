@@ -164,13 +164,23 @@ struct PbCreator {
     pt::time_period action_period;
     // Do we need to disable geojson in the request
     const bool disable_geojson = false;
+    const bool disable_feedpublisher = false;
     // Raptor api
     size_t nb_sections = 0;
     std::map<std::pair<pbnavitia::Journey*, size_t>, std::string> routing_section_map;
     pbnavitia::Ticket* unknown_ticket = nullptr; //we want only one unknown ticket
 
-    PbCreator(const nt::Data& data, const pt::ptime  now, const pt::time_period action_period, const bool disable_geojson=false):
-        data(data), now(now), action_period(action_period), disable_geojson(disable_geojson) {}
+    PbCreator(const nt::Data& data,
+              const pt::ptime now,
+              const pt::time_period action_period,
+              const bool disable_geojson = false,
+              const bool disable_feedpublisher = false):
+        data(data),
+        now(now),
+        action_period(action_period),
+        disable_geojson(disable_geojson),
+        disable_feedpublisher(disable_feedpublisher)
+        {}
 
     PbCreator(const PbCreator&) = delete;
     PbCreator& operator=(const PbCreator&) = delete;
