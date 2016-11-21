@@ -240,24 +240,25 @@ class AsyncWorker(object):
         origin_futures = []
         destination_futures = []
 
-        called_modes = set()
+        called_dep_modes = set()
+        called_arr_modes = set()
         for dep_mode, arr_mode in self.krakens_call:
-            if (dep_mode, origin.uri) not in called_modes:
+            if dep_mode not in called_dep_modes:
                 origin_futures.append(self.pool.spawn(_get_places_crowfly,
                                                       self.instance,
                                                       dep_mode,
                                                       origin,
                                                       get_max_fallback_duration(self.request, dep_mode),
                                                       **self.speed_switcher))
-            if (arr_mode, destination.uri) not in called_modes:
+                called_dep_modes.add(dep_mode)
+            if arr_mode not in called_arr_modes:
                 destination_futures.append(self.pool.spawn(_get_places_crowfly,
                                                            self.instance,
                                                            arr_mode,
                                                            destination,
                                                            get_max_fallback_duration(self.request, arr_mode),
                                                            **self.speed_switcher))
-
-            called_modes |= {(arr_mode, destination.uri), (dep_mode, origin.uri)}
+                called_arr_modes.add(arr_mode)
         return origin_futures, destination_futures
 
     def get_update_crowfly_duration_futures(self):
@@ -265,15 +266,17 @@ class AsyncWorker(object):
         destination_futures = []
         origin = self.request['origin']
         destination = self.request['destination']
-        called_modes = set()
+        called_dep_modes = set()
+        called_arr_modes = set()
         for dep_mode, arr_mode in self.krakens_call:
-            if (dep_mode, origin) not in called_modes:
+            if dep_mode not in called_dep_modes:
                 origin_futures.append(self.pool.spawn(_update_crowfly_duration, self.instance, dep_mode,
                                                       origin, g.requested_origin))
-            if (arr_mode, destination) not in called_modes:
+                called_dep_modes.add(dep_mode)
+            if arr_mode not in called_arr_modes:
                 destination_futures.append(self.pool.spawn(_update_crowfly_duration, self.instance, arr_mode,
                                                            destination, g.requested_destination))
-            called_modes |= {(arr_mode, destination), (dep_mode, origin)}
+                called_arr_modes.add(arr_mode)
         return origin_futures, destination_futures
 
     def get_direct_path_futures(self, func, fallback_direct_path, origin, destination):
