@@ -32,7 +32,7 @@ www.navitia.io
 
 namespace ed { namespace connectors {
 
-static std::string DEFAULT_JSON_POI_TYPES = R"(
+static const std::string DEFAULT_JSON_POI_TYPES = R"(
 {
   "poi_types": [
     {"id": "amenity:college", "name": "École"},

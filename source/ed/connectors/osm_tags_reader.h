@@ -30,6 +30,8 @@ www.navitia.io
 
 #include <bitset>
 #include <map>
+#include "third_party/osmpbfreader/osmpbfreader.h"
+#include "ed/types.h"
 
 namespace ed { namespace connectors {
 
@@ -40,7 +42,24 @@ constexpr uint8_t CAR_BWD = 3;
 constexpr uint8_t FOOT_FWD = 4;
 constexpr uint8_t FOOT_BWD = 5;
 
-/// Retourne les propriétés quant aux modes et sens qui peuvent utiliser le way
+/// return properties on modes and directions that are possible on a way
 std::bitset<8> parse_way_tags(const std::map<std::string, std::string> & tags);
+
+ed::types::Poi fill_poi(const uint64_t osm_id, const double lon, const double lat,
+                        const CanalTP::Tags & tags, const size_t potential_id,
+                        std::unordered_map<std::string, ed::types::PoiType>& poi_types);
+
+struct RuleOsmTag2PoiType {
+    std::string poi_type_id;
+    std::map<std::string, std::string> osm_tag_filters;
+};
+
+struct PoiTypeParams {
+    std::map<std::string, std::string> poi_types;
+    std::vector<RuleOsmTag2PoiType> rules;
+
+    PoiTypeParams(const std::string& json_params);
+    const RuleOsmTag2PoiType* get_applicable_poi_rule(const CanalTP::Tags& tags) const;
+};
 
 }}

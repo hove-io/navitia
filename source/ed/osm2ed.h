@@ -37,6 +37,7 @@ www.navitia.io
 #include <set>
 #include "ed/types.h"
 #include "ed_persistor.h"
+#include "ed/connectors/osm_tags_reader.h"
 #include <boost/geometry.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <boost/geometry/multi/geometries/multi_point.hpp>
@@ -274,17 +275,6 @@ struct AssociateStreetRelation {
     }
 };
 
-
-struct RuleOsmTag2PoiType {
-    std::string poi_type_id;
-    std::map<std::string, std::string> osm_tag_filters;
-};
-
-struct PoiTypeParams {
-    std::map<std::string, std::string> poi_types;
-    std::vector<RuleOsmTag2PoiType> rules;
-    const RuleOsmTag2PoiType* get_applicable_poi_rule(const CanalTP::Tags& tags) const;
-};
 
 typedef std::set<OSMWay>::const_iterator it_way;
 typedef std::map<std::set<const OSMRelation*>, std::set<it_way>> rel_ways;

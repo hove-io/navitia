@@ -41,10 +41,7 @@ www.navitia.io
 #include <boost/range/algorithm/find_if.hpp>
 #include <boost/range/algorithm/reverse.hpp>
 #include <boost/property_tree/ptree.hpp>
-#include <boost/property_tree/json_parser.hpp>
 
-#include "ed/connectors/osm_tags_reader.h"
-#include "ed/connectors/osm2ed_utils.h"
 #include "ed/default_poi_types.h"
 #include "ed_persistor.h"
 #include "utils/functions.h"
@@ -888,23 +885,6 @@ void PoiHouseNumberVisitor::fill_housenumber(const uint64_t osm_id,
     house_numbers.push_back(OSMHouseNumber(str_to_int(it_hn->second), lon, lat, candidate_way->way_ref));
 }
 
-/**
- * the first rule that matches OSM object decides POI-type
- * match : OSM object has all OSM tags required by rule
- */
-const RuleOsmTag2PoiType* PoiTypeParams::get_applicable_poi_rule(const CanalTP::Tags& tags) const {
-    for (const auto& osm_rule: rules) {
-        auto poi_misses_a_tag = [&](const std::pair<const std::string, std::string>& osm_rule_tag) {
-            const auto it_poi_tag = tags.find(osm_rule_tag.first);
-            return (it_poi_tag == tags.end() || it_poi_tag->second != osm_rule_tag.second);
-        };
-        if (! navitia::contains_if(osm_rule.osm_tag_filters, poi_misses_a_tag)) {
-            return &osm_rule;
-        }
-    }
-    return nullptr;
-}
-
 void PoiHouseNumberVisitor::fill_poi(const u_int64_t osm_id, const CanalTP::Tags& tags, const double lon,
                                      const double lat, OsmObjectType osm_relation_type) {
     if (!parse_pois)
@@ -966,43 +946,6 @@ void OSMCache::flag_nodes() {
 
 }}
 
-static ed::connectors::PoiTypeParams parse_json_poi_types(const std::string& json_params){
-    namespace pt = boost::property_tree;
-
-    pt::ptree poi_root;
-    std::istringstream iss (json_params);
-    pt::read_json(iss, poi_root);
-
-    ed::connectors::PoiTypeParams params;
-
-    for (const pt::ptree::value_type& json_poi_type: poi_root.get_child("poi_types")) {
-        std::string poi_type_id = json_poi_type.second.get<std::string>("id");
-        if (params.poi_types.find(poi_type_id) != params.poi_types.end()) {
-            throw std::invalid_argument("POI type id " + poi_type_id + " is defined multiple times");
-        }
-        params.poi_types[poi_type_id] = json_poi_type.second.get<std::string>("name");
-    }
-    if (params.poi_types.find("amenity:parking") == params.poi_types.end() ||
-        params.poi_types.find("amenity:bicycle_rental") == params.poi_types.end()) {
-        throw std::invalid_argument("The 2 POI types id=amenity:parking and "
-                                    "id=amenity:bicycle_rental must be defined");
-    }
-
-    for (const pt::ptree::value_type& json_rule: poi_root.get_child("rules")) {
-        params.rules.emplace_back();
-        auto& rule = params.rules.back();
-        rule.poi_type_id = json_rule.second.get<std::string>("poi_type_id");
-        if (params.poi_types.find(rule.poi_type_id) == params.poi_types.end()) {
-            throw std::invalid_argument("Using an undefined POI type id (" + rule.poi_type_id + ") in rules");
-        }
-        for (const pt::ptree::value_type& json_filter: json_rule.second.get_child("osm_tags_filters")) {
-            rule.osm_tag_filters[json_filter.second.get<std::string>("key")] =
-                                                    json_filter.second.get<std::string>("value");
-        }
-    }
-    return params;
-}
-
 int main(int argc, char** argv) {
     navitia::init_app();
     auto logger = log4cplus::Logger::getInstance("log");
@@ -1044,7 +987,7 @@ int main(int argc, char** argv) {
     if (! vm.count("input")) {
         try {
             LOG4CPLUS_INFO(logger, "Checking that json poi-type parameter is correct");
-            parse_json_poi_types(json_poi_types);
+            const ed::connectors::PoiTypeParams poi_params(json_poi_types);
         } catch (const std::exception& e) {
             LOG4CPLUS_ERROR(logger, std::string("Incorrect json poi-type parameter: ") + e.what());
             return 1;
@@ -1059,7 +1002,7 @@ int main(int argc, char** argv) {
     if (! vm.count("poi-type")) {
         json_poi_types = ed::connectors::DEFAULT_JSON_POI_TYPES;
     }
-    const auto poi_params = parse_json_poi_types(json_poi_types);
+    const ed::connectors::PoiTypeParams poi_params(json_poi_types);
 
     ed::EdPersistor persistor(connection_string);
     persistor.street_network_source = "osm";
