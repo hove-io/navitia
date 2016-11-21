@@ -515,13 +515,10 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request,
             fill_pb_error(pbnavitia::Error::bad_format, e.what(), r.mutable_error());
             return r;
         }
-        auto tmp = proximitylist::find(coord, 100, {type::Type_e::Address}, "", 1, 1, 0, *data, pb_creator.now);
-        pbnavitia::Response pb_response;
-        if(tmp.places_nearby().size() == 1){
-            auto place = pb_response.add_places();
-            place->CopyFrom(tmp.places_nearby(0));
-        }
-        return pb_response;
+        auto address = pb_creator.data.geo_ref->nearest_addr(coord);
+        const auto& way_coord = WayCoord(address.second, coord, address.first);
+        pb_creator.fill(&way_coord, pb_creator.add_places(), 1);
+        return pb_creator.get_response();
     }
 
     auto it_sa = data->pt_data->stop_areas_map.find(request.uri());
