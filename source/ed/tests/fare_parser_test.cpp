@@ -39,7 +39,7 @@ www.navitia.io
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized )
+BOOST_GLOBAL_FIXTURE( logger_initialized );
 
 using namespace navitia::fare;
 using namespace ed::connectors;

@@ -44,7 +44,7 @@ using namespace navitia::proximitylist;
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized )
+BOOST_GLOBAL_FIXTURE( logger_initialized );
 
 BOOST_AUTO_TEST_CASE(distances_grand_cercle)
 {
