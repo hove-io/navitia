@@ -293,21 +293,24 @@ class AsyncWorker(object):
             _reverse_journeys(dp)
         return dp_key, dp
 
-    def get_direct_path_futures(self, fallback_direct_path, origin, destination, reverse_sections):
+    def get_direct_path_futures(self, fallback_direct_path,
+                                origin, destination,
+                                datetime, clockwise,
+                                reverse_sections):
         futures_direct_path = []
         for dep_mode, _ in self.krakens_call:
             dp_key = (dep_mode, origin.uri,
                       destination.uri,
-                      self.request['datetime'],
-                      self.request['clockwise'],
+                      datetime,
+                      clockwise,
                       reverse_sections)
             if dp_key not in fallback_direct_path:
                 futures_direct_path.append(self.pool.spawn(self._get_direct_path,
                                                            self.instance,
                                                            dep_mode,
                                                            origin, destination,
-                                                           self.request['datetime'],
-                                                           self.request['clockwise'],
+                                                           datetime,
+                                                           clockwise,
                                                            self.request,
                                                            reverse_sections))
                 # We initialise the value in fallback_direct_path, so that the same direct path won't be
@@ -345,9 +348,9 @@ class AsyncWorker(object):
     def _extend_journey(self, instance, pt_journey, mode, pb_from, pb_to, departure_date_time, nm, clockwise,
                         request, fallback_direct_path, reverse_sections=False):
         import copy
+        dp_key = (mode, pb_from.uri, pb_to.uri, departure_date_time, clockwise, reverse_sections)
+        departure_dp = fallback_direct_path[dp_key]
 
-        _, departure_dp = self._get_direct_path(instance, mode, pb_from, pb_to, departure_date_time, clockwise, request,
-                                                reverse_sections)
         if clockwise:
             pt_journey.duration += nm[pb_to.uri]
         elif not reverse_sections:
@@ -371,6 +374,7 @@ class AsyncWorker(object):
                 journey.sections.extend([create_crowfly(_from, departure, journey.departure_date_time,
                                          journey.sections[0].begin_date_time)])
             else:
+                # extend the journey with fallback direct path
                 self._extend_journey(instance, journey, dep_mode, _from, departure, journey.departure_date_time,
                                      origins_fallback, True, request, fallback_direct_path)
         journey.sections.sort(SectionSorter()) 
@@ -390,6 +394,7 @@ class AsyncWorker(object):
                 journey.sections.extend([create_crowfly(arrival, to, last_section_end,
                                                         journey.arrival_date_time)])
             else:
+                # extend the journey with fallback direct path
                 o = arrival
                 d = to
                 reverse_sections = False
@@ -400,12 +405,52 @@ class AsyncWorker(object):
         journey.sections.sort(SectionSorter())
         return journey
 
+    def get_fallback_direct_path_futures(self, map_response, crowfly_stop_points, odt_stop_points):
+        futures = []
+        for dep_mode, arr_mode, journey in map_response:
+            # from
+            departure = journey.sections[0].origin
+            clockwise = True
+            reverse_sections = False
+            departure_datetime = journey.departure_date_time - g.origins_fallback[dep_mode][departure.uri]
+            # In the following cases, we don't need to compute the fallback direct path:
+            # 1. the origin of the first section and the requested_origin are the same
+            # 2. the origin of the first section belongs to a stop_area
+            # 3. the origin of the first section belongs to odt stop_points
+            if g.requested_origin.uri != departure.uri and \
+                departure.uri not in odt_stop_points and \
+                    departure.uri not in crowfly_stop_points:
+                futures.extend(self.get_direct_path_futures(g.fallback_direct_path,
+                                                            g.requested_origin,
+                                                            departure,
+                                                            departure_datetime,
+                                                            clockwise,
+                                                            reverse_sections))
+            # to
+            arrival = journey.sections[-1].destination
+            clockwise = False
+            reverse_sections = False
+            # In some cases, we don't need to compute the fallback direct path
+            # Similar reasoning as above
+            arrival_datetime = journey.arrival_date_time + g.destinations_fallback[arr_mode][arrival.uri]
+            if g.requested_destination.uri != arrival.uri and \
+                arrival.uri not in odt_stop_points and \
+                    arrival.uri not in crowfly_stop_points:
+                o, d = arrival, g.requested_destination
+                if arr_mode == 'car':
+                    o, d, reverse_sections = d, o, True
+                futures.extend(self.get_direct_path_futures(g.fallback_direct_path,
+                                                            o,
+                                                            d,
+                                                            arrival_datetime,
+                                                            clockwise, reverse_sections))
+        return futures
+
     def build_journeys(self, map_response, crowfly_stop_points, odt_stop_points):
         futures = []
-        for values in map_response:
-            dep_mode = values[0]
-            arr_mode = values[1]
-            journey = values[2]
+        # to build the journey, at first we compute all fallback direct path ASYNCHRONOUSLY
+
+        for dep_mode, arr_mode, journey in map_response:
             # from
             futures.append(self.pool.spawn(self._build_from, journey, self.instance,
                                            journey.sections[0], g.requested_origin,
@@ -499,6 +544,8 @@ class Scenario(new_default.Scenario):
         futures = worker.get_direct_path_futures(g.fallback_direct_path,
                                                  g.requested_origin,
                                                  g.requested_destination,
+                                                 request['datetime'],
+                                                 request['clockwise'],
                                                  False)
         for future in gevent.iwait(futures):
             self.nb_kraken_calls += 1
@@ -514,7 +561,7 @@ class Scenario(new_default.Scenario):
                                                 g.fallback_direct_path, g.origins_fallback,
                                                 g.destinations_fallback, journey_parameters)
 
-        map_response = []
+        response_tuples = []
         for future in gevent.iwait(futures):
             dep_mode, arr_mode, local_resp = future.get()
             if local_resp is None:
@@ -532,11 +579,20 @@ class Scenario(new_default.Scenario):
             # for log purpose we put and id in each journeys
             for j in local_resp.journeys:
                 j.internal_id = str(generate_id())
-                map_response.append((dep_mode, arr_mode, j))
+                response_tuples.append((dep_mode, arr_mode, j))
             resp.append(local_resp)
 
-        # Once the pt journey is found, I need to reconstruct the whole journey with fallback regarding the mode
-        futures = worker.build_journeys(map_response, crowfly_stop_points, odt_stop_points)
+        # Once the pt journey is found, we need to reconstruct the whole journey with fallback regarding the mode
+
+        # For the sake of performance, we compute at first all fallback direct path asynchronously
+        # then we update the pool of direct paths
+        futures = worker.get_fallback_direct_path_futures(response_tuples, crowfly_stop_points, odt_stop_points)
+        for future in gevent.iwait(futures):
+            resp_key, resp_direct_path = future.get()
+            g.fallback_direct_path[resp_key] = resp_direct_path
+
+        # Now we construct the whole journey by
+        futures = worker.build_journeys(response_tuples, crowfly_stop_points, odt_stop_points)
         for future in gevent.iwait(futures):
             journey = future.get()
             journey.durations.total = journey.duration
