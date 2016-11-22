@@ -62,7 +62,8 @@ class GeocodeJson(AbstractAutocomplete):
             raise TechnicalError('global autocomplete not configured')
 
         q = request['q']
-        url = '{endpoint}?q={q}'.format(endpoint=self.external_api, q=q)
+        count = request['count']
+        url = '{endpoint}?q={q}&limit={count}'.format(endpoint=self.external_api, q=q, count=count)
         try:
             if shape:
                 raw_response = requests.post(url, timeout=self.timeout, json=shape)
