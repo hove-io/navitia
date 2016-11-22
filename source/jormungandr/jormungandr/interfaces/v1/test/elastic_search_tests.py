@@ -518,13 +518,13 @@ def bragi_call_test():
         }
     }
     mock_requests = MockRequests({
-        'http://bob.com/autocomplete?q=rue bobette':
+        'http://bob.com/autocomplete?q=rue bobette&limit=10':
         (bragi_response, 200)
     })
 
     # we mock the http call to return the hard coded mock_response
     with mock.patch('requests.get', mock_requests.get):
-        raw_response = bragi.get({'q': 'rue bobette'}, instance=None, shape=None)
+        raw_response = bragi.get({'q': 'rue bobette', 'count': 10}, instance=None, shape=None)
         places = get_response(raw_response).get('places')
         assert len(places) == 4
         bragi_house_jaures_response_check(places[0])
@@ -533,7 +533,7 @@ def bragi_call_test():
         bragi_admin_response_check(places[3])
 
     with mock.patch('requests.post', mock_requests.get):
-        raw_response = bragi.get({'q': 'rue bobette'}, instance=None, shape=geojson())
+        raw_response = bragi.get({'q': 'rue bobette', 'count': 10}, instance=None, shape=geojson())
         places = get_response(raw_response).get('places')
         assert len(places) == 4
         bragi_house_jaures_response_check(places[0])
