@@ -276,6 +276,7 @@ passage = {
     "stop_date_time": PbField(stop_date_time),
     "display_informations": PbField(display_informations_vj,
                                     attribute='pt_display_informations'),
+    "links": UrisToLinks()
 }
 
 departures = {
