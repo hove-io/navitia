@@ -29,10 +29,10 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask import abort, current_app, url_for, request
+from flask import current_app, url_for, request
 from flask.globals import g
 import flask_restful
-from flask_restful import fields, marshal_with, marshal, reqparse, inputs
+from flask_restful import fields, marshal_with, marshal, reqparse, inputs, abort
 
 import sqlalchemy
 from validate_email import validate_email
@@ -40,6 +40,7 @@ from datetime import datetime
 from tyr_user_event import TyrUserEvent
 from tyr_end_point_event import EndPointEventMessage, TyrEventsRabbitMq
 from tyr.helper import load_instance_config, get_instance_logger
+from navitiacommon.launch_exec import launch_exec_traces
 import logging
 import os
 import shutil
@@ -281,30 +282,29 @@ class Job(flask_restful.Resource):
 class PoiType(flask_restful.Resource):
     def get(self, instance_name):
         instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
-
-        return json.loads(instance.poi_type_json.poi_types_json)
+        poi_types = '{}'
+        if instance.poi_type_json and instance.poi_type_json.poi_types_json:
+            poi_types = instance.poi_type_json.poi_types_json
+        return json.loads(poi_types)
 
     def post(self, instance_name):
         instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
         poi_types_json = request.get_json(silent=False)
 
+        logger = get_instance_logger(instance)
         try:
-            poi_type = models.PoiTypeJson(json.dumps(poi_types_json), instance)
-            db.session.add(poi_type)
-            db.session.commit()
-        except Exception:
-            logging.exception("fail")
-            raise
+            args = ["--connection-string", "nowhere"]
+            if poi_types_json:
+                args.append("-p")
+                poi_types = json.dumps(poi_types_json)
+                args.append(u'{}'.format(poi_types))
 
-        return json.loads(instance.poi_type_json.poi_types_json), 200
+            res, traces = launch_exec_traces('osm2ed', args, logger)
+            if res != 0:
+                abort(400, status="error", message='{}'.format(traces))
 
-    def put(self, instance_name):
-        instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
-        poi_type = instance.poi_type_json
-        poi_types_json = request.get_json(silent=False)
-
-        try:
-            poi_type.poi_types_json = json.dumps(poi_types_json)
+            poi_types = models.PoiTypeJson(json.dumps(poi_types_json), instance)
+            db.session.add(poi_types)
             db.session.commit()
         except Exception:
             logging.exception("fail")
@@ -314,10 +314,11 @@ class PoiType(flask_restful.Resource):
 
     def delete(self, instance_name):
         instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
-        poi_type = instance.poi_type_json
+        poi_types = instance.poi_type_json
         try:
-            db.session.delete(poi_type)
-            db.session.commit()
+            if poi_types:
+                db.session.delete(poi_types)
+                db.session.commit()
         except Exception:
             logging.exception("fail")
             raise

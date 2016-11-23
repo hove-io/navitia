@@ -734,11 +734,11 @@ instance:
 
     curl "http://localhost:5000/v0/instances/fr-bre/poi_types"
 
-If you want to add poi types for an instance you have to POST again all the json (previous AND new poi types):
+If you want to change something on poi types you have to POST again all the json (previous AND new poi types):
     
     curl 'http://localhost:5000/v0/instances/fr-bre/poi_types' -X POST -H 'content-type: application/json' -d '{"poi_types": [{"id": "pdv", "name": "Point de vente"},],"rules": [{"osm_tags_filters": [{"key": "amenity:park", "value": "yes"}, {"key": "amenity", "value": "shop"}], "poi_type_id": "pdv"}]}'
 
-For updating a poi_type (only the name can be changed) you have to do the same thing with a PUT.
+Any update requires a complete POST because the order of the rules matters, so no PUT is allowed on a partial object.
 
 Finally if you want to delete a poi_type you just have to use the DELETE action:
 

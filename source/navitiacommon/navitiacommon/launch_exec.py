@@ -58,7 +58,7 @@ class LogLine(object):
 def parse_log(buff):
     logs = []
     line, sep, buff = buff.partition('\n')
-    while sep and buff:
+    while sep and line:
         logs.append(LogLine(line))
         line, sep, buff = buff.partition('\n')
     if not sep:
@@ -82,7 +82,7 @@ def read_async(fd):
         else:
             return ''
 
-def launch_exec(exec_name, args, logger):
+def launch_exec_traces(exec_name, args, logger):
     """ Launch an exec with args, log the outputs """
     log = 'Launching ' + exec_name + ' ' + ' '.join(args)
     #we hide the password in logs
@@ -94,6 +94,7 @@ def launch_exec(exec_name, args, logger):
                             stderr=subprocess.PIPE,
                             stdout=subprocess.PIPE,
                             close_fds=True)
+    traces = ""
     try:
         make_async(proc.stderr)
         make_async(proc.stdout)
@@ -105,6 +106,7 @@ def launch_exec(exec_name, args, logger):
                 logs, line = parse_log(log_pipe)
                 for l in logs:
                     logger.log(l.level, l.msg)
+                    traces += "##  {}  ##".format(l.msg)
 
             if proc.poll() is not None:
                 break
@@ -112,4 +114,8 @@ def launch_exec(exec_name, args, logger):
         proc.stdout.close()
         proc.stderr.close()
 
-    return proc.returncode
+    return proc.returncode, traces
+
+def launch_exec(exec_name, args, logger):
+    code, traces = launch_exec_traces(exec_name, args, logger)
+    return code
