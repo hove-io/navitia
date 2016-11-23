@@ -45,6 +45,7 @@ class delete_attribute_autocomplete():
             return objects.get('Autocomplete') or objects
         return wrapper
 
+
 class GeocodeJson(AbstractAutocomplete):
     """
     Autocomplete with an external service returning geocodejson
@@ -61,8 +62,9 @@ class GeocodeJson(AbstractAutocomplete):
         if not self.external_api:
             raise TechnicalError('global autocomplete not configured')
 
-        q = request['q']
-        url = '{endpoint}?q={q}'.format(endpoint=self.external_api, q=q)
+        url = '{endpoint}?q={q}&limit={count}'.format(endpoint=self.external_api,
+                                                      q=request['q'],
+                                                      count=request['count'])
         try:
             if shape:
                 raw_response = requests.post(url, timeout=self.timeout, json=shape)
