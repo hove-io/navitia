@@ -666,7 +666,7 @@ static void add_pathes(PbCreator& pb_creator,
         }
 
         const auto departure = pb_journey->sections(0).begin_date_time();
-        const auto arrival = navitia::to_posix_timestamp(arrival_time);
+        const auto arrival = pb_journey->sections(pb_journey->sections_size() - 1).end_date_time();
         pb_journey->set_departure_date_time(departure);
         pb_journey->set_arrival_date_time(arrival);
         pb_journey->set_duration(arrival - departure);
@@ -912,21 +912,37 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         }
         const auto admin = data.geo_ref->admins[it_admin->second];
 
+        // checking for zonal stop points
+        const auto& zonal_sps = data.pt_data->stop_points_by_area.find(ep.coordinates);
+        for (const auto* sp: zonal_sps) {
+            const SpIdx sp_idx{*sp};
+            if (result.find(sp_idx) == result.end()) {
+                concerned_path_finder.distance_to_entry_point[sp_idx] = {};
+                result[sp_idx] = {};
+            }
+        }
+
+        if (! admin->main_stop_areas.empty()) {
+            for (auto stop_area: admin->main_stop_areas) {
+                for(auto sp : stop_area->stop_point_list) {
+                    const SpIdx sp_idx{*sp};
+                    if (result.find(sp_idx) == result.end()) {
+                        result[sp_idx] = {};
+                        concerned_path_finder.distance_to_entry_point[sp_idx] = {};
+                   }
+                }
+            }
+        }
+
         //we add the center of the admin, and look for the stop points around
         auto nearest = worker.find_nearest_stop_points(
                     ep.streetnetwork_params.max_duration,
                     data.pt_data->stop_point_proximity_list,
                     use_second);
         for (const auto& elt: nearest) {
-            result[SpIdx{elt.first}] = elt.second;
-        }
-        if (! admin->main_stop_areas.empty()) {
-            for (auto stop_area: admin->main_stop_areas) {
-                for(auto sp : stop_area->stop_point_list) {
-                    const SpIdx sp_idx{*sp};
-                    result[sp_idx] = {};
-                    concerned_path_finder.distance_to_entry_point[sp_idx] = {};
-                }
+            const SpIdx sp_idx{elt.first};
+            if(result.find(sp_idx) == result.end()) {
+                result[sp_idx] = elt.second;
             }
         }
         LOG4CPLUS_DEBUG(logger, result.size() << " sp found for admin");
