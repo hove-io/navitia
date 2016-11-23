@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(multiple_match_tagging) {
             {
               "osm_tags_filters": [
                 {"key": "amenity", "value": "bicycle_rental"},
-                {"key": "bbs_type", "value": "velib"}
+                {"key": "bss_type", "value": "velib"}
               ],
               "poi_type_id": "velib"
             },
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(multiple_match_tagging) {
             {
               "osm_tags_filters": [
                 {"key": "amenity", "value": "bicycle_rental"},
-                {"key": "bbs_type", "value": "velib"}
+                {"key": "bss_type", "value": "velib"}
               ],
               "poi_type_id": "velib"
             }
@@ -209,8 +209,8 @@ BOOST_AUTO_TEST_CASE(multiple_match_tagging) {
         })";
     const ed::connectors::PoiTypeParams bss_prior_params(bss_prior_json);
 
-    CanalTP::Tags velib_tags = {{"amenity", "bicycle_rental"}, {"bbs_type", "velib"}};
-    CanalTP::Tags bss_tags = {{"amenity", "bicycle_rental"}, {"bbs_type", "unknown"}};
+    CanalTP::Tags velib_tags = {{"amenity", "bicycle_rental"}, {"bss_type", "velib"}};
+    CanalTP::Tags bss_tags = {{"amenity", "bicycle_rental"}, {"bss_type", "unknown"}};
 
     BOOST_CHECK_EQUAL(velib_prior_params.get_applicable_poi_rule(velib_tags)->poi_type_id,
                       "velib");

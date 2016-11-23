@@ -915,7 +915,7 @@ void PoiHouseNumberVisitor::fill_poi(const u_int64_t osm_id, const CanalTP::Tags
         if(poi_tag.first == "addr:housenumber") {
             poi.address_number = poi_tag.second;
         }
-        if(poi_tag.first == "addr:street") {
+        else if(poi_tag.first == "addr:street") {
             poi.address_name = poi_tag.second;
         }
         poi.properties[poi_tag.first] = poi_tag.second;

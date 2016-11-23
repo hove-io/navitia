@@ -400,7 +400,7 @@ struct PoiHouseNumberVisitor {
                               persistor(persistor), cache(cache), data(data),
                               parse_pois(parse_pois), poi_params(poi_params) {
         uint32_t idx = 0;
-        for(auto type: poi_params.poi_types){
+        for(const auto& type: poi_params.poi_types){
             data.poi_types[type.first] = new ed::types::PoiType(idx, type.second);
             ++idx;
         }

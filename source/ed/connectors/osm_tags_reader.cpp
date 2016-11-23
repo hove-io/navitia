@@ -265,11 +265,11 @@ PoiTypeParams::PoiTypeParams(const std::string& json_params) {
  * match : OSM object has all OSM tags required by rule
  */
 const RuleOsmTag2PoiType* PoiTypeParams::get_applicable_poi_rule(const CanalTP::Tags& tags) const {
+    auto poi_misses_a_tag = [&](const std::pair<const std::string, std::string>& osm_rule_tag) {
+        const auto it_poi_tag = tags.find(osm_rule_tag.first);
+        return (it_poi_tag == tags.end() || it_poi_tag->second != osm_rule_tag.second);
+    };
     for (const auto& osm_rule: rules) {
-        auto poi_misses_a_tag = [&](const std::pair<const std::string, std::string>& osm_rule_tag) {
-            const auto it_poi_tag = tags.find(osm_rule_tag.first);
-            return (it_poi_tag == tags.end() || it_poi_tag->second != osm_rule_tag.second);
-        };
         if (! navitia::contains_if(osm_rule.osm_tag_filters, poi_misses_a_tag)) {
             return &osm_rule;
         }
