@@ -208,18 +208,6 @@ class Key(db.Model):
     def get_by_token(cls, token):
         return cls.query.filter_by(token=token).first()
 
-class PoiType(db.Model):
-    uri = db.Column(db.Text, nullable=False)
-    name = db.Column(db.Text, nullable=True)
-    instance_id = db.Column(db.Integer, db.ForeignKey('instance.id'), nullable=False)
-
-    __tablename__ = 'poi_type'
-    __table_args__ = (db.PrimaryKeyConstraint('instance_id', 'uri'), )
-
-    def __init__(self, uri, name=None, instance=None):
-        self.uri = uri
-        self.name = name
-
 
 class PoiTypeJson(db.Model):
     poi_types_json = db.Column(db.Text, nullable=True)
@@ -245,9 +233,6 @@ class Instance(db.Model):
             lazy='dynamic', cascade='save-update, merge, delete')
 
     jobs = db.relationship('Job', backref='instance', lazy='dynamic', cascade='save-update, merge, delete')
-
-    poi_types = db.relationship('PoiType', backref=backref('instance'),
-                               lazy='dynamic', cascade='save-update, merge, delete')
 
     poi_type_json = db.relationship('PoiTypeJson', uselist=False, backref=backref('instance'),
                                  cascade='save-update, merge, delete, delete-orphan')
