@@ -35,7 +35,9 @@ def poi_types_json():
     return {
         "poi_types": [
             {"id": "pdv", "name": "Point de vente"},
-            {"id": "mairie", "name": u"Hôtel de ville"}
+            {"id": "mairie", "name": u"Hôtel de ville"},
+            {"id": "amenity:bicycle_rental", "name": "Station VLS"},
+            {"id": "amenity:parking", "name": "Parking"}
         ],
         "rules": [
             {
@@ -64,8 +66,16 @@ def poi_types_json():
 def test_post_and_get_poi_type_json(create_instance, poi_types_json):
     resp = api_post('/v0/instances/fr/poi_types', data=json.dumps(poi_types_json),
                     content_type='application/json')
-
     assert resp == poi_types_json
+
+    wrong_poi_types_json = {
+        "poi_types": []
+    }
+    resp, status_code = api_post('/v0/instances/fr/poi_types',
+                   data=json.dumps(wrong_poi_types_json),
+                   content_type='application/json',
+                   check=False)
+    assert status_code == 400
 
 
 def test_get_poi_type_json(create_poi_type_json_obj, poi_types_json):
@@ -78,6 +88,8 @@ def test_put_poi_type_json(create_poi_type_json_obj):
     new_poi_types_json = {
         "poi_types": [
             {"id": "parking", "name": "Parking"},
+            {"id": "amenity:bicycle_rental", "name": "Station VLS"},
+            {"id": "amenity:parking", "name": "Parking"}
         ],
         "rules": [
             {
@@ -89,11 +101,12 @@ def test_put_poi_type_json(create_poi_type_json_obj):
         ]
     }
 
-    resp = api_put('/v0/instances/fr/poi_types',
+    resp, status_code = api_put('/v0/instances/fr/poi_types',
                    data=json.dumps(new_poi_types_json),
-                   content_type='application/json')
+                   content_type='application/json',
+                   check=False)
 
-    assert resp == new_poi_types_json
+    assert status_code == 405
 
 
 def test_delete_poi_type_json(create_poi_type_json_obj):

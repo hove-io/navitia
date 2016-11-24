@@ -726,122 +726,19 @@ It is possible to define what type of POI should be extracted from OSM for a spe
 
 A type of poi is characterised by an uri and a name.
 
-If nothing if configured, default POI are extracted. At this time the list is as follow:
-- uri: "amenity:college" name: "école"
-- uri: "amenity:university" name: "université"
-- uri: "amenity:theatre" name: "théâtre"
-- uri: "amenity:hospital" name: "hôpital"
-- uri: "amenity:post_office" name: "bureau de poste"
-- uri: "amenity:bicycle_rental" name: "station vls"
-- uri: "amenity:bicycle_parking" name: "Parking vélo"
-- uri: "amenity:parking" name: "Parking"
-- uri: "amenity:police" name: "Police, Gendarmerie"
-- uri: "amenity:townhall" name: "Mairie"
-- uri: "leisure:garden" name: "Jardin"
-- uri: "leisure:park" name: "Zone Parc. Zone verte ouverte, pour déambuler. habituellement municipale"
+If nothing if configured, default POI are extracted. At this time the json parameter list is available in file:
+[default_poi_types.h](https://github.com/CanalTP/navitia/blob/dev/source/ed/default_poi_types.h)
 
 Let's say you want to see all poi types for the instance fr-bre, you have to call the PoiTypes endpoint for this
 instance:
 
     curl "http://localhost:5000/v0/instances/fr-bre/poi_types"
-```json
-{
-  "poi_types": [
-    {"id": "amenity:college", "name": "École"},
-    {"id": "amenity:university", "name": "Université"},
-    {"id": "amenity:theatre", "name": "Théâtre"},
-    {"id": "amenity:hospital", "name": "Hôpital"},
-    {"id": "amenity:post_office", "name": "Bureau de poste"},
-    {"id": "amenity:bicycle_rental", "name": "Station VLS"},
-    {"id": "amenity:bicycle_parking", "name": "Parking vélo"},
-    {"id": "amenity:parking", "name": "Parking"},
-    {"id": "amenity:police", "name": "Police, gendarmerie"},
-    {"id": "amenity:townhall", "name": "Mairie"},
-    {"id": "leisure:garden", "name": "Jardin"},
-    {"id": "leisure:park", "name": "Parc, espace vert"}
-  ],
-  "rules": [
-    {
-      "osm_tags_filters": [
-        {"key": "amenity", "value": "college"}
-      ],
-      "poi_type_id": "amenity:college"
-    },
-    {
-      "osm_tags_filters": [
-        {"key": "amenity", "value": "university"}
-      ],
-      "poi_type_id": "amenity:university"
-    },
-    {
-      "osm_tags_filters": [
-        {"key": "amenity", "value": "theatre"}
-      ],
-      "poi_type_id": "amenity:theatre"
-    },
-    {
-      "osm_tags_filters": [
-        {"key": "amenity", "value": "hospital"}
-      ],
-      "poi_type_id": "amenity:hospital"
-    },
-    {
-      "osm_tags_filters": [
-        {"key": "amenity", "value": "post_office"}
-      ],
-      "poi_type_id": "amenity:post_office"
-    },
-    {
-      "osm_tags_filters": [
-        {"key": "amenity", "value": "bicycle_rental"}
-      ],
-      "poi_type_id": "amenity:bicycle_rental"
-    },
-    {
-      "osm_tags_filters": [
-        {"key": "amenity", "value": "bicycle_parking"}
-      ],
-      "poi_type_id": "amenity:bicycle_parking"
-    },
-    {
-      "osm_tags_filters": [
-        {"key": "amenity", "value": "parking"}
-      ],
-      "poi_type_id": "amenity:parking"
-    },
-    {
-      "osm_tags_filters": [
-        {"key": "amenity", "value": "police"}
-      ],
-      "poi_type_id": "amenity:police"
-    },
-    {
-      "osm_tags_filters": [
-        {"key": "amenity", "value": "townhall"}
-      ],
-      "poi_type_id": "amenity:townhall"
-    },
-    {
-      "osm_tags_filters": [
-        {"key": "leisure", "value": "garden"}
-      ],
-      "poi_type_id": "leisure:garden"
-    },
-    {
-      "osm_tags_filters": [
-        {"key": "leisure", "value": "park"}
-      ],
-      "poi_type_id": "leisure:park"
-    }
-  ]
-}
-```
 
-If you want to add poi types for an instance you have to POST again all the json (previous AND new poi types):
+If you want to change something on poi types you have to POST again all the json (previous AND new poi types):
     
     curl 'http://localhost:5000/v0/instances/fr-bre/poi_types' -X POST -H 'content-type: application/json' -d '{"poi_types": [{"id": "pdv", "name": "Point de vente"},],"rules": [{"osm_tags_filters": [{"key": "amenity:park", "value": "yes"}, {"key": "amenity", "value": "shop"}], "poi_type_id": "pdv"}]}'
 
-For updating a poi_type (only the name can be changed) you have to do the same thing with a PUT.
+Any update requires a complete POST because the order of the rules matters, so no PUT is allowed on a partial object.
 
 Finally if you want to delete a poi_type you just have to use the DELETE action:
 

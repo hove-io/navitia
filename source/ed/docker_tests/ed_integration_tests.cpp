@@ -42,7 +42,7 @@ www.navitia.io
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized )
+BOOST_GLOBAL_FIXTURE( logger_initialized );
 
 namespace pt = boost::posix_time;
 namespace nt = navitia::type;
@@ -100,7 +100,7 @@ static void check_unsound_pickup_dropoff(const nt::Data& data) {
     }
 }
 
-void check_ntfs(const nt::Data& data) {
+static void check_ntfs(const nt::Data& data) {
     BOOST_CHECK_EQUAL(data.meta->production_date, boost::gregorian::date_period(
                             boost::gregorian::from_undelimited_string("20150325"),
                             boost::gregorian::from_undelimited_string("20150827")));

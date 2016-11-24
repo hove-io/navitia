@@ -41,7 +41,7 @@ using namespace ed;
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized )
+BOOST_GLOBAL_FIXTURE( logger_initialized );
 
 //helper for lazyness
 static boost::gregorian::date date(std::string str) {

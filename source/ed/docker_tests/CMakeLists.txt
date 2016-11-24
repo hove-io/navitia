@@ -48,7 +48,7 @@ target_link_libraries(ed_integration_test data georef types utils ${BOOST_LIBS} 
 add_custom_target(run_test DEPENDS datanav_files ed_integration_test)
 add_custom_command(TARGET run_test
                    COMMAND ed_integration_test
-                   ARGS --log_format=XML --log_sink=results_ed_integration_test.xml --log_level=all --report_level=no ${TEST_CLI_PARAMS})
+                   ARGS --log_format=XML --log_sink=results_ed_integration_test.xml --log_level=all --report_level=no -- ${TEST_CLI_PARAMS})
 
 add_dependencies(ed_integration_test datanav_files)
 add_dependencies(docker_test run_test)

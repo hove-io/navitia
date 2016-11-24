@@ -45,7 +45,7 @@ namespace bg = boost::gregorian;
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized )
+BOOST_GLOBAL_FIXTURE( logger_initialized );
 
 const std::string ntfs_path = std::string(navitia::config::fixtures_dir) + "/ed/ntfs";
 

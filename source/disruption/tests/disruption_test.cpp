@@ -64,7 +64,7 @@ active_days = 11111111
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized )
+BOOST_GLOBAL_FIXTURE( logger_initialized );
 
 namespace pt = boost::posix_time;
 using navitia::type::disruption::Impact;

@@ -42,7 +42,7 @@ www.navitia.io
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized )
+BOOST_GLOBAL_FIXTURE( logger_initialized );
 
 static int32_t time_to_int(int h, int m, int s) {
     auto dur = navitia::time_duration(h, m, s);
