@@ -234,11 +234,11 @@ PoiTypeParams::PoiTypeParams(const std::string& json_params) {
     pt::read_json(iss, poi_root);
 
     for (const pt::ptree::value_type& json_poi_type: poi_root.get_child("poi_types")) {
-        std::string poi_type_id = json_poi_type.second.get<std::string>("id");
-        if (poi_types.find(poi_type_id) != poi_types.end()) {
+        const auto& poi_type_id = json_poi_type.second.get<std::string>("id");
+        const auto& poi_type_name = json_poi_type.second.get<std::string>("name");
+        if (! poi_types.insert({poi_type_id, poi_type_name}).second) {
             throw std::invalid_argument("POI type id " + poi_type_id + " is defined multiple times");
         }
-        poi_types[poi_type_id] = json_poi_type.second.get<std::string>("name");
     }
     if (poi_types.find("amenity:parking") == poi_types.end() ||
         poi_types.find("amenity:bicycle_rental") == poi_types.end()) {

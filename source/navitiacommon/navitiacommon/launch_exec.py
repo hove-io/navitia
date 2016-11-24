@@ -117,5 +117,5 @@ def launch_exec_traces(exec_name, args, logger):
     return proc.returncode, traces
 
 def launch_exec(exec_name, args, logger):
-    code, traces = launch_exec_traces(exec_name, args, logger)
+    code, _ = launch_exec_traces(exec_name, args, logger)
     return code
