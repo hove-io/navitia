@@ -90,7 +90,7 @@ Alternatives?
 =============
 Navitia is written in python/c++, here are some alternatives:
 
-* `OpenTripPlanner <https://github.com/opentripplanner/OpenTripPlanner/>`_ : the best known, written in java. More information here https://github.com/CanalTP/navitia/wiki/OpenTripPlanner-and-Navitia-comparison
+* `OpenTripPlanner <https://github.com/opentripplanner/OpenTripPlanner/>`_ : written in java. More information here https://github.com/CanalTP/navitia/wiki/OpenTripPlanner-and-Navitia-comparison
 * `rrrr <https://github.com/bliksemlabs/rrrr>`_ : the lightest one, written in python/c
 * `Synthese <https://github.com/Open-Transport/synthese>`_ : a full stack, with CMS, written all in c++
 * `Mumoro <https://github.com/Tristramg/mumoro>`_ : a R&D MUltiModal MUltiObjective ROuting algorithm
