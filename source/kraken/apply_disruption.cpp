@@ -520,15 +520,31 @@ void apply_impact(boost::shared_ptr<nt::disruption::Impact> impact,
     LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"), impact->uri << " impact added");
 }
 
+using impact_wptr = boost::weak_ptr<nt::disruption::Impact>;
+
+auto comp = [](const impact_wptr& lhs, const impact_wptr& rhs){
+    if(lhs.expired() || rhs.expired()) {
+        return false;
+    }
+    auto i_lhs = lhs.lock();
+    auto i_rhs = rhs.lock();
+    return i_lhs->updated_at < i_rhs->updated_at || i_lhs->uri < i_rhs->uri;
+};
 
 struct delete_impacts_visitor : public apply_impacts_visitor {
     size_t nb_vj_reassigned = 0;
-
+    std::set<impact_wptr, decltype(comp)> disruptions_collection{comp};
     delete_impacts_visitor(boost::shared_ptr<nt::disruption::Impact> impact,
             nt::PT_Data& pt_data, const nt::MetaData& meta, nt::RTLevel l) :
         apply_impacts_visitor(impact, pt_data, meta, "delete", l) {}
 
-    ~delete_impacts_visitor() {}
+    ~delete_impacts_visitor() {
+        for (const auto i : disruptions_collection) {
+            if (auto spt = i.lock()) {
+                apply_disruption(*spt->disruption, pt_data, meta);
+            }
+        }
+    }
 
     using apply_impacts_visitor::operator();
 
@@ -566,9 +582,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         decltype(mvj->impacted_by) impacted_by_moved;
         boost::swap(impacted_by_moved, mvj->impacted_by);
         for (auto i: impacted_by_moved) {
-            if (auto spt = i.lock()) {
-                apply_disruption(*spt->disruption, pt_data, meta);
-            }
+            disruptions_collection.insert(i);
         }
     }
 

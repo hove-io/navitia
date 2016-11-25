@@ -188,7 +188,7 @@ Disruption& DisruptionHolder::make_disruption(const std::string& uri, type::RTLe
  * remove the disruption (if it exists) from the collection
  * transfer the ownership of the disruption
  *
- * If it does not exists return a nullptr
+ * If it does not exist, return a nullptr
  */
 std::unique_ptr<Disruption> DisruptionHolder::pop_disruption(const std::string& uri) {
     const auto it = disruptions_by_uri.find(uri);
@@ -198,6 +198,14 @@ std::unique_ptr<Disruption> DisruptionHolder::pop_disruption(const std::string& 
     auto res = std::move(it->second);
     disruptions_by_uri.erase(it);
     return res;
+}
+
+const Disruption* DisruptionHolder::get_disruption(const std::string& uri) const {
+    const auto it = disruptions_by_uri.find(uri);
+    if (it == std::end(disruptions_by_uri)) {
+        return {nullptr};
+    }
+    return it->second.get();
 }
 
 void DisruptionHolder::add_weak_impact(boost::weak_ptr<Impact> weak_impact) {
