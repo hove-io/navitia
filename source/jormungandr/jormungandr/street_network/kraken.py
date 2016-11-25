@@ -57,7 +57,7 @@ class Kraken(object):
         req.direct_path.streetnetwork_params.max_car_duration_to_pt = request['max_car_duration_to_pt']
         return self.instance.send_and_receive(req)
 
-    def get_street_network_routing_matrix(self, origins, destinations, street_network_mode, max_duration, request):
+    def get_street_network_routing_matrix(self, origins, destinations, street_network_mode, max_duration, request, **kwargs):
         # TODO: reverse is not handled as so far
         speed_switcher = {
             "walking": request['walking_speed'],
@@ -77,6 +77,6 @@ class Kraken(object):
             dest.access_duration = 0
 
         req.sn_routing_matrix.mode = street_network_mode
-        req.sn_routing_matrix.speed = speed_switcher.get(street_network_mode, self.instance.walking_speed)
+        req.sn_routing_matrix.speed = speed_switcher.get(street_network_mode, kwargs.get("walking"))
         req.sn_routing_matrix.max_duration = max_duration
         return self.instance.send_and_receive(req).sn_routing_matrix

@@ -260,7 +260,7 @@ class Valhalla(object):
                 row.duration.append(time)
         return sn_routing_matrix
 
-    def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration, request):
+    def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration, request, **kwargs):
         data = self._make_data(mode, origins[0], destinations, request, api='one_to_many')
         r = self._call_valhalla('{}/{}'.format(self.service_url, 'one_to_many'), requests.post, data)
         self.check_response(r)

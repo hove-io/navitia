@@ -287,3 +287,8 @@ def create_object(class_path, **kwargs):
         raise ConfigException(class_path)
 
     return obj
+
+
+def generate_id():
+    import uuid
+    return uuid.uuid4()

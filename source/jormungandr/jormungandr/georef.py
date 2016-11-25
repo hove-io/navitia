@@ -61,22 +61,16 @@ class Kraken(object):
             return None
         return response.car_co2_emission
 
-    def get_crow_fly(self, origin, streetnetwork_mode, max_duration, max_nb_crowfly):
-        speed_switcher = {
-            "walking": self.instance.walking_speed,
-            "bike": self.instance.bike_speed,
-            "car": self.instance.car_speed,
-            "bss": self.instance.bss_speed,
-        }
+    def get_crow_fly(self, origin, streetnetwork_mode, max_duration, max_nb_crowfly, **kwargs):
+
         # Getting stop_ponits or stop_areas using crow fly
         # the distance of crow fly is defined by the mode speed and max_duration
         req = request_pb2.Request()
         req.requested_api = type_pb2.places_nearby
         req.places_nearby.uri = origin
-
-        req.places_nearby.distance = speed_switcher.get(streetnetwork_mode,
-                                                        self.instance.walking_speed) * max_duration
-        req.places_nearby.depth = 1
+        req.places_nearby.distance = kwargs.get(streetnetwork_mode,
+                                                        kwargs.get("walking")) * max_duration
+        req.places_nearby.depth = 0
         req.places_nearby.count = max_nb_crowfly
         req.places_nearby.start_page = 0
         req.disable_feedpublisher = True
@@ -94,7 +88,7 @@ class Kraken(object):
         req.ptref.requested_type = type_pb2.STOP_POINT
         req.ptref.count = 100
         req.ptref.start_page = 0
-        req.ptref.depth = 1
+        req.ptref.depth = 0
         req.ptref.filter = 'stop_area.uri = {uri}'.format(uri=uri)
 
         result = self.instance.send_and_receive(req)
@@ -109,7 +103,7 @@ class Kraken(object):
         req.ptref.requested_type = type_pb2.STOP_POINT
         req.ptref.count = 100
         req.ptref.start_page = 0
-        req.ptref.depth = 1
+        req.ptref.depth = 0
         req.ptref.filter = 'stop_point.uri = {uri}'.format(uri=uri)
         result = self.instance.send_and_receive(req)
         return result.stop_points
