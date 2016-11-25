@@ -344,6 +344,7 @@ class DisruptionHolder {
 public:
     Disruption& make_disruption(const std::string& uri, type::RTLevel lvl);
     std::unique_ptr<Disruption> pop_disruption(const std::string& uri);
+    const Disruption* get_disruption(const std::string& uri) const;
     size_t nb_disruptions() const { return disruptions_by_uri.size(); }
     void add_weak_impact(boost::weak_ptr<Impact>);
     void clean_weak_impacts();
