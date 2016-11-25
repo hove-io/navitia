@@ -225,7 +225,9 @@ def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
 
     job = models.Job.query.get(job_id)
     instance = job.instance
-    poi_types_json = instance.poi_type_json.poi_types_json
+    poi_types_json = None
+    if instance.poi_type_json:
+        poi_types_json = instance.poi_type_json.poi_types_json
 
     if os.path.isdir(osm_filename):
         osm_filename = glob.glob('{}/*.pbf'.format(osm_filename))[0]
