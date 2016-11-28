@@ -1,3 +1,26 @@
+navitia2 (2.22.0) unstable; urgency=low
+
+  * Jormun: marshall POI on universal places API  <https://github.com/CanalTP/navitia/pull/1839>
+  * Jormungandr: fix zip_code attribute on universal places API  <https://github.com/CanalTP/navitia/pull/1850>
+  * Experimental: zonal ODT in experimental scenario  <https://github.com/CanalTP/navitia/pull/1841>
+  * Tyr: Update api  poi_types  <https://github.com/CanalTP/navitia/pull/1840>
+  * Jormun: Async experimental scenario  <https://github.com/CanalTP/navitia/pull/1844>
+  * Ed: fix a crash related to bad fare persistance  <https://github.com/CanalTP/navitia/pull/1862>
+  * jormun: fix on /v1/status  <https://github.com/CanalTP/navitia/pull/1854>
+  * Ed: refacto osm2ed to allow one poi-type from multi osm tags  <https://github.com/CanalTP/navitia/pull/1843>
+  * kraken: checking for zonal stop_points added  <https://github.com/CanalTP/navitia/pull/1860>
+  * jormungandr: count added in bragi request  <https://github.com/CanalTP/navitia/pull/1859>
+  * Jormungandr: add links to departures/arrivals  <https://github.com/CanalTP/navitia/pull/1857>
+  * kraken: Fix api place uri  <https://github.com/CanalTP/navitia/pull/1856>
+  * All: no feedpublisher creation for georef.get_crow_fly (experimental)  <https://github.com/CanalTP/navitia/pull/1849>
+  * jormun: check that viewargs is initialized before using it in get_used_coverage  <https://github.com/CanalTP/navitia/pull/1853>
+  * ed2nav: logging of admins added from cities  <https://github.com/CanalTP/navitia/pull/1852>
+  * proximity_list: use approximated distance in sorting by distance  <https://github.com/CanalTP/navitia/pull/1848>
+  * Jormungandr: correctly handle no solution in valhalla  <https://github.com/CanalTP/navitia/pull/1842>
+  * kraken: fix a test on georef_test  <https://github.com/CanalTP/navitia/pull/1845>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Mon, 28 Nov 2016 11:11:18 +0100
+
 navitia2 (2.21.0) unstable; urgency=low
 
   * Kraken: Add disable_geojson to pb_converter to reduce protobuf payload size  <https://github.com/CanalTP/navitia/pull/1835>
