@@ -522,7 +522,7 @@ void apply_impact(boost::shared_ptr<nt::disruption::Impact> impact,
 
 using impact_wptr = boost::weak_ptr<nt::disruption::Impact>;
 
-auto comp = [](const impact_wptr& lhs, const impact_wptr& rhs){
+static auto comp = [](const impact_wptr& lhs, const impact_wptr& rhs){
     if(lhs.expired() || rhs.expired()) {
         return false;
     }
@@ -538,7 +538,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
             nt::PT_Data& pt_data, const nt::MetaData& meta, nt::RTLevel l) :
         apply_impacts_visitor(impact, pt_data, meta, "delete", l) {}
 
-    ~delete_impacts_visitor() {
+    ~delete_impacts_visitor() override {
         for (const auto i : disruptions_collection) {
             if (auto spt = i.lock()) {
                 apply_disruption(*spt->disruption, pt_data, meta);
