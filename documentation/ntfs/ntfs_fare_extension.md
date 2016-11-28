@@ -72,7 +72,7 @@ Colonne | Type | Contrainte | Commentaire
 "après changement" | chaine | Requis | voir § **État avant et après changement** ci-dessous
 "début trajet" | chaine | Requis | voir § **Conditions de début et fin de trajet** ci-dessous
 "fin trajet" | chaine | Requis | voir § **Conditions de début et fin de trajet** ci-dessous
-"condition globale" | chaine | Requis | Condition globale d'utilisation du ticket ("exclusive", "with_changes" ou "symetric")
+"condition globale" | chaine | Requis | Condition globale d'utilisation du ticket (vide, "nothing", "exclusive", "with_changes" ou "symetric")
 "clef ticket" | chaine | Requis | ID tarif (lien avec prices.csv)
 
 **État avant et aprés changement :**  
@@ -94,6 +94,7 @@ Par exemple : indiquer _"nb_changes<2"_ pour préciser que le ticket n'est utils
 
 **Condition globale :**  
 Ce champ précise la condition globale d'utilisation du ticket :
+* vide ou "nothing" : ce ticket n'a aucune condition spécifique
 * "exclusive": correspond à un ticket à tarification spéciale sans correspondance (Noctilien, navettes aéroport…)
 * "with_changes": correspond à un billet de type Origine-Destination permettant tous les changements
 * "symetric": spécifie que ce tarif est également disponible en intervertissant l'état de début et de fin (par exemple : s'il est possible de changer du bus au tramway, la réciproque est vraie)
