@@ -31,7 +31,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr.parking_space_availability.bss.jcdecaux import JcdecauxProvider
 from jormungandr.parking_space_availability.bss.stands import Stands
 from mock import MagicMock
-import requests_mock
 
 poi = {
     'properties': {
@@ -90,14 +89,3 @@ def parking_space_availability_jcdecaux_get_informations_unauthorized_test():
     provider = JcdecauxProvider(u"vélib'", 'Paris', 'unauthorized_api_key', {'jcdecaux'})
     provider._call_webservice = MagicMock(return_value=webservice_unauthorized_response)
     assert provider.get_informations(poi) is None
-
-def test_call_mocked_request():
-    webservice_response = {
-        'available_bike_stands': 4,
-        'available_bikes': 8
-    }
-    provider = JcdecauxProvider(u"vélib'", 'Paris', 'api_key', {'jcdecaux'})
-    with requests_mock.Mocker() as m:
-        m.get('https://api.jcdecaux.com/vls/v1/stations/2', json=webservice_response)
-        assert provider.get_informations(poi) == Stands(4, 8)
-        assert m.called
