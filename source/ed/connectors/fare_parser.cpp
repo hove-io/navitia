@@ -110,7 +110,7 @@ void fare_parser::load_prices() {
         greg::date start(greg::from_undelimited_string(row.at(1)));
         greg::date end(greg::from_undelimited_string(row.at(2)));
 
-        fa::Ticket dated_ticket(row.at(0), row.at(4), boost::lexical_cast<int>(row.at(3)), row.at(5));
+        fa::Ticket dated_ticket(row.at(0), row.at(4), boost::lexical_cast<int>(row.at(3)), row.at(6));
         if (row.size() > 7) {
             dated_ticket.currency = row[7];
         }

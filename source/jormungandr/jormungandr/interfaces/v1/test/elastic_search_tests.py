@@ -430,6 +430,71 @@ def bragi_geocodejson_compatibility_test():
     assert region_list.get(7) == 'Saint-Quentin'
 
 
+def bragi_poi_feature():
+    return {
+        "geometry": {
+            "coordinates": [8.9028068, 42.599235500000009],
+            "type": "Point"
+        },
+        "properties": {
+            "geocoding": {
+                "id": "poi:osm:3224270910",
+                "type": "poi",
+                "label": "Mairie de Pigna (Pigna)",
+                "name": "Mairie de Pigna",
+                "housenumber": None,
+                "street": None,
+                "postcode": None,
+                "city": "Pigna",
+                "administrative_regions": [{
+                    "id": "admin:fr:2B231",
+                    "insee": "2B231",
+                    "level": 8,
+                    "label": "Pigna",
+                    "zip_codes": ["20220", "20221", "20222"],
+                    "weight": 0,
+                    "coord": {
+                        "lat": 42.5996043,
+                        "lon": 8.9027334
+                    }
+                }]
+            }
+        }
+    }
+
+
+def bragi_poi_reading_test():
+    bragi_response = {
+        "Autocomplete": {
+            "features": [
+                bragi_poi_feature(),
+            ]
+        }
+    }
+    navitia_response = get_response(bragi_response).get('places', {})[0]
+    assert navitia_response.get('embedded_type') == "poi"
+    assert navitia_response.get('id') == 'poi:osm:3224270910'
+    assert navitia_response.get('name') == 'Mairie de Pigna (Pigna)'
+    assert navitia_response.get('quality') == '0'
+    poi = navitia_response.get('poi', {})
+    assert poi.get('label') == 'Mairie de Pigna (Pigna)'
+    assert poi.get('name') == 'Mairie de Pigna'
+    assert poi.get('id') == 'poi:osm:3224270910'
+    assert poi.get('coord').get('lat') == 42.599235500000009
+    assert poi.get('coord').get('lon') == 8.9028068
+    assert len(poi.get('administrative_regions')) == 1
+    administrative_region = poi.get('administrative_regions')[0]
+    assert administrative_region.get('insee') == '2B231'
+    assert administrative_region.get('name') == 'Pigna'
+    assert administrative_region.get('label') == 'Pigna'
+    assert administrative_region.get('level') == 8
+    assert administrative_region.get('id') == 'admin:fr:2B231'
+    assert administrative_region.get('coord').get('lat') == 42.5996043
+    assert administrative_region.get('coord').get('lon') == 8.9027334
+    assert administrative_region.get('zip_code') == "20220-20222"
+
+
+
 def geojson():
     return {"type": "Feature",
               "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
@@ -453,13 +518,13 @@ def bragi_call_test():
         }
     }
     mock_requests = MockRequests({
-        'http://bob.com/autocomplete?q=rue bobette':
+        'http://bob.com/autocomplete?q=rue bobette&limit=10':
         (bragi_response, 200)
     })
 
     # we mock the http call to return the hard coded mock_response
     with mock.patch('requests.get', mock_requests.get):
-        raw_response = bragi.get({'q': 'rue bobette'}, instance=None, shape=None)
+        raw_response = bragi.get({'q': 'rue bobette', 'count': 10}, instance=None, shape=None)
         places = get_response(raw_response).get('places')
         assert len(places) == 4
         bragi_house_jaures_response_check(places[0])
@@ -468,7 +533,7 @@ def bragi_call_test():
         bragi_admin_response_check(places[3])
 
     with mock.patch('requests.post', mock_requests.get):
-        raw_response = bragi.get({'q': 'rue bobette'}, instance=None, shape=geojson())
+        raw_response = bragi.get({'q': 'rue bobette', 'count': 10}, instance=None, shape=geojson())
         places = get_response(raw_response).get('places')
         assert len(places) == 4
         bragi_house_jaures_response_check(places[0])

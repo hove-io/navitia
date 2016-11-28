@@ -44,7 +44,7 @@ www.navitia.io
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized )
+BOOST_GLOBAL_FIXTURE( logger_initialized );
 
 
 static pbnavitia::Request create_request(bool wheelchair, const std::string& destination) {

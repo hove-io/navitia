@@ -13,6 +13,10 @@ add_executable(fusio_parser_test fusioparser_test.cpp)
 target_link_libraries(fusio_parser_test connectors data ed types utils ${BOOST_LIBS} log4cplus)
 ADD_BOOST_TEST(fusio_parser_test)
 
+add_executable(osm_tags_reader_test osm_tags_reader_test.cpp)
+target_link_libraries(osm_tags_reader_test connectors data ed types utils ${BOOST_LIBS} log4cplus)
+ADD_BOOST_TEST(osm_tags_reader_test)
+
 
 add_executable(associated_calendar_test associated_calendar_test.cpp)
 target_link_libraries(associated_calendar_test ed data types routing fare georef autocomplete utils ${BOOST_LIBS} log4cplus pb_lib protobuf)

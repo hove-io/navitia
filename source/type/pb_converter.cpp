@@ -304,6 +304,7 @@ std::vector<Target*> PbCreator::Filler::ptref_indexes(const Source* nav_obj) {
 
 template<typename T>
 void PbCreator::Filler::add_contributor(const T* nav) {
+    if (pb_creator.disable_feedpublisher) { return; }
     const auto& contributors = ptref_indexes<nt::Contributor>(nav);
     for(const nt::Contributor* c: contributors){
         if (! c->license.empty()){
@@ -1329,9 +1330,10 @@ void PbCreator::Filler::fill_pb_object(const nt::Contributor* c, pbnavitia::Feed
 
 template<typename N>
 void PbCreator::pb_fill(const std::vector<N*>& nav_list, int depth, const DumpMessage dump_message){
-    auto* pb_object = get_mutable<N>(response);
+    auto* pb_object = get_mutable<typename std::remove_cv<N>::type>(response);
     Filler(depth, dump_message, *this).fill_pb_object(nav_list, pb_object);
 }
+
 template void PbCreator::pb_fill(const std::vector<ng::POI*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<ng::POIType*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::Calendar*>& nav_list, int depth, const DumpMessage dump_message);
@@ -1346,6 +1348,7 @@ template void PbCreator::pb_fill(const std::vector<nt::PhysicalMode*>& nav_list,
 template void PbCreator::pb_fill(const std::vector<nt::Route*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::StopArea*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::StopPoint*>& nav_list, int depth, const DumpMessage dump_message);
+template void PbCreator::pb_fill(const std::vector<const nt::StopPoint*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::StopPointConnection*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::ValidityPattern*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::VehicleJourney*>& nav_list, int depth, const DumpMessage dump_message);

@@ -37,6 +37,7 @@ www.navitia.io
 #include <set>
 #include "ed/types.h"
 #include "ed_persistor.h"
+#include "ed/connectors/osm_tags_reader.h"
 #include <boost/geometry.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
 #include <boost/geometry/multi/geometries/multi_point.hpp>
@@ -322,8 +323,10 @@ struct ReadWaysVisitor {
     // Read references and set if a node is used by a way
     log4cplus::Logger logger = log4cplus::Logger::getInstance("log");
     OSMCache& cache;
+    const PoiTypeParams poi_params;
 
-    ReadWaysVisitor(OSMCache& cache) : cache(cache) {}
+    ReadWaysVisitor(OSMCache& cache, const PoiTypeParams& poi_params) :
+        cache(cache), poi_params(poi_params) {}
     ~ReadWaysVisitor();
 
     void node_callback(uint64_t , double , double , const CanalTP::Tags& ) {}
@@ -381,11 +384,6 @@ inline std::string to_string(OsmObjectType t) {
     }
 }
 
-struct poi_type_comp{
-    std::vector<std::string> order = {"amenity", "tourism", "leisure", "aeroway", "railway", "shop"};
-    bool operator()(const std::string& a, const std::string& b);
-};
-
 struct PoiHouseNumberVisitor {
     const size_t max_inserts_without_bulk = 20000;
     ed::EdPersistor& persistor;
@@ -393,34 +391,19 @@ struct PoiHouseNumberVisitor {
     ed::Georef& data;
     bool parse_pois;
     std::vector<OSMHouseNumber> house_numbers;
-    std::set<std::string> properties_to_ignore;
     size_t n_inserted_pois = 0;
     size_t n_inserted_house_numbers = 0;
-    std::set<std::string, poi_type_comp> tags_types;
+    const PoiTypeParams poi_params;
 
-    PoiHouseNumberVisitor(EdPersistor& persistor, /*const*/ OSMCache& cache,
-            Georef& data, const bool parse_pois, const std::map<std::string, std::string>& poi_types) :
-        persistor(persistor), cache(cache), data(data), parse_pois(parse_pois)  {
+    PoiHouseNumberVisitor(EdPersistor& persistor, /*const*/ OSMCache& cache, Georef& data,
+                          const bool parse_pois, const PoiTypeParams& poi_params) :
+                              persistor(persistor), cache(cache), data(data),
+                              parse_pois(parse_pois), poi_params(poi_params) {
         uint32_t idx = 0;
-        for(auto type: poi_types){
+        for(const auto& type: poi_params.poi_types){
             data.poi_types[type.first] = new ed::types::PoiType(idx, type.second);
             ++idx;
         }
-        for(auto tag: data.poi_types){
-            std::vector<std::string> strs;
-            boost::algorithm::split(strs, tag.first, boost::is_any_of(":"));
-            if(strs.size() > 1){
-                tags_types.insert(strs[0]);
-            }
-        }
-        properties_to_ignore.insert("name");
-        properties_to_ignore.insert("amenity");
-        properties_to_ignore.insert("leisure");
-        properties_to_ignore.insert("addr:housenumber");
-        properties_to_ignore.insert("addr:street");
-        properties_to_ignore.insert("addr:city");
-        properties_to_ignore.insert("addr:postcode");
-        properties_to_ignore.insert("addr:country");
 
         persistor.insert_poi_types(data);
     }

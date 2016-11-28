@@ -41,6 +41,9 @@ import ujson
 import logging
 from jormungandr.new_relic import record_custom_parameter
 from jormungandr.authentication import get_user, get_token, get_app_name, get_used_coverages
+# http://www.gevent.org/intro.html#monkey-patching
+import gevent.monkey
+gevent.monkey.patch_socket()
 
 @rest_api.representation("text/jsonp")
 @rest_api.representation("application/jsonp")

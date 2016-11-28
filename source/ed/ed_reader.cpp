@@ -1577,7 +1577,7 @@ void EdReader::fill_synonyms(navitia::type::Data& data, pqxx::work& work){
 //Fares:
 void EdReader::fill_prices(navitia::type::Data& data, pqxx::work& work) {
 
-    std::string request = "select ticket_key, ticket_title, "
+    std::string request = "select ticket_key, ticket_title, ticket_comment, "
             "ticket_id, valid_from, valid_to, ticket_price, comments, "
             "currency from navitia.ticket, navitia.dated_ticket "
             "where ticket_id = ticket_key";
@@ -1586,7 +1586,8 @@ void EdReader::fill_prices(navitia::type::Data& data, pqxx::work& work) {
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         nf::Ticket ticket;
         const_it["ticket_key"].to(ticket.key);
-        const_it["ticket_title"].to(ticket.comment);
+        const_it["ticket_title"].to(ticket.caption);
+        const_it["ticket_comment"].to(ticket.comment);
         const_it["currency"].to(ticket.currency);
         const_it["ticket_price"].to(ticket.value.value);
         bg::date start = bg::from_string(const_it["valid_from"].as<std::string>());

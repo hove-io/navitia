@@ -726,66 +726,21 @@ It is possible to define what type of POI should be extracted from OSM for a spe
 
 A type of poi is characterised by an uri and a name.
 
-If nothing if configured, default POI are extracted. At this time the list is as follow:
-- uri: "amenity:college" name: "école"
-- uri: "amenity:university" name: "université"
-- uri: "amenity:theatre" name: "théâtre"
-- uri: "amenity:hospital" name: "hôpital"
-- uri: "amenity:post_office" name: "bureau de poste"
-- uri: "amenity:bicycle_rental" name: "station vls"
-- uri: "amenity:bicycle_parking" name: "Parking vélo"
-- uri: "amenity:parking" name: "Parking"
-- uri: "amenity:police" name: "Police, Gendarmerie"
-- uri: "amenity:townhall" name: "Mairie"
-- uri: "leisure:garden" name: "Jardin"
-- uri: "leisure:park" name: "Zone Parc. Zone verte ouverte, pour déambuler. habituellement municipale"
+If nothing if configured, default POI are extracted. At this time the json parameter list is available in file:
+[default_poi_types.h](https://github.com/CanalTP/navitia/blob/dev/source/ed/default_poi_types.h)
 
-Let say you want to see all type of poi for the instance fr-bre, you have to call the PoiTypes endpoint for this
+Let's say you want to see all poi types for the instance fr-bre, you have to call the PoiTypes endpoint for this
 instance:
 
     curl "http://localhost:5000/v0/instances/fr-bre/poi_types"
-```json
-{
-    "poi_types": [
-        {
-            "name": "foo",
-            "uri": "foo:ba"
-        },
-        {
-            "name": "foo\u00e9",
-            "uri": "foo:baff"
-        }
-    ]
-}
 
-```
+If you want to change something on poi types you have to POST again all the json (previous AND new poi types):
+    
+    curl 'http://localhost:5000/v0/instances/fr-bre/poi_types' -X POST -H 'content-type: application/json' -d '{"poi_types": [{"id": "pdv", "name": "Point de vente"},],"rules": [{"osm_tags_filters": [{"key": "amenity:park", "value": "yes"}, {"key": "amenity", "value": "shop"}], "poi_type_id": "pdv"}]}'
 
-If you want to add a poi type for an instance you have to POST it:
-
-    curl 'http://localhost:5000/v0/instances/fr-bre/poi_types/foo:baff?name=foo' -X POST
-
-The name of a poi type is optional and can also be passed in a json like this:
-
-    curl 'http://localhost:5000/v0/instances/fr-bre/poi_types/foo:json' -X POST -H 'content-type: application/json' -d '{"name": "json"}'
-
-For updating a poi_type (only the name can be changed) you have to do the same thing with a PUT.
+Any update requires a complete POST because the order of the rules matters, so no PUT is allowed on a partial object.
 
 Finally if you want to delete a poi_type you just have to use the DELETE action:
 
-    curl 'http://localhost:5000/v0/instances/fr-bre/poi_types/foo:bar' -X DELETE
+    curl 'http://localhost:5000/v0/instances/fr-bre/poi_types' -X DELETE
 
-
-A little help if you want to add a new POI type and keep all the default ones:
-
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:college?name=école' -X POST
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:university?name=université' -X POST
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:theatre?name=théâtre' -X POST
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:hospital?name=hôpital' -X POST
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:post_office?name=bureau+de+poste' -X POST
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:bicycle_rental?name=station+vls' -X POST
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:bicycle_parking?name=Parking+vélo' -X POST
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:parking?name=Parking' -X POST
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:police?name=Police,+Gendarmerie' -X POST
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/amenity:townhall?name=Mairie' -X POST
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/leisure:garden?name=Jardin' -X POST
-    curl 'http://localhost:5000/v0/instances/<INSTANCE>/poi_types/leisure:park?name=Zone+Parc.+Zone+verte+ouverte,+pour+déambuler.+habituellement+municipale' -X POST

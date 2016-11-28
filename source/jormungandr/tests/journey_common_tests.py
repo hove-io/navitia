@@ -762,6 +762,19 @@ class OnBasicRouting():
         response = self.query_region("journeys?from=I1&datetime=20120615T070000&max_duration=36000")
         assert(len(response['journeys']) == 2)
 
+    def test_odt_admin_to_admin(self):
+        """
+        Test journeys from admin to admin using odt
+        """
+        query = "journeys?from=admin:93700&to=admin:75000&datetime=20120615T145500"
+
+        response = self.query_region(query)
+        eq_(len(response['journeys']), 1)
+        eq_(response['journeys'][0]['sections'][0]['from']['id'], 'admin:93700')
+        eq_(response['journeys'][0]['sections'][0]['to']['id'], 'admin:75000')
+        eq_(response['journeys'][0]['sections'][0]['type'], 'public_transport')
+        eq_(response['journeys'][0]['sections'][0]['additional_informations'][0], 'odt_with_zone')
+
 
 @dataset({"main_routing_test": {},
           "basic_routing_test": {'check_killed': False}})

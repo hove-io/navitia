@@ -41,7 +41,6 @@ www.navitia.io
 #include <boost/range/algorithm/reverse.hpp>
 
 #include "ed/connectors/osm_tags_reader.h"
-#include "ed/connectors/osm2ed_utils.h"
 #include "utils/functions.h"
 #include "utils/init.h"
 

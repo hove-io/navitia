@@ -257,7 +257,7 @@ struct GeoRef {
     flat_enum_map<nt::Mode_e, nt::idx_t> offsets;
 
     /// number of vertex by transportation mode
-    nt::idx_t nb_vertex_by_mode;
+    nt::idx_t nb_vertex_by_mode = 0;
     navitia::autocomplete::autocomplete_map synonyms;
     std::set<std::string> ghostwords;
 

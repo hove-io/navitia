@@ -86,6 +86,16 @@ class AddressId(fields.Raw):
         geocoding = obj.get('properties', {}).get('geocoding', {})
         return delete_prefix(geocoding.get('id'), "addr:")
 
+
+def format_zip_code(zip_codes):
+    if all(zip_code == "" for zip_code in zip_codes):
+        return None
+    elif len(zip_codes) == 1:
+        return zip_codes[0]
+    else:
+        return '{}-{}'.format(min(zip_codes), max(zip_codes))
+
+
 def create_administrative_regions_field(geocoding):
     if not geocoding:
         return None
@@ -95,6 +105,7 @@ def create_administrative_regions_field(geocoding):
         coord = admin.get('coord', {})
         lat = coord.get('lat') if coord else None
         lon = coord.get('lon') if coord else None
+        zip_codes = admin.get('zip_codes', [])
         response.append({
             "insee": admin.get('insee'),
             "name": admin.get('label'),
@@ -105,7 +116,7 @@ def create_administrative_regions_field(geocoding):
             },
             "label": admin.get('label'),
             "id": admin.get('id'),
-            "zip_code": admin.get('zip_code')
+            "zip_code": format_zip_code(zip_codes)
         })
     return response
 
@@ -149,6 +160,35 @@ class AddressField(fields.Raw):
                 create_administrative_regions_field(geocoding) or create_admin_field(geocoding) ,
         }
 
+
+class PoiField(fields.Raw):
+    def output(self, key, obj):
+        if not obj:
+            return None
+
+        coordinates = obj.get('geometry', {}).get('coordinates', [])
+        if len(coordinates) == 2:
+            lon = coordinates[0]
+            lat = coordinates[1]
+        else:
+            lon = None
+            lat = None
+
+        geocoding = obj.get('properties', {}).get('geocoding', {})
+
+        # TODO add address, poi_type, properties attributes
+        return {
+            "id": geocoding.get('id'),
+            "coord": {
+                "lon": lon,
+                "lat": lat,
+            },
+            "label": geocoding.get('label'),
+            "name": geocoding.get('name'),
+            "administrative_regions":
+                create_administrative_regions_field(geocoding) or create_admin_field(geocoding),
+        }
+
 geocode_admin = {
     "embedded_type": Lit("administrative_region"),
     "quality": Lit("0"),
@@ -166,6 +206,14 @@ geocode_addr = {
     "address": AddressField()
 }
 
+geocode_poi = {
+    "embedded_type": Lit("poi"),
+    "quality": Lit("0"),
+    "id": fields.String(attribute='properties.geocoding.id'),
+    "name": fields.String(attribute='properties.geocoding.label'),
+    "poi": PoiField()
+}
+
 class GeocodejsonFeature(fields.Raw):
     def format(self, place):
         type_ = place.get('properties', {}).get('geocoding', {}).get('type')
@@ -174,6 +222,8 @@ class GeocodejsonFeature(fields.Raw):
             return marshal(place, geocode_admin)
         elif type_ in ('street', 'house'):
             return marshal(place, geocode_addr)
+        elif type_ == 'poi':
+            return marshal(place, geocode_poi)
 
         return place
 

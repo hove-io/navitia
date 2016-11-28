@@ -46,7 +46,7 @@ namespace ntt = navitia::timetables;
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized )
+BOOST_GLOBAL_FIXTURE( logger_initialized );
 
 static const std::string& get_vj(const pbnavitia::RouteSchedule& r, int i) {
     return r.table().headers(i).pt_display_informations().uris().vehicle_journey();

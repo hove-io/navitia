@@ -86,6 +86,13 @@ struct FindAdminWithCities {
                            << elt.second << " cities responses with "
                            << elt.first << " admins.");
         }
+        for (const auto& admin: added_admins) {
+            LOG4CPLUS_INFO(log, "FindAdminWithCities: "
+                           << "We have added the following admin: "
+                           << admin.second->label << " insee: "
+                           << admin.second->insee << " uri: "
+                           << admin.second->uri);
+        }
     }
 
     void init(){
