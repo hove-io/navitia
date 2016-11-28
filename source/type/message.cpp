@@ -203,7 +203,7 @@ std::unique_ptr<Disruption> DisruptionHolder::pop_disruption(const std::string& 
 const Disruption* DisruptionHolder::get_disruption(const std::string& uri) const {
     const auto it = disruptions_by_uri.find(uri);
     if (it == std::end(disruptions_by_uri)) {
-        return {nullptr};
+        return nullptr;
     }
     return it->second.get();
 }
