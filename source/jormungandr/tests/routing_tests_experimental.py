@@ -108,8 +108,8 @@ class TestExperimentalOnBasicRouting(OnBasicRouting, AbstractTestFixture):
 
     @skip("temporarily disabled")
     def test_sp_to_sp(self):
-        super(OnBasicRouting, self).test_sp_to_sp()
+        super(TestExperimentalOnBasicRouting, self).test_sp_to_sp()
 
     @skip("temporarily disabled")
     def test_isochrone(self):
-        super(OnBasicRouting, self).test_isochrone()
+        super(TestExperimentalOnBasicRouting, self).test_isochrone()
