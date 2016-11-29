@@ -374,6 +374,7 @@ class JourneyCommon(object):
         """
         Test journeys from stop point to stop point
         """
+
         query = "journeys?from=stop_point:uselessA&to=stop_point:stopB&datetime=20120615T080000"
 
         # with street network desactivated
@@ -388,6 +389,12 @@ class JourneyCommon(object):
         eq_(response['journeys'][0]['sections'][0]['type'], 'street_network')
         eq_(response['journeys'][0]['sections'][0]['mode'], 'walking')
         eq_(response['journeys'][0]['sections'][0]['duration'], 0)
+
+        query = "journeys?from=stop_point:stopA&to=stop_point:stopB&datetime=20120615T080000"
+        response = self.query_region(query + "&max_duration_to_pt=0")
+        eq_(len(response['journeys']), 1)
+        eq_(response['journeys'][0]['departure_date_time'], u'20120615T080100')
+        eq_(response['journeys'][0]['arrival_date_time'], u'20120615T080102')
 
     @mock.patch.object(i_manager, 'dispatch')
     def test_max_duration_to_pt(self, mock):

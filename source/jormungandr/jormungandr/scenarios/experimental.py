@@ -80,8 +80,8 @@ def get_max_fallback_duration(request, mode):
 def _init_g():
     g.origins_places_crowfly = {}
     g.destinations_places_crowfly = {}
-    g.origins_fallback = {}
-    g.destinations_fallback = {}
+    g.origins_fallback = collections.defaultdict(dict)
+    g.destinations_fallback = collections.defaultdict(dict)
     g.fallback_direct_path = {}
     g.requested_origin = None
     g.requested_destination = None
@@ -105,9 +105,6 @@ def _update_crowfly_duration(instance, mode, stop_area_uri, requested_point):
     for stop_point in stop_points:
         fallback_list[mode][stop_point.uri] = 0
         crowfly_sps.add(stop_point.uri)
- 
-    if requested_point.uri in fallback_list[mode]:
-        fallback_list[mode][requested_point.uri] = 0
 
     map_coord = {
         type_pb2.STOP_POINT: requested_point.stop_point.coord,
@@ -538,6 +535,17 @@ class Scenario(new_default.Scenario):
 
             _updater(orig_futures, g.origins_fallback, crowfly_stop_points, odt_stop_points)
             _updater(dest_futures, g.destinations_fallback, crowfly_stop_points, odt_stop_points)
+
+            # We update the fallback duration matrix if the requested origin/destination is also
+            # present in the fallback duration matrix, which means from stop_point_1 to itself, it takes 0 second
+            # Ex:
+            #                stop_point1   stop_point2  stop_point3
+            # stop_point_1         0(s)       ...          ...
+            for dep_mode, arr_mode in krakens_call:
+                if dep_mode in g.origins_fallback and g.requested_origin.uri in g.origins_fallback[dep_mode]:
+                    g.origins_fallback[dep_mode][g.requested_origin.uri] = 0
+                if arr_mode in g.destinations_fallback and g.requested_destination.uri in g.destinations_fallback[arr_mode]:
+                    g.destinations_fallback[arr_mode][g.requested_destination.uri] = 0
 
         resp = []
         journey_parameters = create_parameters(request)
