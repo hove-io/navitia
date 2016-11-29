@@ -189,7 +189,7 @@ def _sn_routing_matrix(instance, place, places_crowfly, mode, max_duration, requ
 
 
 class AsyncWorker(object):
-    def __init__(self, instance, krakens_call, request, size=app.config.get('GREENLET_POOL_SIZE', 1)):
+    def __init__(self, instance, krakens_call, request, size=app.config.get('GREENLET_POOL_SIZE', 3)):
         self.pool = gevent.pool.Pool(size)
         self.instance = instance
         self.krakens_call = krakens_call
