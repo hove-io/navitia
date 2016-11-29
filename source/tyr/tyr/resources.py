@@ -296,14 +296,14 @@ class PoiType(flask_restful.Resource):
             args = ["--connection-string", "nowhere"]
             if poi_types_json:
                 args.append("-p")
-                poi_types = json.dumps(poi_types_json)
-                args.append(u'{}'.format(poi_types))
+                poi_types = json.dumps(poi_types_json, ensure_ascii=False)
+                args.append(poi_types)
 
             res, traces = launch_exec_traces('osm2ed', args, logger)
             if res != 0:
                 abort(400, status="error", message='{}'.format(traces))
 
-            poi_types = models.PoiTypeJson(json.dumps(poi_types_json), instance)
+            poi_types = models.PoiTypeJson(json.dumps(poi_types_json, ensure_ascii=False), instance)
             db.session.add(poi_types)
             db.session.commit()
         except Exception:
