@@ -523,11 +523,13 @@ void apply_impact(boost::shared_ptr<nt::disruption::Impact> impact,
 using impact_wptr = boost::weak_ptr<nt::disruption::Impact>;
 
 static auto comp = [](const impact_wptr& lhs, const impact_wptr& rhs){
-    if(lhs.expired() || rhs.expired()) {
-        return false;
-    }
     auto i_lhs = lhs.lock();
     auto i_rhs = rhs.lock();
+
+    if(!i_lhs || !i_rhs) {
+       return false;
+    }
+
     return i_lhs->updated_at < i_rhs->updated_at || i_lhs->uri < i_rhs->uri;
 };
 
