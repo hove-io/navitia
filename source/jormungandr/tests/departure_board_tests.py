@@ -241,6 +241,7 @@ class TestDepartureBoard(AbstractTestFixture):
         """
         Partial Terminus
         """
+        # Stop_schedules in TStop1: Destination in TStop1 for VJ1
         response = self.query_region("stop_areas/Tstop1/stop_schedules?"
                                      "from_datetime=20120615T080000")
 
@@ -261,6 +262,35 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["stop_schedules"][0]["date_times"][0]["links"][1]["value"] == "vj1"
         assert response["stop_schedules"][0]["date_times"][1]["links"][0]["type"] == "vehicle_journey"
         assert response["stop_schedules"][0]["date_times"][1]["links"][0]["value"] == "vj2"
+
+        # Stop_schedules in TStop2: Only VJ2 in response
+        response = self.query_region("stop_areas/Tstop2/stop_schedules?"
+                                     "from_datetime=20120615T080000")
+
+        assert "stop_schedules" in response
+        is_valid_stop_schedule(response["stop_schedules"], self.tester, only_time=False)
+        assert len(response["stop_schedules"]) == 1, "there should be only one elt"
+
+        assert len(response["stop_schedules"]) == 1
+        assert response["stop_schedules"][0]["stop_point"]["id"] == "Tstop2"
+        assert response["stop_schedules"][0]["route"]["id"] == "A:1"
+        assert len(response["stop_schedules"][0]["date_times"]) == 1
+        assert response["stop_schedules"][0]["date_times"][0]["links"][0]["type"] == "vehicle_journey"
+        assert response["stop_schedules"][0]["date_times"][0]["links"][0]["value"] == "vj2"
+
+
+        # Stop_schedules in TStop2: Partial Terminus
+        response = self.query_region("stop_areas/Tstop2/stop_schedules?"
+                                     "from_datetime=20120615T080000&calendar=cal_partial_terminus")
+
+        assert "stop_schedules" in response
+        assert len(response["stop_schedules"]) == 1, "there should be only one elt"
+
+        assert len(response["stop_schedules"]) == 1
+        assert response["stop_schedules"][0]["additional_informations"] == "partial_terminus"
+        assert response["stop_schedules"][0]["route"]["id"] == "A:1"
+        assert len(response["stop_schedules"][0]["date_times"]) == 0
+        assert response["stop_schedules"][0]["stop_point"]["id"] == "Tstop2"
 
     def test_real_terminus(self):
         """
@@ -425,18 +455,18 @@ class TestDepartureBoard(AbstractTestFixture):
         """
         response_1 = self.query_region("lines/C/stop_schedules?from_datetime=20120614T0830&duration=600")
         response_2 = self.query_region("lines/D/stop_schedules?from_datetime=20120614T0700&duration=600")
+
         # Check that when the line is closed the additional_information is no_active_circulation_this_day for all
-        # the stop_schedules which are not partial_terminus
         ss1_c = next(ss for ss in response_1['stop_schedules'] if ss['stop_point']['id'] == 'stop1_C')
         ss2_c = next(ss for ss in response_1['stop_schedules'] if ss['stop_point']['id'] == 'stop2_C')
         ss1_d = next(ss for ss in response_2['stop_schedules'] if (ss['stop_point']['id'] == 'stop1_D'))
         ss2_d = next(ss for ss in response_2['stop_schedules'] if (ss['stop_point']['id'] == 'stop2_D'))
         ss3_d = next(ss for ss in response_2['stop_schedules'] if ss['stop_point']['id'] == 'stop3_D')
         assert ss1_c['additional_informations'] == 'no_active_circulation_this_day'
-        assert ss2_c['additional_informations'] == 'partial_terminus'
+        assert ss2_c['additional_informations'] == 'no_active_circulation_this_day'
         assert ss1_d['additional_informations'] == 'no_active_circulation_this_day'
         assert ss2_d['additional_informations'] == 'no_active_circulation_this_day'
-        assert ss3_d['additional_informations'] == 'partial_terminus'
+        assert ss3_d['additional_informations'] == 'no_active_circulation_this_day'
 
     def test_display_informations_in_routes_schedule(self):
         """
