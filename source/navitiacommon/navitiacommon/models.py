@@ -37,7 +37,7 @@ from flask import current_app
 from sqlalchemy.orm import load_only, backref, aliased
 from datetime import datetime
 from sqlalchemy import func, and_, UniqueConstraint, cast, true, false
-from sqlalchemy.dialects.postgresql import ARRAY, UUID, INTERVAL
+from sqlalchemy.dialects.postgresql import ARRAY, UUID, INTERVAL, JSON
 from navitiacommon.utils import street_source_types, address_source_types, \
     poi_source_types, admin_source_types
 
@@ -124,7 +124,7 @@ class User(db.Model):
     type = db.Column(db.Enum('with_free_instances', 'without_free_instances', 'super_user', name='user_type'),
                              default='with_free_instances', nullable=False)
 
-    shape = db.Column(db.Text, nullable=True)
+    shape = db.Column(JSON(none_as_null=True), nullable=True)
 
 
     def __init__(self, login=None, email=None, block_until=None, keys=None, authorizations=None):

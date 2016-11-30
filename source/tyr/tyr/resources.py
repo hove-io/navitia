@@ -83,9 +83,6 @@ class Shape(fields.Raw):
         if hasattr(g, 'disable_geojson') and g.disable_geojson and obj.has_shape():
             return {}
 
-        if obj.shape is not None:
-            return ujson.loads(obj.shape)
-
         return obj.shape
 
 
@@ -578,7 +575,7 @@ class User(flask_restful.Resource):
             user.type = args['type']
             user.end_point = end_point
             user.billing_plan = billing_plan
-            user.shape = ujson.dumps(args['shape'])
+            user.shape = args['shape']
             db.session.add(user)
             db.session.commit()
 
@@ -608,8 +605,8 @@ class User(flask_restful.Resource):
                             help='block until argument is not correct', location=('json', 'values'))
         parser.add_argument('billing_plan_id', type=int, default=user.billing_plan_id,
                             help='billing id of the end_point', location=('json', 'values'))
-        parser.add_argument('shape', type=parser_args_type.geojson_argument(ujson.loads(user.shape)),
-                            default=ujson.loads(user.shape), required=False, location=('json', 'values'))
+        parser.add_argument('shape', type=parser_args_type.geojson_argument(user.shape),
+                            default=user.shape, required=False, location=('json', 'values'))
         args = parser.parse_args()
 
         if not validate_email(args['email'],
@@ -634,7 +631,7 @@ class User(flask_restful.Resource):
             user.block_until = args['block_until']
             user.end_point = end_point
             user.billing_plan = billing_plan
-            user.shape = ujson.dumps(args['shape'])
+            user.shape = args['shape']
             db.session.commit()
 
             tyr_user_event = TyrUserEvent()

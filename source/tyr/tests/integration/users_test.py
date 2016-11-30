@@ -102,7 +102,7 @@ def create_user(geojson_feature_collection):
         user = models.User('test', 'test@example.com')
         user.end_point = models.EndPoint.get_default()
         user.billing_plan = models.BillingPlan.get_default(user.end_point)
-        user.shape = json.dumps(geojson_feature_collection)
+        user.shape = geojson_feature_collection
         models.db.session.add(user)
         models.db.session.commit()
         return user.id
@@ -142,7 +142,7 @@ def create_multiple_users(request, geojson_feature_collection):
         user1 = models.User('foo', 'foo@example.com')
         user1.end_point = end_point
         user1.billing_plan = billing_plan
-        user1.shape = json.dumps(geojson_feature_collection)
+        user1.shape = geojson_feature_collection
 
         user2 = models.User('foodefault', 'foo@example.com')
         user2.end_point = models.EndPoint.get_default()
@@ -527,6 +527,10 @@ def test_update_shape_with_none(create_multiple_users, mock_rabbit):
     assert resp['shape'] == None
     assert mock_rabbit.called
 
+    resp = api_get('/v0/users/{}'.format(create_multiple_users['user1']))
+    # Ensure that shape = None and not {}
+    assert resp['shape'] == None
+
 
 def test_update_shape_with_empty(create_multiple_users, mock_rabbit, geojson_feature_collection):
     """
@@ -602,7 +606,6 @@ def test_get_user_with_shape(create_user, geojson_feature_collection):
     We start by creating the user with a shape,
     and we test that the attribute shape={} and has_shape = True
     """
-    print api_get('/v0/users')
     resp = api_get('/v0/users/{}'.format(create_user))
 
     assert resp['has_shape'] == True
@@ -626,8 +629,7 @@ def test_get_user_without_shape(create_user_without_shape):
     and we test that  shape = None and has_shape = False
     """
     resp = api_get('/v0/users/{}'.format(create_user_without_shape))
-    print resp['shape']
-    print geojson_feature
+
     assert resp['has_shape'] == False
     assert resp['shape'] == None
 
