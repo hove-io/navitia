@@ -38,7 +38,6 @@ www.navitia.io
 #include "routing/raptor.h"
 #include "kraken/apply_disruption.h"
 #include "kraken/make_disruption_from_chaos.h"
-#include "google/protobuf/text_format.h"
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
@@ -603,9 +602,6 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_impact, calendar_fixture) {
                     10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
 
     pbnavitia::Response resp = pb_creator.get_response();
-    std::string st;
-    google::protobuf::TextFormat::PrintToString(resp, &st);
-    std::cout<<"resp : "<<st<<std::endl;
     BOOST_REQUIRE(! resp.has_error());
     BOOST_CHECK_EQUAL(resp.stop_schedules_size(), 1);
     pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
