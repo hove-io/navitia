@@ -168,7 +168,7 @@ def _sn_routing_matrix(instance, place, places_crowfly, mode, max_duration, requ
     # When max_duration is 0, there is no need to compute the fallback to pt, except if place is a stop_point or a
     # stop_area
     if max_duration == 0:
-        if place:
+        if instance.georef.get_stop_points_from_uri(place.uri):
             return {mode: {place.uri: 0}}
         else:
             return {mode: {}}
@@ -231,7 +231,7 @@ class AsyncWorker(object):
                                                            **self.speed_switcher))
                 called_arr_modes.add(arr_mode)
 
-            return origin_futures, destination_futures
+        return origin_futures, destination_futures
 
     def get_crowfly_futures(self, origin, destination):
         origin_futures = []
