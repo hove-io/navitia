@@ -38,11 +38,13 @@ www.navitia.io
 #include "routing/raptor.h"
 #include "kraken/apply_disruption.h"
 #include "kraken/make_disruption_from_chaos.h"
+#include "google/protobuf/text_format.h"
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized );
+
+BOOST_GLOBAL_FIXTURE( logger_initialized )
 
 static int32_t time_to_int(int h, int m, int s) {
     auto dur = navitia::time_duration(h, m, s);
@@ -331,8 +333,31 @@ BOOST_AUTO_TEST_CASE(partial_terminus_test1) {
     BOOST_CHECK(stop_schedule.date_times_size() == 2);
     BOOST_CHECK_EQUAL(stop_schedule.date_times(0).properties().destination().destination(), "stop2");
     BOOST_CHECK_EQUAL(stop_schedule.date_times(0).properties().vehicle_journey_id(), "vj1");
-    BOOST_CHECK_EQUAL(stop_schedule.date_times(0).dt_status(), pbnavitia::ResponseStatus::partial_terminus);
 
+    {
+        // VJ1 not in response, stop2 is terminus
+        navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
+        departure_board(pb_creator, "stop_point.uri=stop2", {}, {}, d("20150615T094500"), 86400, 0,
+                        10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+
+        resp = pb_creator.get_response();
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+        stop_schedule = resp.stop_schedules(0);
+        BOOST_CHECK(stop_schedule.date_times_size() == 1);
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).properties().vehicle_journey_id(), "vj2");
+    }
+
+    {
+        // Terminus
+        navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
+        departure_board(pb_creator, "stop_point.uri=stop3", {}, {}, d("20150615T094500"), 86400, 0,
+                        10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+
+        resp = pb_creator.get_response();
+
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).response_status(), pbnavitia::ResponseStatus::terminus);
+    }
 }
 
 
@@ -418,6 +443,7 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_weekend, calendar_fixture) {
                     10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
 
     pbnavitia::Response resp = pb_creator.get_response();
+
     BOOST_REQUIRE(! resp.has_error());
     BOOST_CHECK_EQUAL(resp.stop_schedules_size(), 1);
     pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
@@ -577,20 +603,14 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_impact, calendar_fixture) {
                     10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
 
     pbnavitia::Response resp = pb_creator.get_response();
+    std::string st;
+    google::protobuf::TextFormat::PrintToString(resp, &st);
+    std::cout<<"resp : "<<st<<std::endl;
     BOOST_REQUIRE(! resp.has_error());
     BOOST_CHECK_EQUAL(resp.stop_schedules_size(), 1);
     pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
-    BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 3);
-    auto stop_date_time = stop_schedule.date_times(0);
-    BOOST_CHECK_EQUAL(stop_date_time.time(), time_to_int(12, 10, 0));
-    BOOST_CHECK_EQUAL(stop_date_time.date(), 0); //no date
-    stop_date_time = stop_schedule.date_times(1);
-    BOOST_CHECK_EQUAL(stop_date_time.time(), time_to_int(14, 10, 0));
-    BOOST_CHECK_EQUAL(stop_date_time.date(), 0); //no date
-    stop_date_time = stop_schedule.date_times(2);
-    BOOST_CHECK_EQUAL(stop_date_time.time(), time_to_int(16, 10, 0));
-    BOOST_CHECK_EQUAL(stop_date_time.date(), 0); //no date
-
+    BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 0);
+    BOOST_REQUIRE_EQUAL(stop_schedule.response_status(), pbnavitia::ResponseStatus::terminus);
 }
 
 struct small_cal_fixture {
