@@ -100,14 +100,14 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
     }
 };
 
-static bool is_partial_terminus(const nt::StopTime* stop_time){
+static bool is_principal_destination(const nt::StopTime* stop_time){
     return stop_time->vehicle_journey
         && stop_time->vehicle_journey->route
         && stop_time->vehicle_journey->route->destination
         && ! stop_time->vehicle_journey->stop_time_list.empty()
         && stop_time->vehicle_journey->stop_time_list.back().stop_point
         && stop_time->vehicle_journey->route->destination
-           != stop_time->vehicle_journey->stop_time_list.back().stop_point->stop_area;
+           == stop_time->vehicle_journey->stop_time_list.back().stop_point->stop_area;
 }
 
 namespace {
@@ -1218,14 +1218,13 @@ void PbCreator::Filler::fill_pb_object(const StopTimeCalandar* stop_time_calenda
     pbnavitia::Properties* hn = rs_date_time->mutable_properties();
     fill_with_creator(stop_time_calendar->stop_time, [&](){return hn;});
 
-    // partial terminus
-    if (is_partial_terminus(stop_time_calendar->stop_time)) {
+    // principal destination
+    if (! is_principal_destination(stop_time_calendar->stop_time)) {
         auto sa = stop_time_calendar->stop_time->vehicle_journey->stop_time_list.back().stop_point->stop_area;
         pbnavitia::Destination* destination = hn->mutable_destination();
         std::hash<std::string> hash_fn;
         destination->set_uri("destination:"+std::to_string(hash_fn(sa->name)));
         destination->set_destination(sa->name);
-        rs_date_time->set_dt_status(pbnavitia::ResponseStatus::partial_terminus);
     }
     fill(pb_creator.data.pt_data->comments.get(*stop_time_calendar->stop_time), hn->mutable_notes());
     if (stop_time_calendar->stop_time->vehicle_journey != nullptr) {
