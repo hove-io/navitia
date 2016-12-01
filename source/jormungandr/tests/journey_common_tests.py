@@ -482,6 +482,34 @@ class JourneyCommon(object):
         assert section['from']['id'] == 'stop_point:stopA'
         assert section['to']['id'] == 'stop_point:stopC'
 
+    def test_max_duration_to_pt_equals_to_0_from_stop_area(self):
+        query = "journeys?from=stopA&to=stopB&datetime=20120614T080000"
+        response = self.query_region(query)
+        check_journeys(response)
+        eq_(len(response['journeys']), 2)
+
+        query += "&max_duration_to_pt=0"
+        response = self.query_region(query)
+        check_journeys(response)
+        jrnys = response['journeys']
+        assert len(jrnys) == 1
+        section = jrnys[0]['sections'][0]
+        # from departure(a stop area) to stop_point
+        assert section['type'] == 'crow_fly'
+        assert section['from']['id'] == 'stopA'
+        assert section['to']['id'] == 'stop_point:stopA'
+
+        section = jrnys[0]['sections'][1]
+        assert section['type'] == 'public_transport'
+        assert section['from']['id'] == 'stop_point:stopA'
+        assert section['to']['id'] == 'stop_point:stopB'
+
+        section = jrnys[0]['sections'][2]
+        # from a stop point to destination(a stop area)
+        assert section['type'] == 'crow_fly'
+        assert section['from']['id'] == 'stop_point:stopB'
+        assert section['to']['id'] == 'stopB'
+
     def test_max_duration_equals_to_0(self):
         query = journey_basic_query + \
             "&first_section_mode[]=bss" + \
