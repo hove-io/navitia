@@ -44,6 +44,7 @@ from jormungandr.authentication import get_user, get_token, get_app_name, get_us
 # http://www.gevent.org/intro.html#monkey-patching
 import gevent.monkey
 gevent.monkey.patch_socket()
+gevent.monkey.patch_ssl()
 
 @rest_api.representation("text/jsonp")
 @rest_api.representation("application/jsonp")
