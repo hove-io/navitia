@@ -117,8 +117,10 @@ then
     echo "no gtfs or osm file given, we'll take a default data set, Paris"
 
     echo "getting gtfs paris data from data.navitia.io"
-    wget -P /tmp http://data.navitia.io/gtfs_paris_20140502.zip
-    unzip -d /tmp/gtfs /tmp/gtfs_paris_20140502.zip
+    # Note, here is a link to a dataset of the paris region. 
+    # You can explore https://navitia.opendatasoft.com if you want another dataset
+    wget -P /tmp https://navitia.opendatasoft.com/explore/dataset/fr-idf/files/dde578e47118b8c6f8885d75f18a504a/download/
+    unzip -d /tmp/gtfs /tmp/index.html
     gtfs_data_dir=/tmp/gtfs
 
     echo "getting paris osm data from metro.teczno.com"
@@ -148,17 +150,30 @@ git submodule update --init
 if [ -n "$install_dependencies" ]
 then
     echo "** installing all dependencies"
-    sudo apt-get install -y g++ cmake liblog4cplus-dev libzmq-dev libosmpbf-dev libboost-all-dev libpqxx3-dev libgoogle-perftools-dev libprotobuf-dev python-pip libproj-dev protobuf-compiler libgeos-c1
+    sudo apt-get install -y g++ cmake liblog4cplus-dev libzmq-dev libosmpbf-dev libboost-all-dev libgoogle-perftools-dev libprotobuf-dev python-pip libproj-dev protobuf-compiler libgeos-3.5.0
 
     postgresql_package='postgresql-9.3'
     postgresql_postgis_package='postgis postgresql-9.3-postgis-2.1 postgresql-9.3-postgis-scripts'
     distrib=`lsb_release -si`
     version=`lsb_release -sr`
+    pqxx_package='libpqxx3-dev'
 
     # Fix Ubuntu 15.04 package
     if [ "$distrib" = "Ubuntu" -a "$version" = "15.04" ]; then
       postgresql_package='postgresql-9.4'
       postgresql_postgis_package='postgis postgresql-9.4-postgis-2.1 postgresql-9.4-postgis-scripts'
+    elif [ "$distrib" = "Ubuntu" -a "$version" = "16.04" ]; then
+      postgresql_package='postgresql-9.5'
+      postgresql_postgis_package='postgis postgresql-9.5-postgis-2.2 postgresql-9.5-postgis-scripts'
+
+      # there is a bug in the liblog4cplus-dev in ubuntu 16, 
+      # https://bugs.launchpad.net/ubuntu/+source/log4cplus/+bug/1578970
+      # we grab another version
+      wget -P /tmp/ http://fr.archive.ubuntu.com/ubuntu/pool/universe/l/log4cplus/liblog4cplus-dev_1.0.4-1ubuntu1_amd64.deb
+      wget -P /tmp/ http://fr.archive.ubuntu.com/ubuntu/pool/universe/l/log4cplus/liblog4cplus-1.0-4_1.0.4-1ubuntu1_amd64.deb 
+      sudo dpkg -i /tmp/liblog4cplus-1.0-4_1.0.4-1ubuntu1_amd64.deb  /tmp/liblog4cplus-dev_1.0.4-1ubuntu1_amd64.deb
+
+      pqxx_package='libpqxx-dev'
     fi
 
     if [ "$distrib" = "Debian" ] && grep -q '^7\.' /etc/debian_version; then
@@ -173,6 +188,8 @@ then
     fi
 
     sudo apt-get install -y $postgresql_package $postgresql_postgis_package #Note: postgres 9.1 and postgis 2.0 would be enough, be postgis 2.1 is easier to setup
+
+    sudo apt-get install -y $pqxx_package
 
     # then you need to install all python dependencies: ::
 
