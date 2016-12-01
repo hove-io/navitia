@@ -1835,3 +1835,72 @@ BOOST_AUTO_TEST_CASE(add_multiple_impact_on_line_section) {
     BOOST_CHECK_MESSAGE(ba::ends_with(adapted_vp.to_string(), "000110"), adapted_vp);
     BOOST_CHECK_MESSAGE(ba::ends_with(base_vp.to_string(), "000000"), base_vp);
 }
+
+
+/* Update the message of an impact
+ *
+ * */
+BOOST_AUTO_TEST_CASE(update_impact) {
+
+    ed::builder b("20120614");
+    b.vj("A").uri("vj:1")
+              ("stop1", "08:00"_t)
+              ("stop2", "08:15"_t)
+              ("stop3", "08:45"_t) // <- Only stop3 will be impacted
+              ("stop4", "09:00"_t);
+
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
+
+    auto original_disruption_text = "message disruption 1";
+    auto disruption_message_1 = navitia::type::disruption::Message{original_disruption_text,
+                                                                   "","","",{},{},{}};
+    const auto& disruption_1 = b.impact(nt::RTLevel::Adapted, "stop3_closed")
+                                              .severity(nt::disruption::Effect::NO_SERVICE)
+                                              .msg(disruption_message_1)
+                                              .on(nt::Type_e::StopPoint, "stop3")
+                                              // 2012/6/14 7h -> 2012/6/17 6h
+                                              .application_periods(btp("20120614T070000"_dt, "20120617T060000"_dt))
+                                              // 2012/6/17 23h -> 2012/6/18 6h
+                                              .application_periods(btp("20120617T230000"_dt, "20120618T060000"_dt))
+                                              // 2012/6/19 4h -> 2012/6/19 8h30
+                                              .application_periods(btp("20120619T083000"_dt, "20120619T093000"_dt))
+                                              .get_disruption();
+
+    const auto& disruption_2 = b.impact(nt::RTLevel::Adapted, "stop2_closed")
+                                              .severity(nt::disruption::Effect::NO_SERVICE)
+                                              .on(nt::Type_e::StopPoint, "stop2")
+                                              // 2012/6/14 7h -> 2012/6/17 6h
+                                              .application_periods(btp("20120614T070000"_dt, "20120617T060000"_dt))
+                                              // 2012/6/17 23h -> 2012/6/18 6h
+                                              .application_periods(btp("20120617T230000"_dt, "20120618T060000"_dt))
+                                              // 2012/6/19 4h -> 2012/6/19 8h30
+                                              .application_periods(btp("20120619T083000"_dt, "20120619T093000"_dt))
+                                              .get_disruption();
+
+    navitia::apply_disruption(disruption_1, *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(disruption_2, *b.data->pt_data, *b.data->meta);
+
+    const auto* disruption = b.data->pt_data->disruption_holder.get_disruption("stop3_closed");
+    BOOST_REQUIRE_EQUAL(disruption->get_impacts()[0]->messages[0].text, original_disruption_text);
+
+    disruption_1.get_impacts()[0]->messages[0].text = "message disruption updated";
+
+    // update the disruption_1 with the new message
+    navitia::apply_disruption(disruption_1, *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(disruption_1, *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(disruption_1, *b.data->pt_data, *b.data->meta);
+
+    disruption = b.data->pt_data->disruption_holder.get_disruption("stop3_closed");
+    BOOST_REQUIRE_EQUAL(disruption->get_impacts()[0]->messages[0].text, "message disruption updated");
+
+    // delete disruption
+    navitia::delete_disruption("stop3_closed", *b.data->pt_data, *b.data->meta);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
+
+}
