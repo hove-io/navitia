@@ -519,7 +519,10 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request,
             auto address = pb_creator.data.geo_ref->nearest_addr(coord);
             const auto& way_coord = WayCoord(address.second, coord, address.first);
             pb_creator.fill(&way_coord, pb_creator.add_places(), 1);
-        }catch(proximitylist::NotFound) {}
+        }catch(proximitylist::NotFound) {
+            pb_creator.fill_pb_error(pbnavitia::Error::unknown_object,
+                                     "Unable to find place: " + request.uri());
+        }
         return pb_creator.get_response();
     }
 
