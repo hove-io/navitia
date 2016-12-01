@@ -1,3 +1,12 @@
+navitia2 (2.22.1) unstable; urgency=low
+
+  * jormungandr: add patch_ssl after patch_socket  <https://github.com/CanalTP/navitia/pull/1875> 
+  * Tyr: consider all osm2ed args are utf8 (no ascii convert)  <https://github.com/CanalTP/navitia/pull/1870> 
+  * Tyr: explicit encode  <https://github.com/CanalTP/navitia/pull/1877> 
+  * Kraken: Catch exception when coord is not found  <https://github.com/CanalTP/navitia/pull/1880> 
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Thu, 01 Dec 2016 16:12:05 +0100
+
 navitia2 (2.22.0) unstable; urgency=low
 
   * Jormun: marshall POI on universal places API  <https://github.com/CanalTP/navitia/pull/1839>
