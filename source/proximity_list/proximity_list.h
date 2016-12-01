@@ -31,13 +31,14 @@ www.navitia.io
 #pragma once
 
 #include "type/type.h"
+#include "utils/exception.h"
 #include <vector>
 #include <cmath>
 
 namespace navitia { namespace proximitylist {
 
 using type::GeographicalCoord;
-struct NotFound : public std::exception{
+struct NotFound : public recoverable_exception{
     NotFound() = default;
     NotFound(const NotFound&) = default;
     NotFound& operator=(const NotFound&) = default;

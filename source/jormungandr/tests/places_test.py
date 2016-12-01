@@ -164,3 +164,9 @@ class TestPlaces(AbstractTestFixture):
         response, status = self.query_region("places/{}/places_nearby".format(place_id), check=False)
 
         eq_(response["error"]["message"], "The entry point: {} is not valid".format(place_id))
+
+    def test_non_existent_addresse(self):
+        """test that a non existent addresse"""
+        place_id = "-1.5348252000000002;47.2554241"
+        response, status = self.query_region("places/{}".format(place_id), check=False)
+        eq_(response["error"]["message"], u'Unable to find place: coord:-1.5348252000000002:47.2554241')
