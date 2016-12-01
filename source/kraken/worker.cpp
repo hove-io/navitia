@@ -515,9 +515,11 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request,
             fill_pb_error(pbnavitia::Error::bad_format, e.what(), r.mutable_error());
             return r;
         }
-        auto address = pb_creator.data.geo_ref->nearest_addr(coord);
-        const auto& way_coord = WayCoord(address.second, coord, address.first);
-        pb_creator.fill(&way_coord, pb_creator.add_places(), 1);
+        try{
+            auto address = pb_creator.data.geo_ref->nearest_addr(coord);
+            const auto& way_coord = WayCoord(address.second, coord, address.first);
+            pb_creator.fill(&way_coord, pb_creator.add_places(), 1);
+        }catch(proximitylist::NotFound) {}
         return pb_creator.get_response();
     }
 
