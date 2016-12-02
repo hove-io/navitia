@@ -147,6 +147,8 @@ class TestEndPoint(AbstractTestFixture):
 
         is_valid_region_status(main_status)
         get_not_null(main_status, 'region_id')
+        get_not_null(main_status, 'is_open_data') == False
+        get_not_null(main_status, 'is_open_service') == False
         assert get_not_null(main_status, 'status') == 'running'
 
     def test_one_status(self):
@@ -154,6 +156,7 @@ class TestEndPoint(AbstractTestFixture):
 
         is_valid_region_status(get_not_null(json_response, "status"))
         assert json_response["status"]["is_open_data"] == False
+        assert json_response["status"]["is_open_service"] == False
         assert 'realtime_contributors' in json_response['status']
         assert 'realtime_proxies' in json_response['status']
 
