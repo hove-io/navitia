@@ -650,6 +650,7 @@ static bool is_sn_edge(const GeoRef& georef, const edge_t& e) {
 edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const proximitylist::ProximityList<vertex_t>& prox, type::idx_t offset, double horizon) const {
     boost::optional<edge_t> res;
     float min_dist = 0., cur_dist = 0.;
+    double coslat = ::cos(coordinates.lat() * type::GeographicalCoord::N_DEG_TO_RAD);
     for (const auto pair_coord : prox.find_within(coordinates, horizon)) {
         //we increment the index to get the vertex in the other graph
         const auto u = pair_coord.first + offset;
@@ -661,10 +662,11 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const p
             // If there is a geometry for this edge get the projected point to get the distance
             if(edge.geom_idx != nt::invalid_idx) {
                 auto projected = type::project(ways[edge.way_idx]->geoms[edge.geom_idx], coordinates);
-                cur_dist = coordinates.distance_to(projected);
+                cur_dist = coordinates.approx_sqr_distance(projected,  coslat);
             }
             else {
-                cur_dist = coordinates.project(graph[u].coord, graph[v].coord).second;
+
+                cur_dist = coordinates.approx_project(graph[u].coord, graph[v].coord, coslat).second;
             }
             if (!res || cur_dist < min_dist) {
                 min_dist = cur_dist;

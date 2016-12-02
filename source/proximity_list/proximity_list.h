@@ -87,8 +87,7 @@ struct ProximityList
     std::vector< std::pair<T, GeographicalCoord> > find_within(GeographicalCoord coord, double distance = 500) const {
         double distance_degree = distance / 111320;
 
-        double DEG_TO_RAD = 0.0174532925199432958;
-        double coslat = ::cos(coord.lat() * DEG_TO_RAD);
+        double coslat = ::cos(coord.lat() * type::GeographicalCoord::N_DEG_TO_RAD);
 
         auto begin = std::lower_bound(items.begin(), items.end(), coord.lon() - distance_degree / coslat, [](const Item & i, double min){return i.coord.lon() < min;});
         auto end = std::upper_bound(begin, items.end(), coord.lon() + distance_degree / coslat, [](double max, const Item & i){return max < i.coord.lon();});
