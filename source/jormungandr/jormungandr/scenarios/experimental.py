@@ -152,23 +152,25 @@ def _reverse_journeys(res):
     return res
 
 
-def _get_places_crowfly(instance, mode, place, max_duration, max_nb_crowfly=5000, **kwargs):
-    # When max_duration is 0, there is no need to compute the fallback to pt, except if place is a stop_point or a
+def _get_places_crowfly(instance, mode, place, max_duration_to_pt, max_nb_crowfly=5000, **kwargs):
+    # When max_duration_to_pt is 0, there is no need to compute the fallback to pt, except if place is a stop_point or a
     # stop_area
-    if max_duration == 0:
+    if max_duration_to_pt == 0:
+        # When max_duration_to_pt is 0, we can get on the public transport ONLY if the place is a stop_point
         if instance.georef.get_stop_points_from_uri(place.uri):
             return {mode: place}
         else:
             return {mode: []}
-    return {mode: instance.georef.get_crow_fly(get_uri_pt_object(place), mode, max_duration,
+    return {mode: instance.georef.get_crow_fly(get_uri_pt_object(place), mode, max_duration_to_pt,
                                                max_nb_crowfly, **kwargs)}
 
 
-def _sn_routing_matrix(instance, place, places_crowfly, mode, max_duration, request, **kwargs):
-    # When max_duration is 0, there is no need to compute the fallback to pt, except if place is a stop_point or a
+def _sn_routing_matrix(instance, place, places_crowfly, mode, max_duration_to_pt, request, **kwargs):
+    # When max_duration_to_pt is 0, there is no need to compute the fallback to pt, except if place is a stop_point or a
     # stop_area
-    if max_duration == 0:
-        if place:
+    if max_duration_to_pt == 0:
+        # When max_duration_to_pt is 0, we can get on the public transport ONLY if the place is a stop_point
+        if instance.georef.get_stop_points_from_uri(place.uri):
             return {mode: {place.uri: 0}}
         else:
             return {mode: {}}
@@ -176,16 +178,16 @@ def _sn_routing_matrix(instance, place, places_crowfly, mode, max_duration, requ
     sn_routing_matrix = instance.street_network_service.get_street_network_routing_matrix([place],
                                                                                           places,
                                                                                           mode,
-                                                                                          max_duration,
+                                                                                          max_duration_to_pt,
                                                                                           request,
                                                                                           **kwargs)
     if not sn_routing_matrix.rows[0].duration:
         return {mode: {}}
     import numpy as np
     durations = np.array(sn_routing_matrix.rows[0].duration)
-    valid_duration_idx = np.argwhere((durations > -1) & (durations < max_duration)).flatten()
+    valid_duration_idx = np.argwhere((durations > -1) & (durations < max_duration_to_pt)).flatten()
     return {mode: dict(zip([places[i].uri for i in valid_duration_idx],
-                       durations[(durations > -1) & (durations < max_duration)].flatten()))}
+                       durations[(durations > -1) & (durations < max_duration_to_pt)].flatten()))}
 
 
 class AsyncWorker(object):
@@ -231,7 +233,7 @@ class AsyncWorker(object):
                                                            **self.speed_switcher))
                 called_arr_modes.add(arr_mode)
 
-            return origin_futures, destination_futures
+        return origin_futures, destination_futures
 
     def get_crowfly_futures(self, origin, destination):
         origin_futures = []
