@@ -77,6 +77,11 @@ def test_post_and_get_poi_type_json(create_instance, poi_types_json):
                    check=False)
     assert status_code == 400
 
+    # check special characters correctly handled
+    with app.app_context():
+        ptp = models.PoiTypeJson.query.all()
+        assert u'Hôtel de ville' in ptp[0].poi_types_json
+
 
 def test_get_poi_type_json(create_poi_type_json_obj, poi_types_json):
     resp = api_get('/v0/instances/fr/poi_types')
