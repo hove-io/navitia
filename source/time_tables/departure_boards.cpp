@@ -49,7 +49,6 @@ static bool is_last_stoptime(const nt::StopTime* stop_time, const nt::StopPoint*
             && stop_time->vehicle_journey->route
             && stop_time->vehicle_journey->route->destination
             && ! stop_time->vehicle_journey->stop_time_list.empty()
-            && stop_time->vehicle_journey->stop_time_list.back().stop_point
             && stop_time->vehicle_journey->stop_time_list.back().stop_point == stp;
 }
 
