@@ -50,7 +50,25 @@ static bool is_last_stoptime(const nt::StopTime* stop_time, const nt::StopPoint*
             && stop_time->vehicle_journey->route->destination
             && ! stop_time->vehicle_journey->stop_time_list.empty()
             && stop_time->vehicle_journey->stop_time_list.back().stop_point
-            && (stop_time->vehicle_journey->stop_time_list.back().stop_point == stp);
+            && stop_time->vehicle_journey->stop_time_list.back().stop_point == stp;
+}
+
+static bool is_partial_terminus(const PbCreator& pb_creator,
+                                const std::vector<routing::datetime_stop_time>& stop_times,
+                                const stop_point_route& sp_route) {
+    bool last_stoptime = false;
+    for (const auto& st : stop_times) {
+        const auto& vj_idx = navitia::routing::VjIdx(*st.second->vehicle_journey);
+        const auto& jp_idx = pb_creator.data.dataRaptor->jp_container.get_jp_from_vj()[vj_idx];
+        const auto& pair_jp = pb_creator.data.dataRaptor->jp_container.get_jps()[jp_idx.val];
+        const auto& last_jpp = pb_creator.data.dataRaptor->jp_container.get(pair_jp.second.jpps.back());
+
+        last_stoptime = (last_jpp.sp_idx == sp_route.first);
+        if (! last_stoptime) {
+            break;
+        }
+    }
+    return last_stoptime;
 }
 
 static void
@@ -230,18 +248,7 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
         if (stop_point->stop_area == route->destination) {
             response_status[sp_route] = pbnavitia::ResponseStatus::terminus;
         } else {
-            bool last_stoptime = false;
-            for (auto st : stop_times) {
-                auto& jp_idx = pb_creator.data.dataRaptor->jp_container.get_jp_from_vj()[navitia::routing::VjIdx(*st.second->vehicle_journey)];
-                const auto& pair_jp = pb_creator.data.dataRaptor->jp_container.get_jps()[jp_idx.val];
-                const auto& last_jpp = pb_creator.data.dataRaptor->jp_container.get(pair_jp.second.jpps.back());
-
-                last_stoptime = (last_jpp.sp_idx == sp_route.first);
-                if (! last_stoptime) {
-                    break;
-                }
-            }
-            if ( last_stoptime ) {
+            if (is_partial_terminus(pb_creator, stop_times, sp_route)) {
                 response_status[sp_route] = pbnavitia::ResponseStatus::partial_terminus;
             }
         }
