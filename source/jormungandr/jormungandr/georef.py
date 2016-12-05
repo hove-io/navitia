@@ -42,7 +42,13 @@ class Kraken(object):
         req.requested_api = type_pb2.place_uri
         req.place_uri.uri = place
         response = self.instance.send_and_receive(req)
-        return response.places[0]
+        if response.places:
+            return response.places[0]
+        # In some cases, the given "from" is not always findable by kraken
+        # we just forward the given uri and return it with a pt object
+        p = type_pb2.PtObject()
+        p.uri = place
+        return p
 
     def get_car_co2_emission_on_crow_fly(self, origin, destination):
         logger = logging.getLogger(__name__)
