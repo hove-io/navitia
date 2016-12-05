@@ -665,7 +665,6 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const p
                 cur_dist = coordinates.approx_sqr_distance(projected,  coslat);
             }
             else {
-
                 cur_dist = coordinates.approx_project(graph[u].coord, graph[v].coord, coslat).second;
             }
             if (!res || cur_dist < min_dist) {
