@@ -1,3 +1,9 @@
+navitia2 (2.22.2) unstable; urgency=low
+
+  * Kraken: fix disruption update on lines <https://github.com/CanalTP/navitia/pull/1866>
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Mon, 05 Dec 2016 13:12:36 +0100
+
 navitia2 (2.22.1) unstable; urgency=low
 
   * jormungandr: add patch_ssl after patch_socket  <https://github.com/CanalTP/navitia/pull/1875> 
