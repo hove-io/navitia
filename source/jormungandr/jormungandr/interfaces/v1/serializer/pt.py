@@ -59,9 +59,7 @@ class SeveritySerializer(PbNestedSerializer):
     color = serpy.Field()
     priority = serpy.Field()
 
-class PtObjectSerializer(serpy.Serializer):
-    id = serpy.Field(attr='uri')
-    name = serpy.Field()
+class PtObjectSerializer(GenericSerializer):
     quality = serpy.Field(required=False)
     stop_area = serpy.MethodField(display_none=False)
     line = serpy.MethodField(display_none=False)
@@ -199,7 +197,7 @@ class StopAreaSerializer(GenericSerializer):
     stop_points = StopPointSerializer(many=True, display_none=False)
 
 
-class PlaceSerializer(serpy.Serializer):
+class PlaceSerializer(GenericSerializer):
     id = serpy.Field(attr='uri')
     name = serpy.Field()
     quality = serpy.Field(required=False)
