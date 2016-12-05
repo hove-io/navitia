@@ -55,19 +55,15 @@ static bool is_last_stoptime(const nt::StopTime* stop_time, const nt::StopPoint*
 static bool is_partial_terminus(const PbCreator& pb_creator,
                                 const std::vector<routing::datetime_stop_time>& stop_times,
                                 const stop_point_route& sp_route) {
-    bool last_stoptime = false;
     for (const auto& st : stop_times) {
         const auto& vj_idx = navitia::routing::VjIdx(*st.second->vehicle_journey);
         const auto& jp_idx = pb_creator.data.dataRaptor->jp_container.get_jp_from_vj()[vj_idx];
         const auto& pair_jp = pb_creator.data.dataRaptor->jp_container.get_jps()[jp_idx.val];
         const auto& last_jpp = pb_creator.data.dataRaptor->jp_container.get(pair_jp.second.jpps.back());
 
-        last_stoptime = (last_jpp.sp_idx == sp_route.first);
-        if (! last_stoptime) {
-            break;
-        }
+        if (last_jpp.sp_idx != sp_route.first) { return false; }
     }
-    return last_stoptime;
+    return ! stop_times.empty();
 }
 
 static void
