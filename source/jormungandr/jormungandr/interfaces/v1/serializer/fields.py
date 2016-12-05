@@ -41,7 +41,7 @@ class MultiLineStringField(serpy.Field):
 
         lines = []
         for l in value.lines:
-            lines.append(([c.lon, c.lat] for c in l.coordinates))
+            lines.append([[c.lon, c.lat] for c in l.coordinates])
 
         return {
             "type": "MultiLineString",

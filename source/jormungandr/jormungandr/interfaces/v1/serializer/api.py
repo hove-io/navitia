@@ -1,3 +1,4 @@
+
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
 #
@@ -26,24 +27,19 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from functools import wraps
-from flask_restful.utils import unpack
+from jormungandr.interfaces.v1.serializer.pt import StopAreaSerializer, LineSerializer, DisruptionSerializer
+from jormungandr.interfaces.v1.serializer.fields import ErrorSerializer, FeedPublisherSerializer, PaginationSerializer
+import serpy
 
-from .api import LinesSerializer
-from .api import DisruptionsSerializer
+class LinesSerializer(serpy.Serializer):
+    pagination = PaginationSerializer(attr='pagination', display_none=True, required=True)
+    lines = LineSerializer(many=True)
+    error = ErrorSerializer(display_none=False)
+    disruptions = DisruptionSerializer(attr='impacts', many=True)
+    feed_publishers = FeedPublisherSerializer(many=True, display_none=False)
 
-class serialize_with(object):
-    def __init__(self, serializer, many=False):
-        self.serializer = serializer
-        self.many = many
-
-    def __call__(self, f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            resp = f(*args, **kwargs)
-            if isinstance(resp, tuple):
-                data, code, headers = unpack(resp)
-                return self.serializer(data, many=self.many).data, code, headers
-            else:
-                return self.serializer(resp, many=self.many).data
-        return wrapper
+class DisruptionsSerializer(serpy.Serializer):
+    pagination = PaginationSerializer(attr='pagination', display_none=True, required=True)
+    error = ErrorSerializer(display_none=False)
+    disruptions = DisruptionSerializer(attr='impacts', many=True)
+    feed_publishers = FeedPublisherSerializer(many=True, display_none=False)

@@ -54,7 +54,9 @@ from jormungandr.interfaces.common import odt_levels
 from jormungandr.utils import date_to_timestamp
 from jormungandr.resources_utc import ResourceUtc
 from datetime import datetime
-from flask import g
+from flask import g, current_app
+
+from jormungandr.interfaces.v1.serializer import serialize_with, LinesSerializer, DisruptionsSerializer
 
 
 class Uri(ResourceUri, ResourceUtc):
@@ -513,17 +515,12 @@ def lines(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
-            from jormungandr.interfaces.v1.serializer import serialize_with, LineSerializer, ErrorSerializer, DisruptionSerializer, FeedPublisherSerializer, PaginationSerializer
-            import serpy
-            class Serializer(serpy.Serializer):
-                pagination = PaginationSerializer(attr='pagination', display_none=True, required=True)
-                lines = LineSerializer(many=True)
-                error = ErrorSerializer(display_none=False)
-                disruptions = DisruptionSerializer(attr='impacts', many=True)
-                feed_publishers = FeedPublisherSerializer(many=True, display_none=False)
-
-            collections = serialize_with(Serializer)
+            if current_app.config.get('USE_SERPY', False):
+                collections = serialize_with(LinesSerializer)
+            else:
+                collections = marshal_with(OrderedDict(self.collections), display_null=False)
             self.method_decorators.insert(1, collections)
+
             self.parsers["get"].add_argument("original_id", type=unicode,
                             description="original uri of the object you"
                                     "want to query")
@@ -594,25 +591,18 @@ def disruptions(is_collection):
 
         def __init__(self):
             Uri.__init__(self, is_collection, "disruptions")
-            #self.collections = [
-            #    ("pagination", PbField(pagination)),
-            #    ("error", PbField(error)),
-            #    ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
-            #    ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
-            #                               display_null=False)))
-            #]
-            #collections = marshal_with(OrderedDict(self.collections),
-            #                           display_null=False)
+            self.collections = [
+                ("pagination", PbField(pagination)),
+                ("error", PbField(error)),
+                ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
+                                           display_null=False)))
+            ]
 
-            from jormungandr.interfaces.v1.serializer import serialize_with, ErrorSerializer, DisruptionSerializer, FeedPublisherSerializer, PaginationSerializer
-            import serpy
-            class Serializer(serpy.Serializer):
-                pagination = PaginationSerializer(attr='pagination', display_none=True, required=True)
-                error = ErrorSerializer(display_none=False)
-                disruptions = DisruptionSerializer(attr='impacts', many=True)
-                feed_publishers = FeedPublisherSerializer(many=True, display_none=False)
-
-            collections = serialize_with(Serializer)
+            if current_app.config.get('USE_SERPY', False):
+                collections = serialize_with(DisruptionsSerializer)
+            else:
+                collections = marshal_with(OrderedDict(self.collections), display_null=False)
             self.method_decorators.insert(1, collections)
             self.parsers["get"].add_argument("original_id", type=unicode,
                             description="original uri of the object you"
