@@ -36,18 +36,17 @@ import serpy
 class MultiLineStringField(serpy.Field):
 
     def to_value(self, value):
-        if hasattr(g, 'disable_geojson') and g.disable_geojson:
+        if getattr(g, 'disable_geojson', False):
             return None
 
         lines = []
         for l in value.lines:
-            lines.append([[c.lon, c.lat] for c in l.coordinates])
+            lines.append(([c.lon, c.lat] for c in l.coordinates))
 
-        response = {
+        return {
             "type": "MultiLineString",
             "coordinates": lines,
         }
-        return response
 
 
 class PropertySerializer(serpy.Serializer):
