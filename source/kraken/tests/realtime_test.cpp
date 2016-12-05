@@ -1566,3 +1566,99 @@ BOOST_AUTO_TEST_CASE(unknown_stop_point) {
 
 }
 
+/* Delay messages are applied in order
+ * In this test, we are applying three
+ * When one of delay message is removed/updated, remaining delay message should still be
+ * applied in the original order
+ * */
+BOOST_AUTO_TEST_CASE(ordered_delay_message_test) {
+
+    ed::builder b("20150928");
+    b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t)("stop3", "10:01"_t);
+
+    auto trip_update_1 = ntest::make_delay_message("vj:1",
+            "20150928",
+            {
+                    std::make_tuple("stop1", "20150928T0801"_pts, "20150928T0801"_pts),
+                    std::make_tuple("stop2", "20150928T0910"_pts, "20150928T0910"_pts), // << Delayed
+                    std::make_tuple("stop3", "20150928T1001"_pts, "20150928T1001"_pts)
+            });
+    auto trip_update_2 = ntest::make_delay_message("vj:1",
+            "20150928",
+            {
+                    std::make_tuple("stop1", "20150928T0810"_pts, "20150928T0810"_pts),
+                    std::make_tuple("stop2", "20150928T0920"_pts, "20150928T0920"_pts), // << Delayed again
+                    std::make_tuple("stop3", "20150928T1001"_pts, "20150928T1001"_pts)
+            });
+    auto trip_update_3 = ntest::make_delay_message("vj:1",
+            "20150928",
+            {
+                    std::make_tuple("stop1", "20150928T0810"_pts, "20150928T0810"_pts),
+                    std::make_tuple("stop2", "20150928T0925"_pts, "20150928T0925"_pts), // << Delayed again
+                    std::make_tuple("stop3", "20150928T1001"_pts, "20150928T1001"_pts)
+            });
+    b.data->build_uri();
+
+
+    const auto& pt_data = b.data->pt_data;
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
+    auto vj = pt_data->vehicle_journeys.front();
+    BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
+
+    navitia::handle_realtime("feed_42", "20150101T1337"_dt, trip_update_1, *b.data);
+    navitia::handle_realtime("feed_43", "20150101T1338"_dt, trip_update_2, *b.data);
+    navitia::handle_realtime("feed_44", "20150101T1339"_dt, trip_update_3, *b.data);
+
+    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 4);
+    BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
+
+    pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    {
+        navitia::routing::RAPTOR raptor(*(b.data));
+
+        auto compute = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
+            return raptor.compute(pt_data->stop_areas_map.at(from), pt_data->stop_areas_map.at(to),
+                    "08:00"_t, 0, navitia::DateTimeUtils::inf, level, 2_min, true);
+        };
+
+        auto res = compute(nt::RTLevel::Base, "stop1", "stop2");
+        BOOST_REQUIRE_EQUAL(res.size(), 1);
+        BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0901"_dt);
+
+        // Nothing has changed, the result is the same than Base
+        res = compute(nt::RTLevel::RealTime, "stop1", "stop2");
+        BOOST_REQUIRE_EQUAL(res.size(), 1);
+        BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0925"_dt);
+    }
+    // Now we remove the first disruption
+    navitia::delete_disruption("feed_42", *pt_data, *b.data->meta);
+
+    pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    {
+        navitia::routing::RAPTOR raptor(*(b.data));
+
+        auto compute = [&](nt::RTLevel level, const std::string& from, const std::string& to) {
+            return raptor.compute(pt_data->stop_areas_map.at(from), pt_data->stop_areas_map.at(to),
+                    "08:00"_t, 0, navitia::DateTimeUtils::inf, level, 2_min, true);
+        };
+
+        auto res = compute(nt::RTLevel::Base, "stop1", "stop2");
+        BOOST_REQUIRE_EQUAL(res.size(), 1);
+        BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0901"_dt);
+
+        // Nothing has changed, the result is the same than Base
+        res = compute(nt::RTLevel::RealTime, "stop1", "stop2");
+        BOOST_REQUIRE_EQUAL(res.size(), 1);
+        BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0925"_dt);
+    }
+}
+
