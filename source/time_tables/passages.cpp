@@ -129,7 +129,7 @@ void fill_route_point(PbCreator& pb_creator,
     const type::Line* line = route->line;
     auto m_route = pb->mutable_route();
     pb_creator.fill(route, m_route, 0);
-    auto pm = navitia::ptref_indexes<nt::PhysicalMode, type::Route>(route, pb_creator.data);
+    auto pm = navitia::ptref_indexes<nt::PhysicalMode, type::Route>(route, *pb_creator.data);
     pb_creator.fill(pm, m_route->mutable_physical_modes(), 0);
     pb_creator.fill(line, m_route->mutable_line(), 0);
 }
@@ -149,7 +149,7 @@ void passages(PbCreator& pb_creator,
               const uint32_t count,
               const uint32_t start_page) {
 
-    const PassagesVisitor vis{api_pb, pb_creator.data};
+    const PassagesVisitor vis{api_pb, *pb_creator.data};
     RequestHandle handler(pb_creator, request, forbidden_uris,
                           datetime, duration, {}, vis.clockwise());
 
@@ -162,7 +162,7 @@ void passages(PbCreator& pb_creator,
 
     auto passages_dt_st = get_stop_times(vis.stop_event(), handler.journey_pattern_points,
                                          handler.date_time, handler.max_datetime, nb_stoptimes,
-                                         pb_creator.data, rt_level, accessibilite_params);
+                                         *pb_creator.data, rt_level, accessibilite_params);
     size_t total_result = passages_dt_st.size();
     passages_dt_st = paginate(passages_dt_st, count, start_page);
 
@@ -173,16 +173,16 @@ void passages(PbCreator& pb_creator,
         } else {
             passage = pb_creator.add_next_arrivals();
         }
-        pb_creator.action_period = pt::time_period(navitia::to_posix_time(dt_stop_time.first, pb_creator.data),
+        pb_creator.action_period = pt::time_period(navitia::to_posix_time(dt_stop_time.first, *pb_creator.data),
                                                    pt::seconds(1));
-        auto passage_date = navitia::to_posix_timestamp(dt_stop_time.first, pb_creator.data);
+        auto passage_date = navitia::to_posix_timestamp(dt_stop_time.first, *pb_creator.data);
         passage->mutable_stop_date_time()->set_departure_date_time(passage_date);
         passage->mutable_stop_date_time()->set_arrival_date_time(passage_date);
 
         //find base datetime
         auto base_st = get_base_stop_time(dt_stop_time.second);
         if (base_st != nullptr) {
-            auto base_ptime = navitia::to_posix_time(dt_stop_time.first, pb_creator.data);
+            auto base_ptime = navitia::to_posix_time(dt_stop_time.first, *pb_creator.data);
             auto base_passage_dt = get_base_dt(dt_stop_time.second, base_st, base_ptime, true);
             passage->mutable_stop_date_time()->set_base_departure_date_time(navitia::to_posix_timestamp(base_passage_dt));
             passage->mutable_stop_date_time()->set_base_arrival_date_time(navitia::to_posix_timestamp(base_passage_dt));
@@ -198,7 +198,7 @@ void passages(PbCreator& pb_creator,
     pb_creator.make_paginate(total_result, start_page, count, passages_dt_st.size());
 
     // filling empty route points
-    const auto& all_route_points = make_route_points(handler.journey_pattern_points, pb_creator.data);
+    const auto& all_route_points = make_route_points(handler.journey_pattern_points, *pb_creator.data);
     const auto& filled_route_points = make_route_points(passages_dt_st);
     std::vector<RoutePoint> empty_route_points;
     boost::set_difference(all_route_points, filled_route_points, std::back_inserter(empty_route_points));

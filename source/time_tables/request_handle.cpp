@@ -45,9 +45,9 @@ RequestHandle::RequestHandle(PbCreator& pb_creator,
     if (! calendar_id) {
         //we only have to check the production period if we do not have a calendar,
         // since if we have one we are only interested in the time, not the date
-        if(! pb_creator.data.meta->production_date.contains(datetime.date()) ) {
+        if(! pb_creator.data->meta->production_date.contains(datetime.date()) ) {
             pb_creator.fill_pb_error(pbnavitia::Error::date_out_of_bounds, "date is out of bound");
-        } else if( !pb_creator.data.meta->production_date.contains((datetime + boost::posix_time::seconds(duration)).date()) ) {
+        } else if( !pb_creator.data->meta->production_date.contains((datetime + boost::posix_time::seconds(duration)).date()) ) {
              // On regarde si la date + duration ne déborde pas de la période de production
             pb_creator.fill_pb_error(pbnavitia::Error::date_out_of_bounds,
                                      "date is not in data production period");
@@ -55,13 +55,13 @@ RequestHandle::RequestHandle(PbCreator& pb_creator,
     }
 
     if(! pb_creator.has_error()){
-        date_time = DateTimeUtils::set((datetime.date() - pb_creator.data.meta->production_date.begin()).days(),
+        date_time = DateTimeUtils::set((datetime.date() - pb_creator.data->meta->production_date.begin()).days(),
                                        datetime.time_of_day().total_seconds());
         max_datetime = date_time + duration * (clockwise ? 1 : -1);
         const auto jpp_t = type::Type_e::JourneyPatternPoint;
 
         try {
-            const auto& jpps = ptref::make_query(jpp_t, request, forbidden_uris, pb_creator.data);
+            const auto& jpps = ptref::make_query(jpp_t, request, forbidden_uris, *pb_creator.data);
             for (const auto idx: jpps) { journey_pattern_points.push_back(routing::JppIdx(idx)); }
             total_result = journey_pattern_points.size();
         } catch(const ptref::ptref_error &ptref_error){

@@ -307,17 +307,17 @@ void TrafficReport::disruptions_list(const std::string& filter,
 
 } // anonymous namespace
 
-pbnavitia::Response traffic_reports(const navitia::type::Data& d,
-                                const boost::posix_time::ptime& current_datetime,
-                                const size_t depth,
-                                size_t count,
-                                size_t start_page,
-                                const std::string& filter,
-                                const std::vector<std::string>& forbidden_uris) {
-
-    PbCreator pb_creator(d, current_datetime, bt::time_period(current_datetime, bt::seconds(1)));
-
+pbnavitia::Response traffic_reports(navitia::PbCreator& pb_creator,
+                                    const navitia::type::Data& d,
+                                    const boost::posix_time::ptime& current_datetime,
+                                    const size_t depth,
+                                    size_t count,
+                                    size_t start_page,
+                                    const std::string& filter,
+                                    const std::vector<std::string>& forbidden_uris) {
     TrafficReport result;
+    pb_creator.action_period = bt::time_period(current_datetime, bt::seconds(1));
+    //pb_creator.init(&d, current_datetime, bt::time_period(current_datetime, bt::seconds(1)));
     try {
         result.disruptions_list(filter, forbidden_uris, d, current_datetime);
     } catch(const ptref::parsing_error& parse_error) {

@@ -13,7 +13,7 @@ START_MONITORING_THREAD = True
 #http://docs.sqlalchemy.org/en/rel_0_9/dialects/postgresql.html#psycopg2
 SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormungandr'
 
-DISABLE_DATABASE = False
+DISABLE_DATABASE = True
 
 # disable authentication
 PUBLIC = True

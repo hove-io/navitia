@@ -495,7 +495,7 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
     compute_most_serious_disruption(pb_journey, pb_creator);
 
     //fare computation, done at the end for the journey to be complete
-    auto fare = pb_creator.data.fare->compute_fare(path);
+    auto fare = pb_creator.data->fare->compute_fare(path);
     try {
         pb_creator.fill_fare_section(pb_journey, fare);
     } catch(const navitia::exception& e) {
@@ -556,7 +556,7 @@ static void add_pathes(PbCreator& pb_creator,
 
             if (is_same_stop_point(origin, *departure_stop_point)) {
                 // nothing in this case
-            } else if (use_crow_fly(origin, *departure_stop_point, sn_departure_path, pb_creator.data)){
+            } else if (use_crow_fly(origin, *departure_stop_point, sn_departure_path, *pb_creator.data)){
                 type::EntryPoint destination_tmp(type::Type_e::StopPoint, departure_stop_point->uri);
                 destination_tmp.coordinates = departure_stop_point->coord;
                 pb_creator.action_period = bt::time_period (path.items.front().departures.front(),
@@ -621,7 +621,7 @@ static void add_pathes(PbCreator& pb_creator,
 
             if (is_same_stop_point(destination, *arrival_stop_point)) {
                 // nothing in this case
-            } else if (use_crow_fly(destination, *arrival_stop_point, sn_arrival_path, pb_creator.data)) {
+            } else if (use_crow_fly(destination, *arrival_stop_point, sn_arrival_path, *pb_creator.data)) {
                 type::EntryPoint origin_tmp(type::Type_e::StopPoint, arrival_stop_point->uri);
                 auto dt = path.items.back().arrivals.back();
                 origin_tmp.coordinates = arrival_stop_point->coord;
@@ -976,7 +976,8 @@ parse_datetimes(RAPTOR& raptor,
     return datetimes;
 }
 
-pbnavitia::Response make_pt_response(RAPTOR &raptor,
+pbnavitia::Response make_pt_response(navitia::PbCreator& pb_creator,
+                                     RAPTOR &raptor,
                                      const std::vector<type::EntryPoint> &origins,
                                      const std::vector<type::EntryPoint> &destinations,
                                      const uint64_t timestamp,
@@ -984,14 +985,12 @@ pbnavitia::Response make_pt_response(RAPTOR &raptor,
                                      const type::AccessibiliteParams& accessibilite_params,
                                      const std::vector<std::string>& forbidden,
                                      const type::RTLevel rt_level,
-                                     const boost::posix_time::ptime& current_datetime,
                                      const navitia::time_duration& transfer_penalty,
                                      uint32_t max_duration,
                                      uint32_t max_transfers,
                                      uint32_t max_extra_second_pass,
                                      const boost::optional<navitia::time_duration>& direct_path_duration){
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    PbCreator pb_creator(raptor.data, current_datetime, null_time_period);
     std::vector<bt::ptime> datetimes;
     datetimes = parse_datetimes(raptor, {timestamp}, pb_creator, clockwise);
     if(pb_creator.has_error() || pb_creator.has_response_type(pbnavitia::DATE_OUT_OF_BOUNDS)) {
@@ -1049,7 +1048,8 @@ pbnavitia::Response make_pt_response(RAPTOR &raptor,
 }
 
 pbnavitia::Response
-make_response(RAPTOR &raptor,
+make_response(navitia::PbCreator& pb_creator,
+              RAPTOR &raptor,
               const type::EntryPoint& origin,
               const type::EntryPoint& destination,
               const std::vector<uint64_t>& timestamps,
@@ -1058,14 +1058,12 @@ make_response(RAPTOR &raptor,
               std::vector<std::string> forbidden,
               georef::StreetNetwork& worker,
               const type::RTLevel rt_level,
-              const boost::posix_time::ptime& current_datetime,
               const navitia::time_duration& transfer_penalty,
               uint32_t max_duration,
               uint32_t max_transfers,
               uint32_t max_extra_second_pass) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    PbCreator pb_creator(raptor.data, current_datetime, null_time_period);
     std::vector<Path> pathes;
 
     std::vector<bt::ptime> datetimes;
@@ -1155,17 +1153,15 @@ make_response(RAPTOR &raptor,
 }
 
 
-pbnavitia::Response make_isochrone(RAPTOR &raptor,
+pbnavitia::Response make_isochrone(navitia::PbCreator& pb_creator,
+                                   RAPTOR &raptor,
                                    type::EntryPoint origin,
                                    const uint64_t datetime_timestamp, bool clockwise,
                                    const type::AccessibiliteParams & accessibilite_params,
                                    std::vector<std::string> forbidden,
                                    georef::StreetNetwork & worker,
                                    const type::RTLevel rt_level,
-                                   const boost::posix_time::ptime& current_datetime,
                                    int max_duration, uint32_t max_transfers) {
-
-    PbCreator pb_creator(raptor.data, current_datetime, null_time_period);
 
     bt::ptime datetime;
     auto tmp_datetime = parse_datetimes(raptor, {datetime_timestamp}, pb_creator, clockwise);
@@ -1327,20 +1323,19 @@ static DateTime make_isochrone_date (const DateTime& init_dt,
         return init_dt + (clockwise ? 1: -1) * offset;
 }
 
-pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
-                                            const boost::posix_time::ptime& current_datetime,
-                                            type::EntryPoint center,
-                                            const uint64_t departure_datetime,
-                                            const std::vector<DateTime>& boundary_duration,
-                                            uint32_t max_transfers,
-                                            const type::AccessibiliteParams& accessibilite_params,
-                                            const std::vector<std::string>& forbidden,
-                                            bool clockwise,
-                                            const nt::RTLevel rt_level,
-                                            georef::StreetNetwork & worker,
-                                            const double& speed) {
+pbnavitia::Response make_graphical_isochrone(navitia::PbCreator& pb_creator,
+                                             RAPTOR &raptor,
+                                             type::EntryPoint center,
+                                             const uint64_t departure_datetime,
+                                             const std::vector<DateTime>& boundary_duration,
+                                             uint32_t max_transfers,
+                                             const type::AccessibiliteParams& accessibilite_params,
+                                             const std::vector<std::string>& forbidden,
+                                             bool clockwise,
+                                             const nt::RTLevel rt_level,
+                                             georef::StreetNetwork & worker,
+                                             const double& speed) {
 
-    PbCreator pb_creator(raptor.data, current_datetime, null_time_period);
     IsochroneCommon isochrone_common;
     auto resp = fill_isochrone_common(isochrone_common, raptor, center, departure_datetime,
                                       boundary_duration[0], max_transfers, accessibilite_params, forbidden, clockwise,
@@ -1362,8 +1357,8 @@ pbnavitia::Response make_graphical_isochrone(RAPTOR &raptor,
     return pb_creator.get_response();
 }
 
-pbnavitia::Response make_heat_map(RAPTOR &raptor,
-                                  const boost::posix_time::ptime& current_datetime,
+pbnavitia::Response make_heat_map(navitia::PbCreator& pb_creator,
+                                  RAPTOR &raptor,
                                   type::EntryPoint center,
                                   const uint64_t departure_datetime,
                                   DateTime max_duration,
@@ -1377,7 +1372,6 @@ pbnavitia::Response make_heat_map(RAPTOR &raptor,
                                   const navitia::type::Mode_e mode,
                                   const uint32_t resolution) {
 
-    PbCreator pb_creator(raptor.data, current_datetime, null_time_period);
     IsochroneCommon isochrone_common;
     auto resp = fill_isochrone_common(isochrone_common, raptor, center, departure_datetime,
                                  max_duration, max_transfers, accessibilite_params, forbidden, clockwise,

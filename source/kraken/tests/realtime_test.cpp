@@ -40,6 +40,7 @@ www.navitia.io
 #include "routing/raptor.h"
 #include "kraken/apply_disruption.h"
 #include "disruption/traffic_reports_api.h"
+#include "type/pb_converter.h"
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
@@ -1475,7 +1476,9 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys) {
     navitia::handle_realtime("trip_update_vj2", timestamp, trip_update_vj2, *b.data);
     navitia::handle_realtime("trip_update_vj3", timestamp, trip_update_vj3, *b.data);
 
-    const auto resp = navitia::disruption::traffic_reports(*b.data,
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::posix_time::from_iso_string("20150928T0830"), null_time_period);
+    const auto resp = navitia::disruption::traffic_reports(pb_creator, *b.data,
                                                            boost::posix_time::from_iso_string("20150928T0830"),
                                                            1, 10, 0, "", {});
     BOOST_REQUIRE_EQUAL(resp.traffic_reports_size(), 1);
@@ -1500,7 +1503,9 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys_no_base) {
             std::make_tuple("stop2", "20150929T1010"_pts, "20150929T1010"_pts)
         });
     navitia::handle_realtime("trip_update", timestamp, trip_update, *b.data);
-    const auto resp = navitia::disruption::traffic_reports(*b.data,
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::posix_time::from_iso_string("20150928T0830"), null_time_period);
+    const auto resp = navitia::disruption::traffic_reports(pb_creator, *b.data,
                                                            boost::posix_time::from_iso_string("20150928T0830"),
                                                            1, 10, 0, "", {});
     BOOST_REQUIRE_EQUAL(resp.traffic_reports_size(), 0);

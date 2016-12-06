@@ -33,6 +33,7 @@ www.navitia.io
 #include "type/response.pb.h"
 #include "type/request.pb.h"
 #include "type/pt_data.h"
+#include "type/pb_converter.h"
 
 namespace navitia {
 
@@ -44,14 +45,12 @@ namespace type {
 namespace autocomplete {
 
 /** Trouve tous les objets définis par filter dont le nom contient q */
-pbnavitia::Response autocomplete(const std::string &q,
+pbnavitia::Response autocomplete(navitia::PbCreator& pb_creator, const std::string &q,
                                  const std::vector<navitia::type::Type_e> &filter,
                                  uint32_t depth,
-                                 const bool disable_geojson,
                                  int nbmax,
                                  const std::vector <std::string> &admins,
                                  int search_type,
-                                 const type::Data &d,
-                                 const boost::posix_time::ptime& current_datetime);
+                                 const type::Data &d);
 }
 }

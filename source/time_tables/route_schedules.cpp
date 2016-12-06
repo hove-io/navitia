@@ -353,31 +353,31 @@ void route_schedule(PbCreator& pb_creator, const std::string& filter,
         return;
     }
 
-    auto pt_datetime = to_posix_time(handler.date_time, pb_creator.data);
-    auto pt_max_datetime = to_posix_time(handler.max_datetime, pb_creator.data);
+    auto pt_datetime = to_posix_time(handler.date_time, *pb_creator.data);
+    auto pt_max_datetime = to_posix_time(handler.max_datetime, *pb_creator.data);
     pb_creator.action_period = pt::time_period(pt_datetime, pt_max_datetime);
 
     Thermometer thermometer;
-    auto routes_idx = ptref::make_query(type::Type_e::Route, filter, forbidden_uris, pb_creator.data);
+    auto routes_idx = ptref::make_query(type::Type_e::Route, filter, forbidden_uris, *pb_creator.data);
     size_t total_result = routes_idx.size();
     routes_idx = paginate(routes_idx, count, start_page);
     for (const auto& route_idx: routes_idx) {
-        auto route = pb_creator.data.pt_data->routes[route_idx];
+        auto route = pb_creator.data->pt_data->routes[route_idx];
         auto stop_times = get_all_route_stop_times(route, handler.date_time,
                                                    handler.max_datetime, max_stop_date_times,
-                                                   pb_creator.data, rt_level, calendar_id);
-        const auto& jps =  pb_creator.data.dataRaptor->jp_container.get_jps_from_route()[routing::RouteIdx(*route)];
+                                                   *pb_creator.data, rt_level, calendar_id);
+        const auto& jps =  pb_creator.data->dataRaptor->jp_container.get_jps_from_route()[routing::RouteIdx(*route)];
         std::vector<vector_idx> stop_points;
         for (const auto& jp_idx : jps) {
-            const auto& jp = pb_creator.data.dataRaptor->jp_container.get(jp_idx);
+            const auto& jp = pb_creator.data->dataRaptor->jp_container.get(jp_idx);
             stop_points.push_back(vector_idx());
             for (const auto& jpp_idx : jp.jpps) {
-                const auto& jpp = pb_creator.data.dataRaptor->jp_container.get(jpp_idx);
+                const auto& jpp = pb_creator.data->dataRaptor->jp_container.get(jpp_idx);
                 stop_points.back().push_back(jpp.sp_idx.val);
             }
         }
         thermometer.generate_thermometer(stop_points);
-        auto  matrice = make_matrice(stop_times, thermometer, pb_creator.data);
+        auto  matrice = make_matrice(stop_times, thermometer, *pb_creator.data);
 
         auto schedule = pb_creator.add_route_schedules();
         pbnavitia::Table *table = schedule->mutable_table();
@@ -388,7 +388,7 @@ void route_schedule(PbCreator& pb_creator, const std::string& filter,
         for (size_t i = 0; i < stop_times.size(); ++i) { table->add_headers(); }
         for(unsigned int i=0; i < thermometer.get_thermometer().size(); ++i) {
             type::idx_t spidx=thermometer.get_thermometer()[i];
-            const type::StopPoint* sp = pb_creator.data.pt_data->stop_points[spidx];
+            const type::StopPoint* sp = pb_creator.data->pt_data->stop_points[spidx];
             pbnavitia::RouteScheduleRow* row = table->add_rows();
             pb_creator.fill(sp, row->mutable_stop_point(), max_depth);
 
@@ -404,7 +404,7 @@ void route_schedule(PbCreator& pb_creator, const std::string& filter,
                     // - need to override headsign with trip headsign (i.e. vj.name)
                     // - issue all headsigns of the vj in headsigns
                     vj_display_information->set_headsign(vj->name);
-                    for (const auto& headsign: pb_creator.data.pt_data->headsign_handler.get_all_headsigns(vj)) {
+                    for (const auto& headsign: pb_creator.data->pt_data->headsign_handler.get_all_headsigns(vj)) {
                         vj_display_information->add_headsigns(headsign);
                     }
                     pb_creator.fill_additional_informations(header->mutable_additional_informations(),
@@ -426,7 +426,7 @@ void route_schedule(PbCreator& pb_creator, const std::string& filter,
         if (stop_times.empty() && (rt_level != type::RTLevel::Base)) {
             auto tmp_stop_times = get_all_route_stop_times(route, handler.date_time,
                                                            handler.max_datetime, max_stop_date_times,
-                                                           pb_creator.data, type::RTLevel::Base, calendar_id);
+                                                           *pb_creator.data, type::RTLevel::Base, calendar_id);
             if (!tmp_stop_times.empty()) {
                 schedule->set_response_status(pbnavitia::ResponseStatus::active_disruption);
             } else {

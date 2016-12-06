@@ -75,6 +75,7 @@ inline void doWork(zmq::context_t& context,
     zmq::socket_t socket (context, ZMQ_REQ);
     socket.connect("inproc://workers");
     bool run = true;
+    //Here we create the worker
     navitia::Worker w(data_manager, conf);
     z_send(socket, "READY");
     auto slow_request_duration = pt::milliseconds(conf.slow_request_duration());

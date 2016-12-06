@@ -33,6 +33,7 @@ www.navitia.io
 #include "type/request.pb.h"
 #include "type/response.pb.h"
 #include "type/pt_data.h"
+#include "type/pb_converter.h"
 
 namespace navitia {
 
@@ -47,9 +48,9 @@ typedef uint32_t idx_t;
 namespace proximitylist {
 
 typedef std::vector<std::pair<type::idx_t, type::GeographicalCoord>> vector_idx_coord;
-pbnavitia::Response find(const type::GeographicalCoord& coord, const double distance,
+pbnavitia::Response find(navitia::PbCreator& pb_creator,
+                         const type::GeographicalCoord& coord, const double distance,
                          const std::vector<type::Type_e>& types, const std::string& filter,
                          const uint32_t depth, const uint32_t count, const uint32_t start_page,
-                         const type::Data& data, const boost::posix_time::ptime& current_datetime,
-                         const bool disable_feedpublisher = false);
+                         const type::Data& data);
 }} // namespace navitia::proximitylist
