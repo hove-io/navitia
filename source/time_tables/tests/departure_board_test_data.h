@@ -136,15 +136,15 @@ struct calendar_fixture {
     navitia::type::VehicleJourney* vj_wednesday;
     calendar_fixture() : b("20120614", "departure board") {
         //2 vj during the week
-        b.vj("line:A", "1", "", true, "week")("stop1", 10 * 3600, 10 * 3600 + 10 * 60)
-                                             ("stop2", 12 * 3600, 12 * 3600 + 10 * 60);
-        b.vj("line:A", "101", "", true, "week_bis")("stop1", 11 * 3600, 11 * 3600 + 10 * 60)
-                                                   ("stop2", 14 * 3600, 14 * 3600 + 10 * 60);
+        b.vj("line:A", "1", "", true, "week")("stop1", "10:00"_t, "10:10"_t)
+                                             ("stop2", "12:00"_t, "12:10"_t);
+        b.vj("line:A", "101", "", true, "week_bis")("stop1", "11:00"_t, "11:10"_t)
+                                                   ("stop2", "14:00"_t, "14:10"_t);
         //NOTE: we give a first random validity pattern because the builder try to factorize them
 
         //only one on the week end
-        b.vj("line:A", "10101", "", true, "weekend")("stop1", 20 * 3600, 20 * 3600 + 10 * 60)
-                                                    ("stop2", 21 * 3600, 21 * 3600 + 10 * 60);
+        b.vj("line:A", "10101", "", true, "weekend")("stop1", "20:00"_t, "20:10"_t)
+                                                    ("stop2", "21:00"_t, "21:10"_t);
 
         // and one everytime
         auto& builder_vj = b.vj("line:A", "1100101", "", true, "all")("stop1", "15:00"_t, "15:10"_t)
@@ -154,24 +154,24 @@ struct calendar_fixture {
         pt_data.comments.add(builder_vj.vj, "vj comment");
 
         // and wednesday that will not be matched to any cal
-        b.vj("line:A", "110010011", "", true, "wednesday")("stop1", 17 * 3600, 17 * 3600 + 10 * 60)
-                                                          ("stop2", 18 * 3600, 18 * 3600 + 10 * 60);
+        b.vj("line:A", "110010011", "", true, "wednesday")("stop1", "17:00"_t, "17:10"_t)
+                                                          ("stop2", "18:00"_t, "18:10"_t);
 
         // Check partial terminus tag
-        b.vj("A", "10111111", "", true, "vj1", "")("Tstop1", 10*3600, 10*3600)
-                                                  ("Tstop2", 10*3600 + 30*60, 10*3600 + 30*60);
-        b.vj("A", "00000011", "", true, "vj2", "")("Tstop1", 10*3600 + 30*60, 10*3600 + 30*60)
-                                                  ("Tstop2", 11*3600,11*3600)
-                                                  ("Tstop3", 11*3600 + 30*60,36300 + 30*60);
+        b.vj("A", "10111111", "", true, "vj1", "")("Tstop1", "10:00"_t, "10:00"_t)
+                                                  ("Tstop2", "10:30"_t, "10:30"_t);
+        b.vj("A", "00000011", "", true, "vj2", "")("Tstop1", "10:30"_t, "10:30"_t)
+                                                  ("Tstop2", "11:00"_t,"11:00"_t)
+                                                  ("Tstop3", "11:30"_t,"11:30"_t);
 
         // Check date_time_estimated at stoptime
         b.vj("B", "10111111", "", true, "date_time_estimated", "")
-            ("ODTstop1", 10*3600, 10*3600)
-            ("ODTstop2", 10*3600 + 30*60, 10*3600 + 30*60);
+                ("ODTstop1", "10:00"_t, "10:00"_t)
+                ("ODTstop2", "10:30"_t, "10:30"_t);
         // Check on_demand_transport at stoptime
         b.vj("B", "10111111", "", true, "on_demand_transport", "")
-            ("ODTstop1", 11*3600, 11*3600)
-            ("ODTstop2", 11*3600 + 30*60, 11*3600 + 30*60);
+                ("ODTstop1", "11:00"_t, "11:00"_t)
+                ("ODTstop2", "11:30"_t, "11:30"_t);
 
         // Check line opening in stop schedules
         b.vj("C", "110011000001", "", true, "vj_C", "")

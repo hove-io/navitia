@@ -355,6 +355,7 @@ BOOST_AUTO_TEST_CASE(partial_terminus_test1) {
         resp = pb_creator.get_response();
 
         BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).date_times_size(), 0);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).response_status(), pbnavitia::ResponseStatus::terminus);
     }
 }

@@ -46,13 +46,11 @@ namespace navitia { namespace timetables {
 
 static bool is_last_stoptime(const nt::StopTime* stop_time, const nt::StopPoint* stp){
     return stop_time->vehicle_journey
-            && stop_time->vehicle_journey->route
-            && stop_time->vehicle_journey->route->destination
             && ! stop_time->vehicle_journey->stop_time_list.empty()
             && stop_time->vehicle_journey->stop_time_list.back().stop_point == stp;
 }
 
-static bool is_partial_terminus(const PbCreator& pb_creator,
+static bool is_flagged_partial_terminus(const PbCreator& pb_creator,
                                 const std::vector<routing::datetime_stop_time>& stop_times,
                                 const stop_point_route& sp_route) {
     for (const auto& st : stop_times) {
@@ -243,7 +241,7 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
         if (stop_point->stop_area == route->destination) {
             response_status[sp_route] = pbnavitia::ResponseStatus::terminus;
         } else {
-            if (is_partial_terminus(pb_creator, stop_times, sp_route)) {
+            if (is_flagged_partial_terminus(pb_creator, stop_times, sp_route)) {
                 response_status[sp_route] = pbnavitia::ResponseStatus::partial_terminus;
             }
         }
