@@ -429,6 +429,14 @@ void PbCreator::Filler::fill_pb_object(const ng::Admin* adm, pbnavitia::Administ
     if(!adm->insee.empty()){
         admin->set_insee(adm->insee);
     }
+    for (const auto& sa: adm->main_stop_areas) {
+        auto* pb_sa = admin->add_main_stop_areas();
+        fill_pb_object(sa, pb_sa);
+        for (const auto& sp: sa->stop_point_list) {
+            auto* pb_sp = pb_sa->add_stop_points();
+            fill_pb_object(sp, pb_sp);
+        }
+    }
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopPoint* stop_point) {

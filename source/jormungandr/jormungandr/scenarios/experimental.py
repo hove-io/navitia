@@ -30,6 +30,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 from jormungandr.scenarios import new_default
+from jormungandr.scenarios.default import is_admin
 from navitiacommon import type_pb2, response_pb2
 import uuid
 from jormungandr.scenarios.utils import fill_uris
@@ -155,14 +156,32 @@ def _reverse_journeys(res):
 def _get_places_crowfly(instance, mode, place, max_duration_to_pt, max_nb_crowfly=5000, **kwargs):
     # When max_duration_to_pt is 0, there is no need to compute the fallback to pt, except if place is a stop_point or a
     # stop_area
+
     if max_duration_to_pt == 0:
         # When max_duration_to_pt is 0, we can get on the public transport ONLY if the place is a stop_point
         if instance.georef.get_stop_points_from_uri(place.uri):
             return {mode: place}
         else:
             return {mode: []}
-    return {mode: instance.georef.get_crow_fly(get_uri_pt_object(place), mode, max_duration_to_pt,
-                                               max_nb_crowfly, **kwargs)}
+
+    res = instance.georef.get_crow_fly(get_uri_pt_object(place), mode, max_duration_to_pt,
+                                               max_nb_crowfly, **kwargs)
+
+    if place.administrative_region:
+        # for the admin, the main stop area of the admin have a crow fly value of 0
+        for main_stop_area in place.administrative_region.main_stop_areas:
+            for sp in main_stop_area.stop_points:
+                ptobj = next((ptobj for ptobj in res if ptobj.uri == sp.uri), None)
+                if ptobj:
+                    ptobj.distance = 0
+                else:
+                    ptobj = res.add()
+                    ptobj.stop_point.CopyFrom(sp)
+                    ptobj.embedded_type = type_pb2.STOP_POINT
+                    ptobj.uri = sp.uri
+                    ptobj.name = sp.name
+                    ptobj.distance = 0
+    return {mode: res}
 
 
 def _sn_routing_matrix(instance, place, places_crowfly, mode, max_duration_to_pt, request, **kwargs):
