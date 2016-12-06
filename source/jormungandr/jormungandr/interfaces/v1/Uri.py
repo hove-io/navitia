@@ -54,7 +54,9 @@ from jormungandr.interfaces.common import odt_levels
 from jormungandr.utils import date_to_timestamp
 from jormungandr.resources_utc import ResourceUtc
 from datetime import datetime
-from flask import g
+from flask import g, current_app
+
+from jormungandr.interfaces.v1.serializer import serialize_with, LinesSerializer, DisruptionsSerializer
 
 
 class Uri(ResourceUri, ResourceUtc):
@@ -377,6 +379,7 @@ def stop_areas(is_collection):
     return StopAreas
 
 
+
 def connections(is_collection):
     class Connections(Uri):
 
@@ -512,9 +515,12 @@ def lines(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
-            collections = marshal_with(OrderedDict(self.collections),
-                                       display_null=False)
+            if current_app.config.get('USE_SERPY', False):
+                collections = serialize_with(LinesSerializer)
+            else:
+                collections = marshal_with(OrderedDict(self.collections), display_null=False)
             self.method_decorators.insert(1, collections)
+
             self.parsers["get"].add_argument("original_id", type=unicode,
                             description="original uri of the object you"
                                     "want to query")
@@ -592,8 +598,11 @@ def disruptions(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
-            collections = marshal_with(OrderedDict(self.collections),
-                                       display_null=False)
+
+            if current_app.config.get('USE_SERPY', False):
+                collections = serialize_with(DisruptionsSerializer)
+            else:
+                collections = marshal_with(OrderedDict(self.collections), display_null=False)
             self.method_decorators.insert(1, collections)
             self.parsers["get"].add_argument("original_id", type=unicode,
                             description="original uri of the object you"

@@ -18,7 +18,7 @@ psycopg2
 pyzmq==15.4.0
 redis==2.9.1
 six==1.10.0
-kombu==3.0.8
+kombu==3.0.30
 python-dateutil==2.5.3
 pytz==2013.9
 retrying==1.2.3
@@ -36,3 +36,4 @@ suds==0.4
 --no-binary=gevent,greenlet #the wheel is built against python 2.7.4 and debian is on 2.7.3 :(
 gevent==1.1.2
 Flask-Cache==0.13.1
+git+https://github.com/kinnou02/serpy.git@508b5530d7b2a51aa83e0db17e5821b9b9f25bdf#egg=serpy
