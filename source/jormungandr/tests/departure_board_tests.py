@@ -278,6 +278,22 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["stop_schedules"][0]["date_times"][0]["links"][0]["type"] == "vehicle_journey"
         assert response["stop_schedules"][0]["date_times"][0]["links"][0]["value"] == "vj2"
 
+        # vj1 not in response, Tstop2 is partial terminus
+        response = self.query_region("stop_areas/Tstop2/stop_schedules?"
+                                     "from_datetime=20120615T100000")
+
+        assert "stop_schedules" in response
+        is_valid_stop_schedule(response["stop_schedules"], self.tester, only_time=False)
+        assert len(response["stop_schedules"]) == 1, "there should be only one elt"
+
+        assert len(response["stop_schedules"]) == 1
+        assert response["stop_schedules"][0]["stop_point"]["id"] == "Tstop2"
+        assert response["stop_schedules"][0]["route"]["id"] == "A:1"
+        assert len(response["stop_schedules"][0]["date_times"]) == 1
+        assert response["stop_schedules"][0]["date_times"][0]["date_time"] == "20120615T110000"
+        assert response["stop_schedules"][0]["date_times"][0]["links"][0]["type"] == "vehicle_journey"
+        assert response["stop_schedules"][0]["date_times"][0]["links"][0]["value"] == "vj2"
+
 
         # Stop_schedules in TStop2: Partial Terminus
         response = self.query_region("stop_areas/Tstop2/stop_schedules?"
