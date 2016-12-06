@@ -396,7 +396,7 @@ class AsyncWorker(object):
                 journey.sections.extend([create_crowfly(_from, departure, journey.departure_date_time,
                                                         journey.sections[0].begin_date_time)])
             else:
-                # extend the journey with fallback direct path
+                # extend the journey with the fallback routing path
                 self._extend_journey(journey, dep_mode, _from, departure, journey.departure_date_time,
                                      origins_fallback, True, fallback_direct_path)
         journey.sections.sort(SectionSorter())
@@ -416,7 +416,7 @@ class AsyncWorker(object):
                 journey.sections.extend([create_crowfly(arrival, to, last_section_end,
                                                         journey.arrival_date_time)])
             else:
-                # extend the journey with fallback direct path
+                # extend the journey with the fallback routing path
                 o = arrival
                 d = to
                 reverse_sections = False
