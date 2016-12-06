@@ -1,3 +1,9 @@
+navitia2 (2.22.3) unstable; urgency=low
+
+  * disable gevent monkey patch 
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Tue, 06 Dec 2016 09:12:25 +0100
+
 navitia2 (2.22.2) unstable; urgency=low
 
   * Kraken: fix disruption update on lines <https://github.com/CanalTP/navitia/pull/1866>
