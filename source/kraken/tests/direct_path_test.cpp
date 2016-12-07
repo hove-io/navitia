@@ -79,7 +79,8 @@ BOOST_AUTO_TEST_CASE(direct_path_test) {
     //navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     w.init_worker_data(data_manager.get_data(), boost::gregorian::not_a_date_time, null_time_period);
     //w.pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    auto res = w.direct_path(req);
+    w.direct_path(req);
+    auto res = w.pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(res.journeys_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).street_network().path_items_size(), 3);
@@ -89,7 +90,8 @@ BOOST_AUTO_TEST_CASE(direct_path_test) {
     sn_params->set_origin_mode("bss");
     //w.pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     w.init_worker_data(data_manager.get_data(), boost::gregorian::not_a_date_time, null_time_period);
-    res = w.direct_path(req);
+    w.direct_path(req);
+    res = w.pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(res.journeys_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections_size(), 5);
     BOOST_CHECK_EQUAL(res.journeys(0).durations().total(), 234);
@@ -98,7 +100,8 @@ BOOST_AUTO_TEST_CASE(direct_path_test) {
     sn_params->set_origin_mode("bike");
     //w.pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     w.init_worker_data(data_manager.get_data(), boost::gregorian::not_a_date_time, null_time_period);
-    res = w.direct_path(req);
+    w.direct_path(req);
+    res = w.pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(res.journeys_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).street_network().path_items_size(), 7);
@@ -108,7 +111,8 @@ BOOST_AUTO_TEST_CASE(direct_path_test) {
     sn_params->set_origin_mode("car");
     //w.pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     w.init_worker_data(data_manager.get_data(), boost::gregorian::not_a_date_time, null_time_period);
-    res = w.direct_path(req);
+    w.direct_path(req);
+    res = w.pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(res.journeys_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections_size(), 3);
     BOOST_CHECK_EQUAL(res.journeys(0).durations().total(), 121);

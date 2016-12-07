@@ -39,14 +39,6 @@ www.navitia.io
 #include "type/meta_data.h"
 #include <log4cplus/ndc.h>
 
-inline pbnavitia::Response make_internal_error(const std::exception& e) {
-    pbnavitia::Response response;
-
-    response.mutable_error()->set_id(pbnavitia::Error::internal_error);
-    response.mutable_error()->set_message(e.what());
-
-    return response;
-}
 
 static void respond(zmq::socket_t& socket,
              const std::string& address,
@@ -57,7 +49,9 @@ static void respond(zmq::socket_t& socket,
     }catch(const google::protobuf::FatalException& e){
         auto logger = log4cplus::Logger::getInstance("worker");
         LOG4CPLUS_ERROR(logger, "failure during serialization: " << e.what());
-        auto error_response = make_internal_error(e);
+        pbnavitia::Response error_response;
+        error_response.mutable_error()->set_id(pbnavitia::Error::internal_error);
+        error_response.mutable_error()->set_message(e.what());
         reply.rebuild(error_response.ByteSize());
         error_response.SerializeToArray(reply.data(), error_response.ByteSize());
     }
@@ -110,7 +104,7 @@ inline void doWork(zmq::context_t& context,
             LOG4CPLUS_DEBUG(logger, "receive request: " << pb_req.DebugString());
         }
         try {
-            result = w.dispatch(pb_req);
+            w.dispatch(pb_req);
             if(api != pbnavitia::METADATAS){
                 LOG4CPLUS_TRACE(logger, "response: " << result.DebugString());
             }
@@ -119,8 +113,10 @@ inline void doWork(zmq::context_t& context,
             LOG4CPLUS_ERROR(logger, "internal server error: " << e.what());
             LOG4CPLUS_ERROR(logger, "on query: " << pb_req.DebugString());
             LOG4CPLUS_ERROR(logger, "backtrace: " << e.backtrace());
-            result = make_internal_error(e);
+            w.pb_creator.fill_pb_error(pbnavitia::Error::internal_error, e.what());
+            result = w.pb_creator.get_response();
         }
+        result = w.pb_creator.get_response();
         if (! data_manager.get_data()->loaded){
             result.set_publication_date(-1);
         } else {

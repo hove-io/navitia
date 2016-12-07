@@ -1772,10 +1772,13 @@ void PbCreator::fill_pb_error(const pbnavitia::Error::error_id id, const std::st
     error->set_message(message);
 }
 
-pbnavitia::Response PbCreator::get_response(){
+const pbnavitia::Response& PbCreator::get_response(){
     Filler(0, DumpMessage::No, *this).fill_pb_object(contributors, response.mutable_feed_publishers());
+    contributors.clear();
     Filler(0, DumpMessage::No, *this).fill_pb_object(impacts, response.mutable_impacts());
-    return std::move(response);
+    impacts.clear();
+    //return std::move(response);
+    return response;
 }
 
 void PbCreator::fill_additional_informations(google::protobuf::RepeatedField<int>* infos,
@@ -1917,4 +1920,37 @@ void fill_pb_error(const pbnavitia::Error::error_id id, const std::string& messa
     error->set_id(id);
     error->set_message(message);
 }
+
+pbnavitia::GeoStatus* PbCreator::mutable_geo_status(){
+    return response.mutable_geo_status();
+}
+
+pbnavitia::Status* PbCreator::mutable_status(){
+    return response.mutable_status();
+}
+
+pbnavitia::Pagination* PbCreator::mutable_pagination(){
+    return response.mutable_pagination();
+}
+
+pbnavitia::Co2Emission* PbCreator::mutable_car_co2_emission(){
+    return response.mutable_car_co2_emission();
+}
+
+pbnavitia::StreetNetworkRoutingMatrix* PbCreator::mutable_sn_routing_matrix(){
+    return response.mutable_sn_routing_matrix();
+}
+
+pbnavitia::Metadatas* PbCreator::mutable_metadatas(){
+    return response.mutable_metadatas();
+}
+
+void PbCreator::clear_feed_publishers(){
+    response.clear_feed_publishers();
+}
+
+pbnavitia::FeedPublisher* PbCreator::add_feed_publishers(){
+    return response.add_feed_publishers();
+}
+
 }

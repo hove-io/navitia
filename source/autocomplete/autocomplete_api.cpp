@@ -183,7 +183,7 @@ static void update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_
 }
 
 
-pbnavitia::Response autocomplete(navitia::PbCreator& pb_creator, const std::string &q,
+void autocomplete(navitia::PbCreator& pb_creator, const std::string &q,
                                  const std::vector<nt::Type_e> &filter,
                                  uint32_t depth,
                                  int nbmax,
@@ -193,7 +193,7 @@ pbnavitia::Response autocomplete(navitia::PbCreator& pb_creator, const std::stri
 
     if (q.empty()) {
         pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "Autocomplete : value of q absent");
-        return pb_creator.get_response();
+        return;
     }
     int nbmax_temp = nbmax;
     //For each object type we search in the dictionnary and keep (nbmax x 3) objects in the result.
@@ -350,7 +350,6 @@ pbnavitia::Response autocomplete(navitia::PbCreator& pb_creator, const std::stri
 
     //Pagination
     pb_creator.make_paginate(result_size, 0, nbmax, result_size);
-    return pb_creator.get_response();
 }
 
 }} //namespace navitia::autocomplete

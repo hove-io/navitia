@@ -88,11 +88,11 @@ sort_cut(vector_idx_coord& list, const size_t end_pagination, const nt::Geograph
     list.resize(nb_sort);
 }
 
-pbnavitia::Response find(navitia::PbCreator& pb_creator,
-                         const type::GeographicalCoord& coord, const double distance,
-                         const std::vector<nt::Type_e>& types, const std::string& filter,
-                         const uint32_t depth, const uint32_t count, const uint32_t start_page,
-                         const type::Data & data) {
+void find(navitia::PbCreator& pb_creator,
+          const type::GeographicalCoord& coord, const double distance,
+          const std::vector<nt::Type_e>& types, const std::string& filter,
+          const uint32_t depth, const uint32_t count, const uint32_t start_page,
+          const type::Data & data) {
     int total_result = 0;
     std::vector<t_result > result;
     auto end_pagination = (start_page+1) * count;
@@ -116,10 +116,10 @@ pbnavitia::Response find(navitia::PbCreator& pb_creator,
             } catch(const ptref::parsing_error &parse_error) {
                 pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse,
                                          "Problem while parsing the query:" + parse_error.more);
-                return pb_creator.get_response();
+                return;
             } catch(const ptref::ptref_error &pt_error) {
                 pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "ptref : " + pt_error.more);
-                return pb_creator.get_response();
+                return;
             }
         }
         switch(type){
@@ -171,6 +171,5 @@ pbnavitia::Response find(navitia::PbCreator& pb_creator,
     result = paginate(result, count, start_page);
     make_pb(pb_creator, result, depth, data, coord);
     pb_creator.make_paginate(total_result, start_page, count, result.size());
-    return pb_creator.get_response();
 }
 }} // namespace navitia::proximitylist

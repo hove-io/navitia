@@ -284,10 +284,11 @@ int main(int argc, char** argv){
         type::AccessibiliteParams accessibilite_params;
         const auto departure_datetime = DateTimeUtils::set(date.days(), demand.hour);
         navitia::PbCreator pb_creator(&data, boost::gregorian::not_a_date_time, null_time_period);
-        auto resp = make_response(pb_creator, router, origin,
-                                  destination, {departure_datetime}, true,
-                                  accessibilite_params, {}, georef_worker, type::RTLevel::Base,
-                                  2_min, DateTimeUtils::SECONDS_PER_DAY, 10, nb_second_pass);
+        make_response(pb_creator, router, origin,
+                      destination, {departure_datetime}, true,
+                      accessibilite_params, {}, georef_worker, type::RTLevel::Base,
+                      2_min, DateTimeUtils::SECONDS_PER_DAY, 10, nb_second_pass);
+        auto resp = pb_creator.get_response();
 
         if (resp.journeys_size() > 0) {
             ++ nb_reponses;

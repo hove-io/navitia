@@ -193,9 +193,10 @@ BOOST_AUTO_TEST_CASE(test_api) {
     c.set_lon(-1.554514);
     c.set_lat(47.218515);
     navitia::PbCreator pb_creator(&data, boost::gregorian::not_a_date_time, null_time_period);
-    auto result = find(pb_creator, c, 200,
-                    {navitia::type::Type_e::StopArea, navitia::type::Type_e::POI},
-                    "", 1, 10, 0, data);
+    find(pb_creator, c, 200,
+        {navitia::type::Type_e::StopArea, navitia::type::Type_e::POI},
+         "", 1, 10, 0, data);
+    auto result = pb_creator.get_response();
     BOOST_CHECK_EQUAL(result.places_nearby().size(), 2);
     //One object out of the range
     sa = new navitia::type::StopArea();
@@ -206,9 +207,9 @@ BOOST_AUTO_TEST_CASE(test_api) {
     data.build_proximity_list();
     result.Clear();
     pb_creator.init(&data, boost::gregorian::not_a_date_time, null_time_period);
-    result = find(pb_creator, c, 200,
-                    {navitia::type::Type_e::StopArea, navitia::type::Type_e::POI},
+    find(pb_creator, c, 200,{navitia::type::Type_e::StopArea, navitia::type::Type_e::POI},
                     "", 1, 10, 0, data);
+    result = pb_creator.get_response();
     BOOST_CHECK_EQUAL(result.places_nearby().size(), 2);
 }
 
@@ -231,9 +232,8 @@ BOOST_AUTO_TEST_CASE(test_api_type) {
     c.set_lon(-1.554514);
     c.set_lat(47.218515);
     navitia::PbCreator pb_creator(&data, boost::gregorian::not_a_date_time, null_time_period);
-    auto result = find(pb_creator, c, 200,
-                    {navitia::type::Type_e::StopArea},
-                    "", 1, 10, 0, data);
+    find(pb_creator, c, 200, {navitia::type::Type_e::StopArea}, "", 1, 10, 0, data);
+    auto result = pb_creator.get_response();
     BOOST_CHECK_EQUAL(result.places_nearby().size(), 1);
 }
 
@@ -251,22 +251,19 @@ BOOST_AUTO_TEST_CASE(test_filter) {
     c.set_lon(-1.554514);
     c.set_lat(47.218515);
     navitia::PbCreator pb_creator(&data, boost::gregorian::not_a_date_time, null_time_period);
-    auto result = find(pb_creator, c, 200,
-                    {navitia::type::Type_e::StopArea},
-                    "stop_area.name=pouet", 1, 10, 0, data);
+    find(pb_creator, c, 200, {navitia::type::Type_e::StopArea}, "stop_area.name=pouet", 1, 10, 0, data);
+    auto result = pb_creator.get_response();
     BOOST_CHECK_EQUAL(result.places_nearby().size(), 1);
     result.Clear();
     pb_creator.init(&data, boost::gregorian::not_a_date_time, null_time_period);
-    result = find(pb_creator, c, 200,
-                    {navitia::type::Type_e::StopArea},
-                    "stop_area.name=paspouet", 1, 10, 0, data);
+    find(pb_creator, c, 200, {navitia::type::Type_e::StopArea}, "stop_area.name=paspouet", 1, 10, 0, data);
+    result = pb_creator.get_response();
     BOOST_CHECK_EQUAL(result.places_nearby().size(), 0);
 
     //Bad request
     pb_creator.init(&data, boost::gregorian::not_a_date_time, null_time_period);
-    result = find(pb_creator, c, 200,
-                    {navitia::type::Type_e::StopArea},
-                    "stop_area.name=paspouet bachibouzouk", 1, 10, 0, data);
+    find(pb_creator, c, 200, {navitia::type::Type_e::StopArea}, "stop_area.name=paspouet bachibouzouk", 1, 10, 0, data);
+    result = pb_creator.get_response();
     BOOST_CHECK_EQUAL(result.error().id(), pbnavitia::Error::unable_to_parse);
 }
 
@@ -337,9 +334,8 @@ BOOST_AUTO_TEST_CASE(test_poi_filter) {
     c.set_lon(-1.554514);
     c.set_lat(47.218515);
     navitia::PbCreator pb_creator(&data, boost::gregorian::not_a_date_time, null_time_period);
-    auto result = find(pb_creator, c, 200,
-                    {navitia::type::Type_e::POI},
-                    "poi_type.uri=poi_type1", 1, 10, 0, data);
+    find(pb_creator, c, 200, {navitia::type::Type_e::POI}, "poi_type.uri=poi_type1", 1, 10, 0, data);
+    auto result = pb_creator.get_response();
 
     //we want the bob and bobette pois
     BOOST_CHECK_EQUAL(result.places_nearby().size(), 2);

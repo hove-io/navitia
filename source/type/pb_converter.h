@@ -253,7 +253,8 @@ struct PbCreator {
 
     void fill_pb_error(const pbnavitia::Error::error_id, const pbnavitia::ResponseType&, const std::string&);
     void fill_pb_error(const pbnavitia::Error::error_id, const std::string&);
-    pbnavitia::Response get_response();
+    const pbnavitia::Response& get_response();
+    void clear_feed_publishers();
 
     pbnavitia::PtObject* add_places_nearby();
     pbnavitia::Journey* add_journeys();
@@ -283,7 +284,13 @@ struct PbCreator {
     int stop_schedules_size();
     int traffic_reports_size();
     int calendars_size();
-
+    pbnavitia::GeoStatus* mutable_geo_status();
+    pbnavitia::Status* mutable_status();
+    pbnavitia::Pagination* mutable_pagination();
+    pbnavitia::Co2Emission* mutable_car_co2_emission();
+    pbnavitia::StreetNetworkRoutingMatrix* mutable_sn_routing_matrix();
+    pbnavitia::Metadatas* mutable_metadatas();
+    pbnavitia::FeedPublisher* add_feed_publishers();
 private:
 
     pbnavitia::Response response;

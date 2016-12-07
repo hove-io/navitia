@@ -113,9 +113,10 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
     ng::StreetNetwork sn_worker(*data.geo_ref);
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    pbnavitia::Response resp = make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
-                                             true, navitia::type::AccessibiliteParams()/*false*/, forbidden,
-                                             sn_worker, nt::RTLevel::Base, 2_min);
+    make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
+                  true, navitia::type::AccessibiliteParams()/*false*/, forbidden,
+                  sn_worker, nt::RTLevel::Base, 2_min);
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -179,10 +180,10 @@ BOOST_AUTO_TEST_CASE(simple_journey_with_crow_fly) {
     ng::StreetNetwork sn_worker(*data.geo_ref);
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    pbnavitia::Response resp = make_response(pb_creator, raptor, origin, destination,
-                                             {ntest::to_posix_timestamp("20120614T021000")},
-                                             true, navitia::type::AccessibiliteParams()/*false*/,
-                                             forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
+                  true, navitia::type::AccessibiliteParams()/*false*/,
+                  forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -212,10 +213,10 @@ BOOST_AUTO_TEST_CASE(simple_journey_with_crow_fly) {
     destination.streetnetwork_params.max_duration = 15_min;
 
     pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    resp = make_response(pb_creator, raptor, origin, destination,
-                         {ntest::to_posix_timestamp("20120614T021000")},
-                         true, navitia::type::AccessibiliteParams()/*false*/,
-                         forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
+                  true, navitia::type::AccessibiliteParams()/*false*/,
+                  forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -265,10 +266,11 @@ BOOST_AUTO_TEST_CASE(journey_stay_in) {
     ng::StreetNetwork sn_worker(*data.geo_ref);
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    pbnavitia::Response resp = make_response(pb_creator, raptor, origin, destination,
-                                            {ntest::to_posix_timestamp("20120614T165300")},
-                                             true, navitia::type::AccessibiliteParams(),
-                                             forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")},
+                  true, navitia::type::AccessibiliteParams(),
+                  forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -327,9 +329,10 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_teleport) {
     ng::StreetNetwork sn_worker(*data.geo_ref);
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    pbnavitia::Response resp = make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")},
-                                             true, navitia::type::AccessibiliteParams(),
-                                             forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")},
+                  true, navitia::type::AccessibiliteParams(),
+                  forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -395,9 +398,10 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport) {
     ng::StreetNetwork sn_worker(*data.geo_ref);
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    pbnavitia::Response resp = make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")},
-                                             true, navitia::type::AccessibiliteParams(),
-                                             forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")},
+                  true, navitia::type::AccessibiliteParams(),
+                  forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -472,10 +476,10 @@ BOOST_AUTO_TEST_CASE(journey_departure_from_a_stay_in) {
     ng::StreetNetwork sn_worker(*data.geo_ref);
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    pbnavitia::Response resp = make_response(pb_creator, raptor, origin, destination,
-                                            {ntest::to_posix_timestamp("20120614T165300")},
-                                             true, navitia::type::AccessibiliteParams(),
-                                             forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")},
+                  true, navitia::type::AccessibiliteParams(),
+                  forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -541,10 +545,10 @@ BOOST_AUTO_TEST_CASE(journey_arrival_before_a_stay_in) {
     ng::StreetNetwork sn_worker(*data.geo_ref);
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    pbnavitia::Response resp = make_response(pb_creator, raptor, origin, destination,
-                                             {ntest::to_posix_timestamp("20120614T165300")},
-                                             true, navitia::type::AccessibiliteParams(),
-                                             forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")},
+                  true, navitia::type::AccessibiliteParams(),
+                  forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -599,10 +603,10 @@ BOOST_AUTO_TEST_CASE(journey_arrival_in_a_stay_in) {
     ng::StreetNetwork sn_worker(*data.geo_ref);
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    pbnavitia::Response resp = make_response(pb_creator, raptor, origin, destination,
-                                            {ntest::to_posix_timestamp("20120614T165300")},
-                                             true, navitia::type::AccessibiliteParams(),
-                                             forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")},
+                  true, navitia::type::AccessibiliteParams(),
+                  forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    pbnavitia::Response resp = pb_creator.get_response();
 
     dump_response(resp, "arrival_before");
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -668,10 +672,10 @@ BOOST_AUTO_TEST_CASE(journey_arrival_before_a_stay_in_without_teleport) {
     ng::StreetNetwork sn_worker(*data.geo_ref);
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    pbnavitia::Response resp = make_response(pb_creator, raptor, origin, destination,
-                                             {ntest::to_posix_timestamp("20120614T165300")},
-                                             true, navitia::type::AccessibiliteParams(),
-                                             forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T165300")},
+                  true, navitia::type::AccessibiliteParams(),
+                  forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
 
@@ -716,10 +720,10 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport_counterclockwise) {
     ng::StreetNetwork sn_worker(*data.geo_ref);
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    pbnavitia::Response resp = make_response(pb_creator, raptor, origin, destination,
-                                            {ntest::to_posix_timestamp("20120614T174000")}, false,
-                                             navitia::type::AccessibiliteParams(), forbidden,
-                                             sn_worker, nt::RTLevel::Base, 2_min);
+    make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T174000")},
+                  false, navitia::type::AccessibiliteParams(), forbidden,
+                  sn_worker, nt::RTLevel::Base, 2_min);
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -779,9 +783,10 @@ BOOST_AUTO_TEST_CASE(journey_array){
     std::vector<uint64_t> datetimes({ntest::to_posix_timestamp("20120614T080000"), ntest::to_posix_timestamp("20120614T090000")});
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    pbnavitia::Response resp = nr::make_response(pb_creator, raptor, origin, destination, datetimes, true,
-                                                 navitia::type::AccessibiliteParams(),
-                                                 forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    nr::make_response(pb_creator, raptor, origin, destination, datetimes, true,
+                      navitia::type::AccessibiliteParams(),
+                      forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2);
@@ -818,9 +823,10 @@ struct streetnetworkmode_fixture : public routing_api_data<speed_provider_trait>
         nr::RAPTOR raptor(*this->b.data);
         auto * data_ptr = this->b.data.get();
         navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-        return nr::make_response(pb_creator, raptor, this->origin, this->destination, this->datetimes,
-                                 true, navitia::type::AccessibiliteParams(),
-                                 this->forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+        nr::make_response(pb_creator, raptor, this->origin, this->destination, this->datetimes,
+                          true, navitia::type::AccessibiliteParams(),
+                          this->forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+        return pb_creator.get_response();
     }
 };
 
@@ -1331,9 +1337,10 @@ BOOST_FIXTURE_TEST_CASE(bus_car_parking, streetnetworkmode_fixture<test_speed_pr
     nr::RAPTOR raptor(*this->b.data);
     auto * data_ptr = this->b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    auto resp = nr::make_response(pb_creator, raptor, this->destination, this->origin, this->datetimes, true,
-                                  navitia::type::AccessibiliteParams(), this->forbidden, sn_worker,
-                                  type::RTLevel::Base, 2_min);
+    nr::make_response(pb_creator, raptor, this->destination, this->origin, this->datetimes, true,
+                      navitia::type::AccessibiliteParams(), this->forbidden, sn_worker,
+                      type::RTLevel::Base, 2_min);
+    auto resp = pb_creator.get_response();
 
     dump_response(resp, "bus_car_parking");
 
@@ -1762,11 +1769,10 @@ BOOST_AUTO_TEST_CASE(projection_on_one_way) {
     nr::RAPTOR raptor(*b.data);
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    auto resp = nr::make_response(pb_creator, raptor, origin, destination,
-                                  {navitia::test::to_posix_timestamp("20120614T080000")},
-                                  true, navitia::type::AccessibiliteParams(), {}, sn_worker, nt::RTLevel::Base,
-                                  2_min, true);
-
+    nr::make_response(pb_creator, raptor, origin, destination, {navitia::test::to_posix_timestamp("20120614T080000")},
+                      true, navitia::type::AccessibiliteParams(), {}, sn_worker, nt::RTLevel::Base,
+                      2_min, true);
+    auto resp = pb_creator.get_response();
 
     dump_response(resp, "biking length test");
 
@@ -1881,15 +1887,9 @@ BOOST_FIXTURE_TEST_CASE(isochrone, isochrone_fixture) {
     navitia::type::EntryPoint ep {navitia::type::Type_e::StopPoint, "A"};
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    auto result = nr::make_isochrone(pb_creator, raptor,
-                                     ep,
-                                     "20150615T082000"_pts,
-                                     true,
-                                     {},
-                                     {},
-                                     sn_worker,
-                                     nt::RTLevel::Base,
-                                     3 * 60 * 60);
+    nr::make_isochrone(pb_creator, raptor, ep, "20150615T082000"_pts,
+                       true, {}, {}, sn_worker, nt::RTLevel::Base, 3 * 60 * 60);
+    auto result = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(result.journeys_size(), 2);
 
     std::cout << "1/ dep " << navitia::from_posix_timestamp(result.journeys(0).departure_date_time()) << std::endl;
@@ -1915,16 +1915,9 @@ BOOST_FIXTURE_TEST_CASE(reverse_isochrone, isochrone_fixture) {
     navitia::type::EntryPoint ep {navitia::type::Type_e::StopPoint, "B"};
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    auto result = nr::make_isochrone(pb_creator, raptor,
-                                     ep,
-                                     "20150615T110000"_pts,
-                                     false,
-                                     {},
-                                     {},
-                                     sn_worker,
-                                     nt::RTLevel::Base,
-                                     3 * 60 * 60);
-
+    nr::make_isochrone(pb_creator, raptor, ep, "20150615T110000"_pts,
+                       false, {}, {}, sn_worker, nt::RTLevel::Base, 3 * 60 * 60);
+    auto result = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(result.journeys_size(), 2);
 
     BOOST_CHECK_EQUAL(result.journeys(0).departure_date_time(), "20150615T082900"_pts);
@@ -1943,16 +1936,9 @@ BOOST_FIXTURE_TEST_CASE(isochrone_duration_limit, isochrone_fixture) {
     navitia::type::EntryPoint ep {navitia::type::Type_e::StopPoint, "A"};
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    auto result = nr::make_isochrone(pb_creator, raptor,
-                                     ep,
-                                     "20150615T082000"_pts,
-                                     true,
-                                     {},
-                                     {},
-                                     sn_worker,
-                                     nt::RTLevel::Base,
-                                     1 * 60 * 60);
-
+    nr::make_isochrone(pb_creator, raptor, ep, "20150615T082000"_pts,
+                       true, {}, {}, sn_worker, nt::RTLevel::Base, 1 * 60 * 60);
+    auto result = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(result.journeys_size(), 1);
 
     BOOST_CHECK_EQUAL(result.journeys(0).departure_date_time(), "20150615T082000"_pts);
@@ -2002,10 +1988,10 @@ BOOST_AUTO_TEST_CASE(with_information_disruptions) {
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, "20150315T080000"_dt, null_time_period);
-    pbnavitia::Response resp = make_response(pb_creator, raptor, origin, destination,
-                                             {ntest::to_posix_timestamp("20150315T080000")},
-                                             true, nt::AccessibiliteParams(),
-                                             {}, sn_worker, nt::RTLevel::Base, 2_min);
+    make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20150315T080000")},
+                  true, nt::AccessibiliteParams(), {},
+                  sn_worker, nt::RTLevel::Base, 2_min);
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
 
@@ -2056,10 +2042,10 @@ BOOST_AUTO_TEST_CASE(with_disruptions_on_network) {
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, "20150314T080000"_dt, null_time_period);
-    pbnavitia::Response resp = make_response(pb_creator, raptor, origin, destination,
-                                            {ntest::to_posix_timestamp("20150314T080000")},
-                                            true, navitia::type::AccessibiliteParams(),
-                                            {}, sn_worker, nt::RTLevel::Base, 2_min);
+    make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20150314T080000")},
+                  true, navitia::type::AccessibiliteParams(), {},
+                  sn_worker, nt::RTLevel::Base, 2_min);
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
 
@@ -2091,10 +2077,10 @@ BOOST_AUTO_TEST_CASE(journey_with_forbidden) {
     ng::StreetNetwork sn_worker(*data.geo_ref);
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    pbnavitia::Response resp = make_response(pb_creator, raptor, origin, destination,
-                                                {ntest::to_posix_timestamp("20120614T021000")},
-                                             true, navitia::type::AccessibiliteParams(),
-                                             forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
+                  true, navitia::type::AccessibiliteParams(),
+                  forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 3);
@@ -2102,9 +2088,10 @@ BOOST_AUTO_TEST_CASE(journey_with_forbidden) {
 
     forbidden.push_back("A");
     pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    resp = make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
-                         true, navitia::type::AccessibiliteParams(),
-                         forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
+                  true, navitia::type::AccessibiliteParams(),
+                  forbidden, sn_worker, nt::RTLevel::Base, 2_min);
+    resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 3);
@@ -2161,9 +2148,10 @@ BOOST_FIXTURE_TEST_CASE(direct_path_car, streetnetworkmode_fixture<test_speed_pr
     nr::RAPTOR raptor(*this->b.data);
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    auto resp = nr::make_response(pb_creator, raptor, this->origin, this->destination, this->datetimes, true,
-                                  navitia::type::AccessibiliteParams(), this->forbidden, sn_worker,
-                                  type::RTLevel::Base, 2_min);
+    nr::make_response(pb_creator, raptor, this->origin, this->destination, this->datetimes, true,
+                      navitia::type::AccessibiliteParams(), this->forbidden, sn_worker,
+                      type::RTLevel::Base, 2_min);
+    pbnavitia::Response resp = pb_creator.get_response();
 
     dump_response(resp, "direct_path_car");
 
@@ -2234,9 +2222,10 @@ BOOST_FIXTURE_TEST_CASE(direct_path_car, streetnetworkmode_fixture<test_speed_pr
     origin.streetnetwork_params.enable_direct_path = false;
     //direct path is disabled, we should only found the solution with car as fallback
     pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
-    resp = nr::make_response(pb_creator, raptor, this->origin, this->destination, this->datetimes, true,
-                             navitia::type::AccessibiliteParams(), this->forbidden,
-                             sn_worker, type::RTLevel::Base, 2_min);
+    nr::make_response(pb_creator, raptor, this->origin, this->destination, this->datetimes, true,
+                      navitia::type::AccessibiliteParams(), this->forbidden,
+                      sn_worker, type::RTLevel::Base, 2_min);
+    resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1); //1 car->bus->walk
     BOOST_REQUIRE_EQUAL(resp.journeys(0).sections_size(), 5);
 
@@ -2271,10 +2260,10 @@ BOOST_AUTO_TEST_CASE(stop_times_with_distinct_arrival_departure) {
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, "20150314T080000"_dt, null_time_period);
-    pbnavitia::Response resp = make_response(pb_creator, raptor, origin, destination,
-                                            {ntest::to_posix_timestamp("20150314T080000")},
-                                            true, navitia::type::AccessibiliteParams(),
-                                            {}, sn_worker, nt::RTLevel::Base, 2_min);
+    make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20150314T080000")},
+                  true, navitia::type::AccessibiliteParams(), {},
+                  sn_worker, nt::RTLevel::Base, 2_min);
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
