@@ -30,7 +30,6 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 from jormungandr.scenarios import new_default
-from jormungandr.scenarios.default import is_admin
 from navitiacommon import type_pb2, response_pb2
 import uuid
 from jormungandr.scenarios.utils import fill_uris
