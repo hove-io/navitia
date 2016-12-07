@@ -44,9 +44,9 @@ class Kraken(object):
         response = self.instance.send_and_receive(req)
         if response.places:
             return response.places[0]
-        if "coord:" in place:
-            # In some cases, the given "from" is not always a findable addresse by kraken
-            # we just forward the given uri and return it with a pt object
+        if place.startswith("coord:"):
+            # In some cases, the given "from" is not always a findable address by kraken
+            # we just forward the given coord and return a pt object
             p = type_pb2.PtObject()
             p.uri = place
             return p
