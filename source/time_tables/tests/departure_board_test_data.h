@@ -182,6 +182,29 @@ struct calendar_fixture {
                 ("stop1_D", "00:10"_t, "00:10"_t)
                 ("stop2_D", "01:40"_t, "01:40"_t)
                 ("stop3_D", "02:50"_t, "02:50"_t);
+
+        b.vj("A", "10111111", "", true, "vj1", "")("Tstop1", "10:00"_t, "10:00"_t)
+                                                  ("Tstop2", "10:30"_t, "10:30"_t);
+        b.vj("A", "00000011", "", true, "vj2", "")("Tstop1", "10:30"_t, "10:30"_t)
+                                                  ("Tstop2", "11:00"_t,"11:00"_t)
+                                                  ("Tstop3", "11:30"_t,"11:30"_t);
+        /*
+                                                   StopR3                            StopR4
+                                            ------------------------------------------
+                      StopR1               /
+            Line R : ---------------------/StopR2
+                                          \         StopR5                            StopR6
+                                           \ ------------------------------------------
+
+        */
+        b.vj("R", "10111111", "", true, "R:vj1", "")("StopR1", "10:00"_t, "10:00"_t)
+                                                  ("StopR2", "10:30"_t, "10:30"_t)
+                                                  ("StopR3", "11:00"_t, "11:00"_t)
+                                                  ("StopR4", "11:30"_t, "11:30"_t);
+        b.vj("R", "10111111", "", true, "R:vj2", "")("StopR1", "10:00"_t, "10:00"_t)
+                                                  ("StopR2", "10:30"_t, "10:30"_t)
+                                                  ("StopR5", "11:00"_t, "11:00"_t)
+                                                  ("StopR6", "11:30"_t, "11:30"_t);
         // Add opening and closing time
         b.lines["C"]->opening_time = boost::posix_time::time_duration(9,0,0);
         b.lines["C"]->closing_time = boost::posix_time::time_duration(21,0,0);
@@ -252,6 +275,11 @@ struct calendar_fixture {
         auto* line = b.lines["A"];
         for(auto r: line->route_list){
             r->destination = b.sas.find("Tstop3")->second;
+        }
+
+        line = b.lines["R"];
+        for(auto r: line->route_list){
+            r->destination = b.sas.find("StopR2")->second;
         }
 
         // and add a comment on a line

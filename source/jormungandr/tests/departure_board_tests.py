@@ -320,6 +320,16 @@ class TestDepartureBoard(AbstractTestFixture):
         assert len(response["stop_schedules"][0]["date_times"]) == 0
         assert response["stop_schedules"][0]["stop_point"]["id"] == "Tstop2"
 
+        response = self.query_region("stop_areas/StopR3/stop_schedules?from_datetime=20120615T080000")
+        assert "stop_schedules" in response
+        assert len(response["stop_schedules"]) == 1, "there should be only one elt"
+        assert response["stop_schedules"][0]["route"]["id"] == "R:5"
+        assert len(response["stop_schedules"][0]["date_times"]) == 1
+        assert response["stop_schedules"][0]["date_times"][0]["date_time"] == "20120615T110000"
+        assert response["stop_schedules"][0]["stop_point"]["id"] == "StopR3"
+        assert response["notes"][0]["value"] == "StopR4"
+
+
     def test_real_terminus(self):
         """
         Real Terminus
