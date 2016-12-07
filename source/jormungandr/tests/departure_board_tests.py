@@ -296,6 +296,18 @@ class TestDepartureBoard(AbstractTestFixture):
 
 
         # Stop_schedules in TStop2: Partial Terminus
+
+        response = self.query_region("stop_areas/Tstop1/stop_schedules?"
+                                     "from_datetime=20120615T080000&calendar=cal_partial_terminus")
+
+        assert "stop_schedules" in response
+        assert len(response["stop_schedules"]) == 1, "there should be only one elt"
+        assert response["stop_schedules"][0]["route"]["id"] == "A:1"
+        assert len(response["stop_schedules"][0]["date_times"]) == 1
+        assert response["stop_schedules"][0]["date_times"][0]["date_time"] == "100000"
+        assert response["stop_schedules"][0]["stop_point"]["id"] == "Tstop1"
+
+
         response = self.query_region("stop_areas/Tstop2/stop_schedules?"
                                      "from_datetime=20120615T080000&calendar=cal_partial_terminus")
 
