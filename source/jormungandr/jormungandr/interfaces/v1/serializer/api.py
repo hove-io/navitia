@@ -27,19 +27,40 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr.interfaces.v1.serializer.pt import StopAreaSerializer, LineSerializer, DisruptionSerializer
+from jormungandr.interfaces.v1.serializer import pt
 from jormungandr.interfaces.v1.serializer.fields import ErrorSerializer, FeedPublisherSerializer, PaginationSerializer
 import serpy
 
-class LinesSerializer(serpy.Serializer):
+class PTReferentialSerializer(serpy.Serializer):
     pagination = PaginationSerializer(attr='pagination', display_none=True, required=True)
-    lines = LineSerializer(many=True)
     error = ErrorSerializer(display_none=False)
-    disruptions = DisruptionSerializer(attr='impacts', many=True)
     feed_publishers = FeedPublisherSerializer(many=True, display_none=False)
+    disruptions = pt.DisruptionSerializer(attr='impacts', many=True)
 
-class DisruptionsSerializer(serpy.Serializer):
-    pagination = PaginationSerializer(attr='pagination', display_none=True, required=True)
-    error = ErrorSerializer(display_none=False)
-    disruptions = DisruptionSerializer(attr='impacts', many=True)
-    feed_publishers = FeedPublisherSerializer(many=True, display_none=False)
+class LinesSerializer(PTReferentialSerializer):
+    lines = pt.LineSerializer(many=True)
+
+class DisruptionsSerializer(PTReferentialSerializer):
+    #we already have a disruptions fields by default
+    pass
+
+class CommercialModesSerializer(PTReferentialSerializer):
+    commercial_modes = pt.CommercialModeSerializer(many=True)
+
+class PhysicalModesSerializer(PTReferentialSerializer):
+    commercial_modes = pt.CommercialModeSerializer(many=True)
+
+class StopPointsSerializer(PTReferentialSerializer):
+    stop_points = pt.StopPointSerializer(many=True)
+
+class StopAreasSerializer(PTReferentialSerializer):
+    stop_areas = pt.StopAreaSerializer(many=True)
+
+class RoutesSerializer(PTReferentialSerializer):
+    routes = pt.RouteSerializer(many=True)
+
+class LineGroupsSerializer(PTReferentialSerializer):
+    line_groups = pt.LineGroupSerializer(many=True)
+
+class NetworksSerializer(PTReferentialSerializer):
+    networks = pt.NetworkSerializer(many=True)

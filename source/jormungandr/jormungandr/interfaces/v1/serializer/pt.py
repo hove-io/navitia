@@ -106,7 +106,7 @@ class PtObjectSerializer(GenericSerializer):
             return None
 
 class TripSerializer(GenericSerializer):
-    pass
+    pass#@TODO
 
 class ImpactedStopSerializer(PbNestedSerializer):
     stop_point = serpy.MethodField(display_none=False)
@@ -205,8 +205,8 @@ class PlaceSerializer(GenericSerializer):
     stop_point = StopPointSerializer(display_none=False)
     administrative_region = AdminSerializer(display_none=False)
     embedded_type = EnumField(attr='embedded_type')
-#    "address": PbField(address),
-#    "poi": PbField(poi),
+#    @TODO "address": PbField(address),
+#    @TODO "poi": PbField(poi),
 
 class NetworkSerializer(GenericSerializer):
     lines = serpy.MethodField(display_none=False)
