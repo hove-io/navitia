@@ -27,11 +27,19 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from tyr.command.reload_kraken import ReloadKrakenCommand
-from tyr.command.build_data import BuildDataCommand
-from tyr.command.load_data import LoadDataCommand
-import tyr.command.purge
-import tyr.command.cities
-import tyr.command.bounding_shape
-import tyr.command.import_last_dataset
-import tyr.command.last_dataset
+from navitiacommon import models
+from tyr import manager
+
+@manager.command
+def last_dataset(instance_name):
+    """
+    print the last dataset imported for each family of dataset.
+    This will be the dataset imported when doing a import_last_dataset
+    """
+    instance = models.Instance.query_existing().filter_by(name=instance_name).first()
+
+    if not instance:
+        raise Exception("cannot find instance {}".format(instance_name))
+
+    for d in instance.last_datasets(1):
+        print('{}|{}'.format(d.name, d.family_type))
