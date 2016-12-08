@@ -585,12 +585,12 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_impact, calendar_fixture) {
 
     using btp = boost::posix_time::time_period;
 
-    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Disruption stop1")
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Disruption stop2")
                               .severity(nt::disruption::Effect::NO_SERVICE)
-                              .on(nt::Type_e::StopPoint, "stop1")
+                              .on(nt::Type_e::StopPoint, "stop2")
                               .application_periods(btp("20120612T010000"_dt, "20120625T235900"_dt))
                               .publish(btp("20120612T010000"_dt, "20120625T235900"_dt))
-                              .msg("Disruption on stop_point stop1")
+                              .msg("Disruption on stop_point stop2")
                               .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
     b.data->pt_data->index();
