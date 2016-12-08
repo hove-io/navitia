@@ -44,6 +44,26 @@ namespace pt = boost::posix_time;
 
 namespace navitia { namespace timetables {
 
+static bool is_last_stoptime(const nt::StopTime* stop_time, const nt::StopPoint* stp){
+    return stop_time->vehicle_journey
+            && ! stop_time->vehicle_journey->stop_time_list.empty()
+            && stop_time->vehicle_journey->stop_time_list.back().stop_point == stp;
+}
+
+static bool is_flagged_partial_terminus(const PbCreator& pb_creator,
+                                const std::vector<routing::datetime_stop_time>& stop_times,
+                                const stop_point_route& route_point) {
+    for (const auto& st : stop_times) {
+        const auto& vj_idx = navitia::routing::VjIdx(*st.second->vehicle_journey);
+        const auto& jp_idx = pb_creator.data.dataRaptor->jp_container.get_jp_from_vj()[vj_idx];
+        const auto& pair_jp = pb_creator.data.dataRaptor->jp_container.get_jps()[jp_idx.val];
+        const auto& last_jpp = pb_creator.data.dataRaptor->jp_container.get(pair_jp.second.jpps.back());
+
+        if (last_jpp.sp_idx != route_point.first) { return false; }
+    }
+    return ! stop_times.empty();
+}
+
 static void
 render(PbCreator& pb_creator,
           const std::map<stop_point_route, pbnavitia::ResponseStatus>& response_status,
@@ -58,6 +78,7 @@ render(PbCreator& pb_creator,
     for(auto id_vec : map_route_stop_point) {
         auto schedule = pb_creator.add_stop_schedules();
         //Each schedule has a stop_point and a route
+        auto stp = pb_creator.data.pt_data->stop_points[id_vec.first.first.val];
         pb_creator.fill(pb_creator.data.pt_data->stop_points[id_vec.first.first.val],
                 schedule->mutable_stop_point(), depth);
 
@@ -73,8 +94,12 @@ render(PbCreator& pb_creator,
 
         //Now we fill the date_times
         for(auto dt_st : id_vec.second) {
-            auto date_time = schedule->add_date_times();
             const auto& st_calendar = navitia::StopTimeCalandar(dt_st.second, dt_st.first, calendar_id);
+            // terminus or partial terminus
+            if (is_last_stoptime(st_calendar.stop_time, stp)) {
+                continue;
+            }
+            auto date_time = schedule->add_date_times();
             pb_creator.fill(&st_calendar, date_time, 0);
             if (dt_st.second != nullptr) {
                 auto vj = dt_st.second->vehicle_journey;
@@ -216,19 +241,10 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
         if (stop_point->stop_area == route->destination) {
             response_status[sp_route] = pbnavitia::ResponseStatus::terminus;
         } else {
-            // we try to find if the stop point is a terminus for at least one jp passing through the stop
-            // in this case, the stop is a partial terminus
-            for (const auto& jpp_idx: routepoint_jpps) {
-                const auto& jpp = pb_creator.data.dataRaptor->jp_container.get(jpp_idx);
-                const auto& jp = pb_creator.data.dataRaptor->jp_container.get(jpp.jp_idx);
-                const auto& last_jpp = pb_creator.data.dataRaptor->jp_container.get(jp.jpps.back());
-                if (sp_route.first == last_jpp.sp_idx) {
-                    response_status[sp_route] = pbnavitia::ResponseStatus::partial_terminus;
-                    break;
-                }
+            if (is_flagged_partial_terminus(pb_creator, stop_times, sp_route)) {
+                response_status[sp_route] = pbnavitia::ResponseStatus::partial_terminus;
             }
         }
-
         //If there is no departure for a request with "RealTime", Test existance of any departure with "base_schedule"
         //If departure with base_schedule is not empty, additional_information = active_disruption
         //Else additional_information = no_departure_this_day
