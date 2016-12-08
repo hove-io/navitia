@@ -803,6 +803,7 @@ instance_status = {
     "start_production_date": fields.String(),
     "status": fields.String(),
     "is_open_data": fields.Boolean(),
+    "is_open_service": fields.Boolean(),
     "is_realtime_loaded": fields.Boolean(),
     "realtime_proxies": fields.Raw(),
     "dataset_created_at": fields.String(),

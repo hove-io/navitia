@@ -45,7 +45,8 @@ class Status(Resource):
     def get(self, region):
         response = protobuf_to_dict(i_manager.dispatch({}, "status", instance_name=region), use_enum_labels=True)
         instance = i_manager.instances[region]
-        response['status']["is_open_data"] = instance.is_free
+        response['status']["is_open_data"] = instance.is_open_data
+        response['status']["is_open_service"] = instance.is_free
         response['status']['parameters'] = instance
         response['status']['traveler_profiles'] = travelers_profile.TravelerProfile.get_profiles_by_coverage(region)
         response['status']['realtime_proxies'] = []

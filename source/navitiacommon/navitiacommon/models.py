@@ -239,7 +239,12 @@ class Instance(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, unique=True, nullable=False)
     discarded = db.Column(db.Boolean, default=False, nullable=False)
+    #aka is_open_service in jormun
     is_free = db.Column(db.Boolean, default=False, nullable=False)
+
+    #this doesn't impact anything but is_free was used this,
+    #but an instance can be freely accessible but not using open data
+    is_open_data = db.Column(db.Boolean, default=False, nullable=False)
 
     authorizations = db.relationship('Authorization', backref=backref('instance', lazy='joined'),
             lazy='dynamic', cascade='save-update, merge, delete')

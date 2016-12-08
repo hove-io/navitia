@@ -90,6 +90,32 @@ def test_update_instances(create_instance):
     for key, param in params.iteritems():
         assert resp[key] == param
 
+def test_update_instances_is_free(create_instance):
+    params = {"is_free": True}
+    resp = api_put('/v0/instances/{}'.format(create_instance), data=json.dumps(params), content_type='application/json')
+    assert resp['is_free'] == True
+    assert resp['is_open_data'] == False
+
+    params = {"is_free": False}
+    resp = api_put('/v0/instances/{}'.format(create_instance), data=json.dumps(params), content_type='application/json')
+    assert resp['is_free'] == False
+    assert resp['is_open_data'] == False
+
+    params = {"is_open_data": True}
+    resp = api_put('/v0/instances/{}'.format(create_instance), data=json.dumps(params), content_type='application/json')
+    assert resp['is_free'] == False
+    assert resp['is_open_data'] == True
+
+    params = {"is_open_data": False}
+    resp = api_put('/v0/instances/{}'.format(create_instance), data=json.dumps(params), content_type='application/json')
+    assert resp['is_free'] == False
+    assert resp['is_open_data'] == False
+
+    params = {"is_open_data": True, 'is_free': True}
+    resp = api_put('/v0/instances/{}'.format(create_instance), data=json.dumps(params), content_type='application/json')
+    assert resp['is_free'] == True
+    assert resp['is_open_data'] == True
+
 
 def test_delete_instance_by_id(create_instance):
     resp = api_delete('/v0/instances/{}'.format(create_instance))

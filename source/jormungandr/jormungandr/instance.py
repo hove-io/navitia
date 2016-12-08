@@ -275,6 +275,14 @@ class Instance(object):
             return instance_db.is_free
 
     @property
+    def is_open_data(self):
+        instance_db = self.get_models()
+        if not instance_db:
+            return False
+        else:
+            return instance_db.is_open_data
+
+    @property
     def max_duration(self):
         instance_db = self.get_models()
         return get_value_or_default('max_duration', instance_db, self.name)

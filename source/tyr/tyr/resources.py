@@ -134,6 +134,7 @@ instance_fields = {
     'priority': fields.Raw,
     'bss_provider': fields.Boolean,
     'full_sn_geometries': fields.Boolean,
+    'is_open_data': fields.Boolean,
 }
 
 api_fields = {
@@ -445,6 +446,10 @@ class Instance(flask_restful.Resource):
                             location=('json', 'values'), default=instance.bss_provider)
         parser.add_argument('full_sn_geometries', type=bool, help='activation of full geometries',
                             location=('json', 'values'), default=instance.full_sn_geometries)
+        parser.add_argument('is_free', type=bool, help='instance doesn\'t require authorization to be used',
+                            location=('json', 'values'), default=instance.is_free)
+        parser.add_argument('is_open_data', type=bool, help='instance only use open data',
+                            location=('json', 'values'), default=instance.is_open_data)
         args = parser.parse_args()
 
         try:
@@ -479,7 +484,9 @@ class Instance(flask_restful.Resource):
                                        'successive_physical_mode_to_limit_id',
                                        'priority',
                                        'bss_provider',
-                                       'full_sn_geometries'])
+                                       'full_sn_geometries',
+                                       'is_free',
+                                       'is_open_data'])
             db.session.commit()
         except Exception:
             logging.exception("fail")

@@ -287,6 +287,8 @@ def scan_instances():
             instance = models.Instance(name=instance_name)
             instance_config = load_instance_config(instance.name)
             instance.is_free = instance_config.is_free
+            #by default we will consider an free instance as an opendata one
+            instance.is_open_data = instance_config.is_free
 
             models.db.session.add(instance)
             models.db.session.commit()

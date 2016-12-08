@@ -88,7 +88,8 @@ class TechnicalStatus(ModuleResource):
                                                                         timeout=1000)
 
                 raw_resp_dict = protobuf_to_dict(resp, use_enum_labels=True)
-                raw_resp_dict['status']["is_open_data"] = i_manager.instances[key_region].is_free
+                raw_resp_dict['status']["is_open_service"] = i_manager.instances[key_region].is_free
+                raw_resp_dict['status']["is_open_data"] = i_manager.instances[key_region].is_open_data
                 raw_resp_dict['status']['realtime_proxies'] = []
                 for realtime_proxy in i_manager.instances[key_region].realtime_proxy_manager.realtime_proxies.values():
                     raw_resp_dict['status']['realtime_proxies'].append(realtime_proxy.status())
