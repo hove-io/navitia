@@ -89,13 +89,12 @@ inline void doWork(zmq::context_t& context,
         }
 
         pbnavitia::Request pb_req;
-        pbnavitia::Response result;
         pt::ptime start = pt::microsec_clock::universal_time();
         pbnavitia::API api = pbnavitia::UNKNOWN_API;
-        if(!pb_req.ParseFromArray(request.data(), request.size())){
+        if(!pb_req.ParseFromArray(request.data(), request.size())){            
             LOG4CPLUS_WARN(logger, "receive invalid protobuf");
-            result.mutable_error()->set_id(pbnavitia::Error::invalid_protobuf_request);
-            respond(socket, address, result);
+            w.pb_creator.fill_pb_error(pbnavitia::Error::invalid_protobuf_request, "receive invalid protobuf");
+            respond(socket, address, w.pb_creator.get_response());
             continue;
         }
         api = pb_req.requested_api();
@@ -106,7 +105,7 @@ inline void doWork(zmq::context_t& context,
         try {
             w.dispatch(pb_req);
             if(api != pbnavitia::METADATAS){
-                LOG4CPLUS_TRACE(logger, "response: " << result.DebugString());
+                LOG4CPLUS_TRACE(logger, "response: " << w.pb_creator.get_response().DebugString());
             }
         } catch (const navitia::recoverable_exception& e) {
             //on a recoverable an internal server error is returned
@@ -114,15 +113,13 @@ inline void doWork(zmq::context_t& context,
             LOG4CPLUS_ERROR(logger, "on query: " << pb_req.DebugString());
             LOG4CPLUS_ERROR(logger, "backtrace: " << e.backtrace());
             w.pb_creator.fill_pb_error(pbnavitia::Error::internal_error, e.what());
-            result = w.pb_creator.get_response();
         }
-        result = w.pb_creator.get_response();
         if (! data_manager.get_data()->loaded){
-            result.set_publication_date(-1);
+            w.pb_creator.set_publication_date(boost::gregorian::not_a_date_time);
         } else {
-            result.set_publication_date(navitia::to_posix_timestamp(data_manager.get_data()->meta->publication_date));
+            w.pb_creator.set_publication_date(data_manager.get_data()->meta->publication_date);
         }
-        respond(socket, address, result);
+        respond(socket, address, w.pb_creator.get_response());
         auto duration = pt::microsec_clock::universal_time() - start;
         if(duration >= slow_request_duration){
             LOG4CPLUS_WARN(logger, "slow request! duration: " << duration.total_milliseconds()

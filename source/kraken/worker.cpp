@@ -701,6 +701,7 @@ void Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API 
                     arg.forbidden, *street_network_worker,
                     arg.rt_level, request.max_duration(),
                     request.max_transfers());
+            break;
         }
 
         case pbnavitia::pt_planner:
@@ -710,6 +711,7 @@ void Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API 
                     seconds{request.walking_transfer_penalty()}, request.max_duration(),
                     request.max_transfers(), request.max_extra_second_pass(),
                     request.has_direct_path_duration() ? boost::optional<time_duration>(seconds{request.direct_path_duration()}) : boost::optional<time_duration>());
+            break;
         default:
             routing::make_response(this->pb_creator, *planner, arg.origins[0], arg.destinations[0], arg.datetimes,
                     request.clockwise(), arg.accessibilite_params,
@@ -719,7 +721,6 @@ void Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API 
         }
     }catch(const navitia::coord_conversion_exception& e) {
         this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());
-        return;
     }
 }
 
@@ -956,7 +957,12 @@ void Worker::direct_path(const pbnavitia::Request& request) {
 
 
 void Worker::dispatch(const pbnavitia::Request& request) {
-    pbnavitia::Response response ;
+    //update worker data and pb_creator informations.
+    const auto data = data_manager.get_data();
+    bool disable_geojson = get_geojson_state(request);
+    boost::posix_time::ptime current_datetime = bt::from_time_t(request._current_datetime());
+    this->init_worker_data(data, current_datetime, null_time_period, disable_geojson, request.disable_feedpublisher());
+
     // These api can respond even if the data isn't loaded
     if (request.requested_api() == pbnavitia::STATUS) {
         status();
@@ -970,12 +976,6 @@ void Worker::dispatch(const pbnavitia::Request& request) {
         this->pb_creator.fill_pb_error(pbnavitia::Error::service_unavailable, "The service is loading data");
         return;
     }
-    boost::posix_time::ptime current_datetime = bt::from_time_t(request._current_datetime());
-
-    //update worker data and pb_creator informations.
-    const auto data = data_manager.get_data();
-    bool disable_geojson = get_geojson_state(request);
-    this->init_worker_data(data, current_datetime, null_time_period, disable_geojson, request.disable_feedpublisher());
 
     switch(request.requested_api()){
     case pbnavitia::places: autocomplete(request.places()); break;
@@ -1007,7 +1007,7 @@ void Worker::dispatch(const pbnavitia::Request& request) {
     case pbnavitia::odt_stop_points: odt_stop_points(request.coord()); break;
     default:
         LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
-        fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API", response.mutable_error());
+        this->pb_creator.fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API");
         break;
     }
     metadatas();//we add the metadatas for each response

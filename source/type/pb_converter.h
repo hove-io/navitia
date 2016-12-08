@@ -291,6 +291,7 @@ struct PbCreator {
     pbnavitia::StreetNetworkRoutingMatrix* mutable_sn_routing_matrix();
     pbnavitia::Metadatas* mutable_metadatas();
     pbnavitia::FeedPublisher* add_feed_publishers();
+    void set_publication_date(pt::ptime ptime);
 private:
 
     pbnavitia::Response response;

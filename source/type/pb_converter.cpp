@@ -1953,4 +1953,8 @@ pbnavitia::FeedPublisher* PbCreator::add_feed_publishers(){
     return response.add_feed_publishers();
 }
 
+void PbCreator::set_publication_date(pt::ptime ptime){
+    response.set_publication_date(navitia::to_posix_timestamp(ptime));
+}
+
 }
