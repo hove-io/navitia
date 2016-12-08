@@ -492,15 +492,46 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_week, calendar_fixture) {
 BOOST_FIXTURE_TEST_CASE(test_not_associated_cal, calendar_fixture) {
     boost::optional<const std::string> calendar_id{"not_associated_cal"};
 
-    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
-    departure_board(pb_creator, "stop_point.uri=stop1", calendar_id, {}, d("20120615T080000"), 86400, 0,
-                    10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
 
-    pbnavitia::Response resp = pb_creator.get_response();
-    BOOST_REQUIRE(! resp.has_error());
-    BOOST_CHECK_EQUAL(resp.stop_schedules_size(), 1);
-    pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
-    BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 0);
+    using btp = boost::posix_time::time_period;
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Disruption StopR1")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::StopPoint, "StopR1")
+                              .application_periods(btp("20120612T010000"_dt, "20120625T235900"_dt))
+                              .publish(btp("20120612T010000"_dt, "20120625T235900"_dt))
+                              .msg("Disruption on stop_point StopR1")
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+
+    b.data->pt_data->index();
+    b.data->build_uri();
+    b.data->complete();
+    b.data->build_raptor();
+    {
+        navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
+        departure_board(pb_creator, "stop_point.uri=stop1", calendar_id, {}, d("20120615T080000"), 86400, 0,
+                        10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+
+        pbnavitia::Response resp = pb_creator.get_response();
+        BOOST_REQUIRE(! resp.has_error());
+        BOOST_CHECK_EQUAL(resp.stop_schedules_size(), 1);
+        pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
+        BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 0);
+    }
+    {
+        navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
+        departure_board(pb_creator, "stop_point.uri=StopR2", calendar_id, {}, d("20120615T080000"), 86400, 0,
+                        10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+
+        pbnavitia::Response resp = pb_creator.get_response();
+        BOOST_REQUIRE(! resp.has_error());
+        BOOST_CHECK_EQUAL(resp.stop_schedules_size(), 1);
+        pbnavitia::StopSchedule stop_schedule = resp.stop_schedules(0);
+        BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 2);
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), time_to_int(10, 30, 00));
+        BOOST_CHECK_EQUAL(stop_schedule.date_times(1).time(), time_to_int(10, 30, 00));
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE(test_calendar_with_exception, calendar_fixture) {
