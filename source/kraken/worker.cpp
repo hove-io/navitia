@@ -745,7 +745,7 @@ void Worker::pt_ref(const pbnavitia::PTRefRequest &request) {
                              *data);
 }
 
-
+// returns true if there is an error
 bool Worker::set_journeys_args(const pbnavitia::JourneysRequest& request,
                                                                JourneysArg& arg,
                                                                const std::string& name) {
