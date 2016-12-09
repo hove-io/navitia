@@ -38,6 +38,9 @@ Colonne | Type | Contrainte | Commentaire
 "date de fin de validité" | YYYYMMDD | Requis | Date de fin de validité du tarif
 "prix" | Entier | Requis | Valeur en centimes d'euro
 "name" | chaine | Requis | Libellé du billet
+"champ inconnu" | chaine | Requis |
+"commentaire" | chaine | Requis | commentaire
+"devise" | chaine | Optionnel | Devise (par défaut: euro)
 
 ## od_fares.csv
 Ce fichier contient la description des tickets dont le tarif est définit par une Origine-Destination.
