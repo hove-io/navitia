@@ -471,6 +471,13 @@ class Scenario(new_default.Scenario):
     def __init__(self):
         super(Scenario, self).__init__()
 
+    @staticmethod
+    def _make_error_response(message, error_type):
+        r = response_pb2.Response()
+        r.error.message = message
+        r.error.id == response_pb2.Error.error_id.Value(error_type)
+        return r
+
     def call_kraken(self, request_type, request, instance, krakens_call):
         """
         For all krakens_call, call the kraken and aggregate the responses
@@ -488,9 +495,17 @@ class Scenario(new_default.Scenario):
 
         if not g.requested_origin:
             g.requested_origin = instance.georef.place(request['origin'])
+            if not g.requested_origin:
+                r = self._make_error_response("The entry point: {} is not valid".format(request['origin']),
+                                              'no_origin')
+                return [r]
 
         if not g.requested_destination:
             g.requested_destination = instance.georef.place(request['destination'])
+            if not g.requested_destination:
+                r = self._make_error_response("The entry Point: {} is not valid".format(request['destination']),
+                                              'no_destination')
+                return [r]
 
         worker = AsyncWorker(instance, krakens_call, request)
 

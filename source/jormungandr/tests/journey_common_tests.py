@@ -559,6 +559,16 @@ class JourneyCommon(object):
         assert j['sections'][0]['to']['id'] == 'stop_point:stopB'
         assert 'walking' in j['tags']
 
+    def test_journey_from_non_valid_stop_area(self):
+        """
+        When the departure is a non valid stop_area, the response status should be 404
+        """
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
+            .format(from_sa='stop_area:non_valid', to_sa='stop_point:stopB', datetime="20120614T080000")
+        response = self.query_region(query, check=False)
+        assert response[1] == 404
+        assert response[0]['error']['message'] == u'The entry point: stop_area:non_valid is not valid'
+
     def test_crow_fly_sections(self):
         """
         When the departure is a stop_area...
