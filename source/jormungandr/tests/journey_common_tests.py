@@ -561,7 +561,7 @@ class JourneyCommon(object):
 
     def test_journey_from_non_valid_stop_area(self):
         """
-        When the departure is stop_area:A and the destination is stop_point:B belonging to stop_area:B
+        When the departure is a non valid stop_area, the response status should be 404
         """
         query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
             .format(from_sa='stop_area:non_valid', to_sa='stop_point:stopB', datetime="20120614T080000")
