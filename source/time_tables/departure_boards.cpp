@@ -55,9 +55,9 @@ static bool is_flagged_partial_terminus(const PbCreator& pb_creator,
                                 const stop_point_route& route_point) {
     for (const auto& st : stop_times) {
         const auto& vj_idx = navitia::routing::VjIdx(*st.second->vehicle_journey);
-        const auto& jp_idx = pb_creator.data.dataRaptor->jp_container.get_jp_from_vj()[vj_idx];
-        const auto& pair_jp = pb_creator.data.dataRaptor->jp_container.get_jps()[jp_idx.val];
-        const auto& last_jpp = pb_creator.data.dataRaptor->jp_container.get(pair_jp.second.jpps.back());
+        const auto& jp_idx = pb_creator.data->dataRaptor->jp_container.get_jp_from_vj()[vj_idx];
+        const auto& pair_jp = pb_creator.data->dataRaptor->jp_container.get_jps()[jp_idx.val];
+        const auto& last_jpp = pb_creator.data->dataRaptor->jp_container.get(pair_jp.second.jpps.back());
 
         if (last_jpp.sp_idx != route_point.first) { return false; }
     }
