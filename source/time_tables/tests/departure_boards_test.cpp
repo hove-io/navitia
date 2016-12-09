@@ -343,7 +343,8 @@ BOOST_AUTO_TEST_CASE(partial_terminus_test1) {
 
     {
         // VJ1 not in response, stop2 is terminus
-        navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
+        navitia::PbCreator pb_creator;
+        pb_creator.init(b.data.get(), bt::second_clock::universal_time(), null_time_period);
         departure_board(pb_creator, "stop_point.uri=stop2", {}, {}, d("20150615T094500"), 86400, 0,
                         10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
 
@@ -356,7 +357,8 @@ BOOST_AUTO_TEST_CASE(partial_terminus_test1) {
 
     {
         // Terminus
-        navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
+        navitia::PbCreator pb_creator;
+        pb_creator.init(b.data.get(), bt::second_clock::universal_time(), null_time_period);
         departure_board(pb_creator, "stop_point.uri=stop3", {}, {}, d("20150615T094500"), 86400, 0,
                         10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
 
@@ -521,7 +523,8 @@ BOOST_FIXTURE_TEST_CASE(test_not_associated_cal, calendar_fixture) {
     b.data->complete();
     b.data->build_raptor();
     {
-        navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
+        navitia::PbCreator pb_creator;
+        pb_creator.init(b.data.get(), bt::second_clock::universal_time(), null_time_period);
         departure_board(pb_creator, "stop_point.uri=stop1", calendar_id, {}, d("20120615T080000"), 86400, 0,
                         10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
 
@@ -532,7 +535,8 @@ BOOST_FIXTURE_TEST_CASE(test_not_associated_cal, calendar_fixture) {
         BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 0);
     }
     {
-        navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
+        navitia::PbCreator pb_creator;
+        pb_creator.init(b.data.get(), bt::second_clock::universal_time(), null_time_period);
         departure_board(pb_creator, "stop_point.uri=StopR2", calendar_id, {}, d("20120615T080000"), 86400, 0,
                         10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
 
@@ -642,7 +646,7 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_impact, calendar_fixture) {
     b.data->build_raptor();
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
-    departure_board(pb_creator, "stop_point.uri=stop2", calendar_id, {}, d("20120614T080000"), 86400, 0,
+    departure_board(pb_creator, "stop_point.uri=stop1", calendar_id, {}, d("20120614T080000"), 86400, 0,
                     10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
 
     pbnavitia::Response resp = pb_creator.get_response();
