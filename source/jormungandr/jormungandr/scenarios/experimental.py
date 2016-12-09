@@ -47,7 +47,7 @@ def create_crowfly(_from, to, begin, end, mode='walking'):
     section.type = response_pb2.CROW_FLY
     section.origin.CopyFrom(_from)
     section.destination.CopyFrom(to)
-    section.duration = end-begin
+    section.duration = end - begin
     section.begin_date_time = begin
     section.end_date_time = end
     section.street_network.mode = response_pb2.Walking
@@ -97,8 +97,25 @@ def create_parameters(request):
                              forbidden_uris=request['forbidden_uris[]'])
 
 
-def _update_crowfly_duration(instance, mode, stop_area_uri, requested_point):
-    stop_points = instance.georef.get_stop_points_for_stop_area(stop_area_uri)
+def _update_crowfly_duration(instance, mode, requested_entry_point):
+    """
+    compute the list of stoppoint that can be accessed for free by crowfly
+    for a stoparea it's the list of it's stoppoints
+    for an admin it's the list of it's main_stop_area's stoppoints
+
+    we also look if there are on demand transport (odt) stoppoints in the area
+
+    :return
+        the list of the freely accessed stoppoints
+        the list of odt stoppoints
+        the fallback duration for all those stoppoints
+    """
+    stop_points = []
+    if requested_entry_point.embedded_type == type_pb2.STOP_AREA:
+        stop_points = instance.georef.get_stop_points_for_stop_area(requested_entry_point.uri)
+    elif requested_entry_point.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
+        stop_points = [sp for sa in requested_entry_point.administrative_region.main_stop_areas
+                       for sp in sa.stop_points]
     crowfly_sps = set()
     odt_stop_points = set()
     fallback_list = collections.defaultdict(dict)
@@ -107,18 +124,18 @@ def _update_crowfly_duration(instance, mode, stop_area_uri, requested_point):
         crowfly_sps.add(stop_point.uri)
 
     map_coord = {
-        type_pb2.STOP_POINT: requested_point.stop_point.coord,
-        type_pb2.STOP_AREA: requested_point.stop_area.coord,
-        type_pb2.ADDRESS: requested_point.address.coord,
-        type_pb2.ADMINISTRATIVE_REGION: requested_point.administrative_region.coord
+        type_pb2.STOP_POINT: requested_entry_point.stop_point.coord,
+        type_pb2.STOP_AREA: requested_entry_point.stop_area.coord,
+        type_pb2.ADDRESS: requested_entry_point.address.coord,
+        type_pb2.ADMINISTRATIVE_REGION: requested_entry_point.administrative_region.coord
     }
-    coord = map_coord.get(requested_point.embedded_type, None)
+    coord = map_coord.get(requested_entry_point.embedded_type, None)
     if coord:
         odt_sps = instance.georef.get_odt_stop_points(coord)
         for stop_point in odt_sps:
             fallback_list[mode][stop_point.uri] = 0
             odt_stop_points.add(stop_point.uri)
-    
+
     return crowfly_sps, odt_stop_points, fallback_list
 
 
@@ -143,6 +160,7 @@ def _reverse_journeys(res):
         previous_section_begin = j.arrival_date_time
         for s in j.sections:
             from copy import deepcopy
+
             o = deepcopy(s.origin)
             d = deepcopy(s.destination)
             s.origin.CopyFrom(d)
@@ -155,14 +173,18 @@ def _reverse_journeys(res):
 def _get_places_crowfly(instance, mode, place, max_duration_to_pt, max_nb_crowfly=5000, **kwargs):
     # When max_duration_to_pt is 0, there is no need to compute the fallback to pt, except if place is a stop_point or a
     # stop_area
+
     if max_duration_to_pt == 0:
         # When max_duration_to_pt is 0, we can get on the public transport ONLY if the place is a stop_point
         if instance.georef.get_stop_points_from_uri(place.uri):
             return {mode: place}
         else:
             return {mode: []}
-    return {mode: instance.georef.get_crow_fly(get_uri_pt_object(place), mode, max_duration_to_pt,
-                                               max_nb_crowfly, **kwargs)}
+
+    res = instance.georef.get_crow_fly(get_uri_pt_object(place), mode, max_duration_to_pt,
+                                       max_nb_crowfly, **kwargs)
+
+    return {mode: res}
 
 
 def _sn_routing_matrix(instance, place, places_crowfly, mode, max_duration_to_pt, request, **kwargs):
@@ -263,18 +285,16 @@ class AsyncWorker(object):
     def get_update_crowfly_duration_futures(self):
         origin_futures = []
         destination_futures = []
-        origin = self.request['origin']
-        destination = self.request['destination']
         called_dep_modes = set()
         called_arr_modes = set()
         for dep_mode, arr_mode in self.krakens_call:
             if dep_mode not in called_dep_modes:
                 origin_futures.append(self.pool.spawn(_update_crowfly_duration, self.instance, dep_mode,
-                                                      origin, g.requested_origin))
+                                                      g.requested_origin))
                 called_dep_modes.add(dep_mode)
             if arr_mode not in called_arr_modes:
                 destination_futures.append(self.pool.spawn(_update_crowfly_duration, self.instance, arr_mode,
-                                                           destination, g.requested_destination))
+                                                           g.requested_destination))
                 called_arr_modes.add(arr_mode)
         return origin_futures, destination_futures
 
@@ -348,6 +368,7 @@ class AsyncWorker(object):
     def _extend_journey(pt_journey, mode, pb_from, pb_to, departure_date_time, nm, clockwise,
                         fallback_direct_path, reverse_sections=False):
         import copy
+
         dp_key = (mode, pb_from.uri, pb_to.uri, departure_date_time, clockwise, reverse_sections)
         departure_dp = fallback_direct_path[dp_key]
 
@@ -372,12 +393,12 @@ class AsyncWorker(object):
                 journey.sections[0].origin.CopyFrom(_from)
             elif departure.uri in crowfly_stop_points:
                 journey.sections.extend([create_crowfly(_from, departure, journey.departure_date_time,
-                                         journey.sections[0].begin_date_time)])
+                                                        journey.sections[0].begin_date_time)])
             else:
-                # extend the journey with fallback direct path
+                # extend the journey with the fallback routing path
                 self._extend_journey(journey, dep_mode, _from, departure, journey.departure_date_time,
                                      origins_fallback, True, fallback_direct_path)
-        journey.sections.sort(SectionSorter()) 
+        journey.sections.sort(SectionSorter())
         return journey
 
     def _build_to(self, journey, last_section, to, crowfly_stop_points, odt_stop_points,
@@ -394,7 +415,7 @@ class AsyncWorker(object):
                 journey.sections.extend([create_crowfly(arrival, to, last_section_end,
                                                         journey.arrival_date_time)])
             else:
-                # extend the journey with fallback direct path
+                # extend the journey with the fallback routing path
                 o = arrival
                 d = to
                 reverse_sections = False
@@ -418,8 +439,8 @@ class AsyncWorker(object):
             # 2. the origin of the first section belongs to a stop_area
             # 3. the origin of the first section belongs to odt stop_points
             if g.requested_origin.uri != departure.uri and \
-                departure.uri not in odt_stop_points and \
-                    departure.uri not in crowfly_stop_points:
+                            departure.uri not in odt_stop_points and \
+                            departure.uri not in crowfly_stop_points:
                 futures.extend(self.get_direct_path_futures(g.fallback_direct_path,
                                                             g.requested_origin,
                                                             departure,
@@ -434,8 +455,8 @@ class AsyncWorker(object):
             # Similar reasoning as above
             arrival_datetime = journey.arrival_date_time + g.destinations_fallback[arr_mode][arrival.uri]
             if g.requested_destination.uri != arrival.uri and \
-                arrival.uri not in odt_stop_points and \
-                    arrival.uri not in crowfly_stop_points:
+                            arrival.uri not in odt_stop_points and \
+                            arrival.uri not in crowfly_stop_points:
                 o, d = arrival, g.requested_destination
                 if arr_mode == 'car':
                     o, d, reverse_sections = d, o, True
@@ -467,7 +488,6 @@ class AsyncWorker(object):
 
 
 class Scenario(new_default.Scenario):
-
     def __init__(self):
         super(Scenario, self).__init__()
 
@@ -512,7 +532,8 @@ class Scenario(new_default.Scenario):
         if request.get('max_duration', 0):
             # Get all stop_points around the requested origin within a crowfly range
             # Calls on origins and destinations are asynchronous
-            orig_futures, dest_futures = worker.get_crowfly_futures(g.requested_origin, g.requested_destination)
+            orig_futures, dest_futures = worker.get_crowfly_futures(g.requested_origin,
+                                                                    g.requested_destination)
             gevent.joinall(orig_futures + dest_futures)
             for future in orig_futures:
                 g.origins_places_crowfly.update(future.get())
@@ -561,7 +582,8 @@ class Scenario(new_default.Scenario):
             for dep_mode, arr_mode in krakens_call:
                 if dep_mode in g.origins_fallback and g.requested_origin.uri in g.origins_fallback[dep_mode]:
                     g.origins_fallback[dep_mode][g.requested_origin.uri] = 0
-                if arr_mode in g.destinations_fallback and g.requested_destination.uri in g.destinations_fallback[arr_mode]:
+                if arr_mode in g.destinations_fallback and g.requested_destination.uri in \
+                        g.destinations_fallback[arr_mode]:
                     g.destinations_fallback[arr_mode][g.requested_destination.uri] = 0
 
         resp = []

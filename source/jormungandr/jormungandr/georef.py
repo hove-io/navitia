@@ -41,6 +41,7 @@ class Kraken(object):
         req = request_pb2.Request()
         req.requested_api = type_pb2.place_uri
         req.place_uri.uri = place
+        req.place_uri.depth = 2
         response = self.instance.send_and_receive(req)
         if response.places:
             return response.places[0]
