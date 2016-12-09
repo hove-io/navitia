@@ -75,10 +75,7 @@ BOOST_AUTO_TEST_CASE(direct_path_test) {
 
     // walking
     sn_params->set_origin_mode("walking");
-    //auto * data_ptr = data_manager.get_data().get();
-    //navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     w.init_worker_data(data_manager.get_data(), boost::gregorian::not_a_date_time, null_time_period);
-    //w.pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     w.direct_path(req);
     auto res = w.pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(res.journeys_size(), 1);
@@ -88,7 +85,6 @@ BOOST_AUTO_TEST_CASE(direct_path_test) {
 
     // bss
     sn_params->set_origin_mode("bss");
-    //w.pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     w.init_worker_data(data_manager.get_data(), boost::gregorian::not_a_date_time, null_time_period);
     w.direct_path(req);
     res = w.pb_creator.get_response();
@@ -98,7 +94,6 @@ BOOST_AUTO_TEST_CASE(direct_path_test) {
 
     // bike
     sn_params->set_origin_mode("bike");
-    //w.pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     w.init_worker_data(data_manager.get_data(), boost::gregorian::not_a_date_time, null_time_period);
     w.direct_path(req);
     res = w.pb_creator.get_response();
@@ -109,7 +104,6 @@ BOOST_AUTO_TEST_CASE(direct_path_test) {
 
     // car
     sn_params->set_origin_mode("car");
-    //w.pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     w.init_worker_data(data_manager.get_data(), boost::gregorian::not_a_date_time, null_time_period);
     w.direct_path(req);
     res = w.pb_creator.get_response();

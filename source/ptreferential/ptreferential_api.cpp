@@ -148,8 +148,6 @@ void query_pb(navitia::PbCreator& pb_creator,
                              const boost::optional<boost::posix_time::ptime>& until,
                              const type::Data& data) {
     type::Indexes final_indexes;
-    //pbnavitia::Response pb_response;
-
     int total_result;
     try {
         final_indexes = make_query(requested_type, request, forbidden_uris, odt_level, since, until, data);

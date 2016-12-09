@@ -288,8 +288,6 @@ BOOST_AUTO_TEST_CASE(departureboard_test_with_impacts) {
 
     // stop_schedules on stop1 with rtLevel = RealTime
     pb_creator.init(data_ptr, "20150616T080000"_dt, null_time_period);
-    //navitia::PbCreator pb_creator1(data_ptr, "20150616T080000"_dt, null_time_period);
-
     departure_board(pb_creator, "stop_point.uri=stop1", {}, {}, d("20150615T094500"), 43200, 0,
                     10, 0, nt::RTLevel::RealTime, std::numeric_limits<size_t>::max());
 

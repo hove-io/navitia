@@ -91,7 +91,7 @@ inline void doWork(zmq::context_t& context,
         pbnavitia::Request pb_req;
         pt::ptime start = pt::microsec_clock::universal_time();
         pbnavitia::API api = pbnavitia::UNKNOWN_API;
-        if(!pb_req.ParseFromArray(request.data(), request.size())){            
+        if(!pb_req.ParseFromArray(request.data(), request.size())){
             LOG4CPLUS_WARN(logger, "receive invalid protobuf");
             w.pb_creator.fill_pb_error(pbnavitia::Error::invalid_protobuf_request, "receive invalid protobuf");
             respond(socket, address, w.pb_creator.get_response());

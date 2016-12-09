@@ -204,7 +204,6 @@ static bool get_geojson_state(const pbnavitia::Request& request) {
 
 void Worker::geo_status() {
     auto status = this->pb_creator.mutable_geo_status();
-    //auto status = result.mutable_geo_status();
     const auto d = data_manager.get_data();
     status->set_nb_admins(d->geo_ref->admins.size());
     status->set_nb_ways(d->geo_ref->ways.size());

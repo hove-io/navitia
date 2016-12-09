@@ -308,7 +308,7 @@ void ranked_pairs_sort(std::vector<std::vector<routing::datetime_stop_time>>& v)
 }
 
 static std::vector<std::vector<routing::datetime_stop_time> >
-make_matrice(const std::vector<std::vector<routing::datetime_stop_time> >& stop_times,
+make_matrix(const std::vector<std::vector<routing::datetime_stop_time> >& stop_times,
              const Thermometer& thermometer,
              const type::Data&) {
     // result group stop_times by stop_point, tmp by vj.
@@ -377,7 +377,7 @@ void route_schedule(PbCreator& pb_creator, const std::string& filter,
             }
         }
         thermometer.generate_thermometer(stop_points);
-        auto  matrice = make_matrice(stop_times, thermometer, *pb_creator.data);
+        auto  matrix = make_matrix(stop_times, thermometer, *pb_creator.data);
 
         auto schedule = pb_creator.add_route_schedules();
         pbnavitia::Table *table = schedule->mutable_table();
@@ -393,7 +393,7 @@ void route_schedule(PbCreator& pb_creator, const std::string& filter,
             pb_creator.fill(sp, row->mutable_stop_point(), max_depth);
 
             for(unsigned int j=0; j<stop_times.size(); ++j) {
-                const auto& dt_stop_time  = matrice[i][j];
+                const auto& dt_stop_time  = matrix[i][j];
                 if (!is_vj_set[j] && dt_stop_time.second != nullptr) {
                     pbnavitia::Header* header = table->mutable_headers(j);
                     pbnavitia::PtDisplayInfo* vj_display_information = header->mutable_pt_display_informations();

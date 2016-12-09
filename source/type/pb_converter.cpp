@@ -1777,7 +1777,6 @@ const pbnavitia::Response& PbCreator::get_response(){
     contributors.clear();
     Filler(0, DumpMessage::No, *this).fill_pb_object(impacts, response.mutable_impacts());
     impacts.clear();
-    //return std::move(response);
     return response;
 }
 
