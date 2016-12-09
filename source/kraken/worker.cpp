@@ -518,7 +518,7 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request,
         try{
             auto address = pb_creator.data.geo_ref->nearest_addr(coord);
             const auto& way_coord = WayCoord(address.second, coord, address.first);
-            pb_creator.fill(&way_coord, pb_creator.add_places(), 1);
+            pb_creator.fill(&way_coord, pb_creator.add_places(), request.depth());
         }catch(const proximitylist::NotFound&) {
             pb_creator.fill_pb_error(pbnavitia::Error::unknown_object,
                                      "Unable to find place: " + request.uri());
@@ -528,19 +528,19 @@ pbnavitia::Response Worker::place_uri(const pbnavitia::PlaceUriRequest &request,
 
     auto it_sa = data->pt_data->stop_areas_map.find(request.uri());
     if(it_sa != data->pt_data->stop_areas_map.end()) {
-        pb_creator.fill(it_sa->second, pb_creator.add_places(), 1);
+        pb_creator.fill(it_sa->second, pb_creator.add_places(), request.depth());
     } else {
         auto it_sp = data->pt_data->stop_points_map.find(request.uri());
         if(it_sp != data->pt_data->stop_points_map.end()) {            
-            pb_creator.fill(it_sp->second, pb_creator.add_places(), 1);
+            pb_creator.fill(it_sp->second, pb_creator.add_places(), request.depth());
         } else {
             auto it_poi = data->geo_ref->poi_map.find(request.uri());
             if(it_poi != data->geo_ref->poi_map.end()) {
-                pb_creator.fill(it_poi->second, pb_creator.add_places(), 1);
+                pb_creator.fill(it_poi->second, pb_creator.add_places(), request.depth());
             } else {
                 auto it_admin = data->geo_ref->admin_map.find(request.uri());
                 if(it_admin != data->geo_ref->admin_map.end()) {
-                    pb_creator.fill(data->geo_ref->admins[it_admin->second], pb_creator.add_places(), 1);
+                    pb_creator.fill(data->geo_ref->admins[it_admin->second], pb_creator.add_places(), request.depth());
 
                 }else{
                     pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse,

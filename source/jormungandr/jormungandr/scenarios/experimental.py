@@ -97,7 +97,7 @@ def create_parameters(request):
                              forbidden_uris=request['forbidden_uris[]'])
 
 
-def _update_crowfly_duration(instance, mode, requested_point):
+def _update_crowfly_duration(instance, mode, requested_entry_point):
     """
     compute the list of stoppoint that can be accessed for free by crowfly
     for a stoparea it's the list of it's stoppoints
@@ -111,10 +111,10 @@ def _update_crowfly_duration(instance, mode, requested_point):
         the fallback duration for all those stoppoints
     """
     stop_points = []
-    if requested_point.embedded_type == type_pb2.STOP_AREA:
-        stop_points = instance.georef.get_stop_points_for_stop_area(requested_point.uri)
-    elif requested_point.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
-        stop_points = [sp for sa in requested_point.administrative_region.main_stop_areas
+    if requested_entry_point.embedded_type == type_pb2.STOP_AREA:
+        stop_points = instance.georef.get_stop_points_for_stop_area(requested_entry_point.uri)
+    elif requested_entry_point.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
+        stop_points = [sp for sa in requested_entry_point.administrative_region.main_stop_areas
                        for sp in sa.stop_points]
     crowfly_sps = set()
     odt_stop_points = set()
@@ -124,12 +124,12 @@ def _update_crowfly_duration(instance, mode, requested_point):
         crowfly_sps.add(stop_point.uri)
 
     map_coord = {
-        type_pb2.STOP_POINT: requested_point.stop_point.coord,
-        type_pb2.STOP_AREA: requested_point.stop_area.coord,
-        type_pb2.ADDRESS: requested_point.address.coord,
-        type_pb2.ADMINISTRATIVE_REGION: requested_point.administrative_region.coord
+        type_pb2.STOP_POINT: requested_entry_point.stop_point.coord,
+        type_pb2.STOP_AREA: requested_entry_point.stop_area.coord,
+        type_pb2.ADDRESS: requested_entry_point.address.coord,
+        type_pb2.ADMINISTRATIVE_REGION: requested_entry_point.administrative_region.coord
     }
-    coord = map_coord.get(requested_point.embedded_type, None)
+    coord = map_coord.get(requested_entry_point.embedded_type, None)
     if coord:
         odt_sps = instance.georef.get_odt_stop_points(coord)
         for stop_point in odt_sps:

@@ -428,7 +428,7 @@ void PbCreator::Filler::fill_pb_object(const ng::Admin* adm, pbnavitia::Administ
     if(!adm->insee.empty()){
         admin->set_insee(adm->insee);
     }
-    if (depth > 0) {
+    if (depth > 1) {
         // for the admin we add the main stop area, but with the minimum vital information
         auto minimum_filler = Filler(0, DumpMessage::No, pb_creator);
         for (const auto& sa: adm->main_stop_areas) {
