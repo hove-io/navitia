@@ -37,6 +37,7 @@ www.navitia.io
 #include "routing/raptor.h"
 #include "georef/street_network.h"
 #include "type/data.h"
+#include "type/pb_converter.h"
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
@@ -74,10 +75,13 @@ BOOST_AUTO_TEST_CASE(co2_emission_higher_0) {
     navitia::type::EntryPoint origin(origin_type, "stop_area:stop1");
     navitia::type::EntryPoint destination(destination_type, "stop_area:stop2");
 
-    ng::StreetNetwork sn_worker(*data.geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
-                                             true, navitia::type::AccessibiliteParams(), forbidden, sn_worker,
-                                             nt::RTLevel::Base, boost::gregorian::not_a_date_time, 2_min);
+    ng::StreetNetwork sn_worker(*data.geo_ref);    
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
+                  true, navitia::type::AccessibiliteParams(), forbidden, sn_worker,
+                  nt::RTLevel::Base, 2_min);
+    pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
 
@@ -115,9 +119,12 @@ BOOST_AUTO_TEST_CASE(co2_emission_equal_0) {
     navitia::type::EntryPoint destination(destination_type, "stop_area:stop2");
 
     ng::StreetNetwork sn_worker(*data.geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
-                                             true, navitia::type::AccessibiliteParams(), forbidden, sn_worker,
-                                             nt::RTLevel::Base, boost::gregorian::not_a_date_time, 2_min);
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
+                  true, navitia::type::AccessibiliteParams(), forbidden, sn_worker,
+                  nt::RTLevel::Base, 2_min);
+    pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
 
@@ -153,9 +160,12 @@ BOOST_AUTO_TEST_CASE(co2_emission_lower_0) {
     navitia::type::EntryPoint destination(destination_type, "stop_area:stop2");
 
     ng::StreetNetwork sn_worker(*data.geo_ref);
-    pbnavitia::Response resp = make_response(raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
-                                             true, navitia::type::AccessibiliteParams(), forbidden, sn_worker,
-                                             nt::RTLevel::Base, boost::gregorian::not_a_date_time, 2_min);
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
+                  true, navitia::type::AccessibiliteParams(), forbidden, sn_worker,
+                  nt::RTLevel::Base, 2_min);
+    pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
 

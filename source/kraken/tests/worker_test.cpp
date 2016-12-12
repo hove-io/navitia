@@ -169,7 +169,8 @@ BOOST_FIXTURE_TEST_CASE(no_wheelchair_on_vj_tests, fixture) {
 
     const auto no_wheelchair_request = create_request(false, "B");
     // we ask for a journey without a wheelchair, we arrive at 9h
-    pbnavitia::Response resp = w.dispatch(no_wheelchair_request);
+    w.dispatch(no_wheelchair_request);
+    pbnavitia::Response resp = w.pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -181,7 +182,8 @@ BOOST_FIXTURE_TEST_CASE(no_wheelchair_on_vj_tests, fixture) {
 BOOST_FIXTURE_TEST_CASE(wheelchair_on_vj_tests, fixture) {
     const auto no_wheelchair_request = create_request(true, "B");
     // we ask for a journey without a wheelchair, we arrive at 9h
-    pbnavitia::Response resp = w.dispatch(no_wheelchair_request);
+    w.dispatch(no_wheelchair_request);
+    pbnavitia::Response resp = w.pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -193,7 +195,8 @@ BOOST_FIXTURE_TEST_CASE(wheelchair_on_vj_tests, fixture) {
 
 BOOST_FIXTURE_TEST_CASE(wheelchair_on_stop_tests, fixture) {
     const auto no_wheelchair_request = create_request(true, "C");
-    pbnavitia::Response resp = w.dispatch(no_wheelchair_request);
+    w.dispatch(no_wheelchair_request);
+    pbnavitia::Response resp = w.pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::NO_SOLUTION);
 }
@@ -220,7 +223,8 @@ BOOST_FIXTURE_TEST_CASE(journey_on_first_day_of_production_tests, fixture) {
     auto dep_after_request = create_request_for_pt_planner(true, "20150314T080000", "stop_point:B");
 
     // we ask for a journey with clockwise=true, we arrive at 9h
-    pbnavitia::Response resp = w.dispatch(dep_after_request);
+    w.dispatch(dep_after_request);
+    pbnavitia::Response resp = w.pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);

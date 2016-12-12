@@ -124,8 +124,8 @@ struct route_schedule_fixture {
 };
 
 BOOST_FIXTURE_TEST_CASE(test1, route_schedule_fixture) {
-
-    navitia::PbCreator pb_creator(*b.data, bt::second_clock::universal_time(), null_time_period);
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
     navitia::timetables::route_schedule(pb_creator, "line.uri=A", {}, {}, d("20120615T070000"), 86400, 100,
                                                                    3, 10, 0, nt::RTLevel::Base);
     pbnavitia::Response resp = pb_creator.get_response();
@@ -141,7 +141,8 @@ BOOST_FIXTURE_TEST_CASE(test1, route_schedule_fixture) {
 
 BOOST_FIXTURE_TEST_CASE(test_max_nb_stop_times, route_schedule_fixture) {
 
-    navitia::PbCreator pb_creator(*b.data, bt::second_clock::universal_time(), null_time_period);
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
     navitia::timetables::route_schedule(pb_creator, "line.uri=A", {}, {}, d("20120615T070000"), 86400, 0,
                                                                    3, 10, 0, nt::RTLevel::Base);
     pbnavitia::Response resp = pb_creator.get_response();
@@ -240,8 +241,8 @@ struct route_schedule_calendar_fixture {
     }
 
     void check_calendar_results(boost::optional<const std::string> calendar, std::vector<std::string> expected_vjs) {
-
-        navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
+        auto * data_ptr = b.data.get();
+        navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
         navitia::timetables::route_schedule(pb_creator, "line.uri=B", calendar, {},
                                             d("20120615T070000"), 86400, 100,
                                             3, 10, 0, nt::RTLevel::Base);
@@ -502,8 +503,8 @@ BOOST_AUTO_TEST_CASE(test_route_schedule_with_different_vp_over_midnight) {
     b.data->build_raptor();
     b.data->pt_data->build_uri();
 
-    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
-
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
     navitia::timetables::route_schedule(pb_creator, "line.uri=L", c1->uri, {}, d("20151201T020000"), 86400, 100,
                                         3, 10, 0, nt::RTLevel::Base);
     pbnavitia::Response resp = pb_creator.get_response();
@@ -547,7 +548,8 @@ BOOST_AUTO_TEST_CASE(complicated_order_1) {
     b.data->build_raptor();
     b.data->pt_data->build_uri();
 
-    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
     navitia::timetables::route_schedule(pb_creator, "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
                                         3, 10, 0, nt::RTLevel::Base);
     pbnavitia::Response resp = pb_creator.get_response();
@@ -598,7 +600,8 @@ BOOST_AUTO_TEST_CASE(complicated_order_2) {
     b.data->build_raptor();
     b.data->pt_data->build_uri();
 
-    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
     navitia::timetables::route_schedule(pb_creator, "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
                                         3, 10, 0, nt::RTLevel::Base);
     pbnavitia::Response resp = pb_creator.get_response();
@@ -652,7 +655,8 @@ BOOST_AUTO_TEST_CASE(complicated_order_3) {
             .publish(btp("20120614T010000"_dt, "20150625T235900"_dt))
             .msg("Disruption on stop_point st1");
     // current_datetime out of bounds
-    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
     navitia::timetables::route_schedule(pb_creator, "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
                                         3, 10, 0, nt::RTLevel::Base);
 
@@ -672,11 +676,11 @@ BOOST_AUTO_TEST_CASE(complicated_order_3) {
     BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(4).time(), "4:00"_t);
 
     // current_datetime
-    navitia::PbCreator pb_creator1(*(b.data), "20120615T080000"_dt, null_time_period);
-    navitia::timetables::route_schedule(pb_creator1, "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
+    pb_creator.init(data_ptr, "20120615T080000"_dt, null_time_period);
+    navitia::timetables::route_schedule(pb_creator, "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
                                         3, 10, 0, nt::RTLevel::Base);
 
-    resp = pb_creator1.get_response();
+    resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     route_schedule = resp.route_schedules(0);
     BOOST_CHECK_EQUAL(route_schedule.table().rows(0).stop_point().uri(), "st1");
@@ -735,7 +739,8 @@ BOOST_AUTO_TEST_CASE(complicated_order_with_impacts) {
                               .msg("Disruption on line").get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
-    navitia::PbCreator pb_creator(*(b.data), bt::second_clock::universal_time(), null_time_period);
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
     navitia::timetables::route_schedule(pb_creator, "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
                                         3, 10, 0, nt::RTLevel::Base);
 
@@ -755,11 +760,11 @@ BOOST_AUTO_TEST_CASE(complicated_order_with_impacts) {
     BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(4).time(), "4:00"_t);
 
     //Call with RealTime:
-    navitia::PbCreator pb_creator1(*(b.data), bt::second_clock::universal_time(), null_time_period);
-    navitia::timetables::route_schedule(pb_creator1, "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
+    pb_creator.init(data_ptr, bt::second_clock::universal_time(), null_time_period);
+    navitia::timetables::route_schedule(pb_creator, "line.uri=L", {}, {}, d("20120615T000000"), 86400, 100,
                                         3, 10, 0, nt::RTLevel::RealTime);
 
-    resp = pb_creator1.get_response();
+    resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
     route_schedule = resp.route_schedules(0);
     print_route_schedule(route_schedule);

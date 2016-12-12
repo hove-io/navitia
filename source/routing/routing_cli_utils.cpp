@@ -35,6 +35,7 @@ www.navitia.io
 #include "raptor.h"
 #include "georef/street_network.h"
 #include "tests/utils_test.h"
+#include "type/pb_converter.h"
 
 namespace nr = navitia::routing;
 namespace nt = navitia::type;
@@ -73,9 +74,12 @@ namespace navitia { namespace cli {
             if (!last_section_mode.empty() && !destination.set_mode(last_section_mode)) {
                 return false;
             }
-            pb::Response resp = make_response(*raptor, origin, destination, {ntest::to_posix_timestamp(date)},
-                    clockwise, navitia::type::AccessibiliteParams(), forbidden,
-                    sn_worker, type::RTLevel::Base, boost::gregorian::not_a_date_time, 2_min, true);
+            auto * data_ptr = &raptor->data;
+            navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+            make_response(pb_creator, *raptor, origin, destination, {ntest::to_posix_timestamp(date)},
+                          clockwise, navitia::type::AccessibiliteParams(), forbidden,
+                          sn_worker, type::RTLevel::Base, 2_min, true);
+            pb::Response resp = pb_creator.get_response();
 
             if (vm.count("protobuf")) {
                 std::cout << resp.DebugString() << "\n";

@@ -35,6 +35,7 @@ www.navitia.io
 #include "kraken/data_manager.h"
 #include "kraken/worker.h"
 #include "kraken/configuration.h"
+#include "type/pb_converter.h"
 
 
 BOOST_AUTO_TEST_CASE(direct_path_test) {
@@ -74,7 +75,9 @@ BOOST_AUTO_TEST_CASE(direct_path_test) {
 
     // walking
     sn_params->set_origin_mode("walking");
-    auto res = w.direct_path(req);
+    w.init_worker_data(data_manager.get_data(), boost::gregorian::not_a_date_time, null_time_period);
+    w.direct_path(req);
+    auto res = w.pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(res.journeys_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).street_network().path_items_size(), 3);
@@ -82,14 +85,18 @@ BOOST_AUTO_TEST_CASE(direct_path_test) {
 
     // bss
     sn_params->set_origin_mode("bss");
-    res = w.direct_path(req);
+    w.init_worker_data(data_manager.get_data(), boost::gregorian::not_a_date_time, null_time_period);
+    w.direct_path(req);
+    res = w.pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(res.journeys_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections_size(), 5);
     BOOST_CHECK_EQUAL(res.journeys(0).durations().total(), 234);
 
     // bike
     sn_params->set_origin_mode("bike");
-    res = w.direct_path(req);
+    w.init_worker_data(data_manager.get_data(), boost::gregorian::not_a_date_time, null_time_period);
+    w.direct_path(req);
+    res = w.pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(res.journeys_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).street_network().path_items_size(), 7);
@@ -97,7 +104,9 @@ BOOST_AUTO_TEST_CASE(direct_path_test) {
 
     // car
     sn_params->set_origin_mode("car");
-    res = w.direct_path(req);
+    w.init_worker_data(data_manager.get_data(), boost::gregorian::not_a_date_time, null_time_period);
+    w.direct_path(req);
+    res = w.pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(res.journeys_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections_size(), 3);
     BOOST_CHECK_EQUAL(res.journeys(0).durations().total(), 121);

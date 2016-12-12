@@ -39,14 +39,6 @@ www.navitia.io
 #include "type/meta_data.h"
 #include <log4cplus/ndc.h>
 
-inline pbnavitia::Response make_internal_error(const std::exception& e) {
-    pbnavitia::Response response;
-
-    response.mutable_error()->set_id(pbnavitia::Error::internal_error);
-    response.mutable_error()->set_message(e.what());
-
-    return response;
-}
 
 static void respond(zmq::socket_t& socket,
              const std::string& address,
@@ -57,7 +49,9 @@ static void respond(zmq::socket_t& socket,
     }catch(const google::protobuf::FatalException& e){
         auto logger = log4cplus::Logger::getInstance("worker");
         LOG4CPLUS_ERROR(logger, "failure during serialization: " << e.what());
-        auto error_response = make_internal_error(e);
+        pbnavitia::Response error_response;
+        error_response.mutable_error()->set_id(pbnavitia::Error::internal_error);
+        error_response.mutable_error()->set_message(e.what());
         reply.rebuild(error_response.ByteSize());
         error_response.SerializeToArray(reply.data(), error_response.ByteSize());
     }
@@ -75,6 +69,7 @@ inline void doWork(zmq::context_t& context,
     zmq::socket_t socket (context, ZMQ_REQ);
     socket.connect("inproc://workers");
     bool run = true;
+    //Here we create the worker
     navitia::Worker w(data_manager, conf);
     z_send(socket, "READY");
     auto slow_request_duration = pt::milliseconds(conf.slow_request_duration());
@@ -94,13 +89,12 @@ inline void doWork(zmq::context_t& context,
         }
 
         pbnavitia::Request pb_req;
-        pbnavitia::Response result;
         pt::ptime start = pt::microsec_clock::universal_time();
         pbnavitia::API api = pbnavitia::UNKNOWN_API;
         if(!pb_req.ParseFromArray(request.data(), request.size())){
             LOG4CPLUS_WARN(logger, "receive invalid protobuf");
-            result.mutable_error()->set_id(pbnavitia::Error::invalid_protobuf_request);
-            respond(socket, address, result);
+            w.pb_creator.fill_pb_error(pbnavitia::Error::invalid_protobuf_request, "receive invalid protobuf");
+            respond(socket, address, w.pb_creator.get_response());
             continue;
         }
         api = pb_req.requested_api();
@@ -109,23 +103,23 @@ inline void doWork(zmq::context_t& context,
             LOG4CPLUS_DEBUG(logger, "receive request: " << pb_req.DebugString());
         }
         try {
-            result = w.dispatch(pb_req);
+            w.dispatch(pb_req);
             if(api != pbnavitia::METADATAS){
-                LOG4CPLUS_TRACE(logger, "response: " << result.DebugString());
+                LOG4CPLUS_TRACE(logger, "response: " << w.pb_creator.get_response().DebugString());
             }
         } catch (const navitia::recoverable_exception& e) {
             //on a recoverable an internal server error is returned
             LOG4CPLUS_ERROR(logger, "internal server error: " << e.what());
             LOG4CPLUS_ERROR(logger, "on query: " << pb_req.DebugString());
             LOG4CPLUS_ERROR(logger, "backtrace: " << e.backtrace());
-            result = make_internal_error(e);
+            w.pb_creator.fill_pb_error(pbnavitia::Error::internal_error, e.what());
         }
         if (! data_manager.get_data()->loaded){
-            result.set_publication_date(-1);
+            w.pb_creator.set_publication_date(boost::gregorian::not_a_date_time);
         } else {
-            result.set_publication_date(navitia::to_posix_timestamp(data_manager.get_data()->meta->publication_date));
+            w.pb_creator.set_publication_date(data_manager.get_data()->meta->publication_date);
         }
-        respond(socket, address, result);
+        respond(socket, address, w.pb_creator.get_response());
         auto duration = pt::microsec_clock::universal_time() - start;
         if(duration >= slow_request_duration){
             LOG4CPLUS_WARN(logger, "slow request! duration: " << duration.total_milliseconds()

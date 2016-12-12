@@ -183,22 +183,17 @@ static void update_quality(std::vector<Autocomplete<nt::idx_t>::fl_quality>& ac_
 }
 
 
-pbnavitia::Response autocomplete(const std::string &q,
+void autocomplete(navitia::PbCreator& pb_creator, const std::string &q,
                                  const std::vector<nt::Type_e> &filter,
                                  uint32_t depth,
-                                 const bool disable_geojson,
                                  int nbmax,
                                  const std::vector<std::string> &admins,
                                  int search_type,
-                                 const navitia::type::Data &d,
-                                 const boost::posix_time::ptime& current_datetime) {
+                                 const navitia::type::Data &d) {
 
-    navitia::PbCreator pb_creator(d, current_datetime,
-                                  boost::posix_time::time_period(current_datetime, boost::posix_time::seconds(1)),
-                                  disable_geojson);
     if (q.empty()) {
         pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "Autocomplete : value of q absent");
-        return pb_creator.get_response();
+        return;
     }
     int nbmax_temp = nbmax;
     //For each object type we search in the dictionnary and keep (nbmax x 3) objects in the result.
@@ -355,7 +350,6 @@ pbnavitia::Response autocomplete(const std::string &q,
 
     //Pagination
     pb_creator.make_paginate(result_size, 0, nbmax, result_size);
-    return pb_creator.get_response();
 }
 
 }} //namespace navitia::autocomplete
