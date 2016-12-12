@@ -36,9 +36,11 @@ or to filter geocoded objects inside the polygon. Here is a fiddle example:
 
 You can use these APIs (click on them for details):
 
--   **[Places](#places)** : autocomplete on geographical data to find the departure and destination points from an input text.
--   **[Journeys](#journeys)** : Compute all journeys from a departure point to every reachable point,
+-   some **[Places](#places)** requests: autocomplete on geographical data from an input text to find the isochrone starting point.
+either
+-   **[Journeys](#journeys)** : Compute all journeys from a departure point to every reachable point, 
 and returns a list of all reachable points, ordered by time to reach.
--   **[isochrones](#isochrones_api)** : Compute all journeys from a departure point to every reachable point,
-and returns multiple geoJson ready to be displayed on map ! This service is currently in beta.
+or
+-   **[isochrones](#isochrones_api)** : Compute all journeys from a departure point to every reachable point, 
+and returns multiple geoJson ready to be displayed on map. This service is currently in beta.
 
