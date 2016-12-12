@@ -309,7 +309,7 @@ struct Contributor : public Header, Nameable{
         ar & idx & name & uri & website & license & dataset_list;
     }
     Indexes get(Type_e type, const PT_Data & data) const;
-    bool operator<(const Contributor & other) const { return this < &other; }
+    bool operator<(const Contributor & other) const { return this->idx < other.idx; }
 };
 
 struct Dataset : public Header, Nameable{

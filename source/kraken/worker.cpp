@@ -344,7 +344,6 @@ void Worker::traffic_reports(const pbnavitia::TrafficReportsRequest &request,
         forbidden_uris.push_back(request.forbidden_uris(i));
     navitia::disruption::traffic_reports(this->pb_creator,
                                                 *data,
-                                                current_datetime,
                                                 request.depth(),
                                                 request.count(),
                                                 request.start_page(),
