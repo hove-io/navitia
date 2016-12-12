@@ -336,8 +336,7 @@ void Worker::pt_object(const pbnavitia::PtobjectRequest & request) {
                                         request.search_type(), *data);
 }
 
-void Worker::traffic_reports(const pbnavitia::TrafficReportsRequest &request,
-                                            const boost::posix_time::ptime& current_datetime){
+void Worker::traffic_reports(const pbnavitia::TrafficReportsRequest &request){
     const auto data = data_manager.get_data();
     std::vector<std::string> forbidden_uris;
     for(int i = 0; i < request.forbidden_uris_size(); ++i)
@@ -991,8 +990,7 @@ void Worker::dispatch(const pbnavitia::Request& request) {
     case pbnavitia::PLANNER: journeys(request.journeys(), request.requested_api()); break;
     case pbnavitia::places_nearby: proximity_list(request.places_nearby()); break;
     case pbnavitia::PTREFERENTIAL: pt_ref(request.ptref()); break;
-    case pbnavitia::traffic_reports : traffic_reports(request.traffic_reports(),
-                                                                 current_datetime); break;
+    case pbnavitia::traffic_reports : traffic_reports(request.traffic_reports()); break;
     case pbnavitia::calendars : calendars(request.calendars()); break;
     case pbnavitia::place_code : place_code(request.place_code()); break;
     case pbnavitia::nearest_stop_points : nearest_stop_points(request.nearest_stop_points()); break;
