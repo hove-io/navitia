@@ -79,11 +79,13 @@ Colonne | Type | Contrainte | Commentaire
 "clef ticket" | chaine | Requis | ID tarif (lien avec prices.csv)
 
 **État avant et aprés changement :**  
-Un état avant un changement (ou après un changement) est décrit soit par un mode physique, soit par un réseau :
+Un état avant un changement (ou après un changement) est décrit par un objet :
 * Description par un mode physique : Indiquer une URI de mode physique (champ **physical_mode_id** du mode physique avec le préfixe _"physical_mode:"_)  
 Par exemple : indiquer "mode=physical_mode:metro" pour indiquer que le voyageur se trouve dans le métro avant le changement.
 * Description par un réseau : Indiquer une URI de réseau (champ **network_id** du réseau avec le préfixe _"network:"_)  
 Par exemple, indiquer "network=network:Filbleu" pour indiquer que le voyageur se trouve sur le réseau Filbleu avant le changement
+* Description par une ligne : Indiquer une URI de ligne (champ **line_id** de la ligne avec le préfixe _"line:"_)  
+* Description par une zone d'arrêt : Indiquer une URI de zone d'arrêt (champ **stop_id** de l'arrêt ayant pour **location_type** la valeur **1** avec le préfixe _"stoparea:"_)  
 * Indiquer **"\*"** pour ne pas fournir de contrainte particulière
 
 **Conditions de début et fin de trajet :**  
