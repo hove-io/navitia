@@ -108,8 +108,7 @@ class Worker {
         void err_msg_isochron(navitia::PbCreator& pb_creator, const std::string& err_msg);
         void journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api);
         void pt_ref(const pbnavitia::PTRefRequest &request);
-        void traffic_reports(const pbnavitia::TrafficReportsRequest &request,
-                                            const boost::posix_time::ptime& current_datetime);
+        void traffic_reports(const pbnavitia::TrafficReportsRequest &request);
         void calendars(const pbnavitia::CalendarsRequest &request);
         void pt_object(const pbnavitia::PtobjectRequest &request);
         void place_code(const pbnavitia::PlaceCodeRequest &request);

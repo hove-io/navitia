@@ -157,7 +157,7 @@ inline pbnavitia::NavitiaType get_embedded_type(const nt::MetaVehicleJourney*) {
 
 
 struct PbCreator {
-    std::set<const nt::Contributor*> contributors;
+    std::set<const nt::Contributor*, Less> contributors;
     std::set<boost::shared_ptr<type::disruption::Impact>> impacts;
     //std::reference_wrapper<const nt::Data> data;
     const nt::Data* data = nullptr;
@@ -332,22 +332,22 @@ private:
             }
         }
 
-        template<typename Nav, typename Pb>
-        void fill_pb_object(const std::set<Nav>& nav_list,
+        template<typename Nav, typename Cmp, typename Pb>
+        void fill_pb_object(const std::set<Nav, Cmp>& nav_list,
                             ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
             for (auto& nav_obj: nav_list) {
                 fill_pb_object(&nav_obj, pb_list->Add());
             }
         }
-        template<typename Nav, typename Pb>
-        void fill_pb_object(const std::set<Nav*>& nav_list,
+        template<typename Nav, typename Cmp, typename Pb>
+        void fill_pb_object(const std::set<Nav*, Cmp>& nav_list,
                             ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
             for (auto* nav_obj: nav_list) {
                 fill_pb_object(nav_obj, pb_list->Add());
             }
         }
-        template<typename Nav, typename Pb>
-        void fill_pb_object(const std::set<boost::shared_ptr<Nav>>& nav_list,
+        template<typename Nav, typename Cmp, typename Pb>
+        void fill_pb_object(const std::set<boost::shared_ptr<Nav>, Cmp>& nav_list,
                             ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
             for (auto& nav_obj: nav_list) {
                 fill_pb_object(nav_obj.get(), pb_list->Add());

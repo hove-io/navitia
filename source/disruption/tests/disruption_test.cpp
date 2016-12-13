@@ -128,7 +128,7 @@ BOOST_FIXTURE_TEST_CASE(network_filter1, Params) {
     auto dt = "20131219T155000"_dt;
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, dt, null_time_period);
-    navitia::disruption::traffic_reports(pb_creator, *(b.data), dt, 1, 10, 0, "network.uri=network:R", forbidden_uris);
+    navitia::disruption::traffic_reports(pb_creator, *(b.data), 1, 10, 0, "network.uri=network:R", forbidden_uris);
     pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.traffic_reports_size(), 1);
@@ -157,7 +157,7 @@ BOOST_FIXTURE_TEST_CASE(network_filter2, Params) {
     auto dt = "20131224T125000"_dt;
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, dt, null_time_period);
-    navitia::disruption::traffic_reports(pb_creator, *(b.data), dt, 1, 10, 0, "network.uri=network:K", forbidden_uris);
+    navitia::disruption::traffic_reports(pb_creator, *(b.data), 1, 10, 0, "network.uri=network:K", forbidden_uris);
     pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.traffic_reports_size(), 1);
@@ -181,7 +181,7 @@ BOOST_FIXTURE_TEST_CASE(line_filter, Params) {
     auto dt = "20131221T085000"_dt;
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, dt, null_time_period);
-    navitia::disruption::traffic_reports(pb_creator, *(b.data), dt, 1 ,10 ,0 , "line.uri=line:S", forbidden_uris);
+    navitia::disruption::traffic_reports(pb_creator, *(b.data), 1 ,10 ,0 , "line.uri=line:S", forbidden_uris);
     pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.traffic_reports_size(), 1);
@@ -209,7 +209,7 @@ BOOST_FIXTURE_TEST_CASE(Test1, Params) {
     auto dt = "20140101T0900"_dt;
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, dt, null_time_period);
-    navitia::disruption::traffic_reports(pb_creator, *(b.data), dt, 1, 10, 0, "", forbidden_uris);
+    navitia::disruption::traffic_reports(pb_creator, *(b.data), 1, 10, 0, "", forbidden_uris);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ResponseType::NO_SOLUTION);
 }
@@ -219,7 +219,7 @@ BOOST_FIXTURE_TEST_CASE(Test2, Params) {
     auto dt = "20131226T0900"_dt;
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, dt, null_time_period);
-    navitia::disruption::traffic_reports(pb_creator, *(b.data), dt, 1, 10, 0, "", forbidden_uris);
+    navitia::disruption::traffic_reports(pb_creator, *(b.data), 1, 10, 0, "", forbidden_uris);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.traffic_reports_size(), 1);
 
@@ -241,7 +241,7 @@ BOOST_FIXTURE_TEST_CASE(Test4, Params) {
     auto dt = "20130203T0900"_dt;
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, dt, null_time_period);
-    navitia::disruption::traffic_reports(pb_creator, *(b.data), dt, 1 , 10, 0, "", forbidden_uris);
+    navitia::disruption::traffic_reports(pb_creator, *(b.data), 1 , 10, 0, "", forbidden_uris);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ResponseType::NO_SOLUTION);
 }
@@ -251,7 +251,7 @@ BOOST_FIXTURE_TEST_CASE(Test5, Params) {
     auto dt = "20130212T0900"_dt;
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, dt, null_time_period);
-    navitia::disruption::traffic_reports(pb_creator, *(b.data), dt, 1, 10, 0, "", forbidden_uris);
+    navitia::disruption::traffic_reports(pb_creator, *(b.data), 1, 10, 0, "", forbidden_uris);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ResponseType::NO_SOLUTION);
 }
