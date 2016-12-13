@@ -315,9 +315,10 @@ class AsyncWorker(object):
     def get_direct_path_futures(self, fallback_direct_path,
                                 origin, destination,
                                 datetime, clockwise,
-                                reverse_sections):
+                                reverse_sections,
+                                modes):
         futures_direct_path = []
-        for dep_mode, _ in self.krakens_call:
+        for dep_mode in modes:
             dp_key = (dep_mode, origin.uri,
                       destination.uri,
                       datetime,
@@ -446,7 +447,8 @@ class AsyncWorker(object):
                                                             departure,
                                                             departure_datetime,
                                                             clockwise,
-                                                            reverse_sections))
+                                                            reverse_sections,
+                                                            [dep_mode]))
             # to
             arrival = journey.sections[-1].destination
             clockwise = False
@@ -464,7 +466,8 @@ class AsyncWorker(object):
                                                             o,
                                                             d,
                                                             arrival_datetime,
-                                                            clockwise, reverse_sections))
+                                                            clockwise, reverse_sections,
+                                                            [arr_mode]))
         return futures
 
     def build_journeys(self, map_response, crowfly_stop_points, odt_stop_points):
@@ -596,7 +599,8 @@ class Scenario(new_default.Scenario):
                                                  g.requested_destination,
                                                  request['datetime'],
                                                  request['clockwise'],
-                                                 False)
+                                                 False,
+                                                 [mode for mode, _ in krakens_call])
         for future in gevent.iwait(futures):
             resp_key, resp_direct_path = future.get()
             g.fallback_direct_path[resp_key] = resp_direct_path
