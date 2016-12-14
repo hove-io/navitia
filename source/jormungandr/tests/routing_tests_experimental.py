@@ -71,6 +71,18 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
         j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
         eq_(j_departure - timedelta(seconds=1), dt)
 
+    def test_journey_with_different_fallback_modes(self):
+        """
+        Test when departure/arrival fallback modes are different
+        """
+        query = journey_basic_query + "&first_section_mode[]=walking&last_section_mode[]=car&debug=true"
+        response = self.query_region(query)
+        check_journeys(response)
+        jrnys = response['journeys']
+        assert jrnys
+        assert jrnys[0]['sections'][0]['mode'] == 'walking'
+        assert jrnys[0]['sections'][-1]['mode'] == 'car'
+
     def test_best_filtering(self):
         """
         This feature is no longer supported"""
