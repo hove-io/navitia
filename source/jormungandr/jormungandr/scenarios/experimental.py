@@ -39,15 +39,6 @@ from jormungandr.utils import get_uri_pt_object, generate_id
 from jormungandr import app
 import gevent
 import gevent.pool
-import gevent.socket
-import urllib3
-
-# This line replaces the gevent.monkey.patch_socket()
-# the reason why we don't use patch_socket() at the very beginning of jormungandr is
-# that it caused a mysterious strong performance regression for certain requests, thus we patch
-# only at places where asynchronisation is needed
-urllib3.connection.connection.socket = gevent.socket
-
 import collections
 
 

@@ -109,3 +109,5 @@ CIRCUIT_BREAKER_VALHALLA_TIMEOUT_S = 60  # the circuit breaker retries after thi
     
 GRAPHICAL_ISOCHRONE = False
 HEAT_MAP = False
+
+PATCH_WITH_GEVENT_SOCKET = False
