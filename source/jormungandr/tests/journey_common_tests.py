@@ -559,6 +559,19 @@ class JourneyCommon(object):
         assert j['sections'][0]['to']['id'] == 'stop_point:stopB'
         assert 'walking' in j['tags']
 
+    def test_journey_with_different_fallback_modes(self):
+        """
+        Test when departure/arrival fallback modes are different
+        """
+        query = journey_basic_query + "&first_section_mode[]=walking&last_section_mode[]=car&debug=true"
+        response = self.query_region(query)
+        check_journeys(response)
+        jrnys = response['journeys']
+        assert jrnys
+        assert jrnys[0]['sections'][0]['mode'] == 'walking'
+        assert jrnys[0]['sections'][-1]['mode'] == 'car'
+
+
     def test_journey_from_non_valid_stop_area(self):
         """
         When the departure is a non valid stop_area, the response status should be 404
