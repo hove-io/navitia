@@ -526,11 +526,14 @@ static auto comp = [](const impact_wptr& lhs, const impact_wptr& rhs){
     auto i_lhs = lhs.lock();
     auto i_rhs = rhs.lock();
 
+    // lexical sort by pointer then update datetime then uri
     if(!i_lhs || !i_rhs) {
-       return false;
+       return i_lhs.get() < i_rhs.get();
     }
-
-    return i_lhs->updated_at < i_rhs->updated_at || i_lhs->uri < i_rhs->uri;
+    if (i_lhs->updated_at != i_rhs->updated_at) {
+        return i_lhs->updated_at < i_rhs->updated_at;
+    }
+    return i_lhs->uri < i_rhs->uri;
 };
 
 struct delete_impacts_visitor : public apply_impacts_visitor {
@@ -583,7 +586,11 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         // it with an empty vector.
         decltype(mvj->impacted_by) impacted_by_moved;
         boost::swap(impacted_by_moved, mvj->impacted_by);
-        disruptions_collection.insert(std::begin(impacted_by_moved), std::end(impacted_by_moved));
+        
+        // note: insert(it_begin, it_end) crashed...
+        for(const auto& i: impacted_by_moved) {
+            disruptions_collection.insert(i);
+        }
     }
 
     void operator()(nt::StopPoint* stop_point) {
