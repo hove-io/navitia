@@ -46,7 +46,8 @@ if rest_api.app.config.get('PATCH_WITH_GEVENT_SOCKET', False):
     import gevent.socket
     import urllib3
     logger = logging.getLogger('jormungandr.patch_gevent_socket')
-    logger.info("Attention! You'are patching urllib3.connection.connection.socket with gevent.socket")
+    logger.info("Attention! You'are patching urllib3.connection.connection.socket with gevent.socket, "
+                "parallel calling valhalla is activated")
     # This line replaces the gevent.monkey.patch_socket()
     # the reason why we don't use patch_socket() at the very beginning of jormungandr is
     # that it caused a mysterious performance regression for certain requests, thus we patch
