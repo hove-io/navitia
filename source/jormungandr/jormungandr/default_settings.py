@@ -111,4 +111,4 @@ GRAPHICAL_ISOCHRONE = False
 HEAT_MAP = False
 # This parameter are used to apply gevent's monkey patch
 # The Goal is to activate parallel calling valhalla, without the patch, parallel http calling may not work
-PATCH_WITH_GEVENT_SOCKET = True
+PATCH_WITH_GEVENT_SOCKET = False
