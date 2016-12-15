@@ -79,7 +79,7 @@ Colonne | Type | Contrainte | Commentaire
 "clef ticket" | chaine | Requis | ID tarif (lien avec prices.csv)
 
 **État avant et aprés changement :**  
-Un état avant un changement (ou après un changement) est décrit par un objet :
+Un état avant un changement (ou après un changement) est décrit par un objet TC, selon l'une des possibilités suivantes :
 * Description par un mode physique : Indiquer une URI de mode physique (champ **physical_mode_id** du mode physique avec le préfixe _"physical_mode:"_)  
 Par exemple : indiquer "mode=physical_mode:metro" pour indiquer que le voyageur se trouve dans le métro avant le changement.
 * Description par un réseau : Indiquer une URI de réseau (champ **network_id** du réseau avec le préfixe _"network:"_)  
