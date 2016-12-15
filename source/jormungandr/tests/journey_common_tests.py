@@ -559,6 +559,7 @@ class JourneyCommon(object):
         assert j['sections'][0]['to']['id'] == 'stop_point:stopB'
         assert 'walking' in j['tags']
 
+
     def test_journey_from_non_valid_stop_area(self):
         """
         When the departure is a non valid stop_area, the response status should be 404
