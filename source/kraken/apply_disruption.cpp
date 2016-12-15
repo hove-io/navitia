@@ -586,11 +586,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         // it with an empty vector.
         decltype(mvj->impacted_by) impacted_by_moved;
         boost::swap(impacted_by_moved, mvj->impacted_by);
-        
-        // note: insert(it_begin, it_end) crashed...
-        for(const auto& i: impacted_by_moved) {
-            disruptions_collection.insert(i);
-        }
+        disruptions_collection.insert(std::begin(impacted_by_moved), std::end(impacted_by_moved));
     }
 
     void operator()(nt::StopPoint* stop_point) {
