@@ -291,7 +291,10 @@ class PoiType(flask_restful.Resource):
 
     def post(self, instance_name):
         instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
-        poi_types_json = request.get_json(silent=False)
+        try:
+            poi_types_json = request.get_json(silent=False)
+        except:
+            abort(400, status="error", message='Incorrect json provided')
 
         logger = get_instance_logger(instance)
         try:
@@ -311,10 +314,11 @@ class PoiType(flask_restful.Resource):
                 abort(400, status="error",
                       message='The 2 POI types id=amenity:parking and id=amenity:bicycle_rental must be defined')
 
-            for poi_id in (r.get('poi_type_id') for r in poi_types_json.get('rules', [])):
-                if not poi_id in poi_types_map:
+            for r in poi_types_json.get('rules', []):
+                pt_id = r.get('poi_type_id')
+                if not pt_id in poi_types_map:
                     abort(400, status="error",
-                          message='Using an undefined POI type id ({}) forbidden in rules'.format(poi_id))
+                          message='Using an undefined POI type id ({}) forbidden in rules'.format(pt_id))
 
             poi_types = models.PoiTypeJson(json.dumps(poi_types_json, ensure_ascii=False).encode('utf-8'), instance)
             db.session.add(poi_types)
