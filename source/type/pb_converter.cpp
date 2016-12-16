@@ -1945,7 +1945,7 @@ pbnavitia::Metadatas* PbCreator::mutable_metadatas(){
 }
 
 void PbCreator::clear_feed_publishers(){
-    response.clear_feed_publishers();
+    contributors.clear();
 }
 
 pbnavitia::FeedPublisher* PbCreator::add_feed_publishers(){
