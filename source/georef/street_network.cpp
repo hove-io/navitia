@@ -312,17 +312,20 @@ static routing::SpIdx get_id(const routing::SpIdx& idx) { return idx; }
 static std::string get_id(const type::GeographicalCoord& coord) { return coord.uri(); }
 
 template<typename K, typename U, typename G>
-boost::container::flat_map<K, navitia::time_duration>
+boost::container::flat_map<K, georef::RoutingElement>
 PathFinder::start_dijkstra_and_fill_duration_map(const navitia::time_duration& radius,
         const std::vector<U>& destinations,
         const G& projection_getter){
-    boost::container::flat_map<K, navitia::time_duration> result;
+    boost::container::flat_map<K, georef::RoutingElement> result;
     std::vector<std::pair<K, georef::ProjectionData>> projection_found_dests;
     for (const auto& dest: destinations) {
         auto projection = projection_getter(dest);
         // the stop point has been projected on the graph?
         if(projection.found) {
             projection_found_dests.push_back({get_id(dest), projection});
+        } else {
+            result[get_id(dest)] = georef::RoutingElement(navitia::time_duration(),
+                                                          georef::RoutingStatus_e::unknown);
         }
     }
     // if there are no stop_points projected on the graph, there is no need to start the dijkstra
@@ -345,7 +348,7 @@ PathFinder::start_dijkstra_and_fill_duration_map(const navitia::time_duration& r
             //and finally to the destination
             auto duration = path_duration_on_same_edge(starting_edge, projection);
             if(duration <= radius){
-                result[id] = duration;
+                result[id] = georef::RoutingElement(duration, georef::RoutingStatus_e::reached) ;
             }
         }else{
             navitia::time_duration best_dist = bt::pos_infin;
@@ -357,7 +360,11 @@ PathFinder::start_dijkstra_and_fill_duration_map(const navitia::time_duration& r
                                                           + crow_fly_duration(projection.distances[target_e]));
             }
             if (best_dist <= radius) {
-                result[id] = best_dist;
+                result[id] = georef::RoutingElement(best_dist,
+                                                    georef::RoutingStatus_e::reached);
+            } else {
+                result[id] = georef::RoutingElement(navitia::time_duration(),
+                                                    georef::RoutingStatus_e::unreached);
             }
         }
     }
@@ -403,11 +410,17 @@ PathFinder::find_nearest_stop_points(const navitia::time_duration& radius,
         dest_sp_idx.push_back(routing::SpIdx{e.first});
     }
     ProjectionGetterByCache projection_getter{mode, geo_ref.projected_stop_points};
-    return start_dijkstra_and_fill_duration_map<routing::SpIdx, routing::SpIdx, ProjectionGetterByCache>(
+    auto resp = start_dijkstra_and_fill_duration_map<routing::SpIdx, routing::SpIdx, ProjectionGetterByCache>(
             radius, dest_sp_idx, projection_getter);
+    for (auto r : resp) {
+        if (r.second.routing_status == RoutingStatus_e::reached) {
+            result[r.first] = r.second.time_duration;
+        }
+    }
+    return result;
 }
 
-boost::container::flat_map<PathFinder::coord_uri, navitia::time_duration>
+boost::container::flat_map<PathFinder::coord_uri, georef::RoutingElement>
 PathFinder::get_duration_with_dijkstra(const navitia::time_duration& radius,
                                        const std::vector<type::GeographicalCoord>& dest_coords){
     if (dest_coords.empty()) {
