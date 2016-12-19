@@ -79,6 +79,8 @@ int main(int argc, const char* const argv[]) {
     b.generate_dummy_basis();
     b.sa("A", 1., 1.)("stop_point:uselessA", 1., 1.);
     b.sa("B", 2., 2.);
+    b.sa("E", 3., 3.);
+    b.sa("H", 4., 4.);
     b.vj("l1")("A", 8*3600)("B", 8*3600+5*60);
     b.vj("l2")("A", 15*3600)("B", 15*3600+5*60);
     b.vj("l3")("C", 14*3600+7*60)("D", 15*3600);

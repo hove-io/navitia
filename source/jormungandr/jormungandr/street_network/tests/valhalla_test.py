@@ -490,6 +490,9 @@ def one_to_many_valhalla_test():
             'walking',
             42,
             MOCKED_REQUEST)
-        assert valhalla_response.rows[0].duration[0] == 42
-        assert valhalla_response.rows[0].duration[1] == -1
-        assert valhalla_response.rows[0].duration[2] == 1337
+        assert valhalla_response.rows[0].routing_response[0].duration == 42
+        assert valhalla_response.rows[0].routing_response[0].routing_status == response_pb2.reached
+        assert valhalla_response.rows[0].routing_response[1].duration == -1
+        assert valhalla_response.rows[0].routing_response[1].routing_status == response_pb2.unknown
+        assert valhalla_response.rows[0].routing_response[2].duration == 1337
+        assert valhalla_response.rows[0].routing_response[2].routing_status == response_pb2.reached

@@ -829,7 +829,7 @@ class OnBasicRouting():
             .format(from_sa="E", to_sa="H", datetime="20120615T080000")
 
         response = self.query_region(query, display=False)
-        assert(not "journeys" in response or len(response['journeys']) ==  0)
+        assert(not "journeys" in response or len(response['journeys']) == 0)
 
     def test_max_attemps_debug(self):
         """
