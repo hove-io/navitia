@@ -1,3 +1,9 @@
+navitia2 (2.22.4) unstable; urgency=low
+
+  * Kraken: fix disruption update crash #1899
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Mon, 19 Dec 2016 09:12:20 +0100
+
 navitia2 (2.22.3) unstable; urgency=low
 
   * disable gevent monkey patch 
