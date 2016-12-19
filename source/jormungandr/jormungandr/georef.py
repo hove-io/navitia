@@ -48,8 +48,14 @@ class Kraken(object):
         if place.startswith("coord:"):
             # In some cases, the given "from" is not always a findable address by kraken
             # we just forward the given coord and return a pt object
+            _, lon, lat = place.split(':')
+            uri = '{};{}'.format(lon, lat)
             p = type_pb2.PtObject()
-            p.uri = place
+            p.uri = uri
+            p.embedded_type = type_pb2.ADDRESS
+            p.address.coord.lon = float(lon)
+            p.address.coord.lat = float(lat)
+            p.address.uri = uri
             return p
         return None
 
