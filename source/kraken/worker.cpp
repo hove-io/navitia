@@ -919,11 +919,16 @@ void Worker::street_network_routing_matrix(const pbnavitia::StreetNetworkRouting
 
         auto* row = this->pb_creator.mutable_sn_routing_matrix()->add_rows();
         for(auto coord : dest_coords) {
+            auto* k = row->add_routing_response();
             auto it = nearest.find(coord.uri());
-            if (it != nearest.end()) {
-                row->add_duration(it->second.total_seconds());
-            }else {
-                row->add_duration(-1);
+            assert(it != nearest.end());
+            k->set_duration(it->second.time_duration.total_seconds());
+            k->set_routing_status(pbnavitia::RoutingStatus::unknown);
+            if (it->second.routing_status == georef::RoutingStatus_e::reached) {
+                k->set_routing_status(pbnavitia::RoutingStatus::reached);
+            }
+            if (it->second.routing_status == georef::RoutingStatus_e::unreached) {
+                k->set_routing_status(pbnavitia::RoutingStatus::unreached);
             }
         }
     }
