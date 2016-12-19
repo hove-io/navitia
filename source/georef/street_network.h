@@ -96,6 +96,20 @@ struct TransportationModeFilter {
     }
 };
 
+enum class RoutingStatus_e {
+    reached = 0,
+    unreached = 1,
+    unknown = 2
+};
+
+struct RoutingElement {
+    navitia::time_duration time_duration;
+    RoutingStatus_e routing_status = RoutingStatus_e::reached;
+    RoutingElement(navitia::time_duration time_duration=navitia::time_duration(),
+                   RoutingStatus_e routing_status=RoutingStatus_e::reached): time_duration(time_duration),
+        routing_status(routing_status){}
+};
+
 struct PathFinder {
     const GeoRef & geo_ref;
 
