@@ -625,7 +625,8 @@ def is_valid_section(section, query):
             assert dur >= 0
             total_duration += dur
 
-        assert total_duration == section['duration']
+        #assert total_duration == section['duration']
+        assert total_duration - section['duration'] <= 2
 
     #TODO check geojson
     #TODO check stop_date_times
