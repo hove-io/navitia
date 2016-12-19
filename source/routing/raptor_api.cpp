@@ -253,9 +253,7 @@ void add_direct_path(PbCreator& pb_creator,
             if (clockwise) {
                 departure = datetime;
             } else {
-                const auto duration = bt::seconds(path.duration.total_seconds()
-                                                  / origin.streetnetwork_params.speed_factor);
-                departure = datetime - duration;
+                departure = datetime - bt::seconds(path.duration.total_seconds());
             }
             pb_creator.fill_street_sections(origin, path, pb_journey, departure);
 

@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(direct_path_test) {
     BOOST_REQUIRE_EQUAL(res.journeys_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).street_network().path_items_size(), 3);
-    BOOST_CHECK_EQUAL(res.journeys(0).durations().total(), 275);
+    BOOST_CHECK_EQUAL(res.journeys(0).durations().total(), 276);
 
     // bss
     sn_params->set_origin_mode("bss");
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(direct_path_test) {
     res = w.pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(res.journeys_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections_size(), 5);
-    BOOST_CHECK_EQUAL(res.journeys(0).durations().total(), 234);
+    BOOST_CHECK_EQUAL(res.journeys(0).durations().total(), 237);
 
     // bike
     sn_params->set_origin_mode("bike");
@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(direct_path_test) {
     BOOST_REQUIRE_EQUAL(res.journeys_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections(0).street_network().path_items_size(), 7);
-    BOOST_CHECK_EQUAL(res.journeys(0).durations().total(), 58);
+    BOOST_CHECK_EQUAL(res.journeys(0).durations().total(), 62);
 
     // car
     sn_params->set_origin_mode("car");
@@ -109,5 +109,5 @@ BOOST_AUTO_TEST_CASE(direct_path_test) {
     res = w.pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(res.journeys_size(), 1);
     BOOST_CHECK_EQUAL(res.journeys(0).sections_size(), 3);
-    BOOST_CHECK_EQUAL(res.journeys(0).durations().total(), 121);
+    BOOST_CHECK_EQUAL(res.journeys(0).durations().total(), 123);
 }
