@@ -1474,7 +1474,7 @@ void PbCreator::add_path_item(pbnavitia::StreetNetwork* sn, const ng::PathItem& 
     pbnavitia::PathItem* path_item = sn->add_path_items();
     path_item->set_name(data->geo_ref->ways[item.way_idx]->name);
     path_item->set_length(item.get_length(ori_dest.streetnetwork_params.speed_factor));
-    path_item->set_duration(double(item.duration.ticks()) / navitia::time_duration::ticks_per_second());
+    path_item->set_duration(item.duration.total_fractional_seconds());
     path_item->set_direction(item.angle);
 
     //we add each path item coordinate to the global coordinate list

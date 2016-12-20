@@ -496,10 +496,6 @@ struct routing_api_data {
         return speed_trait.to_duration(dist, mode);
     }
 
-    double to_precise_duration(float dist, navitia::type::Mode_e mode) {
-        return double(speed_trait.to_duration(dist, mode).ticks()) / navitia::time_duration::ticks_per_second();
-    }
-
     void add_edges(int edge_idx, navitia::georef::GeoRef& geo_ref, int idx_from, int idx_to, float dist, navitia::type::Mode_e mode) {
         boost::add_edge(idx_from + geo_ref.offsets[mode],
                         idx_to + geo_ref.offsets[mode],
