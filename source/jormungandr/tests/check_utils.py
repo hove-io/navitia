@@ -625,12 +625,12 @@ def is_valid_section(section, query):
             assert dur >= 0
             total_duration += dur
 
-        #assert total_duration == section['duration']
-        assert total_duration - section['duration'] <= 2
+        assert abs(total_duration - section['duration']) <= 0.5 * len(section['path']) + 1
 
     #TODO check geojson
     #TODO check stop_date_times
     #TODO check from/to
+
 
 
 def is_valid_ticket(ticket, tester):

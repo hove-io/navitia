@@ -119,6 +119,7 @@ class JourneyCommon(object):
         non_pt_walk_j = next((j for j in journeys if j['type'] == 'non_pt_walk'), None)
         assert non_pt_walk_j
         assert non_pt_walk_j['duration'] == non_pt_walk_j['sections'][0]['duration']
+        # duration has floor round value: duration = 310 / 1.5 (speed-factor) = 206.66..
         assert non_pt_walk_j['duration'] == 206
         assert non_pt_walk_j['durations']['total'] == 206
         assert non_pt_walk_j['durations']['walking'] == 206

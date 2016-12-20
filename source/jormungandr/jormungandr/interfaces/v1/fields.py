@@ -476,12 +476,7 @@ class Integer(fields.Raw):
     def __init__(self, default=0, **kwargs):
         super(Integer, self).__init__(default=default, **kwargs)
 
-    def output(self, key, obj):
-        attribute = self.attribute or key
-        if not obj.HasField(attribute):
-            return self.default
-
-        value = fields.get_value(attribute, obj)
+    def format(self, value):
         if value is None:
             return self.default
 
