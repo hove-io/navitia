@@ -923,12 +923,15 @@ void Worker::street_network_routing_matrix(const pbnavitia::StreetNetworkRouting
             auto it = nearest.find(coord.uri());
             assert(it != nearest.end());
             k->set_duration(it->second.time_duration.total_seconds());
-            k->set_routing_status(pbnavitia::RoutingStatus::unknown);
-            if (it->second.routing_status == georef::RoutingStatus_e::reached) {
+            switch(it->second.routing_status){
+            case georef::RoutingStatus_e::reached:
                 k->set_routing_status(pbnavitia::RoutingStatus::reached);
-            }
-            if (it->second.routing_status == georef::RoutingStatus_e::unreached) {
+                break;
+            case georef::RoutingStatus_e::unreached:
                 k->set_routing_status(pbnavitia::RoutingStatus::unreached);
+                break;
+            default:
+                k->set_routing_status(pbnavitia::RoutingStatus::unknown);
             }
         }
     }
