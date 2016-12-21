@@ -75,13 +75,14 @@ def get_max_fallback_duration(request, mode):
     raise ValueError('unknown mode: {}'.format(mode))
 
 
-class Fallback(dict):
-    '''
-    Exmaple :
+class FallbackDuration(dict):
+    """
+    Dictionary containing the id of the places and the duration to arrive there and the projection status
+    Example :
     {
         "walking" : {"id1" : {"duration": 6, "status": response_pb2.reached},
                     "id2" : {"duration": 15, "status": response_pb2.unknown}}}
-    '''
+    """
     def update_if_exist(self, mode, uri):
         value = self.get(mode, None)
         if value and uri in value:
@@ -91,18 +92,12 @@ class Fallback(dict):
         values = self.get(mode)
         return values.get(uri).get('duration')
 
-    def to_crowflay(self, mode, uri):
+    def to_crowfly(self, mode, uri):
         values = self.get(mode)
         return values.get(uri).get("status") == response_pb2.unknown
 
     def get_location_context(self, mode):
-        location_context = {}
-        values = self.get(mode, None)
-        if not values:
-            return location_context
-        for key, value in values.items():
-            location_context.update({key: value.get("duration")})
-        return location_context
+        return {key: value.get("duration") for key, value in self.get(mode, {}).items()}
 
     def merge(self, mode, values):
         local_values = self.get(mode, None)
@@ -118,8 +113,8 @@ class Fallback(dict):
 def _init_g():
     g.origins_places_crowfly = {}
     g.destinations_places_crowfly = {}
-    g.origins_fallback = Fallback()
-    g.destinations_fallback = Fallback()
+    g.origins_fallback = FallbackDuration()
+    g.destinations_fallback = FallbackDuration()
     g.fallback_direct_path = {}
     g.requested_origin = None
     g.requested_destination = None
@@ -224,13 +219,15 @@ def _get_places_crowfly(instance, mode, place, max_duration_to_pt, max_nb_crowfl
 
     return {mode: res}
 
+
 def _get_duration(resp, place, mode, **kwargs):
     map_response = {
-        response_pb2.unreached: -1,
         response_pb2.reached: resp.duration,
+        # Calculate duration
         response_pb2.unknown: int(place.distance/kwargs.get(mode))
     }
     return map_response[resp.routing_status]
+
 
 def _sn_routing_matrix(instance, place, places_crowfly, mode, max_duration_to_pt, request, **kwargs):
     # When max_duration_to_pt is 0, there is no need to compute the fallback to pt, except if place is a stop_point or a
@@ -253,9 +250,10 @@ def _sn_routing_matrix(instance, place, places_crowfly, mode, max_duration_to_pt
 
     result = {mode: {}}
     for pos, r in enumerate(sn_routing_matrix.rows[0].routing_response):
-        duration = _get_duration(r, places[pos], mode, **kwargs)
-        if (duration > -1) and (duration < max_duration_to_pt):
-            result[mode].update({places[pos].uri: {'duration': duration, 'status': r.routing_status}})
+        if r.routing_status != response_pb2.unreached:
+            duration = _get_duration(r, places[pos], mode, **kwargs)
+            if duration < max_duration_to_pt:
+                result[mode].update({places[pos].uri: {'duration': duration, 'status': r.routing_status}})
     return result
 
 
@@ -438,7 +436,7 @@ class AsyncWorker(object):
         if _from.uri != departure.uri:
             if departure.uri in odt_stop_points:
                 journey.sections[0].origin.CopyFrom(_from)
-            elif departure.uri in crowfly_stop_points or origins_fallback.to_crowflay(dep_mode, departure.uri):
+            elif departure.uri in crowfly_stop_points or origins_fallback.to_crowfly(dep_mode, departure.uri):
                 journey.sections.extend([create_crowfly(_from, departure, journey.departure_date_time,
                                          journey.sections[0].begin_date_time)])
             else:
@@ -459,7 +457,7 @@ class AsyncWorker(object):
         if to.uri != arrival.uri:
             if arrival.uri in odt_stop_points:
                 journey.sections[-1].destination.CopyFrom(to)
-            elif arrival.uri in crowfly_stop_points or destinations_fallback.to_crowflay(arr_mode, arrival.uri):
+            elif arrival.uri in crowfly_stop_points or destinations_fallback.to_crowfly(arr_mode, arrival.uri):
                 journey.sections.extend([create_crowfly(arrival, to, last_section_end,
                                                         journey.arrival_date_time)])
             else:
