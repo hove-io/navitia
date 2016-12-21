@@ -1562,48 +1562,48 @@ BOOST_FIXTURE_TEST_CASE(biking_length_test, streetnetworkmode_fixture<normal_spe
     int cpt(0);
     auto pathitem = path_items[cpt++];
     BOOST_CHECK_EQUAL(pathitem.name(), "rue bs");
-    BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(B.distance_to(S), navitia::type::Mode_e::Bike).total_seconds());
+    BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(B.distance_to(S), navitia::type::Mode_e::Bike).total_fractional_seconds());
     BOOST_CHECK_CLOSE(pathitem.length(), B.distance_to(S), 2);
 
     pathitem = path_items[cpt++];
     BOOST_CHECK_EQUAL(pathitem.name(), "rue kb");
-    BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(K.distance_to(B), navitia::type::Mode_e::Bike).total_seconds());
+    BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(K.distance_to(B), navitia::type::Mode_e::Bike).total_fractional_seconds());
     BOOST_CHECK_CLOSE(pathitem.length(), B.distance_to(K), 2);
 
     pathitem = path_items[cpt++];
     BOOST_CHECK_EQUAL(pathitem.name(), "rue jk");
-    BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(K.distance_to(J), navitia::type::Mode_e::Bike).total_seconds());
+    BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(K.distance_to(J), navitia::type::Mode_e::Bike).total_fractional_seconds());
     BOOST_CHECK_CLOSE(pathitem.length(), J.distance_to(K), 2);
 
     pathitem = path_items[cpt++];
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ij");
-    BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(I.distance_to(J), navitia::type::Mode_e::Bike).total_seconds());
+    BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(I.distance_to(J), navitia::type::Mode_e::Bike).total_fractional_seconds());
     BOOST_CHECK_CLOSE(pathitem.length(), I.distance_to(J), 2);
 
     pathitem = path_items[cpt++];
     BOOST_CHECK_EQUAL(pathitem.name(), "rue hi");
-    BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(I.distance_to(H), navitia::type::Mode_e::Bike).total_seconds());
+    BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(I.distance_to(H), navitia::type::Mode_e::Bike).total_fractional_seconds());
     BOOST_CHECK_CLOSE(pathitem.length(), I.distance_to(H), 2);
 
     pathitem = path_items[cpt++];
     BOOST_CHECK_EQUAL(pathitem.name(), "rue gh");
-    BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(G.distance_to(H), navitia::type::Mode_e::Bike).total_seconds());
+    BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(G.distance_to(H), navitia::type::Mode_e::Bike).total_fractional_seconds());
     BOOST_CHECK_CLOSE(pathitem.length(), G.distance_to(H), 2);
 
     pathitem = path_items[cpt++];
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ag");
-    BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(distance_ag, navitia::type::Mode_e::Bike).total_seconds());
+    BOOST_CHECK_EQUAL(pathitem.duration(), to_duration(distance_ag, navitia::type::Mode_e::Bike).total_fractional_seconds());
     BOOST_CHECK_CLOSE(pathitem.length(), distance_ag, 2);
 
     //we check the total
-    int total_dur(0);
+    double total_dur(0);
     double total_distance(0);
     for (const auto& item : path_items) {
         total_dur += item.duration();
         total_distance += item.length();
     }
     BOOST_CHECK_CLOSE(section.length(), total_distance, 1);
-    BOOST_CHECK_EQUAL(section.duration(), total_dur);
+    BOOST_CHECK_CLOSE(section.duration(), total_dur, 2);
 }
 
 /**

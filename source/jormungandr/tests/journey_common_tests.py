@@ -119,14 +119,15 @@ class JourneyCommon(object):
         non_pt_walk_j = next((j for j in journeys if j['type'] == 'non_pt_walk'), None)
         assert non_pt_walk_j
         assert non_pt_walk_j['duration'] == non_pt_walk_j['sections'][0]['duration']
-        assert non_pt_walk_j['duration'] == 205
-        assert non_pt_walk_j['durations']['total'] == 205
-        assert non_pt_walk_j['durations']['walking'] == 205
+        # duration has floor round value: duration = 310 / 1.5 (speed-factor) = 206.66..
+        assert non_pt_walk_j['duration'] == 206
+        assert non_pt_walk_j['durations']['total'] == 206
+        assert non_pt_walk_j['durations']['walking'] == 206
 
         assert non_pt_walk_j['departure_date_time'] == non_pt_walk_j['sections'][0]['departure_date_time']
         assert non_pt_walk_j['departure_date_time'] == '20120614T080000'
         assert non_pt_walk_j['arrival_date_time'] == non_pt_walk_j['sections'][0]['arrival_date_time']
-        assert non_pt_walk_j['arrival_date_time'] == '20120614T080325'
+        assert non_pt_walk_j['arrival_date_time'] == '20120614T080326'
 
     def test_not_existent_filtering(self):
         """if we filter with a real type but not present, we don't get any journey, but we got a nice error"""
@@ -335,20 +336,20 @@ class JourneyCommon(object):
         assert(len(response['journeys']) == 2)
         #Note: we do not test order, because that can change depending on the scenario
         eq_(sorted(get_used_vj(response)), sorted([[], ['vjB']]))
-        eq_(sorted(get_arrivals(response)), sorted(['20120614T080612', '20120614T180250']))
+        eq_(sorted(get_arrivals(response)), sorted(['20120614T080613', '20120614T180250']))
 
         # same response if we just give the wheelchair=True
         response = self.query_region(journey_basic_query + "&traveler_type=wheelchair&wheelchair=True")
         assert(len(response['journeys']) == 2)
         eq_(sorted(get_used_vj(response)), sorted([[], ['vjB']]))
-        eq_(sorted(get_arrivals(response)), sorted(['20120614T080612', '20120614T180250']))
+        eq_(sorted(get_arrivals(response)), sorted(['20120614T080613', '20120614T180250']))
 
         # but with the wheelchair profile, if we explicitly accept non accessible solutions (not very
         # consistent, but anyway), we should take the non accessible bus that arrive at 08h
         response = self.query_region(journey_basic_query + "&traveler_type=wheelchair&wheelchair=False")
         assert(len(response['journeys']) == 2)
         eq_(sorted(get_used_vj(response)), sorted([['vjA'], []]))
-        eq_(sorted(get_arrivals(response)), sorted(['20120614T080250', '20120614T080612']))
+        eq_(sorted(get_arrivals(response)), sorted(['20120614T080250', '20120614T080613']))
 
     def test_journeys_float_night_bus_filter_max_factor(self):
         """night_bus_filter_max_factor can be a float (and can be null)"""
@@ -443,9 +444,9 @@ class JourneyCommon(object):
         eq_(len(response['journeys'][0]['sections'][1]['geojson']['coordinates']), 3)
         eq_(response['journeys'][0]['sections'][1]['co2_emission']['value'], 0.58)
         eq_(response['journeys'][0]['sections'][1]['co2_emission']['unit'], 'gEC')
-        eq_(response['journeys'][1]['duration'], 275)
-        eq_(response['journeys'][1]['durations']['total'], 275)
-        eq_(response['journeys'][1]['durations']['walking'], 275)
+        eq_(response['journeys'][1]['duration'], 276)
+        eq_(response['journeys'][1]['durations']['total'], 276)
+        eq_(response['journeys'][1]['durations']['walking'], 276)
 
 
     def test_max_duration_to_pt_equals_to_0(self):
