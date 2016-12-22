@@ -42,12 +42,15 @@ import gevent.pool
 import collections
 
 
-def create_crowfly(_from, to, begin, end, mode='walking'):
+def create_crowfly(pt_journey, _from, to, begin, end, mode='walking'):
     section = response_pb2.Section()
     section.type = response_pb2.CROW_FLY
     section.origin.CopyFrom(_from)
     section.destination.CopyFrom(to)
     section.duration = end - begin
+    pt_journey.durations.walking += section.duration
+    pt_journey.durations.total += section.duration
+    pt_journey.duration += section.duration
     section.begin_date_time = begin
     section.end_date_time = end
     section.street_network.mode = response_pb2.Walking
@@ -415,7 +418,6 @@ class AsyncWorker(object):
 
         dp_key = (mode, pb_from.uri, pb_to.uri, departure_date_time, clockwise, reverse_sections)
         departure_dp = fallback_direct_path[dp_key]
-
         if clockwise:
             pt_journey.duration += nm.get_duration(mode, pb_to.uri)
         elif not reverse_sections:
@@ -437,7 +439,7 @@ class AsyncWorker(object):
             if departure.uri in odt_stop_points:
                 journey.sections[0].origin.CopyFrom(_from)
             elif departure.uri in crowfly_stop_points or origins_fallback.to_crowfly(dep_mode, departure.uri):
-                journey.sections.extend([create_crowfly(_from, departure, journey.departure_date_time,
+                journey.sections.extend([create_crowfly(journey, _from, departure, journey.departure_date_time,
                                          journey.sections[0].begin_date_time)])
             else:
                 # extend the journey with the fallback routing path
@@ -458,7 +460,7 @@ class AsyncWorker(object):
             if arrival.uri in odt_stop_points:
                 journey.sections[-1].destination.CopyFrom(to)
             elif arrival.uri in crowfly_stop_points or destinations_fallback.to_crowfly(arr_mode, arrival.uri):
-                journey.sections.extend([create_crowfly(arrival, to, last_section_end,
+                journey.sections.extend([create_crowfly(journey, arrival, to, last_section_end,
                                                         journey.arrival_date_time)])
             else:
                 # extend the journey with the fallback routing path
