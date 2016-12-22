@@ -501,6 +501,11 @@ class Scenario(new_default.Scenario):
         r.error.id == response_pb2.Error.error_id.Value(error_type)
         return r
 
+    @staticmethod
+    def update_error_message(response, error_type, message):
+        response.error.id = response_pb2.Error.error_id.Value(error_type)
+        response.error.message = message
+
     def call_kraken(self, request_type, request, instance, krakens_call):
         """
         For all krakens_call, call the kraken and aggregate the responses
@@ -627,6 +632,12 @@ class Scenario(new_default.Scenario):
                     and direct_path.journeys:
                 local_resp.ClearField(b"error")
             if local_resp.HasField(b"error"):
+                #Here needs to modify error message of no_solution
+                if len(g.origins_fallback[dep_mode]) == 0:
+                    self.update_error_message(local_resp, "no_origin", "no origin point")
+                elif len(g.destinations_fallback[arr_mode]) == 0:
+                    self.update_error_message(local_resp, "no_destination", "no destination point")
+
                 return [local_resp]
 
             # for log purpose we put and id in each journeys
@@ -647,6 +658,15 @@ class Scenario(new_default.Scenario):
         # Now we construct the whole journey by concatenating the fallback direct path with the pt journey
         worker.build_journeys(response_tuples, crowfly_stop_points, odt_stop_points)
 
+        #If resp doesn't contain any response we have to add an error message
+        if len(resp) == 0:
+            if len(g.origins_fallback[dep_mode]) == 0 and len(g.destinations_fallback[arr_mode]) == 0:
+                resp.append(self._make_error_response("no solution found for this journey", 'no_solution'))
+            elif len(g.origins_fallback[dep_mode]) == 0:
+                resp.append(self._make_error_response("no origin point", 'no_origin'))
+            elif len(g.destinations_fallback[arr_mode]) == 0:
+                resp.append(self._make_error_response("no destination point", 'no_destination'))
+            return resp
         for r in resp:
             fill_uris(r)
         return resp

@@ -591,6 +591,63 @@ class JourneyCommon(object):
         assert section_2['from']['id'] == 'stop_point:stopB'
         assert section_2['to']['id'] == 'stopB'
 
+    def test_no_origin_point(self):
+        """
+        Here we verify no destination point error
+        """
+        query_out_of_production_bound = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
+            .format(from_coord="0.9008898312;0.0019898312",  # coordinate out of range in the dataset
+            to_coord="0.00188646;0.00071865",  # coordinate of R in the dataset
+            datetime="20120614T080000")
+
+        response, status = self.query_region(query_out_of_production_bound, check=False)
+
+        assert status != 200, "the response should not be valid"
+        check_journeys(response)
+        assert response['error']['id'] == "no_origin"
+        assert response['error']['message'] == "no origin point"
+
+        #and no journey is to be provided
+        assert 'journeys' not in response or len(response['journeys']) == 0
+
+    def test_no_destination_point(self):
+        """
+        Here we verify no destination point error
+        """
+        query_out_of_production_bound = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
+            .format(from_coord="0.0000898312;0.0000898312",  # coordinate of S in the dataset
+            to_coord="0.00188646;0.90971865",  # coordinate out of range in the dataset
+            datetime="20120614T080000")
+
+        response, status = self.query_region(query_out_of_production_bound, check=False)
+
+        assert status != 200, "the response should not be valid"
+        check_journeys(response)
+        assert response['error']['id'] == "no_destination"
+        assert response['error']['message'] == "no destination point"
+
+        #and no journey is to be provided
+        assert 'journeys' not in response or len(response['journeys']) == 0
+
+    def test_no_solution(self):
+        """
+        Here we verify no destination point error
+        """
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
+            .format(from_coord="0.0000898312;0.0000898312",  # coordinate out of range in the dataset
+            to_coord="0.00188646;0.00071865",  # coordinate out of range in the dataset
+            datetime="20120901T220000")
+
+        response, status = self.query_region(query + "&max_duration=1&max_duration_to_pt=100", check=False)
+
+        assert status == 200
+        check_journeys(response)
+        assert response['error']['id'] == "no_solution"
+        assert response['error']['message'] == "no solution found for this journey"
+
+        #and no journey is to be provided
+        assert 'journeys' not in response or len(response['journeys']) == 0
+
 
 @dataset({"main_routing_test": {}})
 class DirectPath(object):
