@@ -85,7 +85,7 @@ if you only want to challenge Navitia functionality, take your token and go to t
 
 ![Try Navitia playgroung](/images/navitia_playground.png)
 
-Plugins
+Wrappers
 --------------
 
 To help you in the building of your project, there are some wrappers implemented (by Kisio or not) to query the API Navitia:
