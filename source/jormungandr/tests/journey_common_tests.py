@@ -629,6 +629,25 @@ class JourneyCommon(object):
         #and no journey is to be provided
         assert 'journeys' not in response or len(response['journeys']) == 0
 
+    def test_no_solution(self):
+        """
+        Here we verify no destination point error
+        """
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
+            .format(from_coord="0.0000898312;0.0000898312",  # coordinate out of range in the dataset
+            to_coord="0.00188646;0.00071865",  # coordinate out of range in the dataset
+            datetime="20120901T220000")
+
+        response, status = self.query_region(query + "&max_duration=1&max_duration_to_pt=100", check=False)
+
+        assert status == 200
+        check_journeys(response)
+        assert response['error']['id'] == "no_solution"
+        assert response['error']['message'] == "no solution found for this journey"
+
+        #and no journey is to be provided
+        assert 'journeys' not in response or len(response['journeys']) == 0
+
 
 @dataset({"main_routing_test": {}})
 class DirectPath(object):

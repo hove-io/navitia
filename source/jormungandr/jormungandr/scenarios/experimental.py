@@ -658,6 +658,15 @@ class Scenario(new_default.Scenario):
         # Now we construct the whole journey by concatenating the fallback direct path with the pt journey
         worker.build_journeys(response_tuples, crowfly_stop_points, odt_stop_points)
 
+        #If resp doesn't contain any response we have to add an error message
+        if len(resp) == 0:
+            if len(g.origins_fallback[dep_mode]) == 0 and len(g.destinations_fallback[arr_mode]) == 0:
+                resp.append(self._make_error_response("no solution found for this journey", 'no_solution'))
+            elif len(g.origins_fallback[dep_mode]) == 0:
+                resp.append(self._make_error_response("no origin point", 'no_origin'))
+            elif len(g.destinations_fallback[arr_mode]) == 0:
+                resp.append(self._make_error_response("no destination point", 'no_destination'))
+            return resp
         for r in resp:
             fill_uris(r)
         return resp
