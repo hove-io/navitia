@@ -734,8 +734,10 @@ class OnBasicRouting():
         assert (feed_publisher["license"] == "L-contributor")
         assert (feed_publisher["url"] == "www.canaltp.fr")
 
-    def test_sp_outside_georf(self):
-
+    def test_sp_outside_georef(self):
+        """
+        departure from '5.;5.' coordinates outside street network
+        """
         query = "journeys?from={coord}&to={to_sa}&datetime={datetime}"\
             .format(coord="5.;5.", to_sa="H", datetime="20120615T170000")
 

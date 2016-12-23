@@ -410,7 +410,8 @@ PathFinder::find_nearest_stop_points(const navitia::time_duration& radius,
         dest_sp_idx.push_back(routing::SpIdx{e.first});
     }
     ProjectionGetterByCache projection_getter{mode, geo_ref.projected_stop_points};
-    auto resp = start_dijkstra_and_fill_duration_map<routing::SpIdx, routing::SpIdx, ProjectionGetterByCache>(
+    auto resp = start_dijkstra_and_fill_duration_map<routing::SpIdx,
+            routing::SpIdx,ProjectionGetterByCache>(
             radius, dest_sp_idx, projection_getter);
     for (const auto& r : resp) {
         if (r.second.routing_status == RoutingStatus_e::reached) {
