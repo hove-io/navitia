@@ -189,6 +189,36 @@ class PoiField(fields.Raw):
                 create_administrative_regions_field(geocoding) or create_admin_field(geocoding),
         }
 
+
+class StopAreaField(fields.Raw):
+    def output(self, key, obj):
+        if not obj:
+            return None
+
+        coordinates = obj.get('geometry', {}).get('coordinates', [])
+        if len(coordinates) == 2:
+            lon = coordinates[0]
+            lat = coordinates[1]
+        else:
+            lon = None
+            lat = None
+
+        geocoding = obj.get('properties', {}).get('geocoding', {})
+
+        # TODO add codes
+        return {
+            "id": geocoding.get('id'),
+            "coord": {
+                "lon": lon,
+                "lat": lat,
+            },
+            "label": geocoding.get('label'),
+            "name": geocoding.get('name'),
+            "administrative_regions":
+                create_administrative_regions_field(geocoding) or create_admin_field(geocoding),
+            "timezone": geocoding.get('timezone'),
+        }
+
 geocode_admin = {
     "embedded_type": Lit("administrative_region"),
     "quality": Lit("0"),
@@ -214,6 +244,14 @@ geocode_poi = {
     "poi": PoiField()
 }
 
+geocode_stop_area = {
+    "embedded_type": Lit("stop_area"),
+    "quality": Lit("0"),
+    "id": fields.String(attribute='properties.geocoding.id'),
+    "name": fields.String(attribute='properties.geocoding.label'),
+    "stop_area": StopAreaField()
+}
+
 class GeocodejsonFeature(fields.Raw):
     def format(self, place):
         type_ = place.get('properties', {}).get('geocoding', {}).get('type')
@@ -224,6 +262,8 @@ class GeocodejsonFeature(fields.Raw):
             return marshal(place, geocode_addr)
         elif type_ == 'poi':
             return marshal(place, geocode_poi)
+        elif type_ == 'public_transport:stop_area':
+            return marshal(place, geocode_stop_area)
 
         return place
 
