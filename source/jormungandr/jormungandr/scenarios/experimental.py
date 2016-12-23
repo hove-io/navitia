@@ -541,15 +541,15 @@ class Scenario(new_default.Scenario):
         super(Scenario, self).__init__()
 
     @staticmethod
-    def _make_error_response(message, error_type):
+    def _make_error_response(message, error_id):
         r = response_pb2.Response()
         r.error.message = message
-        r.error.id == response_pb2.Error.error_id.Value(error_type)
+        r.error.id = error_id
         return r
 
     @staticmethod
-    def update_error_message(response, error_type, message):
-        response.error.id = response_pb2.Error.error_id.Value(error_type)
+    def update_error_message(response, error_id, message):
+        response.error.id = error_id
         response.error.message = message
 
     def call_kraken(self, request_type, request, instance, krakens_call):
@@ -571,14 +571,14 @@ class Scenario(new_default.Scenario):
             g.requested_origin = instance.georef.place(request['origin'])
             if not g.requested_origin:
                 r = self._make_error_response("The entry point: {} is not valid".format(request['origin']),
-                                              'no_origin')
+                                              response_pb2.Error.no_origin)
                 return [r]
 
         if not g.requested_destination:
             g.requested_destination = instance.georef.place(request['destination'])
             if not g.requested_destination:
                 r = self._make_error_response("The entry Point: {} is not valid".format(request['destination']),
-                                              'no_destination')
+                                              response_pb2.Error.no_destination)
                 return [r]
 
         worker = AsyncWorker(instance, krakens_call, request)
@@ -676,9 +676,9 @@ class Scenario(new_default.Scenario):
             if local_resp.HasField(b"error"):
                 #Here needs to modify error message of no_solution
                 if len(g.origins_fallback[dep_mode]) == 0:
-                    self.update_error_message(local_resp, "no_origin", "no origin point")
+                    self.update_error_message(local_resp, response_pb2.Error.no_origin, "no origin point")
                 elif len(g.destinations_fallback[arr_mode]) == 0:
-                    self.update_error_message(local_resp, "no_destination", "no destination point")
+                    self.update_error_message(local_resp, response_pb2.Error.no_destination, "no destination point")
 
                 return [local_resp]
 
@@ -703,11 +703,11 @@ class Scenario(new_default.Scenario):
         #If resp doesn't contain any response we have to add an error message
         if len(resp) == 0:
             if len(g.origins_fallback[dep_mode]) == 0 and len(g.destinations_fallback[arr_mode]) == 0:
-                resp.append(self._make_error_response("no solution found for this journey", 'no_solution'))
+                resp.append(self._make_error_response("no solution found for this journey", response_pb2.Error.no_solution))
             elif len(g.origins_fallback[dep_mode]) == 0:
-                resp.append(self._make_error_response("no origin point", 'no_origin'))
+                resp.append(self._make_error_response("no origin point", response_pb2.Error.no_origin))
             elif len(g.destinations_fallback[arr_mode]) == 0:
-                resp.append(self._make_error_response("no destination point", 'no_destination'))
+                resp.append(self._make_error_response("no destination point", response_pb2.Error.no_destination))
             return resp
         for r in resp:
             fill_uris(r)
