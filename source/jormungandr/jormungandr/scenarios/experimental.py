@@ -99,7 +99,7 @@ class FallbackDuration(dict):
         values = self.get(mode)
         return values.get(uri).get("status") == response_pb2.unknown
 
-    def get_location_context(self, mode):
+    def get_locations_contexts(self, mode):
         return {key: value.get("duration") for key, value in self.get(mode, {}).items()}
 
     def merge_reached_values(self, mode, values):
@@ -399,8 +399,8 @@ class AsyncWorker(object):
             else:
                 journey_parameters.direct_path_duration = None
 
-            origins = origins_fallback.get_location_context(dep_mode)
-            destinations = destinations_fallback.get_location_context(arr_mode)
+            origins = origins_fallback.get_locations_contexts(dep_mode)
+            destinations = destinations_fallback.get_locations_contexts(arr_mode)
 
             def worker_journey():
                 if not origins or not destinations or not self.request.get('max_duration', 0):
