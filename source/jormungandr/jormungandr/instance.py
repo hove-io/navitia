@@ -42,7 +42,7 @@ import logging
 from .exceptions import DeadSocketException
 from navitiacommon import models
 from importlib import import_module
-from jormungandr import cache, app
+from jormungandr import cache, app, utils
 from shapely import wkt
 from shapely.geos import ReadingError
 from shapely import geometry
@@ -75,7 +75,8 @@ class Instance(object):
                  zmq_socket,
                  street_network_configuration=None,
                  realtime_proxies_configuration=[],
-                 zmq_socket_type='persistent'):
+                 zmq_socket_type='persistent',
+                 autocomplete=None):
         if not street_network_configuration:
             street_network_configuration = {'class': 'jormungandr.street_network.kraken.Kraken'}
         self.geom = None
@@ -99,8 +100,12 @@ class Instance(object):
 
         self.schedule = schedule.MixedSchedule(self)
         self.realtime_proxy_manager = realtime_schedule.RealtimeProxyManager(realtime_proxies_configuration, self)
-        from jormungandr.autocomplete.kraken import Kraken
-        self.autocomplete = Kraken()
+        if not autocomplete:
+            from jormungandr.autocomplete.kraken import Kraken
+            self.autocomplete = Kraken()
+        else:
+            self.autocomplete = utils.create_object(autocomplete['class_path'],
+                                                    **autocomplete.get('kwargs', {}))
         self.zmq_socket_type = zmq_socket_type
 
     def get_models(self):
