@@ -1,14 +1,14 @@
 """Remove poi_type table
 
 Revision ID: 502b7c6fd00b
-Revises: 5ad2dddab995
+Revises: 57ee5581cc30
 Create Date: 2016-11-24 16:33:34.318234
 
 """
 
 # revision identifiers, used by Alembic.
 revision = '502b7c6fd00b'
-down_revision = '5ad2dddab995'
+down_revision = '57ee5581cc30'
 
 from alembic import op
 import sqlalchemy as sa
