@@ -224,10 +224,11 @@ def _get_places_crowfly(instance, mode, place, max_duration_to_pt, max_nb_crowfl
 
 
 def _get_duration(resp, place, mode, **kwargs):
+    from math import sqrt
     map_response = {
         response_pb2.reached: resp.duration,
         # Calculate duration
-        response_pb2.unknown: int(place.distance/kwargs.get(mode))
+        response_pb2.unknown: int((place.distance*sqrt(2))/kwargs.get(mode))
     }
     return map_response[resp.routing_status]
 
