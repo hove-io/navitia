@@ -214,14 +214,15 @@ def _reverse_journeys(res):
 def _get_places_crowfly(instance, mode, place, max_duration_to_pt, max_nb_crowfly=5000, **kwargs):
     # When max_duration_to_pt is 0, there is no need to compute the fallback to pt, except if place is a stop_point or a
     # stop_area
-
     if max_duration_to_pt == 0:
         # When max_duration_to_pt is 0, we can get on the public transport ONLY if the place is a stop_point
         if instance.georef.get_stop_points_from_uri(place.uri):
             return {mode: place}
         else:
             return {mode: []}
-
+    coord = _get_coord(place)
+    if not coord.lat and not coord.lon:
+        return {mode: []}
     res = instance.georef.get_crow_fly(get_uri_pt_object(place), mode, max_duration_to_pt,
                                        max_nb_crowfly, **kwargs)
 
