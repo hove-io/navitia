@@ -121,6 +121,20 @@ def create_administrative_regions_field(geocoding):
     return response
 
 
+def get_lon_lat(obj):
+    if not obj:
+        return None, None
+
+    coordinates = obj.get('geometry', {}).get('coordinates', [])
+    if len(coordinates) == 2:
+        lon = coordinates[0]
+        lat = coordinates[1]
+    else:
+        lon = None
+        lat = None
+    return lon, lat
+
+
 class AdministrativeRegionField(fields.Raw):
     """
     This field is needed to respect Navitia's spec for the sake of compatibility
@@ -137,14 +151,7 @@ class AddressField(fields.Raw):
         if not obj:
             return None
 
-        coordinates = obj.get('geometry', {}).get('coordinates', [])
-        if len(coordinates) == 2:
-            lon = coordinates[0]
-            lat = coordinates[1]
-        else:
-            lon = None
-            lat = None
-
+        lon, lat = get_lon_lat(obj)
         geocoding = obj.get('properties', {}).get('geocoding', {})
 
         return {
@@ -166,14 +173,7 @@ class PoiField(fields.Raw):
         if not obj:
             return None
 
-        coordinates = obj.get('geometry', {}).get('coordinates', [])
-        if len(coordinates) == 2:
-            lon = coordinates[0]
-            lat = coordinates[1]
-        else:
-            lon = None
-            lat = None
-
+        lon, lat = get_lon_lat(obj)
         geocoding = obj.get('properties', {}).get('geocoding', {})
 
         # TODO add address, poi_type, properties attributes
@@ -195,14 +195,7 @@ class StopAreaField(fields.Raw):
         if not obj:
             return None
 
-        coordinates = obj.get('geometry', {}).get('coordinates', [])
-        if len(coordinates) == 2:
-            lon = coordinates[0]
-            lat = coordinates[1]
-        else:
-            lon = None
-            lat = None
-
+        lon, lat = get_lon_lat(obj)
         geocoding = obj.get('properties', {}).get('geocoding', {})
 
         # TODO add codes
