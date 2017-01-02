@@ -34,6 +34,17 @@ from .check_utils import *
 from jormungandr import app
 from nose.tools import eq_
 
+def get_duration(coord, response):
+    lon, lat = coord.split(';')
+    lat = float(lat)
+    lon = float(lon)
+    heat_map = response['heat_maps'][0]
+    i = next((i for i, h in enumerate(heat_map['heat_matrix']['line_headers'])
+              if h['cell_lat']['min_lat'] <= lat and lat <= h['cell_lat']['max_lat']))
+    duration = next((l['duration'][i] for l in heat_map['heat_matrix']['lines']
+                     if l['cell_lon']['min_lon'] <= lon and lon <= l['cell_lon']['max_lon']))
+    return duration
+
 
 @dataset({"main_routing_test": {}})
 class TestHeatMap(AbstractTestFixture):
@@ -52,24 +63,32 @@ class TestHeatMap(AbstractTestFixture):
 
     def test_to_heat_map_coord(self):
         query = "v1/coverage/main_routing_test/heat_maps?to={}&datetime={}&max_duration={}"
-        query = query.format(s_coord, "20120614T080000", "3600")
+        query = query.format(r_coord, "20120614T080200", "3600")
         response = self.query(query)
 
         is_valid_heat_maps(response, self.tester, query)
 
     def test_heat_maps_from_stop_point(self):
         q = "v1/coverage/main_routing_test/heat_maps?datetime={}&from={}&max_duration={}"
-        q = q.format('20120614T080000', 'stopA', '3600')
+        q = q.format('20120614T080100', 'stopB', '3600')
         response = self.query(q)
 
         is_valid_heat_maps(response, self.tester, q)
+        assert(get_duration(stopB_coord, response) == 7)# about 0
+        assert(get_duration(s_coord, response) == 20)# about 18
+        assert(get_duration(stopA_coord, response) == 9)# about 2
+        assert(get_duration(r_coord, response) == 74)# about 2 + 81
 
     def test_heat_maps_to_stop_point(self):
         q = "v1/coverage/main_routing_test/heat_maps?datetime={}&to={}&max_duration={}"
-        q = q.format('20120614T080000', 'stopA', '3600')
+        q = q.format('20120614T080200', 'stopA', '3600')
         response = self.query(q)
 
         is_valid_heat_maps(response, self.tester, q)
+        assert(get_duration(stopA_coord, response) == 9)# about 0
+        assert(get_duration(r_coord, response) == 87)# about 81
+        assert(get_duration(stopB_coord, response) == 67)# about 60
+        assert(get_duration(s_coord, response) == 73)# about 60 + 18
 
     def test_heat_maps_no_datetime(self):
         q_no_dt = "v1/coverage/main_routing_test/heat_maps?from={}&max_duration={}&_current_datetime={}"
