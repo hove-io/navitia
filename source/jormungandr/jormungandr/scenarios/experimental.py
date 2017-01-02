@@ -133,6 +133,16 @@ def create_parameters(request):
                              forbidden_uris=request['forbidden_uris[]'])
 
 
+def _get_coord(place):
+    map_coord = {
+        type_pb2.STOP_POINT: place.stop_point.coord,
+        type_pb2.STOP_AREA: place.stop_area.coord,
+        type_pb2.ADDRESS: place.address.coord,
+        type_pb2.ADMINISTRATIVE_REGION: place.administrative_region.coord
+    }
+    return map_coord.get(place.embedded_type, None)
+
+
 def _update_crowfly_duration(instance, mode, requested_entry_point):
     """
     compute the list of stoppoint that can be accessed for free by crowfly
@@ -159,13 +169,8 @@ def _update_crowfly_duration(instance, mode, requested_entry_point):
         fallback_list[mode][stop_point.uri] = 0
         crowfly_sps.add(stop_point.uri)
 
-    map_coord = {
-        type_pb2.STOP_POINT: requested_entry_point.stop_point.coord,
-        type_pb2.STOP_AREA: requested_entry_point.stop_area.coord,
-        type_pb2.ADDRESS: requested_entry_point.address.coord,
-        type_pb2.ADMINISTRATIVE_REGION: requested_entry_point.administrative_region.coord
-    }
-    coord = map_coord.get(requested_entry_point.embedded_type, None)
+    coord = _get_coord(requested_entry_point)
+
     if coord:
         odt_sps = instance.georef.get_odt_stop_points(coord)
         for stop_point in odt_sps:
