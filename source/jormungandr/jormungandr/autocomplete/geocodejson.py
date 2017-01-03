@@ -34,16 +34,6 @@ import logging
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
 import requests
 from jormungandr.exceptions import TechnicalError
-from functools import wraps
-
-
-class delete_attribute_autocomplete():
-    def __call__(self, f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            objects = f(*args, **kwargs)
-            return objects.get('Autocomplete') or objects
-        return wrapper
 
 
 class GeocodeJson(AbstractAutocomplete):
@@ -56,8 +46,6 @@ class GeocodeJson(AbstractAutocomplete):
         self.external_api = kwargs.get('host')
         self.timeout = kwargs.get('timeout', 10)
 
-    # TODO: To be deleted when bragi is modified
-    @delete_attribute_autocomplete()
     def get(self, request, instance, shape=None):
         if not self.external_api:
             raise TechnicalError('global autocomplete not configured')
@@ -81,6 +69,7 @@ class GeocodeJson(AbstractAutocomplete):
         bragi_response = raw_response.json()
         from flask.ext.restful import marshal
         from jormungandr.interfaces.v1.Places import geocodejson
+
         return marshal(bragi_response, geocodejson)
 
     def geo_status(self, instance):

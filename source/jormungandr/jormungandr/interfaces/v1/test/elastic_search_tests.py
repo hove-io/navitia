@@ -87,7 +87,6 @@ def bragi_house_jaures_feature():
     return house_feature
 
 @marshal_with(Places.geocodejson)
-@geocodejson.delete_attribute_autocomplete()
 def get_response(bragi_response):
     return bragi_response
 
@@ -109,11 +108,9 @@ def bragi_house_jaures_response_check(feature_response):
 
 def bragi_house_reading_test():
     bragi_response = {
-        "Autocomplete": {
-            "features": [
-                bragi_house_jaures_feature()
-            ]
-        }
+        "features": [
+            bragi_house_jaures_feature()
+        ]
     }
     navitia_response = get_response(bragi_response).get('places', {})
     bragi_house_jaures_response_check(navitia_response[0])
@@ -187,11 +184,9 @@ def bragi_street_response_check(feature_response):
 
 def bragi_street_reading_test():
     bragi_response = {
-        "Autocomplete": {
-            "features": [
-                bragi_street_feature()
-            ]
-        }
+        "features": [
+            bragi_street_feature()
+        ]
     }
 
     navitia_response = get_response(bragi_response).get('places', {})
@@ -263,11 +258,9 @@ def bragi_admin_response_check(feature_response):
 
 def bragi_admin_reading_test():
     bragi_response = {
-        "Autocomplete": {
-            "features": [
-                bragi_admin_feature()
-            ]
-        }
+        "features": [
+            bragi_admin_feature()
+        ]
     }
 
     navitia_response = get_response(bragi_response).get('places', {})
@@ -343,14 +336,12 @@ def bragi_house_lefebvre_response_check(feature_response):
 
 def bragi_good_geocodejson_response_test():
     bragi_response = {
-        "Autocomplete": {
-            "features": [
-                bragi_house_jaures_feature(),
-                bragi_house_lefebvre_feature(),
-                bragi_street_feature(),
-                bragi_admin_feature()
-            ]
-        }
+        "features": [
+            bragi_house_jaures_feature(),
+            bragi_house_lefebvre_feature(),
+            bragi_street_feature(),
+            bragi_admin_feature()
+        ]
     }
 
     navitia_response = get_response(bragi_response).get('places', {})
@@ -412,11 +403,9 @@ def bragi_geocodejson_spec_feature():
 
 def bragi_geocodejson_compatibility_test():
     bragi_response = {
-        "Autocomplete": {
-            "features": [
-                bragi_geocodejson_spec_feature(),
-            ]
-        }
+        "features": [
+            bragi_geocodejson_spec_feature(),
+        ]
     }
     navitia_response = get_response(bragi_response).get('places', {})[0]
     assert navitia_response.get('embedded_type') == "address"
@@ -466,11 +455,9 @@ def bragi_poi_feature():
 
 def bragi_poi_reading_test():
     bragi_response = {
-        "Autocomplete": {
-            "features": [
-                bragi_poi_feature(),
-            ]
-        }
+        "features": [
+            bragi_poi_feature(),
+        ]
     }
     navitia_response = get_response(bragi_response).get('places', {})[0]
     assert navitia_response.get('embedded_type') == "poi"
@@ -522,11 +509,9 @@ def bragi_stop_area_feature():
 
 def bragi_stop_area_reading_test():
     bragi_response = {
-        "Autocomplete": {
-            "features": [
-                bragi_stop_area_feature(),
-            ]
-        }
+        "features": [
+            bragi_stop_area_feature(),
+        ]
     }
     navitia_response = get_response(bragi_response).get('places', {})[0]
     assert navitia_response.get('embedded_type') == "stop_area"
@@ -557,14 +542,12 @@ def bragi_call_test():
     bragi = geocodejson.GeocodeJson(host='http://bob.com/autocomplete')
 
     bragi_response = {
-        "Autocomplete": {
-            "features": [
-                bragi_house_jaures_feature(),
-                bragi_house_lefebvre_feature(),
-                bragi_street_feature(),
-                bragi_admin_feature()
-            ]
-        }
+        "features": [
+            bragi_house_jaures_feature(),
+            bragi_house_lefebvre_feature(),
+            bragi_street_feature(),
+            bragi_admin_feature()
+        ]
     }
     mock_requests = MockRequests({
         'http://bob.com/autocomplete?q=rue bobette&limit=10':
@@ -574,7 +557,7 @@ def bragi_call_test():
     # we mock the http call to return the hard coded mock_response
     with mock.patch('requests.get', mock_requests.get):
         raw_response = bragi.get({'q': 'rue bobette', 'count': 10}, instance=None, shape=None)
-        places = get_response(raw_response).get('places')
+        places = raw_response.get('places')
         assert len(places) == 4
         bragi_house_jaures_response_check(places[0])
         bragi_house_lefebvre_response_check(places[1])
@@ -583,7 +566,7 @@ def bragi_call_test():
 
     with mock.patch('requests.post', mock_requests.get):
         raw_response = bragi.get({'q': 'rue bobette', 'count': 10}, instance=None, shape=geojson())
-        places = get_response(raw_response).get('places')
+        places = raw_response.get('places')
         assert len(places) == 4
         bragi_house_jaures_response_check(places[0])
         bragi_house_lefebvre_response_check(places[1])
