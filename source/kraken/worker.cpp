@@ -921,7 +921,9 @@ void Worker::street_network_routing_matrix(const pbnavitia::StreetNetworkRouting
         for(auto coord : dest_coords) {
             auto* k = row->add_routing_response();
             auto it = nearest.find(coord.uri());
-            assert(it != nearest.end());
+            if(it == nearest.end()) {
+                throw navitia::recoverable_exception("Cannot found object: " + coord.uri());
+            }
             k->set_duration(it->second.time_duration.total_seconds());
             switch(it->second.routing_status){
             case georef::RoutingStatus_e::reached:
