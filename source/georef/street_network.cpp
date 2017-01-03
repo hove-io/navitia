@@ -349,8 +349,11 @@ PathFinder::start_dijkstra_and_fill_duration_map(const navitia::time_duration& r
             auto duration = path_duration_on_same_edge(starting_edge, projection);
             if(duration <= radius){
                 result[id] = georef::RoutingElement(duration, georef::RoutingStatus_e::reached) ;
+            } else {
+                result[id] = georef::RoutingElement(navitia::time_duration(),
+                                                    georef::RoutingStatus_e::unreached);
             }
-        }else{
+        } else {
             navitia::time_duration best_dist = bt::pos_infin;
             if (distances[projection[source_e]] < bt::pos_infin) {
                 best_dist = distances[projection[source_e]] + crow_fly_duration(projection.distances[source_e]);
