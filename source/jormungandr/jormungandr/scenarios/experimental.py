@@ -135,13 +135,16 @@ def create_parameters(request):
 
 def _get_coord(place):
     map_coord = {
-        type_pb2.STOP_POINT: place.stop_point.coord,
-        type_pb2.STOP_AREA: place.stop_area.coord,
-        type_pb2.ADDRESS: place.address.coord,
-        type_pb2.ADMINISTRATIVE_REGION: place.administrative_region.coord
+        type_pb2.STOP_POINT: "stop_point",
+        type_pb2.STOP_AREA: "stop_area",
+        type_pb2.ADDRESS: "address",
+        type_pb2.ADMINISTRATIVE_REGION: "administrative_region",
+        type_pb2.POI: "poi"
     }
-    return map_coord.get(place.embedded_type)
-
+    attr = getattr(place,
+                   map_coord.get(place.embedded_type, ""),
+                   None)
+    return getattr(attr, "coord", None)
 
 def _update_crowfly_duration(instance, mode, requested_entry_point):
     """
