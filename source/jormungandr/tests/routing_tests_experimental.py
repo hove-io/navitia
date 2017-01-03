@@ -134,7 +134,6 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
             "bike_speed": instance.bike_speed,
             "car_speed": instance.car_speed,
             "bss_speed": instance.bss_speed,
-
         }
         resp = instance.street_network_service.get_street_network_routing_matrix([origin], [destination],
                                                                                  mode, max_duration, request, **kwargs)

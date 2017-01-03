@@ -455,7 +455,7 @@ class AsyncWorker(object):
                 # extend the journey with the fallback routing path
                 self._extend_journey(journey, dep_mode, _from, departure, journey.departure_date_time,
                                      origins_fallback, True, fallback_direct_path)
-        journey.sections.sort(SectionSorter()) 
+        journey.sections.sort(SectionSorter())
         return journey
 
     def _build_to(self, journey, last_section, to, crowfly_stop_points, odt_stop_points,
