@@ -42,6 +42,13 @@ from copy import deepcopy
 
 
 class Valhalla(object):
+    map_attr_name = {
+        type_pb2.STOP_POINT: "stop_point",
+        type_pb2.STOP_AREA: "stop_area",
+        type_pb2.ADDRESS: "address",
+        type_pb2.ADMINISTRATIVE_REGION: "administrative_region",
+        type_pb2.POI: "poi"
+    }
 
     def __init__(self, instance, url, timeout=10, api_key=None, **kwargs):
         self.instance = instance
@@ -74,15 +81,9 @@ class Valhalla(object):
         if not isinstance(pt_object, type_pb2.PtObject):
             logging.getLogger(__name__).error('Invalid pt_object')
             raise InvalidArguments('Invalid pt_object')
-        map_attr_name = {
-            type_pb2.STOP_POINT: "stop_point",
-            type_pb2.STOP_AREA: "stop_area",
-            type_pb2.ADDRESS: "address",
-            type_pb2.ADMINISTRATIVE_REGION: "administrative_region",
-            type_pb2.POI: "poi"
-        }
+
         attr = getattr(pt_object,
-                       map_attr_name.get(pt_object.embedded_type, ""),
+                       self.map_attr_name.get(pt_object.embedded_type, ""),
                        None)
         coord = getattr(attr, "coord", None)
         if not coord:

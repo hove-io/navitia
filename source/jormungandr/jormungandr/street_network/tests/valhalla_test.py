@@ -289,6 +289,38 @@ def format_url_func_with_car_mode_test():
                                     }''')
 
 
+def format_url_func_with_different_ptobject():
+    instance = MagicMock()
+    instance.walking_speed = 1
+    instance.bike_speed = 2
+    valhalla = Valhalla(instance=instance,
+                        url='http://bob.com',
+                        costing_options={'bib': 'bom'})
+    valhalla.costing_options = None
+    for ptObject_type in Valhalla.map_attr_name.keys():
+        origin = get_pt_object(ptObject_type, 1.0, 1.0)
+        destination = get_pt_object(ptObject_type, 2.0, 2.0)
+        data = valhalla._make_data("car", origin, [destination], MOCKED_REQUEST)
+        assert json.loads(data) == json.loads(''' {
+                                         "locations": [
+                                           {
+                                             "lat": 1,
+                                             "type": "break",
+                                             "lon": 1
+                                            },
+                                            {
+                                              "lat": 2,
+                                              "type": "break",
+                                              "lon": 2
+                                            }
+                                            ],
+                                            "costing": "auto",
+                                            "directions_options": {
+                                            "units": "kilometers"
+                                            }
+                                            }''')
+
+
 def format_url_func_invalid_mode_test():
     instance = MagicMock()
     valhalla = Valhalla(instance=instance,
