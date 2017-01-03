@@ -253,11 +253,13 @@ class Valhalla(object):
         for one_to_many in json_response['one_to_many']:
             row = sn_routing_matrix.rows.add()
             for one in one_to_many[1:]:
+                routing = row.routing_response.add()
                 if one['time']:
-                    time = one['time']
+                    routing.duration = one['time']
+                    routing.routing_status = response_pb2.reached
                 else:
-                    time = -1
-                row.duration.append(time)
+                    routing.duration = -1
+                    routing.routing_status = response_pb2.unknown
         return sn_routing_matrix
 
     def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration, request, **kwargs):

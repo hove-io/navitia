@@ -96,6 +96,20 @@ struct TransportationModeFilter {
     }
 };
 
+enum class RoutingStatus_e {
+    reached = 0,
+    unreached = 1,
+    unknown = 2
+};
+
+struct RoutingElement {
+    navitia::time_duration time_duration;
+    RoutingStatus_e routing_status = RoutingStatus_e::reached;
+    RoutingElement(navitia::time_duration time_duration=navitia::time_duration(),
+                   RoutingStatus_e routing_status=RoutingStatus_e::reached): time_duration(time_duration),
+        routing_status(routing_status){}
+};
+
 struct PathFinder {
     const GeoRef & geo_ref;
 
@@ -133,7 +147,7 @@ struct PathFinder {
     find_nearest_stop_points(const navitia::time_duration& radius,
                              const proximitylist::ProximityList<type::idx_t>& pl);
     using coord_uri = std::string;
-    boost::container::flat_map<coord_uri, navitia::time_duration>
+    boost::container::flat_map<coord_uri, georef::RoutingElement>
     get_duration_with_dijkstra(const navitia::time_duration& radius,
                                const std::vector<type::GeographicalCoord>& entry_points);
 
@@ -207,7 +221,7 @@ private:
                                       const proximitylist::ProximityList<type::idx_t>& pl);
 
     template<typename K, typename U, typename G>
-    boost::container::flat_map<K, navitia::time_duration>
+    boost::container::flat_map<K, georef::RoutingElement>
     start_dijkstra_and_fill_duration_map(const navitia::time_duration& radius,
             const std::vector<U>& destinations,
             const G& projection_getter);

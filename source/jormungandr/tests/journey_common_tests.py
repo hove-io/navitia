@@ -397,6 +397,7 @@ class JourneyCommon(object):
         eq_(response['journeys'][0]['departure_date_time'], u'20120615T080100')
         eq_(response['journeys'][0]['arrival_date_time'], u'20120615T080102')
 
+
     @mock.patch.object(i_manager, 'dispatch')
     def test_max_duration_to_pt(self, mock):
         q = "v1/coverage/main_routing_test/journeys?max_duration_to_pt=0&from=toto&to=tata"
@@ -733,6 +734,25 @@ class OnBasicRouting():
         assert (feed_publisher["license"] == "L-contributor")
         assert (feed_publisher["url"] == "www.canaltp.fr")
 
+    def test_sp_outside_georef(self):
+        """
+        departure from '5.;5.' coordinates outside street network
+        """
+        query = "journeys?from={coord}&to={to_sa}&datetime={datetime}"\
+            .format(coord="5.;5.", to_sa="H", datetime="20120615T170000")
+
+        response = self.query_region(query)
+        assert('journeys' in response)
+        eq_(len(response['journeys']), 1)
+        eq_(response['journeys'][0]['sections'][0]['to']['id'], 'G')
+        eq_(response['journeys'][0]['sections'][0]['type'], 'crow_fly')
+        eq_(response['journeys'][0]['sections'][0]['mode'], 'walking')
+
+        eq_(response['journeys'][0]['sections'][1]['from']['id'], 'G')
+        eq_(response['journeys'][0]['sections'][1]['to']['id'], 'H')
+        eq_(response['journeys'][0]['sections'][1]['type'], 'public_transport')
+        eq_(response['journeys'][0]['duration'], 3600)
+
     def test_novalidjourney_on_first_call_debug(self):
         """
         On this call the first call to kraken returns a journey
@@ -829,7 +849,7 @@ class OnBasicRouting():
             .format(from_sa="E", to_sa="H", datetime="20120615T080000")
 
         response = self.query_region(query, display=False)
-        assert(not "journeys" in response or len(response['journeys']) ==  0)
+        assert(not "journeys" in response or len(response['journeys']) == 0)
 
     def test_max_attemps_debug(self):
         """
