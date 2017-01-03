@@ -117,11 +117,6 @@ class TestExperimentalJourneysWithPtref(JourneysWithPtref, AbstractTestFixture):
 
 @config({"scenario": "experimental"})
 class TestExperimentalOnBasicRouting(OnBasicRouting, AbstractTestFixture):
-
-    @skip("temporarily disabled")
-    def test_sp_to_sp(self):
-        super(TestExperimentalOnBasicRouting, self).test_sp_to_sp()
-
     @skip("temporarily disabled")
     def test_isochrone(self):
         super(TestExperimentalOnBasicRouting, self).test_isochrone()
