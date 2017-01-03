@@ -87,7 +87,7 @@ class FallbackDuration(dict):
                     "id2" : {"duration": 15, "status": response_pb2.unknown}}}
     """
     def reset_if_exist(self, mode, uri):
-        value = self.get(mode, None)
+        value = self.get(mode)
         if value and uri in value:
             self.update({uri: {"duration": 0, "status": response_pb2.reached}})
 
@@ -103,7 +103,7 @@ class FallbackDuration(dict):
         return {key: value.get("duration") for key, value in self.get(mode, {}).items()}
 
     def merge_reached_values(self, mode, values):
-        local_values = self.get(mode, None)
+        local_values = self.get(mode)
         if not local_values:
             self.update({mode:{}})
             local_values = self.get(mode)
@@ -140,7 +140,7 @@ def _get_coord(place):
         type_pb2.ADDRESS: place.address.coord,
         type_pb2.ADMINISTRATIVE_REGION: place.administrative_region.coord
     }
-    return map_coord.get(place.embedded_type, None)
+    return map_coord.get(place.embedded_type)
 
 
 def _update_crowfly_duration(instance, mode, requested_entry_point):
