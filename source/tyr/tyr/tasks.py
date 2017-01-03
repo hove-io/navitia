@@ -125,12 +125,12 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
         #We pass the job id to each tasks, but job need to be commited for having an id
         binarisation = [ed2nav.si(instance_config, job.id, custom_output_dir)]
         actions.append(chain(*binarisation))
-        if reload:
-            actions.append(reload_data.si(instance_config, job.id))
-        actions.append(finish_job.si(job.id))
         if dataset.family_type == 'pt' and instance.import_stops_in_mimir:
             # if we are loading pt data we might want to load the stops to autocomplete
             actions.append(stops2mimir.si(instance_config, filename, job.id, dataset_uid=dataset.uid))
+        if reload:
+            actions.append(reload_data.si(instance_config, job.id))
+        actions.append(finish_job.si(job.id))
         if async:
             return chain(*actions).delay()
         else:
