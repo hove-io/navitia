@@ -109,6 +109,45 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
         """
         pass
 
+    def test_street_network_routing_matrix(self):
+
+        from jormungandr import i_manager
+        from navitiacommon import response_pb2
+
+        instance = i_manager.instances['main_routing_test']
+        origin = instance.georef.place("stopB")
+        assert origin
+
+        destination = instance.georef.place("stopA")
+        assert destination
+
+        max_duration = 18000
+        mode = 'walking'
+        kwargs = {
+            "walking": instance.walking_speed,
+            "bike": instance.bike_speed,
+            "car": instance.car_speed,
+            "bss": instance.bss_speed,
+        }
+        request = {
+            "walking_speed": instance.walking_speed,
+            "bike_speed": instance.bike_speed,
+            "car_speed": instance.car_speed,
+            "bss_speed": instance.bss_speed,
+
+        }
+        resp = instance.street_network_service.get_street_network_routing_matrix([origin], [destination],
+                                                                                 mode, max_duration, request, **kwargs)
+        assert len(resp.rows[0].routing_response) == 1
+        assert resp.rows[0].routing_response[0].duration == 107
+        assert resp.rows[0].routing_response[0].routing_status == response_pb2.reached
+
+        max_duration = 106
+        resp = instance.street_network_service.get_street_network_routing_matrix([origin], [destination],
+                                                                                 mode, max_duration, request, **kwargs)
+        assert len(resp.rows[0].routing_response) == 1
+        assert resp.rows[0].routing_response[0].duration == 0
+        assert resp.rows[0].routing_response[0].routing_status == response_pb2.unreached
 
 @config({"scenario": "experimental"})
 class TestExperimentalJourneysWithPtref(JourneysWithPtref, AbstractTestFixture):
