@@ -162,6 +162,9 @@ def _update_crowfly_duration(instance, mode, requested_entry_point):
     elif requested_entry_point.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
         stop_points = [sp for sa in requested_entry_point.administrative_region.main_stop_areas
                        for sp in sa.stop_points]
+    elif requested_entry_point.embedded_type == type_pb2.STOP_POINT:
+        stop_points = [requested_entry_point.stop_point]
+
     crowfly_sps = set()
     odt_stop_points = set()
     fallback_list = collections.defaultdict(dict)
