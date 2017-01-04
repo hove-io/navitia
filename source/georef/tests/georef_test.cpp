@@ -1145,10 +1145,6 @@ BOOST_AUTO_TEST_CASE(build_autocomplete_test){
     b.manage_admin();
     b.build_autocomplete();
 
-//    std::cout << "rue jean jaures: " << b.data->geo_ref->find_ways("rue jean jaures", nbmax, false, [](int){return true;}, ghostwords).size() << std::endl;
-//    std::cout << "10 rue jean jaures: " << b.data->geo_ref->find_ways("10 rue jean jaures", nbmax, false, [](int){return true;}, ghostwords).size() << std::endl;
-//    std::cout << "j" << b.data->geo_ref->find_ways("j", nbmax, false, [](int){return true;}, ghostwords).size() << std::endl;
-
     result = b.data->geo_ref->find_ways("10 rue jean jaures", nbmax, false, [](int){return true;}, ghostwords);
 
     // we should have found the 10 of the rue jean jaures
