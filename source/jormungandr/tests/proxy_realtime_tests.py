@@ -91,7 +91,7 @@ class MockedTestProxy(realtime_proxy.RealtimeProxy):
 DepartureCheck = namedtuple('DepartureCheck', ['route', 'dt', 'data_freshness', 'direction', 'physical_mode'])
 
 
-@dataset({"basic_schedule_test": {"proxy_conf": MOCKED_PROXY_CONF}})
+@dataset({"basic_schedule_test": {'instance_config': {'realtime_proxies': MOCKED_PROXY_CONF}}})
 class TestDepartures(AbstractTestFixture):
 
     query_template = 'stop_points/{sp}/stop_schedules?from_datetime={dt}&show_codes=true{data_freshness}'
@@ -238,7 +238,7 @@ MOCKED_PROXY_CONF = [
     }
 ]
 
-@dataset({"basic_schedule_test": {"proxy_conf": MOCKED_PROXY_CONF}})
+@dataset({"basic_schedule_test": {'instance_config': {'realtime_proxies': MOCKED_PROXY_CONF}}})
 class TestDeparturesWithAnotherSource(AbstractTestFixture):
 
     query_template = 'stop_points/{sp}/stop_schedules?from_datetime={dt}&show_codes=true{data_freshness}'

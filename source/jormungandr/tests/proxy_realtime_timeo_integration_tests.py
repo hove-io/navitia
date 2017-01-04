@@ -144,7 +144,7 @@ MOCKED_PROXY_CONF = [
 ]
 
 
-@dataset({"basic_schedule_test": {"proxy_conf": MOCKED_PROXY_CONF}})
+@dataset({"basic_schedule_test": {'instance_config': {'realtime_proxies': MOCKED_PROXY_CONF}}})
 class TestDepartures(AbstractTestFixture):
     query_template = 'stop_points/{sp}/stop_schedules?from_datetime={dt}&show_codes=true{data_freshness}' \
                      '&_current_datetime={c_dt}'
