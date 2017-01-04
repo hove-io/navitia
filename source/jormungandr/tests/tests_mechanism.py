@@ -102,12 +102,9 @@ class AbstractTestFixture(object):
         for name in cls.krakens_pool:
             instance_config = {
                 "key": name,
-                "zmq_socket": "ipc:///tmp/{instance_name}".format(instance_name=name),
-                "realtime_proxies": cls.data_sets[name].get('proxy_conf', [])
+                "zmq_socket": "ipc:///tmp/{instance_name}".format(instance_name=name)
             }
-            street_network = cls.data_sets[name].get('street_network', None)
-            if street_network:
-                instance_config['street_network'] = street_network
+            instance_config.update(cls.data_sets[name].get('instance_config', {}))
             with open(os.path.join(krakens_dir, name) + '.json', 'w') as f:
                 logging.debug("writing ini file {} for {}".format(f.name, name))
                 f.write(json.dumps(instance_config, indent=4))

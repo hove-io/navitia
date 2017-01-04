@@ -163,7 +163,8 @@ class MockValhalla(Valhalla):
         return response
 
 
-@dataset({'main_routing_test': {'scenario': 'experimental', 'street_network': MOCKED_VALHALLA_CONF}})
+@dataset({'main_routing_test': {'scenario': 'experimental',
+                                'instance_config': {'street_network': MOCKED_VALHALLA_CONF}}})
 class TestValhallaDirectPath(AbstractTestFixture):
 
     def test_journey_with_bike_direct_path(self):

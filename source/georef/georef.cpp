@@ -293,14 +293,6 @@ double PathItem::get_length(double speed_factor) const {
     return duration.total_milliseconds() * def_speed * speed_factor / 1000;
 }
 
-void GeoRef::add_way(const Way& w){
-    Way* to_add = new Way;
-    to_add->name = w.name;
-    to_add->idx = w.idx;
-    to_add->uri = w.uri;
-    ways.push_back(to_add);
-}
-
 ProjectionData::ProjectionData(const type::GeographicalCoord & coord, const GeoRef & sn, const proximitylist::ProximityList<vertex_t> &prox) {
     edge_t edge;
     found = true;

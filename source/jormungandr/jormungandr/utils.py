@@ -266,7 +266,15 @@ def pb_del_if(l, pred):
     return nb
 
 
-def create_object(class_path, **kwargs):
+def create_object(configuration):
+    """
+    Create an object from a dict
+    The dict must contains a 'class' key with the class path of the class we want to create
+    It can contains also an 'args' key with a dictionary of arguments to pass to the constructor
+    """
+    class_path = configuration['class']
+    kwargs = configuration.get('args', {})
+
     log = logging.getLogger(__name__)
     try:
         if '.' not in class_path:

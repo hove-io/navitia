@@ -1120,6 +1120,23 @@ def is_valid_stop_date_time(stop_date_time):
     assert get_valid_datetime(stop_date_time['base_arrival_date_time'])
 
 
+def is_valid_autocomplete(response, depth, mandatory_links=True):
+    if mandatory_links:
+        links = get_not_null(response, 'links')
+        for link in links:
+            assert 'href' in link
+            assert 'rel' in link
+            assert 'templated' in link
+    places = get_not_null(response, 'places')
+
+    for place in places:
+        is_valid_place(place, depth_check=depth)
+
+
+def is_valid_global_autocomplete(response, depth):
+    return is_valid_autocomplete(response, depth, mandatory_links=False)
+
+
 def get_used_vj(response):
     """
     return for each journeys the list of taken vj

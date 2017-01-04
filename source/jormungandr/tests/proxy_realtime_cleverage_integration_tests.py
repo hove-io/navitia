@@ -73,7 +73,7 @@ def _get_schedule(scs, sp_uri, line_code):
         ]
 
 
-@dataset({'multiple_schedules': {'proxy_conf': MOCKED_PROXY_CONF}})
+@dataset({'multiple_schedules': {'instance_config': {'realtime_proxies': MOCKED_PROXY_CONF}}})
 class TestCleverageSchedules(AbstractTestFixture):
     """
     integration tests for cleverage

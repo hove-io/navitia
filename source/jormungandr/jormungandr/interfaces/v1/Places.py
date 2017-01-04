@@ -333,10 +333,9 @@ class Places(ResourceUri):
             if global_autocomplete:
                 user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=False)
                 shape = None
-                if user and user.shape :
+                if user and user.shape:
                     shape = json.loads(user.shape)
-                bragi_response = global_autocomplete.get(args, None, shape=shape)
-                response = marshal(bragi_response, geocodejson)
+                response = global_autocomplete.get(args, instance=None, shape=shape)
             else:
                 raise TechnicalError('world wide autocompletion service not available')
         return response, 200

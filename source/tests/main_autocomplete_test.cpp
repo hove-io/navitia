@@ -51,19 +51,35 @@ int main(int argc, const char* const argv[]) {
     b.sa("MPT kerfeunteun", 0, 0);
     b.data->pt_data->index();
 
-    Way w;
-    w.idx = 0;
-    w.name = "rue DU TREGOR";
-    w.uri = w.name;
-    b.data->geo_ref->add_way(w);
-    w.name = "rue VIS";
-    w.uri = w.name;
-    w.idx = 1;
-    b.data->geo_ref->add_way(w);
-    w.idx = 2;
-    w.name = "quai NEUF";
-    w.uri = w.name;
-    b.data->geo_ref->add_way(w);
+    boost::add_vertex(navitia::georef::Vertex(100, 80, false), b.data->geo_ref->graph);
+    boost::add_vertex(navitia::georef::Vertex(110, 80, false), b.data->geo_ref->graph);
+    boost::add_vertex(navitia::georef::Vertex(120, 80, false), b.data->geo_ref->graph);
+    boost::add_vertex(navitia::georef::Vertex(130, 80, false), b.data->geo_ref->graph);
+
+    size_t e_idx = 0;
+    boost::add_edge(0, 1, navitia::georef::Edge(e_idx++, 1_s), b.data->geo_ref->graph);
+    boost::add_edge(1, 2, navitia::georef::Edge(e_idx++, 1_s), b.data->geo_ref->graph);
+    boost::add_edge(2, 3, navitia::georef::Edge(e_idx++, 1_s), b.data->geo_ref->graph);
+    boost::add_edge(3, 4, navitia::georef::Edge(e_idx++, 1_s), b.data->geo_ref->graph);
+
+    auto* w = new Way;
+    w->idx = 0;
+    w->name = "rue DU TREGOR";
+    w->uri = w->name;
+    w->edges.push_back(std::make_pair(0, 1));
+    b.data->geo_ref->ways.push_back(w);
+    w = new Way;
+    w->name = "rue VIS";
+    w->uri = w->name;
+    w->idx = 1;
+    w->edges.push_back(std::make_pair(1, 2));
+    b.data->geo_ref->ways.push_back(w);
+    w = new Way;
+    w->idx = 2;
+    w->name = "quai NEUF";
+    w->uri = w->name;
+    w->edges.push_back(std::make_pair(2, 3));
+    b.data->geo_ref->ways.push_back(w);
 
     Admin* ad = new Admin;
     ad->name = "Quimper";
@@ -71,6 +87,7 @@ int main(int argc, const char* const argv[]) {
     ad->level = 8;
     ad->postal_codes.push_back("29000");
     ad->idx = 0;
+    ad->insee = "92232";
     b.data->geo_ref->admins.push_back(ad);
     b.manage_admin();
     b.build_autocomplete();
