@@ -232,15 +232,6 @@ def _get_places_crowfly(instance, mode, place, max_duration_to_pt, max_nb_crowfl
     return {mode: res}
 
 
-def _get_duration(resp, place, mode, **kwargs):
-    map_response = {
-        response_pb2.reached: resp.duration,
-        # Calculate duration
-        response_pb2.unknown: int(place.distance/kwargs.get(mode))
-    }
-    return map_response[resp.routing_status]
-
-
 def _sn_routing_matrix(instance, place, places_crowfly, mode, max_duration_to_pt, request, **kwargs):
     # When max_duration_to_pt is 0, there is no need to compute the fallback to pt, except if place is a stop_point or a
     # stop_area
@@ -263,9 +254,8 @@ def _sn_routing_matrix(instance, place, places_crowfly, mode, max_duration_to_pt
     result = {mode: {}}
     for pos, r in enumerate(sn_routing_matrix.rows[0].routing_response):
         if r.routing_status != response_pb2.unreached:
-            duration = _get_duration(r, places[pos], mode, **kwargs)
-            if duration < max_duration_to_pt:
-                result[mode].update({places[pos].uri: {'duration': duration, 'status': r.routing_status}})
+            if r.duration < max_duration_to_pt:
+                result[mode].update({places[pos].uri: {'duration': r.duration, 'status': r.routing_status}})
     return result
 
 
