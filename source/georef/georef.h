@@ -332,8 +332,6 @@ struct GeoRef {
     std::pair<int, const Way*> nearest_addr(const type::GeographicalCoord& coord,
                                             const std::function<bool(const Way&)>& filter) const;
 
-    void add_way(const Way& w);
-
     // Return false if we didn't find any projection
     bool add_bss_edges(const type::GeographicalCoord&);
 
