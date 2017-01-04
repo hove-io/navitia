@@ -241,6 +241,9 @@ class Instance(db.Model):
 
     poi_type_json = db.relationship('PoiTypeJson', uselist=False, backref=backref('instance'),
                                  cascade='save-update, merge, delete, delete-orphan')
+
+    import_stops_in_mimir = db.Column(db.Boolean, default=False, nullable=False)
+
     # ============================================================
     # params for jormungandr
     # ============================================================

@@ -109,6 +109,7 @@ instance_fields = {
     'name': fields.Raw,
     'discarded': fields.Raw,
     'is_free': fields.Raw,
+    'import_stops_in_mimir': fields.Raw,
     'scenario': fields.Raw,
     'journey_order': fields.Raw,
     'max_walking_duration_to_pt': fields.Raw,
@@ -458,14 +459,17 @@ class Instance(flask_restful.Resource):
                             location=('json', 'values'), default=instance.night_bus_filter_base_factor)
         parser.add_argument('priority', type=int, help='instance priority',
                             location=('json', 'values'), default=instance.priority)
-        parser.add_argument('bss_provider', type=bool, help='bss provider activation',
+        parser.add_argument('bss_provider', type=inputs.boolean, help='bss provider activation',
                             location=('json', 'values'), default=instance.bss_provider)
-        parser.add_argument('full_sn_geometries', type=bool, help='activation of full geometries',
+        parser.add_argument('full_sn_geometries', type=inputs.boolean, help='activation of full geometries',
                             location=('json', 'values'), default=instance.full_sn_geometries)
-        parser.add_argument('is_free', type=bool, help='instance doesn\'t require authorization to be used',
+        parser.add_argument('is_free', type=inputs.boolean, help='instance doesn\'t require authorization to be used',
                             location=('json', 'values'), default=instance.is_free)
-        parser.add_argument('is_open_data', type=bool, help='instance only use open data',
+        parser.add_argument('is_open_data', type=inputs.boolean, help='instance only use open data',
                             location=('json', 'values'), default=instance.is_open_data)
+        parser.add_argument('import_stops_in_mimir', type=inputs.boolean,
+                            help='import stops in global autocomplete',
+                            location=('json', 'values'), default=instance.import_stops_in_mimir)
         args = parser.parse_args()
 
         try:
@@ -502,7 +506,8 @@ class Instance(flask_restful.Resource):
                                        'bss_provider',
                                        'full_sn_geometries',
                                        'is_free',
-                                       'is_open_data'])
+                                       'is_open_data',
+                                       'import_stops_in_mimir'])
             db.session.commit()
         except Exception:
             logging.exception("fail")
