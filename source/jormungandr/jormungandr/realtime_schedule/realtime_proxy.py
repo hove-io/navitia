@@ -31,6 +31,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from abc import abstractmethod, ABCMeta
 from jormungandr.utils import timestamp_to_datetime
+from jormungandr import new_relic
 
 
 class RealtimeProxy(object):
@@ -89,3 +90,13 @@ class RealtimeProxy(object):
         return a status for the API
         """
         pass
+
+    def record_external_failure(self, message):
+        params = {'rt_system_id': repr(self.rt_system_id), 'message': message}
+        new_relic.record_custom_event('realtime_external_failure', params)
+
+    def record_internal_failure(self, message):
+        params = {'rt_system_id': repr(self.rt_system_id), 'message': message}
+        new_relic.record_custom_event('realtime_internal_failure', params)
+
+

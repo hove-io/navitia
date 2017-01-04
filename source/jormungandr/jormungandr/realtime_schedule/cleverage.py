@@ -72,11 +72,14 @@ class Cleverage(RealtimeProxy):
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Cleverage RT service dead, using base '
                                               'schedule (error: {}'.format(e))
+            self.record_external_failure('circuit breaker open')
         except requests.Timeout as t:
             logging.getLogger(__name__).error('Cleverage RT service timeout, using base '
                                               'schedule (error: {}'.format(t))
-        except:
+            self.record_external_failure('timeout')
+        except Exception as e:
             logging.getLogger(__name__).exception('Cleverage RT error, using base schedule')
+            self.record_external_failure(str(e))
         return None
 
     def _make_url(self, route_point):
@@ -90,6 +93,7 @@ class Cleverage(RealtimeProxy):
             # one a the id is missing, we'll not find any realtime
             logging.getLogger(__name__).debug('missing realtime id for {obj}: stop code={s}'.
                                               format(obj=route_point, s=stop_id))
+            self.record_internal_failure('missing id')
             return None
 
         url = "{base_url}{stop_id}".format(base_url=self.service_url, stop_id=stop_id)
@@ -136,6 +140,7 @@ class Cleverage(RealtimeProxy):
             # TODO better error handling, the response might be in 200 but in error
             logging.getLogger(__name__).error('Cleverage RT service unavailable, impossible to query : {}'
                                               .format(r.url))
+            self.record_external_failure('non 200 response')
             return None
 
         return self._get_passages(route_point, r.json())
