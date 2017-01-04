@@ -292,7 +292,7 @@ def bragi_house_lefebvre_feature():
                         "insee": "02000",
                         "level": 8,
                         "label": "Oyonnax",
-                        "zip_code": "02000",
+                        "zip_codes": ["02000"],
                         "weight": 1,
                         "coord": {
                             "lat": 48.8396154,
@@ -304,7 +304,7 @@ def bragi_house_lefebvre_feature():
                         "insee": "248000549",
                         "level": 7,
                         "label": "Haute Picardie",
-                        "zip_code": "80200",
+                        "zip_codes": ["80200"],
                         "weight": 1,
                         "coord": {
                             "lat": 48.8396154,
