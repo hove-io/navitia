@@ -104,8 +104,7 @@ class Instance(object):
             from jormungandr.autocomplete.kraken import Kraken
             self.autocomplete = Kraken()
         else:
-            self.autocomplete = utils.create_object(autocomplete['class_path'],
-                                                    **autocomplete.get('kwargs', {}))
+            self.autocomplete = utils.create_object(autocomplete)
         self.zmq_socket_type = zmq_socket_type
 
     def get_models(self):
