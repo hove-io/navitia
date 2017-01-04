@@ -101,11 +101,14 @@ class Timeo(RealtimeProxy):
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Timeo RT service dead, using base '
                                               'schedule (error: {}'.format(e))
+            self.record_external_failure('circuit breaker open')
         except requests.Timeout as t:
             logging.getLogger(__name__).error('Timeo RT service timeout, using base '
                                               'schedule (error: {}'.format(t))
-        except:
+            self.record_external_failure('timeout')
+        except Exception as e:
             logging.getLogger(__name__).exception('Timeo RT error, using base schedule')
+            self.record_external_failure(str(e))
         return None
 
     def _get_dt_local(self, utc_dt):
@@ -137,6 +140,7 @@ class Timeo(RealtimeProxy):
             # TODO better error handling, the response might be in 200 but in error
             logging.getLogger(__name__).error('Timeo RT service unavailable, impossible to query : {}'
                                               .format(r.url))
+            self.record_external_failure('non 200 response')
             return None
 
         return self._get_passages(r.json(), current_dt, route_point.fetch_line_uri())
@@ -148,6 +152,7 @@ class Timeo(RealtimeProxy):
         # by construction there should be only one StopTimesResponse
         if not st_responses or len(st_responses) != 1:
             logging.getLogger(__name__).warning('invalid timeo response: {}'.format(timeo_resp))
+            self.record_external_failure('invalid response')
             return None
 
         next_st = st_responses[0]['NextStopTimesMessage']
@@ -190,6 +195,7 @@ class Timeo(RealtimeProxy):
             logging.getLogger(__name__).debug('missing realtime id for {obj}: '
                                               'stop code={s}, line code={l}, route code={r}'.
                                               format(obj=route_point, s=stop, l=line, r=route))
+            self.record_internal_failure('missing id')
             return None
 
         # timeo can only handle items_per_schedule if it's < 5

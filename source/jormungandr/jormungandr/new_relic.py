@@ -29,6 +29,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
+import flask
+
 try:
     from newrelic import agent
 except ImportError:
@@ -50,3 +52,21 @@ def record_custom_parameter(name, value):
     """
     if agent:
         agent.add_custom_parameter(name, value)
+
+def record_custom_event(event_type, params):
+    """
+    record an event
+    Event doesn't share anything with request so we track the request id
+    """
+    if agent:
+        try:
+            if not params:
+                params = {}
+            params['navitia_request_id'] = flask.request.id
+        except RuntimeError:
+            pass#we are outside of a flask context :(
+        try:
+            agent.record_custom_event(event_type, params)
+        except:
+            logger = logging.getLogger(__name__)
+            logger.exception('failure while reporting to newrelic')

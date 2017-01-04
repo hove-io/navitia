@@ -40,6 +40,7 @@ from navitiacommon import type_pb2, request_pb2, response_pb2
 from jormungandr.utils import date_to_timestamp, pb_del_if
 import datetime
 from copy import deepcopy
+from jormungandr import new_relic
 
 RT_PROXY_PROPERTY_NAME = 'realtime_system'
 RT_PROXY_DATA_FRESHNESS = 'realtime'
@@ -243,6 +244,8 @@ class MixedSchedule(object):
         rt_system = self.instance.realtime_proxy_manager.get(rt_system_code)
         if not rt_system:
             log.info('impossible to find {}, no realtime added'.format(rt_system_code))
+            new_relic.record_custom_event('realtime_internal_failure', {'rt_system_id': rt_system_code,
+                                                                        'message': 'no handler found'})
             return None
 
         next_rt_passages = None
@@ -251,8 +254,10 @@ class MixedSchedule(object):
                                                                       request['items_per_schedule'],
                                                                       request['from_datetime'],
                                                                       request['_current_datetime'])
-        except:
+        except Exception as e:
             log.exception('failure while requesting next passages to external RT system {}'.format(rt_system_code))
+            new_relic.record_custom_event('realtime_internal_failure', {'rt_system_id': rt_system_code,
+                                                                        'message': str(e)})
 
         if next_rt_passages is None:
             log.debug('no next passages, using base schedule')
