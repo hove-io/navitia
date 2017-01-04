@@ -918,7 +918,7 @@ void Worker::street_network_routing_matrix(const pbnavitia::StreetNetworkRouting
                 dest_coords);
 
         auto* row = this->pb_creator.mutable_sn_routing_matrix()->add_rows();
-        for(auto coord : dest_coords) {
+        for(const auto coord : dest_coords) {
             auto* k = row->add_routing_response();
             auto it = nearest.find(coord.uri());
             if(it == nearest.end()) {
@@ -933,6 +933,8 @@ void Worker::street_network_routing_matrix(const pbnavitia::StreetNetworkRouting
                 k->set_routing_status(pbnavitia::RoutingStatus::unreached);
                 break;
             default:
+                k->set_duration(street_network_worker->departure_path_finder.crow_fly_duration(
+                                    entry_point.coordinates.distance_to(coord), true).total_seconds());
                 k->set_routing_status(pbnavitia::RoutingStatus::unknown);
             }
         }
