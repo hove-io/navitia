@@ -1072,6 +1072,8 @@ def is_valid_disruption(disruption, chaos_disrup=True):
 
 s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset
 r_coord = "0.00188646;0.00071865"  # coordinate of R in the dataset
+stopA_coord = "0.00107797;0.00071865"
+stopB_coord = "0.0000898312;0.00026949"
 
 #default journey query used in various test
 journey_basic_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
