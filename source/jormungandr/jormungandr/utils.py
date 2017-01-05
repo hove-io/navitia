@@ -301,7 +301,15 @@ def get_pt_object_coord(pt_object):
     :return: coord: type_pb2.GeographicalCoord
 
     >>> pt_object = response_pb2.Response()
-    >>>
+    >>> pt_object = type_pb2.PtObject()
+    >>> pt_object.embedded_type = type_pb2.POI
+    >>> pt_object.poi.coord.lon = 42
+    >>> pt_object.poi.coord.lat = 41
+    >>> coord = get_pt_object_coord(pt_object)
+    >>> coord.lon
+    42
+    >>> coord.lat
+    41
     """
     map_coord = {
         type_pb2.STOP_POINT: "stop_point",
