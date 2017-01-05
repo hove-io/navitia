@@ -300,7 +300,6 @@ def get_pt_object_coord(pt_object):
     :param pt_object: type_pb2.PtObject
     :return: coord: type_pb2.GeographicalCoord
 
-    >>> pt_object = response_pb2.Response()
     >>> pt_object = type_pb2.PtObject()
     >>> pt_object.embedded_type = type_pb2.POI
     >>> pt_object.poi.coord.lon = 42
