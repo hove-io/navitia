@@ -74,3 +74,18 @@ def unsigned_integer(value):
         return d
     except ValueError as e:
         raise ValueError("Unable to evaluate, {}".format(e))
+
+
+def coord_format(coord):
+    """
+    Validate coordinates format (lon;lat)
+    """
+    lon_lat_splitted = coord.split(";")
+    if len(lon_lat_splitted) != 2:
+        raise ValueError('Invalid coordinate parameter. It must be lon;lat where lon and lat are floats.')
+
+    lon, lat = lon_lat_splitted
+    float(lon)
+    float(lat)
+
+    return coord

@@ -34,6 +34,7 @@ import logging
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
 import requests
 from jormungandr.exceptions import TechnicalError
+from urllib import urlencode
 
 
 class GeocodeJson(AbstractAutocomplete):
@@ -50,9 +51,16 @@ class GeocodeJson(AbstractAutocomplete):
         if not self.external_api:
             raise TechnicalError('global autocomplete not configured')
 
-        url = '{endpoint}?q={q}&limit={count}'.format(endpoint=self.external_api,
-                                                      q=request['q'],
-                                                      count=request['count'])
+        params = {
+            "q": request["q"],
+            "count": request["count"]
+        }
+
+        if request["from"]:
+            params["lon"], params["lat"] = self.get_coords(request["from"])
+
+        url = '{endpoint}?{query}'.format(endpoint=self.external_api, query=urlencode(params))
+
         try:
             if shape:
                 raw_response = requests.post(url, timeout=self.timeout, json=shape)
@@ -75,4 +83,5 @@ class GeocodeJson(AbstractAutocomplete):
     def geo_status(self, instance):
         raise NotImplementedError
 
-
+    def get_coords(self, param):
+        return param.split(";")
