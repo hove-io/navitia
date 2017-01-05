@@ -297,7 +297,11 @@ def format_url_func_with_different_ptobject():
                         url='http://bob.com',
                         costing_options={'bib': 'bom'})
     valhalla.costing_options = None
-    for ptObject_type in Valhalla.map_attr_name.keys():
+    for ptObject_type in (type_pb2.STOP_POINT,
+                          type_pb2.STOP_AREA,
+                          type_pb2.ADDRESS,
+                          type_pb2.ADMINISTRATIVE_REGION,
+                          type_pb2.POI):
         origin = get_pt_object(ptObject_type, 1.0, 1.0)
         destination = get_pt_object(ptObject_type, 2.0, 2.0)
         data = valhalla._make_data("car", origin, [destination], MOCKED_REQUEST)
