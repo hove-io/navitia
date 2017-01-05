@@ -99,8 +99,8 @@ def bragi_house_jaures_response_check(feature_response):
     assert address.get('name') == "Rue Jean Jaures"
     assert address.get('label') == "20 Rue Jean Jaures (Saint-Quentin)"
     assert address.get('house_number') == "20"
-    assert address.get('coord', {}).get('lat') == 49.847586
-    assert address.get('coord', {}).get('lon') == 3.282103
+    assert address.get('coord', {}).get('lat') == "49.847586"
+    assert address.get('coord', {}).get('lon') == "3.282103"
     assert len(address.get('administrative_regions')) == 2
     region_list = {region['level']: region['name'] for region in address.get('administrative_regions')}
     assert region_list.get(7) == "Haute Picardie"
@@ -175,8 +175,8 @@ def bragi_street_response_check(feature_response):
     assert address.get('name') == "Rue Jean Jaures"
     assert address.get('label') == "Rue Jean Jaures (Saint-Quentin)"
     assert address.get('house_number') == "0"
-    assert address.get('coord', {}).get('lat') == 49.847586
-    assert address.get('coord', {}).get('lon') == 3.282103
+    assert address.get('coord', {}).get('lat') == "49.847586"
+    assert address.get('coord', {}).get('lon') == "3.282103"
     assert len(address.get('administrative_regions')) == 2
     response = next(region for region in address.get('administrative_regions'))
     assert response.get('level') == 8
@@ -205,13 +205,21 @@ def bragi_street_reading_without_autocomplete_attribute_test():
 
 def bragi_admin_feature():
     admin_feature = {
-        "geometry": "",
+        "geometry": {
+            "coordinates": [
+                2,
+                48
+            ],
+            "type": "Point"
+        },
         "properties": {
             "geocoding": {
-                "city": "",
+                "city_code": "2725",
+                "level": 8,
+                "city": None,
                 "housenumber": "",
                 "id": "admin:fr:2725",
-                "label": "Sommeron",
+                "label": "Sommeron (02260)",
                 "name": "Sommeron",
                 "postcode": "02260",
                 "street": "",
@@ -248,13 +256,22 @@ def bragi_admin_feature():
     }
     return admin_feature
 
+
 def bragi_admin_response_check(feature_response):
     assert feature_response.get('embedded_type') == "administrative_region"
     assert feature_response.get('id') == "admin:fr:2725"
     assert feature_response.get('name') == "Sommeron"
-    assert len(feature_response.get('administrative_regions')) == 2
-    assert feature_response.get('administrative_regions')[0].get('level') == 8
-    assert feature_response.get('administrative_regions')[0].get('name') == "Sommeron"
+    admin = feature_response.get('administrative_regions')
+    assert admin.get('level') == 8
+    assert admin.get('name') == "Sommeron"
+    assert admin.get('label') == "Sommeron (02260)"
+    assert admin.get('zip_code') == "02260"
+    assert admin.get('insee') == "2725"
+    assert admin.get('coord').get('lat') == "48"
+    assert admin.get('coord').get('lon') == "2"
+    assert len(admin.get('administrative_regions')) == 2
+    assert admin.get('administrative_regions')[0].get('level') == 8
+    assert admin.get('administrative_regions')[0].get('name') == "Sommeron"
 
 def bragi_admin_reading_test():
     bragi_response = {
@@ -327,8 +344,8 @@ def bragi_house_lefebvre_response_check(feature_response):
     assert address.get('name') == "Rue Jean Lefebvre"
     assert address.get('label') == "42 Rue Jean Lefebvre (Oyonnax)"
     assert address.get('house_number') == "42"
-    assert address.get('coord', {}).get('lat') == 49.847586
-    assert address.get('coord', {}).get('lon') == 3.282103
+    assert address.get('coord', {}).get('lat') == "49.847586"
+    assert address.get('coord', {}).get('lon') == "3.282103"
     assert len(address.get('administrative_regions')) == 2
     region_list = {region['level']: region['name'] for region in address.get('administrative_regions')}
     assert region_list.get(7) == "Haute Picardie"
@@ -468,8 +485,8 @@ def bragi_poi_reading_test():
     assert poi.get('label') == 'Mairie de Pigna (Pigna)'
     assert poi.get('name') == 'Mairie de Pigna'
     assert poi.get('id') == 'poi:osm:3224270910'
-    assert poi.get('coord').get('lat') == 42.599235500000009
-    assert poi.get('coord').get('lon') == 8.9028068
+    assert poi.get('coord').get('lat') == "42.5992355"
+    assert poi.get('coord').get('lon') == "8.9028068"
     assert len(poi.get('administrative_regions')) == 1
     administrative_region = poi.get('administrative_regions')[0]
     assert administrative_region.get('insee') == '2B231'
@@ -477,8 +494,8 @@ def bragi_poi_reading_test():
     assert administrative_region.get('label') == 'Pigna'
     assert administrative_region.get('level') == 8
     assert administrative_region.get('id') == 'admin:fr:2B231'
-    assert administrative_region.get('coord').get('lat') == 42.5996043
-    assert administrative_region.get('coord').get('lon') == 8.9027334
+    assert administrative_region.get('coord').get('lat') == "42.5996043"
+    assert administrative_region.get('coord').get('lon') == "8.9027334"
     assert administrative_region.get('zip_code') == "20220-20222"
 
 
@@ -523,8 +540,8 @@ def bragi_stop_area_reading_test():
     assert sa.get('name') == 'BOTZARIS'
     assert sa.get('id') == 'stop_area:OIF:SA:59332'
     assert sa.get('timezone') == 'Europe/Paris'
-    assert sa.get('coord').get('lat') == 48.87958
-    assert sa.get('coord').get('lon') == 2.389462
+    assert sa.get('coord').get('lat') == "48.87958"
+    assert sa.get('coord').get('lon') == "2.389462"
     assert len(sa.get('administrative_regions')) == 0
 
 

@@ -103,13 +103,14 @@ def create_administrative_regions_field(geocoding):
     response = []
     for admin in administrative_regions:
         coord = admin.get('coord', {})
-        lat = coord.get('lat') if coord else None
-        lon = coord.get('lon') if coord else None
+        lat = str(coord.get('lat')) if coord and coord.get('lat') else None
+        lon = str(coord.get('lon')) if coord and coord.get('lon') else None
         zip_codes = admin.get('zip_codes', [])
         response.append({
             "insee": admin.get('insee'),
             "name": admin.get('label'),
-            "level": int(admin.get('level')),
+            "level":
+                int(admin.get('level')) if admin.get('level') else None ,
             "coord": {
                 "lat": lat,
                 "lon": lon
@@ -122,13 +123,13 @@ def create_administrative_regions_field(geocoding):
 
 
 def get_lon_lat(obj):
-    if not obj:
+    if not obj or not obj.get('geometry') or not obj.get('geometry').get('coordinates'):
         return None, None
 
     coordinates = obj.get('geometry', {}).get('coordinates', [])
     if len(coordinates) == 2:
-        lon = coordinates[0]
-        lat = coordinates[1]
+        lon = str(coordinates[0])
+        lat = str(coordinates[1])
     else:
         lon = None
         lat = None
@@ -142,8 +143,25 @@ class AdministrativeRegionField(fields.Raw):
     def output(self, key, obj):
         if not obj:
             return None
+
+        lon, lat = get_lon_lat(obj)
         geocoding = obj.get('properties', {}).get('geocoding', {})
-        return create_administrative_regions_field(geocoding) or create_admin_field(geocoding)
+
+        return {
+            "insee": geocoding.get('city_code'),
+            "level":
+                int(geocoding.get('level')) if geocoding.get('level') else None ,
+            "name": geocoding.get('name'),
+            "label": geocoding.get('label'),
+            "id": geocoding.get('id'),
+            "coord": {
+                "lat": lat,
+                "lon": lon
+            },
+            "zip_code": geocoding.get('postcode'),
+            "administrative_regions":
+                create_administrative_regions_field(geocoding) or create_admin_field(geocoding) ,
+        }
 
 
 class AddressField(fields.Raw):
