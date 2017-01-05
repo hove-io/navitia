@@ -37,7 +37,7 @@ import json
 from flask_restful import abort
 from jormungandr.exceptions import UnableToParse, TechnicalError, InvalidArguments, ApiNotFound
 from flask import g
-from jormungandr.utils import is_url, kilometers_to_meters
+from jormungandr.utils import is_url, kilometers_to_meters, get_pt_object_coord
 from copy import deepcopy
 
 
@@ -74,13 +74,7 @@ class Valhalla(object):
         if not isinstance(pt_object, type_pb2.PtObject):
             logging.getLogger(__name__).error('Invalid pt_object')
             raise InvalidArguments('Invalid pt_object')
-        map_coord = {
-            type_pb2.STOP_POINT: pt_object.stop_point.coord,
-            type_pb2.STOP_AREA: pt_object.stop_area.coord,
-            type_pb2.ADDRESS: pt_object.address.coord,
-            type_pb2.ADMINISTRATIVE_REGION: pt_object.administrative_region.coord
-        }
-        coord = map_coord.get(pt_object.embedded_type, None)
+        coord = get_pt_object_coord(pt_object)
         if not coord:
             logging.getLogger(__name__).error('Invalid coord for ptobject type: {}'.format(pt_object.embedded_type))
             raise UnableToParse('Invalid coord for ptobject type: {}'.format(pt_object.embedded_type))

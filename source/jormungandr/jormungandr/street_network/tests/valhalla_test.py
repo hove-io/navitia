@@ -39,12 +39,24 @@ import json
 
 MOCKED_REQUEST = {'walking_speed': 1, 'bike_speed': 2}
 
-def get_pt_object(type, lon, lat):
+def get_pt_object(embedded_type, lon, lat):
     pt_object = type_pb2.PtObject()
-    pt_object.embedded_type = type
-    if type == type_pb2.ADDRESS:
+    pt_object.embedded_type = embedded_type
+    if embedded_type == type_pb2.STOP_POINT:
+        pt_object.stop_point.coord.lat = lat
+        pt_object.stop_point.coord.lon = lon
+    elif embedded_type == type_pb2.STOP_AREA:
+        pt_object.stop_area.coord.lat = lat
+        pt_object.stop_area.coord.lon = lon
+    elif embedded_type == type_pb2.ADDRESS:
         pt_object.address.coord.lat = lat
         pt_object.address.coord.lon = lon
+    elif embedded_type == type_pb2.ADMINISTRATIVE_REGION:
+        pt_object.administrative_region.coord.lat = lat
+        pt_object.administrative_region.coord.lon = lon
+    elif embedded_type == type_pb2.POI:
+        pt_object.poi.coord.lat = lat
+        pt_object.poi.coord.lon = lon
     return pt_object
 
 
@@ -287,6 +299,42 @@ def format_url_func_with_car_mode_test():
                                         "units": "kilometers"
                                       }
                                     }''')
+
+
+def format_url_func_with_different_ptobject_test():
+    instance = MagicMock()
+    instance.walking_speed = 1
+    instance.bike_speed = 2
+    valhalla = Valhalla(instance=instance,
+                        url='http://bob.com',
+                        costing_options={'bib': 'bom'})
+    valhalla.costing_options = None
+    for ptObject_type in (type_pb2.STOP_POINT,
+                          type_pb2.STOP_AREA,
+                          type_pb2.ADDRESS,
+                          type_pb2.ADMINISTRATIVE_REGION,
+                          type_pb2.POI):
+        origin = get_pt_object(ptObject_type, 1.0, 1.0)
+        destination = get_pt_object(ptObject_type, 2.0, 2.0)
+        data = valhalla._make_data("car", origin, [destination], MOCKED_REQUEST)
+        assert json.loads(data) == json.loads(''' {
+                                         "locations": [
+                                           {
+                                             "lat": 1,
+                                             "type": "break",
+                                             "lon": 1
+                                            },
+                                            {
+                                              "lat": 2,
+                                              "type": "break",
+                                              "lon": 2
+                                            }
+                                            ],
+                                            "costing": "auto",
+                                            "directions_options": {
+                                            "units": "kilometers"
+                                            }
+                                            }''')
 
 
 def format_url_func_invalid_mode_test():
