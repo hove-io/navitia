@@ -292,3 +292,25 @@ def create_object(class_path, **kwargs):
 def generate_id():
     import uuid
     return uuid.uuid4()
+
+
+def get_pt_object_coord(pt_object):
+    """
+    Given a PtObject, return the coord according to its embedded_type
+    :param pt_object: type_pb2.PtObject
+    :return: coord: type_pb2.GeographicalCoord
+
+    >>> pt_object = response_pb2.Response()
+    >>>
+    """
+    map_coord = {
+        type_pb2.STOP_POINT: "stop_point",
+        type_pb2.STOP_AREA: "stop_area",
+        type_pb2.ADDRESS: "address",
+        type_pb2.ADMINISTRATIVE_REGION: "administrative_region",
+        type_pb2.POI: "poi"
+    }
+    attr = getattr(pt_object,
+                   map_coord.get(pt_object.embedded_type, ""),
+                   None)
+    return getattr(attr, "coord", None)

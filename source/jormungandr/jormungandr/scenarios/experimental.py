@@ -35,7 +35,7 @@ import uuid
 from jormungandr.scenarios.utils import fill_uris
 from jormungandr.planner import JourneyParameters
 from flask import g
-from jormungandr.utils import get_uri_pt_object, generate_id
+from jormungandr.utils import get_uri_pt_object, generate_id, get_pt_object_coord
 from jormungandr import app
 import gevent
 import gevent.pool
@@ -133,18 +133,7 @@ def create_parameters(request):
                              forbidden_uris=request['forbidden_uris[]'])
 
 
-def _get_coord(place):
-    map_coord = {
-        type_pb2.STOP_POINT: "stop_point",
-        type_pb2.STOP_AREA: "stop_area",
-        type_pb2.ADDRESS: "address",
-        type_pb2.ADMINISTRATIVE_REGION: "administrative_region",
-        type_pb2.POI: "poi"
-    }
-    attr = getattr(place,
-                   map_coord.get(place.embedded_type, ""),
-                   None)
-    return getattr(attr, "coord", None)
+
 
 def _update_crowfly_duration(instance, mode, requested_entry_point):
     """
@@ -175,7 +164,7 @@ def _update_crowfly_duration(instance, mode, requested_entry_point):
         fallback_list[mode][stop_point.uri] = 0
         crowfly_sps.add(stop_point.uri)
 
-    coord = _get_coord(requested_entry_point)
+    coord = get_pt_object_coord(requested_entry_point)
 
     if coord:
         odt_sps = instance.georef.get_odt_stop_points(coord)
@@ -226,7 +215,7 @@ def _get_places_crowfly(instance, mode, place, max_duration_to_pt, max_nb_crowfl
             return {mode: place}
         else:
             return {mode: []}
-    coord = _get_coord(place)
+    coord = get_pt_object_coord(place)
     if not coord.lat and not coord.lon:
         return {mode: []}
     res = instance.georef.get_crow_fly(get_uri_pt_object(place), mode, max_duration_to_pt,
