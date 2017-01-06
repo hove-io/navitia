@@ -34,7 +34,6 @@ import logging
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
 import requests
 from jormungandr.exceptions import TechnicalError
-from urllib import urlencode
 
 
 class GeocodeJson(AbstractAutocomplete):
@@ -59,13 +58,11 @@ class GeocodeJson(AbstractAutocomplete):
         if request["from"]:
             params["lon"], params["lat"] = self.get_coords(request["from"])
 
-        url = '{endpoint}?{query}'.format(endpoint=self.external_api, query=urlencode(params))
-
         try:
             if shape:
-                raw_response = requests.post(url, timeout=self.timeout, json=shape)
+                raw_response = requests.post(self.external_api, timeout=self.timeout, json=shape, params=params)
             else:
-                raw_response = requests.get(url, timeout=self.timeout)
+                raw_response = requests.get(self.external_api, timeout=self.timeout, params=params)
 
         except requests.Timeout:
             logging.getLogger(__name__).error('autocomplete request timeout')
@@ -84,4 +81,8 @@ class GeocodeJson(AbstractAutocomplete):
         raise NotImplementedError
 
     def get_coords(self, param):
+        """
+        Get coordinates (longitude, latitude).
+        For moment we consider that the param can only be a coordinate.
+        """
         return param.split(";")

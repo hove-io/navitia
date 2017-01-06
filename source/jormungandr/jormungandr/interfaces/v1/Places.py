@@ -315,7 +315,8 @@ class Places(ResourceUri):
                             description="remove geojson from the response")
 
         self.parsers['get'].add_argument("from", type=coord_format,
-                                         description="Coorddinates longitude:latitude from where you want to search")
+                                         description="Coordinates longitude;latitude used to prioritize "
+                                                     "the objects around this coordinate")
 
     def get(self, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
