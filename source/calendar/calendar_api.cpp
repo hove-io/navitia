@@ -35,27 +35,26 @@ www.navitia.io
 
 namespace navitia { namespace calendar {
 
-pbnavitia::Response calendars(const navitia::type::Data &d,
-                              const boost::posix_time::ptime& current_datetime,
-                              const std::string &start_date,
-                              const std::string &end_date,
-                              const size_t depth,
-                              size_t count,
-                              size_t start_page,
-                              const std::string &filter,
-                              const std::vector<std::string>& forbidden_uris) {
+void calendars(navitia::PbCreator& pb_creator,
+          const navitia::type::Data &d,
+          const std::string &start_date,
+          const std::string &end_date,
+          const size_t depth,
+          size_t count,
+          size_t start_page,
+          const std::string &filter,
+          const std::vector<std::string>& forbidden_uris) {
 
     navitia::type::Indexes calendar_list;
     boost::gregorian::date start_period(boost::gregorian::not_a_date_time);
     boost::gregorian::date end_period(boost::gregorian::not_a_date_time);
-    PbCreator pb_creator(d, current_datetime, null_time_period);
     if((!start_date.empty()) && (!end_date.empty())) {
         try{
             start_period = boost::gregorian::from_undelimited_string(start_date);
         }catch(const std::exception& e) {
            pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse,
                                     "Unable to parse start_date, "+ std::string(e.what()));
-           return pb_creator.get_response();
+           return;
         }
 
         try{
@@ -63,32 +62,31 @@ pbnavitia::Response calendars(const navitia::type::Data &d,
         }catch(const std::exception& e) {
            pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse,
                                     "Unable to parse end_date, "+ std::string(e.what()));
-           return pb_creator.get_response();
+           return;
         }
     }
     auto action_period = boost::gregorian::date_period(start_period, end_period);
 
     try{
         Calendar calendar;
-        calendar_list = calendar.get_calendars(filter, forbidden_uris, d, action_period, current_datetime);
+        calendar_list = calendar.get_calendars(filter, forbidden_uris, d, action_period, pb_creator.now);
     } catch(const ptref::parsing_error &parse_error) {
         pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse, parse_error.more);
-        return pb_creator.get_response();
+        return;
     } catch(const ptref::ptref_error &ptref_error){
         pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, ptref_error.more);
-        return pb_creator.get_response();
+        return;
     }
     size_t total_result = calendar_list.size();
     calendar_list = paginate(calendar_list, count, start_page);
 
-    pb_creator.pb_fill(pb_creator.data.get_data<nt::Calendar>(calendar_list), depth);
+    pb_creator.pb_fill(pb_creator.data->get_data<nt::Calendar>(calendar_list), depth);
 
     pb_creator.make_paginate(total_result, start_page, count, pb_creator.calendars_size());
     if (pb_creator.calendars_size() == 0) {
         pb_creator.fill_pb_error(pbnavitia::Error::no_solution, pbnavitia::NO_SOLUTION,
                                  "no solution found for calendars API");
     }
-    return pb_creator.get_response();
 }
 }
 }

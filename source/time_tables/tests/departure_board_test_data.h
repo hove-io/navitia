@@ -134,14 +134,21 @@ struct calendar_fixture {
     navitia::type::VehicleJourney* vj_weekend;
     navitia::type::VehicleJourney* vj_all;
     navitia::type::VehicleJourney* vj_wednesday;
+
+    navitia::type::VehicleJourney* r_vj1;
+    navitia::type::VehicleJourney* r_vj2;
+
     calendar_fixture() : b("20120614", "departure board") {
         //2 vj during the week
-        b.vj("line:A", "1", "", true, "week")("stop1", 10 * 3600, 10 * 3600 + 10 * 60)("stop2", 12 * 3600, 12 * 3600 + 10 * 60);
-        b.vj("line:A", "101", "", true, "week_bis")("stop1", 11 * 3600, 11 * 3600 + 10 * 60)("stop2", 14 * 3600, 14 * 3600 + 10 * 60);
+        b.vj("line:A", "1", "", true, "week")("stop1", "10:00"_t, "10:10"_t)
+                                             ("stop2", "12:00"_t, "12:10"_t);
+        b.vj("line:A", "101", "", true, "week_bis")("stop1", "11:00"_t, "11:10"_t)
+                                                   ("stop2", "14:00"_t, "14:10"_t);
         //NOTE: we give a first random validity pattern because the builder try to factorize them
 
         //only one on the week end
-        b.vj("line:A", "10101", "", true, "weekend")("stop1", 20 * 3600, 20 * 3600 + 10 * 60)("stop2", 21 * 3600, 21 * 3600 + 10 * 60);
+        b.vj("line:A", "10101", "", true, "weekend")("stop1", "20:00"_t, "20:10"_t)
+                                                    ("stop2", "21:00"_t, "21:10"_t);
 
         // and one everytime
         auto& builder_vj = b.vj("line:A", "1100101", "", true, "all")("stop1", "15:00"_t, "15:10"_t)
@@ -151,31 +158,58 @@ struct calendar_fixture {
         pt_data.comments.add(builder_vj.vj, "vj comment");
 
         // and wednesday that will not be matched to any cal
-        b.vj("line:A", "110010011", "", true, "wednesday")("stop1", 17 * 3600, 17 * 3600 + 10 * 60)("stop2", 18 * 3600, 18 * 3600 + 10 * 60);
+        b.vj("line:A", "110010011", "", true, "wednesday")("stop1", "17:00"_t, "17:10"_t)
+                                                          ("stop2", "18:00"_t, "18:10"_t);
 
         // Check partial terminus tag
-        b.vj("A", "10111111", "", true, "vj1", "")("Tstop1", 10*3600, 10*3600)
-                                                  ("Tstop2", 10*3600 + 30*60, 10*3600 + 30*60);
-        b.vj("A", "10111111", "", true, "vj2", "")("Tstop1", 10*3600 + 30*60, 10*3600 + 30*60)
-                                                  ("Tstop2", 11*3600,11*3600)
-                                                  ("Tstop3", 11*3600 + 30*60,36300 + 30*60);
+        b.vj("A", "10111111", "", true, "vj1", "")("Tstop1", "10:00"_t, "10:00"_t)
+                                                  ("Tstop2", "10:30"_t, "10:30"_t);
+        b.vj("A", "00000011", "", true, "vj2", "")("Tstop1", "10:30"_t, "10:30"_t)
+                                                  ("Tstop2", "11:00"_t,"11:00"_t)
+                                                  ("Tstop3", "11:30"_t,"11:30"_t);
+
         // Check date_time_estimated at stoptime
         b.vj("B", "10111111", "", true, "date_time_estimated", "")
-            ("ODTstop1", 10*3600, 10*3600)
-            ("ODTstop2", 10*3600 + 30*60, 10*3600 + 30*60);
+                ("ODTstop1", "10:00"_t, "10:00"_t)
+                ("ODTstop2", "10:30"_t, "10:30"_t);
         // Check on_demand_transport at stoptime
         b.vj("B", "10111111", "", true, "on_demand_transport", "")
-            ("ODTstop1", 11*3600, 11*3600)
-            ("ODTstop2", 11*3600 + 30*60, 11*3600 + 30*60);
+                ("ODTstop1", "11:00"_t, "11:00"_t)
+                ("ODTstop2", "11:30"_t, "11:30"_t);
 
         // Check line opening in stop schedules
         b.vj("C", "110011000001", "", true, "vj_C", "")
                 ("stop1_C", "11:00"_t, "11:00"_t)
                 ("stop2_C", "11:30"_t, "11:30"_t);
+
         b.vj("D", "110000001111", "", true, "vj_D", "")
                 ("stop1_D", "00:10"_t, "00:10"_t)
                 ("stop2_D", "01:40"_t, "01:40"_t)
                 ("stop3_D", "02:50"_t, "02:50"_t);
+
+        b.vj("A", "10111111", "", true, "vj1", "")("Tstop1", "10:00"_t, "10:00"_t)
+                                                  ("Tstop2", "10:30"_t, "10:30"_t);
+        b.vj("A", "00000011", "", true, "vj2", "")("Tstop1", "10:30"_t, "10:30"_t)
+                                                  ("Tstop2", "11:00"_t,"11:00"_t)
+                                                  ("Tstop3", "11:30"_t,"11:30"_t);
+        /*
+                                                   StopR3                            StopR4
+                                            ------------------------------------------
+                      StopR1               /
+            Line R : ---------------------/StopR2
+                                          \         StopR5                            StopR6
+                                           \ ------------------------------------------
+
+        */
+
+        b.vj("R", "10111111", "", true, "R:vj1", "")("StopR1", "10:00"_t, "10:00"_t)
+                                                  ("StopR2", "10:30"_t, "10:30"_t)
+                                                  ("StopR3", "11:00"_t, "11:00"_t)
+                                                  ("StopR4", "11:30"_t, "11:30"_t);
+        b.vj("R", "10111111", "", true, "R:vj2", "")("StopR1", "10:00"_t, "10:00"_t)
+                                                  ("StopR2", "10:30"_t, "10:30"_t)
+                                                  ("StopR5", "11:00"_t, "11:00"_t)
+                                                  ("StopR6", "11:30"_t, "11:30"_t);
         // Add opening and closing time
         b.lines["C"]->opening_time = boost::posix_time::time_duration(9,0,0);
         b.lines["C"]->closing_time = boost::posix_time::time_duration(21,0,0);
@@ -201,10 +235,25 @@ struct calendar_fixture {
         vj_week_bis->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111100"});
         vj_weekend = pt_data.vehicle_journeys_map["weekend"];
         vj_weekend->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0000011"});
+
+        r_vj1 = pt_data.vehicle_journeys_map["R:vj1"];
+        r_vj1->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0010000"});
+        r_vj2 = pt_data.vehicle_journeys_map["R:vj2"];
+        r_vj2->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0010000"});
+
         vj_all = pt_data.vehicle_journeys_map["all"];
         vj_all->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"1111111"});
         vj_wednesday = pt_data.vehicle_journeys_map["wednesday"];
         vj_wednesday->base_validity_pattern()->add(beg, end_of_year, std::bitset<7>{"0010000"});
+
+        // Check partial terminus for calendar
+        auto cal_partial_terminus = new navitia::type::Calendar(b.data->meta->production_date.begin());
+        cal_partial_terminus->uri = "cal_partial_terminus";
+        cal_partial_terminus->active_periods.push_back({beg, end_of_year});
+        cal_partial_terminus->week_pattern = std::bitset<7>{"1111111"};
+        pt_data.calendars.push_back(cal_partial_terminus);
+        b.lines["A"]->calendar_list.push_back(cal_partial_terminus);
+
 
         //we now add 2 similar calendars
         auto week_cal = new navitia::type::Calendar(b.data->meta->production_date.begin());
@@ -212,6 +261,7 @@ struct calendar_fixture {
         week_cal->active_periods.push_back({beg, end_of_year});
         week_cal->week_pattern = std::bitset<7>{"1111100"};
         pt_data.calendars.push_back(week_cal);
+        b.lines["A"]->calendar_list.push_back(week_cal);
 
         auto weekend_cal = new navitia::type::Calendar(b.data->meta->production_date.begin());
         weekend_cal->uri = "weekend_cal";
@@ -232,6 +282,16 @@ struct calendar_fixture {
             r->destination = b.sas.find("stop2")->second;
         }
 
+        auto* line = b.lines["A"];
+        for(auto r: line->route_list){
+            r->destination = b.sas.find("Tstop3")->second;
+        }
+
+        line = b.lines["R"];
+        for(auto r: line->route_list){
+            r->destination = b.sas.find("StopR2")->second;
+        }
+
         // and add a comment on a line
         pt_data.comments.add(b.lines["line:A"], "walk the line");
 
@@ -242,6 +302,10 @@ struct calendar_fixture {
         // load metavj calendar association from database (association is tested in ed/tests/associated_calendar_test.cpp)
         navitia::type::AssociatedCalendar* associated_calendar_for_week = new navitia::type::AssociatedCalendar();
         navitia::type::AssociatedCalendar* associated_calendar_for_week_end = new navitia::type::AssociatedCalendar();
+        navitia::type::AssociatedCalendar* associated_calendar_for_terminus = new navitia::type::AssociatedCalendar();
+
+        navitia::type::AssociatedCalendar* associated_calendar_for_line_r = new navitia::type::AssociatedCalendar();
+
         associated_calendar_for_week->calendar = week_cal;
         associated_calendar_for_week_end->calendar = weekend_cal;
         pt_data.associated_calendars.push_back(associated_calendar_for_week);
@@ -255,6 +319,19 @@ struct calendar_fixture {
         auto* all_mvj = pt_data.meta_vjs.get_mut("all");
         all_mvj->associated_calendars[week_cal->uri] = associated_calendar_for_week;
         all_mvj->associated_calendars[weekend_cal->uri] = associated_calendar_for_week_end;
+
+        associated_calendar_for_terminus->calendar = cal_partial_terminus;
+        pt_data.associated_calendars.push_back(associated_calendar_for_terminus);
+        auto* cal_partial_terminus_mvj = pt_data.meta_vjs.get_mut("vj1");
+        cal_partial_terminus_mvj->associated_calendars[cal_partial_terminus->uri] = associated_calendar_for_terminus;
+        cal_partial_terminus_mvj = pt_data.meta_vjs.get_mut("vj2");
+        cal_partial_terminus_mvj->associated_calendars[weekend_cal->uri] = associated_calendar_for_week;
+
+        associated_calendar_for_line_r->calendar = not_associated_cal;
+        auto* r_vj1_mvj = pt_data.meta_vjs.get_mut("R:vj1");
+        r_vj1_mvj->associated_calendars[not_associated_cal->uri] = associated_calendar_for_line_r;
+        auto* r_vj2_mvj = pt_data.meta_vjs.get_mut("R:vj2");
+        r_vj2_mvj->associated_calendars[not_associated_cal->uri] = associated_calendar_for_line_r;
 
         b.data->build_uri();
         b.data->complete();

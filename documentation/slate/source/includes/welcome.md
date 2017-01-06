@@ -85,15 +85,17 @@ if you only want to challenge Navitia functionality, take your token and go to t
 
 ![Try Navitia playgroung](/images/navitia_playground.png)
 
-Plugins
+Wrappers
 --------------
 
-To help you in the building of your project, we have implemented tools to query the API Navitia:
+To help you in the building of your project, there are some wrappers implemented (by Kisio or not) to query the API Navitia:
 
-|Language / Framework |Plugin                                        |
-|---------------------|----------------------------------------------|
-|PHP5                 |<https://github.com/CanalTP/NavitiaComponent> |
-|Symfony 2 or 3       |<https://github.com/CanalTP/NavitiaBundle>    |
+|Language / Framework |Plugin                                              |
+|---------------------|----------------------------------------------------|
+|PHP5                 |<https://github.com/CanalTP/NavitiaComponent>       |
+|Symfony 2 or 3       |<https://github.com/CanalTP/NavitiaBundle>          |
+|Python               |<https://github.com/leonardbinet/navitia_client>    |
+|Python               |<https://github.com/CanalTP/navitia_python_wrapper> |
 
 About the data
 --------------

@@ -73,9 +73,12 @@ static void print_coord(const std::vector<navitia::type::GeographicalCoord>& coo
 BOOST_AUTO_TEST_CASE(init_test) {
     using namespace navitia::type;
     GraphBuilder b;
-    Way w;
-    w.name = "Jaures"; b.geo_ref.add_way(w);
-    w.name = "Hugo"; b.geo_ref.add_way(w);
+    auto* w = new Way;
+    w->name = "Jaures";
+    b.geo_ref.ways.push_back(w);
+    w = new Way;
+    w->name = "Hugo";
+    b.geo_ref.ways.push_back(w);
 
     b("a", 0, 0)("b", 1, 1)("c", 2, 2)("d", 3, 3)("e", 4, 4);
     b("a", "b")("b","c")("c","d")("d","e")("e","d"); //bug ? if no edge leave the vertex, the projection cannot work...
@@ -616,9 +619,12 @@ BOOST_AUTO_TEST_CASE(parallel_and_same_vertex_edges) {
 BOOST_AUTO_TEST_CASE(compute_directions_test) {
     using namespace navitia::type;
     GraphBuilder b;
-    Way w;
-    w.name = "Jaures"; b.geo_ref.add_way(w);
-    w.name = "Hugo"; b.geo_ref.add_way(w);
+    auto* w = new Way;
+    w->name = "Jaures";
+    b.geo_ref.ways.push_back(w);
+    w = new Way;
+    w->name = "Hugo";
+    b.geo_ref.ways.push_back(w);
 
     b("a", 0, 0)("b", 1, 1)("c", 2, 2)("d", 3, 3)("e", 4, 4);
     b("a", "b")("b","c")("c","d")("d","e")("e","d"); //bug ? if no edge leave the vertex, the projection cannot work...
@@ -667,11 +673,18 @@ BOOST_AUTO_TEST_CASE(compute_coord){
     b("a","c",20_s)("a","c",10_s)("a","c",30_s);
     b("c","a",20_s)("c","a",10_s)("c","a",30_s);
 
-    Way w;
-    w.name = "BobAB"; b.geo_ref.add_way(w);
-    w.name = "BobAC"; b.geo_ref.add_way(w);
-    w.name = "BobCD"; b.geo_ref.add_way(w);
-    w.name = "BobDB"; b.geo_ref.add_way(w);
+    auto* w = new Way;
+    w->name = "BobAB";
+    b.geo_ref.ways.push_back(w);
+    w = new Way;
+    w->name = "BobAC";
+    b.geo_ref.ways.push_back(w);
+    w = new Way;
+    w->name = "BobCD";
+    b.geo_ref.ways.push_back(w);
+    w = new Way;
+    w->name = "BobDB";
+    b.geo_ref.ways.push_back(w);
     b.geo_ref.graph[b.get("a","b")].way_idx = 0;
     b.geo_ref.graph[b.get("b","a")].way_idx = 0;
 
@@ -1022,119 +1035,132 @@ BOOST_AUTO_TEST_CASE(coord){
 }
 // Test de autocomplete
 BOOST_AUTO_TEST_CASE(build_autocomplete_test){
+    ed::builder b = {"20140614"};
+    Vertex v;
+    std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> result;
+    int nbmax = 10;
+    std::set<std::string> ghostwords;
 
-        navitia::georef::GeoRef geo_ref;
-        navitia::georef::HouseNumber hn;
-        navitia::georef::Graph graph;
-        vertex_t debut, fin;
-        Vertex v;
-        navitia::georef::Edge e1;
-        std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> result;
-        int nbmax = 10;
-        std::set<std::string> ghostwords;
+    auto* way = new navitia::georef::Way;
+    way->idx = 0;
+    way->name = "jeanne d'arc";
+    way->way_type = "rue";
+    b.data->geo_ref->ways.push_back(way);
 
-        navitia::georef::Way  way;
-        way.name = "jeanne d'arc";
-        way.way_type = "rue";
-        geo_ref.add_way(way);
+    way = new navitia::georef::Way;
+    way->idx = 1;
+    way->name = "jean jaures";
+    way->way_type = "place";
+    b.data->geo_ref->ways.push_back(way);
 
+    way = new navitia::georef::Way;
+    way->idx = 2;
+    way->name = "jean paul gaultier paris";
+    way->way_type = "rue";
+    b.data->geo_ref->ways.push_back(way);
 
-        way.name = "jean jaures";
-        way.way_type = "place";
-        geo_ref.add_way(way);
+    way = new navitia::georef::Way;
+    way->idx = 3;
+    way->name = "jean jaures";
+    way->way_type = "avenue";
+    b.data->geo_ref->ways.push_back(way);
 
+    way = new navitia::georef::Way;
+    way->idx = 4;
+    way->name = "poniatowski";
+    way->way_type = "boulevard";
+    b.data->geo_ref->ways.push_back(way);
 
-        way.name = "jean paul gaultier paris";
-        way.way_type = "rue";
-        geo_ref.add_way(way);
+    way = new navitia::georef::Way;
+    way->idx = 5;
+    way->name = "pente de Bray";
+    way->way_type = "";
+    b.data->geo_ref->ways.push_back(way);
 
+    /*
+   (2,4)       (2,4)       (2,18)       (2,54)
+     4           4           18           54
+   */
 
-        way.name = "jean jaures";
-        way.way_type = "avenue";
-        geo_ref.add_way(way);
+    way = new navitia::georef::Way;
+    way->idx = 6;
+    way->name = "jean jaures";
+    way->way_type = "rue";
+    // Ajout des numéros et les noeuds
+    nt::GeographicalCoord upper(2.0,54.0);
+    nt::GeographicalCoord lower(2.0,4.0);
 
+    navitia::georef::HouseNumber hn;
+    hn.coord = lower;
+    hn.number = 4;
+    way->add_house_number(hn);
+    v.coord = hn.coord;
+    vertex_t debut = boost::add_vertex(v, b.data->geo_ref->graph);
 
-        way.name = "poniatowski";
-        way.way_type = "boulevard";
-        geo_ref.add_way(way);
+    hn.coord.set_lon(2.0);
+    hn.coord.set_lat(8.0);
+    hn.number = 8;
+    way->add_house_number(hn);
+    v.coord = hn.coord;
+    vertex_t fin = boost::add_vertex(v, b.data->geo_ref->graph);
 
+    boost::add_edge(debut, fin, navitia::georef::Edge{way->idx, 1_s}, b.data->geo_ref->graph);
+    boost::add_edge(fin, debut, navitia::georef::Edge{way->idx, 1_s}, b.data->geo_ref->graph);
+    way->edges.push_back(std::make_pair(debut, fin));
+    way->edges.push_back(std::make_pair(fin, debut));
 
-        way.name = "pente de Bray";
-        way.way_type = "";
-        geo_ref.add_way(way);
+    hn.coord.set_lon(2.0);
+    hn.coord.set_lat(18.0);
+    hn.number = 18;
+    way->add_house_number(hn);
+    v.coord = hn.coord;
+    debut = boost::add_vertex(v, b.data->geo_ref->graph);
 
-        /*
-       (2,4)       (2,4)       (2,18)       (2,54)
-         4           4           18           54
-       */
+    boost::add_edge(fin, debut, navitia::georef::Edge{way->idx, 1_s}, b.data->geo_ref->graph);
+    boost::add_edge(debut, fin, navitia::georef::Edge{way->idx, 1_s}, b.data->geo_ref->graph);
+    way->edges.push_back(std::make_pair(fin, debut));
+    way->edges.push_back(std::make_pair(debut, fin));
 
-        way.name = "jean jaures";
-        way.way_type = "rue";
-        // Ajout des numéros et les noeuds
-        nt::GeographicalCoord upper(2.0,54.0);
-        nt::GeographicalCoord lower(2.0,4.0);
+    hn.coord= upper;
+    hn.number = 54;
+    way->add_house_number(hn);
+    v.coord = hn.coord;
+    fin = boost::add_vertex(v, b.data->geo_ref->graph);
 
-        hn.coord=lower;
-        hn.number = 4;
-        way.add_house_number(hn);
-        v.coord = hn.coord;
-        debut = boost::add_vertex(v,graph);
+    boost::add_edge(debut, fin, navitia::georef::Edge{way->idx, 1_s}, b.data->geo_ref->graph);
+    boost::add_edge(fin, debut, navitia::georef::Edge{way->idx, 1_s}, b.data->geo_ref->graph);
+    way->edges.push_back(std::make_pair(debut, fin));
+    way->edges.push_back(std::make_pair(fin, debut));
+    b.data->geo_ref->ways.push_back(way);
 
-        hn.coord.set_lon(2.0);
-        hn.coord.set_lat(8.0);
-        hn.number = 8;
-        way.add_house_number(hn);
-        v.coord = hn.coord;
-        fin = boost::add_vertex(v,graph);
+    Admin* ad = new Admin;
+    ad->name = "Quimper";
+    ad->uri = "Quimper";
+    ad->level = 8;
+    ad->postal_codes.push_back("29000");
+    ad->idx = 0;
+    ad->insee = "92232";
+    b.data->geo_ref->admins.push_back(ad);
 
-        boost::add_edge(debut, fin,e1, graph);
-        boost::add_edge(fin, debut,e1, graph);
-        way.edges.push_back(std::make_pair(debut, fin));
-        way.edges.push_back(std::make_pair(fin,debut));
+    b.manage_admin();
+    b.build_autocomplete();
 
+    result = b.data->geo_ref->find_ways("10 rue jean jaures", nbmax, false, [](int){return true;}, ghostwords);
 
-        hn.coord.set_lon(2.0);
-        hn.coord.set_lat(18.0);
-        hn.number = 18;
-        way.add_house_number(hn);
-        v.coord = hn.coord;
-        debut = boost::add_vertex(v,graph);
+    // we should have found the 10 of the rue jean jaures
+    BOOST_REQUIRE_EQUAL(result.size(), 1);
+    BOOST_CHECK_EQUAL(result[0].house_number, 10);
+    BOOST_REQUIRE(b.data->geo_ref->ways[result[0].idx]);
+    BOOST_CHECK_EQUAL(b.data->geo_ref->ways[result[0].idx]->get_label(), "jean jaures (Quimper)");
 
-        boost::add_edge(fin, debut,e1, graph);
-        boost::add_edge(debut, fin,e1, graph);
-        way.edges.push_back(std::make_pair(fin,debut));
-        way.edges.push_back(std::make_pair(debut, fin));
-
-
-        hn.coord= upper;
-        hn.number = 54;
-        way.add_house_number(hn);
-        v.coord = hn.coord;
-        fin = boost::add_vertex(v,graph);
-
-        boost::add_edge(debut, fin,e1, graph);
-        boost::add_edge(fin, debut,e1, graph);
-        way.edges.push_back(std::make_pair(debut, fin));
-        way.edges.push_back(std::make_pair(fin,debut));
-
-        geo_ref.add_way(way);
-
-        /*way.name = "jean zay";
-        way.way_type = "rue";
-        geo_ref.add_way(way);
-
-        way.name = "jean paul gaultier";
-        way.way_type = "place";
-        geo_ref.add_way(way);*/
-
-        geo_ref.init();
-        geo_ref.build_autocomplete_list();
-
-        result = geo_ref.find_ways("10 rue jean jaures", nbmax, false, [](int){return true;}, ghostwords);
-        if (result.empty())
-            result.clear();
-
+    // when we search only for jean jaures we should have the avenue, the place and the street
+    result = b.data->geo_ref->find_ways("jean jaures", nbmax, false, [](int){return true;}, ghostwords);
+    BOOST_REQUIRE_EQUAL(result.size(), 3);
+    // and none of the result should have a house number
+    for (const auto& r: result) {
+        BOOST_CHECK_EQUAL(r.house_number, -1);
     }
+}
 
 BOOST_AUTO_TEST_CASE(two_scc) {
     using namespace navitia::type;

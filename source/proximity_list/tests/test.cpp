@@ -37,6 +37,7 @@ www.navitia.io
 #include "type/data.h"
 #include "georef/georef.h"
 #include "type/pt_data.h"
+#include "type/pb_converter.h"
 
 using namespace navitia::type;
 using namespace navitia::proximitylist;
@@ -191,9 +192,11 @@ BOOST_AUTO_TEST_CASE(test_api) {
     navitia::type::GeographicalCoord c;
     c.set_lon(-1.554514);
     c.set_lat(47.218515);
-    auto result = find(c, 200,
-                    {navitia::type::Type_e::StopArea, navitia::type::Type_e::POI},
-                    "", 1, 10, 0, data, boost::posix_time::not_a_date_time);
+    navitia::PbCreator pb_creator(&data, boost::gregorian::not_a_date_time, null_time_period);
+    find(pb_creator, c, 200,
+        {navitia::type::Type_e::StopArea, navitia::type::Type_e::POI},
+         "", 1, 10, 0, data);
+    auto result = pb_creator.get_response();
     BOOST_CHECK_EQUAL(result.places_nearby().size(), 2);
     //One object out of the range
     sa = new navitia::type::StopArea();
@@ -203,9 +206,10 @@ BOOST_AUTO_TEST_CASE(test_api) {
     data.pt_data->stop_areas.push_back(sa);
     data.build_proximity_list();
     result.Clear();
-    result = find(c, 200,
-                    {navitia::type::Type_e::StopArea, navitia::type::Type_e::POI},
-                    "", 1, 10, 0, data, boost::posix_time::not_a_date_time);
+    pb_creator.init(&data, boost::gregorian::not_a_date_time, null_time_period);
+    find(pb_creator, c, 200,{navitia::type::Type_e::StopArea, navitia::type::Type_e::POI},
+                    "", 1, 10, 0, data);
+    result = pb_creator.get_response();
     BOOST_CHECK_EQUAL(result.places_nearby().size(), 2);
 }
 
@@ -227,9 +231,9 @@ BOOST_AUTO_TEST_CASE(test_api_type) {
     navitia::type::GeographicalCoord c;
     c.set_lon(-1.554514);
     c.set_lat(47.218515);
-    auto result = find(c, 200,
-                    {navitia::type::Type_e::StopArea},
-                    "", 1, 10, 0, data, boost::posix_time::not_a_date_time);
+    navitia::PbCreator pb_creator(&data, boost::gregorian::not_a_date_time, null_time_period);
+    find(pb_creator, c, 200, {navitia::type::Type_e::StopArea}, "", 1, 10, 0, data);
+    auto result = pb_creator.get_response();
     BOOST_CHECK_EQUAL(result.places_nearby().size(), 1);
 }
 
@@ -246,20 +250,20 @@ BOOST_AUTO_TEST_CASE(test_filter) {
     navitia::type::GeographicalCoord c;
     c.set_lon(-1.554514);
     c.set_lat(47.218515);
-    auto result = find(c, 200,
-                    {navitia::type::Type_e::StopArea},
-                    "stop_area.name=pouet", 1, 10, 0, data, boost::posix_time::not_a_date_time);
+    navitia::PbCreator pb_creator(&data, boost::gregorian::not_a_date_time, null_time_period);
+    find(pb_creator, c, 200, {navitia::type::Type_e::StopArea}, "stop_area.name=pouet", 1, 10, 0, data);
+    auto result = pb_creator.get_response();
     BOOST_CHECK_EQUAL(result.places_nearby().size(), 1);
     result.Clear();
-    result = find(c, 200,
-                    {navitia::type::Type_e::StopArea},
-                    "stop_area.name=paspouet", 1, 10, 0, data, boost::posix_time::not_a_date_time);
+    pb_creator.init(&data, boost::gregorian::not_a_date_time, null_time_period);
+    find(pb_creator, c, 200, {navitia::type::Type_e::StopArea}, "stop_area.name=paspouet", 1, 10, 0, data);
+    result = pb_creator.get_response();
     BOOST_CHECK_EQUAL(result.places_nearby().size(), 0);
 
     //Bad request
-    result = find(c, 200,
-                    {navitia::type::Type_e::StopArea},
-                    "stop_area.name=paspouet bachibouzouk", 1, 10, 0, data, boost::posix_time::not_a_date_time);
+    pb_creator.init(&data, boost::gregorian::not_a_date_time, null_time_period);
+    find(pb_creator, c, 200, {navitia::type::Type_e::StopArea}, "stop_area.name=paspouet bachibouzouk", 1, 10, 0, data);
+    result = pb_creator.get_response();
     BOOST_CHECK_EQUAL(result.error().id(), pbnavitia::Error::unable_to_parse);
 }
 
@@ -329,9 +333,9 @@ BOOST_AUTO_TEST_CASE(test_poi_filter) {
     navitia::type::GeographicalCoord c;
     c.set_lon(-1.554514);
     c.set_lat(47.218515);
-    auto result = find(c, 200,
-                    {navitia::type::Type_e::POI},
-                    "poi_type.uri=poi_type1", 1, 10, 0, data, boost::posix_time::not_a_date_time);
+    navitia::PbCreator pb_creator(&data, boost::gregorian::not_a_date_time, null_time_period);
+    find(pb_creator, c, 200, {navitia::type::Type_e::POI}, "poi_type.uri=poi_type1", 1, 10, 0, data);
+    auto result = pb_creator.get_response();
 
     //we want the bob and bobette pois
     BOOST_CHECK_EQUAL(result.places_nearby().size(), 2);

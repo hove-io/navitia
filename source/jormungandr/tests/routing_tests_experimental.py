@@ -71,6 +71,18 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
         j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
         eq_(j_departure - timedelta(seconds=1), dt)
 
+    def test_journey_with_different_fallback_modes(self):
+        """
+        Test when departure/arrival fallback modes are different
+        """
+        query = journey_basic_query + "&first_section_mode[]=walking&last_section_mode[]=car&debug=true"
+        response = self.query_region(query)
+        check_journeys(response)
+        jrnys = response['journeys']
+        assert jrnys
+        assert jrnys[0]['sections'][0]['mode'] == 'walking'
+        assert jrnys[0]['sections'][-1]['mode'] == 'car'
+
     def test_best_filtering(self):
         """
         This feature is no longer supported"""
@@ -97,6 +109,44 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
         """
         pass
 
+    def test_street_network_routing_matrix(self):
+
+        from jormungandr import i_manager
+        from navitiacommon import response_pb2
+
+        instance = i_manager.instances['main_routing_test']
+        origin = instance.georef.place("stopB")
+        assert origin
+
+        destination = instance.georef.place("stopA")
+        assert destination
+
+        max_duration = 18000
+        mode = 'walking'
+        kwargs = {
+            "walking": instance.walking_speed,
+            "bike": instance.bike_speed,
+            "car": instance.car_speed,
+            "bss": instance.bss_speed,
+        }
+        request = {
+            "walking_speed": instance.walking_speed,
+            "bike_speed": instance.bike_speed,
+            "car_speed": instance.car_speed,
+            "bss_speed": instance.bss_speed,
+        }
+        resp = instance.street_network_service.get_street_network_routing_matrix([origin], [destination],
+                                                                                 mode, max_duration, request, **kwargs)
+        assert len(resp.rows[0].routing_response) == 1
+        assert resp.rows[0].routing_response[0].duration == 107
+        assert resp.rows[0].routing_response[0].routing_status == response_pb2.reached
+
+        max_duration = 106
+        resp = instance.street_network_service.get_street_network_routing_matrix([origin], [destination],
+                                                                                 mode, max_duration, request, **kwargs)
+        assert len(resp.rows[0].routing_response) == 1
+        assert resp.rows[0].routing_response[0].duration == 0
+        assert resp.rows[0].routing_response[0].routing_status == response_pb2.unreached
 
 @config({"scenario": "experimental"})
 class TestExperimentalJourneysWithPtref(JourneysWithPtref, AbstractTestFixture):
@@ -105,11 +155,6 @@ class TestExperimentalJourneysWithPtref(JourneysWithPtref, AbstractTestFixture):
 
 @config({"scenario": "experimental"})
 class TestExperimentalOnBasicRouting(OnBasicRouting, AbstractTestFixture):
-
-    @skip("temporarily disabled")
-    def test_sp_to_sp(self):
-        super(OnBasicRouting, self).test_sp_to_sp()
-
     @skip("temporarily disabled")
     def test_isochrone(self):
-        super(OnBasicRouting, self).test_isochrone()
+        super(TestExperimentalOnBasicRouting, self).test_isochrone()

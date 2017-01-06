@@ -562,3 +562,36 @@ def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
         job.state = 'failed'
         models.db.session.commit()
         raise
+
+
+@celery.task(bind=True)
+def stops2mimir(self, instance_config, input, job_id, dataset_uid):
+    """
+    launch stops2mimir
+
+    Note: this is temporary, this will be done by tartare when tartare will be available
+    """
+    job = models.Job.query.get(job_id)
+    instance = job.instance
+
+    logger = get_instance_logger(instance)
+    cnx_string = current_app.config['MIMIR_URL']
+
+    working_directory = os.path.dirname(input)
+
+    stops_file = os.path.join(working_directory, 'stops.txt')
+
+    # Note: the dataset is for the moment the instance name, we'll need to change this when we'll aggregate
+    argv = ['--input', stops_file,
+            '--connection-string', cnx_string,
+            '--dataset', instance_config.name]
+
+    try:
+        res = launch_exec('stops2mimir', argv, logger)
+        if res != 0:
+            raise ValueError('stops2mimir failed')
+    except:
+        logger.exception('')
+        job.state = 'failed'
+        models.db.session.commit()
+        raise

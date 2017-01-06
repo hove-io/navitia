@@ -71,7 +71,8 @@ BOOST_AUTO_TEST_CASE(ok_before_and_after_disruption) {
     to->set_access_duration(0);
 
     // we ask for a journey
-    pbnavitia::Response resp = w.dispatch(req);
+    w.dispatch(req);
+    pbnavitia::Response resp = w.pb_creator.get_response();
     BOOST_REQUIRE(resp.journeys_size() != 0);
     const auto nb_before = resp.journeys_size();
 
@@ -81,6 +82,7 @@ BOOST_AUTO_TEST_CASE(ok_before_and_after_disruption) {
     data_manager.set_data(data_cloned);
 
     // we ask for a journey, we should have the same thing
-    resp = w.dispatch(req);
+    w.dispatch(req);
+    resp = w.pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), nb_before);
 }

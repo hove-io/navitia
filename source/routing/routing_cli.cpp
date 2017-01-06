@@ -92,7 +92,7 @@ int main(int argc, char **argv) {
                 continue;
             }
             const std::string id = splitted_line[1];
-            navitia::PbCreator pb_creator(compute_opt.data, pt::not_a_date_time, null_time_period);
+            navitia::PbCreator pb_creator(&compute_opt.data, pt::not_a_date_time, null_time_period);
             #define SHOW_ID_CLI(type_name, collection_name) \
             auto collection_name##_map = compute_opt.data.pt_data->collection_name##_map;\
             if ( collection_name##_map.find(id) != collection_name##_map.end()) {\

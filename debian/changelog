@@ -1,3 +1,37 @@
+navitia2 (2.23.0) unstable; urgency=low
+
+  * Experimental: Coverage without georef  <https://github.com/CanalTP/navitia/pull/1903>
+  * routing: fix reverse heat_maps (to somewhere)  <https://github.com/CanalTP/navitia/pull/1913>
+  * Jormungandr: fix performance regression caused by gevent monkey patch  <https://github.com/CanalTP/navitia/pull/1889>
+  * Tyr: add default value for import_stops_to_mimir  <https://github.com/CanalTP/navitia/pull/1919>
+  * Experimental: compute journeys while from/to are POIs  <https://github.com/CanalTP/navitia/pull/1914>
+  * Jormun: refactor admin marshall from bragi  <https://github.com/CanalTP/navitia/pull/1918>
+  * Jormungandr: activate autocomplete on instance  <https://github.com/CanalTP/navitia/pull/1911>
+  * Jormun: trace event in newrelic in case of error with realtime proxy  <https://github.com/CanalTP/navitia/pull/1916>
+  * Tyr: import stops in global autocomplete  <https://github.com/CanalTP/navitia/pull/1909>
+  * Jormun: marshall stop_area from bragi  <https://github.com/CanalTP/navitia/pull/1910>
+  * Tyr: one migration was added in between  <https://github.com/CanalTP/navitia/pull/1912>
+  * jormungandr: Manages no_solution messages in experimental scenario  <https://github.com/CanalTP/navitia/pull/1907>
+  * Kraken: Error on journey request with arrival before due to double use of speed_factor and trimmed float value of duration  <https://github.com/CanalTP/navitia/pull/1904>
+  * Jormungandr: fix no reverse geocoding in experimental  <https://github.com/CanalTP/navitia/pull/1900>
+  * Tyr: remove call to osm2ed in webservice  <https://github.com/CanalTP/navitia/pull/1902>
+  * kraken: fix disable feedpublisher  <https://github.com/CanalTP/navitia/pull/1901>
+  * Experimental: fix direct path key not found in the pool  <https://github.com/CanalTP/navitia/pull/1898>
+  * CMake: remove boost UT dependency for non tests  <https://github.com/CanalTP/navitia/pull/1895>
+  * kraken: reuse protobuf response  <https://github.com/CanalTP/navitia/pull/1890>
+  * Jormun: Admin to admin in experimental  <https://github.com/CanalTP/navitia/pull/1886>
+  * Jormungandr: forward uri when not findable  <https://github.com/CanalTP/navitia/pull/1885>
+  * Kraken: Fix partial terminus  <https://github.com/CanalTP/navitia/pull/1878>
+  * jormun: add is_open_service in /status  <https://github.com/CanalTP/navitia/pull/1883>
+  * jormun: migrate to serpy for api already supported  <https://github.com/CanalTP/navitia/pull/1888>
+  * tyr: add a command that return the last imported dataset  <https://github.com/CanalTP/navitia/pull/1887>
+  * Kraken: use approx computation  <https://github.com/CanalTP/navitia/pull/1884>
+  * Jormun: usage of serpy in place of marshaller from flask  <https://github.com/CanalTP/navitia/pull/1771>
+  * Doc: fix build script for ubuntu 16.04  <https://github.com/CanalTP/navitia/pull/1881>
+  * Cmake: add a target to get all ed executables  <https://github.com/CanalTP/navitia/pull/1867>
+
+ -- patoche <patrick.degeilh@canaltp.fr>  Fri, 06 Jan 2017 11:01:16 +0100
+
 navitia2 (2.22.4) unstable; urgency=low
 
   * Kraken: fix disruption update crash #1899

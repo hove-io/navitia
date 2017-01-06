@@ -47,6 +47,7 @@ www.navitia.io
 #include "georef/georef.h"
 #include "routing/raptor.h"
 #include "ed/build_helper.h"
+#include "type/pb_converter.h"
 
 namespace pt = boost::posix_time;
 using namespace navitia::autocomplete;
@@ -657,8 +658,11 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_and_SA_test) {
 
     type_filter.push_back(navitia::type::Type_e::StopArea);
     type_filter.push_back(navitia::type::Type_e::Admin);
-    pbnavitia::Response resp = navitia::autocomplete::autocomplete("quimper", type_filter , 1, false, 10, admins, 0,
-                                                                   *(b.data), boost::gregorian::not_a_date_time);
+
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "quimper", type_filter , 1, 10, admins, 0, *(b.data));
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.places_size(), 10);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
@@ -672,8 +676,9 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_and_SA_test) {
     BOOST_CHECK_EQUAL(resp.places(8).uri(), "Luther King");
     BOOST_CHECK_EQUAL(resp.places(9).uri(), "Marcel Paul");
 
-    resp = navitia::autocomplete::autocomplete("qui", type_filter , 1, false, 10, admins, 0, *(b.data),
-                                               boost::gregorian::not_a_date_time);
+    pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "qui", type_filter , 1, 10, admins, 0, *(b.data));
+    resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.places_size(), 10);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
     BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
@@ -717,8 +722,11 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_SA_test) {
 
     type_filter.push_back(navitia::type::Type_e::StopArea);
     type_filter.push_back(navitia::type::Type_e::Admin);
-    pbnavitia::Response resp = navitia::autocomplete::autocomplete("quimper", type_filter , 1, false, 5, admins, 0,
-                                                                   *(b.data), boost::gregorian::not_a_date_time);
+
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "quimper", type_filter , 1, 5, admins, 0, *(b.data));
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.places_size(), 5);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
@@ -749,19 +757,21 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_SA_and_Address_test) {
     b.sa("Napoleon III", 0, 0);
     b.sa("MPT kerfeunteun", 0, 0);
     b.data->pt_data->index();
-    Way w;
-    w.idx = 0;
-    w.name = "rue DU TREGOR";
-    w.uri = w.name;
-    b.data->geo_ref->add_way(w);
-    w.name = "rue VIS";
-    w.uri = w.name;
-    w.idx = 1;
-    b.data->geo_ref->add_way(w);
-    w.idx = 2;
-    w.name = "quai NEUF";
-    w.uri = w.name;
-    b.data->geo_ref->add_way(w);
+    Way* w = new Way;
+    w->idx = 0;
+    w->name = "rue DU TREGOR";
+    w->uri = w->name;
+    b.data->geo_ref->ways.push_back(w);
+    w = new navitia::georef::Way;
+    w->name = "rue VIS";
+    w->uri = w->name;
+    w->idx = 1;
+    b.data->geo_ref->ways.push_back(w);
+    w = new navitia::georef::Way;
+    w->idx = 2;
+    w->name = "quai NEUF";
+    w->uri = w->name;
+    b.data->geo_ref->ways.push_back(w);
 
     Admin* ad = new Admin;
     ad->name = "Quimper";
@@ -775,13 +785,16 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_SA_and_Address_test) {
 
     type_filter.push_back(navitia::type::Type_e::StopArea);
     type_filter.push_back(navitia::type::Type_e::Admin);
-    pbnavitia::Response resp = navitia::autocomplete::autocomplete("quimper", type_filter , 1, false, 10, admins, 0,
-                                                                   *(b.data), boost::gregorian::not_a_date_time);
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "quimper", type_filter , 1, 10, admins, 0, *(b.data));
+    pbnavitia::Response resp = pb_creator.get_response();
     //Here we want only Admin and StopArea
     BOOST_REQUIRE_EQUAL(resp.places_size(), 7);
     type_filter.push_back(navitia::type::Type_e::Address);
-    resp = navitia::autocomplete::autocomplete("quimper", type_filter , 1, false, 10, admins, 0, *(b.data),
-                                               boost::gregorian::not_a_date_time);
+    pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "quimper", type_filter , 1, 10, admins, 0, *(b.data));
+    resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.places_size(), 10);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
@@ -834,15 +847,18 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_test) {
 
     type_filter = {navitia::type::Type_e::Network, navitia::type::Type_e::CommercialMode,
                   navitia::type::Type_e::Line, navitia::type::Type_e::Route};
-    pbnavitia::Response resp = navitia::autocomplete::autocomplete("base", type_filter , 1, false, 10, admins, 0,
-                                                                   *(b.data), boost::gregorian::not_a_date_time);
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "base", type_filter , 1, 10, admins, 0, *(b.data));
+    pbnavitia::Response resp = pb_creator.get_response();
     //The result contains only network
     BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type(), pbnavitia::NETWORK);
 
     // Call with "Tram" and &type[]=network&type[]=mode&type[]=line&type[]=route
-    resp = navitia::autocomplete::autocomplete("Tram", type_filter , 1, false, 10, admins, 0, *(b.data),
-                                               boost::gregorian::not_a_date_time);
+    pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "Tram", type_filter , 1, 10, admins, 0, *(b.data));
+    resp = pb_creator.get_response();
     //In the result the first line is Mode and the second is line
     BOOST_REQUIRE_EQUAL(resp.places_size(), 4);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type(), pbnavitia::COMMERCIAL_MODE);
@@ -851,8 +867,9 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_test) {
     BOOST_CHECK_EQUAL(resp.places(3).embedded_type(), pbnavitia::ROUTE);
 
     // Call with "line" and &type[]=network&type[]=mode&type[]=line&type[]=route
-    resp = navitia::autocomplete::autocomplete("line", type_filter , 1, false, 10, admins, 0, *(b.data),
-                                               boost::gregorian::not_a_date_time);
+    pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "line", type_filter , 1, 10, admins, 0, *(b.data));
+    resp = pb_creator.get_response();
     //In the result the first line is line and the others are the routes
     BOOST_REQUIRE_EQUAL(resp.places_size(), 3);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type(), pbnavitia::LINE);
@@ -915,16 +932,19 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_stop_area_te
                   navitia::type::Type_e::Line, navitia::type::Type_e::Route,
                   navitia::type::Type_e::StopArea};
     //Call with q=base
-    pbnavitia::Response resp = navitia::autocomplete::autocomplete("base", type_filter , 1, false, 10, admins, 0,
-                                                                   *(b.data), boost::gregorian::not_a_date_time);
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "base", type_filter , 1, 10, admins, 0, *(b.data));
+    pbnavitia::Response resp = pb_creator.get_response();
     //The result contains network and stop_area
     BOOST_REQUIRE_EQUAL(resp.places_size(), 2);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type(), pbnavitia::NETWORK);
     BOOST_CHECK_EQUAL(resp.places(1).embedded_type(), pbnavitia::STOP_AREA);
 
     //Call with q=met
-    resp = navitia::autocomplete::autocomplete("met", type_filter , 1, false, 10, admins, 0, *(b.data),
-                                               boost::gregorian::not_a_date_time);
+    pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "met", type_filter , 1, 10, admins, 0, *(b.data));
+    resp = pb_creator.get_response();
     //The result contains mode, stop_area, line
     BOOST_REQUIRE_EQUAL(resp.places_size(), 5);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type(), pbnavitia::COMMERCIAL_MODE);
@@ -934,8 +954,9 @@ BOOST_AUTO_TEST_CASE(autocomplete_pt_object_Network_Mode_Line_Route_stop_area_te
     BOOST_CHECK_EQUAL(resp.places(4).embedded_type(), pbnavitia::ROUTE);
 
     //Call with q=chat
-    resp = navitia::autocomplete::autocomplete("chat", type_filter , 1, false, 10, admins, 0, *(b.data),
-                                               boost::gregorian::not_a_date_time);
+    pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "chat", type_filter , 1, 10, admins, 0, *(b.data));
+    resp = pb_creator.get_response();
     //The result contains 2 stop_areas, one line and 2 routes
     BOOST_REQUIRE_EQUAL(resp.places_size(), 5);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type(), pbnavitia::STOP_AREA);
@@ -1094,8 +1115,10 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_SA_temp_test) {
 
     type_filter.push_back(navitia::type::Type_e::StopArea);
     type_filter.push_back(navitia::type::Type_e::Admin);
-    pbnavitia::Response resp = navitia::autocomplete::autocomplete("Sante", type_filter , 1, false, 15, admins, 0,
-                                                                   *(b.data), boost::gregorian::not_a_date_time);
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "Sante", type_filter , 1, 15, admins, 0, *(b.data));
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.places_size(), 12);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
@@ -1241,8 +1264,10 @@ BOOST_AUTO_TEST_CASE(autocomplete_with_multi_postal_codes_test) {
 
     type_filter.push_back(navitia::type::Type_e::StopArea);
     type_filter.push_back(navitia::type::Type_e::Admin);
-    pbnavitia::Response resp = navitia::autocomplete::autocomplete("Sante", type_filter , 1, false, 15, admins, 0,
-                                                                   *(b.data), boost::gregorian::not_a_date_time);
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "Sante", type_filter , 1, 15, admins, 0, *(b.data));
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::STOP_AREA);
@@ -1276,8 +1301,10 @@ BOOST_AUTO_TEST_CASE(autocomplete_with_multi_postal_codes_alphanumeric_test) {
 
     type_filter.push_back(navitia::type::Type_e::StopArea);
     type_filter.push_back(navitia::type::Type_e::Admin);
-    pbnavitia::Response resp = navitia::autocomplete::autocomplete("Sante", type_filter , 1, false, 15, admins, 0,
-                                                                   *(b.data), boost::gregorian::not_a_date_time);
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "Sante", type_filter , 1, 15, admins, 0, *(b.data));
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::STOP_AREA);
@@ -1308,8 +1335,10 @@ BOOST_AUTO_TEST_CASE(autocomplete_without_postal_codes_test) {
 
     type_filter.push_back(navitia::type::Type_e::StopArea);
     type_filter.push_back(navitia::type::Type_e::Admin);
-    pbnavitia::Response resp = navitia::autocomplete::autocomplete("Sante", type_filter , 1, false, 15, admins, 0,
-                                                                   *(b.data), boost::gregorian::not_a_date_time);
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "Sante", type_filter , 1, 15, admins, 0, *(b.data));
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::STOP_AREA);
@@ -1362,8 +1391,10 @@ BOOST_AUTO_TEST_CASE(autocomplete_with_multi_postal_codes_testAA) {
 
     b.build_autocomplete();
     type_filter.push_back(navitia::type::Type_e::Address);
-    pbnavitia::Response resp = navitia::autocomplete::autocomplete("Sante 37000", type_filter , 1, false, 10, admins, 0,
-                                                                   *(b.data), boost::gregorian::not_a_date_time);
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "Sante 37000", type_filter , 1, 10, admins, 0, *(b.data));
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADDRESS);
@@ -1372,8 +1403,9 @@ BOOST_AUTO_TEST_CASE(autocomplete_with_multi_postal_codes_testAA) {
     BOOST_REQUIRE_EQUAL(resp.places(0).address().administrative_regions(0).label(), "Tours (37000-37200)");
     BOOST_REQUIRE_EQUAL(resp.places(0).address().administrative_regions(0).zip_code(), "37000;37100;37200");
 
-    resp = navitia::autocomplete::autocomplete("Sante 44000", type_filter , 1, false, 10, admins, 0, *(b.data),
-                                               boost::gregorian::not_a_date_time);
+    pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "Sante 44000", type_filter , 1, 10, admins, 0, *(b.data));
+    resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADDRESS);
@@ -1384,30 +1416,32 @@ BOOST_AUTO_TEST_CASE(autocomplete_with_multi_postal_codes_testAA) {
 
     type_filter.clear();
     type_filter.push_back(navitia::type::Type_e::Admin);
-    resp = navitia::autocomplete::autocomplete("37000", type_filter , 1, false, 10, admins, 0, *(b.data),
-                                               boost::gregorian::not_a_date_time);
+    pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "37000", type_filter , 1, 10, admins, 0, *(b.data));
+    resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
     BOOST_REQUIRE_EQUAL(resp.places(0).quality(), 70);
     BOOST_REQUIRE_EQUAL(resp.places(0).administrative_region().label(), "Tours (37000-37200)");
     BOOST_REQUIRE_EQUAL(resp.places(0).administrative_region().zip_code(), "37000;37100;37200");
 
-    resp = navitia::autocomplete::autocomplete("37100", type_filter , 1, false, 10, admins, 0, *(b.data),
-                                               boost::gregorian::not_a_date_time);
+    pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "37100", type_filter , 1, 10, admins, 0, *(b.data));
+    resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
     BOOST_REQUIRE_EQUAL(resp.places(0).quality(), 70);
     BOOST_REQUIRE_EQUAL(resp.places(0).administrative_region().label(), "Tours (37000-37200)");
     BOOST_REQUIRE_EQUAL(resp.places(0).administrative_region().zip_code(), "37000;37100;37200");
 
-    resp = navitia::autocomplete::autocomplete("37200", type_filter , 1, false, 10, admins, 0, *(b.data),
-                                               boost::gregorian::not_a_date_time);
+    pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "37200", type_filter , 1, 10, admins, 0, *(b.data));
+    resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
     BOOST_REQUIRE_EQUAL(resp.places(0).quality(), 70);
     BOOST_REQUIRE_EQUAL(resp.places(0).administrative_region().label(), "Tours (37000-37200)");
     BOOST_REQUIRE_EQUAL(resp.places(0).administrative_region().zip_code(), "37000;37100;37200");
-
 }
 
 BOOST_AUTO_TEST_CASE(regex_toknize_with_synonyms_having_ghostword_tests){
@@ -1513,8 +1547,10 @@ BOOST_AUTO_TEST_CASE(autocomplete_with_ghostword_test) {
     type_filter.push_back(navitia::type::Type_e::Admin);
     type_filter.push_back(navitia::type::Type_e::StopArea);
 
-    pbnavitia::Response resp = navitia::autocomplete::autocomplete("gare beaune", type_filter , 1, false, 10, admins, 0,
-                                                                   *(b.data), boost::gregorian::not_a_date_time);
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "gare beaune", type_filter , 1, 10, admins, 0, *(b.data));
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.places_size(), 3);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::STOP_AREA);
@@ -1522,8 +1558,9 @@ BOOST_AUTO_TEST_CASE(autocomplete_with_ghostword_test) {
     BOOST_REQUIRE_EQUAL(resp.places(0).stop_area().administrative_regions(0).label(), "Beaune (21200)");
     BOOST_REQUIRE_EQUAL(resp.places(0).stop_area().administrative_regions(0).zip_code(), "21200");
 
-    resp = navitia::autocomplete::autocomplete("gare de beaune", type_filter , 1, false, 10, admins, 0,
-                                               *(b.data), boost::gregorian::not_a_date_time);
+    pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "gare de beaune", type_filter , 1, 10, admins, 0, *(b.data));
+    resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.places_size(), 3);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::STOP_AREA);
     BOOST_REQUIRE_EQUAL(resp.places(0).stop_area().administrative_regions().size(), 1);
@@ -1697,8 +1734,10 @@ BOOST_AUTO_TEST_CASE(autocomplete_admin_filtering_tests) {
     };
 
     std::vector<std::string> admins = {""}; // no filtering on the admin
-    auto resp = navitia::autocomplete::autocomplete("bob", type_filter, 1, false, 10, admins, 0, *(b.data),
-                                                    boost::gregorian::not_a_date_time);
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "bob", type_filter, 1, 10, admins, 0, *(b.data));
+    auto resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.places_size(), 3);
     BOOST_CHECK_EQUAL(resp.places(0).uri(), "BobVille");
@@ -1706,9 +1745,9 @@ BOOST_AUTO_TEST_CASE(autocomplete_admin_filtering_tests) {
     BOOST_CHECK_EQUAL(resp.places(2).uri(), "bob");
 
     admins = {"BobVille"};
-    resp = navitia::autocomplete::autocomplete("bob", type_filter, 1, false, 10, admins, 0, *(b.data),
-                                               boost::gregorian::not_a_date_time);
-
+    pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "bob", type_filter, 1, 10, admins, 0, *(b.data));
+    resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.places_size(), 2);
     // we should only find the admin and bob
     BOOST_CHECK_EQUAL(resp.places(0).uri(), "BobVille");
@@ -1726,19 +1765,21 @@ BOOST_AUTO_TEST_CASE(test_ways){
     ac.build();
 
     navitia::georef::GeoRef geo_ref;
-    navitia::georef::Way way;
-    way.name = "rue CERNAVODA (Saint-Sébastien-sur-Loire)";
-    way.idx = 0;
-    way.uri = "0";
-    geo_ref.add_way(way);
-    way.name = "rue De LA BOURDAILLERIE (Saint-Sébastien-sur-Loire)";
-    way.idx = 1;
-    way.uri = "1";
-    geo_ref.add_way(way);
-    way.name = "rue DE LA LOIRE (Saint-Sébastien-sur-Loire)";
-    way.idx = 2;
-    way.uri = "2";
-    geo_ref.add_way(way);
+    auto* way = new navitia::georef::Way;
+    way->name = "rue CERNAVODA (Saint-Sébastien-sur-Loire)";
+    way->idx = 0;
+    way->uri = "0";
+    geo_ref.ways.push_back(way);
+    way = new navitia::georef::Way;
+    way->name = "rue De LA BOURDAILLERIE (Saint-Sébastien-sur-Loire)";
+    way->idx = 1;
+    way->uri = "1";
+    geo_ref.ways.push_back(way);
+    way = new navitia::georef::Way;
+    way->name = "rue DE LA LOIRE (Saint-Sébastien-sur-Loire)";
+    way->idx = 2;
+    way->uri = "2";
+    geo_ref.ways.push_back(way);
 
     auto res = ac.find_complete_way("rue de la loire saint seb", nbmax, [](int){return true;}, ghostwords, geo_ref);
     BOOST_REQUIRE_EQUAL(res.size(), 3);
@@ -1855,14 +1896,17 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_piquet) {
     type_filter.push_back(navitia::type::Type_e::StopArea);
     type_filter.push_back(navitia::type::Type_e::Admin);
     //Appel avec search type 0 -> match total
-    pbnavitia::Response resp = navitia::autocomplete::autocomplete("la motte piquet", type_filter , 1, false, 5, admins, 0,
-                                                                   *(b.data), boost::gregorian::not_a_date_time);
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "la motte piquet", type_filter , 1, 5, admins, 0, *(b.data));
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.places_size(), 0);
 
     //Appel avec search type 1 -> match n-gram
-    resp = navitia::autocomplete::autocomplete("la motte piquet", type_filter , 1, false, 5, admins, 1,
-                                                                       *(b.data), boost::gregorian::not_a_date_time);
+    pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "la motte piquet", type_filter , 1, 5, admins, 1, *(b.data));
+    resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
     BOOST_CHECK_EQUAL(resp.places(0).uri(), "gare la motte picquet");
 }
@@ -1893,8 +1937,10 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_orleans) {
     type_filter.push_back(navitia::type::Type_e::StopArea);
     type_filter.push_back(navitia::type::Type_e::Admin);
     //Appel avec search type 0 -> match total
-    pbnavitia::Response resp = navitia::autocomplete::autocomplete("Porte d’Orléans", type_filter , 1, false, 5, admins, 0,
-                                                                   *(b.data), boost::gregorian::not_a_date_time);
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "Porte d’Orléans", type_filter , 1, 5, admins, 0, *(b.data));
+    pbnavitia::Response resp = pb_creator.get_response();
 
     BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
     BOOST_CHECK_EQUAL(resp.places(0).uri(), "Porte d'Orléans");

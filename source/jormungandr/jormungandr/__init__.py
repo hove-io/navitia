@@ -72,8 +72,7 @@ db.init_app(app)
 cache = Cache(app, config=app.config['CACHE_CONFIGURATION'])
 
 if app.config['AUTOCOMPLETE'] is not None:
-    global_autocomplete = utils.create_object(app.config['AUTOCOMPLETE']['class_path'],
-                                              **app.config['AUTOCOMPLETE']['kwargs'])
+    global_autocomplete = utils.create_object(app.config['AUTOCOMPLETE'])
 else:
     global_autocomplete = None
 

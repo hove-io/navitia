@@ -200,9 +200,8 @@ BOOST_AUTO_TEST_CASE(heat_map_test) {
     const auto body = R"(],"lines":[{"cell_lon":)";
     std::size_t found_body = isochrone.find(body);
     BOOST_CHECK(found_body != std::string::npos);
-#if BOOST_VERSION >= 105500
     auto distances = init_distance(*b.data->geo_ref, stop_points, init_dt, raptor,
-                                   mode, E, true, bound, speed, max_duration);
+                                   mode, E, true, bound, speed);
     auto heat_map = fill_heat_map(box,  height_step, width_step, *b.data->geo_ref,
                                   min_dist,  max_duration, speed, distances, step);
     std::vector<navitia::time_duration> result;
@@ -211,11 +210,10 @@ BOOST_AUTO_TEST_CASE(heat_map_test) {
             result.push_back(heat_map.body[i].second[j]);
         }
     }
-    BOOST_CHECK(result[0].total_seconds() == 5420);
-    BOOST_CHECK(result[1].total_seconds() == 5462);
-    BOOST_CHECK(result[2].total_seconds() == 5504);
+    BOOST_CHECK_EQUAL(result[0].total_seconds(), 236);
+    BOOST_CHECK_EQUAL(result[1].total_seconds(), 194);
+    BOOST_CHECK_EQUAL(result[2].total_seconds(), 152);
     for (size_t i = 3; i < result.size(); i++){
         BOOST_CHECK(result[i].is_pos_infinity());
     }
-#endif
 }

@@ -92,13 +92,13 @@ class TestPtRef(AbstractTestFixture):
         feed_publishers = response["feed_publishers"]
         for feed_publisher in feed_publishers:
             is_valid_feed_publisher(feed_publisher)
-        feed_publisher = feed_publishers[0]
+        feed_publisher = feed_publishers[1]
         assert (feed_publisher["id"] == "c1")
         assert (feed_publisher["name"] == "name-c1")
         assert (feed_publisher["license"] == "ls-c1")
         assert (feed_publisher["url"] == "ws-c1")
 
-        feed_publisher = feed_publishers[1]
+        feed_publisher = feed_publishers[0]
         assert (feed_publisher["id"] == "builder")
         assert (feed_publisher["name"] == "canal tp")
         assert (feed_publisher["license"] == "ODBL")

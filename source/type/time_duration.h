@@ -243,6 +243,10 @@ public:
         return time_duration(ticks_.as_number() / divisor);
     }
 
+    double total_fractional_seconds() const {
+        return double(ticks()) / ticks_per_second();
+    }
+
   private:
     explicit time_duration(impl_type tick_count) :
       boost::date_time::time_duration<time_duration, time_res_traits>(tick_count)

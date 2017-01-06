@@ -52,9 +52,10 @@ krakens_dir = os.environ['KRAKEN_BUILD_DIR'] + '/tests'
 
 
 class FakeModel(object):
-    def __init__(self, priority, is_free, scenario='default'):
+    def __init__(self, priority, is_free, is_open_data, scenario='default'):
         self.priority = priority
         self.is_free = is_free
+        self.is_open_data = is_open_data
         self.scenario = scenario
 
 
@@ -101,12 +102,9 @@ class AbstractTestFixture(object):
         for name in cls.krakens_pool:
             instance_config = {
                 "key": name,
-                "zmq_socket": "ipc:///tmp/{instance_name}".format(instance_name=name),
-                "realtime_proxies": cls.data_sets[name].get('proxy_conf', [])
+                "zmq_socket": "ipc:///tmp/{instance_name}".format(instance_name=name)
             }
-            street_network = cls.data_sets[name].get('street_network', None)
-            if street_network:
-                instance_config['street_network'] = street_network
+            instance_config.update(cls.data_sets[name].get('instance_config', {}))
             with open(os.path.join(krakens_dir, name) + '.json', 'w') as f:
                 logging.debug("writing ini file {} for {}".format(f.name, name))
                 f.write(json.dumps(instance_config, indent=4))
@@ -130,10 +128,11 @@ class AbstractTestFixture(object):
             priority = cls.data_sets[name].get('priority', 0)
             logging.info('instance %s has priority %s', name, priority)
             is_free = cls.data_sets[name].get('is_free', False)
+            is_open_data = cls.data_sets[name].get('is_open_data', False)
             scenario = cls.data_sets[name].get('scenario', 'default')
             cls.mocks.append(mock.patch.object(i_manager.instances[name],
                                                'get_models',
-                                               return_value=FakeModel(priority, is_free, scenario)))
+                                               return_value=FakeModel(priority, is_free, is_open_data, scenario)))
 
         for m in cls.mocks:
             m.start()

@@ -625,11 +625,12 @@ def is_valid_section(section, query):
             assert dur >= 0
             total_duration += dur
 
-        assert total_duration == section['duration']
+        assert abs(total_duration - section['duration']) <= 0.5 * len(section['path']) + 1
 
     #TODO check geojson
     #TODO check stop_date_times
     #TODO check from/to
+
 
 
 def is_valid_ticket(ticket, tester):
@@ -1071,6 +1072,8 @@ def is_valid_disruption(disruption, chaos_disrup=True):
 
 s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset
 r_coord = "0.00188646;0.00071865"  # coordinate of R in the dataset
+stopA_coord = "0.00107797;0.00071865"
+stopB_coord = "0.0000898312;0.00026949"
 
 #default journey query used in various test
 journey_basic_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
@@ -1117,6 +1120,23 @@ def is_valid_stop_date_time(stop_date_time):
     assert get_valid_datetime(stop_date_time['base_departure_date_time'])
     get_not_null(stop_date_time, 'base_arrival_date_time')
     assert get_valid_datetime(stop_date_time['base_arrival_date_time'])
+
+
+def is_valid_autocomplete(response, depth, mandatory_links=True):
+    if mandatory_links:
+        links = get_not_null(response, 'links')
+        for link in links:
+            assert 'href' in link
+            assert 'rel' in link
+            assert 'templated' in link
+    places = get_not_null(response, 'places')
+
+    for place in places:
+        is_valid_place(place, depth_check=depth)
+
+
+def is_valid_global_autocomplete(response, depth):
+    return is_valid_autocomplete(response, depth, mandatory_links=False)
 
 
 def get_used_vj(response):

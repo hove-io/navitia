@@ -64,23 +64,11 @@ def valid_autocomplete_with_multi_object(response):
     assert places[8]['embedded_type'] == 'address'
     assert places[9]['embedded_type'] == 'address'
 
+
 def is_response_empty(response):
     """response is empty"""
     assert len(response['links']) == 0
     assert 'places' not in response
-
-def is_valid_autocomplete(response, depth):
-    links = get_not_null(response, 'links')
-    places = get_not_null(response, 'places')
-
-    for link in links:
-        assert 'href' in link
-        assert 'rel' in link
-        assert 'templated' in link
-
-    for place in places:
-        if place['embedded_type'] == 'stop_area':
-            is_valid_stop_area(get_not_null(place, "stop_area"), depth-1)
 
 
 @dataset({"main_autocomplete_test": {}})

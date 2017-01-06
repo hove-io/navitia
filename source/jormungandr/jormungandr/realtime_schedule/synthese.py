@@ -105,18 +105,23 @@ class Synthese(RealtimeProxy):
         """
         try:
             if not self.rate_limiter.acquire(self.rt_system_id, block=False):
+                self.record_external_failure('maximum rate reached')
                 return None  #this should not be cached :(
             return self.breaker.call(requests.get, url, timeout=self.timeout)
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Synthese RT service dead, using base '
                                               'schedule (error: {}'.format(e))
+            self.record_external_failure('circuit breaker open')
         except requests.Timeout as t:
             logging.getLogger(__name__).error('Synthese RT service timeout, using base '
                                               'schedule (error: {}'.format(t))
+            self.record_external_failure('timeout')
         except redis.ConnectionError:
             logging.getLogger(__name__).exception('there is an error with Redis')
-        except:
+            self.record_external_failure('redis error')
+        except Exception as e:
             logging.getLogger(__name__).exception('Synthese RT error, using base schedule')
+            self.record_external_failure(str(e))
         return None
 
     def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None):
@@ -132,6 +137,7 @@ class Synthese(RealtimeProxy):
             # TODO better error handling, the response might be in 200 but in error
             logging.getLogger(__name__).error('Synthese RT service unavailable, impossible to query : {}'
                                               .format(r.url))
+            self.record_external_failure('non 200 response')
             return None
 
         logging.getLogger(__name__).debug("synthese response: {}".format(r.text))
@@ -150,6 +156,7 @@ class Synthese(RealtimeProxy):
             # one a the id is missing, we'll not find any realtime
             logging.getLogger(__name__).debug('missing realtime id for {obj}: stop code={s}'.
                                               format(obj=route_point, s=stop_id))
+            self.record_internal_failure('missing id')
             return None
 
         count_param = '&rn={c}'.format(c=count) if count else ''

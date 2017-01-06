@@ -80,59 +80,52 @@ class Worker {
         boost::posix_time::ptime last_load_at;
 
     public:
+        navitia::PbCreator pb_creator;
+
         Worker(DataManager<navitia::type::Data>& data_manager, kraken::Configuration conf);
         //we override de destructor this way we can forward declare Raptor
         //see: https://stackoverflow.com/questions/6012157/is-stdunique-ptrt-required-to-know-the-full-definition-of-t
         ~Worker();
 
-        pbnavitia::Response dispatch(const pbnavitia::Request & request);
+        void dispatch(const pbnavitia::Request & request);
 
-        void init_worker_data(const boost::shared_ptr<const navitia::type::Data> data);
+        void init_worker_data(const boost::shared_ptr<const navitia::type::Data> data,
+                              const pt::ptime now,
+                              const pt::time_period action_period,
+                              const bool disable_geojson = false,
+                              const bool disable_feedpublisher = false);
 
-        void metadatas(pbnavitia::Response& response);
-        void feed_publisher(pbnavitia::Response& response);
-        pbnavitia::Response status();
-        pbnavitia::Response geo_status();
-        pbnavitia::Response autocomplete(const pbnavitia::PlacesRequest &request,
-                                         const boost::posix_time::ptime& current_datetime);
-        pbnavitia::Response place_uri(const pbnavitia::PlaceUriRequest &request,
-                                      const boost::posix_time::ptime& current_datetime);
-        pbnavitia::Response next_stop_times(const pbnavitia::NextStopTimeRequest &request, pbnavitia::API api,
-                                            const boost::posix_time::ptime& current_datetime);
-        pbnavitia::Response proximity_list(const pbnavitia::PlacesNearbyRequest &request,
-                                           const boost::posix_time::ptime& current_datetime,
-                                           const bool disable_feedpublisher);
+        void metadatas();
+        void feed_publisher();
+        void status();
+        void geo_status();
+        void autocomplete(const pbnavitia::PlacesRequest &request);
+        void place_uri(const pbnavitia::PlaceUriRequest &request);
+        void next_stop_times(const pbnavitia::NextStopTimeRequest &request, pbnavitia::API api);
+        void proximity_list(const pbnavitia::PlacesNearbyRequest &request);
 
         JourneysArg fill_journeys(const pbnavitia::JourneysRequest &request);
-        pbnavitia::Response err_msg_isochron(const std::string& err_msg, navitia::PbCreator& pb_creator);
-        pbnavitia::Response journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api,
-                                     const boost::posix_time::ptime& current_datetime);
-        pbnavitia::Response pt_ref(const pbnavitia::PTRefRequest &request,
-                                   const boost::posix_time::ptime& current_datetime);
-        pbnavitia::Response traffic_reports(const pbnavitia::TrafficReportsRequest &request,
-                                            const boost::posix_time::ptime& current_datetime);
-        pbnavitia::Response calendars(const pbnavitia::CalendarsRequest &request,
-                                      const boost::posix_time::ptime& current_datetime);
-        pbnavitia::Response pt_object(const pbnavitia::PtobjectRequest &request,
-                                      const boost::posix_time::ptime& current_datetime);
-        pbnavitia::Response place_code(const pbnavitia::PlaceCodeRequest &request);
-        pbnavitia::Response nearest_stop_points(const pbnavitia::NearestStopPointsRequest& request);
-        boost::optional<pbnavitia::Response> set_journeys_args(const pbnavitia::JourneysRequest& request,
-                                                               const boost::posix_time::ptime& current_datetime,
+        void err_msg_isochron(navitia::PbCreator& pb_creator, const std::string& err_msg);
+        void journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api);
+        void pt_ref(const pbnavitia::PTRefRequest &request);
+        void traffic_reports(const pbnavitia::TrafficReportsRequest &request);
+        void calendars(const pbnavitia::CalendarsRequest &request);
+        void pt_object(const pbnavitia::PtobjectRequest &request);
+        void place_code(const pbnavitia::PlaceCodeRequest &request);
+        void nearest_stop_points(const pbnavitia::NearestStopPointsRequest& request);
+        bool set_journeys_args(const pbnavitia::JourneysRequest& request,
                                                                JourneysArg& arg, const std::string& name);
-        pbnavitia::Response graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest& request,
-                                                const boost::posix_time::ptime& current_datetime);
-        pbnavitia::Response heat_map(const pbnavitia::HeatMapRequest& request,
-                                     const boost::posix_time::ptime& current_datetime);
-        pbnavitia::Response car_co2_emission_on_crow_fly(const pbnavitia::CarCO2EmissionRequest& request);
-        pbnavitia::Response direct_path(const pbnavitia::Request& request);
+        void graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest& request);
+        void heat_map(const pbnavitia::HeatMapRequest& request);
+        void car_co2_emission_on_crow_fly(const pbnavitia::CarCO2EmissionRequest& request);
+        void direct_path(const pbnavitia::Request& request);
 
         /*
          * Given N origins and M destinations and street network mode, it returns a NxM matrix which contains durations
          * from origin to destination by taking street network
          * */
-        pbnavitia::Response street_network_routing_matrix(const pbnavitia::StreetNetworkRoutingMatrixRequest& request);
-        pbnavitia::Response odt_stop_points(const pbnavitia::GeographicalCoord& request);
+        void street_network_routing_matrix(const pbnavitia::StreetNetworkRoutingMatrixRequest& request);
+        void odt_stop_points(const pbnavitia::GeographicalCoord& request);
 };
 
 type::EntryPoint make_sn_entry_point(const std::string& place,

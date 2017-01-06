@@ -119,14 +119,15 @@ class JourneyCommon(object):
         non_pt_walk_j = next((j for j in journeys if j['type'] == 'non_pt_walk'), None)
         assert non_pt_walk_j
         assert non_pt_walk_j['duration'] == non_pt_walk_j['sections'][0]['duration']
-        assert non_pt_walk_j['duration'] == 205
-        assert non_pt_walk_j['durations']['total'] == 205
-        assert non_pt_walk_j['durations']['walking'] == 205
+        # duration has floor round value: duration = 310 / 1.5 (speed-factor) = 206.66..
+        assert non_pt_walk_j['duration'] == 206
+        assert non_pt_walk_j['durations']['total'] == 206
+        assert non_pt_walk_j['durations']['walking'] == 206
 
         assert non_pt_walk_j['departure_date_time'] == non_pt_walk_j['sections'][0]['departure_date_time']
         assert non_pt_walk_j['departure_date_time'] == '20120614T080000'
         assert non_pt_walk_j['arrival_date_time'] == non_pt_walk_j['sections'][0]['arrival_date_time']
-        assert non_pt_walk_j['arrival_date_time'] == '20120614T080325'
+        assert non_pt_walk_j['arrival_date_time'] == '20120614T080326'
 
     def test_not_existent_filtering(self):
         """if we filter with a real type but not present, we don't get any journey, but we got a nice error"""
@@ -335,20 +336,20 @@ class JourneyCommon(object):
         assert(len(response['journeys']) == 2)
         #Note: we do not test order, because that can change depending on the scenario
         eq_(sorted(get_used_vj(response)), sorted([[], ['vjB']]))
-        eq_(sorted(get_arrivals(response)), sorted(['20120614T080612', '20120614T180250']))
+        eq_(sorted(get_arrivals(response)), sorted(['20120614T080613', '20120614T180250']))
 
         # same response if we just give the wheelchair=True
         response = self.query_region(journey_basic_query + "&traveler_type=wheelchair&wheelchair=True")
         assert(len(response['journeys']) == 2)
         eq_(sorted(get_used_vj(response)), sorted([[], ['vjB']]))
-        eq_(sorted(get_arrivals(response)), sorted(['20120614T080612', '20120614T180250']))
+        eq_(sorted(get_arrivals(response)), sorted(['20120614T080613', '20120614T180250']))
 
         # but with the wheelchair profile, if we explicitly accept non accessible solutions (not very
         # consistent, but anyway), we should take the non accessible bus that arrive at 08h
         response = self.query_region(journey_basic_query + "&traveler_type=wheelchair&wheelchair=False")
         assert(len(response['journeys']) == 2)
         eq_(sorted(get_used_vj(response)), sorted([['vjA'], []]))
-        eq_(sorted(get_arrivals(response)), sorted(['20120614T080250', '20120614T080612']))
+        eq_(sorted(get_arrivals(response)), sorted(['20120614T080250', '20120614T080613']))
 
     def test_journeys_float_night_bus_filter_max_factor(self):
         """night_bus_filter_max_factor can be a float (and can be null)"""
@@ -374,6 +375,7 @@ class JourneyCommon(object):
         """
         Test journeys from stop point to stop point
         """
+
         query = "journeys?from=stop_point:uselessA&to=stop_point:stopB&datetime=20120615T080000"
 
         # with street network desactivated
@@ -388,6 +390,13 @@ class JourneyCommon(object):
         eq_(response['journeys'][0]['sections'][0]['type'], 'street_network')
         eq_(response['journeys'][0]['sections'][0]['mode'], 'walking')
         eq_(response['journeys'][0]['sections'][0]['duration'], 0)
+
+        query = "journeys?from=stop_point:stopA&to=stop_point:stopB&datetime=20120615T080000"
+        response = self.query_region(query + "&max_duration_to_pt=0")
+        eq_(len(response['journeys']), 1)
+        eq_(response['journeys'][0]['departure_date_time'], u'20120615T080100')
+        eq_(response['journeys'][0]['arrival_date_time'], u'20120615T080102')
+
 
     @mock.patch.object(i_manager, 'dispatch')
     def test_max_duration_to_pt(self, mock):
@@ -436,9 +445,9 @@ class JourneyCommon(object):
         eq_(len(response['journeys'][0]['sections'][1]['geojson']['coordinates']), 3)
         eq_(response['journeys'][0]['sections'][1]['co2_emission']['value'], 0.58)
         eq_(response['journeys'][0]['sections'][1]['co2_emission']['unit'], 'gEC')
-        eq_(response['journeys'][1]['duration'], 275)
-        eq_(response['journeys'][1]['durations']['total'], 275)
-        eq_(response['journeys'][1]['durations']['walking'], 275)
+        eq_(response['journeys'][1]['duration'], 276)
+        eq_(response['journeys'][1]['durations']['total'], 276)
+        eq_(response['journeys'][1]['durations']['walking'], 276)
 
 
     def test_max_duration_to_pt_equals_to_0(self):
@@ -474,6 +483,34 @@ class JourneyCommon(object):
         assert section['type'] == 'public_transport'
         assert section['from']['id'] == 'stop_point:stopA'
         assert section['to']['id'] == 'stop_point:stopC'
+
+    def test_max_duration_to_pt_equals_to_0_from_stop_area(self):
+        query = "journeys?from=stopA&to=stopB&datetime=20120614T080000"
+        response = self.query_region(query)
+        check_journeys(response)
+        eq_(len(response['journeys']), 2)
+
+        query += "&max_duration_to_pt=0"
+        response = self.query_region(query)
+        check_journeys(response)
+        jrnys = response['journeys']
+        assert len(jrnys) == 1
+        section = jrnys[0]['sections'][0]
+        # from departure(a stop area) to stop_point
+        assert section['type'] == 'crow_fly'
+        assert section['from']['id'] == 'stopA'
+        assert section['to']['id'] == 'stop_point:stopA'
+
+        section = jrnys[0]['sections'][1]
+        assert section['type'] == 'public_transport'
+        assert section['from']['id'] == 'stop_point:stopA'
+        assert section['to']['id'] == 'stop_point:stopB'
+
+        section = jrnys[0]['sections'][2]
+        # from a stop point to destination(a stop area)
+        assert section['type'] == 'crow_fly'
+        assert section['from']['id'] == 'stop_point:stopB'
+        assert section['to']['id'] == 'stopB'
 
     def test_max_duration_equals_to_0(self):
         query = journey_basic_query + \
@@ -524,6 +561,17 @@ class JourneyCommon(object):
         assert j['sections'][0]['to']['id'] == 'stop_point:stopB'
         assert 'walking' in j['tags']
 
+
+    def test_journey_from_non_valid_stop_area(self):
+        """
+        When the departure is a non valid stop_area, the response status should be 404
+        """
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
+            .format(from_sa='stop_area:non_valid', to_sa='stop_point:stopB', datetime="20120614T080000")
+        response = self.query_region(query, check=False)
+        assert response[1] == 404
+        assert response[0]['error']['message'] == u'The entry point: stop_area:non_valid is not valid'
+
     def test_crow_fly_sections(self):
         """
         When the departure is a stop_area...
@@ -543,6 +591,63 @@ class JourneyCommon(object):
         assert section_2['type'] == 'crow_fly'
         assert section_2['from']['id'] == 'stop_point:stopB'
         assert section_2['to']['id'] == 'stopB'
+
+    def test_no_origin_point(self):
+        """
+        Here we verify no destination point error
+        """
+        query_out_of_production_bound = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
+            .format(from_coord="0.9008898312;0.0019898312",  # coordinate out of range in the dataset
+            to_coord="0.00188646;0.00071865",  # coordinate of R in the dataset
+            datetime="20120614T080000")
+
+        response, status = self.query_region(query_out_of_production_bound, check=False)
+
+        assert status != 200, "the response should not be valid"
+        check_journeys(response)
+        assert response['error']['id'] == "no_origin"
+        assert response['error']['message'] == "no origin point"
+
+        #and no journey is to be provided
+        assert 'journeys' not in response or len(response['journeys']) == 0
+
+    def test_no_destination_point(self):
+        """
+        Here we verify no destination point error
+        """
+        query_out_of_production_bound = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
+            .format(from_coord="0.0000898312;0.0000898312",  # coordinate of S in the dataset
+            to_coord="0.00188646;0.90971865",  # coordinate out of range in the dataset
+            datetime="20120614T080000")
+
+        response, status = self.query_region(query_out_of_production_bound, check=False)
+
+        assert status != 200, "the response should not be valid"
+        check_journeys(response)
+        assert response['error']['id'] == "no_destination"
+        assert response['error']['message'] == "no destination point"
+
+        #and no journey is to be provided
+        assert 'journeys' not in response or len(response['journeys']) == 0
+
+    def test_no_solution(self):
+        """
+        Here we verify no destination point error
+        """
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
+            .format(from_coord="0.0000898312;0.0000898312",  # coordinate out of range in the dataset
+            to_coord="0.00188646;0.00071865",  # coordinate out of range in the dataset
+            datetime="20120901T220000")
+
+        response, status = self.query_region(query + "&max_duration=1&max_duration_to_pt=100", check=False)
+
+        assert status == 200
+        check_journeys(response)
+        assert response['error']['id'] == "no_solution"
+        assert response['error']['message'] == "no solution found for this journey"
+
+        #and no journey is to be provided
+        assert 'journeys' not in response or len(response['journeys']) == 0
 
 
 @dataset({"main_routing_test": {}})
@@ -628,6 +733,25 @@ class OnBasicRouting():
         assert (feed_publisher["name"] == "base contributor")
         assert (feed_publisher["license"] == "L-contributor")
         assert (feed_publisher["url"] == "www.canaltp.fr")
+
+    def test_sp_outside_georef(self):
+        """
+        departure from '5.;5.' coordinates outside street network
+        """
+        query = "journeys?from={coord}&to={to_sa}&datetime={datetime}"\
+            .format(coord="5.;5.", to_sa="H", datetime="20120615T170000")
+
+        response = self.query_region(query)
+        assert('journeys' in response)
+        eq_(len(response['journeys']), 1)
+        eq_(response['journeys'][0]['sections'][0]['to']['id'], 'G')
+        eq_(response['journeys'][0]['sections'][0]['type'], 'crow_fly')
+        eq_(response['journeys'][0]['sections'][0]['mode'], 'walking')
+
+        eq_(response['journeys'][0]['sections'][1]['from']['id'], 'G')
+        eq_(response['journeys'][0]['sections'][1]['to']['id'], 'H')
+        eq_(response['journeys'][0]['sections'][1]['type'], 'public_transport')
+        eq_(response['journeys'][0]['duration'], 3600)
 
     def test_novalidjourney_on_first_call_debug(self):
         """
@@ -725,7 +849,7 @@ class OnBasicRouting():
             .format(from_sa="E", to_sa="H", datetime="20120615T080000")
 
         response = self.query_region(query, display=False)
-        assert(not "journeys" in response or len(response['journeys']) ==  0)
+        assert(not "journeys" in response or len(response['journeys']) == 0)
 
     def test_max_attemps_debug(self):
         """

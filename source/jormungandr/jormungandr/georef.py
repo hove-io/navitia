@@ -41,8 +41,23 @@ class Kraken(object):
         req = request_pb2.Request()
         req.requested_api = type_pb2.place_uri
         req.place_uri.uri = place
+        req.place_uri.depth = 2
         response = self.instance.send_and_receive(req)
-        return response.places[0]
+        if response.places:
+            return response.places[0]
+        if place.startswith("coord:"):
+            # In some cases, the given "from" is not always a findable address by kraken
+            # we just forward the given coord and return a pt object
+            _, lon, lat = place.split(':')
+            uri = '{};{}'.format(lon, lat)
+            p = type_pb2.PtObject()
+            p.uri = uri
+            p.embedded_type = type_pb2.ADDRESS
+            p.address.coord.lon = float(lon)
+            p.address.coord.lat = float(lat)
+            p.address.uri = uri
+            return p
+        return None
 
     def get_car_co2_emission_on_crow_fly(self, origin, destination):
         logger = logging.getLogger(__name__)

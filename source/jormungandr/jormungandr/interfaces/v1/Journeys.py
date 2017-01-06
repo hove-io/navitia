@@ -43,7 +43,7 @@ from jormungandr.interfaces.v1.fields import display_informations_vj, error, pla
 from jormungandr.interfaces.parsers import option_value, date_time_format, default_count_arg_type, date_time_format
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri, complete_links
 from functools import wraps
-from jormungandr.interfaces.v1.fields import DateTime
+from jormungandr.interfaces.v1.fields import DateTime, Integer
 from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.make_links import create_external_link, create_internal_link
 from jormungandr.interfaces.v1.errors import ManageError
@@ -177,7 +177,7 @@ section = {
     "type": section_type(),
     "id": fields.String(),
     "mode": enum_type(attribute="street_network.mode"),
-    "duration": fields.Integer(),
+    "duration": Integer(),
     "from": section_place(place, attribute="origin"),
     "to": section_place(place, attribute="destination"),
     "links": SectionLinks(attribute="uris"),
@@ -185,9 +185,9 @@ section = {
                                     attribute='pt_display_informations'),
     "additional_informations": NonNullList(PbEnum(response_pb2.SectionAdditionalInformationType)),
     "geojson": SectionGeoJson(),
-    "path": NonNullList(NonNullNested({"length": fields.Integer(),
+    "path": NonNullList(NonNullNested({"length": Integer(),
                                        "name": fields.String(),
-                                       "duration": fields.Integer(),
+                                       "duration": Integer(),
                                        "direction": fields.Integer()}),
                         attribute="street_network.path_items"),
     "transfer_type": enum_type(),

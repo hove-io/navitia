@@ -59,7 +59,7 @@ def _get_schedule(sched, sp_uri, route_uri):
     ]
 
 
-@dataset({'multiple_schedules': {'proxy_conf': MOCKED_PROXY_CONF}})
+@dataset({'multiple_schedules': {'instance_config': {'realtime_proxies': MOCKED_PROXY_CONF}}})
 class TestSyntheseSchedules(AbstractTestFixture):
     """
     integration tests for synthese

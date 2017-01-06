@@ -141,3 +141,6 @@ CELERYBEAT_SCHEDULE_FILENAME = '/tmp/celerybeat-schedule'
 CELERYD_HIJACK_ROOT_LOGGER = False
 
 MIMIR_URL = 'http://localhost:9200'
+
+#we don't enable serpy for now
+USE_SERPY = False

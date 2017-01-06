@@ -149,7 +149,7 @@ static std::vector<std::vector<Projection>> find_projection(BoundBox box,
     const size_t offset_lat = floor(min_dist / (height_step * N_DEG_TO_DISTANCE)) + 1;
     auto begin = std::lower_bound(worker.pl.items.begin(), worker.pl.items.end(), box.min.lon(),
                                   [](const proximitylist::ProximityList<georef::vertex_t>::Item & i, double min){
-        return i.coord.lon() <= min;
+        return i.coord.lon() < min;
     });
     auto end = std::upper_bound(begin, worker.pl.items.end(), box.max.lon(),
                                 [](double max, const proximitylist::ProximityList<georef::vertex_t>::Item & i){
@@ -170,8 +170,10 @@ static std::vector<std::vector<Projection>> find_projection(BoundBox box,
                     auto center = type::GeographicalCoord(heat_map.body[lon_rank].first.min_coord + width_step/2,
                                                           heat_map.header[lat_rank].min_coord + height_step / 2);
                     auto proj = center.approx_project(source, target, coslat);
-                    if (!dist_pixel[lon_rank][lat_rank].distance ||
-                            (proj.second < min_dist && proj.second < *dist_pixel[lon_rank][lat_rank].distance)) {
+                    if (proj.second < min_dist &&
+                        (!dist_pixel[lon_rank][lat_rank].distance ||
+                         proj.second < *dist_pixel[lon_rank][lat_rank].distance))
+                    {
                         dist_pixel[lon_rank][lat_rank].distance = proj.second;
                         dist_pixel[lon_rank][lat_rank].source = it->element;
                         dist_pixel[lon_rank][lat_rank].target = v;
@@ -202,7 +204,7 @@ HeatMap fill_heat_map(const BoundBox& box,
                                                       heat_map.header[j].min_coord + height_step / 2);
                 const auto source = worker.graph[projection[i][j].source].coord;
                 const auto target = worker.graph[projection[i][j].target].coord;
-                const auto coslat = center.lat() * type::GeographicalCoord::N_DEG_TO_RAD;
+                const auto coslat = cos(center.lat() * type::GeographicalCoord::N_DEG_TO_RAD);
                 const auto duration_to_source = distances[projection[i][j].source] +
                         navitia::milliseconds(sqrt(center.approx_sqr_distance(source, coslat)) / speed * 1e3);
                 const auto duration_to_target = distances[projection[i][j].target] +
@@ -210,6 +212,8 @@ HeatMap fill_heat_map(const BoundBox& box,
                 const auto new_duration = std::min(duration_to_source, duration_to_target);
                 if (new_duration.total_seconds() < max_duration) {
                     duration = new_duration;
+                } else {
+                    duration = bt::pos_infin;
                 }
             } else {
                 duration = bt::pos_infin;
@@ -240,24 +244,28 @@ static double walking_distance(const DateTime& max_duration,
     return (max_duration - duration) * speed / type::GeographicalCoord::EARTH_RADIUS_IN_METERS * N_RAD_TO_DEG;
 }
 
-std::vector<navitia::time_duration> init_distance(const georef::GeoRef & worker,
-                                                  const std::vector<type::StopPoint*>& stop_points,
-                                                  const DateTime& init_dt,
-                                                  const RAPTOR& raptor,
-                                                  const type::Mode_e& mode,
-                                                  const type::GeographicalCoord& coord_origin,
-                                                  const bool clockwise,
-                                                  const DateTime& bound,
-                                                  const double speed,
-                                                  const DateTime& duration) {
+std::vector<navitia::time_duration>
+init_distance(const georef::GeoRef & worker,
+              const std::vector<type::StopPoint*>& stop_points,
+              const DateTime& init_dt,
+              const RAPTOR& raptor,
+              const type::Mode_e& mode,
+              const type::GeographicalCoord& coord_origin,
+              const bool clockwise,
+              const DateTime& bound,
+              const double speed) {
     std::vector<navitia::time_duration> distances;
     size_t n = boost::num_vertices(worker.graph);
     distances.assign(n, bt::pos_infin);
     nt::idx_t offset = worker.offsets[mode];
     auto proj = georef::ProjectionData(coord_origin, worker, offset, worker.pl);
     if (proj.found) {
-        distances[proj[source_e]] = navitia::seconds(duration + proj.distances[source_e] / speed);
-        distances[proj[target_e]] = navitia::seconds(duration + proj.distances[target_e] / speed);
+        distances[proj[source_e]] = std::min(
+            distances[proj[source_e]],
+            time_duration(seconds(proj.distances[source_e] / speed)));
+        distances[proj[target_e]] = std::min(
+            distances[proj[target_e]],
+            time_duration(seconds(proj.distances[target_e] / speed)));
     }
     for(const type::StopPoint* sp: stop_points) {
         SpIdx sp_idx(*sp);
@@ -266,9 +274,13 @@ std::vector<navitia::time_duration> init_distance(const georef::GeoRef & worker,
             const auto& projections = worker.projected_stop_points[sp->idx];
             const auto& proj = projections[mode];
             if(proj.found) {
-                const double duration = best_lbl - init_dt;
-                distances[proj[source_e]] = navitia::seconds(duration + proj.distances[source_e] / speed);
-                distances[proj[target_e]] = navitia::seconds(duration + proj.distances[target_e] / speed);
+                const double duration = clockwise ? best_lbl - init_dt : init_dt - best_lbl;
+                distances[proj[source_e]] = std::min(
+                    distances[proj[source_e]],
+                    time_duration(seconds(duration + proj.distances[source_e] / speed)));
+                distances[proj[target_e]] = std::min(
+                    distances[proj[target_e]],
+                    time_duration(seconds(duration + proj.distances[target_e] / speed)));
             }
         }
     }
@@ -328,7 +340,7 @@ static BoundBox find_boundary_box(const georef::GeoRef & worker,
             const auto& projections = worker.projected_stop_points[sp->idx];
             const auto& proj = projections[mode];
             if(proj.found) {
-                const double duration = best_lbl - init_dt;
+                const double duration = clockwise ? best_lbl - init_dt : init_dt - best_lbl;
                 box.set_box(sp->coord, walking_distance(max_duration, duration, speed) + distance_500m);
             }
         }
@@ -356,9 +368,7 @@ std::string build_raster_isochrone(const georef::GeoRef& worker,
     auto init_points = init_vertex(worker, stop_points, raptor, mode, coord_origin,
                                    clockwise, bound);
     auto distances = init_distance(worker, stop_points, init_dt, raptor, mode, coord_origin,
-                                   clockwise, bound, speed, duration);
-    // We cannot make a dijkstra multi start with old boost version
-#if BOOST_VERSION >= 105500
+                                   clockwise, bound, speed);
     auto start = init_points.begin();
     auto end = init_points.end();
     double speed_factor = speed / georef::default_speed[mode];
@@ -376,7 +386,6 @@ std::string build_raster_isochrone(const georef::GeoRef& worker,
                                                navitia::seconds(0),
                                                visitor);
     } catch (georef::DestinationFound) {}
-#endif
     return build_grid(worker, box, distances, speed, duration, resolution);
 }
 

@@ -32,14 +32,15 @@ www.navitia.io
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "type/type.h"
 #include "type/response.pb.h"
+#include "type/pb_converter.h"
 
 namespace navitia { namespace disruption {
 
-pbnavitia::Response traffic_reports(const navitia::type::Data& d,
-                                    const boost::posix_time::ptime& current_datetime,
-                                    const size_t depth,
-                                    size_t count,
-                                    size_t start_page, const std::string& filter,
-                                    const std::vector<std::string>& forbidden_uris);
+void traffic_reports(navitia::PbCreator& pb_creator,
+                     const navitia::type::Data& d,
+                     const size_t depth,
+                     size_t count,
+                     size_t start_page, const std::string& filter,
+                     const std::vector<std::string>& forbidden_uris);
 }}
 

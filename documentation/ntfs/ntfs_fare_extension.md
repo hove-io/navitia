@@ -38,6 +38,9 @@ Colonne | Type | Contrainte | Commentaire
 "date de fin de validité" | YYYYMMDD | Requis | Date de fin de validité du tarif
 "prix" | Entier | Requis | Valeur en centimes d'euro
 "name" | chaine | Requis | Libellé du billet
+"champ inconnu" | chaine | Requis |
+"commentaire" | chaine | Requis | commentaire
+"devise" | chaine | Optionnel | Devise (par défaut: euro)
 
 ## od_fares.csv
 Ce fichier contient la description des tickets dont le tarif est définit par une Origine-Destination.
@@ -72,15 +75,17 @@ Colonne | Type | Contrainte | Commentaire
 "après changement" | chaine | Requis | voir § **État avant et après changement** ci-dessous
 "début trajet" | chaine | Requis | voir § **Conditions de début et fin de trajet** ci-dessous
 "fin trajet" | chaine | Requis | voir § **Conditions de début et fin de trajet** ci-dessous
-"condition globale" | chaine | Requis | Condition globale d'utilisation du ticket ("exclusive", "with_changes" ou "symetric")
+"condition globale" | chaine | Requis | Condition globale d'utilisation du ticket (vide, "nothing", "exclusive", "with_changes" ou "symetric")
 "clef ticket" | chaine | Requis | ID tarif (lien avec prices.csv)
 
 **État avant et aprés changement :**  
-Un état avant un changement (ou après un changement) est décrit soit par un mode physique, soit par un réseau :
+Un état avant un changement (ou après un changement) est décrit par un objet TC, selon l'une des possibilités suivantes :
 * Description par un mode physique : Indiquer une URI de mode physique (champ **physical_mode_id** du mode physique avec le préfixe _"physical_mode:"_)  
 Par exemple : indiquer "mode=physical_mode:metro" pour indiquer que le voyageur se trouve dans le métro avant le changement.
 * Description par un réseau : Indiquer une URI de réseau (champ **network_id** du réseau avec le préfixe _"network:"_)  
 Par exemple, indiquer "network=network:Filbleu" pour indiquer que le voyageur se trouve sur le réseau Filbleu avant le changement
+* Description par une ligne : Indiquer une URI de ligne (champ **line_id** de la ligne avec le préfixe _"line:"_)  
+* Description par une zone d'arrêt : Indiquer une URI de zone d'arrêt (champ **stop_id** de l'arrêt ayant pour **location_type** la valeur **1** avec le préfixe _"stoparea:"_)  
 * Indiquer **"\*"** pour ne pas fournir de contrainte particulière
 
 **Conditions de début et fin de trajet :**  
@@ -94,6 +99,7 @@ Par exemple : indiquer _"nb_changes<2"_ pour préciser que le ticket n'est utils
 
 **Condition globale :**  
 Ce champ précise la condition globale d'utilisation du ticket :
+* vide ou "nothing" : ce ticket n'a aucune condition spécifique
 * "exclusive": correspond à un ticket à tarification spéciale sans correspondance (Noctilien, navettes aéroport…)
 * "with_changes": correspond à un billet de type Origine-Destination permettant tous les changements
 * "symetric": spécifie que ce tarif est également disponible en intervertissant l'état de début et de fin (par exemple : s'il est possible de changer du bus au tramway, la réciproque est vraie)

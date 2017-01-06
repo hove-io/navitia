@@ -549,7 +549,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
 
     // We set all the validity pattern to the theorical one, we will re-apply
     // other disruptions after
-    void operator()(nt::MetaVehicleJourney* mvj, nt::Route* /*r*/ = nullptr) {
+    void operator()(nt::MetaVehicleJourney* mvj, nt::Route* /*r*/ = nullptr) override {
         mvj->remove_impact(impact);
         for (auto& vj: mvj->get_base_vj()) {
             // Time to reset the vj

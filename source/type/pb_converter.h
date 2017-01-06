@@ -157,20 +157,23 @@ inline pbnavitia::NavitiaType get_embedded_type(const nt::MetaVehicleJourney*) {
 
 
 struct PbCreator {
-    std::set<const nt::Contributor*> contributors;
+    std::set<const nt::Contributor*, Less> contributors;
     std::set<boost::shared_ptr<type::disruption::Impact>> impacts;
-    const nt::Data& data;
+    //std::reference_wrapper<const nt::Data> data;
+    const nt::Data* data = nullptr;
     pt::ptime now;
-    pt::time_period action_period;
+    pt::time_period action_period = null_time_period;
     // Do we need to disable geojson in the request
-    const bool disable_geojson = false;
-    const bool disable_feedpublisher = false;
+    bool disable_geojson = false;
+    bool disable_feedpublisher = false;
     // Raptor api
     size_t nb_sections = 0;
     std::map<std::pair<pbnavitia::Journey*, size_t>, std::string> routing_section_map;
     pbnavitia::Ticket* unknown_ticket = nullptr; //we want only one unknown ticket
 
-    PbCreator(const nt::Data& data,
+    PbCreator() = default;
+
+    PbCreator(const nt::Data* data,
               const pt::ptime now,
               const pt::time_period action_period,
               const bool disable_geojson = false,
@@ -181,6 +184,24 @@ struct PbCreator {
         disable_geojson(disable_geojson),
         disable_feedpublisher(disable_feedpublisher)
         {}
+
+    void init(const nt::Data* data,
+                   const pt::ptime now,
+                   const pt::time_period action_period,
+                   const bool disable_geojson = false,
+                   const bool disable_feedpublisher = false) {
+        this->data = data;
+        this->now = now;
+        this->action_period = action_period;
+        this->disable_geojson = disable_geojson;
+        this->disable_feedpublisher = disable_feedpublisher;
+        this->nb_sections = 0;
+
+        this->contributors.clear();
+        this->impacts.clear();
+        this->routing_section_map.clear();
+        this->response.Clear();
+    }
 
     PbCreator(const PbCreator&) = delete;
     PbCreator& operator=(const PbCreator&) = delete;
@@ -232,7 +253,8 @@ struct PbCreator {
 
     void fill_pb_error(const pbnavitia::Error::error_id, const pbnavitia::ResponseType&, const std::string&);
     void fill_pb_error(const pbnavitia::Error::error_id, const std::string&);
-    pbnavitia::Response get_response();
+    const pbnavitia::Response& get_response();
+    void clear_feed_publishers();
 
     pbnavitia::PtObject* add_places_nearby();
     pbnavitia::Journey* add_journeys();
@@ -262,7 +284,14 @@ struct PbCreator {
     int stop_schedules_size();
     int traffic_reports_size();
     int calendars_size();
-
+    pbnavitia::GeoStatus* mutable_geo_status();
+    pbnavitia::Status* mutable_status();
+    pbnavitia::Pagination* mutable_pagination();
+    pbnavitia::Co2Emission* mutable_car_co2_emission();
+    pbnavitia::StreetNetworkRoutingMatrix* mutable_sn_routing_matrix();
+    pbnavitia::Metadatas* mutable_metadatas();
+    pbnavitia::FeedPublisher* add_feed_publishers();
+    void set_publication_date(pt::ptime ptime);
 private:
 
     pbnavitia::Response response;
@@ -303,22 +332,22 @@ private:
             }
         }
 
-        template<typename Nav, typename Pb>
-        void fill_pb_object(const std::set<Nav>& nav_list,
+        template<typename Nav, typename Cmp, typename Pb>
+        void fill_pb_object(const std::set<Nav, Cmp>& nav_list,
                             ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
             for (auto& nav_obj: nav_list) {
                 fill_pb_object(&nav_obj, pb_list->Add());
             }
         }
-        template<typename Nav, typename Pb>
-        void fill_pb_object(const std::set<Nav*>& nav_list,
+        template<typename Nav, typename Cmp, typename Pb>
+        void fill_pb_object(const std::set<Nav*, Cmp>& nav_list,
                             ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
             for (auto* nav_obj: nav_list) {
                 fill_pb_object(nav_obj, pb_list->Add());
             }
         }
-        template<typename Nav, typename Pb>
-        void fill_pb_object(const std::set<boost::shared_ptr<Nav>>& nav_list,
+        template<typename Nav, typename Cmp, typename Pb>
+        void fill_pb_object(const std::set<boost::shared_ptr<Nav>, Cmp>& nav_list,
                             ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
             for (auto& nav_obj: nav_list) {
                 fill_pb_object(nav_obj.get(), pb_list->Add());
@@ -344,7 +373,7 @@ private:
         template<typename NT, typename PB>
         void fill_codes(const NT* nt, PB* pb) {
             if (nt == nullptr) {return ;}
-            for (const auto& code: pb_creator.data.pt_data->codes.get_codes(nt)) {
+            for (const auto& code: pb_creator.data->pt_data->codes.get_codes(nt)) {
                 for (const auto& value: code.second) {
                     auto* pb_code = pb->add_codes();
                     pb_code->set_type(code.first);
@@ -356,7 +385,7 @@ private:
         template<typename NT, typename PB>
         void fill_comments(const NT* nt, PB* pb, const std::string& type = "standard") {
             if (nt == nullptr) {return ;}
-            for (const auto& comment: pb_creator.data.pt_data->comments.get(nt)) {
+            for (const auto& comment: pb_creator.data->pt_data->comments.get(nt)) {
                 auto com = pb->add_comments();
                 com->set_value(comment);
                 com->set_type(type);
@@ -431,7 +460,8 @@ pbnavitia::Response get_response(const std::vector<N*>& nt_objects, const nt::Da
                                  const bool disable_geojson = false, const pt::ptime& now = pt::not_a_date_time,
                                  const pt::time_period& action_period = null_time_period,
                                  const DumpMessage dump_message = DumpMessage::Yes){
-    PbCreator creator(data, now, action_period, disable_geojson);
+    PbCreator creator(&data, now, action_period, disable_geojson);
+
     creator.pb_fill(nt_objects, depth, dump_message);
     return creator.get_response();
 }

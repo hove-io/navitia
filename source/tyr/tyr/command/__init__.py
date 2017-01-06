@@ -34,3 +34,4 @@ import tyr.command.purge
 import tyr.command.cities
 import tyr.command.bounding_shape
 import tyr.command.import_last_dataset
+import tyr.command.last_dataset

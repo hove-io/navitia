@@ -429,6 +429,7 @@ class JsonString(fields.Raw):
 
         return response
 
+
 class Durations(fields.Raw):
     def output(self, key, obj):
         if not obj.HasField(str("durations")):
@@ -464,6 +465,22 @@ class FieldDateTime(fields.Raw):
                 return None
         else:
             return None
+
+
+class Integer(fields.Raw):
+    """
+    Integer with round value
+    2.3 -> 2
+    2.6 -> 3
+    """
+    def __init__(self, default=0, **kwargs):
+        super(Integer, self).__init__(default=default, **kwargs)
+
+    def format(self, value):
+        if value is None:
+            return self.default
+
+        return int(round(value))
 
 validity_pattern = {
     'beginning_date': fields.String(),
@@ -803,6 +820,7 @@ instance_status = {
     "start_production_date": fields.String(),
     "status": fields.String(),
     "is_open_data": fields.Boolean(),
+    "is_open_service": fields.Boolean(),
     "is_realtime_loaded": fields.Boolean(),
     "realtime_proxies": fields.Raw(),
     "dataset_created_at": fields.String(),

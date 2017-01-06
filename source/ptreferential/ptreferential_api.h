@@ -29,22 +29,22 @@ www.navitia.io
 */
 
 #pragma once
+#include "type/pb_converter.h"
 
 namespace pbnavitia { class Response;}
 
 namespace navitia{ namespace ptref{
 
 /// execute the pt ref query and return the protobuf response
-pbnavitia::Response query_pb(const type::Type_e requested_type,
-                             const std::string& request,
-                             const std::vector<std::string>& forbidden_uris,
-                             const type::OdtLevel_e odt_level,
-                             const int depth,
-                             const bool disable_geojson,
-                             const int startPage,
-                             const int count,
-                             const boost::optional<boost::posix_time::ptime>& since,
-                             const boost::optional<boost::posix_time::ptime>& until,
-                             const type::Data& data,
-                             const boost::posix_time::ptime& current_datetime);
+void query_pb(navitia::PbCreator& pb_creator,
+              const type::Type_e requested_type,
+              const std::string& request,
+              const std::vector<std::string>& forbidden_uris,
+              const type::OdtLevel_e odt_level,
+              const int depth,
+              const int startPage,
+              const int count,
+              const boost::optional<boost::posix_time::ptime>& since,
+              const boost::optional<boost::posix_time::ptime>& until,
+              const type::Data& data);
 }}
