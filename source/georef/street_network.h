@@ -206,9 +206,9 @@ struct PathFinder {
         const ProjectionData& p2
     );
 
-private:
     ///return the time the travel the distance at the current speed (used for projections)
-    navitia::time_duration crow_fly_duration(const double val) const;
+    navitia::time_duration crow_fly_duration(const double val, const bool use_manhattan_distance=false) const;
+private:
 
     void add_custom_projections_to_path(Path& p, bool append_to_begin, const ProjectionData& projection, ProjectionData::Direction d) const;
 

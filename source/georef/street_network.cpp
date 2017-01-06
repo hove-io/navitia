@@ -43,11 +43,15 @@ namespace navitia { namespace georef {
 const auto source_e = ProjectionData::Direction::Source;
 const auto target_e = ProjectionData::Direction::Target;
 
-navitia::time_duration PathFinder::crow_fly_duration(const double distance) const {
+navitia::time_duration PathFinder::crow_fly_duration(const double distance,
+                                                     const bool use_manhattan_distance) const {
     // For BSS we want the default speed of walking, because on extremities we walk !
     const auto mode_ = mode == nt::Mode_e::Bss ? nt::Mode_e::Walking : mode;
-    return navitia::seconds(distance / (default_speed[mode_] * speed_factor));
+    const auto distance_ = use_manhattan_distance ? distance * sqrt(2) : distance;
+    return navitia::seconds(distance_ / (default_speed[mode_] * speed_factor));
 }
+
+
 
 static bool is_projected_on_same_edge(const ProjectionData& p1, const ProjectionData& p2){
     // On the same edge if both use the same two vertices, are on the same way with the same duration
@@ -393,7 +397,7 @@ PathFinder::find_nearest_stop_points(const navitia::time_duration& radius,
                     continue;
                 }
                 navitia::time_duration duration =
-                        crow_fly_duration(start_coord.distance_to(element.second)) * sqrt(2);
+                        crow_fly_duration(start_coord.distance_to(element.second), true);
                 // if the radius is still ok with sqrt(2) factor
                 auto sp_idx = routing::SpIdx(element.first);
                 if (duration < radius && distance_to_entry_point.count(sp_idx) == 0) {

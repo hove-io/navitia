@@ -233,7 +233,8 @@ BOOST_AUTO_TEST_CASE(simple_journey_with_crow_fly) {
     BOOST_CHECK_EQUAL(stB.stop_point().uri(), "stop_area:stop2");
     BOOST_CHECK_EQUAL(stA.departure_date_time(), ntest::to_posix_timestamp("20120614T081100"));
     BOOST_CHECK_EQUAL(stB.arrival_date_time(), ntest::to_posix_timestamp("20120614T081500"));
-    BOOST_CHECK_EQUAL(journey.sections(0).duration(), 297);
+    // 297*sqrt(2)
+    BOOST_CHECK_EQUAL(journey.sections(0).duration(), 421);
 
 }
 
