@@ -397,12 +397,12 @@ def test_similar_journeys_different_transfer():
 
 def test_similar_journeys_different_waiting_durations():
     """
-     If 2 journeys take the same vjs, same number of sections but with different waiting durations,
+     If 2 journeys take the same vj, same number of sections but with different waiting durations,
      filtere one with smaller waiting duration
     """
     responses = [response_pb2.Response()]
     journey1 = responses[0].journeys.add()
-    journey1.duration = 500
+    journey1.duration = 600
     journey1.sections.add()
     journey1.sections[-1].uris.vehicle_journey = 'bob'
     journey1.sections[-1].duration = 200
@@ -418,7 +418,7 @@ def test_similar_journeys_different_waiting_durations():
 
     responses.append(response_pb2.Response())
     journey2 = responses[-1].journeys.add()
-    journey2.duration = 500
+    journey2.duration = 600
     journey2.sections.add()
     journey2.sections[-1].uris.vehicle_journey = 'bob'
     journey2.sections[-1].duration = 200
@@ -440,7 +440,7 @@ def test_similar_journeys_different_waiting_durations():
 
 def test_similar_journeys_multi_trasfer_and_different_waiting_durations():
     """
-     If 2 journeys take the same vjs, same number of sections and plusieurs waitings with different waiting durations,
+     If 2 journeys take the same vj, same number of sections and several waitings with different waiting durations,
      for each journey find "min waiting duration"
      keep the journey which has larger "min waiting duration"
     """
@@ -492,6 +492,46 @@ def test_similar_journeys_multi_trasfer_and_different_waiting_durations():
     journey2.sections[-1].duration = 100
     journey2.sections.add()
     journey2.sections[-1].uris.vehicle_journey = 'boby'
+    journey2.sections[-1].duration = 200
+
+    journey_filter._filter_similar_vj_journeys(list(journeys_gen(responses)), {})
+
+    assert 'to_delete' not in journey1.tags
+    assert 'to_delete' in journey2.tags
+
+
+def test_similar_journeys_with_and_without_waiting_section():
+    """
+     If 2 journeys take the same vj, one with a waiting section and another without,
+     filtere one with transfer but without waiting section
+    """
+    responses = [response_pb2.Response()]
+    journey1 = responses[0].journeys.add()
+    journey1.duration = 600
+    journey1.sections.add()
+    journey1.sections[-1].uris.vehicle_journey = 'bob'
+    journey1.sections[-1].duration = 200
+    journey1.sections.add()
+    journey1.sections[-1].type = response_pb2.TRANSFER
+    journey1.sections[-1].duration = 50
+    journey1.sections.add()
+    journey1.sections[-1].type = response_pb2.WAITING
+    journey1.sections[-1].duration = 150
+    journey1.sections.add()
+    journey1.sections[-1].uris.vehicle_journey = 'bobette'
+    journey1.sections[-1].duration = 200
+
+    responses.append(response_pb2.Response())
+    journey2 = responses[-1].journeys.add()
+    journey2.duration = 600
+    journey2.sections.add()
+    journey2.sections[-1].uris.vehicle_journey = 'bob'
+    journey2.sections[-1].duration = 200
+    journey2.sections.add()
+    journey2.sections[-1].type = response_pb2.TRANSFER
+    journey2.sections[-1].duration = 200
+    journey2.sections.add()
+    journey2.sections[-1].uris.vehicle_journey = 'bobette'
     journey2.sections[-1].duration = 200
 
     journey_filter._filter_similar_vj_journeys(list(journeys_gen(responses)), {})
