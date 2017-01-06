@@ -5,6 +5,16 @@ You should first have a proper python env:
 pip install -r requirements_release.txt -U
 ```
 
+Before releasing, please make sure that you have a release branch set on distant one:
+```
+git fetch <canaltp_distant_repo_name>
+git checkout -b release <canaltp_distant_repo_name>/release
+```
+Also check that distant release is merged into (should return `<canaltp_distant_repo_name>/release`)
+```
+git branch -r --merged <canaltp_distant_repo_name>/dev | egrep "<canaltp_distant_repo_name>/release$"
+```
+
 Then for a "Normal" release (minor):
 ```
 cd <path/to/repo/navitia>
@@ -15,7 +25,7 @@ python ./script_release.py minor <canaltp_distant_repo_name>
 Then follow the instructions given by the script, and also:
 * pay attention to the changelog, remove useless PR (small doc) and check that every important PR is there
 * don't forget to make `git submodule update` when necessary
-* check that `release` branch COMPILES and TESTS before pushing it!
+* check that `release` branch COMPILES and TESTS (unit, docker and tyr) before pushing it!
 
 ## Other releases
 
@@ -32,3 +42,7 @@ Then the process is less automated (but still, instructions are given):
 * you have to populate the changelog
 * and the TAG yourself
 * also cherry-pick the commits you want to release
+
+
+# Troubleshooting
+If you run into github's daily limitation, you can easily provide your login/token into the script.
