@@ -287,7 +287,7 @@ def get_min_waiting(journey):
     """
     Returns min waiting time in a journey
     """
-    return min(([s.duration for s in journey.sections if s.type == response_pb2.WAITING]) or [0])
+    return min([s.duration for s in journey.sections if s.type == response_pb2.WAITING] or [0])
 
 def way_later(request, journey1, journey2):
     """to check if a journey is way later than another journey
