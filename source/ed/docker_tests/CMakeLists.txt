@@ -46,9 +46,15 @@ target_link_libraries(ed_integration_test data georef types utils ${BOOST_LIBS} 
 # the test is not added with 'add_test', because we don't want 'make test' to handle it
 # it is added as a post build command to 'make docker_test', called after all the build
 add_custom_target(run_test DEPENDS datanav_files ed_integration_test)
+if(${Boost_VERSION} LESS 106000) #if boost version strictly older than 1.60
+add_custom_command(TARGET run_test
+                   COMMAND ed_integration_test
+                   ARGS --log_format=XML --log_sink=results_ed_integration_test.xml --log_level=all --report_level=no ${TEST_CLI_PARAMS})
+else() #if using newer version of boost, passing cli_params new way
 add_custom_command(TARGET run_test
                    COMMAND ed_integration_test
                    ARGS --log_format=XML --log_sink=results_ed_integration_test.xml --log_level=all --report_level=no -- ${TEST_CLI_PARAMS})
+endif()
 
 add_dependencies(ed_integration_test datanav_files)
 add_dependencies(docker_test run_test)
