@@ -99,8 +99,10 @@ def _get_worst_similar(j1, j2, request):
 
     The choice is made on:
      - asap
-     - less fallback
      - duration
+     - more fallback
+     - more connection
+     - smaller value among min waiting duration
     """
     if request.get('clockwise', True):
         if j1.arrival_date_time != j2.arrival_date_time:
@@ -112,8 +114,13 @@ def _get_worst_similar(j1, j2, request):
     if j1.duration != j2.duration:
         return j1 if j1.duration > j2.duration else j2
 
-    return j1 if fallback_duration(j1) > fallback_duration(j2) else j2
+    if fallback_duration(j1) != fallback_duration(j2):
+        return j1 if fallback_duration(j1) > fallback_duration(j2) else j2
 
+    if get_nb_connections(j1) != get_nb_connections(j2):
+        return j1 if get_nb_connections(j1) > get_nb_connections(j2) else j2
+
+    return j1 if get_min_waiting(j1) < get_min_waiting(j2) else j2
 
 
 def to_be_deleted(journey):
@@ -275,6 +282,12 @@ def _get_mode_weight(journey):
         return 1
     return max(mode_weight.get(mode, 1) for mode in journey.tags)
 
+
+def get_min_waiting(journey):
+    """
+    Returns min waiting time in a journey
+    """
+    return min([s.duration for s in journey.sections if s.type == response_pb2.WAITING] or [0])
 
 def way_later(request, journey1, journey2):
     """to check if a journey is way later than another journey
