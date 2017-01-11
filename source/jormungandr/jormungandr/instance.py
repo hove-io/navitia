@@ -448,7 +448,8 @@ class Instance(object):
         req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS
         try:
-            resp = self.send_and_receive(req, timeout=1000, quiet=True)
+            #we use _send_and_receive to avoid the circuit breaker, we don't want fast fail on init :)
+            resp = self._send_and_receive(req, timeout=1000, quiet=True)
             #the instance is automatically updated on a call
             if self.publication_date != pub_date:
                 return True
