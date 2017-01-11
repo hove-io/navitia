@@ -40,7 +40,7 @@ from jormungandr import app
 import gevent
 import gevent.pool
 import collections
-
+import copy
 
 def create_crowfly(pt_journey, _from, to, begin, end, mode='walking'):
     section = response_pb2.Section()
@@ -85,7 +85,11 @@ def make_direct_path_key(dep_mode, orig_uri, dest_uri, datetime, clockwise, reve
 
 
 def get_direct_path_if_exists(direct_path_pool, mode, orig_uri, dest_uri, datetime, clockwise, reverse_sections):
-    import copy
+    """
+    in this function, we retrieve from direct_path_pool the direct path regarding to the given
+    parameters(mode, orig_uri, etc...) then we recompute the datetimes of the found direct path, since the request
+    datetime is no longer the same.
+    """
     dp_key = make_direct_path_key(mode, orig_uri, dest_uri,  datetime, clockwise, reverse_sections)
     dp = copy.deepcopy(direct_path_pool.get(dp_key))
     if not dp.journeys:
@@ -224,10 +228,8 @@ def _reverse_journeys(res):
             continue
         previous_section_begin = j.arrival_date_time
         for s in j.sections:
-            from copy import deepcopy
-
-            o = deepcopy(s.origin)
-            d = deepcopy(s.destination)
+            o = copy.deepcopy(s.origin)
+            d = copy.deepcopy(s.destination)
             s.origin.CopyFrom(d)
             s.destination.CopyFrom(o)
             s.end_date_time = previous_section_begin
@@ -447,7 +449,6 @@ class AsyncWorker(object):
     @staticmethod
     def _extend_journey(pt_journey, mode, pb_from, pb_to, departure_date_time, nm, clockwise,
                         fallback_direct_path, reverse_sections=False):
-        import copy
         departure_dp = get_direct_path_if_exists(fallback_direct_path, mode, pb_from.uri, pb_to.uri,
                                                  departure_date_time, clockwise, reverse_sections)
         if clockwise:
