@@ -102,3 +102,58 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['embedded_type'] == 'address'
             assert r[0]['address']['name'] == 'Rue Bob'
             assert r[0]['address']['label'] == '20 Rue Bob (Bobtown)'
+
+    def test_autocomplete_call_with_param_from(self):
+        mock_requests = MockRequests({
+            'https://host_of_bragi/autocomplete?q=bob&limit=10&lon=3.25&lat=49.84':
+                (
+                    {"features": [
+                        {
+                            "geometry": {
+                                "coordinates": [
+                                    3.282103,
+                                    49.847586
+                                ],
+                                "type": "Point"
+                            },
+                            "properties": {
+                                "geocoding": {
+                                    "city": "Bobtown",
+                                    "housenumber": "20",
+                                    "id": "49.847586;3.282103",
+                                    "label": "20 Rue Bob (Bobtown)",
+                                    "name": "Rue Bob",
+                                    "postcode": "02100",
+                                    "street": "Rue Bob",
+                                    "type": "house",
+                                    "administrative_regions": [
+                                        {
+                                            "id": "admin:fr:02000",
+                                            "insee": "02000",
+                                            "level": 8,
+                                            "label": "Bobtown (02000)",
+                                            "zip_codes": ["02000"],
+                                            "weight": 1,
+                                            "coord": {
+                                                "lat": 48.8396154,
+                                                "lon": 2.3957517
+                                            }
+                                        }
+                                    ],
+                                }
+                            },
+                            "type": "Feature"
+                        }
+                    ]
+                    }, 200)
+        })
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query_region('places?q=bob&from=3.25;49.84')
+
+            is_valid_global_autocomplete(response, depth=1)
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['name'] == '20 Rue Bob (Bobtown)'
+            assert r[0]['embedded_type'] == 'address'
+            assert r[0]['address']['name'] == 'Rue Bob'
+            assert r[0]['address']['label'] == '20 Rue Bob (Bobtown)'

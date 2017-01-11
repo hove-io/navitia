@@ -55,7 +55,7 @@ class GeocodeJson(AbstractAutocomplete):
             "count": request["count"]
         }
 
-        if request["from"]:
+        if request.get("from"):
             params["lon"], params["lat"] = self.get_coords(request["from"])
 
         try:
