@@ -212,17 +212,7 @@ class JourneyCommon(object):
 
         #In this request only two journeys are found
         query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
-                "min_nb_journeys=3&_night_bus_filter_base_factor=35000&_night_bus_filter_max_factor=2"\
-                .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
-        response = self.query_region(query)
-        check_journeys(response)
-        self.is_valid_journey_response(response, query)
-        assert len(response["journeys"]) == 2
-
-        #With greater value of _night_bus_filter_base_factor we find one more journey of 18:01
-        #This request gives two journeys without the correction of this commit.
-        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
-                "min_nb_journeys=3&_night_bus_filter_base_factor=35548&_night_bus_filter_max_factor=2"\
+                "min_nb_journeys=3&_night_bus_filter_base_factor=0&_night_bus_filter_max_factor=2"\
                 .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
         response = self.query_region(query)
         check_journeys(response)
