@@ -198,6 +198,37 @@ class JourneyCommon(object):
         self.is_valid_journey_response(response, query)
         assert len(response["journeys"]) >= 3
 
+    def test_min_nb_journeys_with_night_bus_filter(self):
+        """
+        Tests the combination of parameters _night_bus_filter_base_factor,
+        _night_bus_filter_max_factor and min_nb_journeys
+
+        1. _night_bus_filter_base_factor and _night_bus_filter_max_factor are used to limit the next
+        journey with datetime of best response of last answer.
+
+        2 To obtain at least "min_nb_journeys" journeys in the result each call to kraken
+         in a loop is made with datatime + 1 of de best journey but not of global request.
+        """
+
+        #In this request only two journeys are found
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
+                "min_nb_journeys=3&_night_bus_filter_base_factor=35000&_night_bus_filter_max_factor=2"\
+                .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
+        response = self.query_region(query)
+        check_journeys(response)
+        self.is_valid_journey_response(response, query)
+        assert len(response["journeys"]) == 2
+
+        #With greater value of _night_bus_filter_base_factor we find one more journey of 18:01
+        #This request gives two journeys without the correction of this commit.
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
+                "min_nb_journeys=3&_night_bus_filter_base_factor=35548&_night_bus_filter_max_factor=2"\
+                .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
+        response = self.query_region(query)
+        check_journeys(response)
+        self.is_valid_journey_response(response, query)
+        assert len(response["journeys"]) == 3
+
     """
     test on date format
     """

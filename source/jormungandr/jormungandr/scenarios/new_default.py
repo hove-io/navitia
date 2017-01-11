@@ -684,6 +684,7 @@ class Scenario(simple.Scenario):
 
             tmp_resp = self.call_kraken(request_type, request, instance, krakens_call)
             _tag_by_mode(tmp_resp)
+            journey_filter._filter_too_long_journeys(tmp_resp, request)
             responses.extend(tmp_resp)  # we keep the error for building the response
             if nb_journeys(tmp_resp) == 0:
                 # no new journeys found, we stop
