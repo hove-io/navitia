@@ -78,6 +78,38 @@ def get_max_fallback_duration(request, mode):
     raise ValueError('unknown mode: {}'.format(mode))
 
 
+def make_direct_path_key(dep_mode, orig_uri, dest_uri, datetime, clockwise, reverse_sections):
+    # datetime is not taken into consideration because we assume that
+    # a direct path from A to B remains the same even the departure time are different
+    return dep_mode, orig_uri, dest_uri, datetime, clockwise, reverse_sections
+
+
+def get_direct_path_if_exists(direct_path_pool, mode, orig_uri, dest_uri, datetime, clockwise, reverse_sections):
+    import copy
+    dp_key = make_direct_path_key(mode, orig_uri, dest_uri,  datetime, clockwise, reverse_sections)
+    dp = copy.deepcopy(direct_path_pool.get(dp_key))
+
+    if mode=='car':
+        pass
+    if not dp.journeys:
+        return dp
+
+    dep_arr_datetimes = (datetime + (-1, 1)[clockwise] * dp.journeys[0].duration, datetime)
+    dep_datetime = dep_arr_datetimes[clockwise]
+    arr_datetime = dep_arr_datetimes[not clockwise]
+
+    dp.journeys[0].departure_date_time = dep_datetime
+    dp.journeys[0].arrival_date_time = arr_datetime
+
+    delta = dep_datetime - dp.journeys[0].sections[0].begin_date_time
+    if delta == 0:
+        return dp
+    for s in dp.journeys[0].sections:
+        s.begin_date_time += delta
+        s.end_date_time += delta
+    return dp
+
+
 class FallbackDuration(dict):
     """
     Dictionary containing the id of the places and the duration to arrive there and the projection status
@@ -203,6 +235,7 @@ def _reverse_journeys(res):
             s.destination.CopyFrom(o)
             s.end_date_time = previous_section_begin
             previous_section_begin = s.begin_date_time = s.end_date_time - s.duration
+        j.sections.sort(SectionSorter())
     return res
 
 
@@ -349,7 +382,9 @@ class AsyncWorker(object):
     @staticmethod
     def _get_direct_path(instance, mode, pt_object_origin, pt_object_destination, datetime, clockwise,
                          request, reverse_sections=False):
-        dp_key = (mode, pt_object_origin.uri, pt_object_destination.uri, datetime, clockwise, reverse_sections)
+
+        dp_key = make_direct_path_key(mode, pt_object_origin.uri, pt_object_destination.uri,
+                                      datetime, clockwise, reverse_sections)
         dp = instance.street_network_service.direct_path(mode,
                                                          pt_object_origin,
                                                          pt_object_destination,
@@ -367,11 +402,11 @@ class AsyncWorker(object):
                                 modes):
         futures_direct_path = []
         for dep_mode in modes:
-            dp_key = (dep_mode, origin.uri,
-                      destination.uri,
-                      datetime,
-                      clockwise,
-                      reverse_sections)
+            dp_key = make_direct_path_key(dep_mode, origin.uri,
+                                          destination.uri,
+                                          datetime,
+                                          clockwise,
+                                          reverse_sections)
             if dp_key not in fallback_direct_path:
                 futures_direct_path.append(self.pool.spawn(self._get_direct_path,
                                                            self.instance,
@@ -394,7 +429,7 @@ class AsyncWorker(object):
         datetime = self.request['datetime']
         clockwise = self.request['clockwise']
         for dep_mode, arr_mode in self.krakens_call:
-            dp_key = (dep_mode, origin.uri, destination.uri, datetime, clockwise, reverse_sections)
+            dp_key = make_direct_path_key(dep_mode, origin.uri, destination.uri, datetime, clockwise, reverse_sections)
             dp = fallback_direct_path.get(dp_key)
             if dp.journeys:
                 journey_parameters.direct_path_duration = dp.journeys[0].durations.total
@@ -417,9 +452,8 @@ class AsyncWorker(object):
     def _extend_journey(pt_journey, mode, pb_from, pb_to, departure_date_time, nm, clockwise,
                         fallback_direct_path, reverse_sections=False):
         import copy
-
-        dp_key = (mode, pb_from.uri, pb_to.uri, departure_date_time, clockwise, reverse_sections)
-        departure_dp = fallback_direct_path[dp_key]
+        departure_dp = get_direct_path_if_exists(fallback_direct_path, mode, pb_from.uri, pb_to.uri,
+                                                 departure_date_time, clockwise, reverse_sections)
         if clockwise:
             pt_journey.duration += nm.get_duration(mode, pb_to.uri)
         elif not reverse_sections:
@@ -668,7 +702,7 @@ class Scenario(new_default.Scenario):
             dep_mode, arr_mode, local_resp = future.get()
             if local_resp is None:
                 continue
-            dp_key = (dep_mode, g.requested_origin.uri, g.requested_destination.uri, request['datetime'],
+            dp_key = make_direct_path_key(dep_mode, g.requested_origin.uri, g.requested_destination.uri, request['datetime'],
                       request['clockwise'], False)
             direct_path = g.fallback_direct_path.get(dp_key)
 

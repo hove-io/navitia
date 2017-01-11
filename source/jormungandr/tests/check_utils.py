@@ -486,6 +486,10 @@ def is_valid_journey(journey, tester, query):
 
     #we want to test that all departure match de previous section arrival
     last_arrival = departure
+
+    previous_destination_uri = None
+    if journey['sections']:
+        previous_destination_uri = journey['sections'][0]['from']['id']
     for s in journey['sections']:
         is_valid_section(s, query)
         section_departure = get_valid_datetime(s['departure_date_time'])
@@ -496,6 +500,9 @@ def is_valid_journey(journey, tester, query):
         # test if geojson is valid
         g = s.get('geojson')
         g is None or shape(g)
+
+        assert (s['from']['id'] == previous_destination_uri)
+        previous_destination_uri = s['to']['id']
 
     assert last_arrival == arrival
     assert get_valid_datetime(journey['sections'][-1]['arrival_date_time']) == last_arrival
