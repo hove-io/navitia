@@ -88,9 +88,6 @@ def get_direct_path_if_exists(direct_path_pool, mode, orig_uri, dest_uri, dateti
     import copy
     dp_key = make_direct_path_key(mode, orig_uri, dest_uri,  datetime, clockwise, reverse_sections)
     dp = copy.deepcopy(direct_path_pool.get(dp_key))
-
-    if mode=='car':
-        pass
     if not dp.journeys:
         return dp
 
@@ -382,7 +379,6 @@ class AsyncWorker(object):
     @staticmethod
     def _get_direct_path(instance, mode, pt_object_origin, pt_object_destination, datetime, clockwise,
                          request, reverse_sections=False):
-
         dp_key = make_direct_path_key(mode, pt_object_origin.uri, pt_object_destination.uri,
                                       datetime, clockwise, reverse_sections)
         dp = instance.street_network_service.direct_path(mode,

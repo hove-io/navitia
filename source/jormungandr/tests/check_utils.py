@@ -503,7 +503,6 @@ def is_valid_journey(journey, tester, query):
 
         assert (s['from']['id'] == previous_destination_uri)
         previous_destination_uri = s['to']['id']
-
     assert last_arrival == arrival
     assert get_valid_datetime(journey['sections'][-1]['arrival_date_time']) == last_arrival
 
