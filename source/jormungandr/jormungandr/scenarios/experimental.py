@@ -81,7 +81,7 @@ def get_max_fallback_duration(request, mode):
 def make_direct_path_key(dep_mode, orig_uri, dest_uri, datetime, clockwise, reverse_sections):
     # datetime is not taken into consideration because we assume that
     # a direct path from A to B remains the same even the departure time are different
-    return dep_mode, orig_uri, dest_uri, datetime, clockwise, reverse_sections
+    return dep_mode, orig_uri, dest_uri, clockwise, reverse_sections
 
 
 def get_direct_path_if_exists(direct_path_pool, mode, orig_uri, dest_uri, datetime, clockwise, reverse_sections):
