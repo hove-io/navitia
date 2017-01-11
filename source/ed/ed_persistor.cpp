@@ -130,7 +130,8 @@ void EdPersistor::insert_admins(const ed::Georef& data){
     for(const auto& itm : data.admins){
         if(itm.second->is_used){
             this->lotus.insert({std::to_string(itm.second->id), itm.second->name, itm.second->insee,
-                               itm.second->level, this->to_geographic_point(itm.second->coord),"admin:" + itm.second->insee});
+                               itm.second->level, this->to_geographic_point(itm.second->coord),
+                               "admin:fr:" + itm.second->insee});
         }
     }
     this->lotus.finish_bulk_insert();

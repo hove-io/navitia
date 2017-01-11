@@ -178,10 +178,14 @@ void OSMCache::insert_relations() {
             std::string polygon_str = polygon_stream.str();
             const auto coord = "POINT(" + std::to_string(relation.second.centre.get<0>())
                 + " " + std::to_string(relation.second.centre.get<1>()) + ")";
+
+            auto uri = "admin:osm:" + std::to_string(relation.first);
+            if ( ! relation.second.insee.empty()) {
+                uri = "admin:fr:" + relation.second.insee;
+            }
             lotus.insert({std::to_string(relation.first), relation.second.name,
                           relation.second.postal_code(), relation.second.insee,
-                          std::to_string(relation.second.level), coord, polygon_str,
-                          "admin:"+std::to_string(relation.first)});
+                          std::to_string(relation.second.level), coord, polygon_str, uri});
         } else {
             ++nb_empty_polygons;
         }
