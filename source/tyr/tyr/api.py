@@ -34,10 +34,13 @@ from tyr import resources
 
 from tyr import app, api
 import flask_restful
+from flask import Blueprint
 
 # we always want pretty json
 flask_restful.representations.json.settings = {'indent': 4}
 api.app.url_map.strict_slashes = False
+
+api_bp = Blueprint('api', __name__)
 
 api.add_resource(resources.Instance, '/v0/instances/', '/v0/instances/<int:id>/', '/v0/instances/<string:name>/')
 api.add_resource(resources.Api, '/v0/api/')
@@ -68,6 +71,12 @@ api.add_resource(resources.PoiType,
 api.add_resource(resources.AutocompleteParameter,
                  '/v0/autocomplete_parameters/',
                  '/v0/autocomplete_parameters/<string:name>')
+
+api.add_resource(resources.InstanceDataset,
+                 '/v0/instances/<instance_name>/last_datasets')
+
+api.add_resource(resources.AutocompleteDataset,
+                 '/v0/autocomplete_parameters/<ac_instance_name>/last_datasets')
 
 @app.errorhandler(Exception)
 def error_handler(exception):
