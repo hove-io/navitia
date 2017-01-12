@@ -11,6 +11,23 @@ def create_autocomplete_parameter():
         models.db.session.add(autocomplete_param)
         models.db.session.commit()
 
+        # we also create 3 datasets, one for bano, 2 for osm
+        for i, dset_type in enumerate(['bano', 'osm', 'osm']):
+            job = models.Job()
+
+            dataset = models.DataSet()
+            dataset.type = dset_type
+            dataset.family_type = 'autocomplete_{}'.format(dataset.type)
+            dataset.name = '/path/to/dataset_{}'.format(i)
+            models.db.session.add(dataset)
+
+            job.autocomplete_params_id = autocomplete_param.id
+            job.data_sets.append(dataset)
+            job.state = 'done'
+            models.db.session.add(job)
+            models.db.session.commit()
+
+
 @pytest.fixture
 def create_two_autocomplete_parameters():
     with app.app_context():
@@ -24,7 +41,7 @@ def create_two_autocomplete_parameters():
 @pytest.fixture
 def autocomplete_parameter_json():
     return {"name": "peru", "street": "OSM", "address": "BANO", "poi": "FUSIO", "admin": "OSM",
-            "admin_level" : [8]}
+            "admin_level": [8]}
 
 
 def test_get_autocomplete_parameters_empty():
@@ -45,7 +62,7 @@ def test_get_all_autocomplete(create_autocomplete_parameter):
 
 def test_get_autocomplete_by_name(create_two_autocomplete_parameters):
     resp = api_get('/v0/autocomplete_parameters/')
-    assert len(resp) == 3
+    assert len(resp) == 2
 
     resp = api_get('/v0/autocomplete_parameters/france')
     assert resp['name'] == 'france'
@@ -66,7 +83,7 @@ def test_post_autocomplete(autocomplete_parameter_json):
     assert resp['admin'] == 'OSM'
     assert resp['admin_level'] == [8]
 
-def test_put_autocomplete(autocomplete_parameter_json):
+def test_put_autocomplete(create_two_autocomplete_parameters, autocomplete_parameter_json):
     resp = api_get('/v0/autocomplete_parameters/france')
     assert resp['name'] == 'france'
     assert resp['street'] == 'OSM'
@@ -84,9 +101,9 @@ def test_put_autocomplete(autocomplete_parameter_json):
     assert resp['admin_level'] == [8]
 
 
-def test_delete_autocomplete():
-    resp = resp = api_get('/v0/autocomplete_parameters/')
-    assert len(resp) == 4
+def test_delete_autocomplete(create_two_autocomplete_parameters):
+    resp = api_get('/v0/autocomplete_parameters/')
+    assert len(resp) == 2
     resp = api_get('/v0/autocomplete_parameters/france')
     assert resp['name'] == 'france'
 
@@ -95,3 +112,29 @@ def test_delete_autocomplete():
 
     _, status = api_get('/v0/autocomplete_parameters/france', check=False)
     assert status == 404
+
+    resp = api_get('/v0/autocomplete_parameters/')
+    assert len(resp) == 1
+
+
+def test_get_last_datasets_autocomplete(create_autocomplete_parameter):
+    """
+    we query the loaded datasets of idf
+    we loaded 3 datasets, but by default we should get one by family_type, so one for bano, one for osm
+    """
+    resp = api_get('/v0/autocomplete_parameters/idf/last_datasets')
+
+    assert len(resp) == 2
+    bano = next((d for d in resp if d['type'] == 'bano'), None)
+    assert bano
+    assert bano['family_type'] == 'autocomplete_bano'
+    assert bano['name'] == '/path/to/dataset_0'
+
+    osm = next((d for d in resp if d['type'] == 'osm'), None)
+    assert osm
+    assert osm['family_type'] == 'autocomplete_osm'
+    assert osm['name'] == '/path/to/dataset_2'  # we should have the last one
+
+    # if we ask for the 2 last datasets per type, we got all of them
+    resp = api_get('/v0/autocomplete_parameters/idf/last_datasets?count=2')
+    assert len(resp) == 3
