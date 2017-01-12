@@ -354,8 +354,7 @@ PathFinder::start_dijkstra_and_fill_duration_map(const navitia::time_duration& r
                                                     georef::RoutingStatus_e::unreached);
             }
         } else {
-            navitia::time_duration best_dist = bt::pos_infin;
-            std::tie(best_dist, std::ignore) = find_nearest_vertex(projection, true);
+            const navitia::time_duration best_dist = find_nearest_vertex(projection, true).first;
             if (best_dist <= radius) {
                 result[id] = georef::RoutingElement(best_dist,
                                                     georef::RoutingStatus_e::reached);
