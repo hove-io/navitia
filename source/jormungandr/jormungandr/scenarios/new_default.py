@@ -190,21 +190,21 @@ def tag_ecologic(resp):
             if j.co2_emission.value < resp.car_co2_emission.value * 0.5:
                 j.tags.append('ecologic')
 
+
 def _tag_direct_path(responses):
     street_network_mode_tag_map = {response_pb2.Walking: ['non_pt_walking'],
                                    response_pb2.Bike: ['non_pt_bike']}
-    for r in responses:
-        for j in r.journeys:
-            if all(s.type != response_pb2.PUBLIC_TRANSPORT for s in j.sections):
-                j.tags.extend(['non_pt'])
+    for j in itertools.chain.from_iterable(r.journeys for r in responses):
+        if all(s.type != response_pb2.PUBLIC_TRANSPORT for s in j.sections):
+            j.tags.extend(['non_pt'])
 
-            # TODO: remove that (and street_network_mode_tag_map) when NMP stops using it
-            # if there is only one section
-            if len(j.sections) == 1:
-                if j.sections[0].type == response_pb2.STREET_NETWORK and hasattr(j.sections[0], 'street_network'):
-                    tag = street_network_mode_tag_map.get(j.sections[0].street_network.mode)
-                    if tag:
-                        j.tags.extend(tag)
+        # TODO: remove that (and street_network_mode_tag_map) when NMP stops using it
+        # if there is only one section
+        if len(j.sections) == 1:
+            if j.sections[0].type == response_pb2.STREET_NETWORK and hasattr(j.sections[0], 'street_network'):
+                tag = street_network_mode_tag_map.get(j.sections[0].street_network.mode)
+                if tag:
+                    j.tags.extend(tag)
 
 
 def tag_journeys(resp):
@@ -212,6 +212,7 @@ def tag_journeys(resp):
     tag the journeys
     """
     tag_ecologic(resp)
+
 
 def _get_section_id(section):
     street_network_mode = None

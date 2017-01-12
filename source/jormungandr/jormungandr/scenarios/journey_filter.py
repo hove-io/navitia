@@ -326,14 +326,14 @@ def way_later(request, journey1, journey2):
     return pseudo_j1_duration > max_value
 
 
-def _filter_too_long_journeys(journeys, request):
+def _filter_too_long_journeys(responses, request):
     """
     Filter not coherent journeys
 
     The aim is to keep that as simple as possible
     """
     # for clarity purpose we build a temporary list
-    journeys = [j for r in journeys for j in r.journeys if 'non_pt' not in j.tags]
+    journeys = [j for r in responses for j in r.journeys if 'non_pt' not in j.tags]
 
     logger = logging.getLogger(__name__)
     for (j1, j2) in itertools.permutations(journeys, 2):
