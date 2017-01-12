@@ -1159,23 +1159,24 @@ class AutocompleteParameter(flask_restful.Resource):
     def put(self, name=None):
         autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
         parser = reqparse.RequestParser()
-        parser.add_argument('street', type=str, required=False, default='OSM',
-                            help='source for street: [BANO, OSM]',
+        parser.add_argument('street', type=str, required=False, default=autocomplete_param.street,
+                            help='source for street: {}'.format(utils.street_source_types),
                             location=('json', 'values'),
-                            choices= utils.street_source_types)
-        parser.add_argument('address', type=str, required=False, default='BANO',
-                            help='source for address: [BANO, OpenAddresses]',
+                            choices=utils.street_source_types)
+        parser.add_argument('address', type=str, required=False, default=autocomplete_param.address,
+                            help='source for address: {}'.format(utils.address_source_types),
                             location=('json', 'values'),
                             choices=utils.address_source_types)
-        parser.add_argument('poi', type=str, required=False, default='FUSIO',
-                            help='source for poi: [FUSIO, OSM, PagesJaunes]',
+        parser.add_argument('poi', type=str, required=False, default=autocomplete_param.poi,
+                            help='source for poi: {}'.format(utils.poi_source_types),
                             location=('json', 'values'),
                             choices=utils.poi_source_types)
-        parser.add_argument('admin', type=str, required=False, default='OSM',
-                            help='source for admin: [FUSIO, OSM]',
+        parser.add_argument('admin', type=str, required=False, default=autocomplete_param.admin,
+                            help='source for admin: {}'.format(utils.admin_source_types),
                             location=('json', 'values'),
                             choices=utils.admin_source_types)
-        parser.add_argument('admin_level', type=int, action='append', required=True)
+        parser.add_argument('admin_level', type=int, action='append', required=False,
+                            default=autocomplete_param.admin_level)
 
         args = parser.parse_args()
 
