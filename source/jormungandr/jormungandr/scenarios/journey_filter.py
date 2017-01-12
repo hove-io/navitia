@@ -65,8 +65,6 @@ def filter_journeys(response_list, instance, request):
 
     _filter_similar_vj_journeys(journeys, request)
 
-    _filter_too_long_journeys(journeys, instance, request)
-
     _filter_too_long_waiting(journeys, request)
 
     _filter_max_successive_physical_mode(journeys, instance, request)
@@ -289,6 +287,7 @@ def get_min_waiting(journey):
     """
     return min([s.duration for s in journey.sections if s.type == response_pb2.WAITING] or [0])
 
+
 def way_later(request, journey1, journey2):
     """to check if a journey is way later than another journey
 
@@ -327,12 +326,14 @@ def way_later(request, journey1, journey2):
     return pseudo_j1_duration > max_value
 
 
-def _filter_too_long_journeys(journeys, instance, request):
+def _filter_too_long_journeys(responses, request):
     """
     Filter not coherent journeys
 
     The aim is to keep that as simple as possible
     """
+    # for clarity purpose we build a temporary list
+    journeys = [j for r in responses for j in r.journeys if 'non_pt' not in j.tags]
 
     logger = logging.getLogger(__name__)
     for (j1, j2) in itertools.permutations(journeys, 2):

@@ -439,7 +439,7 @@ def tag_direct_path_test():
     journey_pt = response.journeys.add()
     section = journey_pt.sections.add()
     section.type = response_pb2.PUBLIC_TRANSPORT
-    new_default.tag_direct_path(response)
+    new_default._tag_direct_path([response])
     assert 'non_pt_walking' in response.journeys[0].tags
     assert 'non_pt' in response.journeys[0].tags
     assert 'non_pt_bike' in response.journeys[1].tags

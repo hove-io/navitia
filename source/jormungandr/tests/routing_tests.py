@@ -84,6 +84,12 @@ class TestJourneysDefault(JourneyCommon, AbstractTestFixture):
         assert j['sections'][0]['to']['id'] == 'stop_point:stopB'
         assert j['type'] == 'non_pt_walk'
 
+    def test_min_nb_journeys_with_night_bus_filter(self):
+        """
+        This new feature is not supported in default
+        """
+        pass
+
 
 @config()
 class TestJourneysNoRegionDefault(JourneysNoRegion, AbstractTestFixture):
