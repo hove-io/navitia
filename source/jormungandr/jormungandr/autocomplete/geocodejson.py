@@ -52,7 +52,7 @@ class GeocodeJson(AbstractAutocomplete):
 
         params = {
             "q": request["q"],
-            "count": request["count"]
+            "limit": request["count"]
         }
 
         if request.get("from"):
