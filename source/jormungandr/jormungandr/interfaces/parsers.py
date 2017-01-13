@@ -85,7 +85,11 @@ def coord_format(coord):
         raise ValueError('Invalid coordinate parameter. It must be lon;lat where lon and lat are floats.')
 
     lon, lat = lon_lat_splitted
-    float(lon)
-    float(lat)
+    lat = float(lat)
+    if not (-90.0 <= lat <= 90.0):
+        raise ValueError("lat should be between -90 and 90")
+    lon = float(lon)
+    if not (180.0 >= lon >= -180.0):
+        raise ValueError("lon should be between -180 and 180")
 
     return coord
