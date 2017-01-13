@@ -427,7 +427,7 @@ class AsyncWorker(object):
         datetime = self.request['datetime']
         clockwise = self.request['clockwise']
         for dep_mode, arr_mode in self.krakens_call:
-            dp_key = (dep_mode, origin.uri, destination.uri, datetime, clockwise, reverse_sections)
+            dp_key = make_direct_path_key(dep_mode, origin.uri, destination.uri, datetime, clockwise, reverse_sections)
             dp = fallback_direct_path.get(dp_key)
             if dp.journeys:
                 journey_parameters.direct_path_duration = dp.journeys[0].durations.total
