@@ -31,32 +31,52 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from importlib import import_module
 import logging
+import abc
+
+# Using abc.ABCMeta in a way it is compatible both with Python 2.7 and Python 3.x
+# http://stackoverflow.com/a/38668373/1614576
+ABC = abc.ABCMeta(str("ABC"), (object,), {})
+
+
+class IStreetNetwrokService(ABC):
+    @abc.abstractmethod
+    def get_street_network_routing_matrix(self, origins, destinations, street_network_mode, max_duration, request, **kwargs):
+        pass
+
+    @abc.abstractmethod
+    def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise, request):
+        pass
 
 
 class StreetNetwork(object):
 
     @staticmethod
-    def get_street_network(instance, street_network_configuration):
+    def get_street_network_services(instance, street_network_configurations):
         log = logging.getLogger(__name__)
-        try:
-            cls = street_network_configuration['class']
-        except KeyError, TypeError:
-            log.critical('impossible to build a routing, missing mandatory field in configuration')
-            raise KeyError('impossible to build a routing, missing mandatory field in configuration')
+        street_network_services = {}
+        for config in street_network_configurations:
+            try:
+                cls = config['class']
+            except KeyError, TypeError:
+                log.critical('impossible to build a routing, missing mandatory field in configuration')
+                raise KeyError('impossible to build a routing, missing mandatory field in configuration')
 
-        args = street_network_configuration.get('args', {})
-        service_url = args.get('service_url', None)
-        try:
-            if '.' not in cls:
-                log.critical('impossible to build StreetNetwork, wrongly formated class: {}'.format(cls))
-                raise ValueError('impossible to build StreetNetwork, wrongly formated class: {}'.format(cls))
+            args = config.get('args', {})
+            service_url = args.get('service_url', None)
+            try:
+                if '.' not in cls:
+                    log.critical('impossible to build StreetNetwork, wrongly formated class: {}'.format(cls))
+                    raise ValueError('impossible to build StreetNetwork, wrongly formated class: {}'.format(cls))
 
-            module_path, name = cls.rsplit('.', 1)
-            module = import_module(module_path)
-            attr = getattr(module, name)
-        except AttributeError:
-            log.critical('impossible to build StreetNetwork, cannot find class: {}'.format(cls))
-            raise AttributeError('impossible to build StreetNetwork, cannot find class: {}'.format(cls))
+                module_path, name = cls.rsplit('.', 1)
+                module = import_module(module_path)
+                attr = getattr(module, name)
+            except AttributeError:
+                log.critical('impossible to build StreetNetwork, cannot find class: {}'.format(cls))
+                raise AttributeError('impossible to build StreetNetwork, cannot find class: {}'.format(cls))
 
-        log.info('** StreetNetwork {} used for direct_path **'.format(name))
-        return attr(instance=instance, url=service_url, **args)
+            service = attr(instance=instance, url=service_url, **args)
+            for mode in config["modes"]:
+                street_network_services[mode] = service
+                log.info('** StreetNetwork {} used for direct_path with mode: {} **'.format(name, mode))
+        return street_network_services

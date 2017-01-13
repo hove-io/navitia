@@ -50,6 +50,7 @@ from flask import g
 import flask
 import pybreaker
 from jormungandr import georef, planner, schedule, realtime_schedule, ptref, street_network
+import itertools
 
 type_to_pttype = {
       "stop_area": request_pb2.PlaceCodeRequest.StopArea,
@@ -62,6 +63,8 @@ type_to_pttype = {
       "calendar": request_pb2.PlaceCodeRequest.Calendar
 }
 
+STREET_NETWORK_MODES = ('walking', 'car', 'bss', 'bike')
+
 @app.before_request
 def _init_g():
     g.instances_model = {}
@@ -73,12 +76,10 @@ class Instance(object):
                  context,
                  name,
                  zmq_socket,
-                 street_network_configuration=None,
+                 street_network_configurations=None,
                  realtime_proxies_configuration=[],
                  zmq_socket_type='persistent',
                  autocomplete=None):
-        if not street_network_configuration:
-            street_network_configuration = {'class': 'jormungandr.street_network.kraken.Kraken'}
         self.geom = None
         self._sockets = queue.Queue()
         self.socket_path = zmq_socket
@@ -94,8 +95,12 @@ class Instance(object):
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S'])
         self.georef = georef.Kraken(self)
         self.planner = planner.Kraken(self)
-        self.street_network_service = street_network.StreetNetwork.get_street_network(self,
-                                                                                      street_network_configuration)
+
+        if street_network_configurations is None:
+            street_network_configurations = []
+        self._set_default_street_network_config(street_network_configurations)
+        self.street_network_services = street_network.StreetNetwork.get_street_network_services(self,
+                                                                                                street_network_configurations)
         self.ptref = ptref.PtRef(self)
 
         self.schedule = schedule.MixedSchedule(self)
@@ -107,6 +112,14 @@ class Instance(object):
             self.autocomplete = utils.create_object(autocomplete)
         self.zmq_socket_type = zmq_socket_type
 
+    @staticmethod
+    def _set_default_street_network_config(street_network_configs):
+        default_sn_class = 'jormungandr.street_network.kraken.Kraken'
+        modes_in_configs = set(list(itertools.chain.from_iterable(config["modes"] for config in street_network_configs)))
+        modes_not_set = set(STREET_NETWORK_MODES) - modes_in_configs
+
+        street_network_configs.append({"modes": list(modes_not_set),
+                                       "class": default_sn_class})
     def get_models(self):
         if self.name not in g.instances_model:
             g.instances_model[self.name] = self._get_models()
@@ -458,3 +471,26 @@ class Instance(object):
             # the next request. We don't want to purge all our cache for a small error.
             logging.getLogger(__name__).debug('timeout on init for %s', self.name)
         return False
+
+    def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration_to_pt, request, **kwargs):
+        if mode not in self.street_network_services:
+            abort(400, "{} is not handled, on {} are valid street network mode".format(mode,
+                                                                                       STREET_NETWORK_MODES))
+        return self.street_network_services[mode].get_street_network_routing_matrix(origins,
+                                                                                    destinations,
+                                                                                    mode,
+                                                                                    max_duration_to_pt,
+                                                                                    request,
+                                                                                    **kwargs)
+
+    def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise, request, **kwargs):
+        if mode not in self.street_network_services:
+            abort(400, "{} is not handled, on {} are valid street network mode".format(mode,
+                                                                                       STREET_NETWORK_MODES))
+        return self.street_network_services[mode].direct_path(mode,
+                                                              pt_object_origin,
+                                                              pt_object_destination,
+                                                              datetime,
+                                                              clockwise,
+                                                              request,
+                                                              **kwargs)

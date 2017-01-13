@@ -135,15 +135,15 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
             "car_speed": instance.car_speed,
             "bss_speed": instance.bss_speed,
         }
-        resp = instance.street_network_service.get_street_network_routing_matrix([origin], [destination],
-                                                                                 mode, max_duration, request, **kwargs)
+        resp = instance.get_street_network_routing_matrix([origin], [destination],
+                                                          mode, max_duration, request, **kwargs)
         assert len(resp.rows[0].routing_response) == 1
         assert resp.rows[0].routing_response[0].duration == 107
         assert resp.rows[0].routing_response[0].routing_status == response_pb2.reached
 
         max_duration = 106
-        resp = instance.street_network_service.get_street_network_routing_matrix([origin], [destination],
-                                                                                 mode, max_duration, request, **kwargs)
+        resp = instance.get_street_network_routing_matrix([origin], [destination],
+                                                          mode, max_duration, request, **kwargs)
         assert len(resp.rows[0].routing_response) == 1
         assert resp.rows[0].routing_response[0].duration == 0
         assert resp.rows[0].routing_response[0].routing_status == response_pb2.unreached
