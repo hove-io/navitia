@@ -550,7 +550,7 @@ def bragi_call_test():
         ]
     }
     mock_requests = MockRequests({
-        'http://bob.com/autocomplete?q=rue+bobette&count=10':
+        'http://bob.com/autocomplete?q=rue+bobette&limit=10':
         (bragi_response, 200)
     })
 
