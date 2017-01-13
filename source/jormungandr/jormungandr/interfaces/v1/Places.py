@@ -50,6 +50,7 @@ from flask_restful import marshal, marshal_with
 import datetime
 from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
 import ujson as json
+from jormungandr.interfaces.parsers import coord_format
 
 
 #global marshal
@@ -330,6 +331,10 @@ class Places(ResourceUri):
                                                      " else we consider it as UTC")
         self.parsers['get'].add_argument("disable_geojson", type=boolean, default=False,
                             description="remove geojson from the response")
+
+        self.parsers['get'].add_argument("from", type=coord_format,
+                                         description="Coordinates longitude;latitude used to prioritize "
+                                                     "the objects around this coordinate")
 
     def get(self, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()

@@ -30,7 +30,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 import mock
-from jormungandr.tests.utils_test import MockRequests
+from jormungandr.tests.utils_test import MockRequests, MockResponse
 from tests.check_utils import is_valid_global_autocomplete
 from .tests_mechanism import AbstractTestFixture, dataset
 
@@ -48,49 +48,50 @@ MOCKED_INSTANCE_CONF = {
 
 @dataset({'main_autocomplete_test': MOCKED_INSTANCE_CONF})
 class TestBragiAutocomplete(AbstractTestFixture):
+
     def test_autocomplete_call(self):
         mock_requests = MockRequests({
-            'https://host_of_bragi/autocomplete?q=bob&limit=10':
-                (
-                    {"features": [
-                        {
-                            "geometry": {
-                                "coordinates": [
-                                    3.282103,
-                                    49.847586
-                                ],
-                                "type": "Point"
-                            },
-                            "properties": {
-                                "geocoding": {
-                                    "city": "Bobtown",
-                                    "housenumber": "20",
-                                    "id": "49.847586;3.282103",
-                                    "label": "20 Rue Bob (Bobtown)",
-                                    "name": "Rue Bob",
-                                    "postcode": "02100",
-                                    "street": "Rue Bob",
-                                    "type": "house",
-                                    "administrative_regions": [
-                                        {
-                                            "id": "admin:fr:02000",
-                                            "insee": "02000",
-                                            "level": 8,
-                                            "label": "Bobtown (02000)",
-                                            "zip_codes": ["02000"],
-                                            "weight": 1,
-                                            "coord": {
-                                                "lat": 48.8396154,
-                                                "lon": 2.3957517
-                                            }
+        'https://host_of_bragi/autocomplete?q=bob&limit=10':
+            (
+                {"features": [
+                    {
+                        "geometry": {
+                            "coordinates": [
+                                3.282103,
+                                49.847586
+                            ],
+                            "type": "Point"
+                        },
+                        "properties": {
+                            "geocoding": {
+                                "city": "Bobtown",
+                                "housenumber": "20",
+                                "id": "49.847586;3.282103",
+                                "label": "20 Rue Bob (Bobtown)",
+                                "name": "Rue Bob",
+                                "postcode": "02100",
+                                "street": "Rue Bob",
+                                "type": "house",
+                                "administrative_regions": [
+                                    {
+                                        "id": "admin:fr:02000",
+                                        "insee": "02000",
+                                        "level": 8,
+                                        "label": "Bobtown (02000)",
+                                        "zip_codes": ["02000"],
+                                        "weight": 1,
+                                        "coord": {
+                                            "lat": 48.8396154,
+                                            "lon": 2.3957517
                                         }
-                                    ],
+                                    }
+                                ],
                                 }
-                            },
-                            "type": "Feature"
-                        }
-                    ]
-                    }, 200)
+                        },
+                        "type": "Feature"
+                    }
+                ]
+                }, 200)
         })
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region('places?q=bob')
@@ -102,3 +103,18 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['embedded_type'] == 'address'
             assert r[0]['address']['name'] == 'Rue Bob'
             assert r[0]['address']['label'] == '20 Rue Bob (Bobtown)'
+
+    def test_autocomplete_call_with_param_from(self):
+        """
+        test that the from param of the autocomplete is correctly given to bragi
+        :return:
+        """
+        def http_get(url, *args, **kwargs):
+            params = kwargs.pop('params')
+            assert params
+            assert params.get('lon') == '3.25'
+            assert params.get('lat') == '49.84'
+            return MockResponse({}, 200, '')
+        with mock.patch('requests.get', http_get) as mock_method:
+            self.query_region('places?q=bob&from=3.25;49.84')
+

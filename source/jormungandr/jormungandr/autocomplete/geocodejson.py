@@ -50,14 +50,19 @@ class GeocodeJson(AbstractAutocomplete):
         if not self.external_api:
             raise TechnicalError('global autocomplete not configured')
 
-        url = '{endpoint}?q={q}&limit={count}'.format(endpoint=self.external_api,
-                                                      q=request['q'],
-                                                      count=request['count'])
+        params = {
+            "q": request["q"],
+            "limit": request["count"]
+        }
+
+        if request.get("from"):
+            params["lon"], params["lat"] = self.get_coords(request["from"])
+
         try:
             if shape:
-                raw_response = requests.post(url, timeout=self.timeout, json=shape)
+                raw_response = requests.post(self.external_api, timeout=self.timeout, json=shape, params=params)
             else:
-                raw_response = requests.get(url, timeout=self.timeout)
+                raw_response = requests.get(self.external_api, timeout=self.timeout, params=params)
 
         except requests.Timeout:
             logging.getLogger(__name__).error('autocomplete request timeout')
@@ -75,4 +80,9 @@ class GeocodeJson(AbstractAutocomplete):
     def geo_status(self, instance):
         raise NotImplementedError
 
-
+    def get_coords(self, param):
+        """
+        Get coordinates (longitude, latitude).
+        For moment we consider that the param can only be a coordinate.
+        """
+        return param.split(";")

@@ -50,7 +50,7 @@ places = {
 class Kraken(AbstractAutocomplete):
 
     @marshal_with(places)
-    def get(self, request, instance):
+    def get(self, request, instance, shape=None):
 
         req = request_pb2.Request()
         req.requested_api = type_pb2.places
