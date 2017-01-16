@@ -32,6 +32,7 @@ from tyr import tasks
 import logging
 from tyr import manager
 
+
 @manager.command
 def import_last_autocomplete_dataset(instance_name, wait=True):
     """
@@ -55,3 +56,12 @@ def import_last_autocomplete_dataset(instance_name, wait=True):
         future.wait()
 
     logger.info('last datasets reimport finished for %s', instance_name)
+
+
+@manager.command
+def import_all_last_autocomplete_dataset(wait=True):
+    instances_name = [i.name for i in models.AutocompleteParameter.query.all()]
+    for name in instances_name:
+        import_last_autocomplete_dataset(instance_name=name, wait=wait)
+
+    # TODO we need to find a way to reimport also the public transport dataset in the autocomplete
