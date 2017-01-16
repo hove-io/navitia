@@ -190,16 +190,19 @@ user_fields_full = {
     'shape': Shape
 }
 
+dataset_field = {
+    'type': fields.Raw,
+    'name': fields.Raw,
+    'family_type': fields.Raw,
+}
+
 jobs_fields = {
     'jobs': fields.List(fields.Nested({
         'id': fields.Raw,
         'state': fields.Raw,
         'created_at': FieldDate,
         'updated_at': FieldDate,
-        'data_sets': fields.List(fields.Nested({
-            'type': fields.Raw,
-            'name': fields.Raw
-        })),
+        'data_sets': fields.List(fields.Nested(dataset_field)),
         'instance': fields.Nested(instance_fields)
     }))
 }
@@ -1204,3 +1207,31 @@ class AutocompleteParameter(flask_restful.Resource):
             logging.exception("fail")
             raise
         return ({}, 204)
+
+
+class InstanceDataset(flask_restful.Resource):
+
+    def get(self, instance_name):
+        parser = reqparse.RequestParser()
+        parser.add_argument('count', type=int, required=False,
+                            help='number of last dataset to dump per type',
+                            location=('json', 'values'), default=1)
+        args = parser.parse_args()
+        instance = models.Instance.get_by_name(instance_name)
+        datasets = instance.last_datasets(args['count'])
+
+        return marshal(datasets, dataset_field)
+
+
+class AutocompleteDataset(flask_restful.Resource):
+
+    def get(self, ac_instance_name):
+        parser = reqparse.RequestParser()
+        parser.add_argument('count', type=int, required=False,
+                            help='number of last dataset to dump per type',
+                            location=('json', 'values'), default=1)
+        args = parser.parse_args()
+        instance = models.AutocompleteParameter.query.filter_by(name=ac_instance_name).first_or_404()
+        datasets = instance.last_datasets(args['count'])
+
+        return marshal(datasets, dataset_field)
