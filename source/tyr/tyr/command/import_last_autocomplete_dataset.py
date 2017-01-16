@@ -38,10 +38,7 @@ def import_last_autocomplete_dataset(instance_name, wait=True):
     """
     reimport the last datasets of an autocomplete instance
 
-    If not given, the instance default one is taken
-    By default job is not run on the workers, you need to pass --background for use them, in that case you can
-    also pass --nowait for not waiting the end of the job
-
+    you can set wait=False if you don't want to wait for the result
     """
     instance = models.AutocompleteParameter.query.filter_by(name=instance_name).first()
 
@@ -59,7 +56,10 @@ def import_last_autocomplete_dataset(instance_name, wait=True):
 
 
 @manager.command
-def import_all_last_autocomplete_dataset(wait=True):
+def refresh_autocomplete_data(wait=True):
+    """
+    reimport all the last autocomplete datas
+    """
     instances_name = [i.name for i in models.AutocompleteParameter.query.all()]
     for name in instances_name:
         import_last_autocomplete_dataset(instance_name=name, wait=wait)
