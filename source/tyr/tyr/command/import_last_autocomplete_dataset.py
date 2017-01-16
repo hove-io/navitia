@@ -27,12 +27,31 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from tyr.command.reload_kraken import ReloadKrakenCommand
-from tyr.command.build_data import BuildDataCommand
-from tyr.command.load_data import LoadDataCommand
-import tyr.command.purge
-import tyr.command.cities
-import tyr.command.bounding_shape
-import tyr.command.import_last_dataset
-import tyr.command.import_last_autocomplete_dataset
-import tyr.command.last_dataset
+from navitiacommon import models
+from tyr import tasks
+import logging
+from tyr import manager
+
+@manager.command
+def import_last_autocomplete_dataset(instance_name, wait=True):
+    """
+    reimport the last datasets of an autocomplete instance
+
+    If not given, the instance default one is taken
+    By default job is not run on the workers, you need to pass --background for use them, in that case you can
+    also pass --nowait for not waiting the end of the job
+
+    """
+    instance = models.AutocompleteParameter.query.filter_by(name=instance_name).first()
+
+    if not instance:
+        raise Exception("cannot find autocomplete instance {}".format(instance_name))
+
+    files = [d.name for d in instance.last_datasets(1)]
+    logger = logging.getLogger(__name__)
+    logger.info('we reimport the last dataset of autocomplete %s, composed of: %s', instance_name, files)
+    future = tasks.import_autocomplete(files, instance, backup_file=False)
+    if wait and future:
+        future.wait()
+
+    logger.info('last datasets reimport finished for %s', instance_name)
