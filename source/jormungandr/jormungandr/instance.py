@@ -115,11 +115,12 @@ class Instance(object):
     @staticmethod
     def _set_default_street_network_config(street_network_configs):
         default_sn_class = 'jormungandr.street_network.kraken.Kraken'
-        modes_in_configs = set(list(itertools.chain.from_iterable(config.get("modes", []) for config in street_network_configs)))
-        modes_not_set = set(STREET_NETWORK_MODES) - modes_in_configs
 
-        street_network_configs.append({"modes": list(modes_not_set),
-                                       "class": default_sn_class})
+        modes_in_configs = set(list(itertools.chain.from_iterable(config['modes'] for config in street_network_configs)))
+        modes_not_set = set(STREET_NETWORK_MODES) - modes_in_configs
+        if modes_not_set:
+            street_network_configs.append({"modes": list(modes_not_set),
+                                           "class": default_sn_class})
     def get_models(self):
         if self.name not in g.instances_model:
             g.instances_model[self.name] = self._get_models()
