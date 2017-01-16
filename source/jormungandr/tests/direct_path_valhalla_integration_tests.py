@@ -34,7 +34,8 @@ import requests as requests
 from mock import MagicMock
 import json
 
-MOCKED_VALHALLA_CONF = {
+MOCKED_VALHALLA_CONF = [{
+    "modes": ['walking', 'car', 'bss', 'bike'],
     "class": "tests.direct_path_valhalla_integration_tests.MockValhalla",
     "args": {
         "service_url": "http://bob.com",
@@ -48,7 +49,7 @@ MOCKED_VALHALLA_CONF = {
             }
         }
     }
-}
+}]
 s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset
 r_coord = "0.00188646;0.00071865"  # coordinate of R in the dataset
 

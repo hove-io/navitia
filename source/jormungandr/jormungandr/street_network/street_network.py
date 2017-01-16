@@ -76,7 +76,7 @@ class StreetNetwork(object):
                 raise AttributeError('impossible to build StreetNetwork, cannot find class: {}'.format(cls))
 
             service = attr(instance=instance, url=service_url, **args)
-            for mode in config["modes"]:
+            for mode in config.get("modes", []):
                 street_network_services[mode] = service
                 log.info('** StreetNetwork {} used for direct_path with mode: {} **'.format(name, mode))
         return street_network_services
