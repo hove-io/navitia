@@ -32,7 +32,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 def transform_id(id):
     splitted_coord = id.split(";")
-    splitted_address = id.split(":")
     if len(splitted_coord) == 2:
         try:
             # check if lon and lat are convertible to float
@@ -41,10 +40,4 @@ def transform_id(id):
             return "coord:" + id.replace(";", ":")
         except ValueError:
             pass
-    if len(splitted_address) >= 3 and splitted_address[0] == 'address':
-        del splitted_address[1]
-        return ':'.join(splitted_address)
-    if len(splitted_address) >= 3 and splitted_address[0] == 'admin':
-        del splitted_address[1]
-        return ':'.join(splitted_address)
     return id
