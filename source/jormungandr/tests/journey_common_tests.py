@@ -656,7 +656,7 @@ class JourneyCommon(object):
         Here we verify no origin nor destination point error
         """
         query_out_of_production_bound = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
-            .format(from_coord="0.9008898312;0.0019898312",  # coordinate of S in the dataset
+            .format(from_coord="0.9008898312;0.0019898312",  # coordinate out of range in the dataset
             to_coord="0.00188646;0.90971865",  # coordinate out of range in the dataset
             datetime="20120614T080000")
 
