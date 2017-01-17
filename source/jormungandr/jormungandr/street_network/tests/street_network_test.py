@@ -139,13 +139,14 @@ def street_network_without_class_test():
             }
         }]
         StreetNetwork.get_street_network_services(None, kraken_conf)
-    assert 'impossible to build a routing, missing mandatory field in configuration' in str(excinfo.value)
+    assert 'impossible to build a StreetNetwork, missing mandatory field in configuration: class' in str(excinfo.value)
 
 
 def valhalla_class_with_class_invalid_test():
     with pytest.raises(ValueError) as excinfo:
         kraken_conf = [{
             'class': 'jormungandr',
+            'modes': ['walking'],
             'args': {
                 "service_url": "http://localhost:8002",
                 "costing_options": {
@@ -163,6 +164,7 @@ def valhalla_class_with_class_not_exist_test():
     with pytest.raises(AttributeError) as excinfo:
         kraken_conf = [{
             'class': 'jormungandr.street_network.valhalla.bob',
+            'modes': ['walking'],
             'args': {
                 "service_url": "http://localhost:8002",
                 "costing_options": {
@@ -174,4 +176,22 @@ def valhalla_class_with_class_not_exist_test():
         }]
         StreetNetwork.get_street_network_services(None, kraken_conf)
     assert 'impossible to build StreetNetwork, cannot find class: jormungandr.street_network.valhalla.bob' \
+           in str(excinfo.value)
+
+
+def streetnetwork_service_without_modes_test():
+    with pytest.raises(KeyError) as excinfo:
+        kraken_conf = [{
+            'class': 'jormungandr.street_network.valhalla.bob',
+            'args': {
+                "service_url": "http://localhost:8002",
+                "costing_options": {
+                    "pedestrian": {
+                        "walking_speed": 50.1
+                    }
+                }
+            }
+        }]
+        StreetNetwork.get_street_network_services(None, kraken_conf)
+    assert 'impossible to build a StreetNetwork, missing mandatory field in configuration: modes' \
            in str(excinfo.value)

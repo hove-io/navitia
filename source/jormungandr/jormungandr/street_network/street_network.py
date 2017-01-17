@@ -58,9 +58,10 @@ class StreetNetwork(object):
             try:
                 cls = config['class']
                 modes = config['modes']
-            except KeyError, TypeError:
-                log.critical('impossible to build a routing, missing mandatory field in configuration')
-                raise
+            except KeyError as e:
+                msg = 'impossible to build a StreetNetwork, missing mandatory field in configuration: {}'.format(e.message)
+                logging.exception(msg, exc_info=True)
+                raise KeyError(msg)
 
             args = config.get('args', {})
             service_url = args.get('service_url', None)
@@ -74,8 +75,9 @@ class StreetNetwork(object):
                 module = import_module(module_path)
                 attr = getattr(module, name)
             except AttributeError:
-                log.critical('impossible to build StreetNetwork, cannot find class: {}'.format(cls))
-                raise
+                msg = 'impossible to build StreetNetwork, cannot find class: {}'.format(cls)
+                logging.exception(msg, exc_info=True)
+                raise AttributeError(msg)
 
             service = attr(instance=instance, url=service_url, **args)
             for mode in modes:
