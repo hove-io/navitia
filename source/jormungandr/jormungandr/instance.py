@@ -70,6 +70,18 @@ def _init_g():
     g.instances_model = {}
 
 
+def _set_default_street_network_config(street_network_configs):
+    street_network_configs = street_network_configs or []
+    default_sn_class = 'jormungandr.street_network.kraken.Kraken'
+
+    modes_in_configs = set(list(itertools.chain.from_iterable(config['modes'] for config in street_network_configs)))
+    modes_not_set = set(STREET_NETWORK_MODES) - modes_in_configs
+    if modes_not_set:
+        street_network_configs.append({"modes": list(modes_not_set),
+                                       "class": default_sn_class})
+    return street_network_configs
+
+
 class Instance(object):
 
     def __init__(self,
@@ -96,9 +108,7 @@ class Instance(object):
         self.georef = georef.Kraken(self)
         self.planner = planner.Kraken(self)
 
-        if street_network_configurations is None:
-            street_network_configurations = []
-        self._set_default_street_network_config(street_network_configurations)
+        street_network_configurations = _set_default_street_network_config(street_network_configurations)
         self.street_network_services = street_network.StreetNetwork.get_street_network_services(self,
                                                                                                 street_network_configurations)
         self.ptref = ptref.PtRef(self)
@@ -112,15 +122,7 @@ class Instance(object):
             self.autocomplete = utils.create_object(autocomplete)
         self.zmq_socket_type = zmq_socket_type
 
-    @staticmethod
-    def _set_default_street_network_config(street_network_configs):
-        default_sn_class = 'jormungandr.street_network.kraken.Kraken'
 
-        modes_in_configs = set(list(itertools.chain.from_iterable(config['modes'] for config in street_network_configs)))
-        modes_not_set = set(STREET_NETWORK_MODES) - modes_in_configs
-        if modes_not_set:
-            street_network_configs.append({"modes": list(modes_not_set),
-                                           "class": default_sn_class})
     def get_models(self):
         if self.name not in g.instances_model:
             g.instances_model[self.name] = self._get_models()
@@ -475,8 +477,8 @@ class Instance(object):
 
     def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration_to_pt, request, **kwargs):
         if mode not in self.street_network_services:
-            abort(400, "{} is not handled, on {} are valid street network mode".format(mode,
-                                                                                       STREET_NETWORK_MODES))
+            abort(400, "{} is not handled, only {} are valid street network modes".format(mode,
+                                                                                          STREET_NETWORK_MODES))
         return self.street_network_services[mode].get_street_network_routing_matrix(origins,
                                                                                     destinations,
                                                                                     mode,
@@ -486,8 +488,8 @@ class Instance(object):
 
     def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise, request, **kwargs):
         if mode not in self.street_network_services:
-            abort(400, "{} is not handled, on {} are valid street network mode".format(mode,
-                                                                                       STREET_NETWORK_MODES))
+            abort(400, "{} is not handled, only {} are valid street network mode".format(mode,
+                                                                                         STREET_NETWORK_MODES))
         return self.street_network_services[mode].direct_path(mode,
                                                               pt_object_origin,
                                                               pt_object_destination,
