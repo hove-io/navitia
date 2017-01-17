@@ -52,13 +52,17 @@ We hope you got the source code from git.
 #. Run cmake
 
    ``cmake ../source``
-   Note: it will build in debug mode. If you want to compile it as a release run
-   ``cmake -DCMAKE_BUILD_TYPE=Release ../source``
+   Note: it will build in release mode. If you want to compile it with debug symbols run
+   ``cmake -DCMAKE_BUILD_TYPE=Debug ../source``
 
 #. Compile
 
    ``make -j4``
    Note: adjust -jX according to the number of cores you have
+
+#. Run the tests
+
+   ``make test``
 
 Testing
 =======
