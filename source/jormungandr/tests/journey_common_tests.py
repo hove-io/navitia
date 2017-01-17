@@ -582,7 +582,6 @@ class JourneyCommon(object):
         assert j['sections'][0]['to']['id'] == 'stop_point:stopB'
         assert 'walking' in j['tags']
 
-
     def test_journey_from_non_valid_stop_area(self):
         """
         When the departure is a non valid stop_area, the response status should be 404
@@ -592,6 +591,7 @@ class JourneyCommon(object):
         response = self.query_region(query, check=False)
         assert response[1] == 404
         assert response[0]['error']['message'] == u'The entry point: stop_area:non_valid is not valid'
+        assert response[0]['error']['id'] == u'unknown_object'
 
     def test_crow_fly_sections(self):
         """
@@ -647,6 +647,25 @@ class JourneyCommon(object):
         check_journeys(response)
         assert response['error']['id'] == "no_destination"
         assert response['error']['message'] == "no destination point"
+
+        #and no journey is to be provided
+        assert 'journeys' not in response or len(response['journeys']) == 0
+
+    def test_no_origin_nor_destination(self):
+        """
+        Here we verify no origin nor destination point error
+        """
+        query_out_of_production_bound = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
+            .format(from_coord="0.9008898312;0.0019898312",  # coordinate of S in the dataset
+            to_coord="0.00188646;0.90971865",  # coordinate out of range in the dataset
+            datetime="20120614T080000")
+
+        response, status = self.query_region(query_out_of_production_bound, check=False)
+
+        assert status != 200, "the response should not be valid"
+        check_journeys(response)
+        assert response['error']['id'] == "no_origin_nor_destination"
+        assert response['error']['message'] == "no origin point nor destination point"
 
         #and no journey is to be provided
         assert 'journeys' not in response or len(response['journeys']) == 0
