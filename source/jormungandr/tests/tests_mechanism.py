@@ -236,8 +236,14 @@ class AbstractTestFixture(object):
     def check_journeys_links(self, response, query_dict):
         journeys_links = get_links_dict(response)
         clockwise = query_dict.get('datetime_represents', 'departure') == "departure"
+        has_pt = any(s for j in response['journeys'] for s in j['sections'] if s['type'] == 'public_transport')
+        print(query_dict)
         for l in ["prev", "next", "first", "last"]:
+            if l in ["prev", "next"] and not has_pt:# no prev and next if no pt
+                continue
+
             assert l in journeys_links
+
             url = journeys_links[l]['href']
 
             additional_args = query_from_str(url)
@@ -299,7 +305,7 @@ class AbstractTestFixture(object):
         # to have forwarded all params, (and the time must be right)
         self.check_journeys_links(response, query_dict)
 
-        feed_publishers = get_not_null(response, "feed_publishers")
+        feed_publishers = response.get("feed_publishers", [])
         for feed_publisher in feed_publishers:
             is_valid_feed_publisher(feed_publisher)
 
@@ -329,6 +335,32 @@ class AbstractTestFixture(object):
 
         j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
         eq_(j_departure - timedelta(minutes=1), dt)
+
+
+class NewDefaultScenarioAbstractTestFixture(AbstractTestFixture):
+    @staticmethod
+    def check_next_datetime_link(dt, response, clockwise):
+        if not response.get('journeys'):
+            return
+        """default next behaviour is 1s after the best or the soonest"""
+        from jormungandr.scenarios.qualifier import min_from_criteria
+        j_to_compare = min_from_criteria(generate_pt_journeys(response),
+                                         new_default_pagination_journey_comparator(clockwise=clockwise))
+
+        j_departure = get_valid_datetime(j_to_compare['departure_date_time'])
+        eq_(j_departure + timedelta(seconds=1), dt)
+
+    @staticmethod
+    def check_previous_datetime_link(dt, response, clockwise):
+        if not response.get('journeys'):
+            return
+        """default previous behaviour is 1s before the best or the latest """
+        from jormungandr.scenarios.qualifier import min_from_criteria
+        j_to_compare = min_from_criteria(generate_pt_journeys(response),
+                                         new_default_pagination_journey_comparator(clockwise=clockwise))
+
+        j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
+        eq_(j_departure - timedelta(seconds=1), dt)
 
 
 def dataset(datasets):

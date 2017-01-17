@@ -28,11 +28,10 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from datetime import timedelta
-from .tests_mechanism import AbstractTestFixture
+from .tests_mechanism import NewDefaultScenarioAbstractTestFixture
 from .tests_mechanism import config
 from .check_utils import *
 from nose.tools import eq_
-from jormungandr.scenarios.qualifier import min_from_criteria
 from .journey_common_tests import *
 from unittest import skip
 
@@ -42,7 +41,7 @@ unit for scenario new_default
 '''
 
 @config({"scenario": "new_default"})
-class TestJourneysNewDefault(JourneyCommon,  DirectPath, AbstractTestFixture):
+class TestJourneysNewDefault(JourneyCommon,  DirectPath, NewDefaultScenarioAbstractTestFixture):
     """
     Test the new default scenario
     All the tests are defined in "TestJourneys" class, we only change the scenario
@@ -52,29 +51,6 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, AbstractTestFixture):
 
     the new default scenario override the way the prev/next link are created
     """
-    @staticmethod
-    def check_next_datetime_link(dt, response, clockwise):
-        if not response.get('journeys'):
-            return
-        """default next behaviour is 1s after the best or the soonest"""
-        j_to_compare = min_from_criteria(generate_pt_journeys(response),
-                                         new_default_pagination_journey_comparator(clockwise=clockwise))
-
-        j_departure = get_valid_datetime(j_to_compare['departure_date_time'])
-        eq_(j_departure + timedelta(seconds=1), dt)
-
-    @staticmethod
-    def check_previous_datetime_link(dt, response, clockwise):
-        # All journeys in file with clockwise=true
-        if not response.get('journeys'):
-            return
-        """default previous behaviour is 1s before the best or the latest """
-        j_to_compare = min_from_criteria(generate_pt_journeys(response),
-                                         new_default_pagination_journey_comparator(clockwise=clockwise))
-
-        j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
-        eq_(j_departure - timedelta(seconds=1), dt)
-
     def test_best_filtering(self):
         """
         This feature is no longer supported
@@ -101,54 +77,66 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, AbstractTestFixture):
 
     def test_first_bss_last_bss_section_mode(self):
         query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
-                "first_section_mode[]={first}&last_section_mode[]={last}"
-        response = self.query_region(query.format(first='bss', last='bss'))
-        check_journeys(response)
+                "first_section_mode[]={first}&last_section_mode[]={last}"\
+                .format(first='bss', last='bss')
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
         assert len(response["journeys"]) == 2
         assert response["journeys"][0]["type"] == "best"
         assert "bss" in response["journeys"][0]["tags"]
 
     def test_first_walking_last_walking_section_mode(self):
         query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
-                "first_section_mode[]={first}&last_section_mode[]={last}"
-        response = self.query_region(query.format(first='walking', last='walking'))
-        check_journeys(response)
+                "first_section_mode[]={first}&last_section_mode[]={last}"\
+                .format(first='walking', last='walking')
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
         assert len(response["journeys"]) == 2
         assert response["journeys"][0]["type"] == "best"
         assert "walking" in response["journeys"][0]["tags"]
 
     def test_first_bike_last_walking_section_mode(self):
         query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
-                "first_section_mode[]={first}&last_section_mode[]={last}&_min_bike=50"
-        response = self.query_region(query.format(first='bike', last='walking'))
-        check_journeys(response)
+                "first_section_mode[]={first}&last_section_mode[]={last}&_min_bike=50"\
+                .format(first='bike', last='walking')
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
         assert len(response["journeys"]) == 1
         assert response["journeys"][0]["type"] == "best"
         assert "bike" in response["journeys"][0]["tags"]
 
     def test_first_car_last_walking_section_mode(self):
         query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
-                "first_section_mode[]={first}&last_section_mode[]={last}&_min_car=10"
-        response = self.query_region(query.format(first='car', last='walking'))
-        check_journeys(response)
+                "first_section_mode[]={first}&last_section_mode[]={last}&_min_car=10"\
+                .format(first='car', last='walking')
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
         assert len(response["journeys"]) == 1
         assert response["journeys"][0]["type"] == "best"
         assert "car" in response["journeys"][0]["tags"]
 
     def test_first_bike_last_bss_section_mode(self):
         query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
-                "first_section_mode[]={first}&last_section_mode[]={last}&_min_bike=50"
-        response = self.query_region(query.format(first='bike', last='bss'))
-        check_journeys(response)
+                "first_section_mode[]={first}&last_section_mode[]={last}&_min_bike=50"\
+                .format(first='bike', last='bss')
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
         assert len(response["journeys"]) == 1
         assert response["journeys"][0]["type"] == "best"
         assert "bike" in response["journeys"][0]["tags"]
 
     def test_first_car_last_bss_section_mode(self):
         query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
-                "first_section_mode[]={first}&last_section_mode[]={last}&_min_car=10"
-        response = self.query_region(query.format(first='car', last='bss'))
-        check_journeys(response)
+                "first_section_mode[]={first}&last_section_mode[]={last}&_min_car=10"\
+                .format(first='car', last='bss')
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
         assert len(response["journeys"]) == 1
         assert response["journeys"][0]["type"] == "best"
         assert "car" in response["journeys"][0]["tags"]
@@ -161,7 +149,8 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, AbstractTestFixture):
                 "first_section_mode[]=car&first_section_mode[]=walking&last_section_mode[]=walking"\
                 .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
         response = self.query_region(query)
-        check_journeys(response)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
         assert len(response["journeys"]) == 2
         for j in response["journeys"]:
             assert "ecologic" in j["tags"]
@@ -175,7 +164,8 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, AbstractTestFixture):
                 "last_section_mode[]=walking&_min_car=0"\
                 .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
         response = self.query_region(query)
-        check_journeys(response)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
         assert len(response["journeys"]) == 3
         for j in response["journeys"]:
             if j["type"] == "best":
@@ -192,7 +182,8 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, AbstractTestFixture):
                 "last_section_mode[]=walking&_min_car=0"\
                 .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
         response = self.query_region(query)
-        check_journeys(response)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
         assert 'context' in response
         assert 'car_direct_path' in response['context']
         assert 'co2_emission' in response['context']['car_direct_path']
@@ -209,10 +200,11 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, AbstractTestFixture):
         Test if car_co2_emission in context is the value in car journey
         """
         query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
-                "&first_section_mode[]=walking&last_section_mode[]=walking"\
+                "first_section_mode[]=walking&last_section_mode[]=walking"\
                 .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
         response = self.query_region(query)
-        check_journeys(response)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
         assert len(response["journeys"]) == 2
 
         assert 'context' in response
@@ -229,10 +221,11 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, AbstractTestFixture):
                 "first_section_mode[]=car&first_section_mode[]=walking&"\
                 "first_section_mode[]=bike&first_section_mode[]=bss&"\
                 "last_section_mode[]=walking&last_section_mode[]=bss&"\
-                "&_min_car=0"\
+                "_min_car=0"\
                 .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
         response = self.query_region(query)
-        check_journeys(response)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
         assert len(response["journeys"]) == 4
         assert 'car' in response["journeys"][0]["tags"]
         assert 'bss' in response["journeys"][1]["tags"]
@@ -243,25 +236,25 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, AbstractTestFixture):
 
 
 @config({"scenario": "new_default"})
-class TestNewDefaultJourneysWithPtref(JourneysWithPtref, AbstractTestFixture):
+class TestNewDefaultJourneysWithPtref(JourneysWithPtref, NewDefaultScenarioAbstractTestFixture):
     pass
 
 
 @config({"scenario": "new_default"})
-class TestNewDefaultJourneysNoRegion(JourneysNoRegion, AbstractTestFixture):
+class TestNewDefaultJourneysNoRegion(JourneysNoRegion, NewDefaultScenarioAbstractTestFixture):
     pass
 
 
 
 @config({"scenario": "new_default"})
-class TestNewDefaultOnBasicRouting(OnBasicRouting, AbstractTestFixture):
+class TestNewDefaultOnBasicRouting(OnBasicRouting, NewDefaultScenarioAbstractTestFixture):
     pass
 
 @config({"scenario": "new_default"})
-class TestNewDefaultOneDeadRegion(OneDeadRegion, AbstractTestFixture):
+class TestNewDefaultOneDeadRegion(OneDeadRegion, NewDefaultScenarioAbstractTestFixture):
     pass
 
 
 @config({"scenario": "new_default"})
-class TestNewDefaultWithoutPt(WithoutPt, AbstractTestFixture):
+class TestNewDefaultWithoutPt(WithoutPt, NewDefaultScenarioAbstractTestFixture):
     pass

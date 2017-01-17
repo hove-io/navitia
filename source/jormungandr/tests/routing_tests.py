@@ -48,7 +48,7 @@ class TestJourneysDefault(JourneyCommon, AbstractTestFixture):
             "&first_section_mode[]=car" + \
             "&debug=true"
         response = self.query_region(query)
-        check_journeys(response)
+        check_best(response)
         eq_(len(response['journeys']), 4)
 
         query += "&max_duration=0"
@@ -75,7 +75,7 @@ class TestJourneysDefault(JourneyCommon, AbstractTestFixture):
         query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
             .format(from_sa='stopA', to_sa='stop_point:stopB', datetime="20120614T080000")
         response = self.query_region(query)
-        check_journeys(response)
+        check_best(response)
         jrnys = response['journeys']
 
         j = next((j for j in jrnys if j['type'] == 'non_pt_walk'), None)

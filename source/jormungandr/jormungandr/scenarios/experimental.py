@@ -429,6 +429,7 @@ class AsyncWorker(object):
         for dep_mode, arr_mode in self.krakens_call:
             dp_key = make_direct_path_key(dep_mode, origin.uri, destination.uri, datetime, clockwise, reverse_sections)
             dp = fallback_direct_path.get(dp_key)
+            journey_parameters = copy.deepcopy(journey_parameters)
             if dp.journeys:
                 journey_parameters.direct_path_duration = dp.journeys[0].durations.total
             else:
@@ -437,14 +438,20 @@ class AsyncWorker(object):
             origins = origins_fallback.get_locations_contexts(dep_mode)
             destinations = destinations_fallback.get_locations_contexts(arr_mode)
 
-            def worker_journey():
+            # default argument to workaround late binding
+            # http://stackoverflow.com/questions/3431676/creating-functions-in-a-loop
+            def worker_journey(dep_mode=dep_mode,
+                               arr_mode=arr_mode,
+                               journey_parameters=journey_parameters,
+                               origins=origins,
+                               destinations=destinations):
                 if not origins or not destinations or not self.request.get('max_duration', 0):
                     return dep_mode, arr_mode, None
                 return dep_mode, arr_mode, instance.planner.journeys(origins, destinations,
                                                                      datetime, clockwise,
                                                                      journey_parameters)
             futures_jourenys.append(self.pool.spawn(worker_journey))
-            return futures_jourenys
+        return futures_jourenys
 
     @staticmethod
     def _extend_journey(pt_journey, mode, pb_from, pb_to, departure_date_time, nm, clockwise,
