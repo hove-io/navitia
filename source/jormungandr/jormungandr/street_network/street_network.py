@@ -38,7 +38,7 @@ import abc
 ABC = abc.ABCMeta(str("ABC"), (object,), {})
 
 
-class IStreetNetwrokService(ABC):
+class AbstractStreetNetworkService(ABC):
     @abc.abstractmethod
     def get_street_network_routing_matrix(self, origins, destinations, street_network_mode, max_duration, request, **kwargs):
         pass

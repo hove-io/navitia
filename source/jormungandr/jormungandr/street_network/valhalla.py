@@ -39,10 +39,10 @@ from jormungandr.exceptions import UnableToParse, TechnicalError, InvalidArgumen
 from flask import g
 from jormungandr.utils import is_url, kilometers_to_meters, get_pt_object_coord
 from copy import deepcopy
-from jormungandr.street_network.street_network import IStreetNetwrokService
+from jormungandr.street_network.street_network import AbstractStreetNetworkService
 
 
-class Valhalla(IStreetNetwrokService):
+class Valhalla(AbstractStreetNetworkService):
 
     def __init__(self, instance, url, timeout=10, api_key=None, **kwargs):
         self.instance = instance

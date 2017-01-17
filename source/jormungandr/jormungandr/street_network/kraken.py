@@ -32,10 +32,10 @@ import logging
 from jormungandr.exceptions import TechnicalError
 from navitiacommon import request_pb2, type_pb2
 from jormungandr.utils import get_uri_pt_object
-from jormungandr.street_network.street_network import IStreetNetwrokService
+from jormungandr.street_network.street_network import AbstractStreetNetworkService
 
 
-class Kraken(IStreetNetwrokService):
+class Kraken(AbstractStreetNetworkService):
 
     def __init__(self, instance, url, timeout=10, api_key=None, **kwargs):
         self.instance = instance
