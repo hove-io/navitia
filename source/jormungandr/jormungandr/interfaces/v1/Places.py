@@ -149,9 +149,9 @@ class AdministrativeRegionField(fields.Raw):
         geocoding = obj.get('properties', {}).get('geocoding', {})
 
         return {
-            "insee": geocoding.get('city_code'),
+            "insee": geocoding.get('citycode') or geocoding.get('city_code'),
             "level":
-                int(geocoding.get('level')) if geocoding.get('level') else None ,
+                int(geocoding.get('level')) if geocoding.get('level') else None,
             "name": geocoding.get('name'),
             "label": geocoding.get('label'),
             "id": geocoding.get('id'),
