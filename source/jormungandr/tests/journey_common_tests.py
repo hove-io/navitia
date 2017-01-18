@@ -703,7 +703,7 @@ class JourneyCommon(object):
         response, status = self.query_region(query_out_of_production_bound, check=False)
 
         assert status != 200, "the response should not be valid"
-        check_journeys(response)
+        check_best(response)
         assert response['error']['id'] == "no_origin_nor_destination"
         assert response['error']['message'] == "no origin point nor destination point"
 
