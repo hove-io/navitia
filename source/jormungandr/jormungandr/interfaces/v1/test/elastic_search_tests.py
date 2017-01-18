@@ -214,7 +214,7 @@ def bragi_admin_feature():
         },
         "properties": {
             "geocoding": {
-                "city_code": "2725",
+                "citycode": "2725",
                 "level": 8,
                 "city": None,
                 "housenumber": "",

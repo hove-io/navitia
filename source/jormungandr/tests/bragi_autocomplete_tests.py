@@ -72,6 +72,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
                                 "postcode": "02100",
                                 "street": "Rue Bob",
                                 "type": "house",
+                                "citycode": "02000",
                                 "administrative_regions": [
                                     {
                                         "id": "admin:fr:02000",
