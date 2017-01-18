@@ -236,8 +236,7 @@ class AbstractTestFixture(object):
     def check_journeys_links(self, response, query_dict):
         journeys_links = get_links_dict(response)
         clockwise = query_dict.get('datetime_represents', 'departure') == "departure"
-        has_pt = any(s for j in response['journeys'] for s in j['sections'] if s['type'] == 'public_transport')
-        print(query_dict)
+        has_pt = any(s['type'] == 'public_transport' for j in response['journeys'] for s in j['sections'])
         for l in ["prev", "next", "first", "last"]:
             if l in ["prev", "next"] and not has_pt:# no prev and next if no pt
                 continue
