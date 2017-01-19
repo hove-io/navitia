@@ -479,18 +479,24 @@ class Instance(object):
         return False
 
     def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration_to_pt, request, **kwargs):
-        return self.street_network_services[mode].get_street_network_routing_matrix(origins,
-                                                                                    destinations,
-                                                                                    mode,
-                                                                                    max_duration_to_pt,
-                                                                                    request,
-                                                                                    **kwargs)
+        service = self.street_network_services.get(mode)
+        if not service:
+            return None
+        return service.get_street_network_routing_matrix(origins,
+                                                         destinations,
+                                                         mode,
+                                                         max_duration_to_pt,
+                                                         request,
+                                                         **kwargs)
 
     def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise, request, **kwargs):
-        return self.street_network_services[mode].direct_path(mode,
-                                                              pt_object_origin,
-                                                              pt_object_destination,
-                                                              datetime,
-                                                              clockwise,
-                                                              request,
-                                                              **kwargs)
+        service = self.street_network_services.get(mode)
+        if not service:
+            return None
+        return service.direct_path(mode,
+                                   pt_object_origin,
+                                   pt_object_destination,
+                                   datetime,
+                                   clockwise,
+                                   request,
+                                   **kwargs)
