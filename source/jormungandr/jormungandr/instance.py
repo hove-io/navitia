@@ -479,9 +479,6 @@ class Instance(object):
         return False
 
     def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration_to_pt, request, **kwargs):
-        if mode not in self.street_network_services:
-            abort(400, "{} is not handled, only {} are valid street network modes".format(mode,
-                                                                                          STREET_NETWORK_MODES))
         return self.street_network_services[mode].get_street_network_routing_matrix(origins,
                                                                                     destinations,
                                                                                     mode,
@@ -490,9 +487,6 @@ class Instance(object):
                                                                                     **kwargs)
 
     def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise, request, **kwargs):
-        if mode not in self.street_network_services:
-            abort(400, "{} is not handled, only {} are valid street network mode".format(mode,
-                                                                                         STREET_NETWORK_MODES))
         return self.street_network_services[mode].direct_path(mode,
                                                               pt_object_origin,
                                                               pt_object_destination,
