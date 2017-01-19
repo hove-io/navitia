@@ -29,8 +29,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from importlib import import_module
 import logging
+from jormungandr import utils
+from jormungandr.exceptions import ConfigException
 import abc
 
 # Using abc.ABCMeta in a way it is compatible both with Python 2.7 and Python 3.x
@@ -55,32 +56,29 @@ class StreetNetwork(object):
         log = logging.getLogger(__name__)
         street_network_services = {}
         for config in street_network_configurations:
+            # Set default arguments
+            if 'args' not in config:
+                config['args'] = {}
+            if 'service_url' not in config['args']:
+                config['args'].update({'service_url': None})
+            if 'instance' not in config['args']:
+                config['args'].update({'instance': instance})
+
+            modes = config.get('modes')
+            if not modes:
+                raise KeyError('impossible to build a StreetNetwork, missing mandatory field in configuration: modes')
+
             try:
-                cls = config['class']
-                modes = config['modes']
+                service = utils.create_object(config)
             except KeyError as e:
-                msg = 'impossible to build a StreetNetwork, missing mandatory field in configuration: {}'.format(e.message)
-                logging.exception(msg, exc_info=True)
-                raise KeyError(msg)
+                raise KeyError('impossible to build a StreetNetwork, missing mandatory field in configuration: {}'
+                               .format(e.message))
+            except ConfigException as e:
+                raise ConfigException("impossible to build StreetNetwork, wrongly formated class: {}"
+                                      .format(e))
 
-            args = config.get('args', {})
-            service_url = args.get('service_url', None)
-
-            if '.' not in cls:
-                log.critical('impossible to build StreetNetwork, wrongly formated class: {}'.format(cls))
-                raise ValueError('impossible to build StreetNetwork, wrongly formated class: {}'.format(cls))
-
-            try:
-                module_path, name = cls.rsplit('.', 1)
-                module = import_module(module_path)
-                attr = getattr(module, name)
-            except AttributeError:
-                msg = 'impossible to build StreetNetwork, cannot find class: {}'.format(cls)
-                logging.exception(msg, exc_info=True)
-                raise AttributeError(msg)
-
-            service = attr(instance=instance, url=service_url, **args)
             for mode in modes:
                 street_network_services[mode] = service
-                log.info('** StreetNetwork {} used for direct_path with mode: {} **'.format(name, mode))
+                log.info('** StreetNetwork {} used for direct_path with mode: {} **'
+                         .format(type(service).__name__, mode))
         return street_network_services

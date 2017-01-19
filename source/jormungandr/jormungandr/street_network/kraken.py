@@ -37,7 +37,7 @@ from jormungandr.street_network.street_network import AbstractStreetNetworkServi
 
 class Kraken(AbstractStreetNetworkService):
 
-    def __init__(self, instance, url, timeout=10, api_key=None, **kwargs):
+    def __init__(self, instance, service_url, timeout=10, api_key=None, **kwargs):
         self.instance = instance
 
     def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise, request):

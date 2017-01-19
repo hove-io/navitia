@@ -30,6 +30,7 @@ import pytest
 from jormungandr.street_network.street_network import StreetNetwork
 from jormungandr.street_network.kraken import Kraken
 from jormungandr.street_network.valhalla import Valhalla
+from jormungandr.exceptions import ConfigException
 
 KRAKEN_CLASS = 'jormungandr.street_network.kraken.Kraken'
 VALHALLA_CLASS = 'jormungandr.street_network.valhalla.Valhalla'
@@ -129,6 +130,7 @@ def valhalla_class_with_url_valid_test():
 def street_network_without_class_test():
     with pytest.raises(KeyError) as excinfo:
         kraken_conf = [{
+            'modes': ['walking'],
             'args': {
                 "service_url": "http://localhost:8002",
             "costing_options": {
@@ -143,7 +145,7 @@ def street_network_without_class_test():
 
 
 def valhalla_class_with_class_invalid_test():
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(ConfigException) as excinfo:
         kraken_conf = [{
             'class': 'jormungandr',
             'modes': ['walking'],
@@ -161,7 +163,7 @@ def valhalla_class_with_class_invalid_test():
 
 
 def valhalla_class_with_class_not_exist_test():
-    with pytest.raises(AttributeError) as excinfo:
+    with pytest.raises(ConfigException) as excinfo:
         kraken_conf = [{
             'class': 'jormungandr.street_network.valhalla.bob',
             'modes': ['walking'],
@@ -175,7 +177,7 @@ def valhalla_class_with_class_not_exist_test():
             }
         }]
         StreetNetwork.get_street_network_services(None, kraken_conf)
-    assert 'impossible to build StreetNetwork, cannot find class: jormungandr.street_network.valhalla.bob' \
+    assert 'impossible to build StreetNetwork, wrongly formated class: jormungandr.street_network.valhalla.bob' \
            in str(excinfo.value)
 
 

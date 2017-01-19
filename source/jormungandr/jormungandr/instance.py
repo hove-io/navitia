@@ -70,8 +70,11 @@ def _init_g():
     g.instances_model = {}
 
 
+# For street network modes that are not set in the given config file,
+# we set kraken as their default engine
 def _set_default_street_network_config(street_network_configs):
-    street_network_configs = street_network_configs or []
+    if not isinstance(street_network_configs, list):
+        street_network_configs = []
     default_sn_class = 'jormungandr.street_network.kraken.Kraken'
 
     modes_in_configs = set(list(itertools.chain.from_iterable(config['modes'] for config in street_network_configs)))

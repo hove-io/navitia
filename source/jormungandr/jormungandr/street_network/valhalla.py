@@ -44,11 +44,11 @@ from jormungandr.street_network.street_network import AbstractStreetNetworkServi
 
 class Valhalla(AbstractStreetNetworkService):
 
-    def __init__(self, instance, url, timeout=10, api_key=None, **kwargs):
+    def __init__(self, instance, service_url, timeout=10, api_key=None, **kwargs):
         self.instance = instance
-        if not is_url(url):
-            raise ValueError('service_url is invalid, you give {}'.format(url))
-        self.service_url = url
+        if not is_url(service_url):
+            raise ValueError('service_url is invalid, you give {}'.format(service_url))
+        self.service_url = service_url
         self.api_key = api_key
         self.timeout = timeout
         self.costing_options = kwargs.get('costing_options', None)
