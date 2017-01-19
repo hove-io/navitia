@@ -244,18 +244,10 @@ void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mod
         //small enchancement, if the projection is done on a node, we disable the crow fly
         if (starting_edge.distances[source_e] < 0.01) {
             predecessors[starting_edge[target_e]] = starting_edge[source_e];
-            auto e = boost::edge(starting_edge[source_e], starting_edge[target_e], geo_ref.graph).first;
-            distances[starting_edge[target_e]] = geo_ref.graph[e].duration;
+            distances[starting_edge[target_e]] = bt::pos_infin;
         } else if (starting_edge.distances[target_e] < 0.01) {
             predecessors[starting_edge[source_e]] = starting_edge[target_e];
-            auto edge_pair = boost::edge(starting_edge[target_e], starting_edge[source_e], geo_ref.graph);
-            if (edge_pair.second) {
-                distances[starting_edge[source_e]] = geo_ref.graph[edge_pair.first].duration;
-            } else {
-                // since we reverse the edge (from target to source) the edge might not exists
-                // (for one way street for example). we thus forbid to start from the source
-                distances[starting_edge[source_e]] = bt::pos_infin;
-            }
+            distances[starting_edge[source_e]] = bt::pos_infin;
         }
     }
 }
@@ -339,30 +331,27 @@ PathFinder::start_dijkstra_and_fill_duration_map(const navitia::time_duration& r
     dump_dijkstra_for_quantum(starting_edge);
 #endif
     for (const auto& dest: projection_found_dests) {
-        //if our two points are projected on the same edge the Dijkstra won't give us the correct value
-        // we need to handle this case separately
+        //if our two points are projected on the same edge the
+        // Dijkstra won't give us the correct value we need to handle
+        // this case separately
         auto& projection = dest.second;
         auto& id = dest.first;
+        navitia::time_duration duration;
         if(is_projected_on_same_edge(starting_edge, projection)){
-            //We calculate the duration for going to the edge, then to the projected destination on the edge
-            //and finally to the destination
-            auto duration = path_duration_on_same_edge(starting_edge, projection);
-            if(duration <= radius){
-                result[id] = georef::RoutingElement(duration, georef::RoutingStatus_e::reached) ;
-            } else {
-                result[id] = georef::RoutingElement(navitia::time_duration(),
-                                                    georef::RoutingStatus_e::unreached);
-            }
+            //We calculate the duration for going to the edge, then to
+            //the projected destination on the edge and finally to the
+            //destination
+            duration = path_duration_on_same_edge(starting_edge, projection);
         } else {
-            const navitia::time_duration best_dist = find_nearest_vertex(projection, true).first;
-            if (best_dist <= radius) {
-                result[id] = georef::RoutingElement(best_dist,
-                                                    georef::RoutingStatus_e::reached);
-            } else {
-                result[id] = georef::RoutingElement(navitia::time_duration(),
-                                                    georef::RoutingStatus_e::unreached);
-            }
+            duration = find_nearest_vertex(projection, true).first;
         }
+        if(duration <= radius){
+            result[id] = georef::RoutingElement(duration, georef::RoutingStatus_e::reached) ;
+        } else {
+            result[id] = georef::RoutingElement(navitia::time_duration(),
+                                                georef::RoutingStatus_e::unreached);
+        }
+
     }
     return result;
 }
