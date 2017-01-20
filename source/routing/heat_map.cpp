@@ -151,10 +151,14 @@ static std::vector<std::vector<Projection>> find_projection(BoundBox box,
                                   [](const proximitylist::ProximityList<georef::vertex_t>::Item & i, double min){
         return i.coord.lon() < min;
     });
+
+    if (begin == worker.pl.items.end()) { return dist_pixel; }
+
     auto end = std::upper_bound(begin, worker.pl.items.end(), box.max.lon(),
                                 [](double max, const proximitylist::ProximityList<georef::vertex_t>::Item & i){
         return max <= i.coord.lon();
     });
+
     const auto coslat = cos(begin->coord.lat() * type::GeographicalCoord::N_DEG_TO_RAD);
     for(auto it = begin; it != end; ++it) {
         const auto& source = it->coord;
