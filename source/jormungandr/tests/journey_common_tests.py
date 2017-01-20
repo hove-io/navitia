@@ -1038,9 +1038,13 @@ class OnBasicRouting():
     def test_heat_map_without_sn(self):
         """
         heat map call on a dataset with no streetnetwork
-        should not crash ;)
+        we should get a nice error
         """
-        self.query_region('heat_maps?from=stop_point:B&datetime=20120615T080000&max_duration=60')
+        r, status = self.query_region('heat_maps?from=stop_point:B&datetime=20120615T080000&max_duration=60',
+                              check=False)
+
+        assert r['error']['id'] == "no_solution"
+        assert r['error']['message'] == "no street network data, impossible to compute a heat_map"
 
 
 @dataset({"main_routing_test": {},
