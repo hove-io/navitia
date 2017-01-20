@@ -29,12 +29,45 @@ For more information see
 
 * documentation http://doc.navitia.io
 * main web site http://www.navitia.io
+* playground http://canaltp.github.io/navitia-playground/
 * twitter @navitia https://twitter.com/navitia
 * google groups navitia https://groups.google.com/d/forum/navitia
 * channel #navitia on irc.freenode.net
 
-Organisation
-============
+Getting started
+===============
+
+Want to test the API ?
+----------------------
+
+The easiest way to do this is a to go to `navitia.io <https://www.navitia.io/>`_.
+`Signup <https://www.navitia.io/register/>`_, grab a token, read the `doc <http://doc.navitia.io>`_ and start using the API!
+
+For a more friendly interface you can use the API through `navitia playground <http://canaltp.github.io/navitia-playground/>`_
+
+Want to use you own datasets or infrastructure ?
+------------------------------------------------
+
+docker
+~~~~~~
+The easiest way to do have your own navitia is to use the navitia `docker-compose <https://github.com/CanalTP/navitia-docker-compose>`_.
+
+fabric
+~~~~~~
+If you don't want to use the prebuild docker images you can use the `fabric scripts <https://github.com/CanalTP/fabric_navitia>`_ we use to deploy to api.navitia.io.
+
+*WARNING:* Those scripts should be usable, but they are not meant to be completly generics and are designed for own servers architecture.
+
+Use this only if the docker is not fit for your needs and if you are an experienced user :wink:
+
+Want to dev in navitia ?
+------------------------
+if you want to build navitia, please refer to the `installation documentation <https://github.com/canaltp/navitia/blob/dev/install.rst>`_
+
+You can also check the `automated build script <https://github.com/canaltp/navitia/blob/dev/build_navitia.sh>`_ which is meant as a step by step tutorial for compiling and using navitia with ubuntu 16.04
+
+Code Organisation
+=================
 At the root of the repository, several directories can be found:
 
 #. source: contains the navitia source code (c++ and python)
@@ -65,24 +98,17 @@ More information here: https://github.com/CanalTP/navitia/wiki/Architecture
 
 Tools
 ======
-#. Gcc as the C++ compiler (g++)
+#. Gcc (or clang) as the C++ compiler (g++)
 
 #. Cmake for the build system
 
 #. Python for the api
 
-Installation
-============
-For the installation procedure, please refer to the `installation documentation <https://github.com/canaltp/navitia/blob/dev/install.rst>`_
-
-Want to use Docker? Try this documentation https://github.com/CanalTP/navitia/wiki/Navitia-in-Docker-containers
-
-You can also refer to the `automated build script <https://github.com/canaltp/navitia/blob/dev/build_navitia.sh>`_ to have a step by step setup guide for ubuntu 14.04
-
-
 How to contribute
 =================
 Fork the github repo, create a new branch from dev, and submit your pull request!
+
+Make sure to run the tests before submiting the pull request (`make test` in the build directory)
 
 Are there many people contributing? Yes: https://www.youtube.com/watch?v=GOLfMTMGVFI
 
