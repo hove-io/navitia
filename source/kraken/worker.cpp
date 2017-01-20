@@ -170,13 +170,13 @@ std::vector<std::string> vector_of_admins(const T & admin){
     return result;
 }
 
-Worker::Worker(DataManager<navitia::type::Data>& data_manager, kraken::Configuration conf) :
-    data_manager(data_manager), conf(conf),
+Worker::Worker(kraken::Configuration conf) :
+    conf(conf),
     logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"))){}
 
 Worker::~Worker(){}
 
-static std::string get_string_status(const boost::shared_ptr<const nt::Data>& data) {
+static std::string get_string_status(const nt::Data* data) {
     if (data->loaded) {
         return "running";
     }
@@ -204,7 +204,7 @@ static bool get_geojson_state(const pbnavitia::Request& request) {
 
 void Worker::geo_status() {
     auto status = this->pb_creator.mutable_geo_status();
-    const auto d = data_manager.get_data();
+    const auto* d = this->pb_creator.data;
     status->set_nb_admins(d->geo_ref->admins.size());
     status->set_nb_ways(d->geo_ref->ways.size());
     int nb_addr = std::accumulate(begin(d->geo_ref->ways), end(d->geo_ref->ways), 0,
@@ -224,7 +224,7 @@ void Worker::geo_status() {
 
 void Worker::status() {
     auto status = this->pb_creator.mutable_status();
-    const auto d = data_manager.get_data();
+    const auto* d = this->pb_creator.data;
     status->set_data_version(d->version);
     status->set_navitia_version(config::project_version);
     status->set_loaded(d->loaded);
@@ -253,7 +253,7 @@ void Worker::status() {
 
 void Worker::metadatas() {
     auto metadatas = this->pb_creator.mutable_metadatas();
-    const auto d = data_manager.get_data();
+    const auto* d = this->pb_creator.data;
     if (d->loaded) {
         metadatas->set_start_production_date(bg::to_iso_string(d->meta->production_date.begin()));
         metadatas->set_end_production_date(bg::to_iso_string(d->meta->production_date.last()));
@@ -282,7 +282,7 @@ void Worker::metadatas() {
 }
 
 void Worker::feed_publisher(){
-    const auto d = data_manager.get_data();
+    const auto* d = this->pb_creator.data;
     if (!conf.display_contributors()){
         this->pb_creator.clear_feed_publishers();
     }
@@ -303,7 +303,7 @@ void Worker::feed_publisher(){
     }
 }
 
-void Worker::init_worker_data(const boost::shared_ptr<const navitia::type::Data> data,
+void Worker::init_worker_data(const navitia::type::Data* data,
                               const pt::ptime now,
                               const pt::time_period action_period,
                               const bool disable_geojson,
@@ -315,13 +315,12 @@ void Worker::init_worker_data(const boost::shared_ptr<const navitia::type::Data>
         this->last_data_identifier = data->data_identifier;
         LOG4CPLUS_INFO(logger, "Instanciate planner");        
     }
-    auto * data_ptr = data.get();
-    this->pb_creator.init(data_ptr, now, action_period, disable_geojson, disable_feedpublisher);
+    this->pb_creator.init(data, now, action_period, disable_geojson, disable_feedpublisher);
 }
 
 
 void Worker::autocomplete(const pbnavitia::PlacesRequest & request) {
-    const auto data = data_manager.get_data();
+    const auto* data = this->pb_creator.data;
     navitia::autocomplete::autocomplete(this->pb_creator, request.q(),
                                         vector_of_pb_types(request), request.depth(),
                                         request.count(), vector_of_admins(request),
@@ -329,7 +328,7 @@ void Worker::autocomplete(const pbnavitia::PlacesRequest & request) {
 }
 
 void Worker::pt_object(const pbnavitia::PtobjectRequest & request) {
-    const auto data = data_manager.get_data();
+    const auto* data = this->pb_creator.data;
     navitia::autocomplete::autocomplete(this->pb_creator, request.q(),
                                         vector_of_pb_types(request), request.depth(),
                                         request.count(), vector_of_admins(request),
@@ -337,7 +336,7 @@ void Worker::pt_object(const pbnavitia::PtobjectRequest & request) {
 }
 
 void Worker::traffic_reports(const pbnavitia::TrafficReportsRequest &request){
-    const auto data = data_manager.get_data();
+    const auto* data = this->pb_creator.data;
     std::vector<std::string> forbidden_uris;
     for(int i = 0; i < request.forbidden_uris_size(); ++i)
         forbidden_uris.push_back(request.forbidden_uris(i));
@@ -351,7 +350,7 @@ void Worker::traffic_reports(const pbnavitia::TrafficReportsRequest &request){
 }
 
 void Worker::calendars(const pbnavitia::CalendarsRequest &request){
-    const auto data = data_manager.get_data();
+    const auto* data = this->pb_creator.data;
     std::vector<std::string> forbidden_uris;
     for(int i = 0; i < request.forbidden_uris_size(); ++i)
         forbidden_uris.push_back(request.forbidden_uris(i));
@@ -439,7 +438,7 @@ void Worker::next_stop_times(const pbnavitia::NextStopTimeRequest& request,
 
 
 void Worker::proximity_list(const pbnavitia::PlacesNearbyRequest &request) {
-    const auto data = data_manager.get_data();
+    const auto* data = this->pb_creator.data;
     type::EntryPoint ep(data->get_type_of_id(request.uri()), request.uri());
     type::GeographicalCoord  coord;
     try{
@@ -461,7 +460,7 @@ void Worker::proximity_list(const pbnavitia::PlacesNearbyRequest &request) {
 
 static type::StreetNetworkParams
 streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams& request,
-                                    const boost::shared_ptr<const navitia::type::Data>& data,
+                                    const navitia::type::Data* data,
                                     const bool is_origin)
 {
     type::StreetNetworkParams result;
@@ -506,7 +505,7 @@ streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams& reques
 
 void Worker::place_uri(const pbnavitia::PlaceUriRequest &request) {
 
-    const auto data = data_manager.get_data();
+    const auto* data = this->pb_creator.data;
     if(request.uri().size() > 6 && request.uri().substr(0, 6) == "coord:") {
         type::EntryPoint ep(type::Type_e::Coord, request.uri());
         type::GeographicalCoord  coord;
@@ -594,7 +593,7 @@ void Worker::place_code(const pbnavitia::PlaceCodeRequest &request) {
 static type::EntryPoint
 create_journeys_entry_point(const ::pbnavitia::LocationContext& location,
                    const ::pbnavitia::StreetNetworkParams* sn_params,
-                   const boost::shared_ptr<const navitia::type::Data>& data,
+                   const navitia::type::Data* data,
                    const bool is_origin)
 {
     Type_e entry_point_type = data->get_type_of_id(location.place());
@@ -630,7 +629,7 @@ JourneysArg::JourneysArg(std::vector<type::EntryPoint> origins,
 JourneysArg::JourneysArg(){}
 
 navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest &request) {
-    const auto data = data_manager.get_data();
+    const auto* data = this->pb_creator.data;
     std::vector<type::EntryPoint> origins;
     const auto* sn_params = request.has_streetnetwork_params() ? &request.streetnetwork_params() : nullptr;
     for(int i = 0; i < request.origin().size(); i++) {
@@ -723,7 +722,7 @@ void Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API 
 
 
 void Worker::pt_ref(const pbnavitia::PTRefRequest &request) {
-    const auto data = data_manager.get_data();
+    const auto* data = this->pb_creator.data;
     std::vector<std::string> forbidden_uri;
     for (int i = 0; i < request.forbidden_uri_size(); ++i) {
         forbidden_uri.push_back(request.forbidden_uri(i));
@@ -811,7 +810,7 @@ void Worker::heat_map(const pbnavitia::HeatMapRequest& request) {
 }
 
 void Worker::car_co2_emission_on_crow_fly(const pbnavitia::CarCO2EmissionRequest& request) {
-    const auto data = data_manager.get_data();
+    const auto* data = this->pb_creator.data;
     auto get_geographical_coord = [&](const pbnavitia::LocationContext& location){
         auto origin_type = data->get_type_of_id(location.place());
         auto origin = type::EntryPoint{origin_type, location.place(), location.access_duration()};
@@ -886,7 +885,7 @@ type::EntryPoint make_sn_entry_point(const std::string& place,
 }
 
 void Worker::street_network_routing_matrix(const pbnavitia::StreetNetworkRoutingMatrixRequest& request) {
-    const auto data = data_manager.get_data();
+    const auto* data = this->pb_creator.data;
     std::vector<type::GeographicalCoord> dest_coords;
 
     // In this loop, we try to get the coordinates of all destinations
@@ -940,7 +939,7 @@ void Worker::street_network_routing_matrix(const pbnavitia::StreetNetworkRouting
 }
 
 void Worker::direct_path(const pbnavitia::Request& request) {
-    const auto data = data_manager.get_data();
+    const auto* data = this->pb_creator.data;
     const auto& dp_request = request.direct_path();
     const auto* sn_params = dp_request.has_streetnetwork_params() ? &dp_request.streetnetwork_params() : nullptr;
     const auto origin = create_journeys_entry_point(dp_request.origin(),
@@ -963,12 +962,10 @@ void Worker::direct_path(const pbnavitia::Request& request) {
 }
 
 
-void Worker::dispatch(const pbnavitia::Request& request) {
-    //update worker data and pb_creator informations.
-    const auto data = data_manager.get_data();
+void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
     bool disable_geojson = get_geojson_state(request);
     boost::posix_time::ptime current_datetime = bt::from_time_t(request._current_datetime());
-    this->init_worker_data(data, current_datetime, null_time_period, disable_geojson, request.disable_feedpublisher());
+    this->init_worker_data(&data, current_datetime, null_time_period, disable_geojson, request.disable_feedpublisher());
 
     // These api can respond even if the data isn't loaded
     if (request.requested_api() == pbnavitia::STATUS) {
@@ -979,7 +976,7 @@ void Worker::dispatch(const pbnavitia::Request& request) {
         metadatas();
         return;
     }
-    if (! data_manager.get_data()->loaded){
+    if (! data.loaded){
         this->pb_creator.fill_pb_error(pbnavitia::Error::service_unavailable, "The service is loading data");
         return;
     }
@@ -1021,7 +1018,7 @@ void Worker::dispatch(const pbnavitia::Request& request) {
 }
 
 void Worker::nearest_stop_points(const pbnavitia::NearestStopPointsRequest& request) {
-    const auto data = data_manager.get_data();
+    const auto* data = this->pb_creator.data;
     double speed = 0;
     switch(type::static_data::get()->modeByCaption(request.mode())){
         case type::Mode_e::Bike:
@@ -1059,7 +1056,7 @@ void Worker::odt_stop_points(const pbnavitia::GeographicalCoord& request) {
     navitia::type::GeographicalCoord coord;
     coord.set_lon(request.lon());
     coord.set_lat(request.lat());
-    const auto data = data_manager.get_data();    
+    const auto* data = this->pb_creator.data;
     const auto& zonal_sps = data->pt_data->stop_points_by_area.find(coord);
     this->pb_creator.pb_fill(zonal_sps, 0);
 }
