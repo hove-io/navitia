@@ -276,12 +276,12 @@ def _sn_routing_matrix(instance, place, places_crowfly, mode, max_duration_to_pt
         else:
             return {mode: {}}
     places = places_crowfly[mode]
-    sn_routing_matrix = instance.street_network_service.get_street_network_routing_matrix([place],
-                                                                                          places,
-                                                                                          mode,
-                                                                                          max_duration_to_pt,
-                                                                                          request,
-                                                                                          **kwargs)
+    sn_routing_matrix = instance.get_street_network_routing_matrix([place],
+                                                                   places,
+                                                                   mode,
+                                                                   max_duration_to_pt,
+                                                                   request,
+                                                                   **kwargs)
     if not len(sn_routing_matrix.rows[0].routing_response):
         return {mode: {}}
 
@@ -383,12 +383,12 @@ class AsyncWorker(object):
                          request, reverse_sections=False):
         dp_key = make_direct_path_key(mode, pt_object_origin.uri, pt_object_destination.uri,
                                       datetime, clockwise, reverse_sections)
-        dp = instance.street_network_service.direct_path(mode,
-                                                         pt_object_origin,
-                                                         pt_object_destination,
-                                                         datetime,
-                                                         clockwise,
-                                                         request)
+        dp = instance.direct_path(mode,
+                                  pt_object_origin,
+                                  pt_object_destination,
+                                  datetime,
+                                  clockwise,
+                                  request)
         if reverse_sections:
             _reverse_journeys(dp)
         return dp_key, dp

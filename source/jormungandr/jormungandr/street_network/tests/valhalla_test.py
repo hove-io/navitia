@@ -62,7 +62,7 @@ def get_pt_object(embedded_type, lon, lat):
 
 def decode_func_test():
     valhalla = Valhalla(instance=None,
-                        url='http://bob.com')
+                        service_url='http://bob.com')
     assert valhalla._decode('qyss{Aco|sCF?kBkHeJw[') == [[2.439938, 48.572841],
                                                          [2.439938, 48.572837],
                                                          [2.440088, 48.572891],
@@ -109,7 +109,7 @@ def response_valid():
 def get_costing_options_func_with_empty_costing_options_test():
     instance = MagicMock()
     valhalla = Valhalla(instance=instance,
-                        url='http://bob.com')
+                        service_url='http://bob.com')
     valhalla.costing_options = None
     assert valhalla._get_costing_options('bib', MOCKED_REQUEST) == None
 
@@ -117,7 +117,7 @@ def get_costing_options_func_with_empty_costing_options_test():
 def get_costing_options_func_with_unkown_costing_options_test():
     instance = MagicMock()
     valhalla = Valhalla(instance=instance,
-                        url='http://bob.com',
+                        service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     assert valhalla._get_costing_options('bib', MOCKED_REQUEST) == {'bib': 'bom'}
 
@@ -127,7 +127,7 @@ def get_costing_options_func_test():
     instance.walking_speed = 1
     instance.bike_speed = 2
     valhalla = Valhalla(instance=instance,
-                        url='http://bob.com',
+                        service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     pedestrian = valhalla._get_costing_options('pedestrian', MOCKED_REQUEST)
     assert len(pedestrian) == 2
@@ -147,7 +147,7 @@ def get_costing_options_func_test():
 def format_coord_func_invalid_pt_object_test():
     instance = MagicMock()
     valhalla = Valhalla(instance=instance,
-                        url='http://bob.com',
+                        service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     with pytest.raises(InvalidArguments) as excinfo:
         valhalla._format_coord(MagicMock())
@@ -157,7 +157,7 @@ def format_coord_func_invalid_pt_object_test():
 def format_coord_func_invalid_api_test():
     instance = MagicMock()
     valhalla = Valhalla(instance=instance,
-                        url='http://bob.com',
+                        service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     with pytest.raises(ApiNotFound) as excinfo:
         valhalla._format_coord(get_pt_object(type_pb2.ADDRESS, 1.12, 13.15), 'aaa')
@@ -169,7 +169,7 @@ def format_coord_func_valid_coord_one_to_many_test():
     instance = MagicMock()
     pt_object = get_pt_object(type_pb2.ADDRESS, 1.12, 13.15)
     valhalla = Valhalla(instance=instance,
-                        url='http://bob.com',
+                        service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
 
     coord = valhalla._format_coord(pt_object, 'one_to_many')
@@ -183,7 +183,7 @@ def format_coord_func_valid_coord_test():
     instance = MagicMock()
     pt_object = get_pt_object(type_pb2.ADDRESS, 1.12, 13.15)
     valhalla = Valhalla(instance=instance,
-                        url='http://bob.com',
+                        service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
 
     coord = valhalla._format_coord(pt_object)
@@ -200,7 +200,7 @@ def format_url_func_with_walking_mode_test():
     origin = get_pt_object(type_pb2.ADDRESS, 1.0, 1.0)
     destination = get_pt_object(type_pb2.ADDRESS, 2.0, 2.0)
     valhalla = Valhalla(instance=instance,
-                        url='http://bob.com',
+                        service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     data = valhalla._make_data("walking", origin, [destination], MOCKED_REQUEST)
     assert json.loads(data) == json.loads('''{
@@ -237,7 +237,7 @@ def format_url_func_with_bike_mode_test():
     destination = get_pt_object(type_pb2.ADDRESS, 2.0, 2.0)
 
     valhalla = Valhalla(instance=instance,
-                        url='http://bob.com',
+                        service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     valhalla.costing_options = None
     data = valhalla._make_data("bike", origin, [destination], MOCKED_REQUEST)
@@ -277,7 +277,7 @@ def format_url_func_with_car_mode_test():
     destination = get_pt_object(type_pb2.ADDRESS, 2.0, 2.0)
 
     valhalla = Valhalla(instance=instance,
-                        url='http://bob.com',
+                        service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     valhalla.costing_options = None
     data = valhalla._make_data("car", origin, [destination], MOCKED_REQUEST)
@@ -306,7 +306,7 @@ def format_url_func_with_different_ptobject_test():
     instance.walking_speed = 1
     instance.bike_speed = 2
     valhalla = Valhalla(instance=instance,
-                        url='http://bob.com',
+                        service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     valhalla.costing_options = None
     for ptObject_type in (type_pb2.STOP_POINT,
@@ -340,7 +340,7 @@ def format_url_func_with_different_ptobject_test():
 def format_url_func_invalid_mode_test():
     instance = MagicMock()
     valhalla = Valhalla(instance=instance,
-                        url='http://bob.com',
+                        service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     with pytest.raises(InvalidArguments) as excinfo:
         origin = get_pt_object(type_pb2.ADDRESS, 1.0, 1.0)
@@ -353,7 +353,7 @@ def format_url_func_invalid_mode_test():
 def call_valhalla_func_with_circuit_breaker_error_test():
     instance = MagicMock()
     valhalla = Valhalla(instance=instance,
-                        url='http://bob.com',
+                        service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     valhalla.breaker = MagicMock()
     valhalla.breaker.call = MagicMock(side_effect=pybreaker.CircuitBreakerError())
@@ -363,7 +363,7 @@ def call_valhalla_func_with_circuit_breaker_error_test():
 def call_valhalla_func_with_unknown_exception_test():
     instance = MagicMock()
     valhalla = Valhalla(instance=instance,
-                        url='http://bob.com',
+                        service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     valhalla.breaker = MagicMock()
     valhalla.breaker.call = MagicMock(side_effect=ValueError())
@@ -373,7 +373,7 @@ def call_valhalla_func_with_unknown_exception_test():
 def get_response_func_with_unknown_exception_test():
     instance = MagicMock()
     valhalla = Valhalla(instance=instance,
-                        url='http://bob.com',
+                        service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     resp_json = response_valid()
     origin = get_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
@@ -396,7 +396,7 @@ def get_response_func_with_unknown_exception_test():
 def direct_path_func_without_response_valhalla_test():
     instance = MagicMock()
     valhalla = Valhalla(instance=instance,
-                        url='http://bob.com',
+                        service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     valhalla.breaker = MagicMock()
     valhalla._call_valhalla = MagicMock(return_value=None)
@@ -411,7 +411,7 @@ def direct_path_func_with_status_code_400_response_valhalla_test():
     instance = MagicMock()
     instance.walking_speed = 1.12
     valhalla = Valhalla(instance=instance,
-                        url='http://bob.com',
+                        service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     origin = get_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
     destination = get_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
@@ -433,7 +433,7 @@ def direct_path_func_with_no_response_valhalla_test():
     instance = MagicMock()
     instance.walking_speed = 1.12
     valhalla = Valhalla(instance=instance,
-                        url='http://bob.com',
+                        service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     origin = get_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
     destination = get_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
@@ -454,7 +454,7 @@ def direct_path_func_with_valid_response_valhalla_test():
     instance = MagicMock()
     instance.walking_speed = 1.12
     valhalla = Valhalla(instance=instance,
-                        url='http://bob.com',
+                        service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     resp_json = response_valid()
 
@@ -482,7 +482,7 @@ def direct_path_func_with_valid_response_valhalla_test():
 def get_valhalla_mode_invalid_mode_test():
     instance = MagicMock()
     valhalla = Valhalla(instance=instance,
-                        url='http://bob.com',
+                        service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     with pytest.raises(InvalidArguments) as excinfo:
         valhalla._get_valhalla_mode('bss')
@@ -493,7 +493,7 @@ def get_valhalla_mode_invalid_mode_test():
 def get_valhalla_mode_valid_mode_test():
     instance = MagicMock()
     valhalla = Valhalla(instance=instance,
-                        url='http://bob.com',
+                        service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     map_mode = {
         "walking": "pedestrian",
@@ -508,7 +508,7 @@ def one_to_many_valhalla_test():
     instance = MagicMock()
     instance.walking_speed = 1.12
     valhalla = Valhalla(instance=instance,
-                        url='http://bob.com',
+                        service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     origin = get_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
     destination = get_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)

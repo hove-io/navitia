@@ -30,68 +30,90 @@ import pytest
 from jormungandr.street_network.street_network import StreetNetwork
 from jormungandr.street_network.kraken import Kraken
 from jormungandr.street_network.valhalla import Valhalla
+from jormungandr.exceptions import ConfigException
+
+KRAKEN_CLASS = 'jormungandr.street_network.kraken.Kraken'
+VALHALLA_CLASS = 'jormungandr.street_network.valhalla.Valhalla'
+ALL_MODES = ['walking', 'bike', 'bss', 'car']
 
 
 def kraken_class_test():
-    kraken_conf = {'class': 'jormungandr.street_network.kraken.Kraken'}
-    assert isinstance(StreetNetwork.get_street_network(None, kraken_conf), Kraken)
+    kraken_conf = [{
+        'modes': ALL_MODES,
+        'class': KRAKEN_CLASS
+    }]
+    services = StreetNetwork.get_street_network_services(None, kraken_conf)
+    for mode in ALL_MODES :
+        assert isinstance(services[mode], Kraken)
 
 
 def valhalla_class_without_url_test():
     with pytest.raises(ValueError) as excinfo:
-        valhalla_without_url = {'class': 'jormungandr.street_network.valhalla.Valhalla'}
-        StreetNetwork.get_street_network(None, valhalla_without_url)
+        valhalla_without_url = [{
+            'modes': ALL_MODES,
+            'class': VALHALLA_CLASS,
+        }]
+        StreetNetwork.get_street_network_services(None, valhalla_without_url)
     assert 'service_url is invalid, you give None' in str(excinfo.value)
 
 
 def valhalla_class_wit_empty_url_test():
     with pytest.raises(ValueError) as excinfo:
-        kraken_conf = {
-            'class': 'jormungandr.street_network.valhalla.Valhalla',
+        kraken_conf = [{
+            'modes': ALL_MODES,
+            'class': VALHALLA_CLASS,
             'args': {
                 "service_url": ""
             }
-        }
-        StreetNetwork.get_street_network(None, kraken_conf)
+        }]
+        StreetNetwork.get_street_network_services(None, kraken_conf)
     assert 'service_url is invalid, you give ' in str(excinfo.value)
 
 
 def valhalla_class_with_invalid_url_test():
     with pytest.raises(ValueError) as excinfo:
-        kraken_conf = {
-            'class': 'jormungandr.street_network.valhalla.Valhalla',
+        kraken_conf = [{
+            'modes': ALL_MODES,
+            'class': VALHALLA_CLASS,
             'args': {
                 "service_url": "bob"
             }
-        }
-        StreetNetwork.get_street_network(None, kraken_conf)
+        }]
+        StreetNetwork.get_street_network_services(None, kraken_conf)
     assert 'service_url is invalid, you give bob' in str(excinfo.value)
 
 
 def valhalla_class_without_costing_options_test():
-    kraken_conf = {
-        'class': 'jormungandr.street_network.valhalla.Valhalla',
+    kraken_conf = [{
+        'modes': ALL_MODES,
+        'class': VALHALLA_CLASS,
         'args': {
-            "service_url": "http://localhost:8002",
+            "service_url": "http://localhost:8002"
         }
-    }
-    assert isinstance(StreetNetwork.get_street_network(None, kraken_conf), Valhalla)
+    }]
+    services = StreetNetwork.get_street_network_services(None, kraken_conf)
+    for mode in ALL_MODES:
+        assert isinstance(services[mode], Valhalla)
 
 
 def valhalla_class_with_empty_costing_options_test():
-    kraken_conf = {
-        'class': 'jormungandr.street_network.valhalla.Valhalla',
+    kraken_conf = [{
+        'modes': ALL_MODES,
+        'class': VALHALLA_CLASS,
         'args': {
             "service_url": "http://localhost:8002",
             "costing_options": {}
         }
-    }
-    assert isinstance(StreetNetwork.get_street_network(None, kraken_conf), Valhalla)
+    }]
+    services = StreetNetwork.get_street_network_services(None, kraken_conf)
+    for mode in ALL_MODES:
+        assert isinstance(services[mode], Valhalla)
 
 
 def valhalla_class_with_url_valid_test():
-    kraken_conf = {
-        'class': 'jormungandr.street_network.valhalla.Valhalla',
+    kraken_conf = [{
+        'modes': ALL_MODES,
+        'class': VALHALLA_CLASS,
         'args': {
             "service_url": "http://localhost:8002",
             "costing_options": {
@@ -100,13 +122,15 @@ def valhalla_class_with_url_valid_test():
                 }
             }
         }
-    }
-    assert isinstance(StreetNetwork.get_street_network(None, kraken_conf), Valhalla)
-
+    }]
+    services = StreetNetwork.get_street_network_services(None, kraken_conf)
+    for mode in ALL_MODES:
+        assert isinstance(services[mode], Valhalla)
 
 def street_network_without_class_test():
     with pytest.raises(KeyError) as excinfo:
-        kraken_conf = {
+        kraken_conf = [{
+            'modes': ['walking'],
             'args': {
                 "service_url": "http://localhost:8002",
             "costing_options": {
@@ -115,15 +139,16 @@ def street_network_without_class_test():
                 }
             }
             }
-        }
-        StreetNetwork.get_street_network(None, kraken_conf)
-    assert 'impossible to build a routing, missing mandatory field in configuration' in str(excinfo.value)
+        }]
+        StreetNetwork.get_street_network_services(None, kraken_conf)
+    assert 'impossible to build a StreetNetwork, missing mandatory field in configuration: class' in str(excinfo.value)
 
 
 def valhalla_class_with_class_invalid_test():
-    with pytest.raises(ValueError) as excinfo:
-        kraken_conf = {
+    with pytest.raises(ConfigException) as excinfo:
+        kraken_conf = [{
             'class': 'jormungandr',
+            'modes': ['walking'],
             'args': {
                 "service_url": "http://localhost:8002",
                 "costing_options": {
@@ -132,14 +157,33 @@ def valhalla_class_with_class_invalid_test():
                     }
                 }
             }
-        }
-        StreetNetwork.get_street_network(None, kraken_conf)
+        }]
+        StreetNetwork.get_street_network_services(None, kraken_conf)
     assert 'impossible to build StreetNetwork, wrongly formated class: jormungandr' in str(excinfo.value)
 
 
 def valhalla_class_with_class_not_exist_test():
-    with pytest.raises(AttributeError) as excinfo:
-        kraken_conf = {
+    with pytest.raises(ConfigException) as excinfo:
+        kraken_conf = [{
+            'class': 'jormungandr.street_network.valhalla.bob',
+            'modes': ['walking'],
+            'args': {
+                "service_url": "http://localhost:8002",
+                "costing_options": {
+                    "pedestrian": {
+                        "walking_speed": 50.1
+                    }
+                }
+            }
+        }]
+        StreetNetwork.get_street_network_services(None, kraken_conf)
+    assert 'impossible to build StreetNetwork, wrongly formated class: jormungandr.street_network.valhalla.bob' \
+           in str(excinfo.value)
+
+
+def streetnetwork_service_without_modes_test():
+    with pytest.raises(KeyError) as excinfo:
+        kraken_conf = [{
             'class': 'jormungandr.street_network.valhalla.bob',
             'args': {
                 "service_url": "http://localhost:8002",
@@ -149,7 +193,7 @@ def valhalla_class_with_class_not_exist_test():
                     }
                 }
             }
-        }
-        StreetNetwork.get_street_network(None, kraken_conf)
-    assert 'impossible to build StreetNetwork, cannot find class: jormungandr.street_network.valhalla.bob' \
+        }]
+        StreetNetwork.get_street_network_services(None, kraken_conf)
+    assert 'impossible to build a StreetNetwork, missing mandatory field in configuration: modes' \
            in str(excinfo.value)
