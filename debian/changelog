@@ -1,3 +1,9 @@
+navitia2 (2.23.1) unstable; urgency=low
+
+  * kraken: fix a crash due to a data lifetime bug <https://github.com/CanalTP/navitia/pull/1938>
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Mon, 23 Jan 2017 08:01:02 +0100
+
 navitia2 (2.23.0) unstable; urgency=low
 
   * Experimental: Coverage without georef  <https://github.com/CanalTP/navitia/pull/1903>

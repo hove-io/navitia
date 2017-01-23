@@ -72,8 +72,6 @@ class Worker {
         std::unique_ptr<navitia::routing::RAPTOR> planner;
         std::unique_ptr<navitia::georef::StreetNetwork> street_network_worker;
 
-        // we keep a reference to data_manager in each thread
-        DataManager<navitia::type::Data>& data_manager;
         const kraken::Configuration conf;
         log4cplus::Logger logger;
         size_t last_data_identifier = std::numeric_limits<size_t>::max();// to check that data did not change, do not use directly
@@ -82,14 +80,15 @@ class Worker {
     public:
         navitia::PbCreator pb_creator;
 
-        Worker(DataManager<navitia::type::Data>& data_manager, kraken::Configuration conf);
+        Worker(kraken::Configuration conf);
         //we override de destructor this way we can forward declare Raptor
         //see: https://stackoverflow.com/questions/6012157/is-stdunique-ptrt-required-to-know-the-full-definition-of-t
         ~Worker();
 
-        void dispatch(const pbnavitia::Request & request);
+        void dispatch(const pbnavitia::Request& request, const nt::Data& data);
 
-        void init_worker_data(const boost::shared_ptr<const navitia::type::Data> data,
+    private:
+        void init_worker_data(const navitia::type::Data* data,
                               const pt::ptime now,
                               const pt::time_period action_period,
                               const bool disable_geojson = false,
