@@ -40,13 +40,13 @@ class TestTransformId:
         assert transform_id(id) == uri
 
     def test_transform_id_admin(self):
-        id = "admin:1:12345"
-        uri = "admin:12345"
+        id = "admin:fr:12345"
+        uri = id
         assert transform_id(id) == uri
 
     def test_transform_id_address(self):
-        id = "address:1:12345"
-        uri = "address:12345"
+        id = "address:toto:12345"
+        uri = id
         assert transform_id(id) == uri
 
     def test_transform_id_something(self):
