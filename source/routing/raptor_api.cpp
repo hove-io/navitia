@@ -1369,6 +1369,14 @@ void make_heat_map(navitia::PbCreator& pb_creator,
                                            rt_level, worker, speed, pb_creator);
     if (has_error) { return; }
 
+    if (worker.geo_ref.nb_vertex_by_mode == 0) {
+        // if we have no street network we cannot compute a heatmap
+        pb_creator.fill_pb_error(pbnavitia::Error::no_solution,
+                                 pbnavitia::NO_SOLUTION,
+                                 "no street network data, impossible to compute a heat_map");
+        return;
+    }
+
     auto heat_map = build_raster_isochrone(worker.geo_ref, speed, mode, isochrone_common.init_dt, raptor,
                                            isochrone_common.coord_origin, max_duration, clockwise,
                                            isochrone_common.bound, resolution);

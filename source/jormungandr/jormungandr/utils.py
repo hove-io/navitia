@@ -284,6 +284,9 @@ def create_object(configuration):
         module_path, name = class_path.rsplit('.', 1)
         module = import_module(module_path)
         attr = getattr(module, name)
+    except AttributeError as e:
+        log.warn('impossible to build object {} : {}'.format(class_path, e))
+        raise ConfigException(class_path)
     except ImportError:
         log.warn('impossible to build object {}, cannot find class'.format(class_path))
         raise ConfigException(class_path)

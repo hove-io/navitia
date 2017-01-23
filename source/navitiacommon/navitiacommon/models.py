@@ -562,14 +562,25 @@ class AutocompleteParameter(db.Model, TimestampMixin):
     def backup_dir(self, root_path):
         return os.path.join(self.main_dir(root_path), "backup")
 
-    def autocomplete_latest_datasets(self, nb_dataset=1):
-        return db.session.query(DataSet)\
-            .join(Job) \
-            .join(AutocompleteParameter) \
-            .filter(AutocompleteParameter.id == self.id, DataSet.family_type == "autocomplete", Job.state == 'done') \
-            .order_by(Job.created_at.desc()) \
-            .limit(nb_dataset) \
+    def last_datasets(self, nb_dataset=1):
+        """
+        return the n last dataset of each family type loaded for this instance
+        """
+        family_types = db.session.query(func.distinct(DataSet.family_type)) \
+            .filter(AutocompleteParameter.id == self.id) \
             .all()
+
+        result = []
+        for family_type in family_types:
+            data_sets = db.session.query(DataSet)\
+                .join(Job) \
+                .join(AutocompleteParameter) \
+                .filter(AutocompleteParameter.id == self.id, DataSet.family_type == family_type, Job.state == 'done') \
+                .order_by(Job.created_at.desc()) \
+                .limit(nb_dataset) \
+                .all()
+            result += data_sets
+        return result
 
     def __repr__(self):
         return '<AutocompleteParameter %r>' % self.name

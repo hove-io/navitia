@@ -48,7 +48,7 @@ class TestJourneysDefault(JourneyCommon, AbstractTestFixture):
             "&first_section_mode[]=car" + \
             "&debug=true"
         response = self.query_region(query)
-        check_journeys(response)
+        check_best(response)
         eq_(len(response['journeys']), 4)
 
         query += "&max_duration=0"
@@ -75,7 +75,7 @@ class TestJourneysDefault(JourneyCommon, AbstractTestFixture):
         query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
             .format(from_sa='stopA', to_sa='stop_point:stopB', datetime="20120614T080000")
         response = self.query_region(query)
-        check_journeys(response)
+        check_best(response)
         jrnys = response['journeys']
 
         j = next((j for j in jrnys if j['type'] == 'non_pt_walk'), None)
@@ -83,6 +83,12 @@ class TestJourneysDefault(JourneyCommon, AbstractTestFixture):
         assert j['sections'][0]['from']['id'] == 'stopA'
         assert j['sections'][0]['to']['id'] == 'stop_point:stopB'
         assert j['type'] == 'non_pt_walk'
+
+    def test_min_nb_journeys_with_night_bus_filter(self):
+        """
+        This new feature is not supported in default
+        """
+        pass
 
 
 @config()

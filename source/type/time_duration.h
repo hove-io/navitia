@@ -243,6 +243,10 @@ public:
         return time_duration(ticks_.as_number() / divisor);
     }
 
+    time_duration operator*(float multiplicator) const {
+       return time_duration(ticks_.as_number() * multiplicator);
+    }
+
     double total_fractional_seconds() const {
         return double(ticks()) / ticks_per_second();
     }

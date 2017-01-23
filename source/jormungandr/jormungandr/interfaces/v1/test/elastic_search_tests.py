@@ -214,7 +214,7 @@ def bragi_admin_feature():
         },
         "properties": {
             "geocoding": {
-                "city_code": "2725",
+                "citycode": "2725",
                 "level": 8,
                 "city": None,
                 "housenumber": "",
@@ -567,7 +567,7 @@ def bragi_call_test():
         ]
     }
     mock_requests = MockRequests({
-        'http://bob.com/autocomplete?q=rue bobette&limit=10':
+        'http://bob.com/autocomplete?q=rue+bobette&limit=10':
         (bragi_response, 200)
     })
 

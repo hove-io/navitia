@@ -199,7 +199,7 @@ def import_autocomplete(files, autocomplete_instance, async=True, backup_file=Tr
     for _file in files:
         dataset = models.DataSet()
         dataset.type = type_of_autocomplete_data(_file)
-        dataset.family_type = 'autocomplete'
+        dataset.family_type = 'autocomplete_{}'.format(dataset.type)
         if dataset.type in task:
             if backup_file:
                 filename = move_to_backupdirectory(_file, autocomplete_instance.backup_dir(autocomplete_dir))
@@ -228,10 +228,10 @@ def import_autocomplete(files, autocomplete_instance, async=True, backup_file=Tr
         action.kwargs['job_id'] = job.id
     actions.append(finish_job.si(job.id))
     if async:
-        chain(*actions).delay()
+        return chain(*actions).delay()
     else:
         # all job are run in sequence and import_data will only return when all the jobs are finish
-        chain(*actions).apply()
+        return chain(*actions).apply()
 
 
 @celery.task()
@@ -424,7 +424,7 @@ def purge_autocomplete():
         logger.info('purging autocomplete backup directories for %s', ac_instance.name)
         max_backups = current_app.config.get('AUOTOCOMPLETE_MAX_BACKUPS_TO_KEEP', 5)
         dir_to_keep = set(os.path.realpath(os.path.dirname(dataset.name))
-                          for dataset in ac_instance.autocomplete_latest_datasets(max_backups))
+                          for dataset in ac_instance.last_datasets(max_backups))
         autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
         backup_dir = os.path.join(autocomplete_dir, ac_instance.name, 'backup')
         all_backups = set(os.path.join(backup_dir, backup)

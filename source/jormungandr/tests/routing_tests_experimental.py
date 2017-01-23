@@ -28,8 +28,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from datetime import timedelta
-from .tests_mechanism import config
-from jormungandr.scenarios.qualifier import min_from_criteria
+from .tests_mechanism import config, NewDefaultScenarioAbstractTestFixture
 from .journey_common_tests import *
 from unittest import skip
 from .routing_tests import OnBasicRouting
@@ -40,7 +39,7 @@ unit for scenario experimental
 '''
 
 @config({'scenario': 'experimental'})
-class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
+class TestJourneysExperimental(JourneyCommon, DirectPath, NewDefaultScenarioAbstractTestFixture):
     """
     Test the experiental scenario
     All the tests are defined in "TestJourneys" class, we only change the scenario
@@ -49,35 +48,14 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
     NOTE: for the moment we cannot import all routing tests, so we only get 2, but we need to add some more
     """
 
-    @staticmethod
-    def check_next_datetime_link(dt, response, clockwise):
-        if not response.get('journeys'):
-            return
-        """default next behaviour is 1s after the best or the soonest"""
-        j_to_compare = min_from_criteria(generate_pt_journeys(response),
-                                         new_default_pagination_journey_comparator(clockwise=clockwise))
-
-        j_departure = get_valid_datetime(j_to_compare['departure_date_time'])
-        eq_(j_departure + timedelta(seconds=1), dt)
-
-    @staticmethod
-    def check_previous_datetime_link(dt, response, clockwise):
-        if not response.get('journeys'):
-            return
-        """default previous behaviour is 1s before the best or the latest """
-        j_to_compare = min_from_criteria(generate_pt_journeys(response),
-                                         new_default_pagination_journey_comparator(clockwise=clockwise))
-
-        j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
-        eq_(j_departure - timedelta(seconds=1), dt)
-
     def test_journey_with_different_fallback_modes(self):
         """
         Test when departure/arrival fallback modes are different
         """
         query = journey_basic_query + "&first_section_mode[]=walking&last_section_mode[]=car&debug=true"
         response = self.query_region(query)
-        check_journeys(response)
+        check_best(response)
+        #self.is_valid_journey_response(response, query)# linestring with 1 value (0,0)
         jrnys = response['journeys']
         assert jrnys
         assert jrnys[0]['sections'][0]['mode'] == 'walking'
@@ -135,26 +113,26 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, AbstractTestFixture):
             "car_speed": instance.car_speed,
             "bss_speed": instance.bss_speed,
         }
-        resp = instance.street_network_service.get_street_network_routing_matrix([origin], [destination],
-                                                                                 mode, max_duration, request, **kwargs)
+        resp = instance.get_street_network_routing_matrix([origin], [destination],
+                                                          mode, max_duration, request, **kwargs)
         assert len(resp.rows[0].routing_response) == 1
         assert resp.rows[0].routing_response[0].duration == 107
         assert resp.rows[0].routing_response[0].routing_status == response_pb2.reached
 
         max_duration = 106
-        resp = instance.street_network_service.get_street_network_routing_matrix([origin], [destination],
-                                                                                 mode, max_duration, request, **kwargs)
+        resp = instance.get_street_network_routing_matrix([origin], [destination],
+                                                          mode, max_duration, request, **kwargs)
         assert len(resp.rows[0].routing_response) == 1
         assert resp.rows[0].routing_response[0].duration == 0
         assert resp.rows[0].routing_response[0].routing_status == response_pb2.unreached
 
 @config({"scenario": "experimental"})
-class TestExperimentalJourneysWithPtref(JourneysWithPtref, AbstractTestFixture):
+class TestExperimentalJourneysWithPtref(JourneysWithPtref, NewDefaultScenarioAbstractTestFixture):
     pass
 
 
 @config({"scenario": "experimental"})
-class TestExperimentalOnBasicRouting(OnBasicRouting, AbstractTestFixture):
+class TestExperimentalOnBasicRouting(OnBasicRouting, NewDefaultScenarioAbstractTestFixture):
     @skip("temporarily disabled")
     def test_isochrone(self):
         super(TestExperimentalOnBasicRouting, self).test_isochrone()

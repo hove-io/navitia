@@ -58,4 +58,8 @@ class MockRequests(object):
         self.responses = responses
 
     def get(self, url, *args, **kwargs):
+        if kwargs.get('params'):
+            from urllib import urlencode
+            url += "?{}".format(urlencode(kwargs.get('params')))
+
         return MockResponse(self.responses[url][0], self.responses[url][1], url)

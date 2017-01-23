@@ -57,7 +57,9 @@ def clean_db():
     before all tests the database is cleared
     """
     with app.app_context():
-        tables = ['"{}"'.format(table) for table in ['user', 'instance', 'authorization', 'key', 'data_set', 'job', 'poi_type_json']]
+        tables = ['"{}"'.format(table) for table in ['user', 'instance', 'authorization', 'key',
+                                                     'data_set', 'job', 'poi_type_json',
+                                                     'autocomplete_parameter']]
         db.session.execute('TRUNCATE {} CASCADE;'.format(', '.join(tables)))
         db.session.commit()
 
