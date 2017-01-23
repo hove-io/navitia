@@ -70,7 +70,7 @@ inline void doWork(zmq::context_t& context,
     socket.connect("inproc://workers");
     bool run = true;
     //Here we create the worker
-    navitia::Worker w(data_manager, conf);
+    navitia::Worker w(conf);
     z_send(socket, "READY");
     auto slow_request_duration = pt::milliseconds(conf.slow_request_duration());
     while(run) {
@@ -93,8 +93,11 @@ inline void doWork(zmq::context_t& context,
         pbnavitia::API api = pbnavitia::UNKNOWN_API;
         if(!pb_req.ParseFromArray(request.data(), request.size())){
             LOG4CPLUS_WARN(logger, "receive invalid protobuf");
-            w.pb_creator.fill_pb_error(pbnavitia::Error::invalid_protobuf_request, "receive invalid protobuf");
-            respond(socket, address, w.pb_creator.get_response());
+            pbnavitia::Response response;
+            auto* error = response.mutable_error();
+            error->set_id(pbnavitia::Error::invalid_protobuf_request);
+            error->set_message("receive invalid protobuf");
+            respond(socket, address, response);
             continue;
         }
         api = pb_req.requested_api();
@@ -102,8 +105,9 @@ inline void doWork(zmq::context_t& context,
         if(api != pbnavitia::METADATAS){
             LOG4CPLUS_DEBUG(logger, "receive request: " << pb_req.DebugString());
         }
+        const auto data = data_manager.get_data();
         try {
-            w.dispatch(pb_req);
+            w.dispatch(pb_req, *data);
             if(api != pbnavitia::METADATAS){
                 LOG4CPLUS_TRACE(logger, "response: " << w.pb_creator.get_response().DebugString());
             }
@@ -114,10 +118,10 @@ inline void doWork(zmq::context_t& context,
             LOG4CPLUS_ERROR(logger, "backtrace: " << e.backtrace());
             w.pb_creator.fill_pb_error(pbnavitia::Error::internal_error, e.what());
         }
-        if (! data_manager.get_data()->loaded){
+        if (! data->loaded){
             w.pb_creator.set_publication_date(boost::gregorian::not_a_date_time);
         } else {
-            w.pb_creator.set_publication_date(data_manager.get_data()->meta->publication_date);
+            w.pb_creator.set_publication_date(data->meta->publication_date);
         }
         respond(socket, address, w.pb_creator.get_response());
         auto duration = pt::microsec_clock::universal_time() - start;
