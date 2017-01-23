@@ -313,12 +313,11 @@ echo "** running jormungandr"
 mkdir -p "$run_dir"/jormungandr
 
 # For our test we only need one kraken
-cat << EOFJ > "$run_dir"/jormungandr/default.ini 
-[instance]
-# name of the kraken
-key = default
-# zmq socket used to talk to the kraken, should be the same as the one defined by the zmq_socket param in kraken
-socket = ipc:///tmp/default_kraken
+cat << EOFJ > "$run_dir"/jormungandr/default.json 
+{
+    "key": "default",
+    "socket": "ipc:///tmp/default_kraken"
+}
 EOFJ
 
 # the Jormungnandr configuration is in the source/jormungandr/jormungandr/default_settings.py file
