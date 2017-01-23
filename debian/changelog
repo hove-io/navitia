@@ -1,3 +1,25 @@
+navitia2 (2.24.0) unstable; urgency=low
+
+  * kraken: fix a crash due to a data lifetime bug  <https://github.com/CanalTP/navitia/pull/1938>
+  * Kraken: fix a crash on heat_map  <https://github.com/CanalTP/navitia/pull/1937>
+  * Tyr: add the tyr tests to the `make docker_test` target  <https://github.com/CanalTP/navitia/pull/1929>
+  * Doc: add a getting started section  <https://github.com/CanalTP/navitia/pull/1935>
+  * Experimental: Configure engine per mode  <https://github.com/CanalTP/navitia/pull/1930>
+  * jormungandr: fix multimode in experimental + activate lots of asserts  <https://github.com/CanalTP/navitia/pull/1936>
+  * jormungandr: marshall citycode from bragi response  <https://github.com/CanalTP/navitia/pull/1934>
+  * jormungandr: error messages modified for experimental  <https://github.com/CanalTP/navitia/pull/1933>
+  * Tyr: new tyr target to refresh autocomplete data  <https://github.com/CanalTP/navitia/pull/1932>
+  * Tyr: api to get last_datasets  <https://github.com/CanalTP/navitia/pull/1928>
+  * Jormun: pass lon and lat to geocodejson autocomplete  <https://github.com/CanalTP/navitia/pull/1922>
+  * Experimental: do not take datetime into consideration  <https://github.com/CanalTP/navitia/pull/1915>
+  * jormungandr: Corrections on use of nightbus filter with min_nb_journeys  <https://github.com/CanalTP/navitia/pull/1924>
+  * Tyr: Import poi in mimir  <https://github.com/CanalTP/navitia/pull/1925>
+  * jormun: don't use circuit breaker on init  <https://github.com/CanalTP/navitia/pull/1926>
+  * jormungandr: Choosing journey on waiting durations  <https://github.com/CanalTP/navitia/pull/1920>
+  * Fix manhattan distance  <https://github.com/CanalTP/navitia/pull/1921>
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Mon, 23 Jan 2017 08:01:50 +0100
+
 navitia2 (2.23.1) unstable; urgency=low
 
   * kraken: fix a crash due to a data lifetime bug <https://github.com/CanalTP/navitia/pull/1938>
