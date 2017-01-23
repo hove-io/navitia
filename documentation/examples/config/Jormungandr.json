@@ -1,0 +1,4 @@
+{
+    "key": "some_region",
+    "zmq_socket": "ipc:///tmp/default_kraken"
+}
