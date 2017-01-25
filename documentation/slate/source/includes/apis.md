@@ -1472,13 +1472,14 @@ Departures are ordered chronologically in ascending order as:
 
 ### Parameters
 
-Required | Name           | Type                    | Description        | Default Value
----------|----------------|-------------------------|--------------------|--------------
-nop      | from_datetime    | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules |
-nop      | duration         | int                             | Maximum duration in seconds between from_datetime and the retrieved datetimes.                            | 86400
-nop      | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc.    |
+Required | Name             | Type                            | Description                                                                                              | Default Value
+---------|------------------|---------------------------------|----------------------------------------------------------------------------------------------------------|--------------
+nop      | from_datetime    | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules                                                          | the current datetime
+nop      | duration         | int                             | Maximum duration in seconds between from_datetime and the retrieved datetimes.                           | 86400
+nop      | count            | int                             | Maximum number of results.                                                                               | 10
+nop      | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc.                                                        | 
 nop      | data_freshness   | enum                            | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> | realtime
-nop      | disable_geojson | boolean                | remove geojson fields from the response | False
+nop      | disable_geojson  | boolean                         | remove geojson fields from the response                                                                  | false
 
 
 ### Departure objects
