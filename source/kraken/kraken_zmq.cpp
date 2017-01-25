@@ -63,7 +63,13 @@ int main(int argn, char** argv){
         conf_file = path + application + ".ini";
     }
     conf.load(conf_file);
-    init_logger(conf_file);
+    auto log_level = conf.log_level();
+    auto log_format = conf.log_format();
+    if(log_level && log_format){
+        init_logger(*log_level, *log_format);
+    }else{
+        init_logger(conf_file);
+    }
 
     DataManager<navitia::type::Data> data_manager;
 
