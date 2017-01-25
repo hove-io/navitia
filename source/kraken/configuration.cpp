@@ -32,6 +32,9 @@ www.navitia.io
 #include "utils/exception.h"
 #include <fstream>
 #include <boost/optional.hpp>
+#include <boost/algorithm/string/predicate.hpp>
+#include <boost/algorithm/string/replace.hpp>
+#include <iostream>
 
 namespace po = boost::program_options;
 
@@ -66,6 +69,8 @@ po::options_description get_options_description(const boost::optional<std::strin
              po::value<bool>()->default_value(*display_contributors) : po::value<bool>()->default_value(false),
          "display all contributors in feed publishers")
         ("GENERAL.raptor_cache_size", po::value<int>()->default_value(10), "maximum number of stored raptor caches")
+        ("GENERAL.log_level", po::value<std::string>(), "log level of kraken")
+        ("GENERAL.log_format", po::value<std::string>()->default_value("[%D{%y-%m-%d %H:%M:%S,%q}] [%p] [%x] - %m %b:%L  %n"), "log format")
 
         ("BROKER.host", po::value<std::string>()->default_value("localhost"), "host of rabbitmq")
         ("BROKER.port", po::value<int>()->default_value(5672), "port of rabbitmq")
@@ -83,16 +88,27 @@ po::options_description get_options_description(const boost::optional<std::strin
 
 }
 
+static std::string env_parser(std::string env){
+    if(!boost::algorithm::starts_with(env, "KRAKEN_")){
+        return "";
+    }
+    boost::algorithm::replace_first(env, "KRAKEN_", "");
+    boost::algorithm::replace_first(env, "_", ".");
+    return env;
+}
+
 void Configuration::load(const std::string& filename){
     po::options_description desc = get_options_description();
-    std::ifstream stream(filename);
 
+    po::store(po::parse_environment(desc, env_parser), this->vm);
+
+    std::ifstream stream(filename);
     if(!stream.is_open() || !stream.good()){
-        throw navitia::exception("impossible to open: " + filename);
+        std::cerr << "no configuration file found, using only environment variables" << std::endl;
+    }else{
+        //we allow unknown option for log4cplus
+        po::store(po::parse_config_file(stream, desc, true), this->vm);
     }
-    //we allow unknown option for log4cplus
-    auto tmp = po::parse_config_file(stream, desc, true);
-    po::store(tmp, this->vm);
     po::notify(this->vm);
 }
 
@@ -195,5 +211,20 @@ size_t Configuration::raptor_cache_size() const{
         throw std::invalid_argument("raptor_cache_size must be strictly positive");
     }
     return size_t(raptor_cache_size);
+}
+
+boost::optional<std::string> Configuration::log_level() const{
+    boost::optional<std::string> result;
+    if (this->vm.count("GENERAL.log_level") > 0) {
+        result = this->vm["GENERAL.log_level"].as<std::string>();
+    }
+    return result;
+}
+boost::optional<std::string> Configuration::log_format() const{
+    boost::optional<std::string> result;
+    if (this->vm.count("GENERAL.log_format") > 0) {
+        result = this->vm["GENERAL.log_format"].as<std::string>();
+    }
+    return result;
 }
 }}//namespace
