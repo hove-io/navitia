@@ -980,7 +980,7 @@ from                     | [places](#place)                             | Origin
 to                       | [places](#place)                             | Destination place of this section
 links                    | Array of [link](#link)                        | Links related to this section
 display_informations     | [display_informations](#display-informations) | Useful information to display
-additionnal_informations | *enum* string                                 | Other information. It can be: <ul><li>`regular`: no on demand transport (odt)</li><li>`has_date_time_estimated`: section with at least one estimated date time</li><li>`odt_with_stop_time`: odt with fixed schedule, but travelers have to call agency!</li><li>`odt_with_stop_point`: odt where pickup or drop off are specific points</li><li>`odt_with_zone`: odt which is like a cab, from wherever you want to wherever you want, whenever it is possible</li></ul>
+additional_informations  | *enum* string                                 | Other information. It can be: <ul><li>`regular`: no on demand transport (odt)</li><li>`has_date_time_estimated`: section with at least one estimated date time</li><li>`odt_with_stop_time`: odt with fixed schedule, but travelers have to call agency!</li><li>`odt_with_stop_point`: odt where pickup or drop off are specific points</li><li>`odt_with_zone`: odt which is like a cab, from wherever you want to wherever you want, whenever it is possible</li></ul>
 geojson                  | [GeoJson](http://www.geojson.org)             |
 path                     | Array of [path](#path)                        | The path of this section
 transfer_type            | *enum* string                                 | The type of this transfer it can be: `walking`, `guaranteed`, `extension`
@@ -1274,7 +1274,7 @@ nop      | disable_geojson    | boolean   | remove geojson fields from the respo
 
 Field                    | Type                                          | Description
 -------------------------|-----------------------------------------------|---------------------------
-additionnal_informations | Array of String                               | Other information: TODO enum
+additional_informations  | Array of String                               | Other information: TODO enum
 display_informations     | [display_informations](#display-informations) | Usefull information about the the vehicle journey to display
 links                    | Array of [link](#link)                        | Links to [line](#line), vehicle_journey, [route](#route), [commercial_mode](#commercial-mode), [physical_mode](#physical-mode), [network](#network)
 
