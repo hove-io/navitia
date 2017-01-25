@@ -506,7 +506,7 @@ pt-date-time (pt stands for "public transport") is a complex date time object to
 
 |Field                    | Type               | Description
 |-------------------------|--------------------|-----------------------------
-|additionnal_informations | Array of String    | Other information: TODO enum
+|additional_informations  | Array of String    | Other information: TODO enum
 |departure_date_time      | [iso-date-time](#iso-date-time)    | A date time
 |arrival_date_time        | [iso-date-time](#iso-date-time)    | A date time
 |links                    | Array of [link](#link) |internal links to notes
