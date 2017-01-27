@@ -51,7 +51,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
 
     def test_autocomplete_call(self):
         mock_requests = MockRequests({
-        'https://host_of_bragi/autocomplete?q=bob&limit=10':
+        'https://host_of_bragi/autocomplete?q=bob&limit=10&pt_dataset=main_autocomplete_test':
             (
                 {"features": [
                     {
@@ -95,7 +95,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
                 }, 200)
         })
         with mock.patch('requests.get', mock_requests.get):
-            response = self.query_region('places?q=bob')
+            response = self.query_region('places?q=bob&pt_dataset=main_autocomplete_test')
 
             is_valid_global_autocomplete(response, depth=1)
             r = response.get('places')
