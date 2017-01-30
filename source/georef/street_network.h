@@ -141,6 +141,7 @@ struct PathFinder {
     void init(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor);
 
     void start_distance_dijkstra(const navitia::time_duration& radius);
+    void start_distance_and_target_dijkstra(const navitia::time_duration& radius, const std::vector<vertex_t>& destinations);
 
     /// compute the reachable stop points within the radius
     routing::map_stop_point_duration
@@ -284,7 +285,7 @@ struct target_visitor : public boost::dijkstra_visitor<> {
 };
 
 // Visitor who stops (throw a DestinationFound exception) when a certain distance is reached
-struct distance_visitor : public boost::dijkstra_visitor<> {
+struct distance_visitor : virtual public boost::dijkstra_visitor<> {
     navitia::time_duration max_duration;
     const std::vector<navitia::time_duration>& durations;
 
@@ -348,7 +349,7 @@ struct printer_distance_visitor : public distance_visitor {
 #endif
 
 //Visitor who stops (throw a DestinationFound exception) when all targets has been visited
-struct target_all_visitor : public boost::dijkstra_visitor<> {
+struct target_all_visitor : virtual public boost::dijkstra_visitor<> {
     std::vector<vertex_t> destinations;
     size_t nbFound = 0;
     target_all_visitor(const std::vector<vertex_t>& destinations) : destinations(destinations.begin(), destinations.end()){}
@@ -374,6 +375,22 @@ struct target_unique_visitor : public boost::dijkstra_visitor<> {
     void finish_vertex(vertex_t u, const graph_type&){
         if(u == destination)
             throw DestinationFound();
+    }
+};
+
+//Visitor who stops when a target has been visited or a certain distance is reached
+struct distance_or_target_visitor: virtual public distance_visitor, virtual public target_all_visitor {
+    distance_or_target_visitor(const time_duration& max_dur, const std::vector<time_duration>& dur,
+                                      const std::vector<vertex_t>& destinations):
+        distance_visitor(max_dur, dur), target_all_visitor(destinations){}
+    template <typename graph_type>
+    void finish_vertex(vertex_t u, const graph_type& g){
+        target_all_visitor::finish_vertex(u, g);
+    }
+
+    template <typename G>
+    void examine_vertex(typename boost::graph_traits<G>::vertex_descriptor u, const G& g) {
+        distance_visitor::examine_vertex(u, g);
     }
 };
 
