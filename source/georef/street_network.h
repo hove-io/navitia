@@ -141,7 +141,7 @@ struct PathFinder {
     void init(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor);
 
     void start_distance_dijkstra(const navitia::time_duration& radius);
-    void start_distance_and_target_dijkstra(const navitia::time_duration& radius, const std::vector<vertex_t>& destinations);
+    void start_distance_or_target_dijkstra(const navitia::time_duration& radius, const std::vector<vertex_t>& destinations);
 
     /// compute the reachable stop points within the radius
     routing::map_stop_point_duration
