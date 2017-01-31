@@ -66,6 +66,10 @@ class SectionSorter(object):
             return -1 if a.end_date_time < b.end_date_time else 1
 
 
+# dp_durations (for direct path duration) is used to limit the
+# fallback duration of the first section.  Because we don't want to
+# have more fallback than if we go to the destination directly, we can
+# limit the radius of the fallback with this value.
 def get_max_fallback_duration(request, mode, dp_durations={}):
     if mode in ['walking', 'bss', 'bike', 'car']:
         max_duration = request['max_{}_duration_to_pt'.format(mode)]
@@ -84,6 +88,7 @@ def make_direct_path_duration_by_mode(fallback_direct_path):
     res = {}
     for key, dp in fallback_direct_path.items():
         if dp.journeys:
+            # key[0] is the mode of the direct path
             res[key[0]] = dp.journeys[0].durations.total
     return res
 
@@ -629,8 +634,9 @@ class Scenario(new_default.Scenario):
 
         resp = []
 
-        # Now we compute the direct path with all requested departure mode
-        # their time will be used to initialized our PT calls
+        # Now we compute the direct path with all requested departure
+        # mode their time will be used to initialized our PT calls and
+        # to bound the fallback duration of the first section.
         futures = worker.get_direct_path_futures(g.fallback_direct_path,
                                                  g.requested_origin,
                                                  g.requested_destination,
