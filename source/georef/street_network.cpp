@@ -208,7 +208,7 @@ StreetNetwork::get_direct_path(const type::EntryPoint& origin, const type::Entry
                             origin.streetnetwork_params.mode,
                             origin.streetnetwork_params.speed_factor);
 
-    direct_path_finder.start_distance_dijkstra(max_dur);
+    direct_path_finder.start_distance_or_target_dijkstra(max_dur, {dest_edge[source_e], dest_edge[target_e]});
     const auto dest_vertex = direct_path_finder.find_nearest_vertex(dest_edge, true);
     const auto res = direct_path_finder.get_path(dest_edge, dest_vertex);
     if (res.duration > max_dur) { return Path(); }
@@ -272,6 +272,21 @@ void PathFinder::start_distance_dijkstra(const navitia::time_duration& radius) {
         dijkstra(starting_edge[target_e], printer_distance_visitor(radius, distances, "target"));
 #endif
     } catch(DestinationFound){}
+
+}
+
+void PathFinder::start_distance_or_target_dijkstra(const navitia::time_duration& radius, const std::vector<vertex_t>& destinations){
+    if (! starting_edge.found)
+        return ;
+    computation_launch = true;
+    // We start dijkstra from source and target nodes
+    try {
+        dijkstra(starting_edge[source_e], distance_or_target_visitor(radius, distances, destinations));
+    } catch(DestinationFound&){}
+
+    try {
+        dijkstra(starting_edge[target_e], distance_or_target_visitor(radius, distances, destinations));
+    } catch(DestinationFound&){}
 
 }
 
