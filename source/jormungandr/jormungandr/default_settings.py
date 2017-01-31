@@ -15,10 +15,10 @@ START_MONITORING_THREAD = True
 #http://docs.sqlalchemy.org/en/rel_0_9/dialects/postgresql.html#psycopg2
 SQLALCHEMY_DATABASE_URI = os.getenv('JORMUNGANDR_SQLALCHEMY_DATABASE_URI', 'postgresql://navitia:navitia@localhost/jormungandr')
 
-DISABLE_DATABASE = os.getenv('JORMUNGANDR_DISABLE_DATABASE', False)
+DISABLE_DATABASE = bool(os.getenv('JORMUNGANDR_DISABLE_DATABASE', False))
 
 # disable authentication
-PUBLIC = os.getenv('JORMUNGANDR_IS_PUBLIC', True)
+PUBLIC = bool(os.getenv('JORMUNGANDR_IS_PUBLIC', True))
 
 #message returned on authentication request
 HTTP_BASIC_AUTH_REALM = os.getenv('JORMUNGANDR_HTTP_BASIC_AUTH_REALM', 'Token Required')
@@ -64,7 +64,7 @@ LOGGER = {
 BSS_PROVIDER = json.loads(os.getenv('JORMUNGANDR_BSS_PROVIDER', '{}')) or ()
 
 #Parameters for statistics
-SAVE_STAT = os.getenv('JORMUNGANDR_SAVE_STAT', False)
+SAVE_STAT = bool(os.getenv('JORMUNGANDR_SAVE_STAT', False))
 BROKER_URL = os.getenv('JORMUNGANDR_BROKER_URL', 'amqp://guest:guest@localhost:5672//')
 EXCHANGE_NAME = os.getenv('JORMUNGANDR_EXCHANGE_NAME', 'stat_persistor_exchange')
 
@@ -116,8 +116,8 @@ CIRCUIT_BREAKER_VALHALLA_TIMEOUT_S = 60  # the circuit breaker retries after thi
 # DEFAULT_REGION = 'default'
 
 
-GRAPHICAL_ISOCHRONE = os.getenv('JORMUNGANDR_GRAPHICAL_ISOCHRONE', False)
-HEAT_MAP = os.getenv('JORMUNGANDR_HEAT_MAP', False)
+GRAPHICAL_ISOCHRONE = bool(os.getenv('JORMUNGANDR_GRAPHICAL_ISOCHRONE', False))
+HEAT_MAP = bool(os.getenv('JORMUNGANDR_HEAT_MAP', False))
 # This parameter are used to apply gevent's monkey patch
 # The Goal is to activate parallel calling valhalla, without the patch, parallel http calling may not work
-PATCH_WITH_GEVENT_SOCKET = os.getenv('JORMUNGANDR_PATCH_WITH_GEVENT_SOCKET', False)
+PATCH_WITH_GEVENT_SOCKET = bool(os.getenv('JORMUNGANDR_PATCH_WITH_GEVENT_SOCKET', False))
