@@ -35,6 +35,8 @@ import queue
 from threading import Lock
 from flask.ext.restful import abort
 from zmq import green as zmq
+
+from jormungandr.exceptions import TechnicalError
 from navitiacommon import response_pb2, request_pb2, type_pb2
 from navitiacommon.default_values import get_value_or_default
 from jormungandr.timezone import set_request_instance_timezone
@@ -42,7 +44,7 @@ import logging
 from .exceptions import DeadSocketException
 from navitiacommon import models
 from importlib import import_module
-from jormungandr import cache, app, utils
+from jormungandr import cache, app, utils, global_autocomplete
 from shapely import wkt
 from shapely.geos import ReadingError
 from shapely import geometry
@@ -91,10 +93,10 @@ class Instance(object):
                  context,
                  name,
                  zmq_socket,
-                 street_network_configurations=None,
-                 realtime_proxies_configuration=[],
-                 zmq_socket_type='persistent',
-                 autocomplete=None):
+                 street_network_configurations,
+                 realtime_proxies_configuration,
+                 zmq_socket_type,
+                 autocomplete_type):
         self.geom = None
         self._sockets = queue.Queue()
         self.socket_path = zmq_socket
@@ -118,11 +120,11 @@ class Instance(object):
 
         self.schedule = schedule.MixedSchedule(self)
         self.realtime_proxy_manager = realtime_schedule.RealtimeProxyManager(realtime_proxies_configuration, self)
-        if not autocomplete:
-            from jormungandr.autocomplete.kraken import Kraken
-            self.autocomplete = Kraken()
-        else:
-            self.autocomplete = utils.create_object(autocomplete)
+
+        try:
+            self.autocomplete = global_autocomplete.get(autocomplete_type)
+        except:
+            print('bob')
         self.zmq_socket_type = zmq_socket_type
 
 
@@ -500,3 +502,11 @@ class Instance(object):
                                    clockwise,
                                    request,
                                    **kwargs)
+
+    def get_autocomplete(self, autocomplete):
+        if not autocomplete:
+            return self.autocomplete
+        autocomplete = global_autocomplete.get(autocomplete)
+        if not autocomplete:
+            raise TechnicalError('bobob')
+        return autocomplete
