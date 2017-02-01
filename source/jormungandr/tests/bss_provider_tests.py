@@ -47,6 +47,9 @@ class MockBssProvider(BssProvider):
         available_bikes = 3 if poi['id'] == 'station_1' else 98
         return Stands(available_places=available_places, available_bikes=available_bikes)
 
+    def status(self):
+        return {}
+
 
 def mock_bss_providers(pois_supported):
     providers = [MockBssProvider(pois_supported=pois_supported)]

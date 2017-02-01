@@ -43,3 +43,7 @@ class BssProvider(object):
     @abstractmethod
     def get_informations(self, poi):
         pass
+
+    @abstractmethod
+    def status(self):
+        pass

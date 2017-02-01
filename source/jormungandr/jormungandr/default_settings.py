@@ -61,7 +61,10 @@ LOGGER = {
 
 # Bike self-service configuration
 # This should be moved in a central configuration system like ectd, consul, etc...
-BSS_PROVIDER = json.loads(os.getenv('JORMUNGANDR_BSS_PROVIDER', '{}')) or ()
+BSS_PROVIDER = []
+for key, value in os.environ.items():
+    if key.startswith('JORMUNGANDR_BSS_PROVIDER_'):
+        BSS_PROVIDER.append(json.loads(value))
 
 #Parameters for statistics
 SAVE_STAT = bool(os.getenv('JORMUNGANDR_SAVE_STAT', False))

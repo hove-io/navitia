@@ -38,3 +38,6 @@ class BssMockProvider(BssProvider):
 
     def get_informations(self, poi):
         return Stands(5, 9)
+
+    def status(self):
+        return {}
