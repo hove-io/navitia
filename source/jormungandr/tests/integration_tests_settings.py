@@ -52,6 +52,17 @@ MODULES = {
         'class_name': 'V1Routing'
     }
 }
+AUTOCOMPLETE = {
+    'bragi': {
+        'class': 'jormungandr.autocomplete.geocodejson.GeocodeJson',
+        'args': {
+                "host": "https://host_of_bragi/autocomplete"
+        }
+    },
+    'kraken': {
+        'class': 'jormungandr.autocomplete.kraken.Kraken'
+    }
+}
 
 # circuit breaker parameters, for the tests by default we don't want the circuit breaker
 CIRCUIT_BREAKER_MAX_INSTANCE_FAIL = 99999
