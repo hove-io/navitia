@@ -78,3 +78,6 @@ class AtosProvider(BssProvider):
         if not self._client:
             self._client = suds.client.Client(self.WS_URL, timeout=self.timeout, cache=None)
         return self._client
+
+    def status(self):
+        return {'network': self.network, 'operators': self.operators, 'id_ao': self.id_ao}
