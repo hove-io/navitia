@@ -1,5 +1,6 @@
 # encoding: utf-8
 import os
+import json
 
 START_MONITORING_THREAD = False
 
@@ -50,6 +51,18 @@ MODULES = {
     'v1': {  # API v1 of Navitia
         'import_path': 'jormungandr.modules.v1_routing.v1_routing',
         'class_name': 'V1Routing'
+    }
+}
+
+AUTOCOMPLETE = {
+    'bragi': {
+        'class': 'jormungandr.autocomplete.geocodejson.GeocodeJson',
+        'args': {
+                "host": "https://host_of_bragi/autocomplete"
+        }
+    },
+    'kraken': {
+        'class': 'jormungandr.autocomplete.kraken.Kraken'
     }
 }
 

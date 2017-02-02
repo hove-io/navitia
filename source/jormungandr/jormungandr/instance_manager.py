@@ -104,7 +104,7 @@ class InstanceManager(object):
                             config.get('street_network'),
                             config.get('realtime_proxies', []),
                             config.get('zmq_socket_type', 'persistent'),
-                            config.get('autocomplete'))
+                            config.get('default_autocomplete', 'kraken'))
         self.instances[instance.name] = instance
 
     def initialisation(self):
