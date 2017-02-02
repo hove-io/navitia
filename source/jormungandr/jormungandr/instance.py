@@ -503,10 +503,10 @@ class Instance(object):
                                    request,
                                    **kwargs)
 
-    def get_autocomplete(self, autocomplete):
-        if not autocomplete:
+    def get_autocomplete(self, requested_autocomplete):
+        if not requested_autocomplete:
             return self.autocomplete
-        autocomplete = global_autocomplete.get(autocomplete)
+        autocomplete = global_autocomplete.get(requested_autocomplete)
         if not autocomplete:
-            raise TechnicalError('bobob')
+            raise TechnicalError('autocomplete %s not available' % requested_autocomplete)
         return autocomplete
