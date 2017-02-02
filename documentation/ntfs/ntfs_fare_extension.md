@@ -21,12 +21,12 @@ Les fichiers sont formatés de la manière suivante :
 Fichier | Contrainte | Commentaire
 --- | --- | ---
 prices.csv | Optionnel | Liste des tickets et le prix appliqué (plein tarif uniquement)
-fare.csv | Optionnel | Spécifications tarifaires des tickets déclarés dans le fichier **prices.csv**
+fares.csv | Optionnel | Spécifications tarifaires des tickets déclarés dans le fichier **prices.csv**
 od_fares.csv | Optionnel | Liste des tickets dont le tarif est définit par une Origine-Destination
 
 ## prices.csv
 Ce fichier contient le prix (plein tarif uniquement) de chaque ticket. Les conditions d'utilisation de ce ticket sont
-précisées soit dans le fichier **fare.csv** soit dans le fichier **od_fares.csv**.  
+précisées soit dans le fichier **fares.csv** soit dans le fichier **od_fares.csv**.  
 Il est possible de préciser plusieurs tarifs pour un même billet avec des dates de validité différentes (pour gérer un changement de tarif).
 
 > **Attention : Ce fichier est _SANS_ ligne d'entête.**
@@ -64,7 +64,7 @@ Par exemple : pour définir que le tarif par OD fonctionne sur toutes les gares 
 * Si le champ **Origin mode** contient la valeur **mode** : le champ **Origin ID** contient une URI de mode physique (champ **physical_mode_id** du mode physique avec le préfixe _"physical_mode:"_)  
 Par exemple : si le tarif par OD permet de partir de n'importe quelle station de métro, indiquer "physical_mode:metro" dans la colonne Origin_ID
 
-## fare.csv (optionnel)
+## fares.csv (optionnel)
 Ce fichier contient les spécifications tarifaires des tickets déclarés dans le fichier **prices.csv**.
 
 > **Attention : Ce fichier est _SANS_ ligne d'entête.**
