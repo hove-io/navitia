@@ -115,6 +115,9 @@ class TestBragiAutocomplete(AbstractTestFixture):
             self.query_region('places?q=bob&from=3.25;49.84')
 
     def test_autocomplete_call_override(self):
+        """"
+        test that the _autocomplete param switch the right autocomplete service
+        """
         mock_requests = MockRequests({
         'https://host_of_bragi/autocomplete?q=bob&limit=10&pt_dataset=main_autocomplete_test':
             (
@@ -169,6 +172,8 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['embedded_type'] == 'address'
             assert r[0]['address']['name'] == 'Rue Bob'
             assert r[0]['address']['label'] == '20 Rue Bob (Bobtown)'
+
+            # with a query on kraken, the results should be different
             response = self.query_region("places?q=Gare&_autocomplete=kraken")
             r = response.get('places')
             assert len(r) == 1

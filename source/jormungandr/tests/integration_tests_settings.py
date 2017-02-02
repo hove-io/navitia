@@ -52,6 +52,7 @@ MODULES = {
         'class_name': 'V1Routing'
     }
 }
+
 AUTOCOMPLETE = {
     'bragi': {
         'class': 'jormungandr.autocomplete.geocodejson.GeocodeJson',
