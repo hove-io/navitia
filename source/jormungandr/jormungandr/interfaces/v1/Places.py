@@ -335,7 +335,8 @@ class Places(ResourceUri):
         self.parsers['get'].add_argument("from", type=coord_format,
                                          description="Coordinates longitude;latitude used to prioritize "
                                                      "the objects around this coordinate")
-        self.parsers['get'].add_argument("_autocomplete", type=unicode, description="...")
+        self.parsers['get'].add_argument("_autocomplete", type=unicode, description="name of the autocomplete service"
+                                         " used under the hood")
 
     def get(self, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
@@ -354,7 +355,7 @@ class Places(ResourceUri):
             timezone.set_request_timezone(region)
             response = i_manager.dispatch(args, "places", instance_name=instance)
         else:
-            autocomplete = global_autocomplete.get('bragi', None)
+            autocomplete = global_autocomplete.get('bragi')
             if autocomplete:
                 user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=False)
                 shape = None

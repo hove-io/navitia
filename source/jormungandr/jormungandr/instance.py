@@ -121,10 +121,8 @@ class Instance(object):
         self.schedule = schedule.MixedSchedule(self)
         self.realtime_proxy_manager = realtime_schedule.RealtimeProxyManager(realtime_proxies_configuration, self)
 
-        try:
-            self.autocomplete = global_autocomplete.get(autocomplete_type)
-        except:
-            print('bob')
+        self.autocomplete = global_autocomplete.get(autocomplete_type)
+
         self.zmq_socket_type = zmq_socket_type
 
 
@@ -508,5 +506,5 @@ class Instance(object):
             return self.autocomplete
         autocomplete = global_autocomplete.get(requested_autocomplete)
         if not autocomplete:
-            raise TechnicalError('autocomplete %s not available' % requested_autocomplete)
+            raise TechnicalError('autocomplete {} not available'.format(requested_autocomplete))
         return autocomplete
