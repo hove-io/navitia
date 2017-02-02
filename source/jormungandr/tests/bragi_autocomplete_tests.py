@@ -116,7 +116,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
 
     def test_autocomplete_call_override(self):
         mock_requests = MockRequests({
-        'https://host_of_bragi/autocomplete?q=bob&limit=10':
+        'https://host_of_bragi/autocomplete?q=bob&limit=10&pt_dataset=main_autocomplete_test':
             (
                 {"features": [
                     {
