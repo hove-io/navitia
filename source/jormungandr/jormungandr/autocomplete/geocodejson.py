@@ -55,6 +55,9 @@ class GeocodeJson(AbstractAutocomplete):
         if request.get("from"):
             params["lon"], params["lat"] = self.get_coords(request["from"])
 
+        if request.get("type[]"):
+            params["type[]"] = request["type[]"]
+
         if instance:
             params["pt_dataset"] = instance.name
 
