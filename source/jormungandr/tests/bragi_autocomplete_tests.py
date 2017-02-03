@@ -45,8 +45,13 @@ MOCKED_INSTANCE_CONF = {
 class TestBragiAutocomplete(AbstractTestFixture):
 
     def test_autocomplete_call(self):
+        url = 'https://host_of_bragi/autocomplete'
+        kwargs = {'params': {u'q': u'bob', u'type[]': [u"['stop_area', 'address', 'poi', 'administrative_region']"],
+                             u'limit': 10, u'pt_dataset': 'main_autocomplete_test'}, 'timeout': 10}
+        from urllib import urlencode
+        url += "?{}".format(urlencode(kwargs.get('params')))
         mock_requests = MockRequests({
-        'https://host_of_bragi/autocomplete?q=bob&limit=10&pt_dataset=main_autocomplete_test':
+        url:
             (
                 {"features": [
                     {
@@ -90,7 +95,8 @@ class TestBragiAutocomplete(AbstractTestFixture):
                 }, 200)
         })
         with mock.patch('requests.get', mock_requests.get):
-            response = self.query_region('places?q=bob&pt_dataset=main_autocomplete_test')
+            response = self.query_region("places?q=bob&pt_dataset=main_autocomplete_test&type[]=['stop_area', "
+                                         "'address', 'poi', 'administrative_region']")
 
             is_valid_global_autocomplete(response, depth=1)
             r = response.get('places')
@@ -118,8 +124,13 @@ class TestBragiAutocomplete(AbstractTestFixture):
         """"
         test that the _autocomplete param switch the right autocomplete service
         """
+        url = 'https://host_of_bragi/autocomplete'
+        kwargs = {'params': {u'q': u'bob', u'type[]': [u"['stop_area', 'address', 'poi', 'administrative_region']"],
+                             u'limit': 10, u'pt_dataset': 'main_autocomplete_test'}, 'timeout': 10}
+        from urllib import urlencode
+        url += "?{}".format(urlencode(kwargs.get('params')))
         mock_requests = MockRequests({
-        'https://host_of_bragi/autocomplete?q=bob&limit=10&pt_dataset=main_autocomplete_test':
+        url:
             (
                 {"features": [
                     {
@@ -163,7 +174,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
                 }, 200)
         })
         with mock.patch('requests.get', mock_requests.get):
-            response = self.query_region('places?q=bob')
+            response = self.query_region("places?q=bob&type[]=['stop_area', 'address', 'poi', 'administrative_region']")
 
             is_valid_global_autocomplete(response, depth=1)
             r = response.get('places')
