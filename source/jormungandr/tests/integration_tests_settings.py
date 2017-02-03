@@ -53,7 +53,7 @@ MODULES = {
     }
 }
 
-AUTOCOMPLETE = {
+AUTOCOMPLETE_SYSTEMS = {
     'bragi': {
         'class': 'jormungandr.autocomplete.geocodejson.GeocodeJson',
         'args': {

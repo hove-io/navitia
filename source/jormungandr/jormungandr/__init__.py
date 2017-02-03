@@ -71,8 +71,8 @@ from navitiacommon.models import db
 db.init_app(app)
 cache = Cache(app, config=app.config['CACHE_CONFIGURATION'])
 
-if app.config['AUTOCOMPLETE'] is not None:
-    global_autocomplete = { k: utils.create_object(v) for k, v in app.config['AUTOCOMPLETE'].items() }
+if app.config['AUTOCOMPLETE_SYSTEMS'] is not None:
+    global_autocomplete = {k: utils.create_object(v) for k, v in app.config['AUTOCOMPLETE_SYSTEMS'].items()}
 else:
     from jormungandr.autocomplete.kraken import Kraken
     global_autocomplete = {'kraken': Kraken()}
