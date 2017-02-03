@@ -358,7 +358,9 @@ class Places(ResourceUri):
             autocomplete = global_autocomplete.get('bragi')
             if autocomplete:
                 user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=False)
+                authentication.check_access_to_global_places(user)
                 shape = None
+
                 if user and user.shape:
                     shape = json.loads(user.shape)
                 response = autocomplete.get(args, instance=None, shape=shape)

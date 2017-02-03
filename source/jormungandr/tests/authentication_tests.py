@@ -28,6 +28,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
+from jormungandr.tests.utils_test import MockResponse
 from navitiacommon import models
 
 from .tests_mechanism import AbstractTestFixture, dataset
@@ -38,6 +39,7 @@ from jormungandr import app
 import json
 import logging
 from nose.util import *
+import mock
 
 
 authorizations = {
@@ -91,6 +93,7 @@ class FakeUser:
         self.is_super_user = is_super_user
         self.end_point_id = None
         self._is_blocked = is_blocked
+        self.shape = None
 
     @classmethod
     def get_from_token(cls, token):
@@ -129,7 +132,9 @@ user_in_db = {
     'bobitto': FakeUser('bobitto', 3),
     'tgv': FakeUser('tgv', 4, have_access_to_free_instances=False),
     'test_user_blocked': FakeUser('test_user_blocked', 5, True, False, True),
-    'test_user_not_blocked': FakeUser('test_user_not_blocked', 6, True, False, False)
+    'test_user_not_blocked': FakeUser('test_user_not_blocked', 6, True, False, False),
+    'super_user_not_open': FakeUser('super_user_not_open', id=7,
+                                    have_access_to_free_instances=False, is_super_user=True),
 }
 
 mock_instances = {
@@ -219,6 +224,24 @@ class TestBasicAuthentication(AbstractTestAuthentication):
             assert get_not_null(r, 'error')['message'] \
                    == "The region the_marvelous_unknown_region doesn't exists"
 
+    def test_global_places(self):
+        """
+        test the v1/places authentication
+        """
+        bragi_response_get = lambda *args, **kwargs: MockResponse({"features": []}, 200, url='')
+        with mock.patch('requests.get', bragi_response_get):
+            # bob is a normal user, it can access the open_data, he thus can access the global places
+            with user_set(app, 'bob'):
+                r, status = self.query_no_assert('/v1/places?q=bob')
+                assert status == 200
+            # tgv has not access to the open_data, he cannot access the global places
+            with user_set(app, 'tgv'):
+                _, status = self.query_no_assert('/v1/places?q=bob')
+                assert status == 403
+            # super_user_not_open cannot access the open data, but since he is a super user, he can access /places
+            with user_set(app, 'super_user_not_open'):
+                _, status = self.query_no_assert('/v1/places?q=bob')
+                assert status == 200
 
 @dataset({"main_routing_test": {}})
 class TestIfUserIsBlocked(AbstractTestAuthentication):
@@ -420,9 +443,6 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             assert status == 403
             _, status = self.query_no_assert('v1/coverage/empty_routing_test/places?q=toto')
             assert status == 403
-            # this test suppose no elasticsearch is lanched at localhost
-            _, status = self.query_no_assert('v1/places?q=toto')
-            assert status == 500
 
     def test_sort_coverage(self):
         with user_set(app, 'bobitto'):
