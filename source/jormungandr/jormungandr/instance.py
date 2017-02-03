@@ -123,7 +123,8 @@ class Instance(object):
 
         self.autocomplete = global_autocomplete.get(autocomplete_type)
         if not self.autocomplete:
-            raise TechnicalError('impossible to find autocomplete system {} cannot initialize instance {}'.format(autocomplete_type, name))
+            raise TechnicalError('impossible to find autocomplete system {} '
+                                 'cannot initialize instance {}'.format(autocomplete_type, name))
 
         self.zmq_socket_type = zmq_socket_type
 
