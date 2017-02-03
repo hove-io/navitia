@@ -92,7 +92,7 @@ MODULES = {
 }
 
 # This should be moved in a central configuration system like ectd, consul, etc...
-AUTOCOMPLETE = json.loads(os.getenv('JORMUNGANDR_AUTOCOMPLETE', '{}')) or None
+AUTOCOMPLETE_SYSTEMS = json.loads(os.getenv('JORMUNGANDR_AUTOCOMPLETE_SYSTEMS', '{}')) or None
 
 ISOCHRONE_DEFAULT_VALUE = os.getenv('JORMUNGANDR_ISOCHRONE_DEFAULT_VALUE', 1800) # in s
 
