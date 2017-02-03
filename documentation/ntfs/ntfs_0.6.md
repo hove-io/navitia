@@ -193,6 +193,7 @@ contributor_id | chaine | Requis | Identifiant du contributeur (lien vers le fic
 dataset_start_date | date | Requis | Date de début de prise en compte du jeu de données (peut-être différent de la date de début de validité de l'export source)
 dataset_end_date | date | Requis | Date de fin de prise en compte du jeu de données (peut-être différent de la date de fin de validité de l'export source)
 dataset_type | entier (1) | Optionnel | Type de données représentant la "fraicheur"
+dataset_extrapolation | entier | Optionnel | Indique si les données du service ont été extrapolées (le champ a pour valeur 1) ou non (le champ a pour valeur 0) 
 dataset_desc | chaine | Optionnel | Note indiquant le contenu du jeu de données
 dataset_system | chaine | Optionnel | Nom du système source ayant généré les données ou du format des données
 

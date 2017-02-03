@@ -288,7 +288,7 @@ private:
         }
     }
     void add_house_number(const Coord& coord, const int house_number, Way* way) {
-        const std::string hn_uri = way->uri + std::to_string(house_number);
+        const std::string hn_uri = way->uri + ":" + std::to_string(house_number);
         if (parser.data.house_numbers.count(hn_uri) == 0){
             ed::types::HouseNumber& current_hn = parser.data.house_numbers[hn_uri];
             current_hn.coord = coord;

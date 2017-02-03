@@ -27,4 +27,3 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from jormungandr import i_manager

@@ -53,6 +53,18 @@ MODULES = {
     }
 }
 
+AUTOCOMPLETE_SYSTEMS = {
+    'bragi': {
+        'class': 'jormungandr.autocomplete.geocodejson.GeocodeJson',
+        'args': {
+                "host": "https://host_of_bragi/autocomplete"
+        }
+    },
+    'kraken': {
+        'class': 'jormungandr.autocomplete.kraken.Kraken'
+    }
+}
+
 # circuit breaker parameters, for the tests by default we don't want the circuit breaker
 CIRCUIT_BREAKER_MAX_INSTANCE_FAIL = 99999
 CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S = 1

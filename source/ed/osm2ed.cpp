@@ -395,9 +395,12 @@ void OSMCache::insert_relations() {
             std::string polygon_str = polygon_stream.str();
             const auto coord = "POINT(" + std::to_string(relation.centre.get<0>())
                 + " " + std::to_string(relation.centre.get<1>()) + ")";
+            auto uri = "admin:osm:" + std::to_string(relation.osm_id);
+            if ( ! relation.insee.empty()) {
+                uri = "admin:fr:" + relation.insee;
+            }
             lotus.insert({std::to_string(relation.osm_id), relation.name, relation.insee,
-                          std::to_string(relation.level), coord, polygon_str,
-                          "admin:"+std::to_string(relation.osm_id)});
+                          std::to_string(relation.level), coord, polygon_str, uri});
             ++nb_admins;
         } else {
             LOG4CPLUS_WARN(logger, "admin " << relation.name << " id: " << relation.osm_id << " of level "

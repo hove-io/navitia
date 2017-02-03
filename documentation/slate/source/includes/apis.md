@@ -909,7 +909,7 @@ The [isochrones](#isochrones) service exposes another response structure, which 
 | nop       | to                      | id            | The id of the arrival of your journey. If none are provided an isochrone is computed   |               |
 | yep       | datetime                | [iso-date-time](#iso-date-time) | Date and time to go                                                  |               |
 | nop       | datetime_represents     | string        | Can be `departure` or `arrival`.<br>If `departure`, the request will retrieve journeys starting after datetime.<br>If `arrival` it will retrieve journeys arriving before datetime.                      | departure     |
-| nop       | <a name="traveler-type"></a>traveler_type | enum | Define speeds and accessibility values for different kind of people.<br>Each profile also automatically determines appropriate first and last section modes to the covered area. Note: this means that you might get car, bike, etc fallback routes even if you set `forbidden_uris[]`! You can overload all parameters (especially speeds, distances, first and last modes) by setting all of them specifically. We advise that you don't rely on the traveler_type's fallback modes (`first_section_mode[]` and `last_section_mode[]`) and set them yourself.<br><div data-collapse><p>enum values:</p><ul><li>standard</li><li>slow_walker</li><li>fast_walker</li><li>luggage</li></ul></div>| standard      |
+| nop       | <a name="traveler-type"></a>traveler_type | enum | Define speeds and accessibility values for different kind of people.<br>Each profile also automatically determines appropriate first and last section modes to the covered area. Note: this means that you might get car, bike, etc fallback routes even if you set `forbidden_uris[]`! You can overload all parameters (especially speeds, distances, first and last modes) by setting all of them specifically. We advise that you don't rely on the traveler_type's fallback modes (`first_section_mode[]` and `last_section_mode[]`) and set them yourself.<br><div data-collapse><p>enum values:</p><ul><li>standard</li><li>slow_walker</li><li>fast_walker</li><li>luggage</li><li>wheelchair</li></ul></div>| standard      |
 | nop       | data_freshness          | enum          | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> _**when using the following parameter**_ "&data_freshness=base_schedule" <br> you can get disrupted journeys in the response. You can then display the disruption message to the traveler and make a realtime request to get a new undisrupted solution.   | base_schedule |
 | nop       | forbidden_uris[]        | id            | If you want to avoid lines, modes, networks, etc.</br> Note: the forbidden_uris[] concern only the public transport objects. You can't for example forbid the use of the bike with them, you have to set the fallback modes for this (`first_section_mode[]` and `last_section_mode[]`) |               |
 | nop       | first_section_mode[]    | array of string   | Force the first section mode if the first section is not a public transport one. It takes one the following values: `walking`, `car`, `bike`, `bss`.<br>`bss` stands for bike sharing system.<br>It's an array, you can give multiple modes.<br><br>Note: choosing `bss` implicitly allows the `walking` mode since you might have to walk to the bss station.<br> Note 2: The parameter is inclusive, not exclusive, so if you want to forbid a mode, you need to add all the other modes.<br> Eg: If you never want to use a `car`, you need: `first_section_mode[]=walking&first_section_mode[]=bss&first_section_mode[]=bike&last_section_mode[]=walking&last_section_mode[]=bss&last_section_mode[]=bike` | walking |
@@ -980,7 +980,7 @@ from                     | [places](#place)                             | Origin
 to                       | [places](#place)                             | Destination place of this section
 links                    | Array of [link](#link)                        | Links related to this section
 display_informations     | [display_informations](#display-informations) | Useful information to display
-additionnal_informations | *enum* string                                 | Other information. It can be: <ul><li>`regular`: no on demand transport (odt)</li><li>`has_date_time_estimated`: section with at least one estimated date time</li><li>`odt_with_stop_time`: odt with fixed schedule, but travelers have to call agency!</li><li>`odt_with_stop_point`: odt where pickup or drop off are specific points</li><li>`odt_with_zone`: odt which is like a cab, from wherever you want to wherever you want, whenever it is possible</li></ul>
+additional_informations  | *enum* string                                 | Other information. It can be: <ul><li>`regular`: no on demand transport (odt)</li><li>`has_date_time_estimated`: section with at least one estimated date time</li><li>`odt_with_stop_time`: odt with fixed schedule, but travelers have to call agency!</li><li>`odt_with_stop_point`: odt where pickup or drop off are specific points</li><li>`odt_with_zone`: odt which is like a cab, from wherever you want to wherever you want, whenever it is possible</li></ul>
 geojson                  | [GeoJson](http://www.geojson.org)             |
 path                     | Array of [path](#path)                        | The path of this section
 transfer_type            | *enum* string                                 | The type of this transfer it can be: `walking`, `guaranteed`, `extension`
@@ -1274,7 +1274,7 @@ nop      | disable_geojson    | boolean   | remove geojson fields from the respo
 
 Field                    | Type                                          | Description
 -------------------------|-----------------------------------------------|---------------------------
-additionnal_informations | Array of String                               | Other information: TODO enum
+additional_informations  | Array of String                               | Other information: TODO enum
 display_informations     | [display_informations](#display-informations) | Usefull information about the the vehicle journey to display
 links                    | Array of [link](#link)                        | Links to [line](#line), vehicle_journey, [route](#route), [commercial_mode](#commercial-mode), [physical_mode](#physical-mode), [network](#network)
 
@@ -1472,13 +1472,14 @@ Departures are ordered chronologically in ascending order as:
 
 ### Parameters
 
-Required | Name           | Type                    | Description        | Default Value
----------|----------------|-------------------------|--------------------|--------------
-nop      | from_datetime    | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules |
-nop      | duration         | int                             | Maximum duration in seconds between from_datetime and the retrieved datetimes.                            | 86400
-nop      | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc.    |
+Required | Name             | Type                            | Description                                                                                              | Default Value
+---------|------------------|---------------------------------|----------------------------------------------------------------------------------------------------------|--------------
+nop      | from_datetime    | [iso-date-time](#iso-date-time) | The date_time from which you want the schedules                                                          | the current datetime
+nop      | duration         | int                             | Maximum duration in seconds between from_datetime and the retrieved datetimes.                           | 86400
+nop      | count            | int                             | Maximum number of results.                                                                               | 10
+nop      | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc.                                                        | 
 nop      | data_freshness   | enum                            | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> | realtime
-nop      | disable_geojson | boolean                | remove geojson fields from the response | False
+nop      | disable_geojson  | boolean                         | remove geojson fields from the response                                                                  | false
 
 
 ### Departure objects

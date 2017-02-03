@@ -141,7 +141,7 @@ class Scenario(object):
         return resp
 
     def places(self, request, instance, shape=None):
-        return instance.autocomplete.get(request, instance, shape)
+        return instance.get_autocomplete(request.get('_autocomplete')).get(request, instance, shape)
 
     def pt_objects(self, request, instance):
         req = request_pb2.Request()

@@ -40,6 +40,7 @@ from navitiacommon import type_pb2, request_pb2
 from jormungandr import i_manager
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.interfaces.v1 import fields
+from jormungandr import bss_provider_manager
 
 
 class Index(ModuleResource):
@@ -76,7 +77,8 @@ class TechnicalStatus(ModuleResource):
     def get(self):
         response = {
             "jormungandr_version": __version__,
-            "regions": []
+            "regions": [],
+            "bss_providers": [provider.status() for provider in bss_provider_manager.bss_providers]
         }
         regions = i_manager.get_regions()
         for key_region in regions:

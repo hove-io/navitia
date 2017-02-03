@@ -43,22 +43,22 @@ Want to test the API ?
 The easiest way to do this is a to go to `navitia.io <https://www.navitia.io/>`_.
 `Signup <https://www.navitia.io/register/>`_, grab a token, read the `doc <http://doc.navitia.io>`_ and start using the API!
 
-For a more friendly interface you can use the API through `navitia playground <http://canaltp.github.io/navitia-playground/>`_
+For a more friendly interface you can use the API through `navitia playground <http://canaltp.github.io/navitia-playground/>`_ (no matter the server used)
 
 Want to use you own datasets or infrastructure ?
 ------------------------------------------------
 
 docker
 ~~~~~~
-The easiest way to do have your own navitia is to use the navitia `docker-compose <https://github.com/CanalTP/navitia-docker-compose>`_.
+The easiest way to have your own navitia is to use the navitia `docker-compose <https://github.com/CanalTP/navitia-docker-compose>`_.
 
 fabric
 ~~~~~~
-If you don't want to use the prebuild docker images you can use the `fabric scripts <https://github.com/CanalTP/fabric_navitia>`_ we use to deploy to api.navitia.io.
+If you don't want to use the prebuilt docker images you can use the `fabric scripts <https://github.com/CanalTP/fabric_navitia>`_ we use to deploy to api.navitia.io.
 
-*WARNING:* Those scripts should be usable, but they are not meant to be completly generics and are designed for own servers architecture.
+*WARNING:* Those scripts should be usable, but they are not meant to be completly generics and are designed for our own servers architecture.
 
-Use this only if the docker is not fit for your needs and if you are an experienced user :wink:
+Use this only if the docker does not suit your needs and if you are an experienced user :wink:
 
 Want to dev in navitia ?
 ------------------------

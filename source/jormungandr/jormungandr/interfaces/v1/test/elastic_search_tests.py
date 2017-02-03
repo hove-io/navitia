@@ -590,4 +590,47 @@ def bragi_call_test():
         bragi_street_response_check(places[2])
         bragi_admin_response_check(places[3])
 
+
+def bragi_make_params_with_instance_test():
+    """
+    test of generate params with instance
+    """
+    instance = mock.MagicMock()
+    instance.name = 'bib'
+    bragi = geocodejson.GeocodeJson(host='http://bob.com/autocomplete')
+
+    request = {
+        "q": "aa",
+        "count": 20
+    }
+
+    params = bragi.make_params(request=request, instance=instance)
+    rsp = {'q': 'aa', 'limit': 20, 'pt_dataset': 'bib'}
+    len(rsp.keys()) == len(params.keys())
+    for key, value in rsp.items():
+        assert key in params
+        assert value == params[key]
+
+
+
+def bragi_make_params_without_instance_test():
+    """
+    test of generate params without instance
+    """
+    bragi = geocodejson.GeocodeJson(host='http://bob.com/autocomplete')
+
+    request = {
+        "q": "aa",
+        "count": 20
+    }
+
+    params = bragi.make_params(request=request, instance=None)
+    rsp = {'q': 'aa', 'limit': 20}
+    len(rsp.keys()) == len(params.keys())
+    for key, value in rsp.items():
+        assert key in params
+        assert value == params[key]
+
+
+
 # TODO at least a test on a invalid call to bragi + an invalid bragi response + a py breaker test ?

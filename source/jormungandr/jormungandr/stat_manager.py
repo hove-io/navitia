@@ -162,7 +162,7 @@ class StatManager(object):
         end_time = time.time()
         stat_request = stat_pb2.StatRequest()
         stat_request.request_duration = int((end_time - start_time) * 1000) #In milliseconds
-        self.fill_request(stat_request, call_result)
+        self.fill_request(stat_request, start_time, call_result)
         self.fill_coverages(stat_request)
         self.fill_parameters(stat_request)
         self.fill_result(stat_request, call_result)
@@ -186,12 +186,11 @@ class StatManager(object):
                 'to' in request.args:
             self.fill_journeys(stat_request, call_result)
 
-    def fill_request(self, stat_request, call_result):
+    def fill_request(self, stat_request, start_time, call_result):
         """
         fill stat requests message (protobuf)
         """
-        dt = datetime.utcnow()
-        stat_request.request_date = int(time.mktime(dt.timetuple()))
+        stat_request.request_date = int(start_time)
         # Note: for stat we don't want to abort if no token has been
         # given (it's up to the authentication process)
         token = get_token()

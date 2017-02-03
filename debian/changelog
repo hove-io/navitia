@@ -1,3 +1,25 @@
+navitia2 (2.25.0) unstable; urgency=low
+
+  * ed: add tcmalloc especially to bina (also to tests)  <https://github.com/CanalTP/navitia/pull/1961>
+  * Jormungandr: do not use old AUTOCOMPLETE conf  <https://github.com/CanalTP/navitia/pull/1960>
+  * Jormungandr: Send coverage name to Bragi  <https://github.com/CanalTP/navitia/pull/1950>
+  * Jormungandr: limit first section radius using direct path duration in experimental  <https://github.com/CanalTP/navitia/pull/1952>
+  * Stats: Use a correct timestamp (fix a one-hour bug in stats)  <https://github.com/CanalTP/navitia/pull/1956>
+  * Jormungandr: handle authentication on /v1/places  <https://github.com/CanalTP/navitia/pull/1959>
+  * jormungandr: Autocomplete switch  <https://github.com/CanalTP/navitia/pull/1958>
+  * Doc: fix fares.csv filename  <https://github.com/CanalTP/navitia/pull/1957>
+  * jormun: configure bss provider by multiple env var  <https://github.com/CanalTP/navitia/pull/1955>
+  * kraken: optimization of direct path  <https://github.com/CanalTP/navitia/pull/1953>
+  * Doc: Add wheelchair traveler type  <https://github.com/CanalTP/navitia/pull/1949>
+  * !BREAKING CHANGE! Jormungandr: enable configuration from environment variable  <https://github.com/CanalTP/navitia/pull/1941>
+  * Doc: add count parameter in departures  <https://github.com/CanalTP/navitia/pull/1947>
+  * Doc: Correct typo in docs: additionnal -> additional  <https://github.com/CanalTP/navitia/pull/1946>
+  * Doc: adding datasource_extrapolation  <https://github.com/CanalTP/navitia/pull/1942>
+  * doc: transition from .ini to .json for jormungandr  <https://github.com/CanalTP/navitia/pull/1939>
+  * Ed: change uri of admin to match mimir  <https://github.com/CanalTP/navitia/pull/1927>
+
+ -- Guillaume Pinot <texitoi@texitoi.eu>  Fri, 03 Feb 2017 15:02:49 +0100
+
 navitia2 (2.24.0) unstable; urgency=low
 
   * kraken: fix a crash due to a data lifetime bug  <https://github.com/CanalTP/navitia/pull/1938>

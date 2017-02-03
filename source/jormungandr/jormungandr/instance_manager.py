@@ -44,6 +44,7 @@ from jormungandr.exceptions import ApiNotFound, RegionNotFound,\
 from jormungandr import authentication, cache, app
 from jormungandr.instance import Instance
 import gevent
+import os
 
 def instances_comparator(instance1, instance2):
     """
@@ -96,6 +97,16 @@ class InstanceManager(object):
     def __repr__(self):
         return '<InstanceManager>'
 
+    def register_instance(self, config):
+        logging.getLogger(__name__).debug("instance configuration: %s", config)
+        name = config['key']
+        instance = Instance(self.context, name, config['zmq_socket'],
+                            config.get('street_network'),
+                            config.get('realtime_proxies', []),
+                            config.get('zmq_socket_type', 'persistent'),
+                            config.get('default_autocomplete', 'kraken'))
+        self.instances[instance.name] = instance
+
     def initialisation(self):
         """ Charge la configuration à partir d'un fichier ini indiquant
             les chemins des fichiers contenant :
@@ -104,29 +115,23 @@ class InstanceManager(object):
         """
 
         self.instances.clear()
+        for key, value in os.environ.items():
+            if key.startswith('JORMUNGANDR_INSTANCE_'):
+                logging.getLogger(__name__).info("Initialisation, reading: %s", key)
+                config_data = json.loads(value)
+                self.register_instance(config_data)
+
         for file_name in self.configuration_files:
-            logging.getLogger(__name__).info("Initialisation, reading file : " + file_name)
-            if file_name.endswith('.ini'):
-                # Note: the ini configuration file is kept only temporarily, to migration all the
-                # production configuration slowly
-                conf = configparser.ConfigParser()
-                conf.read(file_name)
-                instance = Instance(self.context, conf.get('instance', 'key'), conf.get('instance', 'socket'))
-            elif file_name.endswith('.json'):
+            logging.getLogger(__name__).info("Initialisation, reading file: %s", file_name)
+            if file_name.endswith('.json'):
                 with open(file_name) as f:
                     config_data = json.load(f)
-                    name = config_data['key']
-                    instance = Instance(self.context, name, config_data['zmq_socket'],
-                                        config_data.get('street_network'),
-                                        config_data.get('realtime_proxies', []),
-                                        config_data.get('zmq_socket_type', 'persistent'),
-                                        config_data.get('autocomplete'))
+                    self.register_instance(config_data)
+
             else:
                 logging.getLogger(__name__).warn('impossible to init an instance with the configuration '
-                                                 'file {}'.format(file_name))
+                                                 'file %s', file_name)
                 continue
-
-            self.instances[instance.name] = instance
 
         #we fetch the krakens metadata first
         # not on the ping thread to always have the data available (for the tests for example)

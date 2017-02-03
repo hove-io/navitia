@@ -124,7 +124,7 @@ struct FindAdminWithCities {
         pqxx::result result = work.exec(request);
         result_type res;
         for (auto it = result.begin(); it != result.end(); ++it) {
-            const std::string uri = it["uri"].as<std::string>() + "extern";
+            const std::string uri = it["uri"].as<std::string>();
             const std::string insee = it["insee"].as<std::string>();
             //we try to find the admin in georef by using it's insee code (only work in France)
             navitia::georef::Admin* admin = nullptr;

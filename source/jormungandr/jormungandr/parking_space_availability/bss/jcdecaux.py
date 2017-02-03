@@ -72,3 +72,6 @@ class JcdecauxProvider(BssProvider):
         data = self._call_webservice(ref)
         if data and 'available_bike_stands' in data and 'available_bikes' in data:
             return Stands(data['available_bike_stands'], data['available_bikes'])
+
+    def status(self):
+        return {'network': self.network, 'operators': self.operators, 'contract': self.contract}

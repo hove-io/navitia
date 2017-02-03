@@ -66,15 +66,15 @@ class SectionSorter(object):
             return -1 if a.end_date_time < b.end_date_time else 1
 
 
-def get_max_fallback_duration(request, mode):
-    if mode == 'walking':
-        return request['max_walking_duration_to_pt']
-    if mode == 'bss':
-        return request['max_bss_duration_to_pt']
-    if mode == 'bike':
-        return request['max_bike_duration_to_pt']
-    if mode == 'car':
-        return request['max_car_duration_to_pt']
+# dp_durations (for direct path duration) is used to limit the
+# fallback duration of the first section.  Because we don't want to
+# have more fallback than if we go to the destination directly, we can
+# limit the radius of the fallback with this value.
+def get_max_fallback_duration(request, mode, dp_durations={}):
+    if mode in ['walking', 'bss', 'bike', 'car']:
+        max_duration = request['max_{}_duration_to_pt'.format(mode)]
+        dp_duration = dp_durations.get(mode, max_duration)
+        return min(max_duration, dp_duration)
     raise ValueError('unknown mode: {}'.format(mode))
 
 
@@ -82,6 +82,15 @@ def make_direct_path_key(dep_mode, orig_uri, dest_uri, datetime, clockwise, reve
     # datetime is not taken into consideration because we assume that
     # a direct path from A to B remains the same even the departure time are different
     return dep_mode, orig_uri, dest_uri, clockwise, reverse_sections
+
+
+def make_direct_path_duration_by_mode(fallback_direct_path):
+    res = {}
+    for key, dp in fallback_direct_path.items():
+        if dp.journeys:
+            # key[0] is the mode of the direct path
+            res[key[0]] = dp.journeys[0].durations.total
+    return res
 
 
 def get_direct_path_if_exists(direct_path_pool, mode, orig_uri, dest_uri, datetime, clockwise, reverse_sections):
@@ -307,7 +316,7 @@ class AsyncWorker(object):
             "bss": instance.bss_speed,
         }
 
-    def get_routing_matrix_futures(self, origin, destination, origins_places_crowfly, destinations_places_crowfly):
+    def get_routing_matrix_futures(self, origin, destination, origins_places_crowfly, destinations_places_crowfly, dp_durations):
         origin_futures = []
         destination_futures = []
 
@@ -320,7 +329,7 @@ class AsyncWorker(object):
                                                       origin,
                                                       origins_places_crowfly,
                                                       dep_mode,
-                                                      get_max_fallback_duration(self.request, dep_mode),
+                                                      get_max_fallback_duration(self.request, dep_mode, dp_durations),
                                                       self.request,
                                                       **self.speed_switcher))
                 called_dep_modes.add(dep_mode)
@@ -337,7 +346,7 @@ class AsyncWorker(object):
 
         return origin_futures, destination_futures
 
-    def get_crowfly_futures(self, origin, destination):
+    def get_crowfly_futures(self, origin, destination, dp_durations):
         origin_futures = []
         destination_futures = []
 
@@ -349,7 +358,7 @@ class AsyncWorker(object):
                                                       self.instance,
                                                       dep_mode,
                                                       origin,
-                                                      get_max_fallback_duration(self.request, dep_mode),
+                                                      get_max_fallback_duration(self.request, dep_mode, dp_durations),
                                                       **self.speed_switcher))
                 called_dep_modes.add(dep_mode)
             if arr_mode not in called_arr_modes:
@@ -623,10 +632,33 @@ class Scenario(new_default.Scenario):
 
         worker = AsyncWorker(instance, krakens_call, request)
 
+        resp = []
+
+        # Now we compute the direct path with all requested departure
+        # mode their time will be used to initialized our PT calls and
+        # to bound the fallback duration of the first section.
+        futures = worker.get_direct_path_futures(g.fallback_direct_path,
+                                                 g.requested_origin,
+                                                 g.requested_destination,
+                                                 request['datetime'],
+                                                 request['clockwise'],
+                                                 False,
+                                                 {mode for mode, _ in krakens_call})
+        for future in gevent.iwait(futures):
+            resp_key, resp_direct_path = future.get()
+            g.fallback_direct_path[resp_key] = resp_direct_path
+            if resp_direct_path.journeys:
+                resp_direct_path.journeys[0].internal_id = str(generate_id())
+                resp.append(resp_direct_path)
+
         if request.get('max_duration', 0):
+            direct_path_duration_by_mode = make_direct_path_duration_by_mode(g.fallback_direct_path)
+
             # Get all stop_points around the requested origin within a crowfly range
             # Calls on origins and destinations are asynchronous
-            orig_futures, dest_futures = worker.get_crowfly_futures(g.requested_origin, g.requested_destination)
+            orig_futures, dest_futures = worker.get_crowfly_futures(g.requested_origin,
+                                                                    g.requested_destination,
+                                                                    direct_path_duration_by_mode)
             gevent.joinall(orig_futures + dest_futures)
             for future in orig_futures:
                 g.origins_places_crowfly.update(future.get())
@@ -644,7 +676,8 @@ class Scenario(new_default.Scenario):
             orig_futures, dest_futures = worker.get_routing_matrix_futures(g.requested_origin,
                                                                            g.requested_destination,
                                                                            g.origins_places_crowfly,
-                                                                           g.destinations_places_crowfly)
+                                                                           g.destinations_places_crowfly,
+                                                                           direct_path_duration_by_mode)
             gevent.joinall(orig_futures + dest_futures)
             for future in orig_futures:
                 g.origins_fallback.update(future.get())
@@ -676,27 +709,8 @@ class Scenario(new_default.Scenario):
                 g.origins_fallback.reset_if_exist(dep_mode, g.requested_origin.uri)
                 g.destinations_fallback.reset_if_exist(arr_mode, g.requested_destination.uri)
 
-        resp = []
-        journey_parameters = create_parameters(request)
-
-        # Now we compute the direct path with all requested departure mode
-        # their time will be used to initialized our PT calls
-        futures = worker.get_direct_path_futures(g.fallback_direct_path,
-                                                 g.requested_origin,
-                                                 g.requested_destination,
-                                                 request['datetime'],
-                                                 request['clockwise'],
-                                                 False,
-                                                 [mode for mode, _ in krakens_call])
-        for future in gevent.iwait(futures):
-            resp_key, resp_direct_path = future.get()
-            g.fallback_direct_path[resp_key] = resp_direct_path
-            if resp_direct_path.journeys:
-                if resp_direct_path not in resp:
-                    resp_direct_path.journeys[0].internal_id = str(generate_id())
-                    resp.append(resp_direct_path)
-
         # Here starts the computation for pt journey
+        journey_parameters = create_parameters(request)
         futures = worker.get_pt_journey_futures(g.requested_origin, g.requested_destination,
                                                 g.fallback_direct_path, g.origins_fallback,
                                                 g.destinations_fallback, journey_parameters)

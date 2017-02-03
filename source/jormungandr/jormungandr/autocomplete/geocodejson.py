@@ -46,10 +46,7 @@ class GeocodeJson(AbstractAutocomplete):
         self.external_api = kwargs.get('host')
         self.timeout = kwargs.get('timeout', 10)
 
-    def get(self, request, instance, shape=None):
-        if not self.external_api:
-            raise TechnicalError('global autocomplete not configured')
-
+    def make_params(self, request, instance):
         params = {
             "q": request["q"],
             "limit": request["count"]
@@ -57,6 +54,17 @@ class GeocodeJson(AbstractAutocomplete):
 
         if request.get("from"):
             params["lon"], params["lat"] = self.get_coords(request["from"])
+
+        if instance:
+            params["pt_dataset"] = instance.name
+
+        return params
+
+    def get(self, request, instance, shape=None):
+        if not self.external_api:
+            raise TechnicalError('global autocomplete not configured')
+
+        params = self.make_params(request, instance)
 
         try:
             if shape:

@@ -335,6 +335,8 @@ class Places(ResourceUri):
         self.parsers['get'].add_argument("from", type=coord_format,
                                          description="Coordinates longitude;latitude used to prioritize "
                                                      "the objects around this coordinate")
+        self.parsers['get'].add_argument("_autocomplete", type=unicode, description="name of the autocomplete service"
+                                         " used under the hood")
 
     def get(self, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
@@ -353,12 +355,15 @@ class Places(ResourceUri):
             timezone.set_request_timezone(region)
             response = i_manager.dispatch(args, "places", instance_name=instance)
         else:
-            if global_autocomplete:
+            autocomplete = global_autocomplete.get('bragi')
+            if autocomplete:
                 user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=False)
+                authentication.check_access_to_global_places(user)
                 shape = None
+
                 if user and user.shape:
                     shape = json.loads(user.shape)
-                response = global_autocomplete.get(args, instance=None, shape=shape)
+                response = autocomplete.get(args, instance=None, shape=shape)
             else:
                 raise TechnicalError('world wide autocompletion service not available')
         return response, 200

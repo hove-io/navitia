@@ -61,6 +61,8 @@ namespace navitia { namespace kraken{
             bool display_contributors() const;
             size_t raptor_cache_size() const;
             int slow_request_duration() const;
+            boost::optional<std::string> log_level() const;
+            boost::optional<std::string> log_format() const;
 
             std::vector<std::string> rt_topics() const;
     };
