@@ -47,7 +47,7 @@ from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.exceptions import TechnicalError
 from functools import wraps
 from flask_restful import marshal, marshal_with
-import datetime
+import datetime, re
 from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
 import ujson as json
 from jormungandr.interfaces.parsers import coord_format
@@ -172,6 +172,10 @@ class AddressField(fields.Raw):
 
         lon, lat = get_lon_lat(obj)
         geocoding = obj.get('properties', {}).get('geocoding', {})
+        numbers = re.findall(r'^\d+', geocoding.get('housenumber') or "0")
+        hn = 0
+        if len(numbers) > 0:
+            hn = numbers[0]
 
         return {
             "id": delete_prefix(geocoding.get('id'), "addr:"),
@@ -179,7 +183,7 @@ class AddressField(fields.Raw):
                 "lon": lon,
                 "lat": lat,
             },
-            "house_number": geocoding.get('housenumber') or '0',
+            "house_number": int(hn) or 0,
             "label": geocoding.get('label'),
             "name": geocoding.get('name'),
             "administrative_regions":
@@ -233,16 +237,16 @@ class StopAreaField(fields.Raw):
 
 geocode_admin = {
     "embedded_type": Lit("administrative_region"),
-    "quality": Lit("0"),
+    "quality": Lit(0),
     "id": fields.String(attribute='properties.geocoding.id'),
     "name": fields.String(attribute='properties.geocoding.name'),
-    "administrative_regions": AdministrativeRegionField()
+    "administrative_region": AdministrativeRegionField()
 }
 
 
 geocode_addr = {
     "embedded_type": Lit("address"),
-    "quality": Lit("0"),
+    "quality": Lit(0),
     "id": AddressId,
     "name": fields.String(attribute='properties.geocoding.label'),
     "address": AddressField()
@@ -250,7 +254,7 @@ geocode_addr = {
 
 geocode_poi = {
     "embedded_type": Lit("poi"),
-    "quality": Lit("0"),
+    "quality": Lit(0),
     "id": fields.String(attribute='properties.geocoding.id'),
     "name": fields.String(attribute='properties.geocoding.label'),
     "poi": PoiField()
@@ -258,7 +262,7 @@ geocode_poi = {
 
 geocode_stop_area = {
     "embedded_type": Lit("stop_area"),
-    "quality": Lit("0"),
+    "quality": Lit(0),
     "id": fields.String(attribute='properties.geocoding.id'),
     "name": fields.String(attribute='properties.geocoding.label'),
     "stop_area": StopAreaField()
