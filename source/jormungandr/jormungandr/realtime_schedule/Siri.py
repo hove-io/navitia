@@ -77,42 +77,18 @@ class Siri(object):
         headers = {"Content-Type": "text/xml; charset=UTF-8",
                    "Content-Length": len(encoded_request)}
 
-        response = requests.post(url=self.service_url, headers=headers, data=encoded_request, verify=False, timeout=self.timeout)
+        response = requests.post(url=self.service_url, headers=headers, data=encoded_request, verify=False,
+                                 timeout=self.timeout)
 
         return response.text
 
     def _make_request(self, message_identifier='StopMonitoringClient:Test:0',
-                      monitoring_ref='Orleans:StopPoint:BP:TPOSTA1:LOC',
+                      monitoring_ref='Orleans:StopPoint:BP:52600:LOC',
                       stop_visit_types='all'):
 
-        '''
         request = '<?xml version="1.0" encoding="UTF-8"?>' \
-                  '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/">' \
-                  '<soapenv:Header/>' \
-                  '<soapenv:Body>' \
-                  '<GetStopMonitoring xmlns="http://wsdl.siri.org.uk" xmlns:siri="http://www.siri.org.uk/siri">' \
-                  '<ServiceRequestInfo xmlns="">' \
-                  '<siri:RequestTimestamp>2017-02-02T11:10:12.788+01:00</siri:RequestTimestamp>' \
-                  '<siri:RequestorRef>{RequestorRef}</siri:RequestorRef>' \
-                  '<siri:MessageIdentifier>{MessageIdentifier}</siri:MessageIdentifier>' \
-                  '</ServiceRequestInfo>' \
-                  '<Request version="1.3" xmlns="">' \
-                  '<siri:RequestTimestamp>2017-02-02T11:10:12.788+01:00</siri:RequestTimestamp>' \
-                  '<siri:MessageIdentifier>{MessageIdentifier}</siri:MessageIdentifier>' \
-                  '<siri:MonitoringRef>{MonitoringRef}</siri:MonitoringRef>' \
-                  '<siri:StopVisitTypes>{StopVisitTypes}</siri:StopVisitTypes>' \
-                  '</Request>' \
-                  '<RequestExtension xmlns=""/>' \
-                  '</GetStopMonitoring>' \
-                  '</soapenv:Body>' \
-                  '</soapenv:Envelope>'.format(RequestorRef=self.requestor_ref,
-                                               MessageIdentifier=message_identifier,
-                                               MonitoringRef=monitoring_ref,
-                                               StopVisitTypes=stop_visit_types)
-
-        '''
-        request = '<?xml version="1.0" encoding="UTF-8"?>' \
-                  '<x:Envelope xmlns:x="http://schemas.xmlsoap.org/soap/envelope/">' \
+                  '<x:Envelope xmlns:x="http://schemas.xmlsoap.org/soap/envelope/" ' \
+                  'xmlns:wsd="http://wsdl.siri.org.uk" xmlns:siri="http://www.siri.org.uk/siri">' \
                   '<x:Header/>' \
                   '<x:Body>' \
                   '<GetStopMonitoring xmlns="http://wsdl.siri.org.uk" xmlns:siri="http://www.siri.org.uk/siri">' \

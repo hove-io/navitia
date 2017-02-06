@@ -39,4 +39,4 @@ def make_request_test():
     assert 'OrleansJVM' in request_data
 
     response = siri._call_siri(request_data)
-    assert 'Ensemble de la ligne : trafic ralenti.' in response
+    assert '[BAD_ID] MonitoringRef (52600)' in response
