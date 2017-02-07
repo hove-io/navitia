@@ -866,6 +866,10 @@ int compute_directions(const navitia::georef::Path& path, const nt::Geographical
     return rounded_angle;
 }
 
+distance_visitor::~distance_visitor() {}
+target_all_visitor::~target_all_visitor() {}
+distance_or_target_visitor::~distance_or_target_visitor() {}
+
 /**
   The _DEBUG_DIJKSTRA_QUANTUM_ activate at compil time some dump used in quantum to analyze
   the street network.
