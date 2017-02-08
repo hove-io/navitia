@@ -785,6 +785,31 @@ BOOST_AUTO_TEST_CASE(split_over_dst_one_year_new_york) {
     BOOST_CHECK_EQUAL(summer_periods.at(1).last(), "20160730"_d);
 }
 
+/*
+ * Configuration in tz_db_wrapper.h :
+ * America/Costa_Rica,CST,CST,,,-06:00:00,+00:00:00,,,,+00:00:00
+ * there is no dst in costa rica, offset is always -6 hours
+ */
+BOOST_AUTO_TEST_CASE(split_over_dst_costa_rica) {
+    ed::connectors::GtfsData gtfs_data;
+    auto tz_pair = gtfs_data.tz.get_tz("America/Costa_Rica");
+
+    boost::gregorian::date_period vj_validity_period {"20120201"_d, "20121105"_d};
+
+    ed::EdTZWrapper tz_wrapper {tz_pair.first, tz_pair.second};
+
+    auto split_periods = tz_wrapper.split_over_dst(vj_validity_period);
+
+    BOOST_REQUIRE_EQUAL(split_periods.size(), 1);
+
+    const auto costa_rica_utc_shift = -6 * 60 * 60;
+    const auto& period = split_periods.at(costa_rica_utc_shift);
+    BOOST_REQUIRE_EQUAL(period.size(), 1);
+    BOOST_CHECK_EQUAL(period.at(0).begin(), "20120201"_d);
+    BOOST_CHECK_EQUAL(period.at(0).last(), "20121104"_d);
+}
+
+
 BOOST_AUTO_TEST_CASE(parse_with_feed_info) {
     ed::Data data;
     ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path + "_with_feed_info");
