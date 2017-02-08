@@ -172,8 +172,8 @@ class AddressField(fields.Raw):
 
         lon, lat = get_lon_lat(obj)
         geocoding = obj.get('properties', {}).get('geocoding', {})
-        numbers = re.findall(r'^\d+', geocoding.get('housenumber') or "0")
         hn = 0
+        numbers = re.findall(r'^\d+', geocoding.get('housenumber') or "0")
         if len(numbers) > 0:
             hn = numbers[0]
 
@@ -183,7 +183,7 @@ class AddressField(fields.Raw):
                 "lon": lon,
                 "lat": lat,
             },
-            "house_number": int(hn) or 0,
+            "house_number": int(hn),
             "label": geocoding.get('label'),
             "name": geocoding.get('name'),
             "administrative_regions":
