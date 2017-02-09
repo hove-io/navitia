@@ -249,7 +249,7 @@ examples:
 
 this is the navitia call and YES means we display the disruption, NO means we do not display it
 
-`/routes/route_1_of_the_line_1` --> YES (? not sure about this one if the line section is represented as linked to the line)
+`/routes/route_1_of_the_line_1` --> YES
 
 `/stop_areas/A`  --> NO
 
@@ -265,7 +265,7 @@ this is the navitia call and YES means we display the disruption, NO means we do
 
 `/routes/route_2_of_the_line_1`  --> NO
 
-`/lines/line_1`  -->  YES (? not sure about this one if we represent the line section as linked to 2 stops and a list of routes)
+`/lines/line_1`  -->  YES
 
 `/lines/line_2`  -->  NO
 
@@ -277,7 +277,11 @@ If we decide to display the line section disruptions based on the last object of
 
 `/networks/network_of_the_route_1 `  --> NO
 
-`/stop_points/C_1`  --> NO
+`/stop_points/C_1`  --> YES
+
+`/stop_points/C_2_of_route_2_of_line_1`  --> NO
+
+`/stop_points/C_3_of_line_2`  --> NO
 
 `/vehicle_journeys/vj1_of_route_1_of_line_1`  --> NO
 
@@ -286,7 +290,10 @@ If we decide to display the line section disruptions based on the last object of
 
 This is for the calls api.navitia.io/v1/coverage/bob/<some pt ref filters>/disruptions
 
-The /disruption api is meant to be a direct representation of the object model below so I think it's ok the keep the same mechanism as the common cases (but not restricted to the active disruptions by default)
+The /disruption api is meant to be a direct representation of the object model below so I think it's ok the keep the same mechanism as before 
+where only the objects with disruptions technically linked to them have disruptions.
+
+So this will depend on the chosen line section model
 
 ### ptref with /traffic_reports
 
@@ -298,7 +305,7 @@ This /traffic_reports api is meant to be a clever representation of the disrupti
 
 `/stop_areas/C/traffic_reports`  --> YES
 
-`/lines/line_1/traffic_reports ` -->  YES
+`/lines/line_1/traffic_reports`  -->  YES
 
 `/lines/line_2/traffic_reports`  -->  NO
 
