@@ -105,7 +105,7 @@ We display only the stoppoints impacted by the line section
 
 `/routes/route_2_of_the_line_1`  --> NO
 
-`/lines/line_1`  -->  YES
+`/lines/line_1`  -->  NOT_SPECIFIED
 
 `/lines/line_2`  -->  NO
 
