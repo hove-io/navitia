@@ -577,7 +577,7 @@ def bragi_call_test():
 
     # we mock the http call to return the hard coded mock_response
     with mock.patch('requests.get', mock_requests.get):
-        raw_response = bragi.get({'q': 'rue bobette', 'count': 10}, instance=None, shape=None)
+        raw_response = bragi.get({'q': 'rue bobette', 'count': 10}, instance=None)
         places = raw_response.get('places')
         assert len(places) == 4
         bragi_house_jaures_response_check(places[0])
@@ -586,7 +586,7 @@ def bragi_call_test():
         bragi_admin_response_check(places[3])
 
     with mock.patch('requests.post', mock_requests.get):
-        raw_response = bragi.get({'q': 'rue bobette', 'count': 10}, instance=None, shape=geojson())
+        raw_response = bragi.get({'q': 'rue bobette', 'count': 10, 'shape': geojson()}, instance=None)
         places = raw_response.get('places')
         assert len(places) == 4
         bragi_house_jaures_response_check(places[0])

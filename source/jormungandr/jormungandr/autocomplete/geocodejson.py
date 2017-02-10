@@ -75,12 +75,13 @@ class GeocodeJson(AbstractAutocomplete):
 
         return params
 
-    def get(self, request, instance, shape=None):
+    def get(self, request, instance):
         if not self.external_api:
             raise TechnicalError('global autocomplete not configured')
 
         params = self.make_params(request, instance)
 
+        shape = request.get('shape', None)
         try:
             if shape:
                 raw_response = requests.post(self.external_api, timeout=self.timeout, json=shape, params=params)

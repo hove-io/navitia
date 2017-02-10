@@ -352,6 +352,13 @@ class Places(ResourceUri):
         if args['disable_geojson']:
             g.disable_geojson = True
 
+        user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=False)
+
+        shape = None
+        if user and user.shape:
+            shape = json.loads(user.shape)
+        args['shape'] = shape
+
         # If a region or coords are asked, we do the search according
         # to the region, else, we do a word wide search
 
@@ -360,15 +367,10 @@ class Places(ResourceUri):
             timezone.set_request_timezone(region)
             response = i_manager.dispatch(args, "places", instance_name=instance)
         else:
+            authentication.check_access_to_global_places(user)
             autocomplete = global_autocomplete.get('bragi')
             if autocomplete:
-                user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=False)
-                authentication.check_access_to_global_places(user)
-                shape = None
-
-                if user and user.shape:
-                    shape = json.loads(user.shape)
-                response = autocomplete.get(args, instance=None, shape=shape)
+                response = autocomplete.get(args, instance=None)
             else:
                 raise TechnicalError('world wide autocompletion service not available')
         return response, 200
