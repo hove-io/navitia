@@ -354,10 +354,7 @@ class Places(ResourceUri):
 
         user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=False)
 
-        shape = None
-        if user and user.shape:
-            shape = json.loads(user.shape)
-        args['shape'] = shape
+        args['shape'] = json.loads(user.shape) if user and user.shape else None
 
         # If a region or coords are asked, we do the search according
         # to the region, else, we do a word wide search
