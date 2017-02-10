@@ -34,6 +34,8 @@ import logging
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
 import requests
 from jormungandr.exceptions import TechnicalError
+from jormungandr.scenarios.utils import pb_type
+from flask.ext.restful import abort
 
 
 class GeocodeJson(AbstractAutocomplete):
@@ -56,7 +58,20 @@ class GeocodeJson(AbstractAutocomplete):
             params["lon"], params["lat"] = self.get_coords(request["from"])
 
         if request.get("type[]"):
-            params["type[]"] = request["type[]"]
+            types = []
+            for type in request.get("type[]"):
+                if type == 'stop_point':
+                    continue
+
+                if type not in pb_type:
+                    abort(422, message="{} is not an acceptable type".format(type))
+
+                if type == 'administrative_region':
+                    type = 'city'
+
+                types.append(type)
+
+            params["type[]"] = types
 
         if instance:
             params["pt_dataset"] = instance.name
