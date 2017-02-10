@@ -98,7 +98,7 @@ We display only the stoppoints impacted by the line section
 
 `/stop_points/D_1_of_route_1_of_line_1`  --> YES
 
-`/stop_points/E_1_of_route_1_of_line_1`  --> NO
+`/stop_points/E_1_of_route_1_of_line_1`  --> YES
 
 `/stop_points/F_1_of_route_1_of_line_1`  --> NO
 
@@ -187,6 +187,5 @@ struct LineSection {
 ```
 
 but a line section disruption will be stored in:
-* the line
-* each vehicle_journeys of each routes
+* each impacted vehicle_journeys of each routes
 * each stoppoints in [start_point, end_point] for each vj for each routes
