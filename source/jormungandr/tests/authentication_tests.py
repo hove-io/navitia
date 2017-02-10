@@ -39,6 +39,7 @@ from jormungandr import app
 import json
 import logging
 from nose.util import *
+from nose.tools import raises
 import mock
 
 
@@ -76,14 +77,18 @@ authorizations = {
         "departure_board_test": {'ALL': True},
         "empty_routing_test": {'ALL': True}
     },
+    'test_user_with_shape': {
+        "main_routing_test": {'ALL': True},
+        "departure_board_test": {'ALL': True},
+        "empty_routing_test": {'ALL': True}
+    },
 }
-
 
 class FakeUser:
     """
     We create a user independent from a database
     """
-    def __init__(self, name, id, have_access_to_free_instances=True, is_super_user=False, is_blocked=False):
+    def __init__(self, name, id, have_access_to_free_instances=True, is_super_user=False, is_blocked=False, shape=None):
         """
         We just need a fake user, we don't really care about its identity
         """
@@ -93,7 +98,7 @@ class FakeUser:
         self.is_super_user = is_super_user
         self.end_point_id = None
         self._is_blocked = is_blocked
-        self.shape = None
+        self.shape = shape
 
     @classmethod
     def get_from_token(cls, token):
@@ -125,6 +130,9 @@ class FakeInstance(models.Instance):
     def get_by_name(cls, name):
         return mock_instances.get(name)
 
+def geojson():
+    return '{"type": "Feature", "geometry": ' \
+           '{"type": "Point", "coordinates": [102.0, 0.5]}, "properties": {"prop0": "value0"}}'
 
 user_in_db = {
     'bob': FakeUser('bob', 1),
@@ -135,6 +143,7 @@ user_in_db = {
     'test_user_not_blocked': FakeUser('test_user_not_blocked', 6, True, False, False),
     'super_user_not_open': FakeUser('super_user_not_open', id=7,
                                     have_access_to_free_instances=False, is_super_user=True),
+    'test_user_with_shape': FakeUser('test_user_with_shape', 6, True, False, False, shape=geojson()),
 }
 
 mock_instances = {
@@ -453,6 +462,19 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             assert regions[0]["name"] == 'departure board'
             assert regions[1]["name"] == 'empty routing'
             assert regions[2]["name"] == 'routing api data'
+
+    #todo: move this test to bragi test and complete it
+    def test_places_for_user_with_shape(self):
+        with user_set(app, "test_user_with_shape"):
+            def http_get(url, *args, **kwargs):
+                assert False
+
+            def http_post(url, *args, **kwargs):
+                assert False
+
+            with mock.patch('requests.get', http_get) as mock_method:
+                self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi')
+
 
     #TODO add more tests on:
     # * coords
