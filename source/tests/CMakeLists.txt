@@ -1,5 +1,5 @@
 SET(ALL_LIBS workers ed disruption_api calendar_api time_tables types autocomplete proximitylist
-    ptreferential time_tables data routing fare georef utils SimpleAmqpClient
+    ptreferential time_tables data routing fare types georef utils SimpleAmqpClient
     rabbitmq-static log4cplus tcmalloc ${Boost_LIBRARIES} protobuf)
 
 # every tests will produce an executable used in jormungandr integration tests
@@ -26,6 +26,8 @@ add_executable(main_routing_without_pt_test main_routing_without_pt_test.cpp)
 
 add_executable(multiple_schedules multiple_schedules.cpp)
 
+add_executable(line_sections_test line_sections_test.cpp)
+
 
 target_link_libraries(main_routing_test ${ALL_LIBS})
 target_link_libraries(main_ptref_test ${ALL_LIBS})
@@ -38,3 +40,4 @@ target_link_libraries(main_stif_test ${ALL_LIBS})
 target_link_libraries(null_status_test ${ALL_LIBS})
 target_link_libraries(main_routing_without_pt_test ${ALL_LIBS})
 target_link_libraries(multiple_schedules ${ALL_LIBS})
+target_link_libraries(line_sections_test ${ALL_LIBS})

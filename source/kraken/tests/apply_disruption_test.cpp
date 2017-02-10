@@ -40,6 +40,7 @@ www.navitia.io
 #include "kraken/realtime.h"
 #include "type/kirin.pb.h"
 #include "routing/raptor.h"
+#include "type/pb_converter.h"
 
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
@@ -1902,5 +1903,4 @@ BOOST_AUTO_TEST_CASE(update_impact) {
     navitia::delete_disruption("stop3_closed", *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
-
 }
