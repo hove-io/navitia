@@ -34,8 +34,6 @@ import logging
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
 import requests
 from jormungandr.exceptions import TechnicalError
-from jormungandr.scenarios.utils import pb_type
-from flask.ext.restful import abort
 
 
 class GeocodeJson(AbstractAutocomplete):
@@ -61,11 +59,10 @@ class GeocodeJson(AbstractAutocomplete):
             types = []
             for type in request.get("type[]"):
                 if type == 'stop_point':
+                    logging.getLogger(__name__).debug('stop_point is not handled by bragi')
                     continue
 
-                if type not in pb_type:
-                    abort(422, message="{} is not an acceptable type".format(type))
-
+                # the geocodejson type for an "administrative_region" is "city"
                 if type == 'administrative_region':
                     type = 'city'
 

@@ -50,7 +50,8 @@ from flask_restful import marshal, marshal_with
 import datetime
 from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
 import ujson as json
-from jormungandr.interfaces.parsers import coord_format
+from jormungandr.interfaces.parsers import coord_format, option_value
+from jormungandr.scenarios.utils import pb_type
 
 
 #global marshal
@@ -295,7 +296,6 @@ places = {
 
 
 class Places(ResourceUri):
-
     def __init__(self, *args, **kwargs):
         ResourceUri.__init__(self, authentication=False, *args, **kwargs)
         self.parsers = {}
@@ -303,7 +303,8 @@ class Places(ResourceUri):
             argument_class=ArgumentDoc)
         self.parsers["get"].add_argument("q", type=unicode, required=True,
                                          description="The data to search")
-        self.parsers["get"].add_argument("type[]", type=unicode, action="append",
+        self.parsers["get"].add_argument("type[]", type=option_value(pb_type),
+                                         action="append",
                                          default=["stop_area", "address",
                                                   "poi",
                                                   "administrative_region"],
