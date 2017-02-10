@@ -55,6 +55,21 @@ class GeocodeJson(AbstractAutocomplete):
         if request.get("from"):
             params["lon"], params["lat"] = self.get_coords(request["from"])
 
+        if request.get("type[]"):
+            types = []
+            for type in request.get("type[]"):
+                if type == 'stop_point':
+                    logging.getLogger(__name__).debug('stop_point is not handled by bragi')
+                    continue
+
+                # the geocodejson type for an "administrative_region" is "city"
+                if type == 'administrative_region':
+                    type = 'city'
+
+                types.append(type)
+
+            params["type[]"] = types
+
         if instance:
             params["pt_dataset"] = instance.name
 
