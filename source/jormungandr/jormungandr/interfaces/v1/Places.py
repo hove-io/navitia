@@ -80,12 +80,12 @@ def create_admin_field(geocoding):
         })
     return response
 
-class AddressId(fields.Raw):
+class CoordId(fields.Raw):
     def output(self, key, obj):
         if not obj:
             return None
-        geocoding = obj.get('properties', {}).get('geocoding', {})
-        return delete_prefix(geocoding.get('id'), "addr:")
+        lon, lat = get_lon_lat(obj)
+        return '{};{}'.format(lon, lat)
 
 
 def format_zip_code(zip_codes):
@@ -178,7 +178,7 @@ class AddressField(fields.Raw):
             hn = numbers[0]
 
         return {
-            "id": delete_prefix(geocoding.get('id'), "addr:"),
+            "id": '{};{}'.format(lon, lat),
             "coord": {
                 "lon": lon,
                 "lat": lat,
@@ -201,7 +201,7 @@ class PoiField(fields.Raw):
 
         # TODO add address, poi_type, properties attributes
         return {
-            "id": geocoding.get('id'),
+            "id": '{};{}'.format(lon, lat),
             "coord": {
                 "lon": lon,
                 "lat": lat,
@@ -247,7 +247,7 @@ geocode_admin = {
 geocode_addr = {
     "embedded_type": Lit("address"),
     "quality": Lit(0),
-    "id": AddressId,
+    "id": CoordId,
     "name": fields.String(attribute='properties.geocoding.label'),
     "address": AddressField()
 }
@@ -255,7 +255,7 @@ geocode_addr = {
 geocode_poi = {
     "embedded_type": Lit("poi"),
     "quality": Lit(0),
-    "id": fields.String(attribute='properties.geocoding.id'),
+    "id": CoordId,
     "name": fields.String(attribute='properties.geocoding.label'),
     "poi": PoiField()
 }

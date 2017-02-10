@@ -48,7 +48,7 @@ def bragi_house_jaures_feature():
             "geocoding": {
                 "city": "Saint-Quentin",
                 "housenumber": "20",
-                "id": "49.847586;3.282103",
+                "id": "3.282103;49.847586",
                 "label": "20 Rue Jean Jaures (Saint-Quentin)",
                 "name": "Rue Jean Jaures",
                 "postcode": "02100",
@@ -93,7 +93,7 @@ def get_response(bragi_response):
 
 def bragi_house_jaures_response_check(feature_response):
     assert feature_response.get('embedded_type') == "address"
-    assert feature_response.get('id') == "49.847586;3.282103"
+    assert feature_response.get('id') == "3.282103;49.847586"
     assert feature_response.get('name') == "20 Rue Jean Jaures (Saint-Quentin)"
     address = feature_response.get('address', {})
     assert address.get('name') == "Rue Jean Jaures"
@@ -128,7 +128,7 @@ def bragi_street_feature():
         "properties": {
             "geocoding": {
                 "city": "Saint-Quentin",
-                "id": "49.847586;3.282103",
+                "id": "38059376",
                 "label": "Rue Jean Jaures (Saint-Quentin)",
                 "name": "Rue Jean Jaures",
                 "postcode": "02100",
@@ -169,7 +169,7 @@ def bragi_street_feature():
 def bragi_street_response_check(feature_response):
 
     assert feature_response.get('embedded_type') == "address"
-    assert feature_response.get('id') == "49.847586;3.282103"
+    assert feature_response.get('id') == "3.282103;49.847586"
     assert feature_response.get('name') == "Rue Jean Jaures (Saint-Quentin)"
     address = feature_response.get('address', {})
     assert address.get('name') == "Rue Jean Jaures"
@@ -337,10 +337,10 @@ def bragi_house_lefebvre_feature():
 
 def bragi_house_lefebvre_response_check(feature_response):
     assert feature_response.get('embedded_type') == "address"
-    assert feature_response.get('id') == "49.847586;3.282103"
+    assert feature_response.get('id') == "3.282103;49.847586"
     assert feature_response.get('name') == "42bis Rue Jean Lefebvre (Oyonnax)"
     address = feature_response.get('address', {})
-    assert address.get('id') == "49.847586;3.282103"
+    assert address.get('id') == "3.282103;49.847586"
     assert address.get('name') == "Rue Jean Lefebvre"
     assert address.get('label') == "42bis Rue Jean Lefebvre (Oyonnax)"
     assert address.get('house_number') == 42
@@ -426,7 +426,7 @@ def bragi_geocodejson_compatibility_test():
     }
     navitia_response = get_response(bragi_response).get('places', {})[0]
     assert navitia_response.get('embedded_type') == "address"
-    assert navitia_response.get('id') == '49.847586;3.282103'
+    assert navitia_response.get('id') == '3.282103;49.847586'
     assert navitia_response.get('name') == '20 Rue Jean Jaures (Saint-Quentin)'
     address = navitia_response.get('address', {})
     assert len(address.get('administrative_regions')) == 5
@@ -478,13 +478,17 @@ def bragi_poi_reading_test():
     }
     navitia_response = get_response(bragi_response).get('places', {})[0]
     assert navitia_response.get('embedded_type') == "poi"
-    assert navitia_response.get('id') == 'poi:osm:3224270910'
+    # FIXME: for the moment, we just output coords to make it works for journeys
+    #assert navitia_response.get('id') == 'poi:osm:3224270910'
+    assert navitia_response.get('id') == '8.9028068;42.5992355'
     assert navitia_response.get('name') == 'Mairie de Pigna (Pigna)'
     assert navitia_response.get('quality') == 0
     poi = navitia_response.get('poi', {})
     assert poi.get('label') == 'Mairie de Pigna (Pigna)'
     assert poi.get('name') == 'Mairie de Pigna'
-    assert poi.get('id') == 'poi:osm:3224270910'
+    # FIXME: for the moment, we just output coords to make it works for journeys
+    #assert poi.get('id') == 'poi:osm:3224270910'
+    assert poi.get('id') == '8.9028068;42.5992355'
     assert poi.get('coord').get('lat') == "42.5992355"
     assert poi.get('coord').get('lon') == "8.9028068"
     assert len(poi.get('administrative_regions')) == 1
