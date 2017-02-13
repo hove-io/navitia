@@ -248,7 +248,8 @@ static std::set<nt::disruption::ChannelType> create_channel_types(const chaos::C
 }
 
 static boost::shared_ptr<nt::disruption::Impact>
-make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
+make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data,
+            const navitia::type::MetaData& meta) {
     auto from_posix = navitia::from_posix_timestamp;
     nt::disruption::DisruptionHolder& holder = pt_data.disruption_holder;
 
@@ -263,7 +264,7 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
     impact->severity = make_severity(chaos_impact.severity(), holder);
 
     for (auto ptobj: make_pt_objects(chaos_impact.informed_entities(), pt_data)) {
-        link_informed_entity(std::move(ptobj), impact);
+        link_informed_entity(std::move(ptobj), impact, meta.production_date, nt::RTLevel::Adapted);
     }
     for (const auto& chaos_message: chaos_impact.messages()) {
         const auto& channel = chaos_message.channel();
@@ -283,7 +284,8 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
 }
 
 const type::disruption::Disruption&
-make_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_data) {
+make_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_data,
+                const navitia::type::MetaData& meta) {
     auto log = log4cplus::Logger::getInstance("log");
     LOG4CPLUS_DEBUG(log, "Adding disruption: " << chaos_disruption.id());
     auto from_posix = navitia::from_posix_timestamp;
@@ -304,7 +306,7 @@ make_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_data)
     disruption.updated_at = from_posix(chaos_disruption.updated_at());
     disruption.cause = make_cause(chaos_disruption.cause(), holder);
     for (const auto& chaos_impact: chaos_disruption.impacts()) {
-        auto impact = make_impact(chaos_impact, pt_data);
+        auto impact = make_impact(chaos_impact, pt_data, meta);
         disruption.add_impact(impact, holder);
     }
     disruption.localization = make_pt_objects(chaos_disruption.localization(), pt_data);
@@ -324,7 +326,7 @@ void make_and_apply_disruption(const chaos::Disruption& chaos_disruption,
     //we delete the disrupion before adding the new one
     delete_disruption(chaos_disruption.id(), pt_data, meta);
 
-    const auto& disruption = make_disruption(chaos_disruption, pt_data);
+    const auto& disruption = make_disruption(chaos_disruption, pt_data, meta);
 
     apply_disruption(disruption, pt_data, meta);
 }

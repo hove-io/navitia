@@ -273,7 +273,7 @@ create_disruption(const std::string& id,
         impact->severity = make_severity(id, std::move(wording), effect, timestamp, holder);
         link_informed_entity(
                     nd::make_pt_obj(nt::Type_e::MetaVehicleJourney, trip_update.trip().trip_id(), *data.pt_data),
-                    impact);
+                    impact, data.meta->production_date, nt::RTLevel::RealTime);
         // messages
         disruption.add_impact(std::move(impact), holder);
     }

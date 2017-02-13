@@ -264,7 +264,7 @@ struct Impact {
 
     // add the ptobj to the enformed entities and make all the needed backref
     // Note: it's a friend function because we need the shared_ptr to the impact
-    friend void link_informed_entity(PtObj ptobj, boost::shared_ptr<Impact>& impact);
+    friend void link_informed_entity(PtObj ptobj, boost::shared_ptr<Impact>& impact, const boost::gregorian::date_period&, type::RTLevel);
 
     bool is_valid(const boost::posix_time::ptime& current_time, const boost::posix_time::time_period& action_period) const;
 
@@ -366,6 +366,11 @@ public:
         ar & disruptions_by_uri & causes & severities & tags & weak_impacts;
     }
 };
+
+using SectionBounds = const std::pair<boost::optional<uint16_t>, boost::optional<uint16_t>>;
+std::vector<std::tuple<const VehicleJourney*, ValidityPattern, SectionBounds>>
+get_impacted_vehicle_journeys(const LineSection&, const Impact&, const boost::gregorian::date_period&, type::RTLevel);
+
 }
 
 }}//namespace
