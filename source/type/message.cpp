@@ -40,6 +40,31 @@ namespace bg = boost::gregorian;
 
 namespace navitia { namespace type { namespace disruption {
 
+struct InformedEntitiesLinker: public boost::static_visitor<> {
+    const boost::shared_ptr<Impact>& impact;
+
+    InformedEntitiesLinker(const boost::shared_ptr<Impact>& impact):
+        impact(impact) {}
+
+    template <typename NavitiaPTObject>
+    void operator()(NavitiaPTObject* bo) const {
+        // the the ptobject that match a navitia object, we can just add the impact to the object
+        bo->add_impact(impact);
+    }
+    void operator()(const nt::disruption::LineSection& line_section) const {
+        // for a line section it's a bit more complex, we need to register the impact
+        // to all impacted stoppoints and vehiclejourneys
+    }
+    void operator()(const nt::disruption::UnknownPtObj&) const {}
+};
+
+void link_informed_entity(PtObj ptobj, boost::shared_ptr<Impact>& impact) {
+    InformedEntitiesLinker v(impact);
+    boost::apply_visitor(v, ptobj);
+
+    impact->_informed_entities.push_back(std::move(ptobj));
+}
+
 bool Impact::is_valid(const boost::posix_time::ptime& publication_date, const boost::posix_time::time_period& active_period) const {
 
     if(publication_date.is_not_a_date_time() && active_period.is_null()){
@@ -99,11 +124,8 @@ void Disruption::add_impact(const boost::shared_ptr<Impact>& impact, DisruptionH
 
 namespace {
 template<typename T>
-PtObj transform_pt_object(const std::string& uri, T* o, const boost::shared_ptr<Impact>& impact) {
+PtObj transform_pt_object(const std::string& uri, T* o) {
     if (o != nullptr) {
-        if (impact){
-            o->add_impact(impact);
-        }
         return o;
     } else {
         LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "Impossible to find pt object " << uri);
@@ -112,54 +134,27 @@ PtObj transform_pt_object(const std::string& uri, T* o, const boost::shared_ptr<
 }
 template<typename T>
 PtObj transform_pt_object(const std::string& uri,
-                          const std::unordered_map<std::string, T*>& map,
-                          const boost::shared_ptr<Impact>& impact) {
-    return transform_pt_object(uri, find_or_default(uri, map), impact);
+                          const std::unordered_map<std::string, T*>& map) {
+    return transform_pt_object(uri, find_or_default(uri, map));
 }
 template<typename T>
-PtObj transform_pt_object(const std::string& uri,
-                          ObjFactory<T>& factory,
-                          const boost::shared_ptr<Impact>& impact) {
-    return transform_pt_object(uri, factory.get_mut(uri), impact);
+PtObj transform_pt_object(const std::string& uri, ObjFactory<T>& factory) {
+    return transform_pt_object(uri, factory.get_mut(uri));
 }
 }
 
 PtObj make_pt_obj(Type_e type,
                   const std::string& uri,
-                  PT_Data& pt_data,
-                  const boost::shared_ptr<Impact>& impact) {
+                  PT_Data& pt_data) {
     switch (type) {
-    case Type_e::Network: return transform_pt_object(uri, pt_data.networks_map, impact);
-    case Type_e::StopArea: return transform_pt_object(uri, pt_data.stop_areas_map, impact);
-    case Type_e::StopPoint: return transform_pt_object(uri, pt_data.stop_points_map, impact);
-    case Type_e::Line: return transform_pt_object(uri, pt_data.lines_map, impact);
-    case Type_e::Route: return transform_pt_object(uri, pt_data.routes_map, impact);
-    case Type_e::MetaVehicleJourney: return transform_pt_object(uri, pt_data.meta_vjs, impact);
+    case Type_e::Network: return transform_pt_object(uri, pt_data.networks_map);
+    case Type_e::StopArea: return transform_pt_object(uri, pt_data.stop_areas_map);
+    case Type_e::StopPoint: return transform_pt_object(uri, pt_data.stop_points_map);
+    case Type_e::Line: return transform_pt_object(uri, pt_data.lines_map);
+    case Type_e::Route: return transform_pt_object(uri, pt_data.routes_map);
+    case Type_e::MetaVehicleJourney: return transform_pt_object(uri, pt_data.meta_vjs);
     default: return UnknownPtObj();
     }
-}
-
-PtObj make_line_section(const std::string& line_uri,
-                        const std::string& start_stop_uri,
-                        const std::string& end_stop_uri,
-                        const std::vector<std::string>& route_uris,
-                        PT_Data& pt_data,
-                        const boost::shared_ptr<Impact>& impact) {
-    LineSection line_section;
-    line_section.line = find_or_default(line_uri, pt_data.lines_map);
-    line_section.start_point = find_or_default(start_stop_uri, pt_data.stop_areas_map);
-    line_section.end_point = find_or_default(end_stop_uri, pt_data.stop_areas_map);
-    for(auto& uri: route_uris) {
-        auto* route = find_or_default(uri, pt_data.routes_map);
-        if(route) {
-            if(impact) {
-                route->add_impact(impact);
-            }
-            line_section.routes.push_back(route);
-        }
-    }
-
-    return line_section;
 }
 
 bool Impact::operator<(const Impact& other){

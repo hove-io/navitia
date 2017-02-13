@@ -110,8 +110,7 @@ make_severity(const chaos::Severity& chaos_severity, nt::disruption::DisruptionH
 
 static boost::optional<nt::disruption::LineSection>
 make_line_section(const chaos::PtObject& chaos_section,
-                  nt::PT_Data& pt_data,
-                  const boost::shared_ptr<nt::disruption::Impact>& impact) {
+                  nt::PT_Data& pt_data) {
     if (!chaos_section.has_pt_line_section()) {
         LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
                        "fill_disruption_from_chaos: LineSection invalid!");
@@ -163,47 +162,46 @@ make_line_section(const chaos::PtObject& chaos_section,
     }
 
     // we store the impact in the impacted objects
-    if(impact) {
-        line->add_impact(impact);
-        for(auto* route: line_section.routes) {
-            route->add_impact(impact);
-        }
-    }
+//    if(impact) {
+//        line->add_impact(impact);
+//        for(auto* route: line_section.routes) {
+//            route->add_impact(impact);
+//        }
+//    }
 
     return line_section;
 }
 
 static std::vector<nt::disruption::PtObj>
 make_pt_objects(const google::protobuf::RepeatedPtrField<chaos::PtObject>& chaos_pt_objects,
-                nt::PT_Data& pt_data,
-                const boost::shared_ptr<nt::disruption::Impact>& impact = {}) {
+                nt::PT_Data& pt_data) {
     using namespace nt::disruption;
 
     std::vector<PtObj> res;
     for (const auto& chaos_pt_object: chaos_pt_objects) {
         switch (chaos_pt_object.pt_object_type()) {
         case chaos::PtObject_Type_network:
-            res.push_back(make_pt_obj(nt::Type_e::Network, chaos_pt_object.uri(), pt_data, impact));
+            res.push_back(make_pt_obj(nt::Type_e::Network, chaos_pt_object.uri(), pt_data));
             break;
         case chaos::PtObject_Type_stop_area:
-            res.push_back(make_pt_obj(nt::Type_e::StopArea, chaos_pt_object.uri(), pt_data, impact));
+            res.push_back(make_pt_obj(nt::Type_e::StopArea, chaos_pt_object.uri(), pt_data));
             break;
         case chaos::PtObject_Type_stop_point:
-            res.push_back(make_pt_obj(nt::Type_e::StopPoint, chaos_pt_object.uri(), pt_data, impact));
+            res.push_back(make_pt_obj(nt::Type_e::StopPoint, chaos_pt_object.uri(), pt_data));
             break;
         case chaos::PtObject_Type_line_section:
-            if (auto line_section = make_line_section(chaos_pt_object, pt_data, impact)) {
+            if (auto line_section = make_line_section(chaos_pt_object, pt_data)) {
                 res.push_back(*line_section);
             }
             break;
         case chaos::PtObject_Type_line:
-            res.push_back(make_pt_obj(nt::Type_e::Line, chaos_pt_object.uri(), pt_data, impact));
+            res.push_back(make_pt_obj(nt::Type_e::Line, chaos_pt_object.uri(), pt_data));
             break;
         case chaos::PtObject_Type_route:
-            res.push_back(make_pt_obj(nt::Type_e::Route, chaos_pt_object.uri(), pt_data, impact));
+            res.push_back(make_pt_obj(nt::Type_e::Route, chaos_pt_object.uri(), pt_data));
             break;
         case chaos::PtObject_Type_trip:
-            res.push_back(make_pt_obj(nt::Type_e::MetaVehicleJourney, chaos_pt_object.uri(), pt_data, impact));
+            res.push_back(make_pt_obj(nt::Type_e::MetaVehicleJourney, chaos_pt_object.uri(), pt_data));
             break;
         case chaos::PtObject_Type_unkown_type:
             res.push_back(UnknownPtObj());
@@ -263,7 +261,10 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data) {
         impact->application_periods.emplace_back(from_posix(chaos_ap.start()), from_posix(chaos_ap.end()));
     }
     impact->severity = make_severity(chaos_impact.severity(), holder);
-    impact->informed_entities = make_pt_objects(chaos_impact.informed_entities(), pt_data, impact);
+
+    for (auto ptobj: make_pt_objects(chaos_impact.informed_entities(), pt_data)) {
+        link_informed_entity(std::move(ptobj), impact);
+    }
     for (const auto& chaos_message: chaos_impact.messages()) {
         const auto& channel = chaos_message.channel();
         auto channel_types = create_channel_types(channel);

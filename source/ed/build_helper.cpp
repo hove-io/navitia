@@ -360,7 +360,6 @@ DisruptionCreator builder::disrupt(nt::RTLevel lvl, const std::string& uri) {
     return DisruptionCreator(*this, uri, lvl);
 }
 
-
 Impacter& Impacter::severity(dis::Effect e,
                              std::string uri,
                              const std::string& wording,
@@ -404,7 +403,7 @@ Impacter& Impacter::severity(const std::string& uri) {
 }
 
 Impacter& Impacter::on(nt::Type_e type, const std::string& uri) {
-    impact->informed_entities.push_back(dis::make_pt_obj(type, uri, *b.data->pt_data, impact));
+    link_informed_entity(dis::make_pt_obj(type, uri, *b.data->pt_data), impact);
     return *this;
 }
 
@@ -412,9 +411,20 @@ Impacter& Impacter::on_line_section(const std::string& line_uri,
                                     const std::string& start_stop_uri,
                                     const std::string& end_stop_uri,
                                     const std::vector<std::string>& route_uris) {
-    impact->informed_entities.push_back(
-        dis::make_line_section(line_uri, start_stop_uri, end_stop_uri, route_uris, *b.data->pt_data, impact)
-    );
+
+
+    dis::LineSection line_section;
+    line_section.line = b.get<nt::Line>(line_uri);
+    line_section.start_point = b.get<nt::StopArea>(start_stop_uri);
+    line_section.end_point = b.get<nt::StopArea>(end_stop_uri);
+    for(auto& uri: route_uris) {
+        auto* route = b.get<nt::Route>(uri);
+        if(route) {
+            line_section.routes.push_back(route);
+        }
+    }
+
+    link_informed_entity(std::move(line_section), impact);
     return *this;
 }
 

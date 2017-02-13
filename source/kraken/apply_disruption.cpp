@@ -237,7 +237,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 // it's not passing by both stops and should not be impacted
                 if(bounds_st.first && bounds_st.second) {
                     // Once we know the line section is part of the vj we compute the vp for the adapted_vj
-                    LOG4CPLUS_TRACE(log, "vj "<< vj.uri << " pass by both stops, might be affected.");
+                    LOG4CPLUS_TRACE(log, "vj " << vj.uri << " pass by both stops, might be affected.");
                     nt::ValidityPattern new_vp{vj.validity_patterns[rt_level]->beginning_date};
                     for(const auto& period : impact->application_periods) {
                         // get the vp of the section
@@ -245,7 +245,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                     }
                     // If there is effective days for the adapted vp we're keeping it
                     if(!new_vp.days.none()){
-                        LOG4CPLUS_TRACE(log, "vj "<< vj.uri << " is affected, keeping it.");
+                        LOG4CPLUS_TRACE(log, "vj " << vj.uri << " is affected, keeping it.");
                         new_vp.days >>= vj.shift;
                         has_affected_vj = true;
                         vj_vp_pairs.emplace_back(&vj, new_vp, bounds_st);
@@ -516,7 +516,7 @@ void apply_impact(boost::shared_ptr<nt::disruption::Impact> impact,
     LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"), "Adding impact: " << impact->uri);
 
     add_impacts_visitor v(impact, pt_data, meta, impact->disruption->rt_level);
-    boost::for_each(impact->informed_entities, boost::apply_visitor(v));
+    boost::for_each(impact->mut_informed_entities(), boost::apply_visitor(v));
     LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("log"), impact->uri << " impact added");
 }
 
@@ -648,7 +648,7 @@ void delete_impact(boost::shared_ptr<nt::disruption::Impact> impact,
     auto log = log4cplus::Logger::getInstance("log");
     LOG4CPLUS_DEBUG(log, "Deleting impact: " << impact.get()->uri);
     delete_impacts_visitor v(impact, pt_data, meta, impact->disruption->rt_level);
-    boost::for_each(impact->informed_entities, boost::apply_visitor(v));
+    boost::for_each(impact->mut_informed_entities(), boost::apply_visitor(v));
     LOG4CPLUS_DEBUG(log, impact.get()->uri << " deleted");
 }
 
