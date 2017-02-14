@@ -312,6 +312,8 @@ stop_time = Table('stop_time', metadata,*[
     Column('stop_point_id', BIGINT(), primary_key=False, nullable=True),
     Column('shape_from_prev_id', BIGINT(), primary_key=False, nullable=True),
     Column('arrival_time', INTEGER(), primary_key=False),
+    Column('boarding_time', INTEGER(), primary_key=False, nullable=True),
+    Column('alighting_time', INTEGER(), primary_key=False, nullable=True),
     Column('departure_time', INTEGER(), primary_key=False),
     Column('local_traffic_zone', INTEGER(), primary_key=False),
     Column('odt', BOOLEAN(), primary_key=False, nullable=False),
