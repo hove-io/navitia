@@ -417,9 +417,9 @@ Impacter& Impacter::on_line_section(const std::string& line_uri,
     line_section.line = b.get<nt::Line>(line_uri);
     line_section.start_point = b.get<nt::StopArea>(start_stop_uri);
     line_section.end_point = b.get<nt::StopArea>(end_stop_uri);
-    for(auto& uri: route_uris) {
+    for (auto& uri: route_uris) {
         auto* route = b.get<nt::Route>(uri);
-        if(route) {
+        if (route) {
             line_section.routes.push_back(route);
         }
     }

@@ -55,7 +55,6 @@ get_impacted_vehicle_journeys(const LineSection& ls,
     // Loop on impacted routes of the line section
     for(const auto* route: ls.routes) {
         // Loop on each vj
-        bool has_affected_vj(false);
         route->for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
             /*
              * Pre-filtering by validity pattern, which allows us to check if the vj is impacted quickly
@@ -84,7 +83,6 @@ get_impacted_vehicle_journeys(const LineSection& ls,
                 if(!new_vp.days.none()){
                     LOG4CPLUS_TRACE(log, "vj " << vj.uri << " is affected, keeping it.");
                     new_vp.days >>= vj.shift;
-                    has_affected_vj = true;
                     vj_vp_pairs.emplace_back(&vj, new_vp, bounds_st);
                 }
             }
