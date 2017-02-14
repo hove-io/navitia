@@ -411,7 +411,8 @@ Impacter& Impacter::on_line_section(const std::string& line_uri,
                                     const std::string& start_stop_uri,
                                     const std::string& end_stop_uri,
                                     const std::vector<std::string>& route_uris) {
-
+    // Note: don't forget to set the application period before calling this method for the correct
+    // vehicle_journeys to be impacted
 
     dis::LineSection line_section;
     line_section.line = b.get<nt::Line>(line_uri);

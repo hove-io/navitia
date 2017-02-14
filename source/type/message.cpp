@@ -121,8 +121,12 @@ struct InformedEntitiesLinker: public boost::static_visitor<> {
             auto& bounds_st = std::get<2>(vj_vp_section);
 
             if (!bounds_st.first || ! bounds_st.second) { continue; }
+            if (vj->stop_time_list.size() < *bounds_st.first ||
+                         vj->stop_time_list.size() < *bounds_st.second) {
+                throw navitia::recoverable_exception("the line section bound are invalid, we skip the linesection");
+            }
             auto impacted_stoptimes = boost::make_iterator_range(vj->stop_time_list.begin() + *bounds_st.first,
-                                                                 vj->stop_time_list.begin() + *bounds_st.second);
+                                                                 vj->stop_time_list.begin() + *bounds_st.second + 1);
 
             for (const auto& st : impacted_stoptimes) {
                 auto* sp = st.stop_point;

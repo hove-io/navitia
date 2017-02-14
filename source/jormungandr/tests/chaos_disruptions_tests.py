@@ -149,36 +149,27 @@ class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
     """
     Note: it is done as a new fixture, to spawn a new kraken, in order not the get previous disruptions
     """
+
     def test_disruption_on_line_section(self):
         """
-        when calling the pt object line:A, at first we have no disruptions,
+        the test blocking a line section
 
-        then we mock a disruption sent from chaos, and we call again the pt object line:A
-        we then must have one disruption
+        we check that before we have not our disruption and we have it after sending it
+
+        TODO add more checks when all the line section features will be implemented
         """
-        response = self.query_region('lines/A')
-
-        lines = get_not_null(response, 'lines')
-        assert len(lines) == 1
-        line = lines[0]
-        #at first no disruption
-        assert 'disruptions' not in line
+        response = self.query_region('disruptions')
+        assert 'bobette_the_disruption' not in [d['disruption_id'] for d in response['disruptions']]
 
         self.send_mock("bobette_the_disruption", "A",
                        "line_section", start="stopA", end="stopB", blocking=True)
 
-        #and we call again, we must have the disruption now
-        response = self.query_region('lines/A')
-        lines = get_not_null(response, 'lines')
-        assert len(lines) == 1
-        line = lines[0]
+        response = self.query_region('disruptions')
+        # and we call again, we must have the disruption now
+        assert 'bobette_the_disruption' in [d['disruption_id'] for d in response['disruptions']]
 
-        disruptions = get_disruptions(line, response)
-
-        #at first we got only one disruption
-        print(disruptions)
-        assert len(disruptions) == 1
-        assert any(d['disruption_id'] == 'bobette_the_disruption' for d in disruptions)
+        # the disruption is linked to the trips of the line and to the stoppoints
+        # TODO line sections!
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)

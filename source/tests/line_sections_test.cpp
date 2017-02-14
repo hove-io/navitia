@@ -88,12 +88,11 @@ int main(int argc, const char* const argv[]) {
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line_1")
                               .severity(nt::disruption::Effect::NO_SERVICE)
-                              .on_line_section("line:1", "C", "D", {"route:line:1:1"})
                               .application_periods(btp("20170101T000000"_dt, "20170106T090000"_dt))
                               .publish(btp("20170101T000000"_dt, "20170110T090000"_dt))
+                              .on_line_section("line:1", "C", "E", {"route:line:1:1"})
                               .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
-
 
     mock_kraken kraken(b, "line_sections_test", argc, argv);
 

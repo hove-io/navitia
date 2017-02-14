@@ -1030,9 +1030,12 @@ def get_disruptions(obj, response):
     """
     all_disruptions = {d['id']: d for d in response['disruptions']}
 
-    if 'links' not in obj:
-        return None
-    return [all_disruptions[d['id']] for d in obj['links'] if d['type'] == 'disruption']
+    # !! uggly hack !!
+    # for vehicle journeys we do not respect the right way to represent disruption,
+    # we do not put the disruption link in a generic `links` section but in a `disruptions` sections...
+    link_section = obj.get('links', obj.get('disruptions', []))
+
+    return [all_disruptions[d['id']] for d in link_section if d['type'] == 'disruption']
 
 
 def is_valid_disruption(disruption, chaos_disrup=True):
