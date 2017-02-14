@@ -9,8 +9,8 @@ struct raptor_visitor {
     typedef std::vector<type::StopTime>::const_iterator stop_time_iterator;
     typedef boost::iterator_range<stop_time_iterator> stop_time_range;
 
-    inline bool better_or_equal(const DateTime& a, const DateTime& current_dt, const type::StopTime& st) const {
-        return a <= st.section_end(current_dt, clockwise());
+    inline bool better_or_equal(const DateTime& a, const DateTime& current_dt, const type::StopTime& st, const DateTime& shift) const {
+        return a <= (st.section_end(current_dt - shift, clockwise()) + shift);
     }
 
     inline boost::iterator_range<std::vector<dataRAPTOR::JppsFromJp::Jpp>::const_iterator>
@@ -60,8 +60,8 @@ struct raptor_reverse_visitor {
     typedef std::vector<type::StopTime>::const_reverse_iterator stop_time_iterator;
     typedef boost::iterator_range<stop_time_iterator> stop_time_range;
 
-    inline bool better_or_equal(const DateTime &a, const DateTime &current_dt, const type::StopTime& st) const {
-        return a >= st.section_end(current_dt, clockwise());
+    inline bool better_or_equal(const DateTime &a, const DateTime &current_dt, const type::StopTime& st, const DateTime& shift) const {
+        return a >= (st.section_end(current_dt - shift, clockwise()) + shift);
     }
 
     inline boost::iterator_range<std::vector<dataRAPTOR::JppsFromJp::Jpp>::const_reverse_iterator>

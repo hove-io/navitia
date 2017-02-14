@@ -530,6 +530,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
     // return the base vj corresponding to this vj, return nullptr if nothing found
     const VehicleJourney* get_corresponding_base() const;
 
+    std::vector<StopTime>::const_iterator earliest_stop_time() const;
+
     /*
      *
      *
@@ -753,19 +755,17 @@ struct StopTime {
     /// get the departure (resp arrival for anti clockwise) from the stoptime
     /// dt is the departure from the previous stoptime (resp arrival on the next one for anti clockwise)
     DateTime section_end(DateTime dt, bool clockwise) const {
-        u_int32_t hour;
         if (is_frequency()) {
-            hour = clockwise ? this->f_arrival_time(DateTimeUtils::hour(dt)) : this->f_departure_time(DateTimeUtils::hour(dt));
+            return clockwise ? this->f_arrival_time(dt) : this->f_departure_time(dt);
         } else {
-            hour = clockwise ? arrival_time : departure_time;
+            return clockwise ? alighting_time : boarding_time;
         }
-        return DateTimeUtils::shift(dt, hour, clockwise);
     }
 
     /// get the departure from the arrival if clockwise and vise versa
     DateTime begin_from_end(const DateTime dt, bool clockwise) const {
         assert (is_frequency());
-        const int32_t diff = departure_time - arrival_time;
+        const int32_t diff = boarding_time - alighting_time;
         if ((clockwise && int32_t(dt) < diff) || (!clockwise && diff < 0 && int32_t(dt) < -1 * diff)) {
             // corner case for the 1 day if the arrival in the stoptime is before midnight
             // and the arrival is after, but we consider that we don't care about it
@@ -776,15 +776,23 @@ struct StopTime {
     }
 
     DateTime departure(DateTime dt) const {
-        return DateTimeUtils::shift(dt, is_frequency() ? f_departure_time(DateTimeUtils::hour(dt), true): departure_time);
+        return is_frequency() ? f_departure_time(dt, true): boarding_time;
     }
     DateTime arrival(DateTime dt) const {
-        return DateTimeUtils::shift(dt, is_frequency() ? f_arrival_time(DateTimeUtils::hour(dt), true): arrival_time);
+        return is_frequency() ? f_arrival_time(dt, true): alighting_time;
+    }
+
+    // Return the current shift of the working datetime.
+    // We get the number of time we have 86400 seconds in dt and substract one if it's a pass midnight vj
+    DateTime current_shift_time(DateTime dt, bool clockwise) const {
+        auto base_time = (clockwise ? boarding_time : alighting_time);
+        auto nb_shift_day = (dt / DateTimeUtils::SECONDS_PER_DAY) - (base_time >= DateTimeUtils::SECONDS_PER_DAY ? 1 : 0);
+        return (dt <= base_time ? 0 : nb_shift_day * DateTimeUtils::SECONDS_PER_DAY);
     }
 
     boost::posix_time::ptime get_arrival_utc(const boost::gregorian::date& circulating_day) const {
        auto timestamp = navitia::to_posix_timestamp(boost::posix_time::ptime{circulating_day})
-                   + static_cast<uint64_t>(arrival_time);
+                   + static_cast<uint64_t>(alighting_time);
        return boost::posix_time::from_time_t(timestamp);
     }
 

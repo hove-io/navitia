@@ -120,7 +120,8 @@ static bool st_are_equals(const nt::VehicleJourney& vj1, const nt::VehicleJourne
     for (auto it1 = vj1.stop_time_list.begin(), it2 = vj2.stop_time_list.begin();
          it1 !=  vj1.stop_time_list.end() && it2 !=  vj2.stop_time_list.end();
          ++it1, ++it2) {
-        if (it1->arrival_time != it2->arrival_time || it1->departure_time != it2->departure_time) {
+        if (it1->arrival_time != it2->arrival_time || it1->departure_time != it2->departure_time ||
+            it1->alighting_time != it2->alighting_time || it1->boarding_time != it2->boarding_time) {
             return false;
         }
     }
@@ -146,14 +147,14 @@ overtake(const VJ& vj, const std::vector<const VJ*>& vjs) {
         if (st_are_equals(vj, *cur_vj)) { continue; }
 
         const bool vj_is_first =
-            vj.stop_time_list.front().departure_time < cur_vj->stop_time_list.front().departure_time;
+            vj.stop_time_list.front().boarding_time < cur_vj->stop_time_list.front().boarding_time;
         const VJ& vj1 = vj_is_first ? vj : *cur_vj;
         const VJ& vj2 = vj_is_first ? *cur_vj : vj;
         for (auto it1 = vj1.stop_time_list.begin(), it2 = vj2.stop_time_list.begin();
              it1 !=  vj1.stop_time_list.end() && it2 !=  vj2.stop_time_list.end();
              ++it1, ++it2) {
-            if (it1->arrival_time >= it2->arrival_time ||
-                it1->departure_time >= it2->departure_time) {
+            if (it1->alighting_time >= it2->alighting_time ||
+                it1->boarding_time >= it2->boarding_time) {
                 return true;
             }            
         }

@@ -157,8 +157,8 @@ StopTime StopTime::clone() const{
 }
 
 bool StopTime::is_valid_day(u_int32_t day, const bool is_arrival, const RTLevel rt_level) const {
-    if((is_arrival && arrival_time >= DateTimeUtils::SECONDS_PER_DAY)
-       || (!is_arrival && departure_time >= DateTimeUtils::SECONDS_PER_DAY)) {
+    if((is_arrival && alighting_time >= DateTimeUtils::SECONDS_PER_DAY)
+       || (!is_arrival && boarding_time >= DateTimeUtils::SECONDS_PER_DAY)) {
         if(day == 0)
             return false;
         --day;
@@ -173,12 +173,14 @@ uint32_t StopTime::f_arrival_time(const u_int32_t hour, bool clockwise) const {
         if (this == &this->vehicle_journey->stop_time_list.front())
             return hour;
         const auto& prec_st = this->vehicle_journey->stop_time_list[order() - 1];
-        return DateTimeUtils::hour_in_day(hour + this->arrival_time - prec_st.arrival_time);
+        auto arr_diff = this->arrival_time - prec_st.arrival_time;
+        return hour - prec_st.get_alighting_duration() + arr_diff + this->get_alighting_duration();
     } else {
         if (this == &this->vehicle_journey->stop_time_list.back())
             return hour;
         const auto& next_st = this->vehicle_journey->stop_time_list[order() + 1];
-        return DateTimeUtils::hour_in_day(hour - (next_st.arrival_time - this->arrival_time));
+        auto arr_diff = next_st.arrival_time - this->arrival_time;
+        return hour - next_st.get_alighting_duration() - arr_diff + this->get_alighting_duration();
     }
 }
 
@@ -189,12 +191,14 @@ uint32_t StopTime::f_departure_time(const u_int32_t hour, bool clockwise) const 
         if (this == &this->vehicle_journey->stop_time_list.front())
             return hour;
         const auto& prec_st = this->vehicle_journey->stop_time_list[order() - 1];
-        return DateTimeUtils::hour_in_day(hour + this->departure_time - prec_st.departure_time);
+        auto dep_diff = this->departure_time - prec_st.departure_time;
+        return hour + prec_st.get_boarding_duration() + dep_diff - this->get_boarding_duration();
     } else {
         if (this == &this->vehicle_journey->stop_time_list.back())
             return hour;
         const auto& next_st = this->vehicle_journey->stop_time_list[order() + 1];
-        return DateTimeUtils::hour_in_day(hour - (next_st.departure_time - this->departure_time));
+        auto dep_diff = next_st.departure_time - this->departure_time;
+        return hour + next_st.get_boarding_duration() - dep_diff - this->get_boarding_duration();
     }
 }
 
@@ -310,11 +314,11 @@ boost::posix_time::time_period VehicleJourney::execution_period(const boost::gre
     uint32_t first_departure = std::numeric_limits<uint32_t>::max();
     uint32_t last_arrival = 0;
     for (const auto& st: stop_time_list) {
-        if (st.pick_up_allowed() && first_departure > st.departure_time) {
-            first_departure = st.departure_time;
+        if (st.pick_up_allowed() && first_departure > st.boarding_time) {
+            first_departure = st.boarding_time;
         }
-        if (st.drop_off_allowed() && last_arrival < st.arrival_time) {
-            last_arrival = st.arrival_time;
+        if (st.drop_off_allowed() && last_arrival < st.alighting_time) {
+            last_arrival = st.alighting_time;
         }
     }
     return bt::time_period(bt::ptime(date, bt::seconds(first_departure)),
@@ -425,7 +429,10 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
     vj_ptr->realtime_level = level;
     vj_ptr->shift = 0;
     if (!sts.empty()) {
-        vj_ptr->shift = sts.front().arrival_time / (ndtu::SECONDS_PER_DAY);
+        const auto first_st_it = std::min_element(sts.begin(), sts.end(), [](const StopTime& st1, const StopTime& st2) {
+                return std::min(st1.boarding_time, st1.arrival_time) < std::min(st2.boarding_time, st2.arrival_time);
+        });
+        vj_ptr->shift = std::min(first_st_it->boarding_time, first_st_it->arrival_time) / (ndtu::SECONDS_PER_DAY);
     }
     ValidityPattern model_new_vp{canceled_vp};
     model_new_vp.days <<= vj_ptr->shift; // shift validity pattern
@@ -560,6 +567,12 @@ const VehicleJourney* VehicleJourney::get_corresponding_base() const {
         }
     }
     return nullptr;
+}
+
+std::vector<StopTime>::const_iterator VehicleJourney::earliest_stop_time() const {
+    return std::min_element(stop_time_list.begin(), stop_time_list.end(), [](const StopTime& st1, const StopTime& st2) {
+            return std::min(st1.boarding_time, st1.arrival_time) < std::min(st2.boarding_time, st2.arrival_time);
+    });
 }
 
 Indexes MetaVehicleJourney::get(Type_e type, const PT_Data& data) const {
