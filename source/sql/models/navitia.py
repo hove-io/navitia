@@ -49,7 +49,7 @@ tz_dst = Table('tz_dst', metadata,*[
 meta_vj = Table('meta_vj', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False),
     Column('name', TEXT(), primary_key=False, nullable=False),
-    Column('timezone', BIGINT(), primary_key=False, nullable=False),
+    Column('timezone', BIGINT(), primary_key=False, nullable=True),
     ForeignKeyConstraint(['timezone'], [u'navitia.timezone.id'], name=u'associated_timezone_metavj_fkey')
     ],
     schema='navitia')
@@ -87,6 +87,8 @@ parameters = Table('parameters', metadata,*[
     Column('shape', Geography(geometry_type='MULTIPOLYGON', srid=4326, spatial_index=False), primary_key=False),
     Column('shape_computed', BOOLEAN(), primary_key=False, default=text(u'true')),
     Column('parse_pois_from_osm', BOOLEAN(), primary_key=False, default=text(u'true')),
+    Column('poi_source', TEXT(), primary_key=False, nullable=True),
+    Column('street_network_source', TEXT(), primary_key=False, nullable=True),
     ],
     schema='navitia')
 
@@ -270,7 +272,6 @@ vehicle_journey = Table('vehicle_journey', metadata,*[
     Column('start_time', INTEGER(), primary_key=False),
     Column('end_time', INTEGER(), primary_key=False),
     Column('headway_sec', INTEGER(), primary_key=False),
-    Column('utc_to_local_offset', INTEGER(), primary_key=False),
     Column('is_frequency', BOOLEAN(), primary_key=False),
     Column('vj_class', ENUM(u'Theoric', u'Adapted', u'RealTime', name='vj_classification'), server_default=u'Theoric', default=u'Theoric', primary_key=False, nullable=False),
     Column('meta_vj_name', TEXT(), primary_key=False),
@@ -309,7 +310,7 @@ stop_time = Table('stop_time', metadata,*[
     Column('vehicle_journey_id', BIGINT(), primary_key=False, nullable=False),
     Column('order', INTEGER(), primary_key=False, nullable=True),
     Column('stop_point_id', BIGINT(), primary_key=False, nullable=True),
-    Column('shape_from_prev', Geography(geometry_type='LINESTRING', srid=4326, spatial_index=False), primary_key=False),
+    Column('shape_from_prev_id', BIGINT(), primary_key=False, nullable=True),
     Column('arrival_time', INTEGER(), primary_key=False),
     Column('departure_time', INTEGER(), primary_key=False),
     Column('local_traffic_zone', INTEGER(), primary_key=False),
@@ -322,9 +323,15 @@ stop_time = Table('stop_time', metadata,*[
     Column('headsign', TEXT(), primary_key=False, nullable=True),
     ForeignKeyConstraint(['vehicle_journey_id'], [u'navitia.vehicle_journey.id'], name=u'stop_time_vehicle_journey_id_fkey'),
     ForeignKeyConstraint(['properties_id'], [u'navitia.properties.id'], name=u'stop_time_properties_id_fkey'),
+    ForeignKeyConstraint(['shape_from_prev_id'], [u'navitia.shape.id'], name=u'fk_stop_time_shape'),
     ForeignKeyConstraint(['stop_point_id'], [u'navitia.stop_point.id'], name=u'stop_time_stop_point_id_fkey'),],
     schema='navitia')
 
+shape = Table('shape', metadata,*[
+    Column('id', BIGINT(), primary_key=True, nullable=False),
+    Column('geom', Geography(geometry_type='LINESTRING', srid=4326, spatial_index=False), primary_key=False),
+    ],
+    schema='navitia')
 
 period = Table('period', metadata,*[
     Column('id', BIGINT(), primary_key=True, nullable=False, default=text(u'nextval(\'"navitia".period_id_seq\'::regclass)')),
