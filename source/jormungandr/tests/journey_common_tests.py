@@ -767,6 +767,57 @@ class JourneyCommon(object):
         eq_(len(response['journeys'][3]['sections']), 1)
         eq_(response['journeys'][3]['sections'][0]['mode'], 'walking')
 
+    def test_call_kraken_boarding_alighting(self):
+        '''
+        test that boarding and alighting sections are present
+        '''
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&debug=true&max_duration_to_pt=0"\
+                    .format(from_sa="stopA",
+                            to_sa="stopB",
+                            datetime="20120614T223000")
+
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+
+        eq_(len(response['journeys']), 1)
+        journey = response['journeys'][0]
+
+        eq_(journey['sections'][0]['from']['id'], 'stopA')
+        eq_(journey['sections'][0]['to']['id'], 'stop_point:stopA')
+        eq_(journey['sections'][0]['type'], 'crow_fly')
+        eq_(journey['sections'][0]['duration'], 0)
+        eq_(journey['sections'][0]['departure_date_time'], '20120614T223200')
+        eq_(journey['sections'][0]['arrival_date_time'], '20120614T223200')
+
+        eq_(journey['sections'][1]['from']['id'], 'stop_point:stopA')
+        eq_(journey['sections'][1]['to']['id'], 'stop_point:stopA')
+        eq_(journey['sections'][1]['type'], 'boarding')
+        eq_(journey['sections'][1]['duration'], 1800)
+        eq_(journey['sections'][1]['departure_date_time'], '20120614T223200')
+        eq_(journey['sections'][1]['arrival_date_time'], '20120614T230200')
+
+        eq_(journey['sections'][2]['from']['id'], 'stop_point:stopA')
+        eq_(journey['sections'][2]['to']['id'], 'stop_point:stopB')
+        eq_(journey['sections'][2]['type'], 'public_transport')
+        eq_(journey['sections'][2]['duration'], 180)
+        eq_(journey['sections'][2]['departure_date_time'], '20120614T230200')
+        eq_(journey['sections'][2]['arrival_date_time'], '20120614T230500')
+
+        eq_(journey['sections'][3]['from']['id'], 'stop_point:stopB')
+        eq_(journey['sections'][3]['to']['id'], 'stop_point:stopB')
+        eq_(journey['sections'][3]['type'], 'alighting')
+        eq_(journey['sections'][3]['duration'], 1800)
+        eq_(journey['sections'][3]['departure_date_time'], '20120614T230500')
+        eq_(journey['sections'][3]['arrival_date_time'], '20120614T233500')
+
+        eq_(journey['sections'][4]['from']['id'], 'stop_point:stopB')
+        eq_(journey['sections'][4]['to']['id'], 'stopB')
+        eq_(journey['sections'][4]['type'], 'crow_fly')
+        eq_(journey['sections'][4]['duration'], 0)
+        eq_(journey['sections'][4]['departure_date_time'], '20120614T233500')
+        eq_(journey['sections'][4]['arrival_date_time'], '20120614T233500')
+
 
 @dataset({"main_routing_test": {}})
 class DirectPath(object):

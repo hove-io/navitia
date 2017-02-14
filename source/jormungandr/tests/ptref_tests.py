@@ -807,7 +807,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('stop_points/stop_point:stopB/arrivals?from_datetime=20120615T000000')
         assert 'error' not in response
         arrivals = get_not_null(response, 'arrivals')
-        eq_(len(arrivals), 1)
+        eq_(len(arrivals), 2)
         eq_(arrivals[0]['display_informations']['headsign'], "vehicle_journey 2")
 
     def test_headsign_display_info_route_schedules(self):
@@ -863,7 +863,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('trips')
 
         trips = get_not_null(response, 'trips')
-        assert len(trips) == 4
+        assert len(trips) == 5
         for t in trips:
             is_valid_trip(t)
 

@@ -154,7 +154,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         eq_(get_used_vj(response), [['vjA'], []])
 
         pt_response = self.query_region('vehicle_journeys')
-        eq_(len(pt_response['vehicle_journeys']), 4)
+        eq_(len(pt_response['vehicle_journeys']), 5)
 
         # no disruption yet
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
@@ -167,7 +167,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         # A new vj is created
         pt_response = self.query_region('vehicle_journeys')
-        eq_(len(pt_response['vehicle_journeys']), 5)
+        eq_(len(pt_response['vehicle_journeys']), 6)
 
         vj_ids = [vj['id'] for vj in pt_response['vehicle_journeys']]
         assert 'vjA:modified:0:vjA_delayed' in vj_ids
@@ -244,7 +244,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         pt_response = self.query_region('vehicle_journeys')
         # No vj cleaning for the moment, vj nb SHOULD be 5, the first vj created for the first
         # disruption is useless
-        eq_(len(pt_response['vehicle_journeys']), 6)
+        eq_(len(pt_response['vehicle_journeys']), 7)
 
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
         eq_(len(pt_response['disruptions']), 1)
@@ -288,7 +288,7 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
         eq_(get_used_vj(response), [['vjA'], []])
 
         pt_response = self.query_region('vehicle_journeys')
-        eq_(len(pt_response['vehicle_journeys']), 4)
+        eq_(len(pt_response['vehicle_journeys']), 5)
 
         # check that we have the next vj
         s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset
@@ -311,7 +311,7 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
 
         # A new vj is created
         pt_response = self.query_region('vehicle_journeys')
-        eq_(len(pt_response['vehicle_journeys']), 5)
+        eq_(len(pt_response['vehicle_journeys']), 6)
 
         vj_ids = [vj['id'] for vj in pt_response['vehicle_journeys']]
         assert 'vjA:modified:0:96231_2015-07-28_0' in vj_ids
