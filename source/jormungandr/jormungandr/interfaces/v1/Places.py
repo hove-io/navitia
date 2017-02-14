@@ -199,9 +199,10 @@ class PoiField(fields.Raw):
 
         lon, lat = get_lon_lat(obj)
         geocoding = obj.get('properties', {}).get('geocoding', {})
+        poi_types = geocoding.get('poi_types', [])
 
-        # TODO add address, poi_type, properties attributes
-        return {
+        # TODO add address, properties attributes
+        res = {
             "id": '{};{}'.format(lon, lat),
             "coord": {
                 "lon": lon,
@@ -212,6 +213,9 @@ class PoiField(fields.Raw):
             "administrative_regions":
                 create_administrative_regions_field(geocoding) or create_admin_field(geocoding),
         }
+        if isinstance(poi_types, list) and poi_types:
+            res['poi_type'] = poi_types[0]
+        return res
 
 
 class StopAreaField(fields.Raw):
