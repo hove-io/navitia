@@ -250,7 +250,7 @@ struct VehicleSection {
 
     struct StopTimeDatetime {
         StopTimeDatetime(const type::StopTime& s, const DateTime dep, const DateTime arr):
-            st(s), departure(s.departure(dep)), arrival(s.arrival(arr)) {}
+            st(s), departure(dep), arrival(arr) {}
         const type::StopTime& st;
         DateTime departure, arrival;
     };
@@ -263,13 +263,14 @@ std::vector<VehicleSection> get_vjs(const Journey::Section& section) {
     std::vector<VehicleSection> res;
     auto current_st = section.get_in_st;
     auto end_st = section.get_out_st;
-    auto current_dep = section.get_in_dt;
+    auto shift = section.get_in_dt - section.get_in_st->boarding_time;
     // for the first arrival, we want to go back into the past, hence the clockwise
 
     const auto* in_st = section.get_in_st;
+    DateTime current_dep = section.get_in_st->boarding_time;
     DateTime current_arr;
     if (! in_st->is_frequency()) {
-        current_arr = DateTimeUtils::shift(current_dep, section.get_in_st->arrival_time, false);
+        current_arr = section.get_in_st->alighting_time;
     } else {
         current_arr = in_st->begin_from_end(current_dep, true);
     }
@@ -279,9 +280,13 @@ std::vector<VehicleSection> get_vjs(const Journey::Section& section) {
         res.emplace_back(section, current_st->vehicle_journey);
 
         for (const auto& st: boost::make_iterator_range(vj->stop_time_list.begin() + order, vj->stop_time_list.end())) {
-            res.back().stop_times_and_dt.emplace_back(st, current_dep, current_arr);
-            current_dep = res.back().stop_times_and_dt.back().departure;
-            current_arr = res.back().stop_times_and_dt.back().arrival;
+            current_dep = st.departure(current_dep);
+            current_arr = st.arrival(current_arr);
+            res.back().stop_times_and_dt.emplace_back(
+                st,
+                current_dep + st.get_boarding_duration() + shift,
+                current_arr - st.get_alighting_duration() + shift
+            );
 
             if (&st == end_st) {
                 return res;
@@ -444,9 +449,10 @@ struct RaptorSolutionReader {
                         const unsigned nb_stay_in,
                         Transfers& transfers) {
         static const auto no_zone = std::numeric_limits<uint16_t>::max();
+        DateTime shift = begin_st_dt.first->current_shift_time(cur_dt, v.clockwise());
 
         for (const auto& end_st: st_range) {
-            cur_dt = end_st.section_end(cur_dt, v.clockwise());
+            cur_dt = end_st.section_end(cur_dt - shift, v.clockwise()) + shift;
 
             // trying to end
             if (! end_st.valid_end(v.clockwise())) { continue; }
@@ -727,8 +733,22 @@ Path make_path(const Journey& journey, const type::Data& data) {
 
         //we then need to create one section by service extension
         const VehicleSection* last_vj_section = nullptr;
-        for (const auto& vj_section: get_vjs(section)) {
-            if (last_vj_section) {
+        const auto& sections = get_vjs(section);
+        for (size_t i(0); i < sections.size(); i++) {
+            auto& vj_section = sections.at(i);
+            const auto& boarding_st = vj_section.stop_times_and_dt.front().st;
+            const auto& alighting_st = vj_section.stop_times_and_dt.back().st;
+            if (i == 0 && boarding_st.boarding_time != boarding_st.departure_time) {
+                // Add a boarding section if we have boarding_time != departure_time and that's the first vj
+                path.items.emplace_back(ItemType::boarding,
+                                        posix(section.get_in_dt),
+                                        posix(section.get_in_dt + boarding_st.get_boarding_duration()));
+                auto& boarding_section = path.items.back();
+                boarding_section.stop_points.push_back(boarding_st.stop_point);
+                boarding_section.stop_points.push_back(boarding_st.stop_point);
+                boarding_section.arrivals.push_back(boarding_section.arrival);
+                boarding_section.departures.push_back(boarding_section.departure);
+            } else if (last_vj_section) {
                 //add a stay in
                 path.items.emplace_back(ItemType::stay_in,
                                         posix(section.get_in_dt),
@@ -741,6 +761,7 @@ Path make_path(const Journey& journey, const type::Data& data) {
                 stay_in_section.departure = posix(last_st.departure);
                 stay_in_section.arrival = posix(vj_section.stop_times_and_dt.front().arrival);
             }
+
             //add the pt section
             path.items.emplace_back(ItemType::public_transport);
             auto& item = path.items.back();
@@ -761,6 +782,18 @@ Path make_path(const Journey& journey, const type::Data& data) {
             item.departure = posix(vj_section.stop_times_and_dt.front().departure);
             item.arrival = posix(vj_section.stop_times_and_dt.back().arrival);
             last_vj_section = &vj_section;
+
+            if (i == sections.size() - 1 && alighting_st.alighting_time != alighting_st.arrival_time) {
+                // Add an alighting section if we have alighting_time != arrival_time and it's the last vj
+                path.items.emplace_back(ItemType::alighting,
+                                        posix(section.get_out_dt - alighting_st.get_alighting_duration()),
+                                        posix(section.get_out_dt));
+                auto& alighting_section = path.items.back();
+                alighting_section.stop_points.push_back(alighting_st.stop_point);
+                alighting_section.stop_points.push_back(alighting_st.stop_point);
+                alighting_section.arrivals.push_back(alighting_section.arrival);
+                alighting_section.departures.push_back(alighting_section.departure);
+            }
         }
 
         last_section = &section;

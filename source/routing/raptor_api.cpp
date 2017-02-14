@@ -435,6 +435,8 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
                                             break;
                                         }
                 case ItemType::waiting : pb_section->set_type(pbnavitia::WAITING); break;
+                case ItemType::boarding : pb_section->set_type(pbnavitia::boarding); break;
+                case ItemType::alighting : pb_section->set_type(pbnavitia::ALIGHTING); break;
                 default : pb_section->set_transfer_type(pbnavitia::walking); break;
             }
             // For a waiting section, if the previous public transport section,

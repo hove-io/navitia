@@ -43,6 +43,8 @@ std::string PathItem::print() const {
     case ItemType::walking: ss << "walking"; break;
     case ItemType::stay_in: ss << "stay in"; break;
     case ItemType::waiting: ss << "waiting"; break;
+    case ItemType::boarding: ss << "boarding"; break;
+    case ItemType::alighting: ss << "alighting"; break;
     default: ss << "unknown"; break;
     }
     ss << " section\n";
