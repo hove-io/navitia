@@ -49,6 +49,8 @@ BOOST_AUTO_TEST_CASE(do_not_shift) {
     vj->stop_time_list.push_back(st);
     st->arrival_time = 50000;
     st->departure_time = 49000;
+    st->alighting_time = 50000;
+    st->boarding_time = 49000;
     d.shift_stop_times();
     BOOST_CHECK_EQUAL(st->arrival_time, 50000);
     BOOST_CHECK_EQUAL(st->departure_time, 49000);
@@ -65,6 +67,8 @@ BOOST_AUTO_TEST_CASE(do_not_shift_freq) {
     vj->headway_secs = 10;
     st->arrival_time = 50000;
     st->departure_time = 49000;
+    st->alighting_time = 50000;
+    st->boarding_time = 49000;
     d.shift_stop_times();
     BOOST_CHECK_EQUAL(st->arrival_time, 50000);
     BOOST_CHECK_EQUAL(st->departure_time, 49000);
@@ -83,6 +87,8 @@ BOOST_AUTO_TEST_CASE(do_not_shift_freq_end_before) {
     vj->headway_secs = 10;
     st->arrival_time = 50000;
     st->departure_time = 49000;
+    st->alighting_time = 50000;
+    st->boarding_time = 49000;
     d.shift_stop_times();
     BOOST_CHECK_EQUAL(st->arrival_time, 50000);
     BOOST_CHECK_EQUAL(st->departure_time, 49000);
@@ -101,6 +107,8 @@ BOOST_AUTO_TEST_CASE(do_not_shift_freq_end_neg) {
     vj->headway_secs = 10;
     st->arrival_time = 50000;
     st->departure_time = 49000;
+    st->alighting_time = 50000;
+    st->boarding_time = 49000;
     d.shift_stop_times();
     BOOST_CHECK_EQUAL(st->arrival_time, 50000);
     BOOST_CHECK_EQUAL(st->departure_time, 49000);
@@ -121,6 +129,8 @@ BOOST_AUTO_TEST_CASE(shift_before) {
     vj->stop_time_list.push_back(st);
     st->arrival_time = -50000;
     st->departure_time = -49000;
+    st->alighting_time = -50000;
+    st->boarding_time = -49000;
     d.shift_stop_times();
     BOOST_CHECK_EQUAL(st->arrival_time, 36400);
     BOOST_CHECK_EQUAL(st->departure_time, 37400);
@@ -145,6 +155,8 @@ BOOST_AUTO_TEST_CASE(shift_before_freq) {
     vj->headway_secs = 10;
     st->arrival_time = -50000;
     st->departure_time = -49000;
+    st->alighting_time = -50000;
+    st->boarding_time = -49000;
     d.shift_stop_times();
     BOOST_CHECK_EQUAL(st->arrival_time, 36400);
     BOOST_CHECK_EQUAL(st->departure_time, 37400);
@@ -168,6 +180,8 @@ BOOST_AUTO_TEST_CASE(shift_before_overmidnight) {
     vj->stop_time_list.push_back(st);
     st->arrival_time = -100;
     st->departure_time = 100;
+    st->alighting_time = -100;
+    st->boarding_time = 100;
     d.shift_stop_times();
     BOOST_CHECK_EQUAL(st->arrival_time, 86300);
     BOOST_CHECK_EQUAL(st->departure_time, 86500);
@@ -193,6 +207,8 @@ BOOST_AUTO_TEST_CASE(shift_before_change_beginning_date) {
         vj->stop_time_list.push_back(st);
         st->arrival_time = times.first;
         st->departure_time = times.second;
+        st->alighting_time = times.first;
+        st->boarding_time = times.second;
     }
 
     d.shift_stop_times();
@@ -238,6 +254,8 @@ BOOST_AUTO_TEST_CASE(shift_after) {
     vj->stop_time_list.push_back(st);
     st->arrival_time = 86500;
     st->departure_time = 86600;
+    st->alighting_time = 86500;
+    st->boarding_time = 86600;
     d.shift_stop_times();
     BOOST_CHECK_EQUAL(st->arrival_time, 100);
     BOOST_CHECK_EQUAL(st->departure_time, 200);
@@ -256,6 +274,8 @@ BOOST_AUTO_TEST_CASE(shift_after_freq) {
     vj->stop_time_list.push_back(st);
     st->arrival_time = 86500;
     st->departure_time = 86600;
+    st->alighting_time = 86500;
+    st->boarding_time = 86600;
     vj->start_time = 86400;
     vj->end_time = 1000;
     vj->headway_secs = 10;
