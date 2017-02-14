@@ -280,6 +280,9 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
 
     navitia::type::RTLevel realtime_level = navitia::type::RTLevel::Base;
 
+    // Get the stop time with the earliest time of the vj
+    std::vector<StopTime*>::const_iterator earliest_stop_time() const;
+
     bool operator<(const VehicleJourney& other) const;
 };
 
@@ -312,6 +315,8 @@ struct StopTime {
     size_t idx = 0;
     int arrival_time = 0; /// Number of seconds from midnight can be negative when
     int departure_time = 0; /// we shift in UTC conversion
+    int boarding_time = 0; /// Time at which the user should be to start the boarding process
+    int alighting_time = 0; /// Time at which the user will have finish the alighting process
     VehicleJourney* vehicle_journey = nullptr;
     StopPoint* stop_point = nullptr;
     std::shared_ptr<Shape> shape_from_prev;
@@ -330,7 +335,9 @@ struct StopTime {
     void shift_times(int n_days) {
         arrival_time += n_days * int(navitia::DateTimeUtils::SECONDS_PER_DAY);
         departure_time += n_days * int(navitia::DateTimeUtils::SECONDS_PER_DAY);
-        assert(arrival_time >= 0 && departure_time >= 0);
+        alighting_time += n_days * int(navitia::DateTimeUtils::SECONDS_PER_DAY);
+        boarding_time += n_days * int(navitia::DateTimeUtils::SECONDS_PER_DAY);
+        assert(arrival_time >= 0 && departure_time >= 0 && alighting_time >= 0 && boarding_time >= 0);
     }
 };
 

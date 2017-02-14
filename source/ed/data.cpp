@@ -195,8 +195,7 @@ void Data::shift_vp_left(types::ValidityPattern& vp) {
 
 void Data::shift_stop_times() {
     for (auto vj : vehicle_journeys) {
-        const auto first_st_it = std::min_element(vj->stop_time_list.begin(), vj->stop_time_list.end(),
-                [](const types::StopTime* st1, const types::StopTime* st2) { return st1->order < st2->order;});
+        const auto first_st_it = vj->earliest_stop_time();
         if (first_st_it == vj->stop_time_list.end()) {
             continue;
         }
@@ -205,9 +204,11 @@ void Data::shift_stop_times() {
         // For non-frequency vj, we must have the first stop time in
         // [0; 24:00[ (since they are ordered, every stop time will be
         // greatter than 0)
+        // Depending on boarding and alighting duration the start_time will be either the arrival_time or
+        // the boarding time.
         //
         // For frequency vj, the start time must be in [0; 24:00[.
-        const int start_time = vj->is_frequency() ? vj->start_time : first_st->arrival_time;
+        const int start_time = vj->is_frequency() ? vj->start_time : std::min(first_st->boarding_time, first_st->arrival_time);
 
         // number of days to shift for start_time in [0; 24:00[
         int shift = (start_time >= 0 ? 0 : 1) - start_time / int(navitia::DateTimeUtils::SECONDS_PER_DAY);
@@ -342,7 +343,7 @@ void Data::clean() {
         }
         // we check that no stop times are negatives
         const auto st_is_invalid = [](const types::StopTime* st) {
-            return st->departure_time < 0 || st->arrival_time < 0;
+            return st->departure_time < 0 || st->arrival_time < 0 || st->boarding_time < 0 || st->alighting_time < 0;
         };
         if (std::any_of(vj->stop_time_list.begin(), vj->stop_time_list.end(), st_is_invalid)) {
             toErase.insert(vj->uri);
@@ -713,14 +714,16 @@ void Data::build_associated_calendar() {
 void Data::finalize_frequency() {
     for(auto * vj : this->vehicle_journeys) {
         if(!vj->stop_time_list.empty() && vj->stop_time_list.front()->is_frequency) {
-            auto * first_st = vj->stop_time_list.front();
-            int begin = first_st->arrival_time;
+            auto first_st = vj->earliest_stop_time();
+            int begin = std::min((*first_st)->boarding_time, (*first_st)->arrival_time);
             if (begin == 0){
                 continue; //Time is already relative to 0
             }
             for(auto * st : vj->stop_time_list) {
                 st->arrival_time   -= begin;
                 st->departure_time -= begin;
+                st->alighting_time -= begin;
+                st->boarding_time  -= begin;
             }
         }
     }

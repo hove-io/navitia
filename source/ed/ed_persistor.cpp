@@ -922,7 +922,8 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
     std::vector<std::string> columns = {
         "id", "arrival_time", "departure_time", "local_traffic_zone", "odt",
         "pick_up_allowed", "drop_off_allowed", "is_frequency", "\"order\"", "stop_point_id",
-        "shape_from_prev_id", "vehicle_journey_id", "date_time_estimated", "headsign"};
+        "shape_from_prev_id", "vehicle_journey_id", "date_time_estimated", "headsign",
+        "boarding_time", "alighting_time"};
 
     this->lotus.prepare_bulk_insert("navitia.stop_time", columns);
     size_t inserted_count = 0;
@@ -958,6 +959,8 @@ void EdPersistor::insert_stop_times(const std::vector<types::StopTime*>& stop_ti
         }
         values.push_back(std::to_string(stop->date_time_estimated));
         values.push_back(stop->headsign);
+        values.push_back(std::to_string(stop->boarding_time));
+        values.push_back(std::to_string(stop->alighting_time));
 
         this->lotus.insert(values);
         ++inserted_count;
