@@ -147,6 +147,8 @@ void HasMessages::clean_weak_impacts() {
 
 StopTime StopTime::clone() const{
     StopTime ret{arrival_time, departure_time, stop_point};
+    ret.alighting_time = alighting_time;
+    ret.boarding_time = boarding_time;
     ret.properties = properties;
     ret.local_traffic_zone = local_traffic_zone;
     ret.vehicle_journey = nullptr;
@@ -447,11 +449,17 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
     for (nt::StopTime& st: vj_ptr->stop_time_list) {
         st.arrival_time -= ndtu::SECONDS_PER_DAY * vj_ptr->shift;
         st.departure_time -= ndtu::SECONDS_PER_DAY * vj_ptr->shift;
+        st.alighting_time -= ndtu::SECONDS_PER_DAY * vj_ptr->shift;
+        st.boarding_time -= ndtu::SECONDS_PER_DAY * vj_ptr->shift;
         // a vj cannot be longer than 24h and its start is contained in [00:00 ; 24:00[
         assert(st.arrival_time >= 0);
         assert(st.arrival_time < ndtu::SECONDS_PER_DAY * 2);
         assert(st.departure_time >= 0);
         assert(st.departure_time < ndtu::SECONDS_PER_DAY * 2);
+        assert(st.alighting_time >= 0);
+        assert(st.alighting_time < ndtu::SECONDS_PER_DAY * 2);
+        assert(st.boarding_time >= 0);
+        assert(st.boarding_time < ndtu::SECONDS_PER_DAY * 2);
     }
 
     // Desactivating the other vjs. The last creation has priority on

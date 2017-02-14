@@ -708,6 +708,10 @@ struct StopTime {
     uint32_t arrival_time = 0; ///< seconds since midnight
     uint32_t departure_time = 0; ///< seconds since midnight
 
+    /// Representing times used in Raptor, taking into account boarding and alighting process duration
+    uint32_t boarding_time = 0; ///< seconds since midnight
+    uint32_t alighting_time = 0; ///< seconds since midnight
+
     VehicleJourney* vehicle_journey = nullptr;
     StopPoint* stop_point = nullptr;
     boost::shared_ptr<LineString> shape_from_prev;
@@ -784,11 +788,15 @@ struct StopTime {
        return boost::posix_time::from_time_t(timestamp);
     }
 
+    uint32_t get_boarding_duration() const { return departure_time - boarding_time; }
+
+    uint32_t get_alighting_duration() const { return alighting_time - arrival_time; }
+
     bool is_valid_day(u_int32_t day, const bool is_arrival, const RTLevel rt_level) const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-            ar & arrival_time & departure_time & vehicle_journey & stop_point & shape_from_prev
-            & properties & local_traffic_zone;
+            ar & arrival_time & departure_time & boarding_time & alighting_time & vehicle_journey
+            & stop_point & shape_from_prev & properties & local_traffic_zone;
     }
 
 private:
