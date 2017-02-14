@@ -35,6 +35,12 @@ www.navitia.io
 
 #include "routing/raptor.h"
 #include "ed/build_helper.h"
+#include "tests/utils_test.h"
+
+struct logger_initialized {
+    logger_initialized() { init_logger(); }
+};
+BOOST_GLOBAL_FIXTURE( logger_initialized )
 
 using namespace navitia;
 using namespace routing;
@@ -644,4 +650,50 @@ BOOST_AUTO_TEST_CASE(max_transfers){
             BOOST_REQUIRE(r.nb_changes <= nb_transfers);
         }
     }
+}
+
+BOOST_AUTO_TEST_CASE(with_boarding_alighting_time_and_stay_in){
+    ed::builder b("20170101");
+    b.vj("A", "1111111", "block1").uri("vj:A1")
+        ("S1", "09:00"_t, "09:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 600)
+        ("S2", "09:05"_t, "09:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 1200, 1200)
+        ("S3", "09:10"_t, "09:10"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)
+        ("S4", "09:15"_t, "09:15"_t, std::numeric_limits<uint16_t>::max(), true, false, 600, 0);
+
+    b.vj("B", "1111111", "block1").uri("vj:B1")
+        ("S4", "09:30"_t, "09:30"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)
+        ("S5", "09:35"_t, "09:35"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 0);
+
+    b.vj("B").uri("vj:B2")
+        ("S4", "09:35"_t, "09:35"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)
+        ("S5", "09:40"_t, "09:40"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 0);
+
+    b.connection("S4", "S4", 120);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*b.data);
+
+    auto result = raptor.compute(
+        b.data->pt_data->stop_areas_map["S1"], b.data->pt_data->stop_areas_map["S5"],
+        "09:45"_t, 0, DateTimeUtils::min, type::RTLevel::Base, 2_min, false
+    );
+
+    BOOST_REQUIRE_EQUAL(result.size(), 1);
+    result.at(0).print();
+    BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 4);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, boost::posix_time::time_from_string("2017-Jan-01 08:50:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, boost::posix_time::time_from_string("2017-Jan-01 09:00:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[1].type, ItemType::public_transport);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, boost::posix_time::time_from_string("2017-Jan-01 09:00:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, boost::posix_time::time_from_string("2017-Jan-01 09:15:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[2].type, ItemType::stay_in);
+    BOOST_CHECK_EQUAL(result.at(0).items[2].departure, boost::posix_time::time_from_string("2017-Jan-01 09:15:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[2].arrival, boost::posix_time::time_from_string("2017-Jan-01 09:30:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[3].type, ItemType::public_transport);
+    BOOST_CHECK_EQUAL(result.at(0).items[3].departure, boost::posix_time::time_from_string("2017-Jan-01 09:30:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[3].arrival, boost::posix_time::time_from_string("2017-Jan-01 09:35:00"));
 }

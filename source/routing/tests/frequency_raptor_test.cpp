@@ -427,3 +427,217 @@ BOOST_AUTO_TEST_CASE(freq_vj_end_time_is_smaller_than_start_time) {
     BOOST_REQUIRE_EQUAL(res.size(), 0);
 
 }
+
+BOOST_AUTO_TEST_CASE(freq_vj_with_boarding_alighting) {
+    ed::builder b("20170101");
+    b.frequency_vj("A", "8:00"_t, "18:00"_t, "00:30"_t)
+        ("stop1", "8:02"_t, "8:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)
+        ("stop2", "8:07"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 900)
+        ("stop3", "8:12"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+
+    auto result = raptor.compute(
+        b.data->pt_data->stop_areas_map["stop1"], b.data->pt_data->stop_areas_map["stop3"],
+        "07:58"_t, 0, DateTimeUtils::inf, type::RTLevel::Base, 2_min
+    );
+
+    BOOST_REQUIRE_EQUAL(result.size(), 1);
+    result.at(0).print();
+    BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 3);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, boost::posix_time::time_from_string("2017-Jan-01 08:25:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, boost::posix_time::time_from_string("2017-Jan-01 08:30:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[1].type, ItemType::public_transport);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, boost::posix_time::time_from_string("2017-Jan-01 08:30:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, boost::posix_time::time_from_string("2017-Jan-01 08:42:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[2].type, ItemType::alighting);
+    BOOST_CHECK_EQUAL(result.at(0).items[2].departure, boost::posix_time::time_from_string("2017-Jan-01 08:42:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[2].arrival, boost::posix_time::time_from_string("2017-Jan-01 08:47:00"));
+
+    result = raptor.compute(
+        b.data->pt_data->stop_areas_map["stop1"], b.data->pt_data->stop_areas_map["stop3"],
+        "08:45"_t, 0, DateTimeUtils::min, type::RTLevel::Base, 2_min, false
+    );
+
+    BOOST_REQUIRE_EQUAL(result.size(), 1);
+    result.at(0).print();
+    BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 3);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, boost::posix_time::time_from_string("2017-Jan-01 07:55:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, boost::posix_time::time_from_string("2017-Jan-01 08:00:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[1].type, ItemType::public_transport);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, boost::posix_time::time_from_string("2017-Jan-01 08:00:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, boost::posix_time::time_from_string("2017-Jan-01 08:12:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[2].type, ItemType::alighting);
+    BOOST_CHECK_EQUAL(result.at(0).items[2].departure, boost::posix_time::time_from_string("2017-Jan-01 08:12:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[2].arrival, boost::posix_time::time_from_string("2017-Jan-01 08:17:00"));
+}
+
+BOOST_AUTO_TEST_CASE(transfer_between_freq_with_boarding_alighting) {
+    ed::builder b("20170101");
+    b.frequency_vj("A", "8:00"_t, "18:00"_t, "00:30"_t)
+        ("stop1", "8:00"_t, "8:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)
+        ("stop2", "8:05"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 900)
+        ("stop3", "8:10"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
+
+    b.frequency_vj("B", "12:15"_t, "16:15"_t, "00:45"_t)
+        ("stop3", "12:15"_t, "12:15"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)
+        ("stop4", "12:30"_t, "12:30"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)
+        ("stop5", "12:45"_t, "12:45"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
+
+    b.connection("stop3", "stop3", 120);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+
+    auto result = raptor.compute(
+        b.data->pt_data->stop_areas_map["stop1"], b.data->pt_data->stop_areas_map["stop5"],
+        "08:00"_t, 0, DateTimeUtils::inf, type::RTLevel::Base, 2_min
+    );
+
+    BOOST_REQUIRE_EQUAL(result.size(), 1);
+    result.at(0).print();
+    BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 7);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, boost::posix_time::time_from_string("2017-Jan-01 11:25:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, boost::posix_time::time_from_string("2017-Jan-01 11:30:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[1].type, ItemType::public_transport);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, boost::posix_time::time_from_string("2017-Jan-01 11:30:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, boost::posix_time::time_from_string("2017-Jan-01 11:40:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[2].type, ItemType::alighting);
+    BOOST_CHECK_EQUAL(result.at(0).items[2].departure, boost::posix_time::time_from_string("2017-Jan-01 11:40:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[2].arrival, boost::posix_time::time_from_string("2017-Jan-01 11:45:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[3].type, ItemType::waiting);
+    BOOST_CHECK_EQUAL(result.at(0).items[3].departure, boost::posix_time::time_from_string("2017-Jan-01 11:45:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[3].arrival, boost::posix_time::time_from_string("2017-Jan-01 12:10:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[4].type, ItemType::boarding);
+    BOOST_CHECK_EQUAL(result.at(0).items[4].departure, boost::posix_time::time_from_string("2017-Jan-01 12:10:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[4].arrival, boost::posix_time::time_from_string("2017-Jan-01 12:15:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[5].type, ItemType::public_transport);
+    BOOST_CHECK_EQUAL(result.at(0).items[5].departure, boost::posix_time::time_from_string("2017-Jan-01 12:15:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[5].arrival, boost::posix_time::time_from_string("2017-Jan-01 12:45:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[6].type, ItemType::alighting);
+    BOOST_CHECK_EQUAL(result.at(0).items[6].departure, boost::posix_time::time_from_string("2017-Jan-01 12:45:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[6].arrival, boost::posix_time::time_from_string("2017-Jan-01 12:50:00"));
+
+    result = raptor.compute(
+        b.data->pt_data->stop_areas_map["stop1"], b.data->pt_data->stop_areas_map["stop5"],
+        "18:00"_t, 0, DateTimeUtils::min, type::RTLevel::Base, 2_min, false
+    );
+
+    BOOST_REQUIRE_EQUAL(result.size(), 1);
+    result.at(0).print();
+    BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 7);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, boost::posix_time::time_from_string("2017-Jan-01 15:25:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, boost::posix_time::time_from_string("2017-Jan-01 15:30:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[1].type, ItemType::public_transport);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, boost::posix_time::time_from_string("2017-Jan-01 15:30:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, boost::posix_time::time_from_string("2017-Jan-01 15:40:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[2].type, ItemType::alighting);
+    BOOST_CHECK_EQUAL(result.at(0).items[2].departure, boost::posix_time::time_from_string("2017-Jan-01 15:40:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[2].arrival, boost::posix_time::time_from_string("2017-Jan-01 15:45:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[3].type, ItemType::waiting);
+    BOOST_CHECK_EQUAL(result.at(0).items[3].departure, boost::posix_time::time_from_string("2017-Jan-01 15:45:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[3].arrival, boost::posix_time::time_from_string("2017-Jan-01 15:55:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[4].type, ItemType::boarding);
+    BOOST_CHECK_EQUAL(result.at(0).items[4].departure, boost::posix_time::time_from_string("2017-Jan-01 15:55:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[4].arrival, boost::posix_time::time_from_string("2017-Jan-01 16:00:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[5].type, ItemType::public_transport);
+    BOOST_CHECK_EQUAL(result.at(0).items[5].departure, boost::posix_time::time_from_string("2017-Jan-01 16:00:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[5].arrival, boost::posix_time::time_from_string("2017-Jan-01 16:30:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[6].type, ItemType::alighting);
+    BOOST_CHECK_EQUAL(result.at(0).items[6].departure, boost::posix_time::time_from_string("2017-Jan-01 16:30:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[6].arrival, boost::posix_time::time_from_string("2017-Jan-01 16:35:00"));
+}
+
+BOOST_AUTO_TEST_CASE(transfer_pass_midnight_freq_vj_to_vj_with_boarding_time) {
+    ed::builder b("20170101");
+
+    b.frequency_vj("A", "22:00"_t, "29:00"_t, "01:00"_t, "network:1", "0000001")
+        ("stop1", "22:00"_t, "22:10"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 600)
+        ("stop2", "22:30"_t, "22:40"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 600)
+        ("stop3", "23:00"_t, "23:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 600);
+
+    b.vj("B", "1111111", "block1").uri("vj:B1")
+        ("stop4", "06:15"_t, "06:15"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)
+        ("stop5", "06:30"_t, "06:30"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 0)
+        ("stop4", "06:45"_t, "06:45"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
+
+    b.vj("B", "1111111", "block1").uri("vj:B2")
+        ("stop4", "08:15"_t, "08:15"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)
+        ("stop5", "08:30"_t, "08:30"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 0)
+        ("stop4", "08:45"_t, "08:45"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
+
+    b.connection("stop3", "stop4", "00:15"_t);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+
+    // We should take the last possible vj on A in order to get vj:B1
+    auto result = raptor.compute(
+        b.data->pt_data->stop_areas_map["stop1"], b.data->pt_data->stop_areas_map["stop5"],
+        "22:10"_t, 0, DateTimeUtils::inf, type::RTLevel::Base, 2_min
+    );
+
+    BOOST_REQUIRE_EQUAL(result.size(), 1);
+    result.at(0).print();
+    BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 6);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, boost::posix_time::time_from_string("2017-Jan-02 04:00:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, boost::posix_time::time_from_string("2017-Jan-02 04:10:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[1].type, ItemType::public_transport);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, boost::posix_time::time_from_string("2017-Jan-02 04:10:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, boost::posix_time::time_from_string("2017-Jan-02 05:00:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[2].type, ItemType::walking);
+    BOOST_CHECK_EQUAL(result.at(0).items[2].departure, boost::posix_time::time_from_string("2017-Jan-02 05:00:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[2].arrival, boost::posix_time::time_from_string("2017-Jan-02 05:15:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[3].type, ItemType::waiting);
+    BOOST_CHECK_EQUAL(result.at(0).items[3].departure, boost::posix_time::time_from_string("2017-Jan-02 05:15:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[3].arrival, boost::posix_time::time_from_string("2017-Jan-02 06:10:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[4].type, ItemType::boarding);
+    BOOST_CHECK_EQUAL(result.at(0).items[4].departure, boost::posix_time::time_from_string("2017-Jan-02 06:10:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[4].arrival, boost::posix_time::time_from_string("2017-Jan-02 06:15:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[5].type, ItemType::public_transport);
+    BOOST_CHECK_EQUAL(result.at(0).items[5].departure, boost::posix_time::time_from_string("2017-Jan-02 06:15:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[5].arrival, boost::posix_time::time_from_string("2017-Jan-02 06:30:00"));
+
+    // We should take the last vj of the frequency (at 5am) and wait two hours to get vj:B2
+    result = raptor.compute(
+        b.data->pt_data->stop_areas_map["stop1"], b.data->pt_data->stop_areas_map["stop5"],
+        "09:00"_t, 1, DateTimeUtils::min, type::RTLevel::Base, 2_min, false
+    );
+
+    BOOST_REQUIRE_EQUAL(result.size(), 1);
+    result.at(0).print();
+    BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 6);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, boost::posix_time::time_from_string("2017-Jan-02 05:00:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, boost::posix_time::time_from_string("2017-Jan-02 05:10:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[1].type, ItemType::public_transport);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, boost::posix_time::time_from_string("2017-Jan-02 05:10:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, boost::posix_time::time_from_string("2017-Jan-02 06:00:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[2].type, ItemType::walking);
+    BOOST_CHECK_EQUAL(result.at(0).items[2].departure, boost::posix_time::time_from_string("2017-Jan-02 06:00:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[2].arrival, boost::posix_time::time_from_string("2017-Jan-02 06:15:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[3].type, ItemType::waiting);
+    BOOST_CHECK_EQUAL(result.at(0).items[3].departure, boost::posix_time::time_from_string("2017-Jan-02 06:15:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[3].arrival, boost::posix_time::time_from_string("2017-Jan-02 08:10:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[4].type, ItemType::boarding);
+    BOOST_CHECK_EQUAL(result.at(0).items[4].departure, boost::posix_time::time_from_string("2017-Jan-02 08:10:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[4].arrival, boost::posix_time::time_from_string("2017-Jan-02 08:15:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[5].type, ItemType::public_transport);
+    BOOST_CHECK_EQUAL(result.at(0).items[5].departure, boost::posix_time::time_from_string("2017-Jan-02 08:15:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[5].arrival, boost::posix_time::time_from_string("2017-Jan-02 08:30:00"));
+}
