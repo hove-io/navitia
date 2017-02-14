@@ -60,9 +60,9 @@ std::vector<datetime_stop_time> get_stop_times(const routing::StopEvent stop_eve
         auto st = next_st.next_stop_time(stop_event, jpp_idx,
                                          dt, clockwise, rt_level,
                                          accessibilite_params.vehicle_properties, true);
-
         if (st.first) {
-            next_requested_dt.push({jpp_idx, st.first, st.second});
+            auto diff = clockwise ? st.first->get_boarding_duration() : -1 * st.first->get_alighting_duration();
+            next_requested_dt.push({jpp_idx, st.first, st.second + diff});
         }
     }
 
@@ -82,7 +82,8 @@ std::vector<datetime_stop_time> get_stop_times(const routing::StopEvent stop_eve
                                          next_dt, clockwise, rt_level,
                                          accessibilite_params.vehicle_properties, true);
         if (st.first) {
-            next_requested_dt.push({best_jpp_dt.jpp, st.first, st.second});
+            auto diff = clockwise ? st.first->get_boarding_duration() : -1 * st.first->get_alighting_duration();
+            next_requested_dt.push({best_jpp_dt.jpp, st.first, st.second + diff});
         }
     }
 
@@ -181,12 +182,12 @@ get_all_calendar_stop_times(const routing::JourneyPattern& jp,
             //Note: end can be lower than start, so we have to cycle through the day
             const auto freq_vj = static_cast<const type::FrequencyVehicleJourney*>(vj);
             bool is_looping = (freq_vj->start_time > freq_vj->end_time);
-            auto stop_loop = [freq_vj, is_looping](u_int32_t t) {
+            auto stop_loop = [freq_vj, is_looping, st](u_int32_t t) {
                 if (! is_looping)
-                    return t <= freq_vj->end_time;
-                return t > freq_vj->end_time;
+                    return t <= freq_vj->end_time + st.departure_time;
+                return t > freq_vj->end_time + st.departure_time;
             };
-            for (auto time = freq_vj->start_time; stop_loop(time); time += freq_vj->headway_secs) {
+            for (auto time = freq_vj->start_time + st.departure_time; stop_loop(time); time += freq_vj->headway_secs) {
                 if (is_looping && time > DateTimeUtils::SECONDS_PER_DAY) {
                     time -= DateTimeUtils::SECONDS_PER_DAY;
                 }
