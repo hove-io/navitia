@@ -258,6 +258,9 @@ create_disruption(const std::string& id,
                 type::StopTime stop_time{uint32_t(ptime_arrival.total_seconds()),
                                          uint32_t(ptime_departure.total_seconds()),
                                          stop_point_ptr};
+                // Don't take into account boarding and alighting duration, we'll get the one from the base stop_time later
+                stop_time.boarding_time = stop_time.departure_time;
+                stop_time.alighting_time = stop_time.arrival_time;
                 stop_time.set_pick_up_allowed(st.departure().has_time());
                 stop_time.set_drop_off_allowed(st.arrival().has_time());
                 std::string message;
