@@ -40,39 +40,29 @@ class TestLineSections(AbstractTestFixture):
         """query navitia with a current date in the publication period of the impacts"""
         return self.query_region('{}?_current_datetime=20170101T100000'.format(q), **kwargs)
 
-    def has_disruption(self, q, object_spec, disruption_uri, **kwargs):
-        """
-        Little helper to check if a specific object is linked to a specific disruption
-
-        object_spec is a tuple with:
-          * the name of the collection to search
-          * the uri of the object
-        """
+    def has_disruption(self, q, object_get, disruption_uri, **kwargs):
         r = self.default_query(q, **kwargs)
-        object_getter = lambda r: next((s for s in r[object_spec[0]] if s['id'] == object_spec[1]), None)
-        o = object_getter(r)
-        assert o
+        return has_disruption(r, object_get, disruption_uri)
 
-        disruptions = get_disruptions(o, r) or []
-
-        return disruption_uri in (d['disruption_uri'] for d in disruptions)
+    def has_disruption(self, object_get, disruption_uri):
+        """Little helper calling the detail of an object and checking it's disruptions"""
+        r = self.default_query('{col}/{uri}'.format(col=object_get.collection, uri=object_get.uri))
+        return has_disruption(r, object_get, disruption_uri)
 
     def test_on_stop_points(self):
         """
         the line section disruption should be linked to the impacted stop_points
         """
-        assert not self.has_disruption('stop_points/A_1', ('stop_points', 'A_1'), 'line_section_on_line_1')
-        assert not self.has_disruption('stop_points/B_1', ('stop_points', 'B_1'), 'line_section_on_line_1')
-        assert self.has_disruption('stop_points/C_1', ('stop_points', 'C_1'), 'line_section_on_line_1')
-        assert self.has_disruption('stop_points/D_1', ('stop_points', 'D_1'), 'line_section_on_line_1')
-        assert self.has_disruption('stop_points/E_1', ('stop_points', 'E_1'), 'line_section_on_line_1')
-        assert not self.has_disruption('stop_points/F_1', ('stop_points', 'F_1'), 'line_section_on_line_1')
+        assert not self.has_disruption(ObjGetter('stop_points', 'A_1'), 'line_section_on_line_1')
+        assert not self.has_disruption(ObjGetter('stop_points', 'B_1'), 'line_section_on_line_1')
+        assert self.has_disruption(ObjGetter('stop_points', 'C_1'), 'line_section_on_line_1')
+        assert self.has_disruption(ObjGetter('stop_points', 'D_1'), 'line_section_on_line_1')
+        assert self.has_disruption(ObjGetter('stop_points', 'E_1'), 'line_section_on_line_1')
+        assert not self.has_disruption(ObjGetter('stop_points', 'F_1'), 'line_section_on_line_1')
 
     def test_on_vehicle_journeys(self):
         """
         the line section disruption should be linked to the impacted vehicle journeys
         """
-        assert self.has_disruption('vehicle_journeys/', ('vehicle_journeys', 'vj:1:1'),
-                                   'line_section_on_line_1')
-        assert not self.has_disruption('vehicle_journeys/', ('vehicle_journeys', 'vj:1:2'),
-                                   'line_section_on_line_1')
+        assert self.has_disruption(ObjGetter('vehicle_journeys', 'vj:1:1'), 'line_section_on_line_1')
+        assert not self.has_disruption(ObjGetter('vehicle_journeys', 'vj:1:2'), 'line_section_on_line_1')

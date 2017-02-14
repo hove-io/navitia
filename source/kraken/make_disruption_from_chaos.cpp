@@ -161,14 +161,6 @@ make_line_section(const chaos::PtObject& chaos_section,
         line_section.routes = line_section.line->route_list;
     }
 
-    // we store the impact in the impacted objects
-//    if(impact) {
-//        line->add_impact(impact);
-//        for(auto* route: line_section.routes) {
-//            route->add_impact(impact);
-//        }
-//    }
-
     return line_section;
 }
 

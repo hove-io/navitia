@@ -1085,6 +1085,22 @@ def is_valid_disruption(disruption, chaos_disrup=True):
                 assert 'base_arrival_time' in impacted_stop and 'base_departure_time' in impacted_stop or \
                        'amended_arrival_time' in impacted_stop and 'amended_arrival_time' in impacted_stop
 
+ObjGetter = namedtuple('ObjGetter', ['collection', 'uri'])
+
+
+def has_disruption(response, object_get, disruption_uri):
+    """
+    Little helper to check if a specific object is linked to a specific disruption
+
+    object_spec is a ObjGetter
+    """
+    o = next((s for s in response[object_get.collection] if s['id'] == object_get.uri), None)
+    assert o, 'impossible to find object {}'.format(object_get)
+
+    disruptions = get_disruptions(o, response) or []
+
+    return disruption_uri in (d['disruption_uri'] for d in disruptions)
+
 
 s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset
 r_coord = "0.00188646;0.00071865"  # coordinate of R in the dataset
