@@ -84,6 +84,7 @@ int main(int argc, const char* const argv[]) {
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
+    b.build_autocomplete();
     b.data->meta->production_date = bg::date_period(bg::date(2017, 1, 1), bg::days(30));
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line_1")

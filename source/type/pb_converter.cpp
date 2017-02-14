@@ -71,8 +71,16 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
         add_pt_object(bo);
     }
     void operator()(const nt::disruption::LineSection& line_section) const {
-        //TODO: for the moment a line section is only a line, but later we might want to output more stuff
-        add_pt_object(line_section.line);
+        // a line section is displayed as a disruption on a line with additional information (like the vj)
+        auto* pobj = add_pt_object(line_section.line);
+
+        auto* impacted_line_sections = pobj->mutable_impacted_line_sections();
+
+        filler.copy(0, DumpMessage::No).fill_pb_object(line_section.start_point,
+                                                       impacted_line_sections->mutable_from());
+
+        filler.copy(0, DumpMessage::No).fill_pb_object(line_section.end_point,
+                                                       impacted_line_sections->mutable_to());
     }
     void operator()(const nt::disruption::UnknownPtObj&) const {}
     void operator()(const nt::MetaVehicleJourney* mvj) const {
