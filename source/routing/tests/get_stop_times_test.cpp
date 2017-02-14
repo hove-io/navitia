@@ -263,7 +263,7 @@ BOOST_AUTO_TEST_CASE(test_looping_frequency_for_calendar) {
     size_t headway_sec = 1000;
     b.frequency_vj("A", vj1_departure, 2001, headway_sec, "default_network", "1010", "", true, "vj1")
         (spa1, vj1_departure, vj1_departure)
-        ("useless_stop", 1000, 1000);
+        ("useless_stop", 87400, 87400);
 
     auto cal(new type::Calendar(b.data->meta->production_date.begin()));
     cal->uri="cal1";
@@ -309,7 +309,7 @@ BOOST_AUTO_TEST_CASE(test_frequency_over_midnight_for_calendar) {
     size_t headway_sec = 1000;
     b.frequency_vj("A", vj1_departure, 90001, headway_sec, "default_network", "1010", "", true, "vj1")
         (spa1, vj1_departure, vj1_departure)
-        ("useless_stop", 1000, 1000);
+        ("useless_stop", 87400, 87400);
 
     auto cal(new type::Calendar(b.data->meta->production_date.begin()));
     cal->uri="cal1";
