@@ -223,15 +223,16 @@ VJ& VJ::st_shape(const navitia::type::LineString& shape) {
     return *this;
 }
 
-VJ& VJ::operator()(const std::string &stopPoint,const std::string& arrivee, const std::string& depart,
-            uint16_t local_traffic_zone, bool drop_off_allowed, bool pick_up_allowed){
+VJ& VJ::operator()(const std::string &stopPoint,const std::string& arrivee,
+                   const std::string& depart, uint16_t local_traffic_zone, bool drop_off_allowed,
+                   bool pick_up_allowed, int alighting_duration, int boarding_duration){
     return (*this)(stopPoint, pt::duration_from_string(arrivee).total_seconds(),
             pt::duration_from_string(depart).total_seconds(), local_traffic_zone,
-            drop_off_allowed, pick_up_allowed);
+            drop_off_allowed, pick_up_allowed, alighting_duration, boarding_duration);
 }
 
 VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16_t local_trafic_zone,
-                    bool drop_off_allowed, bool pick_up_allowed){
+                    bool drop_off_allowed, bool pick_up_allowed, int alighting_duration, int boarding_duration){
     auto it = b.sps.find(sp_name);
     navitia::type::StopPoint* sp = nullptr;
     if(it == b.sps.end()){
@@ -273,6 +274,8 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16
     if(depart == -1) depart = arrivee;
     st.arrival_time = arrivee;
     st.departure_time = depart;
+    st.alighting_time = arrivee + alighting_duration;
+    st.boarding_time = depart - boarding_duration;
     st.vehicle_journey = vj;
     st.local_traffic_zone = local_trafic_zone;
     st.set_drop_off_allowed(drop_off_allowed);
@@ -730,11 +733,18 @@ void builder::finish() {
                  continue;
              }
 
-             const auto start = freq_vj->stop_time_list.front().arrival_time;
+             const auto first_st_it = freq_vj->earliest_stop_time();
+             const auto start = std::min(first_st_it->arrival_time, first_st_it->boarding_time);
+             if(freq_vj->start_time <=  freq_vj->stop_time_list.front().arrival_time && start < freq_vj->start_time) {
+                 freq_vj->end_time -= (freq_vj->start_time - start);
+                 freq_vj->start_time = start;
+             }
              for (auto& st: freq_vj->stop_time_list) {
                  st.set_is_frequency(true); //we need to tag the stop time as a frequency stop time
                  st.arrival_time -= start;
                  st.departure_time -= start;
+                 st.alighting_time -= start;
+                 st.boarding_time -= start;
              }
          }
      }

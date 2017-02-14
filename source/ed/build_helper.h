@@ -97,14 +97,18 @@ struct VJ {
                    int depart = -1,
                    uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max(),
                    bool drop_off_allowed = true,
-                   bool pick_up_allowed = true);
+                   bool pick_up_allowed = true,
+                   int alighting_duration = 0,
+                   int boarding_duration = 0);
 
     VJ& operator()(const std::string& stopPoint,
                    const std::string& arrivee,
                    const std::string& depart,
                    uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max(),
                    bool drop_off_allowed = true,
-                   bool pick_up_allowed = true);
+                   bool pick_up_allowed = true,
+                   int alighting_duration = 0,
+                   int boarding_duration = 0);
 
     VJ& block_id(const std::string& b) { _block_id = b; return *this; }
 
