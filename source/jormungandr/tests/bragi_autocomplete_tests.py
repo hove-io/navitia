@@ -30,10 +30,31 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 import mock
-from jormungandr.tests.utils_test import MockRequests, MockResponse
+from jormungandr.tests.utils_test import MockRequests, MockResponse, user_set, FakeUser
 from tests.check_utils import is_valid_global_autocomplete
 from .tests_mechanism import AbstractTestFixture, dataset
 from nose.tools import raises
+from jormungandr import app
+
+
+class FakeUserBragi(FakeUser):
+    @classmethod
+    def get_from_token(cls, token):
+        """
+        Create an empty user
+        """
+        return user_in_db_bragi[token]
+
+def geojson():
+    return '{"type": "Feature", "geometry": ' \
+           '{"type": "Point", "coordinates": [102.0, 0.5]}, "properties": {"prop0": "value0"}}'
+
+user_in_db_bragi = {
+    'test_user_no_shape': FakeUserBragi('test_user_no_shape', 1,
+                                        have_access_to_free_instances=False, is_super_user=True),
+    'test_user_with_shape': FakeUserBragi('test_user_with_shape', 2,
+                                          True, False, False, shape=geojson()),
+}
 
 
 MOCKED_INSTANCE_CONF = {
@@ -263,3 +284,60 @@ class TestBragiAutocomplete(AbstractTestFixture):
             return MockResponse({}, 200, '')
         with mock.patch('requests.get', http_get) as mock_method:
             self.query_region('places?q=bob&type[]=stop_point&type[]=address')
+
+
+@dataset({"main_routing_test": {}})
+class TestBragiShape(AbstractTestFixture):
+
+    def test_places_for_user_with_shape(self):
+        """
+        Test that with a shape on user, it is correctly posted
+        """
+        with user_set(app, FakeUserBragi, "test_user_with_shape"):
+
+            mock_post = mock.MagicMock(return_value=MockResponse({}, 200, '{}'))
+
+            def http_get(url, *args, **kwargs):
+                assert False
+
+            with mock.patch('requests.get', http_get):
+                with mock.patch('requests.post', mock_post):
+
+                    self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi')
+                    assert mock_post.called
+
+                    mock_post.reset_mock()
+                    self.query('v1/places?q=toto')
+                    assert mock_post.called
+
+            # test that the shape is posted
+            def http_post(url, *args, **kwargs):
+                json = kwargs.pop('json')
+                assert json.get('geometry')
+                return MockResponse({}, 200, '{}')
+
+            with mock.patch('requests.get', http_get):
+                with mock.patch('requests.post', http_post):
+                    self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi')
+                    self.query('v1/places?q=toto')
+
+    def test_places_for_user_without_shape(self):
+        """
+        Test that without shape for user, we use the get method
+        """
+        with user_set(app, FakeUserBragi, "test_user_no_shape"):
+
+            mock_get = mock.MagicMock(return_value=MockResponse({}, 200, '{}'))
+
+            def http_post(self, url, *args, **kwargs):
+                assert False
+
+            with mock.patch('requests.get', mock_get):
+                with mock.patch('requests.post', http_post):
+
+                    self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi')
+                    assert mock_get.called
+
+                    mock_get.reset_mock()
+                    self.query('v1/places?q=toto')
+                    assert mock_get.called
