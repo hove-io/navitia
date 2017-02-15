@@ -28,6 +28,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from contextlib import contextmanager
+from flask import appcontext_pushed, g
+
 
 class MockResponse(object):
     """
@@ -63,3 +66,47 @@ class MockRequests(object):
             url += "?{}".format(urlencode(kwargs.get('params'), doseq=True))
 
         return MockResponse(self.responses[url][0], self.responses[url][1], url)
+
+
+class FakeUser:
+    """
+    We create a user independent from a database
+    """
+    def __init__(self, name, id,
+                 have_access_to_free_instances=True, is_super_user=False, is_blocked=False, shape=None):
+        """
+        We just need a fake user, we don't really care about its identity
+        """
+        self.id = id
+        self.login = name
+        self.have_access_to_free_instances = have_access_to_free_instances
+        self.is_super_user = is_super_user
+        self.end_point_id = None
+        self._is_blocked = is_blocked
+        self.shape = shape
+
+    @classmethod
+    def get_from_token(cls, token):
+        """
+        Create an empty user
+        Must be overridden
+        """
+        assert False
+
+    def is_blocked(self, datetime_utc):
+        """
+        Return True if user is blocked else False
+        """
+        return self._is_blocked
+
+
+@contextmanager
+def user_set(app, fake_user_type, user_name):
+    """
+    set the test user doing the request
+    """
+
+    def handler(sender, **kwargs):
+        g.user = fake_user_type.get_from_token(user_name)
+    with appcontext_pushed.connected_to(handler, app):
+        yield
