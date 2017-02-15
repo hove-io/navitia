@@ -899,7 +899,7 @@ impacted_stop = {
 impacted_object = {
     'pt_object': NonNullNested(pt_object),
     'impacted_stops': NonNullList(NonNullNested(impacted_stop)),
-    'line_section': NonNullNested(impacted_line_section, attribute='impacted_line_sections') ## TODO to discuss during review, wouldn't 'impacted_section' be more consistent ?
+    'line_section': NonNullNested(impacted_line_section, attribute='impacted_line_section') ## TODO to discuss during review, wouldn't 'impacted_section' be more consistent ?
 }
 
 disruption_marshaller = {
