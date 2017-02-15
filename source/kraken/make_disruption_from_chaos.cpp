@@ -255,8 +255,9 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data,
     }
     impact->severity = make_severity(chaos_impact.severity(), holder);
 
-    for (auto ptobj: make_pt_objects(chaos_impact.informed_entities(), pt_data)) {
-        link_informed_entity(std::move(ptobj), impact, meta.production_date, nt::RTLevel::Adapted);
+    for (auto& ptobj: make_pt_objects(chaos_impact.informed_entities(), pt_data)) {
+        nt::disruption::Impact::link_informed_entity(std::move(ptobj),
+                                                     impact, meta.production_date, nt::RTLevel::Adapted);
     }
     for (const auto& chaos_message: chaos_impact.messages()) {
         const auto& channel = chaos_message.channel();

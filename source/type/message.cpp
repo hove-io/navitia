@@ -136,12 +136,11 @@ struct InformedEntitiesLinker: public boost::static_visitor<> {
                 }
             }
         }
-
     }
     void operator()(const nt::disruption::UnknownPtObj&) const {}
 };
 
-void link_informed_entity(PtObj ptobj, boost::shared_ptr<Impact>& impact,
+void Impact::link_informed_entity(PtObj ptobj, boost::shared_ptr<Impact>& impact,
                           const boost::gregorian::date_period& production_period, type::RTLevel rt_level) {
     InformedEntitiesLinker v(impact, production_period, rt_level);
     boost::apply_visitor(v, ptobj);

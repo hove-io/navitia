@@ -263,8 +263,8 @@ struct Impact {
     }
 
     // add the ptobj to the enformed entities and make all the needed backref
-    // Note: it's a friend function because we need the shared_ptr to the impact
-    friend void link_informed_entity(PtObj ptobj, boost::shared_ptr<Impact>& impact, const boost::gregorian::date_period&, type::RTLevel);
+    // Note: it's a static method because we need the shared_ptr to the impact
+    static void link_informed_entity(PtObj ptobj, boost::shared_ptr<Impact>& impact, const boost::gregorian::date_period&, type::RTLevel);
 
     bool is_valid(const boost::posix_time::ptime& current_time, const boost::posix_time::time_period& action_period) const;
 

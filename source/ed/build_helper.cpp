@@ -403,7 +403,12 @@ Impacter& Impacter::severity(const std::string& uri) {
 }
 
 Impacter& Impacter::on(nt::Type_e type, const std::string& uri) {
-    link_informed_entity(dis::make_pt_obj(type, uri, *b.data->pt_data), impact, b.data->meta->production_date, get_disruption().rt_level);
+    dis::Impact::link_informed_entity(
+                dis::make_pt_obj(type, uri, *b.data->pt_data),
+                impact,
+                b.data->meta->production_date,
+                get_disruption().rt_level
+    );
     return *this;
 }
 
@@ -425,7 +430,8 @@ Impacter& Impacter::on_line_section(const std::string& line_uri,
         }
     }
 
-    link_informed_entity(std::move(line_section), impact, b.data->meta->production_date, get_disruption().rt_level);
+    dis::Impact::link_informed_entity(std::move(line_section),
+                                      impact, b.data->meta->production_date, get_disruption().rt_level);
     return *this;
 }
 
