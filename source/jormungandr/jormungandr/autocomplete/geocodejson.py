@@ -42,6 +42,12 @@ class GeocodeJson(AbstractAutocomplete):
     (https://github.com/geocoders/geocodejson-spec/)
 
     """
+    TYPE_STOP_AREA = "public_transport:stop_area"
+    TYPE_CITY = "city"
+    TYPE_POI = "poi"
+    TYPE_HOUSE = "house"
+    TYPE_STREET = "street"
+
     def __init__(self, **kwargs):
         self.external_api = kwargs.get('host')
         self.timeout = kwargs.get('timeout', 10)
@@ -64,12 +70,15 @@ class GeocodeJson(AbstractAutocomplete):
 
                 # the geocodejson type for an "administrative_region" is "city"
                 if type == 'administrative_region':
-                    type = 'city'
-
-                types.append(type)
+                    types.append(self.TYPE_CITY)
+                elif type == 'address':
+                    types.extend([self.TYPE_STREET, self.TYPE_HOUSE])
+                elif type == 'stop_area':
+                    types.append(self.TYPE_STOP_AREA)
+                else:
+                    types.append(type)
 
             params["type[]"] = types
-
         if instance:
             params["pt_dataset"] = instance.name
 
