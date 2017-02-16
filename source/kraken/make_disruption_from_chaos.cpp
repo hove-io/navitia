@@ -65,6 +65,9 @@ make_cause(const chaos::Cause& chaos_cause, nt::disruption::DisruptionHolder& ho
     cause->wording = chaos_cause.wording();
     cause->created_at = from_posix(chaos_cause.created_at());
     cause->updated_at = from_posix(chaos_cause.updated_at());
+    if(chaos_cause.has_category()){
+        cause->category = chaos_cause.category().name();
+    }
 
     weak_cause = cause;
     return cause;

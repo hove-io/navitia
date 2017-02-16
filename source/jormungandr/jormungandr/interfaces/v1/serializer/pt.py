@@ -138,6 +138,7 @@ class DisruptionSerializer(PbNestedSerializer):
     updated_at = DateTimeField()
     tags = serpy.Serializer(many=True, display_none=False)
     cause = serpy.Field()
+    category = serpy.Field(display_none=False)
     severity = SeveritySerializer()
     messages = MessageSerializer(many=True)
     impacted_objects = ImpactedSerializer(many=True, display_none=False)

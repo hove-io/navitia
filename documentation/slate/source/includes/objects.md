@@ -346,7 +346,8 @@ Real time and disruption objects
     "impacted_objects": [
         {"...": "..."}
     ],
-    "cause": "Cause..."
+    "cause": "Cause...",
+    "category": "incident"
 }
 ```
 
@@ -362,6 +363,7 @@ Real time and disruption objects
 |updated_at          |[iso-date-time](#iso-date-time) |date_time of last modifications 
 |impacted_objects    |array of [pt_object](#pt_object) |The list of public transport objects which are affected by the disruption
 |cause               |string                   |why is there such a disruption?
+|category            |string (optional)        |The category of the disruption, such as "construction works" or "incident"
 
 ### Message
 

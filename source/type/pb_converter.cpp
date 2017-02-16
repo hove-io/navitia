@@ -958,6 +958,9 @@ void PbCreator::Filler::fill_pb_object(const nt::disruption::Impact* impact, pbn
     }
     if (impact->disruption->cause) {
         pb_impact->set_cause(impact->disruption->cause->wording);
+        if (!impact->disruption->cause->category.empty()) {
+            pb_impact->set_category(impact->disruption->cause->category);
+        }
     }
 
     for (const auto& m: impact->messages) {

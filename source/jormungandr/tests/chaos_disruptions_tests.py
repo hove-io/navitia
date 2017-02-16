@@ -41,9 +41,9 @@ class ChaosDisruptionsFixture(RabbitMQCnxFixture):
     """
     def _make_mock_item(self, disruption_name, impacted_obj, impacted_obj_type, start=None, end=None,
                               message='default_message', is_deleted=False, blocking=False,
-                         start_period="20100412T165200", end_period="20200412T165200"):
+                         start_period="20100412T165200", end_period="20200412T165200", cause='CauseTest', category=None):
         return make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end, message, is_deleted,
-                                    blocking, start_period, end_period)
+                                    blocking, start_period, end_period, cause=cause, category=category)
 
 
 MAIN_ROUTING_TEST_SETTING = {"main_routing_test": {'kraken_args': ['--BROKER.sleeptime=0',
@@ -84,6 +84,8 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         assert len(disruptions) == 1
 
         assert any(d['disruption_id'] == 'bob_the_disruption' for d in disruptions)
+        assert disruptions[0]['cause'] == 'CauseTest'
+        assert 'category' not in disruptions[0]
 
         #here we test messages in disruption: message, channel and types
         messages = get_not_null(disruptions[0], 'messages')
@@ -153,9 +155,7 @@ class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
     def test_disruption_on_line_section(self):
         """
         the test blocking a line section
-
         we check that before we have not our disruption and we have it after sending it
-
         TODO add more checks when all the line section features will be implemented
         """
         def query_on_date(q, **kwargs):
@@ -602,12 +602,16 @@ class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
                        disruption_target,
                        disruption_target_type,
                        blocking=True,
-                       message=disruption_msg)
+                       message=disruption_msg,
+                       cause='foo',
+                       category='CategoryTest')
         response = self.query_region(query)
         disruptions = response.get('disruptions')
         assert disruptions
         assert len(disruptions) == 1
         assert disruptions[0]['disruption_id'] == disruption_id
+        assert disruptions[0]['cause'] == 'foo'
+        assert disruptions[0]['category'] == 'CategoryTest'
 
         journey_query_adapted = journey_basic_query + "&data_freshness=adapted_schedule"
 
@@ -642,7 +646,8 @@ class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
 
 def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end,
                          message_text='default_message', is_deleted=False, blocking=False,
-                         start_period="20100412T165200", end_period="20200412T165200"):
+                         start_period="20100412T165200", end_period="20200412T165200",
+                         cause='CauseTest', category=None):
     feed_message = gtfs_realtime_pb2.FeedMessage()
     feed_message.header.gtfs_realtime_version = '1.0'
     feed_message.header.incrementality = gtfs_realtime_pb2.FeedHeader.DIFFERENTIAL
@@ -655,8 +660,11 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start
     disruption = feed_entity.Extensions[chaos_pb2.disruption]
 
     disruption.id = disruption_name
-    disruption.cause.id = "CauseTest"
-    disruption.cause.wording = "CauseTest"
+    disruption.cause.id = cause
+    disruption.cause.wording = cause
+    if category:
+        disruption.cause.category.id = category
+        disruption.cause.category.name = category
     disruption.reference = "DisruptionTest"
     disruption.publication_period.start = utils.str_to_time_stamp(start_period)
     disruption.publication_period.end = utils.str_to_time_stamp(end_period)
