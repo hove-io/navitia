@@ -37,12 +37,13 @@ import json
 from flask_restful import abort
 from jormungandr.exceptions import TechnicalError, InvalidArguments, ApiNotFound
 from flask import g
-from jormungandr.utils import is_url, kilometers_to_meters, get_pt_object_coord
+from jormungandr.utils import is_url, kilometers_to_meters, get_pt_object_coord, record_external_failure
 from copy import deepcopy
 from jormungandr.street_network.street_network import AbstractStreetNetworkService
 
 
 class Valhalla(AbstractStreetNetworkService):
+    sn_system_id = 'valhalla'
 
     def __init__(self, instance, service_url, timeout=10, api_key=None, **kwargs):
         self.instance = instance
@@ -65,10 +66,13 @@ class Valhalla(AbstractStreetNetworkService):
             return self.breaker.call(method, url, timeout=self.timeout, data=data, headers={'api_key': self.api_key})
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Valhalla routing service dead (error: {})'.format(e))
+            self.record_external_failure('circuit breaker open')
         except requests.Timeout as t:
             logging.getLogger(__name__).error('Valhalla routing service dead (error: {})'.format(t))
-        except:
+            self.record_external_failure('timeout')
+        except Exception as e:
             logging.getLogger(__name__).exception('Valhalla routing error')
+            self.record_external_failure(str(e))
         return None
 
     def _format_coord(self, pt_object, api='route'):

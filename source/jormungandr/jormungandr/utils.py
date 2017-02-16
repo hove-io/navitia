@@ -40,6 +40,7 @@ from importlib import import_module
 import logging
 from jormungandr.exceptions import ConfigException, UnableToParse, InvalidArguments
 from urlparse import urlparse
+from jormungandr import new_relic
 
 
 DATETIME_FORMAT = "%Y%m%dT%H%M%S"
@@ -341,3 +342,8 @@ def get_pt_object_coord(pt_object):
         logging.getLogger(__name__).error('Invalid coord for ptobject type: {}'.format(pt_object.embedded_type))
         raise UnableToParse('Invalid coord for ptobject type: {}'.format(pt_object.embedded_type))
     return coord
+
+
+def record_external_failure(message, connector_type, connector_name):
+    params = {'{}_system_id'.format(connector_type): repr(connector_name), 'message': message}
+    new_relic.record_custom_event('{}_external_failure'.format(connector_type), params)

@@ -36,6 +36,7 @@ from jormungandr.street_network.street_network import AbstractStreetNetworkServi
 
 
 class Kraken(AbstractStreetNetworkService):
+    sn_system_id = 'kraken'
 
     def __init__(self, instance, service_url, timeout=10, api_key=None, **kwargs):
         self.instance = instance
