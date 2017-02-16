@@ -149,36 +149,40 @@ class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
     """
     Note: it is done as a new fixture, to spawn a new kraken, in order not the get previous disruptions
     """
+
     def test_disruption_on_line_section(self):
         """
-        when calling the pt object line:A, at first we have no disruptions,
+        the test blocking a line section
 
-        then we mock a disruption sent from chaos, and we call again the pt object line:A
-        we then must have one disruption
+        we check that before we have not our disruption and we have it after sending it
+
+        TODO add more checks when all the line section features will be implemented
         """
-        response = self.query_region('lines/A')
+        def query_on_date(q, **kwargs):
+            """We do the query on a dt inside the disruption application period"""
+            return self.query_region('{q}?_current_datetime=20120614T120000'.format(q=q), **kwargs)
 
-        lines = get_not_null(response, 'lines')
-        assert len(lines) == 1
-        line = lines[0]
-        #at first no disruption
-        assert 'disruptions' not in line
+        def has_dis(obj_get, dis):
+            r = query_on_date('{col}/{uri}'.format(col=obj_get.collection, uri=obj_get.uri))
+            return has_disruption(r, obj_get, dis)
+
+        response = self.query_region('disruptions')
+        assert 'bobette_the_disruption' not in [d['disruption_id'] for d in response['disruptions']]
+        assert not has_dis(ObjGetter('stop_points', 'stop_point:stopA'), 'bobette_the_disruption')
+        assert not has_dis(ObjGetter('vehicle_journeys', 'vjA'), 'bobette_the_disruption')
 
         self.send_mock("bobette_the_disruption", "A",
-                       "line_section", start="stopA", end="stopB", blocking=True)
+                       "line_section", start="stopB", end="stopA",
+                       start_period="20120614T100000", end_period="20120624T170000",
+                       blocking=True)
 
-        #and we call again, we must have the disruption now
-        response = self.query_region('lines/A')
-        lines = get_not_null(response, 'lines')
-        assert len(lines) == 1
-        line = lines[0]
+        response = self.query_region('disruptions')
+        # and we call again, we must have the disruption now
+        assert 'bobette_the_disruption' in [d['disruption_id'] for d in response['disruptions']]
 
-        disruptions = get_disruptions(line, response)
-
-        #at first we got only one disruption
-        print(disruptions)
-        assert len(disruptions) == 1
-        assert any(d['disruption_id'] == 'bobette_the_disruption' for d in disruptions)
+        # the disruption is linked to the trips of the line and to the stoppoints
+        assert has_dis(ObjGetter('stop_points', 'stop_point:stopA'), 'bobette_the_disruption')
+        assert has_dis(ObjGetter('vehicle_journeys', 'vjA'), 'bobette_the_disruption')
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)

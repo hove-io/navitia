@@ -1030,9 +1030,12 @@ def get_disruptions(obj, response):
     """
     all_disruptions = {d['id']: d for d in response['disruptions']}
 
-    if 'links' not in obj:
-        return None
-    return [all_disruptions[d['id']] for d in obj['links'] if d['type'] == 'disruption']
+    # !! uggly hack !!
+    # for vehicle journeys we do not respect the right way to represent disruption,
+    # we do not put the disruption link in a generic `links` section but in a `disruptions` sections...
+    link_section = obj.get('links', obj.get('disruptions', []))
+
+    return [all_disruptions[d['id']] for d in link_section if d['type'] == 'disruption']
 
 
 def is_valid_disruption(disruption, chaos_disrup=True):
@@ -1081,6 +1084,22 @@ def is_valid_disruption(disruption, chaos_disrup=True):
                 # we need at least either the base or the departure information
                 assert 'base_arrival_time' in impacted_stop and 'base_departure_time' in impacted_stop or \
                        'amended_arrival_time' in impacted_stop and 'amended_arrival_time' in impacted_stop
+
+ObjGetter = namedtuple('ObjGetter', ['collection', 'uri'])
+
+
+def has_disruption(response, object_get, disruption_uri):
+    """
+    Little helper to check if a specific object is linked to a specific disruption
+
+    object_spec is a ObjGetter
+    """
+    o = next((s for s in response[object_get.collection] if s['id'] == object_get.uri), None)
+    assert o, 'impossible to find object {}'.format(object_get)
+
+    disruptions = get_disruptions(o, response) or []
+
+    return disruption_uri in (d['disruption_uri'] for d in disruptions)
 
 
 s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset

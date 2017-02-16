@@ -43,6 +43,7 @@ www.navitia.io
 #include <boost/serialization/set.hpp>
 #include <boost/variant.hpp>
 #include <boost/serialization/variant.hpp>
+#include <boost/range/iterator_range.hpp>
 
 #include <atomic>
 #include <map>
@@ -180,15 +181,7 @@ typedef boost::variant<
 
 PtObj make_pt_obj(Type_e type,
                   const std::string &uri,
-                  PT_Data& pt_data,
-                  const boost::shared_ptr<Impact> &impact = {});
-
-PtObj make_line_section(const std::string& line_uri,
-                        const std::string& start_stop_uri,
-                        const std::string& end_stop_uri,
-                        const std::vector<std::string>& route_uris,
-                        PT_Data& pt_data,
-                        const boost::shared_ptr<Impact>& impact = {});
+                  PT_Data& pt_data);
 
 struct Disruption;
 
@@ -246,8 +239,6 @@ struct Impact {
 
     boost::shared_ptr<Severity> severity;
 
-    std::vector<PtObj> informed_entities;
-
     std::vector<Message> messages;
 
     detail::AuxInfoForMetaVJ aux_info;
@@ -260,15 +251,29 @@ struct Impact {
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar & uri & created_at & updated_at & application_periods
-           & severity & informed_entities & messages & disruption
+           & severity & _informed_entities & messages & disruption
            & aux_info;
     }
+
+    boost::iterator_range<std::vector<PtObj>::const_iterator> informed_entities() const {
+        return boost::make_iterator_range(_informed_entities.begin(), _informed_entities.end());
+    }
+    boost::iterator_range<std::vector<PtObj>::iterator> mut_informed_entities() {
+        return boost::make_iterator_range(_informed_entities.begin(), _informed_entities.end());
+    }
+
+    // add the ptobj to the enformed entities and make all the needed backref
+    // Note: it's a static method because we need the shared_ptr to the impact
+    static void link_informed_entity(PtObj ptobj, boost::shared_ptr<Impact>& impact, const boost::gregorian::date_period&, type::RTLevel);
 
     bool is_valid(const boost::posix_time::ptime& current_time, const boost::posix_time::time_period& action_period) const;
 
     const type::ValidityPattern get_impact_vp(const boost::gregorian::date_period& production_date) const;
 
     bool operator<(const Impact& other);
+
+private:
+    std::vector<PtObj> _informed_entities;
 };
 
 struct Tag {
@@ -361,6 +366,11 @@ public:
         ar & disruptions_by_uri & causes & severities & tags & weak_impacts;
     }
 };
+
+using SectionBounds = const std::pair<boost::optional<uint16_t>, boost::optional<uint16_t>>;
+std::vector<std::tuple<const VehicleJourney*, ValidityPattern, SectionBounds>>
+get_impacted_vehicle_journeys(const LineSection&, const Impact&, const boost::gregorian::date_period&, type::RTLevel);
+
 }
 
 }}//namespace

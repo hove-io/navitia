@@ -293,7 +293,7 @@ static Indexes get_indexes_by_impacts(const Data & d, const type::Type_e& type_e
         if (imp->severity->effect != type::disruption::Effect::NO_SERVICE) {
             continue;
         }
-        for(const auto& entitie: imp->informed_entities){
+        for(const auto& entitie: imp->informed_entities()){
             auto pair_type_indexes = boost::apply_visitor(visit, entitie);
             if(type_e == pair_type_indexes.first){
                 result.insert(pair_type_indexes.second.begin(), pair_type_indexes.second.end());

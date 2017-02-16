@@ -1000,7 +1000,7 @@ void PbCreator::Filler::fill_pb_object(const nt::disruption::Impact* impact, pbn
     //we need to compute the active status
     pb_impact->set_status(compute_disruption_status(*impact, pb_creator.action_period));
 
-    for (const auto& informed_entity: impact->informed_entities) {
+    for (const auto& informed_entity: impact->informed_entities()) {
         fill_informed_entity(informed_entity, *impact, pb_impact);
     }
 }
