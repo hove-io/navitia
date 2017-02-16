@@ -71,7 +71,7 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
         add_pt_object(bo);
     }
     void operator()(const nt::disruption::LineSection& line_section) const {
-        // a line section is displayed as a disruption on a line with additional information (like the vj)
+        // a line section is displayed as a disruption on a line with additional information
         auto* pobj = add_pt_object(line_section.line);
 
         auto* impacted_section = pobj->mutable_impacted_section();
