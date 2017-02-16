@@ -130,7 +130,7 @@ class Valhalla(AbstractStreetNetworkService):
             costing_options['bicycle']['cycling_speed'] = request['bike_speed'] * 3.6
         return costing_options
 
-    def _get_response(self, json_resp, mode, pt_object_origin, pt_object_destination, datetime):
+    def _get_response(self, json_resp, mode, pt_object_origin, pt_object_destination, datetime, clockwise):
         map_mode = {
             "walking": response_pb2.Walking,
             "car": response_pb2.Car,
@@ -143,8 +143,13 @@ class Valhalla(AbstractStreetNetworkService):
         for leg in json_resp['trip']['legs']:
             journey = resp.journeys.add()
             journey.duration = leg['summary']['time']
-            journey.departure_date_time = datetime
-            journey.arrival_date_time = datetime + journey.duration
+            if clockwise:
+                journey.departure_date_time = datetime
+                journey.arrival_date_time = datetime + journey.duration
+            else:
+                journey.departure_date_time = datetime - journey.duration
+                journey.arrival_date_time = datetime
+
             journey.durations.total = journey.duration
 
             if mode == 'walking':
@@ -235,7 +240,7 @@ class Valhalla(AbstractStreetNetworkService):
             return resp
         self._check_response(r)
         resp_json = r.json()
-        return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, datetime)
+        return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, datetime, clockwise)
 
     def _get_matrix(self, json_response):
         sn_routing_matrix = response_pb2.StreetNetworkRoutingMatrix()

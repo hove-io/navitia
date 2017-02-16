@@ -381,7 +381,8 @@ def get_response_func_with_unknown_exception_test():
     response = valhalla._get_response(resp_json, 'walking',
                                       origin,
                                       destination,
-                                      str_to_time_stamp('20161010T152000'))
+                                      str_to_time_stamp('20161010T152000'),
+                                      True)
     assert response.status_code == 200
     assert response.response_type == response_pb2.ITINERARY_FOUND
     assert len(response.journeys) == 1
