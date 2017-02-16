@@ -278,12 +278,12 @@ def _get_duration(resp, place, mode, **kwargs):
 def _sn_routing_matrix(instance, origins, destinations, is_orig_center, mode, max_duration_to_pt, request, **kwargs):
     # When max_duration_to_pt is 0, there is no need to compute the fallback to pt, except if place is a stop_point or a
     # stop_area
-    center_isochron = origins[0] if is_orig_center else destinations[0]
-    places_isochron = destinations if is_orig_center else origins
+    center_isochrone = origins[0] if is_orig_center else destinations[0]
+    places_isochrone = destinations if is_orig_center else origins
     if max_duration_to_pt == 0:
         # When max_duration_to_pt is 0, we can get on the public transport ONLY if the place is a stop_point
-        if instance.georef.get_stop_points_from_uri(center_isochron.uri):
-            return {mode: {center_isochron.uri: {"duration": 0, "status": response_pb2.reached}}}
+        if instance.georef.get_stop_points_from_uri(center_isochrone.uri):
+            return {mode: {center_isochrone.uri: {"duration": 0, "status": response_pb2.reached}}}
         else:
             return {mode: {}}
     sn_routing_matrix = instance.get_street_network_routing_matrix(origins,
@@ -298,9 +298,9 @@ def _sn_routing_matrix(instance, origins, destinations, is_orig_center, mode, ma
     result = {mode: {}}
     for pos, r in enumerate(sn_routing_matrix.rows[0].routing_response):
         if r.routing_status != response_pb2.unreached:
-            duration = _get_duration(r, places_isochron[pos], mode, **kwargs)
+            duration = _get_duration(r, places_isochrone[pos], mode, **kwargs)
             if duration < max_duration_to_pt:
-                result[mode].update({places_isochron[pos].uri: {'duration': duration, 'status': r.routing_status}})
+                result[mode].update({places_isochrone[pos].uri: {'duration': duration, 'status': r.routing_status}})
     return result
 
 
