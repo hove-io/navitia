@@ -1047,12 +1047,12 @@ def is_valid_line_section_disruption(disruption):
 
     line_section_impacted = next((d for d in get_not_null(disruption, 'impacted_objects')
                                   if d['pt_object']['embedded_type'] == 'line'
-                                 and d.get('line_section')), None)
+                                 and d.get('impacted_section')), None)
 
     assert line_section_impacted
-    line_section = get_not_null(line_section_impacted, 'line_section')
-    is_valid_stop_area(get_not_null(line_section, 'from'))
-    is_valid_stop_area(get_not_null(line_section, 'to'))
+    line_section = get_not_null(line_section_impacted, 'impacted_section')
+    is_valid_pt_object(get_not_null(line_section, 'from'))
+    is_valid_pt_object(get_not_null(line_section, 'to'))
 
 def is_valid_disruption(disruption, chaos_disrup=True):
     get_not_null(disruption, 'id')

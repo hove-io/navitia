@@ -881,9 +881,9 @@ instance_traveler_types = {
 instance_status_with_parameters['traveler_profiles'] = fields.List(fields.Nested(instance_traveler_types,
                                                                                  allow_null=True))
 
-impacted_line_section = {
-    'from': NonNullNested(stop_area),
-    'to': NonNullNested(stop_area),
+impacted_section = {
+    'from': NonNullNested(pt_object),
+    'to': NonNullNested(pt_object),
 }
 
 impacted_stop = {
@@ -899,7 +899,7 @@ impacted_stop = {
 impacted_object = {
     'pt_object': NonNullNested(pt_object),
     'impacted_stops': NonNullList(NonNullNested(impacted_stop)),
-    'line_section': NonNullNested(impacted_line_section, attribute='impacted_line_section') ## TODO to discuss during review, wouldn't 'impacted_section' be more consistent ?
+    'impacted_section': NonNullNested(impacted_section)
 }
 
 disruption_marshaller = {
