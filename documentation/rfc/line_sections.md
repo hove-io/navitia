@@ -23,20 +23,26 @@ We impact a line and add some precisions on how this line is impacted
         }
         "id":"id_of_the_line",
      }, 
-     "line_section":{ // <- the integration is a bit tricky, you need to check this field to know the impact is on a line section
+     "impacted_section":{ // <- the integration is a bit tricky, you need to check this field to know the impact is on a line section
         "from": {
-            // a stop area
+            // a pt object
+            "embedded_type":"stop_area",
+            "stop_area":{
+            }
         },
         "to": {
-            // a stop area
+            // a pt object
+            "embedded_type":"stop_area",
+            "stop_area":{
+            }
         },
-        // routes ?
+        // no routes for the moment
       },
   }]
 }
 ```
 
-The downside is that the integration is harder, the user needs to check wheter or not a field `impacted_line_sections` is present to treat the impacted line differently, 
+The downside is that the integration is harder, the user needs to check wheter or not a field `impacted_section` is present to treat the impacted line differently, 
 but:
 * it's like what we have for the delays on trips
 * we find that it's quite clear
