@@ -75,6 +75,10 @@ void fill_disruption_from_database(const std::string& connection_string,
                "     c.is_visible as cause_visible,"
                "     extract(epoch from c.created_at  AT TIME ZONE 'UTC') :: bigint as cause_created_at,"
                "     extract(epoch from c.updated_at  AT TIME ZONE 'UTC') :: bigint as cause_updated_at,"
+               // Category fields
+               "     cat.name as category_name, cat.id as category_id,"
+               "     extract(epoch from c.created_at  AT TIME ZONE 'UTC') :: bigint as category_created_at,"
+               "     extract(epoch from c.updated_at  AT TIME ZONE 'UTC') :: bigint as category_updated_at,"
                // Tag fields
                "     t.id as tag_id, t.name as tag_name, t.is_visible as tag_is_visible,"
                "     extract(epoch from t.created_at  AT TIME ZONE 'UTC') :: bigint as tag_created_at,"
@@ -124,6 +128,7 @@ void fill_disruption_from_database(const std::string& connection_string,
                "     FROM disruption AS d"
                "     JOIN contributor AS co ON d.contributor_id = co.id"
                "     JOIN cause AS c ON (c.id = d.cause_id)"
+               "     LEFT JOIN category AS cat ON cat.id=c.category_id"
                "     LEFT JOIN associate_disruption_tag ON associate_disruption_tag.disruption_id = d.id"
                "     LEFT JOIN tag AS t ON associate_disruption_tag.tag_id = t.id"
                "     JOIN impact AS i ON i.disruption_id = d.id"
@@ -158,7 +163,7 @@ void fill_disruption_from_database(const std::string& connection_string,
 
         offset += result.size();
         LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("sql"), request);
-    }while(result.size() > 0);    
+    }while(result.size() > 0);
     LOG4CPLUS_INFO(log4cplus::Logger::getInstance("Logger"),"Loading " << offset << " disruptions");
     reader.finalize();
     LOG4CPLUS_INFO(log4cplus::Logger::getInstance("Logger"),offset << " disruptions loaded");

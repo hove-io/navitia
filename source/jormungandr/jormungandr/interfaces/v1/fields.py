@@ -906,6 +906,7 @@ disruption_marshaller = {
     "updated_at": DateTime(),
     "tags": NonNullList(fields.String()),
     "cause": fields.String(),
+    "category": NonNullString(),
     "severity": NonNullNested(disruption_severity),
     "messages": NonNullList(NonNullNested(disruption_message)),
     "impacted_objects": NonNullList(NonNullNested(impacted_object)),

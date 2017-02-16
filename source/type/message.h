@@ -128,12 +128,13 @@ inline std::string to_string(ChannelType ct) {
 struct Cause {
     std::string uri;
     std::string wording;
+    std::string category;
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & uri & wording & created_at & updated_at;
+        ar & uri & wording & created_at & updated_at & category;
     }
 };
 
