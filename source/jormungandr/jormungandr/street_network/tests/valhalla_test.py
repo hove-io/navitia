@@ -28,46 +28,16 @@
 # www.navitia.io
 import pytest
 from jormungandr.street_network.valhalla import Valhalla
-from jormungandr.exceptions import UnableToParse, InvalidArguments, TechnicalError, ApiNotFound
+from jormungandr.exceptions import InvalidArguments, TechnicalError, ApiNotFound
 from navitiacommon import type_pb2, response_pb2
 import pybreaker
 from mock import MagicMock
-import requests as requests
+from streetnetwork_test_utils import get_pt_object
 from jormungandr.utils import str_to_time_stamp
 import requests_mock
 import json
 
 MOCKED_REQUEST = {'walking_speed': 1, 'bike_speed': 2}
-
-def get_pt_object(embedded_type, lon, lat):
-    pt_object = type_pb2.PtObject()
-    pt_object.embedded_type = embedded_type
-    if embedded_type == type_pb2.STOP_POINT:
-        pt_object.stop_point.coord.lat = lat
-        pt_object.stop_point.coord.lon = lon
-    elif embedded_type == type_pb2.STOP_AREA:
-        pt_object.stop_area.coord.lat = lat
-        pt_object.stop_area.coord.lon = lon
-    elif embedded_type == type_pb2.ADDRESS:
-        pt_object.address.coord.lat = lat
-        pt_object.address.coord.lon = lon
-    elif embedded_type == type_pb2.ADMINISTRATIVE_REGION:
-        pt_object.administrative_region.coord.lat = lat
-        pt_object.administrative_region.coord.lon = lon
-    elif embedded_type == type_pb2.POI:
-        pt_object.poi.coord.lat = lat
-        pt_object.poi.coord.lon = lon
-    return pt_object
-
-
-def decode_func_test():
-    valhalla = Valhalla(instance=None,
-                        service_url='http://bob.com')
-    assert valhalla._decode('qyss{Aco|sCF?kBkHeJw[') == [[2.439938, 48.572841],
-                                                         [2.439938, 48.572837],
-                                                         [2.440088, 48.572891],
-                                                         [2.440548, 48.57307]]
-
 
 def response_valid():
     return {
