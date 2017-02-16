@@ -54,7 +54,6 @@ struct VJ {
     builder& b;
     const std::string network_name;
     const std::string line_name;
-    const std::string validity_pattern;
     std::string _block_id;
     std::string _route_name;
     const bool is_frequency;
@@ -67,6 +66,7 @@ struct VJ {
     const uint32_t headway_secs;
     std::vector<nt::StopTime> stop_times;
     nt::VehicleJourney* vj = nullptr;
+    nt::ValidityPattern _vp;
 
     /// Construit un nouveau vehicle journey
     VJ(builder& b,
@@ -114,6 +114,7 @@ struct VJ {
     VJ& st_shape(const navitia::type::LineString& shape);
 
     VJ& uri(const std::string& u) { _uri = u; return *this; }
+    VJ& valid_all_days() { _vp.days.set(); return *this; }
 
     // create the vj
     nt::VehicleJourney* make();

@@ -900,14 +900,14 @@ void PbCreator::Filler::fill_informed_entity(const nt::disruption::PtObj& ptobj,
 
 static pbnavitia::ActiveStatus
 compute_disruption_status(const nt::disruption::Impact& impact,
-                          const pt::time_period& action_period) {
+                          const pt::ptime& now) {
 
     bool is_future = false;
     for(const auto& period: impact.application_periods){
-        if(period.intersects(action_period)){
+        if(period.contains(now)){
             return pbnavitia::active;
         }
-        if(!period.is_null() && period.begin() >= action_period.end()){
+        if(!period.is_null() && period.begin() >= now){
             is_future = true;
         }
     }
@@ -1001,7 +1001,7 @@ void PbCreator::Filler::fill_pb_object(const nt::disruption::Impact* impact, pbn
     }
 
     //we need to compute the active status
-    pb_impact->set_status(compute_disruption_status(*impact, pb_creator.action_period));
+    pb_impact->set_status(compute_disruption_status(*impact, pb_creator.now));
 
     for (const auto& informed_entity: impact->informed_entities()) {
         fill_informed_entity(informed_entity, *impact, pb_impact);
