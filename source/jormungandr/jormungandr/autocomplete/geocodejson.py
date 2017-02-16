@@ -42,6 +42,7 @@ class GeocodeJson(AbstractAutocomplete):
     (https://github.com/geocoders/geocodejson-spec/)
 
     """
+    # the geocodejson types
     TYPE_STOP_AREA = "public_transport:stop_area"
     TYPE_CITY = "city"
     TYPE_POI = "poi"
@@ -63,22 +64,21 @@ class GeocodeJson(AbstractAutocomplete):
 
         if request.get("type[]"):
             types = []
+            map_type = {
+                "administrative_region": [self.TYPE_CITY],
+                "address": [self.TYPE_STREET, self.TYPE_HOUSE],
+                "stop_area": [self.TYPE_STOP_AREA],
+                "poi": [self.TYPE_POI]
+            }
             for type in request.get("type[]"):
                 if type == 'stop_point':
                     logging.getLogger(__name__).debug('stop_point is not handled by bragi')
                     continue
 
-                # the geocodejson type for an "administrative_region" is "city"
-                if type == 'administrative_region':
-                    types.append(self.TYPE_CITY)
-                elif type == 'address':
-                    types.extend([self.TYPE_STREET, self.TYPE_HOUSE])
-                elif type == 'stop_area':
-                    types.append(self.TYPE_STOP_AREA)
-                else:
-                    types.append(type)
+                types.extend(map_type[type])
 
             params["type[]"] = types
+
         if instance:
             params["pt_dataset"] = instance.name
 
