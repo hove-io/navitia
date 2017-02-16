@@ -64,6 +64,8 @@ namespace navitia { namespace kraken{
             boost::optional<std::string> log_level() const;
             boost::optional<std::string> log_format() const;
 
+            int broker_keepalive_timeout() const;
+
             std::vector<std::string> rt_topics() const;
     };
 

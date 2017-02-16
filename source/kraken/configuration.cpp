@@ -81,6 +81,8 @@ po::options_description get_options_description(const boost::optional<std::strin
         ("BROKER.rt_topics", po::value<std::vector<std::string>>(), "list of realtime topic for this instance")
         ("BROKER.timeout", po::value<int>()->default_value(100), "timeout for maintenance worker in millisecond")
         ("BROKER.sleeptime", po::value<int>()->default_value(1), "sleeptime for maintenance worker in second")
+        ("BROKER.keepalive_timeout", po::value<int>()->default_value(10), "timeout of the rabbitmq connection "
+            "in minutes. After this time without receiving message we open a new connection")
 
         ("CHAOS.database", po::value<std::string>(), "Chaos database connection string");
 
@@ -178,6 +180,10 @@ int Configuration::broker_timeout() const {
 
 int Configuration::broker_sleeptime() const {
     return vm["BROKER.sleeptime"].as<int>();
+}
+
+int Configuration::broker_keepalive_timeout() const {
+    return vm["BROKER.keepalive_timeout"].as<int>();
 }
 
 std::vector<std::string> Configuration::rt_topics() const{

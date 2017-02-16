@@ -50,6 +50,7 @@ class MaintenanceWorker{
         //nom de la queue créer pour ce worker
         std::string queue_name_task;
         std::string queue_name_rt;
+        boost::posix_time::ptime last_message_received_at;
 
         boost::posix_time::ptime next_try_realtime_loading;
 

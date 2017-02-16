@@ -257,6 +257,14 @@ void MaintenanceWorker::listen_rabbitmq(){
 
         auto task_envelopes = consume_in_batch(task_tag, 1, timeout_ms, no_ack);
         handle_task_in_batch(task_envelopes);
+        if(rt_envelopes.size() + task_envelopes.size() > 0){
+            this->last_message_received_at = boost::posix_time::second_clock::universal_time();
+        }else if(boost::posix_time::second_clock::universal_time()
+                > (this->last_message_received_at + boost::posix_time::minutes(conf.broker_keepalive_timeout()))){
+            throw std::runtime_error(
+                    (boost::format("no messages for more than %s minutes, we force a new connection")
+                        % conf.broker_keepalive_timeout()).str());
+        }
 
         // Since consume_in_batch is non blocking, we don't want that the worker loops for nothing, when the
         // queue is empty.
@@ -307,6 +315,7 @@ void MaintenanceWorker::init_rabbitmq(){
         }
         is_initialized = true;
     }
+    this->last_message_received_at = boost::posix_time::second_clock::universal_time();
     LOG4CPLUS_DEBUG(logger, "connected to rabbitmq");
 }
 

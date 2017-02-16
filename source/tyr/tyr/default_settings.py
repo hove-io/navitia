@@ -129,7 +129,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'heartbeat-kraken': {
         'task': 'tyr.tasks.heartbeat',
-        'schedule': timedelta(minutes=30),
+        'schedule': timedelta(minutes=5),
         'options': {'expires': 50}
     },
 }
