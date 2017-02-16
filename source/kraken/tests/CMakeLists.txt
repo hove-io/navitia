@@ -29,3 +29,7 @@ target_link_libraries(direct_path_test workers make_disruption_from_chaos apply_
   ed data types routing fare pb_lib thermometer georef
   autocomplete utils  ${BOOST_LIBS} log4cplus pthread protobuf)
 ADD_BOOST_TEST(direct_path_test)
+
+add_executable(disruption_periods_test disruption_periods_test.cpp)
+target_link_libraries(disruption_periods_test workers data ed types pb_lib utils log4cplus tcmalloc ${Boost_LIBRARIES} ${Boost_DATE_TIME_LIBRARY} protobuf)
+ADD_BOOST_TEST(disruption_periods_test)
