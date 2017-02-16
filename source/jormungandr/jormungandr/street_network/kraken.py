@@ -71,6 +71,15 @@ class Kraken(AbstractStreetNetworkService):
         }
         req = request_pb2.Request()
         req.requested_api = type_pb2.street_network_routing_matrix
+
+        #kraken can only manage 1-n request, so we reverse request if needed
+        if len(origins) > 1:
+            if len(destinations) > 1:
+                logging.getLogger(__name__).error('routing matrix error, no unique center point')
+                raise TechnicalError('routing matrix error, no unique center point')
+            else:
+                origins, destinations = destinations, origins
+
         for o in origins:
             orig = req.sn_routing_matrix.origins.add()
             orig.place = get_uri_pt_object(o)

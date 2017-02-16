@@ -38,7 +38,7 @@ from navitiacommon import response_pb2, type_pb2
 from builtins import range, zip
 from importlib import import_module
 import logging
-from jormungandr.exceptions import ConfigException
+from jormungandr.exceptions import ConfigException, UnableToParse, InvalidArguments
 from urlparse import urlparse
 
 
@@ -321,6 +321,10 @@ def get_pt_object_coord(pt_object):
     >>> coord.lat
     41.41
     """
+    if not isinstance(pt_object, type_pb2.PtObject):
+        logging.getLogger(__name__).error('Invalid pt_object')
+        raise InvalidArguments('Invalid pt_object')
+
     map_coord = {
         type_pb2.STOP_POINT: "stop_point",
         type_pb2.STOP_AREA: "stop_area",
@@ -331,4 +335,9 @@ def get_pt_object_coord(pt_object):
     attr = getattr(pt_object,
                    map_coord.get(pt_object.embedded_type, ""),
                    None)
-    return getattr(attr, "coord", None)
+    coord = getattr(attr, "coord", None)
+
+    if not coord:
+        logging.getLogger(__name__).error('Invalid coord for ptobject type: {}'.format(pt_object.embedded_type))
+        raise UnableToParse('Invalid coord for ptobject type: {}'.format(pt_object.embedded_type))
+    return coord

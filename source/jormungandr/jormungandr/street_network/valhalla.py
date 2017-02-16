@@ -35,7 +35,7 @@ import requests as requests
 from jormungandr import app
 import json
 from flask_restful import abort
-from jormungandr.exceptions import UnableToParse, TechnicalError, InvalidArguments, ApiNotFound
+from jormungandr.exceptions import TechnicalError, InvalidArguments, ApiNotFound
 from flask import g
 from jormungandr.utils import is_url, kilometers_to_meters, get_pt_object_coord
 from copy import deepcopy
@@ -71,22 +71,12 @@ class Valhalla(AbstractStreetNetworkService):
             logging.getLogger(__name__).exception('Valhalla routing error')
         return None
 
-    def _get_coord(self, pt_object):
-        if not isinstance(pt_object, type_pb2.PtObject):
-            logging.getLogger(__name__).error('Invalid pt_object')
-            raise InvalidArguments('Invalid pt_object')
-        coord = get_pt_object_coord(pt_object)
-        if not coord:
-            logging.getLogger(__name__).error('Invalid coord for ptobject type: {}'.format(pt_object.embedded_type))
-            raise UnableToParse('Invalid coord for ptobject type: {}'.format(pt_object.embedded_type))
-        return coord
-
     def _format_coord(self, pt_object, api='route'):
         if api not in ['route', 'one_to_many']:
             logging.getLogger(__name__).error('Valhalla routing service , invalid api {}'.format(api))
             raise ApiNotFound('Valhalla routing service , invalid api {}'.format(api))
 
-        coord = self._get_coord(pt_object)
+        coord = get_pt_object_coord(pt_object)
         dict_coord = {"lat": coord.lat, "lon": coord.lon}
         if api == 'route':
             dict_coord["type"] = "break"
@@ -220,7 +210,7 @@ class Valhalla(AbstractStreetNetworkService):
                 args[key] = value
         return json.dumps(args)
 
-    def check_response(self, response):
+    def _check_response(self, response):
         if response == None:
             raise TechnicalError('impossible to access valhalla service')
         if response.status_code != 200:
@@ -239,7 +229,7 @@ class Valhalla(AbstractStreetNetworkService):
             resp.status_code = 200
             resp.response_type = response_pb2.NO_SOLUTION
             return resp
-        self.check_response(r)
+        self._check_response(r)
         resp_json = r.json()
         return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, datetime)
 
@@ -258,8 +248,17 @@ class Valhalla(AbstractStreetNetworkService):
         return sn_routing_matrix
 
     def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration, request, **kwargs):
+
+        #for now valhalla only manages 1-n request, so we reverse request if needed
+        if len(origins) > 1:
+            if len(destinations) > 1:
+                logging.getLogger(__name__).error('routing matrix error, no unique center point')
+                raise TechnicalError('routing matrix error, no unique center point')
+            else:
+                origins, destinations = destinations, origins
+
         data = self._make_data(mode, origins[0], destinations, request, api='one_to_many')
         r = self._call_valhalla('{}/{}'.format(self.service_url, 'one_to_many'), requests.post, data)
-        self.check_response(r)
+        self._check_response(r)
         resp_json = r.json()
         return self._get_matrix(resp_json)
