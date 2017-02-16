@@ -72,7 +72,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         kwargs = {
             'params': {
                 u'q': u'bob',
-                u'type[]': [u'stop_area', u'address', u'poi', u'city'],
+                u'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
                 u'limit': 10,
                 u'pt_dataset': 'main_autocomplete_test',
             },
@@ -159,7 +159,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         kwargs = {
             'params': {
                 u'q': u'bob',
-                u'type[]': [u'stop_area', u'address', u'poi', u'city'],
+                u'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
                 u'limit': 10,
                 u'pt_dataset': 'main_autocomplete_test',
             },
@@ -241,7 +241,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         def http_get(url, *args, **kwargs):
             params = kwargs.pop('params')
             assert params
-            assert params.get('type[]') == ['stop_area', 'address', 'poi', 'city']
+            assert params.get('type[]') == ['public_transport:stop_area', 'street', 'house', 'poi', 'city']
             return MockResponse({}, 200, '')
         with mock.patch('requests.get', http_get) as mock_method:
             self.query_region('places?q=bob')
@@ -254,7 +254,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         def http_get(url, *args, **kwargs):
             params = kwargs.pop('params')
             assert params
-            assert params.get('type[]') == ['city', 'address']
+            assert params.get('type[]') == ['city', 'street', 'house']
 
             return MockResponse({}, 200, '')
         with mock.patch('requests.get', http_get) as mock_method:
@@ -279,7 +279,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         def http_get(url, *args, **kwargs):
             params = kwargs.pop('params')
             assert params
-            assert params.get('type[]') == ['address']
+            assert params.get('type[]') == ['street', 'house']
 
             return MockResponse({}, 200, '')
         with mock.patch('requests.get', http_get) as mock_method:
