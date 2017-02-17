@@ -42,11 +42,12 @@ from jormungandr.utils import get_pt_object_coord, is_url, record_external_failu
 class Geovelo(AbstractStreetNetworkService):
     sn_system_id = 'geovelo'
 
-    def __init__(self, instance, service_url, timeout=10, **kwargs):
+    def __init__(self, instance, service_url, timeout=10, api_key=None, **kwargs):
         self.instance = instance
         if not is_url(service_url):
             raise ValueError('service_url is invalid, you give {}'.format(service_url))
         self.service_url = service_url
+        self.api_key = api_key
         self.timeout = timeout
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_GEOVELO_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_GEOVELO_TIMEOUT_S'])
@@ -68,7 +69,7 @@ class Geovelo(AbstractStreetNetworkService):
     def _call_geovelo(self, url, method=requests.post, data=None):
         logging.getLogger(__name__).debug('Geovelo routing service , call url : {}'.format(url))
         try:
-            return self.breaker.call(method, url, timeout=self.timeout, data=data, headers={'content-type': 'application/json'})
+            return self.breaker.call(method, url, timeout=self.timeout, data=data, headers={'content-type': 'application/json', 'Api-Key': self.api_key})
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Geovelo routing service dead (error: {})'.format(e))
             self.record_external_failure('circuit breaker open')
@@ -111,7 +112,8 @@ class Geovelo(AbstractStreetNetworkService):
             raise InvalidArguments('Geovelo, mode {} not implemented'.format(street_network_mode))
 
         data = self._make_data(origins, destinations)
-        r = self._call_geovelo(self.service_url, requests.post, json.dumps(data))
+        r = self._call_geovelo('{}/{}'.format(self.service_url, 'api/v2/routes_m2m'),
+                               requests.post, json.dumps(data))
         self._check_response(r)
         resp_json = r.json()
         return self._get_matrix(resp_json)
@@ -181,7 +183,8 @@ class Geovelo(AbstractStreetNetworkService):
         data['starts'] = [self._pt_object_summary(pt_object_origin)]
         data['ends'] = [self._pt_object_summary(pt_object_destination)]
 
-        r = self._call_geovelo(self.service_url, requests.post, json.dumps(data))
+        r = self._call_geovelo('{}/{}'.format(self.service_url, 'api/v2/routes_m2m'),
+                               requests.post, json.dumps(data))
         self._check_response(r)
         resp_json = r.json()
         return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, datetime, clockwise)
