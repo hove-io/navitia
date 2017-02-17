@@ -881,6 +881,11 @@ instance_traveler_types = {
 instance_status_with_parameters['traveler_profiles'] = fields.List(fields.Nested(instance_traveler_types,
                                                                                  allow_null=True))
 
+impacted_section = {
+    'from': NonNullNested(pt_object),
+    'to': NonNullNested(pt_object),
+}
+
 impacted_stop = {
     "stop_point": NonNullNested(stop_point),
     "base_arrival_time": SplitDateTime(date=None, time='base_stop_time.arrival_time'),
@@ -893,7 +898,8 @@ impacted_stop = {
 
 impacted_object = {
     'pt_object': NonNullNested(pt_object),
-    'impacted_stops': NonNullList(NonNullNested(impacted_stop))
+    'impacted_stops': NonNullList(NonNullNested(impacted_stop)),
+    'impacted_section': NonNullNested(impacted_section)
 }
 
 disruption_marshaller = {

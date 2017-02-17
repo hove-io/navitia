@@ -49,6 +49,12 @@ class TestLineSections(AbstractTestFixture):
         r = self.default_query('{col}/{uri}'.format(col=object_get.collection, uri=object_get.uri))
         return has_disruption(r, object_get, disruption_uri)
 
+    def test_line_section_structure(self):
+        r = self.default_query('stop_points/C_1')
+
+        assert len(get_not_null(r, 'disruptions')) == 1
+        is_valid_line_section_disruption(r['disruptions'][0])
+
     def test_on_stop_points(self):
         """
         the line section disruption should be linked to the impacted stop_points
