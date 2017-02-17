@@ -30,7 +30,7 @@ from jormungandr.street_network.geovelo import Geovelo
 from navitiacommon import type_pb2, response_pb2
 import pybreaker
 from mock import MagicMock
-from streetnetwork_test_utils import get_pt_object
+from streetnetwork_test_utils import make_pt_object
 from jormungandr.utils import str_to_time_stamp
 import requests_mock
 import json
@@ -59,7 +59,7 @@ def pt_object_summary_test():
     instance = MagicMock()
     geovelo = Geovelo(instance=instance,
                       service_url='http://bob.com')
-    summary = geovelo._pt_object_summary(get_pt_object(type_pb2.ADDRESS, lon=1.12, lat=13.15, uri='toto'))
+    summary = geovelo._pt_object_summary(make_pt_object(type_pb2.ADDRESS, lon=1.12, lat=13.15, uri='toto'))
     assert summary == [13.15, 1.12, 'toto']
 
 
@@ -67,10 +67,10 @@ def make_data_test():
     instance = MagicMock()
     geovelo = Geovelo(instance=instance,
                       service_url='http://bob.com')
-    origins = [get_pt_object(type_pb2.ADDRESS, lon=2, lat=48.2, uri='refStart1')]
-    destinations = [get_pt_object(type_pb2.ADDRESS, lon=3, lat=48.3, uri='refEnd1'),
-                    get_pt_object(type_pb2.ADDRESS, lon=4, lat=48.4, uri='refEnd2')]
-    data = geovelo._make_data(origins, destinations)
+    origins = [make_pt_object(type_pb2.ADDRESS, lon=2, lat=48.2, uri='refStart1')]
+    destinations = [make_pt_object(type_pb2.ADDRESS, lon=3, lat=48.3, uri='refEnd1'),
+                    make_pt_object(type_pb2.ADDRESS, lon=4, lat=48.4, uri='refEnd2')]
+    data = geovelo._make_request_arguments(origins, destinations)
     assert json.loads(json.dumps(data)) == json.loads('''{
             "starts":[[48.2,2, "refStart1"]],
             "ends":[[48.3,3, "refEnd1"],
@@ -112,10 +112,10 @@ def direct_path_geovelo_test():
                       service_url='http://bob.com')
     resp_json = direct_path_response_valid()
 
-    origin = get_pt_object(type_pb2.ADDRESS, lon=2, lat=48.2, uri='refStart1')
-    destination = get_pt_object(type_pb2.ADDRESS, lon=3, lat=48.3, uri='refEnd1')
+    origin = make_pt_object(type_pb2.ADDRESS, lon=2, lat=48.2, uri='refStart1')
+    destination = make_pt_object(type_pb2.ADDRESS, lon=3, lat=48.3, uri='refEnd1')
     with requests_mock.Mocker() as req:
-        req.post('http://bob.com', json=resp_json)
+        req.post('http://bob.com/api/v2/routes_m2m', json=resp_json)
         geovelo_resp = geovelo.direct_path('bike',
                                            origin,
                                            destination,
@@ -141,12 +141,12 @@ def isochrone_geovelo_test():
                       service_url='http://bob.com')
     resp_json = isochrone_response_valid()
 
-    origins = [get_pt_object(type_pb2.ADDRESS, lon=2, lat=48.2, uri='refStart1')]
-    destinations = [get_pt_object(type_pb2.ADDRESS, lon=3, lat=48.3, uri='refEnd1'),
-                   get_pt_object(type_pb2.ADDRESS, lon=4, lat=48.4, uri='refEnd2')]
+    origins = [make_pt_object(type_pb2.ADDRESS, lon=2, lat=48.2, uri='refStart1')]
+    destinations = [make_pt_object(type_pb2.ADDRESS, lon=3, lat=48.3, uri='refEnd1'),
+                   make_pt_object(type_pb2.ADDRESS, lon=4, lat=48.4, uri='refEnd2')]
 
     with requests_mock.Mocker() as req:
-        req.post('http://bob.com', json=resp_json, status_code=200)
+        req.post('http://bob.com/api/v2/routes_m2m', json=resp_json, status_code=200)
         geovelo_response = geovelo.get_street_network_routing_matrix(
             origins,
             destinations,

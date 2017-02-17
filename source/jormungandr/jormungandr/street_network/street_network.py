@@ -40,7 +40,6 @@ ABC = abc.ABCMeta(str("ABC"), (object,), {})
 
 
 class AbstractStreetNetworkService(ABC):
-    connector_type = 'streetnetwork'
     @abc.abstractmethod
     def get_street_network_routing_matrix(self, origins, destinations, street_network_mode, max_duration, request, **kwargs):
         pass

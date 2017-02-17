@@ -34,42 +34,42 @@ import pybreaker
 import json
 from navitiacommon import response_pb2
 from jormungandr import app
-from jormungandr.exceptions import TechnicalError, InvalidArguments
+from jormungandr.exceptions import TechnicalError, InvalidArguments, UnableToParse
 from jormungandr.street_network.street_network import AbstractStreetNetworkService
-from jormungandr.utils import get_pt_object_coord, is_url, record_external_failure
+from jormungandr.utils import get_pt_object_coord, is_url
 
 
 class Geovelo(AbstractStreetNetworkService):
-    sn_system_id = 'geovelo'
 
-    def __init__(self, instance, service_url, timeout=10, api_key=None, **kwargs):
+    def __init__(self, instance, service_url, id='geovelo', timeout=10, api_key=None, **kwargs):
         self.instance = instance
+        self.sn_system_id = id
         if not is_url(service_url):
-            raise ValueError('service_url is invalid, you give {}'.format(service_url))
+            raise ValueError('service_url {} is not a valid url'.format(service_url))
         self.service_url = service_url
         self.api_key = api_key
         self.timeout = timeout
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_GEOVELO_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_GEOVELO_TIMEOUT_S'])
 
-    def _pt_object_summary(self, pt_object):
+    @staticmethod
+    def _pt_object_summary(pt_object):
         coord = get_pt_object_coord(pt_object)
         return [coord.lat, coord.lon, getattr(pt_object, 'uri', None)]
 
-    def _make_data(self, origins, destinations):
-        data = {}
-        data['starts'] = []
-        for o in origins:
-            data['starts'].append(self._pt_object_summary(o))
-        data['ends'] = []
-        for d in destinations:
-            data['ends'].append(self._pt_object_summary(d))
-        return data
+    @staticmethod
+    def _make_request_arguments(origins, destinations):
+        return {
+            'starts': [Geovelo._pt_object_summary(o) for o in origins],
+            'ends': [Geovelo._pt_object_summary(o) for o in destinations],
+        }
 
     def _call_geovelo(self, url, method=requests.post, data=None):
         logging.getLogger(__name__).debug('Geovelo routing service , call url : {}'.format(url))
         try:
-            return self.breaker.call(method, url, timeout=self.timeout, data=data, headers={'content-type': 'application/json', 'Api-Key': self.api_key})
+            return self.breaker.call(method, url, timeout=self.timeout, data=data,
+                                     headers={'content-type': 'application/json',
+                                              'Api-Key': self.api_key})
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Geovelo routing service dead (error: {})'.format(e))
             self.record_external_failure('circuit breaker open')
@@ -82,9 +82,17 @@ class Geovelo(AbstractStreetNetworkService):
         return None
 
     def _get_matrix(self, json_response):
+        '''
+        build the 1-n response matrix from geovelo table
+        each element is ["start", "end", duration] (first being the header)
+        as it is ordered, we only consider the third
+        '''
         sn_routing_matrix = response_pb2.StreetNetworkRoutingMatrix()
         row = sn_routing_matrix.rows.add()
-        for e in json_response:
+        if json_response[0] != ["start_reference", "end_reference", "duration"]:
+            logging.getLogger(__name__).error('Geovelo parsing error. Response: {}'.format(json_response))
+            raise UnableToParse('Geovelo parsing error. Response: {}'.format(json_response))
+        for e in json_response[1:]:
             if e[2] == 'duration':
                 continue
             routing = row.routing_response.add()
@@ -96,8 +104,9 @@ class Geovelo(AbstractStreetNetworkService):
                 routing.routing_status = response_pb2.unknown
         return sn_routing_matrix
 
-    def _check_response(self, response):
-        if response == None:
+    @staticmethod
+    def _check_response(response):
+        if response is None:
             raise TechnicalError('impossible to access geovelo service')
         if response.status_code != 200:
             logging.getLogger(__name__).error('Geovelo service unavailable, impossible to query : {}'
@@ -110,12 +119,22 @@ class Geovelo(AbstractStreetNetworkService):
         if street_network_mode != "bike":
             logging.getLogger(__name__).error('Geovelo, mode {} not implemented'.format(street_network_mode))
             raise InvalidArguments('Geovelo, mode {} not implemented'.format(street_network_mode))
+        if len(origins) != 1 and len(destinations) != 1:
+            logging.getLogger(__name__).error('Geovelo, managing only 1-n in connector, requested {}-{}'
+                                              .format(len(origins), len(destinations)))
+            raise InvalidArguments('Geovelo, managing only 1-n in connector, requested {}-{}'
+                                   .format(len(origins), len(destinations)))
 
-        data = self._make_data(origins, destinations)
+        data = self._make_request_arguments(origins, destinations)
         r = self._call_geovelo('{}/{}'.format(self.service_url, 'api/v2/routes_m2m'),
                                requests.post, json.dumps(data))
         self._check_response(r)
         resp_json = r.json()
+
+        if len(resp_json) - 1 != len(origins) * len(destinations):
+            logging.getLogger(__name__).error('Geovelo nb response != nb requested')
+            raise UnableToParse('Geovelo nb response != nb requested')
+
         return self._get_matrix(resp_json)
 
     def _get_response(self, json_response, mode, pt_object_origin, pt_object_destination, datetime, clockwise):
@@ -123,12 +142,10 @@ class Geovelo(AbstractStreetNetworkService):
         resp.status_code = 200
         resp.response_type = response_pb2.ITINERARY_FOUND
 
-        duration = 13371337
-        for e in json_response:
-            if e[2] == 'duration':
-                continue
-            if e[2]:
-                duration = e[2]
+        if json_response[0] != ["start_reference", "end_reference", "duration"] or len(json_response) != 2:
+            logging.getLogger(__name__).error('Geovelo parsing error. Response: {}'.format(json_response))
+            raise UnableToParse('Geovelo parsing error. Response: {}'.format(json_response))
+        duration = json_response[1][2]
 
         journey = resp.journeys.add()
         journey.duration = duration
@@ -149,7 +166,7 @@ class Geovelo(AbstractStreetNetworkService):
 
         section.id = 'section_0'
         section.duration = journey.duration
-        section.length = journey.duration*3
+        section.length = journey.duration*3 #assuming speed is 3m/s
 
         section.origin.CopyFrom(pt_object_origin)
         section.destination.CopyFrom(pt_object_destination)
@@ -179,12 +196,14 @@ class Geovelo(AbstractStreetNetworkService):
             logging.getLogger(__name__).error('Geovelo, mode {} not implemented'.format(mode))
             raise InvalidArguments('Geovelo, mode {} not implemented'.format(mode))
 
-        data = {}
-        data['starts'] = [self._pt_object_summary(pt_object_origin)]
-        data['ends'] = [self._pt_object_summary(pt_object_destination)]
-
+        data = Geovelo._make_request_arguments([pt_object_origin], [pt_object_destination])
         r = self._call_geovelo('{}/{}'.format(self.service_url, 'api/v2/routes_m2m'),
                                requests.post, json.dumps(data))
         self._check_response(r)
         resp_json = r.json()
+
+        if len(resp_json) != 2:
+            logging.getLogger(__name__).error('Geovelo nb response != nb requested')
+            raise UnableToParse('Geovelo nb response != nb requested')
+
         return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, datetime, clockwise)

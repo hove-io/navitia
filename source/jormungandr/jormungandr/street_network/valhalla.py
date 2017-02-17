@@ -43,12 +43,12 @@ from jormungandr.street_network.street_network import AbstractStreetNetworkServi
 
 
 class Valhalla(AbstractStreetNetworkService):
-    sn_system_id = 'valhalla'
 
-    def __init__(self, instance, service_url, timeout=10, api_key=None, **kwargs):
+    def __init__(self, instance, service_url, id='valhalla', timeout=10, api_key=None, **kwargs):
         self.instance = instance
+        self.sn_system_id = id
         if not is_url(service_url):
-            raise ValueError('service_url is invalid, you give {}'.format(service_url))
+            raise ValueError('service_url {} is not a valid url'.format(service_url))
         self.service_url = service_url
         self.api_key = api_key
         self.timeout = timeout
@@ -199,7 +199,7 @@ class Valhalla(AbstractStreetNetworkService):
             raise InvalidArguments('Valhalla, mode {} not implemented'.format(kraken_mode))
         return map_mode.get(kraken_mode)
 
-    def _make_data(self, mode, pt_object_origin, pt_object_destinations, request, api='route', max_duration=None):
+    def _make_request_arguments(self, mode, pt_object_origin, pt_object_destinations, request, api='route', max_duration=None):
 
         valhalla_mode = self._get_valhalla_mode(mode)
         destinations = [self._format_coord(destination, api) for destination in pt_object_destinations]
@@ -230,7 +230,7 @@ class Valhalla(AbstractStreetNetworkService):
                                  format(response.url))
 
     def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise, request):
-        data = self._make_data(mode, pt_object_origin, [pt_object_destination], request, api='route')
+        data = self._make_request_arguments(mode, pt_object_origin, [pt_object_destination], request, api='route')
         r = self._call_valhalla('{}/{}'.format(self.service_url, 'route'), requests.post, data)
         if r is not None and r.status_code == 400 and r.json()['error_code'] == 442:
             # error_code == 442 => No path could be found for input
@@ -266,7 +266,7 @@ class Valhalla(AbstractStreetNetworkService):
             else:
                 origins, destinations = destinations, origins
 
-        data = self._make_data(mode, origins[0], destinations, request, api='one_to_many')
+        data = self._make_request_arguments(mode, origins[0], destinations, request, api='one_to_many')
         r = self._call_valhalla('{}/{}'.format(self.service_url, 'one_to_many'), requests.post, data)
         self._check_response(r)
         resp_json = r.json()

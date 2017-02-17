@@ -54,7 +54,7 @@ def valhalla_class_without_url_test():
             'class': VALHALLA_CLASS,
         }]
         StreetNetwork.get_street_network_services(None, valhalla_without_url)
-    assert 'service_url is invalid, you give None' in str(excinfo.value)
+    assert 'service_url None is not a valid url' in str(excinfo.value)
 
 
 def valhalla_class_wit_empty_url_test():
@@ -67,7 +67,7 @@ def valhalla_class_wit_empty_url_test():
             }
         }]
         StreetNetwork.get_street_network_services(None, kraken_conf)
-    assert 'service_url is invalid, you give ' in str(excinfo.value)
+    assert 'service_url  is not a valid url' in str(excinfo.value)
 
 
 def valhalla_class_with_invalid_url_test():
@@ -80,7 +80,7 @@ def valhalla_class_with_invalid_url_test():
             }
         }]
         StreetNetwork.get_street_network_services(None, kraken_conf)
-    assert 'service_url is invalid, you give bob' in str(excinfo.value)
+    assert 'service_url bob is not a valid url' in str(excinfo.value)
 
 
 def valhalla_class_without_costing_options_test():

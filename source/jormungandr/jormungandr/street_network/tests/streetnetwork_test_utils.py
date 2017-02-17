@@ -29,7 +29,7 @@
 from navitiacommon import type_pb2
 
 
-def get_pt_object(embedded_type, lon, lat, uri=None):
+def make_pt_object(embedded_type, lon, lat, uri=None):
     pt_object = type_pb2.PtObject()
     pt_object.embedded_type = embedded_type
     if uri:

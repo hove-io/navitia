@@ -95,7 +95,7 @@ class RealtimeProxy(object):
         record_external_failure(message, 'realtime', self.rt_system_id)
 
     def record_internal_failure(self, message):
-        params = {'rt_system_id': repr(self.rt_system_id), 'message': message}
+        params = {'realtime_system_id': repr(self.rt_system_id), 'message': message}
         new_relic.record_custom_event('realtime_internal_failure', params)
 
 
