@@ -159,7 +159,7 @@ class add_pagination_links(object):
                             kwargs["start_page"] = 0
                         else:
                             nb_last_page = total_result - 1
-                            nb_last_page = nb_last_page / items_per_page
+                            nb_last_page = int(nb_last_page / items_per_page)
                             kwargs["start_page"] = nb_last_page
                             data["links"].append({
                                 "href": url_for(endpoint, **kwargs),
