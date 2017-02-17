@@ -354,7 +354,7 @@ Real time and disruption objects
 |Field | Type | Description |
 |------|------|-------------|
 |id     | string                                |Id of the disruption
-|status | between: "past", "active" or "future" |state of the disruption
+|status | between: "past", "active" or "future" |state of the disruption. The state is computed using the application_periods of the disruption and the current time of the query.
 |disruption_id | string                         |for traceability: Id of original input disruption
 |impact_id     | string                         |for traceability: Id of original input impact
 |severity      | [severity](#severity)          |gives some categorization element
