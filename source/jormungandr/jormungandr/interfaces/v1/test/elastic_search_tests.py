@@ -48,7 +48,7 @@ def bragi_house_jaures_feature():
             "geocoding": {
                 "city": "Saint-Quentin",
                 "housenumber": "20",
-                "id": "49.847586;3.282103",
+                "id": "3.282103;49.847586",
                 "label": "20 Rue Jean Jaures (Saint-Quentin)",
                 "name": "Rue Jean Jaures",
                 "postcode": "02100",
@@ -93,12 +93,12 @@ def get_response(bragi_response):
 
 def bragi_house_jaures_response_check(feature_response):
     assert feature_response.get('embedded_type') == "address"
-    assert feature_response.get('id') == "49.847586;3.282103"
+    assert feature_response.get('id') == "3.282103;49.847586"
     assert feature_response.get('name') == "20 Rue Jean Jaures (Saint-Quentin)"
     address = feature_response.get('address', {})
     assert address.get('name') == "Rue Jean Jaures"
     assert address.get('label') == "20 Rue Jean Jaures (Saint-Quentin)"
-    assert address.get('house_number') == "20"
+    assert address.get('house_number') == 20
     assert address.get('coord', {}).get('lat') == "49.847586"
     assert address.get('coord', {}).get('lon') == "3.282103"
     assert len(address.get('administrative_regions')) == 2
@@ -128,7 +128,7 @@ def bragi_street_feature():
         "properties": {
             "geocoding": {
                 "city": "Saint-Quentin",
-                "id": "49.847586;3.282103",
+                "id": "38059376",
                 "label": "Rue Jean Jaures (Saint-Quentin)",
                 "name": "Rue Jean Jaures",
                 "postcode": "02100",
@@ -169,12 +169,12 @@ def bragi_street_feature():
 def bragi_street_response_check(feature_response):
 
     assert feature_response.get('embedded_type') == "address"
-    assert feature_response.get('id') == "49.847586;3.282103"
+    assert feature_response.get('id') == "3.282103;49.847586"
     assert feature_response.get('name') == "Rue Jean Jaures (Saint-Quentin)"
     address = feature_response.get('address', {})
     assert address.get('name') == "Rue Jean Jaures"
     assert address.get('label') == "Rue Jean Jaures (Saint-Quentin)"
-    assert address.get('house_number') == "0"
+    assert address.get('house_number') == 0
     assert address.get('coord', {}).get('lat') == "49.847586"
     assert address.get('coord', {}).get('lon') == "3.282103"
     assert len(address.get('administrative_regions')) == 2
@@ -261,7 +261,7 @@ def bragi_admin_response_check(feature_response):
     assert feature_response.get('embedded_type') == "administrative_region"
     assert feature_response.get('id') == "admin:fr:2725"
     assert feature_response.get('name') == "Sommeron"
-    admin = feature_response.get('administrative_regions')
+    admin = feature_response.get('administrative_region')
     assert admin.get('level') == 8
     assert admin.get('name') == "Sommeron"
     assert admin.get('label') == "Sommeron (02260)"
@@ -296,9 +296,9 @@ def bragi_house_lefebvre_feature():
         "properties": {
             "geocoding": {
                 "city": "Saint-Quentin",
-                "housenumber": "42",
+                "housenumber": "42bis",
                 "id": "49.847586;3.282103",
-                "label": "42 Rue Jean Lefebvre (Oyonnax)",
+                "label": "42bis Rue Jean Lefebvre (Oyonnax)",
                 "name": "Rue Jean Lefebvre",
                 "postcode": "02100",
                 "street": "Rue Jean Lefebvre",
@@ -337,13 +337,13 @@ def bragi_house_lefebvre_feature():
 
 def bragi_house_lefebvre_response_check(feature_response):
     assert feature_response.get('embedded_type') == "address"
-    assert feature_response.get('id') == "49.847586;3.282103"
-    assert feature_response.get('name') == "42 Rue Jean Lefebvre (Oyonnax)"
+    assert feature_response.get('id') == "3.282103;49.847586"
+    assert feature_response.get('name') == "42bis Rue Jean Lefebvre (Oyonnax)"
     address = feature_response.get('address', {})
-    assert address.get('id') == "49.847586;3.282103"
+    assert address.get('id') == "3.282103;49.847586"
     assert address.get('name') == "Rue Jean Lefebvre"
-    assert address.get('label') == "42 Rue Jean Lefebvre (Oyonnax)"
-    assert address.get('house_number') == "42"
+    assert address.get('label') == "42bis Rue Jean Lefebvre (Oyonnax)"
+    assert address.get('house_number') == 42
     assert address.get('coord', {}).get('lat') == "49.847586"
     assert address.get('coord', {}).get('lon') == "3.282103"
     assert len(address.get('administrative_regions')) == 2
@@ -426,7 +426,7 @@ def bragi_geocodejson_compatibility_test():
     }
     navitia_response = get_response(bragi_response).get('places', {})[0]
     assert navitia_response.get('embedded_type') == "address"
-    assert navitia_response.get('id') == '49.847586;3.282103'
+    assert navitia_response.get('id') == '3.282103;49.847586'
     assert navitia_response.get('name') == '20 Rue Jean Jaures (Saint-Quentin)'
     address = navitia_response.get('address', {})
     assert len(address.get('administrative_regions')) == 5
@@ -446,6 +446,9 @@ def bragi_poi_feature():
             "geocoding": {
                 "id": "poi:osm:3224270910",
                 "type": "poi",
+                "poi_types": [
+                    {"id": "poi_type:amenity:townhall", "name": "Mairie"}
+                ],
                 "label": "Mairie de Pigna (Pigna)",
                 "name": "Mairie de Pigna",
                 "housenumber": None,
@@ -478,13 +481,19 @@ def bragi_poi_reading_test():
     }
     navitia_response = get_response(bragi_response).get('places', {})[0]
     assert navitia_response.get('embedded_type') == "poi"
-    assert navitia_response.get('id') == 'poi:osm:3224270910'
+    # FIXME: for the moment, we just output coords to make it works for journeys
+    #assert navitia_response.get('id') == 'poi:osm:3224270910'
+    assert navitia_response.get('id') == '8.9028068;42.5992355'
     assert navitia_response.get('name') == 'Mairie de Pigna (Pigna)'
-    assert navitia_response.get('quality') == '0'
+    assert navitia_response.get('quality') == 0
     poi = navitia_response.get('poi', {})
     assert poi.get('label') == 'Mairie de Pigna (Pigna)'
     assert poi.get('name') == 'Mairie de Pigna'
-    assert poi.get('id') == 'poi:osm:3224270910'
+    # FIXME: for the moment, we just output coords to make it works for journeys
+    #assert poi.get('id') == 'poi:osm:3224270910'
+    assert poi.get('id') == '8.9028068;42.5992355'
+    assert poi.get('poi_type').get('id') == 'poi_type:amenity:townhall'
+    assert poi.get('poi_type').get('name') == 'Mairie'
     assert poi.get('coord').get('lat') == "42.5992355"
     assert poi.get('coord').get('lon') == "8.9028068"
     assert len(poi.get('administrative_regions')) == 1
@@ -534,7 +543,7 @@ def bragi_stop_area_reading_test():
     assert navitia_response.get('embedded_type') == "stop_area"
     assert navitia_response.get('id') == 'stop_area:OIF:SA:59332'
     assert navitia_response.get('name') == 'BOTZARIS (Paris)'
-    assert navitia_response.get('quality') == '0'
+    assert navitia_response.get('quality') == 0
     sa = navitia_response.get('stop_area', {})
     assert sa.get('label') == 'BOTZARIS (Paris)'
     assert sa.get('name') == 'BOTZARIS'
@@ -573,7 +582,7 @@ def bragi_call_test():
 
     # we mock the http call to return the hard coded mock_response
     with mock.patch('requests.get', mock_requests.get):
-        raw_response = bragi.get({'q': 'rue bobette', 'count': 10}, instance=None, shape=None)
+        raw_response = bragi.get({'q': 'rue bobette', 'count': 10}, instance=None)
         places = raw_response.get('places')
         assert len(places) == 4
         bragi_house_jaures_response_check(places[0])
@@ -582,7 +591,7 @@ def bragi_call_test():
         bragi_admin_response_check(places[3])
 
     with mock.patch('requests.post', mock_requests.get):
-        raw_response = bragi.get({'q': 'rue bobette', 'count': 10}, instance=None, shape=geojson())
+        raw_response = bragi.get({'q': 'rue bobette', 'count': 10, 'shape': geojson()}, instance=None)
         places = raw_response.get('places')
         assert len(places) == 4
         bragi_house_jaures_response_check(places[0])

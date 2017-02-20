@@ -35,19 +35,20 @@ import requests as requests
 from jormungandr import app
 import json
 from flask_restful import abort
-from jormungandr.exceptions import UnableToParse, TechnicalError, InvalidArguments, ApiNotFound
+from jormungandr.exceptions import TechnicalError, InvalidArguments, ApiNotFound
 from flask import g
-from jormungandr.utils import is_url, kilometers_to_meters, get_pt_object_coord
+from jormungandr.utils import is_url, kilometers_to_meters, get_pt_object_coord, record_external_failure
 from copy import deepcopy
 from jormungandr.street_network.street_network import AbstractStreetNetworkService
 
 
 class Valhalla(AbstractStreetNetworkService):
 
-    def __init__(self, instance, service_url, timeout=10, api_key=None, **kwargs):
+    def __init__(self, instance, service_url, id='valhalla', timeout=10, api_key=None, **kwargs):
         self.instance = instance
+        self.sn_system_id = id
         if not is_url(service_url):
-            raise ValueError('service_url is invalid, you give {}'.format(service_url))
+            raise ValueError('service_url {} is not a valid url'.format(service_url))
         self.service_url = service_url
         self.api_key = api_key
         self.timeout = timeout
@@ -65,28 +66,21 @@ class Valhalla(AbstractStreetNetworkService):
             return self.breaker.call(method, url, timeout=self.timeout, data=data, headers={'api_key': self.api_key})
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Valhalla routing service dead (error: {})'.format(e))
+            self.record_external_failure('circuit breaker open')
         except requests.Timeout as t:
             logging.getLogger(__name__).error('Valhalla routing service dead (error: {})'.format(t))
-        except:
+            self.record_external_failure('timeout')
+        except Exception as e:
             logging.getLogger(__name__).exception('Valhalla routing error')
+            self.record_external_failure(str(e))
         return None
-
-    def _get_coord(self, pt_object):
-        if not isinstance(pt_object, type_pb2.PtObject):
-            logging.getLogger(__name__).error('Invalid pt_object')
-            raise InvalidArguments('Invalid pt_object')
-        coord = get_pt_object_coord(pt_object)
-        if not coord:
-            logging.getLogger(__name__).error('Invalid coord for ptobject type: {}'.format(pt_object.embedded_type))
-            raise UnableToParse('Invalid coord for ptobject type: {}'.format(pt_object.embedded_type))
-        return coord
 
     def _format_coord(self, pt_object, api='route'):
         if api not in ['route', 'one_to_many']:
             logging.getLogger(__name__).error('Valhalla routing service , invalid api {}'.format(api))
             raise ApiNotFound('Valhalla routing service , invalid api {}'.format(api))
 
-        coord = self._get_coord(pt_object)
+        coord = get_pt_object_coord(pt_object)
         dict_coord = {"lat": coord.lat, "lon": coord.lon}
         if api == 'route':
             dict_coord["type"] = "break"
@@ -136,7 +130,7 @@ class Valhalla(AbstractStreetNetworkService):
             costing_options['bicycle']['cycling_speed'] = request['bike_speed'] * 3.6
         return costing_options
 
-    def _get_response(self, json_resp, mode, pt_object_origin, pt_object_destination, datetime):
+    def _get_response(self, json_resp, mode, pt_object_origin, pt_object_destination, datetime, clockwise):
         map_mode = {
             "walking": response_pb2.Walking,
             "car": response_pb2.Car,
@@ -149,8 +143,13 @@ class Valhalla(AbstractStreetNetworkService):
         for leg in json_resp['trip']['legs']:
             journey = resp.journeys.add()
             journey.duration = leg['summary']['time']
-            journey.departure_date_time = datetime
-            journey.arrival_date_time = datetime + journey.duration
+            if clockwise:
+                journey.departure_date_time = datetime
+                journey.arrival_date_time = datetime + journey.duration
+            else:
+                journey.departure_date_time = datetime - journey.duration
+                journey.arrival_date_time = datetime
+
             journey.durations.total = journey.duration
 
             if mode == 'walking':
@@ -200,7 +199,7 @@ class Valhalla(AbstractStreetNetworkService):
             raise InvalidArguments('Valhalla, mode {} not implemented'.format(kraken_mode))
         return map_mode.get(kraken_mode)
 
-    def _make_data(self, mode, pt_object_origin, pt_object_destinations, request, api='route', max_duration=None):
+    def _make_request_arguments(self, mode, pt_object_origin, pt_object_destinations, request, api='route', max_duration=None):
 
         valhalla_mode = self._get_valhalla_mode(mode)
         destinations = [self._format_coord(destination, api) for destination in pt_object_destinations]
@@ -220,7 +219,7 @@ class Valhalla(AbstractStreetNetworkService):
                 args[key] = value
         return json.dumps(args)
 
-    def check_response(self, response):
+    def _check_response(self, response):
         if response == None:
             raise TechnicalError('impossible to access valhalla service')
         if response.status_code != 200:
@@ -231,7 +230,7 @@ class Valhalla(AbstractStreetNetworkService):
                                  format(response.url))
 
     def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise, request):
-        data = self._make_data(mode, pt_object_origin, [pt_object_destination], request, api='route')
+        data = self._make_request_arguments(mode, pt_object_origin, [pt_object_destination], request, api='route')
         r = self._call_valhalla('{}/{}'.format(self.service_url, 'route'), requests.post, data)
         if r is not None and r.status_code == 400 and r.json()['error_code'] == 442:
             # error_code == 442 => No path could be found for input
@@ -239,9 +238,9 @@ class Valhalla(AbstractStreetNetworkService):
             resp.status_code = 200
             resp.response_type = response_pb2.NO_SOLUTION
             return resp
-        self.check_response(r)
+        self._check_response(r)
         resp_json = r.json()
-        return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, datetime)
+        return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, datetime, clockwise)
 
     def _get_matrix(self, json_response):
         sn_routing_matrix = response_pb2.StreetNetworkRoutingMatrix()
@@ -258,8 +257,17 @@ class Valhalla(AbstractStreetNetworkService):
         return sn_routing_matrix
 
     def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration, request, **kwargs):
-        data = self._make_data(mode, origins[0], destinations, request, api='one_to_many')
+
+        #for now valhalla only manages 1-n request, so we reverse request if needed
+        if len(origins) > 1:
+            if len(destinations) > 1:
+                logging.getLogger(__name__).error('routing matrix error, no unique center point')
+                raise TechnicalError('routing matrix error, no unique center point')
+            else:
+                origins, destinations = destinations, origins
+
+        data = self._make_request_arguments(mode, origins[0], destinations, request, api='one_to_many')
         r = self._call_valhalla('{}/{}'.format(self.service_url, 'one_to_many'), requests.post, data)
-        self.check_response(r)
+        self._check_response(r)
         resp_json = r.json()
         return self._get_matrix(resp_json)

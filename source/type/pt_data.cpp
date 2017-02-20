@@ -253,6 +253,9 @@ PT_Data::~PT_Data() {
                 [](type_name* obj){delete obj;});
     ITERATE_NAVITIA_PT_TYPES(DELETE_PTDATA)
 
+    for (auto conn: stop_point_connections) {
+        delete conn;
+    }
     for (auto cal: associated_calendars) {
         delete cal;
     }

@@ -41,9 +41,9 @@ class ChaosDisruptionsFixture(RabbitMQCnxFixture):
     """
     def _make_mock_item(self, disruption_name, impacted_obj, impacted_obj_type, start=None, end=None,
                               message='default_message', is_deleted=False, blocking=False,
-                         start_period="20100412T165200", end_period="20200412T165200"):
+                         start_period="20100412T165200", end_period="20200412T165200", cause='CauseTest', category=None):
         return make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end, message, is_deleted,
-                                    blocking, start_period, end_period)
+                                    blocking, start_period, end_period, cause=cause, category=category)
 
 
 MAIN_ROUTING_TEST_SETTING = {"main_routing_test": {'kraken_args': ['--BROKER.sleeptime=0',
@@ -84,6 +84,8 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         assert len(disruptions) == 1
 
         assert any(d['disruption_id'] == 'bob_the_disruption' for d in disruptions)
+        assert disruptions[0]['cause'] == 'CauseTest'
+        assert 'category' not in disruptions[0]
 
         #here we test messages in disruption: message, channel and types
         messages = get_not_null(disruptions[0], 'messages')
@@ -149,36 +151,38 @@ class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
     """
     Note: it is done as a new fixture, to spawn a new kraken, in order not the get previous disruptions
     """
+
     def test_disruption_on_line_section(self):
         """
-        when calling the pt object line:A, at first we have no disruptions,
-
-        then we mock a disruption sent from chaos, and we call again the pt object line:A
-        we then must have one disruption
+        the test blocking a line section
+        we check that before we have not our disruption and we have it after sending it
+        TODO add more checks when all the line section features will be implemented
         """
-        response = self.query_region('lines/A')
+        def query_on_date(q, **kwargs):
+            """We do the query on a dt inside the disruption application period"""
+            return self.query_region('{q}?_current_datetime=20120614T120000'.format(q=q), **kwargs)
 
-        lines = get_not_null(response, 'lines')
-        assert len(lines) == 1
-        line = lines[0]
-        #at first no disruption
-        assert 'disruptions' not in line
+        def has_dis(obj_get, dis):
+            r = query_on_date('{col}/{uri}'.format(col=obj_get.collection, uri=obj_get.uri))
+            return has_disruption(r, obj_get, dis)
+
+        response = self.query_region('disruptions')
+        assert 'bobette_the_disruption' not in [d['disruption_id'] for d in response['disruptions']]
+        assert not has_dis(ObjGetter('stop_points', 'stop_point:stopA'), 'bobette_the_disruption')
+        assert not has_dis(ObjGetter('vehicle_journeys', 'vjA'), 'bobette_the_disruption')
 
         self.send_mock("bobette_the_disruption", "A",
-                       "line_section", start="stopA", end="stopB", blocking=True)
+                       "line_section", start="stopB", end="stopA",
+                       start_period="20120614T100000", end_period="20120624T170000",
+                       blocking=True)
 
-        #and we call again, we must have the disruption now
-        response = self.query_region('lines/A')
-        lines = get_not_null(response, 'lines')
-        assert len(lines) == 1
-        line = lines[0]
+        response = self.query_region('disruptions')
+        # and we call again, we must have the disruption now
+        assert 'bobette_the_disruption' in [d['disruption_id'] for d in response['disruptions']]
 
-        disruptions = get_disruptions(line, response)
-
-        #at first we got only one disruption
-        print(disruptions)
-        assert len(disruptions) == 1
-        assert any(d['disruption_id'] == 'bobette_the_disruption' for d in disruptions)
+        # the disruption is linked to the trips of the line and to the stoppoints
+        assert has_dis(ObjGetter('stop_points', 'stop_point:stopA'), 'bobette_the_disruption')
+        assert has_dis(ObjGetter('vehicle_journeys', 'vjA'), 'bobette_the_disruption')
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
@@ -598,12 +602,16 @@ class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
                        disruption_target,
                        disruption_target_type,
                        blocking=True,
-                       message=disruption_msg)
+                       message=disruption_msg,
+                       cause='foo',
+                       category='CategoryTest')
         response = self.query_region(query)
         disruptions = response.get('disruptions')
         assert disruptions
         assert len(disruptions) == 1
         assert disruptions[0]['disruption_id'] == disruption_id
+        assert disruptions[0]['cause'] == 'foo'
+        assert disruptions[0]['category'] == 'CategoryTest'
 
         journey_query_adapted = journey_basic_query + "&data_freshness=adapted_schedule"
 
@@ -638,7 +646,8 @@ class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
 
 def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end,
                          message_text='default_message', is_deleted=False, blocking=False,
-                         start_period="20100412T165200", end_period="20200412T165200"):
+                         start_period="20100412T165200", end_period="20200412T165200",
+                         cause='CauseTest', category=None):
     feed_message = gtfs_realtime_pb2.FeedMessage()
     feed_message.header.gtfs_realtime_version = '1.0'
     feed_message.header.incrementality = gtfs_realtime_pb2.FeedHeader.DIFFERENTIAL
@@ -651,8 +660,11 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start
     disruption = feed_entity.Extensions[chaos_pb2.disruption]
 
     disruption.id = disruption_name
-    disruption.cause.id = "CauseTest"
-    disruption.cause.wording = "CauseTest"
+    disruption.cause.id = cause
+    disruption.cause.wording = cause
+    if category:
+        disruption.cause.category.id = category
+        disruption.cause.category.name = category
     disruption.reference = "DisruptionTest"
     disruption.publication_period.start = utils.str_to_time_stamp(start_period)
     disruption.publication_period.end = utils.str_to_time_stamp(end_period)

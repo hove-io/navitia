@@ -42,6 +42,13 @@ class GeocodeJson(AbstractAutocomplete):
     (https://github.com/geocoders/geocodejson-spec/)
 
     """
+    # the geocodejson types
+    TYPE_STOP_AREA = "public_transport:stop_area"
+    TYPE_CITY = "city"
+    TYPE_POI = "poi"
+    TYPE_HOUSE = "house"
+    TYPE_STREET = "street"
+
     def __init__(self, **kwargs):
         self.external_api = kwargs.get('host')
         self.timeout = kwargs.get('timeout', 10)
@@ -55,17 +62,35 @@ class GeocodeJson(AbstractAutocomplete):
         if request.get("from"):
             params["lon"], params["lat"] = self.get_coords(request["from"])
 
+        if request.get("type[]"):
+            types = []
+            map_type = {
+                "administrative_region": [self.TYPE_CITY],
+                "address": [self.TYPE_STREET, self.TYPE_HOUSE],
+                "stop_area": [self.TYPE_STOP_AREA],
+                "poi": [self.TYPE_POI]
+            }
+            for type in request.get("type[]"):
+                if type == 'stop_point':
+                    logging.getLogger(__name__).debug('stop_point is not handled by bragi')
+                    continue
+
+                types.extend(map_type[type])
+
+            params["type[]"] = types
+
         if instance:
             params["pt_dataset"] = instance.name
 
         return params
 
-    def get(self, request, instance, shape=None):
+    def get(self, request, instance):
         if not self.external_api:
             raise TechnicalError('global autocomplete not configured')
 
         params = self.make_params(request, instance)
 
+        shape = request.get('shape', None)
         try:
             if shape:
                 raw_response = requests.post(self.external_api, timeout=self.timeout, json=shape, params=params)

@@ -346,14 +346,15 @@ Real time and disruption objects
     "impacted_objects": [
         {"...": "..."}
     ],
-    "cause": "Cause..."
+    "cause": "Cause...",
+    "category": "incident"
 }
 ```
 
 |Field | Type | Description |
 |------|------|-------------|
 |id     | string                                |Id of the disruption
-|status | between: "past", "active" or "future" |state of the disruption
+|status | between: "past", "active" or "future" |state of the disruption. The state is computed using the application_periods of the disruption and the current time of the query.
 |disruption_id | string                         |for traceability: Id of original input disruption
 |impact_id     | string                         |for traceability: Id of original input impact
 |severity      | [severity](#severity)          |gives some categorization element
@@ -362,6 +363,7 @@ Real time and disruption objects
 |updated_at          |[iso-date-time](#iso-date-time) |date_time of last modifications 
 |impacted_objects    |array of [pt_object](#pt_object) |The list of public transport objects which are affected by the disruption
 |cause               |string                   |why is there such a disruption?
+|category            |string (optional)        |The category of the disruption, such as "construction works" or "incident"
 
 ### Message
 

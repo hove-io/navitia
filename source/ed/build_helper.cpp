@@ -60,7 +60,6 @@ VJ::VJ(builder& b,
     b(b),
     network_name(network_name),
     line_name(line_name),
-    validity_pattern(validity_pattern),
     _block_id(block_id),
     is_frequency(is_frequency),
     wheelchair_boarding(wheelchair_boarding),
@@ -69,7 +68,8 @@ VJ::VJ(builder& b,
     physical_mode(physical_mode),
     start_time(start_time),
     end_time(end_time),
-    headway_secs(headway_secs)
+    headway_secs(headway_secs),
+    _vp(b.begin, validity_pattern)
 {}
 
 
@@ -152,19 +152,18 @@ nt::VehicleJourney* VJ::make() {
     // we associate the metavj to the default timezone for the moment
     mvj->tz_handler = b.tz_handler;
 
-    const auto vp = nt::ValidityPattern(b.begin, validity_pattern);
     const auto uri_str = _uri.empty() ?
         "vj:" + line_name + ":" + std::to_string(pt_data.vehicle_journeys.size()) :
         _uri;
     if (is_frequency) {
-        auto* fvj = mvj->create_frequency_vj(uri_str, nt::RTLevel::Base, vp, route, stop_times, pt_data);
+        auto* fvj = mvj->create_frequency_vj(uri_str, nt::RTLevel::Base, _vp, route, stop_times, pt_data);
         fvj->start_time = start_time;
         const size_t nb_trips = std::ceil((end_time - start_time) / headway_secs);
         fvj->end_time = start_time + (nb_trips * headway_secs);
         fvj->headway_secs = headway_secs;
         vj = fvj;
     } else {
-        vj = mvj->create_discrete_vj(uri_str, nt::RTLevel::Base, vp, route, stop_times, pt_data);
+        vj = mvj->create_discrete_vj(uri_str, nt::RTLevel::Base, _vp, route, stop_times, pt_data);
     }
     // default dataset
     if (!vj->dataset){
@@ -360,7 +359,6 @@ DisruptionCreator builder::disrupt(nt::RTLevel lvl, const std::string& uri) {
     return DisruptionCreator(*this, uri, lvl);
 }
 
-
 Impacter& Impacter::severity(dis::Effect e,
                              std::string uri,
                              const std::string& wording,
@@ -404,7 +402,12 @@ Impacter& Impacter::severity(const std::string& uri) {
 }
 
 Impacter& Impacter::on(nt::Type_e type, const std::string& uri) {
-    impact->informed_entities.push_back(dis::make_pt_obj(type, uri, *b.data->pt_data, impact));
+    dis::Impact::link_informed_entity(
+                dis::make_pt_obj(type, uri, *b.data->pt_data),
+                impact,
+                b.data->meta->production_date,
+                get_disruption().rt_level
+    );
     return *this;
 }
 
@@ -412,9 +415,22 @@ Impacter& Impacter::on_line_section(const std::string& line_uri,
                                     const std::string& start_stop_uri,
                                     const std::string& end_stop_uri,
                                     const std::vector<std::string>& route_uris) {
-    impact->informed_entities.push_back(
-        dis::make_line_section(line_uri, start_stop_uri, end_stop_uri, route_uris, *b.data->pt_data, impact)
-    );
+    // Note: don't forget to set the application period before calling this method for the correct
+    // vehicle_journeys to be impacted
+
+    dis::LineSection line_section;
+    line_section.line = b.get<nt::Line>(line_uri);
+    line_section.start_point = b.get<nt::StopArea>(start_stop_uri);
+    line_section.end_point = b.get<nt::StopArea>(end_stop_uri);
+    for (auto& uri: route_uris) {
+        auto* route = b.get<nt::Route>(uri);
+        if (route) {
+            line_section.routes.push_back(route);
+        }
+    }
+
+    dis::Impact::link_informed_entity(std::move(line_section),
+                                      impact, b.data->meta->production_date, get_disruption().rt_level);
     return *this;
 }
 

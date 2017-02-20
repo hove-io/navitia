@@ -819,7 +819,7 @@ EdTZWrapper::split_over_dst(const boost::gregorian::date_period& validity_period
 
     if (! boost_timezone->has_dst()) {
         //no dst -> easy way out, no split, we just have to take the utc offset into account
-        res[utc_offset.total_seconds() / 60].push_back(validity_period);
+        res[utc_offset.total_seconds()].push_back(validity_period);
         return res;
     }
 

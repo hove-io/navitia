@@ -291,6 +291,8 @@ struct distance_visitor : virtual public boost::dijkstra_visitor<> {
 
     distance_visitor(const time_duration& max_dur, const std::vector<time_duration>& dur):
         max_duration(max_dur), durations(dur) {}
+    distance_visitor(const distance_visitor& other) = default;
+    virtual ~distance_visitor();
 
     /*
      * stop when we can't find any vertex such that distances[v] <= max_duration
@@ -352,7 +354,10 @@ struct printer_distance_visitor : public distance_visitor {
 struct target_all_visitor : virtual public boost::dijkstra_visitor<> {
     std::vector<vertex_t> destinations;
     size_t nbFound = 0;
-    target_all_visitor(const std::vector<vertex_t>& destinations) : destinations(destinations.begin(), destinations.end()){}
+    target_all_visitor(const std::vector<vertex_t>& destinations):
+        destinations(destinations.begin(), destinations.end()) {}
+    target_all_visitor(const target_all_visitor& other) = default;
+    virtual ~target_all_visitor();
     template <typename graph_type>
     void finish_vertex(vertex_t u, const graph_type&){
         if (std::find(destinations.begin(), destinations.end(), u) != destinations.end()) {
@@ -380,9 +385,12 @@ struct target_unique_visitor : public boost::dijkstra_visitor<> {
 
 //Visitor who stops when a target has been visited or a certain distance is reached
 struct distance_or_target_visitor: virtual public distance_visitor, virtual public target_all_visitor {
-    distance_or_target_visitor(const time_duration& max_dur, const std::vector<time_duration>& dur,
-                                      const std::vector<vertex_t>& destinations):
-        distance_visitor(max_dur, dur), target_all_visitor(destinations){}
+    distance_or_target_visitor(const time_duration& max_dur,
+                               const std::vector<time_duration>& dur,
+                               const std::vector<vertex_t>& destinations):
+        distance_visitor(max_dur, dur), target_all_visitor(destinations) {}
+    distance_or_target_visitor(const distance_or_target_visitor& other) = default;
+    virtual ~distance_or_target_visitor();
     template <typename graph_type>
     void finish_vertex(vertex_t u, const graph_type& g){
         target_all_visitor::finish_vertex(u, g);

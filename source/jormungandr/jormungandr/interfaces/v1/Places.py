@@ -47,10 +47,11 @@ from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.exceptions import TechnicalError
 from functools import wraps
 from flask_restful import marshal, marshal_with
-import datetime
+import datetime, re
 from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
 import ujson as json
-from jormungandr.interfaces.parsers import coord_format
+from jormungandr.interfaces.parsers import coord_format, option_value
+from jormungandr.scenarios.utils import pb_type
 
 
 #global marshal
@@ -80,12 +81,12 @@ def create_admin_field(geocoding):
         })
     return response
 
-class AddressId(fields.Raw):
+class CoordId(fields.Raw):
     def output(self, key, obj):
         if not obj:
             return None
-        geocoding = obj.get('properties', {}).get('geocoding', {})
-        return delete_prefix(geocoding.get('id'), "addr:")
+        lon, lat = get_lon_lat(obj)
+        return '{};{}'.format(lon, lat)
 
 
 def format_zip_code(zip_codes):
@@ -172,14 +173,18 @@ class AddressField(fields.Raw):
 
         lon, lat = get_lon_lat(obj)
         geocoding = obj.get('properties', {}).get('geocoding', {})
+        hn = 0
+        numbers = re.findall(r'^\d+', geocoding.get('housenumber') or "0")
+        if len(numbers) > 0:
+            hn = numbers[0]
 
         return {
-            "id": delete_prefix(geocoding.get('id'), "addr:"),
+            "id": '{};{}'.format(lon, lat),
             "coord": {
                 "lon": lon,
                 "lat": lat,
             },
-            "house_number": geocoding.get('housenumber') or '0',
+            "house_number": int(hn),
             "label": geocoding.get('label'),
             "name": geocoding.get('name'),
             "administrative_regions":
@@ -194,10 +199,11 @@ class PoiField(fields.Raw):
 
         lon, lat = get_lon_lat(obj)
         geocoding = obj.get('properties', {}).get('geocoding', {})
+        poi_types = geocoding.get('poi_types', [])
 
-        # TODO add address, poi_type, properties attributes
-        return {
-            "id": geocoding.get('id'),
+        # TODO add address, properties attributes
+        res = {
+            "id": '{};{}'.format(lon, lat),
             "coord": {
                 "lon": lon,
                 "lat": lat,
@@ -207,6 +213,9 @@ class PoiField(fields.Raw):
             "administrative_regions":
                 create_administrative_regions_field(geocoding) or create_admin_field(geocoding),
         }
+        if isinstance(poi_types, list) and poi_types:
+            res['poi_type'] = poi_types[0]
+        return res
 
 
 class StopAreaField(fields.Raw):
@@ -233,32 +242,32 @@ class StopAreaField(fields.Raw):
 
 geocode_admin = {
     "embedded_type": Lit("administrative_region"),
-    "quality": Lit("0"),
+    "quality": Lit(0),
     "id": fields.String(attribute='properties.geocoding.id'),
     "name": fields.String(attribute='properties.geocoding.name'),
-    "administrative_regions": AdministrativeRegionField()
+    "administrative_region": AdministrativeRegionField()
 }
 
 
 geocode_addr = {
     "embedded_type": Lit("address"),
-    "quality": Lit("0"),
-    "id": AddressId,
+    "quality": Lit(0),
+    "id": CoordId,
     "name": fields.String(attribute='properties.geocoding.label'),
     "address": AddressField()
 }
 
 geocode_poi = {
     "embedded_type": Lit("poi"),
-    "quality": Lit("0"),
-    "id": fields.String(attribute='properties.geocoding.id'),
+    "quality": Lit(0),
+    "id": CoordId,
     "name": fields.String(attribute='properties.geocoding.label'),
     "poi": PoiField()
 }
 
 geocode_stop_area = {
     "embedded_type": Lit("stop_area"),
-    "quality": Lit("0"),
+    "quality": Lit(0),
     "id": fields.String(attribute='properties.geocoding.id'),
     "name": fields.String(attribute='properties.geocoding.label'),
     "stop_area": StopAreaField()
@@ -295,7 +304,6 @@ places = {
 
 
 class Places(ResourceUri):
-
     def __init__(self, *args, **kwargs):
         ResourceUri.__init__(self, authentication=False, *args, **kwargs)
         self.parsers = {}
@@ -303,7 +311,8 @@ class Places(ResourceUri):
             argument_class=ArgumentDoc)
         self.parsers["get"].add_argument("q", type=unicode, required=True,
                                          description="The data to search")
-        self.parsers["get"].add_argument("type[]", type=unicode, action="append",
+        self.parsers["get"].add_argument("type[]", type=option_value(pb_type),
+                                         action="append",
                                          default=["stop_area", "address",
                                                   "poi",
                                                   "administrative_region"],
@@ -347,6 +356,10 @@ class Places(ResourceUri):
         if args['disable_geojson']:
             g.disable_geojson = True
 
+        user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=False)
+
+        args['shape'] = json.loads(user.shape) if user and user.shape else None
+
         # If a region or coords are asked, we do the search according
         # to the region, else, we do a word wide search
 
@@ -355,15 +368,10 @@ class Places(ResourceUri):
             timezone.set_request_timezone(region)
             response = i_manager.dispatch(args, "places", instance_name=instance)
         else:
+            authentication.check_access_to_global_places(user)
             autocomplete = global_autocomplete.get('bragi')
             if autocomplete:
-                user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=False)
-                authentication.check_access_to_global_places(user)
-                shape = None
-
-                if user and user.shape:
-                    shape = json.loads(user.shape)
-                response = autocomplete.get(args, instance=None, shape=shape)
+                response = autocomplete.get(args, instance=None)
             else:
                 raise TechnicalError('world wide autocompletion service not available')
         return response, 200

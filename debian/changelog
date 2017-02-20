@@ -1,3 +1,28 @@
+navitia2 (2.26.0) unstable; urgency=low
+
+  * Jormun: Call bragi with type  <https://github.com/CanalTP/navitia/pull/1963>
+  * Doc: doc on the impact's status  <https://github.com/CanalTP/navitia/pull/1985>
+  * jormungandr: make start_page an int for last link  <https://github.com/CanalTP/navitia/pull/1987>
+  * Jormungandr: Geovelo management  <https://github.com/CanalTP/navitia/pull/1986>
+  * Jormungandr: output line sections  <https://github.com/CanalTP/navitia/pull/1978>
+  * Kraken: disruption status is only based on 'now'  <https://github.com/CanalTP/navitia/pull/1984>
+  * all: add category on disruption  <https://github.com/CanalTP/navitia/pull/1982>
+  * Jormun: fix types sent to bragi  <https://github.com/CanalTP/navitia/pull/1983>
+  * All: Line sections on ptref  <https://github.com/CanalTP/navitia/pull/1977>
+  * Kraken: StopPointConnection weren't freed, so it was causing a memory leak  <https://github.com/CanalTP/navitia/pull/1981>
+  * Jormungandr: serialize poi_type in poi from geocodejson  <https://github.com/CanalTP/navitia/pull/1979>
+  * jormungandr: use user shape on instance autocomplete  <https://github.com/CanalTP/navitia/pull/1975>
+  * Jormungandr: POC of a SIRI lite connector for realtime  <https://github.com/CanalTP/navitia/pull/1971>
+  * Jormungandr: remove useless cache file  <https://github.com/CanalTP/navitia/pull/1976>
+  * Jormungandr: fix marshall of street and hack on POI  <https://github.com/CanalTP/navitia/pull/1974>
+  * Jormun: fix test  <https://github.com/CanalTP/navitia/pull/1973>
+  * Jormun: fix retrocompatibility  <https://github.com/CanalTP/navitia/pull/1967>
+  * ed: fix timezone bug when there is no dst  <https://github.com/CanalTP/navitia/pull/1969>
+  * Jormungandr: error handling on autocomplete configuration error  <https://github.com/CanalTP/navitia/pull/1962>
+  * Doc: since/until parameters on disruptions  <https://github.com/CanalTP/navitia/pull/1964>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Mon, 20 Feb 2017 10:02:25 +0100
+
 navitia2 (2.25.0) unstable; urgency=low
 
   * ed: add tcmalloc especially to bina (also to tests)  <https://github.com/CanalTP/navitia/pull/1961>

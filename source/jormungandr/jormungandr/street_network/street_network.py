@@ -48,6 +48,9 @@ class AbstractStreetNetworkService(ABC):
     def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise, request):
         pass
 
+    def record_external_failure(self, message):
+        utils.record_external_failure(message, 'streetnetwork', self.sn_system_id)
+
 
 class StreetNetwork(object):
 

@@ -166,6 +166,17 @@ namespace navitia {
             auto cause = disruption->mutable_cause();
             FILL_TIMESTAMPMIXIN(cause)
             FILL_REQUIRED(cause, wording, std::string)
+            fill_category(const_it);
+        }
+
+        template<typename T>
+        void fill_category(T const_it) {
+            if (const_it["category_id"].is_null()) {
+                return;
+            }
+            auto category = disruption->mutable_cause()->mutable_category();
+            FILL_TIMESTAMPMIXIN(category)
+            FILL_REQUIRED(category, name, std::string)
         }
 
         template<typename T>

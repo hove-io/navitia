@@ -838,9 +838,6 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         assert len(disruptions) == 9
         for d in disruptions:
             is_valid_disruption(d)
-            # in pt_ref, the status is always active as the checked
-            # period is the validity period
-            assert d["status"] == "active"
 
         # we test that we can access a specific disruption
         response = self.query_region('disruptions/too_bad_line_C')

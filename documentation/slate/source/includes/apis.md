@@ -314,16 +314,18 @@ Examples:
 
 -   Type: [iso-date-time](#iso-date-time)
 
-To be used only on "vehicle_journeys" collection, to filter on a
+To be used only on "vehicle_journeys" and "disruptions" collection, to filter on a
 period. Both parameters "until" and "since" are optional.
 
 Example:
 
 -   Getting every active New Jersey vehicles between 12h00 and 12h01, on a specific date <https://api.navitia.io/v1/coverage/us-ny/networks/network:newjersey/vehicle_journeys?since=20160503T120000&until=20160503T120100>
+-   Getting every active disruption on "Bretagne" for a specific date <http://api.navitia.io/v1/coverage/fr-bre/disruptions?since=20170206000000&until=20170206235959>
 
 <aside class="warning">
-    This filter is applied using only the first stop time of a
-    vehicle journey, "since" is included and "until" is excluded.
+    On vehicle_journey this filter is applied using only the first stop time.
+    On disruption this filter must intersect with one application period.
+    "since" is included and "until" is excluded.
 </aside>
 
 #### disable_geojson

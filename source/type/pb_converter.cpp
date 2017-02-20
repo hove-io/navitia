@@ -71,8 +71,16 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
         add_pt_object(bo);
     }
     void operator()(const nt::disruption::LineSection& line_section) const {
-        //TODO: for the moment a line section is only a line, but later we might want to output more stuff
-        add_pt_object(line_section.line);
+        // a line section is displayed as a disruption on a line with additional information
+        auto* pobj = add_pt_object(line_section.line);
+
+        auto* impacted_section = pobj->mutable_impacted_section();
+
+        filler.copy(0, DumpMessage::No).fill_pb_object(line_section.start_point,
+                                                       impacted_section->mutable_from());
+
+        filler.copy(0, DumpMessage::No).fill_pb_object(line_section.end_point,
+                                                       impacted_section->mutable_to());
     }
     void operator()(const nt::disruption::UnknownPtObj&) const {}
     void operator()(const nt::MetaVehicleJourney* mvj) const {
@@ -900,14 +908,14 @@ void PbCreator::Filler::fill_informed_entity(const nt::disruption::PtObj& ptobj,
 
 static pbnavitia::ActiveStatus
 compute_disruption_status(const nt::disruption::Impact& impact,
-                          const pt::time_period& action_period) {
+                          const pt::ptime& now) {
 
     bool is_future = false;
     for(const auto& period: impact.application_periods){
-        if(period.intersects(action_period)){
+        if(period.contains(now)){
             return pbnavitia::active;
         }
-        if(!period.is_null() && period.begin() >= action_period.end()){
+        if(!period.is_null() && period.begin() >= now){
             is_future = true;
         }
     }
@@ -958,6 +966,9 @@ void PbCreator::Filler::fill_pb_object(const nt::disruption::Impact* impact, pbn
     }
     if (impact->disruption->cause) {
         pb_impact->set_cause(impact->disruption->cause->wording);
+        if (!impact->disruption->cause->category.empty()) {
+            pb_impact->set_category(impact->disruption->cause->category);
+        }
     }
 
     for (const auto& m: impact->messages) {
@@ -998,9 +1009,9 @@ void PbCreator::Filler::fill_pb_object(const nt::disruption::Impact* impact, pbn
     }
 
     //we need to compute the active status
-    pb_impact->set_status(compute_disruption_status(*impact, pb_creator.action_period));
+    pb_impact->set_status(compute_disruption_status(*impact, pb_creator.now));
 
-    for (const auto& informed_entity: impact->informed_entities) {
+    for (const auto& informed_entity: impact->informed_entities()) {
         fill_informed_entity(informed_entity, *impact, pb_impact);
     }
 }

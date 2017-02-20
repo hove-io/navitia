@@ -30,7 +30,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from abc import abstractmethod, ABCMeta
-from jormungandr.utils import timestamp_to_datetime
+from jormungandr.utils import timestamp_to_datetime, record_external_failure
 from jormungandr import new_relic
 
 
@@ -92,11 +92,10 @@ class RealtimeProxy(object):
         pass
 
     def record_external_failure(self, message):
-        params = {'rt_system_id': repr(self.rt_system_id), 'message': message}
-        new_relic.record_custom_event('realtime_external_failure', params)
+        record_external_failure(message, 'realtime', self.rt_system_id)
 
     def record_internal_failure(self, message):
-        params = {'rt_system_id': repr(self.rt_system_id), 'message': message}
+        params = {'realtime_system_id': repr(self.rt_system_id), 'message': message}
         new_relic.record_custom_event('realtime_internal_failure', params)
 
 

@@ -889,7 +889,7 @@ def check_embedded_line_label(label, line, depth_check):
     if depth_check > 0:
         assert get_not_null(line, 'commercial_mode')['name'] in label
         assert get_not_null(line, 'network')['name'] in label
-    assert get_not_null(line, 'code') in label
+    assert line.get('code', '') in label
     assert get_not_null(line, 'name') in label
 
 
@@ -1030,10 +1030,29 @@ def get_disruptions(obj, response):
     """
     all_disruptions = {d['id']: d for d in response['disruptions']}
 
-    if 'links' not in obj:
-        return None
-    return [all_disruptions[d['id']] for d in obj['links'] if d['type'] == 'disruption']
+    # !! uggly hack !!
+    # for vehicle journeys we do not respect the right way to represent disruption,
+    # we do not put the disruption link in a generic `links` section but in a `disruptions` sections...
+    link_section = obj.get('links', obj.get('disruptions', []))
 
+    return [all_disruptions[d['id']] for d in link_section if d['type'] == 'disruption']
+
+
+def is_valid_line_section_disruption(disruption):
+    """
+    a line section disruption is a classic disruption with it's line as the impacted object
+    and aside this a 'line_section' section with additional information on the line section
+    """
+    is_valid_disruption(disruption, chaos_disrup=False)
+
+    line_section_impacted = next((d for d in get_not_null(disruption, 'impacted_objects')
+                                  if d['pt_object']['embedded_type'] == 'line'
+                                 and d.get('impacted_section')), None)
+
+    assert line_section_impacted
+    line_section = get_not_null(line_section_impacted, 'impacted_section')
+    is_valid_pt_object(get_not_null(line_section, 'from'))
+    is_valid_pt_object(get_not_null(line_section, 'to'))
 
 def is_valid_disruption(disruption, chaos_disrup=True):
     get_not_null(disruption, 'id')
@@ -1081,6 +1100,22 @@ def is_valid_disruption(disruption, chaos_disrup=True):
                 # we need at least either the base or the departure information
                 assert 'base_arrival_time' in impacted_stop and 'base_departure_time' in impacted_stop or \
                        'amended_arrival_time' in impacted_stop and 'amended_arrival_time' in impacted_stop
+
+ObjGetter = namedtuple('ObjGetter', ['collection', 'uri'])
+
+
+def has_disruption(response, object_get, disruption_uri):
+    """
+    Little helper to check if a specific object is linked to a specific disruption
+
+    object_spec is a ObjGetter
+    """
+    o = next((s for s in response[object_get.collection] if s['id'] == object_get.uri), None)
+    assert o, 'impossible to find object {}'.format(object_get)
+
+    disruptions = get_disruptions(o, response) or []
+
+    return disruption_uri in (d['disruption_uri'] for d in disruptions)
 
 
 s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset
@@ -1224,4 +1259,3 @@ def new_default_pagination_journey_comparator(clockwise):
             make_crit(lambda j: get_valid_int(j['duration'])),
             make_crit(lambda j: len(j.get('sections', []))),
     ]
-

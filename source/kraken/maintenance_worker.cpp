@@ -252,11 +252,17 @@ void MaintenanceWorker::listen_rabbitmq(){
         // in theory, we can handle a batch of 5000 disruptions in one time very quickly too.
         size_t max_batch_nb = 5000;
 
-        auto rt_envelopes = consume_in_batch(rt_tag, max_batch_nb, timeout_ms, no_ack);
-        handle_rt_in_batch(rt_envelopes);
+        try {
+            auto rt_envelopes = consume_in_batch(rt_tag, max_batch_nb, timeout_ms, no_ack);
+            handle_rt_in_batch(rt_envelopes);
 
-        auto task_envelopes = consume_in_batch(task_tag, 1, timeout_ms, no_ack);
-        handle_task_in_batch(task_envelopes);
+            auto task_envelopes = consume_in_batch(task_tag, 1, timeout_ms, no_ack);
+            handle_task_in_batch(task_envelopes);
+        } catch (const navitia::recoverable_exception& e) {
+            //on a recoverable an internal server error is returned
+            LOG4CPLUS_ERROR(logger, "internal server error on rabbitmq message: " << e.what());
+            LOG4CPLUS_ERROR(logger, "backtrace: " << e.backtrace());
+        }
 
         // Since consume_in_batch is non blocking, we don't want that the worker loops for nothing, when the
         // queue is empty.

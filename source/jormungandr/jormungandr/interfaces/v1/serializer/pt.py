@@ -123,9 +123,16 @@ class ImpactedStopSerializer(PbNestedSerializer):
         else:
             return None
 
+
+class ImpactedSectionSerializer(PbNestedSerializer):
+    f = PtObjectSerializer(label='from', attr='from')
+    to = PtObjectSerializer()
+
+
 class ImpactedSerializer(PbNestedSerializer):
     pt_object = PtObjectSerializer(display_none=False)
     impacted_stops = ImpactedStopSerializer(many=True, display_none=False)
+    impacted_section = ImpactedSectionSerializer(display_none=False)
 
 
 class DisruptionSerializer(PbNestedSerializer):
@@ -138,13 +145,13 @@ class DisruptionSerializer(PbNestedSerializer):
     updated_at = DateTimeField()
     tags = serpy.Serializer(many=True, display_none=False)
     cause = serpy.Field()
+    category = serpy.Field(display_none=False)
     severity = SeveritySerializer()
     messages = MessageSerializer(many=True)
     impacted_objects = ImpactedSerializer(many=True, display_none=False)
     uri = serpy.Field(attr='uri')
     disruption_uri = serpy.Field()
     contributor = serpy.Field()
-
 
 
 class AdminSerializer(GenericSerializer):
