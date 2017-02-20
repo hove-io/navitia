@@ -313,7 +313,8 @@ class TestBragiShape(AbstractTestFixture):
             # test that the shape is posted
             def http_post(url, *args, **kwargs):
                 json = kwargs.pop('json')
-                assert json.get('geometry')
+                assert json['shape']['type'] == 'Feature'
+                assert json.get('shape').get('geometry')
                 return MockResponse({}, 200, '{}')
 
             with mock.patch('requests.get', http_get):
