@@ -93,7 +93,7 @@ class GeocodeJson(AbstractAutocomplete):
         shape = request.get('shape', None)
         try:
             if shape:
-                raw_response = requests.post(self.external_api, timeout=self.timeout, json=shape, params=params)
+                raw_response = requests.post(self.external_api, timeout=self.timeout, json={'shape': shape}, params=params)
             else:
                 raw_response = requests.get(self.external_api, timeout=self.timeout, params=params)
 
