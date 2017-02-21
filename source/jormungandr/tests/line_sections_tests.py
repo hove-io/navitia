@@ -55,6 +55,17 @@ class TestLineSections(AbstractTestFixture):
         assert len(get_not_null(r, 'disruptions')) == 1
         is_valid_line_section_disruption(r['disruptions'][0])
 
+    def test_on_stop_areas(self):
+        """
+        the line section disruption is not linked to a stop area, we cannot directly find our disruption
+        """
+        assert not self.has_disruption(ObjGetter('stop_areas', 'A'), 'line_section_on_line_1')
+        assert not self.has_disruption(ObjGetter('stop_areas', 'B'), 'line_section_on_line_1')
+        assert not self.has_disruption(ObjGetter('stop_areas', 'C'), 'line_section_on_line_1')
+        assert not self.has_disruption(ObjGetter('stop_areas', 'D'), 'line_section_on_line_1')
+        assert not self.has_disruption(ObjGetter('stop_areas', 'E'), 'line_section_on_line_1')
+        assert not self.has_disruption(ObjGetter('stop_areas', 'F'), 'line_section_on_line_1')
+
     def test_on_stop_points(self):
         """
         the line section disruption should be linked to the impacted stop_points
@@ -72,3 +83,80 @@ class TestLineSections(AbstractTestFixture):
         """
         assert self.has_disruption(ObjGetter('vehicle_journeys', 'vj:1:1'), 'line_section_on_line_1')
         assert not self.has_disruption(ObjGetter('vehicle_journeys', 'vj:1:2'), 'line_section_on_line_1')
+
+    def test_traffic_reports_on_stop_areas(self):
+        """
+        we should be able to find the related line section disruption with /traffic_report
+        """
+        def has_dis(q):
+            r = self.default_query(q)
+            return 'line_section_on_line_1' in (d['disruption_id'] for d in r['disruptions'])
+
+        assert not has_dis('stop_areas/A/traffic_reports')
+        assert not has_dis('stop_areas/B/traffic_reports')
+        assert has_dis('stop_areas/C/traffic_reports')
+        assert has_dis('stop_areas/D/traffic_reports')
+        assert has_dis('stop_areas/E/traffic_reports')
+        assert not has_dis('stop_areas/F/traffic_reports')
+
+    def test_traffic_reports_on_lines(self):
+        """
+        we should be able to find the related line section disruption with /traffic_report
+        """
+        def has_dis(q):
+            r = self.default_query(q)
+            return 'line_section_on_line_1' in (d['disruption_id'] for d in r['disruptions'])
+
+        assert has_dis('lines/line:1/traffic_reports')
+        assert not has_dis('lines/line:2/traffic_reports')
+
+    def test_traffic_reports_on_routes(self):
+        """
+        for routes since we display the impacts on all the stops (but we do not display a route object)
+        we display the disruption even if the route has not been directly impacted
+        """
+        def has_dis(q):
+            r = self.default_query(q)
+            return 'line_section_on_line_1' in (d['disruption_id'] for d in r['disruptions'])
+
+        assert has_dis('routes/route:line:1:1/traffic_reports')
+        assert has_dis('routes/route:line:1:2/traffic_reports')
+        # route 3 has been impacted by the line section but it has no stoppoint in the line section
+        # so in this case we do not display the disruption
+        assert not has_dis('routes/route:line:1:3/traffic_reports')
+
+    def test_traffic_reports_on_vjs(self):
+        """
+        for /traffic_reports on vjs it's a bit the same as the lines
+        we display a line section disruption if it impacts the stops of the vj
+        """
+        def has_dis(q):
+            r = self.default_query(q)
+            return 'line_section_on_line_1' in (d['disruption_id'] for d in r['disruptions'])
+
+        assert has_dis('vehicle_journeys/vj:1:1/traffic_reports')
+        assert has_dis('vehicle_journeys/vj:1:2/traffic_reports')
+        assert not has_dis('vehicle_journeys/vj:1:3/traffic_reports')
+
+    def test_traffic_reports_on_stop_points(self):
+        """
+        for /traffic_reports on stopoints
+        we display a line section disruption if it impacts the stop_area
+        """
+        def has_dis(q):
+            r = self.default_query(q)
+            return 'line_section_on_line_1' in (d['disruption_id'] for d in r['disruptions'])
+
+        assert not has_dis('stop_points/A_1/traffic_reports')
+        assert not has_dis('stop_points/A_2/traffic_reports')
+        assert not has_dis('stop_points/B_1/traffic_reports')
+        assert not has_dis('stop_points/B_2/traffic_reports')
+        assert has_dis('stop_points/C_1/traffic_reports')
+        # even if C_2 is not impacted, we display the line section impact because C has been impacted
+        assert has_dis('stop_points/C_2/traffic_reports')
+        assert has_dis('stop_points/D_1/traffic_reports')
+        assert has_dis('stop_points/D_2/traffic_reports')
+        assert has_dis('stop_points/E_1/traffic_reports')
+        assert has_dis('stop_points/E_2/traffic_reports')
+        assert not has_dis('stop_points/F_1/traffic_reports')
+        assert not has_dis('stop_points/F_2/traffic_reports')

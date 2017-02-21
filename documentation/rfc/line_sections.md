@@ -144,13 +144,9 @@ This /traffic_reports api is meant to be a clever representation of the disrupti
 
 `/stop_areas/C/traffic_reports`  --> YES
 
-`/lines/line_1/traffic_reports`  -->  YES
+`/lines/line_1/traffic_reports`  --> YES
 
-`/lines/line_2/traffic_reports`  -->  NO
-
-`/routes/route_1_of_the_line_1/traffic_reports`  --> YES
-
-`/routes/route_2_of_the_line_1/traffic_reports`  --> NO
+`/lines/line_2/traffic_reports`  --> NO
 
 `/stop_areas/A/routes/route_1_of_the_line_1/traffic_reports`  --> YES (I think NO would be better it but this will be quite difficult for not that much gain)
 
@@ -158,9 +154,17 @@ This /traffic_reports api is meant to be a clever representation of the disrupti
 
 `/networks/network_of_the_route_1/traffic_reports `  --> YES
 
+`/traffic_reports` display explicitly only `networks`, `lines` and `stop_areas`
+
+so for `routes`, `stop_points` and `vehicle_journeys` we display a line section disruption if we display a stop_areas impacted by the disruption
+
+`/routes/route_1_of_the_line_1/traffic_reports`  --> YES
+
+`/routes/route_2_of_the_line_1/traffic_reports`  --> YES because we display the disruption on a route_2_of_the_line_1's stop area
+
 `/stop_points/C_1/traffic_reports`  --> YES since it's stop_area is part of an impacted line section
 
-`/vehicle_journeys/vj1_of_route_1_of_line_1/traffic_reports`  --> NO (It would be better to display it, but we do not display other disruptions there, would it be worth it to change this ?)
+`/vehicle_journeys/vj1_of_route_1_of_line_1/traffic_reports`  --> YES
 
 
 To sum up, `/disruptions` is a technical view whereas `/traffic_reports` should be user friendly thus:

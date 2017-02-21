@@ -38,11 +38,15 @@ www.navitia.io
   Test on when to display the line section disruptions
 
 A           B           C           D           E           F
-o --------- o --------- o --------- o --------- o --------- o   <- route_1_of_the_line_1
+o --------- o --------- o --------- o --------- o --------- o   <- route:line:1:1
 
-                        XXXXXXXXXXXXXXXXXXXXXXXXX               <- impact on the route_1_of_the_line_1 on [C, E]
+                        XXXXXXXXXXXXXXXXXXXXXXXXX        <- impact on route:line:1:1 and route:line:1:3 on [C, E]
 
-  We also add another route route_2_of_the_line_1 that pass through the same stops areas but different stop points
+  We also add another route route:line:1:2 that pass through the same stops areas but different stop points
+
+  We also add another route route:line:1:3 that only pass on (A, B, F) and that shouldn't be impacted
+
+  We finaly add another line line_2 that pass on the same stops areas
   */
 
 namespace bg = boost::gregorian;
@@ -79,6 +83,20 @@ int main(int argc, const char* const argv[]) {
             ("E_2", "09:15"_t)
             ("F_2", "09:30"_t);
 
+    b.vj("line:1")
+            .route("route:line:1:3")
+            .uri("vj:1:3")
+            ("A_1", "08:00"_t)
+            ("B_1", "08:15"_t)
+            ("F_1", "09:30"_t);
+
+    b.vj("line:2")
+            .route("route:line:2:1")
+            .uri("vj:2")
+            ("A_1", "08:00"_t)
+            ("B_1", "08:15"_t)
+            ("F_1", "09:30"_t);
+
     b.generate_dummy_basis();
     b.finish();
     b.data->pt_data->index();
@@ -91,7 +109,7 @@ int main(int argc, const char* const argv[]) {
                               .severity(nt::disruption::Effect::NO_SERVICE)
                               .application_periods(btp("20170101T000000"_dt, "20170106T090000"_dt))
                               .publish(btp("20170101T000000"_dt, "20170110T090000"_dt))
-                              .on_line_section("line:1", "C", "E", {"route:line:1:1"})
+                              .on_line_section("line:1", "C", "E", {"route:line:1:1", "route:line:1:3"})
                               .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
