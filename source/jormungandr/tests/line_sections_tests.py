@@ -160,3 +160,47 @@ class TestLineSections(AbstractTestFixture):
         assert has_dis('stop_points/E_2/traffic_reports')
         assert not has_dis('stop_points/F_1/traffic_reports')
         assert not has_dis('stop_points/F_2/traffic_reports')
+
+    def test_journeys(self):
+        """
+        for /journeys, we should display a line section disruption only if we use an impacted section
+
+        We do all the calls as base_schedule to see the disruption but not be really impacted by them
+        """
+
+        date = '20170102T080000'  # with this departure time we should take 'vj:1:1' that is impacted
+        current = '_current_datetime=20170101T080000'
+
+        def journey_query(_from, to):
+            return 'journeys?from={fr}&to={to}&datetime={dt}&{cur}&data_freshness=base_schedule'.\
+                format(fr=_from,
+                       to=to,
+                       dt=date,
+                       cur=current)
+
+        def journeys(_from, to):
+            q = journey_query(_from=_from, to=to)
+            r = self.query_region(q)
+            self.is_valid_journey_response(r, q)
+            return r
+
+        # if we do not use an impacted section we shouldn't see the impact
+        r = journeys(_from='A', to='B')
+        assert get_used_vj(r) == [['vj:1:1']]  # we check the used vj to be certain we took an impacted vj
+        assert 'line_section_on_line_1' not in get_all_element_disruptions(r['journeys'], r)
+
+        # even if 'C' is part of the impacted section, it's the first stop,
+        # so A->C do not use an impacted section
+        r = journeys(_from='A', to='C')
+        assert get_used_vj(r) == [['vj:1:1']]
+        assert 'line_section_on_line_1' not in get_all_element_disruptions(r['journeys'], r)
+
+        # same for B->C
+        r = journeys(_from='B', to='C')
+        assert get_used_vj(r) == [['vj:1:1']]
+        assert 'line_section_on_line_1' not in get_all_element_disruptions(r['journeys'], r)
+
+        # if we use an impacted section we should see the impact
+        r = journeys(_from='C', to='D')
+        assert get_used_vj(r) == [['vj:1:1']]
+        assert 'line_section_on_line_1' in get_all_element_disruptions(r['journeys'], r)

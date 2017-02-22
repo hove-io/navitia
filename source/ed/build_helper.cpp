@@ -462,7 +462,9 @@ Impacter builder::impact(nt::RTLevel lvl, std::string disruption_uri) {
         disruption_uri = get_random_id();
     }
     auto& disruption = data->pt_data->disruption_holder.make_disruption(disruption_uri, lvl);
-    return Impacter(*this, disruption);
+    auto i = Impacter(*this, disruption);
+    i.uri(disruption_uri); //by default we set the same uri to the impact and the disruption
+    return i;
 }
 
 VJ builder::vj(const std::string& line_name,
