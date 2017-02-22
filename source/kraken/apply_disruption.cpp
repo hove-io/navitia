@@ -177,7 +177,7 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 pt_data);
             LOG4CPLUS_TRACE(log, "New vj has been created " << vj->uri);
             // Use the corresponding base stop_time for boarding and alighting duration
-            for(auto st: vj->stop_time_list) {
+            for(auto& st: vj->stop_time_list) {
                 const auto base_st = get_base_stop_time(&st);
                 if(base_st) {
                     st.boarding_time = st.departure_time - base_st->get_boarding_duration();
