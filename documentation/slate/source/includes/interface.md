@@ -130,11 +130,12 @@ That means :
 Objects order
 ------------
 
-Unless specified otherwise objects are not sorted and stability of object's order is not guaranteed.
+Unless specified, objects lists are not sorted and stability of objects' order is not guaranteed.
 
-Examples of sorted objects:
+Examples of sorted objects tables:
 * journeys in a '/journeys' response
 * '/departures' and '/arrivals'
+* '/stop_schedules'
 * stop_points in '/routes/<id_route>/stop_points'
 * '/places_nearby'
 * '/places'
@@ -148,7 +149,7 @@ Examples of unsorted responses:
 Lifetime of id
 --------------
 
-The way id (or uri) of objects are generated is not garanteed stable, nor are the data processed.
-So we advise to limit to the minimum storing id/uri of objects.
+The way id (or uri) of an object is generated is not garanteed stable, nor are the data processed.
+So we advise to limit to the minimum storing ids/uris of objects.
 We recommend to use as much as possible a previous call to **[Places](#places)** and **[PT_objects](#pt-objects)**.
-Also, be resilient if one of those id/uri disappears.
+Also, be resilient if one of those ids/uris disappears.
