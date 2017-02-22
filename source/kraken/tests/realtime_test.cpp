@@ -1667,3 +1667,131 @@ BOOST_AUTO_TEST_CASE(ordered_delay_message_test) {
     }
 }
 
+
+BOOST_AUTO_TEST_CASE(delays_with_boarding_alighting_times) {
+    ed::builder b("20170101");
+
+    b.vj("line:A", "1111111", "", true, "vj:1")
+            ("stop_point:10", "08:10"_t, "08:11"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)
+            ("stop_point:20", "08:20"_t, "08:21"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)
+            ("stop_point:30", "08:30"_t, "08:31"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)
+            ("stop_point:40", "08:40"_t, "08:41"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
+
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+
+    auto trip_update_1 = ntest::make_delay_message("vj:1",
+            "20170102",
+            {
+                    std::make_tuple("stop_point:10", "20170102T081000"_pts, "20170102T081100"_pts),
+                    std::make_tuple("stop_point:20", "20170102T082000"_pts, "20170102T082100"_pts),
+                    std::make_tuple("stop_point:30", "20170102T084000"_pts, "20170102T084100"_pts), // << Delayed
+                    std::make_tuple("stop_point:40", "20170102T085000"_pts, "20170102T085100"_pts) // << Delayed
+            });
+    navitia::handle_realtime("feed", "20170101T1337"_dt, trip_update_1, *b.data);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+
+    // Check the original vj
+    auto* vj = b.get<nt::VehicleJourney>("vj:1");
+    auto realtime_vp = vj->rt_validity_pattern()->days;
+    auto base_vp = vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(boost::algorithm::ends_with(realtime_vp.to_string(), "1111101"), realtime_vp);
+    BOOST_CHECK_MESSAGE(boost::algorithm::ends_with(base_vp.to_string(), "1111111"), base_vp);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().stop_point->uri, "stop_point:10");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().departure_time, "08:11"_t);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().boarding_time, "08:06"_t);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(1).stop_point->uri, "stop_point:20");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(1).departure_time, "08:21"_t);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(1).boarding_time, "08:21"_t);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).stop_point->uri, "stop_point:30");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).departure_time, "08:31"_t);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).boarding_time, "08:31"_t);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().stop_point->uri, "stop_point:40");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().arrival_time, "08:40"_t);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().alighting_time, "08:45"_t);
+
+    // Check the realtime vj
+    vj = b.get<nt::VehicleJourney>("vj:1:modified:0:feed");
+    realtime_vp = vj->rt_validity_pattern()->days;
+    base_vp = vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(boost::algorithm::ends_with(realtime_vp.to_string(), "0000010"), realtime_vp);
+    BOOST_CHECK_MESSAGE(boost::algorithm::ends_with(base_vp.to_string(), "0000000"), base_vp);
+    // The realtime vj should have all 4 stop_times and kept the boarding_times
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().stop_point->uri, "stop_point:10");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().departure_time, "08:11"_t);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().boarding_time, "08:06"_t);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(1).stop_point->uri, "stop_point:20");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(1).departure_time, "08:21"_t);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(1).boarding_time, "08:21"_t);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).stop_point->uri, "stop_point:30");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).departure_time, "08:41"_t);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).boarding_time, "08:41"_t);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().stop_point->uri, "stop_point:40");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().arrival_time, "08:50"_t);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().alighting_time, "08:55"_t);
+}
+
+BOOST_AUTO_TEST_CASE(delays_on_lollipop_with_boarding_alighting_times) {
+    ed::builder b("20170101");
+
+    b.vj("line:A", "1111111", "", true, "vj:1")
+            ("stop_point:10", "08:10"_t, "08:11"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)
+            ("stop_point:20", "08:20"_t, "08:21"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)
+            ("stop_point:10", "08:30"_t, "08:31"_t, std::numeric_limits<uint16_t>::max(), true, true, 300, 0);
+
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+
+    auto trip_update_1 = ntest::make_delay_message("vj:1",
+            "20170102",
+            {
+                    std::make_tuple("stop_point:10", "20170102T081000"_pts, "20170102T081100"_pts),
+                    std::make_tuple("stop_point:20", "20170102T082000"_pts, "20170102T082100"_pts),
+                    std::make_tuple("stop_point:10", "20170102T084000"_pts, "20170102T084100"_pts), // Delayed
+            });
+    navitia::handle_realtime("feed", "20170101T1337"_dt, trip_update_1, *b.data);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+
+    // Check the original vj
+    auto* vj = b.get<nt::VehicleJourney>("vj:1");
+    auto realtime_vp = vj->rt_validity_pattern()->days;
+    auto base_vp = vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(boost::algorithm::ends_with(realtime_vp.to_string(), "1111101"), realtime_vp);
+    BOOST_CHECK_MESSAGE(boost::algorithm::ends_with(base_vp.to_string(), "1111111"), base_vp);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 3);
+
+    // Check the realtime vj
+    vj = b.get<nt::VehicleJourney>("vj:1:modified:0:feed");
+    realtime_vp = vj->rt_validity_pattern()->days;
+    base_vp = vj->base_validity_pattern()->days;
+    BOOST_CHECK_MESSAGE(boost::algorithm::ends_with(realtime_vp.to_string(), "0000010"), realtime_vp);
+    BOOST_CHECK_MESSAGE(boost::algorithm::ends_with(base_vp.to_string(), "0000000"), base_vp);
+    // The realtime vj should have all 3 stop_times but lose the boarding / alighting time on stop_point:10
+    // since it's a lollipop vj and it can't find the base_st
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 3);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().stop_point->uri, "stop_point:10");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().departure_time, "08:11"_t);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().boarding_time, "08:11"_t);
+    // SHOULD BE : BOOST_REQUIRE_EQUAL(vj->stop_time_list.front().boarding_time, "08:06"_t);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(1).stop_point->uri, "stop_point:20");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(1).departure_time, "08:21"_t);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(1).boarding_time, "08:21"_t);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).stop_point->uri, "stop_point:10");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).departure_time, "08:41"_t);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).alighting_time, "08:40"_t);
+    // SHOULD BE : BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).alighting_time, "08:46"_t);
+}
