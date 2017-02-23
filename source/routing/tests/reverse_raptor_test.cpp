@@ -685,15 +685,15 @@ BOOST_AUTO_TEST_CASE(with_boarding_alighting_time_and_stay_in){
     result.at(0).print();
     BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 4);
     BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
-    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, boost::posix_time::time_from_string("2017-Jan-01 08:50:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, boost::posix_time::time_from_string("2017-Jan-01 09:00:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, "20170101T085000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, "20170101T090000"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[1].type, ItemType::public_transport);
-    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, boost::posix_time::time_from_string("2017-Jan-01 09:00:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, boost::posix_time::time_from_string("2017-Jan-01 09:15:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, "20170101T090000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, "20170101T091500"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[2].type, ItemType::stay_in);
-    BOOST_CHECK_EQUAL(result.at(0).items[2].departure, boost::posix_time::time_from_string("2017-Jan-01 09:15:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[2].arrival, boost::posix_time::time_from_string("2017-Jan-01 09:30:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[2].departure, "20170101T091500"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[2].arrival, "20170101T093000"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[3].type, ItemType::public_transport);
-    BOOST_CHECK_EQUAL(result.at(0).items[3].departure, boost::posix_time::time_from_string("2017-Jan-01 09:30:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[3].arrival, boost::posix_time::time_from_string("2017-Jan-01 09:35:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[3].departure, "20170101T093000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[3].arrival, "20170101T093500"_dt);
 }

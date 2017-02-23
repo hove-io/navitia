@@ -450,14 +450,14 @@ BOOST_AUTO_TEST_CASE(freq_vj_with_boarding_alighting) {
     result.at(0).print();
     BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 3);
     BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
-    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, boost::posix_time::time_from_string("2017-Jan-01 08:25:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, boost::posix_time::time_from_string("2017-Jan-01 08:30:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, "20170101T082500"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, "20170101T083000"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[1].type, ItemType::public_transport);
-    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, boost::posix_time::time_from_string("2017-Jan-01 08:30:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, boost::posix_time::time_from_string("2017-Jan-01 08:42:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, "20170101T083000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, "20170101T084200"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[2].type, ItemType::alighting);
-    BOOST_CHECK_EQUAL(result.at(0).items[2].departure, boost::posix_time::time_from_string("2017-Jan-01 08:42:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[2].arrival, boost::posix_time::time_from_string("2017-Jan-01 08:47:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[2].departure, "20170101T084200"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[2].arrival, "20170101T084700"_dt);
 
     result = raptor.compute(
         b.data->pt_data->stop_areas_map["stop1"], b.data->pt_data->stop_areas_map["stop3"],
@@ -468,14 +468,14 @@ BOOST_AUTO_TEST_CASE(freq_vj_with_boarding_alighting) {
     result.at(0).print();
     BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 3);
     BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
-    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, boost::posix_time::time_from_string("2017-Jan-01 07:55:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, boost::posix_time::time_from_string("2017-Jan-01 08:00:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, "20170101T075500"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, "20170101T080000"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[1].type, ItemType::public_transport);
-    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, boost::posix_time::time_from_string("2017-Jan-01 08:00:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, boost::posix_time::time_from_string("2017-Jan-01 08:12:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, "20170101T080000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, "20170101T081200"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[2].type, ItemType::alighting);
-    BOOST_CHECK_EQUAL(result.at(0).items[2].departure, boost::posix_time::time_from_string("2017-Jan-01 08:12:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[2].arrival, boost::posix_time::time_from_string("2017-Jan-01 08:17:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[2].departure, "20170101T081200"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[2].arrival, "20170101T081700"_dt);
 }
 
 BOOST_AUTO_TEST_CASE(transfer_between_freq_with_boarding_alighting) {
@@ -537,26 +537,26 @@ BOOST_AUTO_TEST_CASE(transfer_between_freq_with_boarding_alighting) {
     result.at(0).print();
     BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 7);
     BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
-    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, boost::posix_time::time_from_string("2017-Jan-01 15:25:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, boost::posix_time::time_from_string("2017-Jan-01 15:30:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, "20170101T152500"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, "20170101T153000"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[1].type, ItemType::public_transport);
-    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, boost::posix_time::time_from_string("2017-Jan-01 15:30:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, boost::posix_time::time_from_string("2017-Jan-01 15:40:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, "20170101T153000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, "20170101T154000"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[2].type, ItemType::alighting);
-    BOOST_CHECK_EQUAL(result.at(0).items[2].departure, boost::posix_time::time_from_string("2017-Jan-01 15:40:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[2].arrival, boost::posix_time::time_from_string("2017-Jan-01 15:45:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[2].departure, "20170101T154000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[2].arrival, "20170101T154500"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[3].type, ItemType::waiting);
-    BOOST_CHECK_EQUAL(result.at(0).items[3].departure, boost::posix_time::time_from_string("2017-Jan-01 15:45:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[3].arrival, boost::posix_time::time_from_string("2017-Jan-01 15:55:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[3].departure, "20170101T154500"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[3].arrival, "20170101T155500"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[4].type, ItemType::boarding);
-    BOOST_CHECK_EQUAL(result.at(0).items[4].departure, boost::posix_time::time_from_string("2017-Jan-01 15:55:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[4].arrival, boost::posix_time::time_from_string("2017-Jan-01 16:00:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[4].departure, "20170101T155500"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[4].arrival, "20170101T160000"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[5].type, ItemType::public_transport);
-    BOOST_CHECK_EQUAL(result.at(0).items[5].departure, boost::posix_time::time_from_string("2017-Jan-01 16:00:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[5].arrival, boost::posix_time::time_from_string("2017-Jan-01 16:30:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[5].departure, "20170101T160000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[5].arrival, "20170101T163000"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[6].type, ItemType::alighting);
-    BOOST_CHECK_EQUAL(result.at(0).items[6].departure, boost::posix_time::time_from_string("2017-Jan-01 16:30:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[6].arrival, boost::posix_time::time_from_string("2017-Jan-01 16:35:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[6].departure, "20170101T163000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[6].arrival, "20170101T163500"_dt);
 }
 
 BOOST_AUTO_TEST_CASE(transfer_pass_midnight_freq_vj_to_vj_with_boarding_time) {
@@ -595,23 +595,23 @@ BOOST_AUTO_TEST_CASE(transfer_pass_midnight_freq_vj_to_vj_with_boarding_time) {
     result.at(0).print();
     BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 6);
     BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
-    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, boost::posix_time::time_from_string("2017-Jan-02 04:00:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, boost::posix_time::time_from_string("2017-Jan-02 04:10:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, "20170102T040000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, "20170102T041000"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[1].type, ItemType::public_transport);
-    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, boost::posix_time::time_from_string("2017-Jan-02 04:10:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, boost::posix_time::time_from_string("2017-Jan-02 05:00:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, "20170102T041000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, "20170102T050000"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[2].type, ItemType::walking);
-    BOOST_CHECK_EQUAL(result.at(0).items[2].departure, boost::posix_time::time_from_string("2017-Jan-02 05:00:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[2].arrival, boost::posix_time::time_from_string("2017-Jan-02 05:15:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[2].departure, "20170102T050000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[2].arrival, "20170102T051500"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[3].type, ItemType::waiting);
-    BOOST_CHECK_EQUAL(result.at(0).items[3].departure, boost::posix_time::time_from_string("2017-Jan-02 05:15:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[3].arrival, boost::posix_time::time_from_string("2017-Jan-02 06:10:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[3].departure, "20170102T051500"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[3].arrival, "20170102T061000"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[4].type, ItemType::boarding);
-    BOOST_CHECK_EQUAL(result.at(0).items[4].departure, boost::posix_time::time_from_string("2017-Jan-02 06:10:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[4].arrival, boost::posix_time::time_from_string("2017-Jan-02 06:15:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[4].departure, "20170102T061000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[4].arrival, "20170102T061500"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[5].type, ItemType::public_transport);
-    BOOST_CHECK_EQUAL(result.at(0).items[5].departure, boost::posix_time::time_from_string("2017-Jan-02 06:15:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[5].arrival, boost::posix_time::time_from_string("2017-Jan-02 06:30:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[5].departure, "20170102T061500"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[5].arrival, "20170102T063000"_dt);
 
     // We should take the last vj of the frequency (at 5am) and wait two hours to get vj:B2
     result = raptor.compute(
@@ -623,21 +623,21 @@ BOOST_AUTO_TEST_CASE(transfer_pass_midnight_freq_vj_to_vj_with_boarding_time) {
     result.at(0).print();
     BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 6);
     BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
-    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, boost::posix_time::time_from_string("2017-Jan-02 05:00:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, boost::posix_time::time_from_string("2017-Jan-02 05:10:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, "20170102T050000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, "20170102T051000"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[1].type, ItemType::public_transport);
-    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, boost::posix_time::time_from_string("2017-Jan-02 05:10:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, boost::posix_time::time_from_string("2017-Jan-02 06:00:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, "20170102T051000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, "20170102T060000"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[2].type, ItemType::walking);
-    BOOST_CHECK_EQUAL(result.at(0).items[2].departure, boost::posix_time::time_from_string("2017-Jan-02 06:00:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[2].arrival, boost::posix_time::time_from_string("2017-Jan-02 06:15:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[2].departure, "20170102T060000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[2].arrival, "20170102T061500"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[3].type, ItemType::waiting);
-    BOOST_CHECK_EQUAL(result.at(0).items[3].departure, boost::posix_time::time_from_string("2017-Jan-02 06:15:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[3].arrival, boost::posix_time::time_from_string("2017-Jan-02 08:10:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[3].departure, "20170102T061500"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[3].arrival, "20170102T081000"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[4].type, ItemType::boarding);
-    BOOST_CHECK_EQUAL(result.at(0).items[4].departure, boost::posix_time::time_from_string("2017-Jan-02 08:10:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[4].arrival, boost::posix_time::time_from_string("2017-Jan-02 08:15:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[4].departure, "20170102T081000"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[4].arrival, "20170102T081500"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[5].type, ItemType::public_transport);
-    BOOST_CHECK_EQUAL(result.at(0).items[5].departure, boost::posix_time::time_from_string("2017-Jan-02 08:15:00"));
-    BOOST_CHECK_EQUAL(result.at(0).items[5].arrival, boost::posix_time::time_from_string("2017-Jan-02 08:30:00"));
+    BOOST_CHECK_EQUAL(result.at(0).items[5].departure, "20170102T081500"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[5].arrival, "20170102T083000"_dt);
 }
