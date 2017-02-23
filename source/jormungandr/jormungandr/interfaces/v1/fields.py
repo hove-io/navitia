@@ -899,7 +899,7 @@ impacted_stop = {
 impacted_object = {
     'pt_object': NonNullNested(pt_object),
     'impacted_stops': NonNullList(NonNullNested(impacted_stop)),
-    'impacted_section': NonNullNested(impacted_section)
+    'impacted_section': NonNullProtobufNested(impacted_section)
 }
 
 disruption_marshaller = {
