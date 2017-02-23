@@ -428,9 +428,10 @@ struct routing_api_data {
                 .st_shape({A, I, B});
             b.lines["C"]->code = "1C";
 
+            auto zone_id = std::numeric_limits<uint16_t>::max();
             b.vj("C")
-                ("stop_point:stopA", "23:00:00"_t, "23:02:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 1800)
-                ("stop_point:stopB", "23:05:00"_t, "23:07:00"_t, std::numeric_limits<uint16_t>::max(), true, false, 1800, 0);
+                ("stop_point:stopA", "23:00:00"_t, "23:02:00"_t, zone_id, false, true, 0, 1800)
+                ("stop_point:stopB", "23:05:00"_t, "23:07:00"_t, zone_id, true, false, 1800, 0);
 
             //we add another stop not used in the routing tests, but used for ptref tests
 

@@ -208,7 +208,12 @@ void Data::shift_stop_times() {
         // the boarding time.
         //
         // For frequency vj, the start time must be in [0; 24:00[.
-        const int start_time = vj->is_frequency() ? vj->start_time : std::min(first_st->boarding_time, first_st->arrival_time);
+        int start_time;
+        if (vj->is_frequency()) {
+            start_time = vj->start_time;
+        } else {
+            start_time = std::min(first_st->boarding_time, first_st->arrival_time);
+        }
 
         // number of days to shift for start_time in [0; 24:00[
         int shift = (start_time >= 0 ? 0 : 1) - start_time / int(navitia::DateTimeUtils::SECONDS_PER_DAY);
