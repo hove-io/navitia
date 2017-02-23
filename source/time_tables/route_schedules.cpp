@@ -398,7 +398,8 @@ void route_schedule(PbCreator& pb_creator, const std::string& filter,
                     pbnavitia::Header* header = table->mutable_headers(j);
                     pbnavitia::PtDisplayInfo* vj_display_information = header->mutable_pt_display_informations();
                     auto vj = dt_stop_time.second->vehicle_journey;
-                    const auto& vj_st = navitia::VjStopTimes(vj, dt_stop_time.second, nullptr);
+                    auto sts = std::vector<const nt::StopTime*>{dt_stop_time.second};
+                    const auto& vj_st = navitia::VjStopTimes(vj, sts);
                     pb_creator.fill(&vj_st, vj_display_information, 0);
                     // as we only issue headsign for vj in route_schedules:
                     // - need to override headsign with trip headsign (i.e. vj.name)
