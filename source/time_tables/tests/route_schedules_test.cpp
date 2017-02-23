@@ -853,3 +853,41 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_frequency_and_calendar) {
     BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(4).time(), "23:55"_t);
     BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(4).time(), "0:10"_t);
 }
+
+// Check that results are in the right order even if the boarding_time are in a different one
+BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_order_check) {
+    ed::builder b("20170101");
+
+    b.vj("L1").uri("vj:0")
+        ("stop1", "8:00"_t, "8:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 900, 0)
+        ("stop2", "8:05"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 0)
+        ("stop3", "8:10"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 900, 0);
+
+    b.vj("L1").uri("vj:1")
+        ("stop1", "8:05"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 900)
+        ("stop2", "8:10"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 900)
+        ("stop3", "8:15"_t, "8:15"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
+
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->pt_data->build_uri();
+
+    auto* data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
+    navitia::timetables::route_schedule(pb_creator, "line.uri=L1", {}, {}, d("20170103T070000"), 86400, 100,
+                                        3, 10, 0, nt::RTLevel::Base);
+    pbnavitia::Response resp = pb_creator.get_response();
+    BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
+    pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
+    print_route_schedule(route_schedule);
+
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vj:0");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(0).time(), "8:00"_t);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(0).time(), "8:05"_t);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(0).time(), "8:10"_t);
+    BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vj:1");
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(1).time(), "8:05"_t);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(1).time(), "8:10"_t);
+    BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(1).time(), "8:15"_t);
+}
