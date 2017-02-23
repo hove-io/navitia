@@ -61,8 +61,7 @@ std::vector<datetime_stop_time> get_stop_times(const routing::StopEvent stop_eve
                                          dt, clockwise, rt_level,
                                          accessibilite_params.vehicle_properties, true);
         if (st.first) {
-            auto diff = clockwise ? st.first->get_boarding_duration() : -1 * st.first->get_alighting_duration();
-            next_requested_dt.push({jpp_idx, st.first, st.second + diff});
+            next_requested_dt.push({jpp_idx, st.first, st.second});
         }
     }
 
@@ -74,7 +73,14 @@ std::vector<datetime_stop_time> get_stop_times(const routing::StopEvent stop_eve
             // the best elt of the queue is after the limit, we can stop
             break;
         }
-        result.push_back(std::make_pair(best_jpp_dt.dt, best_jpp_dt.st));
+
+        auto result_dt = best_jpp_dt.dt;
+        if(stop_event == StopEvent::pick_up) {
+            result_dt += best_jpp_dt.st->get_boarding_duration();
+        } else {
+            result_dt -= best_jpp_dt.st->get_alighting_duration();
+        }
+        result.push_back(std::make_pair(result_dt, best_jpp_dt.st));
 
         // we insert the next stop time in the queue (it must be at least one second after/before)
         auto next_dt = best_jpp_dt.dt + (clockwise ? 1 : -1);
@@ -82,8 +88,7 @@ std::vector<datetime_stop_time> get_stop_times(const routing::StopEvent stop_eve
                                          next_dt, clockwise, rt_level,
                                          accessibilite_params.vehicle_properties, true);
         if (st.first) {
-            auto diff = clockwise ? st.first->get_boarding_duration() : -1 * st.first->get_alighting_duration();
-            next_requested_dt.push({best_jpp_dt.jpp, st.first, st.second + diff});
+            next_requested_dt.push({best_jpp_dt.jpp, st.first, st.second});
         }
     }
 
