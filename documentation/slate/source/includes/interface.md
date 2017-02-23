@@ -126,3 +126,30 @@ That means :
 * where you can find the details of your object ( **"id": "edc46f3a-ad3d-11e4-a5e1-005056a44da2"** ).
 
 
+
+Objects order
+------------
+
+Unless specified, objects lists are not sorted and stability of objects' order is not guaranteed.
+
+Examples of sorted objects tables:
+* journeys in a '/journeys' response
+* '/departures' and '/arrivals'
+* '/stop_schedules'
+* stop_points in '/routes/<id_route>/stop_points'
+* '/places_nearby'
+* '/places'
+
+Examples of unsorted responses:
+* stop_points in '/lines/<id_line>/stop_points'
+* pretty much everything else...
+
+
+
+Lifetime of id
+--------------
+
+The way id (or uri) of an object is generated is not garanteed stable, nor are the data processed.
+So we advise to limit to the minimum storing ids/uris of objects.
+We recommend to use as much as possible a previous call to **[Places](#places)** and **[PT_objects](#pt-objects)**.
+Also, be resilient if one of those ids/uris disappears.
