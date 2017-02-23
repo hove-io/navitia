@@ -133,6 +133,7 @@ Objects order
 Unless specified, objects lists are not sorted and stability of objects' order is not guaranteed.
 
 Examples of sorted objects tables:
+
 * journeys in a '/journeys' response
 * '/departures' and '/arrivals'
 * '/stop_schedules'
@@ -141,6 +142,7 @@ Examples of sorted objects tables:
 * '/places'
 
 Examples of unsorted responses:
+
 * stop_points in '/lines/<id_line>/stop_points'
 * pretty much everything else...
 
