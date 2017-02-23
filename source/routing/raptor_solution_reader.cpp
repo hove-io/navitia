@@ -734,21 +734,24 @@ Path make_path(const Journey& journey, const type::Data& data) {
         //we then need to create one section by service extension
         const VehicleSection* last_vj_section = nullptr;
         const auto& sections = get_vjs(section);
+
+        // Add boarding section if we have boarding_time != departure_time on the first stop_time of the first vj
+        const auto& boarding_st = sections.front().stop_times_and_dt.front().st;
+        if(boarding_st.boarding_time != boarding_st.departure_time) {
+            path.items.emplace_back(ItemType::boarding,
+                                    posix(section.get_in_dt),
+                                    posix(section.get_in_dt + boarding_st.get_boarding_duration()));
+            auto& boarding_section = path.items.back();
+            // The departure and arrival stop_point of the boarding are the first stop_point of the first section
+            boarding_section.stop_points.push_back(boarding_st.stop_point);
+            boarding_section.stop_points.push_back(boarding_st.stop_point);
+            boarding_section.arrivals.push_back(boarding_section.arrival);
+            boarding_section.departures.push_back(boarding_section.departure);
+        }
+
         for (size_t i(0); i < sections.size(); i++) {
             auto& vj_section = sections.at(i);
-            const auto& boarding_st = vj_section.stop_times_and_dt.front().st;
-            const auto& alighting_st = vj_section.stop_times_and_dt.back().st;
-            if (i == 0 && boarding_st.boarding_time != boarding_st.departure_time) {
-                // Add a boarding section if we have boarding_time != departure_time and that's the first vj
-                path.items.emplace_back(ItemType::boarding,
-                                        posix(section.get_in_dt),
-                                        posix(section.get_in_dt + boarding_st.get_boarding_duration()));
-                auto& boarding_section = path.items.back();
-                boarding_section.stop_points.push_back(boarding_st.stop_point);
-                boarding_section.stop_points.push_back(boarding_st.stop_point);
-                boarding_section.arrivals.push_back(boarding_section.arrival);
-                boarding_section.departures.push_back(boarding_section.departure);
-            } else if (last_vj_section) {
+            if (last_vj_section) {
                 //add a stay in
                 path.items.emplace_back(ItemType::stay_in,
                                         posix(section.get_in_dt),
@@ -782,18 +785,20 @@ Path make_path(const Journey& journey, const type::Data& data) {
             item.departure = posix(vj_section.stop_times_and_dt.front().departure);
             item.arrival = posix(vj_section.stop_times_and_dt.back().arrival);
             last_vj_section = &vj_section;
+        }
 
-            if (i == sections.size() - 1 && alighting_st.alighting_time != alighting_st.arrival_time) {
-                // Add an alighting section if we have alighting_time != arrival_time and it's the last vj
-                path.items.emplace_back(ItemType::alighting,
-                                        posix(section.get_out_dt - alighting_st.get_alighting_duration()),
-                                        posix(section.get_out_dt));
-                auto& alighting_section = path.items.back();
-                alighting_section.stop_points.push_back(alighting_st.stop_point);
-                alighting_section.stop_points.push_back(alighting_st.stop_point);
-                alighting_section.arrivals.push_back(alighting_section.arrival);
-                alighting_section.departures.push_back(alighting_section.departure);
-            }
+        // Add alighting section if we have alighting_time != arrival_time on the last stop_time of the last vj
+        const auto& alighting_st = sections.back().stop_times_and_dt.back().st;
+        if (alighting_st.alighting_time != alighting_st.arrival_time) {
+            path.items.emplace_back(ItemType::alighting,
+                                    posix(section.get_out_dt - alighting_st.get_alighting_duration()),
+                                    posix(section.get_out_dt));
+            auto& alighting_section = path.items.back();
+            // The departure and arrival stop_point of the alighting are the last stop_point of the last section
+            alighting_section.stop_points.push_back(alighting_st.stop_point);
+            alighting_section.stop_points.push_back(alighting_st.stop_point);
+            alighting_section.arrivals.push_back(alighting_section.arrival);
+            alighting_section.departures.push_back(alighting_section.departure);
         }
 
         last_section = &section;
