@@ -1162,7 +1162,7 @@ void PbCreator::Filler::fill_pb_object(const VjOrigDest* vj_orig_dest, pbnavitia
  */
 void PbCreator::Filler::fill_messages(const VjStopTimes* vj_stoptimes,
                                       pbnavitia::PtDisplayInfo* pt_display_info) {
-    if (vj_stoptimes == nullptr) {return ;}
+    if (vj_stoptimes == nullptr) { return ; }
     if (dump_message == DumpMessage::No) { return; }
     const auto* meta_vj = vj_stoptimes->vj->meta_vj;
     for (const auto& message : meta_vj->get_applicable_messages(pb_creator.now,

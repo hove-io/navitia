@@ -68,22 +68,22 @@ get_impacted_vehicle_journeys(const LineSection& ls,
             }
 
             // Filtering each journey to see if it's impacted by the section.
-            auto section = vj.get_sections_stop_points(ls.start_point, ls.end_point);
+            SectionBounds bounds_st = vj.get_bounds_orders_for_section(ls.start_point, ls.end_point);
             // If the vj pass by both stops both elements will be different than nullptr, otherwise
             // it's not passing by both stops and should not be impacted
-            if (! section.empty()) {
+            if(bounds_st.first && bounds_st.second) {
                 // Once we know the line section is part of the vj we compute the vp for the adapted_vj
                 LOG4CPLUS_TRACE(log, "vj " << vj.uri << " pass by both stops, might be affected.");
                 nt::ValidityPattern new_vp{vj.validity_patterns[rt_level]->beginning_date};
                 for(const auto& period : impact.application_periods) {
                     // get the vp of the section
-                    new_vp.days |= vj.get_vp_for_section(section, rt_level, period).days;
+                    new_vp.days |= vj.get_vp_for_section(bounds_st, rt_level, period).days;
                 }
                 // If there is effective days for the adapted vp we're keeping it
                 if(!new_vp.days.none()){
                     LOG4CPLUS_TRACE(log, "vj " << vj.uri << " is affected, keeping it.");
                     new_vp.days >>= vj.shift;
-                    vj_vp_pairs.emplace_back(&vj, new_vp, std::move(section));
+                    vj_vp_pairs.emplace_back(&vj, new_vp, bounds_st);
                 }
             }
             return true;
@@ -112,6 +112,10 @@ struct InformedEntitiesLinker: public boost::static_visitor<> {
         auto impacted_vjs = get_impacted_vehicle_journeys(line_section, *impact, production_period, rt_level);
         std::set<type::StopPoint*> impacted_stop_points;
         std::set<type::MetaVehicleJourney*> impacted_meta_vjs;
+        if (impacted_meta_vjs.empty()) {
+            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "line section impact " << impact->uri
+                        << " does not impact any vj, it will not be linked to anything");
+        }
         for (auto& impacted_vj : impacted_vjs) {
             const auto* vj = impacted_vj.vj;
             if (impacted_meta_vjs.insert(vj->meta_vj).second) {
