@@ -165,21 +165,21 @@ void passages(PbCreator& pb_creator,
                                          *pb_creator.data, rt_level, accessibilite_params);
     size_t total_result = passages_dt_st.size();
     passages_dt_st = paginate(passages_dt_st, count, start_page);
+    auto sort_predicate = [&vis](routing::datetime_stop_time dt1, routing::datetime_stop_time dt2) {
+                    return (vis.clockwise() ? dt1.first < dt2.first : dt1.first > dt2.first);
+                };
+    std::sort(passages_dt_st.begin(), passages_dt_st.end(), sort_predicate);
 
     for (auto dt_stop_time : passages_dt_st) {
-        pbnavitia::Passage* passage;
-        auto passage_date = navitia::to_posix_timestamp(dt_stop_time.first, *pb_creator.data);
         auto base_ptime = navitia::to_posix_time(dt_stop_time.first, *pb_creator.data);
+        pbnavitia::Passage* passage;
         if (vis.stop_event() == StopEvent::pick_up) {
             passage = pb_creator.add_next_departures();
-            passage_date += dt_stop_time.second->get_boarding_duration();
-            base_ptime += pt::seconds(dt_stop_time.second->get_boarding_duration());
         } else {
             passage = pb_creator.add_next_arrivals();
-            passage_date -= dt_stop_time.second->get_alighting_duration();
-            base_ptime -= pt::seconds(dt_stop_time.second->get_alighting_duration());
         }
         pb_creator.action_period = pt::time_period(base_ptime, pt::seconds(1));
+        auto passage_date = navitia::to_posix_timestamp(dt_stop_time.first, *pb_creator.data);
         passage->mutable_stop_date_time()->set_departure_date_time(passage_date);
         passage->mutable_stop_date_time()->set_arrival_date_time(passage_date);
 
