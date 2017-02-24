@@ -48,6 +48,18 @@ namespace ed {
 
 struct builder;
 
+// We store times as int to handle < 0 times (shifted into the negative because of boarding_duration)
+struct ST {
+    navitia::type::StopTime st;
+    ST(navitia::type::StopTime stop_time) {
+        st = stop_time;
+    }
+
+    int departure_time;
+    int arrival_time;
+    int boarding_time;
+    int alighting_time;
+};
 
 /// Structure retournée à la construction d'un VehicleJourney
 struct VJ {
@@ -64,7 +76,7 @@ struct VJ {
     const uint32_t start_time;
     const uint32_t end_time;
     const uint32_t headway_secs;
-    std::vector<nt::StopTime> stop_times;
+    std::vector<ST> stop_times;
     nt::VehicleJourney* vj = nullptr;
     nt::ValidityPattern _vp;
 

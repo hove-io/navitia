@@ -152,18 +152,42 @@ nt::VehicleJourney* VJ::make() {
     // we associate the metavj to the default timezone for the moment
     mvj->tz_handler = b.tz_handler;
 
+    // Handle stop_times with min time < 0 (can happen with boarding_duration shifting to the previous day)
+    const auto& min_st = std::min_element(stop_times.begin(), stop_times.end(),
+                                          [](const ST& st1, const ST& st2) {
+            return std::min(st1.boarding_time, st1.arrival_time) < std::min(st2.boarding_time, st2.arrival_time);
+    });
+    int shift = 0;
+    if (min_st != stop_times.end()) {
+        auto min_time = std::min(min_st->boarding_time, min_st->arrival_time);
+        if (min_time < 0) {
+            _vp.days >>= 1;
+            shift = 1;
+        }
+    }
+
+    // Fill a vector of stop_times
+    std::vector<nt::StopTime> sts;
+    for (auto& st: stop_times) {
+        st.st.departure_time = st.departure_time + shift * navitia::DateTimeUtils::SECONDS_PER_DAY;
+        st.st.boarding_time = st.boarding_time + shift * navitia::DateTimeUtils::SECONDS_PER_DAY;
+        st.st.arrival_time = st.arrival_time + shift * navitia::DateTimeUtils::SECONDS_PER_DAY;
+        st.st.alighting_time = st.alighting_time + shift * navitia::DateTimeUtils::SECONDS_PER_DAY;
+        sts.push_back(st.st);
+    }
+
     const auto uri_str = _uri.empty() ?
         "vj:" + line_name + ":" + std::to_string(pt_data.vehicle_journeys.size()) :
         _uri;
     if (is_frequency) {
-        auto* fvj = mvj->create_frequency_vj(uri_str, nt::RTLevel::Base, _vp, route, stop_times, pt_data);
+        auto* fvj = mvj->create_frequency_vj(uri_str, nt::RTLevel::Base, _vp, route, sts, pt_data);
         fvj->start_time = start_time;
         const size_t nb_trips = std::ceil((end_time - start_time) / headway_secs);
         fvj->end_time = start_time + (nb_trips * headway_secs);
         fvj->headway_secs = headway_secs;
         vj = fvj;
     } else {
-        vj = mvj->create_discrete_vj(uri_str, nt::RTLevel::Base, _vp, route, stop_times, pt_data);
+        vj = mvj->create_discrete_vj(uri_str, nt::RTLevel::Base, _vp, route, sts, pt_data);
     }
     // default dataset
     if (!vj->dataset){
@@ -216,10 +240,10 @@ nt::VehicleJourney* VJ::make() {
 VJ& VJ::st_shape(const navitia::type::LineString& shape) {
     assert(shape.size() >= 2);
     assert(stop_times.size() >= 2);
-    assert(stop_times.back().stop_point->coord == shape.back());
-    assert(stop_times.at(stop_times.size() - 2).stop_point->coord == shape.front());
+    assert(stop_times.back().st.stop_point->coord == shape.back());
+    assert(stop_times.at(stop_times.size() - 2).st.stop_point->coord == shape.front());
     auto s = boost::make_shared<navitia::type::LineString>(shape);
-    stop_times.back().shape_from_prev = s;
+    stop_times.back().st.shape_from_prev = s;
     return *this;
 }
 
@@ -268,18 +292,19 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16
         sp = it->second;
     }
 
-    navitia::type::StopTime st;
-    st.stop_point = sp;
+    nt::StopTime stop_time;
+    stop_time.stop_point = sp;
+    stop_time.vehicle_journey = vj;
+    stop_time.local_traffic_zone = local_trafic_zone;
+    stop_time.set_drop_off_allowed(drop_off_allowed);
+    stop_time.set_pick_up_allowed(pick_up_allowed);
 
+    ST st(stop_time);
     if(depart == -1) depart = arrivee;
     st.arrival_time = arrivee;
     st.departure_time = depart;
     st.alighting_time = arrivee + alighting_duration;
     st.boarding_time = depart - boarding_duration;
-    st.vehicle_journey = vj;
-    st.local_traffic_zone = local_trafic_zone;
-    st.set_drop_off_allowed(drop_off_allowed);
-    st.set_pick_up_allowed(pick_up_allowed);
 
     stop_times.push_back(st);
     return *this;
