@@ -733,8 +733,7 @@ void builder::finish() {
                  continue;
              }
 
-             const auto first_st_it = freq_vj->earliest_stop_time();
-             const auto start = std::min(first_st_it->arrival_time, first_st_it->boarding_time);
+             const auto start = freq_vj->earliest_time();
              if(freq_vj->start_time <=  freq_vj->stop_time_list.front().arrival_time && start < freq_vj->start_time) {
                  freq_vj->end_time -= (freq_vj->start_time - start);
                  freq_vj->start_time = start;

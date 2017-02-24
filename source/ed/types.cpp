@@ -113,10 +113,12 @@ bool StopPoint::operator<(const StopPoint& other) const {
     }
 }
 
-std::vector<StopTime*>::const_iterator VehicleJourney::earliest_stop_time() const {
-    return std::min_element(stop_time_list.begin(), stop_time_list.end(), [](StopTime* st1, StopTime* st2) {
+int VehicleJourney::earliest_time() const {
+    const auto& st = std::min_element(stop_time_list.begin(), stop_time_list.end(),
+                                      [](StopTime* st1, StopTime* st2) {
         return std::min(st1->boarding_time, st1->arrival_time) < std::min(st2->boarding_time, st2->arrival_time);
     });
+    return std::min((*st)->boarding_time, (*st)->arrival_time);
 }
 
 bool VehicleJourney::operator<(const VehicleJourney& other) const {

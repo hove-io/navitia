@@ -530,7 +530,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
     // return the base vj corresponding to this vj, return nullptr if nothing found
     const VehicleJourney* get_corresponding_base() const;
 
-    std::vector<StopTime>::const_iterator earliest_stop_time() const;
+    // Return the smallest time within its stop_times
+    uint32_t earliest_time() const;
 
     /*
      *

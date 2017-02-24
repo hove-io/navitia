@@ -1091,8 +1091,7 @@ void FrequenciesGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         vj->start_time = to_utc(row[start_time_c], utc_offset);
         vj->end_time = to_utc(row[end_time_c], utc_offset);
         vj->headway_secs = boost::lexical_cast<int>(row[headway_secs_c]);
-        const auto& it_st = vj->earliest_stop_time();
-        auto start = std::min((*it_st)->boarding_time, (*it_st)->arrival_time);
+        const auto& start = vj->earliest_time();
         if(vj->start_time <= vj->stop_time_list.front()->arrival_time && start < vj->start_time) {
             vj->end_time -= (vj->start_time - start);
             vj->start_time = start;

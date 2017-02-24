@@ -195,11 +195,9 @@ void Data::shift_vp_left(types::ValidityPattern& vp) {
 
 void Data::shift_stop_times() {
     for (auto vj : vehicle_journeys) {
-        const auto first_st_it = vj->earliest_stop_time();
-        if (first_st_it == vj->stop_time_list.end()) {
+        if (vj->stop_time_list.empty()) {
             continue;
         }
-        const auto first_st = *first_st_it;
 
         // For non-frequency vj, we must have the first stop time in
         // [0; 24:00[ (since they are ordered, every stop time will be
@@ -212,7 +210,7 @@ void Data::shift_stop_times() {
         if (vj->is_frequency()) {
             start_time = vj->start_time;
         } else {
-            start_time = std::min(first_st->boarding_time, first_st->arrival_time);
+            start_time = vj->earliest_time();
         }
 
         // number of days to shift for start_time in [0; 24:00[
@@ -719,8 +717,7 @@ void Data::build_associated_calendar() {
 void Data::finalize_frequency() {
     for(auto * vj : this->vehicle_journeys) {
         if(!vj->stop_time_list.empty() && vj->stop_time_list.front()->is_frequency) {
-            auto first_st = vj->earliest_stop_time();
-            int begin = std::min((*first_st)->boarding_time, (*first_st)->arrival_time);
+            int begin = vj->earliest_time();
             if (begin == 0){
                 continue; //Time is already relative to 0
             }

@@ -474,9 +474,7 @@ static bool keep_vj(const nt::VehicleJourney* vj,
         return false; //no stop time, so it cannot be valid
     }
 
-    const auto first_st_it = vj->earliest_stop_time();
-    const auto& first_departure_dt = std::min(first_st_it->arrival_time, first_st_it->boarding_time);
-
+    const auto& first_departure_dt = vj->earliest_time();
     for (boost::gregorian::day_iterator it(period.begin().date()); it <= period.last().date(); ++it) {
         if (! vj->base_validity_pattern()->check(*it)) { continue; }
         bt::ptime vj_dt = bt::ptime(*it, bt::seconds(first_departure_dt));

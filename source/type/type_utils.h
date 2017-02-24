@@ -79,6 +79,15 @@ static bt::ptime get_base_dt(const nt::StopTime* st_orig, const nt::StopTime* st
     return bt::ptime(validity_pattern_dt_day, boost::posix_time::seconds(hour_of_day_base));
 }
 
+static const nt::StopTime& earliest_stop_time(const std::vector<nt::StopTime>& sts) {
+    assert(!sts.empty());
+    const auto& min_st = std::min_element(sts.begin(), sts.end(),
+                                          [](const nt::StopTime& st1, const nt::StopTime& st2) {
+            return std::min(st1.boarding_time, st1.arrival_time) < std::min(st2.boarding_time, st2.arrival_time);
+    });
+    return *min_st;
+}
+
 static pbnavitia::RTLevel to_pb_realtime_level(const navitia::type::RTLevel realtime_level) {
     switch (realtime_level) {
     case nt::RTLevel::Base:

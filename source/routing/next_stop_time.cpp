@@ -34,6 +34,7 @@ www.navitia.io
 #include "type/data.h"
 #include "type/pt_data.h"
 #include "type/meta_data.h"
+#include "type/type_utils.h"
 
 #include <boost/range/algorithm/sort.hpp>
 #include <boost/range/algorithm_ext/push_back.hpp>
@@ -71,12 +72,12 @@ void NextStopTimeData::TimesStopTimes<Getter>::init(const JourneyPattern& jp,
         const auto time1 = DateTimeUtils::hour(getter.get_time(*st1));
         const auto time2 = DateTimeUtils::hour(getter.get_time(*st2));
         if (time1 != time2) { return time1 < time2; }
-        const auto& st1_first = st1->vehicle_journey->earliest_stop_time();
-        const auto& st2_first = st2->vehicle_journey->earliest_stop_time();
-        if (getter.get_time(*st1_first) != getter.get_time(*st2_first)) {
-            return getter.get_time(*st1_first) < getter.get_time(*st2_first);
+        const auto& st1_first = navitia::earliest_stop_time(st1->vehicle_journey->stop_time_list);
+        const auto& st2_first = navitia::earliest_stop_time(st2->vehicle_journey->stop_time_list);
+        if (getter.get_time(st1_first) != getter.get_time(st2_first)) {
+            return getter.get_time(st1_first) < getter.get_time(st2_first);
         }
-        return st1_first->vehicle_journey->idx < st2_first->vehicle_journey->idx;
+        return st1_first.vehicle_journey->idx < st2_first.vehicle_journey->idx;
     });
 
     // collect the corresponding times

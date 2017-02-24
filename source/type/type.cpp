@@ -32,6 +32,7 @@ www.navitia.io
 #include "pt_data.h"
 #include "data.h"
 #include "meta_data.h"
+#include "type_utils.h"
 #include <iostream>
 #include <set>
 #include <boost/assign.hpp>
@@ -429,10 +430,8 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
     vj_ptr->realtime_level = level;
     vj_ptr->shift = 0;
     if (!sts.empty()) {
-        const auto first_st_it = std::min_element(sts.begin(), sts.end(), [](const StopTime& st1, const StopTime& st2) {
-                return std::min(st1.boarding_time, st1.arrival_time) < std::min(st2.boarding_time, st2.arrival_time);
-        });
-        vj_ptr->shift = std::min(first_st_it->boarding_time, first_st_it->arrival_time) / (ndtu::SECONDS_PER_DAY);
+        const auto& first_st = navitia::earliest_stop_time(sts);
+        vj_ptr->shift = std::min(first_st.boarding_time, first_st.arrival_time) / (ndtu::SECONDS_PER_DAY);
     }
     ValidityPattern model_new_vp{canceled_vp};
     model_new_vp.days <<= vj_ptr->shift; // shift validity pattern
@@ -569,10 +568,9 @@ const VehicleJourney* VehicleJourney::get_corresponding_base() const {
     return nullptr;
 }
 
-std::vector<StopTime>::const_iterator VehicleJourney::earliest_stop_time() const {
-    return std::min_element(stop_time_list.begin(), stop_time_list.end(), [](const StopTime& st1, const StopTime& st2) {
-            return std::min(st1.boarding_time, st1.arrival_time) < std::min(st2.boarding_time, st2.arrival_time);
-    });
+uint32_t VehicleJourney::earliest_time() const {
+    const auto& st = navitia::earliest_stop_time(stop_time_list);
+    return std::min(st.arrival_time, st.boarding_time);
 }
 
 Indexes MetaVehicleJourney::get(Type_e type, const PT_Data& data) const {

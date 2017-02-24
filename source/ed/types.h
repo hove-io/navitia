@@ -280,8 +280,8 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
 
     navitia::type::RTLevel realtime_level = navitia::type::RTLevel::Base;
 
-    // Get the stop time with the earliest time of the vj
-    std::vector<StopTime*>::const_iterator earliest_stop_time() const;
+    // Return the smallest time within its stop_times
+    int earliest_time() const;
 
     bool operator<(const VehicleJourney& other) const;
 };
