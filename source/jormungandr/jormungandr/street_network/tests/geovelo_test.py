@@ -41,7 +41,125 @@ def direct_path_response_valid():
     reply to POST of {"starts":[[48.803064,2.443385, "refStart1"]],
                       "ends":[[48.802049,2.426482, "refEnd1"]]}
     """
-    return [["start_reference","end_reference","duration"],["refStart1","refEnd1",1546]]
+    return [
+        {
+            "distances": {
+                "discouragedRoads": 65.0,
+                "normalRoads": 3569.0,
+                "recommendedRoads": 7759.0,
+                "total": 11393.0
+            },
+            "duration": 3155,
+            "estimatedDatetimeOfArrival": "2017-02-24T16:52:08.711",
+            "estimatedDatetimeOfDeparture": "2017-02-24T15:59:33.711",
+            "id": "bG9jPTQ4Ljg4Nzk0LDIuMzE0MzM4JmxvYz00OC44Mjk5MjcsMi4zNzY3NDcjQkVHSU5ORVIjRmFsc2UjQkVHSU5ORVIjMTMjRmFsc2UjRmFsc2UjMjAxNy0wMi0yNCAxNTo1OTozMy43MTEwNjgjVFJBRElUSU9OQUwjMCMwI1JFQ09NTUVOREVEI0ZhbHNl",
+            "sections": [
+                {
+                    "details": {
+                        "averageSpeed": 13,
+                        "bikeType": "TRADITIONAL",
+                        "direction": "Boulevard de Clichy",
+                        "distances": {
+                            "cycleway": 7563.0,
+                            "discouragedRoads": 65.0,
+                            "footway": 363.0,
+                            "greenway": 0.0,
+                            "lane": 78.0,
+                            "livingstreet": 500.0,
+                            "normalRoads": 3569.0,
+                            "opposite": 141.0,
+                            "pedestrian": 206.0,
+                            "recommendedRoads": 7759.0,
+                            "residential": 0.0,
+                            "sharebusway": 118.0,
+                            "steps": 0.0,
+                            "total": 11393.0,
+                            "zone30": 793.0
+                        },
+                        "elevations": None,
+                        "instructions": [
+                            [
+                                "direction",
+                                "roadName",
+                                "roadLength",
+                                "facility",
+                                "cyclability",
+                                "geometryIndex",
+                                "orientation",
+                                "cityNames"
+                            ],
+                            [
+                                "HEAD_ON",
+                                "Rue Cardinet",
+                                58,
+                                "SHAREBUSWAY",
+                                3,
+                                0,
+                                "SW",
+                                ""
+                            ],
+                            [
+                                "GO_STRAIGHT",
+                                "Rue Jouffroy d'Abbans",
+                                40,
+                                "RESIDENTIAL",
+                                4,
+                                3,
+                                "W",
+                                ""
+                            ],
+                            [
+                                "REACHED_YOUR_DESTINATION",
+                                "",
+                                0,
+                                "NONE",
+                                3,
+                                307,
+                                "N",
+                                ""
+                            ]
+                        ],
+                        "profile": "BEGINNER",
+                        "verticalGain": 51
+                    },
+                    "duration": 3155,
+                    "estimatedDatetimeOfArrival": "2017-02-24T16:52:08.711",
+                    "estimatedDatetimeOfDeparture": "2017-02-24T15:59:33.711",
+                    "geometry": "_yzf|AszglClL`ShClEzCrHj@nNnBfD~AoHfDeD`nBmeC|AqBvAuAhWyWjVqUbJsJdd@uf@uPwh@sBgG{JoYmEkMeEwLxv@iu@}Hwj@k@}DcCqQ{Ims@m@yEbBcDbCyEhEiIhSm`@rPy\\bI}OfBwD|H}CaNehA}MwiAzA_LiBsPa@sDoBaSeAoKiCcHqBQmG{Rqk@meAa@oHRwSDuDv^yfChAmAnAkHrFqZnA{Gb@wDxc@m{Btd@a|Bz@cErHum@xLobBfBqMd@aHAkGmA{LaAkCaUwoBo@sFiR{aB_@wJuFoe@u@sDm@_CyTonB`@yDy@gIdA{EyBsTNoG_OqzBe@uDuAaLjD~DzAmAzNoLxCcBtDqEj_A}y@`_@i\\vFcF~c@w^~GuFbJgJ`JaHnCmDri@kd@nQcOxCiC~\\wYfCuBlC_CpB_BtCeCxDoEdx@}q@pG_Fpi@yd@lDuBhO_NjD}CxKyJ~IcIlIsHp^{\\dRwN~DuDjBqBxEkEzh@md@xHwG~AqAhGgFzMeLrM_Lp{@_t@lEeDfKsJvQ_PxDuCnCoCzO_NlIcHhSyQzFcF~CoCdsA{hAfDoCtSqStDyCjAmEn@uJ`Ywk@xEeJxHePwWabAaB{GkKqc@wL}n@sAuG`@qFxB}A~vBc|AfUkPjE}C|b@uZ`w@oj@~j@ca@tl@mb@zMgIzIoEvNiIlHaJjIcFfNwFhH_ChMuBpMoAlK_@rLH~Lp@|OjCfFjAtD|FfCz@lBp@nHe@xkCl~@vaAf]b{@pZzMhFnCb@nFpBtGkWlBuBbBcC|NgTzWu_@fB_CtCcC|@_Cvb@qgAtw@usBdRnMtJnGb\\vTy@hEvCtAfFdC`Bv@nEtBtExBhW`Q|HtE|ChBrAjAdL_Nb^qc@zUkYxCqDlCmDxRkTrAwAlEyDdH{GhZmm@lCgFfDkIvA|@lv@xe@pCfBpDlBpC_I|DuKr[gy@xAwDhKgX`FyMzBkFdCsG|JoWdk@c{AdLsZzEcObFgMbMa\\fR}f@nBzF`c@d`BjAdF`Mra@hGfSzw@f}BxF~LfCzDzA@lCzPnZdu@p^x{@rFzNzCfIpLl[fAvCvxA}`BPaDhFkGnHkJvF_IrKoIfCiDrz@nkBvKzFdEoDfGkEbO{MbFsErDzAz^_\\t_@e]lE_Gpc@ql@r_@wg@fk@gv@fa@{h@rNcRvLvWrWrk@fB`ElD~H`Pv]pEdKhAbCbN|[fBnElBtE~AlF`Mlu@rZoXjE{Dt^e\\|AnDzAhDzJwK]eAg@CTpBrGeBzBkBk@eBHa@J_AeAY}@}ClCiCw@wJ[cAeB?gScp@YtCxBjH~DvM",
+                    "transportMode": "BIKE",
+                    "waypoints": [
+                        {
+                            "latitude": 48.88794,
+                            "longitude": 2.314338,
+                            "title": None
+                        },
+                        {
+                            "latitude": 48.829927,
+                            "longitude": 2.376747,
+                            "title": None
+                        }
+                    ],
+                    "waypointsIndices": [
+                        0,
+                        308
+                    ]
+                }
+            ],
+            "title": "RECOMMENDED",
+            "waypoints": [
+                {
+                    "latitude": 48.88794,
+                    "longitude": 2.314338,
+                    "title": None
+                },
+                {
+                    "latitude": 48.829927,
+                    "longitude": 2.376747,
+                    "title": None
+                }
+            ]
+        }
+    ]
 
 
 def isochrone_response_valid():
@@ -56,21 +174,15 @@ def isochrone_response_valid():
 
 
 def pt_object_summary_test():
-    instance = MagicMock()
-    geovelo = Geovelo(instance=instance,
-                      service_url='http://bob.com')
-    summary = geovelo._pt_object_summary(make_pt_object(type_pb2.ADDRESS, lon=1.12, lat=13.15, uri='toto'))
+    summary = Geovelo._pt_object_summary_isochrone(make_pt_object(type_pb2.ADDRESS, lon=1.12, lat=13.15, uri='toto'))
     assert summary == [13.15, 1.12, 'toto']
 
 
 def make_data_test():
-    instance = MagicMock()
-    geovelo = Geovelo(instance=instance,
-                      service_url='http://bob.com')
     origins = [make_pt_object(type_pb2.ADDRESS, lon=2, lat=48.2, uri='refStart1')]
     destinations = [make_pt_object(type_pb2.ADDRESS, lon=3, lat=48.3, uri='refEnd1'),
                     make_pt_object(type_pb2.ADDRESS, lon=4, lat=48.4, uri='refEnd2')]
-    data = geovelo._make_request_arguments(origins, destinations)
+    data = Geovelo._make_request_arguments_isochrone(origins, destinations)
     assert json.loads(json.dumps(data)) == json.loads('''{
             "starts":[[48.2,2, "refStart1"]],
             "ends":[[48.3,3, "refEnd1"],
@@ -97,13 +209,12 @@ def call_geovelo_func_with_unknown_exception_test():
 
 
 def get_matrix_test():
-    instance = MagicMock()
-    geovelo = Geovelo(instance=instance,
-                        service_url='http://bob.com')
-    resp_json = direct_path_response_valid()
-    matrix = geovelo._get_matrix(resp_json)
-    assert matrix.rows[0].routing_response[0].duration == 1546
+    resp_json = isochrone_response_valid()
+    matrix = Geovelo._get_matrix(resp_json)
+    assert matrix.rows[0].routing_response[0].duration == 1051
     assert matrix.rows[0].routing_response[0].routing_status == response_pb2.reached
+    assert matrix.rows[0].routing_response[1].duration == 1656
+    assert matrix.rows[0].routing_response[1].routing_status == response_pb2.reached
 
 
 def direct_path_geovelo_test():
@@ -115,7 +226,8 @@ def direct_path_geovelo_test():
     origin = make_pt_object(type_pb2.ADDRESS, lon=2, lat=48.2, uri='refStart1')
     destination = make_pt_object(type_pb2.ADDRESS, lon=3, lat=48.3, uri='refEnd1')
     with requests_mock.Mocker() as req:
-        req.post('http://bob.com/api/v2/routes_m2m', json=resp_json)
+        req.post('http://bob.com/api/v2/computedroutes?instructions=true&elevations=false&geometry=true'
+                 '&single_result=true&bike_stations=false&objects_as_ids=true&', json=resp_json)
         geovelo_resp = geovelo.direct_path('bike',
                                            origin,
                                            destination,
@@ -125,14 +237,23 @@ def direct_path_geovelo_test():
         assert geovelo_resp.status_code == 200
         assert geovelo_resp.response_type == response_pb2.ITINERARY_FOUND
         assert len(geovelo_resp.journeys) == 1
-        assert geovelo_resp.journeys[0].duration == 1546
+        assert geovelo_resp.journeys[0].duration == 3155 # 52min35s
         assert len(geovelo_resp.journeys[0].sections) == 1
         assert geovelo_resp.journeys[0].arrival_date_time == str_to_time_stamp('20161010T152000')
+        assert geovelo_resp.journeys[0].departure_date_time == str_to_time_stamp('20161010T142725')
         assert geovelo_resp.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
         assert geovelo_resp.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
-        assert geovelo_resp.journeys[0].sections[0].length == 1546*3 #totally arbitrary in connector
+        assert geovelo_resp.journeys[0].sections[0].duration == 3155
+        assert geovelo_resp.journeys[0].sections[0].length == 11393
         assert geovelo_resp.journeys[0].sections[0].origin == origin
         assert geovelo_resp.journeys[0].sections[0].destination == destination
+        assert geovelo_resp.journeys[0].sections[0].street_network.coordinates[1].lon == 2.314361
+        assert geovelo_resp.journeys[0].sections[0].street_network.coordinates[1].lat == 48.887497
+        assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].name == "Rue Jouffroy d'Abbans"
+        assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].direction == 0
+        assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].length == 40
+        assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].duration == 144
+
 
 
 def isochrone_geovelo_test():
