@@ -245,15 +245,14 @@ def direct_path_geovelo_test():
         assert geovelo_resp.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
         assert geovelo_resp.journeys[0].sections[0].duration == 3155
         assert geovelo_resp.journeys[0].sections[0].length == 11393
+        assert geovelo_resp.journeys[0].sections[0].street_network.coordinates[2].lon == 2.314258
+        assert geovelo_resp.journeys[0].sections[0].street_network.coordinates[2].lat == 48.887428
         assert geovelo_resp.journeys[0].sections[0].origin == origin
         assert geovelo_resp.journeys[0].sections[0].destination == destination
-        assert geovelo_resp.journeys[0].sections[0].street_network.coordinates[1].lon == 2.314361
-        assert geovelo_resp.journeys[0].sections[0].street_network.coordinates[1].lat == 48.887497
         assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].name == "Rue Jouffroy d'Abbans"
         assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].direction == 0
         assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].length == 40
         assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].duration == 144
-
 
 
 def isochrone_geovelo_test():
