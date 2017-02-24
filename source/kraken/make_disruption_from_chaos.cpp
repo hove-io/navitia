@@ -279,7 +279,7 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data,
     return impact;
 }
 
-const type::disruption::Disruption&
+static const type::disruption::Disruption&
 make_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_data,
                 const navitia::type::MetaData& meta) {
     auto log = log4cplus::Logger::getInstance("log");
