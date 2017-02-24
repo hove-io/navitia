@@ -28,16 +28,14 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from navitiacommon import response_pb2, type_pb2
+from navitiacommon import response_pb2
 import logging
 import pybreaker
 import requests as requests
 from jormungandr import app
 import json
-from flask_restful import abort
 from jormungandr.exceptions import TechnicalError, InvalidArguments, ApiNotFound
-from flask import g
-from jormungandr.utils import is_url, kilometers_to_meters, get_pt_object_coord, record_external_failure
+from jormungandr.utils import is_url, kilometers_to_meters, get_pt_object_coord, decode_polyline
 from copy import deepcopy
 from jormungandr.street_network.street_network import AbstractStreetNetworkService
 
@@ -75,7 +73,8 @@ class Valhalla(AbstractStreetNetworkService):
             self.record_external_failure(str(e))
         return None
 
-    def _format_coord(self, pt_object, api='route'):
+    @classmethod
+    def _format_coord(cls, pt_object, api='route'):
         if api not in ['route', 'one_to_many']:
             logging.getLogger(__name__).error('Valhalla routing service , invalid api {}'.format(api))
             raise ApiNotFound('Valhalla routing service , invalid api {}'.format(api))
@@ -85,34 +84,6 @@ class Valhalla(AbstractStreetNetworkService):
         if api == 'route':
             dict_coord["type"] = "break"
         return dict_coord
-
-    def _decode(self, encoded):
-        # See: https://mapzen.com/documentation/mobility/decoding/#python
-        inv = 1.0 / 1e6
-        decoded = []
-        previous = [0, 0]
-        i = 0
-        #for each byte
-        while i < len(encoded):
-            #for each coord (lat, lon)
-            ll = [0, 0]
-            for j in [0, 1]:
-                shift = 0
-                byte = 0x20
-                #keep decoding bytes until you have this coord
-                while byte >= 0x20:
-                    byte = ord(encoded[i]) - 63
-                    i += 1
-                    ll[j] |= (byte & 0x1f) << shift
-                    shift += 5
-                #get the final value adding the previous offset and remember it for the next
-                ll[j] = previous[j] + (~(ll[j] >> 1) if ll[j] & 1 else (ll[j] >> 1))
-                previous[j] = ll[j]
-            #scale by the precision and chop off long coords also flip the positions so
-            # #its the far more standard lon,lat instead of lat,lon
-            decoded.append([float('%.6f' % (ll[1] * inv)), float('%.6f' % (ll[0] * inv))])
-            #hand back the list of coordinates
-        return decoded
 
     def _get_costing_options(self, valhalla_mode, request):
         costing_options = deepcopy(self.costing_options)
@@ -130,7 +101,8 @@ class Valhalla(AbstractStreetNetworkService):
             costing_options['bicycle']['cycling_speed'] = request['bike_speed'] * 3.6
         return costing_options
 
-    def _get_response(self, json_resp, mode, pt_object_origin, pt_object_destination, datetime, clockwise):
+    @classmethod
+    def _get_response(cls, json_resp, mode, pt_object_origin, pt_object_destination, datetime, clockwise):
         map_mode = {
             "walking": response_pb2.Walking,
             "car": response_pb2.Car,
@@ -140,36 +112,40 @@ class Valhalla(AbstractStreetNetworkService):
         resp.status_code = 200
         resp.response_type = response_pb2.ITINERARY_FOUND
 
-        for leg in json_resp['trip']['legs']:
-            journey = resp.journeys.add()
-            journey.duration = leg['summary']['time']
-            if clockwise:
-                journey.departure_date_time = datetime
-                journey.arrival_date_time = datetime + journey.duration
-            else:
-                journey.departure_date_time = datetime - journey.duration
-                journey.arrival_date_time = datetime
+        journey = resp.journeys.add()
+        journey.duration = json_resp['trip']['summary']['time']
+        if clockwise:
+            journey.departure_date_time = datetime
+            journey.arrival_date_time = datetime + journey.duration
+        else:
+            journey.departure_date_time = datetime - journey.duration
+            journey.arrival_date_time = datetime
 
-            journey.durations.total = journey.duration
+        journey.durations.total = journey.duration
 
-            if mode == 'walking':
-                journey.durations.walking = journey.duration
+        if mode == 'walking':
+            journey.durations.walking = journey.duration
 
+        previous_section_endtime = journey.departure_date_time
+        for index, leg in enumerate(json_resp['trip']['legs']):
             section = journey.sections.add()
             section.type = response_pb2.STREET_NETWORK
 
-            section.begin_date_time = journey.departure_date_time
-            section.end_date_time = journey.arrival_date_time
+            section.duration = leg['summary']['time']
+            section.begin_date_time = previous_section_endtime
+            section.end_date_time = section.begin_date_time + section.duration
+            previous_section_endtime = section.end_date_time
 
-            section.id = 'section_0'
-            section.duration = journey.duration
+            section.id = 'section_{}'.format(index)
             section.length = int(kilometers_to_meters(leg['summary']['length']))
 
-            section.origin.CopyFrom(pt_object_origin)
-            section.destination.CopyFrom(pt_object_destination)
+            if index == 0:
+                section.origin.CopyFrom(pt_object_origin)
+            if index == len(json_resp['trip']['legs']) - 1:
+                section.destination.CopyFrom(pt_object_destination)
 
-            section.street_network.length = kilometers_to_meters(leg['summary']['length'])
-            section.street_network.duration = leg['summary']['time']
+            section.street_network.length = section.length
+            section.street_network.duration = section.duration
             section.street_network.mode = map_mode[mode]
             for maneuver in leg['maneuvers']:
                 path_item = section.street_network.path_items.add()
@@ -180,7 +156,7 @@ class Valhalla(AbstractStreetNetworkService):
                 # TODO: calculate direction
                 path_item.direction = 0
 
-            shape = self._decode(leg['shape'])
+            shape = decode_polyline(leg['shape'])
             for sh in shape:
                 coord = section.street_network.coordinates.add()
                 coord.lon = sh[0]
@@ -188,7 +164,8 @@ class Valhalla(AbstractStreetNetworkService):
 
         return resp
 
-    def _get_valhalla_mode(self, kraken_mode):
+    @classmethod
+    def _get_valhalla_mode(cls, kraken_mode):
         map_mode = {
             "walking": "pedestrian",
             "car": "auto",
@@ -201,10 +178,10 @@ class Valhalla(AbstractStreetNetworkService):
 
     def _make_request_arguments(self, mode, pt_object_origin, pt_object_destinations, request, api='route', max_duration=None):
 
-        valhalla_mode = self._get_valhalla_mode(mode)
-        destinations = [self._format_coord(destination, api) for destination in pt_object_destinations]
+        valhalla_mode = Valhalla._get_valhalla_mode(mode)
+        destinations = [Valhalla._format_coord(destination, api) for destination in pt_object_destinations]
         args = {
-            'locations': [self._format_coord(pt_object_origin)] + destinations,
+            'locations': [Valhalla._format_coord(pt_object_origin)] + destinations,
             'costing': valhalla_mode
         }
 
@@ -219,7 +196,8 @@ class Valhalla(AbstractStreetNetworkService):
                 args[key] = value
         return json.dumps(args)
 
-    def _check_response(self, response):
+    @classmethod
+    def _check_response(cls, response):
         if response == None:
             raise TechnicalError('impossible to access valhalla service')
         if response.status_code != 200:
@@ -238,11 +216,12 @@ class Valhalla(AbstractStreetNetworkService):
             resp.status_code = 200
             resp.response_type = response_pb2.NO_SOLUTION
             return resp
-        self._check_response(r)
+        Valhalla._check_response(r)
         resp_json = r.json()
-        return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, datetime, clockwise)
+        return Valhalla._get_response(resp_json, mode, pt_object_origin, pt_object_destination, datetime, clockwise)
 
-    def _get_matrix(self, json_response):
+    @classmethod
+    def _get_matrix(cls, json_response):
         sn_routing_matrix = response_pb2.StreetNetworkRoutingMatrix()
         for one_to_many in json_response['one_to_many']:
             row = sn_routing_matrix.rows.add()
@@ -268,6 +247,6 @@ class Valhalla(AbstractStreetNetworkService):
 
         data = self._make_request_arguments(mode, origins[0], destinations, request, api='one_to_many')
         r = self._call_valhalla('{}/{}'.format(self.service_url, 'one_to_many'), requests.post, data)
-        self._check_response(r)
+        Valhalla._check_response(r)
         resp_json = r.json()
-        return self._get_matrix(resp_json)
+        return Valhalla._get_matrix(resp_json)
