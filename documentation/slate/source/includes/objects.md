@@ -361,9 +361,88 @@ Real time and disruption objects
 |application_periods |array of [period](#period)       |dates where the current disruption is active
 |messages            |[message](#message)     |text to provide to the traveler
 |updated_at          |[iso-date-time](#iso-date-time) |date_time of last modifications 
-|impacted_objects    |array of [pt_object](#pt_object) |The list of public transport objects which are affected by the disruption
+|impacted_objects    |array of [impacted_object](#impacted_object) |The list of public transport objects which are affected by the disruption
 |cause               |string                   |why is there such a disruption?
 |category            |string (optional)        |The category of the disruption, such as "construction works" or "incident"
+
+
+### Impacted_object
+
+``` json
+{
+    "pt_object": {
+        "id": "id_of_the_line",
+        "name": "name of a lne",
+        "embedded_type": "line",
+        "line": {
+            "...": "..."
+        }
+    },
+    "impacted_section": {
+        "...": "..."
+    }
+}
+```
+
+|Field|Type|Description|
+|-----|----|-----------|
+|pt_object|[pt_object](#pt_object)|The impacted public transport object|
+|impacted_section|*optional* [impacted_section](#impacted_section)|Only for line section impact, the impacted section|
+|impacted_stops|*optional* array of [impacted_stop](#impacted_stop)|Only for [trip](#trip) delay, the list of delays, stop by stop
+
+### Impacted_section
+
+``` json
+{
+    "from": {
+        "embedded_type": "stop_area",
+        "id": "C",
+        "name": "C",
+        "stop_area": {
+            "...": "..."
+        }
+    },
+    "to": {
+        "embedded_type": "stop_area",
+        "id": "E",
+        "name": "E",
+        "stop_area": {
+            "...": "..."
+        }
+    }
+}
+```
+
+|Field|Type|Description|
+|-----|----|-----------|
+|from|[pt_object](#pt_object)|The beginning of the section|
+|to|[pt_object](#pt_object)|The end of the section|
+
+### Impacted_stop
+
+```json
+{
+    "stop_point": {
+        "...": "..."
+    },
+    "amended_arrival_time": "073600",
+    "amended_departure_time": "073600",
+    "base_arrival_time": "073600",
+    "base_departure_time": "073600",
+    "cause": "",
+    "stop_time_effect": "delayed"
+}
+```
+
+|Field|Type|Description|
+|-----|----|-----------|
+|stop_point|[stop_point](#stop-point)|The impacted stop point of the trip|
+|amended_departure_time|string|New departure hour (format HHMMSS) of the trip on this stop point|
+|amended_arrival_time|string|New arrival hour (format HHMMSS) of the trip on this stop point|
+|base_departure_time|string|Base departure hour (format HHMMSS) of the trip on this stop point|
+|base_arrival_time|string|Base arrival hour (format HHMMSS) of the trip on this stop point|
+|cause|string|Cause of the modification|
+|stop_time_effect|Enum|Can be: "added", "deleted", or "delayed".|
 
 ### Message
 
