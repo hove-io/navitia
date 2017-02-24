@@ -3204,3 +3204,44 @@ BOOST_AUTO_TEST_CASE(with_boarding_alighting_time_and_stay_in){
     BOOST_CHECK_EQUAL(result.at(0).items[3].departure, "20170101T093000"_dt);
     BOOST_CHECK_EQUAL(result.at(0).items[3].arrival, "20170101T093500"_dt);
 }
+
+// The vp should be shifted to the previous day since the boarding time will be before midnight
+BOOST_AUTO_TEST_CASE(reverse_pass_midnight_with_boardings){
+    ed::builder b("20170101");
+    b.vj("A", "0111110").uri("vj:A1")
+        ("S1", "00:05"_t, "00:05"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 0)
+        ("S2", "00:15"_t, "00:15"_t, std::numeric_limits<uint16_t>::max(), true, true, 1200, 1200)
+        ("S3", "00:25"_t, "00:25"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)
+        ("S4", "00:35"_t, "00:35"_t, std::numeric_limits<uint16_t>::max(), true, false, 600, 0);
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*b.data);
+    const type::PT_Data& d = *b.data->pt_data;
+
+    auto compute = [&](int day) {
+        return raptor.compute(d.stop_areas_map.at("S2"),
+                              d.stop_areas_map.at("S4"), "23:00"_t,
+                              day,
+                              DateTimeUtils::inf, type::RTLevel::Base, 2_min);
+    };
+
+    auto result = compute(0);
+    BOOST_REQUIRE_EQUAL(result.size(), 1);
+    result.at(0).print();
+    BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 3);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].departure, "20170101T235500"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[0].arrival, "20170102T001500"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].type, ItemType::public_transport);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].departure, "20170102T001500"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[1].arrival, "20170102T003500"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[2].type, ItemType::alighting);
+    BOOST_CHECK_EQUAL(result.at(0).items[2].departure, "20170102T003500"_dt);
+    BOOST_CHECK_EQUAL(result.at(0).items[2].arrival, "20170102T004500"_dt);
+
+    result = compute(5);
+    BOOST_REQUIRE_EQUAL(result.size(), 0);
+}
