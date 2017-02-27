@@ -74,8 +74,8 @@ class Geovelo(AbstractStreetNetworkService):
                 {'latitude': coord_dest.lat, 'longitude': coord_dest.lon}
             ],
             'bikeDetails': {
-                'profile': 'BEGINNER',
-                'bikeType': 'TRADITIONAL', #can be 'BSS'
+                'profile': 'BEGINNER', # can be MEDIAN, EXPERT
+                'bikeType': 'TRADITIONAL', # can be 'BSS'
                 # 'averageSpeed': '6' # in km/h, BEGINER sets it to 13
             },
             'transportModes': ['BIKE']
@@ -142,17 +142,17 @@ class Geovelo(AbstractStreetNetworkService):
             raise InvalidArguments('Geovelo, managing only 1-n in connector, requested {}-{}'
                                    .format(len(origins), len(destinations)))
 
-        data = Geovelo._make_request_arguments_isochrone(origins, destinations)
+        data = self._make_request_arguments_isochrone(origins, destinations)
         r = self._call_geovelo('{}/{}'.format(self.service_url, 'api/v2/routes_m2m'),
                                requests.post, json.dumps(data))
-        Geovelo._check_response(r)
+        self._check_response(r)
         resp_json = r.json()
 
         if len(resp_json) - 1 != len(origins) * len(destinations):
             logging.getLogger(__name__).error('Geovelo nb response != nb requested')
             raise UnableToParse('Geovelo nb response != nb requested')
 
-        return Geovelo._get_matrix(resp_json)
+        return self._get_matrix(resp_json)
 
 
     @classmethod
@@ -242,7 +242,7 @@ class Geovelo(AbstractStreetNetworkService):
             logging.getLogger(__name__).error('Geovelo, mode {} not implemented'.format(mode))
             raise InvalidArguments('Geovelo, mode {} not implemented'.format(mode))
 
-        data = Geovelo._make_request_arguments_direct_path(pt_object_origin, pt_object_destination)
+        data = self._make_request_arguments_direct_path(pt_object_origin, pt_object_destination)
         r = self._call_geovelo('{}/{}'.format(self.service_url, 'api/v2/computedroutes?'
                                                                 'instructions=true&'
                                                                 'elevations=false&'
@@ -251,11 +251,11 @@ class Geovelo(AbstractStreetNetworkService):
                                                                 'bike_stations=false&'
                                                                 'objects_as_ids=true&'),
                                requests.post, json.dumps(data))
-        Geovelo._check_response(r)
+        self._check_response(r)
         resp_json = r.json()
 
         if len(resp_json) != 1:
             logging.getLogger(__name__).error('Geovelo nb response != nb requested')
             raise UnableToParse('Geovelo nb response != nb requested')
 
-        return Geovelo._get_response(resp_json, mode, pt_object_origin, pt_object_destination, datetime, clockwise)
+        return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, datetime, clockwise)

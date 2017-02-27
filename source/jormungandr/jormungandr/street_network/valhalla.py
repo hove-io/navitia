@@ -178,10 +178,10 @@ class Valhalla(AbstractStreetNetworkService):
 
     def _make_request_arguments(self, mode, pt_object_origin, pt_object_destinations, request, api='route', max_duration=None):
 
-        valhalla_mode = Valhalla._get_valhalla_mode(mode)
-        destinations = [Valhalla._format_coord(destination, api) for destination in pt_object_destinations]
+        valhalla_mode = self._get_valhalla_mode(mode)
+        destinations = [self._format_coord(destination, api) for destination in pt_object_destinations]
         args = {
-            'locations': [Valhalla._format_coord(pt_object_origin)] + destinations,
+            'locations': [self._format_coord(pt_object_origin)] + destinations,
             'costing': valhalla_mode
         }
 
@@ -216,9 +216,9 @@ class Valhalla(AbstractStreetNetworkService):
             resp.status_code = 200
             resp.response_type = response_pb2.NO_SOLUTION
             return resp
-        Valhalla._check_response(r)
+        self._check_response(r)
         resp_json = r.json()
-        return Valhalla._get_response(resp_json, mode, pt_object_origin, pt_object_destination, datetime, clockwise)
+        return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, datetime, clockwise)
 
     @classmethod
     def _get_matrix(cls, json_response):
@@ -247,6 +247,6 @@ class Valhalla(AbstractStreetNetworkService):
 
         data = self._make_request_arguments(mode, origins[0], destinations, request, api='one_to_many')
         r = self._call_valhalla('{}/{}'.format(self.service_url, 'one_to_many'), requests.post, data)
-        Valhalla._check_response(r)
+        self._check_response(r)
         resp_json = r.json()
-        return Valhalla._get_matrix(resp_json)
+        return self._get_matrix(resp_json)
