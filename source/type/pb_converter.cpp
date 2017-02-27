@@ -1167,31 +1167,28 @@ void PbCreator::Filler::fill_messages(const VjStopTimes* vj_stoptimes,
     const auto* meta_vj = vj_stoptimes->vj->meta_vj;
     for (const auto& message : meta_vj->get_applicable_messages(pb_creator.now,
                                                                 pb_creator.action_period)) {
-        auto line_section_impacted_obj_it = boost::find_if(message->informed_entities(),
-                                                        [](const nt::disruption::PtObj& ptobj) {
-           return boost::get<nt::disruption::LineSection>(&ptobj) != nullptr;
-        });
-        if (line_section_impacted_obj_it != message->informed_entities().end()) {
-            // note in this we take the premise that an impact cannot impact a line section AND a vj
-            const auto& line_section = *line_section_impacted_obj_it;
-            bool found = false;
-            for (const auto& st: vj_stoptimes->stop_times) {
-                // if one stop point of the stoptimes is impacted by the same impact
-                // it means the section is impacted
-                for (const auto& sp_message : st->stop_point->get_applicable_messages(pb_creator.now,
-                                                                            pb_creator.action_period)) {
-                    if (sp_message == message) {
-                        found = true;
-                        break;
+        bool found = [&](){
+            auto line_section_impacted_obj_it = boost::find_if(message->informed_entities(),
+                                                            [](const nt::disruption::PtObj& ptobj) {
+               return boost::get<nt::disruption::LineSection>(&ptobj) != nullptr;
+            });
+           if (line_section_impacted_obj_it != message->informed_entities().end()) {
+                // note in this we take the premise that an impact cannot impact a line section AND a vj
+                for (const auto& st: vj_stoptimes->stop_times) {
+                    // if one stop point of the stoptimes is impacted by the same impact
+                    // it means the section is impacted
+                    for (const auto& sp_message : st->stop_point->get_applicable_messages(pb_creator.now,
+                                                                                pb_creator.action_period)) {
+                        if (sp_message == message) {
+                            return true;
+                        }
                     }
                 }
-                if (found) { break; }
-            }
-            if (! found) {
-                // we haven't found a stoppoint impacted by this line section impact, it does not concern this vj
-                continue;
-            }
-        }
+                return false;
+            }}();
+          // we haven't found a stoppoint impacted by this line section impact, it does not concern this vj
+          if (! found) continue;
+
         fill_message(message, pt_display_info);
     }
 }
