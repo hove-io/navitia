@@ -390,13 +390,13 @@ BOOST_AUTO_TEST_CASE(sync_ntfs) {
     parser.fill(data, "20150327");
 
     //we check that the data have been correctly loaded
-    BOOST_REQUIRE_EQUAL(data.lines.size(), 3);
+    BOOST_REQUIRE_EQUAL(data.lines.size(), 4);
     BOOST_REQUIRE_EQUAL(data.stop_point_connections.size(), 1);
     BOOST_REQUIRE_EQUAL(data.stop_points.size(), 8);
     BOOST_CHECK_EQUAL(data.lines[0]->name, "ligne A Flexible");
     BOOST_CHECK_EQUAL(data.lines[0]->uri, "l1");
     BOOST_CHECK_EQUAL(data.lines[0]->text_color, "FFD700");    
-    BOOST_REQUIRE_EQUAL(data.routes.size(), 3);
+    BOOST_REQUIRE_EQUAL(data.routes.size(), 4);
 
     navitia::type::hasProperties has_properties;
     has_properties.set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
