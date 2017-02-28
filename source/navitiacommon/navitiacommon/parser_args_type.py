@@ -92,16 +92,12 @@ def geojson_argument(default_value):
         if value:
             is_valid_object = isinstance(value, dict)
             if not is_valid_object:
+                raise ValueError('invalid json')
+            if not is_geometry_valid(value) :
                 raise ValueError('invalid geojson')
-            features= value.get('features')
-            if not features:
-                is_valid_object = is_geometry_valid(value)
-            else:
-                for feature in features:
-                    geometry = feature.get('geometry')
-                    is_valid_object = is_valid_object and is_geometry_valid(geometry)
-            if not is_valid_object:
-                raise ValueError('invalid geometry')
+            type= value.get('type')
+            if not (type.lower() == 'polygon' if type else False):
+                raise ValueError('invalid geometry type')
         else:
             return default_value
         return value
