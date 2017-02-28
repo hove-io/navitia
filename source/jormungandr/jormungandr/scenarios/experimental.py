@@ -531,9 +531,9 @@ class AsyncWorker(object):
         for dep_mode, arr_mode, journey in map_response:
             # from
             departure = journey.sections[0].origin
-            clockwise = True
+            clockwise = False
             reverse_sections = False
-            departure_datetime = journey.departure_date_time - g.origins_fallback.get_duration(dep_mode, departure.uri)
+            arrival_datetime = journey.departure_date_time
             # In the following cases, we don't need to compute the fallback direct path:
             # 1. the origin of the first section and the requested_origin are the same
             # 2. the origin of the first section belongs to a stop_area
@@ -543,17 +543,17 @@ class AsyncWorker(object):
                 futures.extend(self.get_direct_path_futures(g.fallback_direct_path,
                                                             g.requested_origin,
                                                             departure,
-                                                            departure_datetime,
+                                                            arrival_datetime,
                                                             clockwise,
                                                             reverse_sections,
                                                             [dep_mode]))
             # to
             arrival = journey.sections[-1].destination
-            clockwise = False
+            clockwise = True
             reverse_sections = False
             # In some cases, we don't need to compute the fallback direct path
             # Similar reasoning as above
-            arrival_datetime = journey.arrival_date_time + g.destinations_fallback.get_duration(arr_mode, arrival.uri)
+            departure_datetime = journey.arrival_date_time
             if g.requested_destination.uri != arrival.uri and arrival.uri not in odt_stop_points \
                     and arrival.uri not in crowfly_stop_points:
                 o, d = arrival, g.requested_destination
@@ -562,7 +562,7 @@ class AsyncWorker(object):
                 futures.extend(self.get_direct_path_futures(g.fallback_direct_path,
                                                             o,
                                                             d,
-                                                            arrival_datetime,
+                                                            departure_datetime,
                                                             clockwise, reverse_sections,
                                                             [arr_mode]))
         return futures
