@@ -40,14 +40,14 @@ namespace bg = boost::gregorian;
 
 namespace navitia { namespace type { namespace disruption {
 
-std::vector<std::tuple<const nt::VehicleJourney*, nt::ValidityPattern, SectionBounds>>
+std::vector<ImpactedVJ>
 get_impacted_vehicle_journeys(const LineSection& ls,
                               const Impact& impact,
                               const boost::gregorian::date_period& production_period,
                               type::RTLevel rt_level) {
     auto log = log4cplus::Logger::getInstance("log");
     // Get all impacted VJs and compute the corresponding base_canceled vp
-    std::vector<std::tuple<const nt::VehicleJourney*, nt::ValidityPattern, SectionBounds>> vj_vp_pairs;
+    std::vector<ImpactedVJ> vj_vp_pairs;
 
     // Computing a validity_pattern of impact used to pre-filter concerned vjs later
     type::ValidityPattern impact_vp = impact.get_impact_vp(production_period);
@@ -68,22 +68,22 @@ get_impacted_vehicle_journeys(const LineSection& ls,
             }
 
             // Filtering each journey to see if it's impacted by the section.
-            SectionBounds bounds_st = vj.get_bounds_orders_for_section(ls.start_point, ls.end_point);
+            auto section = vj.get_sections_stop_points(ls.start_point, ls.end_point);
             // If the vj pass by both stops both elements will be different than nullptr, otherwise
             // it's not passing by both stops and should not be impacted
-            if(bounds_st.first && bounds_st.second) {
+            if (! section.empty()) {
                 // Once we know the line section is part of the vj we compute the vp for the adapted_vj
                 LOG4CPLUS_TRACE(log, "vj " << vj.uri << " pass by both stops, might be affected.");
                 nt::ValidityPattern new_vp{vj.validity_patterns[rt_level]->beginning_date};
                 for(const auto& period : impact.application_periods) {
                     // get the vp of the section
-                    new_vp.days |= vj.get_vp_for_section(bounds_st, rt_level, period).days;
+                    new_vp.days |= vj.get_vp_for_section(section, rt_level, period).days;
                 }
                 // If there is effective days for the adapted vp we're keeping it
                 if(!new_vp.days.none()){
                     LOG4CPLUS_TRACE(log, "vj " << vj.uri << " is affected, keeping it.");
                     new_vp.days >>= vj.shift;
-                    vj_vp_pairs.emplace_back(&vj, new_vp, bounds_st);
+                    vj_vp_pairs.emplace_back(&vj, new_vp, std::move(section));
                 }
             }
             return true;
@@ -109,27 +109,16 @@ struct InformedEntitiesLinker: public boost::static_visitor<> {
     void operator()(const nt::disruption::LineSection& line_section) const {
         // for a line section it's a bit more complex, we need to register the impact
         // to all impacted stoppoints and vehiclejourneys
-        auto vj_vp_pairs = get_impacted_vehicle_journeys(line_section, *impact, production_period, rt_level);
+        auto impacted_vjs = get_impacted_vehicle_journeys(line_section, *impact, production_period, rt_level);
         std::set<type::StopPoint*> impacted_stop_points;
         std::set<type::MetaVehicleJourney*> impacted_meta_vjs;
-        for (auto& vj_vp_section : vj_vp_pairs) {
-            const auto* vj = std::get<0>(vj_vp_section);
+        for (auto& impacted_vj : impacted_vjs) {
+            const auto* vj = impacted_vj.vj;
             if (impacted_meta_vjs.insert(vj->meta_vj).second) {
                 // it's the first time we see this metavj, we add the impact to it
                 vj->meta_vj->add_impact(impact);
             }
-            auto& bounds_st = std::get<2>(vj_vp_section);
-
-            if (!bounds_st.first || ! bounds_st.second) { continue; }
-            if (vj->stop_time_list.size() <= *bounds_st.first ||
-                         vj->stop_time_list.size() <= *bounds_st.second) {
-                throw navitia::recoverable_exception("the line section bounds are invalid, we skip the linesection");
-            }
-            auto impacted_stoptimes = boost::make_iterator_range(vj->stop_time_list.begin() + *bounds_st.first,
-                                                                 vj->stop_time_list.begin() + *bounds_st.second + 1);
-
-            for (const auto& st : impacted_stoptimes) {
-                auto* sp = st.stop_point;
+            for (auto* sp: impacted_vj.impacted_stops) {
                 if (impacted_stop_points.insert(sp).second) {
                     // it's the first time we see this stoppoint, we add the impact to it
                     sp->add_impact(impact);

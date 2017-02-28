@@ -1,3 +1,10 @@
+navitia2 (2.26.2) unstable; urgency=low
+
+  * Kraken: fix line section bug  <https://github.com/CanalTP/navitia/pull/1997> 
+  * Jormungandr: hide impacted_section field when not needed  <https://github.com/CanalTP/navitia/pull/1992>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Tue, 28 Feb 2017 17:02:43 +0100
+
 navitia2 (2.26.1) unstable; urgency=low
 
   * Jormungandr: nest shape in a shape field for geocodejson <https://github.com/CanalTP/navitia/pull/1989>

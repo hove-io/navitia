@@ -368,9 +368,22 @@ public:
     }
 };
 
-using SectionBounds = const std::pair<boost::optional<uint16_t>, boost::optional<uint16_t>>;
-std::vector<std::tuple<const VehicleJourney*, ValidityPattern, SectionBounds>>
-get_impacted_vehicle_journeys(const LineSection&, const Impact&, const boost::gregorian::date_period&, type::RTLevel);
+struct ImpactedVJ {
+    const VehicleJourney* vj; // vj before impact
+    ValidityPattern new_vp;
+    std::set<StopPoint*> impacted_stops;
+    ImpactedVJ(const VehicleJourney* vj,
+               ValidityPattern vp,
+               std::set<StopPoint*> r):
+        vj(vj), new_vp(vp), impacted_stops(std::move(r)) {}
+};
+/*
+ * return the list of vehicle journey that are impacted by the linesection
+ */
+std::vector<ImpactedVJ> get_impacted_vehicle_journeys(const LineSection&,
+                                                      const Impact&,
+                                                      const boost::gregorian::date_period&,
+                                                      type::RTLevel);
 
 }
 

@@ -1357,6 +1357,161 @@ BOOST_AUTO_TEST_CASE(add_simple_impact_on_line_section) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.back().stop_point->uri, "stop_point:40");
 }
 
+BOOST_AUTO_TEST_CASE(multiple_impact_on_line_section) {
+    ed::builder b("20160404");
+    b.vj("line:1").uri("vj:1")
+            ("A", "08:10"_t)
+            ("B", "08:20"_t)
+            ("C", "08:30"_t)
+            ("D", "08:40"_t)
+            ("E", "08:50"_t)
+            ("F", "08:60"_t)
+            ("G", "08:70"_t);
+
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = bg::date_period(bg::date(2016,4,4), bg::days(7));
+
+    auto get_stops = [](const nt::VehicleJourney* vj) {
+          std::vector<std::string> res;
+          for (const auto st: vj->stop_time_list) {
+              res.push_back(st.stop_point->uri);
+          }
+          return res;
+    };
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "first_ls_B_C")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .application_periods(btp("20160404T080000"_dt, "20160406T230000"_dt))
+                              .publish(btp("20160404T080000"_dt, "20160406T090000"_dt))
+                              .on_line_section("line:1", "B", "C", {"line:1:0"})
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    // it should have created one vj
+    BOOST_CHECK_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(b.data->pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
+
+    // we should be able to find the disuption on the stoppoints [B, C]
+    BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("A")->get_impacts().size(), 0);
+    BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("B")->get_impacts().size(), 1);
+    BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("C")->get_impacts().size(), 1);
+    BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("D")->get_impacts().size(), 0);
+    BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("E")->get_impacts().size(), 0);
+    BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("F")->get_impacts().size(), 0);
+    BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("G")->get_impacts().size(), 0);
+
+    // Check the original vjs
+    auto* vj = b.get<nt::VehicleJourney>("vj:1");
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 7);
+    auto* meta_vj = vj->meta_vj;
+    // this vj should be impacted by the line section, so the impact should be found in it's metavj
+    BOOST_CHECK_EQUAL(meta_vj->get_impacts().size(), 1);
+
+    // Check adapted vjs
+    BOOST_REQUIRE_EQUAL(meta_vj->get_adapted_vj().size(), 1);
+
+    const auto* adapted_vj = b.get<nt::VehicleJourney>("vj:1:Adapted:0:first_ls_B_C");
+    BOOST_REQUIRE(adapted_vj);
+    BOOST_CHECK(ba::ends_with(adapted_vj->adapted_validity_pattern()->days.to_string(), "000111"));
+    BOOST_CHECK(ba::ends_with(adapted_vj->base_validity_pattern()->days.to_string(), "000000"));
+    BOOST_CHECK_EQUAL(adapted_vj->meta_vj->get_impacts().size(), 1);
+    BOOST_REQUIRE_EQUAL(adapted_vj->stop_time_list.size(), 5);
+
+    BOOST_CHECK_EQUAL_RANGE(get_stops(adapted_vj), std::vector<std::string>({"A", "D", "E", "F", "G"}));
+
+    // we now cut E->F
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "second_ls_E_F")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .application_periods(btp("20160404T080000"_dt, "20160406T230000"_dt))
+                              .publish(btp("20160404T080000"_dt, "20160406T090000"_dt))
+                              .on_line_section("line:1", "E", "F", {"line:1:0"})
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    // it will have created another vj, the previous one being deactivated (because we do not clean yet)
+    BOOST_CHECK_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(b.data->pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 3);
+
+    // we should be able to find the disuption on the stoppoints [B, C] and [E, F]
+    BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("A")->get_impacts().size(), 0);
+    BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("B")->get_impacts().size(), 1);
+    BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("C")->get_impacts().size(), 1);
+    BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("D")->get_impacts().size(), 0);
+    BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("E")->get_impacts().size(), 1);
+    BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("F")->get_impacts().size(), 1);
+    BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("G")->get_impacts().size(), 0);
+
+    // Check the original vjs
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 7);
+    // the 2 impacts should be there
+    BOOST_CHECK_EQUAL(meta_vj->get_impacts().size(), 2);
+
+    // Check adapted vjs, there should be 2, one being deactivated
+    BOOST_REQUIRE_EQUAL(meta_vj->get_adapted_vj().size(), 2);
+
+    const auto* first_adapted_vj = b.get<nt::VehicleJourney>("vj:1:Adapted:0:first_ls_B_C");
+    BOOST_REQUIRE(first_adapted_vj);
+    BOOST_CHECK(ba::ends_with(first_adapted_vj->adapted_validity_pattern()->days.to_string(), "000000"));
+    BOOST_CHECK(ba::ends_with(first_adapted_vj->base_validity_pattern()->days.to_string(), "000000"));
+
+    const auto* second_adapted_vj = b.get<nt::VehicleJourney>("vj:1:Adapted:0:first_ls_B_C:Adapted:1:second_ls_E_F");
+    BOOST_REQUIRE(second_adapted_vj);
+    BOOST_CHECK(ba::ends_with(second_adapted_vj->adapted_validity_pattern()->days.to_string(), "000111"));
+    BOOST_CHECK(ba::ends_with(second_adapted_vj->base_validity_pattern()->days.to_string(), "000000"));
+
+    BOOST_CHECK_EQUAL(second_adapted_vj->meta_vj->get_impacts().size(), 2);
+    BOOST_CHECK_EQUAL_RANGE(get_stops(second_adapted_vj), std::vector<std::string>({"A", "D", "G"}));
+
+    // we now cut D->G
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "third_ls_C_G")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .application_periods(btp("20160404T080000"_dt, "20160406T230000"_dt))
+                              .publish(btp("20160404T080000"_dt, "20160406T090000"_dt))
+                              .on_line_section("line:1", "B", "G", {"line:1:0"})
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    // it should not have created another vj
+    BOOST_CHECK_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(b.data->pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 4);
+
+    // we should be able to find the disuption on the stoppoints [B, G]
+    BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("A")->get_impacts().size(), 0);
+    BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("B")->get_impacts().size(), 2);
+    BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("C")->get_impacts().size(), 2);
+    BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("D")->get_impacts().size(), 1);
+    BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("E")->get_impacts().size(), 2);
+    BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("F")->get_impacts().size(), 2);
+    BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("G")->get_impacts().size(), 1);
+
+    // Check the original vjs
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 7);
+    // the 3 impacts should be there
+    BOOST_CHECK_EQUAL(meta_vj->get_impacts().size(), 3);
+
+    // Check adapted vjs, there should still be 3, with 2 being inactive
+    BOOST_CHECK(ba::ends_with(first_adapted_vj->adapted_validity_pattern()->days.to_string(), "000000"));
+    BOOST_CHECK(ba::ends_with(second_adapted_vj->adapted_validity_pattern()->days.to_string(), "000000"));
+
+    const auto* third_adapted_vj = b.get<nt::VehicleJourney>
+            ("vj:1:Adapted:0:first_ls_B_C:Adapted:1:second_ls_E_F:Adapted:2:third_ls_C_G");
+    BOOST_REQUIRE(third_adapted_vj);
+    BOOST_CHECK(ba::ends_with(third_adapted_vj->adapted_validity_pattern()->days.to_string(), "000111"));
+    BOOST_CHECK(ba::ends_with(third_adapted_vj->base_validity_pattern()->days.to_string(), "000000"));
+    BOOST_CHECK_EQUAL(third_adapted_vj->meta_vj->get_impacts().size(), 3);
+    BOOST_CHECK_EQUAL_RANGE(get_stops(third_adapted_vj), std::vector<std::string>({"A"}));
+}
+
 BOOST_AUTO_TEST_CASE(add_impact_on_line_section_with_vj_pass_midnight) {
     ed::builder b("20160404");
     b.sa("stop_area:1", 0, 0, false, true)("stop_point:10");

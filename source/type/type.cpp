@@ -233,7 +233,7 @@ ValidityPattern VehicleJourney::get_vp_of_sp(const StopPoint& sp,
 }
 
 ValidityPattern VehicleJourney::get_vp_for_section(
-    const std::pair<boost::optional<uint16_t>, boost::optional<uint16_t>> bounds_st,
+    const std::set<StopPoint*>& section,
     RTLevel rt_level,
     const boost::posix_time::time_period& period
 ) const {
@@ -241,7 +241,7 @@ ValidityPattern VehicleJourney::get_vp_for_section(
 
     auto pass_in_the_section = [&](const nt::StopTime& stop_time){
         // Return if not in the section
-        if (stop_time.order() < bounds_st.first || stop_time.order() > bounds_st.second) {
+        if (! section.count(stop_time.stop_point)) {
             return;
         }
         const auto& beginning_date = validity_patterns[rt_level]->beginning_date;
@@ -262,21 +262,25 @@ ValidityPattern VehicleJourney::get_vp_for_section(
     return vp_for_section;
 }
 
-const std::pair<boost::optional<uint16_t>, boost::optional<uint16_t>> VehicleJourney::get_bounds_orders_for_section(
+std::set<StopPoint*> VehicleJourney::get_sections_stop_points(
        const StopArea* start_stop,
        const StopArea* end_stop
 ) const {
-     std::pair<boost::optional<uint16_t>, boost::optional<uint16_t>> bounds_st;
-        /*
+     /*
      * We are checking if the journey pass first by the start_point of the line_section and
      * the end_point. We can have start_point == end_point.
+     *
      * We perform the check on the base_vj stop_times, if it exists, in order to be able to
      * apply multiple line_section disruption.
+     *
      * If we have a line A :
      *
      *      s1----->s2----->s3----->s4----->s5
      *
-     * We have two disruptions :
+     * if you first impact [s2, s3] then in another disruption impact [s2, s4], you need the base stops
+     *
+     * There is also the temporal problem.
+     * For example if we have two disruptions :
      *  - s4/s5 from the 1st to the 10th
      *  - s3/s4 from the 5th to the 15th
      *
@@ -287,8 +291,10 @@ const std::pair<boost::optional<uint16_t>, boost::optional<uint16_t>> VehicleJou
      *  - s1/s2 from the 5th to the 10th,
      *  - s1/s2/s5 from the 11th to the 15th
      * */
-    auto* base_vj = this->get_corresponding_base();
-    for(auto& st: (base_vj ? base_vj->stop_time_list : this->stop_time_list)) {
+    std::pair<boost::optional<uint16_t>, boost::optional<uint16_t>> bounds_st;
+    const auto* base_vj = this->get_corresponding_base();
+    const auto* vj = base_vj ? base_vj : this;
+    for(auto& st: vj->stop_time_list) {
         // The line section is using stop_areas so we make sure we have one
         if(st.stop_point && st.stop_point->stop_area) {
             if(!bounds_st.first && st.stop_point->stop_area->uri == start_stop->uri) {
@@ -301,7 +307,13 @@ const std::pair<boost::optional<uint16_t>, boost::optional<uint16_t>> VehicleJou
         }
     }
 
-    return bounds_st;
+    std::set<StopPoint*> res;
+    if (bounds_st.first && bounds_st.second) {
+        for (auto i = *bounds_st.first; i <= *bounds_st.second; ++i) {
+            res.insert(vj->stop_time_list[i].stop_point);
+        }
+    }
+    return res;
 }
 
 boost::posix_time::time_period VehicleJourney::execution_period(const boost::gregorian::date& date) const {
