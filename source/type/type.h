@@ -555,16 +555,12 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
 
     // Return the vp for all the stops of the section
     ValidityPattern get_vp_for_section(
-            const std::pair<boost::optional<uint16_t>, boost::optional<uint16_t>> bounds_st,
+            const std::set<StopPoint*>& bounds_st,
             RTLevel rt_level,
             const boost::posix_time::time_period& period) const;
 
-    // Return the stop_times for a section between start_stop and end_stop
-    // Return nullptr if not found
-    const std::pair<boost::optional<uint16_t>, boost::optional<uint16_t>> get_bounds_orders_for_section(
-            const StopArea* start_stop,
-            const StopArea* end_stop
-    ) const;
+    // return all the stoppoints of the base vj between the 2 stop areas
+    std::set<StopPoint*> get_sections_stop_points(const StopArea*, const StopArea*) const;
 
     //return the time period of circulation of the vj for one day
     boost::posix_time::time_period execution_period(const boost::gregorian::date& date) const;
