@@ -69,9 +69,10 @@ get_out_st_dt(const std::pair<const type::StopTime*, DateTime>& in_st_dt,
               const JourneyPatternContainer& jp_container)
 {
     DateTime cur_dt = in_st_dt.second;
+    DateTime base_dt = in_st_dt.first->base_dt(cur_dt, true);
     auto st_range = raptor_visitor().st_range(*in_st_dt.first);
     for (const auto& st: st_range.advance_begin(1)) {
-        cur_dt = st.section_end(cur_dt, true);
+        cur_dt = st.section_end(base_dt, true);
         if (jp_container.get_jpp(st) == target_jpp) {
             // check if the get_out is valid?
             return {&st, cur_dt};
@@ -81,7 +82,7 @@ get_out_st_dt(const std::pair<const type::StopTime*, DateTime>& in_st_dt,
          stay_in_vj != nullptr;
          stay_in_vj = stay_in_vj->next_vj) {
         for (const auto& st: stay_in_vj->stop_time_list) {
-            cur_dt = st.section_end(cur_dt, true);
+            cur_dt = st.section_end(base_dt, true);
             if (jp_container.get_jpp(st) == target_jpp) {
                 // check if the get_out is valid?
                 return {&st, cur_dt};
@@ -263,29 +264,21 @@ std::vector<VehicleSection> get_vjs(const Journey::Section& section) {
     std::vector<VehicleSection> res;
     auto current_st = section.get_in_st;
     auto end_st = section.get_out_st;
-    auto shift = section.get_in_dt - section.get_in_st->boarding_time;
-    // for the first arrival, we want to go back into the past, hence the clockwise
-
-    const auto* in_st = section.get_in_st;
-    DateTime current_dep = section.get_in_st->boarding_time;
+    auto base_dt = section.get_in_st->base_dt(section.get_in_dt, true);
+    DateTime current_dep;
     DateTime current_arr;
-    if (! in_st->is_frequency()) {
-        current_arr = section.get_in_st->alighting_time;
-    } else {
-        current_arr = in_st->begin_from_end(current_dep, true);
-    }
 
     size_t order = current_st->order();
     for (const auto* vj = current_st->vehicle_journey; vj; vj = vj->next_vj) {
         res.emplace_back(section, current_st->vehicle_journey);
 
         for (const auto& st: boost::make_iterator_range(vj->stop_time_list.begin() + order, vj->stop_time_list.end())) {
-            current_dep = st.departure(current_dep);
-            current_arr = st.arrival(current_arr);
+            current_dep = st.departure(base_dt);
+            current_arr = st.arrival(base_dt);
             res.back().stop_times_and_dt.emplace_back(
                 st,
-                current_dep + st.get_boarding_duration() + shift,
-                current_arr - st.get_alighting_duration() + shift
+                current_dep + st.get_boarding_duration(),
+                current_arr - st.get_alighting_duration()
             );
 
             if (&st == end_st) {
@@ -421,20 +414,17 @@ struct RaptorSolutionReader {
                      const StDt& begin_st_dt) {
         Transfers& transfers = transfers_cache.get(count);
         auto cur_dt = begin_st_dt.second;
+        auto base_dt = begin_st_dt.first->base_dt(cur_dt, v.clockwise());
         unsigned nb_stay_in = 0;
-        if (begin_st_dt.first->is_frequency()) {
-            //for frequency, we need cur_dt to be the begin in the stoptime
-            cur_dt = begin_st_dt.first->begin_from_end(cur_dt, v.clockwise());
-        }
         const auto begin_zone = begin_st_dt.first->local_traffic_zone;
-        cur_dt = try_end_pt(count, path, begin_st_dt, begin_zone, cur_dt,
+        cur_dt = try_end_pt(count, path, begin_st_dt, begin_zone, base_dt,
                             v.st_range(*begin_st_dt.first).advance_begin(1), nb_stay_in, transfers);
 
         // continuing in the stay in
         for (const auto* stay_in_vj = v.get_extension_vj(begin_st_dt.first->vehicle_journey);
              stay_in_vj != nullptr;
              stay_in_vj = v.get_extension_vj(stay_in_vj)) {
-            cur_dt = try_end_pt(count, path, begin_st_dt, begin_zone, cur_dt,
+            cur_dt = try_end_pt(count, path, begin_st_dt, begin_zone, base_dt,
                                 v.stop_time_list(stay_in_vj), ++nb_stay_in, transfers);
         }
         return transfers;
@@ -449,10 +439,9 @@ struct RaptorSolutionReader {
                         const unsigned nb_stay_in,
                         Transfers& transfers) {
         static const auto no_zone = std::numeric_limits<uint16_t>::max();
-        DateTime shift = begin_st_dt.first->current_shift_time(cur_dt, v.clockwise());
-
+        auto base_dt = cur_dt;
         for (const auto& end_st: st_range) {
-            cur_dt = end_st.section_end(cur_dt - shift, v.clockwise()) + shift;
+            cur_dt = end_st.section_end(base_dt, v.clockwise());
 
             // trying to end
             if (! end_st.valid_end(v.clockwise())) { continue; }
@@ -495,15 +484,12 @@ struct RaptorSolutionReader {
 
     DateTime get_vj_end(const StDt& begin_st_dt) const {
         auto cur_dt = begin_st_dt.second;
-        if (begin_st_dt.first->is_frequency()) {
-            //for frequency, we need cur_dt to be the begin in the stoptime
-            cur_dt = begin_st_dt.first->begin_from_end(cur_dt, v.clockwise());
-        }
+        auto base_dt = begin_st_dt.first->base_dt(cur_dt, v.clockwise());
         // Note: We keep a ref on the range because the advance_begin return a ref on the object
         // and some gcc version optimize out the inner range
         auto r = v.st_range(*begin_st_dt.first);
         for (const auto& end_st: r.advance_begin(1)) {
-            cur_dt = end_st.section_end(cur_dt, v.clockwise());
+            cur_dt = end_st.section_end(base_dt, v.clockwise());
         }
 
         return cur_dt;
@@ -602,6 +588,7 @@ void read_solutions(const RAPTOR& raptor,
                                         raptor.data.dataRaptor->min_connection_time,
                                         transfer_penalty,
                                         v.clockwise());
+
             if (reader.solutions.contains_better_than(j)) { continue; }
             try {
                 reader.begin_pt(count, a.first, working_labels.dt_pt(a.first));

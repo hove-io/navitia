@@ -63,20 +63,20 @@ bool RAPTOR::apply_vj_extension(const Visitor& v,
                                 const RoutingState& state) {
     auto& working_labels = labels[count];
     auto workingDt = state.workingDate;
-    uint32_t shift = 0;
+    auto base_dt = workingDt;
     auto vj = state.vj;
     bool result = false;
     while(vj) {
         const auto& stop_time_list = v.stop_time_list(vj);
         const auto& st_begin = stop_time_list.front();
-        shift = st_begin.current_shift_time(workingDt, v.clockwise());
-        workingDt = st_begin.section_end(workingDt - shift, v.clockwise()) + shift;
+        workingDt = st_begin.section_end(base_dt, v.clockwise());
+
         // If the vj is not valid for the first stop it won't be valid at all
         if (!st_begin.is_valid_day(DateTimeUtils::date(workingDt), !v.clockwise(), rt_level)) {
             return result;
         }
         for (const type::StopTime& st: stop_time_list) {
-            workingDt = st.section_end(workingDt - shift, v.clockwise()) + shift;
+            workingDt = st.section_end(base_dt, v.clockwise());
             if (!st.valid_end(v.clockwise())) {
                 continue;
             }
@@ -660,7 +660,7 @@ void RAPTOR::raptor_loop(Visitor visitor,
             if(q_elt.second != visitor.init_queue_item()) {
                 bool is_onboard = false;
                 DateTime workingDt = visitor.worst_datetime();
-                uint32_t shift = 0;
+                DateTime base_dt = workingDt;
                 typename Visitor::stop_time_iterator it_st;
                 uint16_t l_zone = std::numeric_limits<uint16_t>::max();
                 const auto& jpps_to_explore = visitor.jpps_from_order(data.dataRaptor->jpps_from_jp,
@@ -673,7 +673,7 @@ void RAPTOR::raptor_loop(Visitor visitor,
                         // We need at each journey pattern point when we have a st
                         // If we don't it might cause problem with overmidnight vj
                         const type::StopTime& st = *it_st;
-                        workingDt = st.section_end(workingDt - shift, visitor.clockwise()) + shift;
+                        workingDt = st.section_end(base_dt, visitor.clockwise());
                         // We check if there are no drop_off_only and if the local_zone is okay
                         if (st.valid_end(visitor.clockwise())
                             && (l_zone == std::numeric_limits<uint16_t>::max() ||
@@ -692,7 +692,7 @@ void RAPTOR::raptor_loop(Visitor visitor,
                     // journey pattern point before
                     const DateTime previous_dt = prec_labels.dt_transfer(jpp.sp_idx);
                     if (prec_labels.transfer_is_initialized(jpp.sp_idx) && valid_stop_points[jpp.sp_idx.val] &&
-                        (!is_onboard || visitor.better_or_equal(previous_dt, workingDt, *it_st, shift))) {
+                        (!is_onboard || visitor.better_or_equal(previous_dt, base_dt, *it_st))) {
                         const auto tmp_st_dt = next_st->next_stop_time(
                             visitor.stop_event(), jpp.idx, previous_dt, visitor.clockwise());
                         if (tmp_st_dt.first != nullptr) {
@@ -716,21 +716,15 @@ void RAPTOR::raptor_loop(Visitor visitor,
                                 l_zone = std::numeric_limits<uint16_t>::max();
                             }
                             workingDt = tmp_st_dt.second;
-                            shift = tmp_st_dt.first->current_shift_time(workingDt, visitor.clockwise());
+                            base_dt = tmp_st_dt.first->base_dt(workingDt, visitor.clockwise());
                             BOOST_ASSERT(! visitor.comp(workingDt, previous_dt));
-
-                            if (tmp_st_dt.first->is_frequency()) {
-                                // we need to update again the working dt for it to always
-                                // be the arrival (resp departure) in the stoptimes
-                                workingDt = tmp_st_dt.first->begin_from_end(workingDt, visitor.clockwise());
-                            }
                         }
                     }
                 }
                 if (is_onboard) {
                     const type::VehicleJourney* vj_stay_in = visitor.get_extension_vj(it_st->vehicle_journey);
                     if (vj_stay_in) {
-                        states_stay_in.emplace_back(vj_stay_in, l_zone, workingDt);
+                        states_stay_in.emplace_back(vj_stay_in, l_zone, base_dt);
                     }
                 }
             }
