@@ -28,21 +28,21 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
+#include "type/type.h"
+#include "type/type.pb.h"
 #include <boost/date_time/posix_time/posix_time.hpp>
 
-namespace nt = navitia::type;
-namespace bt = boost::posix_time;
 namespace navitia {
 
-const nt::StopTime* get_base_stop_time(const nt::StopTime* st_orig);
+const type::StopTime* get_base_stop_time(const type::StopTime* st_orig);
 
 /**
  * Compute base passage from amended passage, knowing amended and base stop-times
  */
-bt::ptime get_base_dt(const nt::StopTime* st_orig, const nt::StopTime* st_base,
-                             const bt::ptime& dt_orig, bool is_departure);
+boost::posix_time::ptime get_base_dt(const type::StopTime* st_orig, const type::StopTime* st_base,
+                             const boost::posix_time::ptime& dt_orig, bool is_departure);
 
-const nt::StopTime& earliest_stop_time(const std::vector<nt::StopTime>& sts);
+const type::StopTime& earliest_stop_time(const std::vector<type::StopTime>& sts);
 
 pbnavitia::RTLevel to_pb_realtime_level(const navitia::type::RTLevel realtime_level);
 

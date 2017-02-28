@@ -31,7 +31,7 @@ www.navitia.io
 #include "type/datetime.h"
 #include "type/message.h"
 #include "type/meta_data.h"
-#include "type/type.pb.h"
+#include "type/type_utils.h"
 #include "utils/logger.h"
 
 namespace nt = navitia::type;
