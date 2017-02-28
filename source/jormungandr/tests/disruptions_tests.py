@@ -75,6 +75,16 @@ class TestDisruptions(AbstractTestFixture):
             eq_(lines_disrupt[0]['contributor'], 'contrib')
             eq_(lines_disrupt[0]['uri'], 'too_bad_again')
             eq_(lines_disrupt[0]['severity']['name'], 'bad severity')
+            # we should be able to find the line in the disruption impacted objects
+            impacted_objs = lines_disrupt[0]['impacted_objects']
+            # this disruption impacts a line and a network
+            assert len(impacted_objs) == 2
+            impacted_lines = [o for o in impacted_objs if o.get('pt_object').get('embedded_type') == 'line']
+            assert len(impacted_lines) == 1
+            # it's a line impact, there should not be a 'impacted_section' section
+            # (it's only for linesections impacts)
+            assert 'impacted_section' not in impacted_lines[0]
+            assert impacted_lines[0]['pt_object']['id'] == 'A'
 
             eq_(lines_disrupt[1]['uri'], 'later_impact')
 
