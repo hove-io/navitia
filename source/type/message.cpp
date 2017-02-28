@@ -109,16 +109,16 @@ struct InformedEntitiesLinker: public boost::static_visitor<> {
     void operator()(const nt::disruption::LineSection& line_section) const {
         // for a line section it's a bit more complex, we need to register the impact
         // to all impacted stoppoints and vehiclejourneys
-        auto vj_vp_pairs = get_impacted_vehicle_journeys(line_section, *impact, production_period, rt_level);
+        auto impacted_vjs = get_impacted_vehicle_journeys(line_section, *impact, production_period, rt_level);
         std::set<type::StopPoint*> impacted_stop_points;
         std::set<type::MetaVehicleJourney*> impacted_meta_vjs;
-        for (auto& vj_vp_section : vj_vp_pairs) {
-            const auto* vj = vj_vp_section.vj;
+        for (auto& impacted_vj : impacted_vjs) {
+            const auto* vj = impacted_vj.vj;
             if (impacted_meta_vjs.insert(vj->meta_vj).second) {
                 // it's the first time we see this metavj, we add the impact to it
                 vj->meta_vj->add_impact(impact);
             }
-            for (auto* sp: vj_vp_section.impacted_stops) {
+            for (auto* sp: impacted_vj.impacted_stops) {
                 if (impacted_stop_points.insert(sp).second) {
                     // it's the first time we see this stoppoint, we add the impact to it
                     sp->add_impact(impact);

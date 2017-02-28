@@ -209,17 +209,17 @@ struct add_impacts_visitor : public apply_impacts_visitor {
         LOG4CPLUS_TRACE(log, "canceling " << uri);
 
         // Get all impacted VJs and compute the corresponding base_canceled vp
-        auto vj_vp_pairs = nt::disruption::get_impacted_vehicle_journeys(ls, *impact, meta.production_date, rt_level);
+        auto impacted_vjs = nt::disruption::get_impacted_vehicle_journeys(ls, *impact, meta.production_date, rt_level);
 
         // Loop on each affected vj
-        for (auto& vj_vp_section : vj_vp_pairs) {
+        for (auto& impacted_vj : impacted_vjs) {
             std::vector<nt::StopTime> new_stop_times;
-            const auto* vj = vj_vp_section.vj;
-            auto& new_vp = vj_vp_section.new_vp;
-            const auto& stop_points_section = vj_vp_section.impacted_stops;
+            const auto* vj = impacted_vj.vj;
+            auto& new_vp = impacted_vj.new_vp;
+            const auto& stop_points_section = impacted_vj.impacted_stops;
 
             for (const auto& st : vj->stop_time_list) {
-                // Ignore stop if it's stop_point has to be ignored
+                // stop is ignored if its stop_point is not in impacted_stops
                 if(stop_points_section.count(st.stop_point)) {
                     LOG4CPLUS_TRACE(log, "Ignoring stop " << st.stop_point->uri << "on " << vj->uri);
                     continue;
