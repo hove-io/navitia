@@ -1503,7 +1503,8 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_line_section) {
     BOOST_CHECK(ba::ends_with(first_adapted_vj->adapted_validity_pattern()->days.to_string(), "000000"));
     BOOST_CHECK(ba::ends_with(second_adapted_vj->adapted_validity_pattern()->days.to_string(), "000000"));
 
-    const auto* third_adapted_vj = b.get<nt::VehicleJourney>("vj:1:Adapted:0:first_ls_B_C:Adapted:1:second_ls_E_F:Adapted:2:third_ls_C_G");
+    const auto* third_adapted_vj = b.get<nt::VehicleJourney>
+            ("vj:1:Adapted:0:first_ls_B_C:Adapted:1:second_ls_E_F:Adapted:2:third_ls_C_G");
     BOOST_REQUIRE(third_adapted_vj);
     BOOST_CHECK(ba::ends_with(third_adapted_vj->adapted_validity_pattern()->days.to_string(), "000111"));
     BOOST_CHECK(ba::ends_with(third_adapted_vj->base_validity_pattern()->days.to_string(), "000000"));
