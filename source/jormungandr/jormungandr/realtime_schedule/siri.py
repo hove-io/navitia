@@ -31,6 +31,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask import logging
+import pybreaker
 import requests as requests
 from jormungandr import cache, app
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy
@@ -54,6 +55,8 @@ class Siri(RealtimeProxy):
         self.object_id_tag = object_id_tag if object_id_tag else id
         self.destination_id_tag = destination_id_tag
         self.instance = instance
+        self.breaker = pybreaker.CircuitBreaker(fail_max=app.config.get('CIRCUIT_BREAKER_MAX_SIRI_FAIL', 5),
+                                                reset_timeout=app.config.get('CIRCUIT_BREAKER_SIRI_TIMEOUT_S', 60))
 
     def __repr__(self):
         """
@@ -64,12 +67,24 @@ class Siri(RealtimeProxy):
     def _get_next_passage_for_route_point(self, route_point, count, from_dt, current_dt):
         stop = route_point.fetch_stop_id(self.object_id_tag)
         request = self._make_request(monitoring_ref=stop, dt=from_dt, count=count)
+        if not request:
+            return None
         siri_response = self._call_siri(request)
-        logging.getLogger(__name__).debug('siri for {}: {}'.format(stop, siri_response))
-        return self._get_passages(siri_response, route_point)
+        if not siri_response or siri_response.status_code != 200:
+            return None
+        logging.getLogger(__name__).debug('siri for {}: {}'.format(stop, siri_response.text))
+        return self._get_passages(siri_response.text, route_point)
 
     def status(self):
-        return {'id': self.rt_system_id, 'timeout': self.timeout}
+        return {
+            'id': self.rt_system_id,
+            'timeout': self.timeout,
+            'circuit_breaker': {
+                'current_state': self.breaker.current_state,
+                'fail_counter': self.breaker.fail_counter,
+                'reset_timeout': self.breaker.reset_timeout
+            },
+        }
 
     def _get_passages(self, xml, route_point):
         ns = {'siri': 'http://www.siri.org.uk/siri'}
@@ -97,7 +112,7 @@ class Siri(RealtimeProxy):
             cur_dt = visit.find('.//siri:ExpectedDepartureTime', ns).text
             cur_dt = aniso8601.parse_datetime(cur_dt)
             next_passages.append(RealTimePassage(cur_dt, cur_destination))
-            logging.getLogger(__name__).debug('stop: {}, line: {}, route: {}'.format(cur_stop, cur_line, cur_route))
+
         return next_passages
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_SIRI', 60))
@@ -107,42 +122,61 @@ class Siri(RealtimeProxy):
             "Content-Type": "text/xml; charset=UTF-8",
             "Content-Length": len(encoded_request)
         }
-        response = requests.post(url=self.service_url, headers=headers, data=encoded_request,
-                                 verify=False, timeout=self.timeout)
 
-        return response.text
+        logging.getLogger(__name__).debug('siri RT service, post at {}: {}'.format(self.service_url, request))
+        try:
+            return self.breaker.call(requests.post,
+                                     url=self.service_url,
+                                     headers=headers,
+                                     data=encoded_request,
+                                     verify=False,
+                                     timeout=self.timeout)
+        except pybreaker.CircuitBreakerError as e:
+            logging.getLogger(__name__).error('siri RT service dead, using base '
+                                              'schedule (error: {}'.format(e))
+            self.record_external_failure('circuit breaker open')
+        except requests.Timeout as t:
+            logging.getLogger(__name__).error('siri RT service timeout, using base '
+                                              'schedule (error: {}'.format(t))
+            self.record_external_failure('timeout')
+        except Exception as e:
+            logging.getLogger(__name__).exception('siri RT error, using base schedule')
+            self.record_external_failure(str(e))
+        return None
+
 
     def _make_request(self, dt, count, message_identifier='StopMonitoringClient:Test:0',
                       monitoring_ref='Orleans:StopPoint:BP:52600:LOC',
                       stop_visit_types='all'):
 
-        request = '<?xml version="1.0" encoding="UTF-8"?>' \
-                  '<x:Envelope xmlns:x="http://schemas.xmlsoap.org/soap/envelope/" ' \
-                  'xmlns:wsd="http://wsdl.siri.org.uk" xmlns:siri="http://www.siri.org.uk/siri">' \
-                  '<x:Header/>' \
-                  '<x:Body>' \
-                  '<GetStopMonitoring xmlns="http://wsdl.siri.org.uk" xmlns:siri="http://www.siri.org.uk/siri">' \
-                  '<ServiceRequestInfo xmlns="">' \
-                  '<siri:RequestTimestamp>{dt}</siri:RequestTimestamp>' \
-                  '<siri:RequestorRef>{RequestorRef}</siri:RequestorRef>' \
-                  '<siri:MessageIdentifier>{MessageIdentifier}</siri:MessageIdentifier>' \
-                  '</ServiceRequestInfo>' \
-                  '<Request version="1.3" xmlns="">' \
-                  '<siri:RequestTimestamp>{dt}</siri:RequestTimestamp>' \
-                  '<siri:MessageIdentifier>{MessageIdentifier}</siri:MessageIdentifier>' \
-                  '<siri:MonitoringRef>{MonitoringRef}</siri:MonitoringRef>' \
-                  '<siri:StopVisitTypes>{StopVisitTypes}</siri:StopVisitTypes>' \
-                  '<siri:MaximumStopVisits>{count}</siri:MaximumStopVisits>' \
-                  '</Request>' \
-                  '<RequestExtension xmlns=""/>' \
-                  '</GetStopMonitoring>' \
-                  '</x:Body>' \
-                  '</x:Envelope>'.format(dt=datetime.utcfromtimestamp(dt).isoformat(),
-                                         count=count,
-                                         RequestorRef=self.requestor_ref,
-                                         MessageIdentifier=message_identifier,
-                                         MonitoringRef=monitoring_ref,
-                                         StopVisitTypes=stop_visit_types)
+        request = """<?xml version="1.0" encoding="UTF-8"?>
+        <x:Envelope xmlns:x="http://schemas.xmlsoap.org/soap/envelope/"
+                    xmlns:wsd="http://wsdl.siri.org.uk" xmlns:siri="http://www.siri.org.uk/siri">
+          <x:Header/>
+          <x:Body>
+            <GetStopMonitoring xmlns="http://wsdl.siri.org.uk" xmlns:siri="http://www.siri.org.uk/siri">
+              <ServiceRequestInfo xmlns="">
+                <siri:RequestTimestamp>{dt}</siri:RequestTimestamp>
+                <siri:RequestorRef>{RequestorRef}</siri:RequestorRef>
+                <siri:MessageIdentifier>{MessageIdentifier}</siri:MessageIdentifier>
+              </ServiceRequestInfo>
+              <Request version="1.3" xmlns="">
+                <siri:RequestTimestamp>{dt}</siri:RequestTimestamp>
+                <siri:MessageIdentifier>{MessageIdentifier}</siri:MessageIdentifier>
+                <siri:MonitoringRef>{MonitoringRef}</siri:MonitoringRef>
+                <siri:StopVisitTypes>{StopVisitTypes}</siri:StopVisitTypes>
+                <siri:MaximumStopVisits>{count}</siri:MaximumStopVisits>
+              </Request>
+              <RequestExtension xmlns=""/>
+            </GetStopMonitoring>
+          </x:Body>
+        </x:Envelope>
+        """.format(dt=datetime.utcfromtimestamp(dt).isoformat(),
+                   count=count,
+                   RequestorRef=self.requestor_ref,
+                   MessageIdentifier=message_identifier,
+                   MonitoringRef=monitoring_ref,
+                   StopVisitTypes=stop_visit_types)
         return request
 
 
