@@ -483,44 +483,47 @@ class AsyncWorker(object):
         pt_journey.durations.walking += fallback_copy.journeys[0].durations.walking
         _extend_pt_sections_with_direct_path(pt_journey, fallback_copy)
 
-    def _build_from(self, journey, first_section, journey_origin, crowfly_stop_points, odt_stop_points,
+    def _build_from(self, journey, journey_origin, crowfly_stop_points, odt_stop_points,
                     dep_mode, fallback_direct_path_pool, origins_fallback):
 
-        pt_origin = first_section.origin
-        journey.departure_date_time = journey.departure_date_time - \
-                                      origins_fallback.get_duration(dep_mode, pt_origin.uri)
+        pt_origin = journey.sections[0].origin
         if journey_origin.uri != pt_origin.uri:
             if pt_origin.uri in odt_stop_points:
                 journey.sections[0].origin.CopyFrom(journey_origin)
             elif pt_origin.uri in crowfly_stop_points or origins_fallback.is_crowfly_needed(dep_mode, pt_origin.uri):
-                journey.sections.extend([create_crowfly(journey, journey_origin, pt_origin, journey.departure_date_time,
-                                         journey.sections[0].begin_date_time)])
+                crowfly_departure_dt = journey.departure_date_time - \
+                                       origins_fallback.get_duration(dep_mode, pt_origin.uri)
+                journey.sections.extend([create_crowfly(journey, journey_origin, pt_origin,
+                                                        crowfly_departure_dt,
+                                                        journey.sections[0].begin_date_time)])
             else:
                 # extend the journey with the fallback routing path
-                is_start_fallback_datetime = True
+                is_start_fallback_datetime = False
                 is_fallback_at_end = False
                 self._extend_journey(journey, dep_mode, journey_origin, pt_origin,
                                      journey.departure_date_time, is_start_fallback_datetime,
                                      fallback_direct_path_pool, is_fallback_at_end)
         journey.sections.sort(SectionSorter())
+        journey.departure_date_time = journey.sections[0].begin_date_time
         return journey
 
-    def _build_to(self, journey, last_section, journey_destination, crowfly_stop_points, odt_stop_points,
+    def _build_to(self, journey, journey_destination, crowfly_stop_points, odt_stop_points,
                   arr_mode, fallback_direct_path_pool, destinations_fallback):
 
-        pt_destination = last_section.destination
-        journey.arrival_date_time = journey.arrival_date_time + \
-                                    destinations_fallback.get_duration(arr_mode, pt_destination.uri)
-        last_section_end = last_section.end_date_time
+        pt_destination = journey.sections[-1].destination
+        last_section_end = journey.sections[-1].end_date_time
 
         if journey_destination.uri != pt_destination.uri:
             if pt_destination.uri in odt_stop_points:
                 journey.sections[-1].destination.CopyFrom(journey_destination)
             elif pt_destination.uri in crowfly_stop_points or destinations_fallback.is_crowfly_needed(arr_mode, pt_destination.uri):
-                journey.sections.extend([create_crowfly(journey, pt_destination, journey_destination, last_section_end,
-                                                        journey.arrival_date_time)])
+                crowfly_arrival_dt = journey.arrival_date_time + \
+                                     destinations_fallback.get_duration(arr_mode, pt_destination.uri)
+                journey.sections.extend([create_crowfly(journey, pt_destination, journey_destination,
+                                                        last_section_end,
+                                                        crowfly_arrival_dt)])
             else:
-                is_start_fallback_datetime = False
+                is_start_fallback_datetime = True
                 # extend the journey with the fallback routing path
                 o = pt_destination
                 d = journey_destination
@@ -531,6 +534,7 @@ class AsyncWorker(object):
                                      journey.arrival_date_time, is_start_fallback_datetime,
                                      fallback_direct_path_pool, is_fallback_at_end)
         journey.sections.sort(SectionSorter())
+        journey.arrival_date_time = journey.sections[-1].end_date_time
         return journey
 
     def get_fallback_direct_path_futures(self, map_response, crowfly_stop_points, odt_stop_points):
@@ -579,13 +583,11 @@ class AsyncWorker(object):
         futures = []
         for dep_mode, arr_mode, journey in map_response:
             # from
-            futures.append(self.pool.spawn(self._build_from, journey,
-                                           journey.sections[0], g.requested_origin,
+            futures.append(self.pool.spawn(self._build_from, journey, g.requested_origin,
                                            crowfly_stop_points, odt_stop_points,
                                            dep_mode, g.fallback_direct_path_pool, g.origins_fallback))
             # to
-            futures.append(self.pool.spawn(self._build_to, journey,
-                                           journey.sections[-1], g.requested_destination,
+            futures.append(self.pool.spawn(self._build_to, journey, g.requested_destination,
                                            crowfly_stop_points, odt_stop_points,
                                            arr_mode, g.fallback_direct_path_pool, g.destinations_fallback))
 
