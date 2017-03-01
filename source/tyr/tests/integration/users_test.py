@@ -20,6 +20,18 @@ def geojson_polygon():
 
 
 @pytest.fixture
+def geojson_multipolygon():
+    return {
+        "type": "MultiPolygon",
+        "coordinates": [
+            [[[102.0, 2.0], [103.0, 2.0], [103.0, 3.0], [102.0, 3.0], [102.0, 2.0]]],
+            [[[100.0, 0.0], [101.0, 0.0], [101.0, 1.0], [100.0, 1.0], [100.0, 0.0]],
+             [[100.2, 0.2], [100.8, 0.2], [100.8, 0.8], [100.2, 0.8], [100.2, 0.2]]]
+        ]
+    }
+
+
+@pytest.fixture
 def invalid_geojsonfixture():
     return {
         "type": "Point",
@@ -171,6 +183,17 @@ def test_add_user(mock_rabbit, geojson_polygon):
     check(resp[0])
     assert resp[0]['shape'] == {}
     assert mock_rabbit.called
+
+
+def test_add_user_with_multipolygon(mock_rabbit, geojson_multipolygon):
+    """
+    creation of a user passing arguments as a json
+    """
+    user = {'login': 'user1', 'email': 'user1@example.com', 'shape': geojson_multipolygon, 'has_shape': True}
+    data = json.dumps(user)
+    resp, status = api_post('/v0/users/', check=False, data=data, content_type='application/json')
+    assert status == 400
+    assert mock_rabbit.call_count == 0
 
 
 def test_add_user_with_invalid_geojson(mock_rabbit, invalid_geojsonfixture):
