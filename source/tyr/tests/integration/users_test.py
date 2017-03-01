@@ -187,7 +187,8 @@ def test_add_user(mock_rabbit, geojson_polygon):
 
 def test_add_user_with_multipolygon(mock_rabbit, geojson_multipolygon):
     """
-    creation of a user passing arguments as a json
+    creation of a user with multipolygon shape
+    status must be 200 when bragi will accept multipolygon shape
     """
     user = {'login': 'user1', 'email': 'user1@example.com', 'shape': geojson_multipolygon, 'has_shape': True}
     data = json.dumps(user)
@@ -589,13 +590,15 @@ def test_get_users(create_multiple_users):
     """
     resp = api_get('/v0/users')
 
-    for user in resp:
-        if user.get('login') == 'foo':
-            assert user.get('has_shape') is True
-            assert user.get('shape') == {}
-        else:
-            assert user.get('has_shape') is False
-            assert user.get('shape') is None
+    foo = next((u for u in resp if u.get('login') == 'foo'), None)
+    assert foo
+    assert foo.get('has_shape') is True
+    assert foo.get('shape') == {}
+
+    foodefault = next((u for u in resp if u.get('login') == 'foodefault'), None)
+    assert foodefault
+    assert foodefault.get('has_shape') is False
+    assert foodefault.get('shape') is None
 
 
 def test_get_users_with_disable_geojson_false(create_multiple_users, geojson_polygon):
@@ -609,10 +612,12 @@ def test_get_users_with_disable_geojson_false(create_multiple_users, geojson_pol
     """
     resp = api_get('/v0/users?disable_geojson=false')
 
-    for user in resp:
-        if user.get('login') == 'foo':
-            assert user.get('has_shape') is True
-            assert user.get('shape') == geojson_polygon
-        else:
-            assert user.get('has_shape') is False
-            assert user.get('shape') is None
+    foo = next((u for u in resp if u.get('login') == 'foo'), None)
+    assert foo
+    assert foo.get('has_shape') is True
+    assert foo.get('shape') == geojson_polygon
+
+    foodefault = next((u for u in resp if u.get('login') == 'foodefault'), None)
+    assert foodefault
+    assert foodefault.get('has_shape') is False
+    assert foodefault.get('shape') is None
