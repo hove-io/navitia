@@ -159,6 +159,7 @@ As "direction" is a [place](#place) , it can be a poi in some data.
 |-----|----|-----------|
 |id|string|Identifier of the stop area|
 |name|string|Name of the stop area|
+|label|string|Label of the stop area. The name is directly taken from the data whereas the label is something we compute for better traveler information. If you don't know what to display, display the label.|
 |coord|[coord](#coord)|Coordinates of the stop area|
 |administrative_regions|array of [admin](#admin)|Administrative regions of the stop area in which is the stop area|
 |stop_points|array of [stop_point](#stop-point)|Stop points contained in this stop area|
@@ -552,6 +553,7 @@ Poi = Point Of Interest
 |-----|----|-----------|
 |id|string|Identifier of the poi|
 |name|string|Name of the poi|
+|label|string|Label of the poi. The name is directly taken from the data whereas the label is something we compute for better traveler information. If you don't know what to display, display the label.|
 |poi_type|[poi_type](#poi-type)|Type of the poi|
 
 ### Address
@@ -560,6 +562,7 @@ Poi = Point Of Interest
 |-----|----|-----------|
 |id|string|Identifier of the address|
 |name|string|Name of the address|
+|label|string|Label of the adress. The name is directly taken from the data whereas the label is something we compute for better traveler information. If you don't know what to display, display the label.|
 |coord|[coord](#coord)|Coordinates of the address|
 |house_number|int|House number of the address|
 |administrative_regions|array of [admin](#admin)|Administrative regions of the address in which is the stop area|
@@ -570,6 +573,7 @@ Poi = Point Of Interest
 |-----|----|-----------|
 |id|string|Identifier of the address|
 |name|string|Name of the address|
+|label|string|Label of the administrative region. The name is directly taken from the data whereas the label is something we compute for better traveler information. If you don't know what to display, display the label.|
 |coord|[coord](#coord)|Coordinates of the address|
 |level|int|Level of the admin|
 |zip_code|string|Zip code of the admin|
