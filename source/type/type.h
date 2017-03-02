@@ -754,9 +754,9 @@ struct StopTime {
     bool is_odt_and_date_time_estimated() const{ return (this->odt() && this->date_time_estimated());}
 
     /// get the departure (resp arrival for anti clockwise) from the stoptime
-    /// dt is the base time (from midnight for discrete / from start_time for frequencies)
+    /// base_dt is the base time (from midnight for discrete / from start_time for frequencies)
     DateTime section_end(DateTime base_dt, bool clockwise) const {
-        return base_dt + (clockwise ? alighting_time : boarding_time);
+        return clockwise ? arrival(base_dt) : departure(base_dt);
     }
 
     DateTime departure(DateTime base_dt) const {
@@ -766,8 +766,8 @@ struct StopTime {
         return base_dt + alighting_time;
     }
 
-    DateTime base_dt(DateTime base_dt, bool clockwise) const {
-        return base_dt - (clockwise ? boarding_time : alighting_time);
+    DateTime base_dt(DateTime dt, bool clockwise) const {
+        return dt - (clockwise ? boarding_time : alighting_time);
     }
 
     boost::posix_time::ptime get_arrival_utc(const boost::gregorian::date& circulating_day) const {
@@ -786,10 +786,6 @@ struct StopTime {
             ar & arrival_time & departure_time & boarding_time & alighting_time & vehicle_journey
             & stop_point & shape_from_prev & properties & local_traffic_zone;
     }
-
-private:
-    uint32_t f_arrival_time(const u_int32_t hour, bool clockwise = true) const;
-    uint32_t f_departure_time(const u_int32_t hour, bool clockwise = false) const;
 };
 
 struct Calendar : public Nameable, public Header {

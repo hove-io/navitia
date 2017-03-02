@@ -167,42 +167,6 @@ bool StopTime::is_valid_day(u_int32_t day, const bool is_arrival, const RTLevel 
     return vehicle_journey->validity_patterns[rt_level]->check(day);
 }
 
-uint32_t StopTime::f_arrival_time(const u_int32_t hour, bool clockwise) const {
-    // get the arrival time of a frequency stop time from the arrival time on the previous stop in the vj
-    assert (is_frequency());
-    if(clockwise) {
-        if (this == &this->vehicle_journey->stop_time_list.front())
-            return hour;
-        const auto& prec_st = this->vehicle_journey->stop_time_list[order() - 1];
-        auto arr_diff = this->arrival_time - prec_st.arrival_time;
-        return hour - prec_st.get_alighting_duration() + arr_diff + this->get_alighting_duration();
-    } else {
-        if (this == &this->vehicle_journey->stop_time_list.back())
-            return hour;
-        const auto& next_st = this->vehicle_journey->stop_time_list[order() + 1];
-        auto arr_diff = next_st.arrival_time - this->arrival_time;
-        return hour - next_st.get_alighting_duration() - arr_diff + this->get_alighting_duration();
-    }
-}
-
-uint32_t StopTime::f_departure_time(const u_int32_t hour, bool clockwise) const {
-    // get the departure time of a frequency stop time from the departure time on the previous stop in the vj
-    assert (is_frequency());
-    if(clockwise) {
-        if (this == &this->vehicle_journey->stop_time_list.front())
-            return hour;
-        const auto& prec_st = this->vehicle_journey->stop_time_list[order() - 1];
-        auto dep_diff = this->departure_time - prec_st.departure_time;
-        return hour + prec_st.get_boarding_duration() + dep_diff - this->get_boarding_duration();
-    } else {
-        if (this == &this->vehicle_journey->stop_time_list.back())
-            return hour;
-        const auto& next_st = this->vehicle_journey->stop_time_list[order() + 1];
-        auto dep_diff = next_st.departure_time - this->departure_time;
-        return hour + next_st.get_boarding_duration() - dep_diff - this->get_boarding_duration();
-    }
-}
-
 bool FrequencyVehicleJourney::is_valid(int day, const RTLevel rt_level) const {
     if (day < 0)
         return false;
