@@ -49,7 +49,7 @@ class Siri(RealtimeProxy):
     def __init__(self, id, service_url, requestor_ref,
                  object_id_tag=None, destination_id_tag=None, instance=None, timeout=10, **kwargs):
         self.service_url = service_url
-        self.requestor_ref = requestor_ref
+        self.requestor_ref = requestor_ref # login for siri
         self.timeout = timeout  #timeout in seconds
         self.rt_system_id = id
         self.object_id_tag = object_id_tag if object_id_tag else id
@@ -145,10 +145,8 @@ class Siri(RealtimeProxy):
         return None
 
 
-    def _make_request(self, dt, count, message_identifier='StopMonitoringClient:Test:0',
-                      monitoring_ref='Orleans:StopPoint:BP:52600:LOC',
-                      stop_visit_types='all'):
-
+    def _make_request(self, dt, count, monitoring_ref):
+        message_identifier='IDontCare'
         request = """<?xml version="1.0" encoding="UTF-8"?>
         <x:Envelope xmlns:x="http://schemas.xmlsoap.org/soap/envelope/"
                     xmlns:wsd="http://wsdl.siri.org.uk" xmlns:siri="http://www.siri.org.uk/siri">
@@ -164,7 +162,6 @@ class Siri(RealtimeProxy):
                 <siri:RequestTimestamp>{dt}</siri:RequestTimestamp>
                 <siri:MessageIdentifier>{MessageIdentifier}</siri:MessageIdentifier>
                 <siri:MonitoringRef>{MonitoringRef}</siri:MonitoringRef>
-                <siri:StopVisitTypes>{StopVisitTypes}</siri:StopVisitTypes>
                 <siri:MaximumStopVisits>{count}</siri:MaximumStopVisits>
               </Request>
               <RequestExtension xmlns=""/>
@@ -175,8 +172,7 @@ class Siri(RealtimeProxy):
                    count=count,
                    RequestorRef=self.requestor_ref,
                    MessageIdentifier=message_identifier,
-                   MonitoringRef=monitoring_ref,
-                   StopVisitTypes=stop_visit_types)
+                   MonitoringRef=monitoring_ref)
         return request
 
 
