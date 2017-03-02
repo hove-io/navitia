@@ -35,6 +35,7 @@ from jormungandr.realtime_schedule.siri import Siri
 import validators
 from jormungandr.realtime_schedule.tests.utils import MockRoutePoint, _timestamp
 import xml.etree.ElementTree as et
+from jormungandr.tests.utils_test import MockResponse, MockRequests
 
 
 def make_request_test():
@@ -50,14 +51,6 @@ def make_request_test():
     assert root.find('.//siri:MaximumStopVisits', ns).text == '2'
     assert root.find('.//siri:RequestTimestamp', ns).text == '2016-02-07T12:00:00'
     assert root.find('.//siri:RequestorRef', ns).text == 'Stibada'
-
-
-class MockResponse(object):
-    def __init__(self, data, status_code, url, *args, **kwargs):
-        self.content = data
-        self.text = data
-        self.status_code = status_code
-        self.url = url
 
 
 def mock_good_response():
@@ -118,15 +111,6 @@ def mock_good_response():
   </soap:Body>
 </soap:Envelope>
     """
-
-
-class MockRequests(object):
-
-    def __init__(self, responses):
-        self.responses = responses
-
-    def post(self, url, *args, **kwargs):
-        return MockResponse(self.responses[url][0], self.responses[url][1], url)
 
 
 def next_passage_for_route_point_test():

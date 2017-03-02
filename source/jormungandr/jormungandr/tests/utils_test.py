@@ -67,6 +67,9 @@ class MockRequests(object):
 
         return MockResponse(self.responses[url][0], self.responses[url][1], url)
 
+    def post(self, *args, **kwargs):
+        return self.get(*args, **kwargs)
+
 
 class FakeUser:
     """
