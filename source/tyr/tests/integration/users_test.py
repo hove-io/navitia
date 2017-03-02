@@ -216,7 +216,7 @@ def test_add_user_with_plus(mock_rabbit):
     resp = api_post('/v0/users/', data=json.dumps(user), content_type='application/json')
 
     def check(u):
-        for k, _ in user.iteritems():
+        for k in user.iterkeys():
             assert u[k] == user[k]
         assert u['end_point']['name'] == 'navitia.io'
         assert u['type'] == 'with_free_instances'
@@ -237,7 +237,7 @@ def test_add_user_with_plus_no_json(mock_rabbit):
     resp = api_post('/v0/users/', data=user)
 
     def check(u):
-        for k, _ in user.iteritems():
+        for k in user.iterkeys():
             assert u[k] == user[k]
         assert u['end_point']['name'] == 'navitia.io'
         assert u['type'] == 'with_free_instances'
@@ -262,7 +262,7 @@ def test_add_user_with_plus_in_query(mock_rabbit):
     resp = api_post('/v0/users/?login={email}&email={email}'.format(email=urllib.quote(user['email'])))
 
     def check(u):
-        for k, _ in user.iteritems():
+        for k in user.iterkeys():
             assert u[k] == user[k]
         assert u['end_point']['name'] == 'navitia.io'
         assert u['type'] == 'with_free_instances'
@@ -412,7 +412,7 @@ def test_update_user(create_multiple_users, mock_rabbit, geojson_polygon):
                    content_type='application/json')
 
     def check(u):
-        for k, _ in user.iteritems():
+        for k in user.iterkeys():
             assert u[k] == user[k]
         assert resp['id'] == create_multiple_users['user1']
         assert resp['login'] == user['login']
@@ -444,7 +444,7 @@ def test_update_shape(create_multiple_users, mock_rabbit, geojson_polygon):
                    content_type='application/json')
 
     def check(u):
-        for k, _ in user.iteritems():
+        for k in user.iterkeys():
             assert u[k] == user[k]
         assert resp['id'] == create_multiple_users['user1']
     check(resp)
