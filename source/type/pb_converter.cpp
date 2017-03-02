@@ -1158,7 +1158,7 @@ void PbCreator::Filler::fill_pb_object(const VjOrigDest* vj_orig_dest, pbnavitia
  *
  * for a journey section, we get:
  *  - all of the meta journey impacts but the line sections impacts
- *  - for the line sections impacts we check that theyintersect the journey section
+ *  - for the line sections impacts we check that they intersect the journey section
  */
 void PbCreator::Filler::fill_messages(const VjStopTimes* vj_stoptimes,
                                       pbnavitia::PtDisplayInfo* pt_display_info) {
