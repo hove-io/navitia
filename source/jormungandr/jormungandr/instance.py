@@ -492,15 +492,17 @@ class Instance(object):
                                                          request,
                                                          **kwargs)
 
-    def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise, request, **kwargs):
+    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, **kwargs):
+        '''
+        :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
+        '''
         service = self.street_network_services.get(mode)
         if not service:
             return None
         return service.direct_path(mode,
                                    pt_object_origin,
                                    pt_object_destination,
-                                   datetime,
-                                   clockwise,
+                                   fallback_extremity,
                                    request,
                                    **kwargs)
 

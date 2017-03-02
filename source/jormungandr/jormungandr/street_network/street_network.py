@@ -45,7 +45,10 @@ class AbstractStreetNetworkService(ABC):
         pass
 
     @abc.abstractmethod
-    def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise, request):
+    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request):
+        '''
+        :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
+        '''
         pass
 
     def record_external_failure(self, message):

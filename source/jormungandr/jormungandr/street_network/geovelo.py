@@ -36,7 +36,7 @@ from navitiacommon import response_pb2
 from jormungandr import app
 from jormungandr.exceptions import TechnicalError, InvalidArguments, UnableToParse
 from jormungandr.street_network.street_network import AbstractStreetNetworkService
-from jormungandr.utils import get_pt_object_coord, is_url
+from jormungandr.utils import get_pt_object_coord, is_url, decode_polyline
 
 
 class Geovelo(AbstractStreetNetworkService):
@@ -52,16 +52,33 @@ class Geovelo(AbstractStreetNetworkService):
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_GEOVELO_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_GEOVELO_TIMEOUT_S'])
 
-    @staticmethod
-    def _pt_object_summary(pt_object):
+    @classmethod
+    def _pt_object_summary_isochrone(cls, pt_object):
         coord = get_pt_object_coord(pt_object)
         return [coord.lat, coord.lon, getattr(pt_object, 'uri', None)]
 
-    @staticmethod
-    def _make_request_arguments(origins, destinations):
+    @classmethod
+    def _make_request_arguments_isochrone(cls, origins, destinations):
         return {
-            'starts': [Geovelo._pt_object_summary(o) for o in origins],
-            'ends': [Geovelo._pt_object_summary(o) for o in destinations],
+            'starts': [cls._pt_object_summary_isochrone(o) for o in origins],
+            'ends': [cls._pt_object_summary_isochrone(o) for o in destinations],
+        }
+
+    @classmethod
+    def _make_request_arguments_direct_path(cls, origin, destination):
+        coord_orig = get_pt_object_coord(origin)
+        coord_dest = get_pt_object_coord(destination)
+        return {
+            'waypoints': [
+                {'latitude': coord_orig.lat, 'longitude': coord_orig.lon},
+                {'latitude': coord_dest.lat, 'longitude': coord_dest.lon}
+            ],
+            'bikeDetails': {
+                'profile': 'BEGINNER', # can be MEDIAN, EXPERT
+                'bikeType': 'TRADITIONAL', # can be 'BSS'
+                # 'averageSpeed': '6' # in km/h, BEGINER sets it to 13
+            },
+            'transportModes': ['BIKE']
         }
 
     def _call_geovelo(self, url, method=requests.post, data=None):
@@ -81,7 +98,8 @@ class Geovelo(AbstractStreetNetworkService):
             self.record_external_failure(str(e))
         return None
 
-    def _get_matrix(self, json_response):
+    @classmethod
+    def _get_matrix(cls, json_response):
         '''
         build the 1-n response matrix from geovelo table
         each element is ["start", "end", duration] (first being the header)
@@ -89,12 +107,11 @@ class Geovelo(AbstractStreetNetworkService):
         '''
         sn_routing_matrix = response_pb2.StreetNetworkRoutingMatrix()
         row = sn_routing_matrix.rows.add()
+        #checking header of geovelo's response
         if json_response[0] != ["start_reference", "end_reference", "duration"]:
             logging.getLogger(__name__).error('Geovelo parsing error. Response: {}'.format(json_response))
             raise UnableToParse('Geovelo parsing error. Response: {}'.format(json_response))
         for e in json_response[1:]:
-            if e[2] == 'duration':
-                continue
             routing = row.routing_response.add()
             if e[2]:
                 routing.duration = e[2]
@@ -104,8 +121,8 @@ class Geovelo(AbstractStreetNetworkService):
                 routing.routing_status = response_pb2.unknown
         return sn_routing_matrix
 
-    @staticmethod
-    def _check_response(response):
+    @classmethod
+    def _check_response(cls, response):
         if response is None:
             raise TechnicalError('impossible to access geovelo service')
         if response.status_code != 200:
@@ -125,7 +142,7 @@ class Geovelo(AbstractStreetNetworkService):
             raise InvalidArguments('Geovelo, managing only 1-n in connector, requested {}-{}'
                                    .format(len(origins), len(destinations)))
 
-        data = self._make_request_arguments(origins, destinations)
+        data = self._make_request_arguments_isochrone(origins, destinations)
         r = self._call_geovelo('{}/{}'.format(self.service_url, 'api/v2/routes_m2m'),
                                requests.post, json.dumps(data))
         self._check_response(r)
@@ -137,73 +154,112 @@ class Geovelo(AbstractStreetNetworkService):
 
         return self._get_matrix(resp_json)
 
-    def _get_response(self, json_response, mode, pt_object_origin, pt_object_destination, datetime, clockwise):
+
+    @classmethod
+    def _get_response(cls, json_response, mode, pt_object_origin, pt_object_destination, fallback_extremity):
+        '''
+        :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
+        '''
+
+        # map giving the change of direction (degrees) from geovelo indications
+        # see: http://developers.geovelo.fr/#/documentation/compute
+        map_instructions_direction = {
+            'HEAD_ON': 0,
+            'GO_STRAIGHT': 0,
+            'REACHED_YOUR_DESTINATION': 0,
+            'REACH_VIA_LOCATION': 0,
+            'ELEVATOR': 0,
+            'CROSSING': 0,
+            'ENTER_ROUND_ABOUT': 90,
+            'LEAVE_ROUND_ABOUT': 90,
+            'STAY_ON_ROUND_ABOUT': 0,
+            'ENTER_AGAINST_ALLOWED_DIRECTION': 0,
+            'LEAVE_AGAINST_ALLOWED_DIRECTION': 0,
+            'TURN_SLIGHT_RIGHT': 45,
+            'TURN_SLIGHT_LEFT': -45,
+            'TURN_RIGHT': 90,
+            'TURN_LEFT': -90,
+            'TURN_SHARP_RIGHT': 135,
+            'TURN_SHARP_LEFT': -135,
+            'U-TURN': 180
+        }
+
         resp = response_pb2.Response()
         resp.status_code = 200
         resp.response_type = response_pb2.ITINERARY_FOUND
 
-        if json_response[0] != ["start_reference", "end_reference", "duration"] or len(json_response) != 2:
-            logging.getLogger(__name__).error('Geovelo parsing error. Response: {}'.format(json_response))
-            raise UnableToParse('Geovelo parsing error. Response: {}'.format(json_response))
-        duration = json_response[1][2]
+        geovelo_resp = json_response[0]
 
         journey = resp.journeys.add()
-        journey.duration = duration
-        if clockwise:
+        journey.duration = geovelo_resp['duration']
+        datetime, represents_start_fallback = fallback_extremity
+        if represents_start_fallback:
             journey.departure_date_time = datetime
-            journey.arrival_date_time = datetime + duration
+            journey.arrival_date_time = datetime + journey.duration
         else:
-            journey.departure_date_time = datetime - duration
+            journey.departure_date_time = datetime - journey.duration
             journey.arrival_date_time = datetime
 
-        journey.durations.total = duration
+        journey.durations.total = journey.duration
 
-        section = journey.sections.add()
-        section.type = response_pb2.STREET_NETWORK
+        previous_section_endtime = journey.departure_date_time
+        for index, geovelo_section in enumerate(geovelo_resp['sections']):
+            section = journey.sections.add()
+            section.type = response_pb2.STREET_NETWORK
 
-        section.begin_date_time = journey.departure_date_time
-        section.end_date_time = journey.arrival_date_time
+            section.duration = geovelo_section['duration']
+            section.begin_date_time = previous_section_endtime
+            section.end_date_time = section.begin_date_time + section.duration
+            previous_section_endtime = section.end_date_time
 
-        section.id = 'section_0'
-        section.duration = journey.duration
-        section.length = journey.duration*3 #assuming speed is 3m/s
+            section.id = 'section_{}'.format(index)
+            section.length = int(geovelo_section['details']['distances']['total'])
 
-        section.origin.CopyFrom(pt_object_origin)
-        section.destination.CopyFrom(pt_object_destination)
+            if index == 0:
+                section.origin.CopyFrom(pt_object_origin)
+            if index == len(geovelo_resp['sections']) - 1:
+                section.destination.CopyFrom(pt_object_destination)
 
-        section.street_network.duration = section.duration
-        section.street_network.length = section.length
-        section.street_network.mode = response_pb2.Bike
+            section.street_network.duration = section.duration
+            section.street_network.length = section.length
+            section.street_network.mode = response_pb2.Bike
 
-        path_item = section.street_network.path_items.add()
-        path_item.name = "unknown"
-        path_item.duration = section.duration
-        path_item.length = section.length
-        # TODO: calculate direction
-        path_item.direction = 0
+            speed = section.length / section.duration
 
-        pt_coord = section.street_network.coordinates.add()
-        coord = get_pt_object_coord(pt_object_origin)
-        pt_coord.lat, pt_coord.lon = coord.lat, coord.lon
-        pt_coord = section.street_network.coordinates.add()
-        coord = get_pt_object_coord(pt_object_destination)
-        pt_coord.lat, pt_coord.lon = coord.lat, coord.lon
+            for geovelo_instruction in geovelo_section['details']['instructions'][1:]:
+                path_item = section.street_network.path_items.add()
+                path_item.name = geovelo_instruction[1]
+                path_item.length = geovelo_instruction[2]
+                path_item.duration = round(path_item.length * speed)
+                path_item.direction = map_instructions_direction.get(geovelo_instruction[0], 0)
+
+            shape = decode_polyline(geovelo_resp['sections'][0]['geometry'])
+            for sh in shape:
+                coord = section.street_network.coordinates.add()
+                coord.lon = sh[0]
+                coord.lat = sh[1]
 
         return resp
 
-    def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise, request):
+    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request):
         if mode != "bike":
             logging.getLogger(__name__).error('Geovelo, mode {} not implemented'.format(mode))
             raise InvalidArguments('Geovelo, mode {} not implemented'.format(mode))
 
-        data = Geovelo._make_request_arguments([pt_object_origin], [pt_object_destination])
-        r = self._call_geovelo('{}/{}'.format(self.service_url, 'api/v2/routes_m2m'),
+        data = self._make_request_arguments_direct_path(pt_object_origin, pt_object_destination)
+        r = self._call_geovelo('{}/{}'.format(self.service_url, 'api/v2/computedroutes?'
+                                                                'instructions=true&'
+                                                                'elevations=false&'
+                                                                'geometry=true&'
+                                                                'single_result=true&'
+                                                                'bike_stations=false&'
+                                                                'objects_as_ids=true&'),
                                requests.post, json.dumps(data))
         self._check_response(r)
         resp_json = r.json()
 
-        if len(resp_json) != 2:
+        if len(resp_json) != 1:
             logging.getLogger(__name__).error('Geovelo nb response != nb requested')
             raise UnableToParse('Geovelo nb response != nb requested')
 
-        return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, datetime, clockwise)
+        return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, fallback_extremity)
