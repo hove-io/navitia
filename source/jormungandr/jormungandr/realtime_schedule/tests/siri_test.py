@@ -60,15 +60,6 @@ class MockResponse(object):
         self.url = url
 
 
-class MockRequests(object):
-
-    def __init__(self, responses):
-        self.responses = responses
-
-    def get(self, url, *args, **kwargs):
-        return MockResponse(self.responses[url][0], self.responses[url][1], url)
-
-
 def mock_good_response():
     return """<?xml version="1.0"?>
 <soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
