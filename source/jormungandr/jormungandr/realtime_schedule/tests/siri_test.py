@@ -151,7 +151,7 @@ def next_passage_for_route_point_failure_test():
     """
     test the whole next_passage_for_route_point
 
-    the timeo's response is in error (status = 404), we should get 'None'
+    the siri's response is in error (status = 404), we should get 'None'
     """
     siri = Siri(id='tata', service_url='http://bob.com/', requestor_ref='Stibada')
 
