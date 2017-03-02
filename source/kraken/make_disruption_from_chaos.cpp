@@ -251,7 +251,7 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data,
     auto impact = boost::make_shared<nt::disruption::Impact>();
     impact->uri = chaos_impact.id();
     impact->created_at = from_posix(chaos_impact.created_at());
-    auto updated_at = chaos_impact.created_at();
+    auto updated_at = chaos_impact.updated_at();
     impact->updated_at = updated_at ? from_posix(updated_at) : impact->created_at;
     for (const auto& chaos_ap: chaos_impact.application_periods()) {
         impact->application_periods.emplace_back(from_posix(chaos_ap.start()), from_posix(chaos_ap.end()));
@@ -319,7 +319,7 @@ make_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_data,
 void make_and_apply_disruption(const chaos::Disruption& chaos_disruption,
                     navitia::type::PT_Data& pt_data,
                     const navitia::type::MetaData& meta) {
-    //we delete the disrupion before adding the new one
+    //we delete the disruption before adding the new one
     delete_disruption(chaos_disruption.id(), pt_data, meta);
 
     const auto& disruption = make_disruption(chaos_disruption, pt_data, meta);
