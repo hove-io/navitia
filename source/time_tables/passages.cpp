@@ -191,7 +191,8 @@ void passages(PbCreator& pb_creator,
 
         const type::VehicleJourney* vj = dt_stop_time.second->vehicle_journey;
         passage->mutable_stop_date_time()->set_data_freshness(to_pb_realtime_level(vj->realtime_level));
-        const auto& vj_st = navitia::VjStopTimes(vj, dt_stop_time.second, nullptr);
+        const auto sts = std::vector<const nt::StopTime*>{dt_stop_time.second};
+        const auto& vj_st = navitia::VjStopTimes(vj, sts);
         pb_creator.fill(&vj_st, passage->mutable_pt_display_informations(), 1);
         fill_route_point(pb_creator, depth, vj->route, dt_stop_time.second->stop_point, passage);
     }

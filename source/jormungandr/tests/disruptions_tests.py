@@ -190,14 +190,14 @@ class TestDisruptions(AbstractTestFixture):
         eq_(len(departures), 2)
 
         departure = departures[0]
-        disruptions = get_all_disruptions(departure, response)
+        disruptions = get_all_element_disruptions(departure, response)
         assert disruptions
         eq_(len(disruptions), 1)
         assert 'too_bad_all_lines' in disruptions
-        is_valid_disruption(disruptions['too_bad_all_lines'][0][0])
+        is_valid_disruption(disruptions['too_bad_all_lines'][0].disruption)
 
         departure = departures[1]
-        disruptions = get_all_disruptions(departure, response)
+        disruptions = get_all_element_disruptions(departure, response)
         assert not disruptions
 
     def test_disruption_with_arrival(self):
@@ -212,14 +212,14 @@ class TestDisruptions(AbstractTestFixture):
         eq_(len(arrivals), 2)
 
         arrival = arrivals[0]
-        disruptions = get_all_disruptions(arrival, response)
+        disruptions = get_all_element_disruptions(arrival, response)
         assert disruptions
         eq_(len(disruptions), 1)
         assert 'too_bad_all_lines' in disruptions
-        is_valid_disruption(disruptions['too_bad_all_lines'][0][0])
+        is_valid_disruption(disruptions['too_bad_all_lines'][0].disruption)
 
         arrival = arrivals[1]
-        disruptions = get_all_disruptions(arrival, response)
+        disruptions = get_all_element_disruptions(arrival, response)
         assert not disruptions
 
     def test_direct_disruption_call(self):
