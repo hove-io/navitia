@@ -159,6 +159,7 @@ As "direction" is a [place](#place) , it can be a poi in some data.
 |-----|----|-----------|
 |id|string|Identifier of the stop area|
 |name|string|Name of the stop area|
+|label|string|Label of the stop area. The name is directly taken from the data whereas the label is something we compute for better traveler information. If you don't know what to display, display the label.|
 |coord|[coord](#coord)|Coordinates of the stop area|
 |administrative_regions|array of [admin](#admin)|Administrative regions of the stop area in which is the stop area|
 |stop_points|array of [stop_point](#stop-point)|Stop points contained in this stop area|
