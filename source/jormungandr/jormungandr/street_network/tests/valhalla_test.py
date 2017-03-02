@@ -33,7 +33,7 @@ from navitiacommon import type_pb2, response_pb2
 import pybreaker
 from mock import MagicMock
 from streetnetwork_test_utils import make_pt_object
-from jormungandr.utils import str_to_time_stamp
+from jormungandr.utils import str_to_time_stamp, PeriodExtremity
 import requests_mock
 import json
 
@@ -328,11 +328,11 @@ def get_response_func_with_unknown_exception_test():
     resp_json = response_valid()
     origin = make_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
     destination = make_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
+    fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), True)
     response = Valhalla._get_response(resp_json, 'walking',
                                       origin,
                                       destination,
-                                      str_to_time_stamp('20161010T152000'),
-                                      True)
+                                      fallback_extremity)
     assert response.status_code == 200
     assert response.response_type == response_pb2.ITINERARY_FOUND
     assert len(response.journeys) == 1
@@ -353,7 +353,7 @@ def direct_path_func_without_response_valhalla_test():
     valhalla._call_valhalla = MagicMock(return_value=None)
     valhalla._make_request_arguments = MagicMock(return_value=None)
     with pytest.raises(TechnicalError) as excinfo:
-        valhalla.direct_path(None, None, None, None, None, None)
+        valhalla.direct_path(None, None, None, None, None)
     assert '500: Internal Server Error' == str(excinfo.value)
     assert 'TechnicalError' == str(excinfo.typename)
 
@@ -366,14 +366,14 @@ def direct_path_func_with_status_code_400_response_valhalla_test():
                         costing_options={'bib': 'bom'})
     origin = make_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
     destination = make_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
+    fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), True)
     with requests_mock.Mocker() as req:
         with pytest.raises(TechnicalError) as excinfo:
             req.post('http://bob.com/route', json={'error_code': 42}, status_code=400)
             valhalla.direct_path('walking',
                                  origin,
                                  destination,
-                                 str_to_time_stamp('20161010T152000'),
-                                 True,
+                                 fallback_extremity,
                                  MOCKED_REQUEST)
         assert str(excinfo.value) == '500: Internal Server Error'
         assert str(excinfo.value.data['message']) == 'Valhalla service unavailable, impossible to query : http://bob.com/route'
@@ -388,13 +388,13 @@ def direct_path_func_with_no_response_valhalla_test():
                         costing_options={'bib': 'bom'})
     origin = make_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
     destination = make_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
+    fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), True)
     with requests_mock.Mocker() as req:
         req.post('http://bob.com/route', json={'error_code': 442}, status_code=400)
         valhalla_response = valhalla.direct_path('walking',
                                                  origin,
                                                  destination,
-                                                 str_to_time_stamp('20161010T152000'),
-                                                 True,
+                                                 fallback_extremity,
                                                  MOCKED_REQUEST)
         assert valhalla_response.status_code == 200
         assert valhalla_response.response_type == response_pb2.NO_SOLUTION
@@ -411,13 +411,13 @@ def direct_path_func_with_valid_response_valhalla_test():
 
     origin = make_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
     destination = make_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
+    fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), True)
     with requests_mock.Mocker() as req:
         req.post('http://bob.com/route', json=resp_json)
         valhalla_response = valhalla.direct_path('walking',
                                           origin,
                                           destination,
-                                          str_to_time_stamp('20161010T152000'),
-                                          True,
+                                          fallback_extremity,
                                           MOCKED_REQUEST)
         assert valhalla_response.status_code == 200
         assert valhalla_response.response_type == response_pb2.ITINERARY_FOUND

@@ -29,7 +29,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 import calendar
-from collections import deque
+from collections import deque, namedtuple
 from datetime import datetime
 from google.protobuf.descriptor import FieldDescriptor
 import pytz
@@ -381,3 +381,10 @@ def decode_polyline(encoded):
         decoded.append([float('%.6f' % (ll[1] * inv)), float('%.6f' % (ll[0] * inv))])
         #hand back the list of coordinates
     return decoded
+
+
+# PeriodExtremity is used to provide a datetime and it's meaning
+#     datetime: given datetime (obviously)
+#     represents_start: is True if it's start of period, False if it's the end of period
+# (mostly used for fallback management in experimental scenario)
+PeriodExtremity = namedtuple('PeriodExtremity', ['datetime', 'represents_start'])

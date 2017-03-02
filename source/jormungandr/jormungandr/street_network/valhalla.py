@@ -102,7 +102,10 @@ class Valhalla(AbstractStreetNetworkService):
         return costing_options
 
     @classmethod
-    def _get_response(cls, json_resp, mode, pt_object_origin, pt_object_destination, datetime, clockwise):
+    def _get_response(cls, json_resp, mode, pt_object_origin, pt_object_destination, fallback_extremity):
+        '''
+        :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
+        '''
         map_mode = {
             "walking": response_pb2.Walking,
             "car": response_pb2.Car,
@@ -114,7 +117,8 @@ class Valhalla(AbstractStreetNetworkService):
 
         journey = resp.journeys.add()
         journey.duration = json_resp['trip']['summary']['time']
-        if clockwise:
+        datetime, represents_start_fallback = fallback_extremity
+        if represents_start_fallback:
             journey.departure_date_time = datetime
             journey.arrival_date_time = datetime + journey.duration
         else:
@@ -207,7 +211,7 @@ class Valhalla(AbstractStreetNetworkService):
             raise TechnicalError('Valhalla service unavailable, impossible to query : {}'.
                                  format(response.url))
 
-    def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise, request):
+    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request):
         data = self._make_request_arguments(mode, pt_object_origin, [pt_object_destination], request, api='route')
         r = self._call_valhalla('{}/{}'.format(self.service_url, 'route'), requests.post, data)
         if r is not None and r.status_code == 400 and r.json()['error_code'] == 442:
@@ -218,7 +222,7 @@ class Valhalla(AbstractStreetNetworkService):
             return resp
         self._check_response(r)
         resp_json = r.json()
-        return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, datetime, clockwise)
+        return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, fallback_extremity)
 
     @classmethod
     def _get_matrix(cls, json_response):

@@ -31,7 +31,7 @@ from navitiacommon import type_pb2, response_pb2
 import pybreaker
 from mock import MagicMock
 from streetnetwork_test_utils import make_pt_object
-from jormungandr.utils import str_to_time_stamp
+from jormungandr.utils import str_to_time_stamp, PeriodExtremity
 import requests_mock
 import json
 
@@ -225,14 +225,14 @@ def direct_path_geovelo_test():
 
     origin = make_pt_object(type_pb2.ADDRESS, lon=2, lat=48.2, uri='refStart1')
     destination = make_pt_object(type_pb2.ADDRESS, lon=3, lat=48.3, uri='refEnd1')
+    fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), False)
     with requests_mock.Mocker() as req:
         req.post('http://bob.com/api/v2/computedroutes?instructions=true&elevations=false&geometry=true'
                  '&single_result=true&bike_stations=false&objects_as_ids=true&', json=resp_json)
         geovelo_resp = geovelo.direct_path('bike',
                                            origin,
                                            destination,
-                                           str_to_time_stamp('20161010T152000'),
-                                           False,
+                                           fallback_extremity,
                                            None)
         assert geovelo_resp.status_code == 200
         assert geovelo_resp.response_type == response_pb2.ITINERARY_FOUND

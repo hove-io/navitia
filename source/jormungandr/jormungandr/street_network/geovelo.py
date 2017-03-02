@@ -156,7 +156,10 @@ class Geovelo(AbstractStreetNetworkService):
 
 
     @classmethod
-    def _get_response(cls, json_response, mode, pt_object_origin, pt_object_destination, datetime, clockwise):
+    def _get_response(cls, json_response, mode, pt_object_origin, pt_object_destination, fallback_extremity):
+        '''
+        :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
+        '''
 
         # map giving the change of direction (degrees) from geovelo indications
         # see: http://developers.geovelo.fr/#/documentation/compute
@@ -189,7 +192,8 @@ class Geovelo(AbstractStreetNetworkService):
 
         journey = resp.journeys.add()
         journey.duration = geovelo_resp['duration']
-        if clockwise:
+        datetime, represents_start_fallback = fallback_extremity
+        if represents_start_fallback:
             journey.departure_date_time = datetime
             journey.arrival_date_time = datetime + journey.duration
         else:
@@ -237,7 +241,7 @@ class Geovelo(AbstractStreetNetworkService):
 
         return resp
 
-    def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise, request):
+    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request):
         if mode != "bike":
             logging.getLogger(__name__).error('Geovelo, mode {} not implemented'.format(mode))
             raise InvalidArguments('Geovelo, mode {} not implemented'.format(mode))
@@ -258,4 +262,4 @@ class Geovelo(AbstractStreetNetworkService):
             logging.getLogger(__name__).error('Geovelo nb response != nb requested')
             raise UnableToParse('Geovelo nb response != nb requested')
 
-        return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, datetime, clockwise)
+        return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, fallback_extremity)
