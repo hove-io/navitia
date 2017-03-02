@@ -54,7 +54,7 @@ void fill_disruption_from_database(const std::string& connection_string,
     pqxx::work work(*conn, "loading disruptions");
 
     size_t offset = 0,
-           items_per_request = 100;
+           items_per_request = 1000;
     DisruptionDatabaseReader reader(pt_data, meta);
     pqxx::result result;
     std::string contributors_array = boost::algorithm::join(contributors, ", ");
