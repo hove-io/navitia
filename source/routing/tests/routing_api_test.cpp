@@ -625,7 +625,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_in_a_stay_in) {
     section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.type(), pbnavitia::SectionType::TRANSFER);
     BOOST_REQUIRE_EQUAL(section.transfer_type(), pbnavitia::TransferType::stay_in);
-    BOOST_REQUIRE_EQUAL(section.duration(), 50);
+    BOOST_REQUIRE_EQUAL(section.duration(), 150);
 
     section = journey.sections(2);
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 1);
