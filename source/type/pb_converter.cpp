@@ -1172,7 +1172,7 @@ void PbCreator::Filler::fill_messages(const VjStopTimes* vj_stoptimes,
                                                             [](const nt::disruption::PtObj& ptobj) {
                return boost::get<nt::disruption::LineSection>(&ptobj) != nullptr;
             });
-           if (line_section_impacted_obj_it != message->informed_entities().end()) {
+            if (line_section_impacted_obj_it != message->informed_entities().end()) {
                 // note in this we take the premise that an impact cannot impact a line section AND a vj
                 for (const auto& st: vj_stoptimes->stop_times) {
                     // if one stop point of the stoptimes is impacted by the same impact
@@ -1184,8 +1184,9 @@ void PbCreator::Filler::fill_messages(const VjStopTimes* vj_stoptimes,
                         }
                     }
                 }
-                return false;
-            }}();
+            }
+            return false;
+            }();
           // we haven't found a stoppoint impacted by this line section impact, it does not concern this vj
           if (! found) continue;
 
