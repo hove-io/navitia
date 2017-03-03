@@ -1,3 +1,22 @@
+navitia2 (2.27.0) unstable; urgency=low
+
+  * Doc: update interface.md  <https://github.com/CanalTP/navitia/pull/1993>
+  * Kraken: fix disruption.updated_at  <https://github.com/CanalTP/navitia/pull/2003>
+  * Jormungandr: suds is deprecated, replace it with zeep  <https://github.com/CanalTP/navitia/pull/2004>
+  * Jormungandr: fix physical_modes with serpy  <https://github.com/CanalTP/navitia/pull/2005>
+  * Tyr: fix user shape  <https://github.com/CanalTP/navitia/pull/2007>
+  * Jormungandr: fix geovelo profile  <https://github.com/CanalTP/navitia/pull/2006>
+  * Tyr: only geojson polygon accepted  <https://github.com/CanalTP/navitia/pull/1998>
+  * Jormungandr: siri realtime proxy connector  <https://github.com/CanalTP/navitia/pull/1995>
+  * Doc: add the stopareas label  <https://github.com/CanalTP/navitia/pull/2000>
+  * Jormungandr: geovelo's call to direct path  <https://github.com/CanalTP/navitia/pull/1996>
+  * Kraken: broader disruption buckets  <https://github.com/CanalTP/navitia/pull/1999>
+  * Jormungandr: better display of line_sections in /journeys and schedules  <https://github.com/CanalTP/navitia/pull/1991>
+  * Doc: add linesection and trip modification  <https://github.com/CanalTP/navitia/pull/1994>
+  * Jormungnadr: add tests on line section for /traffic_reports  <https://github.com/CanalTP/navitia/pull/1988>
+
+ -- xlqian <patrick.qian@canaltp.fr>  Fri, 03 Mar 2017 16:03:40 +0100
+
 navitia2 (2.26.2) unstable; urgency=low
 
   * Kraken: fix line section bug  <https://github.com/CanalTP/navitia/pull/1997> 
