@@ -739,7 +739,7 @@ Path make_path(const Journey& journey, const type::Data& data) {
                 const auto* first_stop_point = vj_section.stop_times_and_dt.front().st.stop_point;
                 stay_in_section.stop_points.push_back(first_stop_point);
                 stay_in_section.departure = posix(last_st.departure);
-                stay_in_section.arrival = posix(vj_section.stop_times_and_dt.front().arrival);
+                stay_in_section.arrival = posix(vj_section.stop_times_and_dt.front().departure);
             }
             //add the pt section
             path.items.emplace_back(ItemType::public_transport);
