@@ -31,7 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr.parking_space_availability.bss.bss_provider import BssProvider
 from jormungandr.parking_space_availability.bss.stands import Stands
 from jormungandr import cache, app
-import suds
+import zeep
 import logging
 
 
@@ -56,27 +56,27 @@ class AtosProvider(BssProvider):
     def get_informations(self, poi):
         logging.debug('building stands')
         try:
-            all_stands = self.get_all_stands()
+            all_stands = self._get_all_stands()
             ref = poi.get('properties', {}).get('ref')
             if ref:
                 stands = all_stands.get(ref.lstrip('0'))
                 return stands
         except:
-            #suds raide a lot of crap... don't want to handle all of them
             logging.getLogger(__name__).exception('transport error during call to %s bss provider', self.id_ao)
         return None
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_ATOS', 30))
-    def get_all_stands(self):
-        client = self.get_client()
+    def _get_all_stands(self):
+        client = self._get_client()
         if not client:
             return {}
         all_stands = client.service.getSummaryInformationTerminals(self.id_ao)
         return {stands.libelle: Stands(stands.nbPlacesDispo, stands.nbVelosDispo) for stands in all_stands}
 
-    def get_client(self):
+    def _get_client(self):
         if not self._client:
-            self._client = suds.client.Client(self.WS_URL, timeout=self.timeout, cache=None)
+            transport = zeep.Transport(timeout=self.timeout)
+            self._client = zeep.Client(self.WS_URL, transport=transport)
         return self._client
 
     def status(self):
