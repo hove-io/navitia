@@ -96,7 +96,7 @@ def geojson_argument(default_value):
             if not is_geometry_valid(value) :
                 raise ValueError('invalid geojson')
 
-            geometry= value.get('type')
+            geometry= value.get('geometry', {}).get('type')
             if not geometry or geometry.lower() != 'polygon':
                 raise ValueError('invalid geometry type')
         else:
