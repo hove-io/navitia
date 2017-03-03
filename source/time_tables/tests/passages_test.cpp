@@ -50,14 +50,14 @@ BOOST_AUTO_TEST_CASE(passages_boarding_order) {
     ed::builder b("20170101");
 
     b.vj("L1").uri("vj:0")
-        ("stop1", "8:01"_t, "8:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 900, 0)
-        ("stop2", "8:06"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 0)
-        ("stop3", "8:11"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 900, 0);
+        ("stop1", "8:00"_t, "8:01"_t, std::numeric_limits<uint16_t>::max(), false, true, 900, 0)
+        ("stop2", "8:05"_t, "8:06"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 0)
+        ("stop3", "8:10"_t, "8:11"_t, std::numeric_limits<uint16_t>::max(), true, false, 900, 0);
 
     b.vj("L1").uri("vj:1")
-        ("stop1", "8:06"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 900)
-        ("stop2", "8:11"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 900)
-        ("stop3", "8:16"_t, "8:15"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
+        ("stop1", "8:05"_t, "8:06"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 900)
+        ("stop2", "8:10"_t, "8:11"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 900)
+        ("stop3", "8:15"_t, "8:16"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
 
     b.finish();
     b.data->pt_data->index();
@@ -71,8 +71,8 @@ BOOST_AUTO_TEST_CASE(passages_boarding_order) {
              navitia::type::AccessibiliteParams(), nt::RTLevel::Base, pbnavitia::NEXT_DEPARTURES, 10, 0);
     auto resp = pb_creator_ndep.get_response();
     BOOST_REQUIRE_EQUAL(resp.next_departures().size(), 2);
-    BOOST_REQUIRE_EQUAL(resp.next_departures(0).stop_date_time().departure_date_time(), "20170101T080500"_pts);
-    BOOST_REQUIRE_EQUAL(resp.next_departures(1).stop_date_time().departure_date_time(), "20170101T081000"_pts);
+    BOOST_REQUIRE_EQUAL(resp.next_departures(0).stop_date_time().departure_date_time(), "20170101T080600"_pts);
+    BOOST_REQUIRE_EQUAL(resp.next_departures(1).stop_date_time().departure_date_time(), "20170101T081100"_pts);
 
     // next arrivals
     navitia::PbCreator pb_creator_narr(data_ptr, bt::second_clock::universal_time(), null_time_period);
@@ -80,8 +80,8 @@ BOOST_AUTO_TEST_CASE(passages_boarding_order) {
              navitia::type::AccessibiliteParams(), nt::RTLevel::Base, pbnavitia::NEXT_ARRIVALS, 10, 0);
     resp = pb_creator_narr.get_response();
     BOOST_REQUIRE_EQUAL(resp.next_arrivals().size(), 2);
-    BOOST_REQUIRE_EQUAL(resp.next_arrivals(0).stop_date_time().arrival_date_time(), "20170101T080600"_pts);
-    BOOST_REQUIRE_EQUAL(resp.next_arrivals(1).stop_date_time().arrival_date_time(), "20170101T081100"_pts);
+    BOOST_REQUIRE_EQUAL(resp.next_arrivals(0).stop_date_time().arrival_date_time(), "20170101T080500"_pts);
+    BOOST_REQUIRE_EQUAL(resp.next_arrivals(1).stop_date_time().arrival_date_time(), "20170101T081000"_pts);
 
     // previous departures
     navitia::PbCreator pb_creator_pdep(data_ptr, bt::second_clock::universal_time(), null_time_period);
@@ -89,8 +89,8 @@ BOOST_AUTO_TEST_CASE(passages_boarding_order) {
              navitia::type::AccessibiliteParams(), nt::RTLevel::Base, pbnavitia::PREVIOUS_DEPARTURES, 10, 0);
     resp = pb_creator_pdep.get_response();
     BOOST_REQUIRE_EQUAL(resp.next_departures().size(), 2);
-    BOOST_REQUIRE_EQUAL(resp.next_departures(0).stop_date_time().departure_date_time(), "20170101T081000"_pts);
-    BOOST_REQUIRE_EQUAL(resp.next_departures(1).stop_date_time().departure_date_time(), "20170101T080500"_pts);
+    BOOST_REQUIRE_EQUAL(resp.next_departures(0).stop_date_time().departure_date_time(), "20170101T081100"_pts);
+    BOOST_REQUIRE_EQUAL(resp.next_departures(1).stop_date_time().departure_date_time(), "20170101T080600"_pts);
 
     // previous arrivals
     navitia::PbCreator pb_creator_parr(data_ptr, bt::second_clock::universal_time(), null_time_period);
@@ -98,6 +98,6 @@ BOOST_AUTO_TEST_CASE(passages_boarding_order) {
              navitia::type::AccessibiliteParams(), nt::RTLevel::Base, pbnavitia::PREVIOUS_ARRIVALS, 10, 0);
     resp = pb_creator_parr.get_response();
     BOOST_REQUIRE_EQUAL(resp.next_arrivals().size(), 2);
-    BOOST_REQUIRE_EQUAL(resp.next_arrivals(0).stop_date_time().arrival_date_time(), "20170101T081100"_pts);
-    BOOST_REQUIRE_EQUAL(resp.next_arrivals(1).stop_date_time().arrival_date_time(), "20170101T080600"_pts);
+    BOOST_REQUIRE_EQUAL(resp.next_arrivals(0).stop_date_time().arrival_date_time(), "20170101T081000"_pts);
+    BOOST_REQUIRE_EQUAL(resp.next_arrivals(1).stop_date_time().arrival_date_time(), "20170101T080500"_pts);
 }

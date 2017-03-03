@@ -3062,7 +3062,6 @@ BOOST_AUTO_TEST_CASE(with_boarding_alighting_time){
     );
 
     BOOST_REQUIRE_EQUAL(result.size(), 1);
-    result.at(0).print();
     BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 3);
     BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
     BOOST_CHECK_EQUAL(result.at(0).items[0].departure, "20170101T085000"_dt);
@@ -3080,7 +3079,6 @@ BOOST_AUTO_TEST_CASE(with_boarding_alighting_time){
     );
 
     BOOST_REQUIRE_EQUAL(result.size(), 1);
-    result.at(0).print();
     BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 3);
     BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
     BOOST_CHECK_EQUAL(result.at(0).items[0].departure, "20170101T084500"_dt);
@@ -3098,7 +3096,6 @@ BOOST_AUTO_TEST_CASE(with_boarding_alighting_time){
     );
 
     BOOST_REQUIRE_EQUAL(result.size(), 1);
-    result.at(0).print();
     BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 2);
     BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::public_transport);
     BOOST_CHECK_EQUAL(result.at(0).items[0].departure, "20170101T091000"_dt);
@@ -3113,7 +3110,6 @@ BOOST_AUTO_TEST_CASE(with_boarding_alighting_time){
     );
 
     BOOST_REQUIRE_EQUAL(result.size(), 1);
-    result.at(0).print();
     BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 2);
     BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
     BOOST_CHECK_EQUAL(result.at(0).items[0].departure, "20170101T085000"_dt);
@@ -3135,7 +3131,6 @@ BOOST_AUTO_TEST_CASE(with_boarding_alighting_time){
     );
 
     BOOST_REQUIRE_EQUAL(result.size(), 1);
-    result.at(0).print();
     BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 6);
     BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
     BOOST_CHECK_EQUAL(result.at(0).items[0].departure, "20170101T085000"_dt);
@@ -3189,7 +3184,6 @@ BOOST_AUTO_TEST_CASE(with_boarding_alighting_time_and_stay_in){
     );
 
     BOOST_REQUIRE_EQUAL(result.size(), 1);
-    result.at(0).print();
     BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 4);
     BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
     BOOST_CHECK_EQUAL(result.at(0).items[0].departure, "20170101T085000"_dt);
@@ -3230,7 +3224,6 @@ BOOST_AUTO_TEST_CASE(reverse_pass_midnight_with_boardings){
 
     auto result = compute(0);
     BOOST_REQUIRE_EQUAL(result.size(), 1);
-    result.at(0).print();
     BOOST_REQUIRE_EQUAL(result.at(0).items.size(), 3);
     BOOST_CHECK_EQUAL(result.at(0).items[0].type, ItemType::boarding);
     BOOST_CHECK_EQUAL(result.at(0).items[0].departure, "20170101T235500"_dt);

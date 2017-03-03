@@ -1791,7 +1791,7 @@ BOOST_AUTO_TEST_CASE(delays_on_lollipop_with_boarding_alighting_times) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(1).departure_time, "08:21"_t);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(1).boarding_time, "08:21"_t);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).stop_point->uri, "stop_point:10");
-    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).departure_time, "08:41"_t);
+    BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).arrival_time, "08:40"_t);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).alighting_time, "08:40"_t);
     // SHOULD BE : BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).alighting_time, "08:46"_t);
 }
