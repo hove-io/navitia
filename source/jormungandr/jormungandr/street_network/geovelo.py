@@ -74,9 +74,9 @@ class Geovelo(AbstractStreetNetworkService):
                 {'latitude': coord_dest.lat, 'longitude': coord_dest.lon}
             ],
             'bikeDetails': {
-                'profile': 'BEGINNER', # can be MEDIAN, EXPERT
+                'profile': 'MEDIAN', # can be BEGINNER, EXPERT
                 'bikeType': 'TRADITIONAL', # can be 'BSS'
-                # 'averageSpeed': '6' # in km/h, BEGINER sets it to 13
+                # 'averageSpeed': '6' # in km/h, BEGINNER sets it to 13
             },
             'transportModes': ['BIKE']
         }
