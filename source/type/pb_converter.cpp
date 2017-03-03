@@ -1186,9 +1186,9 @@ void PbCreator::Filler::fill_messages(const VjStopTimes* vj_stoptimes,
                 }
             }
             return false;
-            }();
-          // we haven't found a stoppoint impacted by this line section impact, it does not concern this vj
-          if (! found) continue;
+        }();
+        // we haven't found a stoppoint impacted by this line section impact, it does not concern this vj
+        if (! found) continue;
 
         fill_message(message, pt_display_info);
     }
