@@ -33,7 +33,7 @@ from navitiacommon import type_pb2, response_pb2
 import pybreaker
 from mock import MagicMock
 from streetnetwork_test_utils import make_pt_object
-from jormungandr.utils import str_to_time_stamp
+from jormungandr.utils import str_to_time_stamp, PeriodExtremity
 import requests_mock
 import json
 
@@ -115,34 +115,22 @@ def get_costing_options_func_test():
 
 
 def format_coord_func_invalid_pt_object_test():
-    instance = MagicMock()
-    valhalla = Valhalla(instance=instance,
-                        service_url='http://bob.com',
-                        costing_options={'bib': 'bom'})
     with pytest.raises(InvalidArguments) as excinfo:
-        valhalla._format_coord(MagicMock())
+        Valhalla._format_coord(MagicMock())
     assert '400: Bad Request' in str(excinfo.value)
 
 
 def format_coord_func_invalid_api_test():
-    instance = MagicMock()
-    valhalla = Valhalla(instance=instance,
-                        service_url='http://bob.com',
-                        costing_options={'bib': 'bom'})
     with pytest.raises(ApiNotFound) as excinfo:
-        valhalla._format_coord(make_pt_object(type_pb2.ADDRESS, 1.12, 13.15), 'aaa')
+        Valhalla._format_coord(make_pt_object(type_pb2.ADDRESS, 1.12, 13.15), 'aaa')
     assert '404: Not Found' in str(excinfo.value)
     assert 'ApiNotFound' in str(excinfo.typename)
 
 
 def format_coord_func_valid_coord_one_to_many_test():
-    instance = MagicMock()
     pt_object = make_pt_object(type_pb2.ADDRESS, 1.12, 13.15)
-    valhalla = Valhalla(instance=instance,
-                        service_url='http://bob.com',
-                        costing_options={'bib': 'bom'})
 
-    coord = valhalla._format_coord(pt_object, 'one_to_many')
+    coord = Valhalla._format_coord(pt_object, 'one_to_many')
     coord_res = {'lat': pt_object.address.coord.lat, 'lon': pt_object.address.coord.lon}
     assert len(coord) == 2
     for key, value in coord_res.items():
@@ -150,13 +138,9 @@ def format_coord_func_valid_coord_one_to_many_test():
 
 
 def format_coord_func_valid_coord_test():
-    instance = MagicMock()
     pt_object = make_pt_object(type_pb2.ADDRESS, 1.12, 13.15)
-    valhalla = Valhalla(instance=instance,
-                        service_url='http://bob.com',
-                        costing_options={'bib': 'bom'})
 
-    coord = valhalla._format_coord(pt_object)
+    coord = Valhalla._format_coord(pt_object)
     coord_res = {'lat': pt_object.address.coord.lat, 'type': 'break', 'lon': pt_object.address.coord.lon}
     assert len(coord) == 3
     for key, value in coord_res.items():
@@ -341,18 +325,14 @@ def call_valhalla_func_with_unknown_exception_test():
 
 
 def get_response_func_with_unknown_exception_test():
-    instance = MagicMock()
-    valhalla = Valhalla(instance=instance,
-                        service_url='http://bob.com',
-                        costing_options={'bib': 'bom'})
     resp_json = response_valid()
     origin = make_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
     destination = make_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
-    response = valhalla._get_response(resp_json, 'walking',
+    fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), True)
+    response = Valhalla._get_response(resp_json, 'walking',
                                       origin,
                                       destination,
-                                      str_to_time_stamp('20161010T152000'),
-                                      True)
+                                      fallback_extremity)
     assert response.status_code == 200
     assert response.response_type == response_pb2.ITINERARY_FOUND
     assert len(response.journeys) == 1
@@ -373,7 +353,7 @@ def direct_path_func_without_response_valhalla_test():
     valhalla._call_valhalla = MagicMock(return_value=None)
     valhalla._make_request_arguments = MagicMock(return_value=None)
     with pytest.raises(TechnicalError) as excinfo:
-        valhalla.direct_path(None, None, None, None, None, None)
+        valhalla.direct_path(None, None, None, None, None)
     assert '500: Internal Server Error' == str(excinfo.value)
     assert 'TechnicalError' == str(excinfo.typename)
 
@@ -386,14 +366,14 @@ def direct_path_func_with_status_code_400_response_valhalla_test():
                         costing_options={'bib': 'bom'})
     origin = make_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
     destination = make_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
+    fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), True)
     with requests_mock.Mocker() as req:
         with pytest.raises(TechnicalError) as excinfo:
             req.post('http://bob.com/route', json={'error_code': 42}, status_code=400)
             valhalla.direct_path('walking',
                                  origin,
                                  destination,
-                                 str_to_time_stamp('20161010T152000'),
-                                 True,
+                                 fallback_extremity,
                                  MOCKED_REQUEST)
         assert str(excinfo.value) == '500: Internal Server Error'
         assert str(excinfo.value.data['message']) == 'Valhalla service unavailable, impossible to query : http://bob.com/route'
@@ -408,13 +388,13 @@ def direct_path_func_with_no_response_valhalla_test():
                         costing_options={'bib': 'bom'})
     origin = make_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
     destination = make_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
+    fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), True)
     with requests_mock.Mocker() as req:
         req.post('http://bob.com/route', json={'error_code': 442}, status_code=400)
         valhalla_response = valhalla.direct_path('walking',
                                                  origin,
                                                  destination,
-                                                 str_to_time_stamp('20161010T152000'),
-                                                 True,
+                                                 fallback_extremity,
                                                  MOCKED_REQUEST)
         assert valhalla_response.status_code == 200
         assert valhalla_response.response_type == response_pb2.NO_SOLUTION
@@ -431,13 +411,13 @@ def direct_path_func_with_valid_response_valhalla_test():
 
     origin = make_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
     destination = make_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
+    fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), True)
     with requests_mock.Mocker() as req:
         req.post('http://bob.com/route', json=resp_json)
         valhalla_response = valhalla.direct_path('walking',
                                           origin,
                                           destination,
-                                          str_to_time_stamp('20161010T152000'),
-                                          True,
+                                          fallback_extremity,
                                           MOCKED_REQUEST)
         assert valhalla_response.status_code == 200
         assert valhalla_response.response_type == response_pb2.ITINERARY_FOUND
@@ -451,28 +431,20 @@ def direct_path_func_with_valid_response_valhalla_test():
 
 
 def get_valhalla_mode_invalid_mode_test():
-    instance = MagicMock()
-    valhalla = Valhalla(instance=instance,
-                        service_url='http://bob.com',
-                        costing_options={'bib': 'bom'})
     with pytest.raises(InvalidArguments) as excinfo:
-        valhalla._get_valhalla_mode('bss')
+        Valhalla._get_valhalla_mode('bss')
     assert '400: Bad Request' == str(excinfo.value)
     assert 'InvalidArguments' == str(excinfo.typename)
 
 
 def get_valhalla_mode_valid_mode_test():
-    instance = MagicMock()
-    valhalla = Valhalla(instance=instance,
-                        service_url='http://bob.com',
-                        costing_options={'bib': 'bom'})
     map_mode = {
         "walking": "pedestrian",
         "car": "auto",
         "bike": "bicycle"
     }
     for kraken_mode, valhalla_mode in map_mode.items():
-        assert valhalla._get_valhalla_mode(kraken_mode) == valhalla_mode
+        assert Valhalla._get_valhalla_mode(kraken_mode) == valhalla_mode
 
 
 def one_to_many_valhalla_test():

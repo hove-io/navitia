@@ -88,10 +88,9 @@ struct VjOrigDest{
 
 struct VjStopTimes{
     const nt::VehicleJourney* vj;
-    const nt::StopTime* orig;
-    const nt::StopTime* dest;
-    VjStopTimes(const nt::VehicleJourney* vj, const nt::StopTime* orig, const nt::StopTime* dest): vj(vj),
-        orig(orig), dest(dest){}
+    const std::vector<const nt::StopTime*>& stop_times;
+    VjStopTimes(const nt::VehicleJourney* vj, const std::vector<const nt::StopTime*>& st): vj(vj),
+        stop_times(st){}
 };
 
 struct StopTimeCalandar{
@@ -363,6 +362,8 @@ private:
                 fill_message(message, pb_obj);
             }
         }
+        // override fill_messages for journey sections to handle line sections impacts
+        void fill_messages(const VjStopTimes*, pbnavitia::PtDisplayInfo*);
 
         template <typename Target, typename Source>
         std::vector<Target*> ptref_indexes(const Source* nav_obj);

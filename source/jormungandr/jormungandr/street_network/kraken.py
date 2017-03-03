@@ -41,15 +41,15 @@ class Kraken(AbstractStreetNetworkService):
     def __init__(self, instance, service_url, timeout=10, api_key=None, **kwargs):
         self.instance = instance
 
-    def direct_path(self, mode, pt_object_origin, pt_object_destination, datetime, clockwise, request):
+    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request):
         req = request_pb2.Request()
         req.requested_api = type_pb2.direct_path
         req.direct_path.origin.place = get_uri_pt_object(pt_object_origin)
         req.direct_path.origin.access_duration = 0
         req.direct_path.destination.place = get_uri_pt_object(pt_object_destination)
         req.direct_path.destination.access_duration = 0
-        req.direct_path.datetime = datetime
-        req.direct_path.clockwise = clockwise
+        req.direct_path.datetime = fallback_extremity.datetime
+        req.direct_path.clockwise = fallback_extremity.represents_start
         req.direct_path.streetnetwork_params.origin_mode = mode
         req.direct_path.streetnetwork_params.destination_mode = mode
         req.direct_path.streetnetwork_params.walking_speed = request['walking_speed']

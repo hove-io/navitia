@@ -71,7 +71,7 @@ get_impacted_vehicle_journeys(const LineSection& ls,
             auto section = vj.get_sections_stop_points(ls.start_point, ls.end_point);
             // If the vj pass by both stops both elements will be different than nullptr, otherwise
             // it's not passing by both stops and should not be impacted
-            if (! section.empty()) {
+            if( ! section.empty()) {
                 // Once we know the line section is part of the vj we compute the vp for the adapted_vj
                 LOG4CPLUS_TRACE(log, "vj " << vj.uri << " pass by both stops, might be affected.");
                 nt::ValidityPattern new_vp{vj.validity_patterns[rt_level]->beginning_date};
@@ -112,6 +112,10 @@ struct InformedEntitiesLinker: public boost::static_visitor<> {
         auto impacted_vjs = get_impacted_vehicle_journeys(line_section, *impact, production_period, rt_level);
         std::set<type::StopPoint*> impacted_stop_points;
         std::set<type::MetaVehicleJourney*> impacted_meta_vjs;
+        if (impacted_meta_vjs.empty()) {
+            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "line section impact " << impact->uri
+                        << " does not impact any vj, it will not be linked to anything");
+        }
         for (auto& impacted_vj : impacted_vjs) {
             const auto* vj = impacted_vj.vj;
             if (impacted_meta_vjs.insert(vj->meta_vj).second) {

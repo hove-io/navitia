@@ -32,7 +32,6 @@ import pytest
 from jormungandr.parking_space_availability.bss.atos import AtosProvider
 from jormungandr.parking_space_availability.bss.stands import Stands
 from mock import MagicMock
-from suds import WebFault
 
 poi = {
     'properties': {
@@ -83,7 +82,7 @@ def parking_space_availability_atos_get_informations_test():
         '2': stands
     }
     provider = AtosProvider(u'10', u'vélitul', u'https://webservice.atos.com?wsdl', {'keolis'})
-    provider.get_all_stands = MagicMock(return_value=all_stands)
+    provider._get_all_stands = MagicMock(return_value=all_stands)
     assert provider.get_informations(poi) == stands
     invalid_poi = {}
     assert provider.get_informations(invalid_poi) is None
@@ -91,7 +90,7 @@ def parking_space_availability_atos_get_informations_test():
     poi_blur_ref = {'properties': {'ref': '02'}}
     assert provider.get_informations(poi_blur_ref) == stands
 
-    provider.get_all_stands = MagicMock(side_effect=WebFault('fake fault', 'mock'))
+    provider._get_all_stands = MagicMock(side_effect=Exception('cannot access service'))
     assert provider.get_informations(poi) is None
 
 def parking_space_availability_atos_get_all_stands_test():
@@ -114,8 +113,8 @@ def parking_space_availability_atos_get_all_stands_test():
     client = lambda: None
     client.service = lambda: None
     client.service.getSummaryInformationTerminals = MagicMock(return_value=all_stands_list)
-    provider.get_client = MagicMock(return_value=client)
-    all_stands = provider.get_all_stands()
+    provider._get_client = MagicMock(return_value=client)
+    all_stands = provider._get_all_stands()
     assert len(all_stands) == 2
     assert isinstance(all_stands.get('2'), Stands)
 
@@ -126,4 +125,4 @@ def parking_space_availability_atos_get_all_stands_urlerror_test():
     provider = AtosProvider(u'10', u'vélitul', u'https://error.fake.com?wsdl', {'keolis'})
 
     with pytest.raises(Exception):
-        provider.get_all_stands()
+        provider._get_all_stands()

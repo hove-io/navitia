@@ -176,13 +176,8 @@ static void fill_section(PbCreator& pb_creator, pbnavitia::Section *pb_section, 
     }
     auto* vj_pt_display_information = pb_section->mutable_pt_display_informations();
 
-    if (! stop_times.empty()) {
-        const auto& vj_stoptimes = navitia::VjStopTimes(vj, stop_times.front(), stop_times.back());
-        pb_creator.fill(&vj_stoptimes, vj_pt_display_information, 1);
-    } else {
-        const auto& vj_stoptimes = navitia::VjStopTimes(vj, nullptr, nullptr);
-        pb_creator.fill(&vj_stoptimes, vj_pt_display_information, 1);
-    }
+    const auto& vj_stoptimes = navitia::VjStopTimes(vj, stop_times);
+    pb_creator.fill(&vj_stoptimes, vj_pt_display_information, 1);
 
     fill_shape(pb_section, stop_times);
     set_length(pb_section);

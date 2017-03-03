@@ -1132,10 +1132,11 @@ heat_map_basic_query = "heat_maps?from={from_coord}&datetime={datetime}&max_dura
     .format(from_coord=s_coord, datetime="20120614T080000", max_duration="3600")
 
 
-def get_all_disruptions(elem, response):
+def get_all_element_disruptions(elem, response):
     """
     return a map with the disruption id as key and the list of disruption + impacted object as value for a item of the response
     """
+    DisruptAndElt = namedtuple('DisruptAndElt', ['disruption', 'impacted_object'])
     disruption_by_obj = defaultdict(list)
 
     all_disruptions = {d['id']: d for d in response['disruptions']}
@@ -1150,7 +1151,7 @@ def get_all_disruptions(elem, response):
         real_disruptions = [all_disruptions[d['id']] for d in obj['links'] if d['type'] == 'disruption']
 
         for d in real_disruptions:
-            disruption_by_obj[d['id']].append((d, obj))
+            disruption_by_obj[d['id']].append(DisruptAndElt(disruption=d, impacted_object=obj))
 
     #we import utils here else it will import jormungandr too early in the test
     from jormungandr import utils

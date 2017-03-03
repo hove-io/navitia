@@ -38,11 +38,15 @@ www.navitia.io
   Test on when to display the line section disruptions
 
 A           B           C           D           E           F
-o --------- o --------- o --------- o --------- o --------- o   <- route_1_of_the_line_1
+o --------- o --------- o --------- o --------- o --------- o   <- route:line:1:1
 
-                        XXXXXXXXXXXXXXXXXXXXXXXXX               <- impact on the route_1_of_the_line_1 on [C, E]
+                        XXXXXXXXXXXXXXXXXXXXXXXXX        <- impact on route:line:1:1 and route:line:1:3 on [C, E]
 
-  We also add another route route_2_of_the_line_1 that pass through the same stops areas but different stop points
+  We also add another route route:line:1:2 that pass through the same stops areas but different stop points
+
+  We also add another route route:line:1:3 that only pass on (A, B, F) and that shouldn't be impacted
+
+  We finaly add another line line_2 that pass on the same stops areas
   */
 
 namespace bg = boost::gregorian;
@@ -52,12 +56,12 @@ int main(int argc, const char* const argv[]) {
     navitia::init_app();
 
     ed::builder b("20170101");
-    b.sa("A")("A_1")("A_2");
-    b.sa("B")("B_1")("B_2");
-    b.sa("C")("C_1")("C_2");
-    b.sa("D")("D_1")("D_2");
-    b.sa("E")("E_1")("E_2");
-    b.sa("F")("F_1")("F_2");
+    b.sa("A", 0., 1.)("A_1", 0., 1.)("A_2", 0., 1.);
+    b.sa("B", 0., 2.)("B_1", 0., 2.)("B_2", 0., 2.);
+    b.sa("C", 0., 3.)("C_1", 0., 3.)("C_2", 0., 3.);
+    b.sa("D", 0., 4.)("D_1", 0., 4.)("D_2", 0., 4.);
+    b.sa("E", 0., 5.)("E_1", 0., 5.)("E_2", 0., 5.);
+    b.sa("F", 0., 6.)("F_1", 0., 6.)("F_2", 0., 6.);
 
     b.vj("line:1")
             .route("route:line:1:1")
@@ -72,12 +76,26 @@ int main(int argc, const char* const argv[]) {
     b.vj("line:1")
             .route("route:line:1:2")
             .uri("vj:1:2")
-            ("A_2", "08:00"_t)
-            ("B_2", "08:15"_t)
-            ("C_2", "08:45"_t)
-            ("D_2", "09:00"_t)
-            ("E_2", "09:15"_t)
-            ("F_2", "09:30"_t);
+            ("A_2", "09:00"_t)
+            ("B_2", "09:15"_t)
+            ("C_2", "09:45"_t)
+            ("D_2", "10:00"_t)
+            ("E_2", "10:15"_t)
+            ("F_2", "10:30"_t);
+
+    b.vj("line:1")
+            .route("route:line:1:3")
+            .uri("vj:1:3")
+            ("A_1", "10:00"_t)
+            ("B_1", "10:15"_t)
+            ("F_1", "11:30"_t);
+
+    b.vj("line:2")
+            .route("route:line:2:1")
+            .uri("vj:2")
+            ("A_1", "11:00"_t)
+            ("B_1", "11:15"_t)
+            ("F_1", "12:30"_t);
 
     b.generate_dummy_basis();
     b.finish();
@@ -89,9 +107,9 @@ int main(int argc, const char* const argv[]) {
 
     navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line_1")
                               .severity(nt::disruption::Effect::NO_SERVICE)
-                              .application_periods(btp("20170101T000000"_dt, "20170106T090000"_dt))
-                              .publish(btp("20170101T000000"_dt, "20170110T090000"_dt))
-                              .on_line_section("line:1", "C", "E", {"route:line:1:1"})
+                              .application_periods(btp("20170101T000000"_dt, "20170105T000000"_dt))
+                              .publish(btp("20170101T000000"_dt, "20170105T000000"_dt))
+                              .on_line_section("line:1", "C", "E", {"route:line:1:1", "route:line:1:3"})
                               .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 

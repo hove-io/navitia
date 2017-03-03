@@ -1153,8 +1153,49 @@ void PbCreator::Filler::fill_pb_object(const VjOrigDest* vj_orig_dest, pbnavitia
     }
 }
 
+/*
+ * override fill_messages for journey sections to handle line sections impacts
+ *
+ * for a journey section, we get:
+ *  - all of the meta journey impacts but the line sections impacts
+ *  - for the line sections impacts we check that they intersect the journey section
+ */
+void PbCreator::Filler::fill_messages(const VjStopTimes* vj_stoptimes,
+                                      pbnavitia::PtDisplayInfo* pt_display_info) {
+    if (vj_stoptimes == nullptr) { return ; }
+    if (dump_message == DumpMessage::No) { return; }
+    const auto* meta_vj = vj_stoptimes->vj->meta_vj;
+    for (const auto& message : meta_vj->get_applicable_messages(pb_creator.now,
+                                                                pb_creator.action_period)) {
+        bool found = [&](){
+            auto line_section_impacted_obj_it = boost::find_if(message->informed_entities(),
+                                                            [](const nt::disruption::PtObj& ptobj) {
+               return boost::get<nt::disruption::LineSection>(&ptobj) != nullptr;
+            });
+            if (line_section_impacted_obj_it != message->informed_entities().end()) {
+                // note in this we take the premise that an impact cannot impact a line section AND a vj
+                for (const auto& st: vj_stoptimes->stop_times) {
+                    // if one stop point of the stoptimes is impacted by the same impact
+                    // it means the section is impacted
+                    for (const auto& sp_message : st->stop_point->get_applicable_messages(pb_creator.now,
+                                                                                pb_creator.action_period)) {
+                        if (sp_message == message) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }();
+        // we haven't found a stoppoint impacted by this line section impact, it does not concern this vj
+        if (! found) continue;
+
+        fill_message(message, pt_display_info);
+    }
+}
+
 void PbCreator::Filler::fill_pb_object(const VjStopTimes* vj_stoptimes,
-                                       pbnavitia::PtDisplayInfo* pt_display_info){
+                                       pbnavitia::PtDisplayInfo* pt_display_info) {
     if(vj_stoptimes->vj == nullptr) { return ;}
 
     pbnavitia::Uris* uris = pt_display_info->mutable_uris();
@@ -1171,10 +1212,11 @@ void PbCreator::Filler::fill_pb_object(const VjStopTimes* vj_stoptimes,
         uris->set_journey_pattern(pb_creator.data->dataRaptor->jp_container.get_id(jp_idx));
     }
 
-    fill_messages(vj_stoptimes->vj->meta_vj, pt_display_info);
+    fill_messages(vj_stoptimes, pt_display_info);
 
-    if (vj_stoptimes->orig != nullptr) {
-        pt_display_info->set_headsign(pb_creator.data->pt_data->headsign_handler.get_headsign(*vj_stoptimes->orig));
+    const auto* first_st = vj_stoptimes->stop_times.empty() ? nullptr : vj_stoptimes->stop_times.front();
+    if (first_st != nullptr) {
+        pt_display_info->set_headsign(pb_creator.data->pt_data->headsign_handler.get_headsign(*first_st));
     }
     pt_display_info->set_direction(vj_stoptimes->vj->get_direction());
     if (vj_stoptimes->vj->physical_mode != nullptr) {
@@ -1183,8 +1225,10 @@ void PbCreator::Filler::fill_pb_object(const VjStopTimes* vj_stoptimes,
     }
     pt_display_info->set_description(vj_stoptimes->vj->odt_message);
     pbnavitia::hasEquipments* has_equipments = pt_display_info->mutable_has_equipments();
-    if (vj_stoptimes->orig && vj_stoptimes->dest) {
-        const auto& vj = VjOrigDest(vj_stoptimes->vj, vj_stoptimes->orig->stop_point, vj_stoptimes->dest->stop_point);
+    if (vj_stoptimes->stop_times.size() >= 2) {
+        const auto& vj = VjOrigDest(vj_stoptimes->vj,
+                                    vj_stoptimes->stop_times.front()->stop_point,
+                                    vj_stoptimes->stop_times.back()->stop_point);
         fill_with_creator(&vj, [&](){return has_equipments;});
     } else {
         fill_with_creator(vj_stoptimes->vj, [&](){return has_equipments;});
