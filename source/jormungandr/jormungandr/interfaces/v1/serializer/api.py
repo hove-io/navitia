@@ -48,7 +48,7 @@ class CommercialModesSerializer(PTReferentialSerializer):
     commercial_modes = pt.CommercialModeSerializer(many=True)
 
 class PhysicalModesSerializer(PTReferentialSerializer):
-    commercial_modes = pt.CommercialModeSerializer(many=True)
+    physical_modes = pt.PhysicalModeSerializer(many=True)
 
 class StopPointsSerializer(PTReferentialSerializer):
     stop_points = pt.StopPointSerializer(many=True)
