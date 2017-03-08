@@ -73,7 +73,7 @@ class Siri(RealtimeProxy):
         if not siri_response or siri_response.status_code != 200:
             return None
         logging.getLogger(__name__).debug('siri for {}: {}'.format(stop, siri_response.text))
-        return self._get_passages(siri_response.text, route_point)
+        return self._get_passages(siri_response.content, route_point)
 
     def status(self):
         return {
