@@ -131,6 +131,8 @@ int main(int argc, char * argv[])
         ++nb_hacked;
         vj->stop_time_list[1]->arrival_time += 10 * 60;
         vj->stop_time_list[1]->departure_time += 10 * 60;
+        vj->stop_time_list[1]->alighting_time += 10 * 60;
+        vj->stop_time_list[1]->boarding_time += 10 * 60;
     }
     LOG4CPLUS_INFO(logger, "Da ugly ODT hack: " << nb_hacked << " patched");
 

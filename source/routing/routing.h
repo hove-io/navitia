@@ -64,7 +64,9 @@ enum class ItemType {
     public_transport,
     walking,
     stay_in,
-    waiting
+    waiting,
+    boarding,
+    alighting
 };
 
 inline std::ostream& operator<< (std::ostream& ss, ItemType t) {
@@ -73,6 +75,8 @@ inline std::ostream& operator<< (std::ostream& ss, ItemType t) {
     case ItemType::walking: return ss << "transfer";
     case ItemType::stay_in: return ss << "stay_in";
     case ItemType::waiting: return ss << "waiting";
+    case ItemType::boarding: return ss << "boarding";
+    case ItemType::alighting: return ss << "alighting";
     }
     return ss;
 }

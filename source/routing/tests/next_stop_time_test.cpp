@@ -2060,6 +2060,7 @@ struct classic_freq_dataset {
         vj.headway_secs = 20 * 60;
 
         st.departure_time = 30;
+        st.boarding_time = 30;
     }
 
     type::FrequencyVehicleJourney vj;
@@ -2113,6 +2114,7 @@ struct midnight_freq_dataset {
         vj.headway_secs = 20 * 60;
 
         st.departure_time = 30;
+        st.boarding_time = 30;
     }
 
     type::FrequencyVehicleJourney vj;
@@ -2159,6 +2161,7 @@ struct midnight_freq_dataset_no_valid_first_day {
         vj.headway_secs = 20 * 60;
 
         st.departure_time = 30;
+        st.boarding_time = 30;
     }
 
     type::FrequencyVehicleJourney vj;
