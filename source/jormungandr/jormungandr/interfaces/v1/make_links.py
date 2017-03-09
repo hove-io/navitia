@@ -198,7 +198,7 @@ class add_coverage_link(generate_links):
                 data = self.prepare_objetcs(data)
                 kwargs = self.prepare_kwargs(kwargs, data)
                 for link in self.links:
-                    data["links"].append(create_external_link("v1.{link}".format(link=link), rel='related', templated=True, **kwargs))
+                    data["links"].append(create_external_link("v1.{link}".format(link=link), rel=link, templated=True, **kwargs))
             if isinstance(objects, tuple):
                 return data, code, header
             else:
@@ -281,9 +281,9 @@ class add_id_links(generate_links):
 
     def get_objets(self, data, collection_name=None):
         if hasattr(data, 'keys'):
-            if "id" in data \
-               and ("href" not in data) \
-               and collection_name:
+            if "id" in data and "type" in data:
+                self.data.add(data["type"])
+            if "id" in data and ("href" not in data) and collection_name:
                 self.data.add(collection_name)
             for key, value in data.items():
                 self.get_objets(value, key)
