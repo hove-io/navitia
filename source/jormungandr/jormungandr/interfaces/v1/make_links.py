@@ -198,7 +198,8 @@ class add_coverage_link(generate_links):
                 data = self.prepare_objetcs(data)
                 kwargs = self.prepare_kwargs(kwargs, data)
                 for link in self.links:
-                    data["links"].append(create_external_link("v1.{link}".format(link=link), rel=link, templated=True, **kwargs))
+                    data["links"].append(
+                        create_external_link("v1.{}".format(link), rel=link, templated=True, **kwargs))
             if isinstance(objects, tuple):
                 return data, code, header
             else:
