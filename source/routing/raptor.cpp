@@ -60,11 +60,12 @@ DateTime limit_bound(const bool clockwise, const DateTime departure_datetime, co
 template<typename Visitor>
 bool RAPTOR::apply_vj_extension(const Visitor& v,
                                 const nt::RTLevel rt_level,
-                                const RoutingState& state) {
+                                const type::VehicleJourney* vj,
+                                const uint16_t l_zone,
+                                const DateTime workingDate) {
     auto& working_labels = labels[count];
-    auto workingDt = state.workingDate;
+    auto workingDt = workingDate;
     auto base_dt = workingDt;
-    auto vj = state.vj;
     bool result = false;
     while(vj) {
         const auto& stop_time_list = v.stop_time_list(vj);
@@ -80,8 +81,8 @@ bool RAPTOR::apply_vj_extension(const Visitor& v,
             if (!st.valid_end(v.clockwise())) {
                 continue;
             }
-            if (state.l_zone != std::numeric_limits<uint16_t>::max() &&
-               state.l_zone == st.local_traffic_zone) {
+            if (l_zone != std::numeric_limits<uint16_t>::max() &&
+               l_zone == st.local_traffic_zone) {
                 continue;
             }
             auto sp = st.stop_point;
@@ -654,7 +655,6 @@ void RAPTOR::raptor_loop(Visitor visitor,
          * We need to store it so we can apply stay_in after applying normal vjs
          * We want to do it, to favoritize normal vj against stay_in vjs
          */
-        std::vector<RoutingState> states_stay_in;
         for (auto q_elt: Q) {
             const JpIdx jp_idx = q_elt.first;
             if(q_elt.second != visitor.init_queue_item()) {
@@ -724,15 +724,12 @@ void RAPTOR::raptor_loop(Visitor visitor,
                 if (is_onboard) {
                     const type::VehicleJourney* vj_stay_in = visitor.get_extension_vj(it_st->vehicle_journey);
                     if (vj_stay_in) {
-                        states_stay_in.emplace_back(vj_stay_in, l_zone, base_dt);
+                        bool applied = apply_vj_extension(visitor, rt_level, vj_stay_in, l_zone, base_dt);
+                        continue_algorithm = continue_algorithm || applied;
                     }
                 }
             }
             q_elt.second = visitor.init_queue_item();
-        }
-        for (auto state : states_stay_in) {
-            bool applied = apply_vj_extension(visitor, rt_level, state);
-            continue_algorithm = continue_algorithm || applied;
         }
         continue_algorithm = continue_algorithm && this->foot_path(visitor);
     }

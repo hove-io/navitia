@@ -55,18 +55,6 @@ struct StartingPointSndPhase {
     bool has_priority;
 };
 
-/*
- * Use to save routing test to launch stay_in
- */
-struct RoutingState {
-    const type::VehicleJourney* vj = nullptr;
-    uint16_t l_zone = std::numeric_limits<uint16_t>::max();
-    DateTime workingDate = DateTimeUtils::inf;
-
-    RoutingState(const type::VehicleJourney* vj, uint16_t l_zone, DateTime workingDate) :
-        vj(vj), l_zone(l_zone), workingDate(workingDate) {}
-};
-
 /** Worker Raptor : une instance par thread, les données sont modifiées par le calcul */
 struct RAPTOR
 {
@@ -189,7 +177,9 @@ struct RAPTOR
     template<typename Visitor>
     bool apply_vj_extension(const Visitor& v,
                             const nt::RTLevel rt_level,
-                            const RoutingState& state);
+                            const type::VehicleJourney* vj,
+                            const uint16_t l_zone,
+                            const DateTime workingDate);
 
     ///Main loop
     template<typename Visitor>
