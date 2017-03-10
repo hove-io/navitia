@@ -62,22 +62,21 @@ bool RAPTOR::apply_vj_extension(const Visitor& v,
                                 const nt::RTLevel rt_level,
                                 const type::VehicleJourney* vj,
                                 const uint16_t l_zone,
-                                const DateTime workingDate) {
+                                DateTime base_dt) {
     auto& working_labels = labels[count];
-    auto workingDt = workingDate;
-    auto base_dt = workingDt;
     bool result = false;
     while(vj) {
+        base_dt = v.get_base_dt_extension(base_dt, vj);
         const auto& stop_time_list = v.stop_time_list(vj);
         const auto& st_begin = stop_time_list.front();
-        workingDt = st_begin.section_end(base_dt, v.clockwise());
+        const auto first_dt = st_begin.section_end(base_dt, v.clockwise());
 
         // If the vj is not valid for the first stop it won't be valid at all
-        if (!st_begin.is_valid_day(DateTimeUtils::date(workingDt), !v.clockwise(), rt_level)) {
+        if (!st_begin.is_valid_day(DateTimeUtils::date(first_dt), !v.clockwise(), rt_level)) {
             return result;
         }
         for (const type::StopTime& st: stop_time_list) {
-            workingDt = st.section_end(base_dt, v.clockwise());
+            const auto workingDt = st.section_end(base_dt, v.clockwise());
             if (!st.valid_end(v.clockwise())) {
                 continue;
             }

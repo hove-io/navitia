@@ -745,3 +745,37 @@ BOOST_AUTO_TEST_CASE(reverse_pass_midnight_with_boardings){
     result = compute(6);
     BOOST_REQUIRE_EQUAL(result.size(), 0);
 }
+
+BOOST_AUTO_TEST_CASE(stay_in_pass_midnight){
+    ed::builder b("20170101");
+    auto* vj1 = b.vj("A").uri("vj:1").block_id("42")
+        ("S1", "23:45"_t, "23:45"_t)
+        ("S2", "23:50"_t, "23:50"_t)
+        ("S3", "24:00"_t, "24:00"_t)
+        .make();
+
+    auto* vj2 = b.vj("A").uri("vj:2").block_id("42")
+        ("S3", "24:45"_t, "24:45"_t)
+        ("S4", "24:50"_t, "24:50"_t)
+        ("S5", "24:55"_t, "24:55"_t)
+        .make();
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    vj1->next_vj = vj2;
+    vj1->prev_vj = nullptr;
+    vj2->prev_vj = vj1;
+    vj2->next_vj = nullptr;
+    RAPTOR raptor(*b.data);
+
+    auto result = raptor.compute(
+        b.data->pt_data->stop_areas_map["S1"], b.data->pt_data->stop_areas_map["S5"],
+        "01:00"_t, 2, 0, type::RTLevel::Base, 2_min, false
+    );
+
+    BOOST_REQUIRE_EQUAL(result.size(), 1);
+    result.at(0).print();
+    BOOST_CHECK_EQUAL(result.front().items.front().departure, "20170102T234500"_dt);
+}

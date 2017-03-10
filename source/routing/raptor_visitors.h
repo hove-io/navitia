@@ -42,6 +42,15 @@ struct raptor_visitor {
        return vj->next_vj;
     }
 
+    inline DateTime
+    get_base_dt_extension(DateTime base_dt, const type::VehicleJourney* vj) const {
+        if (vj->prev_vj->stop_time_list.back().departure_time > vj->stop_time_list.front().departure_time) {
+            std::cout << "+1d" << std::endl;
+            base_dt += DateTimeUtils::SECONDS_PER_DAY;
+        }
+        return base_dt;
+    }
+
     inline stop_time_range stop_time_list(const type::VehicleJourney* vj) const {
         return boost::make_iterator_range(vj->stop_time_list.begin(), vj->stop_time_list.end());
     }
@@ -92,6 +101,15 @@ struct raptor_reverse_visitor {
     inline
     const type::VehicleJourney* get_extension_vj(const type::VehicleJourney* vj) const {
        return vj->prev_vj;
+    }
+
+    inline DateTime
+    get_base_dt_extension(DateTime base_dt, const type::VehicleJourney* vj) const {
+        if (vj->next_vj->stop_time_list.front().departure_time < vj->stop_time_list.back().departure_time) {
+            std::cout << "-1d" << std::endl;
+            base_dt -= DateTimeUtils::SECONDS_PER_DAY;
+        }
+        return base_dt;
     }
 
     inline stop_time_range stop_time_list(const type::VehicleJourney* vj) const {

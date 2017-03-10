@@ -179,7 +179,7 @@ struct RAPTOR
                             const nt::RTLevel rt_level,
                             const type::VehicleJourney* vj,
                             const uint16_t l_zone,
-                            const DateTime workingDate);
+                            DateTime workingDate);
 
     ///Main loop
     template<typename Visitor>
