@@ -21,7 +21,7 @@ This connection string must contains:
  * password: database password
  * dbname: name of the database
 
-example: ```--connection-sting="host=localhost user=my_user password=my_pwd dbname=my_db"```
+example: ```--connection-string="host=localhost user=my_user password=my_pwd dbname=my_db"```
 
 Note: importing data will remove the data of the specified type (i.e. osm2ed and geopal2ed will remove street network data).
 
