@@ -268,7 +268,6 @@ class AbstractTestFixture(object):
 
         if has_pt and '/coverage/' in query:
             types = [l['type'] for l in response['links']]
-            print(types)
             assert 'stop_point' in types
             assert 'stop_area' in types
             assert 'route' in types
