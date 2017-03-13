@@ -63,6 +63,14 @@ class TestPtRef(AbstractTestFixture):
         for l in wanted_links[1:]:
             assert url_dict == _get_dict_to_compare(l)
 
+
+    def test_pagination_links_with_count(self):
+        response = self.query_region("v1/stop_points?count=2&start_page=2", display=True)
+        for link in response['links']:
+            if link['type'] in ('previous', 'next', 'first', 'last'):
+                assert 'count=2' in link['href']
+
+
     def test_vj_default_depth(self):
         """default depth is 1"""
         response = self.query_region("v1/vehicle_journeys")
