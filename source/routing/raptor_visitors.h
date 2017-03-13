@@ -45,7 +45,6 @@ struct raptor_visitor {
     inline DateTime
     get_base_dt_extension(DateTime base_dt, const type::VehicleJourney* vj) const {
         if (vj->prev_vj->stop_time_list.back().departure_time > vj->stop_time_list.front().departure_time) {
-            std::cout << "+1d" << std::endl;
             base_dt += DateTimeUtils::SECONDS_PER_DAY;
         }
         return base_dt;
@@ -106,7 +105,6 @@ struct raptor_reverse_visitor {
     inline DateTime
     get_base_dt_extension(DateTime base_dt, const type::VehicleJourney* vj) const {
         if (vj->next_vj->stop_time_list.front().departure_time < vj->stop_time_list.back().departure_time) {
-            std::cout << "-1d" << std::endl;
             base_dt -= DateTimeUtils::SECONDS_PER_DAY;
         }
         return base_dt;

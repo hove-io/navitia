@@ -3239,6 +3239,7 @@ BOOST_AUTO_TEST_CASE(reverse_pass_midnight_with_boardings){
     BOOST_REQUIRE_EQUAL(result.size(), 0);
 }
 
+// Check that we have a valid journey with a stay_in that pass midnight
 BOOST_AUTO_TEST_CASE(stay_in_pass_midnight){
     ed::builder b("20170101");
     auto* vj1 = b.vj("A").uri("vj:1").block_id("42")
@@ -3269,6 +3270,6 @@ BOOST_AUTO_TEST_CASE(stay_in_pass_midnight){
     );
 
     BOOST_REQUIRE_EQUAL(result.size(), 1);
-    result.at(0).print();
+    // as we start the 20170101, we must begin the day after
     BOOST_CHECK_EQUAL(result.front().items.back().arrival, "20170103T005500"_dt);
 }
