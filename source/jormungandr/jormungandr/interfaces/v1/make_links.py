@@ -126,6 +126,7 @@ class add_pagination_links(object):
                 data = objects
             pagination = data.get('pagination', None)
             endpoint = request.endpoint
+            kwargs.update(request.args)
             if pagination and endpoint and "region" in kwargs:
                 if "start_page" in pagination and \
                         "items_on_page" in pagination and \
