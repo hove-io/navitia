@@ -81,6 +81,7 @@ get_out_st_dt(const std::pair<const type::StopTime*, DateTime>& in_st_dt,
     for (const auto* stay_in_vj = in_st_dt.first->vehicle_journey->next_vj;
          stay_in_vj != nullptr;
          stay_in_vj = stay_in_vj->next_vj) {
+        base_dt = raptor_visitor().get_base_dt_extension(base_dt, stay_in_vj);
         for (const auto& st: stay_in_vj->stop_time_list) {
             cur_dt = st.section_end(base_dt, true);
             if (jp_container.get_jpp(st) == target_jpp) {
@@ -270,6 +271,10 @@ std::vector<VehicleSection> get_vjs(const Journey::Section& section) {
 
     size_t order = current_st->order();
     for (const auto* vj = current_st->vehicle_journey; vj; vj = vj->next_vj) {
+        if (!res.empty()) {
+            // only update base_dt for vj extensions
+            base_dt = raptor_visitor().get_base_dt_extension(base_dt, vj);
+        }
         res.emplace_back(section, current_st->vehicle_journey);
 
         for (const auto& st: boost::make_iterator_range(vj->stop_time_list.begin() + order, vj->stop_time_list.end())) {
@@ -424,6 +429,7 @@ struct RaptorSolutionReader {
         for (const auto* stay_in_vj = v.get_extension_vj(begin_st_dt.first->vehicle_journey);
              stay_in_vj != nullptr;
              stay_in_vj = v.get_extension_vj(stay_in_vj)) {
+            base_dt = v.get_base_dt_extension(base_dt, stay_in_vj);
             cur_dt = try_end_pt(count, path, begin_st_dt, begin_zone, base_dt,
                                 v.stop_time_list(stay_in_vj), ++nb_stay_in, transfers);
         }
