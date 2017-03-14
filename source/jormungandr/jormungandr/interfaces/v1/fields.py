@@ -660,8 +660,6 @@ line["network"] = PbField(network)
 
 commercial_mode = deepcopy(generic_type)
 physical_mode = deepcopy(generic_type)
-commercial_mode["physical_modes"] = NonNullList(NonNullNested(commercial_mode))
-physical_mode["commercial_modes"] = NonNullList(NonNullNested(physical_mode))
 line["commercial_mode"] = PbField(commercial_mode)
 line["physical_modes"] = NonNullList(NonNullNested(physical_mode))
 route["physical_modes"] = NonNullList(NonNullNested(physical_mode))

@@ -442,8 +442,10 @@ class TestPtRef(AbstractTestFixture):
 
         modes = get_not_null(s, 'physical_modes')
         assert len(modes) == 1
+        is_valid_physical_mode(modes[0], depth_check=1)
         modes = get_not_null(s, 'commercial_modes')
         assert len(modes) == 1
+        is_valid_commercial_mode(modes[0], depth_check=1)
 
         self._test_links(response, 'stop_points')
 

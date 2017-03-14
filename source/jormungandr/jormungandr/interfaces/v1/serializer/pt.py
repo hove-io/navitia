@@ -163,12 +163,11 @@ class AdminSerializer(GenericSerializer):
 
 
 class PhysicalModeSerializer(GenericSerializer):
-    commercial_modes = serpy.MethodField()
-    def get_commercial_modes(self, obj):
-        return CommercialModeSerializer(obj.commercial_modes, many=True, display_none=False).data
+    pass
+
 
 class CommercialModeSerializer(GenericSerializer):
-    physical_modes = PhysicalModeSerializer(many=True, display_none=False)
+    pass
 
 
 class StopPointSerializer(GenericSerializer):
