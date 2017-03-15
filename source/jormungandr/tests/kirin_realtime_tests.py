@@ -84,6 +84,11 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         geojson = isochrone['isochrones'][0]['geojson']
         multi_poly = asShape(geojson)
 
+        # we have 2 departures and 1 disruption (linked to the first passage)
+        departures = self.query_region("stop_points/stop_point:stopB/departures?_current_datetime=20120614T0800")
+        assert len(departures['disruptions']) == 1
+        assert len(departures['departures']) == 2
+
         self.send_mock("vjA", "20120614", 'canceled', disruption_id='disruption_bob')
 
         # we should see the disruption
@@ -108,7 +113,7 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         eq_(len(disrup_response['disruptions']), 1)
         _check_train_cancel_disruption(disrup_response['disruptions'][0])
 
-        traffic_reports_response = self.query_region('traffic_reports?_current_datetime=20120614T1337')
+        traffic_reports_response = self.query_region('traffic_reports?_current_datetime=20120614T0800')
         traffic_reports = get_not_null(traffic_reports_response, 'traffic_reports')
         assert len(traffic_reports) == 1
         vjs = get_not_null(traffic_reports[0], "vehicle_journeys")
@@ -131,6 +136,16 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         assert not multi_poly.difference(multi_poly_realtime).is_empty
         assert multi_poly.equals(multi_poly_base_schedule)
 
+        # we have one less departure and we loose the disruption in
+        # realtime because we don't have the 08:01
+        departures = self.query_region("stop_points/stop_point:stopB/departures?_current_datetime=20120614T0800")
+        assert len(departures['disruptions']) == 0
+        assert len(departures['departures']) == 1
+        # We still have 2 passages in base schedule, but we have the new disruption
+        departures = self.query_region("stop_points/stop_point:stopB/departures?_current_datetime=20120614T0800&data_freshness=base_schedule")
+        assert len(departures['disruptions']) == 2
+        assert len(departures['departures']) == 2
+
         # it should not have changed anything for the theoric
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
         eq_(get_arrivals(new_base), ['20120614T080222', '20120614T080436'])
@@ -152,6 +167,12 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         # with no cancellation, we have 2 journeys, one direct and one with the vj:A:0
         eq_(get_arrivals(response), ['20120614T080222', '20120614T080436'])
         eq_(get_used_vj(response), [['vjA'], []])
+
+        # we have 2 departures and 1 disruption (linked to the first passage)
+        departures = self.query_region("stop_points/stop_point:stopB/departures?_current_datetime=20120614T0800", display=True)
+        assert len(departures['disruptions']) == 1
+        assert len(departures['departures']) == 2
+        assert departures['departures'][0]['stop_date_time']['departure_date_time'] == '20120614T080100'
 
         pt_response = self.query_region('vehicle_journeys')
         eq_(len(pt_response['vehicle_journeys']), 5)
@@ -233,6 +254,17 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
         eq_(get_arrivals(new_base), ['20120614T080222', '20120614T080436'])
         eq_(get_used_vj(new_base), [['vjA'], []])
+
+        # we have one delayed departure
+        departures = self.query_region("stop_points/stop_point:stopB/departures?_current_datetime=20120614T0800", display=True)
+        assert len(departures['disruptions']) == 2
+        assert len(departures['departures']) == 2
+        assert departures['departures'][0]['stop_date_time']['departure_date_time'] == '20120614T080225'
+        # Same as realtime except the departure date time
+        departures = self.query_region("stop_points/stop_point:stopB/departures?_current_datetime=20120614T0800&data_freshness=base_schedule", display=True)
+        assert len(departures['disruptions']) == 2
+        assert len(departures['departures']) == 2
+        assert departures['departures'][0]['stop_date_time']['departure_date_time'] == '20120614T080100'
 
         # We send again the same disruption
         self.send_mock("vjA", "20120614", 'delayed',

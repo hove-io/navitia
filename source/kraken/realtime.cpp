@@ -202,10 +202,20 @@ create_disruption(const std::string& id,
     // cause
     {// impact
         auto impact = boost::make_shared<nt::disruption::Impact>();
+
+        // We want the application period to be the span of the
+        // execution period of the base and realtime vj:
+        //
+        // [----------)             base vj
+        //               [-------)  rt vj
+        // [---------------------)  application period
+        const auto base_application_period = base_execution_period(circulation_date, mvj);
+        auto begin_app_period = base_application_period.begin();
+        auto end_app_period = base_application_period.end();
+
         impact->uri = disruption.uri;
         impact->created_at = timestamp;
         impact->updated_at = timestamp;
-        impact->application_periods.push_back(base_execution_period(circulation_date, mvj));
         if (trip_update.HasExtension(kirin::trip_message)) {
             impact->messages.push_back(create_message(trip_update.GetExtension(kirin::trip_message)));
         }
@@ -252,8 +262,12 @@ create_disruption(const std::string& id,
                         departure_time = arrival_time = st.arrival().time();
                     }
                 }
-                auto ptime_arrival = bpt::from_time_t(arrival_time) - start_first_day_of_impact;
-                auto ptime_departure = bpt::from_time_t(departure_time) - start_first_day_of_impact;
+                const auto arrival_pt = bpt::from_time_t(arrival_time);
+                const auto departure_pt = bpt::from_time_t(departure_time);
+                begin_app_period = std::min(begin_app_period, departure_pt);
+                end_app_period = std::max(end_app_period, arrival_pt);
+                auto ptime_arrival = arrival_pt - start_first_day_of_impact;
+                auto ptime_departure = departure_pt - start_first_day_of_impact;
 
                 type::StopTime stop_time{uint32_t(ptime_arrival.total_seconds()),
                                          uint32_t(ptime_departure.total_seconds()),
@@ -273,6 +287,7 @@ create_disruption(const std::string& id,
         } else {
             LOG4CPLUS_ERROR(log, "unhandled real time message");
         }
+        impact->application_periods.push_back({begin_app_period, end_app_period});
         impact->severity = make_severity(id, std::move(wording), effect, timestamp, holder);
         nd::Impact::link_informed_entity(
                     nd::make_pt_obj(nt::Type_e::MetaVehicleJourney, trip_update.trip().trip_id(), *data.pt_data),
