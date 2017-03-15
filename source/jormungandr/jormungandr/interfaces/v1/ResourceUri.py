@@ -122,6 +122,9 @@ class add_computed_resources(object):
             kwargs["_external"] = True
             templated = True
             for key in data:
+                if key == 'disruptions' and collection is not None:
+                    # disruption is a special case since it can be present in all responses
+                    continue
                 if key in collections_to_resource_type:
                     collection = key
                 if key in resource_type_to_collection:
