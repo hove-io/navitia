@@ -655,7 +655,10 @@ navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest &req
     /// Accessibility params
     type::AccessibiliteParams accessibilite_params;
     accessibilite_params.properties.set(type::hasProperties::WHEELCHAIR_BOARDING, request.wheelchair());
+    accessibilite_params.properties.set(type::hasProperties::BIKE_ACCEPTED, request.bike_in_pt());
+
     accessibilite_params.vehicle_properties.set(type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE, request.wheelchair());
+    accessibilite_params.vehicle_properties.set(type::hasVehicleProperties::BIKE_ACCEPTED, request.bike_in_pt());
 
     type::RTLevel rt_level = get_realtime_level(request.realtime_level());
 
