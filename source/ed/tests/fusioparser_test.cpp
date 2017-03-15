@@ -97,6 +97,7 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     // check stops properties
     navitia::type::hasProperties has_properties;
     has_properties.set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
+    has_properties.set_property(navitia::type::hasProperties::BIKE_ACCEPTED);
     BOOST_CHECK_EQUAL(data.stop_points[0]->accessible(has_properties.properties()), true);
 
     for (int i = 1; i < 8; i++){
@@ -158,6 +159,10 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
 
     //vj_headsign
     BOOST_REQUIRE_EQUAL(vj->name, "vehiclejourney1");
+
+    navitia::type::hasVehicleProperties has_vehicle_properties;
+    has_vehicle_properties.set_vehicle(navitia::type::hasVehicleProperties::BIKE_ACCEPTED);
+    BOOST_CHECK_EQUAL(vj->accessible(has_vehicle_properties.vehicles()), true);
 
     for (const auto vj : data.vehicle_journeys) {
         for (size_t position = 0; position < vj->stop_time_list.size(); ++position) {
@@ -400,6 +405,7 @@ BOOST_AUTO_TEST_CASE(sync_ntfs) {
 
     navitia::type::hasProperties has_properties;
     has_properties.set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
+    has_properties.set_property(navitia::type::hasProperties::BIKE_ACCEPTED);
     BOOST_CHECK_EQUAL(data.stop_point_connections[0]->accessible(has_properties.properties()), true);
     BOOST_CHECK_EQUAL(data.stop_points[0]->accessible(has_properties.properties()), true);
 
@@ -416,4 +422,9 @@ BOOST_AUTO_TEST_CASE(sync_ntfs) {
     BOOST_CHECK_EQUAL(data.datasets[0]->realtime_level == nt::RTLevel::Base, true);
     BOOST_CHECK_EQUAL(data.datasets[0]->system, "obiti");
     BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->dataset->uri, "d1");
+
+    const ed::types::VehicleJourney* vj = data.vehicle_journeys.front();
+    navitia::type::hasVehicleProperties has_vehicle_properties;
+    has_vehicle_properties.set_vehicle(navitia::type::hasVehicleProperties::BIKE_ACCEPTED);
+    BOOST_CHECK_EQUAL(vj->accessible(has_vehicle_properties.vehicles()), true);
 }
