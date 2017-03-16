@@ -63,7 +63,8 @@ class GeocodeJson(AbstractAutocomplete):
             logging.getLogger(__name__).exception('error in autocomplete request')
             raise TechnicalError('impossible to access external autocomplete service')
 
-    def response_marshaler(self, response_bragi):
+    @staticmethod
+    def response_marshaler(response_bragi):
         json_response = response_bragi.json()
         from flask.ext.restful import marshal
         from jormungandr.interfaces.v1.Places import geocodejson
