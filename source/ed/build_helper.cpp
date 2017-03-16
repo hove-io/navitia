@@ -56,7 +56,8 @@ VJ::VJ(builder& b,
        const std::string& physical_mode,
        const uint32_t start_time,
        const uint32_t end_time,
-       const uint32_t headway_secs):
+       const uint32_t headway_secs,
+       const bool bike_accepted):
     b(b),
     network_name(network_name),
     line_name(line_name),
@@ -69,7 +70,8 @@ VJ::VJ(builder& b,
     start_time(start_time),
     end_time(end_time),
     headway_secs(headway_secs),
-    _vp(b.begin, validity_pattern)
+    _vp(b.begin, validity_pattern),
+    _bike_accepted(bike_accepted)
 {}
 
 
@@ -234,6 +236,10 @@ nt::VehicleJourney* VJ::make() {
     if (! pt_data.companies.empty()) {
         vj->company = pt_data.companies.front();
     }
+
+    if (_bike_accepted) {
+        vj->set_vehicle(navitia::type::hasVehicleProperties::BIKE_ACCEPTED);
+    }
     return vj;
 }
 
@@ -276,6 +282,7 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16
             sa->name = sp_name;
             sa->uri = sp_name;
             sa->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
+            sa->set_property(navitia::type::hasProperties::BIKE_ACCEPTED);
             sp->stop_area = sa;
             b.sas[sp_name] = sa;
             b.data->pt_data->stop_areas.push_back(sa);
@@ -311,7 +318,7 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16
 }
 
 SA::SA(builder & b, const std::string & sa_name, double x, double y,
-       bool create_sp, bool wheelchair_boarding)
+       bool create_sp, bool wheelchair_boarding, bool bike_accepted)
        : b(b) {
     sa = new navitia::type::StopArea();
     sa->idx = b.data->pt_data->stop_areas.size();
@@ -322,6 +329,8 @@ SA::SA(builder & b, const std::string & sa_name, double x, double y,
     sa->coord.set_lat(y);
     if(wheelchair_boarding)
         sa->set_property(types::hasProperties::WHEELCHAIR_BOARDING);
+    if(bike_accepted)
+        sa->set_property(types::hasProperties::BIKE_ACCEPTED);
     b.sas[sa_name] = sa;
 
     if (create_sp) {
@@ -332,6 +341,8 @@ SA::SA(builder & b, const std::string & sa_name, double x, double y,
         sp->uri = sp->name;
         if(wheelchair_boarding)
             sp->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
+        if(bike_accepted)
+            sp->set_property(navitia::type::hasProperties::BIKE_ACCEPTED);
         sp->coord.set_lon(x);
         sp->coord.set_lat(y);
 
@@ -341,7 +352,8 @@ SA::SA(builder & b, const std::string & sa_name, double x, double y,
     }
 }
 
-SA & SA::operator()(const std::string & sp_name, double x, double y, bool wheelchair_boarding){
+SA & SA::operator()(const std::string & sp_name, double x, double y, bool wheelchair_boarding,
+                    bool bike_accepted){
     navitia::type::StopPoint * sp = new navitia::type::StopPoint();
     sp->idx = b.data->pt_data->stop_points.size();
     b.data->pt_data->stop_points.push_back(sp);
@@ -349,6 +361,8 @@ SA & SA::operator()(const std::string & sp_name, double x, double y, bool wheelc
     sp->uri = sp_name;
     if(wheelchair_boarding)
         sp->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
+    if(bike_accepted)
+        sp->set_property(navitia::type::hasProperties::BIKE_ACCEPTED);
     sp->coord.set_lon(x);
     sp->coord.set_lat(y);
 
@@ -541,8 +555,8 @@ VJ builder::frequency_vj(const std::string& line_name,
 
 
 SA builder::sa(const std::string &name, double x, double y,
-               const bool create_sp, const bool wheelchair_boarding) {
-    return SA(*this, name, x, y, create_sp, wheelchair_boarding);
+               const bool create_sp, const bool wheelchair_boarding, const bool bike_accepted) {
+    return SA(*this, name, x, y, create_sp, wheelchair_boarding, bike_accepted);
 }
 
 builder::builder(const std::string & date,

@@ -79,6 +79,7 @@ struct VJ {
     std::vector<ST> stop_times;
     nt::VehicleJourney* vj = nullptr;
     nt::ValidityPattern _vp;
+    bool _bike_accepted;
 
     /// Construit un nouveau vehicle journey
     VJ(builder& b,
@@ -93,7 +94,8 @@ struct VJ {
        const std::string& physical_mode = "",
        const uint32_t start_time = 0,
        const uint32_t end_time = 0,
-       const uint32_t headway_secs = 0);
+       const uint32_t headway_secs = 0,
+       const bool bike_accepted = true);
 
     VJ(VJ&&) = default;
     VJ& operator=(VJ&&) = delete;
@@ -125,6 +127,7 @@ struct VJ {
     VJ& block_id(const std::string& b) { _block_id = b; return *this; }
 
     VJ& route(const std::string& r) { _route_name = r; return *this; }
+    VJ& bike_accepted(bool b) { _bike_accepted = b; return *this; }
 
     // set the shape to the last stop point
     VJ& st_shape(const navitia::type::LineString& shape);
@@ -142,10 +145,11 @@ struct SA {
 
     /// Construit un nouveau stopArea
     SA(builder & b, const std::string & sa_name, double x, double y,
-       bool create_sp = true, bool wheelchair_boarding = true);
+       bool create_sp = true, bool wheelchair_boarding = true, bool bike_accepted = true);
 
     /// Construit un stopPoint appartenant au stopArea courant
-    SA & operator()(const std::string & sp_name, double x = 0, double y = 0, bool wheelchair_boarding = true);
+    SA & operator()(const std::string & sp_name, double x = 0, double y = 0, bool wheelchair_boarding = true,
+                    bool bike_accepted = true);
 };
 
 struct DisruptionCreator;
@@ -257,7 +261,7 @@ struct builder {
 
     /// Crée un nouveau stop area
     SA sa(const std::string & name, double x = 0, double y = 0,
-          const bool create_sp = true, const bool wheelchair_boarding = true);
+          const bool create_sp = true, const bool wheelchair_boarding = true, const bool bike_accepted = true);
     SA sa(const std::string & name, navitia::type::GeographicalCoord geo,
           const bool create_sp = true, bool wheelchair_boarding = true) {
         return sa(name, geo.lon(), geo.lat(), create_sp, wheelchair_boarding);
