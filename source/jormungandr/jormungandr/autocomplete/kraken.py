@@ -93,3 +93,11 @@ class Kraken(AbstractAutocomplete):
         if resp.geo_status.poi_source:
             status.poi_sources.append(resp.geo_status.poi_source)
         return status
+
+    @marshal_with(places)
+    def get_uri(self, uri, query, instance):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.place_uri
+        req.place_uri.uri = uri
+        req._current_datetime = date_to_timestamp(query['_current_datetime'])
+        return instance.send_and_receive(req)

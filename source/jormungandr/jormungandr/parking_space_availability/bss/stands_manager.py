@@ -27,6 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
+from flask.ext.restful.utils import unpack
 from jormungandr import i_manager, bss_provider_manager
 from functools import wraps
 import logging
@@ -44,7 +45,7 @@ class ManageStands(object):
     def __call__(self, f):
         @wraps(f)
         def wrapper(*args, **kwargs):
-            response, status, e = f(*args, **kwargs)
+            response, status, h = unpack(f(*args, **kwargs))
             if status == 200 and self.attribute in response:
                 instance = i_manager.instances.get(self.resource.region)
                 if instance and instance.bss_provider:
@@ -55,5 +56,5 @@ class ManageStands(object):
                     except:
                         logger = logging.getLogger(__name__)
                         logger.exception('Error while handling BSS realtime availability')
-            return response, status, e
+            return response, status, h
         return wrapper

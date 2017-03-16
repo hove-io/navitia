@@ -143,6 +143,9 @@ class Scenario(object):
     def places(self, request, instance):
         return instance.get_autocomplete(request.get('_autocomplete')).get(request, instance)
 
+    def place_uri(self, request, instance):
+        return instance.get_autocomplete(request.get('_autocomplete')).get_uri(request["uri"], request, instance)
+
     def pt_objects(self, request, instance):
         req = request_pb2.Request()
         req.requested_api = type_pb2.pt_objects
@@ -169,13 +172,6 @@ class Scenario(object):
         build_pagination(request, resp)
 
         return resp
-
-    def place_uri(self, request, instance):
-        req = request_pb2.Request()
-        req.requested_api = type_pb2.place_uri
-        req.place_uri.uri = request["uri"]
-        req._current_datetime = date_to_timestamp(request['_current_datetime'])
-        return instance.send_and_receive(req)
 
     def route_schedules(self, request, instance):
         return instance.schedule.route_schedules(request)
