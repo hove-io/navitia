@@ -33,7 +33,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import logging
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
 import requests
-from jormungandr.exceptions import TechnicalError
+from jormungandr.exceptions import TechnicalError, InvalidArguments
 
 
 class GeocodeJson(AbstractAutocomplete):
@@ -53,7 +53,8 @@ class GeocodeJson(AbstractAutocomplete):
         self.host = kwargs.get('host')
         self.timeout = kwargs.get('timeout', 10)
 
-    def call_bragi(self, url, method, **kwargs):
+    @staticmethod
+    def call_bragi(url, method, **kwargs):
         try:
             return method(url, **kwargs)
         except requests.Timeout:
@@ -63,8 +64,18 @@ class GeocodeJson(AbstractAutocomplete):
             logging.getLogger(__name__).exception('error in autocomplete request')
             raise TechnicalError('impossible to access external autocomplete service')
 
-    @staticmethod
-    def response_marshaler(response_bragi):
+    @classmethod
+    def _check_response(cls, response, uri):
+        if response == None:
+            raise TechnicalError('impossible to access autocomplete service')
+        if response.status_code == 404:
+            raise InvalidArguments(uri)
+        if response.status_code != 200:
+            raise TechnicalError('error in autocomplete request')
+
+    @classmethod
+    def response_marshaler(cls, response_bragi, uri=None):
+        cls._check_response(response_bragi, uri)
         json_response = response_bragi.json()
         from flask.ext.restful import marshal
         from jormungandr.interfaces.v1.Places import geocodejson
@@ -151,4 +162,4 @@ class GeocodeJson(AbstractAutocomplete):
         url = self.make_url('features', uri)
         raw_response = self.call_bragi(url, requests.get, timeout=self.timeout, params=params)
 
-        return self.response_marshaler(raw_response)
+        return self.response_marshaler(raw_response, uri)
