@@ -700,6 +700,9 @@ def is_valid_stop_point(stop_point, depth_check=1):
     else:
         assert "stop_area" not in stop_point
 
+    if depth_check == 3:
+        is_valid_address(get_not_null(stop_point, "address"))
+
 
 def is_valid_route(route, depth_check=1):
     get_not_null(route, "name")
