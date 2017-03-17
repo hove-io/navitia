@@ -91,7 +91,10 @@ class HeatMap(JourneyCommon):
 
         set_request_timezone(self.region)
         original_datetime = args['original_datetime']
-        new_datetime = self.convert_to_utc(original_datetime)
+        if original_datetime:
+            new_datetime = self.convert_to_utc(original_datetime)
+        else:
+            new_datetime = args['_current_datetime']
         args['datetime'] = date_to_timestamp(new_datetime)
 
         response = i_manager.dispatch(args, "heat_maps", self.region)
