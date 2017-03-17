@@ -53,7 +53,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
 
     pqxx::work work(*conn, "loading ED");
 
-    this->fill_vector_to_ignore(data, work, min_non_connected_graph_ratio);
+    this->fill_vector_to_ignore(work, min_non_connected_graph_ratio);
     this->fill_meta(data, work);
     // TODO merge fill_feed_infos, fill_meta
     this->fill_feed_infos(data, work);
@@ -625,7 +625,7 @@ void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
     for(auto const_it = property_result.begin(); const_it != property_result.end(); ++const_it){
         auto line_it = this->line_map.find(const_it["object_id"].as<idx_t>());
         if(line_it != this->line_map.end()) {
-            line_it->second->properties[const_it["property_name"].as<std::string>()] = const_it["property_value"].as<std::string>(); 
+            line_it->second->properties[const_it["property_name"].as<std::string>()] = const_it["property_value"].as<std::string>();
         }
     }
 }
@@ -1296,51 +1296,73 @@ void EdReader::fill_house_numbers(navitia::type::Data& data, pqxx::work& work){
         way->sort_house_numbers();
     }
 }
+struct ComponentVertice {
+    uint64_t db_id;
+};
+struct ComponentEdge {
+    navitia::flat_enum_map<nt::Mode_e, bool> modes;
+};
 
-void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work,
- const double min_non_connected_graph_ratio) {
-    navitia::georef::GeoRef geo_ref_temp;
-    std::unordered_map<idx_t, uint64_t> map_idx_to_id;
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::directedS, ComponentVertice, ComponentEdge> ComponentGraph;
+typedef boost::graph_traits<ComponentGraph>::edge_descriptor component_edge_t;
+typedef boost::graph_traits<ComponentGraph>::vertex_descriptor component_vertex_t;
+
+struct ModeFilter {
+    nt::Mode_e mode;
+    const ComponentGraph* g = nullptr;
+    ModeFilter(nt::Mode_e mode, const ComponentGraph* g): mode(mode), g(g) {}
+    ModeFilter() {}
+
+    bool operator()(const component_edge_t& e) const {
+        return (*g)[e].modes[mode];
+    }
+};
+using filtered_graph = boost::filtered_graph<ComponentGraph, ModeFilter, boost::keep_all>;
+
+ComponentGraph make_graph(pqxx::work& work) {
+    ComponentGraph graph;
     std::unordered_map<uint64_t, idx_t> node_map_temp;
-    std::unordered_map<idx_t, size_t> way_nb_edges;
 
-
-    // chargement des vertex
-    std::string request = "select id, ST_X(coord::geometry) as lon, ST_Y(coord::geometry) as lat from georef.node;";
+    // vertex loading
+    std::string request = "select id from georef.node;";
     pqxx::result result = work.exec(request);
     uint64_t idx = 0;
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-        navitia::georef::Vertex v;
-        v.coord.set_lon(const_it["lon"].as<double>());
-        v.coord.set_lat(const_it["lat"].as<double>());
-        boost::add_vertex(v, geo_ref_temp.graph);
-        node_map_temp[const_it["id"].as<uint64_t>()] = idx;
-        map_idx_to_id[idx] = const_it["id"].as<uint64_t>();
+    for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+        auto id = const_it["id"].as<uint64_t>();
+        auto v = ComponentVertice{id};
+        boost::add_vertex(v, graph);
+        node_map_temp[id] = idx;
         idx++;
     }
-    // construction du graph temporaire
-    request = "select e.source_node_id, target_node_id, e.way_id, ST_LENGTH(the_geog) AS leng,";
-    request += "e.pedestrian_allowed as map,e.cycles_allowed as bike,e.cars_allowed as car from georef.edge e;";
+    // construction of a temporary graph
+    request = "select source_node_id, target_node_id,";
+    request += " pedestrian_allowed as walk, cycles_allowed as bike, cars_allowed as car from georef.edge;";
     result = work.exec(request);
-    for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
-            navitia::georef::Edge e;
-            float len;
-            const_it["leng"].to(len);
-            e.duration = navitia::seconds(len / navitia::georef::default_speed[navitia::type::Mode_e::Walking]);
-            e.way_idx = const_it["way_id"].as<idx_t>();
-            uint64_t source = node_map_temp[const_it["source_node_id"].as<uint64_t>()];
-            uint64_t target = node_map_temp[const_it["target_node_id"].as<uint64_t>()];
-            boost::add_edge(source, target, e, geo_ref_temp.graph);
-
-            way_nb_edges[e.way_idx]++; //we count the number of edges on each way, to be able to delete empty ways
+    for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
+        ComponentEdge e;
+        e.modes[nt::Mode_e::Walking] = const_it["walk"].as<bool>();
+        e.modes[nt::Mode_e::Bike] = const_it["bike"].as<bool>();
+        e.modes[nt::Mode_e::Car] = const_it["car"].as<bool>();
+        uint64_t source = node_map_temp[const_it["source_node_id"].as<uint64_t>()];
+        uint64_t target = node_map_temp[const_it["target_node_id"].as<uint64_t>()];
+        boost::add_edge(source, target, e, graph);
     }
+    return graph;
+}
 
-    std::vector<size_t> vertex_component(boost::num_vertices(geo_ref_temp.graph));
-    boost::connected_components(geo_ref_temp.graph, &vertex_component[0]);
+std::vector<component_vertex_t> get_useless_nodes(const filtered_graph& graph,
+                                                  const nt::Mode_e mode,
+                                                  const double min_non_connected_graph_ratio) {
+    std::vector<component_vertex_t> useless_nodes;
+    auto log = log4cplus::Logger::getInstance("log");
+
+    auto nb_vertices = boost::num_vertices(graph);
+    std::vector<uint64_t> vertex_component(nb_vertices);
+    boost::connected_components(graph, &vertex_component[0]);
     std::map<size_t, size_t> component_size;
     boost::optional<std::pair<size_t, size_t>> principal_component = {{std::numeric_limits<size_t>::max(), 0}}; //pair with id/number of vertex
     // we create the map to know the size of each component
-    for (navitia::georef::vertex_t component : vertex_component) {
+    for (auto component: vertex_component) {
         component_size[component]++;
 
         size_t count = component_size[component];
@@ -1349,50 +1371,65 @@ void EdReader::fill_vector_to_ignore(navitia::type::Data& , pqxx::work& work,
         }
     }
 
-    LOG4CPLUS_INFO(log, component_size.size() << " connexes components found");
+    LOG4CPLUS_INFO(log, component_size.size() << " connexes components found for mode " << mode);
 
     if (! principal_component) {
-        LOG4CPLUS_ERROR(log, "Impossible to find a main composent in graph. Graph must be empty (nb vertices = "
-                        << boost::num_vertices(geo_ref_temp.graph) <<")");
-        return;
+        LOG4CPLUS_ERROR(log, "Impossible to find a main composent in graph for mode " << mode
+                        << ". Graph must be empty (nb vertices = " << nb_vertices << ")");
+        return useless_nodes;
     }
 
     LOG4CPLUS_INFO(log, "the biggest has " << principal_component->second << " nodes");
 
-    std::set<navitia::georef::edge_t> graph_edge_to_ignore;
-    // we fill the node_to_ignore to erase them later
-    for (navitia::georef::vertex_t vertex_idx = 0;  vertex_idx != vertex_component.size(); ++vertex_idx) {
+    for (component_vertex_t vertex_idx = 0;  vertex_idx != vertex_component.size(); ++vertex_idx) {
         auto comp = vertex_component[vertex_idx];
 
         auto nb_elt_in_component = component_size[comp];
 
-        if (nb_elt_in_component / principal_component->second >= min_non_connected_graph_ratio)
+        if (nb_elt_in_component / principal_component->second >= min_non_connected_graph_ratio) {
             continue; //big enough, we skip
+        }
+        useless_nodes.push_back(vertex_idx);
+    }
+    LOG4CPLUS_INFO(log, "for mode " << mode << ", " << useless_nodes.size() << " useless nodes");
+    return useless_nodes;
+}
 
-        uint64_t source = map_idx_to_id[vertex_idx];
+void EdReader::fill_vector_to_ignore(pqxx::work& work, const double min_non_connected_graph_ratio) {
+    const auto graph = make_graph(work);
+    navitia::flat_enum_map<nt::Mode_e, size_t> nb_disable_edges = {{{0, 0, 0}}}; // for log purpose
+    std::unordered_map<uint64_t, uint8_t> count_useless_mode_by_node;
 
-        node_to_ignore.insert(source);
-        BOOST_FOREACH(navitia::georef::edge_t e, boost::out_edges(vertex_idx, geo_ref_temp.graph)) {
-            uint64_t target = boost::target(e, geo_ref_temp.graph);
-            //no need to store the edge to ignore since we won't import the required nodes
-            node_to_ignore.insert(map_idx_to_id[target]);
-            graph_edge_to_ignore.insert(e); //used for the ways
+    const auto modes = {nt::Mode_e::Walking, nt::Mode_e::Bike, nt::Mode_e::Car};
+    for (auto mode: modes) {
+        auto mode_graph = filtered_graph(graph, ModeFilter(mode, &graph), {});
+        auto useless_nodes = get_useless_nodes(mode_graph, mode, min_non_connected_graph_ratio);
+
+        for (const auto n_idx: useless_nodes) {
+            auto source_db_id = mode_graph[n_idx].db_id;
+            count_useless_mode_by_node[source_db_id]++;
+            // we remove the transportation mode for all the edges of this node
+            BOOST_FOREACH(auto e_idx, boost::out_edges(n_idx, mode_graph)) {
+                auto target_db_id = mode_graph[boost::target(e_idx, mode_graph)].db_id;
+                this->edge_to_ignore_by_modes[mode].insert({source_db_id, target_db_id});
+                nb_disable_edges[mode]++;
+            }
         }
     }
 
-    //we fill the way to ignore list
-    for (const auto& edge: graph_edge_to_ignore) {
-        auto e = geo_ref_temp.graph[edge].way_idx;
-        if (way_nb_edges[e] > 1) {
-            way_nb_edges[e] --;
-        } else {
-            //it was the last edge of the way, we add it to the ignore list
-            way_to_ignore.insert(e);
+    for (const auto& p: count_useless_mode_by_node) {
+        if (p.second >= modes.size()) {
+            // all modes are disabled, we can remove the node
+            this->node_to_ignore.insert(p.first);
         }
     }
 
-    LOG4CPLUS_INFO(log, way_to_ignore.size() << " way to ignore");
+    // Note: for the moment we do not clean up the ways that do not have any edges anymore
+
     LOG4CPLUS_INFO(log, node_to_ignore.size() << " node to ignore");
+    LOG4CPLUS_INFO(log, nb_disable_edges[nt::Mode_e::Walking] << " walking edges disabled, "
+                      << nb_disable_edges[nt::Mode_e::Bike] << " bike edges disabled, "
+                      << nb_disable_edges[nt::Mode_e::Car] << " car edges disabled ");
 }
 
 void EdReader::fill_vertex(navitia::type::Data& data, pqxx::work& work) {
@@ -1440,8 +1477,8 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work, bool expo
     }
     request += " from georef.edge e;";
     pqxx::result result = work.exec(request);
-    size_t nb_edges_no_way = 0;
-    int nb_walking_edges(0), nb_biking_edges(0), nb_driving_edges(0);
+    size_t nb_edges_no_way = 0, nb_useless_edges = 0;
+    size_t nb_walking_edges(0), nb_biking_edges(0), nb_driving_edges(0);
     for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         navitia::georef::Way* way = this->way_map[const_it["way_id"].as<uint64_t>()];
 
@@ -1475,8 +1512,20 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work, bool expo
                 way->geoms.push_back(geometry);
             }
         }
+        auto edge_id = std::make_pair(const_it["source_node_id"].as<uint64_t>(), const_it["target_node_id"].as<uint64_t>());
+        bool walkable = const_it["pede"].as<bool>() &&
+                this->edge_to_ignore_by_modes[nt::Mode_e::Walking].count(edge_id) == 0;
+        bool bike = const_it["bike"].as<bool>() &&
+                this->edge_to_ignore_by_modes[nt::Mode_e::Bike].count(edge_id) == 0;
+        bool car = const_it["car"].as<bool>() &&
+                this->edge_to_ignore_by_modes[nt::Mode_e::Car].count(edge_id) == 0;
 
-        if (const_it["pede"].as<bool>()) {
+        if (!walkable && !bike && !car) {
+            nb_useless_edges++;
+            continue;
+        }
+
+        if (walkable) {
             if (auto dur = get_duration(nt::Mode_e::Walking, len, source, target)) {
                 e.duration = navitia::seconds(*dur);
                 boost::add_edge(source, target, e, data.geo_ref->graph);
@@ -1484,7 +1533,7 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work, bool expo
                 nb_walking_edges++;
             }
         }
-        if (const_it["bike"].as<bool>()) {
+        if (bike) {
             if (auto dur = get_duration(nt::Mode_e::Bike, len, source, target)) {
                 e.duration = navitia::seconds(*dur);
                 auto bike_source = data.geo_ref->offsets[nt::Mode_e::Bike] + source;
@@ -1494,7 +1543,7 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work, bool expo
                 nb_biking_edges++;
             }
         }
-        if (const_it["car"].as<bool>()) {
+        if (car) {
             if (auto dur = get_duration(nt::Mode_e::Car, len, source, target)) {
                 e.duration = navitia::seconds(*dur);
                 auto car_source = data.geo_ref->offsets[nt::Mode_e::Car] + source;
@@ -1508,6 +1557,9 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work, bool expo
 
     if (nb_edges_no_way) {
         LOG4CPLUS_WARN(log, nb_edges_no_way << " edges have an unknown way");
+    }
+    if (nb_useless_edges) {
+        LOG4CPLUS_WARN(log, nb_useless_edges << " edges are not usable by any modes");
     }
 
     LOG4CPLUS_INFO(log, boost::num_edges(data.geo_ref->graph) << " edges added ");
