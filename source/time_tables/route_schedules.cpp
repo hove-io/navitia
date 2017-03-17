@@ -95,7 +95,7 @@ get_all_route_stop_times(const nt::Route* route,
                 }
             } else {
                 // for frequencies, we only need to add the stoptime offset to the first stoptime
-                dt = ho.first + stop_time.departure_time;
+                dt = ho.first + (stop_time.departure_time - ho.second->departure_time);
                 // NOTE: for calendar, we don't need to add again the utc offset, since for frequency
                 // vj all stop_times are relative to the start of the vj (and the UTC offset has  already
                 // been included in the first stop time)

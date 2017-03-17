@@ -108,8 +108,8 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
                             return sp->is_zonal && sp->name == "Beleymas" && sp->area;
                         }), 1);
 
-    BOOST_REQUIRE_EQUAL(data.lines.size(), 3);
-    BOOST_REQUIRE_EQUAL(data.routes.size(), 3);
+    BOOST_REQUIRE_EQUAL(data.lines.size(), 4);
+    BOOST_REQUIRE_EQUAL(data.routes.size(), 4);
 
     //chekc comments
     BOOST_REQUIRE_EQUAL(data.comment_by_id.size(), 2);
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_CHECK_EQUAL(data.line_group_links[1].line->uri, "l3");
 
     // stop_headsign
-    const types::VehicleJourney* vj1 = data.vehicle_journeys.back();
+    const types::VehicleJourney* vj1 = data.vehicle_journeys.at(6);
 
     // headsign of vj and stop_times
     BOOST_REQUIRE_EQUAL(vj1->name.substr(0,6), "NULL");
@@ -227,6 +227,30 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_REQUIRE_EQUAL(vj1->stop_time_list[3]->headsign, "HS");
     BOOST_REQUIRE_EQUAL(vj1->stop_time_list[4]->headsign, "NULL");
     BOOST_REQUIRE_EQUAL(vj1->stop_time_list[5]->headsign, "NULL");
+
+    // Shift the frequency
+    data.finalize_frequency();
+    // Frequencies and boarding / alighting times (times are in UTC, first vj of trip_5 is UTC+1 in NTFS)
+    vj1 = data.vehicle_journeys.at(8);
+    BOOST_REQUIRE_EQUAL(vj1->is_frequency(), true);
+    // start time is moved 5 minutes in the past because of boarding_time
+    BOOST_REQUIRE_EQUAL(vj1->start_time, "04:55:00"_t);
+    BOOST_REQUIRE_EQUAL(vj1->end_time, "26:55:00"_t);
+    BOOST_REQUIRE_EQUAL(vj1->headway_secs, "01:00:00"_t);
+
+    BOOST_REQUIRE_EQUAL(vj1->stop_time_list.size(), 4);
+    BOOST_REQUIRE_EQUAL(vj1->stop_time_list.at(0)->departure_time, 300);
+    BOOST_REQUIRE_EQUAL(vj1->stop_time_list.at(0)->boarding_time, 0);
+    BOOST_REQUIRE_EQUAL(vj1->stop_time_list.at(0)->alighting_time, 300);
+    BOOST_REQUIRE_EQUAL(vj1->stop_time_list.at(1)->departure_time, 900);
+    BOOST_REQUIRE_EQUAL(vj1->stop_time_list.at(1)->boarding_time, 0);
+    BOOST_REQUIRE_EQUAL(vj1->stop_time_list.at(1)->alighting_time, 1800);
+    BOOST_REQUIRE_EQUAL(vj1->stop_time_list.at(2)->departure_time, 1500);
+    BOOST_REQUIRE_EQUAL(vj1->stop_time_list.at(2)->boarding_time, 600);
+    BOOST_REQUIRE_EQUAL(vj1->stop_time_list.at(2)->alighting_time, 2400);
+    BOOST_REQUIRE_EQUAL(vj1->stop_time_list.at(3)->departure_time, 2100);
+    BOOST_REQUIRE_EQUAL(vj1->stop_time_list.at(3)->boarding_time, 2100);
+    BOOST_REQUIRE_EQUAL(vj1->stop_time_list.at(3)->alighting_time, 2400);
 }
 /*
 complete production without beginning_date
@@ -366,13 +390,13 @@ BOOST_AUTO_TEST_CASE(sync_ntfs) {
     parser.fill(data, "20150327");
 
     //we check that the data have been correctly loaded
-    BOOST_REQUIRE_EQUAL(data.lines.size(), 3);
+    BOOST_REQUIRE_EQUAL(data.lines.size(), 4);
     BOOST_REQUIRE_EQUAL(data.stop_point_connections.size(), 1);
     BOOST_REQUIRE_EQUAL(data.stop_points.size(), 8);
     BOOST_CHECK_EQUAL(data.lines[0]->name, "ligne A Flexible");
     BOOST_CHECK_EQUAL(data.lines[0]->uri, "l1");
     BOOST_CHECK_EQUAL(data.lines[0]->text_color, "FFD700");    
-    BOOST_REQUIRE_EQUAL(data.routes.size(), 3);
+    BOOST_REQUIRE_EQUAL(data.routes.size(), 4);
 
     navitia::type::hasProperties has_properties;
     has_properties.set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);

@@ -69,9 +69,10 @@ get_out_st_dt(const std::pair<const type::StopTime*, DateTime>& in_st_dt,
               const JourneyPatternContainer& jp_container)
 {
     DateTime cur_dt = in_st_dt.second;
+    DateTime base_dt = in_st_dt.first->base_dt(cur_dt, true);
     auto st_range = raptor_visitor().st_range(*in_st_dt.first);
     for (const auto& st: st_range.advance_begin(1)) {
-        cur_dt = st.section_end(cur_dt, true);
+        cur_dt = st.section_end(base_dt, true);
         if (jp_container.get_jpp(st) == target_jpp) {
             // check if the get_out is valid?
             return {&st, cur_dt};
@@ -80,8 +81,9 @@ get_out_st_dt(const std::pair<const type::StopTime*, DateTime>& in_st_dt,
     for (const auto* stay_in_vj = in_st_dt.first->vehicle_journey->next_vj;
          stay_in_vj != nullptr;
          stay_in_vj = stay_in_vj->next_vj) {
+        base_dt = raptor_visitor().get_base_dt_extension(base_dt, stay_in_vj);
         for (const auto& st: stay_in_vj->stop_time_list) {
-            cur_dt = st.section_end(cur_dt, true);
+            cur_dt = st.section_end(base_dt, true);
             if (jp_container.get_jpp(st) == target_jpp) {
                 // check if the get_out is valid?
                 return {&st, cur_dt};
@@ -250,7 +252,7 @@ struct VehicleSection {
 
     struct StopTimeDatetime {
         StopTimeDatetime(const type::StopTime& s, const DateTime dep, const DateTime arr):
-            st(s), departure(s.departure(dep)), arrival(s.arrival(arr)) {}
+            st(s), departure(dep), arrival(arr) {}
         const type::StopTime& st;
         DateTime departure, arrival;
     };
@@ -263,25 +265,26 @@ std::vector<VehicleSection> get_vjs(const Journey::Section& section) {
     std::vector<VehicleSection> res;
     auto current_st = section.get_in_st;
     auto end_st = section.get_out_st;
-    auto current_dep = section.get_in_dt;
-    // for the first arrival, we want to go back into the past, hence the clockwise
-
-    const auto* in_st = section.get_in_st;
+    auto base_dt = section.get_in_st->base_dt(section.get_in_dt, true);
+    DateTime current_dep;
     DateTime current_arr;
-    if (! in_st->is_frequency()) {
-        current_arr = DateTimeUtils::shift(current_dep, section.get_in_st->arrival_time, false);
-    } else {
-        current_arr = in_st->begin_from_end(current_dep, true);
-    }
 
     size_t order = current_st->order();
     for (const auto* vj = current_st->vehicle_journey; vj; vj = vj->next_vj) {
+        if (!res.empty()) {
+            // only update base_dt for vj extensions
+            base_dt = raptor_visitor().get_base_dt_extension(base_dt, vj);
+        }
         res.emplace_back(section, current_st->vehicle_journey);
 
         for (const auto& st: boost::make_iterator_range(vj->stop_time_list.begin() + order, vj->stop_time_list.end())) {
-            res.back().stop_times_and_dt.emplace_back(st, current_dep, current_arr);
-            current_dep = res.back().stop_times_and_dt.back().departure;
-            current_arr = res.back().stop_times_and_dt.back().arrival;
+            current_dep = st.departure(base_dt);
+            current_arr = st.arrival(base_dt);
+            res.back().stop_times_and_dt.emplace_back(
+                st,
+                current_dep + st.get_boarding_duration(),
+                current_arr - st.get_alighting_duration()
+            );
 
             if (&st == end_st) {
                 return res;
@@ -416,20 +419,18 @@ struct RaptorSolutionReader {
                      const StDt& begin_st_dt) {
         Transfers& transfers = transfers_cache.get(count);
         auto cur_dt = begin_st_dt.second;
+        auto base_dt = begin_st_dt.first->base_dt(cur_dt, v.clockwise());
         unsigned nb_stay_in = 0;
-        if (begin_st_dt.first->is_frequency()) {
-            //for frequency, we need cur_dt to be the begin in the stoptime
-            cur_dt = begin_st_dt.first->begin_from_end(cur_dt, v.clockwise());
-        }
         const auto begin_zone = begin_st_dt.first->local_traffic_zone;
-        cur_dt = try_end_pt(count, path, begin_st_dt, begin_zone, cur_dt,
+        cur_dt = try_end_pt(count, path, begin_st_dt, begin_zone, base_dt,
                             v.st_range(*begin_st_dt.first).advance_begin(1), nb_stay_in, transfers);
 
         // continuing in the stay in
         for (const auto* stay_in_vj = v.get_extension_vj(begin_st_dt.first->vehicle_journey);
              stay_in_vj != nullptr;
              stay_in_vj = v.get_extension_vj(stay_in_vj)) {
-            cur_dt = try_end_pt(count, path, begin_st_dt, begin_zone, cur_dt,
+            base_dt = v.get_base_dt_extension(base_dt, stay_in_vj);
+            cur_dt = try_end_pt(count, path, begin_st_dt, begin_zone, base_dt,
                                 v.stop_time_list(stay_in_vj), ++nb_stay_in, transfers);
         }
         return transfers;
@@ -444,9 +445,9 @@ struct RaptorSolutionReader {
                         const unsigned nb_stay_in,
                         Transfers& transfers) {
         static const auto no_zone = std::numeric_limits<uint16_t>::max();
-
+        auto base_dt = cur_dt;
         for (const auto& end_st: st_range) {
-            cur_dt = end_st.section_end(cur_dt, v.clockwise());
+            cur_dt = end_st.section_end(base_dt, v.clockwise());
 
             // trying to end
             if (! end_st.valid_end(v.clockwise())) { continue; }
@@ -489,15 +490,12 @@ struct RaptorSolutionReader {
 
     DateTime get_vj_end(const StDt& begin_st_dt) const {
         auto cur_dt = begin_st_dt.second;
-        if (begin_st_dt.first->is_frequency()) {
-            //for frequency, we need cur_dt to be the begin in the stoptime
-            cur_dt = begin_st_dt.first->begin_from_end(cur_dt, v.clockwise());
-        }
+        auto base_dt = begin_st_dt.first->base_dt(cur_dt, v.clockwise());
         // Note: We keep a ref on the range because the advance_begin return a ref on the object
         // and some gcc version optimize out the inner range
         auto r = v.st_range(*begin_st_dt.first);
         for (const auto& end_st: r.advance_begin(1)) {
-            cur_dt = end_st.section_end(cur_dt, v.clockwise());
+            cur_dt = end_st.section_end(base_dt, v.clockwise());
         }
 
         return cur_dt;
@@ -596,6 +594,7 @@ void read_solutions(const RAPTOR& raptor,
                                         raptor.data.dataRaptor->min_connection_time,
                                         transfer_penalty,
                                         v.clockwise());
+
             if (reader.solutions.contains_better_than(j)) { continue; }
             try {
                 reader.begin_pt(count, a.first, working_labels.dt_pt(a.first));
@@ -727,7 +726,24 @@ Path make_path(const Journey& journey, const type::Data& data) {
 
         //we then need to create one section by service extension
         const VehicleSection* last_vj_section = nullptr;
-        for (const auto& vj_section: get_vjs(section)) {
+        const auto& sections = get_vjs(section);
+
+        // Add boarding section if we have boarding_time != departure_time on the first stop_time of the first vj
+        const auto& boarding_st = sections.front().stop_times_and_dt.front().st;
+        if(boarding_st.boarding_time != boarding_st.departure_time) {
+            path.items.emplace_back(ItemType::boarding,
+                                    posix(section.get_in_dt),
+                                    posix(section.get_in_dt + boarding_st.get_boarding_duration()));
+            auto& boarding_section = path.items.back();
+            // The departure and arrival stop_point of the boarding are the first stop_point of the first section
+            boarding_section.stop_points.push_back(boarding_st.stop_point);
+            boarding_section.stop_points.push_back(boarding_st.stop_point);
+            boarding_section.arrivals.push_back(boarding_section.arrival);
+            boarding_section.departures.push_back(boarding_section.departure);
+        }
+
+        for (size_t i(0); i < sections.size(); i++) {
+            auto& vj_section = sections.at(i);
             if (last_vj_section) {
                 //add a stay in
                 path.items.emplace_back(ItemType::stay_in,
@@ -739,8 +755,9 @@ Path make_path(const Journey& journey, const type::Data& data) {
                 const auto* first_stop_point = vj_section.stop_times_and_dt.front().st.stop_point;
                 stay_in_section.stop_points.push_back(first_stop_point);
                 stay_in_section.departure = posix(last_st.departure);
-                stay_in_section.arrival = posix(vj_section.stop_times_and_dt.front().arrival);
+                stay_in_section.arrival = posix(vj_section.stop_times_and_dt.front().departure);
             }
+
             //add the pt section
             path.items.emplace_back(ItemType::public_transport);
             auto& item = path.items.back();
@@ -761,6 +778,20 @@ Path make_path(const Journey& journey, const type::Data& data) {
             item.departure = posix(vj_section.stop_times_and_dt.front().departure);
             item.arrival = posix(vj_section.stop_times_and_dt.back().arrival);
             last_vj_section = &vj_section;
+        }
+
+        // Add alighting section if we have alighting_time != arrival_time on the last stop_time of the last vj
+        const auto& alighting_st = sections.back().stop_times_and_dt.back().st;
+        if (alighting_st.alighting_time != alighting_st.arrival_time) {
+            path.items.emplace_back(ItemType::alighting,
+                                    posix(section.get_out_dt - alighting_st.get_alighting_duration()),
+                                    posix(section.get_out_dt));
+            auto& alighting_section = path.items.back();
+            // The departure and arrival stop_point of the alighting are the last stop_point of the last section
+            alighting_section.stop_points.push_back(alighting_st.stop_point);
+            alighting_section.stop_points.push_back(alighting_st.stop_point);
+            alighting_section.arrivals.push_back(alighting_section.arrival);
+            alighting_section.departures.push_back(alighting_section.departure);
         }
 
         last_section = &section;

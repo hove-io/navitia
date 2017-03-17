@@ -31,6 +31,7 @@ www.navitia.io
 #include "apply_disruption.h"
 #include "utils/logger.h"
 #include "type/datetime.h"
+#include "type/type_utils.h"
 
 #include <boost/make_shared.hpp>
 #include <boost/variant/static_visitor.hpp>
@@ -175,6 +176,14 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 std::move(stoptimes),
                 pt_data);
             LOG4CPLUS_TRACE(log, "New vj has been created " << vj->uri);
+            // Use the corresponding base stop_time for boarding and alighting duration
+            for(auto& st: vj->stop_time_list) {
+                const auto base_st = get_base_stop_time(&st);
+                if(base_st) {
+                    st.boarding_time = st.departure_time - base_st->get_boarding_duration();
+                    st.alighting_time = st.arrival_time + base_st->get_alighting_duration();
+                }
+            }
             if (! mvj->get_base_vj().empty()) {
                 vj->physical_mode = mvj->get_base_vj().at(0)->physical_mode;
                 vj->name = mvj->get_base_vj().at(0)->name; 
@@ -227,6 +236,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 nt::StopTime new_st = st.clone();
                 new_st.arrival_time = st.arrival_time + ndtu::SECONDS_PER_DAY * vj->shift;
                 new_st.departure_time = st.departure_time + ndtu::SECONDS_PER_DAY * vj->shift;
+                new_st.alighting_time = st.alighting_time + ndtu::SECONDS_PER_DAY * vj->shift;
+                new_st.boarding_time = st.boarding_time + ndtu::SECONDS_PER_DAY * vj->shift;
                 new_stop_times.push_back(std::move(new_st));
             }
 
@@ -395,6 +406,8 @@ struct add_impacts_visitor : public apply_impacts_visitor {
                 // Check the test case: apply_disruption_test/test_shift_of_a_disrupted_delayed_train for more details
                 new_st.arrival_time = st.arrival_time + ndtu::SECONDS_PER_DAY * vj->shift;
                 new_st.departure_time = st.departure_time + ndtu::SECONDS_PER_DAY * vj->shift;
+                new_st.alighting_time = st.alighting_time + ndtu::SECONDS_PER_DAY * vj->shift;
+                new_st.boarding_time = st.boarding_time + ndtu::SECONDS_PER_DAY * vj->shift;
                 new_stop_times.push_back(std::move(new_st));
             }
 

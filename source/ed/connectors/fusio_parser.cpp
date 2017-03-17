@@ -382,6 +382,8 @@ void StopTimeFusioHandler::init(Data& data) {
     date_time_estimated_c = csv.get_pos_col("date_time_estimated");
     id_c = csv.get_pos_col("stop_time_id");
     headsign_c = csv.get_pos_col("stop_headsign");
+    boarding_duration_c = csv.get_pos_col("boarding_duration");
+    alighting_duration_c = csv.get_pos_col("alighting_duration");
 }
 
 void StopTimeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_first_line) {
@@ -418,6 +420,36 @@ void StopTimeFusioHandler::handle_line(Data& data, const csv_row& row, bool is_f
 
         if (is_valid(headsign_c, row)) {
             stop_time->headsign = row[headsign_c];
+        }
+
+        if (is_valid(boarding_duration_c, row)) {
+            unsigned int boarding_duration(0);
+            try {
+                 boarding_duration = boost::lexical_cast<unsigned int>(row[boarding_duration_c]);
+            }
+            catch(boost::bad_lexical_cast) {
+                LOG4CPLUS_INFO(logger, "Impossible to parse boarding_duration for stop_time number "
+                               << stop_time->order << " on trip " << stop_time->vehicle_journey->uri
+                               << " : " << stop_time->departure_time << " / " << stop_time->arrival_time
+                               << ". Assuming 0 as boarding duration");
+            }
+            assert(stop_time->boarding_time == stop_time->departure_time);
+            stop_time->boarding_time -= boarding_duration;
+        }
+
+        if (is_valid(alighting_duration_c, row)) {
+            unsigned int alighting_duration(0);
+            try {
+                 alighting_duration = boost::lexical_cast<unsigned int>(row[alighting_duration_c]);
+            }
+            catch(boost::bad_lexical_cast) {
+                LOG4CPLUS_INFO(logger, "Impossible to parse boarding_duration for stop_time number "
+                               << stop_time->order << " on trip " << stop_time->vehicle_journey->uri
+                               << " : " << stop_time->departure_time << " / " << stop_time->arrival_time
+                               << ". Assuming 0 as boarding duration");
+            }
+            assert(stop_time->alighting_time == stop_time->arrival_time);
+            stop_time->alighting_time += alighting_duration;
         }
     }
 }

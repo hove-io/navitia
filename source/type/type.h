@@ -530,6 +530,9 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties {
     // return the base vj corresponding to this vj, return nullptr if nothing found
     const VehicleJourney* get_corresponding_base() const;
 
+    // Return the smallest time within its stop_times
+    uint32_t earliest_time() const;
+
     /*
      *
      *
@@ -704,6 +707,10 @@ struct StopTime {
     uint32_t arrival_time = 0; ///< seconds since midnight
     uint32_t departure_time = 0; ///< seconds since midnight
 
+    /// Representing times used in Raptor, taking into account boarding and alighting process duration
+    uint32_t boarding_time = 0; ///< seconds since midnight
+    uint32_t alighting_time = 0; ///< seconds since midnight
+
     VehicleJourney* vehicle_journey = nullptr;
     StopPoint* stop_point = nullptr;
     boost::shared_ptr<LineString> shape_from_prev;
@@ -743,53 +750,38 @@ struct StopTime {
     bool is_odt_and_date_time_estimated() const{ return (this->odt() && this->date_time_estimated());}
 
     /// get the departure (resp arrival for anti clockwise) from the stoptime
-    /// dt is the departure from the previous stoptime (resp arrival on the next one for anti clockwise)
-    DateTime section_end(DateTime dt, bool clockwise) const {
-        u_int32_t hour;
-        if (is_frequency()) {
-            hour = clockwise ? this->f_arrival_time(DateTimeUtils::hour(dt)) : this->f_departure_time(DateTimeUtils::hour(dt));
-        } else {
-            hour = clockwise ? arrival_time : departure_time;
-        }
-        return DateTimeUtils::shift(dt, hour, clockwise);
+    /// base_dt is the base time (from midnight for discrete / from start_time for frequencies)
+    DateTime section_end(DateTime base_dt, bool clockwise) const {
+        return clockwise ? arrival(base_dt) : departure(base_dt);
     }
 
-    /// get the departure from the arrival if clockwise and vise versa
-    DateTime begin_from_end(const DateTime dt, bool clockwise) const {
-        assert (is_frequency());
-        const int32_t diff = departure_time - arrival_time;
-        if ((clockwise && int32_t(dt) < diff) || (!clockwise && diff < 0 && int32_t(dt) < -1 * diff)) {
-            // corner case for the 1 day if the arrival in the stoptime is before midnight
-            // and the arrival is after, but we consider that we don't care about it
-            return 0;
-        }
-        if (clockwise) { return dt - diff; }
-        return dt + diff;
+    DateTime departure(DateTime base_dt) const {
+        return base_dt + boarding_time;
+    }
+    DateTime arrival(DateTime base_dt) const {
+        return base_dt + alighting_time;
     }
 
-    DateTime departure(DateTime dt) const {
-        return DateTimeUtils::shift(dt, is_frequency() ? f_departure_time(DateTimeUtils::hour(dt), true): departure_time);
-    }
-    DateTime arrival(DateTime dt) const {
-        return DateTimeUtils::shift(dt, is_frequency() ? f_arrival_time(DateTimeUtils::hour(dt), true): arrival_time);
+    DateTime base_dt(DateTime dt, bool clockwise) const {
+        return dt - (clockwise ? boarding_time : alighting_time);
     }
 
     boost::posix_time::ptime get_arrival_utc(const boost::gregorian::date& circulating_day) const {
        auto timestamp = navitia::to_posix_timestamp(boost::posix_time::ptime{circulating_day})
-                   + static_cast<uint64_t>(arrival_time);
+                   + static_cast<uint64_t>(alighting_time);
        return boost::posix_time::from_time_t(timestamp);
     }
+
+    uint32_t get_boarding_duration() const { return departure_time - boarding_time; }
+
+    uint32_t get_alighting_duration() const { return alighting_time - arrival_time; }
 
     bool is_valid_day(u_int32_t day, const bool is_arrival, const RTLevel rt_level) const;
 
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
-            ar & arrival_time & departure_time & vehicle_journey & stop_point & shape_from_prev
-            & properties & local_traffic_zone;
+            ar & arrival_time & departure_time & boarding_time & alighting_time & vehicle_journey
+            & stop_point & shape_from_prev & properties & local_traffic_zone;
     }
-
-private:
-    uint32_t f_arrival_time(const u_int32_t hour, bool clockwise = true) const;
-    uint32_t f_departure_time(const u_int32_t hour, bool clockwise = false) const;
 };
 
 struct Calendar : public Nameable, public Header {

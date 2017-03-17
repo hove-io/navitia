@@ -233,7 +233,7 @@ class AbstractTestFixture(object):
 
         return json_response, response.status_code
 
-    def check_journeys_links(self, response, query_dict):
+    def check_journeys_links(self, response, query_dict, query):
         journeys_links = get_links_dict(response)
         clockwise = query_dict.get('datetime_represents', 'departure') == "departure"
         has_pt = any(s['type'] == 'public_transport' for j in response['journeys'] for s in j['sections'])
@@ -265,6 +265,17 @@ class AbstractTestFixture(object):
                     continue
 
                 eq_(query_dict[k], v)
+
+        if has_pt and '/coverage/' in query:
+            types = [l['type'] for l in response['links']]
+            assert 'stop_point' in types
+            assert 'stop_area' in types
+            assert 'route' in types
+            assert 'physical_mode' in types
+            assert 'commercial_mode' in types
+            assert 'vehicle_journey' in types
+            assert 'line' in types
+            assert 'network' in types
 
     def is_valid_journey_response(self, response, query_str):
         """
@@ -302,7 +313,7 @@ class AbstractTestFixture(object):
 
         # more checks on links, we want the prev/next/first/last,
         # to have forwarded all params, (and the time must be right)
-        self.check_journeys_links(response, query_dict)
+        self.check_journeys_links(response, query_dict, query_str)
 
         feed_publishers = response.get("feed_publishers", [])
         for feed_publisher in feed_publishers:

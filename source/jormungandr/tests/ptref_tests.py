@@ -63,6 +63,14 @@ class TestPtRef(AbstractTestFixture):
         for l in wanted_links[1:]:
             assert url_dict == _get_dict_to_compare(l)
 
+
+    def test_pagination_links_with_count(self):
+        response = self.query_region("v1/stop_points?count=2&start_page=2", display=True)
+        for link in response['links']:
+            if link['type'] in ('previous', 'next', 'first', 'last'):
+                assert 'count=2' in link['href']
+
+
     def test_vj_default_depth(self):
         """default depth is 1"""
         response = self.query_region("v1/vehicle_journeys")
@@ -434,8 +442,10 @@ class TestPtRef(AbstractTestFixture):
 
         modes = get_not_null(s, 'physical_modes')
         assert len(modes) == 1
+        is_valid_physical_mode(modes[0], depth_check=1)
         modes = get_not_null(s, 'commercial_modes')
         assert len(modes) == 1
+        is_valid_commercial_mode(modes[0], depth_check=1)
 
         self._test_links(response, 'stop_points')
 
@@ -807,7 +817,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('stop_points/stop_point:stopB/arrivals?from_datetime=20120615T000000')
         assert 'error' not in response
         arrivals = get_not_null(response, 'arrivals')
-        eq_(len(arrivals), 1)
+        eq_(len(arrivals), 2)
         eq_(arrivals[0]['display_informations']['headsign'], "vehicle_journey 2")
 
     def test_headsign_display_info_route_schedules(self):
@@ -863,7 +873,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('trips')
 
         trips = get_not_null(response, 'trips')
-        assert len(trips) == 4
+        assert len(trips) == 5
         for t in trips:
             is_valid_trip(t)
 

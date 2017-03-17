@@ -1036,6 +1036,10 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
         stop_time->arrival_time = to_utc(row[arrival_c], utc_offset);
         stop_time->departure_time = to_utc(row[departure_c], utc_offset);
 
+        // GTFS don't handle boarding / alighting duration, assuming 0
+        stop_time->alighting_time = stop_time->arrival_time;
+        stop_time->boarding_time = stop_time->departure_time;
+
         stop_time->stop_point = stop_it->second;
         stop_time->order = boost::lexical_cast<unsigned int>(row[stop_seq_c]);
         stop_time->vehicle_journey = vj_it->second;
@@ -1074,23 +1078,31 @@ void FrequenciesGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     for (auto vj_end_it = gtfs_data.tz.vj_by_name.upper_bound(row[trip_id_c]),
          vj_it = gtfs_data.tz.vj_by_name.lower_bound(row[trip_id_c]);
          vj_it != vj_end_it; ++vj_it) {
+        auto* vj = vj_it->second;
 
-        if (vj_it->second->stop_time_list.empty()) {
+        if (vj->stop_time_list.empty()) {
              LOG4CPLUS_WARN(logger, "vj " << row[trip_id_c] << " is empty cannot add stoptimes in frequencies");
              continue;
         }
 
         //we need to convert the stop times in UTC
-        int utc_offset = data.tz_wrapper.tz_handler.get_first_utc_offset(*vj_it->second->validity_pattern);
+        int utc_offset = data.tz_wrapper.tz_handler.get_first_utc_offset(*vj->validity_pattern);
 
-        vj_it->second->start_time = to_utc(row[start_time_c], utc_offset);
-        vj_it->second->end_time = to_utc(row[end_time_c], utc_offset);
-        vj_it->second->headway_secs = boost::lexical_cast<int>(row[headway_secs_c]);
-        int first_st_gap = vj_it->second->start_time - vj_it->second->stop_time_list.front()->arrival_time;
-        for(auto st: vj_it->second->stop_time_list) {
+        vj->start_time = to_utc(row[start_time_c], utc_offset);
+        vj->end_time = to_utc(row[end_time_c], utc_offset);
+        vj->headway_secs = boost::lexical_cast<int>(row[headway_secs_c]);
+        const auto& start = vj->earliest_time();
+        if(vj->start_time <= vj->stop_time_list.front()->arrival_time && start < vj->start_time) {
+            vj->end_time -= (vj->start_time - start);
+            vj->start_time = start;
+        }
+        int first_st_gap = vj->start_time - start;
+        for(auto st: vj->stop_time_list) {
             st->is_frequency = true;
             st->arrival_time += first_st_gap;
             st->departure_time += first_st_gap;
+            st->alighting_time += first_st_gap;
+            st->boarding_time += first_st_gap;
         }
     }
 }

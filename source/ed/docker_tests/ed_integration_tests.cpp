@@ -119,7 +119,7 @@ static void check_ntfs(const nt::Data& data) {
     // check stop_time headsigns
     const nt::HeadsignHandler& headsigns = data.pt_data->headsign_handler;
     auto& vj_vec = data.pt_data->vehicle_journeys;
-    BOOST_REQUIRE_EQUAL(vj_vec.size(), 8);
+    BOOST_REQUIRE_EQUAL(vj_vec.size(), 10);
     // check that vj 0 & 1 have headsign N1 from first 3 stop_time, then N2
     check_headsigns(data, "N1", 0, 1, 0, 2);
     check_headsigns(data, "N2", 0, 1, 3, 4);
@@ -147,7 +147,7 @@ static void check_ntfs(const nt::Data& data) {
     BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("NULL"), vj_vec[6]));
     BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("NULL"), vj_vec[7]));
 
-    BOOST_CHECK_EQUAL(data.pt_data->meta_vjs.size(), 4);
+    BOOST_CHECK_EQUAL(data.pt_data->meta_vjs.size(), 5);
     for (auto& mvj : data.pt_data->meta_vjs) {
         BOOST_CHECK_EQUAL(data.pt_data->meta_vjs[mvj->uri], mvj.get());
         BOOST_CHECK_EQUAL(data.pt_data->meta_vjs[nr::MvjIdx(*mvj)], mvj.get());
@@ -173,7 +173,7 @@ static void check_ntfs(const nt::Data& data) {
     BOOST_CHECK_EQUAL(vj_map.at("vehicle_journey:trip_4_dst_1")->physical_mode, physical_default);
 
     auto& routes_map = data.pt_data->routes_map;
-    BOOST_REQUIRE_EQUAL(routes_map.size(), 3);
+    BOOST_REQUIRE_EQUAL(routes_map.size(), 4);
 
     BOOST_CHECK_EQUAL(routes_map.at("route:route_1")->direction_type, "forward");
     BOOST_CHECK_EQUAL(routes_map.at("route:route_2")->direction_type, "backward");
@@ -355,8 +355,8 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
 
     BOOST_REQUIRE(res);
 
-    BOOST_REQUIRE_EQUAL(data.pt_data->lines.size(), 3);    
-    BOOST_REQUIRE_EQUAL(data.pt_data->routes.size(), 3);
+    BOOST_REQUIRE_EQUAL(data.pt_data->lines.size(), 4);
+    BOOST_REQUIRE_EQUAL(data.pt_data->routes.size(), 4);
 
     BOOST_REQUIRE_EQUAL(data.pt_data->datasets.size(), 1);
     BOOST_REQUIRE_EQUAL(data.pt_data->contributors.size(), 1);

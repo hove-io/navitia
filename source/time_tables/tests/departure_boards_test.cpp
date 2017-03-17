@@ -1042,3 +1042,107 @@ BOOST_AUTO_TEST_CASE(departureboard_no_geojson) {
     BOOST_REQUIRE(!resp.stop_schedules(0).route().has_geojson());
     BOOST_REQUIRE(!resp.stop_schedules(0).route().line().has_geojson());
 }
+
+// Test that frequency are correctly displayed and that we get departure_times and not boarding_times
+BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_frequency_and_calendar) {
+    ed::builder b("20170101");
+
+    boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20170101");
+    boost::gregorian::date end = boost::gregorian::date_from_iso_string("20180101");
+
+    b.vj("L1").uri("vj:0")
+        ("stop1", "8:00"_t, "8:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)
+        ("stop2", "8:05"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 900)
+        ("stop3", "8:10"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
+
+    b.vj("L1").uri("vj:2")
+        ("stop1", "23:50"_t, "23:50"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 0)
+        ("stop2", "23:55"_t, "23:55"_t, std::numeric_limits<uint16_t>::max(), true, true, 600, 1800)
+        ("stop3", "24:10"_t, "24:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
+
+    b.frequency_vj("L1", "18:00"_t, "19:00"_t, "00:30"_t).uri("vj:1")
+        ("stop1", "18:00"_t, "18:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)
+        ("stop2", "18:05"_t, "18:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 900)
+        ("stop3", "18:10"_t, "18:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
+
+    navitia::type::Calendar* c = new navitia::type::Calendar(begin);
+    c->uri = "C1";
+    c->active_periods.push_back({begin, end});
+    c->week_pattern = std::bitset<7>("1111111");
+    b.data->pt_data->calendars.push_back(c);
+    b.data->pt_data->calendars_map[c->uri] = c;
+
+    auto a1 = new navitia::type::AssociatedCalendar;
+    a1->calendar = c;
+    b.data->pt_data->associated_calendars.push_back(a1);
+    b.data->pt_data->meta_vjs.get_mut("vj:0")->associated_calendars.insert({c->uri, a1});
+    b.data->pt_data->meta_vjs.get_mut("vj:1")->associated_calendars.insert({c->uri, a1});
+
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->pt_data->build_uri();
+
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator_cal(data_ptr, bt::second_clock::universal_time(), null_time_period);
+    departure_board(pb_creator_cal, "stop_point.uri=stop1", c->uri, {}, d("20170103T123000"), 86400, 3,
+                    10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+    auto resp = pb_creator_cal.get_response();
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+    auto stop_schedule = resp.stop_schedules(0);
+    BOOST_CHECK_EQUAL(stop_schedule.stop_point().uri(), "stop1");
+    BOOST_CHECK_EQUAL(stop_schedule.route().uri(), "L1:0");
+    BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 4);
+    BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), "18:00"_t);
+    BOOST_CHECK_EQUAL(stop_schedule.date_times(1).time(), "18:30"_t);
+    BOOST_CHECK_EQUAL(stop_schedule.date_times(2).time(), "19:00"_t);
+    BOOST_CHECK_EQUAL(stop_schedule.date_times(3).time(), "08:00"_t);
+
+    navitia::PbCreator pb_creator_nocal(data_ptr, bt::second_clock::universal_time(), null_time_period);
+    departure_board(pb_creator_nocal, "stop_point.uri=stop1", {}, {}, d("20170103T123000"), 86400, 3,
+                    10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+    resp = pb_creator_nocal.get_response();
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+    stop_schedule = resp.stop_schedules(0);
+    BOOST_CHECK_EQUAL(stop_schedule.stop_point().uri(), "stop1");
+    BOOST_CHECK_EQUAL(stop_schedule.route().uri(), "L1:0");
+    BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 5);
+    BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), "18:00"_t);
+    BOOST_CHECK_EQUAL(stop_schedule.date_times(1).time(), "18:30"_t);
+    BOOST_CHECK_EQUAL(stop_schedule.date_times(2).time(), "19:00"_t);
+    BOOST_CHECK_EQUAL(stop_schedule.date_times(3).time(), "23:50"_t);
+    BOOST_CHECK_EQUAL(stop_schedule.date_times(4).time(), "08:00"_t);
+}
+
+// Check that results are in the right order even if the boarding_time are in a different one
+BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_order_check) {
+    ed::builder b("20170101");
+
+    b.vj("L1").uri("vj:0")
+        ("stop1", "8:00"_t, "8:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 900, 0)
+        ("stop2", "8:05"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 0)
+        ("stop3", "8:10"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 900, 0);
+
+    b.vj("L1").uri("vj:1")
+        ("stop1", "8:05"_t, "8:05"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 900)
+        ("stop2", "8:10"_t, "8:10"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 900)
+        ("stop3", "8:15"_t, "8:15"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
+
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->pt_data->build_uri();
+    auto * data_ptr = b.data.get();
+
+    navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
+    departure_board(pb_creator, "stop_point.uri=stop1", {}, {}, d("20170103T123000"), 86400, 3,
+                    10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+    auto resp = pb_creator.get_response();
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+    auto stop_schedule = resp.stop_schedules(0);
+    BOOST_CHECK_EQUAL(stop_schedule.stop_point().uri(), "stop1");
+    BOOST_CHECK_EQUAL(stop_schedule.route().uri(), "L1:0");
+    BOOST_REQUIRE_EQUAL(stop_schedule.date_times_size(), 2);
+    BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), "08:00"_t);
+    BOOST_CHECK_EQUAL(stop_schedule.date_times(1).time(), "08:05"_t);
+}

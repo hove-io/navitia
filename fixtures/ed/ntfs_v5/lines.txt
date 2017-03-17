@@ -2,3 +2,4 @@ line_id,line_code,line_name,forward_line_name,forward_direction,backward_line_na
 l1,"A","ligne A Flexible",,,,,,,ligneflexible,BUS,C1,,00:00:00,23:59:00,FFD700
 l2,"B","B line",,,,,,,ligneflexible,BUS,,,00:05:00,21:00:00,
 l3,"Bn","B line (night bus)",,,,,,,ligneflexible,BUS,,,00:21:00,01:00:00,
+l4,"F","TAD boarding alighting frequency",,,,,,,ligneflexible,BUS,,,06:00:00,28:00:00
