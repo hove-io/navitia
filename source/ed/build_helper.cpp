@@ -56,8 +56,7 @@ VJ::VJ(builder& b,
        const std::string& physical_mode,
        const uint32_t start_time,
        const uint32_t end_time,
-       const uint32_t headway_secs,
-       const bool bike_accepted):
+       const uint32_t headway_secs):
     b(b),
     network_name(network_name),
     line_name(line_name),
@@ -70,8 +69,7 @@ VJ::VJ(builder& b,
     start_time(start_time),
     end_time(end_time),
     headway_secs(headway_secs),
-    _vp(b.begin, validity_pattern),
-    _bike_accepted(bike_accepted)
+    _vp(b.begin, validity_pattern)
 {}
 
 
@@ -282,7 +280,9 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16
             sa->name = sp_name;
             sa->uri = sp_name;
             sa->set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
-            sa->set_property(navitia::type::hasProperties::BIKE_ACCEPTED);
+            if(_bike_accepted){
+                sa->set_property(navitia::type::hasProperties::BIKE_ACCEPTED);
+            }
             sp->stop_area = sa;
             b.sas[sp_name] = sa;
             b.data->pt_data->stop_areas.push_back(sa);

@@ -79,7 +79,7 @@ struct VJ {
     std::vector<ST> stop_times;
     nt::VehicleJourney* vj = nullptr;
     nt::ValidityPattern _vp;
-    bool _bike_accepted;
+    bool _bike_accepted = true;
 
     /// Construit un nouveau vehicle journey
     VJ(builder& b,
@@ -94,8 +94,7 @@ struct VJ {
        const std::string& physical_mode = "",
        const uint32_t start_time = 0,
        const uint32_t end_time = 0,
-       const uint32_t headway_secs = 0,
-       const bool bike_accepted = true);
+       const uint32_t headway_secs = 0);
 
     VJ(VJ&&) = default;
     VJ& operator=(VJ&&) = delete;

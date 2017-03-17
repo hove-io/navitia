@@ -99,6 +99,7 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     has_properties.set_property(navitia::type::hasProperties::WHEELCHAIR_BOARDING);
     has_properties.set_property(navitia::type::hasProperties::BIKE_ACCEPTED);
     BOOST_CHECK_EQUAL(data.stop_points[0]->accessible(has_properties.properties()), true);
+    BOOST_CHECK_EQUAL(data.stop_points[1]->accessible(has_properties.properties()), false);
 
     for (int i = 1; i < 8; i++){
         BOOST_CHECK_EQUAL(data.stop_points[i]->accessible(has_properties.properties()), false);
@@ -427,4 +428,7 @@ BOOST_AUTO_TEST_CASE(sync_ntfs) {
     navitia::type::hasVehicleProperties has_vehicle_properties;
     has_vehicle_properties.set_vehicle(navitia::type::hasVehicleProperties::BIKE_ACCEPTED);
     BOOST_CHECK_EQUAL(vj->accessible(has_vehicle_properties.vehicles()), true);
+
+    vj = data.vehicle_journeys.back();
+    BOOST_CHECK_EQUAL(vj->accessible(has_vehicle_properties.vehicles()), false);
 }
