@@ -172,6 +172,11 @@ static void check_ntfs(const nt::Data& data) {
     BOOST_CHECK_EQUAL(vj_map.at("vehicle_journey:trip_1_dst_1")->physical_mode, physical_bus);
     BOOST_CHECK_EQUAL(vj_map.at("vehicle_journey:trip_4_dst_1")->physical_mode, physical_default);
 
+    navitia::type::hasVehicleProperties has_vehicle_properties;
+    has_vehicle_properties.set_vehicle(navitia::type::hasVehicleProperties::BIKE_ACCEPTED);
+    BOOST_CHECK_EQUAL(vj_map.at("vehicle_journey:trip_1_dst_1")->accessible(has_vehicle_properties.vehicles()), true);
+    BOOST_CHECK_EQUAL(vj_map.at("vehicle_journey:trip_4_dst_1")->accessible(has_vehicle_properties.vehicles()), false);
+
     auto& routes_map = data.pt_data->routes_map;
     BOOST_REQUIRE_EQUAL(routes_map.size(), 4);
 
@@ -182,6 +187,12 @@ static void check_ntfs(const nt::Data& data) {
     check_unsound_pickup_dropoff(data);
 
     BOOST_CHECK_EQUAL(data.meta->dataset_created_at, boost::posix_time::from_iso_string("20150415T153234"));
+
+    auto& sp_map = data.pt_data->stop_points_map;
+    navitia::type::hasProperties has_properties;
+    has_properties.set_property(navitia::type::hasProperties::BIKE_ACCEPTED);
+    BOOST_CHECK_EQUAL(sp_map.at("stop_point:SP:A")->accessible(has_properties.properties()), true);
+    BOOST_CHECK_EQUAL(sp_map.at("stop_point:SP:B")->accessible(has_properties.properties()), false);
 }
 
 BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
