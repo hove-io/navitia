@@ -1,3 +1,16 @@
+navitia2 (2.28.0) unstable; urgency=low
+
+  * raptor: fix stay-in arrival datetime  <https://github.com/CanalTP/navitia/pull/2002>
+  * Jormungandr: fix stay-in that pass midnight  <https://github.com/CanalTP/navitia/pull/2012>
+  * Jormungandr: fix some links  <https://github.com/CanalTP/navitia/pull/2017>
+  * kraken: fix disruptions in departures for realtime  <https://github.com/CanalTP/navitia/pull/2016>
+  * Jormungandr: fix parameters in pagination links  <https://github.com/CanalTP/navitia/pull/2014>
+  * Jormungandr: link fixes  <https://github.com/CanalTP/navitia/pull/2011>
+  * jormungandr: fix encoding problem in SIRI RT proxy  <https://github.com/CanalTP/navitia/pull/2010>
+  * all: Handling boarding / alighting duration in navitia  <https://github.com/CanalTP/navitia/pull/1980>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Fri, 17 Mar 2017 11:03:02 +0100
+
 navitia2 (2.27.0) unstable; urgency=low
 
   * Doc: update interface.md  <https://github.com/CanalTP/navitia/pull/1993>
