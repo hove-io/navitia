@@ -899,3 +899,12 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         eq_(journeys[0]['sections'][0]['display_informations']['headsign'], "A00")
         eq_(journeys[0]['sections'][0]['display_informations']['color'], "289728")
         eq_(journeys[0]['sections'][0]['display_informations']['text_color'], "FFD700")
+
+    def test_stop_points_depth_3(self):
+        """
+        test stop_points formating in depth 3
+        Note: done in main_routing_test because we need a routing graph to have all the attributes
+        """
+        response = self.query_region("v1/stop_points?depth=3")
+        for s in get_not_null(response, 'stop_points'):
+            is_valid_stop_point(s, depth_check=3)
