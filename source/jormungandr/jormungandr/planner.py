@@ -45,7 +45,7 @@ class Kraken(object):
     def __init__(self, instance):
         self.instance = instance
 
-    def journeys(self, origins, destinations, datetime, clockwise, journey_parameters):
+    def journeys(self, origins, destinations, datetime, clockwise, journey_parameters,dep_mode, arr_mode):
         req = request_pb2.Request()
         req.requested_api = type_pb2.pt_planner
         for stop_point_id, access_duration in origins.items():
@@ -72,5 +72,7 @@ class Kraken(object):
 
         if journey_parameters.direct_path_duration is not None:
             req.journeys.direct_path_duration = journey_parameters.direct_path_duration
+
+        req.journeys.bike_in_pt = (dep_mode == 'bike' and arr_mode == 'bike')
 
         return self.instance.send_and_receive(req)

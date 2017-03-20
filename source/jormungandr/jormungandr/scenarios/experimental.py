@@ -470,7 +470,7 @@ class AsyncWorker(object):
                 return dep_mode, arr_mode, instance.planner.journeys(origins, destinations,
                                                                      fallback_extremity.datetime,
                                                                      fallback_extremity.represents_start,
-                                                                     journey_parameters)
+                                                                     journey_parameters, dep_mode, arr_mode)
             futures_jourenys.append(self.pool.spawn(worker_journey))
         return futures_jourenys
 
