@@ -102,7 +102,9 @@ private:
 
     // ces deux vectors servent pour ne pas charger les graphes secondaires
     std::set<uint64_t> way_to_ignore; //TODO if bottleneck change to flat_set
-    std::set<uint64_t> node_to_ignore;
+    std::unordered_set<uint64_t> node_to_ignore;
+    using EdgeId = std::pair<uint64_t, uint64_t>;
+    navitia::flat_enum_map<navitia::type::Mode_e, std::set<EdgeId>> edge_to_ignore_by_modes;
 
     void fill_meta(navitia::type::Data& data, pqxx::work& work);
     void fill_feed_infos(navitia::type::Data& data, pqxx::work& work);
@@ -147,7 +149,7 @@ private:
     void fill_graph(navitia::type::Data& data, pqxx::work& work, bool export_georef_edges_geometries);
     boost::optional<navitia::time_res_traits::sec_type>
     get_duration (nt::Mode_e mode, float len, uint64_t source, uint64_t target);
-    void fill_vector_to_ignore(navitia::type::Data& data, pqxx::work& work, const double percent_delete);
+    void fill_vector_to_ignore(pqxx::work& work, const double percent_delete);
     void fill_graph_bss(navitia::type::Data& data, pqxx::work& work);
     void fill_graph_parking(navitia::type::Data& data, pqxx::work& work);
 
