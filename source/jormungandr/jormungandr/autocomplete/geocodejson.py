@@ -33,7 +33,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import logging
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
 import requests
-from jormungandr.exceptions import TechnicalError, InvalidArguments
+from jormungandr.exceptions import TechnicalError, UnknownObject
 
 
 class GeocodeJson(AbstractAutocomplete):
@@ -69,7 +69,7 @@ class GeocodeJson(AbstractAutocomplete):
         if response == None:
             raise TechnicalError('impossible to access autocomplete service')
         if response.status_code == 404:
-            raise InvalidArguments(uri)
+            raise UnknownObject(uri)
         if response.status_code != 200:
             raise TechnicalError('error in autocomplete request')
 

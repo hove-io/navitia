@@ -100,6 +100,15 @@ class ApiNotFound(HTTPException):
         self.code = 404
 
 
+class UnknownObject(HTTPException):
+
+    def __init__(self, msg):
+        super(UnknownObject, self).__init__()
+        error = 'The object {} doesn\'t exist'.format(msg)
+        self.data = format_error("unknown_object", error)
+        self.code = 404
+
+
 class InvalidArguments(HTTPException):
 
     def __init__(self, arg):

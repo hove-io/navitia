@@ -375,9 +375,9 @@ class TestBragiAutocomplete(AbstractTestFixture):
 
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places/AAA?&pt_dataset=main_autocomplete_test", check=False)
-            assert response[1] == 400
+            assert response[1] == 404
             assert response[0]["error"]["id"] == 'unknown_object'
-            assert response[0]["error"]["message"] == 'Invalid arguments AAA'
+            assert response[0]["error"]["message"] == "The object AAA doesn't exist"
 
 @dataset({"main_routing_test": {}})
 class TestBragiShape(AbstractTestFixture):
