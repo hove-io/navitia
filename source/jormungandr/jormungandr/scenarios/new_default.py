@@ -150,7 +150,7 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     for forbidden_uri in get_or_default(request, "forbidden_uris[]", []):
         req.journeys.forbidden_uris.append(forbidden_uri)
 
-    req.journeys.bike_in_pt= (dep_mode == 'bike') and (arr_mode == 'bike')
+    req.journeys.bike_in_pt = (dep_mode == 'bike') and (arr_mode == 'bike')
 
     return req
 
