@@ -903,7 +903,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
     def test_stop_points_depth_3(self):
         """
         test stop_points formating in depth 3
-        Note: done in main_routing_test because we need a routing graph do have all the attributes
+        Note: done in main_routing_test because we need a routing graph to have all the attributes
         """
         response = self.query_region("v1/stop_points?depth=3")
         for s in get_not_null(response, 'stop_points'):
