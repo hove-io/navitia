@@ -75,7 +75,8 @@ def get_kraken_calls(request):
                            ('bike', 'walking'),
                            ('car', 'walking'),
                            ('bike', 'bss'),
-                           ('car', 'bss')]
+                           ('car', 'bss'),
+                           ('bike', 'bike')]
 
     res = [c for c in allowed_combination if c in itertools.product(dep_modes, arr_modes)]
 
@@ -148,6 +149,8 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
 
     for forbidden_uri in get_or_default(request, "forbidden_uris[]", []):
         req.journeys.forbidden_uris.append(forbidden_uri)
+
+    req.journeys.bike_in_pt= (dep_mode == 'bike') and (arr_mode == 'bike')
 
     return req
 
