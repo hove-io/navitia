@@ -351,6 +351,34 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['address']['name'] == 'Rue Bob'
             assert r[0]['address']['label'] == '20 Rue Bob (Bobtown)'
 
+    def test_features_unknown_uri(self):
+        url = 'https://host_of_bragi'
+        kwargs = {
+            'params': {
+                u'pt_dataset': 'main_autocomplete_test',
+            },
+            'timeout': 10
+        }
+
+        from urllib import urlencode
+        url += "/features/AAA?{}".format(urlencode(kwargs.get('params'), doseq=True))
+        mock_requests = MockRequests({
+        url:
+            (
+                {
+                    'short": "query error',
+                    'long": "invalid query EsError("Unable to find object")'
+                },
+                404
+            )
+        })
+
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query_region("places/AAA?&pt_dataset=main_autocomplete_test", check=False)
+            assert response[1] == 400
+            assert response[0]["error"]["id"] == 'unknown_object'
+            assert response[0]["error"]["message"] == 'Invalid arguments AAA'
+
 @dataset({"main_routing_test": {}})
 class TestBragiShape(AbstractTestFixture):
 

@@ -148,7 +148,8 @@ class GeocodeJson(AbstractAutocomplete):
     def geo_status(self, instance):
         raise NotImplementedError
 
-    def get_coords(self, param):
+    @staticmethod
+    def get_coords(param):
         """
         Get coordinates (longitude, latitude).
         For moment we consider that the param can only be a coordinate.
