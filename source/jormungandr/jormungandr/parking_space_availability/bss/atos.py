@@ -75,7 +75,7 @@ class AtosProvider(BssProvider):
 
     def _get_client(self):
         if not self._client:
-            transport = zeep.Transport(timeout=self.timeout)
+            transport = zeep.Transport(timeout=self.timeout, operation_timeout=self.timeout)
             self._client = zeep.Client(self.WS_URL, transport=transport)
         return self._client
 
