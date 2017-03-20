@@ -245,8 +245,6 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
             args['origin'] = transform_id(args['origin'])
         if args['destination']:
             args['destination'] = transform_id(args['destination'])
-        if not args['datetime']:
-            args['datetime'] = args['_current_datetime']
 
         args['original_datetime'] = args['datetime']
 
