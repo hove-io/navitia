@@ -33,6 +33,7 @@ from jormungandr.parking_space_availability.bss.stands import Stands
 from jormungandr import cache, app
 import zeep
 import logging
+import pybreaker
 
 
 class AtosProvider(BssProvider):
@@ -44,6 +45,7 @@ class AtosProvider(BssProvider):
         self.operators = [o.lower() for o in operators]
         self.timeout = timeout
         self._client = None
+        self.breaker = pybreaker.CircuitBreaker(fail_max=kwargs.get('fail_max', 5), reset_timeout=kwargs.get('reset_timeout', 120))
 
     def __repr__(self):
         return self.WS_URL + str(self.id_ao)
@@ -56,7 +58,7 @@ class AtosProvider(BssProvider):
     def get_informations(self, poi):
         logging.debug('building stands')
         try:
-            all_stands = self._get_all_stands()
+            all_stands = self.breaker.call(self._get_all_stands)
             ref = poi.get('properties', {}).get('ref')
             if ref:
                 stands = all_stands.get(ref.lstrip('0'))
