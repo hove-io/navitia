@@ -31,8 +31,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import os
 # set default config file if not defined in other tests
 from datetime import timedelta
-from operator import itemgetter
-from flask import logging
 import mock
 import retrying
 from retrying import RetryError

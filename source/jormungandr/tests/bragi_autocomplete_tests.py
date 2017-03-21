@@ -155,7 +155,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         """"
         test that the _autocomplete param switch the right autocomplete service
         """
-        url = 'https://host_of_bragi/autocomplete'
+        url = 'https://host_of_bragi'
         kwargs = {
             'params': {
                 u'q': u'bob',
@@ -167,7 +167,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         }
 
         from urllib import urlencode
-        url += "?{}".format(urlencode(kwargs.get('params'), doseq=True))
+        url += "/autocomplete?{}".format(urlencode(kwargs.get('params'), doseq=True))
         mock_requests = MockRequests({
         url:
             (
@@ -285,6 +285,99 @@ class TestBragiAutocomplete(AbstractTestFixture):
         with mock.patch('requests.get', http_get) as mock_method:
             self.query_region('places?q=bob&type[]=stop_point&type[]=address')
 
+    def test_features_call(self):
+        url = 'https://host_of_bragi'
+        kwargs = {
+            'params': {
+                u'pt_dataset': 'main_autocomplete_test',
+            },
+            'timeout': 10
+        }
+
+        from urllib import urlencode
+        url += "/features/1234?{}".format(urlencode(kwargs.get('params'), doseq=True))
+        mock_requests = MockRequests({
+        url:
+            (
+                {"features": [
+                    {
+                        "geometry": {
+                            "coordinates": [
+                                3.282103,
+                                49.847586
+                            ],
+                            "type": "Point"
+                        },
+                        "properties": {
+                            "geocoding": {
+                                "city": "Bobtown",
+                                "housenumber": "20",
+                                "id": "49.847586;3.282103",
+                                "label": "20 Rue Bob (Bobtown)",
+                                "name": "Rue Bob",
+                                "postcode": "02100",
+                                "street": "Rue Bob",
+                                "type": "house",
+                                "citycode": "02000",
+                                "administrative_regions": [
+                                    {
+                                        "id": "admin:fr:02000",
+                                        "insee": "02000",
+                                        "level": 8,
+                                        "label": "Bobtown (02000)",
+                                        "zip_codes": ["02000"],
+                                        "weight": 1,
+                                        "coord": {
+                                            "lat": 48.8396154,
+                                            "lon": 2.3957517
+                                        }
+                                    }
+                                ],
+                                }
+                        },
+                        "type": "Feature"
+                    }
+                ]
+                }, 200)
+        })
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query_region("places/1234?&pt_dataset=main_autocomplete_test")
+
+            is_valid_global_autocomplete(response, depth=1)
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['name'] == '20 Rue Bob (Bobtown)'
+            assert r[0]['embedded_type'] == 'address'
+            assert r[0]['address']['name'] == 'Rue Bob'
+            assert r[0]['address']['label'] == '20 Rue Bob (Bobtown)'
+
+    def test_features_unknown_uri(self):
+        url = 'https://host_of_bragi'
+        kwargs = {
+            'params': {
+                u'pt_dataset': 'main_autocomplete_test',
+            },
+            'timeout': 10
+        }
+
+        from urllib import urlencode
+        url += "/features/AAA?{}".format(urlencode(kwargs.get('params'), doseq=True))
+        mock_requests = MockRequests({
+        url:
+            (
+                {
+                    'short": "query error',
+                    'long": "invalid query EsError("Unable to find object")'
+                },
+                404
+            )
+        })
+
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query_region("places/AAA?&pt_dataset=main_autocomplete_test", check=False)
+            assert response[1] == 404
+            assert response[0]["error"]["id"] == 'unknown_object'
+            assert response[0]["error"]["message"] == "The object AAA doesn't exist"
 
 @dataset({"main_routing_test": {}})
 class TestBragiShape(AbstractTestFixture):

@@ -33,7 +33,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import logging
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
 import requests
-from jormungandr.exceptions import TechnicalError
+from jormungandr.exceptions import TechnicalError, UnknownObject
 
 
 class GeocodeJson(AbstractAutocomplete):
@@ -50,18 +50,63 @@ class GeocodeJson(AbstractAutocomplete):
     TYPE_STREET = "street"
 
     def __init__(self, **kwargs):
-        self.external_api = kwargs.get('host')
+        self.host = kwargs.get('host')
         self.timeout = kwargs.get('timeout', 10)
 
+    @staticmethod
+    def call_bragi(url, method, **kwargs):
+        try:
+            return method(url, **kwargs)
+        except requests.Timeout:
+            logging.getLogger(__name__).error('autocomplete request timeout')
+            raise TechnicalError('external autocomplete service timeout')
+        except:
+            logging.getLogger(__name__).exception('error in autocomplete request')
+            raise TechnicalError('impossible to access external autocomplete service')
+
+    @classmethod
+    def _check_response(cls, response, uri):
+        if response == None:
+            raise TechnicalError('impossible to access autocomplete service')
+        if response.status_code == 404:
+            raise UnknownObject(uri)
+        if response.status_code != 200:
+            raise TechnicalError('error in autocomplete request')
+
+    @classmethod
+    def response_marshaler(cls, response_bragi, uri=None):
+        cls._check_response(response_bragi, uri)
+        json_response = response_bragi.json()
+        from flask.ext.restful import marshal
+        from jormungandr.interfaces.v1.Places import geocodejson
+
+        return marshal(json_response, geocodejson)
+
+    def make_url(self, end_point, uri=None):
+
+        if end_point not in ['autocomplete', 'features']:
+            raise TechnicalError('Unknown endpoint')
+
+        if not self.host:
+            raise TechnicalError('global autocomplete not configured')
+
+        url = "{host}/{end_point}".format(host=self.host, end_point=end_point)
+        if uri:
+            url = '{url}/{uri}'.format(url=url, uri=uri)
+        return url
+
+    def basic_params(self, instance):
+        params = {}
+        if instance:
+            params["pt_dataset"] = instance.name
+        return params
+
     def make_params(self, request, instance):
-        params = {
+        params = self.basic_params(instance)
+        params.update({
             "q": request["q"],
             "limit": request["count"]
-        }
-
-        if request.get("from"):
-            params["lon"], params["lat"] = self.get_coords(request["from"])
-
+        })
         if request.get("type[]"):
             types = []
             map_type = {
@@ -79,43 +124,43 @@ class GeocodeJson(AbstractAutocomplete):
 
             params["type[]"] = types
 
-        if instance:
-            params["pt_dataset"] = instance.name
-
+        if request.get("from"):
+            params["lon"], params["lat"] = self.get_coords(request["from"])
         return params
 
     def get(self, request, instance):
-        if not self.external_api:
-            raise TechnicalError('global autocomplete not configured')
 
         params = self.make_params(request, instance)
 
         shape = request.get('shape', None)
-        try:
-            if shape:
-                raw_response = requests.post(self.external_api, timeout=self.timeout, json={'shape': shape}, params=params)
-            else:
-                raw_response = requests.get(self.external_api, timeout=self.timeout, params=params)
 
-        except requests.Timeout:
-            logging.getLogger(__name__).error('autocomplete request timeout')
-            raise TechnicalError('external autocomplete service timeout')
-        except:
-            logging.getLogger(__name__).exception('error in autocomplete request')
-            raise TechnicalError('impossible to access external autocomplete service')
+        url = self.make_url('autocomplete')
+        kwargs = {"params": params, "timeout": self.timeout}
+        method = requests.get
+        if shape:
+            kwargs["json"] = {"shape": shape}
+            method = requests.post
 
-        bragi_response = raw_response.json()
-        from flask.ext.restful import marshal
-        from jormungandr.interfaces.v1.Places import geocodejson
+        raw_response = self.call_bragi(url, method, **kwargs)
 
-        return marshal(bragi_response, geocodejson)
+        return self.response_marshaler(raw_response)
 
     def geo_status(self, instance):
         raise NotImplementedError
 
-    def get_coords(self, param):
+    @staticmethod
+    def get_coords(param):
         """
         Get coordinates (longitude, latitude).
         For moment we consider that the param can only be a coordinate.
         """
         return param.split(";")
+
+    def get_uri(self, uri, request, instance):
+
+        params = self.basic_params(instance)
+
+        url = self.make_url('features', uri)
+        raw_response = self.call_bragi(url, requests.get, timeout=self.timeout, params=params)
+
+        return self.response_marshaler(raw_response, uri)
