@@ -46,12 +46,12 @@ BOOST_AUTO_TEST_CASE(wcb_required_false_properties_true) {
     BOOST_CHECK_EQUAL(sp.accessible(required_properties), true);
 }
 BOOST_AUTO_TEST_CASE(wcb_required_true_properties_false) {
-    Properties required_properties = std::pow(2, hasProperties::WHEELCHAIR_BOARDING);
+    Properties required_properties = 1 << hasProperties::WHEELCHAIR_BOARDING;
     StopPoint sp;
     BOOST_CHECK_EQUAL(sp.accessible(required_properties), false);
 }
 BOOST_AUTO_TEST_CASE(wcb_required_true_properties_true) {
-    Properties required_properties = std::pow(2, hasProperties::WHEELCHAIR_BOARDING);
+    Properties required_properties = 1 << hasProperties::WHEELCHAIR_BOARDING;
     StopPoint sp;
     sp.set_property(hasProperties::WHEELCHAIR_BOARDING);
     BOOST_CHECK_EQUAL(sp.accessible(required_properties), true);
@@ -70,13 +70,13 @@ BOOST_AUTO_TEST_CASE(wcb_required_false_properties_true_const) {
     BOOST_CHECK_EQUAL(sp.accessible(required_properties), true);
 }
 BOOST_AUTO_TEST_CASE(wcb_required_true_properties_false_const) {
-    Properties required_properties = std::pow(2, hasProperties::WHEELCHAIR_BOARDING);
+    Properties required_properties = 1 << hasProperties::WHEELCHAIR_BOARDING;
     StopPoint tmp_sp;
     const StopPoint sp = tmp_sp;
     BOOST_CHECK_EQUAL(sp.accessible(required_properties), false);
 }
 BOOST_AUTO_TEST_CASE(wcb_required_true_properties_true_const) {
-    Properties required_properties = std::pow(2, hasProperties::WHEELCHAIR_BOARDING);
+    Properties required_properties = 1 << hasProperties::WHEELCHAIR_BOARDING;
     StopPoint tmp_sp;
     tmp_sp.set_property(hasProperties::WHEELCHAIR_BOARDING);
     const StopPoint sp = tmp_sp;
@@ -94,7 +94,7 @@ BOOST_AUTO_TEST_CASE(ba_required_false_properties_true) {
     BOOST_CHECK_EQUAL(sp.accessible(required_properties), true);
 }
 BOOST_AUTO_TEST_CASE(ba_required_true_properties_false) {
-    Properties required_properties = std::pow(2, hasProperties::BIKE_ACCEPTED);;
+    Properties required_properties = 1 << hasProperties::BIKE_ACCEPTED;
     StopPoint sp;
     BOOST_CHECK_EQUAL(sp.accessible(required_properties), false);
 }
@@ -118,13 +118,13 @@ BOOST_AUTO_TEST_CASE(ba_required_false_properties_true_const) {
     BOOST_CHECK_EQUAL(sp.accessible(required_properties), true);
 }
 BOOST_AUTO_TEST_CASE(ba_required_true_properties_false_const) {
-    Properties required_properties = std::pow(2, hasProperties::BIKE_ACCEPTED);;
+    Properties required_properties = 1 << hasProperties::BIKE_ACCEPTED;
     StopPoint tmp_sp;
     const StopPoint sp = tmp_sp;
     BOOST_CHECK_EQUAL(sp.accessible(required_properties), false);
 }
 BOOST_AUTO_TEST_CASE(ba_required_true_properties_true_const) {
-    Properties required_properties = std::pow(2, hasProperties::BIKE_ACCEPTED);
+    Properties required_properties = 1 << hasProperties::BIKE_ACCEPTED;
     StopPoint tmp_sp;
     tmp_sp.set_property(hasProperties::BIKE_ACCEPTED);
     const StopPoint sp = tmp_sp;

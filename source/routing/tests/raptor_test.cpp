@@ -2250,7 +2250,7 @@ BOOST_AUTO_TEST_CASE(accessibility_drop_off_forbidden) {
     BOOST_REQUIRE_EQUAL(j.items.size(), 4);
 
     BOOST_REQUIRE(! j.items[0].stop_times.empty());
-    // we should do the cnx on D1
+    // we should do the cnx on C1
     BOOST_CHECK_EQUAL(j.items[0].stop_points.back()->uri, "C1");
 
     // the 2th path item should be the transfer
@@ -2479,7 +2479,7 @@ BOOST_AUTO_TEST_CASE(accessibility_on_departure_cnx_2) {
     BOOST_REQUIRE_EQUAL(j.items.size(), 4);
 
     BOOST_REQUIRE(! j.items[0].stop_times.empty());
-    // we should do the cnx on D1
+    // we should do the cnx on B1
     BOOST_CHECK_EQUAL(j.items[0].stop_points.back()->uri, "B1");
 
     // the 2th path item should be the transfer
@@ -3360,7 +3360,7 @@ BOOST_AUTO_TEST_CASE(bike_drop_off_forbidden) {
     BOOST_REQUIRE_EQUAL(j.items.size(), 4);
 
     BOOST_REQUIRE(! j.items[0].stop_times.empty());
-    // we should do the cnx on D1
+    // we should do the cnx on C1
     BOOST_CHECK_EQUAL(j.items[0].stop_points.back()->uri, "C1");
 
     // the 2th path item should be the transfer
@@ -3506,7 +3506,7 @@ BOOST_AUTO_TEST_CASE(bike_accepted_on_departure_cnx_2) {
     BOOST_REQUIRE_EQUAL(j.items.size(), 4);
 
     BOOST_REQUIRE(! j.items[0].stop_times.empty());
-    // we should do the cnx on D1
+    // we should do the cnx on B1
     BOOST_CHECK_EQUAL(j.items[0].stop_points.back()->uri, "B1");
 
     // the 2th path item should be the transfer

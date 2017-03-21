@@ -329,8 +329,6 @@ SA::SA(builder & b, const std::string & sa_name, double x, double y,
     sa->coord.set_lat(y);
     if(wheelchair_boarding)
         sa->set_property(types::hasProperties::WHEELCHAIR_BOARDING);
-    if(bike_accepted)
-        sa->set_property(types::hasProperties::BIKE_ACCEPTED);
     b.sas[sa_name] = sa;
 
     if (create_sp) {
