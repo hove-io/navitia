@@ -1,3 +1,9 @@
+navitia2 (2.28.1) unstable; urgency=low
+
+  * jormun: set timeout for network operation with zeep <https://github.com/CanalTP/navitia/pull/2025> 
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Wed, 22 Mar 2017 08:03:06 +0100
+
 navitia2 (2.28.0) unstable; urgency=low
 
   * raptor: fix stay-in arrival datetime  <https://github.com/CanalTP/navitia/pull/2002>
