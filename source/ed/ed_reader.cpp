@@ -1480,7 +1480,7 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work, bool expo
     for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         navitia::georef::Way* way = this->way_map[const_it["way_id"].as<uint64_t>()];
         const auto source_node_id = const_it["source_node_id"].as<uint64_t>();
-        const auto target_node_id = const_it["source_node_id"].as<uint64_t>();
+        const auto target_node_id = const_it["target_node_id"].as<uint64_t>();
         auto it_source = node_map.find(source_node_id);
         auto it_target = node_map.find(target_node_id);
 
