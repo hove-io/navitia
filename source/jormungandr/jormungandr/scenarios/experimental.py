@@ -467,10 +467,11 @@ class AsyncWorker(object):
                                destinations=destinations):
                 if not origins or not destinations or not self.request.get('max_duration', 0):
                     return dep_mode, arr_mode, None
+                bike_in_pt = (dep_mode == 'bike' and arr_mode == 'bike')
                 return dep_mode, arr_mode, instance.planner.journeys(origins, destinations,
                                                                      fallback_extremity.datetime,
                                                                      fallback_extremity.represents_start,
-                                                                     journey_parameters)
+                                                                     journey_parameters, bike_in_pt)
             futures_jourenys.append(self.pool.spawn(worker_journey))
         return futures_jourenys
 

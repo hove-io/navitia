@@ -118,6 +118,9 @@ def has_bike_first_and_walking_last(journey):
 def has_bike_first_and_bss_last(journey):
     return has_bike_first(journey) and has_bss_last(journey)
 
+def has_bike_first_and_bike_last(journey):
+    return has_bike_first(journey) and has_bike_last(journey)
+
 def bike_duration(journey):
     duration = 0
     in_bss = False
