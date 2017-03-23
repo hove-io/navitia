@@ -44,7 +44,7 @@ class AbstractAutocomplete(object):
         pass
 
     @abstractmethod
-    def get_uri(self, uri, query, instance):
+    def get_uri(self, uri, instance=None, current_datetime=None):
         pass
 
     @abstractmethod

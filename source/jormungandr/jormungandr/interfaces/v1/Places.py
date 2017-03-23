@@ -374,8 +374,8 @@ class Places(ResourceUri):
 
 class PlaceUri(ResourceUri):
 
-    def __init__(self, *args, **kwargs):
-        ResourceUri.__init__(self, *args, **kwargs)
+    def __init__(self, **kwargs):
+        ResourceUri.__init__(self, authentication=False, **kwargs)
         self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
@@ -407,7 +407,7 @@ class PlaceUri(ResourceUri):
             authentication.check_access_to_global_places(user)
             autocomplete = global_autocomplete.get('bragi')
             if autocomplete:
-                response = autocomplete.get_uri(args, instance=None)
+                response = autocomplete.get_uri(args["uri"], instance=None)
             else:
                 raise TechnicalError('world wide autocompletion service not available')
 

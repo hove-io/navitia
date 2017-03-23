@@ -144,7 +144,10 @@ class Scenario(object):
         return instance.get_autocomplete(request.get('_autocomplete')).get(request, instance)
 
     def place_uri(self, request, instance):
-        return instance.get_autocomplete(request.get('_autocomplete')).get_uri(request["uri"], request, instance)
+        autocomplete = instance.get_autocomplete(request.get('_autocomplete'))
+        return autocomplete.get_uri(uri=request["uri"],
+                                    instance=instance,
+                                    current_datetime=request['_current_datetime'])
 
     def pt_objects(self, request, instance):
         req = request_pb2.Request()

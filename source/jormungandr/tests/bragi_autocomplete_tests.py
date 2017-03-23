@@ -63,6 +63,47 @@ MOCKED_INSTANCE_CONF = {
     }
 }
 
+BRAGI_MOCK_RESPONSE = {
+    "features": [
+        {
+            "geometry": {
+                "coordinates": [
+                    3.282103,
+                    49.847586
+                ],
+                "type": "Point"
+            },
+            "properties": {
+                "geocoding": {
+                    "city": "Bobtown",
+                    "housenumber": "20",
+                    "id": "49.847586;3.282103",
+                    "label": "20 Rue Bob (Bobtown)",
+                    "name": "Rue Bob",
+                    "postcode": "02100",
+                    "street": "Rue Bob",
+                    "type": "house",
+                    "citycode": "02000",
+                    "administrative_regions": [
+                        {
+                            "id": "admin:fr:02000",
+                            "insee": "02000",
+                            "level": 8,
+                            "label": "Bobtown (02000)",
+                            "zip_codes": ["02000"],
+                            "weight": 1,
+                            "coord": {
+                                "lat": 48.8396154,
+                                "lon": 2.3957517
+                            }
+                        }
+                    ],
+                }
+            },
+            "type": "Feature"
+        }
+    ]
+}
 
 @dataset({'main_autocomplete_test': MOCKED_INSTANCE_CONF})
 class TestBragiAutocomplete(AbstractTestFixture):
@@ -82,48 +123,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         from urllib import urlencode
         url += "?{}".format(urlencode(kwargs.get('params'), doseq=True))
         mock_requests = MockRequests({
-        url:
-            (
-                {"features": [
-                    {
-                        "geometry": {
-                            "coordinates": [
-                                3.282103,
-                                49.847586
-                            ],
-                            "type": "Point"
-                        },
-                        "properties": {
-                            "geocoding": {
-                                "city": "Bobtown",
-                                "housenumber": "20",
-                                "id": "49.847586;3.282103",
-                                "label": "20 Rue Bob (Bobtown)",
-                                "name": "Rue Bob",
-                                "postcode": "02100",
-                                "street": "Rue Bob",
-                                "type": "house",
-                                "citycode": "02000",
-                                "administrative_regions": [
-                                    {
-                                        "id": "admin:fr:02000",
-                                        "insee": "02000",
-                                        "level": 8,
-                                        "label": "Bobtown (02000)",
-                                        "zip_codes": ["02000"],
-                                        "weight": 1,
-                                        "coord": {
-                                            "lat": 48.8396154,
-                                            "lon": 2.3957517
-                                        }
-                                    }
-                                ],
-                                }
-                        },
-                        "type": "Feature"
-                    }
-                ]
-                }, 200)
+            url: (BRAGI_MOCK_RESPONSE, 200)
         })
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places?q=bob&pt_dataset=main_autocomplete_test&type[]=stop_area"
@@ -168,49 +168,9 @@ class TestBragiAutocomplete(AbstractTestFixture):
 
         from urllib import urlencode
         url += "/autocomplete?{}".format(urlencode(kwargs.get('params'), doseq=True))
+
         mock_requests = MockRequests({
-        url:
-            (
-                {"features": [
-                    {
-                        "geometry": {
-                            "coordinates": [
-                                3.282103,
-                                49.847586
-                            ],
-                            "type": "Point"
-                        },
-                        "properties": {
-                            "geocoding": {
-                                "city": "Bobtown",
-                                "housenumber": "20",
-                                "id": "49.847586;3.282103",
-                                "label": "20 Rue Bob (Bobtown)",
-                                "name": "Rue Bob",
-                                "postcode": "02100",
-                                "street": "Rue Bob",
-                                "type": "house",
-                                "citycode": "02000",
-                                "administrative_regions": [
-                                    {
-                                        "id": "admin:fr:02000",
-                                        "insee": "02000",
-                                        "level": 8,
-                                        "label": "Bobtown (02000)",
-                                        "zip_codes": ["02000"],
-                                        "weight": 1,
-                                        "coord": {
-                                            "lat": 48.8396154,
-                                            "lon": 2.3957517
-                                        }
-                                    }
-                                ],
-                                }
-                        },
-                        "type": "Feature"
-                    }
-                ]
-                }, 200)
+            url: (BRAGI_MOCK_RESPONSE, 200)
         })
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places?q=bob&type[]=stop_area&type[]=address&type[]=poi"
@@ -296,49 +256,9 @@ class TestBragiAutocomplete(AbstractTestFixture):
 
         from urllib import urlencode
         url += "/features/1234?{}".format(urlencode(kwargs.get('params'), doseq=True))
+
         mock_requests = MockRequests({
-        url:
-            (
-                {"features": [
-                    {
-                        "geometry": {
-                            "coordinates": [
-                                3.282103,
-                                49.847586
-                            ],
-                            "type": "Point"
-                        },
-                        "properties": {
-                            "geocoding": {
-                                "city": "Bobtown",
-                                "housenumber": "20",
-                                "id": "49.847586;3.282103",
-                                "label": "20 Rue Bob (Bobtown)",
-                                "name": "Rue Bob",
-                                "postcode": "02100",
-                                "street": "Rue Bob",
-                                "type": "house",
-                                "citycode": "02000",
-                                "administrative_regions": [
-                                    {
-                                        "id": "admin:fr:02000",
-                                        "insee": "02000",
-                                        "level": 8,
-                                        "label": "Bobtown (02000)",
-                                        "zip_codes": ["02000"],
-                                        "weight": 1,
-                                        "coord": {
-                                            "lat": 48.8396154,
-                                            "lon": 2.3957517
-                                        }
-                                    }
-                                ],
-                                }
-                        },
-                        "type": "Feature"
-                    }
-                ]
-                }, 200)
+            url: (BRAGI_MOCK_RESPONSE, 200)
         })
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places/1234?&pt_dataset=main_autocomplete_test")
@@ -435,3 +355,18 @@ class TestBragiShape(AbstractTestFixture):
                     mock_get.reset_mock()
                     self.query('v1/places?q=toto')
                     assert mock_get.called
+
+    def test_global_place_uri(self):
+        mock_requests = MockRequests({
+            'https://host_of_bragi/features/bob': (BRAGI_MOCK_RESPONSE, 200)
+        })
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query("/v1/places/bob")
+
+            is_valid_global_autocomplete(response, depth=1)
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['name'] == '20 Rue Bob (Bobtown)'
+            assert r[0]['embedded_type'] == 'address'
+            assert r[0]['address']['name'] == 'Rue Bob'
+            assert r[0]['address']['label'] == '20 Rue Bob (Bobtown)'
