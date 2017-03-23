@@ -112,8 +112,17 @@ class SiriLite(RealtimeProxy):
             next_passages = []
             for next_expected_st in schedules:
                 # for the moment we handle only the NextStop and the direction
-                dt = self._get_dt(next_expected_st['monitoredVehicleJourney']['monitoredCall']['expectedDepartureTime'])
-                direction = next_expected_st.get('destinationName', {}).get('value')
+                expected_dt = next_expected_st.get('monitoredVehicleJourney', {})\
+                                              .get('monitoredCall', {})\
+                                              .get('expectedDepartureTime')
+                if not expected_dt:
+                    continue
+                dt = self._get_dt(expected_dt)
+                destination = next_expected_st.get('monitoredVehicleJourney', {}).get('destinationName', [])
+                if destination:
+                    direction = destination[0].get('value')
+                else:
+                    direction = None
                 is_real_time = True
                 next_passage = RealTimePassage(dt, direction, is_real_time)
                 next_passages.append(next_passage)
