@@ -35,7 +35,7 @@ import uuid
 from jormungandr.scenarios.utils import fill_uris
 from jormungandr.planner import JourneyParameters
 from flask import g
-from jormungandr.utils import get_uri_pt_object, generate_id, get_pt_object_coord, PeriodExtremity
+from jormungandr.utils import get_uri_pt_object, generate_id, get_pt_object_coord, PeriodExtremity, SectionSorter
 from jormungandr import app
 import gevent
 import gevent.pool
@@ -56,13 +56,6 @@ def create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end, 
     section.street_network.mode = response_pb2.Walking
     section.id = unicode(uuid.uuid4())
     return section
-
-class SectionSorter(object):
-    def __call__(self, a, b):
-        if a.begin_date_time != b.begin_date_time:
-            return -1 if a.begin_date_time < b.begin_date_time else 1
-        else:
-            return -1 if a.end_date_time < b.end_date_time else 1
 
 
 # dp_durations (for direct path duration) is used to limit the
@@ -241,24 +234,6 @@ def _extend_pt_sections_with_direct_path(pt_journey, dp_journey):
         pt_journey.sections.extend(dp_journey.journeys[0].sections)
 
 
-def _reverse_journeys(res):
-    if not getattr(res, "journeys"):
-        return res
-    for j in res.journeys:
-        if not getattr(j, "sections"):
-            continue
-        previous_section_begin = j.arrival_date_time
-        for s in j.sections:
-            o = copy.deepcopy(s.origin)
-            d = copy.deepcopy(s.destination)
-            s.origin.CopyFrom(d)
-            s.destination.CopyFrom(o)
-            s.end_date_time = previous_section_begin
-            previous_section_begin = s.begin_date_time = s.end_date_time - s.duration
-        j.sections.sort(SectionSorter())
-    return res
-
-
 def _get_places_crowfly(instance, mode, place, max_duration_to_pt, max_nb_crowfly=5000, **kwargs):
     # When max_duration_to_pt is 0, there is no need to compute the fallback to pt, except if place is a stop_point or a
     # stop_area
@@ -414,9 +389,9 @@ class AsyncWorker(object):
                                   pt_object_origin,
                                   pt_object_destination,
                                   fallback_extremity,
-                                  request)
-        if is_fallback_at_end:
-            _reverse_journeys(dp)
+                                  request,
+                                  is_fallback_at_end=is_fallback_at_end)
+
         return dp_key, dp
 
     def get_direct_path_futures(self, fallback_direct_path_pool, origin, destination,
