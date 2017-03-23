@@ -38,15 +38,37 @@ using namespace navitia::georef;
  * Here we test prepare a data for autocomplete test
  * The data contains One Admin, 6 stop_areas and three addresses
  */
+
+/*
+
+Shape and stopAreas
+
+
+  |     (1,8)
+  |     |-------------------------------------------------------------- (8,8)
+  |     |                                                               |
+  |     |                                                               |
+  |     |                        *                                      |
+  |     |                   Becharles(5,7)          *                   |
+  |     |                                       Luther King(7,5)        |
+  |     |               *                                               |
+  |     |    *           Gare(3,4)                                      |
+  |     |    IUT(2,3)                                                   |
+  |     |_______________________________________________________________|
+  |    (1,1)                                                            (8,1)
+  |-------------------------------------------------------------------------------
+*/
+
+
 int main(int argc, const char* const argv[]) {
     navitia::init_app();
 
     ed::builder b = {"20140614"};
 
-    b.sa("IUT", 0, 0);
-    b.sa("Gare", 0, 0);
-    b.sa("Becharles", 0, 0);
-    b.sa("Luther King", 0, 0);
+    b.sa("IUT", 2, 3);
+    b.sa("Gare", 3, 4);
+    b.sa("Becharles", 5, 7);
+    b.sa("Luther King", 7, 5);
     b.sa("Napoleon III", 0, 0);
     b.sa("MPT kerfeunteun", 0, 0);
     b.data->pt_data->index();
@@ -96,6 +118,14 @@ int main(int argc, const char* const argv[]) {
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
+
+    std::stringstream ss;
+    ss << "POLYGON((" << 1. << " " << 1.
+              << ", " << 8. << " " << 1.
+              << ", " << 8. << " " << 8.
+              << ", " << 1. << " " << 8.
+              << ", " << 1. << " " << 1. << "))";
+    b.data->meta->shape = ss.str();
 
     mock_kraken kraken(b, "main_autocomplete_test", argc, argv);
     return 0;
