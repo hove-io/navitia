@@ -98,3 +98,19 @@ class TestAutocomplete(AbstractTestFixture):
         response = self.query_region("places?q=quimper", display=False)
         is_valid_autocomplete(response, 2)
         valid_autocomplete_with_multi_object(response)
+
+    def test_places_coords(self):
+        coords = '{lon};{lat}'.format(lon=2, lat=3)
+        response = self.query('v1/coverage/{coords}/places?q={q}&type[]=stop_point'.
+                              format(coords=coords, q='Becharles'))
+        places = get_not_null(response, 'places')
+        assert len(places) == 1
+        assert places[0]['id'] == 'stop_point:Becharles'
+
+    def test_place_uri_coords(self):
+        coords = '{lon};{lat}'.format(lon=2, lat=3)
+        response = self.query('v1/coverage/{coords}/places/{id}'.
+                              format(coords=coords, id='stop_point:Becharles'))
+        places = get_not_null(response, 'places')
+        assert len(places) == 1
+        assert places[0]['id'] == 'stop_point:Becharles'

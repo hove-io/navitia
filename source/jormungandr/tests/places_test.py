@@ -121,6 +121,16 @@ class TestPlaces(AbstractTestFixture):
         assert(len(response['places_nearby']) > 0)
         is_valid_places(response['places_nearby'])
 
+    def test_places_nearby_with_coords_without_region(self):
+        """check places_nearby with /coords and type[]=stop_area"""
+
+        response = self.query("/v1/coords/0.000001;0.000898311281954/places_nearby?type[]=stop_area")
+        places_nearby = response['places_nearby']
+        assert len(places_nearby) == 3
+        is_valid_places(places_nearby)
+        for place in places_nearby:
+            assert place["embedded_type"] == "stop_area"
+
     def test_places_nearby_with_coords_current_datetime(self):
         """places_nearby with _current_datetime"""
 

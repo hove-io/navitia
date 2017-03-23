@@ -27,7 +27,6 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-import logging
 from jormungandr.tests.utils_test import MockResponse, user_set, FakeUser
 from navitiacommon import models
 
@@ -35,8 +34,12 @@ from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
 from jormungandr import app
 import json
-from nose.util import *
 import mock
+
+"""
+coords in main_routing_test coverage
+"""
+coords = '{lon};{lat}'.format(lon=0.000628818387368, lat=0.00107797437835)
 
 
 authorizations = {
@@ -419,8 +422,47 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             assert regions[1]["name"] == 'empty routing'
             assert regions[2]["name"] == 'routing api data'
 
+    def test_coverage_by_coords(self):
+        with user_set(app, FakeUserAuth, 'bobitto'):
+            response = self.query('v1/coverage/{coords}'.format(coords=coords))
+
+            r = get_not_null(response, 'regions')
+
+            region_ids = {region['id']: region for region in r}
+            assert len(region_ids) == 1
+            assert 'main_routing_test' in region_ids
+
+    def test_auth_required_coords(self):
+        response_obj = self.app.get('/v1/coverage/{coords}'.format(coords=coords))
+        assert response_obj.status_code == 401
+        assert 'WWW-Authenticate' in response_obj.headers
+
+    def test_status_code_coords(self):
+        with user_set(app, FakeUserAuth, 'bob'):
+            # Coverage by coords
+            response = self.app.get('/v1/coverage/{coords}'.format(coords=coords))
+            assert response.status_code == 200
+
+    def test_unkown_region_coords(self):
+        with user_set(app, FakeUserAuth, 'bob'):
+            # coords outside regions
+            r, status = self.query_no_assert('/v1/coverage/{lon};{lat}/stop_areas'.format(lon=20, lat=15))
+            assert status == 404
+            assert 'error' in r
+            assert get_not_null(r, 'error')['message'] == "No region available for the coordinates:20.0, 15.0"
+
+    def test_pt_ref_for_bobitto_coords(self):
+        with user_set(app, FakeUserAuth, 'bobitto'):
+            # By coords: All stops of main_routing_test coverage
+            response = self.query('v1/coverage/{coords}/stop_points'.format(coords=coords))
+            stop_points = get_not_null(response, 'stop_points')
+            assert len(stop_points) == 4
+
+            response = self.query('v1/coverage/{coords}/stop_points/{id}'.format(coords=coords, id='stop_point:stopB'))
+            stop_points = get_not_null(response, 'stop_points')
+            assert len(stop_points) == 1
+            assert stop_points[0]['id'] == 'stop_point:stopB'
 
     #TODO add more tests on:
-    # * coords
     # * disruptions
     # * get by external code ?
