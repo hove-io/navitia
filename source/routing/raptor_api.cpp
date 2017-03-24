@@ -978,6 +978,7 @@ void make_pt_response(navitia::PbCreator& pb_creator,
                       bool clockwise,
                       const type::AccessibiliteParams& accessibilite_params,
                       const std::vector<std::string>& forbidden,
+                      const std::vector<std::string>& allowed,
                       const type::RTLevel rt_level,
                       const navitia::time_duration& transfer_penalty,
                       uint32_t max_duration,
@@ -1028,7 +1029,8 @@ void make_pt_response(navitia::PbCreator& pb_creator,
     }
     std::vector<Path> pathes = raptor.compute_all(
             departures, arrivals, init_dt, rt_level, transfer_penalty, bound, max_transfers,
-            accessibilite_params, forbidden, clockwise, direct_path_duration, max_extra_second_pass);
+            accessibilite_params, forbidden, allowed, clockwise, direct_path_duration,
+            max_extra_second_pass);
 
     for(auto & path : pathes) {
         path.request_time = datetime;
@@ -1048,6 +1050,7 @@ void make_response(navitia::PbCreator& pb_creator,
                    bool clockwise,
                    const type::AccessibiliteParams& accessibilite_params,
                    std::vector<std::string> forbidden,
+                   std::vector<std::string> allowed,
                    georef::StreetNetwork& worker,
                    const type::RTLevel rt_level,
                    const navitia::time_duration& transfer_penalty,
@@ -1119,7 +1122,8 @@ void make_response(navitia::PbCreator& pb_creator,
         }
         std::vector<Path> tmp = raptor.compute_all(
             departures, destinations, init_dt, rt_level, transfer_penalty, bound, max_transfers,
-            accessibilite_params, forbidden, clockwise, direct_path_dur, max_extra_second_pass);
+            accessibilite_params, forbidden, allowed, clockwise, direct_path_dur,
+            max_extra_second_pass);
         LOG4CPLUS_DEBUG(logger, "raptor found " << tmp.size() << " solutions");
 
 
@@ -1150,6 +1154,7 @@ void make_isochrone(navitia::PbCreator& pb_creator,
                     const uint64_t datetime_timestamp, bool clockwise,
                     const type::AccessibiliteParams & accessibilite_params,
                     std::vector<std::string> forbidden,
+                    std::vector<std::string> allowed,
                     georef::StreetNetwork & worker,
                     const type::RTLevel rt_level,
                     int max_duration, uint32_t max_transfers) {
@@ -1175,7 +1180,7 @@ void make_isochrone(navitia::PbCreator& pb_creator,
     DateTime bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
 
     raptor.isochrone(departures, init_dt, bound, max_transfers,
-                           accessibilite_params, forbidden, clockwise, rt_level);
+                     accessibilite_params, forbidden, allowed, clockwise, rt_level);
 
     add_isochrone_response(raptor, origin, pb_creator, raptor.data.pt_data->stop_points, clockwise,
                            init_dt, bound, max_duration);
@@ -1270,18 +1275,19 @@ struct IsochroneCommon {
 };
 
 static bool fill_isochrone_common(IsochroneCommon& isochrone_common,
-                                                                  RAPTOR& raptor,
-                                                                  type::EntryPoint center,
-                                                                  const uint64_t departure_datetime,
-                                                                  const double max_duration,
-                                                                  uint32_t max_transfers,
-                                                                  const type::AccessibiliteParams& accessibilite_params,
-                                                                  const std::vector<std::string>& forbidden,
-                                                                  bool clockwise,
-                                                                  const nt::RTLevel rt_level,
-                                                                  georef::StreetNetwork & worker,
-                                                                  const double& speed,
-                                                                  PbCreator& pb_creator) {
+                                  RAPTOR& raptor,
+                                  type::EntryPoint center,
+                                  const uint64_t departure_datetime,
+                                  const double max_duration,
+                                  uint32_t max_transfers,
+                                  const type::AccessibiliteParams& accessibilite_params,
+                                  const std::vector<std::string>& forbidden,
+                                  const std::vector<std::string>& allowed,
+                                  bool clockwise,
+                                  const nt::RTLevel rt_level,
+                                  georef::StreetNetwork & worker,
+                                  const double& speed,
+                                  PbCreator& pb_creator) {
     bt::ptime datetime;
     auto tmp_datetime = parse_datetimes(raptor, {departure_datetime}, pb_creator, clockwise);
     if(pb_creator.has_error() || tmp_datetime.size() == 0 ||
@@ -1301,7 +1307,7 @@ static bool fill_isochrone_common(IsochroneCommon& isochrone_common,
     DateTime init_dt = DateTimeUtils::set(day, time);
     DateTime bound = build_bound(clockwise, max_duration, init_dt);
     raptor.isochrone(departures, init_dt, bound, max_transfers,
-                     accessibilite_params, forbidden, clockwise, rt_level);
+                     accessibilite_params, forbidden, allowed, clockwise, rt_level);
     type::GeographicalCoord coord_origin = center.coordinates;
     isochrone_common = IsochroneCommon(clockwise, coord_origin, departures, speed, init_dt, center, bound, datetime);
     return false;
@@ -1321,6 +1327,7 @@ void make_graphical_isochrone(navitia::PbCreator& pb_creator,
                               uint32_t max_transfers,
                               const type::AccessibiliteParams& accessibilite_params,
                               const std::vector<std::string>& forbidden,
+                              const std::vector<std::string>& allowed,
                               bool clockwise,
                               const nt::RTLevel rt_level,
                               georef::StreetNetwork & worker,
@@ -1329,7 +1336,7 @@ void make_graphical_isochrone(navitia::PbCreator& pb_creator,
     IsochroneCommon isochrone_common;
     auto has_error = fill_isochrone_common(isochrone_common, raptor, center, departure_datetime,
                                            boundary_duration[0], max_transfers, accessibilite_params,
-                                           forbidden, clockwise, rt_level, worker, speed, pb_creator);
+                                           forbidden, allowed, clockwise, rt_level, worker, speed, pb_creator);
 
     if (has_error) { return; }
 
@@ -1353,6 +1360,7 @@ void make_heat_map(navitia::PbCreator& pb_creator,
                    uint32_t max_transfers,
                    const type::AccessibiliteParams& accessibilite_params,
                    const std::vector<std::string>& forbidden,
+                   const std::vector<std::string>& allowed,
                    bool clockwise,
                    const nt::RTLevel rt_level,
                    georef::StreetNetwork & worker,
@@ -1362,7 +1370,7 @@ void make_heat_map(navitia::PbCreator& pb_creator,
 
     IsochroneCommon isochrone_common;
     auto has_error = fill_isochrone_common(isochrone_common, raptor, center, departure_datetime, max_duration,
-                                           max_transfers, accessibilite_params, forbidden, clockwise,
+                                           max_transfers, accessibilite_params, forbidden, allowed, clockwise,
                                            rt_level, worker, speed, pb_creator);
     if (has_error) { return; }
 

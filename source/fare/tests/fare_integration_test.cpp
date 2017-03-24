@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(test_protobuff) {
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     make_response(pb_creator, raptor, origin, destination, {test::to_posix_timestamp("20120614T080000")},
-                  true, type::AccessibiliteParams(), {}, sn_worker, type::RTLevel::Base, 2_min);
+                  true, type::AccessibiliteParams(), {}, {}, sn_worker, type::RTLevel::Base, 2_min);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(test_protobuff_no_data) {
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     make_response(pb_creator, raptor, origin, destination, {test::to_posix_timestamp("20120614T080000")},
-                  true, type::AccessibiliteParams(), {}, sn_worker,
+                  true, type::AccessibiliteParams(), {}, {}, sn_worker,
                   type::RTLevel::Base, 2_min);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
