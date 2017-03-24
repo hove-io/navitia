@@ -407,7 +407,7 @@ class PlaceUri(ResourceUri):
             authentication.check_access_to_global_places(user)
             autocomplete = global_autocomplete.get('bragi')
             if autocomplete:
-                response = autocomplete.get_uri(args["uri"], instance=None)
+                response = autocomplete.get_by_uri(args["uri"], instance=None)
             else:
                 raise TechnicalError('world wide autocompletion service not available')
 

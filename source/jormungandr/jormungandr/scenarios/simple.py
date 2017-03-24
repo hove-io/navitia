@@ -145,7 +145,7 @@ class Scenario(object):
 
     def place_uri(self, request, instance):
         autocomplete = instance.get_autocomplete(request.get('_autocomplete'))
-        return autocomplete.get_uri(uri=request["uri"],
+        return autocomplete.get_by_uri(uri=request["uri"],
                                     instance=instance,
                                     current_datetime=request['_current_datetime'])
 
