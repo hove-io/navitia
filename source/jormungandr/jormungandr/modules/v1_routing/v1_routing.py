@@ -167,6 +167,7 @@ class V1Routing(AModule):
                           endpoint='pt_objects')
 
         self.add_resource(Places.PlaceUri,
+                          '/places/<id:id>',
                           region + 'places/<id:id>',
                           coord + 'places/<id:id>',
                           endpoint='place_uri')

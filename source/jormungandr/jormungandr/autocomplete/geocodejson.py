@@ -156,7 +156,7 @@ class GeocodeJson(AbstractAutocomplete):
         """
         return param.split(";")
 
-    def get_uri(self, uri, request, instance):
+    def get_uri(self, uri, instance=None, current_datetime=None):
 
         params = self.basic_params(instance)
 
