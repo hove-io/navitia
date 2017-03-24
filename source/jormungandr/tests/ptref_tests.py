@@ -65,7 +65,7 @@ class TestPtRef(AbstractTestFixture):
 
 
     def test_pagination_links_with_count(self):
-        response = self.query_region("v1/stop_points?count=2&start_page=2", display=True)
+        response = self.query_region("stop_points?count=2&start_page=2", display=True)
         for link in response['links']:
             if link['type'] in ('previous', 'next', 'first', 'last'):
                 assert 'count=2' in link['href']
@@ -73,7 +73,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_vj_default_depth(self):
         """default depth is 1"""
-        response = self.query_region("v1/vehicle_journeys")
+        response = self.query_region("vehicle_journeys")
 
         vjs = get_not_null(response, 'vehicle_journeys')
 
@@ -115,7 +115,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_vj_depth_0(self):
         """default depth is 1"""
-        response = self.query_region("v1/vehicle_journeys?depth=0")
+        response = self.query_region("vehicle_journeys?depth=0")
 
         vjs = get_not_null(response, 'vehicle_journeys')
 
@@ -124,7 +124,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_vj_depth_2(self):
         """default depth is 1"""
-        response = self.query_region("v1/vehicle_journeys?depth=2")
+        response = self.query_region("vehicle_journeys?depth=2")
 
         vjs = get_not_null(response, 'vehicle_journeys')
 
@@ -133,7 +133,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_vj_depth_3(self):
         """default depth is 1"""
-        response = self.query_region("v1/vehicle_journeys?depth=3")
+        response = self.query_region("vehicle_journeys?depth=3")
 
         vjs = get_not_null(response, 'vehicle_journeys')
 
@@ -169,6 +169,16 @@ class TestPtRef(AbstractTestFixture):
 
         assert len(response['disruptions']) == 0
 
+    def test_ptref_invalid_type(self):
+        response, code = self.query_region("AAAAAA/stop_areas", check=False)
+        eq_(code, 400)
+        eq_(response['message'], 'unknown type: AAAAAA')
+
+        coord = "{lon};{lat}".format(lon=1.2, lat=3.4)
+        response, code = self.query_region("{coord}/stop_areas".format(coord=coord), check=False)
+        eq_(code, 400)
+        eq_(response['message'], 'unknown type: {coord}'.format(coord=coord))
+
     def test_ptref_with_current_datetime(self):
         """
         stop_area:stop1 with _current_datetime
@@ -185,7 +195,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_contributors(self):
         """test contributor formating"""
-        response = self.query_region("v1/contributors")
+        response = self.query_region("contributors")
 
         contributors = get_not_null(response, 'contributors')
 
@@ -199,7 +209,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_datasets(self):
         """test dataset formating"""
-        response = self.query_region("v1/datasets")
+        response = self.query_region("datasets")
 
         datasets = get_not_null(response, 'datasets')
 
@@ -233,7 +243,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_line(self):
         """test line formating"""
-        response = self.query_region("v1/lines")
+        response = self.query_region("lines")
 
         lines = get_not_null(response, 'lines')
 
@@ -271,7 +281,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_line_without_shape(self):
         """test line formating with shape disabled"""
-        response = self.query_region("v1/lines?disable_geojson=true")
+        response = self.query_region("lines?disable_geojson=true")
         lines = get_not_null(response, 'lines')
 
         assert len(lines) == 3
@@ -280,7 +290,7 @@ class TestPtRef(AbstractTestFixture):
         #we don't want a geojson since we have desactivate them
         assert 'geojson' not in l
 
-        response = self.query_region("v1/lines")
+        response = self.query_region("lines")
         lines = get_not_null(response, 'lines')
 
         assert len(lines) == 3
@@ -294,7 +304,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_line_with_shape(self):
         """test line formating with shape explicitly enabled"""
-        response = self.query_region("v1/lines?disable_geojson=false")
+        response = self.query_region("lines?disable_geojson=false")
 
         lines = get_not_null(response, 'lines')
 
@@ -337,7 +347,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_line_with_active_disruption(self):
         """test disruption is active"""
-        response = self.query_region("v1/lines/line:A?_current_datetime=20140115T235959")
+        response = self.query_region("lines/line:A?_current_datetime=20140115T235959")
 
         disruptions = get_not_null(response, 'disruptions')
 
@@ -353,7 +363,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_line_codes(self):
         """test line formating"""
-        response = self.query_region("v1/lines/line:A?show_codes=true")
+        response = self.query_region("lines/line:A?show_codes=true")
 
         lines = get_not_null(response, 'lines')
 
@@ -369,7 +379,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_route(self):
         """test line formating"""
-        response = self.query_region("v1/routes")
+        response = self.query_region("routes")
 
         routes = get_not_null(response, 'routes')
         assert len(routes) == 3
@@ -392,7 +402,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_stop_areas(self):
         """test stop_areas formating"""
-        response = self.query_region("v1/stop_areas")
+        response = self.query_region("stop_areas")
 
         stops = get_not_null(response, 'stop_areas')
 
@@ -412,7 +422,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_stop_area(self):
         """test stop_areas formating"""
-        response = self.query_region("v1/stop_areas/stop_area:stop1?depth=2")
+        response = self.query_region("stop_areas/stop_area:stop1?depth=2")
 
         stops = get_not_null(response, 'stop_areas')
 
@@ -426,7 +436,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_stop_points(self):
         """test stop_points formating"""
-        response = self.query_region("v1/stop_points?depth=2")
+        response = self.query_region("stop_points?depth=2")
 
         stops = get_not_null(response, 'stop_points')
 
@@ -451,7 +461,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_company_default_depth(self):
         """default depth is 1"""
-        response = self.query_region("v1/companies")
+        response = self.query_region("companies")
 
         companies = get_not_null(response, 'companies')
 
@@ -475,7 +485,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_forbidden_uris_on_line(self):
         """test forbidden uri for lines"""
-        response = self.query_region("v1/lines")
+        response = self.query_region("lines")
 
         lines = get_not_null(response, 'lines')
         assert len(lines) == 3
@@ -905,6 +915,6 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         test stop_points formating in depth 3
         Note: done in main_routing_test because we need a routing graph to have all the attributes
         """
-        response = self.query_region("v1/stop_points?depth=3")
+        response = self.query_region("stop_points?depth=3")
         for s in get_not_null(response, 'stop_points'):
             is_valid_stop_point(s, depth_check=3)

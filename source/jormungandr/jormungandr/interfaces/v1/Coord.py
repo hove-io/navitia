@@ -46,8 +46,8 @@ class Coord(ResourceUri):
                 abort(404, message='invalid coords [{}], should be <lon:lon>;<lat:lat>'.format(id))
             lon, lat = splitted
             try:
-                float(lon)
-                float(lat)
+                lon = float(lon)
+                lat = float(lat)
             except ValueError:
                 abort(404, message='invalid coords [{}], should be <lon:lon>;<lat:lat>'.format(id))
 

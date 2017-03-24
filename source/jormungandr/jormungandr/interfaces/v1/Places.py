@@ -359,9 +359,9 @@ class Places(ResourceUri):
         # to the region, else, we do a word wide search
 
         if any([region, lon, lat]):
-            instance = i_manager.get_region(region, lon, lat)
-            timezone.set_request_timezone(region)
-            response = i_manager.dispatch(args, "places", instance_name=instance)
+            self.region = i_manager.get_region(region, lon, lat)
+            timezone.set_request_timezone(self.region)
+            response = i_manager.dispatch(args, "places", instance_name=self.region)
         else:
             authentication.check_access_to_global_places(user)
             autocomplete = global_autocomplete.get('bragi')
@@ -401,6 +401,7 @@ class PlaceUri(ResourceUri):
             "_current_datetime": datetime.datetime.utcnow()})
         if any([region, lon, lat]):
             self.region = i_manager.get_region(region, lon, lat)
+            timezone.set_request_timezone(self.region)
             response = i_manager.dispatch(args, "place_uri", instance_name=self.region)
         else:
             user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=False)
