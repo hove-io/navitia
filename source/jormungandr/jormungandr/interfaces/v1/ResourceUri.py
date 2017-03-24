@@ -75,7 +75,6 @@ class ResourceUri(StatedResource):
             if items[-1] not in collections_to_resource_type:
                 abort(400, message="unknown type: {}".format(items[-1]))
             else:
-                type_ = collections_to_resource_type[items[-1]]
                 items = items[:-1]
 
         for item in items:
