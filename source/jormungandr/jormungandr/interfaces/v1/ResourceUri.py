@@ -28,19 +28,16 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask.ext.restful import Resource, abort
+from flask.ext.restful import abort
 from jormungandr.interfaces.v1.converters_collection_type import collections_to_resource_type
 from jormungandr.interfaces.v1.converters_collection_type import resource_type_to_collection
-from jormungandr import utils
 from jormungandr.interfaces.v1.StatedResource import StatedResource
-from jormungandr.stat_manager import manage_stat_caller
 from jormungandr.interfaces.v1.make_links import add_id_links, clean_links, add_pagination_links
 from functools import wraps
-from collections import OrderedDict, deque
+from collections import deque
 from flask import url_for
 from flask.ext.restful.utils import unpack
 from jormungandr.authentication import authentication_required
-import navitiacommon.type_pb2 as type_pb2
 
 
 def protect(uri):
