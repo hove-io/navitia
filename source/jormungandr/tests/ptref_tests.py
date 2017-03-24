@@ -169,6 +169,16 @@ class TestPtRef(AbstractTestFixture):
 
         assert len(response['disruptions']) == 0
 
+    def test_ptref_invalid_type(self):
+        response, code = self.query_region("AAAAAA/stop_areas", check=False)
+        eq_(code, 400)
+        eq_(response['message'], 'unknown type: AAAAAA')
+
+        coord = "{lon};{lat}".format(lon=1.2, lat=3.4)
+        response, code = self.query_region("{coord}/stop_areas".format(coord=coord), check=False)
+        eq_(code, 400)
+        eq_(response['message'], 'unknown type: {coord}'.format(coord=coord))
+
     def test_ptref_with_current_datetime(self):
         """
         stop_area:stop1 with _current_datetime
