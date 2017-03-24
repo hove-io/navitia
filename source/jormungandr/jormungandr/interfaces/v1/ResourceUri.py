@@ -49,6 +49,7 @@ def protect(uri):
     """
     return '"' + uri.replace('"', '\\"') + '"'
 
+
 class ResourceUri(StatedResource):
 
     def __init__(self, authentication=True, links=True, *args, **kwargs):
@@ -66,10 +67,16 @@ class ResourceUri(StatedResource):
             self.method_decorators.append(authentication_required)
 
     def get_filter(self, items, args):
+
         filter_list = [args["filter"]] if args.get("filter") else []
-        if len(items) % 2 != 0:
-            items = items[:-1]
+
         type_ = None
+        if len(items) % 2 != 0:
+            if items[-1] not in collections_to_resource_type:
+                abort(400, message="unknown type: {}".format(items[-1]))
+            else:
+                type_ = collections_to_resource_type[items[-1]]
+                items = items[:-1]
 
         for item in items:
             if not type_:
