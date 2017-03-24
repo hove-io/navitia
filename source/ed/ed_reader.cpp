@@ -1395,7 +1395,6 @@ std::vector<component_vertex_t> get_useless_nodes(const filtered_graph& graph,
 
 void EdReader::fill_vector_to_ignore(pqxx::work& work, const double min_non_connected_graph_ratio) {
     const auto graph = make_graph(work);
-    navitia::flat_enum_map<nt::Mode_e, size_t> nb_disable_edges = {{{0, 0, 0}}}; // for log purpose
     std::unordered_map<uint64_t, uint8_t> count_useless_mode_by_node; // used to disable useless nodes
 
     const auto modes = {nt::Mode_e::Walking, nt::Mode_e::Bike, nt::Mode_e::Car};
@@ -1404,13 +1403,12 @@ void EdReader::fill_vector_to_ignore(pqxx::work& work, const double min_non_conn
         auto useless_nodes = get_useless_nodes(mode_graph, mode, min_non_connected_graph_ratio);
 
         for (const auto n_idx: useless_nodes) {
-            auto source_db_id = mode_graph[n_idx].db_id;
-            count_useless_mode_by_node[source_db_id]++;
+            auto target_db_id = mode_graph[n_idx].db_id;
+            count_useless_mode_by_node[target_db_id]++;
             // we remove the transportation mode for all the edges of this node
             BOOST_FOREACH(auto e_idx, boost::in_edges(n_idx, mode_graph)) {
-                auto target_db_id = mode_graph[boost::target(e_idx, mode_graph)].db_id;
+                auto source_db_id = mode_graph[boost::source(e_idx, mode_graph)].db_id;
                 this->edge_to_ignore_by_modes[mode].insert({source_db_id, target_db_id});
-                nb_disable_edges[mode]++;
             }
         }
     }
@@ -1425,9 +1423,9 @@ void EdReader::fill_vector_to_ignore(pqxx::work& work, const double min_non_conn
     // Note: for the moment we do not clean up the ways that do not have any edges anymore
 
     LOG4CPLUS_INFO(log, node_to_ignore.size() << " node to ignore");
-    LOG4CPLUS_INFO(log, nb_disable_edges[nt::Mode_e::Walking] << " walking edges disabled, "
-                      << nb_disable_edges[nt::Mode_e::Bike] << " bike edges disabled, "
-                      << nb_disable_edges[nt::Mode_e::Car] << " car edges disabled ");
+    LOG4CPLUS_INFO(log, this->edge_to_ignore_by_modes[nt::Mode_e::Walking].size() << " walking edges disabled, "
+                      << this->edge_to_ignore_by_modes[nt::Mode_e::Bike].size() << " bike edges disabled, "
+                      << this->edge_to_ignore_by_modes[nt::Mode_e::Car].size() << " car edges disabled ");
 }
 
 void EdReader::fill_vertex(navitia::type::Data& data, pqxx::work& work) {
@@ -1477,6 +1475,7 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work, bool expo
     pqxx::result result = work.exec(request);
     size_t nb_edges_no_way = 0, nb_useless_edges = 0;
     size_t nb_walking_edges(0), nb_biking_edges(0), nb_driving_edges(0);
+
     for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
         navitia::georef::Way* way = this->way_map[const_it["way_id"].as<uint64_t>()];
         const auto source_node_id = const_it["source_node_id"].as<uint64_t>();
