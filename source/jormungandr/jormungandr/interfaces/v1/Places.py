@@ -200,7 +200,7 @@ class PoiField(fields.Raw):
 
         # TODO add address, properties attributes
         res = {
-            "id": '{};{}'.format(lon, lat),
+            "id": geocoding.get('id'),
             "coord": {
                 "lon": lon,
                 "lat": lat,

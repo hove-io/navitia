@@ -489,9 +489,7 @@ def bragi_poi_reading_test():
     poi = navitia_response.get('poi', {})
     assert poi.get('label') == 'Mairie de Pigna (Pigna)'
     assert poi.get('name') == 'Mairie de Pigna'
-    # FIXME: for the moment, we just output coords to make it works for journeys
-    #assert poi.get('id') == 'poi:osm:3224270910'
-    assert poi.get('id') == '8.9028068;42.5992355'
+    assert poi.get('id') == 'poi:osm:3224270910'
     assert poi.get('poi_type').get('id') == 'poi_type:amenity:townhall'
     assert poi.get('poi_type').get('name') == 'Mairie'
     assert poi.get('coord').get('lat') == "42.5992355"
