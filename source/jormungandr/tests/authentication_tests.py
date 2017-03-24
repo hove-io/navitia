@@ -36,11 +36,6 @@ from jormungandr import app
 import json
 import mock
 
-"""
-coords in main_routing_test coverage
-"""
-coords = '{lon};{lat}'.format(lon=0.000628818387368, lat=0.00107797437835)
-
 
 authorizations = {
     'bob': {
@@ -423,27 +418,37 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             assert regions[2]["name"] == 'routing api data'
 
     def test_coverage_by_coords(self):
+        """
+        Test coverage containing coordinates, bobitto user authorized
+        """
         with user_set(app, FakeUserAuth, 'bobitto'):
-            response = self.query('v1/coverage/{coords}'.format(coords=coords))
+            response = self.query('v1/coverage/{coords}'.format(coords=s_coord))
 
             r = get_not_null(response, 'regions')
 
-            region_ids = {region['id']: region for region in r}
-            assert len(region_ids) == 1
-            assert 'main_routing_test' in region_ids
+            assert {region['id'] for region in r} == {'main_routing_test'}
 
     def test_auth_required_coords(self):
-        response_obj = self.app.get('/v1/coverage/{coords}'.format(coords=coords))
+        """
+        Test coverage containing coordinates, without user
+        """
+        response_obj = self.app.get('/v1/coverage/{coords}'.format(coords=s_coord))
         assert response_obj.status_code == 401
         assert 'WWW-Authenticate' in response_obj.headers
 
     def test_status_code_coords(self):
+        """
+        Test of status response for coverage containing coordinates
+        """
         with user_set(app, FakeUserAuth, 'bob'):
             # Coverage by coords
-            response = self.app.get('/v1/coverage/{coords}'.format(coords=coords))
+            response = self.app.get('/v1/coverage/{coords}'.format(coords=s_coord))
             assert response.status_code == 200
 
     def test_unkown_region_coords(self):
+        """
+        Test coverage containing coordinates, coordinate outside region
+        """
         with user_set(app, FakeUserAuth, 'bob'):
             # coords outside regions
             r, status = self.query_no_assert('/v1/coverage/{lon};{lat}/stop_areas'.format(lon=20, lat=15))
@@ -452,13 +457,16 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             assert get_not_null(r, 'error')['message'] == "No region available for the coordinates:20.0, 15.0"
 
     def test_pt_ref_for_bobitto_coords(self):
+        """
+        Test ptref for coverage containing coordinates
+        """
         with user_set(app, FakeUserAuth, 'bobitto'):
             # By coords: All stops of main_routing_test coverage
-            response = self.query('v1/coverage/{coords}/stop_points'.format(coords=coords))
+            response = self.query('v1/coverage/{coords}/stop_points'.format(coords=s_coord))
             stop_points = get_not_null(response, 'stop_points')
             assert len(stop_points) == 4
 
-            response = self.query('v1/coverage/{coords}/stop_points/{id}'.format(coords=coords, id='stop_point:stopB'))
+            response = self.query('v1/coverage/{coords}/stop_points/{id}'.format(coords=s_coord, id='stop_point:stopB'))
             stop_points = get_not_null(response, 'stop_points')
             assert len(stop_points) == 1
             assert stop_points[0]['id'] == 'stop_point:stopB'
