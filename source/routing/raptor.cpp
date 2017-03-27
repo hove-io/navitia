@@ -629,9 +629,15 @@ void RAPTOR::set_valid_jp_and_jpp(
 
     const auto allowed_objs = ObjsFromIds(allowed, jp_container, data);
     if (allowed_objs.jps.any()) {
+        // If a journey pattern is present in allowed_obj, the
+        // constraint is setted. Else, there is no constraint at the
+        // journey pattern level.
         valid_journey_patterns &= allowed_objs.jps;
     }
     if (allowed_objs.jpps.any()) {
+        // If a journey point pattern is present in allowed_obj, the
+        // constraint is setted. Else, there is no constraint at the
+        // journey pattern point level.
         valid_journey_pattern_points &= allowed_objs.jpps;
         valid_stop_points &= allowed_objs.sps;
     }
