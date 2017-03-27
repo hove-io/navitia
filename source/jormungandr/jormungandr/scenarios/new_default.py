@@ -668,7 +668,7 @@ def get_kraken_id(autocomplete, instance, entrypoint):
         return None
 
     emb_type = detail.get('embedded_type')
-    if emb_type in ('stop_area', 'administrative_region'):
+    if emb_type in ('stop_point', 'stop_area', 'administrative_region'):
         # for those object, we need to keep the original id, as there are specific treatment to be done
         return entrypoint
 
@@ -859,9 +859,9 @@ class Scenario(simple.Scenario):
     def get_entrypoint_kraken_id(self, entrypoint, instance):
         kraken_id = get_kraken_id(instance.autocomplete, instance, entrypoint)
 
-        if not kraken_id:
+        if not kraken_id and not isinstance(instance.autocomplete, geocodejson):
             bragi = global_autocomplete.get('bragi')
-            if bragi and not isinstance(instance.autocomplete, geocodejson):
+            if bragi:
                 # if the instance's autocomplete is not a geocodejson autocomplete, we also check in the
                 # global autocomplete instance
                 kraken_id = get_kraken_id(bragi, instance, entrypoint)
