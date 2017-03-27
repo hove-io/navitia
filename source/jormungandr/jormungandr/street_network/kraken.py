@@ -33,7 +33,7 @@ import copy
 from jormungandr.exceptions import TechnicalError
 from navitiacommon import request_pb2, type_pb2
 from jormungandr.utils import get_uri_pt_object
-from jormungandr.street_network.street_network import AbstractStreetNetworkService
+from jormungandr.street_network.street_network import AbstractStreetNetworkService, DirectPathType
 from jormungandr import utils
 
 class Kraken(AbstractStreetNetworkService):
@@ -59,7 +59,7 @@ class Kraken(AbstractStreetNetworkService):
             j.sections.sort(utils.SectionSorter())
         return response
 
-    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, **kwargs):
+    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
         req = request_pb2.Request()
         req.requested_api = type_pb2.direct_path
         req.direct_path.origin.place = get_uri_pt_object(pt_object_origin)
@@ -81,9 +81,9 @@ class Kraken(AbstractStreetNetworkService):
 
         response = self.instance.send_and_receive(req)
 
-        if not kwargs.get('is_fallback_at_end'):
-            return response
-        return self._reverse_journeys(response)
+        if direct_path_type == DirectPathType.ENDING_CAR_FALLBACK_BY_KRAKEN:
+            return self._reverse_journeys(response)
+        return response
 
 
     def get_street_network_routing_matrix(self, origins, destinations, street_network_mode, max_duration, request, **kwargs):

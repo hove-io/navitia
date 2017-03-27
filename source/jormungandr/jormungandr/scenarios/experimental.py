@@ -37,6 +37,7 @@ from jormungandr.planner import JourneyParameters
 from flask import g
 from jormungandr.utils import get_uri_pt_object, generate_id, get_pt_object_coord, PeriodExtremity, SectionSorter
 from jormungandr import app
+from jormungandr.street_network.street_network import DirectPathType
 import gevent
 import gevent.pool
 import collections
@@ -70,17 +71,17 @@ def get_max_fallback_duration(request, mode, dp_durations={}):
     raise ValueError('unknown mode: {}'.format(mode))
 
 
-def make_direct_path_key(dep_mode, orig_uri, dest_uri, is_fallback_at_end, fallback_extremity):
+def make_direct_path_key(dep_mode, orig_uri, dest_uri, direct_path_type, fallback_extremity):
     '''
     :param orig_uri, dest_uri, mode: matters obviously
-    :param is_fallback_at_end: whether it's a fallback at the beginning or end of journey also matters
+    :param direct_path_type: whether it's a fallback at the beginning or end of journey also matters
         especially for car (to know if we park before or after)
     :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
     Nota: fallback_extremity is not taken into consideration so far because we assume that a
         direct path from A to B remains the same even the departure time are different (no realtime)
     Nota: this implementation is connector-specific (so shouldn't be here)
     '''
-    return dep_mode, is_fallback_at_end, orig_uri, dest_uri
+    return dep_mode, direct_path_type, orig_uri, dest_uri
 
 
 def make_direct_path_duration_by_mode(fallback_direct_path_pool):
@@ -93,7 +94,7 @@ def make_direct_path_duration_by_mode(fallback_direct_path_pool):
 
 
 def get_direct_path_if_exists(fallback_direct_path_pool, mode, orig_uri, dest_uri,
-                              fallback_extremity, is_fallback_at_end):
+                              fallback_extremity, direct_path_type):
     """
     :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
     in this function, we retrieve from fallback_direct_path_pool the direct path regarding to the given
@@ -101,7 +102,7 @@ def get_direct_path_if_exists(fallback_direct_path_pool, mode, orig_uri, dest_ur
     since the request datetime might no longer be the same (but we consider the same fallback duration).
     Nota: this implementation is connector-specific (so shouldn't be here)
     """
-    dp_key = make_direct_path_key(mode, orig_uri, dest_uri, is_fallback_at_end, fallback_extremity)
+    dp_key = make_direct_path_key(mode, orig_uri, dest_uri, direct_path_type, fallback_extremity)
     dp_copy = copy.deepcopy(fallback_direct_path_pool.get(dp_key))
     if not dp_copy or not dp_copy.journeys:
         return None
@@ -379,37 +380,37 @@ class AsyncWorker(object):
 
     @staticmethod
     def _get_direct_path(instance, mode, pt_object_origin, pt_object_destination,
-                         fallback_extremity, request, is_fallback_at_end):
+                         fallback_extremity, request, direct_path_type):
         '''
         :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
         '''
         dp_key = make_direct_path_key(mode, pt_object_origin.uri, pt_object_destination.uri,
-                                      is_fallback_at_end, fallback_extremity)
+                                      direct_path_type, fallback_extremity)
         dp = instance.direct_path(mode,
                                   pt_object_origin,
                                   pt_object_destination,
                                   fallback_extremity,
                                   request,
-                                  is_fallback_at_end=is_fallback_at_end)
+                                  direct_path_type)
 
         return dp_key, dp
 
     def get_direct_path_futures(self, fallback_direct_path_pool, origin, destination,
-                                fallback_extremity, is_fallback_at_end, modes):
+                                fallback_extremity, direct_path_type, modes):
         '''
         :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
         '''
         futures_direct_path = []
         for dep_mode in modes:
             dp_key = make_direct_path_key(dep_mode, origin.uri, destination.uri,
-                                          is_fallback_at_end, fallback_extremity)
+                                          direct_path_type, fallback_extremity)
             if dp_key not in fallback_direct_path_pool:
                 futures_direct_path.append(self.pool.spawn(self._get_direct_path,
                                                            self.instance,
                                                            dep_mode, origin, destination,
                                                            fallback_extremity,
                                                            self.request,
-                                                           is_fallback_at_end))
+                                                           direct_path_type))
                 # We initialise the value in fallback_direct_path_pool,
                 # so that the same direct path won't be computed twice
                 fallback_direct_path_pool[dp_key] = None
@@ -418,12 +419,12 @@ class AsyncWorker(object):
     def get_pt_journey_futures(self, origin, destination, fallback_direct_path_pool,
                                origins_fallback, destinations_fallback, journey_parameters):
         futures_jourenys = []
-        is_fallback_at_end = False
+        direct_path_type = DirectPathType.NORMAL
         instance = self.instance
         fallback_extremity = PeriodExtremity(self.request['datetime'], self.request['clockwise'])
         for dep_mode, arr_mode in self.krakens_call:
             dp_key = make_direct_path_key(dep_mode, origin.uri, destination.uri,
-                                          is_fallback_at_end, fallback_extremity)
+                                          direct_path_type, fallback_extremity)
             dp = fallback_direct_path_pool.get(dp_key)
             journey_parameters = copy.deepcopy(journey_parameters)
             if dp.journeys:
@@ -453,12 +454,12 @@ class AsyncWorker(object):
 
     @staticmethod
     def _extend_journey(pt_journey, mode, pb_from, pb_to, fallback_extremity,
-                        fallback_direct_path_pool, is_fallback_at_end):
+                        fallback_direct_path_pool, direct_path_type):
         '''
         :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
         '''
         fallback_dp = get_direct_path_if_exists(fallback_direct_path_pool, mode, pb_from.uri, pb_to.uri,
-                                                fallback_extremity, is_fallback_at_end)
+                                                fallback_extremity, direct_path_type)
         fallback_copy = copy.deepcopy(fallback_dp)
         pt_journey.duration += fallback_copy.journeys[0].duration
         pt_journey.durations.walking += fallback_copy.journeys[0].durations.walking
@@ -480,9 +481,9 @@ class AsyncWorker(object):
             else:
                 # extend the journey with the fallback routing path
                 fallback_extremity = PeriodExtremity(journey.departure_date_time, False)
-                is_fallback_at_end = False
+                direct_path_type = DirectPathType.NORMAL
                 self._extend_journey(journey, dep_mode, journey_origin, pt_origin, fallback_extremity,
-                                     fallback_direct_path_pool, is_fallback_at_end)
+                                     fallback_direct_path_pool, direct_path_type)
         journey.sections.sort(SectionSorter())
         journey.departure_date_time = journey.sections[0].begin_date_time
         return journey
@@ -507,11 +508,11 @@ class AsyncWorker(object):
                 # extend the journey with the fallback routing path
                 o = pt_destination
                 d = journey_destination
-                is_fallback_at_end = False
+                direct_path_type = DirectPathType.NORMAL
                 if arr_mode == 'car':
-                    o, d, is_fallback_at_end = d, o, True
+                    o, d, direct_path_type = d, o, DirectPathType.ENDING_CAR_FALLBACK_BY_KRAKEN
                 self._extend_journey(journey, arr_mode, o, d, fallback_extremity,
-                                     fallback_direct_path_pool, is_fallback_at_end)
+                                     fallback_direct_path_pool, direct_path_type)
         journey.sections.sort(SectionSorter())
         journey.arrival_date_time = journey.sections[-1].end_date_time
         return journey
@@ -521,7 +522,7 @@ class AsyncWorker(object):
         for dep_mode, arr_mode, journey in map_response:
             # from
             departure = journey.sections[0].origin
-            is_fallback_at_end = False
+            direct_path_type = DirectPathType.NORMAL
             fallback_extremity_dep = PeriodExtremity(journey.departure_date_time, False)
             # In the following cases, we don't need to compute the fallback direct path:
             # 1. the origin of the first section and the requested_origin are the same
@@ -533,11 +534,11 @@ class AsyncWorker(object):
                                                             g.requested_origin,
                                                             departure,
                                                             fallback_extremity_dep,
-                                                            is_fallback_at_end,
+                                                            direct_path_type,
                                                             [dep_mode]))
             # to
             arrival = journey.sections[-1].destination
-            is_fallback_at_end = False
+            direct_path_type = DirectPathType.NORMAL
             # In some cases, we don't need to compute the fallback direct path
             # Similar reasoning as above
             fallback_extremity_arr = PeriodExtremity(journey.arrival_date_time, True)
@@ -545,12 +546,12 @@ class AsyncWorker(object):
                     and arrival.uri not in crowfly_stop_points:
                 o, d = arrival, g.requested_destination
                 if arr_mode == 'car':
-                    o, d, is_fallback_at_end = d, o, True
+                    o, d, direct_path_type = d, o, DirectPathType.ENDING_CAR_FALLBACK_BY_KRAKEN
                 futures.extend(self.get_direct_path_futures(g.fallback_direct_path_pool,
                                                             o,
                                                             d,
                                                             fallback_extremity_arr,
-                                                            is_fallback_at_end,
+                                                            direct_path_type,
                                                             [arr_mode]))
         return futures
 
@@ -625,13 +626,13 @@ class Scenario(new_default.Scenario):
         # Now we compute the direct path with all requested departure
         # mode their time will be used to initialized our PT calls and
         # to bound the fallback duration of the first section.
-        is_fallback_at_end = False
+        direct_path_type = DirectPathType.NORMAL
         fallback_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
         futures = worker.get_direct_path_futures(g.fallback_direct_path_pool,
                                                  g.requested_origin,
                                                  g.requested_destination,
                                                  fallback_extremity,
-                                                 is_fallback_at_end,
+                                                 direct_path_type,
                                                  {mode for mode, _ in krakens_call})
         for future in gevent.iwait(futures):
             resp_key, resp_direct_path = future.get()
@@ -709,10 +710,10 @@ class Scenario(new_default.Scenario):
             dep_mode, arr_mode, local_resp = future.get()
             if local_resp is None:
                 continue
-            is_fallback_at_end = False
+            direct_path_type = DirectPathType.NORMAL
             fallback_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
             dp_key = make_direct_path_key(dep_mode, g.requested_origin.uri, g.requested_destination.uri,
-                                          is_fallback_at_end, fallback_extremity)
+                                          direct_path_type, fallback_extremity)
             direct_path = g.fallback_direct_path_pool.get(dp_key)
 
             if local_resp.HasField(b"error") and local_resp.error.id == response_pb2.Error.error_id.Value('no_solution') \
