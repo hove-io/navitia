@@ -40,7 +40,7 @@ ABC = abc.ABCMeta(str("ABC"), (object,), {})
 
 # Regarding to the type of direct path, some special treatments may be done in connector
 class DirectPathType:
-    DirectNoPT = 0
+    DIRECT_NO_PT = 0
     BEGINNING_FALLBACK = 1
     ENDING_FALLBACK = 2
 

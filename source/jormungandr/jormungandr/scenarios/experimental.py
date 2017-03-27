@@ -419,7 +419,7 @@ class AsyncWorker(object):
     def get_pt_journey_futures(self, origin, destination, fallback_direct_path_pool,
                                origins_fallback, destinations_fallback, journey_parameters):
         futures_jourenys = []
-        direct_path_type = DirectPathType.DirectNoPT
+        direct_path_type = DirectPathType.DIRECT_NO_PT
         instance = self.instance
         fallback_extremity = PeriodExtremity(self.request['datetime'], self.request['clockwise'])
         for dep_mode, arr_mode in self.krakens_call:
@@ -622,7 +622,7 @@ class Scenario(new_default.Scenario):
         # Now we compute the direct path with all requested departure
         # mode their time will be used to initialized our PT calls and
         # to bound the fallback duration of the first section.
-        direct_path_type = DirectPathType.DirectNoPT
+        direct_path_type = DirectPathType.DIRECT_NO_PT
         fallback_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
         futures = worker.get_direct_path_futures(g.fallback_direct_path_pool,
                                                  g.requested_origin,
@@ -706,7 +706,7 @@ class Scenario(new_default.Scenario):
             dep_mode, arr_mode, local_resp = future.get()
             if local_resp is None:
                 continue
-            direct_path_type = DirectPathType.DirectNoPT
+            direct_path_type = DirectPathType.DIRECT_NO_PT
             fallback_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
             dp_key = make_direct_path_key(dep_mode, g.requested_origin.uri, g.requested_destination.uri,
                                           direct_path_type, fallback_extremity)
