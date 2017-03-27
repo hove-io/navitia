@@ -105,7 +105,7 @@ BRAGI_MOCK_RESPONSE = {
     ]
 }
 
-@dataset({'main_autocomplete_test': MOCKED_INSTANCE_CONF})
+@dataset({'main_routing_test': MOCKED_INSTANCE_CONF})
 class TestBragiAutocomplete(AbstractTestFixture):
 
     def test_autocomplete_call(self):
@@ -115,7 +115,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
                 u'q': u'bob',
                 u'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
                 u'limit': 10,
-                u'pt_dataset': 'main_autocomplete_test',
+                u'pt_dataset': 'main_routing_test',
             },
             'timeout': 10
         }
@@ -126,7 +126,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             url: (BRAGI_MOCK_RESPONSE, 200)
         })
         with mock.patch('requests.get', mock_requests.get):
-            response = self.query_region("places?q=bob&pt_dataset=main_autocomplete_test&type[]=stop_area"
+            response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
                                          "&type[]=address&type[]=poi&type[]=administrative_region")
 
             is_valid_global_autocomplete(response, depth=1)
@@ -161,7 +161,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
                 u'q': u'bob',
                 u'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
                 u'limit': 10,
-                u'pt_dataset': 'main_autocomplete_test',
+                u'pt_dataset': 'main_routing_test',
             },
             'timeout': 10
         }
@@ -185,13 +185,10 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['address']['label'] == '20 Rue Bob (Bobtown)'
 
             # with a query on kraken, the results should be different
-            response = self.query_region("places?q=Gare&_autocomplete=kraken")
+            response = self.query_region("places?q=Park&_autocomplete=kraken")
             r = response.get('places')
-            assert len(r) == 1
-            assert r[0]['name'] == 'Gare (Quimper)'
-            assert r[0]['embedded_type'] == 'stop_area'
-            assert r[0]['stop_area']['name'] == 'Gare'
-            assert r[0]['stop_area']['label'] == 'Gare (Quimper)'
+            assert len(r) >= 1
+            assert r[0]['name'] == 'first parking (Condom)'
 
     def test_autocomplete_call_with_no_param_type(self):
         """
@@ -249,7 +246,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         url = 'https://host_of_bragi'
         kwargs = {
             'params': {
-                u'pt_dataset': 'main_autocomplete_test',
+                u'pt_dataset': 'main_routing_test',
             },
             'timeout': 10
         }
@@ -261,7 +258,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             url: (BRAGI_MOCK_RESPONSE, 200)
         })
         with mock.patch('requests.get', mock_requests.get):
-            response = self.query_region("places/1234?&pt_dataset=main_autocomplete_test")
+            response = self.query_region("places/1234?&pt_dataset=main_routing_test")
 
             is_valid_global_autocomplete(response, depth=1)
             r = response.get('places')
@@ -275,7 +272,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         url = 'https://host_of_bragi'
         kwargs = {
             'params': {
-                u'pt_dataset': 'main_autocomplete_test',
+                u'pt_dataset': 'main_routing_test',
             },
             'timeout': 10
         }
@@ -294,7 +291,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         })
 
         with mock.patch('requests.get', mock_requests.get):
-            response = self.query_region("places/AAA?&pt_dataset=main_autocomplete_test", check=False)
+            response = self.query_region("places/AAA?&pt_dataset=main_routing_test", check=False)
             assert response[1] == 404
             assert response[0]["error"]["id"] == 'unknown_object'
             assert response[0]["error"]["message"] == "The object AAA doesn't exist"
@@ -370,3 +367,4 @@ class TestBragiShape(AbstractTestFixture):
             assert r[0]['embedded_type'] == 'address'
             assert r[0]['address']['name'] == 'Rue Bob'
             assert r[0]['address']['label'] == '20 Rue Bob (Bobtown)'
+
