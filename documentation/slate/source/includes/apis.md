@@ -960,18 +960,18 @@ We want to go from SPA to SPB. Lines LA and LB can go from SPA to SPB. There is 
 
 Without any constraint, all these objects can be used to propose a solution. Let's study some examples:
 
-`forbidden_uris[]` | `allowed_id[]` | Result
--------------------|----------------|--------
-LA, LB             |                | All the journeys will pass from SPC, using either of LC, LD, LE and LF
-SPA                |                | No solution, as we can't get in any transport
-SPB                |                | No solution, as we can't get out to destination
-                   | SPC            | No solution, as we can't get in neither get out
-LA, LB             | LC             | No solution, as only LC can be taken
-                   | LC, LE         | All the journeys will pass from SPC using LC and LE
-		   | LC, LD, LE     | All the journeys will pass from SPC using (LC or LD) and LE
-		   | LC, SPC, LE    | No solution, as we can't get in neither get out
-		   | SPA, SPC, SPB  | As without any constraint, passing via SPC is not needed
-SPA, SPB           | SPA, SPB       | No solution, as no stop point are allowed.
+| `forbidden_uris[]` | `allowed_id[]` | Result
+|--------------------|----------------|--------
+| LA, LB             |                | All the journeys will pass from SPC, using either of LC, LD, LE and LF
+| SPA                |                | No solution, as we can't get in any transport
+| SPB                |                | No solution, as we can't get out to destination
+|                    | SPC            | No solution, as we can't get in neither get out
+| LA, LB             | LC             | No solution, as only LC can be taken
+|                    | LC, LE         | All the journeys will pass from SPC using LC and LE
+|                    | LC, LD, LE     | All the journeys will pass from SPC using (LC or LD) and LE
+|		     | LC, SPC, LE    | No solution, as we can't get in neither get out
+|		     | SPA, SPC, SPB  | As without any constraint, passing via SPC is not needed
+| SPA, SPB           | SPA, SPB       | No solution, as no stop point are allowed.
 
 ### Objects
 
