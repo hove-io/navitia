@@ -936,6 +936,43 @@ The [isochrones](#isochrones) service exposes another response structure, which 
 | nop     | wheelchair           | boolean | If true the traveler is considered to be using a wheelchair, thus only accessible public transport are used<br>be warned: many data are currently too faint to provide acceptable answers with this parameter on       | False       |
 | nop     | debug                | boolean | Debug mode<br>No journeys are filtered in this mode     | False       |
 
+### Precisions on `forbidden_uris[]` and `allowed_id[]`
+
+These parameters are filtering the vehicle journeys and the stop points use to compute the journeys.  The journeys can only use allowed vehicle journeys (as present in the `public_transport` or `on_demand_transport` sections). They also can only use the allowed stop points (as present in the `street_network`, `waiting` and `crow_fly` sections).
+
+For filtering vehicle journeys, the identifier of a line, route, commercial mode, physical mode or network can be used. 
+
+For filtering stop points, the identifier of a stop point or stop area can be used.
+
+`forbidden_uris[]` removes the corresponding vehicle journeys from the list of allowed vehicle journeys.
+
+`allowed_id[]` works in 2 parts:
+  * If an id related to a stop point is given, only the corresponding stop points will be allowed. Else, all the stop points are allowed.
+  * If an id related to a vehicle journey is given, only the corresponding vehicle journeys will be allowed. Else, all the vehicle journeys are allowed.
+
+The constraints of `forbidden_uris[]` and `allowed_id[]` are combined. For example, if you give `allowed_id[]=network:SN&forbidden_uris[]=line:A`, only the vehicle journeys of the network SN that are not from the line A can be used to compute the journeys.
+
+Let's illustrate all of that with an example.
+
+![example](forbidden_example.png)
+
+We want to go from SPA to SPB. Lines LA and LB can go from SPA to SPB. There is another stop point SPC connected to SPA with lines LC and LD, and connected to SB with lines LE and LF.
+
+Without any constraint, all these objects can be used to propose a solution. Let's study some examples:
+
+`forbidden_uris[]` | `allowed_id[]` | Result
+-------------------|----------------|--------
+LA, LB             |                | All the journeys will pass from SPC, using either of LC, LD, LE and LF
+SPA                |                | No solution, as we can't get in any transport
+SPB                |                | No solution, as we can't get out to destination
+                   | SPC            | No solution, as we can't get in neither get out
+LA, LB             | LC             | No solution, as only LC can be taken
+                   | LC, LE         | All the journeys will pass from SPC using LC and LE
+		   | LC, LD, LE     | All the journeys will pass from SPC using (LC or LD) and LE
+		   | LC, SPC, LE    | No solution, as we can't get in neither get out
+		   | SPA, SPC, SPB  | As without any constraint, passing via SPC is not needed
+SPA, SPB           | SPA, SPB       | No solution, as no stop point are allowed.
+
 ### Objects
 
 Here is a typical journey, all sections are detailed below
