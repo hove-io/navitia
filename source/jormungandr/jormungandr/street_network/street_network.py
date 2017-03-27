@@ -38,11 +38,11 @@ import abc
 # http://stackoverflow.com/a/38668373/1614576
 ABC = abc.ABCMeta(str("ABC"), (object,), {})
 
-# we need to "invert" a direct path when it's a ending fallback by car if and only if it's returned by kraken
-# In other case, it's ignored
+# Regarding to the type of direct path, some special treatments may be done in connector
 class DirectPathType:
-    NORMAL = 0
-    ENDING_CAR_FALLBACK_BY_KRAKEN = 1
+    DirectNoPT = 0
+    BEGINNING_FALLBACK = 1
+    ENDING_FALLBACK = 2
 
 class AbstractStreetNetworkService(ABC):
     @abc.abstractmethod

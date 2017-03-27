@@ -60,6 +60,10 @@ class Kraken(AbstractStreetNetworkService):
         return response
 
     def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
+        should_invert_journey = mode == 'car' and direct_path_type == DirectPathType.ENDING_FALLBACK
+        if should_invert_journey:
+            pt_object_origin, pt_object_destination = pt_object_destination, pt_object_origin
+
         req = request_pb2.Request()
         req.requested_api = type_pb2.direct_path
         req.direct_path.origin.place = get_uri_pt_object(pt_object_origin)
@@ -81,7 +85,7 @@ class Kraken(AbstractStreetNetworkService):
 
         response = self.instance.send_and_receive(req)
 
-        if direct_path_type == DirectPathType.ENDING_CAR_FALLBACK_BY_KRAKEN:
+        if should_invert_journey:
             return self._reverse_journeys(response)
         return response
 

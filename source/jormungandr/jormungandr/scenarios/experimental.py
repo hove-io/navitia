@@ -74,8 +74,8 @@ def get_max_fallback_duration(request, mode, dp_durations={}):
 def make_direct_path_key(dep_mode, orig_uri, dest_uri, direct_path_type, fallback_extremity):
     '''
     :param orig_uri, dest_uri, mode: matters obviously
-    :param direct_path_type: whether it's a fallback at the beginning or end of journey also matters
-        especially for car (to know if we park before or after)
+    :param direct_path_type: whether it's a fallback at the beginning, the end of journey or a direct path without PT
+        also matters especially for car (to know if we park before or after)
     :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
     Nota: fallback_extremity is not taken into consideration so far because we assume that a
         direct path from A to B remains the same even the departure time are different (no realtime)
@@ -419,7 +419,7 @@ class AsyncWorker(object):
     def get_pt_journey_futures(self, origin, destination, fallback_direct_path_pool,
                                origins_fallback, destinations_fallback, journey_parameters):
         futures_jourenys = []
-        direct_path_type = DirectPathType.NORMAL
+        direct_path_type = DirectPathType.DirectNoPT
         instance = self.instance
         fallback_extremity = PeriodExtremity(self.request['datetime'], self.request['clockwise'])
         for dep_mode, arr_mode in self.krakens_call:
@@ -481,7 +481,7 @@ class AsyncWorker(object):
             else:
                 # extend the journey with the fallback routing path
                 fallback_extremity = PeriodExtremity(journey.departure_date_time, False)
-                direct_path_type = DirectPathType.NORMAL
+                direct_path_type = DirectPathType.BEGINNING_FALLBACK
                 self._extend_journey(journey, dep_mode, journey_origin, pt_origin, fallback_extremity,
                                      fallback_direct_path_pool, direct_path_type)
         journey.sections.sort(SectionSorter())
@@ -508,9 +508,7 @@ class AsyncWorker(object):
                 # extend the journey with the fallback routing path
                 o = pt_destination
                 d = journey_destination
-                direct_path_type = DirectPathType.NORMAL
-                if arr_mode == 'car':
-                    o, d, direct_path_type = d, o, DirectPathType.ENDING_CAR_FALLBACK_BY_KRAKEN
+                direct_path_type = DirectPathType.ENDING_FALLBACK
                 self._extend_journey(journey, arr_mode, o, d, fallback_extremity,
                                      fallback_direct_path_pool, direct_path_type)
         journey.sections.sort(SectionSorter())
@@ -522,7 +520,7 @@ class AsyncWorker(object):
         for dep_mode, arr_mode, journey in map_response:
             # from
             departure = journey.sections[0].origin
-            direct_path_type = DirectPathType.NORMAL
+            direct_path_type = DirectPathType.BEGINNING_FALLBACK
             fallback_extremity_dep = PeriodExtremity(journey.departure_date_time, False)
             # In the following cases, we don't need to compute the fallback direct path:
             # 1. the origin of the first section and the requested_origin are the same
@@ -538,15 +536,13 @@ class AsyncWorker(object):
                                                             [dep_mode]))
             # to
             arrival = journey.sections[-1].destination
-            direct_path_type = DirectPathType.NORMAL
+            direct_path_type = DirectPathType.ENDING_FALLBACK
             # In some cases, we don't need to compute the fallback direct path
             # Similar reasoning as above
             fallback_extremity_arr = PeriodExtremity(journey.arrival_date_time, True)
             if g.requested_destination.uri != arrival.uri and arrival.uri not in odt_stop_points \
                     and arrival.uri not in crowfly_stop_points:
                 o, d = arrival, g.requested_destination
-                if arr_mode == 'car':
-                    o, d, direct_path_type = d, o, DirectPathType.ENDING_CAR_FALLBACK_BY_KRAKEN
                 futures.extend(self.get_direct_path_futures(g.fallback_direct_path_pool,
                                                             o,
                                                             d,
@@ -626,7 +622,7 @@ class Scenario(new_default.Scenario):
         # Now we compute the direct path with all requested departure
         # mode their time will be used to initialized our PT calls and
         # to bound the fallback duration of the first section.
-        direct_path_type = DirectPathType.NORMAL
+        direct_path_type = DirectPathType.DirectNoPT
         fallback_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
         futures = worker.get_direct_path_futures(g.fallback_direct_path_pool,
                                                  g.requested_origin,
@@ -710,7 +706,7 @@ class Scenario(new_default.Scenario):
             dep_mode, arr_mode, local_resp = future.get()
             if local_resp is None:
                 continue
-            direct_path_type = DirectPathType.NORMAL
+            direct_path_type = DirectPathType.DirectNoPT
             fallback_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
             dp_key = make_direct_path_key(dep_mode, g.requested_origin.uri, g.requested_destination.uri,
                                           direct_path_type, fallback_extremity)
