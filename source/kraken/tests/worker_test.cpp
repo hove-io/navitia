@@ -242,3 +242,51 @@ BOOST_FIXTURE_TEST_CASE(journey_on_first_day_of_production_tests, fixture) {
     journey = resp.journeys(0);
     BOOST_CHECK_EQUAL(journey.arrival_date_time(), navitia::test::to_posix_timestamp("20150314T100000"));
 }
+
+BOOST_AUTO_TEST_CASE(retrocompat_invalid_coord_creation) {
+    std::string coord = "bob1.7226949:48.8311244";
+
+    auto ep = navitia::make_entry_point_from_coord(coord);
+
+    BOOST_REQUIRE(! ep);
+}
+
+BOOST_AUTO_TEST_CASE(retrocompat_coord_creation) {
+    std::string coord = "coord:1.7226949:48.8311244";
+
+    auto ep = navitia::make_entry_point_from_coord(coord);
+
+    BOOST_REQUIRE(ep);
+    BOOST_CHECK_CLOSE(ep->coordinates.lon(), 1.7226949, 0.0001);
+    BOOST_CHECK_CLOSE(ep->coordinates.lat(), 48.8311244, 0.0001);
+}
+
+BOOST_AUTO_TEST_CASE(coord_creation) {
+    std::string coord = "1.7226949;48.8311244";
+
+    auto ep = navitia::make_entry_point_from_coord(coord);
+
+    BOOST_REQUIRE(ep);
+    BOOST_CHECK_CLOSE(ep->coordinates.lon(), 1.7226949, 0.0001);
+    BOOST_CHECK_CLOSE(ep->coordinates.lat(), 48.8311244, 0.0001);
+}
+
+BOOST_AUTO_TEST_CASE(complex_coord_creation) {
+    //lon is a negative integer and lat is in scientific notation, it should work
+    std::string coord = "-1;12e-3";
+
+    auto ep = navitia::make_entry_point_from_coord(coord);
+
+    BOOST_REQUIRE(ep);
+    BOOST_CHECK_CLOSE(ep->coordinates.lon(), -1.0, 0.0001);
+    BOOST_CHECK_CLOSE(ep->coordinates.lat(), 0.012, 0.0001);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_coord_creation_no_semi) {
+    // the separator is a ':' it's not valid'
+    std::string coord = "1.7226949:48.8311244";
+
+    auto ep = navitia::make_entry_point_from_coord(coord);
+
+    BOOST_REQUIRE(! ep);
+}

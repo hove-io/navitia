@@ -43,6 +43,7 @@ www.navitia.io
 #include "calendar/calendar_api.h"
 #include "routing/raptor.h"
 #include "type/meta_data.h"
+#include <regex>
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
@@ -502,19 +503,50 @@ streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams& reques
     return result;
 }
 
+// the new way to represent a coord is : "lon;lat"
+const std::string match_double = "[-+]?[0-9]*\\.?[0-9]+[eE]?[-+]?[0-9]*";
+const auto coord_regex = std::regex("^(" + match_double + ");(" + match_double + ")$");
+
+boost::optional<type::EntryPoint> make_entry_point_from_coord(const std::string& uri) {
+    auto make_ep = [&](const std::string& lon, const std::string& lat) {
+        type::EntryPoint ep;
+        ep.uri = uri;
+        ep.type = type::Type_e::Coord;
+        try {
+            ep.coordinates.set_lon(boost::lexical_cast<double>(lon));
+            ep.coordinates.set_lat(boost::lexical_cast<double>(lat));
+        } catch(boost::bad_lexical_cast) {
+       }
+        return ep;
+    };
+    if (uri.size() > 6 && uri.substr(0, 6) == "coord:") {
+        // old style to represent coord.
+        // done for retrocompatibility
+       size_t pos2 = uri.find(":", 6);
+        if (pos2 == std::string::npos) {
+            return boost::none;
+        }
+       return {make_ep(uri.substr(6, pos2 - 6), uri.substr(pos2+1))};
+    }
+    std::smatch matches;
+    bool res = std::regex_match(uri, matches, coord_regex);
+    if (! res) {
+        return boost::none;
+    }
+    if (matches.size() != 3) {
+        LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"), 
+        "uri " << uri << " partialy match coordinate, cannot work");
+        return boost::none;
+    }
+    return {make_ep(matches[1], matches[2])};
+}
 
 void Worker::place_uri(const pbnavitia::PlaceUriRequest &request) {
 
     const auto* data = this->pb_creator.data;
-    if(request.uri().size() > 6 && request.uri().substr(0, 6) == "coord:") {
-        type::EntryPoint ep(type::Type_e::Coord, request.uri());
-        type::GeographicalCoord  coord;
-        try{
-            coord = coord_of_entry_point(ep, *data);
-        }catch(const navitia::coord_conversion_exception& e) {
-            this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());
-            return;
-        }
+    if (auto ep = make_entry_point_from_coord(request.uri())) {
+        type::GeographicalCoord coord = ep->coordinates;
+
         try{ 
             auto address = this->pb_creator.data->geo_ref->nearest_addr(coord);
             const auto& way_coord = WayCoord(address.second, coord, address.first);

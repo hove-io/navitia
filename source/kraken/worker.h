@@ -48,6 +48,7 @@ namespace routing{
 
 #include <memory>
 #include <limits>
+#include <boost/optional.hpp>
 
 namespace navitia {
 
@@ -66,6 +67,8 @@ struct JourneysArg {
                 std::vector<uint64_t> datetimes);
     JourneysArg();
 };
+
+boost::optional<type::EntryPoint> make_entry_point_from_coord(const std::string& uri);
 
 class Worker {
     private:
