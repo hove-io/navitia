@@ -353,7 +353,7 @@ def direct_path_func_without_response_valhalla_test():
     valhalla._call_valhalla = MagicMock(return_value=None)
     valhalla._make_request_arguments = MagicMock(return_value=None)
     with pytest.raises(TechnicalError) as excinfo:
-        valhalla.direct_path(None, None, None, None, None)
+        valhalla.direct_path(None, None, None, None, None, None)
     assert '500: Internal Server Error' == str(excinfo.value)
     assert 'TechnicalError' == str(excinfo.typename)
 
@@ -374,7 +374,8 @@ def direct_path_func_with_status_code_400_response_valhalla_test():
                                  origin,
                                  destination,
                                  fallback_extremity,
-                                 MOCKED_REQUEST)
+                                 MOCKED_REQUEST,
+                                 None)
         assert str(excinfo.value) == '500: Internal Server Error'
         assert str(excinfo.value.data['message']) == 'Valhalla service unavailable, impossible to query : http://bob.com/route'
         assert str(excinfo.typename) == 'TechnicalError'
@@ -395,7 +396,8 @@ def direct_path_func_with_no_response_valhalla_test():
                                                  origin,
                                                  destination,
                                                  fallback_extremity,
-                                                 MOCKED_REQUEST)
+                                                 MOCKED_REQUEST,
+                                                 None)
         assert valhalla_response.status_code == 200
         assert valhalla_response.response_type == response_pb2.NO_SOLUTION
         assert len(valhalla_response.journeys) == 0
@@ -415,10 +417,11 @@ def direct_path_func_with_valid_response_valhalla_test():
     with requests_mock.Mocker() as req:
         req.post('http://bob.com/route', json=resp_json)
         valhalla_response = valhalla.direct_path('walking',
-                                          origin,
-                                          destination,
-                                          fallback_extremity,
-                                          MOCKED_REQUEST)
+                                                 origin,
+                                                 destination,
+                                                 fallback_extremity,
+                                                 MOCKED_REQUEST,
+                                                 None)
         assert valhalla_response.status_code == 200
         assert valhalla_response.response_type == response_pb2.ITINERARY_FOUND
         assert len(valhalla_response.journeys) == 1
