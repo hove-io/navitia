@@ -31,7 +31,7 @@ is this document 'now' will represent the actual datetime at which the query is 
 
 # Summary
 
-To sum up we display an impact if 'now' is in the publication period AND the action period intersects the application periods.
+To sum up we display an impact if 'now' is in the publication period.
 
 The status of the impact depends only of 'now' and is:
 * 'active' if 'now' is inside an application periods
