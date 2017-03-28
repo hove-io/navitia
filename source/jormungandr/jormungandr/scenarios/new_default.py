@@ -660,24 +660,26 @@ def merge_responses(responses):
     return merged_response
 
 
-def get_kraken_id(autocomplete, instance, entrypoint):
-    detail = autocomplete.get_by_uri(entrypoint, instance=instance)
-
-    if not detail:
+def get_kraken_id(entrypoint_detail):
+    """
+    returns a usable id for kraken from the entrypoint detail
+    returns None if the original ID needs to be kept
+    """
+    if not entrypoint_detail:
         # impossible to find the object
         return None
 
-    emb_type = detail.get('embedded_type')
+    emb_type = entrypoint_detail.get('embedded_type')
     if emb_type in ('stop_point', 'stop_area', 'administrative_region'):
         # for those object, we need to keep the original id, as there are specific treatment to be done
-        return entrypoint
+        return None
 
     # for the other objects the id is the object coordinated
     coord = detail.get(emb_type, {}).get('coord')
 
     if not coord:
         # no coordinate, we keep the original id
-        return entrypoint
+        return None
 
     return '{};{}'.format(coord['lon'], coord['lat'])
 
@@ -701,8 +703,12 @@ class Scenario(simple.Scenario):
             'origin': api_request.get('origin'),
             'destination': api_request.get('destination')
         }
-        api_request['origin'] = self.get_entrypoint_kraken_id(api_request.get('origin'), instance)
-        api_request['destination'] = self.get_entrypoint_kraken_id(api_request.get('destination'), instance)
+        api_request['entrypoint_detail'] = {
+            'origin': self.get_entrypoint_detail(api_request.get('origin'), instance),
+            'destination': self.get_entrypoint_detail(api_request.get('destination'), instance)
+        }
+        api_request['origin'] = self.get_entrypoint_kraken_id(api_request['entrypoint_detail']['origin']) or api_request.get('origin')
+        api_request['destination'] = self.get_entrypoint_kraken_id(api_request['entrypoint_detail']['destination']) or api_request.get('destination')
 
         request = deepcopy(api_request)
         min_asked_journeys = get_or_default(request, 'min_nb_journeys', 1)
@@ -856,17 +862,17 @@ class Scenario(simple.Scenario):
         one_second = 1
         return best.arrival_date_time - one_second
 
-    def get_entrypoint_kraken_id(self, entrypoint, instance):
-        kraken_id = get_kraken_id(instance.autocomplete, instance, entrypoint)
+    def get_entrypoint_detail(self, entrypoint, instance):
+        detail = instance.autocomplete.get_by_uri(entrypoint, instance=instance)
 
-        if not kraken_id and not isinstance(instance.autocomplete, geocodejson):
+        if detail:
+            return detail
+
+        if not isinstance(instance.autocomplete, geocodejson):
             bragi = global_autocomplete.get('bragi')
             if bragi:
                 # if the instance's autocomplete is not a geocodejson autocomplete, we also check in the
                 # global autocomplete instance
-                kraken_id = get_kraken_id(bragi, instance, entrypoint)
+                return bragi.get_by_uri(entrypoint, instance=instance)
 
-        if not kraken_id:
-            # we don't have more detail, the id stays the same
-            return entrypoint
-        return kraken_id
+        return None

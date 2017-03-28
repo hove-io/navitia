@@ -32,9 +32,12 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import mock
 from jormungandr.tests.utils_test import MockRequests, MockResponse, user_set, FakeUser
 from tests.check_utils import is_valid_global_autocomplete
+from tests import check_utils
 from .tests_mechanism import AbstractTestFixture, dataset
 from nose.tools import raises
 from jormungandr import app
+from urllib import urlencode
+from nose.tools import eq_
 
 
 class FakeUserBragi(FakeUser):
@@ -120,7 +123,6 @@ class TestBragiAutocomplete(AbstractTestFixture):
             'timeout': 10
         }
 
-        from urllib import urlencode
         url += "?{}".format(urlencode(kwargs.get('params'), doseq=True))
         mock_requests = MockRequests({
             url: (BRAGI_MOCK_RESPONSE, 200)
@@ -166,7 +168,6 @@ class TestBragiAutocomplete(AbstractTestFixture):
             'timeout': 10
         }
 
-        from urllib import urlencode
         url += "/autocomplete?{}".format(urlencode(kwargs.get('params'), doseq=True))
 
         mock_requests = MockRequests({
@@ -251,7 +252,6 @@ class TestBragiAutocomplete(AbstractTestFixture):
             'timeout': 10
         }
 
-        from urllib import urlencode
         url += "/features/1234?{}".format(urlencode(kwargs.get('params'), doseq=True))
 
         mock_requests = MockRequests({
@@ -277,7 +277,6 @@ class TestBragiAutocomplete(AbstractTestFixture):
             'timeout': 10
         }
 
-        from urllib import urlencode
         url += "/features/AAA?{}".format(urlencode(kwargs.get('params'), doseq=True))
         mock_requests = MockRequests({
         url:
@@ -295,6 +294,145 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert response[1] == 404
             assert response[0]["error"]["id"] == 'unknown_object'
             assert response[0]["error"]["message"] == "The object AAA doesn't exist"
+
+    def test_journey_with_external_uri_from_bragi(self):
+        """
+        This test aim to recreate a classic integration
+
+        The user query the instance's autocomplete (which is set up to bragi)
+        And then use the autocomplete's response to query for a journey
+
+        For this test we have 2 item in our autocomplete:
+         - the poi 'bobette' 
+         - an adresse in bob's street that is not in the dataset
+        """
+
+        bragi_bobette = {
+            "features": [
+                {
+                    "geometry": {
+                        "coordinates": [
+                            0.0000898312,
+                            0.0000898312
+                        ],
+                        "type": "Point"
+                    },
+                    "properties": {
+                        "geocoding": {
+                            "city": "Bobtown",
+                            "id": "bobette",
+                            "label": "bobette's label",
+                            "name": "bobette",
+                            "poi_types": [
+                                {
+                                    "id": "poi_type:amenity:bicycle_rental", 
+                                    "name": "Station VLS"
+                                }
+                            ], 
+                            "postcode": "02100",
+                            "type": "poi",
+                            "citycode": "02000",
+                            "administrative_regions": [
+                                {
+                                    "id": "admin:fr:02000",
+                                    "insee": "02000",
+                                    "level": 8,
+                                    "label": "Bobtown (02000)",
+                                    "zip_codes": ["02000"],
+                                    "weight": 1,
+                                    "coord": {
+                                        "lat": 48.8396154,
+                                        "lon": 2.3957517
+                                    }
+                                }
+                            ],
+                        }
+                    },
+                    "type": "Feature"
+                }
+            ]
+        }
+
+        bob_street = {
+            "features": [
+                {
+                    "geometry": {
+                        "coordinates": [
+                            0.00188646,
+                            0.00071865
+                        ],
+                        "type": "Point"
+                    },
+                    "properties": {
+                        "geocoding": {
+                            "city": "Bobtown",
+                            "housenumber": "20",
+                            "id": check_utils.r_coord, # the adresse is just above 'R'
+                            "label": "20 Rue Bob (Bobtown)",
+                            "name": "Rue Bob",
+                            "postcode": "02100",
+                            "street": "Rue Bob",
+                            "type": "house",
+                            "citycode": "02000",
+                            "administrative_regions": [
+                                {
+                                    "id": "admin:fr:02000",
+                                    "insee": "02000",
+                                    "level": 8,
+                                    "label": "Bobtown (02000)",
+                                    "zip_codes": ["02000"],
+                                    "weight": 1,
+                                    "coord": {
+                                        "lat": 48.8396154,
+                                        "lon": 2.3957517
+                                    }
+                                }
+                            ],
+                        }
+                    },
+                    "type": "Feature"
+                }
+            ]
+        }
+
+        args = {
+            u'pt_dataset': 'main_routing_test',
+            u'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
+            u'limit': 10,
+        }
+        params = urlencode(args, doseq=True)
+        
+        mock_requests = MockRequests({
+            'https://host_of_bragi/autocomplete?q=bobette&{p}'.format(p=params): (bragi_bobette, 200),
+            'https://host_of_bragi/features/bobette': (bragi_bobette, 200),
+            'https://host_of_bragi/autocomplete?q=20+rue+bob&{p}'.format(p=params): (bob_street, 200),
+            'https://host_of_bragi/features/{}?{}'.format(check_utils.r_coord, params): (bob_street, 200)
+        })
+        def get_autocomplete(query):
+            autocomplete_response = self.query_region(query)
+            
+            r = autocomplete_response.get('places')
+            assert len(r) == 1
+            return r[0]['id']
+
+        with mock.patch('requests.get', mock_requests.get):
+            journeys_from = get_autocomplete('places?q=bobette')
+
+            journeys_to = get_autocomplete('places?q=20 rue bob')
+
+            journeys_response = self.query_region('journeys?from={f}&to={to}&datetime={dt}'.format(f=journeys_from, to=journeys_to, dt="20120614T080000"))
+            import logging
+
+            # all journeys should have kept the user's from/to
+            for j in journeys_response['journeys']:
+                response_to = j['sections'][-1]['to']
+                response_from = j['sections'][0]['from']
+
+                eq_(response_from['id'], "bobette")
+                eq_(response_from['embedded_type'], "poi")
+                eq_(response_from['label'], "bobette")
+
+
 
 @dataset({"main_routing_test": {}})
 class TestBragiShape(AbstractTestFixture):
@@ -367,4 +505,3 @@ class TestBragiShape(AbstractTestFixture):
             assert r[0]['embedded_type'] == 'address'
             assert r[0]['address']['name'] == 'Rue Bob'
             assert r[0]['address']['label'] == '20 Rue Bob (Bobtown)'
-
