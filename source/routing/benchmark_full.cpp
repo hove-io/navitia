@@ -286,7 +286,7 @@ int main(int argc, char** argv){
         navitia::PbCreator pb_creator(&data, boost::gregorian::not_a_date_time, null_time_period);
         make_response(pb_creator, router, origin,
                       destination, {departure_datetime}, true,
-                      accessibilite_params, {}, georef_worker, type::RTLevel::Base,
+                      accessibilite_params, {}, {}, georef_worker, type::RTLevel::Base,
                       2_min, DateTimeUtils::SECONDS_PER_DAY, 10, nb_second_pass);
         auto resp = pb_creator.get_response();
 

@@ -55,12 +55,14 @@ struct JourneysArg {
     std::vector<type::EntryPoint> origins;
     type::AccessibiliteParams accessibilite_params;
     std::vector<std::string> forbidden;
+    std::vector<std::string> allowed;
     type::RTLevel rt_level;
     std::vector<type::EntryPoint> destinations;
     std::vector<uint64_t> datetimes;
     JourneysArg(std::vector<type::EntryPoint> origins,
                 type::AccessibiliteParams accessibilite_params,
                 std::vector<std::string> forbidden,
+                std::vector<std::string> allowed,
                 type::RTLevel rt_level,
                 std::vector<type::EntryPoint> destinations,
                 std::vector<uint64_t> datetimes);

@@ -183,6 +183,7 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
         parser_get.add_argument("bss_speed", type=float_gt_0)
         parser_get.add_argument("car_speed", type=float_gt_0)
         parser_get.add_argument("forbidden_uris[]", type=unicode, action="append")
+        parser_get.add_argument("allowed_id[]", type=unicode, action="append")
         parser_get.add_argument("type", type=option_value(types),
                                 default="all")
         parser_get.add_argument("disruption_active", type=boolean, default=False)  # for retrocomp

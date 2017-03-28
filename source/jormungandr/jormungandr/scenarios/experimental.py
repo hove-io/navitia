@@ -183,7 +183,8 @@ def create_parameters(request):
                              realtime_level=request['data_freshness'],
                              max_extra_second_pass=request['max_extra_second_pass'],
                              walking_transfer_penalty=request['_walking_transfer_penalty'],
-                             forbidden_uris=request['forbidden_uris[]'])
+                             forbidden_uris=request['forbidden_uris[]'],
+                             allowed_id=request['allowed_id[]'])
 
 
 

@@ -186,14 +186,16 @@ void RAPTOR::first_raptor_loop(const map_stop_point_duration& dep,
                                const uint32_t max_transfers,
                                const type::AccessibiliteParams& accessibilite_params,
                                const std::vector<std::string>& forbidden_uri,
+                               const std::vector<std::string>& allowed_ids,
                                bool clockwise) {
 
     const DateTime bound = limit_bound(clockwise, departure_datetime, b);
 
     set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
-            accessibilite_params,
-            forbidden_uri,
-            rt_level);
+                         accessibilite_params,
+                         forbidden_uri,
+                         allowed_ids,
+                         rt_level);
 
     assert(data.dataRaptor->cached_next_st_manager);
     next_st = data.dataRaptor->cached_next_st_manager->load(
@@ -382,6 +384,7 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
                     const uint32_t max_transfers,
                     const type::AccessibiliteParams& accessibilite_params,
                     const std::vector<std::string>& forbidden_uri,
+                    const std::vector<std::string>& allowed_ids,
                     bool clockwise,
                     const boost::optional<navitia::time_duration>& direct_path_dur,
                     const size_t max_extra_second_pass) {
@@ -406,7 +409,8 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
     const auto& calc_dest = clockwise ? destinations : departures;
 
     first_raptor_loop(calc_dep, departure_datetime, rt_level,
-                      bound, max_transfers, accessibilite_params, forbidden_uri, clockwise);
+                      bound, max_transfers, accessibilite_params,
+                      forbidden_uri, allowed_ids, clockwise);
 
     auto end_first_pass = std::chrono::system_clock::now();
 
@@ -501,12 +505,14 @@ RAPTOR::isochrone(const map_stop_point_duration& departures,
                   uint32_t max_transfers,
                   const type::AccessibiliteParams& accessibilite_params,
                   const std::vector<std::string>& forbidden,
+                  const std::vector<std::string>& allowed,
                   bool clockwise,
                   const nt::RTLevel rt_level) {
     const DateTime bound = limit_bound(clockwise, departure_datetime, b);
     set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
                          accessibilite_params,
                          forbidden,
+                         allowed,
                          rt_level);
     assert(data.dataRaptor->cached_next_st_manager);
     next_st = data.dataRaptor->cached_next_st_manager->load(
@@ -520,87 +526,120 @@ RAPTOR::isochrone(const map_stop_point_duration& departures,
     boucleRAPTOR(clockwise, rt_level, max_transfers);
 }
 
+namespace {
+struct ObjsFromIds {
+    boost::dynamic_bitset<> jps;
+    boost::dynamic_bitset<> jpps;
+    boost::dynamic_bitset<> sps;
+    ObjsFromIds(const std::vector<std::string>& ids,
+                const JourneyPatternContainer& jp_container,
+                const nt::Data& data):
+        jps(jp_container.nb_jps()),
+        jpps(jp_container.nb_jpps()),
+        sps(data.pt_data->stop_points.size())
+    {
+        for (const auto& id: ids) {
+            const auto it_line = data.pt_data->lines_map.find(id);
+            if (it_line != data.pt_data->lines_map.end()) {
+                for (const auto route: it_line->second->route_list) {
+                    for (const auto& jp_idx: jp_container.get_jps_from_route()[RouteIdx(*route)]) {
+                        jps.set(jp_idx.val, true);
+                    }
+                }
+                continue;
+            }
+            const auto it_route = data.pt_data->routes_map.find(id);
+            if (it_route != data.pt_data->routes_map.end()) {
+                for (const auto& jp_idx: jp_container.get_jps_from_route()[RouteIdx(*it_route->second)]) {
+                    jps.set(jp_idx.val, true);
+                }
+                continue;
+            }
+            const auto it_commercial_mode = data.pt_data->commercial_modes_map.find(id);
+            if (it_commercial_mode != data.pt_data->commercial_modes_map.end()) {
+                for (const auto line : it_commercial_mode->second->line_list) {
+                    for (auto route: line->route_list) {
+                        for (const auto& jp_idx: jp_container.get_jps_from_route()[RouteIdx(*route)]) {
+                            jps.set(jp_idx.val, true);
+                        }
+                    }
+                }
+                continue;
+            }
+            const auto it_physical_mode = data.pt_data->physical_modes_map.find(id);
+            if (it_physical_mode != data.pt_data->physical_modes_map.end()) {
+                const auto phy_mode_idx = PhyModeIdx(*it_physical_mode->second);
+                for (const auto& jp_idx: jp_container.get_jps_from_phy_mode()[phy_mode_idx]) {
+                    jps.set(jp_idx.val, true);
+                }
+                continue;
+            }
+            const auto it_network = data.pt_data->networks_map.find(id);
+            if (it_network != data.pt_data->networks_map.end()) {
+                for (const auto line: it_network->second->line_list) {
+                    for (const auto route: line->route_list) {
+                        for (const auto& jp_idx: jp_container.get_jps_from_route()[RouteIdx(*route)]) {
+                            jps.set(jp_idx.val, true);
+                        }
+                    }
+                }
+                continue;
+            }
+            const auto it_sp = data.pt_data->stop_points_map.find(id);
+            if (it_sp !=  data.pt_data->stop_points_map.end()) {
+                sps.set(it_sp->second->idx, true);
+                for (const auto& jpp: data.dataRaptor->jpps_from_sp[SpIdx(*it_sp->second)]) {
+                    jpps.set(jpp.idx.val, true);
+                }
+                continue;
+            }
+            const auto it_sa = data.pt_data->stop_areas_map.find(id);
+            if (it_sa !=  data.pt_data->stop_areas_map.end()) {
+                for (const auto sp: it_sa->second->stop_point_list) {
+                    sps.set(sp->idx, true);
+                    for (const auto& jpp: data.dataRaptor->jpps_from_sp[SpIdx(*sp)]) {
+                        jpps.set(jpp.idx.val, true);
+                    }
+                }
+                continue;
+            }
+        }
+    }
+};
+}
+
 // Returns valid_jpps
 void RAPTOR::set_valid_jp_and_jpp(
     uint32_t date,
     const type::AccessibiliteParams& accessibilite_params,
     const std::vector<std::string>& forbidden,
+    const std::vector<std::string>& allowed,
     const nt::RTLevel rt_level)
 {
     const auto& jp_container = data.dataRaptor->jp_container;
     valid_journey_patterns = data.dataRaptor->jp_validity_patterns[rt_level][date];
     boost::dynamic_bitset<> valid_journey_pattern_points(jp_container.nb_jpps());
     valid_journey_pattern_points.set();
-
-
     valid_stop_points.set();
 
-    // We will forbiden every object designated in forbidden
-    for (const auto& uri : forbidden) {
-        const auto it_line = data.pt_data->lines_map.find(uri);
-        if (it_line != data.pt_data->lines_map.end()) {
-            for (const auto route : it_line->second->route_list) {
-                for (const auto& jp_idx: jp_container.get_jps_from_route()[RouteIdx(*route)]) {
-                    valid_journey_patterns.set(jp_idx.val, false);
-                }
-            }
-            continue;
-        }
-        const auto it_route = data.pt_data->routes_map.find(uri);
-        if (it_route != data.pt_data->routes_map.end()) {
-            for (const auto& jp_idx: jp_container.get_jps_from_route()[RouteIdx(*it_route->second)]) {
-                valid_journey_patterns.set(jp_idx.val, false);
-            }
-            continue;
-        }
-        const auto it_commercial_mode = data.pt_data->commercial_modes_map.find(uri);
-        if (it_commercial_mode != data.pt_data->commercial_modes_map.end()) {
-            for (const auto line : it_commercial_mode->second->line_list) {
-                for (auto route : line->route_list) {
-                    for (const auto& jp_idx: jp_container.get_jps_from_route()[RouteIdx(*route)]) {
-                        valid_journey_patterns.set(jp_idx.val, false);
-                    }
-                }
-            }
-            continue;
-        }
-        const auto it_physical_mode = data.pt_data->physical_modes_map.find(uri);
-        if (it_physical_mode != data.pt_data->physical_modes_map.end()) {
-            const auto phy_mode_idx = PhyModeIdx(*it_physical_mode->second);
-            for (const auto& jp_idx: jp_container.get_jps_from_phy_mode()[phy_mode_idx]) {
-                valid_journey_patterns.set(jp_idx.val, false);
-            }
-            continue;
-        }
-        const auto it_network = data.pt_data->networks_map.find(uri);
-        if (it_network != data.pt_data->networks_map.end()) {
-            for (const auto line : it_network->second->line_list) {
-                for (const auto route : line->route_list) {
-                    for (const auto& jp_idx: jp_container.get_jps_from_route()[RouteIdx(*route)]) {
-                        valid_journey_patterns.set(jp_idx.val, false);
-                    }
-                }
-            }
-            continue;
-        }
-        const auto it_sp = data.pt_data->stop_points_map.find(uri);
-        if (it_sp !=  data.pt_data->stop_points_map.end()) {
-            valid_stop_points.set(it_sp->second->idx, false);
-            for (const auto& jpp: data.dataRaptor->jpps_from_sp[SpIdx(*it_sp->second)]) {
-                valid_journey_pattern_points.set(jpp.idx.val, false);
-            }
-            continue;
-        }
-        const auto it_sa = data.pt_data->stop_areas_map.find(uri);
-        if (it_sa !=  data.pt_data->stop_areas_map.end()) {
-            for (const auto sp : it_sa->second->stop_point_list) {
-                valid_stop_points.set(sp->idx, false);
-                for (const auto& jpp: data.dataRaptor->jpps_from_sp[SpIdx(*sp)]) {
-                    valid_journey_pattern_points.set(jpp.idx.val, false);
-                }
-            }
-            continue;
-        }
+    auto forbidden_objs = ObjsFromIds(forbidden, jp_container, data);
+    valid_journey_patterns &= forbidden_objs.jps.flip();
+    valid_journey_pattern_points &= forbidden_objs.jpps.flip();
+    valid_stop_points &= forbidden_objs.sps.flip();
+
+    const auto allowed_objs = ObjsFromIds(allowed, jp_container, data);
+    if (allowed_objs.jps.any()) {
+        // If a journey pattern is present in allowed_obj, the
+        // constraint is setted. Else, there is no constraint at the
+        // journey pattern level.
+        valid_journey_patterns &= allowed_objs.jps;
+    }
+    if (allowed_objs.jpps.any()) {
+        // If a journey point pattern is present in allowed_obj, the
+        // constraint is setted. Else, there is no constraint at the
+        // journey pattern point level.
+        valid_journey_pattern_points &= allowed_objs.jpps;
+        valid_stop_points &= allowed_objs.sps;
     }
 
     // filter accessibility
@@ -777,6 +816,7 @@ std::vector<Path> RAPTOR::compute(const type::StopArea* departure,
                        max_transfers,
                        accessibilite_params,
                        forbidden_uri,
+                       {},
                        clockwise,
                        direct_path_dur);
 }

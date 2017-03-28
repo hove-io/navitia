@@ -40,7 +40,7 @@ import itertools
 from flask import current_app
 import time
 from jormungandr.scenarios.utils import pb_type, pt_object_type, are_equals, count_typed_journeys, journey_sorter, \
-    change_ids, updated_request_with_default, fill_uris
+    change_ids, updated_request_with_default, fill_uris, get_or_default
 from jormungandr.scenarios import simple
 import logging
 from jormungandr.scenarios.helpers import walking_duration, bss_duration, bike_duration, car_duration, pt_duration
@@ -130,9 +130,10 @@ class Scenario(simple.Scenario):
             req.journeys.streetnetwork_params.origin_mode = "bss"
         if req.journeys.streetnetwork_params.destination_mode == "bike_rental":
             req.journeys.streetnetwork_params.destination_mode = "bss"
-        if "forbidden_uris[]" in request and request["forbidden_uris[]"]:
-            for forbidden_uri in request["forbidden_uris[]"]:
-                req.journeys.forbidden_uris.append(forbidden_uri)
+        for forbidden_uri in get_or_default(request, "forbidden_uris[]", []):
+            req.journeys.forbidden_uris.append(forbidden_uri)
+        for allowed_id in get_or_default(request, "allowed_id[]", []):
+            req.journeys.allowed_id.append(allowed_id)
         if not "type" in request:
             request["type"] = "all" #why ?
 
