@@ -313,6 +313,24 @@ class AbstractTestFixture(object):
         # to have forwarded all params, (and the time must be right)
         self.check_journeys_links(response, query_dict, query_str)
 
+        # journeys[n].links
+        for j in journeys:
+            has_stop_point = any((o for s in j.get('sections', []) if 'from' in s
+                                    for o in (s['from'], s['to']) if 'stop_point' in o))
+            if 'sections' not in j:
+                assert len(j['links']) == 1 # isochone link
+                assert j['links'][0]['rel'] == 'journeys'
+                assert '/journeys?' in j['links'][0]['href']
+                assert 'from=' in j['links'][0]['href']
+                assert 'to=' in j['links'][0]['href']
+            elif has_stop_point and 'public_transport' in (s['type'] for s in j['sections']):
+                assert len(j['links']) == 1 # other_schedules link
+                assert j['links'][0]['rel'] == 'other_schedules'
+                assert '/journeys?' in j['links'][0]['href']
+                assert 'allowed_id%5B%5D=' in j['links'][0]['href']
+            else:
+                assert 'links' not in j
+
         feed_publishers = response.get("feed_publishers", [])
         for feed_publisher in feed_publishers:
             is_valid_feed_publisher(feed_publisher)

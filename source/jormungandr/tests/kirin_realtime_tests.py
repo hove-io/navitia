@@ -153,6 +153,12 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         # see http://jira.canaltp.fr/browse/NAVP-266,
         # _current_datetime is needed to make it working
         #eq_(len(new_base['disruptions']), 1)
+
+        # remove links as the calling url is not the same
+        for j in  new_base['journeys']:
+            j.pop('links', None)
+        for j in response['journeys']:
+            j.pop('links', None)
         assert new_base['journeys'] == response['journeys']
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
