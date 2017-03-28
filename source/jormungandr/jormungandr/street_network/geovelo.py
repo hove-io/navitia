@@ -224,7 +224,7 @@ class Geovelo(AbstractStreetNetworkService):
             section.street_network.length = section.length
             section.street_network.mode = response_pb2.Bike
 
-            speed = section.length / section.duration
+            speed = section.length / section.duration if section.duration != 0 else 0
 
             for geovelo_instruction in geovelo_section['details']['instructions'][1:]:
                 path_item = section.street_network.path_items.add()
