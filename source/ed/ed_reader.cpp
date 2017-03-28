@@ -1320,7 +1320,7 @@ struct ModeFilter {
 };
 using filtered_graph = boost::filtered_graph<ComponentGraph, ModeFilter, boost::keep_all>;
 
-ComponentGraph make_graph(pqxx::work& work) {
+static ComponentGraph make_graph(pqxx::work& work) {
     ComponentGraph graph;
     std::unordered_map<uint64_t, component_vertex_t> node_map;
 
@@ -1348,9 +1348,9 @@ ComponentGraph make_graph(pqxx::work& work) {
     return graph;
 }
 
-std::vector<component_vertex_t> get_useless_nodes(const filtered_graph& graph,
-                                                  const nt::Mode_e mode,
-                                                  const double min_non_connected_graph_ratio) {
+static std::vector<component_vertex_t> get_useless_nodes(const filtered_graph& graph,
+                                                         const nt::Mode_e mode,
+                                                         const double min_non_connected_graph_ratio) {
     std::vector<component_vertex_t> useless_nodes;
     auto log = log4cplus::Logger::getInstance("log");
 
