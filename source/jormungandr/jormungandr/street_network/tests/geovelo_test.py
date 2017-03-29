@@ -162,6 +162,118 @@ def direct_path_response_valid():
     ]
 
 
+def direct_path_response_zero():
+    return [
+        {
+            "distances": {
+                "discouragedRoads": 0.0,
+                "normalRoads": 0.0,
+                "recommendedRoads": 0.0,
+                "total": 0.0
+            },
+            "duration": 0,
+            "estimatedDatetimeOfArrival": "2017-03-27T19:00:32.434",
+            "estimatedDatetimeOfDeparture": "2017-03-27T19:00:32.434",
+            "id": "bG9jPTQ4LjAsMi4wJmxvYz00OC4wLDIuMCNCRUdJTk5FUiNGYWxzZSNCRUdJTk5FUiMxMyNGYWxzZSNGYWxzZSMyMDE3LTAzLTI3IDE5OjAwOjMyLjQzNDMyNyNUUkFESVRJT05BTCMwIzAjUkVDT01NRU5ERUQjRmFsc2U=",
+            "sections": [
+                {
+                    "details": {
+                        "averageSpeed": 13,
+                        "bikeType": "TRADITIONAL",
+                        "direction": None,
+                        "distances": {
+                            "cycleway": 0.0,
+                            "discouragedRoads": 0.0,
+                            "footway": 0.0,
+                            "greenway": 0.0,
+                            "lane": 0.0,
+                            "livingstreet": 0.0,
+                            "normalRoads": 0.0,
+                            "opposite": 0.0,
+                            "pedestrian": 0.0,
+                            "recommendedRoads": 0.0,
+                            "residential": 0.0,
+                            "sharebusway": 0.0,
+                            "steps": 0.0,
+                            "total": 0.0,
+                            "zone30": 0.0
+                        },
+                        "elevations": None,
+                        "instructions": [
+                            [
+                                "direction",
+                                "roadName",
+                                "roadLength",
+                                "facility",
+                                "cyclability",
+                                "geometryIndex",
+                                "orientation",
+                                "cityNames"
+                            ],
+                            [
+                                "HEAD_ON",
+                                "voie pietonne",
+                                0,
+                                "FOOTWAY",
+                                4,
+                                0,
+                                "N",
+                                ""
+                            ],
+                            [
+                                "REACHED_YOUR_DESTINATION",
+                                "",
+                                0,
+                                "NONE",
+                                3,
+                                1,
+                                "N",
+                                ""
+                            ]
+                        ],
+                        "profile": "BEGINNER",
+                        "verticalGain": 0
+                    },
+                    "duration": 0,
+                    "estimatedDatetimeOfArrival": "2017-03-27T19:00:32.434",
+                    "estimatedDatetimeOfDeparture": "2017-03-27T19:00:32.434",
+                    "geometry": "wytpzAg}ayB??",
+                    "transportMode": "BIKE",
+                    "waypoints": [
+                        {
+                            "latitude": 48.0,
+                            "longitude": 2.0,
+                            "title": None
+                        },
+                        {
+                            "latitude": 48.0,
+                            "longitude": 2.0,
+                            "title": None
+                        }
+                    ],
+                    "waypointsIndices": [
+                        0,
+                        2
+                    ]
+                }
+            ],
+            "title": "RECOMMENDED",
+            "waypoints": [
+                {
+                    "latitude": 48.0,
+                    "longitude": 2.0,
+                    "title": None
+                },
+                {
+                    "latitude": 48.0,
+                    "longitude": 2.0,
+                    "title": None
+                }
+            ]
+        }
+    ]
+
+
 def isochrone_response_valid():
     """
     reply to POST of {"starts":[[48.85568,2.326355, "refStart1"]],
@@ -253,6 +365,42 @@ def direct_path_geovelo_test():
         assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].direction == 0
         assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].length == 40
         assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].duration == 144
+
+
+def direct_path_geovelo_zero_test():
+    instance = MagicMock()
+    geovelo = Geovelo(instance=instance,
+                      service_url='http://bob.com')
+    resp_json = direct_path_response_zero()
+
+    origin = make_pt_object(type_pb2.ADDRESS, lon=2, lat=48, uri='refStart1')
+    destination = make_pt_object(type_pb2.ADDRESS, lon=2, lat=48, uri='refEnd1')
+    fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), False)
+    with requests_mock.Mocker() as req:
+        req.post('http://bob.com/api/v2/computedroutes?instructions=true&elevations=false&geometry=true'
+                 '&single_result=true&bike_stations=false&objects_as_ids=true&', json=resp_json)
+        geovelo_resp = geovelo.direct_path('bike',
+                                           origin,
+                                           destination,
+                                           fallback_extremity,
+                                           None)
+        assert geovelo_resp.status_code == 200
+        assert geovelo_resp.response_type == response_pb2.ITINERARY_FOUND
+        assert len(geovelo_resp.journeys) == 1
+        assert geovelo_resp.journeys[0].duration == 0
+        assert len(geovelo_resp.journeys[0].sections) == 1
+        assert geovelo_resp.journeys[0].arrival_date_time == str_to_time_stamp('20161010T152000')
+        assert geovelo_resp.journeys[0].departure_date_time == str_to_time_stamp('20161010T152000')
+        assert geovelo_resp.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
+        assert geovelo_resp.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
+        assert geovelo_resp.journeys[0].sections[0].duration == 0
+        assert geovelo_resp.journeys[0].sections[0].length == 0
+        assert geovelo_resp.journeys[0].sections[0].origin == origin
+        assert geovelo_resp.journeys[0].sections[0].destination == destination
+        assert geovelo_resp.journeys[0].sections[0].street_network.path_items[0].name == "voie pietonne"
+        assert geovelo_resp.journeys[0].sections[0].street_network.path_items[0].direction == 0
+        assert geovelo_resp.journeys[0].sections[0].street_network.path_items[0].length == 0
+        assert geovelo_resp.journeys[0].sections[0].street_network.path_items[0].duration == 0
 
 
 def isochrone_geovelo_test():

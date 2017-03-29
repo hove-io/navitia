@@ -938,17 +938,17 @@ The [isochrones](#isochrones) service exposes another response structure, which 
 
 ### Precisions on `forbidden_uris[]` and `allowed_id[]`
 
-These parameters are filtering the vehicle journeys and the stop points use to compute the journeys.  The journeys can only use allowed vehicle journeys (as present in the `public_transport` or `on_demand_transport` sections). They also can only use the allowed stop points (as present in the `street_network`, `waiting` and `crow_fly` sections).
+These parameters are filtering the vehicle journeys and the stop points used to compute the journeys. The journeys can only use allowed vehicle journeys (as present in the `public_transport` or `on_demand_transport` sections). They also can only use the allowed stop points (as present in the `street_network`, `waiting` and `crow_fly` sections).
 
 For filtering vehicle journeys, the identifier of a line, route, commercial mode, physical mode or network can be used. 
 
 For filtering stop points, the identifier of a stop point or stop area can be used.
 
-`forbidden_uris[]` removes the corresponding vehicle journeys from the list of allowed vehicle journeys.
+`forbidden_uris[]` removes the corresponding vehicle journeys (or stop points) from the list of allowed vehicle journeys (resp. stop_points).
 
 `allowed_id[]` works in 2 parts:
-  * If an id related to a stop point is given, only the corresponding stop points will be allowed. Else, all the stop points are allowed.
-  * If an id related to a vehicle journey is given, only the corresponding vehicle journeys will be allowed. Else, all the vehicle journeys are allowed.
+-   If an id related to a stop point is given, only the corresponding stop points will be allowed. Else, all the stop points are allowed.
+-   If an id related to a vehicle journey is given, only the corresponding vehicle journeys will be allowed. Else, all the vehicle journeys are allowed.
 
 The constraints of `forbidden_uris[]` and `allowed_id[]` are combined. For example, if you give `allowed_id[]=network:SN&forbidden_uris[]=line:A`, only the vehicle journeys of the network SN that are not from the line A can be used to compute the journeys.
 
@@ -962,15 +962,15 @@ Without any constraint, all these objects can be used to propose a solution. Let
 
 | `forbidden_uris[]` | `allowed_id[]` | Result
 |--------------------|----------------|--------
-| LA, LB             |                | All the journeys will pass from SPC, using either of LC, LD, LE and LF
+| LA, LB             |                | All the journeys will pass by SPC, using either of LC, LD, LE and LF
 | SPA                |                | No solution, as we can't get in any transport
-| SPB                |                | No solution, as we can't get out to destination
+| SPB                |                | No solution, as we can't get out at destination
 |                    | SPC            | No solution, as we can't get in neither get out
 | LA, LB             | LC             | No solution, as only LC can be taken
-|                    | LC, LE         | All the journeys will pass from SPC using LC and LE
-|                    | LC, LD, LE     | All the journeys will pass from SPC using (LC or LD) and LE
-|		     | LC, SPC, LE    | No solution, as we can't get in neither get out
-|		     | SPA, SPC, SPB  | As without any constraint, passing via SPC is not needed
+|                    | LC, LE         | All the journeys will pass by SPC using LC and LE
+|                    | LC, LD, LE     | All the journeys will pass by SPC using (LC or LD) and LE
+|                    | LC, LE, SPC    | No solution, as we can't get in neither get out
+|                    | SPA, SPC, SPB  | As without any constraint, passing via SPC is not needed
 | SPA, SPB           | SPA, SPB       | No solution, as no stop point are allowed.
 
 ### Objects
