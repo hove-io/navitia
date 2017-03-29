@@ -53,8 +53,7 @@ class AbstractStreetNetworkService(ABC):
     def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
         '''
         :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
-        :param direct_path_type : we need to "invert" a direct path when it's a ending fallback by car if and only if
-                                  it's returned by kraken. In other case, it's ignored
+        :param direct_path_type : direct_path need to be treated differently regarding to the used connector
         '''
         pass
 
