@@ -319,7 +319,7 @@ class add_journey_href(object):
                     args['min_nb_journeys'] = 5
                     ids.update(args.get('allowed_id[]', []))
                     args['allowed_id[]'] = list(ids)
-                    journey['links'] = [create_external_link('v1.journeys', rel='other_schedules', **args)]
+                    journey['links'] = [create_external_link('v1.journeys', rel='same_journey_schedules', **args)]
             return objects
         return wrapper
 
