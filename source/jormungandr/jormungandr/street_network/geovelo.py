@@ -241,7 +241,7 @@ class Geovelo(AbstractStreetNetworkService):
 
         return resp
 
-    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request):
+    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
         if mode != "bike":
             logging.getLogger(__name__).error('Geovelo, mode {} not implemented'.format(mode))
             raise InvalidArguments('Geovelo, mode {} not implemented'.format(mode))
