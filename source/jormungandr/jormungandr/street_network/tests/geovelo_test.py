@@ -384,6 +384,7 @@ def direct_path_geovelo_zero_test():
                                            origin,
                                            destination,
                                            fallback_extremity,
+                                           None,
                                            None)
         assert geovelo_resp.status_code == 200
         assert geovelo_resp.response_type == response_pb2.ITINERARY_FOUND
