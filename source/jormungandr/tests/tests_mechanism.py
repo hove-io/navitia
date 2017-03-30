@@ -326,6 +326,7 @@ class AbstractTestFixture(object):
             elif has_stop_point and 'public_transport' in (s['type'] for s in j['sections']):
                 assert len(j['links']) == 1 # same_journey_schedules link
                 assert j['links'][0]['rel'] == 'same_journey_schedules'
+                assert j['links'][0]['type'] == 'journeys'
                 assert '/journeys?' in j['links'][0]['href']
                 assert 'allowed_id%5B%5D=' in j['links'][0]['href']
             else:
