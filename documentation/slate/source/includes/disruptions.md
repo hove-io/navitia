@@ -20,41 +20,248 @@ The publication period is the way to control this.
 
 ### application periods of a disruption
 The application periods are the list of periods on which the disruption is active.
+For example it's the actual period when railworks are done and train circulation is cut.
 
 ## query dates
 
-Another thing is that can be tricky to understand this that there can be several datetimes for a query.
-
-### now
-
-In this document 'now' will represent the actual datetime at which the query is made, so the current datetime.
+Another thing this that can be tricky to understand is that there can be several datetimes for a query.
 
 # Summary
 
 To sum up we display an impact if 'now' is in the publication period.
 
 The status of the impact depends only of 'now' and is:
+
 * 'active' if 'now' is inside an application period
-* 'future' if there is an application periods after 'now'
+* 'future' if there is an application period after 'now'
 * 'past' otherwise
 
-| Navitia Data     | Impact                                 ||  Request date  |              Show impacts                  |||     Status     |||
-|Production period | publication period  |Application period |                | [disruptions](#disruptions) API|[traffic_report](#traffic_report) API| [PtRef](#pt-ref) API| [disruptions](#disruptions) API|[traffic_report](#traffic_report) API| [PtRef](#pt-ref) API|
-|------------------|:---------------------------------------:|----------------|:--------------------------------------------------------------------:|:----------------------------:|
-|                  |                     |                   |                |                |                  |          |                       |                  |           |
-|                  |                     |                   |      date1     |    **Yes**     |        -         |    -     |        future         |       -          |    -      |
-|                  |                     |                   |                |                |                  |          |                       |                  |           |
-|         *        |                     |                   |                |                |                  |          |                       |                  |           |
-|        \|        |                     |                   |      date2     |    **Yes**     |       -          |   -      |        future         |       -          |    -      |
-|        \|        |         *           |                   |                |                |                  |          |                       |                  |           |
-|        \|        |        \|           |                   |      date3     |     **Yes**    |      **Yes**     |**Yes**   |        future         |       future     |future     |
-|        \|        |        \|           |         *         |                |                |                  |          |                       |                  |           |
-|        \|        |        \|           |        \|         |      date4     |     **Yes**    |      **Yes**     |**Yes**   |        active         |      active      |active     |
-|        \|        |        \|           |        \|         |                |                |                  |          |                       |                  |           |
-|        \|        |        \|           |         *         |                |                |                  |          |                       |                  |           |
-|        \|        |        \|           |                   |      date5     |     **Yes**    |     **Yes**      |**Yes**   |        passed         |     passed       |passed     |
-|        \|        |        \|           |                   |                |                |                  |          |                       |                  |           |
-|        \|        |         *           |                   |                |                |                  |          |                       |                  |           |
-|        \|        |                     |                   |      date6     |      **Yes**   |       -          |   -      |       passed          |        -         |     -     |
-|         *        |                     |                   |                |                |                  |          |                       |                  |           |
-|                  |                     |                   |      date7     |      **Yes**   |       -          |    -     |       passed          |        -         |      -    |
+<table>
+  <thead>
+    <tr>
+      <th></th>
+      <th align="center" colspan="2"></th>
+      <th align="center"> </th>
+      <th align="center" colspan="3">Show impacts </th>
+      <th align="center" colspan="3">Status </th>
+    </tr>
+    <tr>
+      <th>Production period </th>
+      <th align="center">publication period </th>
+      <th>Application period </th>
+      <th align="center">Request date</th>
+      <th align="center">disruptions API</th>
+      <th align="center">traffic_report API</th>
+      <th align="center">PtRef API</th>
+      <th align="center">disruptions API</th>
+      <th align="center">traffic_report API</th>
+      <th align="center">PtRef API</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td> </td>
+      <td align="center"> </td>
+      <td> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td align="center"> </td>
+      <td> </td>
+      <td align="center">date1 </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center">- </td>
+      <td align="center">- </td>
+      <td align="center">future </td>
+      <td align="center">- </td>
+      <td align="center">- </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td align="center"> </td>
+      <td> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+    </tr>
+    <tr>
+      <td>* </td>
+      <td align="center"> </td>
+      <td> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+    </tr>
+    <tr>
+      <td>| </td>
+      <td align="center"> </td>
+      <td> </td>
+      <td align="center">date2 </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center">- </td>
+      <td align="center">- </td>
+      <td align="center">future </td>
+      <td align="center">- </td>
+      <td align="center">- </td>
+    </tr>
+    <tr>
+      <td>| </td>
+      <td align="center">* </td>
+      <td> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+    </tr>
+    <tr>
+      <td>| </td>
+      <td align="center">| </td>
+      <td> </td>
+      <td align="center">date3 </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center">future </td>
+      <td align="center">future </td>
+      <td align="center">future </td>
+    </tr>
+    <tr>
+      <td>| </td>
+      <td align="center">| </td>
+      <td>* </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+    </tr>
+    <tr>
+      <td>| </td>
+      <td align="center">| </td>
+      <td>| </td>
+      <td align="center">date4 </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center">active </td>
+      <td align="center">active </td>
+      <td align="center">active </td>
+    </tr>
+    <tr>
+      <td>| </td>
+      <td align="center">| </td>
+      <td>| </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+    </tr>
+    <tr>
+      <td>| </td>
+      <td align="center">| </td>
+      <td>* </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+    </tr>
+    <tr>
+      <td>| </td>
+      <td align="center">| </td>
+      <td> </td>
+      <td align="center">date5 </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center">passed </td>
+      <td align="center">passed </td>
+      <td align="center">passed </td>
+    </tr>
+    <tr>
+      <td>| </td>
+      <td align="center">| </td>
+      <td> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+    </tr>
+    <tr>
+      <td>| </td>
+      <td align="center">* </td>
+      <td> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+    </tr>
+    <tr>
+      <td>| </td>
+      <td align="center"> </td>
+      <td> </td>
+      <td align="center">date6 </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center">- </td>
+      <td align="center">- </td>
+      <td align="center">passed </td>
+      <td align="center">- </td>
+      <td align="center">- </td>
+    </tr>
+    <tr>
+      <td>* </td>
+      <td align="center"> </td>
+      <td> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+    </tr>
+    <tr>
+      <td> </td>
+      <td align="center"> </td>
+      <td> </td>
+      <td align="center">date7 </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center">- </td>
+      <td align="center">- </td>
+      <td align="center">passed </td>
+      <td align="center">- </td>
+      <td align="center">- </td>
+    </tr>
+  </tbody>
+</table>
