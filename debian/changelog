@@ -1,3 +1,26 @@
+navitia2 (2.29.0) unstable; urgency=low
+
+  * Jormungandr: add same_journey_schedules link in journey  <https://github.com/CanalTP/navitia/pull/2042>
+  * Jormungandr: Put some logics into connector  <https://github.com/CanalTP/navitia/pull/2033>
+  * All: add allowed_id[] parameter for journeys  <https://github.com/CanalTP/navitia/pull/2037>
+  * Jormungandr: Fix stop_areas by lon;lat   <https://github.com/CanalTP/navitia/pull/2035>
+  * Ed: fix mistake on source/target  <https://github.com/CanalTP/navitia/pull/2036>
+  * Jormungandr: fix places uri  <https://github.com/CanalTP/navitia/pull/2034>
+  * Change behavior of passages on first and last production day  <https://github.com/CanalTP/navitia/pull/2032>
+  * Jormun: fetching of the direction in siri lite connector  <https://github.com/CanalTP/navitia/pull/2023>
+  * jormun: a few improvement for docker deployment  <https://github.com/CanalTP/navitia/pull/2031>
+  * kraken: add bike in pt  <https://github.com/CanalTP/navitia/pull/2018>
+  * Ed: fix big boulette  <https://github.com/CanalTP/navitia/pull/2030>
+  * Jormun: manage places/uri from mimir  <https://github.com/CanalTP/navitia/pull/2019>
+  * Jormun: set gevent default pool size to 10  <https://github.com/CanalTP/navitia/pull/2026>
+  * Ed: connexe component by mode  <https://github.com/CanalTP/navitia/pull/2024>
+  * Jormungandr: add adresses in stoppoint for serpy in depth 3  <https://github.com/CanalTP/navitia/pull/2021>
+  * jormun: set timeout for network operation with zeep  <https://github.com/CanalTP/navitia/pull/2025>
+  * Jormungandr: fix journeys without datetime  <https://github.com/CanalTP/navitia/pull/2022>
+
+ -- David Quintanel
+ <david.quintanel@canaltp.fr>  Fri, 31 Mar 2017 11:03:17 +0100
+
 navitia2 (2.28.1) unstable; urgency=low
 
   * jormun: set timeout for network operation with zeep <https://github.com/CanalTP/navitia/pull/2025> 
