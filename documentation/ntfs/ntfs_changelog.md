@@ -43,3 +43,5 @@
     * ajout des temps d'embarquement et de débarquement dans le fichier stop_times.txt.
 * Version 0.6.3 du 25/01/2017
     * ajout du champ dataset_extrapolation dans le fichier datasets.txt
+* Version 0.6.4 du 31/03/2017
+    * ajout du mode physique RailShuttle pour les VAL
