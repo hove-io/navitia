@@ -224,7 +224,7 @@ class Geovelo(AbstractStreetNetworkService):
             section.street_network.length = section.length
             section.street_network.mode = response_pb2.Bike
 
-            speed = section.length / section.duration
+            speed = section.length / section.duration if section.duration != 0 else 0
 
             for geovelo_instruction in geovelo_section['details']['instructions'][1:]:
                 path_item = section.street_network.path_items.add()
@@ -241,7 +241,7 @@ class Geovelo(AbstractStreetNetworkService):
 
         return resp
 
-    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request):
+    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
         if mode != "bike":
             logging.getLogger(__name__).error('Geovelo, mode {} not implemented'.format(mode))
             raise InvalidArguments('Geovelo, mode {} not implemented'.format(mode))

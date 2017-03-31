@@ -621,10 +621,12 @@ create_journeys_entry_point(const ::pbnavitia::LocationContext& location,
 JourneysArg::JourneysArg(std::vector<type::EntryPoint> origins,
                          type::AccessibiliteParams accessibilite_params,
                          std::vector<std::string> forbidden,
+                         std::vector<std::string> allowed,
                          type::RTLevel rt_level,
                          std::vector<type::EntryPoint> destinations,
-                         std::vector<uint64_t> datetimes): origins(origins), accessibilite_params(accessibilite_params),
-    forbidden(forbidden), rt_level(rt_level),destinations(destinations),
+                         std::vector<uint64_t> datetimes):
+    origins(origins), accessibilite_params(accessibilite_params),
+    forbidden(forbidden), allowed(allowed), rt_level(rt_level), destinations(destinations),
     datetimes(datetimes){}
 JourneysArg::JourneysArg(){}
 
@@ -647,6 +649,11 @@ navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest &req
         forbidden.push_back(request.forbidden_uris(i));
     }
 
+    std::vector<std::string> allowed;
+    for(int i = 0; i < request.allowed_id_size(); ++i) {
+        allowed.push_back(request.allowed_id(i));
+    }
+
     std::vector<uint64_t> datetimes;
     for(int i = 0; i < request.datetimes_size(); ++i) {
         datetimes.push_back(request.datetimes(i));
@@ -655,12 +662,16 @@ navitia::JourneysArg Worker::fill_journeys(const pbnavitia::JourneysRequest &req
     /// Accessibility params
     type::AccessibiliteParams accessibilite_params;
     accessibilite_params.properties.set(type::hasProperties::WHEELCHAIR_BOARDING, request.wheelchair());
+    accessibilite_params.properties.set(type::hasProperties::BIKE_ACCEPTED, request.bike_in_pt());
+
     accessibilite_params.vehicle_properties.set(type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE, request.wheelchair());
+    accessibilite_params.vehicle_properties.set(type::hasVehicleProperties::BIKE_ACCEPTED, request.bike_in_pt());
 
     type::RTLevel rt_level = get_realtime_level(request.realtime_level());
 
     return JourneysArg(std::move(origins), std::move(accessibilite_params),
-                       std::move(forbidden), rt_level, std::move(destinations), std::move(datetimes));
+                       std::move(forbidden), std::move(allowed), rt_level,
+                       std::move(destinations), std::move(datetimes));
 }
 
 void Worker::err_msg_isochron(navitia::PbCreator& pb_creator, const std::string& err_msg){
@@ -692,28 +703,31 @@ void Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API 
                 return;
             }
             type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
-            navitia::routing::make_isochrone(this->pb_creator, *planner, ep, request.datetimes(0),
-                    request.clockwise(), arg.accessibilite_params,
-                    arg.forbidden, *street_network_worker,
-                    arg.rt_level, request.max_duration(),
-                    request.max_transfers());
+            navitia::routing::make_isochrone(
+                this->pb_creator, *planner, ep, request.datetimes(0),
+                request.clockwise(), arg.accessibilite_params,
+                arg.forbidden, arg.allowed, *street_network_worker,
+                arg.rt_level, request.max_duration(),
+                request.max_transfers());
             break;
         }
 
         case pbnavitia::pt_planner:
-            routing::make_pt_response(this->pb_creator, *planner, arg.origins, arg.destinations, arg.datetimes[0],
-                    request.clockwise(), arg.accessibilite_params,
-                    arg.forbidden, arg.rt_level,
-                    seconds{request.walking_transfer_penalty()}, request.max_duration(),
-                    request.max_transfers(), request.max_extra_second_pass(),
-                    request.has_direct_path_duration() ? boost::optional<time_duration>(seconds{request.direct_path_duration()}) : boost::optional<time_duration>());
+            routing::make_pt_response(
+                this->pb_creator, *planner, arg.origins, arg.destinations, arg.datetimes[0],
+                request.clockwise(), arg.accessibilite_params,
+                arg.forbidden, arg.allowed, arg.rt_level,
+                seconds{request.walking_transfer_penalty()}, request.max_duration(),
+                request.max_transfers(), request.max_extra_second_pass(),
+                request.has_direct_path_duration() ? boost::optional<time_duration>(seconds{request.direct_path_duration()}) : boost::optional<time_duration>());
             break;
         default:
-            routing::make_response(this->pb_creator, *planner, arg.origins[0], arg.destinations[0], arg.datetimes,
-                    request.clockwise(), arg.accessibilite_params,
-                    arg.forbidden, *street_network_worker,
-                    arg.rt_level, seconds{request.walking_transfer_penalty()}, request.max_duration(),
-                    request.max_transfers(), request.max_extra_second_pass());
+            routing::make_response(
+                this->pb_creator, *planner, arg.origins[0], arg.destinations[0], arg.datetimes,
+                request.clockwise(), arg.accessibilite_params,
+                arg.forbidden, arg.allowed, *street_network_worker,
+                arg.rt_level, seconds{request.walking_transfer_penalty()}, request.max_duration(),
+                request.max_transfers(), request.max_extra_second_pass());
         }
     }catch(const navitia::coord_conversion_exception& e) {
         this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());
@@ -782,12 +796,13 @@ void Worker::graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest& req
     for(int i = 0; i < request.boundary_duration_size(); ++i) {
         boundary_duration.push_back(request.boundary_duration(i));
     }
-    navitia::routing::make_graphical_isochrone(this->pb_creator, *planner, ep, request_journey.datetimes(0),
-                                                      boundary_duration, request_journey.max_transfers(),
-                                                      arg.accessibilite_params, arg.forbidden,
-                                                      request_journey.clockwise(), arg.rt_level,
-                                                      *street_network_worker,
-                                                      request_journey.streetnetwork_params().walking_speed());
+    navitia::routing::make_graphical_isochrone(
+        this->pb_creator, *planner, ep, request_journey.datetimes(0),
+        boundary_duration, request_journey.max_transfers(),
+        arg.accessibilite_params, arg.forbidden, arg.allowed,
+        request_journey.clockwise(), arg.rt_level,
+        *street_network_worker,
+        request_journey.streetnetwork_params().walking_speed());
 }
 
 void Worker::heat_map(const pbnavitia::HeatMapRequest& request) {
@@ -802,7 +817,7 @@ void Worker::heat_map(const pbnavitia::HeatMapRequest& request) {
     auto mode = type::static_data::get()->modeByCaption(mode_iso);
     navitia::routing::make_heat_map(this->pb_creator, *planner, ep, request_journey.datetimes(0),
                                     request_journey.max_duration(), request_journey.max_transfers(),
-                                    arg.accessibilite_params, arg.forbidden,
+                                    arg.accessibilite_params, arg.forbidden, arg.allowed,
                                     request_journey.clockwise(), arg.rt_level,
                                     *street_network_worker,
                                     request_journey.streetnetwork_params().walking_speed(), mode,

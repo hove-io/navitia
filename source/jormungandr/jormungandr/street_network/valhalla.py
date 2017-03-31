@@ -211,7 +211,7 @@ class Valhalla(AbstractStreetNetworkService):
             raise TechnicalError('Valhalla service unavailable, impossible to query : {}'.
                                  format(response.url))
 
-    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request):
+    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
         data = self._make_request_arguments(mode, pt_object_origin, [pt_object_destination], request, api='route')
         r = self._call_valhalla('{}/{}'.format(self.service_url, 'route'), requests.post, data)
         if r is not None and r.status_code == 400 and r.json()['error_code'] == 442:

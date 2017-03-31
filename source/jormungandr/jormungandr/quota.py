@@ -31,7 +31,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from functools import wraps
-from jormungandr import authentication
+from jormungandr import authentication, new_relic
 import flask_restful
 from datetime import datetime
 
@@ -43,7 +43,8 @@ def quota_control(func):
     def wrapper(*args, **kwargs):
         user = authentication.get_user(token=authentication.get_token())
         if user is not None and user.is_blocked(datetime.utcnow()):
-            flask_restful.abort(429, message="Quota limit reached, please contact provider if you want to upgrade your current billing plan")
+            new_relic.ignore()
+            flask_restful.abort(429, message="Quota limit reached, please contact your provider if you want to upgrade your current billing plan")
 
         return func(*args, **kwargs)
 

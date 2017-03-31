@@ -162,6 +162,13 @@ class AdminSerializer(GenericSerializer):
     coord = CoordSerializer(required=False)
 
 
+class AddressSerializer(GenericSerializer):
+    house_number = serpy.Field()
+    coord = CoordSerializer(required=False, display_none=False)
+    label = serpy.Field()
+    administrative_regions = AdminSerializer(many=True, display_none=False)
+
+
 class PhysicalModeSerializer(GenericSerializer):
     pass
 
@@ -182,6 +189,7 @@ class StopPointSerializer(GenericSerializer):
     administrative_regions = AdminSerializer(many=True, display_none=False)
     stop_area = serpy.MethodField(display_none=False)
     equipments = Equipments(attr='has_equipments')
+    address = AddressSerializer(display_none=False)
 
     def get_stop_area(self, obj):
         if obj.HasField(str('stop_area')):

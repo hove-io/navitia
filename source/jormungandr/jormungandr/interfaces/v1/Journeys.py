@@ -303,15 +303,25 @@ class add_journey_href(object):
             if objects[1] != 200 or 'journeys' not in objects[0]:
                 return objects
             for journey in objects[0]['journeys']:
+                args = dict(request.args)
+                ids = {o['stop_point']['stop_area']['id']
+                       for s in journey.get('sections', []) if 'from' in s
+                       for o in (s['from'], s['to']) if 'stop_point' in o}
+                if 'region' in kwargs:
+                    args['region'] = kwargs['region']
                 if "sections" not in journey:#this mean it's an isochrone...
-                    args = dict(request.args)
                     if 'to' not in args:
                         args['to'] = journey['to']['id']
                     if 'from' not in args:
                         args['from'] = journey['from']['id']
-                    if 'region' in kwargs:
-                        args['region'] = kwargs['region']
                     journey['links'] = [create_external_link('v1.journeys', rel='journeys', **args)]
+                elif ids and 'public_transport' in (s['type'] for s in journey['sections']):
+                    args['min_nb_journeys'] = 5
+                    ids.update(args.get('allowed_id[]', []))
+                    args['allowed_id[]'] = list(ids)
+                    journey['links'] = [
+                        create_external_link('v1.journeys', rel='same_journey_schedules', _type='journeys', **args)
+                    ]
             return objects
         return wrapper
 
@@ -454,7 +464,10 @@ class Journeys(JourneyCommon):
 
             # we save the original datetime for debuging purpose
             original_datetime = args['original_datetime']
-            new_datetime = self.convert_to_utc(original_datetime)
+            if original_datetime:
+                new_datetime = self.convert_to_utc(original_datetime)
+            else:
+                new_datetime = args['_current_datetime']
             args['datetime'] = date_to_timestamp(new_datetime)
 
             response = i_manager.dispatch(args, api, instance_name=self.region)

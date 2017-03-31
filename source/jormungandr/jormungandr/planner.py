@@ -27,6 +27,7 @@ class JourneyParameters(object):
                  max_transfers=10,
                  wheelchair=False,
                  forbidden_uris=None,
+                 allowed_id=None,
                  realtime_level='base_schedule',
                  max_extra_second_pass=None,
                  walking_transfer_penalty=120,
@@ -35,6 +36,7 @@ class JourneyParameters(object):
         self.max_transfers = max_transfers
         self.wheelchair = wheelchair
         self.forbidden_uris = set(forbidden_uris) if forbidden_uris else set()
+        self.allowed_id = set(allowed_id) if allowed_id else set()
         self.realtime_level = realtime_level
         self.max_extra_second_pass = max_extra_second_pass
         self.direct_path_duration = direct_path_duration
@@ -45,7 +47,7 @@ class Kraken(object):
     def __init__(self, instance):
         self.instance = instance
 
-    def journeys(self, origins, destinations, datetime, clockwise, journey_parameters):
+    def journeys(self, origins, destinations, datetime, clockwise, journey_parameters, bike_in_pt):
         req = request_pb2.Request()
         req.requested_api = type_pb2.pt_planner
         for stop_point_id, access_duration in origins.items():
@@ -70,7 +72,12 @@ class Kraken(object):
         for uri in journey_parameters.forbidden_uris:
             req.journeys.forbidden_uris.append(uri)
 
+        for id in journey_parameters.allowed_id:
+            req.journeys.allowed_id.append(id)
+
         if journey_parameters.direct_path_duration is not None:
             req.journeys.direct_path_duration = journey_parameters.direct_path_duration
+
+        req.journeys.bike_in_pt = bike_in_pt
 
         return self.instance.send_and_receive(req)

@@ -31,8 +31,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import os
 # set default config file if not defined in other tests
 from datetime import timedelta
-from operator import itemgetter
-from flask import logging
 import mock
 import retrying
 from retrying import RetryError
@@ -314,6 +312,25 @@ class AbstractTestFixture(object):
         # more checks on links, we want the prev/next/first/last,
         # to have forwarded all params, (and the time must be right)
         self.check_journeys_links(response, query_dict, query_str)
+
+        # journeys[n].links
+        for j in journeys:
+            has_stop_point = any((o for s in j.get('sections', []) if 'from' in s
+                                    for o in (s['from'], s['to']) if 'stop_point' in o))
+            if 'sections' not in j:
+                assert len(j['links']) == 1 # isochone link
+                assert j['links'][0]['rel'] == 'journeys'
+                assert '/journeys?' in j['links'][0]['href']
+                assert 'from=' in j['links'][0]['href']
+                assert 'to=' in j['links'][0]['href']
+            elif has_stop_point and 'public_transport' in (s['type'] for s in j['sections']):
+                assert len(j['links']) == 1 # same_journey_schedules link
+                assert j['links'][0]['rel'] == 'same_journey_schedules'
+                assert j['links'][0]['type'] == 'journeys'
+                assert '/journeys?' in j['links'][0]['href']
+                assert 'allowed_id%5B%5D=' in j['links'][0]['href']
+            else:
+                assert 'links' not in j
 
         feed_publishers = response.get("feed_publishers", [])
         for feed_publisher in feed_publishers:

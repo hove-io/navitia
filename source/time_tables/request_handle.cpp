@@ -47,17 +47,20 @@ RequestHandle::RequestHandle(PbCreator& pb_creator,
         // since if we have one we are only interested in the time, not the date
         if(! pb_creator.data->meta->production_date.contains(datetime.date()) ) {
             pb_creator.fill_pb_error(pbnavitia::Error::date_out_of_bounds, "date is out of bound");
-        } else if( !pb_creator.data->meta->production_date.contains((datetime + boost::posix_time::seconds(duration)).date()) ) {
-             // On regarde si la date + duration ne déborde pas de la période de production
-            pb_creator.fill_pb_error(pbnavitia::Error::date_out_of_bounds,
-                                     "date is not in data production period");
         }
     }
 
     if(! pb_creator.has_error()){
         date_time = DateTimeUtils::set((datetime.date() - pb_creator.data->meta->production_date.begin()).days(),
                                        datetime.time_of_day().total_seconds());
-        max_datetime = date_time + duration * (clockwise ? 1 : -1);
+        if (clockwise) {
+            // in clockwise set max_dt to the end_date at midnight if dt + duration is bigger
+            auto max_prod_dt = DateTimeUtils::set(pb_creator.data->meta->production_date.length().days(), 0);
+            max_datetime = std::min(date_time + duration, max_prod_dt);
+        } else {
+            // in !clockwise make sure we don't substract duration to dt if it's bigger since they are unsigned
+            max_datetime = duration > date_time ? 0 : date_time - duration;
+        }
         const auto jpp_t = type::Type_e::JourneyPatternPoint;
 
         try {

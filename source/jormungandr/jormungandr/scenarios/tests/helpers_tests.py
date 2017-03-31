@@ -610,6 +610,45 @@ def has_bike_first_and_bss_last__bike_bss_test():
 def has_bike_first_and_bss_last__bike_car_test():
     assert not has_bike_first_and_bss_last(get_bike_car_journey())
 
+#==============================================================================
+# has_bike_first_and_bike_last test
+#==============================================================================
+def has_bike_first_and_bike_last__walking_walking_test():
+    assert not has_bike_first_and_bike_last(get_walking_walking_journey())
+
+def has_bike_first_and_bike_last__walking_bike_test():
+    assert not has_bike_first_and_bike_last(get_walking_bike_journey())
+
+def has_bike_first_and_bike_last__walking_bss_test():
+    assert not has_bike_first_and_bike_last(get_walking_bss_journey())
+
+def has_bike_first_and_bike_last__walking_car_test():
+    assert not has_bike_first_and_bike_last(get_walking_car_journey())
+
+def has_bike_first_and_bike_last__bss_walking_test():
+    assert not has_bike_first_and_bike_last(get_bss_walking_journey())
+
+def has_bike_first_and_bike_last__bss_bike_test():
+    assert not has_bike_first_and_bike_last(get_bss_bike_journey())
+
+def has_bike_first_and_bike_last__bss_bss_test():
+    assert not has_bike_first_and_bike_last(get_bss_bss_journey())
+
+def has_bike_first_and_bike_last__bss_car_test():
+    assert not has_bike_first_and_bike_last(get_bss_car_journey())
+
+def has_bike_first_and_bike_last__bike_walking_test():
+    assert not has_bike_first_and_bike_last(get_bike_walking_journey())
+
+def has_bike_first_and_bike_last__bike_bike_test():
+    assert has_bike_first_and_bike_last(get_bike_bike_journey())
+
+def has_bike_first_and_bike_last__bike_bss_test():
+    assert not has_bike_first_and_bike_last(get_bike_bss_journey())
+
+def has_bike_first_and_bike_last__bike_car_test():
+    assert not has_bike_first_and_bike_last(get_bike_car_journey())
+
 
 def bike_duration_test():
     assert bike_duration(get_walking_walking_journey()) ==  0

@@ -131,6 +131,11 @@ class TestOverlappingCoverage(AbstractTestFixture):
         is_valid_address(response['address'])
         assert(response['address']['label'] == "42 rue kb (Condom)")
 
+    def test_coord_geo_inv(self):
+        response = self.query("/v1/coverage/0.000001;0.000898311281954/coords/0.000001;0.000898311281954")
+        is_valid_address(response['address'])
+        assert(response['address']['label'] == "42 rue kb (Condom)")
+
     def test_not_found_coord(self):
         """
         -0.9;-0.9 is in the two regions, but there is no addresses at

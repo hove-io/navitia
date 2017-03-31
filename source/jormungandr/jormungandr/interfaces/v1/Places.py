@@ -30,13 +30,11 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask import Flask, request
-from flask.ext.restful import Resource, fields, reqparse, abort
+from flask.ext.restful import fields, reqparse, abort
 from flask.ext.restful.inputs import boolean
 from flask.globals import g
-from jormungandr import i_manager, timezone, global_autocomplete, bss_provider_manager, authentication
+from jormungandr import i_manager, timezone, global_autocomplete, authentication
 from jormungandr.interfaces.v1.fields import disruption_marshaller
-from jormungandr.interfaces.v1.make_links import add_id_links
 from jormungandr.interfaces.v1.fields import place, NonNullList, NonNullNested, PbField, pagination,\
                                              error, feed_publisher, Lit, ListLit, beta_endpoint
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
@@ -45,7 +43,6 @@ from jormungandr.interfaces.parsers import depth_argument, default_count_arg_typ
 from copy import deepcopy
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.exceptions import TechnicalError
-from functools import wraps
 from flask_restful import marshal, marshal_with
 import datetime, re
 from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
@@ -319,11 +316,9 @@ class Places(ResourceUri):
                                          description="The type of data to\
                                          search")
         self.parsers["get"].add_argument("count", type=default_count_arg_type, default=10,
-                                         description="The maximum number of\
-                                         places returned")
+                                         description="The maximum number of places returned")
         self.parsers["get"].add_argument("search_type", type=int, default=0,
-                                         description="Type of search:\
-                                         firstletter or type error")
+                                         description="Type of search: firstletter or type error")
         self.parsers["get"].add_argument("admin_uri[]", type=unicode,
                                          action="append",
                                          description="If filled, will\
@@ -339,7 +334,7 @@ class Places(ResourceUri):
                                                      "the object The timezone should be specified in the format,"
                                                      " else we consider it as UTC")
         self.parsers['get'].add_argument("disable_geojson", type=boolean, default=False,
-                            description="remove geojson from the response")
+                                         description="remove geojson from the response")
 
         self.parsers['get'].add_argument("from", type=coord_format,
                                          description="Coordinates longitude;latitude used to prioritize "
@@ -364,9 +359,9 @@ class Places(ResourceUri):
         # to the region, else, we do a word wide search
 
         if any([region, lon, lat]):
-            instance = i_manager.get_region(region, lon, lat)
-            timezone.set_request_timezone(region)
-            response = i_manager.dispatch(args, "places", instance_name=instance)
+            self.region = i_manager.get_region(region, lon, lat)
+            timezone.set_request_timezone(self.region)
+            response = i_manager.dispatch(args, "places", instance_name=self.region)
         else:
             authentication.check_access_to_global_places(user)
             autocomplete = global_autocomplete.get('bragi')
@@ -379,30 +374,44 @@ class Places(ResourceUri):
 
 class PlaceUri(ResourceUri):
 
-    def __init__(self, *args, **kwargs):
-        ResourceUri.__init__(self, *args, **kwargs)
+    def __init__(self, **kwargs):
+        ResourceUri.__init__(self, authentication=False, **kwargs)
         self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
         self.parsers["get"].add_argument("bss_stands", type=boolean, default=True,
                                          description="Show bss stands availability")
         self.parsers['get'].add_argument("disable_geojson", type=boolean, default=False,
-                            description="remove geojson from the response")
+                                         description="remove geojson from the response")
         args = self.parsers["get"].parse_args()
+
         if args["bss_stands"]:
             self.method_decorators.insert(1, ManageStands(self, 'places'))
+
         if args['disable_geojson']:
             g.disable_geojson = True
 
-    @marshal_with(places)
+        self.parsers['get'].add_argument("_autocomplete", type=unicode, description="name of the autocomplete service"
+                                         " used under the hood")
+
     def get(self, id, region=None, lon=None, lat=None):
-        self.region = i_manager.get_region(region, lon, lat)
         args = self.parsers["get"].parse_args()
         args.update({
             "uri": transform_id(id),
             "_current_datetime": datetime.datetime.utcnow()})
-        response = i_manager.dispatch(args, "place_uri",
-                                      instance_name=self.region)
+        if any([region, lon, lat]):
+            self.region = i_manager.get_region(region, lon, lat)
+            timezone.set_request_timezone(self.region)
+            response = i_manager.dispatch(args, "place_uri", instance_name=self.region)
+        else:
+            user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=False)
+            authentication.check_access_to_global_places(user)
+            autocomplete = global_autocomplete.get('bragi')
+            if autocomplete:
+                response = autocomplete.get_uri(args["uri"], instance=None)
+            else:
+                raise TechnicalError('world wide autocompletion service not available')
+
         return response, 200
 
 place_nearby = deepcopy(place)

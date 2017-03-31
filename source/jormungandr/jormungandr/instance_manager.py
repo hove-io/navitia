@@ -34,7 +34,6 @@ from flask import json
 from shapely import geometry
 import configparser
 from zmq import green as zmq
-from threading import Thread, Event
 from navitiacommon import type_pb2, request_pb2, models
 import glob
 import logging
@@ -137,12 +136,8 @@ class InstanceManager(object):
         # not on the ping thread to always have the data available (for the tests for example)
         self.init_kraken_instances()
 
-        self.thread_event = Event()
-        self.thread = Thread(target=self.thread_ping)
-        #daemon thread does'nt block the exit of a process
-        self.thread.daemon = True
         if self.start_ping:
-            self.thread.start()
+            gevent.spawn(self.thread_ping)
 
     def _clear_cache(self):
         logging.getLogger(__name__).info('clear cache')
@@ -192,9 +187,9 @@ class InstanceManager(object):
         """
         fetch krakens metadata
         """
-        while not self.thread_event.is_set() and [i for i in self.instances.values() if not i.is_initialized]:
+        while [i for i in self.instances.values() if not i.is_initialized]:
             self.init_kraken_instances()
-            self.thread_event.wait(timer)
+            gevent.sleep(timer)
         logging.getLogger(__name__).debug('end of ping thread')
 
     def stop(self):

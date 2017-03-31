@@ -367,6 +367,9 @@ def get_kraken_calls_test():
     req = {"origin_mode": ["bike", "car"], "destination_mode": ["bss"]}
     assert get_kraken_calls(req) == [("bike", "bss"), ("car", "bss")]
 
+    req = {"origin_mode": ["bss", "bike"], "destination_mode": ["bike"]}
+    assert get_kraken_calls(req) == [("bike", "bike")]
+
 
 def get_kraken_calls_invalid_1_test():
     with pytest.raises(HTTPException):
@@ -376,11 +379,6 @@ def get_kraken_calls_invalid_1_test():
 def get_kraken_calls_invalid_2_test():
     with pytest.raises(HTTPException):
         get_kraken_calls({"origin_mode": ["bss", "walking"], "destination_mode": ["bike"]})
-
-
-def get_kraken_calls_invalid_3_test():
-    with pytest.raises(HTTPException):
-        get_kraken_calls({"origin_mode": ["bss", "bike"], "destination_mode": ["bike"]})
 
 
 def tag_by_mode_test():
@@ -423,6 +421,9 @@ def tag_by_mode_test():
     bssc = helpers_tests.get_bss_car_journey()
     _tag_journey_by_mode(bssc)
     assert 'car' in bssc.tags
+    bb = helpers_tests.get_bike_bike_journey()
+    _tag_journey_by_mode(bb)
+    assert 'bike' in bb.tags
 
 def tag_direct_path_test():
     response = response_pb2.Response()

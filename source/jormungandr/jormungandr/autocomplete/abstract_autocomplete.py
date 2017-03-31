@@ -44,6 +44,10 @@ class AbstractAutocomplete(object):
         pass
 
     @abstractmethod
+    def get_uri(self, uri, instance=None, current_datetime=None):
+        pass
+
+    @abstractmethod
     def geo_status(self, instance):
         pass
 

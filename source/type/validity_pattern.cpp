@@ -29,6 +29,7 @@ www.navitia.io
 */
 #include "validity_pattern.h"
 #include <log4cplus/logger.h>
+#include <log4cplus/loggingmacros.h>
 #include "datetime.h"
 
 namespace navitia {

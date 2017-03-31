@@ -38,6 +38,11 @@ import abc
 # http://stackoverflow.com/a/38668373/1614576
 ABC = abc.ABCMeta(str("ABC"), (object,), {})
 
+# Regarding to the type of direct path, some special treatments may be done in connector
+class DirectPathType:
+    DIRECT_NO_PT = 0
+    BEGINNING_FALLBACK = 1
+    ENDING_FALLBACK = 2
 
 class AbstractStreetNetworkService(ABC):
     @abc.abstractmethod
@@ -45,9 +50,10 @@ class AbstractStreetNetworkService(ABC):
         pass
 
     @abc.abstractmethod
-    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request):
+    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
         '''
         :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
+        :param direct_path_type : direct_path need to be treated differently regarding to the used connector
         '''
         pass
 

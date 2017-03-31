@@ -565,7 +565,7 @@ def bragi_call_test():
     """
     test the whole autocomplete with a geocodejson service
     """
-    bragi = geocodejson.GeocodeJson(host='http://bob.com/autocomplete')
+    bragi = geocodejson.GeocodeJson(host='http://bob.com')
 
     bragi_response = {
         "features": [

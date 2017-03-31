@@ -29,11 +29,12 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
+import copy
 from jormungandr.exceptions import TechnicalError
 from navitiacommon import request_pb2, type_pb2
 from jormungandr.utils import get_uri_pt_object
-from jormungandr.street_network.street_network import AbstractStreetNetworkService
-
+from jormungandr.street_network.street_network import AbstractStreetNetworkService, DirectPathType
+from jormungandr import utils
 
 class Kraken(AbstractStreetNetworkService):
     sn_system_id = 'kraken'
@@ -41,7 +42,32 @@ class Kraken(AbstractStreetNetworkService):
     def __init__(self, instance, service_url, timeout=10, api_key=None, **kwargs):
         self.instance = instance
 
-    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request):
+    def _reverse_journeys(self, response):
+        if not getattr(response, "journeys"):
+            return response
+        for j in response.journeys:
+            if not getattr(j, "sections"):
+                continue
+            previous_section_begin = j.arrival_date_time
+            for s in j.sections:
+                o = copy.deepcopy(s.origin)
+                d = copy.deepcopy(s.destination)
+                s.origin.CopyFrom(d)
+                s.destination.CopyFrom(o)
+                s.end_date_time = previous_section_begin
+                previous_section_begin = s.begin_date_time = s.end_date_time - s.duration
+            j.sections.sort(utils.SectionSorter())
+        return response
+
+    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
+        """
+        :param direct_path_type: we need to "invert" a direct path when it's a ending fallback by car if and only if
+                                 it's returned by kraken. In other case, it's ignored
+        """
+        should_invert_journey = (mode == 'car' and direct_path_type == DirectPathType.ENDING_FALLBACK)
+        if should_invert_journey:
+            pt_object_origin, pt_object_destination = pt_object_destination, pt_object_origin
+
         req = request_pb2.Request()
         req.requested_api = type_pb2.direct_path
         req.direct_path.origin.place = get_uri_pt_object(pt_object_origin)
@@ -60,7 +86,13 @@ class Kraken(AbstractStreetNetworkService):
         req.direct_path.streetnetwork_params.max_bss_duration_to_pt = request['max_bss_duration_to_pt']
         req.direct_path.streetnetwork_params.car_speed = request['car_speed']
         req.direct_path.streetnetwork_params.max_car_duration_to_pt = request['max_car_duration_to_pt']
-        return self.instance.send_and_receive(req)
+
+        response = self.instance.send_and_receive(req)
+
+        if should_invert_journey:
+            return self._reverse_journeys(response)
+        return response
+
 
     def get_street_network_routing_matrix(self, origins, destinations, street_network_mode, max_duration, request, **kwargs):
         # TODO: reverse is not handled as so far

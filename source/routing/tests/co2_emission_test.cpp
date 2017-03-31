@@ -79,7 +79,7 @@ BOOST_AUTO_TEST_CASE(co2_emission_higher_0) {
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
-                  true, navitia::type::AccessibiliteParams(), forbidden, sn_worker,
+                  true, navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker,
                   nt::RTLevel::Base, 2_min);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -122,7 +122,7 @@ BOOST_AUTO_TEST_CASE(co2_emission_equal_0) {
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
-                  true, navitia::type::AccessibiliteParams(), forbidden, sn_worker,
+                  true, navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker,
                   nt::RTLevel::Base, 2_min);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
@@ -163,7 +163,7 @@ BOOST_AUTO_TEST_CASE(co2_emission_lower_0) {
     auto * data_ptr = b.data.get();
     navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
     make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20120614T021000")},
-                  true, navitia::type::AccessibiliteParams(), forbidden, sn_worker,
+                  true, navitia::type::AccessibiliteParams(), forbidden, {}, sn_worker,
                   nt::RTLevel::Base, 2_min);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);

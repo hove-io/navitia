@@ -137,6 +137,7 @@ struct RAPTOR
                 const uint32_t max_transfers = 10,
                 const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
                 const std::vector<std::string>& forbidden = std::vector<std::string>(),
+                const std::vector<std::string>& allowed = std::vector<std::string>(),
                 bool clockwise = true,
                 const boost::optional<navitia::time_duration>& direct_path_dur = boost::none,
                 const size_t max_extra_second_pass = 0);
@@ -153,6 +154,7 @@ struct RAPTOR
               uint32_t max_transfers = 10,
               const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
               const std::vector<std::string>& forbidden = std::vector<std::string>(),
+              const std::vector<std::string>& allowed = std::vector<std::string>(),
               bool clockwise = true,
               const nt::RTLevel rt_level = nt::RTLevel::Base);
 
@@ -162,6 +164,7 @@ struct RAPTOR
     void set_valid_jp_and_jpp(uint32_t date,
                               const type::AccessibiliteParams&,
                               const std::vector<std::string>& forbidden,
+                              const std::vector<std::string>& allowed,
                               const nt::RTLevel rt_level);
 
     ///Boucle principale, parcourt les journey_patterns,
@@ -200,6 +203,7 @@ struct RAPTOR
                            const uint32_t max_transfers,
                            const type::AccessibiliteParams& accessibilite_params,
                            const std::vector<std::string>& forbidden_uri,
+                           const std::vector<std::string>& allowed_ids,
                            bool clockwise);
 
     ~RAPTOR() = default;
