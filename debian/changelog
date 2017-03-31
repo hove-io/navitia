@@ -1,3 +1,9 @@
+navitia2 (2.29.1) unstable; urgency=low
+
+  * patch changelog
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Fri, 31 Mar 2017 15:03:46 +0100
+
 navitia2 (2.29.0) unstable; urgency=low
 
   * Jormungandr: add same_journey_schedules link in journey  <https://github.com/CanalTP/navitia/pull/2042>
@@ -18,8 +24,7 @@ navitia2 (2.29.0) unstable; urgency=low
   * jormun: set timeout for network operation with zeep  <https://github.com/CanalTP/navitia/pull/2025>
   * Jormungandr: fix journeys without datetime  <https://github.com/CanalTP/navitia/pull/2022>
 
- -- David Quintanel
- <david.quintanel@canaltp.fr>  Fri, 31 Mar 2017 11:03:17 +0100
+ -- David Quintanel <david.quintanel@canaltp.fr>  Fri, 31 Mar 2017 11:03:17 +0100
 
 navitia2 (2.28.1) unstable; urgency=low
 
