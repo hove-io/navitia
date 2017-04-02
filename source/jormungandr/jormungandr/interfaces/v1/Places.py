@@ -257,7 +257,7 @@ geocode_addr = {
 geocode_poi = {
     "embedded_type": Lit("poi"),
     "quality": Lit(0),
-    "id": CoordId,
+    "id": fields.String(attribute='properties.geocoding.id'),
     "name": fields.String(attribute='properties.geocoding.label'),
     "poi": PoiField()
 }

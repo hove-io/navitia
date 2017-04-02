@@ -68,8 +68,6 @@ struct JourneysArg {
     JourneysArg();
 };
 
-boost::optional<type::EntryPoint> make_entry_point_from_coord(const std::string& uri);
-
 class Worker {
     private:
         std::unique_ptr<navitia::routing::RAPTOR> planner;

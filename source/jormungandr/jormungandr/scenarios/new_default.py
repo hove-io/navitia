@@ -41,11 +41,13 @@ from jormungandr.scenarios.qualifier import min_from_criteria, arrival_crit, dep
     has_no_bike, has_bike, has_no_bss, has_bss, non_pt_journey, has_walk, and_filters
 import numpy as np
 import collections
-from jormungandr.utils import date_to_timestamp
+from jormungandr.utils import date_to_timestamp, dict_to_protobuf
 from jormungandr.scenarios.simple import get_pb_data_freshness
 import gevent, gevent.pool
 import flask
 from jormungandr import app
+from jormungandr.autocomplete.geocodejson import GeocodeJson
+from jormungandr import global_autocomplete
 
 SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
 JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
@@ -675,7 +677,7 @@ def get_kraken_id(entrypoint_detail):
         return None
 
     # for the other objects the id is the object coordinated
-    coord = detail.get(emb_type, {}).get('coord')
+    coord = entrypoint_detail.get(emb_type, {}).get('coord')
 
     if not coord:
         # no coordinate, we keep the original id
@@ -683,6 +685,49 @@ def get_kraken_id(entrypoint_detail):
 
     return '{};{}'.format(coord['lon'], coord['lat'])
 
+
+def rig_journey(journey, request):
+    """
+    Rig the journey to put back the request from/to if they have been changed
+    """
+    if not journey or not journey.sections:
+        return
+
+    return # debug
+    original_origin = request.get('entrypoint_detail', {}).get('origin')
+    if original_origin:
+        journey.sections[0].origin = original_origin
+
+    original_destination = request.get('entrypoint_detail', {}).get('destination')
+    if original_destination:
+        journey.sections[-1].destination = original_destination
+
+def make_place_protobuf(place_detail):
+
+    """
+    make a protobuf place from a python place detail
+    do not make it for stop_point, stop_area and admins as we won't need it 
+    """
+    emb_type = place_detail.get('embedded_type')
+
+    pb_place = type_pb2.PtObject()
+    pb_place.uri = place_detail.get('id')
+    pb_place.name = place_detail.get('name')
+
+    if emb_type == 'poi':
+        pb_poi = pb_place.poi
+        poi = place_detail[emb_type]
+        pb_place.embedded_type = type_pb2.POI
+        dict_to_protobuf(poi, pb_poi)
+    elif emb_type == 'address':
+        pb_addr = pb_place.address
+        addr = place_detail[emb_type]
+        pb_place.embedded_type = type_pb2.ADDRESS
+        dict_to_protobuf(addr, pb_addr)
+    else:
+        return None
+
+    return pb_place
 
 class Scenario(simple.Scenario):
     """
@@ -703,12 +748,23 @@ class Scenario(simple.Scenario):
             'origin': api_request.get('origin'),
             'destination': api_request.get('destination')
         }
+        origin_detail = self.get_entrypoint_detail(api_request.get('origin'), instance)
+        destination_detail = self.get_entrypoint_detail(api_request.get('destination'), instance)
+
+        api_request['origin'] = get_kraken_id(origin_detail) or api_request.get('origin')
+        api_request['destination'] = get_kraken_id(destination_detail) or api_request.get('destination')
+
+        # we convert the origin/destination to protobuf for future uses
         api_request['entrypoint_detail'] = {
-            'origin': self.get_entrypoint_detail(api_request.get('origin'), instance),
-            'destination': self.get_entrypoint_detail(api_request.get('destination'), instance)
+            'origin': make_place_protobuf(origin_detail) ,
+            'destination': make_place_protobuf(destination_detail)
         }
-        api_request['origin'] = self.get_entrypoint_kraken_id(api_request['entrypoint_detail']['origin']) or api_request.get('origin')
-        api_request['destination'] = self.get_entrypoint_kraken_id(api_request['entrypoint_detail']['destination']) or api_request.get('destination')
+
+        logging.info("----------------------------- {origin} -> {destination} \n {detail_o} -> {detail_d} \n  {pb_o} -> {pb_d} \n"
+        .format(origin=api_request['origin'],destination=api_request['destination'],
+        detail_o=origin_detail, detail_d=destination_detail,
+        pb_o=api_request['entrypoint_detail']['origin'], pb_d=api_request['entrypoint_detail']['destination']
+        ))
 
         request = deepcopy(api_request)
         min_asked_journeys = get_or_default(request, 'min_nb_journeys', 1)
@@ -780,6 +836,7 @@ class Scenario(simple.Scenario):
             self.nb_kraken_calls += 1
             for idx, j in enumerate(local_resp.journeys):
                 j.internal_id = "{resp}-{j}".format(resp=self.nb_kraken_calls, j=idx)
+                rig_journey(j, request)
 
             fill_uris(local_resp)
             resp.append(local_resp)
@@ -863,16 +920,17 @@ class Scenario(simple.Scenario):
         return best.arrival_date_time - one_second
 
     def get_entrypoint_detail(self, entrypoint, instance):
-        detail = instance.autocomplete.get_by_uri(entrypoint, instance=instance)
+        logging.info("calling autocomplete {} for {}".format(instance.autocomplete, entrypoint))
+        detail = instance.autocomplete.get_object_by_uri(entrypoint, instance=instance)
 
         if detail:
             return detail
 
-        if not isinstance(instance.autocomplete, geocodejson):
+        if not isinstance(instance.autocomplete, GeocodeJson):
             bragi = global_autocomplete.get('bragi')
             if bragi:
                 # if the instance's autocomplete is not a geocodejson autocomplete, we also check in the
                 # global autocomplete instance
-                return bragi.get_by_uri(entrypoint, instance=instance)
+                return bragi.get_object_by_uri(entrypoint, instance=instance)
 
         return None

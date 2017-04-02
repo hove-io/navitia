@@ -945,6 +945,11 @@ std::string to_string(ExceptionDate::ExceptionType t) {
     }
 }
 
+
+// the new way to represent a coord is : "lon;lat"
+const std::string match_double = "[-+]?[0-9]*\\.?[0-9]+[eE]?[-+]?[0-9]*";
+const auto coord_regex = std::regex("^(" + match_double + ");(" + match_double + ")$");
+
 EntryPoint::EntryPoint(const Type_e type, const std::string &uri, int access_duration) : type(type), uri(uri), access_duration(access_duration) {
    // Gestion des adresses
    if (type == Type_e::Address){
@@ -955,18 +960,40 @@ EntryPoint::EntryPoint(const Type_e type, const std::string &uri, int access_dur
            this->house_number = str_to_int(vect[2]);
        }
    }
-   if(type == Type_e::Coord){
-       size_t pos2 = uri.find(":", 6);
-       try{
-           if(pos2 != std::string::npos) {
-               this->coordinates.set_lon(boost::lexical_cast<double>(uri.substr(6, pos2 - 6)));
-               this->coordinates.set_lat(boost::lexical_cast<double>(uri.substr(pos2+1)));
-           }
-       }catch(boost::bad_lexical_cast){
-           this->coordinates.set_lon(0);
-           this->coordinates.set_lat(0);
-       }
-   }
+   if (type == Type_e::Coord) {
+       auto set_coord = [&](const std::string& lon, const std::string& lat) {
+            try {
+                this->coordinates.set_lon(boost::lexical_cast<double>(lon));
+                this->coordinates.set_lat(boost::lexical_cast<double>(lat));
+            } catch(boost::bad_lexical_cast) {
+                this->coordinates.set_lon(0);
+                this->coordinates.set_lat(0);
+            }
+       };
+
+        if (uri.size() > 6 && uri.substr(0, 6) == "coord:") {
+            // old style to represent coord.
+            // done for retrocompatibility
+            size_t pos2 = uri.find(":", 6);
+            if (pos2 != std::string::npos) {
+                set_coord(uri.substr(6, pos2 - 6), uri.substr(pos2+1));
+            }
+            return;
+        }
+        std::smatch matches;
+        bool res = std::regex_match(uri, matches, coord_regex);
+        if (res && matches.size() == 3) {
+            set_coord(matches[1], matches[2]);
+        } else {
+            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"), 
+                "uri " << uri << " partialy match coordinate, cannot work");
+        }
+    }
+}
+
+bool is_coord(const std::string& uri) {
+    return (uri.size() > 6 && uri.substr(0, 6) == "coord:")
+     || std::regex_match(uri, coord_regex);
 }
 
 EntryPoint::EntryPoint(const Type_e type, const std::string &uri) : EntryPoint(type, uri, 0) { }

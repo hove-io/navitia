@@ -723,7 +723,6 @@ stop_date_time = {
     "data_freshness": enum_type()
 }
 
-
 place = {
     "stop_point": PbField(stop_point),
     "stop_area": PbField(stop_area),

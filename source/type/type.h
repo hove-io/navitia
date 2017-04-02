@@ -1015,6 +1015,7 @@ template<> inline Type_e get_type_e<Contributor>() {
     return Type_e::Contributor;
 }
 
+bool is_coord(const std::string&);
 } //namespace navitia::type
 
 //trait to access the number of elements in the Mode_e enum

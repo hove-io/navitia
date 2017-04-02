@@ -31,13 +31,4 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 def transform_id(id):
-    splitted_coord = id.split(";")
-    if len(splitted_coord) == 2:
-        try:
-            # check if lon and lat are convertible to float
-            float(splitted_coord[0])
-            float(splitted_coord[1])
-            return "coord:" + id.replace(";", ":")
-        except ValueError:
-            pass
-    return id
+    return id  # TODO remove the call to this method

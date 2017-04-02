@@ -38,6 +38,7 @@ from nose.tools import raises
 from jormungandr import app
 from urllib import urlencode
 from nose.tools import eq_
+from .tests_mechanism import config
 
 
 class FakeUserBragi(FakeUser):
@@ -295,6 +296,83 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert response[0]["error"]["id"] == 'unknown_object'
             assert response[0]["error"]["message"] == "The object AAA doesn't exist"
 
+
+@dataset({"main_routing_test": {}})
+class TestBragiShape(AbstractTestFixture):
+
+    def test_places_for_user_with_shape(self):
+        """
+        Test that with a shape on user, it is correctly posted
+        """
+        with user_set(app, FakeUserBragi, "test_user_with_shape"):
+
+            mock_post = mock.MagicMock(return_value=MockResponse({}, 200, '{}'))
+
+            def http_get(url, *args, **kwargs):
+                assert False
+
+            with mock.patch('requests.get', http_get):
+                with mock.patch('requests.post', mock_post):
+
+                    self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi')
+                    assert mock_post.called
+
+                    mock_post.reset_mock()
+                    self.query('v1/places?q=toto')
+                    assert mock_post.called
+
+            # test that the shape is posted
+            def http_post(url, *args, **kwargs):
+                json = kwargs.pop('json')
+                assert json['shape']['type'] == 'Feature'
+                assert json.get('shape').get('geometry')
+                return MockResponse({}, 200, '{}')
+
+            with mock.patch('requests.get', http_get):
+                with mock.patch('requests.post', http_post):
+                    self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi')
+                    self.query('v1/places?q=toto')
+
+    def test_places_for_user_without_shape(self):
+        """
+        Test that without shape for user, we use the get method
+        """
+        with user_set(app, FakeUserBragi, "test_user_no_shape"):
+
+            mock_get = mock.MagicMock(return_value=MockResponse({}, 200, '{}'))
+
+            def http_post(self, url, *args, **kwargs):
+                assert False
+
+            with mock.patch('requests.get', mock_get):
+                with mock.patch('requests.post', http_post):
+
+                    self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi')
+                    assert mock_get.called
+
+                    mock_get.reset_mock()
+                    self.query('v1/places?q=toto')
+                    assert mock_get.called
+
+    def test_global_place_uri(self):
+        mock_requests = MockRequests({
+            'https://host_of_bragi/features/bob': (BRAGI_MOCK_RESPONSE, 200)
+        })
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query("/v1/places/bob")
+
+            is_valid_global_autocomplete(response, depth=1)
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['name'] == '20 Rue Bob (Bobtown)'
+            assert r[0]['embedded_type'] == 'address'
+            assert r[0]['address']['name'] == 'Rue Bob'
+            assert r[0]['address']['label'] == '20 Rue Bob (Bobtown)'
+
+
+
+@dataset({'main_routing_test': MOCKED_INSTANCE_CONF})
+class AbstractAutocompleteAndRouting(AbstractTestFixture):
     def test_journey_with_external_uri_from_bragi(self):
         """
         This test aim to recreate a classic integration
@@ -404,12 +482,14 @@ class TestBragiAutocomplete(AbstractTestFixture):
         
         mock_requests = MockRequests({
             'https://host_of_bragi/autocomplete?q=bobette&{p}'.format(p=params): (bragi_bobette, 200),
-            'https://host_of_bragi/features/bobette': (bragi_bobette, 200),
+            'https://host_of_bragi/features/bobette?pt_dataset=main_routing_test': (bragi_bobette, 200),
             'https://host_of_bragi/autocomplete?q=20+rue+bob&{p}'.format(p=params): (bob_street, 200),
-            'https://host_of_bragi/features/{}?{}'.format(check_utils.r_coord, params): (bob_street, 200)
+            'https://host_of_bragi/features/{}?pt_dataset=main_routing_test'.format(check_utils.r_coord): (bob_street, 200)
         })
+        import logging
         def get_autocomplete(query):
             autocomplete_response = self.query_region(query)
+            logging.debug('response = {}'.format(autocomplete_response))
             
             r = autocomplete_response.get('places')
             assert len(r) == 1
@@ -421,7 +501,6 @@ class TestBragiAutocomplete(AbstractTestFixture):
             journeys_to = get_autocomplete('places?q=20 rue bob')
 
             journeys_response = self.query_region('journeys?from={f}&to={to}&datetime={dt}'.format(f=journeys_from, to=journeys_to, dt="20120614T080000"))
-            import logging
 
             # all journeys should have kept the user's from/to
             for j in journeys_response['journeys']:
@@ -432,76 +511,6 @@ class TestBragiAutocomplete(AbstractTestFixture):
                 eq_(response_from['embedded_type'], "poi")
                 eq_(response_from['label'], "bobette")
 
-
-
-@dataset({"main_routing_test": {}})
-class TestBragiShape(AbstractTestFixture):
-
-    def test_places_for_user_with_shape(self):
-        """
-        Test that with a shape on user, it is correctly posted
-        """
-        with user_set(app, FakeUserBragi, "test_user_with_shape"):
-
-            mock_post = mock.MagicMock(return_value=MockResponse({}, 200, '{}'))
-
-            def http_get(url, *args, **kwargs):
-                assert False
-
-            with mock.patch('requests.get', http_get):
-                with mock.patch('requests.post', mock_post):
-
-                    self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi')
-                    assert mock_post.called
-
-                    mock_post.reset_mock()
-                    self.query('v1/places?q=toto')
-                    assert mock_post.called
-
-            # test that the shape is posted
-            def http_post(url, *args, **kwargs):
-                json = kwargs.pop('json')
-                assert json['shape']['type'] == 'Feature'
-                assert json.get('shape').get('geometry')
-                return MockResponse({}, 200, '{}')
-
-            with mock.patch('requests.get', http_get):
-                with mock.patch('requests.post', http_post):
-                    self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi')
-                    self.query('v1/places?q=toto')
-
-    def test_places_for_user_without_shape(self):
-        """
-        Test that without shape for user, we use the get method
-        """
-        with user_set(app, FakeUserBragi, "test_user_no_shape"):
-
-            mock_get = mock.MagicMock(return_value=MockResponse({}, 200, '{}'))
-
-            def http_post(self, url, *args, **kwargs):
-                assert False
-
-            with mock.patch('requests.get', mock_get):
-                with mock.patch('requests.post', http_post):
-
-                    self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi')
-                    assert mock_get.called
-
-                    mock_get.reset_mock()
-                    self.query('v1/places?q=toto')
-                    assert mock_get.called
-
-    def test_global_place_uri(self):
-        mock_requests = MockRequests({
-            'https://host_of_bragi/features/bob': (BRAGI_MOCK_RESPONSE, 200)
-        })
-        with mock.patch('requests.get', mock_requests.get):
-            response = self.query("/v1/places/bob")
-
-            is_valid_global_autocomplete(response, depth=1)
-            r = response.get('places')
-            assert len(r) == 1
-            assert r[0]['name'] == '20 Rue Bob (Bobtown)'
-            assert r[0]['embedded_type'] == 'address'
-            assert r[0]['address']['name'] == 'Rue Bob'
-            assert r[0]['address']['label'] == '20 Rue Bob (Bobtown)'
+@config({'scenario': 'new_default'})
+class TestDefaultAutocompleteAndRouting(AbstractAutocompleteAndRouting):
+    pass
