@@ -212,6 +212,29 @@ def _tag_direct_path(responses):
                     j.tags.extend(tag)
 
 
+def _is_bike_section(s):
+    return ((s.type == response_pb2.CROW_FLY or s.type == response_pb2.STREET_NETWORK) and
+            s.street_network.mode == response_pb2.Bike)
+
+def _is_pt_bike_section(s):
+    bike_ok = type_pb2.hasEquipments.has_bike_accepted
+    return (s.type == response_pb2.PUBLIC_TRANSPORT and
+            bike_ok in s.pt_display_informations.has_equipments.has_equipments and
+            bike_ok in s.origin.stop_point.has_equipments.has_equipments and
+            bike_ok in s.destination.stop_point.has_equipments.has_equipments)
+
+def _tag_bike_in_pt(responses):
+    bike_indifferent = [response_pb2.boarding,
+                        response_pb2.landing,
+                        response_pb2.WAITING,
+                        response_pb2.TRANSFER,
+                        response_pb2.ALIGHTING]
+    for j in itertools.chain.from_iterable(r.journeys for r in responses):
+        if _has_pt(j) and all(_is_bike_section(s) or _is_pt_bike_section(s) or s.type in bike_indifferent
+                              for s in j.sections):
+            j.tags.extend(['bike_in_pt'])
+
+
 def tag_journeys(resp):
     """
     tag the journeys
@@ -689,6 +712,7 @@ class Scenario(simple.Scenario):
             tmp_resp = self.call_kraken(request_type, request, instance, krakens_call)
             _tag_by_mode(tmp_resp)
             _tag_direct_path(tmp_resp)
+            _tag_bike_in_pt(tmp_resp)
             journey_filter._filter_too_long_journeys(tmp_resp, request)
             responses.extend(tmp_resp)  # we keep the error for building the response
             if nb_journeys(tmp_resp) == 0:
