@@ -947,6 +947,7 @@ For filtering stop points, the identifier of a stop point or stop area can be us
 `forbidden_uris[]` removes the corresponding vehicle journeys (or stop points) from the list of allowed vehicle journeys (resp. stop_points).
 
 `allowed_id[]` works in 2 parts:
+
 -   If an id related to a stop point is given, only the corresponding stop points will be allowed. Else, all the stop points are allowed.
 -   If an id related to a vehicle journey is given, only the corresponding vehicle journeys will be allowed. Else, all the vehicle journeys are allowed.
 
