@@ -223,15 +223,20 @@ def _is_pt_bike_section(s):
             bike_ok in s.origin.stop_point.has_equipments.has_equipments and
             bike_ok in s.destination.stop_point.has_equipments.has_equipments)
 
-def _tag_bike_in_pt(responses):
+def _is_bike_in_pt_journey(j):
     bike_indifferent = [response_pb2.boarding,
                         response_pb2.landing,
                         response_pb2.WAITING,
                         response_pb2.TRANSFER,
                         response_pb2.ALIGHTING]
+    if all(_is_bike_section(s) or _is_pt_bike_section(s) or s.type in bike_indifferent for s in j.sections)\
+            and _has_pt(j):
+        return True
+    return False
+
+def _tag_bike_in_pt(responses):
     for j in itertools.chain.from_iterable(r.journeys for r in responses):
-        if _has_pt(j) and all(_is_bike_section(s) or _is_pt_bike_section(s) or s.type in bike_indifferent
-                              for s in j.sections):
+        if _is_bike_in_pt_journey(j):
             j.tags.extend(['bike_in_pt'])
 
 
