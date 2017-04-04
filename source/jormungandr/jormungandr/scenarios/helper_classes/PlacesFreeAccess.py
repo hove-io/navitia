@@ -3,9 +3,10 @@ from navitiacommon import type_pb2
 from jormungandr import utils
 from collections import namedtuple
 
-AccessibleByCrowflyResult = namedtuple('AccessibleByCrowflyResult', ['crowfly', 'odt'])
+PlaceFreeAccessResult = namedtuple('PlaceFreeAccessResult', ['crowfly', 'odt'])
 
-class AccessibleByCrowfly:
+
+class PlacesFreeAccess:
     """
     stop_points that are accessible by crowfly: odt, stop_points of a stop_area, etc.
     """
@@ -38,7 +39,7 @@ class AccessibleByCrowfly:
             odt_sps = self._instance.georef.get_odt_stop_points(coord)
             [odt.add(stop_point.uri) for stop_point in odt_sps]
 
-        return AccessibleByCrowflyResult(crowfly, odt)
+        return PlaceFreeAccessResult(crowfly, odt)
 
     def async_request(self):
         self._value = Future.create_future(self._do_request)

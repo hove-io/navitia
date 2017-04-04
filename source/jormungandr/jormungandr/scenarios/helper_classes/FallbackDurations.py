@@ -6,15 +6,19 @@ DurationElement = namedtuple('DurationElement', ['duration', 'status'])
 
 
 class FallbackDurations:
-    def __init__(self, instance, requested_place_obj, is_origin, mode, proximities_by_crowfly_pool, request, speed_switcher):
+    def __init__(self, instance, requested_place_obj, is_origin, mode, proximities_by_crowfly_pool, places_free_access,
+                 request, speed_switcher):
         self._instance = instance
         self._requested_place_obj = requested_place_obj
         self._is_origin = is_origin
         self._mode = mode
         self._proximities_by_crowfly_pool = proximities_by_crowfly_pool
+        self._places_free_access = places_free_access
         self._request = request
         self._speed_switcher = speed_switcher
         self._value = None
+
+        self.async_request()
 
     def _get_duration(self, resp, place):
         from math import sqrt
@@ -26,17 +30,28 @@ class FallbackDurations:
         return map_response[resp.routing_status]
 
     def _do_request(self):
-        # When max_duration_to_pt is 0, there is no need to compute the fallback to pt, except if place is a stop_point or a
-        # stop_area
+        # When max_duration_to_pt is 0, there is no need to compute the fallback to pt, except if place is a
+        # stop_point or a stop_area
         center_isochrone = self._requested_place_obj
-        places_isochrone = self._proximities_by_crowfly_pool.wait_and_get(self._mode)
+        free_access = self._places_free_access.wait_and_get()
+        all_free_access = free_access.crowfly | free_access.odt
+        proximities_by_crowfly = self._proximities_by_crowfly_pool.wait_and_get(self._mode)
+
+        # if a place is freely accessible, there is no need to compute it's access duration in isochrone
+        places_isochrone = [p for p in proximities_by_crowfly if p.uri not in all_free_access]
+
+        result = {}
+        # Since we have already places that have free access, we add them into the result
+        [result.update({uri: DurationElement(0, response_pb2.reached)}) for uri in all_free_access]
+
         max_duration_to_pt = self._request['max_{}_duration_to_pt'.format(self._mode)]
+
         if max_duration_to_pt == 0:
             # When max_duration_to_pt is 0, we can get on the public transport ONLY if the place is a stop_point
             if self._instance.georef.get_stop_points_from_uri(center_isochrone.uri):
                 return {center_isochrone.uri: DurationElement(0, response_pb2.reached)}
             else:
-                return {}
+                return result
         sn_routing_matrix = self._instance.get_street_network_routing_matrix([center_isochrone],
                                                                              places_isochrone,
                                                                              self._mode,
@@ -45,9 +60,8 @@ class FallbackDurations:
                                                                              **self._speed_switcher)
 
         if not len(sn_routing_matrix.rows) or not len(sn_routing_matrix.rows[0].routing_response):
-            return {}
+            return result
 
-        result = {}
         for pos, r in enumerate(sn_routing_matrix.rows[0].routing_response):
             if r.routing_status != response_pb2.unreached:
                 duration = self._get_duration(r, places_isochrone[pos])
@@ -61,6 +75,7 @@ class FallbackDurations:
         # stop_point_1         0(s)       ...          ...
         if center_isochrone.uri in result:
             result[center_isochrone.uri] = DurationElement(0, response_pb2.reached)
+
         return result
 
     def async_request(self):
@@ -74,13 +89,14 @@ class FallbackDurations:
 
 class FallbackDurationsPool(dict):
 
-    def __init__(self, instance, requested_place_obj, is_origin, modes, proximities_by_crowfly_pool, request):
+    def __init__(self, instance, requested_place_obj, is_origin, modes, proximities_by_crowfly_pool, places_free_access, request):
         super(FallbackDurationsPool, self).__init__()
         self._instance = instance
         self._requested_place_obj = requested_place_obj
         self._is_origin = is_origin
         self._modes = set(modes)
         self._proximities_by_crowfly_pool = proximities_by_crowfly_pool
+        self._places_free_access = places_free_access
         self._request = request
         self._speed_switcher = {
             "walking": instance.walking_speed,
@@ -96,9 +112,8 @@ class FallbackDurationsPool(dict):
     def async_request(self):
         for mode in self._modes:
             fallback_durations = FallbackDurations(self._instance, self._requested_place_obj, self._is_origin, mode,
-                                                   self._proximities_by_crowfly_pool, self._request,
-                                                   self._speed_switcher)
-            fallback_durations.async_request()
+                                                   self._proximities_by_crowfly_pool, self._places_free_access,
+                                                   self._request, self._speed_switcher)
             self._value[mode] = fallback_durations
 
     def wait_and_get(self, mode):
@@ -107,19 +122,3 @@ class FallbackDurationsPool(dict):
 
     def is_empty(self):
         return next((False for _, v in self._value.items() if v.wait_and_get()), True)
-
-    def wait_and_update_with_accessible_by_crowfly(self, accessible_by_crowfly):
-        accessible = accessible_by_crowfly.wait_and_get()
-        all_crowfly = accessible.crowfly | accessible.odt
-
-        for mode in self._value:
-            # Get fallback durations by mode
-            f = self._value.get(mode)
-            if not f:
-                continue
-            # Here we get a uri-vs-(duration,status) dictionary
-            durations = f.wait_and_get()
-            [durations.update({uri: DurationElement(0, response_pb2.reached)}) for uri in all_crowfly]
-
-            # we overwrite the durations that are computed previously
-            f.wait_and_set(durations)

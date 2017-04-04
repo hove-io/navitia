@@ -1,4 +1,4 @@
-from AccessibleByCrowfly import AccessibleByCrowfly
+from PlacesFreeAccess import PlacesFreeAccess
 from DirectPath import DirectPathPool
 from FallbackDurations import FallbackDurationsPool
 from PlaceByUri import PlaceByUri

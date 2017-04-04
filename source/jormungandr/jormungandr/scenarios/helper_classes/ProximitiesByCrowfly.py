@@ -25,7 +25,7 @@ class ProximitiesByCrowfly:
         if self._max_duration == 0:
             # When max_duration_to_pt is 0, we can get on the public transport ONLY if the place is a stop_point
             if self._instance.georef.get_stop_points_from_uri(self._requested_place_obj.uri):
-                return [self._requested_place_obj.uri]
+                return [self._requested_place_obj]
 
         coord = utils.get_pt_object_coord(self._requested_place_obj)
         if coord.lat and coord.lon:

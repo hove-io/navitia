@@ -30,7 +30,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 from jormungandr.scenarios import new_default
-from navitiacommon import type_pb2, response_pb2
+from navitiacommon import type_pb2
 from jormungandr.utils import PeriodExtremity
 from jormungandr.street_network.street_network import DirectPathType
 from jormungandr.scenarios.helper_classes import *
@@ -79,7 +79,6 @@ class Scenario(new_default.Scenario):
         # if max_duration(time to pass in pt) is zero, there is no need to continue,
         # we return all direct path without pt
         if not request.get('max_duration', 0):
-            res = []
             for mode in requested_dep_modes:
                 dp = direct_path_pool.wait_and_get(requested_orig_obj, requested_dest_obj, mode,
                                                    fallback_extremity, direct_path_type)
@@ -91,18 +90,19 @@ class Scenario(new_default.Scenario):
         dest_proximities_by_crowfly = ProximitiesByCrowflyPool(instance, requested_dest_obj, requested_arr_modes,
                                                                request, None)
 
-        is_origin= True
-        orig_fallback_durations_pool = FallbackDurationsPool(instance, requested_orig_obj, is_origin, requested_dep_modes,
-                                                             orig_proximities_by_crowfly, request)
-        is_origin= False
-        dest_fallback_durations_pool = FallbackDurationsPool(instance, requested_dest_obj, is_origin, requested_arr_modes,
-                                                             dest_proximities_by_crowfly, request)
+        orig_places_free_access = PlacesFreeAccess(instance, requested_orig_obj)
+        dest_places_free_access = PlacesFreeAccess(instance, requested_dest_obj)
 
-        orig_accessible_by_crowfly = AccessibleByCrowfly(instance, requested_orig_obj)
-        dest_accessible_by_crowfly = AccessibleByCrowfly(instance, requested_dest_obj)
-
-        orig_fallback_durations_pool.wait_and_update_with_accessible_by_crowfly(orig_accessible_by_crowfly)
-        dest_fallback_durations_pool.wait_and_update_with_accessible_by_crowfly(dest_accessible_by_crowfly)
+        is_origin = True
+        orig_fallback_durations_pool = FallbackDurationsPool(instance, requested_orig_obj, is_origin,
+                                                             requested_dep_modes,
+                                                             orig_proximities_by_crowfly, orig_places_free_access,
+                                                             request)
+        is_origin = False
+        dest_fallback_durations_pool = FallbackDurationsPool(instance, requested_dest_obj, is_origin,
+                                                             requested_arr_modes,
+                                                             dest_proximities_by_crowfly, dest_places_free_access,
+                                                             request)
 
         pt_journey_pool = PtJourneyPool(instance, requested_orig_obj, requested_dest_obj,
                                         direct_path_pool, krakens_call,
@@ -111,7 +111,7 @@ class Scenario(new_default.Scenario):
 
         completed_pt_journeys = wait_and_complete_pt_journey(requested_orig_obj, requested_dest_obj,
                                                              pt_journey_pool, direct_path_pool,
-                                                             orig_accessible_by_crowfly, dest_accessible_by_crowfly,
+                                                             orig_places_free_access, dest_places_free_access,
                                                              orig_fallback_durations_pool, dest_fallback_durations_pool,
                                                              request)
 
