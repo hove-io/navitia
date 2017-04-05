@@ -109,7 +109,7 @@ def create_administrative_regions_field(geocoding):
             "insee": admin.get('insee'),
             "name": admin.get('label'),
             "level":
-                int(admin.get('level')) if admin.get('level') else None ,
+                int(admin.get('level')) if admin.get('level') else None,
             "coord": {
                 "lat": lat,
                 "lon": lon
