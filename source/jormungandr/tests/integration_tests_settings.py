@@ -54,12 +54,6 @@ MODULES = {
 }
 
 AUTOCOMPLETE_SYSTEMS = {
-    'bragi': {
-        'class': 'jormungandr.autocomplete.geocodejson.GeocodeJson',
-        'args': {
-                "host": "https://host_of_bragi"
-        }
-    },
     'kraken': {
         'class': 'jormungandr.autocomplete.kraken.Kraken'
     }

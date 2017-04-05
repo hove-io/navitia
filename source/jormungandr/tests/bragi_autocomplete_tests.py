@@ -109,7 +109,7 @@ BRAGI_MOCK_RESPONSE = {
     ]
 }
 
-@dataset({'main_routing_test': MOCKED_INSTANCE_CONF})
+@dataset({'main_routing_test': MOCKED_INSTANCE_CONF}, global_config={'activate_bragi': True})
 class TestBragiAutocomplete(AbstractTestFixture):
 
     def test_autocomplete_call(self):
@@ -297,7 +297,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert response[0]["error"]["message"] == "The object AAA doesn't exist"
 
 
-@dataset({"main_routing_test": {}})
+@dataset({"main_routing_test": {}}, global_config={'activate_bragi': True})
 class TestBragiShape(AbstractTestFixture):
 
     def test_places_for_user_with_shape(self):
@@ -371,7 +371,7 @@ class TestBragiShape(AbstractTestFixture):
 
 
 
-@dataset({'main_routing_test': MOCKED_INSTANCE_CONF})
+@dataset({'main_routing_test': MOCKED_INSTANCE_CONF}, global_config={'activate_bragi': True})
 class AbstractAutocompleteAndRouting(AbstractTestFixture):
     def test_journey_with_external_uri_from_bragi(self):
         """
@@ -504,12 +504,17 @@ class AbstractAutocompleteAndRouting(AbstractTestFixture):
 
             # all journeys should have kept the user's from/to
             for j in journeys_response['journeys']:
-                response_to = j['sections'][-1]['to']
                 response_from = j['sections'][0]['from']
-
                 eq_(response_from['id'], "bobette")
+                eq_(response_from['name'], "bobette's label")
                 eq_(response_from['embedded_type'], "poi")
-                eq_(response_from['label'], "bobette")
+                eq_(response_from['poi']['label'], "bobette's label")
+
+                response_to = j['sections'][-1]['to']
+                eq_(response_to['id'], journeys_to)
+                eq_(response_to['name'], "20 Rue Bob (Bobtown)")
+                eq_(response_to['embedded_type'], "address")
+                eq_(response_to['address']['label'], "20 Rue Bob (Bobtown)")
 
 @config({'scenario': 'new_default'})
 class TestDefaultAutocompleteAndRouting(AbstractAutocompleteAndRouting):

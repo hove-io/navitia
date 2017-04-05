@@ -28,6 +28,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+from copy import deepcopy
 import os
 # set default config file if not defined in other tests
 from datetime import timedelta
@@ -41,7 +42,8 @@ if not 'JORMUNGANDR_CONFIG_FILE' in os.environ:
 
 import subprocess
 from .check_utils import *
-from jormungandr import app, i_manager
+import jormungandr
+from jormungandr import app, i_manager, utils
 from jormungandr.stat_manager import StatManager
 from navitiacommon.models import User
 from jormungandr.instance import Instance
@@ -114,9 +116,44 @@ class AbstractTestFixture(object):
         ]
 
     @classmethod
+    def global_jormun_setup(cls):
+        """
+        non instance dependent jormungandr setup
+        """
+        if cls.global_config.get('activate_bragi', False):
+            logging.info("rigging the autocomplete for {}".format(cls.__name__))
+            # if we need a global bragi, we rig jormungandr global_autocomplete
+            cls.old_global_autocompletes = deepcopy(jormungandr.global_autocomplete)
+
+            # we want to keep the same address for global_autocomplete as others might have references on it
+            jormungandr.global_autocomplete.clear()
+            jormungandr.global_autocomplete.update({
+                'bragi': utils.create_object({
+                    'class': 'jormungandr.autocomplete.geocodejson.GeocodeJson',
+                    'args': {
+                        "host": "https://host_of_bragi"
+                    }
+                }),
+                'kraken': utils.create_object({'class': 'jormungandr.autocomplete.kraken.Kraken'})
+            })
+
+    @classmethod
+    def global_jormun_teardown(cls):
+        """
+        cleanup the global config
+        """
+        if hasattr(cls, 'old_global_autocompletes'):
+            logging.info("putting back the old global autoconfig for {}".format(cls.__name__))
+            #if we changed the global_autocomplete variable, we put the old value back
+            # we want to keep the same address for global_autocomplete as others might have references on it
+            jormungandr.global_autocomplete.clear()
+            jormungandr.global_autocomplete.update(cls.old_global_autocompletes)
+
+    @classmethod
     def setup_class(cls):
         cls.krakens_pool = {}
         logging.info("Initing the tests {}, let's pop the krakens".format(cls.__name__))
+        cls.global_jormun_setup()
         cls.launch_all_krakens()
         instances_config_files = cls.create_dummy_json()
         i_manager.configuration_files = instances_config_files
@@ -175,6 +212,7 @@ class AbstractTestFixture(object):
     def teardown_class(cls):
         logging.info("Tearing down the tests {}, time to hunt the krakens down"
                      .format(cls.__name__))
+        cls.global_jormun_teardown()
         cls.kill_all_krakens()
         for m in cls.mocks:
             m.stop()
@@ -371,7 +409,7 @@ class NewDefaultScenarioAbstractTestFixture(AbstractTestFixture):
         eq_(j_departure - timedelta(seconds=1), dt)
 
 
-def dataset(datasets):
+def dataset(datasets, global_config={}):
     """
     decorator giving class attribute 'data_sets'
 
@@ -383,6 +421,7 @@ def dataset(datasets):
     """
     def deco(cls):
         cls.data_sets = datasets
+        cls.global_config = global_config
         return cls
     return deco
 
