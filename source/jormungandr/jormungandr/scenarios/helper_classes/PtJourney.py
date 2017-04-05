@@ -1,9 +1,10 @@
 import Future
 from jormungandr import utils
-from jormungandr.street_network.street_network import DirectPathType
+from jormungandr.street_network.street_network import StreetNetworkPath
 from navitiacommon import response_pb2
 from collections import namedtuple
 import copy
+import logging
 
 PtPoolElement = namedtuple('PtPoolElement', ['dep_mode', 'arr_mode', 'pt_journey'])
 
@@ -24,9 +25,15 @@ class PtJourney:
         self.async_request()
 
     def _do_request(self):
-
+        logger = logging.getLogger(__name__)
+        logger.debug("waiting for orig fallback durations with %s", self._dep_mode)
         orig_fallback_duration_status = self._orig_fallback_durtaions_pool.wait_and_get(self._dep_mode)
+        logger.debug("waiting for dest fallback durations with %s", self._arr_mode)
         dest_fallback_duration_status = self._dest_fallback_durations_pool.wait_and_get(self._arr_mode)
+
+        logger.debug("requesting public transport journey with dep_mode: %s and arr_mode: %s",
+                     self._dep_mode,
+                     self._arr_mode)
 
         orig_fallback_durations = {k: v.duration for k, v in orig_fallback_duration_status.items()}
         dest_fallback_durations = {k: v.duration for k, v in dest_fallback_duration_status.items()}
@@ -42,6 +49,7 @@ class PtJourney:
             j.internal_id = str(utils.generate_id())
 
         if resp.HasField(b"error"):
+            logger.debug("pt journey has error dep_mode: %s and arr_mode: %s", self._dep_mode, self._arr_mode)
             #Here needs to modify error message of no_solution
             if not orig_fallback_durations:
                 resp.error.id = response_pb2.Error.no_origin
@@ -49,6 +57,10 @@ class PtJourney:
             elif not dest_fallback_durations:
                 resp.error.id = response_pb2.Error.no_destination
                 resp.error.message = "no destination point"
+
+        logger.debug("finish public transport journey with dep_mode: %s and arr_mode: %s",
+                     self._dep_mode,
+                     self._arr_mode)
         return resp
 
     def async_request(self):
@@ -59,7 +71,20 @@ class PtJourney:
 
 
 class _PtJourneySorter(object):
+    """
+    This sorter is used as a trick to render the computation asynchronous
 
+    With this sorter, the PtJourneyPool is sorted in a way from (likely) quickest computation to slowest computation.
+    For instance, we assume that a journey starts with "walking" and ends with "walking" may be computed faster than
+    a journey starts with "bike" and ends with "bike" which is fatster than a journey starts with "car" and ends with
+    "car". This assumption is based on the fact that the computation of fallback durations for "walking" is much faster
+    than for "bike" than for "car".
+
+    The use case can be found in the function "compute_fallback(...)". In that function, we launch the computation of
+    fallbacks once the pt_journey is returned, with this sorter, the time of computation is slightly optimized, since
+    we don't need to wait for the slowest pt_journey(ex. "car-car") to launch the fallback of a quick pt_journey
+    ("walking-walking").
+    """
     mode_weight = {"walking": 1, "bike": 100, "bss": 500, "car": 1000}
 
     def __call__(self, a, b):
@@ -67,9 +92,10 @@ class _PtJourneySorter(object):
         b_weight = self.mode_weight.get(b.dep_mode) + self.mode_weight.get(b.dep_mode)
         return -1 if a_weight < b_weight else 1
 
+
 class PtJourneyPool:
-    def __init__(self, instance, requested_orig_obj, requested_dest_obj, direct_path_pool, kraken_calls, orig_fallback_durtaions_pool,
-                 dest_fallback_durations_pool, request):
+    def __init__(self, instance, requested_orig_obj, requested_dest_obj, direct_path_pool, kraken_calls,
+                 orig_fallback_durtaions_pool, dest_fallback_durations_pool, request):
         self._instance = instance
         self._requested_orig_obj = requested_orig_obj
         self._requested_dest_obj = requested_dest_obj
@@ -95,7 +121,7 @@ class PtJourneyPool:
                                  forbidden_uris=request['forbidden_uris[]'])
 
     def async_request(self):
-        direct_path_type = DirectPathType.DIRECT_NO_PT
+        direct_path_type = StreetNetworkPath.DIRECT
         periode_extremity = utils.PeriodExtremity(self._request['datetime'], self._request['clockwise'])
         for dep_mode, arr_mode in self._kraken_calls:
             dp = self._direct_path_pool.wait_and_get(self._requested_orig_obj,

@@ -2,6 +2,7 @@ import Future
 from navitiacommon import type_pb2
 from jormungandr import utils
 from collections import namedtuple
+import logging
 
 PlaceFreeAccessResult = namedtuple('PlaceFreeAccessResult', ['crowfly', 'odt'])
 
@@ -17,6 +18,9 @@ class PlacesFreeAccess:
         self.async_request()
 
     def _do_request(self):
+        logger = logging.getLogger(__name__)
+        logger.debug("requesting places with free access from %s", self._requested_place_obj.uri)
+
         crowfly = set()
         odt = set()
 
@@ -38,6 +42,8 @@ class PlacesFreeAccess:
         if coord:
             odt_sps = self._instance.georef.get_odt_stop_points(coord)
             [odt.add(stop_point.uri) for stop_point in odt_sps]
+
+        logger.debug("finish places with free access from %s", self._requested_place_obj.uri)
 
         return PlaceFreeAccessResult(crowfly, odt)
 

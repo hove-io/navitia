@@ -1,7 +1,8 @@
 import Future
-from jormungandr.street_network.street_network import DirectPathType
+from jormungandr.street_network.street_network import StreetNetworkPath
 from helper_utils import get_max_fallback_duration
 from jormungandr import utils
+import logging
 
 
 class ProximitiesByCrowfly:
@@ -21,9 +22,14 @@ class ProximitiesByCrowfly:
         self.async_request()
 
     def _do_request(self):
+        logger = logging.getLogger(__name__)
+        logger.debug("requesting proximities by crowfly from %s in %s", self._requested_place_obj.uri, self._mode)
+
         # When max_duration_to_pt is 0, there is no need to compute the fallback to pt, except if place is a stop_point
         # or a stop_area
         if self._max_duration == 0:
+            logger.debug("max duration equals to 0, no need to compute proximities by crowfly")
+
             # When max_duration_to_pt is 0, we can get on the public transport ONLY if the place is a stop_point
             if self._instance.georef.get_stop_points_from_uri(self._requested_place_obj.uri):
                 return [self._requested_place_obj]
@@ -33,8 +39,11 @@ class ProximitiesByCrowfly:
             crow_fly = self._instance.georef.get_crow_fly(utils.get_uri_pt_object(self._requested_place_obj),
                                                           self._mode,  self._max_duration, self._max_nb_crowfly,
                                                           **self._speed_switcher)
+
+            logger.debug("finish proximities by crowfly from %s in %s", self._requested_place_obj.uri, self._mode)
             return crow_fly
 
+        logger.debug("the coord of requested places is not valid: %s", coord)
         return []
 
     def async_request(self):
@@ -62,7 +71,7 @@ class ProximitiesByCrowflyPool:
     def async_request(self):
         dps_by_mode = {}
         if self._direct_path_pool:
-            dps_by_mode = self._direct_path_pool.get_direct_paths_by_type(DirectPathType.DIRECT_NO_PT)
+            dps_by_mode = self._direct_path_pool.get_direct_paths_by_type(StreetNetworkPath.DIRECT)
 
         for mode in self._modes:
             max_fallback_duration = get_max_fallback_duration(self._request, mode, dps_by_mode.get(mode))

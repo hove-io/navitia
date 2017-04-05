@@ -6,4 +6,4 @@ from PtJourney import PtJourneyPool
 from ProximitiesByCrowfly import ProximitiesByCrowflyPool
 from CompletePtJourney import wait_and_complete_pt_journey
 from Exceptions import PtException, EntryPointException
-from helper_utils import check_entry_point_or_raise, check_final_results_or_raise
+from helper_utils import get_entry_point_or_raise, check_final_results_or_raise

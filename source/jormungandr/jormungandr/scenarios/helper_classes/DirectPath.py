@@ -1,7 +1,8 @@
 import Future
 from jormungandr import utils
 from collections import namedtuple
-from jormungandr.street_network.street_network import DirectPathType
+from jormungandr.street_network.street_network import StreetNetworkPath
+import logging
 
 DirectPathKey = namedtuple('DirectPathKey', ['mode', 'orig_uri', 'dest_uri', 'direct_path_type'])
 
@@ -19,11 +20,18 @@ class DirectPath:
         self.async_request()
 
     def _do_request(self):
+        logger = logging.getLogger(__name__)
+        logger.debug("requesting %s direct path from %s to %s by %s", self._direct_path_type,
+                     self._orig_obj.uri, self._dest_obj.uri, self._mode)
+
         dp = self._instance.direct_path(self._mode, self._orig_obj, self._dest_obj,
                                         self._fallback_extremity, self._request,
                                         self._direct_path_type)
         if getattr(dp, "journeys", None):
             dp.journeys[0].internal_id = str(utils.generate_id())
+
+        logger.debug("finish %s direct path from %s to %s by %s", self._direct_path_type,
+                     self._orig_obj.uri, self._dest_obj.uri, self._mode)
         return dp
 
     def async_request(self):
@@ -70,7 +78,7 @@ class DirectPathPool:
 
     def has_valid_direct_path_no_pt(self):
         for k in self._value:
-            if k.direct_path_type is not DirectPathType.DIRECT_NO_PT:
+            if k.direct_path_type is not StreetNetworkPath.DIRECT:
                 continue
             dp = self._value[k].wait_and_get()
             if getattr(dp, "journeys", None):

@@ -33,7 +33,7 @@ import copy
 from jormungandr.exceptions import TechnicalError
 from navitiacommon import request_pb2, type_pb2
 from jormungandr.utils import get_uri_pt_object
-from jormungandr.street_network.street_network import AbstractStreetNetworkService, DirectPathType
+from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPath
 from jormungandr import utils
 
 class Kraken(AbstractStreetNetworkService):
@@ -64,7 +64,7 @@ class Kraken(AbstractStreetNetworkService):
         :param direct_path_type: we need to "invert" a direct path when it's a ending fallback by car if and only if
                                  it's returned by kraken. In other case, it's ignored
         """
-        should_invert_journey = (mode == 'car' and direct_path_type == DirectPathType.ENDING_FALLBACK)
+        should_invert_journey = (mode == 'car' and direct_path_type == StreetNetworkPath.ENDING_FALLBACK)
         if should_invert_journey:
             pt_object_origin, pt_object_destination = pt_object_destination, pt_object_origin
 

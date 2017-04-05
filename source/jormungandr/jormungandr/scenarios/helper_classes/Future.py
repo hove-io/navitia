@@ -2,8 +2,9 @@ import gevent
 import gevent.pool
 from jormungandr import app
 
+
 class GeventFuture:
-    _pool = gevent.pool.Pool(4)
+    _pool = gevent.pool.Pool(app.config.get('GREENLET_POOL_SIZE', 4))
 
     def __init__(self, fun, *args, **kwargs):
         self._future = self._pool.spawn(fun, *args, **kwargs)
