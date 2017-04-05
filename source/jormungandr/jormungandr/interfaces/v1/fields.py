@@ -554,9 +554,15 @@ display_informations_vj = {
     "text_color": fields.String(attribute="text_color"),
 }
 
+
+class DoubleToStringField(fields.Raw):
+    def format(self, value):
+        # we don't want to loose precision while converting a double to string
+        return "{:.16g}".format(value)
+
 coord = {
-    "lon": fields.String(),
-    "lat": fields.String()
+    "lon": DoubleToStringField(),
+    "lat": DoubleToStringField()
 }
 
 generic_type = {
