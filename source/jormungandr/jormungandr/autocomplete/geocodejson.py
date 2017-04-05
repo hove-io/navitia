@@ -34,6 +34,7 @@ import logging
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
 import requests
 from jormungandr.exceptions import TechnicalError, UnknownObject
+from flask import current_app
 
 
 class GeocodeJson(AbstractAutocomplete):
@@ -77,10 +78,15 @@ class GeocodeJson(AbstractAutocomplete):
     def response_marshaler(cls, response_bragi, uri=None):
         cls._check_response(response_bragi, uri)
         json_response = response_bragi.json()
-        from flask.ext.restful import marshal
-        from jormungandr.interfaces.v1.Places import geocodejson
 
-        return marshal(json_response, geocodejson)
+        if current_app.config.get('USE_SERPY', False):
+            from jormungandr.interfaces.v1.serializer.places import PlacesSerializer
+            return PlacesSerializer(json_response).data
+        else:
+            from flask.ext.restful import marshal
+            from jormungandr.interfaces.v1.Places import geocodejson
+
+            return marshal(json_response, geocodejson)
 
     def make_url(self, end_point, uri=None):
 
