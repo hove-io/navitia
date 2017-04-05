@@ -93,15 +93,16 @@ class Scenario(new_default.Scenario):
         orig_places_free_access = PlacesFreeAccess(instance, requested_orig_obj)
         dest_places_free_access = PlacesFreeAccess(instance, requested_dest_obj)
 
-        is_origin = True
-        orig_fallback_durations_pool = FallbackDurationsPool(instance, requested_orig_obj, is_origin,
+        orig_fallback_durations_pool = FallbackDurationsPool(instance, requested_orig_obj,
                                                              requested_dep_modes,
                                                              orig_proximities_by_crowfly, orig_places_free_access,
+                                                             direct_path_pool,
                                                              request)
-        is_origin = False
-        dest_fallback_durations_pool = FallbackDurationsPool(instance, requested_dest_obj, is_origin,
+
+        dest_fallback_durations_pool = FallbackDurationsPool(instance, requested_dest_obj,
                                                              requested_arr_modes,
                                                              dest_proximities_by_crowfly, dest_places_free_access,
+                                                             None,
                                                              request)
 
         pt_journey_pool = PtJourneyPool(instance, requested_orig_obj, requested_dest_obj,

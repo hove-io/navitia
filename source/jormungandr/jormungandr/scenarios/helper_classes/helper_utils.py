@@ -82,6 +82,7 @@ def _extend_journey(pt_journey, fallback_dp, fallback_extremity):
     '''
     alinged_fallback = _align_fallback_direct_path_datetime(fallback_dp, fallback_extremity)
     pt_journey.duration += alinged_fallback.journeys[0].duration
+    pt_journey.durations.total = pt_journey.duration
     pt_journey.durations.walking += alinged_fallback.journeys[0].durations.walking
     _extend_pt_sections_with_direct_path(pt_journey, alinged_fallback)
 
@@ -158,11 +159,28 @@ def _clean_pt_journey_error_or_raise(pt_journeys, has_valid_direct_path_no_pt):
             raise PtException(pt_journeys)
 
 
+def get_max_fallback_duration(request, mode, dp_future):
+    """
+    By knowing the duration of direct path, we can limit the max duration for proximities by crowfly and fallback
+    durations
+    :param request:
+    :param mode:
+    :param dp_future:
+    :return:  max_fallback_duration
+    """
+    # 30 minutes by default
+    max_duration = request.get('max_{}_duration_to_pt'.format(mode), 1800)
+    dp = dp_future.wait_and_get() if dp_future else None
+    dp_duration = dp.journeys[0].durations.total if getattr(dp, 'journeys', None) else max_duration
+    return min(max_duration, dp_duration)
+
+
 def compute_fallback(requested_orig_obj, requested_dest_obj, pt_journey_pool, direct_path_pool,
                      orig_accessible_by_crowfly, dest_accessible_by_crowfly, request):
     has_valid_direct_path_no_pt = direct_path_pool.has_valid_direct_path_no_pt()
     for (dep_mode, arr_mode, pt_journey_f) in pt_journey_pool:
         pt_journeys = pt_journey_f.wait_and_get()
+        print(dep_mode, arr_mode, "launching fallback")
 
         _clean_pt_journey_error_or_raise(pt_journeys, has_valid_direct_path_no_pt)
 

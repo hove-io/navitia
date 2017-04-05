@@ -1,5 +1,5 @@
 import Future
-from utils import complete_pt_journey, compute_fallback
+from helper_utils import complete_pt_journey, compute_fallback
 
 
 def wait_and_complete_pt_journey(requested_orig_obj, requested_dest_obj, pt_journey_pool, direct_path_pool,

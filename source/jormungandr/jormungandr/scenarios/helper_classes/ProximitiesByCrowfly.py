@@ -1,5 +1,6 @@
 import Future
 from jormungandr.street_network.street_network import DirectPathType
+from helper_utils import get_max_fallback_duration
 from jormungandr import utils
 
 
@@ -29,9 +30,9 @@ class ProximitiesByCrowfly:
 
         coord = utils.get_pt_object_coord(self._requested_place_obj)
         if coord.lat and coord.lon:
-            crow_fly = self._instance.georef.get_crow_fly(utils.get_uri_pt_object(self._requested_place_obj), self._mode,
-                                                      self._max_duration,
-                                                      self._max_nb_crowfly, **self._speed_switcher)
+            crow_fly = self._instance.georef.get_crow_fly(utils.get_uri_pt_object(self._requested_place_obj),
+                                                          self._mode,  self._max_duration, self._max_nb_crowfly,
+                                                          **self._speed_switcher)
             return crow_fly
 
         return []
@@ -64,13 +65,8 @@ class ProximitiesByCrowflyPool:
             dps_by_mode = self._direct_path_pool.get_direct_paths_by_type(DirectPathType.DIRECT_NO_PT)
 
         for mode in self._modes:
-            max_duration = self._request['max_{}_duration_to_pt'.format(mode)]
-            dp = dps_by_mode.get(mode)
-            dp_duration = dp.wait_and_get().journeys[0].durations.total if hasattr(dp, 'journeys') else max_duration
-
-            crowfly_max_duration = min(max_duration, dp_duration)
-
-            p = ProximitiesByCrowfly(self. _instance, self._requested_place_obj, mode, crowfly_max_duration,
+            max_fallback_duration = get_max_fallback_duration(self._request, mode, dps_by_mode.get(mode))
+            p = ProximitiesByCrowfly(self. _instance, self._requested_place_obj, mode, max_fallback_duration,
                                      self._max_nb_crowfly)
 
             self._value[mode] = p

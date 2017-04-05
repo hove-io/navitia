@@ -1,19 +1,21 @@
 import Future
 from navitiacommon import response_pb2
 from collections import namedtuple
+from jormungandr.street_network.street_network import DirectPathType
+from helper_utils import get_max_fallback_duration
 
 DurationElement = namedtuple('DurationElement', ['duration', 'status'])
 
 
 class FallbackDurations:
-    def __init__(self, instance, requested_place_obj, is_origin, mode, proximities_by_crowfly_pool, places_free_access,
-                 request, speed_switcher):
+    def __init__(self, instance, requested_place_obj, mode, proximities_by_crowfly_pool, places_free_access,
+                 max_duration_to_pt, request, speed_switcher):
         self._instance = instance
         self._requested_place_obj = requested_place_obj
-        self._is_origin = is_origin
         self._mode = mode
         self._proximities_by_crowfly_pool = proximities_by_crowfly_pool
         self._places_free_access = places_free_access
+        self._max_duration_to_pt = max_duration_to_pt
         self._request = request
         self._speed_switcher = speed_switcher
         self._value = None
@@ -44,9 +46,7 @@ class FallbackDurations:
         # Since we have already places that have free access, we add them into the result
         [result.update({uri: DurationElement(0, response_pb2.reached)}) for uri in all_free_access]
 
-        max_duration_to_pt = self._request['max_{}_duration_to_pt'.format(self._mode)]
-
-        if max_duration_to_pt == 0:
+        if self._max_duration_to_pt == 0:
             # When max_duration_to_pt is 0, we can get on the public transport ONLY if the place is a stop_point
             if self._instance.georef.get_stop_points_from_uri(center_isochrone.uri):
                 return {center_isochrone.uri: DurationElement(0, response_pb2.reached)}
@@ -55,7 +55,7 @@ class FallbackDurations:
         sn_routing_matrix = self._instance.get_street_network_routing_matrix([center_isochrone],
                                                                              places_isochrone,
                                                                              self._mode,
-                                                                             max_duration_to_pt,
+                                                                             self._max_duration_to_pt,
                                                                              self._request,
                                                                              **self._speed_switcher)
 
@@ -65,7 +65,7 @@ class FallbackDurations:
         for pos, r in enumerate(sn_routing_matrix.rows[0].routing_response):
             if r.routing_status != response_pb2.unreached:
                 duration = self._get_duration(r, places_isochrone[pos])
-                if duration < max_duration_to_pt:
+                if duration < self._max_duration_to_pt:
                     result.update({places_isochrone[pos].uri: DurationElement(duration, r.routing_status)})
 
         # We update the fallback duration matrix if the requested origin/destination is also
@@ -84,19 +84,18 @@ class FallbackDurations:
     def wait_and_get(self):
         return self._value.wait_and_get() if self._value else None
 
-    def wait_and_set(self, value):
-        self._value.wait_and_set(value)
 
 class FallbackDurationsPool(dict):
 
-    def __init__(self, instance, requested_place_obj, is_origin, modes, proximities_by_crowfly_pool, places_free_access, request):
+    def __init__(self, instance, requested_place_obj, modes, proximities_by_crowfly_pool, places_free_access,
+                 direct_path_pool, request):
         super(FallbackDurationsPool, self).__init__()
         self._instance = instance
         self._requested_place_obj = requested_place_obj
-        self._is_origin = is_origin
         self._modes = set(modes)
         self._proximities_by_crowfly_pool = proximities_by_crowfly_pool
         self._places_free_access = places_free_access
+        self._direct_path_pool = direct_path_pool
         self._request = request
         self._speed_switcher = {
             "walking": instance.walking_speed,
@@ -110,9 +109,15 @@ class FallbackDurationsPool(dict):
         self.async_request()
 
     def async_request(self):
+        dps_by_mode = {}
+        if self._direct_path_pool:
+            dps_by_mode = self._direct_path_pool.get_direct_paths_by_type(DirectPathType.DIRECT_NO_PT)
+
         for mode in self._modes:
-            fallback_durations = FallbackDurations(self._instance, self._requested_place_obj, self._is_origin, mode,
+            max_fallback_duration = get_max_fallback_duration(self._request, mode, dps_by_mode.get(mode))
+            fallback_durations = FallbackDurations(self._instance, self._requested_place_obj, mode,
                                                    self._proximities_by_crowfly_pool, self._places_free_access,
+                                                   max_fallback_duration,
                                                    self._request, self._speed_switcher)
             self._value[mode] = fallback_durations
 

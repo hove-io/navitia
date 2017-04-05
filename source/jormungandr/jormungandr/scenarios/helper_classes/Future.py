@@ -1,9 +1,9 @@
 import gevent
 import gevent.pool
-
+from jormungandr import app
 
 class GeventFuture:
-    _pool = gevent.pool.Pool(8)
+    _pool = gevent.pool.Pool(4)
 
     def __init__(self, fun, *args, **kwargs):
         self._future = self._pool.spawn(fun, *args, **kwargs)
@@ -13,10 +13,6 @@ class GeventFuture:
 
     def wait_and_get(self):
         return self._future.get()
-
-    def wait_and_set(self, value):
-        self._future.join()
-        self._future.value = value
 
 
 def create_future(fun, *args, **kwargs):
