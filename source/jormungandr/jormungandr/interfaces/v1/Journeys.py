@@ -350,6 +350,37 @@ class add_fare_links(object):
             return objects
         return wrapper
 
+
+class rig_journey(object):
+
+    def __call__(self, f):
+        @wraps(f)
+        def wrapper(*args, **kwargs):
+            objects = f(*args, **kwargs)
+            response, status, _ = objects
+            if status != 200:
+                return objects
+
+            if not hasattr(g, 'origin_detail') or not hasattr(g, 'destination_detail'):
+                return objects
+
+            for j in response.get('journeys', []):
+                if not 'sections' in j:
+                    continue
+                logging.debug('for journey changing origin: {old_o} to {new_o}'
+                              ', destination to {old_d} to {new_d}'
+                              .format(old_o=j['sections'][0]['from'],
+                                      new_o=g.origin_detail,
+                                      old_d=j['sections'][-1]['to'],
+                                      new_d=g.destination_detail))
+
+                j['sections'][0]['from'] = g.origin_detail
+                j['sections'][-1]['to'] = g.destination_detail
+
+            return objects
+        return wrapper
+
+
 class Journeys(JourneyCommon):
 
     def __init__(self):
@@ -388,6 +419,7 @@ class Journeys(JourneyCommon):
     @add_debug_info()
     @add_fare_links()
     @add_journey_href()
+    @rig_journey()
     @marshal_with(journeys)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):

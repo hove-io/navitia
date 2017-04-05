@@ -236,39 +236,6 @@ def walk_protobuf(pb_object, visitor):
 
         add_elt(elem[0], elem[1])
 
-
-def dict_to_protobuf(values, message):
-    """
-    generate a Protobuf structure from a dict.
-
-    not very efficient, use with care
-    """
-    def parse_list(values ,message):
-        '''parse list to protobuf message'''
-        if isinstance(values[0], dict):  #value needs to be further parsed
-            for v in values:
-                cmd = message.add()
-                dict_to_protobuf(v, cmd)
-        else: #value can be set
-            message.extend(values)
-
-    for k, v in values.iteritems():
-        if isinstance(v, dict):
-            dict_to_protobuf(v,getattr(message, k))
-        elif isinstance(v, list):
-            parse_list(v, getattr(message, k))
-        else:
-            try:
-                if k == 'id':
-                    # hackounet, we need to rename id to uri to make a generic mechanism
-                    k = 'uri'
-                setattr(message, k, v)
-            except AttributeError:
-                logging.info('while converting to protobuf, impossible to set {}.{} = {}'.format(message,k,v))
-                logging.exception('bob')
-            except TypeError:
-                casted_val = float(v)
-                setattr(message, k, casted_val)
                 
 def realtime_level_to_pbf(level):
     if level == 'base_schedule':
