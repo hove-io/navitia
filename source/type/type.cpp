@@ -947,7 +947,7 @@ std::string to_string(ExceptionDate::ExceptionType t) {
 
 
 // the new way to represent a coord is : "lon;lat"
-const std::string match_double = "[-+]?[0-9]*\\.?[0-9]+[eE]?[-+]?[0-9]*";
+const std::string match_double = "[-+]?[0-9]*\\.?[0-9]*[eE]?[-+]?[0-9]*";
 const auto coord_regex = std::regex("^(" + match_double + ");(" + match_double + ")$");
 
 EntryPoint::EntryPoint(const Type_e type, const std::string &uri, int access_duration) : type(type), uri(uri), access_duration(access_duration) {
@@ -993,7 +993,7 @@ EntryPoint::EntryPoint(const Type_e type, const std::string &uri, int access_dur
 
 bool is_coord(const std::string& uri) {
     return (uri.size() > 6 && uri.substr(0, 6) == "coord:")
-     || std::regex_match(uri, coord_regex);
+     || (std::regex_match(uri, coord_regex) && uri != ";");
 }
 
 EntryPoint::EntryPoint(const Type_e type, const std::string &uri) : EntryPoint(type, uri, 0) { }

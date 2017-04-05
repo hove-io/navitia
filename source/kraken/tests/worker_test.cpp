@@ -285,6 +285,25 @@ BOOST_AUTO_TEST_CASE(complex_coord_creation) {
     BOOST_CHECK_CLOSE(ep.coordinates.lat(), 0.012, 0.0001);
 }
 
+BOOST_AUTO_TEST_CASE(no_dec_coord_creation) {
+    //without any decimal it should also work
+    std::string coord = "5.;6";
+
+    auto ep = navitia::type::EntryPoint(nt::Type_e::Coord, coord);
+
+    BOOST_REQUIRE(navitia::type::is_coord(coord));
+    BOOST_CHECK_CLOSE(ep.coordinates.lon(), 5, 0.0001);
+    BOOST_CHECK_CLOSE(ep.coordinates.lat(), 6, 0.0001);
+}
+
+BOOST_AUTO_TEST_CASE(empty_coord_creation) {
+    //we should not match an empty coord
+    std::string coord = ";";
+
+    BOOST_REQUIRE(! navitia::type::is_coord(coord));
+}
+
+
 BOOST_AUTO_TEST_CASE(invalid_coord_creation_no_semi) {
     // the separator is a ':' it's not valid'
     std::string coord = "1.7226949:48.8311244";
