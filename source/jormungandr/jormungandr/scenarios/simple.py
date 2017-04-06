@@ -185,12 +185,6 @@ class Scenario(object):
     def next_departures(self, request, instance):
         return instance.schedule.next_departures(request)
 
-    def previous_arrivals(self, request, instance):
-        return instance.schedule.previous_arrivals(request)
-
-    def previous_departures(self, request, instance):
-        return instance.schedule.previous_departures(request)
-
     def departure_boards(self, request, instance):
         return instance.schedule.departure_boards(request)
 

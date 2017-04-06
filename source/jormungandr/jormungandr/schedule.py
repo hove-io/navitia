@@ -334,12 +334,6 @@ class MixedSchedule(object):
 
         return resp
 
-    def previous_arrivals(self, request):
-        return self.__stop_times(request, api=type_pb2.PREVIOUS_ARRIVALS, arrival_filter=request["filter"])
-
-    def previous_departures(self, request):
-        return self.__stop_times(request, api=type_pb2.PREVIOUS_DEPARTURES, departure_filter=request["filter"])
-
     def departure_boards(self, request):
         resp = self.__stop_times(request, api=type_pb2.DEPARTURE_BOARDS, departure_filter=request["filter"])
 
