@@ -33,6 +33,7 @@ import mock
 from jormungandr.tests.utils_test import MockRequests, MockResponse, user_set, FakeUser
 from tests.check_utils import is_valid_global_autocomplete
 from tests import check_utils
+from tests.tests_mechanism import NewDefaultScenarioAbstractTestFixture
 from .tests_mechanism import AbstractTestFixture, dataset
 from nose.tools import raises
 from jormungandr import app
@@ -486,21 +487,20 @@ class AbstractAutocompleteAndRouting(AbstractTestFixture):
             'https://host_of_bragi/autocomplete?q=20+rue+bob&{p}'.format(p=params): (bob_street, 200),
             'https://host_of_bragi/features/{}?pt_dataset=main_routing_test'.format(check_utils.r_coord): (bob_street, 200)
         })
-        import logging
+
         def get_autocomplete(query):
             autocomplete_response = self.query_region(query)
-            logging.debug('response = {}'.format(autocomplete_response))
-            
             r = autocomplete_response.get('places')
             assert len(r) == 1
             return r[0]['id']
 
         with mock.patch('requests.get', mock_requests.get):
             journeys_from = get_autocomplete('places?q=bobette')
-
             journeys_to = get_autocomplete('places?q=20 rue bob')
+            query = 'journeys?from={f}&to={to}&datetime={dt}'.format(f=journeys_from, to=journeys_to, dt="20120614T080000")
+            journeys_response = self.query_region(query)
 
-            journeys_response = self.query_region('journeys?from={f}&to={to}&datetime={dt}'.format(f=journeys_from, to=journeys_to, dt="20120614T080000"))
+            self.is_valid_journey_response(journeys_response, query)
 
             # all journeys should have kept the user's from/to
             for j in journeys_response['journeys']:
@@ -517,5 +517,11 @@ class AbstractAutocompleteAndRouting(AbstractTestFixture):
                 eq_(response_to['address']['label'], "20 Rue Bob (Bobtown)")
 
 @config({'scenario': 'new_default'})
-class TestDefaultAutocompleteAndRouting(AbstractAutocompleteAndRouting):
+class TestNewDefaultAutocompleteAndRouting(AbstractAutocompleteAndRouting,
+                                         NewDefaultScenarioAbstractTestFixture):
+    pass
+
+@config({'scenario': 'experimental'})
+class TestExperimentalAutocompleteAndRouting(AbstractAutocompleteAndRouting,
+                                         NewDefaultScenarioAbstractTestFixture):
     pass

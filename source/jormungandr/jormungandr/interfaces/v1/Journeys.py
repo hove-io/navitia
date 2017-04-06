@@ -352,7 +352,10 @@ class add_fare_links(object):
 
 
 class rig_journey(object):
-
+    """
+    decorator to rig journeys in order to put back the requested origin/destination in the journeys
+    those origin/destination can be changed internaly by some scenarios (querying external autocomple service)
+    """
     def __call__(self, f):
         @wraps(f)
         def wrapper(*args, **kwargs):
