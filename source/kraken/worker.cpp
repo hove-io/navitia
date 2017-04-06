@@ -987,8 +987,6 @@ void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
     case pbnavitia::ROUTE_SCHEDULES:
     case pbnavitia::NEXT_DEPARTURES:
     case pbnavitia::NEXT_ARRIVALS:
-    case pbnavitia::PREVIOUS_DEPARTURES:
-    case pbnavitia::PREVIOUS_ARRIVALS:
     case pbnavitia::DEPARTURE_BOARDS: next_stop_times(request.next_stop_times(), request.requested_api()); break;
     case pbnavitia::ISOCHRONE:
     case pbnavitia::NMPLANNER:
