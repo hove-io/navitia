@@ -49,15 +49,6 @@ namespace {
 struct PassagesVisitor {
     pbnavitia::API api_pb;
     const type::Data& data;
-    bool clockwise() const {
-        switch (api_pb) {
-        case pbnavitia::NEXT_DEPARTURES:
-        case pbnavitia::NEXT_ARRIVALS:
-            return true;
-        default:
-            throw std::logic_error("bad api_pb in passages");
-        }
-    }
     StopEvent stop_event() const {
         switch (api_pb) {
         case pbnavitia::NEXT_DEPARTURES:
@@ -146,7 +137,7 @@ void passages(PbCreator& pb_creator,
 
     const PassagesVisitor vis{api_pb, *pb_creator.data};
     RequestHandle handler(pb_creator, request, forbidden_uris,
-                          datetime, duration, {}, vis.clockwise());
+                          datetime, duration, {}, true);
 
     if(pb_creator.has_error()) {
         return;
@@ -160,8 +151,8 @@ void passages(PbCreator& pb_creator,
                                          *pb_creator.data, rt_level, accessibilite_params);
     size_t total_result = passages_dt_st.size();
     passages_dt_st = paginate(passages_dt_st, count, start_page);
-    auto sort_predicate = [&vis](routing::datetime_stop_time dt1, routing::datetime_stop_time dt2) {
-                    return (vis.clockwise() ? dt1.first < dt2.first : dt1.first > dt2.first);
+    auto sort_predicate = [](routing::datetime_stop_time dt1, routing::datetime_stop_time dt2) {
+                    return dt1.first < dt2.first;
                 };
     std::sort(passages_dt_st.begin(), passages_dt_st.end(), sort_predicate);
 
