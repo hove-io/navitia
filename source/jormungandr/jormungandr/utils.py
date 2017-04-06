@@ -55,6 +55,15 @@ def get_uri_pt_object(pt_object):
 def kilometers_to_meters(distance):
     return distance * 1000.0
 
+def is_coord(uri):
+    # for the moment we do a simple check
+    return uri.count(';') == 1
+
+def get_lon_lat(uri):
+    if is_coord(uri):
+        return uri.split(';')
+    return None, None
+
 
 def is_url(url):
     if not url or url.strip() == '':
