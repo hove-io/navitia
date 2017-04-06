@@ -657,6 +657,11 @@ class User(flask_restful.Resource):
         if not billing_plan:
             return ({'error': 'billing_plan doesn\'t exist'}, 400)
 
+        # If the user gives the empty object, we don't change the
+        # shape. This is because the empty object can be outputed by
+        # GET to express "there is a shape, but I don't show it to you
+        # as you don't care". We want that giving the result of GET to
+        # PUT doesn't change anything. That explain this strangeness.
         if args['shape'] == {}:
             args['shape'] = ujson.loads(user.shape)
 
