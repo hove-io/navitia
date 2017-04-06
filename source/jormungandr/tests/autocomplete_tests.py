@@ -114,3 +114,19 @@ class TestAutocomplete(AbstractTestFixture):
         places = get_not_null(response, 'places')
         assert len(places) == 1
         assert places[0]['id'] == 'stop_point:Becharles'
+
+    def test_place_shape(self):
+        shape = '{"type":"Feature","geometry":{"type":"Polygon","coordinates":\
+        [[[2.283,48.896],[2.280,48.818],[2.417,48.818],[2.416,48.897],[2.283,48.896]]]}}'
+        _ = self.query_region("places?q=Gare&shape={}".format(shape))
+        _, status = self.query_no_assert('/v1/coverage/main_autocomplete_test/places?q=Gare&shape={}')
+        assert status == 400
+        _, status = self.query_no_assert('/v1/coverage/main_autocomplete_test/places?q=Gare&shape=toto')
+        assert status == 400
+
+        multipolygon = '{"type":"Feature","geometry":{"type":"MultiPolygo","coordiates":\
+        [[[[2.4,48.6],[2.8,48.6],[2.7,48.9],[2.4,48.6]]],\
+        [[[2.1,48.9],[2.2,48.6],[2.4,48.9],[2.1,48.9]]]]}}'
+        _, status = self.query_no_assert('/v1/coverage/main_autocomplete_test/places?q=Gare&shape={}'
+                                         .format(multipolygon))
+        assert status == 400
