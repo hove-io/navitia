@@ -193,8 +193,6 @@ static bool get_geojson_state(const pbnavitia::Request& request) {
         case pbnavitia::ROUTE_SCHEDULES:
         case pbnavitia::NEXT_DEPARTURES:
         case pbnavitia::NEXT_ARRIVALS:
-        case pbnavitia::PREVIOUS_DEPARTURES:
-        case pbnavitia::PREVIOUS_ARRIVALS:
         case pbnavitia::DEPARTURE_BOARDS: result = request.next_stop_times().disable_geojson(); break;
         case pbnavitia::PTREFERENTIAL: result = request.ptref().disable_geojson(); break;
     default: result = false; break;
@@ -388,20 +386,6 @@ void Worker::next_stop_times(const pbnavitia::NextStopTimeRequest& request,
         case pbnavitia::NEXT_ARRIVALS:
             timetables::passages(this->pb_creator, request.arrival_filter(),
                                  forbidden_uri, from_datetime,
-                                 request.duration(), request.nb_stoptimes(),
-                                 request.depth(), type::AccessibiliteParams(),
-                                 rt_level, api, request.count(), request.start_page());
-            break;
-        case pbnavitia::PREVIOUS_DEPARTURES:
-            timetables::passages(this->pb_creator, request.departure_filter(),
-                                 forbidden_uri, until_datetime,
-                                 request.duration(), request.nb_stoptimes(),
-                                 request.depth(), type::AccessibiliteParams(),
-                                 rt_level, api, request.count(), request.start_page());
-            break;
-        case pbnavitia::PREVIOUS_ARRIVALS:
-            timetables::passages(this->pb_creator, request.arrival_filter(),
-                                 forbidden_uri, until_datetime,
                                  request.duration(), request.nb_stoptimes(),
                                  request.depth(), type::AccessibiliteParams(),
                                  rt_level, api, request.count(), request.start_page());

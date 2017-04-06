@@ -82,60 +82,8 @@ BOOST_AUTO_TEST_CASE(passages_boarding_order) {
     BOOST_REQUIRE_EQUAL(resp.next_arrivals().size(), 2);
     BOOST_REQUIRE_EQUAL(resp.next_arrivals(0).stop_date_time().arrival_date_time(), "20170101T080500"_pts);
     BOOST_REQUIRE_EQUAL(resp.next_arrivals(1).stop_date_time().arrival_date_time(), "20170101T081000"_pts);
-
-    // previous departures
-    navitia::PbCreator pb_creator_pdep(data_ptr, bt::second_clock::universal_time(), null_time_period);
-    passages(pb_creator_pdep, "stop_point.uri=stop2", {}, "20170102T070000"_dt, 86400, 10, 3,
-             navitia::type::AccessibiliteParams(), nt::RTLevel::Base, pbnavitia::PREVIOUS_DEPARTURES, 10, 0);
-    resp = pb_creator_pdep.get_response();
-    BOOST_REQUIRE_EQUAL(resp.next_departures().size(), 2);
-    BOOST_REQUIRE_EQUAL(resp.next_departures(0).stop_date_time().departure_date_time(), "20170101T081100"_pts);
-    BOOST_REQUIRE_EQUAL(resp.next_departures(1).stop_date_time().departure_date_time(), "20170101T080600"_pts);
-
-    // previous arrivals
-    navitia::PbCreator pb_creator_parr(data_ptr, bt::second_clock::universal_time(), null_time_period);
-    passages(pb_creator_parr, "stop_point.uri=stop2", {}, "20170102T070000"_dt, 86400, 10, 3,
-             navitia::type::AccessibiliteParams(), nt::RTLevel::Base, pbnavitia::PREVIOUS_ARRIVALS, 10, 0);
-    resp = pb_creator_parr.get_response();
-    BOOST_REQUIRE_EQUAL(resp.next_arrivals().size(), 2);
-    BOOST_REQUIRE_EQUAL(resp.next_arrivals(0).stop_date_time().arrival_date_time(), "20170101T081000"_pts);
-    BOOST_REQUIRE_EQUAL(resp.next_arrivals(1).stop_date_time().arrival_date_time(), "20170101T080500"_pts);
 }
 
-// Check that previous departures work on first production day
-BOOST_AUTO_TEST_CASE(previous_passages_on_first_production_day) {
-    ed::builder b("20170101");
-
-    b.vj("L1", "1111111").uri("vj:0")
-        ("stop1", "8:00"_t, "8:01"_t)
-        ("stop2", "8:05"_t, "8:06"_t)
-        ("stop3", "8:10"_t, "8:11"_t);
-
-    b.vj("L1", "1111111").uri("vj:1")
-        ("stop1", "9:00"_t, "9:01"_t)
-        ("stop2", "9:05"_t, "9:06"_t)
-        ("stop3", "9:10"_t, "9:11"_t);
-
-    b.finish();
-    b.data->pt_data->index();
-    b.data->build_raptor();
-    b.data->pt_data->build_uri();
-    auto * data_ptr = b.data.get();
-
-    navitia::PbCreator pb_creator_pdep1(data_ptr, bt::second_clock::universal_time(), null_time_period);
-    passages(pb_creator_pdep1, "stop_point.uri=stop2", {}, "20170101T090000"_dt, 86400, 10, 3,
-             navitia::type::AccessibiliteParams(), nt::RTLevel::Base, pbnavitia::PREVIOUS_DEPARTURES, 10, 0);
-    auto resp = pb_creator_pdep1.get_response();
-    BOOST_REQUIRE_EQUAL(resp.next_departures().size(), 1);
-    BOOST_REQUIRE_EQUAL(resp.next_departures(0).stop_date_time().departure_date_time(), "20170101T080600"_pts);
-
-    // Check that we have no error when dt and max_dt will be both at 0
-    navitia::PbCreator pb_creator_pdep2(data_ptr, bt::second_clock::universal_time(), null_time_period);
-    passages(pb_creator_pdep2, "stop_point.uri=stop2", {}, "20170101T000000"_dt, 86400, 10, 3,
-             navitia::type::AccessibiliteParams(), nt::RTLevel::Base, pbnavitia::PREVIOUS_DEPARTURES, 10, 0);
-    resp = pb_creator_pdep2.get_response();
-    BOOST_REQUIRE_EQUAL(resp.next_departures().size(), 0);
-}
 
 BOOST_AUTO_TEST_CASE(next_passages_on_last_production_day) {
     ed::builder b("20170101");

@@ -54,9 +54,6 @@ struct PassagesVisitor {
         case pbnavitia::NEXT_DEPARTURES:
         case pbnavitia::NEXT_ARRIVALS:
             return true;
-        case pbnavitia::PREVIOUS_DEPARTURES:
-        case pbnavitia::PREVIOUS_ARRIVALS:
-            return false;
         default:
             throw std::logic_error("bad api_pb in passages");
         }
@@ -64,10 +61,8 @@ struct PassagesVisitor {
     StopEvent stop_event() const {
         switch (api_pb) {
         case pbnavitia::NEXT_DEPARTURES:
-        case pbnavitia::PREVIOUS_DEPARTURES:
             return StopEvent::pick_up;
         case pbnavitia::NEXT_ARRIVALS:
-        case pbnavitia::PREVIOUS_ARRIVALS:
             return StopEvent::drop_off;
         default:
             throw std::logic_error("bad api_pb in passages");
