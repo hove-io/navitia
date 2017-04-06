@@ -506,7 +506,7 @@ streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams& reques
 void Worker::place_uri(const pbnavitia::PlaceUriRequest &request) {
 
     const auto* data = this->pb_creator.data;
-    if (type::is_coord(request.uri())) {
+    if (type::EntryPoint::is_coord(request.uri())) {
         auto ep = type::EntryPoint(type::Type_e::Coord, request.uri());
         type::GeographicalCoord coord = ep.coordinates;
 
