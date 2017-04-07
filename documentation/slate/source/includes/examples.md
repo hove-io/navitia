@@ -196,12 +196,13 @@ a journey can be faster than an other but requires more changes or more walking.
 This API has more options explained in the reference as:
 
 * The dates are given in the basic form of the ISO 8601 datetime format: ``YYYYMMDDTHHMM``.
-  For example, if you want to compute a journey on friday, April 22 ``datetime=20160422T0800``
-  <https://api.navitia.io/v1/journeys?from=-122.47787733594924;37.71696489300146&to=-122.41539259473815;37.78564348914185&datetime=20160422T0800>
+  For example, if you want to compute a journey on friday, April 07 ``datetime=20170407T120000``
+  <https://api.navitia.io/v1/journeys?from=-122.47787733594924;37.71696489300146&to=-122.41539259473815;37.78564348914185&datetime=20170407T120000>
+
 
 * Latest departure
   To get the latest departure, you can query for some journeys arriving before the end of the service
-  <https://api.navitia.io/v1/journeys?from=-122.47787733594924;37.71696489300146&to=-122.41539259473815;37.78564348914185&datetime=20160422T2359&datetime_represents=arrival>
+  <https://api.navitia.io/v1/journeys?from=-122.47787733594924;37.71696489300146&to=-122.41539259473815;37.78564348914185&datetime=20170407T120000&datetime_represents=arrival>
 
 * You can also change the [traveler profile](#traveler-type) (to adapt the walking/biking/driving parts and comfort of journeys):
   <https://api.navitia.io/v1/journeys?from=-122.4752;37.80826&to=-122.402770;37.794682&traveler_type=slow_walker>

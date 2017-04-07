@@ -24,6 +24,10 @@ For example: <https://api.navitia.io/v1/journeys?from=bob&to=bobette&datetime=20
 
 There are lots of ISO 8601 libraries in every kind of language that you should use before breaking down <https://youtu.be/-5wpm-gesOY>
 
+### Iso-date
+
+The date are represented in ISO 8601 "YYYYMMDD" string
+
 
 Public transport objects
 ------------------------
