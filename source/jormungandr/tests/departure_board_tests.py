@@ -796,7 +796,9 @@ class TestSchedules(AbstractTestFixture):
         assert departures[0]["route"]["id"] == 'M:6'
         assert departures[0]["stop_point"]["id"] == 'S11'
         assert departures[0]["stop_date_time"]["arrival_date_time"] == '20160101T113000'
+        assert departures[0]["stop_date_time"]["base_arrival_date_time"] == '20160101T113000'
         assert departures[0]["stop_date_time"]["departure_date_time"] == '20160101T113500'
+        assert departures[0]["stop_date_time"]["base_departure_date_time"] == '20160101T113500'
 
     def test_arrival_schedule_departure_date_time_not_eq_arrival_date_time(self):
         """
