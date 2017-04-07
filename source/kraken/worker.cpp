@@ -371,7 +371,6 @@ void Worker::next_stop_times(const pbnavitia::NextStopTimeRequest& request,
         forbidden_uri.push_back(request.forbidden_uri(i));
 
     bt::ptime from_datetime = bt::from_time_t(request.from_datetime());
-    bt::ptime until_datetime = bt::from_time_t(request.until_datetime());
 
     auto rt_level = get_realtime_level(request.realtime_level());
     try {
