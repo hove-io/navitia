@@ -22,9 +22,9 @@ The publication period is the way to control this.
 The application periods are the list of periods on which the disruption is active.
 For example it's the actual period when railworks are done and train circulation is cut.
 
-## query dates
+## Request date
 
-Another thing this that can be tricky to understand is that there can be several datetimes for a query.
+Request date is the navitia call date, the default value is now.
 
 # Summary
 
