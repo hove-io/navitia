@@ -82,26 +82,24 @@ def _make_interval_argument(max_value, min_value):
     return to_return
 
 
-def geojson_argument(default_value):
-    def to_return(value):
-        def is_geometry_valid(geometry):
-            geometry_str = ujson.dumps(geometry)
-            valid = geojson.is_valid(geojson.loads(geometry_str))
-            return 'valid' in valid and (valid['valid'] == 'yes' or valid['valid'] == '')
+def geojson_argument(value):
+    def is_geometry_valid(geometry):
+        geometry_str = ujson.dumps(geometry)
+        valid = geojson.is_valid(geojson.loads(geometry_str))
+        return 'valid' in valid and (valid['valid'] == 'yes' or valid['valid'] == '')
 
-        if value:
-            if not isinstance(value, dict):
-                raise ValueError('invalid json')
+    if value:
+        if not isinstance(value, dict):
+            raise ValueError('invalid json')
 
-            if not is_geometry_valid(value) :
-                raise ValueError('invalid geojson')
+        if not is_geometry_valid(value) :
+            raise ValueError('invalid geojson')
 
-            geometry= value.get('geometry', {}).get('type')
-            if not geometry or geometry.lower() != 'polygon':
-                raise ValueError('invalid geometry type')
-        else:
-            return default_value
-        return value
-    return to_return
+        geometry = value.get('geometry', {}).get('type')
+        if not geometry or geometry.lower() != 'polygon':
+            raise ValueError('invalid geometry type')
+
+    return value
+
 
 default_count_arg_type = _make_interval_argument(max_value=1000, min_value=0)
