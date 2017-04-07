@@ -30,14 +30,14 @@ import Future
 
 
 class PlaceByUri:
-    def __init__(self, instance, requested_place):
+    def __init__(self, instance, uri):
         self._instance = instance
-        self._requested_place = requested_place
+        self._uri = uri
         self._value = None
         self._async_request()
 
     def _do_request(self):
-        return self._instance.georef.place(self._requested_place)
+        return self._instance.georef.place(self._uri)
 
     def _async_request(self):
         self._value = Future.create_future(self._do_request)

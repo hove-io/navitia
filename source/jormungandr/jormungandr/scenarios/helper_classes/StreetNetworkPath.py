@@ -89,18 +89,23 @@ class StreetNetworkPathPool:
         self._instance = instance
         self._value = {}
 
-    def add_async_request(self, requested_orig_obj, requested_dest_obj, mode, fallback_extremity, request,
+    def add_async_request(self,
+                          requested_orig_obj,
+                          requested_dest_obj,
+                          mode,
+                          period_extremity,
+                          request,
                           streetnetwork_path_type):
         streetnetwork_service = self._instance.street_network_services.get(mode)
         key = streetnetwork_service.make_path_key(mode,
                                                   requested_orig_obj.uri,
                                                   requested_dest_obj.uri,
                                                   streetnetwork_path_type,
-                                                  fallback_extremity) if streetnetwork_service else None
+                                                  period_extremity) if streetnetwork_service else None
         if key in self._value:
             return
         self._value[key] = StreetNetworkPath(streetnetwork_service, requested_orig_obj, requested_dest_obj, mode,
-                                             fallback_extremity, request, streetnetwork_path_type)
+                                             period_extremity, request, streetnetwork_path_type)
 
     def get_streetnetwork_path_by_type(self, streetnetwork_path_type):
         return {k.mode: v for k, v in self._value.items() if k.streetnetwork_path_type is streetnetwork_path_type}
@@ -114,12 +119,12 @@ class StreetNetworkPathPool:
                 return True
         return False
 
-    def wait_and_get(self, requested_orig_obj, requested_dest_obj, mode, fallback_extremity, streetnetwork_path_type):
+    def wait_and_get(self, requested_orig_obj, requested_dest_obj, mode, period_extremity, streetnetwork_path_type):
         streetnetwork_service = self._instance.street_network_services.get(mode)
         key = streetnetwork_service.make_path_key(mode,
                                                   requested_orig_obj.uri,
                                                   requested_dest_obj.uri,
                                                   streetnetwork_path_type,
-                                                  fallback_extremity) if streetnetwork_service else None
+                                                  period_extremity) if streetnetwork_service else None
         dp = self._value.get(key)
         return dp.wait_and_get() if dp else None

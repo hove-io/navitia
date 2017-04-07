@@ -55,59 +55,90 @@ class Scenario(new_default.Scenario):
         requested_arr_modes = {mode for _, mode in krakens_call}
         res = []
 
-        requested_orig = PlaceByUri(instance, request['origin'])
-        requested_dest = PlaceByUri(instance, request['destination'])
+        requested_orig = PlaceByUri(instance=instance, uri=request['origin'])
+        requested_dest = PlaceByUri(instance=instance, uri=request['destination'])
 
         requested_orig_obj = get_entry_point_or_raise(requested_orig, request['origin'])
         requested_dest_obj = get_entry_point_or_raise(requested_dest, request['destination'])
 
-        streetnetwork_path_pool = StreetNetworkPathPool(instance)
-        fallback_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
+        streetnetwork_path_pool = StreetNetworkPathPool(instance=instance)
+        period_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
 
         # we launch direct path asynchrnously
         for mode in requested_dep_modes:
-            streetnetwork_path_pool.add_async_request(requested_orig_obj, requested_dest_obj, mode,
-                                               fallback_extremity, request, StreetNetworkPathType.DIRECT)
+            streetnetwork_path_pool.add_async_request(requested_orig_obj=requested_orig_obj,
+                                                      requested_dest_obj=requested_dest_obj,
+                                                      mode=mode,
+                                                      period_extremity=period_extremity,
+                                                      request=request,
+                                                      streetnetwork_path_type=StreetNetworkPathType.DIRECT)
 
         # if max_duration(time to pass in pt) is zero, there is no need to continue,
         # we return all direct path without pt
         if request['max_duration'] == 0:
-            return [streetnetwork_path_pool.wait_and_get(requested_orig_obj, requested_dest_obj, mode, fallback_extremity,
-                                                         StreetNetworkPathType.DIRECT) for mode in requested_dep_modes]
+            return [streetnetwork_path_pool.wait_and_get(requested_orig_obj=requested_orig_obj,
+                                                         requested_dest_obj=requested_dest_obj,
+                                                         mode=mode,
+                                                         period_extremity=period_extremity,
+                                                         streetnetwork_path_type=StreetNetworkPathType.DIRECT)
+                    for mode in requested_dep_modes]
 
-        orig_proximities_by_crowfly = ProximitiesByCrowflyPool(instance, requested_orig_obj, requested_dep_modes,
-                                                               request, streetnetwork_path_pool)
-        dest_proximities_by_crowfly = ProximitiesByCrowflyPool(instance, requested_dest_obj, requested_arr_modes,
-                                                               request, None)
+        orig_proximities_by_crowfly = ProximitiesByCrowflyPool(instance=instance,
+                                                               requested_place_obj=requested_orig_obj,
+                                                               modes=requested_dep_modes,
+                                                               request=request,
+                                                               streetnetwork_path_pool=streetnetwork_path_pool)
 
-        orig_places_free_access = PlacesFreeAccess(instance, requested_orig_obj)
-        dest_places_free_access = PlacesFreeAccess(instance, requested_dest_obj)
+        dest_proximities_by_crowfly = ProximitiesByCrowflyPool(instance=instance,
+                                                               requested_place_obj=requested_dest_obj,
+                                                               modes=requested_arr_modes,
+                                                               request=request,
+                                                               streetnetwork_path_pool=None)
 
-        orig_fallback_durations_pool = FallbackDurationsPool(instance, requested_orig_obj,
-                                                             requested_dep_modes,
-                                                             orig_proximities_by_crowfly, orig_places_free_access,
-                                                             streetnetwork_path_pool,
-                                                             request)
-        dest_fallback_durations_pool = FallbackDurationsPool(instance, requested_dest_obj,
-                                                             requested_arr_modes,
-                                                             dest_proximities_by_crowfly, dest_places_free_access,
-                                                             None,
-                                                             request)
+        orig_places_free_access = PlacesFreeAccess(instance=instance, requested_place_obj=requested_orig_obj)
+        dest_places_free_access = PlacesFreeAccess(instance=instance, requested_place_obj=requested_dest_obj)
 
-        pt_journey_pool = PtJourneyPool(instance, requested_orig_obj, requested_dest_obj,
-                                        streetnetwork_path_pool, krakens_call,
-                                        orig_fallback_durations_pool, dest_fallback_durations_pool,
-                                        request)
+        orig_fallback_durations_pool = FallbackDurationsPool(instance=instance,
+                                                             requested_place_obj=requested_orig_obj,
+                                                             modes=requested_dep_modes,
+                                                             proximities_by_crowfly_pool=orig_proximities_by_crowfly,
+                                                             places_free_access=orig_places_free_access,
+                                                             streetnetwork_path_pool=streetnetwork_path_pool,
+                                                             request=request)
 
-        completed_pt_journeys = wait_and_complete_pt_journey(requested_orig_obj, requested_dest_obj,
-                                                             pt_journey_pool, streetnetwork_path_pool,
-                                                             orig_places_free_access, dest_places_free_access,
-                                                             orig_fallback_durations_pool, dest_fallback_durations_pool,
-                                                             request)
+        dest_fallback_durations_pool = FallbackDurationsPool(instance=instance,
+                                                             requested_place_obj=requested_dest_obj,
+                                                             modes=requested_arr_modes,
+                                                             proximities_by_crowfly_pool=dest_proximities_by_crowfly,
+                                                             places_free_access=dest_places_free_access,
+                                                             streetnetwork_path_pool=None,
+                                                             request=request)
+
+        pt_journey_pool = PtJourneyPool(instance=instance,
+                                        requested_orig_obj=requested_orig_obj,
+                                        requested_dest_obj=requested_dest_obj,
+                                        streetnetwork_path_pool=streetnetwork_path_pool,
+                                        krakens_call=krakens_call,
+                                        orig_fallback_durations_pool=orig_fallback_durations_pool,
+                                        dest_fallback_durations_pool=dest_fallback_durations_pool,
+                                        request=request)
+
+        completed_pt_journeys = wait_and_complete_pt_journey(requested_orig_obj=requested_orig_obj,
+                                                             requested_dest_obj=requested_dest_obj,
+                                                             pt_journey_pool=pt_journey_pool,
+                                                             streetnetwork_path_pool=streetnetwork_path_pool,
+                                                             orig_places_free_access=orig_places_free_access,
+                                                             dest_places_free_access=dest_places_free_access,
+                                                             orig_fallback_durations_pool=orig_fallback_durations_pool,
+                                                             dest_fallback_durations_pool=dest_fallback_durations_pool,
+                                                             request=request)
 
         for mode in requested_dep_modes:
-            dp = streetnetwork_path_pool.wait_and_get(requested_orig_obj, requested_dest_obj, mode,
-                                               fallback_extremity, StreetNetworkPathType.DIRECT)
+            dp = streetnetwork_path_pool.wait_and_get(requested_orig_obj=requested_orig_obj,
+                                                      requested_dest_obj=requested_dest_obj,
+                                                      mode=mode,
+                                                      period_extremity=period_extremity,
+                                                      streetnetwork_path_type=StreetNetworkPathType.DIRECT)
             if getattr(dp, "journeys", None):
                 res.append(dp)
 

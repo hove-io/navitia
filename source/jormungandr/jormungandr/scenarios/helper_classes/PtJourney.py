@@ -127,14 +127,14 @@ class _PtJourneySorter(object):
 
 
 class PtJourneyPool:
-    def __init__(self, instance, requested_orig_obj, requested_dest_obj, streetnetwork_path_pool, kraken_calls,
-                 orig_fallback_durtaions_pool, dest_fallback_durations_pool, request):
+    def __init__(self, instance, requested_orig_obj, requested_dest_obj, streetnetwork_path_pool, krakens_call,
+                 orig_fallback_durations_pool, dest_fallback_durations_pool, request):
         self._instance = instance
         self._requested_orig_obj = requested_orig_obj
         self._requested_dest_obj = requested_dest_obj
         self._streetnetwork_path_pool = streetnetwork_path_pool
-        self._kraken_calls = kraken_calls
-        self._orig_fallback_durtaions_pool = orig_fallback_durtaions_pool
+        self._krakens_call = krakens_call
+        self._orig_fallback_durations_pool = orig_fallback_durations_pool
         self._dest_fallback_durations_pool = dest_fallback_durations_pool
         self._journey_params = self._create_parameters(request)
         self._request = request
@@ -156,7 +156,7 @@ class PtJourneyPool:
     def _async_request(self):
         direct_path_type = StreetNetworkPathType.DIRECT
         periode_extremity = utils.PeriodExtremity(self._request['datetime'], self._request['clockwise'])
-        for dep_mode, arr_mode in self._kraken_calls:
+        for dep_mode, arr_mode in self._krakens_call:
             dp = self._streetnetwork_path_pool.wait_and_get(self._requested_orig_obj,
                                                             self._requested_dest_obj,
                                                             dep_mode,
@@ -169,7 +169,7 @@ class PtJourneyPool:
 
             bike_in_pt = (dep_mode == 'bike' and arr_mode == 'bike')
             pt_journey = PtJourney(self._instance,
-                                   self._orig_fallback_durtaions_pool, self._dest_fallback_durations_pool,
+                                   self._orig_fallback_durations_pool, self._dest_fallback_durations_pool,
                                    dep_mode, arr_mode,
                                    periode_extremity, self._journey_params, bike_in_pt, self._request)
 

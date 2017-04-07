@@ -30,24 +30,40 @@ import Future
 from helper_utils import complete_pt_journey, compute_fallback
 
 
-def wait_and_complete_pt_journey(requested_orig_obj, requested_dest_obj, pt_journey_pool, streetnetwork_path_pool,
-                                 orig_accessible_by_crowfly, dest_accessible_by_crowfly,
-                                 orig_fallback_durations_pool, dest_fallback_durations_pool,
+def wait_and_complete_pt_journey(requested_orig_obj,
+                                 requested_dest_obj,
+                                 pt_journey_pool,
+                                 streetnetwork_path_pool,
+                                 orig_places_free_access,
+                                 dest_places_free_access,
+                                 orig_fallback_durations_pool,
+                                 dest_fallback_durations_pool,
                                  request):
     """
     In this function, we compute all fallback path once the pt journey is finished, then we build the
     whole pt journey by adding the fallback path to the beginning and the ending section of pt journey
     """
     # launch fallback direct path asynchronously
-    compute_fallback(requested_orig_obj, requested_dest_obj, pt_journey_pool, streetnetwork_path_pool,
-                     orig_accessible_by_crowfly, dest_accessible_by_crowfly, request)
+    compute_fallback(requested_orig_obj=requested_orig_obj,
+                     requested_dest_obj=requested_dest_obj,
+                     pt_journey_pool=pt_journey_pool,
+                     streetnetwork_path_pool=streetnetwork_path_pool,
+                     orig_places_free_access=orig_places_free_access,
+                     dest_places_free_access=dest_places_free_access,
+                     request=request)
 
     futures = []
     for elem in pt_journey_pool:
-        f = Future.create_future(complete_pt_journey, requested_orig_obj, requested_dest_obj,
-                                 elem, streetnetwork_path_pool,
-                                 orig_accessible_by_crowfly, dest_accessible_by_crowfly,
-                                 orig_fallback_durations_pool, dest_fallback_durations_pool)
+
+        f = Future.create_future(complete_pt_journey,
+                                 requested_orig_obj=requested_orig_obj,
+                                 requested_dest_obj=requested_dest_obj,
+                                 pt_journey_pool_elem=elem,
+                                 streetnetwork_path_pool=streetnetwork_path_pool,
+                                 orig_places_free_access=orig_places_free_access,
+                                 dest_places_free_access=dest_places_free_access,
+                                 orig_fallback_durations_pool=orig_fallback_durations_pool,
+                                 dest_fallback_durations_pool=dest_fallback_durations_pool)
         futures.append(f)
     # return a generator, so we block the main thread later when they are evaluated
     return (f.wait_and_get() for f in futures)
