@@ -30,7 +30,6 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 from jormungandr.scenarios import new_default
-from navitiacommon import type_pb2
 from jormungandr.utils import PeriodExtremity
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.scenarios.helper_classes import *

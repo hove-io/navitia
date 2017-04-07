@@ -43,18 +43,18 @@ from jormungandr.new_relic import record_custom_parameter
 from jormungandr.authentication import get_user, get_token, get_app_name, get_used_coverages
 
 if rest_api.app.config.get('PATCH_WITH_GEVENT_SOCKET', False):
-    import gevent.socket
-    import urllib3
     logger = logging.getLogger('jormungandr.patch_gevent_socket')
-    logger.info("Attention! You'are patching urllib3.connection.connection.socket with gevent.socket, "
-                "parallel calling valhalla is activated")
+    logger.info("Attention! You'are patching requests.packages.urllib3.connection.connection.socket with gevent.socket,"
+                "parallel http calling by requests is activated")
     # This line replaces the gevent.monkey.patch_socket()
     # the reason why we don't use patch_socket() at the very beginning of jormungandr is
     # that it caused a mysterious performance regression for certain requests, thus we patch
     # only at places where asynchronisation is needed
     # Note that "monkey_patch" only patches on http request because we want asynchronisation on that,
     # but we don't want that for reddis because it may cause performance regression
-    urllib3.connection.connection.socket = gevent.socket
+    import requests
+    import gevent.socket
+    requests.packages.urllib3.connection.connection.socket = gevent.socket
 
 @rest_api.representation("text/jsonp")
 @rest_api.representation("application/jsonp")
