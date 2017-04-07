@@ -32,7 +32,7 @@ import logging
 from jormungandr.scenarios import new_default
 from navitiacommon import type_pb2
 from jormungandr.utils import PeriodExtremity
-from jormungandr.street_network.street_network import StreetNetworkPath
+from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.scenarios.helper_classes import *
 from jormungandr.scenarios.utils import fill_uris
 
@@ -56,49 +56,38 @@ class Scenario(new_default.Scenario):
         requested_arr_modes = {mode for _, mode in krakens_call}
         res = []
 
-        logger.debug('requesting from by uri: %s', request['origin'])
-        logger.debug('requesting to by uri: %s', request['destination'])
         requested_orig = PlaceByUri(instance, request['origin'])
         requested_dest = PlaceByUri(instance, request['destination'])
 
         requested_orig_obj = get_entry_point_or_raise(requested_orig, request['origin'])
         requested_dest_obj = get_entry_point_or_raise(requested_dest, request['destination'])
 
-        direct_path_pool = DirectPathPool(instance)
-        direct_path_type = StreetNetworkPath.DIRECT
+        streetnetwork_path_pool = StreetNetworkPathPool(instance)
         fallback_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
 
-        logger.info('launching direct paht for modes: %s', requested_dep_modes)
         # we launch direct path asynchrnously
         for mode in requested_dep_modes:
-            direct_path_pool.add_async_request(requested_orig_obj, requested_dest_obj, mode,
-                                               fallback_extremity, request, direct_path_type)
+            streetnetwork_path_pool.add_async_request(requested_orig_obj, requested_dest_obj, mode,
+                                               fallback_extremity, request, StreetNetworkPathType.DIRECT)
 
         # if max_duration(time to pass in pt) is zero, there is no need to continue,
         # we return all direct path without pt
-        if not request.get('max_duration', 0):
-            logger.info('max_duration is 0')
-            for mode in requested_dep_modes:
-                dp = direct_path_pool.wait_and_get(requested_orig_obj, requested_dest_obj, mode,
-                                                   fallback_extremity, direct_path_type)
-                res.append(dp)
-            return res
+        if request['max_duration'] == 0:
+            return [streetnetwork_path_pool.wait_and_get(requested_orig_obj, requested_dest_obj, mode, fallback_extremity,
+                                                         StreetNetworkPathType.DIRECT) for mode in requested_dep_modes]
 
-        logger.info('requesting proximities by crowfly from orig and dest')
         orig_proximities_by_crowfly = ProximitiesByCrowflyPool(instance, requested_orig_obj, requested_dep_modes,
-                                                               request, direct_path_pool)
+                                                               request, streetnetwork_path_pool)
         dest_proximities_by_crowfly = ProximitiesByCrowflyPool(instance, requested_dest_obj, requested_arr_modes,
                                                                request, None)
 
-        logger.info('requesting places with free access from orig and dest')
         orig_places_free_access = PlacesFreeAccess(instance, requested_orig_obj)
         dest_places_free_access = PlacesFreeAccess(instance, requested_dest_obj)
 
-        logger.info('requesting fallback durations from orig and dest')
         orig_fallback_durations_pool = FallbackDurationsPool(instance, requested_orig_obj,
                                                              requested_dep_modes,
                                                              orig_proximities_by_crowfly, orig_places_free_access,
-                                                             direct_path_pool,
+                                                             streetnetwork_path_pool,
                                                              request)
         dest_fallback_durations_pool = FallbackDurationsPool(instance, requested_dest_obj,
                                                              requested_arr_modes,
@@ -106,26 +95,24 @@ class Scenario(new_default.Scenario):
                                                              None,
                                                              request)
 
-        logger.info('requesting public transport journey')
         pt_journey_pool = PtJourneyPool(instance, requested_orig_obj, requested_dest_obj,
-                                        direct_path_pool, krakens_call,
+                                        streetnetwork_path_pool, krakens_call,
                                         orig_fallback_durations_pool, dest_fallback_durations_pool,
                                         request)
 
-        logger.info('building public transport journey with fallbacks')
         completed_pt_journeys = wait_and_complete_pt_journey(requested_orig_obj, requested_dest_obj,
-                                                             pt_journey_pool, direct_path_pool,
+                                                             pt_journey_pool, streetnetwork_path_pool,
                                                              orig_places_free_access, dest_places_free_access,
                                                              orig_fallback_durations_pool, dest_fallback_durations_pool,
                                                              request)
 
         for mode in requested_dep_modes:
-            dp = direct_path_pool.wait_and_get(requested_orig_obj, requested_dest_obj, mode,
-                                               fallback_extremity, direct_path_type)
+            dp = streetnetwork_path_pool.wait_and_get(requested_orig_obj, requested_dest_obj, mode,
+                                               fallback_extremity, StreetNetworkPathType.DIRECT)
             if getattr(dp, "journeys", None):
                 res.append(dp)
 
-        res.extend(completed_pt_journeys)
+        res.extend([j for j in completed_pt_journeys if j])
 
         check_final_results_or_raise(res, orig_fallback_durations_pool, dest_fallback_durations_pool)
 
@@ -134,6 +121,8 @@ class Scenario(new_default.Scenario):
         return res
 
     def call_kraken(self, request_type, request, instance, krakens_call):
+        logger = logging.getLogger(__name__)
+        logger.warning("using experimental scenario!!")
         try:
             res = self._compute_all(request, instance, krakens_call)
             return res
@@ -143,9 +132,4 @@ class Scenario(new_default.Scenario):
             return [e.get()]
 
     def isochrone(self, request, instance):
-        return self.__on_journeys(type_pb2.ISOCHRONE, request, instance)
-
-    def journeys(self, request, instance):
-        logger = logging.getLogger(__name__)
-        logger.warn('using experimental scenario!!!')
-        return self.__on_journeys(type_pb2.PLANNER, request, instance)
+        return new_default.Scenario().isochrone(request, instance)

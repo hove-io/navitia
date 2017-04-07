@@ -1,11 +1,42 @@
+# Copyright (c) 2001-2017, Canal TP and/or its affiliates. All rights reserved.
+#
+# This file is part of Navitia,
+#     the software to build cool stuff with public transport.
+#
+# Hope you'll enjoy and contribute to this project,
+#     powered by Canal TP (www.canaltp.fr).
+# Help us simplify mobility and open public transport:
+#     a non ending quest to the responsive locomotion way of traveling!
+#
+# LICENCE: This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Stay tuned using
+# twitter @navitia
+# IRC #navitia on freenode
+# https://groups.google.com/d/forum/navitia
+# www.navitia.io
 import Future
-from jormungandr.street_network.street_network import StreetNetworkPath
+from jormungandr.street_network.street_network import StreetNetworkPathType
 from helper_utils import get_max_fallback_duration
 from jormungandr import utils
 import logging
 
 
 class ProximitiesByCrowfly:
+    """
+    A ProximitiesByCrowfly is a set of stop_points that are accessible by crowfly within a time of 'max_duration'.
+    """
     def __init__(self, instance, requested_place_obj, mode, max_duration, max_nb_crowfly=5000):
         self._instance = instance
         self._requested_place_obj = requested_place_obj
@@ -19,7 +50,7 @@ class ProximitiesByCrowfly:
             "bss": instance.bss_speed,
         }
         self._value = None
-        self.async_request()
+        self._async_request()
 
     def _do_request(self):
         logger = logging.getLogger(__name__)
@@ -46,32 +77,32 @@ class ProximitiesByCrowfly:
         logger.debug("the coord of requested places is not valid: %s", coord)
         return []
 
-    def async_request(self):
+    def _async_request(self):
         self._value = Future.create_future(self._do_request)
 
     def wait_and_get(self):
-        return self._value.wait_and_get() if self._value else None
+        return self._value.wait_and_get()
 
 
 class ProximitiesByCrowflyPool:
-    def __init__(self, instance, requested_place_obj, modes, request, direct_path_pool, max_nb_crowfly=5000):
+    def __init__(self, instance, requested_place_obj, modes, request, streetnetwork_path_pool, max_nb_crowfly=5000):
         self._instance = instance
         self._requested_place_obj = requested_place_obj
         # we don't want to compute the same mode several times
         self._modes = set(modes)
         self._request = request
-        self._direct_path_pool = direct_path_pool
+        self._streetnetwork_path_pool = streetnetwork_path_pool
         self._max_nb_crowfly = max_nb_crowfly
 
         self._future = None
         self._value = {}
 
-        self.async_request()
+        self._async_request()
 
-    def async_request(self):
+    def _async_request(self):
         dps_by_mode = {}
-        if self._direct_path_pool:
-            dps_by_mode = self._direct_path_pool.get_direct_paths_by_type(StreetNetworkPath.DIRECT)
+        if self._streetnetwork_path_pool:
+            dps_by_mode = self._streetnetwork_path_pool.get_streetnetwork_path_by_type(StreetNetworkPathType.DIRECT)
 
         for mode in self._modes:
             max_fallback_duration = get_max_fallback_duration(self._request, mode, dps_by_mode.get(mode))

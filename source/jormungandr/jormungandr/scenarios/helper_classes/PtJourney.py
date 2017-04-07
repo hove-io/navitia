@@ -1,6 +1,34 @@
+# Copyright (c) 2001-2017, Canal TP and/or its affiliates. All rights reserved.
+#
+# This file is part of Navitia,
+#     the software to build cool stuff with public transport.
+#
+# Hope you'll enjoy and contribute to this project,
+#     powered by Canal TP (www.canaltp.fr).
+# Help us simplify mobility and open public transport:
+#     a non ending quest to the responsive locomotion way of traveling!
+#
+# LICENCE: This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with this program. If not, see <http://www.gnu.org/licenses/>.
+#
+# Stay tuned using
+# twitter @navitia
+# IRC #navitia on freenode
+# https://groups.google.com/d/forum/navitia
+# www.navitia.io
 import Future
 from jormungandr import utils
-from jormungandr.street_network.street_network import StreetNetworkPath
+from jormungandr.street_network.street_network import StreetNetworkPathType
 from navitiacommon import response_pb2
 from collections import namedtuple
 import copy
@@ -8,7 +36,12 @@ import logging
 
 PtPoolElement = namedtuple('PtPoolElement', ['dep_mode', 'arr_mode', 'pt_journey'])
 
+
 class PtJourney:
+    """
+    Given a set of stop_points and their access time from origin and destination respectively, now we can compute the
+    public transport journey
+    """
     def __init__(self, instance, orig_fallback_durtaions_pool, dest_fallback_durations_pool,
                  dep_mode, arr_mode, periode_extremity, journey_params, bike_in_pt, request):
         self._instance = instance
@@ -22,7 +55,7 @@ class PtJourney:
         self._request = request
         self._value = None
 
-        self.async_request()
+        self._async_request()
 
     def _do_request(self):
         logger = logging.getLogger(__name__)
@@ -63,16 +96,16 @@ class PtJourney:
                      self._arr_mode)
         return resp
 
-    def async_request(self):
+    def _async_request(self):
         self._value = Future.create_future(self._do_request)
 
     def wait_and_get(self):
-        return self._value.wait_and_get() if self._value else None
+        return self._value.wait_and_get()
 
 
 class _PtJourneySorter(object):
     """
-    This sorter is used as a trick to render the computation asynchronous
+    This sorter is used as a trick to optimize the computation
 
     With this sorter, the PtJourneyPool is sorted in a way from (likely) quickest computation to slowest computation.
     For instance, we assume that a journey starts with "walking" and ends with "walking" may be computed faster than
@@ -94,12 +127,12 @@ class _PtJourneySorter(object):
 
 
 class PtJourneyPool:
-    def __init__(self, instance, requested_orig_obj, requested_dest_obj, direct_path_pool, kraken_calls,
+    def __init__(self, instance, requested_orig_obj, requested_dest_obj, streetnetwork_path_pool, kraken_calls,
                  orig_fallback_durtaions_pool, dest_fallback_durations_pool, request):
         self._instance = instance
         self._requested_orig_obj = requested_orig_obj
         self._requested_dest_obj = requested_dest_obj
-        self._direct_path_pool = direct_path_pool
+        self._streetnetwork_path_pool = streetnetwork_path_pool
         self._kraken_calls = kraken_calls
         self._orig_fallback_durtaions_pool = orig_fallback_durtaions_pool
         self._dest_fallback_durations_pool = dest_fallback_durations_pool
@@ -107,7 +140,7 @@ class PtJourneyPool:
         self._request = request
         self._value = []
 
-        self.async_request()
+        self._async_request()
 
     @staticmethod
     def _create_parameters(request):
@@ -120,15 +153,15 @@ class PtJourneyPool:
                                  walking_transfer_penalty=request['_walking_transfer_penalty'],
                                  forbidden_uris=request['forbidden_uris[]'])
 
-    def async_request(self):
-        direct_path_type = StreetNetworkPath.DIRECT
+    def _async_request(self):
+        direct_path_type = StreetNetworkPathType.DIRECT
         periode_extremity = utils.PeriodExtremity(self._request['datetime'], self._request['clockwise'])
         for dep_mode, arr_mode in self._kraken_calls:
-            dp = self._direct_path_pool.wait_and_get(self._requested_orig_obj,
-                                                     self._requested_dest_obj,
-                                                     dep_mode,
-                                                     periode_extremity,
-                                                     direct_path_type)
+            dp = self._streetnetwork_path_pool.wait_and_get(self._requested_orig_obj,
+                                                            self._requested_dest_obj,
+                                                            dep_mode,
+                                                            periode_extremity,
+                                                            direct_path_type)
             if dp.journeys:
                 self._journey_params.direct_path_duration = dp.journeys[0].durations.total
             else:
