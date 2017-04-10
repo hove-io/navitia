@@ -48,7 +48,6 @@ namespace routing{
 
 #include <memory>
 #include <limits>
-#include <boost/optional.hpp>
 
 namespace navitia {
 

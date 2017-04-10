@@ -43,7 +43,6 @@ www.navitia.io
 #include "calendar/calendar_api.h"
 #include "routing/raptor.h"
 #include "type/meta_data.h"
-#include <regex>
 
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;

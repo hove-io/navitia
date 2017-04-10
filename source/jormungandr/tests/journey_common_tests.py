@@ -348,7 +348,7 @@ class JourneyCommon(object):
 
         assert(len(response['journeys']) > 0)
         for j in response['journeys']:
-            eq_(j['sections'][0]['from']['id'], id)
+            assert(j['sections'][0]['from']['id'] == id)
             assert(j['sections'][0]['from']['address']['id'] == id)
             assert(j['sections'][-1]['to']['id'] == id)
             assert(j['sections'][-1]['to']['address']['id'] == id)

@@ -57,11 +57,30 @@ def kilometers_to_meters(distance):
 
 def is_coord(uri):
     # for the moment we do a simple check
-    return uri.count(';') == 1
+    return get_lon_lat(uri) != (None, None)
 
 def get_lon_lat(uri):
-    if is_coord(uri):
-        return uri.split(';')
+    """
+    extract lon lat from an uri
+    the uri should be formated as: 'lon;lat'
+    >>> get_lon_lat('12.3;-5.3')
+    (u'12.3', u'-5.3')
+    >>> get_lon_lat('bob')
+    (None, None)
+    >>> get_lon_lat('5.3;bob')
+    (None, None)
+    >>> get_lon_lat('5.0;0.0')
+    (u'5.0', u'0.0')
+    """
+    if uri.count(';') == 1:
+        try:
+            lon, lat = uri.split(';')
+            # we check that both are float
+            float(lon)
+            float(lat)
+            return lon, lat
+        except ValueError:
+            return None, None
     return None, None
 
 
@@ -245,7 +264,7 @@ def walk_protobuf(pb_object, visitor):
 
         add_elt(elem[0], elem[1])
 
-                
+
 def realtime_level_to_pbf(level):
     if level == 'base_schedule':
         return type_pb2.BASE_SCHEDULE
