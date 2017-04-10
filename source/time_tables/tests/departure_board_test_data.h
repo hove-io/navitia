@@ -67,6 +67,12 @@ struct departure_board_fixture {
         b.vj("M","1111111")("M:s", "10:30"_t)("S11", "11:30"_t, "11:35"_t)("M:e", "12:30"_t);
         b.vj("P", "11111").uri("vjP:1")("stopP1", "23:40"_t)("stopP2", "24:04"_t, "24:06"_t)("stopP3", "24:13"_t);
         b.vj("Q", "11111").uri("vjQ:1")("stopQ1", "23:40"_t)("stopQ2", "23:44"_t, "23:46"_t)("stopQ3", "23:55"_t);
+
+        b.frequency_vj("l:freq", "18:00"_t, "19:00"_t, "00:30"_t).uri("vj:freq")
+            ("stopf1", "18:00"_t, "18:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)
+            ("stopf2", "18:05"_t, "18:10"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 900)
+            ("stopf3", "18:10"_t, "18:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
+
         navitia::georef::Admin* ad = new navitia::georef::Admin();
         ad->name = "Quimper";
         ad->uri = "Quimper";
