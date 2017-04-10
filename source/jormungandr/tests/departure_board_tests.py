@@ -830,22 +830,14 @@ class TestSchedules(AbstractTestFixture):
         arrivals = response["arrivals"]
 
         is_valid_departures(arrivals)
-        assert len(arrivals) == 2
+        assert len(arrivals) == 1
         assert arrivals[0]["route"]["id"] == 'P:7'
         assert arrivals[0]["stop_point"]["id"] == 'stopP2'
-        assert arrivals[0]["stop_date_time"]["arrival_date_time"] == '20160104T000400'
+        assert arrivals[0]["stop_date_time"]["arrival_date_time"] == '20160104T000800'
         assert arrivals[0]["stop_date_time"]["base_arrival_date_time"] == '20160104T000400'
-        assert arrivals[0]["stop_date_time"]["departure_date_time"] == '20160104T000600'
+        assert arrivals[0]["stop_date_time"]["departure_date_time"] == '20160104T001000'
         assert arrivals[0]["stop_date_time"]["base_departure_date_time"] == '20160104T000600'
-        assert arrivals[0]["stop_date_time"]["data_freshness"] == 'base_schedule'
-
-        assert arrivals[1]["route"]["id"] == 'P:7'
-        assert arrivals[1]["stop_point"]["id"] == 'stopP2'
-        assert arrivals[1]["stop_date_time"]["arrival_date_time"] == '20160104T000800'
-        assert arrivals[1]["stop_date_time"]["base_arrival_date_time"] == '20160104T000400'
-        assert arrivals[1]["stop_date_time"]["departure_date_time"] == '20160104T001000'
-        assert arrivals[1]["stop_date_time"]["base_departure_date_time"] == '20160104T000600'
-        assert arrivals[1]["stop_date_time"]["data_freshness"] == 'realtime'
+        assert arrivals[0]["stop_date_time"]["data_freshness"] == 'realtime'
 
     def test_departure_schedule_departures_date_time_not_eq_arrival_date_time_realtime(self):
         """
@@ -859,19 +851,97 @@ class TestSchedules(AbstractTestFixture):
         departures = response["departures"]
 
         is_valid_departures(departures)
-        assert len(departures) == 2
+        assert len(departures) == 1
         assert departures[0]["route"]["id"] == 'P:7'
         assert departures[0]["stop_point"]["id"] == 'stopP2'
-        assert departures[0]["stop_date_time"]["arrival_date_time"] == '20160104T000400'
+        assert departures[0]["stop_date_time"]["arrival_date_time"] == '20160104T000800'
         assert departures[0]["stop_date_time"]["base_arrival_date_time"] == '20160104T000400'
-        assert departures[0]["stop_date_time"]["departure_date_time"] == '20160104T000600'
+        assert departures[0]["stop_date_time"]["departure_date_time"] == '20160104T001000'
         assert departures[0]["stop_date_time"]["base_departure_date_time"] == '20160104T000600'
-        assert departures[0]["stop_date_time"]["data_freshness"] == 'base_schedule'
+        assert departures[0]["stop_date_time"]["data_freshness"] == 'realtime'
 
-        assert departures[1]["route"]["id"] == 'P:7'
-        assert departures[1]["stop_point"]["id"] == 'stopP2'
-        assert departures[1]["stop_date_time"]["arrival_date_time"] == '20160104T000800'
-        assert departures[1]["stop_date_time"]["base_arrival_date_time"] == '20160104T000400'
-        assert departures[1]["stop_date_time"]["departure_date_time"] == '20160104T001000'
-        assert departures[1]["stop_date_time"]["base_departure_date_time"] == '20160104T000600'
-        assert departures[1]["stop_date_time"]["data_freshness"] == 'realtime'
+    def test_arrival_schedule_arrivals_date_time_midnight_realtime(self):
+        """
+        test a arrival, with a date time
+
+        departure_date_time != arrival_date_time
+        """
+        response = self.query_region("stop_points/stopQ2/arrivals?from_datetime=20160103T230000"
+                                     "&data_freshness=realtime")
+
+        arrivals = response["arrivals"]
+
+        is_valid_departures(arrivals)
+        assert len(arrivals) == 1
+        assert arrivals[0]["route"]["id"] == 'Q:8'
+        assert arrivals[0]["stop_point"]["id"] == 'stopQ2'
+        assert arrivals[0]["stop_date_time"]["arrival_date_time"] == '20160104T000500'
+        assert arrivals[0]["stop_date_time"]["base_arrival_date_time"] == '20160103T234400'
+        assert arrivals[0]["stop_date_time"]["departure_date_time"] == '20160104T000600'
+        assert arrivals[0]["stop_date_time"]["base_departure_date_time"] == '20160103T234600'
+        assert arrivals[0]["stop_date_time"]["data_freshness"] == 'realtime'
+
+    def test_departure_schedule_departures_date_time_midnight_realtime(self):
+        """
+        test a departure, with a date time
+
+        departure_date_time != arrival_date_time
+        """
+        response = self.query_region("stop_points/stopQ2/departures?from_datetime=20160103T100000"
+                                     "&data_freshness=realtime")
+
+        departures = response["departures"]
+
+        is_valid_departures(departures)
+        assert len(departures) == 1
+        assert departures[0]["route"]["id"] == 'Q:8'
+        assert departures[0]["stop_point"]["id"] == 'stopQ2'
+        assert departures[0]["stop_date_time"]["arrival_date_time"] == '20160104T000500'
+        assert departures[0]["stop_date_time"]["base_arrival_date_time"] == '20160103T234400'
+        assert departures[0]["stop_date_time"]["departure_date_time"] == '20160104T000600'
+        assert departures[0]["stop_date_time"]["base_departure_date_time"] == '20160103T234600'
+        assert departures[0]["stop_date_time"]["data_freshness"] == 'realtime'
+
+
+
+    def test_arrival_schedule_arrivals_date_time_midnight_base_schedule(self):
+        """
+        test a arrival, with a date time
+
+        departure_date_time != arrival_date_time
+        """
+        response = self.query_region("stop_points/stopQ2/arrivals?from_datetime=20160103T230000"
+                                     "&data_freshness=base_schedule")
+
+        arrivals = response["arrivals"]
+
+        is_valid_departures(arrivals)
+        assert len(arrivals) == 1
+        assert arrivals[0]["route"]["id"] == 'Q:8'
+        assert arrivals[0]["stop_point"]["id"] == 'stopQ2'
+        assert arrivals[0]["stop_date_time"]["arrival_date_time"] == '20160103T234400'
+        assert arrivals[0]["stop_date_time"]["base_arrival_date_time"] == '20160103T234400'
+        assert arrivals[0]["stop_date_time"]["departure_date_time"] == '20160103T234600'
+        assert arrivals[0]["stop_date_time"]["base_departure_date_time"] == '20160103T234600'
+        assert arrivals[0]["stop_date_time"]["data_freshness"] == 'base_schedule'
+
+    def test_departure_schedule_departures_date_time_midnight_base_schedule(self):
+        """
+        test a departure, with a date time
+
+        departure_date_time != arrival_date_time
+        """
+        response = self.query_region("stop_points/stopQ2/departures?from_datetime=20160103T100000"
+                                     "&data_freshness=base_schedule")
+
+        departures = response["departures"]
+
+        is_valid_departures(departures)
+        assert len(departures) == 1
+        assert departures[0]["route"]["id"] == 'Q:8'
+        assert departures[0]["stop_point"]["id"] == 'stopQ2'
+        assert departures[0]["stop_date_time"]["arrival_date_time"] == '20160103T234400'
+        assert departures[0]["stop_date_time"]["base_arrival_date_time"] == '20160103T234400'
+        assert departures[0]["stop_date_time"]["departure_date_time"] == '20160103T234600'
+        assert departures[0]["stop_date_time"]["base_departure_date_time"] == '20160103T234600'
+        assert departures[0]["stop_date_time"]["data_freshness"] == 'base_schedule'
