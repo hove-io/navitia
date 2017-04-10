@@ -36,63 +36,73 @@ namespace bt = boost::posix_time;
 
 namespace navitia {
 
-static boost::shared_ptr<nt::disruption::Tag>
-make_tag(const chaos::Tag& chaos_tag, nt::disruption::DisruptionHolder& holder) {
+static void update_tag(nt::disruption::Tag& tag, const chaos::Tag& chaos_tag) {
     auto from_posix = navitia::from_posix_timestamp;
 
+    tag.uri = chaos_tag.id();
+    tag.name = chaos_tag.name();
+    tag.created_at = from_posix(chaos_tag.created_at());
+    tag.updated_at = from_posix(chaos_tag.updated_at());
+}
+
+static boost::shared_ptr<nt::disruption::Tag>
+make_tag(const chaos::Tag& chaos_tag, nt::disruption::DisruptionHolder& holder) {
+
     auto& weak_tag = holder.tags[chaos_tag.id()];
-    if (auto tag = weak_tag.lock()) { return tag; }
+    if (auto tag = weak_tag.lock()) {
+        update_tag(*tag, chaos_tag);
+        return tag;
+    }
 
     auto tag = boost::make_shared<nt::disruption::Tag>();
-    tag->uri = chaos_tag.id();
-    tag->name = chaos_tag.name();
-    tag->created_at = from_posix(chaos_tag.created_at());
-    tag->updated_at = from_posix(chaos_tag.updated_at());
+    update_tag(*tag, chaos_tag);
 
     weak_tag = tag;
     return tag;
 }
 
+static void update_cause(nt::disruption::Cause& cause, const chaos::Cause& chaos_cause) {
+    auto from_posix = navitia::from_posix_timestamp;
+    cause.uri = chaos_cause.id();
+    cause.wording = chaos_cause.wording();
+    cause.created_at = from_posix(chaos_cause.created_at());
+    cause.updated_at = from_posix(chaos_cause.updated_at());
+    if (chaos_cause.has_category()) {
+        cause.category = chaos_cause.category().name();
+    }
+}
+
 static boost::shared_ptr<nt::disruption::Cause>
 make_cause(const chaos::Cause& chaos_cause, nt::disruption::DisruptionHolder& holder) {
-    auto from_posix = navitia::from_posix_timestamp;
-
     auto& weak_cause = holder.causes[chaos_cause.id()];
-    if (auto cause = weak_cause.lock()) { return cause; }
+    if (auto cause = weak_cause.lock()) {
+        // we update the cause if it has changed since it's creation
+        update_cause(*cause, chaos_cause);
+        return cause;
+    }
 
     auto cause = boost::make_shared<nt::disruption::Cause>();
-    cause->uri = chaos_cause.id();
-    cause->wording = chaos_cause.wording();
-    cause->created_at = from_posix(chaos_cause.created_at());
-    cause->updated_at = from_posix(chaos_cause.updated_at());
-    if(chaos_cause.has_category()){
-        cause->category = chaos_cause.category().name();
-    }
+    update_cause(*cause, chaos_cause);
 
     weak_cause = cause;
     return cause;
 
 }
 
-static boost::shared_ptr<nt::disruption::Severity>
-make_severity(const chaos::Severity& chaos_severity, nt::disruption::DisruptionHolder& holder) {
+static void update_severity(nt::disruption::Severity& severity, const chaos::Severity& chaos_severity) {
     namespace tr = transit_realtime;
     namespace new_disr = nt::disruption;
     auto from_posix = navitia::from_posix_timestamp;
 
-    auto& weak_severity = holder.severities[chaos_severity.id()];
-    if (auto severity = weak_severity.lock()) { return severity; }
-
-    auto severity = boost::make_shared<new_disr::Severity>();
-    severity->uri = chaos_severity.id();
-    severity->wording = chaos_severity.wording();
-    severity->created_at = from_posix(chaos_severity.created_at());
-    severity->updated_at = from_posix(chaos_severity.updated_at());
-    severity->color = chaos_severity.color();
-    severity->priority = chaos_severity.priority();
+    severity.uri = chaos_severity.id();
+    severity.wording = chaos_severity.wording();
+    severity.created_at = from_posix(chaos_severity.created_at());
+    severity.updated_at = from_posix(chaos_severity.updated_at());
+    severity.color = chaos_severity.color();
+    severity.priority = chaos_severity.priority();
     switch (chaos_severity.effect()) {
 #define EFFECT_ENUM_CONVERSION(e) \
-        case tr::Alert_Effect_##e: severity->effect = new_disr::Effect::e; break
+        case tr::Alert_Effect_##e: severity.effect = new_disr::Effect::e; break
 
         EFFECT_ENUM_CONVERSION(NO_SERVICE);
         EFFECT_ENUM_CONVERSION(REDUCED_SERVICE);
@@ -106,6 +116,18 @@ make_severity(const chaos::Severity& chaos_severity, nt::disruption::DisruptionH
 
 #undef EFFECT_ENUM_CONVERSION
     }
+}
+
+static boost::shared_ptr<nt::disruption::Severity>
+make_severity(const chaos::Severity& chaos_severity, nt::disruption::DisruptionHolder& holder) {
+    auto& weak_severity = holder.severities[chaos_severity.id()];
+    if (auto severity = weak_severity.lock()) {
+        update_severity(*severity, chaos_severity);
+        return severity;
+    }
+
+    auto severity = boost::make_shared<nt::disruption::Severity>();
+    update_severity(*severity, chaos_severity);
 
     weak_severity = severity;
     return severity;
