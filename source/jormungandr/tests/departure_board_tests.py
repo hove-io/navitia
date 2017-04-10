@@ -902,8 +902,6 @@ class TestSchedules(AbstractTestFixture):
         assert departures[0]["stop_date_time"]["base_departure_date_time"] == '20160103T234600'
         assert departures[0]["stop_date_time"]["data_freshness"] == 'realtime'
 
-
-
     def test_arrival_schedule_arrivals_date_time_midnight_base_schedule(self):
         """
         test a arrival, with a date time
