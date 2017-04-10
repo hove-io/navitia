@@ -36,6 +36,14 @@ The only arguments are the ones of [paging](#paging).
 |start_production_date |[iso-date](#iso-date)       | Beginning of the production period. We only have data on this production period |
 |end_production_date   |[iso-date](#iso-date)       | End of the production period. We only have data on this production period |
 
+#### Production period
+
+The production period is the validity period of the coverage's data.
+
+There is no data outside this production period.
+
+This production period cannot exceed one year.
+
 <aside class="notice">
 Navitia need transportation data to work and those are very date dependant. To check that a coverage has some data for a given date, you need to check the production period of the coverage.
 </aside>

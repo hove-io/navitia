@@ -26,7 +26,7 @@ There are lots of ISO 8601 libraries in every kind of language that you should u
 
 ### Iso-date
 
-The date are represented in ISO 8601 "YYYYMMDD" string
+The date are represented in ISO 8601 "YYYYMMDD" string.
 
 
 Public transport objects
