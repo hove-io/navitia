@@ -85,13 +85,27 @@ class ProximitiesByCrowfly:
 
 
 class ProximitiesByCrowflyPool:
-    def __init__(self, instance, requested_place_obj, modes, request, streetnetwork_path_pool, max_nb_crowfly=5000):
+    def __init__(self, instance, requested_place_obj, modes, request, direct_paths_by_mode, max_nb_crowfly=5000):
+        """
+        A ProximitiesByCrowflyPool is a set of ProximitiesByCrowfly grouped by mode
+
+        :param instance: coverage instance
+        :param requested_place_obj: a protobuf object, returned by PlaceUri
+        :param modes: a set of modes
+        :param request: original request
+        :param direct_paths_by_mode: a map of "mode" vs "direct path futures", used to optimize the max duration when
+                                     searching for ProximitiesByCrowfly
+                                     Ex. If we find a direct path from A to B by car whose duration is 15min, then there
+                                     is no need to compute ProximitiesByCrowfly from A with a max_duration more than
+                                     15min (max_duration is 30min by default).
+        :param max_nb_crowfly:
+        """
         self._instance = instance
         self._requested_place_obj = requested_place_obj
         # we don't want to compute the same mode several times
         self._modes = set(modes)
         self._request = request
-        self._streetnetwork_path_pool = streetnetwork_path_pool
+        self._direct_paths_by_mode = direct_paths_by_mode
         self._max_nb_crowfly = max_nb_crowfly
 
         self._future = None
@@ -100,12 +114,9 @@ class ProximitiesByCrowflyPool:
         self._async_request()
 
     def _async_request(self):
-        dps_by_mode = {}
-        if self._streetnetwork_path_pool:
-            dps_by_mode = self._streetnetwork_path_pool.get_streetnetwork_path_by_type(StreetNetworkPathType.DIRECT)
 
         for mode in self._modes:
-            max_fallback_duration = get_max_fallback_duration(self._request, mode, dps_by_mode.get(mode))
+            max_fallback_duration = get_max_fallback_duration(self._request, mode, self._direct_paths_by_mode.get(mode))
             p = ProximitiesByCrowfly(self. _instance, self._requested_place_obj, mode, max_fallback_duration,
                                      self._max_nb_crowfly)
 

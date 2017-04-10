@@ -107,7 +107,12 @@ class StreetNetworkPathPool:
         self._value[key] = StreetNetworkPath(streetnetwork_service, requested_orig_obj, requested_dest_obj, mode,
                                              period_extremity, request, streetnetwork_path_type)
 
-    def get_streetnetwork_path_by_type(self, streetnetwork_path_type):
+    def get_all_direct_paths(self):
+        """
+        Get all streetnetwork path of DIRECT type
+        :return: a dictionary of mode vs dp_future
+        """
+        streetnetwork_path_type = StreetNetworkPathType.DIRECT
         return {k.mode: v for k, v in self._value.items() if k.streetnetwork_path_type is streetnetwork_path_type}
 
     def has_valid_direct_paths(self):

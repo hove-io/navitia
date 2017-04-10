@@ -85,17 +85,22 @@ class Scenario(new_default.Scenario):
                                                          streetnetwork_path_type=StreetNetworkPathType.DIRECT)
                     for mode in requested_dep_modes]
 
+        # We'd like to get the know the duration a direct path to do some optimizations in ProximitiesByCrowflyPool and
+        # FallbackDurationsPool.
+        # Note :direct_paths_by_mode is a dict of mode vs future of a direct paths, this line is not blocking
+        direct_paths_by_mode = streetnetwork_path_pool.get_all_direct_paths()
+
         orig_proximities_by_crowfly = ProximitiesByCrowflyPool(instance=instance,
                                                                requested_place_obj=requested_orig_obj,
                                                                modes=requested_dep_modes,
                                                                request=request,
-                                                               streetnetwork_path_pool=streetnetwork_path_pool)
+                                                               direct_paths_by_mode=direct_paths_by_mode)
 
         dest_proximities_by_crowfly = ProximitiesByCrowflyPool(instance=instance,
                                                                requested_place_obj=requested_dest_obj,
                                                                modes=requested_arr_modes,
                                                                request=request,
-                                                               streetnetwork_path_pool=None)
+                                                               direct_paths_by_mode=direct_paths_by_mode)
 
         orig_places_free_access = PlacesFreeAccess(instance=instance, requested_place_obj=requested_orig_obj)
         dest_places_free_access = PlacesFreeAccess(instance=instance, requested_place_obj=requested_dest_obj)
@@ -105,7 +110,7 @@ class Scenario(new_default.Scenario):
                                                              modes=requested_dep_modes,
                                                              proximities_by_crowfly_pool=orig_proximities_by_crowfly,
                                                              places_free_access=orig_places_free_access,
-                                                             streetnetwork_path_pool=streetnetwork_path_pool,
+                                                             direct_paths_by_mode=direct_paths_by_mode,
                                                              request=request)
 
         dest_fallback_durations_pool = FallbackDurationsPool(instance=instance,
@@ -113,7 +118,7 @@ class Scenario(new_default.Scenario):
                                                              modes=requested_arr_modes,
                                                              proximities_by_crowfly_pool=dest_proximities_by_crowfly,
                                                              places_free_access=dest_places_free_access,
-                                                             streetnetwork_path_pool=None,
+                                                             direct_paths_by_mode={},
                                                              request=request)
 
         pt_journey_pool = PtJourneyPool(instance=instance,
@@ -135,16 +140,14 @@ class Scenario(new_default.Scenario):
                                                              dest_fallback_durations_pool=dest_fallback_durations_pool,
                                                              request=request)
 
-        # At the stage, all types of journeys have been computed 
+        # At the stage, all types of journeys have been computed
+
         for mode in requested_dep_modes:
-            dp = streetnetwork_path_pool.wait_and_get(requested_orig_obj=requested_orig_obj,
-                                                      requested_dest_obj=requested_dest_obj,
-                                                      mode=mode,
-                                                      period_extremity=period_extremity,
-                                                      streetnetwork_path_type=StreetNetworkPathType.DIRECT)
+            dp = direct_paths_by_mode.get(mode).wait_and_get()
             if getattr(dp, "journeys", None):
                 res.append(dp)
 
+        # completed_pt_journeys may contain None and res must be a list of protobuf journey
         res.extend([j for j in completed_pt_journeys if j])
 
         check_final_results_or_raise(res, orig_fallback_durations_pool, dest_fallback_durations_pool)

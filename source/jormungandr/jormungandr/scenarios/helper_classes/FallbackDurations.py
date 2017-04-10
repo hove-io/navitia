@@ -29,7 +29,6 @@
 import Future
 from navitiacommon import response_pb2
 from collections import namedtuple
-from jormungandr.street_network.street_network import StreetNetworkPathType
 from helper_utils import get_max_fallback_duration
 import logging
 
@@ -102,6 +101,12 @@ class FallbackDurations:
         # Since we have already places that have free access, we add them into the result
         [result.update({uri: DurationElement(0, response_pb2.reached)}) for uri in all_free_access]
 
+        # There are two cases that places_isochrone maybe empty:
+        # 1. The duration of direct_path is very small that we cannot find any proximities by crowfly
+        # 2. All proximities by crowfly are free access
+        if not places_isochrone:
+            return result
+
         if self._max_duration_to_pt == 0:
             logger.debug("max_duration_to_pt equals to 0")
 
@@ -150,14 +155,14 @@ class FallbackDurationsPool(dict):
     A fallback durations pool is set of "fallback durations" grouped by mode.
     """
     def __init__(self, instance, requested_place_obj, modes, proximities_by_crowfly_pool, places_free_access,
-                 streetnetwork_path_pool, request):
+                 direct_paths_by_mode, request):
         super(FallbackDurationsPool, self).__init__()
         self._instance = instance
         self._requested_place_obj = requested_place_obj
         self._modes = set(modes)
         self._proximities_by_crowfly_pool = proximities_by_crowfly_pool
         self._places_free_access = places_free_access
-        self._streetnetwork_path_pool = streetnetwork_path_pool
+        self._direct_paths_by_mode = direct_paths_by_mode
         self._request = request
         self._speed_switcher = {
             "walking": instance.walking_speed,
@@ -171,12 +176,8 @@ class FallbackDurationsPool(dict):
         self._async_request()
 
     def _async_request(self):
-        dps_by_mode = {}
-        if self._streetnetwork_path_pool:
-            dps_by_mode = self._streetnetwork_path_pool.get_streetnetwork_path_by_type(StreetNetworkPathType.DIRECT)
-
         for mode in self._modes:
-            max_fallback_duration = get_max_fallback_duration(self._request, mode, dps_by_mode.get(mode))
+            max_fallback_duration = get_max_fallback_duration(self._request, mode, self._direct_paths_by_mode.get(mode))
             fallback_durations = FallbackDurations(self._instance, self._requested_place_obj, mode,
                                                    self._proximities_by_crowfly_pool, self._places_free_access,
                                                    max_fallback_duration,
