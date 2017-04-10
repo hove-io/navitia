@@ -32,12 +32,14 @@ inline uint64_t to_posix_timestamp(const std::string& str) {
 
 inline transit_realtime::TripUpdate
 make_delay_message(const std::string& vj_uri,
-        const std::string& date,
+        const std::string& start_date,
         const std::vector<std::tuple<std::string, int, int>>& delayed_time_stops) {
     transit_realtime::TripUpdate trip_update;
     auto trip = trip_update.mutable_trip();
     trip->set_trip_id(vj_uri);
-    trip->set_start_date(date);
+    // start_date: see
+    // https://github.com/CanalTP/chaos-proto/blob/dddda3c42cb80ebe1f3ed46f74604c6a6183b477/gtfs-realtime.proto#L459
+    trip->set_start_date(start_date);
     trip->set_schedule_relationship(transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED);
     auto st_update = trip_update.mutable_stop_time_update();
 

@@ -69,9 +69,11 @@ bt::ptime get_date_time(const routing::StopEvent stop_event,
                         const bt::ptime& dt_orig, bool is_departure) {
     if (st_orig == nullptr || st_base == nullptr) { return bt::not_a_date_time; }
 
-    const uint32_t hour = (stop_event == routing::StopEvent::pick_up) ? st_orig->departure_time : st_orig->arrival_time;
+    const uint32_t hour = (stop_event == routing::StopEvent::pick_up) ?
+                st_orig->departure_time : st_orig->arrival_time;
 
-    uint32_t shift_seconds = (st_orig == st_base) ? 0:  st_orig->vehicle_journey->shift * DateTimeUtils::SECONDS_PER_DAY;
+    uint32_t shift_seconds = (st_orig == st_base) ?
+                0 : st_orig->vehicle_journey->shift * DateTimeUtils::SECONDS_PER_DAY;
 
     if (is_departure) {
         return (dt_orig - bt::seconds(shift_seconds) - bt::seconds(hour)) + bt::seconds(st_base->departure_time);
