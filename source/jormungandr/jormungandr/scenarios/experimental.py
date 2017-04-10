@@ -55,6 +55,8 @@ class Scenario(new_default.Scenario):
         requested_arr_modes = {mode for _, mode in krakens_call}
         res = []
 
+        logger.debug('requesting places by uri orig: %s dest %s', request['origin'], request['destination'])
+
         requested_orig = PlaceByUri(instance=instance, uri=request['origin'])
         requested_dest = PlaceByUri(instance=instance, uri=request['destination'])
 
@@ -64,7 +66,7 @@ class Scenario(new_default.Scenario):
         streetnetwork_path_pool = StreetNetworkPathPool(instance=instance)
         period_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
 
-        # we launch direct path asynchrnously
+        # we launch direct path asynchronously
         for mode in requested_dep_modes:
             streetnetwork_path_pool.add_async_request(requested_orig_obj=requested_orig_obj,
                                                       requested_dest_obj=requested_dest_obj,
@@ -133,6 +135,7 @@ class Scenario(new_default.Scenario):
                                                              dest_fallback_durations_pool=dest_fallback_durations_pool,
                                                              request=request)
 
+        # At the stage, all types of journeys have been computed 
         for mode in requested_dep_modes:
             dp = streetnetwork_path_pool.wait_and_get(requested_orig_obj=requested_orig_obj,
                                                       requested_dest_obj=requested_dest_obj,

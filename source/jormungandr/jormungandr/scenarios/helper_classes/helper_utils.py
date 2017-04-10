@@ -207,8 +207,8 @@ def get_max_fallback_duration(request, mode, dp_future):
     return min(max_duration, dp_duration)
 
 
-def compute_fallback(requested_orig_obj,
-                     requested_dest_obj,
+def compute_fallback(from_obj,
+                     to_obj,
                      pt_journey_pool,
                      streetnetwork_path_pool,
                      orig_places_free_access,
@@ -240,16 +240,16 @@ def compute_fallback(requested_orig_obj,
             pt_orig = journey.sections[0].origin
             direct_path_type = StreetNetworkPathType.BEGINNING_FALLBACK
             fallback_extremity_dep = PeriodExtremity(journey.departure_date_time, False)
-            if requested_orig_obj.uri != pt_orig.uri and pt_orig.uri not in orig_all_free_access:
-                streetnetwork_path_pool.add_async_request(requested_orig_obj, pt_orig, dep_mode, fallback_extremity_dep,
+            if from_obj.uri != pt_orig.uri and pt_orig.uri not in orig_all_free_access:
+                streetnetwork_path_pool.add_async_request(from_obj, pt_orig, dep_mode, fallback_extremity_dep,
                                                           request, direct_path_type)
 
             # to
             pt_dest = journey.sections[-1].destination
             direct_path_type = StreetNetworkPathType.ENDING_FALLBACK
             fallback_extremity_arr = PeriodExtremity(journey.arrival_date_time, True)
-            if requested_dest_obj.uri != pt_dest.uri and pt_dest.uri not in dest_all_free_access:
-                streetnetwork_path_pool.add_async_request(pt_dest, requested_dest_obj, arr_mode, fallback_extremity_arr,
+            if to_obj.uri != pt_dest.uri and pt_dest.uri not in dest_all_free_access:
+                streetnetwork_path_pool.add_async_request(pt_dest, to_obj, arr_mode, fallback_extremity_arr,
                                                           request, direct_path_type)
 
 

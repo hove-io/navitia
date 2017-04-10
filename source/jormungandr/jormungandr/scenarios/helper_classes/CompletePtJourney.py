@@ -44,8 +44,8 @@ def wait_and_complete_pt_journey(requested_orig_obj,
     whole pt journey by adding the fallback path to the beginning and the ending section of pt journey
     """
     # launch fallback direct path asynchronously
-    compute_fallback(requested_orig_obj=requested_orig_obj,
-                     requested_dest_obj=requested_dest_obj,
+    compute_fallback(from_obj=requested_orig_obj,
+                     to_obj=requested_dest_obj,
                      pt_journey_pool=pt_journey_pool,
                      streetnetwork_path_pool=streetnetwork_path_pool,
                      orig_places_free_access=orig_places_free_access,
