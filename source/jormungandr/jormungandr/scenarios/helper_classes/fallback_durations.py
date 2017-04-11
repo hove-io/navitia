@@ -95,7 +95,7 @@ class FallbackDurations:
         proximities_by_crowfly = self._proximities_by_crowfly_pool.wait_and_get(self._mode)
 
         # if a place is freely accessible, there is no need to compute it's access duration in isochrone
-        places_isochrone = (p for p in proximities_by_crowfly if p.uri not in all_free_access)
+        places_isochrone = [p for p in proximities_by_crowfly if p.uri not in all_free_access]
 
         result = {}
         # Since we have already places that have free access, we add them into the result
