@@ -117,7 +117,7 @@ class Scenario(new_default.Scenario):
                                                              modes=requested_arr_modes,
                                                              proximities_by_crowfly_pool=dest_proximities_by_crowfly,
                                                              places_free_access=dest_places_free_access,
-                                                             direct_paths_by_mode={},
+                                                             direct_paths_by_mode=direct_paths_by_mode,
                                                              request=request)
 
         pt_journey_pool = PtJourneyPool(instance=instance,
