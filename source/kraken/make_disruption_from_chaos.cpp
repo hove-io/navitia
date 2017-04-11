@@ -47,17 +47,15 @@ static void update_tag(nt::disruption::Tag& tag, const chaos::Tag& chaos_tag) {
 
 static boost::shared_ptr<nt::disruption::Tag>
 make_tag(const chaos::Tag& chaos_tag, nt::disruption::DisruptionHolder& holder) {
-
     auto& weak_tag = holder.tags[chaos_tag.id()];
-    if (auto tag = weak_tag.lock()) {
-        update_tag(*tag, chaos_tag);
-        return tag;
+    auto tag = weak_tag.lock();
+    if (! tag) {
+        tag = boost::make_shared<nt::disruption::Tag>();
+        weak_tag = tag;
     }
 
-    auto tag = boost::make_shared<nt::disruption::Tag>();
     update_tag(*tag, chaos_tag);
 
-    weak_tag = tag;
     return tag;
 }
 
@@ -75,16 +73,13 @@ static void update_cause(nt::disruption::Cause& cause, const chaos::Cause& chaos
 static boost::shared_ptr<nt::disruption::Cause>
 make_cause(const chaos::Cause& chaos_cause, nt::disruption::DisruptionHolder& holder) {
     auto& weak_cause = holder.causes[chaos_cause.id()];
-    if (auto cause = weak_cause.lock()) {
-        // we update the cause if it has changed since it's creation
-        update_cause(*cause, chaos_cause);
-        return cause;
+    auto cause = weak_cause.lock();
+    if (! cause) {
+        cause = boost::make_shared<nt::disruption::Cause>();
+        weak_cause = cause;
     }
 
-    auto cause = boost::make_shared<nt::disruption::Cause>();
     update_cause(*cause, chaos_cause);
-
-    weak_cause = cause;
     return cause;
 
 }
@@ -121,15 +116,14 @@ static void update_severity(nt::disruption::Severity& severity, const chaos::Sev
 static boost::shared_ptr<nt::disruption::Severity>
 make_severity(const chaos::Severity& chaos_severity, nt::disruption::DisruptionHolder& holder) {
     auto& weak_severity = holder.severities[chaos_severity.id()];
-    if (auto severity = weak_severity.lock()) {
-        update_severity(*severity, chaos_severity);
-        return severity;
+    auto severity = weak_severity.lock();
+    if (! severity) {
+        severity = boost::make_shared<nt::disruption::Severity>();
+        weak_severity = severity;
     }
 
-    auto severity = boost::make_shared<nt::disruption::Severity>();
     update_severity(*severity, chaos_severity);
 
-    weak_severity = severity;
     return severity;
 }
 

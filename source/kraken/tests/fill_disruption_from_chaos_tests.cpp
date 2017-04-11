@@ -482,7 +482,8 @@ BOOST_AUTO_TEST_CASE(update_cause_severities_and_tag) {
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
-    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
+    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14),
+                                                                  boost::gregorian::days(7));
 
 
     // we delete the line 1 with a given cause
