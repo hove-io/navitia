@@ -951,9 +951,8 @@ const std::string match_double = "[-+]?[0-9]*\\.?[0-9]*[eE]?[-+]?[0-9]*";
 const auto coord_regex = std::regex("^(" + match_double + ");(" + match_double + ")$");
 
 EntryPoint::EntryPoint(const Type_e type, const std::string &uri, int access_duration) : type(type), uri(uri), access_duration(access_duration) {
-    if (type == Type_e::Address){
-        std::vector<std::string> vect;
-        vect = split_string(uri, ":");
+    if (type == Type_e::Address) {
+        auto vect = split_string(uri, ":");
         if(vect.size() == 3){
             this->uri = vect[0] + ":" + vect[1];
             this->house_number = str_to_int(vect[2]);

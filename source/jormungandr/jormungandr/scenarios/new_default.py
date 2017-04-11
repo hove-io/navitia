@@ -701,11 +701,6 @@ class Scenario(simple.Scenario):
         krakens_call = get_kraken_calls(api_request)
 
         # sometimes we need to change the entrypoint id (eg if the id is from another autocomplete system)
-        # we store the original requested id to put them back in the journey's response
-        api_request['requested_entrypoint'] = {
-            'origin': api_request.get('origin'),
-            'destination': api_request.get('destination')
-        }
         origin_detail = self.get_entrypoint_detail(api_request.get('origin'), instance)
         destination_detail = self.get_entrypoint_detail(api_request.get('destination'), instance)
         # we store the origin/destination detail in g to be able to use them after the marshall
