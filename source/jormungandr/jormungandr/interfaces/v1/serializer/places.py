@@ -26,8 +26,7 @@
 # www.navitia.io
 
 import serpy
-from jormungandr.interfaces.v1.serializer.fields import *
-import logging
+from base import LiteralField
 
 
 class PropertyPathField(serpy.Field):
@@ -41,15 +40,6 @@ class PropertyPathField(serpy.Field):
             obj = result
 
         return obj
-
-
-class LiteralField(serpy.Field):
-    def __init__(self, value, *args, **kwargs):
-        super(LiteralField, self).__init__(*args, **kwargs)
-        self.value = value
-
-    def as_getter(self, serializer_field_name, serializer_cls):
-        return lambda *args, **kwargs: self.value
 
 
 def get_lon_lat(obj):
@@ -110,7 +100,7 @@ class SubAdministrativeRegionField(serpy.DictSerializer):
     insee = serpy.Field()
     name = serpy.Field(attr="label")
     label = serpy.Field()
-    level = serpy.MethodField()
+    level = serpy.IntField()
     coord = serpy.MethodField()
     zip_code = serpy.MethodField()
 
@@ -122,9 +112,6 @@ class SubAdministrativeRegionField(serpy.DictSerializer):
             "lat": lat,
             "lon": lon
         }
-
-    def get_level(self, obj):
-        return int(obj.get('level')) if obj.get('level') else None
 
     def get_zip_code(self, obj):
         zip_codes = obj.get('zip_codes', [])
@@ -268,8 +255,7 @@ class GeocodeStopAreaSerializer(serpy.DictSerializer):
     def get_stop_area(self, obj):
         return StopAreaSerializer(obj).data
 
-
-class PlacesSerializer(serpy.DictSerializer):
+class GeocodePlacesSerializer(serpy.DictSerializer):
     places = serpy.MethodField()
 
     def get_places(self, obj):

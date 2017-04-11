@@ -31,10 +31,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 import serpy
 import operator
-import datetime
-import logging
-from flask import g
-from jormungandr.interfaces.v1.make_links import create_internal_link, create_external_link
 
 
 class PbField(serpy.Field):
@@ -56,8 +52,10 @@ class PbField(serpy.Field):
                 return op(obj)
         return getter
 
+
 class PbNestedSerializer(serpy.Serializer, PbField):
     pass
+
 
 class EnumField(serpy.Field):
     def as_getter(self, serializer_field_name, serializer_cls):
@@ -70,6 +68,7 @@ class EnumField(serpy.Field):
         enum = value.DESCRIPTOR.fields_by_name[self.attr].enum_type.values_by_number
         return enum[getattr(value, self.attr)].name.lower()
 
+
 class EnumListField(EnumField):
     def to_value(self, obj):
         enum = obj.DESCRIPTOR.fields_by_name[self.attr].enum_type.values_by_number
@@ -80,3 +79,14 @@ class GenericSerializer(PbNestedSerializer):
     id = serpy.Field(attr='uri')
     name = serpy.Field()
 
+
+class LiteralField(serpy.Field):
+    """
+    :return literal value
+    """
+    def __init__(self, value, *args, **kwargs):
+        super(LiteralField, self).__init__(*args, **kwargs)
+        self.value = value
+
+    def as_getter(self, serializer_field_name, serializer_cls):
+        return lambda *args, **kwargs: self.value
