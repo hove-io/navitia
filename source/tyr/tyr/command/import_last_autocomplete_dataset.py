@@ -67,7 +67,7 @@ def import_last_stop_dataset(instance_name, wait=True):
     if not instance:
         raise Exception("cannot find instance {}".format(instance_name))
 
-    files = [d.name for d in instance.last_datasets(1)]
+    files = [d.name for d in instance.last_datasets(1, 'pt')]
     logger = logging.getLogger(__name__)
     logger.info('we reimport to mimir the last dataset of %s, composed of: %s',
                 instance.name, files)
@@ -82,6 +82,7 @@ def refresh_autocomplete_data(wait=True):
     """
     reimport all the last autocomplete datas alongwith the last dataset of all instances
     with import_stops_in_mimir = true
+
     """
     instances_name = [i.name for i in models.AutocompleteParameter.query.all()]
     for name in instances_name:
