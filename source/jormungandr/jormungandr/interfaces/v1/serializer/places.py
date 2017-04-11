@@ -26,20 +26,8 @@
 # www.navitia.io
 
 import serpy
-from base import LiteralField
-
-
-class PropertyPathField(serpy.Field):
-    def as_getter(self, serializer_field_name, serializer_cls):
-        return lambda v: self.get_property(v, self.attr)
-
-    def get_property(self, obj, path):
-        properties = path.split(("."))
-        for property_ in properties:
-            result = obj.get(property_, {})
-            obj = result
-
-        return obj
+from base import LiteralField, NestedPropertyField, IntNestedPropertyField
+from flask.ext.restful import abort
 
 
 def get_lon_lat(obj):
@@ -79,22 +67,6 @@ class CoordId(serpy.Field):
         return '{};{}'.format(lon, lat)
 
 
-class IntPropertyPathField(serpy.Field):
-    def as_getter(self, serializer_field_name, serializer_cls):
-        return lambda v: self.get_property(v, self.attr)
-
-    def get_property(self, obj, path):
-        properties = path.split(("."))
-        for property_ in properties:
-            result = obj.get(property_, {})
-            obj = result
-
-        return obj
-
-    def to_value(self, value):
-        return int(value) if value else None
-
-
 class SubAdministrativeRegionField(serpy.DictSerializer):
     id = serpy.Field()
     insee = serpy.Field()
@@ -124,13 +96,13 @@ class SubAdministrativeRegionField(serpy.DictSerializer):
 
 
 class AdministrativeRegionSerializer(serpy.DictSerializer):
-    id = PropertyPathField(attr='properties.geocoding.id')
-    name = PropertyPathField(attr='properties.geocoding.name')
-    label = PropertyPathField(attr='properties.geocoding.label')
-    zip_code = PropertyPathField(attr='properties.geocoding.postcode')
+    id = NestedPropertyField(attr='properties.geocoding.id')
+    name = NestedPropertyField(attr='properties.geocoding.name')
+    label = NestedPropertyField(attr='properties.geocoding.label')
+    zip_code = NestedPropertyField(attr='properties.geocoding.postcode')
     coord = CoordField()
     insee = serpy.MethodField()
-    level = IntPropertyPathField(attr='properties.geocoding.level')
+    level = IntNestedPropertyField(attr='properties.geocoding.level')
     administrative_regions = serpy.MethodField()
 
     def get_insee(self, obj):
@@ -144,8 +116,8 @@ class AdministrativeRegionSerializer(serpy.DictSerializer):
 
 
 class GeocodeAdminSerializer(serpy.DictSerializer):
-    id = PropertyPathField(attr='properties.geocoding.id')
-    name = PropertyPathField(attr='properties.geocoding.name')
+    id = NestedPropertyField(attr='properties.geocoding.id')
+    name = NestedPropertyField(attr='properties.geocoding.name')
     quality = LiteralField(0)
     embedded_type = LiteralField("administrative_region")
     administrative_region = serpy.MethodField()
@@ -162,8 +134,8 @@ class PoiTypeSerializer(serpy.DictSerializer):
 class PoiSerializer(serpy.DictSerializer):
     id = CoordId()
     coord = CoordField()
-    label = PropertyPathField(attr='properties.geocoding.label')
-    name = PropertyPathField(attr='properties.geocoding.name')
+    label = NestedPropertyField(attr='properties.geocoding.label')
+    name = NestedPropertyField(attr='properties.geocoding.name')
     administrative_regions = serpy.MethodField()
     poi_type = serpy.MethodField(display_none=False)
 
@@ -181,7 +153,7 @@ class GeocodePoiSerializer(serpy.DictSerializer):
     embedded_type = LiteralField("poi")
     quality = LiteralField(0)
     id = CoordId()
-    name = PropertyPathField(attr='properties.geocoding.label')
+    name = NestedPropertyField(attr='properties.geocoding.label')
     poi = serpy.MethodField()
 
     def get_poi(self, obj):
@@ -192,8 +164,8 @@ class AddressSerializer(serpy.DictSerializer):
     id = CoordId()
     coord = CoordField()
     house_number = serpy.MethodField()
-    label = PropertyPathField(attr='properties.geocoding.label')
-    name = PropertyPathField(attr='properties.geocoding.name')
+    label = NestedPropertyField(attr='properties.geocoding.label')
+    name = NestedPropertyField(attr='properties.geocoding.name')
     administrative_regions = serpy.MethodField()
 
     def get_administrative_regions(self, obj):
@@ -215,7 +187,7 @@ class GeocodeAddressSerializer(serpy.DictSerializer):
     embedded_type = LiteralField("address")
     quality = LiteralField(0)
     id = CoordId()
-    name = PropertyPathField(attr='properties.geocoding.label')
+    name = NestedPropertyField(attr='properties.geocoding.label')
     address = serpy.MethodField()
 
     def get_address(self, obj):
@@ -223,10 +195,10 @@ class GeocodeAddressSerializer(serpy.DictSerializer):
 
 
 class StopAreaSerializer(serpy.DictSerializer):
-    id = PropertyPathField(attr='properties.geocoding.id')
+    id = NestedPropertyField(attr='properties.geocoding.id')
     coord = CoordField()
-    label = PropertyPathField(attr='properties.geocoding.label')
-    name = PropertyPathField(attr='properties.geocoding.name')
+    label = NestedPropertyField(attr='properties.geocoding.label')
+    name = NestedPropertyField(attr='properties.geocoding.name')
     administrative_regions = serpy.MethodField()
     timezone = LiteralField(None)
 
@@ -248,26 +220,29 @@ class StopAreaSerializer(serpy.DictSerializer):
 class GeocodeStopAreaSerializer(serpy.DictSerializer):
     embedded_type = LiteralField("stop_area")
     quality = LiteralField(0)
-    id = PropertyPathField(attr='properties.geocoding.id')
-    name = PropertyPathField(attr='properties.geocoding.label')
+    id = NestedPropertyField(attr='properties.geocoding.id')
+    name = NestedPropertyField(attr='properties.geocoding.label')
     stop_area = serpy.MethodField()
 
     def get_stop_area(self, obj):
         return StopAreaSerializer(obj).data
 
+
 class GeocodePlacesSerializer(serpy.DictSerializer):
     places = serpy.MethodField()
 
     def get_places(self, obj):
+        map_serializer = {
+            'city': GeocodeAdminSerializer,
+            'street': GeocodeAddressSerializer,
+            'house': GeocodeAddressSerializer,
+            'poi': GeocodePoiSerializer,
+            'public_transport:stop_area': GeocodeStopAreaSerializer
+        }
         res = []
         for feature in obj.get('features', {}):
             type_ = feature.get('properties', {}).get('geocoding', {}).get('type')
-            if type_ == 'city':
-                res.append(GeocodeAdminSerializer(feature).data)
-            elif type_ in ('street', 'house'):
-                res.append(GeocodeAddressSerializer(feature).data)
-            elif type_ == 'poi':
-                res.append(GeocodePoiSerializer(feature).data)
-            elif type_ == 'public_transport:stop_area':
-                res.append(GeocodeStopAreaSerializer(feature).data)
+            if not type_ or type_ not in map_serializer:
+                abort(404, message='Unknown places type {}'.format(type_))
+            res.append(map_serializer[type_](feature).data)
         return res
