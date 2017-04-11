@@ -90,3 +90,45 @@ class LiteralField(serpy.Field):
 
     def as_getter(self, serializer_field_name, serializer_cls):
         return lambda *args, **kwargs: self.value
+
+
+def flatten(obj):
+    new_obj = {}
+    for key, value in obj.items():
+        if type(value) == dict:
+            tmp = {'.'.join([key, _key]): _value for _key, _value in flatten(value).items()}
+            new_obj.update(tmp)
+        else:
+            new_obj[key] = value
+    return new_obj
+
+
+def str_to_int(value, default=None):
+    try:
+        return int(value)
+    except:
+        return default
+
+
+class NestedPropertyField(serpy.Field):
+    def as_getter(self, serializer_field_name, serializer_cls):
+        return lambda v: self.get_property(v, self.attr)
+
+    def get_property(self, obj, path):
+        new_obj = flatten(obj)
+        if path in new_obj:
+            return new_obj[path]
+        else:
+            return None
+
+
+class IntNestedPropertyField(serpy.Field):
+    def as_getter(self, serializer_field_name, serializer_cls):
+        return lambda v: self.get_property(v, self.attr)
+
+    def get_property(self, obj, path):
+        new_obj = flatten(obj)
+        if path in new_obj:
+            return str_to_int(new_obj[path])
+        else:
+            return None
