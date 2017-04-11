@@ -20,11 +20,33 @@ The only arguments are the ones of [paging](#paging).
 ### Accesses
 
 | url | Result |
-|----------------------------------------------|-------------------------------------|
+|-----------------------------------------|-------------------------------------|
 | `coverage`                              | List of the areas covered by navitia|
 | `coverage/{region_id}`                  | Information about a specific region |
 | `coverage/{lon;lat}`                    | Information about a specific region |
 
+### Fields
+
+| Field                | Type                       | Description                                |
+|----------------------|----------------------------|--------------------------------------------|
+|id                    |string                      | Identifier of the coverage                 |
+|name                  |string                      | Name of the coverage                       |
+|shape                 |string                      | GeoJSON of the shape of the coverage       |
+|dataset_created_at    |[iso-date-time](#iso-date-time) | Creation date of the dataset           |
+|start_production_date |[iso-date](#iso-date)       | Beginning of the production period. We only have data on this production period |
+|end_production_date   |[iso-date](#iso-date)       | End of the production period. We only have data on this production period |
+
+#### Production period
+
+The production period is the validity period of the coverage's data.
+
+There is no data outside this production period.
+
+This production period cannot exceed one year.
+
+<aside class="notice">
+Navitia need transportation data to work and those are very date dependant. To check that a coverage has some data for a given date, you need to check the production period of the coverage.
+</aside>
 
 <a name="datasets"></a>Datasets
 -------------------------------
@@ -279,7 +301,7 @@ For example
 
 <https://api.navitia.io/v1/coverage/fr-nw/networks/network:lila/lines>
 
-<https://api.navitia.io/v1/coverage/fr-nw/networks/network:Lignes18/lines?odt_level=scheduled>
+<https://api.navitia.io/v1/coverage/fr-nw/networks/network:irigo/lines?odt_level=scheduled>
 
 #### distance
 
@@ -300,14 +322,14 @@ as headsign (on vehicle journey itself or at a stop time).
 
 Examples:
 
--   <https://api.navitia.io/v1/coverage/fr-idf/vehicle_journeys?headsign=CANE>
--   <https://api.navitia.io/v1/coverage/fr-idf/stop_areas?headsign=CANE>
+-   <https://api.navitia.io/v1/coverage/fr-idf/vehicle_journeys?headsign=PADO>
+-   <https://api.navitia.io/v1/coverage/fr-idf/stop_areas?headsign=PADO>
 
 
 <aside class="warning">
     This last request gives the stop areas used by the vehicle
-    journeys containing the headsign CANE, <b>not</b> the stop areas where it
-    exists a stop time with the headsign CANE.
+    journeys containing the headsign PADO, <b>not</b> the stop areas where it
+    exists a stop time with the headsign PADO.
 </aside>
 
 #### since / until
@@ -319,7 +341,7 @@ period. Both parameters "until" and "since" are optional.
 
 Example:
 
--   Getting every active New Jersey vehicles between 12h00 and 12h01, on a specific date <https://api.navitia.io/v1/coverage/us-ny/networks/network:newjersey/vehicle_journeys?since=20160503T120000&until=20160503T120100>
+-   Getting every active New Jersey vehicles between 12h00 and 12h01, on a specific date <https://api.navitia.io/v1/coverage/us-ny/networks/network:newjersey/vehicle_journeys?since=20170407T120000&until=20170407T120100>
 -   Getting every active disruption on "Bretagne" for a specific date <http://api.navitia.io/v1/coverage/fr-bre/disruptions?since=20170206000000&until=20170206235959>
 
 <aside class="warning">
@@ -398,8 +420,8 @@ The filter format is `filter={collection_name}.has_code({code_type},{code_value}
 Examples :
 
 -   <https://api.navitia.io/v1/coverage/fr-sw/stop_points?filter=stop_point.has_code(source,5852)>
--   <https://api.navitia.io/v1/coverage/fr-sw/stop_areas?filter=stop_area.has_code(gtfs_stop_code,1)>
--   <https://api.navitia.io/v1/coverage/fr-sw/lines?filter=line.has_code(source,11821949021891615)>
+-   <https://api.navitia.io/v1/coverage/fr-sw/stop_areas?filter=stop_area.has_code(gtfs_stop_code,1303)>
+-   <https://api.navitia.io/v1/coverage/fr-sw/lines?filter=line.has_code(source,11821949021891619)>
 
 <aside class="warning">
     these ids (which are not Navitia ids) may not be unique. you will have to manage a tuple in response.
@@ -909,7 +931,7 @@ The [isochrones](#isochrones) service exposes another response structure, which 
 |-----------|-------------------------|---------------|----------------------------------------------------------------------------------------|---------------|
 | nop       | from                    | id            | The id of the departure of your journey. If none are provided an isochrone is computed |               |
 | nop       | to                      | id            | The id of the arrival of your journey. If none are provided an isochrone is computed   |               |
-| nop       | datetime                | [iso-date-time](#iso-date-time) | Date and time to go                                                  | now           |
+| nop       | datetime                | [iso-date-time](#iso-date-time) | Date and time to go.<br>Note: the datetime must be in the [coverage's publication period](#coverage)                                                   | now           |
 | nop       | datetime_represents     | string        | Can be `departure` or `arrival`.<br>If `departure`, the request will retrieve journeys starting after datetime.<br>If `arrival` it will retrieve journeys arriving before datetime.                      | departure     |
 | nop       | <a name="traveler-type"></a>traveler_type | enum | Define speeds and accessibility values for different kind of people.<br>Each profile also automatically determines appropriate first and last section modes to the covered area. Note: this means that you might get car, bike, etc fallback routes even if you set `forbidden_uris[]`! You can overload all parameters (especially speeds, distances, first and last modes) by setting all of them specifically. We advise that you don't rely on the traveler_type's fallback modes (`first_section_mode[]` and `last_section_mode[]`) and set them yourself.<br><div data-collapse><p>enum values:</p><ul><li>standard</li><li>slow_walker</li><li>fast_walker</li><li>luggage</li><li>wheelchair</li></ul></div>| standard      |
 | nop       | data_freshness          | enum          | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> _**when using the following parameter**_ "&data_freshness=base_schedule" <br> you can get disrupted journeys in the response. You can then display the disruption message to the traveler and make a realtime request to get a new undisrupted solution.   | base_schedule |
