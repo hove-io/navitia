@@ -235,6 +235,34 @@ def import_autocomplete(files, autocomplete_instance, async=True, backup_file=Tr
 
 
 @celery.task()
+def import_in_mimir(files, instance, async=True):
+    """
+    Import pt data stops to autocomplete
+    """
+    current_app.logger.debug("Import pt data to mimir")
+    job = models.Job()
+    actions = []
+    job.instance = instance
+    job.send_to_mimir = True
+    instance_config = load_instance_config(instance.name)
+    models.db.session.add(job)
+    models.db.session.commit()
+
+    for action in actions:
+        action.kwargs['job_id'] = job.id
+
+    actions.append(stops2mimir.si(instance_config, files, job.id, None))
+
+    actions.append(finish_job.si(job.id))
+    if async:
+        return chain(*actions).delay()
+    else:
+        # all job are run in sequence and import_in_mimir will only return when all the jobs are finish
+        return chain(*actions).apply()
+    logger.info('last datasets reimport finished for %s', instance.name)
+
+
+@celery.task()
 def update_autocomplete():
     current_app.logger.debug("Update autocomplete data")
     autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
