@@ -179,4 +179,4 @@ class TestPlaces(AbstractTestFixture):
         """test that a non existent addresse"""
         place_id = "-1.5348252000000002;47.2554241"
         response, status = self.query_region("places/{}".format(place_id), check=False)
-        eq_(response["error"]["message"], u'Unable to find place: coord:-1.5348252000000002:47.2554241')
+        eq_(response["error"]["message"], u'Unable to find place: -1.5348252000000002;47.2554241')

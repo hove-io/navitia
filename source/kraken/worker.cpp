@@ -502,19 +502,13 @@ streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams& reques
     return result;
 }
 
-
 void Worker::place_uri(const pbnavitia::PlaceUriRequest &request) {
 
     const auto* data = this->pb_creator.data;
-    if(request.uri().size() > 6 && request.uri().substr(0, 6) == "coord:") {
-        type::EntryPoint ep(type::Type_e::Coord, request.uri());
-        type::GeographicalCoord  coord;
-        try{
-            coord = coord_of_entry_point(ep, *data);
-        }catch(const navitia::coord_conversion_exception& e) {
-            this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());
-            return;
-        }
+    if (type::EntryPoint::is_coord(request.uri())) {
+        auto ep = type::EntryPoint(type::Type_e::Coord, request.uri());
+        type::GeographicalCoord coord = ep.coordinates;
+
         try{ 
             auto address = this->pb_creator.data->geo_ref->nearest_addr(coord);
             const auto& way_coord = WayCoord(address.second, coord, address.first);

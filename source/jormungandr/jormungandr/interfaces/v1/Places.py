@@ -202,7 +202,7 @@ class PoiField(fields.Raw):
 
         # TODO add address, properties attributes
         res = {
-            "id": '{};{}'.format(lon, lat),
+            "id": geocoding.get('id'),
             "coord": {
                 "lon": lon,
                 "lat": lat,
@@ -259,7 +259,7 @@ geocode_addr = {
 geocode_poi = {
     "embedded_type": Lit("poi"),
     "quality": Lit(0),
-    "id": CoordId,
+    "id": fields.String(attribute='properties.geocoding.id'),
     "name": fields.String(attribute='properties.geocoding.label'),
     "poi": PoiField()
 }
@@ -421,7 +421,7 @@ class PlaceUri(ResourceUri):
             authentication.check_access_to_global_places(user)
             autocomplete = global_autocomplete.get('bragi')
             if autocomplete:
-                response = autocomplete.get_uri(args["uri"], instance=None)
+                response = autocomplete.get_by_uri(args["uri"], instance=None)
             else:
                 raise TechnicalError('world wide autocompletion service not available')
 

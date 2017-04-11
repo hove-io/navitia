@@ -31,6 +31,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from abc import abstractmethod, ABCMeta
+from jormungandr.exceptions import UnknownObject
 
 
 class AbstractAutocomplete(object):
@@ -44,13 +45,34 @@ class AbstractAutocomplete(object):
         pass
 
     @abstractmethod
-    def get_uri(self, uri, instance=None, current_datetime=None):
+    def get_by_uri(self, uri, instance=None, current_datetime=None):
+        """
+        look for an object with its uri
+
+        if nothing is found, raise an ObjectUnkown exception
+        :return the list of objects found
+        """
         pass
 
     @abstractmethod
     def geo_status(self, instance):
         pass
 
+    def get_object_by_uri(self, uri, instance=None, current_datetime=None):
+        """
+        same as get_by_uri, but more user friendly, return the object or none if nothing was found
+        """
+        details = None
+        try:
+            details = self.get_by_uri(uri, instance=instance, current_datetime=current_datetime)
+        except UnknownObject:
+            pass
+
+        if not details:
+            # impossible to find the object
+            return None
+
+        return details.get('places', [None])[0]
 
 class GeoStatusResponse(object):
     def __init__(self):

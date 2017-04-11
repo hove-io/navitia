@@ -32,6 +32,7 @@ from copy import deepcopy
 import itertools
 import logging
 from flask.ext.restful import abort
+from flask import g
 from jormungandr.scenarios import simple, journey_filter, helpers
 from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, \
     get_or_default, fill_uris, gen_all_combin, get_pseudo_duration, mode_weight
@@ -46,6 +47,8 @@ from jormungandr.scenarios.simple import get_pb_data_freshness
 import gevent, gevent.pool
 import flask
 from jormungandr import app
+from jormungandr.autocomplete.geocodejson import GeocodeJson
+from jormungandr import global_autocomplete
 
 SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
 JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
@@ -695,6 +698,30 @@ def merge_responses(responses):
     return merged_response
 
 
+def get_kraken_id(entrypoint_detail):
+    """
+    returns a usable id for kraken from the entrypoint detail
+    returns None if the original ID needs to be kept
+    """
+    if not entrypoint_detail:
+        # impossible to find the object
+        return None
+
+    emb_type = entrypoint_detail.get('embedded_type')
+    if emb_type in ('stop_point', 'stop_area', 'administrative_region'):
+        # for those object, we need to keep the original id, as there are specific treatment to be done
+        return None
+
+    # for the other objects the id is the object coordinated
+    coord = entrypoint_detail.get(emb_type, {}).get('coord')
+
+    if not coord:
+        # no coordinate, we keep the original id
+        return None
+
+    return '{};{}'.format(coord['lon'], coord['lat'])
+
+
 class Scenario(simple.Scenario):
     """
     TODO: a bit of explanation about the new scenario
@@ -707,6 +734,16 @@ class Scenario(simple.Scenario):
     def fill_journeys(self, request_type, api_request, instance):
 
         krakens_call = get_kraken_calls(api_request)
+
+        # sometimes we need to change the entrypoint id (eg if the id is from another autocomplete system)
+        origin_detail = self.get_entrypoint_detail(api_request.get('origin'), instance)
+        destination_detail = self.get_entrypoint_detail(api_request.get('destination'), instance)
+        # we store the origin/destination detail in g to be able to use them after the marshall
+        g.origin_detail = origin_detail
+        g.destination_detail = destination_detail
+
+        api_request['origin'] = get_kraken_id(origin_detail) or api_request.get('origin')
+        api_request['destination'] = get_kraken_id(destination_detail) or api_request.get('destination')
 
         request = deepcopy(api_request)
         min_asked_journeys = get_or_default(request, 'min_nb_journeys', 1)
@@ -763,6 +800,7 @@ class Scenario(simple.Scenario):
         resp = []
         logger = logging.getLogger(__name__)
         futures = []
+
         def worker(dep_mode, arr_mode, instance, request, request_id):
             return (dep_mode, arr_mode, instance.send_and_receive(request, request_id=request_id))
 
@@ -859,3 +897,19 @@ class Scenario(simple.Scenario):
 
         one_second = 1
         return best.arrival_date_time - one_second
+
+    def get_entrypoint_detail(self, entrypoint, instance):
+        logging.info("calling autocomplete {} for {}".format(instance.autocomplete, entrypoint))
+        detail = instance.autocomplete.get_object_by_uri(entrypoint, instance=instance)
+
+        if detail:
+            return detail
+
+        if not isinstance(instance.autocomplete, GeocodeJson):
+            bragi = global_autocomplete.get('bragi')
+            if bragi:
+                # if the instance's autocomplete is not a geocodejson autocomplete, we also check in the
+                # global autocomplete instance
+                return bragi.get_object_by_uri(entrypoint, instance=instance)
+
+        return None

@@ -30,6 +30,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from navitiacommon import request_pb2, response_pb2, type_pb2
 import logging
+from jormungandr import utils
 
 
 class Kraken(object):
@@ -45,17 +46,16 @@ class Kraken(object):
         response = self.instance.send_and_receive(req)
         if response.places:
             return response.places[0]
-        if place.startswith("coord:"):
+        if utils.is_coord(place):
             # In some cases, the given "from" is not always a findable address by kraken
             # we just forward the given coord and return a pt object
-            _, lon, lat = place.split(':')
-            uri = '{};{}'.format(lon, lat)
+            lon, lat = utils.get_lon_lat(place)
             p = type_pb2.PtObject()
-            p.uri = uri
+            p.uri = place
             p.embedded_type = type_pb2.ADDRESS
             p.address.coord.lon = float(lon)
             p.address.coord.lat = float(lat)
-            p.address.uri = uri
+            p.address.uri = place
             return p
         return None
 
