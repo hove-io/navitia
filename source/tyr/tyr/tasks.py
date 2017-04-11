@@ -243,7 +243,6 @@ def import_in_mimir(files, instance, async=True):
     job = models.Job()
     actions = []
     job.instance = instance
-    job.send_to_mimir = True
     instance_config = load_instance_config(instance.name)
     models.db.session.add(job)
     models.db.session.commit()
