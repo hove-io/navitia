@@ -27,17 +27,13 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from functools import wraps
-from flask.ext.restful import fields, marshal
+from flask.ext.restful import fields
 from copy import deepcopy
-from collections import OrderedDict, defaultdict
 import datetime
 import logging
 from flask.globals import g
 import pytz
-from jormungandr import utils
 from jormungandr.interfaces.v1.make_links import create_internal_link, create_external_link
-from jormungandr.timezone import get_timezone
 from jormungandr.utils import timestamp_to_str
 from navitiacommon import response_pb2, type_pb2
 import ujson
