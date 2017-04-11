@@ -53,7 +53,6 @@ class Scenario(new_default.Scenario):
 
         requested_dep_modes = {mode for mode, _ in krakens_call}
         requested_arr_modes = {mode for _, mode in krakens_call}
-        res = []
 
         logger.debug('requesting places by uri orig: %s dest %s', request['origin'], request['destination'])
 
@@ -140,7 +139,8 @@ class Scenario(new_default.Scenario):
                                                              dest_fallback_durations_pool=dest_fallback_durations_pool,
                                                              request=request)
 
-        # At the stage, all types of journeys have been computed
+        # At the stage, all types of journeys have been computed thus we build the final result here
+        res = []
 
         for mode in requested_dep_modes:
             dp = direct_paths_by_mode.get(mode).wait_and_get()
@@ -148,7 +148,7 @@ class Scenario(new_default.Scenario):
                 res.append(dp)
 
         # completed_pt_journeys may contain None and res must be a list of protobuf journey
-        res.extend([j for j in completed_pt_journeys if j])
+        res.extend((j for j in completed_pt_journeys if j))
 
         check_final_results_or_raise(res, orig_fallback_durations_pool, dest_fallback_durations_pool)
 

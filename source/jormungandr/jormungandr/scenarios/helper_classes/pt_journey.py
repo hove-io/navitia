@@ -26,7 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-import Future
+import helper_future
 from jormungandr import utils
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from navitiacommon import response_pb2
@@ -97,7 +97,7 @@ class PtJourney:
         return resp
 
     def _async_request(self):
-        self._value = Future.create_future(self._do_request)
+        self._value = helper_future.create_future(self._do_request)
 
     def wait_and_get(self):
         return self._value.wait_and_get()

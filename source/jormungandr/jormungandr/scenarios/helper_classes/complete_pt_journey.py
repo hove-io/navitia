@@ -26,7 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-import Future
+import helper_future
 from helper_utils import complete_pt_journey, compute_fallback
 
 
@@ -55,15 +55,15 @@ def wait_and_complete_pt_journey(requested_orig_obj,
     futures = []
     for elem in pt_journey_pool:
 
-        f = Future.create_future(complete_pt_journey,
-                                 requested_orig_obj=requested_orig_obj,
-                                 requested_dest_obj=requested_dest_obj,
-                                 pt_journey_pool_elem=elem,
-                                 streetnetwork_path_pool=streetnetwork_path_pool,
-                                 orig_places_free_access=orig_places_free_access,
-                                 dest_places_free_access=dest_places_free_access,
-                                 orig_fallback_durations_pool=orig_fallback_durations_pool,
-                                 dest_fallback_durations_pool=dest_fallback_durations_pool)
+        f = helper_future.create_future(complete_pt_journey,
+                                        requested_orig_obj=requested_orig_obj,
+                                        requested_dest_obj=requested_dest_obj,
+                                        pt_journey_pool_elem=elem,
+                                        streetnetwork_path_pool=streetnetwork_path_pool,
+                                        orig_places_free_access=orig_places_free_access,
+                                        dest_places_free_access=dest_places_free_access,
+                                        orig_fallback_durations_pool=orig_fallback_durations_pool,
+                                        dest_fallback_durations_pool=dest_fallback_durations_pool)
         futures.append(f)
     # return a generator, so we block the main thread later when they are evaluated
     return (f.wait_and_get() for f in futures)

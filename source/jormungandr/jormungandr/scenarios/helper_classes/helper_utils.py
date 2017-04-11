@@ -29,7 +29,7 @@
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.utils import PeriodExtremity, SectionSorter
 from navitiacommon import response_pb2
-from Exceptions import *
+from helper_exceptions import *
 import uuid
 import copy
 import logging

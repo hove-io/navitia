@@ -26,9 +26,10 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-import Future
+import helper_future
 from navitiacommon import response_pb2
 from collections import namedtuple
+from math import sqrt
 from helper_utils import get_max_fallback_duration
 import logging
 
@@ -75,7 +76,6 @@ class FallbackDurations:
         self._async_request()
 
     def _get_duration(self, resp, place):
-        from math import sqrt
         map_response = {
             response_pb2.reached: resp.duration,
             # Calculate duration
@@ -95,7 +95,7 @@ class FallbackDurations:
         proximities_by_crowfly = self._proximities_by_crowfly_pool.wait_and_get(self._mode)
 
         # if a place is freely accessible, there is no need to compute it's access duration in isochrone
-        places_isochrone = [p for p in proximities_by_crowfly if p.uri not in all_free_access]
+        places_isochrone = (p for p in proximities_by_crowfly if p.uri not in all_free_access)
 
         result = {}
         # Since we have already places that have free access, we add them into the result
@@ -144,7 +144,7 @@ class FallbackDurations:
         return result
 
     def _async_request(self):
-        self._value = Future.create_future(self._do_request)
+        self._value = helper_future.create_future(self._do_request)
 
     def wait_and_get(self):
         return self._value.wait_and_get() if self._value else None
