@@ -89,7 +89,8 @@ class ProximitiesByCrowflyPool:
         """
         A ProximitiesByCrowflyPool is a set of ProximitiesByCrowfly grouped by mode
 
-        :param instance: coverage instance
+        :param instance: instance of the coverage, all outside services callings pass through it(street network,
+                         auto completion)
         :param requested_place_obj: a protobuf object, returned by PlaceUri
         :param modes: a set of modes
         :param request: original request

@@ -40,6 +40,12 @@ class PlacesFreeAccess:
     stop_points that are accessible freely from a given place: odt, stop_points of a stop_area, etc.
     """
     def __init__(self, instance, requested_place_obj):
+        """
+
+        :param instance: instance of the coverage, all outside services callings pass through it(street network,
+                         auto completion)
+        :param requested_place_obj:
+        """
         self._instance = instance
         self._requested_place_obj = requested_place_obj
         self._value = None

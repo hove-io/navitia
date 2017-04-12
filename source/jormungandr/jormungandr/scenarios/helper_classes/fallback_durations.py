@@ -54,7 +54,8 @@ class FallbackDurations:
                  max_duration_to_pt, request, speed_switcher):
         """
 
-        :param instance:
+        :param instance: instance of the coverage, all outside services callings pass through it(street network,
+                         auto completion)
         :param requested_place_obj: departure protobuffer obj, returned by kraken
         :param mode: access mode
         :param proximities_by_crowfly_pool: arrival stop_points, precomputed by crowfly

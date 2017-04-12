@@ -37,7 +37,8 @@ class StreetNetworkPath:
     """
     def __init__(self, instance, orig_obj, dest_obj, mode, fallback_extremity, request, streetnetwork_path_type):
         """
-        :param instance: street network connector, may be kraken, valhalla, etc.
+        :param instance: instance of the coverage, all outside services callings pass through it(street network,
+                         auto completion)
         :param orig_obj: proto obj
         :param dest_obj: proto obj
         :param mode: street network mode, should be one of ['walking', 'bike', 'bss', 'car']
