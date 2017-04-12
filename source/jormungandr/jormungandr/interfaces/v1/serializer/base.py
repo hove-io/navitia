@@ -93,6 +93,8 @@ class LiteralField(serpy.Field):
 
 
 def flatten(obj):
+    if type(obj) != dict:
+        raise ValueError("Invalid argument")
     new_obj = {}
     for key, value in obj.items():
         if type(value) == dict:
@@ -101,6 +103,14 @@ def flatten(obj):
         else:
             new_obj[key] = value
     return new_obj
+
+
+def value_by_path(obj, path, default=None):
+    new_obj = flatten(obj)
+    if new_obj and path in new_obj:
+        return new_obj[path]
+    else:
+        return default
 
 
 def str_to_int(value, default=None):
@@ -115,11 +125,7 @@ class NestedPropertyField(serpy.Field):
         return lambda v: self.get_property(v, self.attr)
 
     def get_property(self, obj, path):
-        new_obj = flatten(obj)
-        if path in new_obj:
-            return new_obj[path]
-        else:
-            return None
+        return value_by_path(obj, path)
 
 
 class IntNestedPropertyField(serpy.Field):
