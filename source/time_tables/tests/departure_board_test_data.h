@@ -8,6 +8,7 @@
 #include "georef/adminref.h"
 
 namespace ntest = navitia::test;
+namespace bg = boost::gregorian;
 
 /**
  * basic data set for departure board
@@ -63,6 +64,15 @@ struct departure_board_fixture {
         b.vj("L")("S39", "09:11"_t)("S42", "10:11"_t)("S43", "11:11"_t);
         b.lines.find("L")->second->properties["realtime_system"] = "KisioDigital";
 
+        b.vj("M","1111111")("M:s", "10:30"_t)("S11", "11:30"_t, "11:35"_t)("M:e", "12:30"_t);
+        b.vj("P", "11111").uri("vjP:1")("stopP1", "23:40"_t)("stopP2", "24:04"_t, "24:06"_t)("stopP3", "24:13"_t);
+        b.vj("Q", "11111").uri("vjQ:1")("stopQ1", "23:40"_t)("stopQ2", "23:44"_t, "23:46"_t)("stopQ3", "23:55"_t);
+
+        b.frequency_vj("l:freq", "18:00"_t, "19:00"_t, "00:30"_t).uri("vj:freq")
+            ("stopf1", "18:00"_t, "18:00"_t, std::numeric_limits<uint16_t>::max(), false, true, 0, 300)
+            ("stopf2", "18:05"_t, "18:10"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 900)
+            ("stopf3", "18:10"_t, "18:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
+
         navitia::georef::Admin* ad = new navitia::georef::Admin();
         ad->name = "Quimper";
         ad->uri = "Quimper";
@@ -81,6 +91,8 @@ struct departure_board_fixture {
         b.data->pt_data->build_uri();
         b.data->complete();
         b.data->compute_labels();
+
+        b.data->meta->production_date = bg::date_period(bg::date(2016,1,1), bg::days(5));
 
         sp_ptr = b.data->pt_data->stop_points_map["C:S0"];
         b.data->pt_data->codes.add(sp_ptr, "KisioDigital", "KisioDigital_C:S0");
@@ -116,6 +128,53 @@ struct departure_board_fixture {
             });
         navitia::handle_realtime("delay_vj3", "20160101T1337"_dt, trip_update3, *b.data);
 
+
+        //
+        //      20160103                        |    20160104
+        //                                      |
+        //      S31                             |         S32             S33
+        //      23h40                           |     24h04 24h06        24h13
+        //  -----|------------------------------|------|-----|--------------|-          Base_schedule
+        //                                      |
+        //                                      |
+        //       S31                            |              S32               S33
+        //      23h40                           |          00h08 00h10          24h17
+        //  -----|------------------------------|------------|-----|--------------|-    Realtime
+        //                                      |
+        //                                      |
+        //
+        //
+        //
+        auto trip_update = ntest::make_delay_message("vjP:1", "20160103", {
+                std::make_tuple("stopP1", "20160103T2340"_pts, "20160103T2340"_pts),
+                std::make_tuple("stopP2", "20160104T0008"_pts, "20160104T0010"_pts),
+                std::make_tuple("stopP3", "20160104T0017"_pts, "20160104T0017"_pts),
+            });
+        navitia::handle_realtime("bib", "20160101T1337"_dt, trip_update, *b.data);
+
+        //
+        //      20160103                    |    20160104
+        //                                  |
+        //      Q1            Q2            |
+        //      23h40    23h44 23h46        |
+        //  -----|--------|-----|----|------|--------------------          Base_schedule
+        //                          23h55   |
+        //                           Q3     |
+        //                                  |   Q1           Q2                Q3
+        //                                  | 00h01     00h05 00h06          00h16
+        //  --------------------------------|--|----------|-----|--------------|-    Realtime
+        //                                  |
+        //                                  |
+        //
+        //
+        //
+        // 21m
+        auto trip_update_q = ntest::make_delay_message("vjQ:1", "20160103", {
+                std::make_tuple("stopQ1", "20160104T0001"_pts, "20160104T0001"_pts),
+                std::make_tuple("stopQ2", "20160104T0005"_pts, "20160104T0006"_pts),
+                std::make_tuple("stopQ3", "20160104T0016"_pts, "20160104T0016"_pts),
+            });
+        navitia::handle_realtime("Q", "20160101T1337"_dt, trip_update_q, *b.data);
         b.data->build_raptor();
         b.data->build_uri();
     }

@@ -49,25 +49,11 @@ namespace {
 struct PassagesVisitor {
     pbnavitia::API api_pb;
     const type::Data& data;
-    bool clockwise() const {
-        switch (api_pb) {
-        case pbnavitia::NEXT_DEPARTURES:
-        case pbnavitia::NEXT_ARRIVALS:
-            return true;
-        case pbnavitia::PREVIOUS_DEPARTURES:
-        case pbnavitia::PREVIOUS_ARRIVALS:
-            return false;
-        default:
-            throw std::logic_error("bad api_pb in passages");
-        }
-    }
     StopEvent stop_event() const {
         switch (api_pb) {
         case pbnavitia::NEXT_DEPARTURES:
-        case pbnavitia::PREVIOUS_DEPARTURES:
             return StopEvent::pick_up;
         case pbnavitia::NEXT_ARRIVALS:
-        case pbnavitia::PREVIOUS_ARRIVALS:
             return StopEvent::drop_off;
         default:
             throw std::logic_error("bad api_pb in passages");
@@ -151,7 +137,7 @@ void passages(PbCreator& pb_creator,
 
     const PassagesVisitor vis{api_pb, *pb_creator.data};
     RequestHandle handler(pb_creator, request, forbidden_uris,
-                          datetime, duration, {}, vis.clockwise());
+                          datetime, duration, {}, true);
 
     if(pb_creator.has_error()) {
         return;
@@ -165,8 +151,8 @@ void passages(PbCreator& pb_creator,
                                          *pb_creator.data, rt_level, accessibilite_params);
     size_t total_result = passages_dt_st.size();
     passages_dt_st = paginate(passages_dt_st, count, start_page);
-    auto sort_predicate = [&vis](routing::datetime_stop_time dt1, routing::datetime_stop_time dt2) {
-                    return (vis.clockwise() ? dt1.first < dt2.first : dt1.first > dt2.first);
+    auto sort_predicate = [](routing::datetime_stop_time dt1, routing::datetime_stop_time dt2) {
+                    return dt1.first < dt2.first;
                 };
     std::sort(passages_dt_st.begin(), passages_dt_st.end(), sort_predicate);
 
@@ -179,17 +165,26 @@ void passages(PbCreator& pb_creator,
             passage = pb_creator.add_next_arrivals();
         }
         pb_creator.action_period = pt::time_period(base_ptime, pt::seconds(1));
-        auto passage_date = navitia::to_posix_timestamp(dt_stop_time.first, *pb_creator.data);
-        passage->mutable_stop_date_time()->set_departure_date_time(passage_date);
-        passage->mutable_stop_date_time()->set_arrival_date_time(passage_date);
+
+        auto departure_dt = get_date_time(vis.stop_event(), dt_stop_time.second, dt_stop_time.second,
+                                          base_ptime, true);
+        auto arrival_dt = get_date_time(vis.stop_event(), dt_stop_time.second, dt_stop_time.second,
+                                        base_ptime, false);
+
+        passage->mutable_stop_date_time()->set_departure_date_time(navitia::to_posix_timestamp(departure_dt));
+        passage->mutable_stop_date_time()->set_arrival_date_time(navitia::to_posix_timestamp(arrival_dt));
 
         //find base datetime
         auto base_st = get_base_stop_time(dt_stop_time.second);
         if (base_st != nullptr) {
-            auto base_departure_dt = get_base_dt(dt_stop_time.second, base_st, base_ptime, true);
-            auto base_arrival_dt = get_base_dt(dt_stop_time.second, base_st, base_ptime, false);
-            passage->mutable_stop_date_time()->set_base_departure_date_time(navitia::to_posix_timestamp(base_departure_dt));
-            passage->mutable_stop_date_time()->set_base_arrival_date_time(navitia::to_posix_timestamp(base_arrival_dt));
+            auto base_departure_dt = get_date_time(vis.stop_event(), dt_stop_time.second, base_st,
+                                                   base_ptime, true);
+            auto base_arrival_dt = get_date_time(vis.stop_event(), dt_stop_time.second, base_st,
+                                                 base_ptime, false);
+            passage->mutable_stop_date_time()->set_base_departure_date_time(
+                        navitia::to_posix_timestamp(base_departure_dt));
+            passage->mutable_stop_date_time()->set_base_arrival_date_time(
+                        navitia::to_posix_timestamp(base_arrival_dt));
         }
         pb_creator.fill(dt_stop_time.second, passage->mutable_stop_date_time()->mutable_properties(), 0);
 
