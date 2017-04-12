@@ -26,22 +26,8 @@
 # www.navitia.io
 
 import serpy
-from base import LiteralField, NestedPropertyField, IntNestedPropertyField
+from base import LiteralField, NestedPropertyField, IntNestedPropertyField, value_by_path
 from flask.ext.restful import abort
-
-
-def get_lon_lat(obj):
-    if not obj or not obj.get('geometry') or not obj.get('geometry').get('coordinates'):
-        return None, None
-
-    coordinates = obj.get('geometry', {}).get('coordinates', [])
-    if len(coordinates) == 2:
-        lon = str(coordinates[0])
-        lat = str(coordinates[1])
-    else:
-        lon = None
-        lat = None
-    return lon, lat
 
 
 class CoordField(serpy.Field):
@@ -49,11 +35,11 @@ class CoordField(serpy.Field):
         return lambda obj: self.generate_coord_field(obj)
 
     def generate_coord_field(self, obj):
-        lon, lat = get_lon_lat(obj)
-        return {
-            "lat": lat,
-            "lon": lon,
-        }
+        coords = value_by_path(obj, 'geometry.coordinates')
+        res = {'lat': None, 'lon': None}
+        if coords and len(coords) >= 2:
+            res.update({'lat': coords[1], 'lon': coords[0]})
+        return res
 
 
 class CoordId(serpy.Field):
@@ -61,10 +47,10 @@ class CoordId(serpy.Field):
         return lambda obj: self.generate_coord_id(obj)
 
     def generate_coord_id(self, obj):
-        if not obj:
-            return None
-        lon, lat = get_lon_lat(obj)
-        return '{};{}'.format(lon, lat)
+        coords = value_by_path(obj, 'geometry.coordinates')
+        if coords and len(coords) >= 2:
+            return '{};{}'.format(coords[0], coords[1])
+        return None
 
 
 class SubAdministrativeRegionField(serpy.DictSerializer):
@@ -77,13 +63,12 @@ class SubAdministrativeRegionField(serpy.DictSerializer):
     zip_code = serpy.MethodField()
 
     def get_coord(self, obj):
-        coord = obj.get('coord', {})
-        lat = str(coord.get('lat')) if coord and coord.get('lat') else None
-        lon = str(coord.get('lon')) if coord and coord.get('lon') else None
-        return {
-            "lat": lat,
-            "lon": lon
-        }
+        lat = value_by_path(obj, 'coord.lat')
+        lon = value_by_path(obj, 'coord.lon')
+        res = {'lat': None, 'lon': None}
+        if lon and lat:
+            res.update({'lat': lat, 'lon': lon})
+        return res
 
     def get_zip_code(self, obj):
         zip_codes = obj.get('zip_codes', [])
@@ -163,7 +148,7 @@ class GeocodePoiSerializer(serpy.DictSerializer):
 class AddressSerializer(serpy.DictSerializer):
     id = CoordId()
     coord = CoordField()
-    house_number = serpy.MethodField()
+    house_number = IntNestedPropertyField(attr='properties.geocoding.housenumber')
     label = NestedPropertyField(attr='properties.geocoding.label')
     name = NestedPropertyField(attr='properties.geocoding.name')
     administrative_regions = serpy.MethodField()
@@ -172,15 +157,6 @@ class AddressSerializer(serpy.DictSerializer):
         geocoding = obj.get('properties', {}).get('geocoding', {})
 
         return [SubAdministrativeRegionField(r).data for r in geocoding.get('administrative_regions', [])]
-
-    def get_house_number(self, obj):
-        geocoding = obj.get('properties', {}).get('geocoding', {})
-        hn = 0
-        import re
-        numbers = re.findall(r'^\d+', geocoding.get('housenumber') or "0")
-        if len(numbers) > 0:
-            hn = numbers[0]
-        return int(hn)
 
 
 class GeocodeAddressSerializer(serpy.DictSerializer):
@@ -206,15 +182,6 @@ class StopAreaSerializer(serpy.DictSerializer):
         geocoding = obj.get('properties', {}).get('geocoding', {})
 
         return [SubAdministrativeRegionField(r).data for r in geocoding.get('administrative_regions', [])]
-
-    def get_house_number(self, obj):
-        geocoding = obj.get('properties', {}).get('geocoding', {})
-        hn = 0
-        import re
-        numbers = re.findall(r'^\d+', geocoding.get('housenumber') or "0")
-        if len(numbers) > 0:
-            hn = numbers[0]
-        return int(hn)
 
 
 class GeocodeStopAreaSerializer(serpy.DictSerializer):
