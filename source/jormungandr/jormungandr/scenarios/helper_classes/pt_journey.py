@@ -109,7 +109,7 @@ class _PtJourneySorter(object):
 
     With this sorter, the PtJourneyPool is sorted in a way from (likely) quickest computation to slowest computation.
     For instance, we assume that a journey starts with "walking" and ends with "walking" may be computed faster than
-    a journey starts with "bike" and ends with "bike" which is fatster than a journey starts with "car" and ends with
+    a journey starts with "bike" and ends with "bike" which is faster than a journey starts with "car" and ends with
     "car". This assumption is based on the fact that the computation of fallback durations for "walking" is much faster
     than for "bike" than for "car".
 

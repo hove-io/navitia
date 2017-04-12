@@ -112,11 +112,11 @@ def _extend_journey(pt_journey, fallback_dp, fallback_extremity):
     '''
     :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
     '''
-    alinged_fallback = _align_fallback_direct_path_datetime(fallback_dp, fallback_extremity)
-    pt_journey.duration += alinged_fallback.journeys[0].duration
+    aligned_fallback = _align_fallback_direct_path_datetime(fallback_dp, fallback_extremity)
+    pt_journey.duration += aligned_fallback.journeys[0].duration
     pt_journey.durations.total = pt_journey.duration
-    pt_journey.durations.walking += alinged_fallback.journeys[0].durations.walking
-    _extend_pt_sections_with_direct_path(pt_journey, alinged_fallback)
+    pt_journey.durations.walking += aligned_fallback.journeys[0].durations.walking
+    _extend_pt_sections_with_direct_path(pt_journey, aligned_fallback)
 
 
 def _build_from(requested_orig_obj, pt_journeys, dep_mode, streetnetwork_path_pool, orig_accessible_by_crowfly,
