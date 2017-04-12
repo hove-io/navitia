@@ -244,13 +244,13 @@ def import_in_mimir(files, instance, async=True):
     instance_config = load_instance_config(instance.name)
 
     for _file in files:
-        actions.append(stops2mimir.si(instance_config, _file, None))
+        filename = _file
 
     if async:
-        return chain(*actions).delay()
+        return chain(stops2mimir.si(instance_config, filename)).delay()
     else:
         # all job are run in sequence and import_in_mimir will only return when all the jobs are finish
-        return chain(*actions).apply()
+        return chain(stops2mimir.si(instance_config, filename)).apply()
 
 
 @celery.task()

@@ -580,6 +580,7 @@ def stops2mimir(self, instance_config, input, job_id=None, dataset_uid=None):
 
     Note: this is temporary, this will be done by tartare when tartare will be available
     """
+    # We don't have job_id while doing a reimport of all instances with import_stops_in_mimir = true
     if job_id:
         job = models.Job.query.get(job_id)
         instance = job.instance
@@ -588,7 +589,6 @@ def stops2mimir(self, instance_config, input, job_id=None, dataset_uid=None):
         logger = logging.getLogger("autocomplete")
     cnx_string = current_app.config['MIMIR_URL']
 
-    logger.exception('')
     working_directory = os.path.dirname(input)
 
     stops_file = os.path.join(working_directory, 'stops.txt')
