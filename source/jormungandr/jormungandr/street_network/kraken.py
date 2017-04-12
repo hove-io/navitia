@@ -33,7 +33,8 @@ import copy
 from jormungandr.exceptions import TechnicalError
 from navitiacommon import request_pb2, type_pb2
 from jormungandr.utils import get_uri_pt_object
-from jormungandr.street_network.street_network import AbstractStreetNetworkService, DirectPathType
+from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathType, \
+    StreetNetworkPathKey
 from jormungandr import utils
 
 class Kraken(AbstractStreetNetworkService):
@@ -64,7 +65,7 @@ class Kraken(AbstractStreetNetworkService):
         :param direct_path_type: we need to "invert" a direct path when it's a ending fallback by car if and only if
                                  it's returned by kraken. In other case, it's ignored
         """
-        should_invert_journey = (mode == 'car' and direct_path_type == DirectPathType.ENDING_FALLBACK)
+        should_invert_journey = (mode == 'car' and direct_path_type == StreetNetworkPathType.ENDING_FALLBACK)
         if should_invert_journey:
             pt_object_origin, pt_object_destination = pt_object_destination, pt_object_origin
 
@@ -131,3 +132,16 @@ class Kraken(AbstractStreetNetworkService):
             logging.getLogger(__name__).error('routing matrix query error {}'.format(res.error))
             raise TechnicalError('routing matrix fail')
         return res.sn_routing_matrix
+
+    def make_path_key(self, mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity):
+        """
+        :param orig_uri, dest_uri, mode: matters obviously
+        :param streetnetwork_path_type: whether it's a fallback at
+        the beginning, the end of journey or a direct path without PT also matters especially for car (to know if we
+        park before or after)
+        :param period_extremity: is a PeriodExtremity (a datetime and it's meaning on the
+        fallback period)
+        Nota: period_extremity is not taken into consideration so far because we assume that a
+        direct path from A to B remains the same even the departure time are different (no realtime)
+        """
+        return StreetNetworkPathKey(mode, orig_uri, dest_uri, streetnetwork_path_type, None)
