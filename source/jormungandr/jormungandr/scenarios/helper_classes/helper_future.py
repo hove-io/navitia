@@ -36,8 +36,9 @@ use concurrent.futures ) by creating a new future class of future and implementi
 'wait_and_get' and use that new class in 'create_future'
 """
 
+
 class GeventFuture:
-    _pool = gevent.pool.Pool(app.config.get('GREENLET_POOL_SIZE', 4))
+    _pool = gevent.pool.Pool(app.config.get('GREENLET_POOL_SIZE', 8))
 
     def __init__(self, fun, *args, **kwargs):
         self._future = self._pool.spawn(fun, *args, **kwargs)
