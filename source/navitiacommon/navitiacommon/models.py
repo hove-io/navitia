@@ -340,7 +340,7 @@ class Instance(db.Model):
         if family_type:
             family_types = family_types.filter(DataSet.family_type == family_type)
 
-        family_types = family_type.all()
+        family_types = family_types.all()
 
         result = []
         for family_type in family_types:

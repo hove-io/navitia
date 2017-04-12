@@ -71,10 +71,9 @@ def import_last_stop_dataset(instance_name, wait=True):
     logger = logging.getLogger(__name__)
     logger.info('we reimport to mimir the last dataset of %s, composed of: %s',
                 instance.name, files)
-    future = tasks.import_in_mimir(files, instance, async=wait)
+    future = tasks.import_in_mimir(files, instance)
     if wait and future:
         future.wait()
-    logger.info('last datasets reimport finished for %s', instance.name)
 
 
 @manager.command
