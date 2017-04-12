@@ -38,7 +38,7 @@ class CoordField(serpy.Field):
         coords = value_by_path(obj, 'geometry.coordinates')
         res = {'lat': None, 'lon': None}
         if coords and len(coords) >= 2:
-            res.update({'lat': coords[1], 'lon': coords[0]})
+            res.update({'lat': str(coords[1]), 'lon': str(coords[0])})
         return res
 
 
@@ -67,7 +67,7 @@ class SubAdministrativeRegionField(serpy.DictSerializer):
         lon = value_by_path(obj, 'coord.lon')
         res = {'lat': None, 'lon': None}
         if lon and lat:
-            res.update({'lat': lat, 'lon': lon})
+            res.update({'lat': str(lat), 'lon': str(lon)})
         return res
 
     def get_zip_code(self, obj):
@@ -148,10 +148,19 @@ class GeocodePoiSerializer(serpy.DictSerializer):
 class AddressSerializer(serpy.DictSerializer):
     id = CoordId()
     coord = CoordField()
-    house_number = IntNestedPropertyField(attr='properties.geocoding.housenumber')
+    house_number = serpy.MethodField()
     label = NestedPropertyField(attr='properties.geocoding.label')
     name = NestedPropertyField(attr='properties.geocoding.name')
     administrative_regions = serpy.MethodField()
+
+    def get_house_number(self, obj):
+        geocoding = obj.get('properties', {}).get('geocoding', {})
+        hn = 0
+        import re
+        numbers = re.findall(r'^\d+', geocoding.get('housenumber') or "0")
+        if len(numbers) > 0:
+            hn = numbers[0]
+        return int(hn)
 
     def get_administrative_regions(self, obj):
         geocoding = obj.get('properties', {}).get('geocoding', {})
@@ -170,7 +179,7 @@ class GeocodeAddressSerializer(serpy.DictSerializer):
         return AddressSerializer(obj).data
 
 
-class StopAreaSerializer(serpy.DictSerializer):
+class GeocodeStopAreaSerializer(serpy.DictSerializer):
     id = NestedPropertyField(attr='properties.geocoding.id')
     coord = CoordField()
     label = NestedPropertyField(attr='properties.geocoding.label')
@@ -192,7 +201,7 @@ class GeocodeStopAreaSerializer(serpy.DictSerializer):
     stop_area = serpy.MethodField()
 
     def get_stop_area(self, obj):
-        return StopAreaSerializer(obj).data
+        return GeocodeStopAreaSerializer(obj).data
 
 
 class GeocodePlacesSerializer(serpy.DictSerializer):
