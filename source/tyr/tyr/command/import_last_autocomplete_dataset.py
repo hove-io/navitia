@@ -67,14 +67,18 @@ def import_last_stop_dataset(instance_name, wait=True):
     if not instance:
         raise Exception("cannot find instance {}".format(instance_name))
 
-    files = [d.name for d in instance.last_datasets(1, 'pt')]
+    files = [d.name for d in instance.last_datasets(nb_dataset=1, family_type='pt')]
     logger = logging.getLogger(__name__)
     logger.info('we reimport to mimir the last dataset of %s, composed of: %s',
                 instance.name, files)
-    future = tasks.import_in_mimir(files, instance)
-    if wait and future:
-        future.wait()
-    logger.info('last datasets reimport finished for %s', instance.name)
+    if len(files) == 1:
+        _file = files[0]
+        future = tasks.import_in_mimir(_file, instance)
+        if wait and future:
+            future.wait()
+        logger.info('last datasets reimport finished for %s', instance.name)
+    else:
+        logger.info('No file to reimport to mimir the last dataset of %s', instance.name)
 
 
 @manager.command

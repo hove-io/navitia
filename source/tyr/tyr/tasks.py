@@ -235,22 +235,18 @@ def import_autocomplete(files, autocomplete_instance, async=True, backup_file=Tr
 
 
 @celery.task()
-def import_in_mimir(files, instance, async=True):
+def import_in_mimir(_file, instance, async=True):
     """
     Import pt data stops to autocomplete
     """
     current_app.logger.debug("Import pt data to mimir")
-    actions = []
     instance_config = load_instance_config(instance.name)
-
-    for _file in files:
-        filename = _file
-
+    action = stops2mimir.si(instance_config, _file)
     if async:
-        return chain(stops2mimir.si(instance_config, filename)).delay()
+        return action.delay()
     else:
         # all job are run in sequence and import_in_mimir will only return when all the jobs are finish
-        return chain(stops2mimir.si(instance_config, filename)).apply()
+        return action.apply()
 
 
 @celery.task()
