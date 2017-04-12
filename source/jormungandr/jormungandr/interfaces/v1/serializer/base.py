@@ -113,28 +113,10 @@ def value_by_path(obj, path, default=None):
         return default
 
 
-def str_to_int(value, default=None):
-    try:
-        return int(value)
-    except:
-        return default
-
-
 class NestedPropertyField(serpy.Field):
     def as_getter(self, serializer_field_name, serializer_cls):
-        return lambda v: self.get_property(v, self.attr)
-
-    def get_property(self, obj, path):
-        return value_by_path(obj, path)
+        return lambda v: value_by_path(v, self.attr)
 
 
-class IntNestedPropertyField(serpy.Field):
-    def as_getter(self, serializer_field_name, serializer_cls):
-        return lambda v: self.get_property(v, self.attr)
-
-    def get_property(self, obj, path):
-        new_obj = flatten(obj)
-        if path in new_obj:
-            return str_to_int(new_obj[path])
-        else:
-            return None
+class IntNestedPropertyField(NestedPropertyField):
+    to_value = staticmethod(int)

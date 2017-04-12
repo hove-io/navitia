@@ -179,7 +179,7 @@ class GeocodeAddressSerializer(serpy.DictSerializer):
         return AddressSerializer(obj).data
 
 
-class GeocodeStopAreaSerializer(serpy.DictSerializer):
+class StopAreaSerializer(serpy.DictSerializer):
     id = NestedPropertyField(attr='properties.geocoding.id')
     coord = CoordField()
     label = NestedPropertyField(attr='properties.geocoding.label')
@@ -201,7 +201,7 @@ class GeocodeStopAreaSerializer(serpy.DictSerializer):
     stop_area = serpy.MethodField()
 
     def get_stop_area(self, obj):
-        return GeocodeStopAreaSerializer(obj).data
+        return StopAreaSerializer(obj).data
 
 
 class GeocodePlacesSerializer(serpy.DictSerializer):
