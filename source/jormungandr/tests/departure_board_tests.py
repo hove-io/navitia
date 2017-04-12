@@ -782,9 +782,9 @@ class TestSchedules(AbstractTestFixture):
 
     def test_departure_schedule_departure_date_time_not_eq_arrival_date_time(self):
         """
-        test a departure, with a date time
+        test a departure api
 
-        departure_date_time != arrival_date_time
+        base_departure_date_time != base_arrival_date_time on S11
         """
         response = self.query_region("stop_points/S11/departures?from_datetime=20160101T080000"
                                      "&data_freshness=base_schedule")
@@ -802,9 +802,9 @@ class TestSchedules(AbstractTestFixture):
 
     def test_arrival_schedule_departure_date_time_not_eq_arrival_date_time(self):
         """
-        test a arrival, with a date time
+        test a arrival api
 
-        departure_date_time != arrival_date_time
+        base_departure_date_time != base_arrival_date_time on S11 and without realtime
         """
         response = self.query_region("stop_points/S11/arrivals?from_datetime=20160101T080000"
                                      "&data_freshness=base_schedule")
@@ -820,9 +820,9 @@ class TestSchedules(AbstractTestFixture):
 
     def test_arrival_schedule_arrivals_date_time_not_eq_arrival_date_time_realtime(self):
         """
-        test a arrival, with a date time
+        test a arrival api
 
-        departure_date_time != arrival_date_time
+        base_departure_date_time != base_arrival_date_time on stopP2 and the realtime activated
         """
         response = self.query_region("stop_points/stopP2/arrivals?from_datetime=20160103T100000"
                                      "&data_freshness=realtime")
@@ -841,9 +841,9 @@ class TestSchedules(AbstractTestFixture):
 
     def test_departure_schedule_departures_date_time_not_eq_arrival_date_time_realtime(self):
         """
-        test a departure, with a date time
+        test a departure api
 
-        departure_date_time != arrival_date_time
+        base_departure_date_time != base_arrival_date_time on stopP2 and the realtime activated
         """
         response = self.query_region("stop_points/stopP2/departures?from_datetime=20160103T100000"
                                      "&data_freshness=realtime")
@@ -862,9 +862,9 @@ class TestSchedules(AbstractTestFixture):
 
     def test_arrival_schedule_arrivals_date_time_midnight_realtime(self):
         """
-        test a arrival, with a date time
+        test a arrival api
 
-        departure_date_time != arrival_date_time
+        base_departure_date_time != base_arrival_date_time on stopQ2 and the realtime activated
         """
         response = self.query_region("stop_points/stopQ2/arrivals?from_datetime=20160103T230000"
                                      "&data_freshness=realtime")
@@ -883,9 +883,9 @@ class TestSchedules(AbstractTestFixture):
 
     def test_departure_schedule_departures_date_time_midnight_realtime(self):
         """
-        test a departure, with a date time
+        test a departure api
 
-        departure_date_time != arrival_date_time
+        base_departure_date_time != base_arrival_date_time on stopQ2 and the realtime activated
         """
         response = self.query_region("stop_points/stopQ2/departures?from_datetime=20160103T100000"
                                      "&data_freshness=realtime")
@@ -904,9 +904,9 @@ class TestSchedules(AbstractTestFixture):
 
     def test_arrival_schedule_arrivals_date_time_midnight_base_schedule(self):
         """
-        test a arrival, with a date time
+        test a arrival api
 
-        departure_date_time != arrival_date_time
+        base_departure_date_time != base_arrival_date_time on stopQ2 and without realtime
         """
         response = self.query_region("stop_points/stopQ2/arrivals?from_datetime=20160103T230000"
                                      "&data_freshness=base_schedule")
@@ -925,9 +925,9 @@ class TestSchedules(AbstractTestFixture):
 
     def test_departure_schedule_departures_date_time_midnight_base_schedule(self):
         """
-        test a departure, with a date time
+        test a departure api
 
-        departure_date_time != arrival_date_time
+        base_departure_date_time != base_arrival_date_time on stopQ2 and without realtime
         """
         response = self.query_region("stop_points/stopQ2/departures?from_datetime=20160103T100000"
                                      "&data_freshness=base_schedule")
@@ -946,9 +946,7 @@ class TestSchedules(AbstractTestFixture):
 
     def test_arrival_schedule_arrivals_date_time_frequency_base_schedule(self):
         """
-        test a arrival, with a date time
-
-        departure_date_time != arrival_date_time
+        test a arrival api with frequency line and without realtime
         """
         response = self.query_region("stop_points/stopf2/arrivals?from_datetime=20160103T100000"
                                      "&data_freshness=base_schedule")
@@ -983,9 +981,7 @@ class TestSchedules(AbstractTestFixture):
 
     def test_departure_schedule_departures_date_time_frequency_base_schedule(self):
         """
-        test a departure, with a date time
-
-        departure_date_time != arrival_date_time
+        test a departure api with frequency line and without realtime
         """
         response = self.query_region("stop_points/stopf2/departures?from_datetime=20160103T100000"
                                      "&data_freshness=base_schedule")

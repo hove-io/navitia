@@ -37,8 +37,8 @@ make_delay_message(const std::string& vj_uri,
     transit_realtime::TripUpdate trip_update;
     auto trip = trip_update.mutable_trip();
     trip->set_trip_id(vj_uri);
-    // start_date: see
-    // https://github.com/CanalTP/chaos-proto/blob/dddda3c42cb80ebe1f3ed46f74604c6a6183b477/gtfs-realtime.proto#L459
+    // start_date is used to disambiguate trips that are very late, cf:
+    // https://github.com/CanalTP/chaos-proto/blob/master/gtfs-realtime.proto#L459
     trip->set_start_date(start_date);
     trip->set_schedule_relationship(transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED);
     auto st_update = trip_update.mutable_stop_time_update();
