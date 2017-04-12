@@ -37,7 +37,7 @@ import json
 from jormungandr.exceptions import TechnicalError, InvalidArguments, ApiNotFound
 from jormungandr.utils import is_url, kilometers_to_meters, get_pt_object_coord, decode_polyline
 from copy import deepcopy
-from jormungandr.street_network.street_network import AbstractStreetNetworkService
+from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathKey
 
 
 class Valhalla(AbstractStreetNetworkService):
@@ -258,3 +258,16 @@ class Valhalla(AbstractStreetNetworkService):
         self._check_response(r)
         resp_json = r.json()
         return self._get_matrix(resp_json)
+
+    def make_path_key(self, mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity):
+        """
+        :param orig_uri, dest_uri, mode: matters obviously
+        :param streetnetwork_path_type: whether it's a fallback at
+        the beginning, the end of journey or a direct path without PT also matters especially for car (to know if we
+        park before or after)
+        :param period_extremity: is a PeriodExtremity (a datetime and it's meaning on the
+        fallback period)
+        Nota: period_extremity is not taken into consideration so far because we assume that a
+        direct path from A to B remains the same even the departure time are different (no realtime)
+        """
+        return StreetNetworkPathKey(mode, orig_uri, dest_uri, streetnetwork_path_type, None)
