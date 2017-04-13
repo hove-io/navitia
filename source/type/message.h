@@ -204,15 +204,22 @@ struct Message {
 };
 
 struct StopTimeUpdate {
-    StopTimeUpdate() {}
-    StopTimeUpdate(const StopTime& st, const std::string& c): stop_time(st), cause(c) {}
     StopTime stop_time;
     std::string cause; //TODO factorize this cause with a pool
-    // enum ADDED/DELETED/UPDATE
+    enum class Status {
+        // Note: status are ordered, from least to most important
+        UNCHANGED = 0,
+        ADDED,
+        DELETED,
+        DELAYED
+    };
+    Status status;
+    StopTimeUpdate() {}
+    StopTimeUpdate(const StopTime& st, const std::string& c, Status s): stop_time(st), cause(c), status(s) {}
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & stop_time & cause;
+        ar & stop_time & cause & status;
     }
 };
 

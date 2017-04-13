@@ -30,10 +30,27 @@ inline uint64_t to_posix_timestamp(const std::string& str) {
     return navitia::to_posix_timestamp(boost::posix_time::from_iso_string(str));
 }
 
+struct DelayedTimeStop {
+    std::string _stop_name;
+    int _arrival_time = 0;
+    int _departure_time = 0;
+    navitia::time_duration _arrival_delay = 0_s;
+    navitia::time_duration _departure_delay = 0_s;
+    std::string _msg = "birds on the tracks";
+    DelayedTimeStop(const std::string& n, int arrival_time, int departure_time):
+        _stop_name(n), _arrival_time(arrival_time), _departure_time(departure_time) {}
+    DelayedTimeStop(const std::string& n, int time):
+        _stop_name(n), _arrival_time(time), _departure_time(time) {}
+
+    DelayedTimeStop& arrival_delay(navitia::time_duration delay) { _arrival_delay = delay; return *this; }
+    DelayedTimeStop& departure_delay(navitia::time_duration delay) { _departure_delay = delay; return *this; }
+    DelayedTimeStop& delay(navitia::time_duration delay) { return arrival_delay(delay).departure_delay(delay); }
+};
+
 inline transit_realtime::TripUpdate
 make_delay_message(const std::string& vj_uri,
         const std::string& start_date,
-        const std::vector<std::tuple<std::string, int, int>>& delayed_time_stops) {
+        const std::vector<DelayedTimeStop>& delayed_time_stops) {
     transit_realtime::TripUpdate trip_update;
     auto trip = trip_update.mutable_trip();
     trip->set_trip_id(vj_uri);
@@ -47,10 +64,12 @@ make_delay_message(const std::string& vj_uri,
         auto stop_time = st_update->Add();
         auto arrival = stop_time->mutable_arrival();
         auto departure = stop_time->mutable_departure();
-        stop_time->SetExtension(kirin::stoptime_message, "birds on the tracks");
-        stop_time->set_stop_id(std::get<0>(delayed_st));
-        arrival->set_time(std::get<1>(delayed_st));
-        departure->set_time(std::get<2>(delayed_st));
+        stop_time->SetExtension(kirin::stoptime_message, delayed_st._msg);
+        stop_time->set_stop_id(delayed_st._stop_name);
+        arrival->set_time(delayed_st._arrival_time);
+        arrival->set_delay(delayed_st._arrival_delay.total_seconds());
+        departure->set_time(delayed_st._departure_time);
+        departure->set_delay(delayed_st._departure_delay.total_seconds());
     }
 
     return trip_update;

@@ -103,28 +103,29 @@ struct departure_board_fixture {
         sp_ptr = b.data->pt_data->stop_points_map["S43"];
         b.data->pt_data->codes.add(sp_ptr, "KisioDigital", "KisioDigital_C:S43");
 
+        using ntest::DelayedTimeStop;
         // we delay all A's vjs by 7mn (to be able to test whether it's base schedule or realtime data)
         auto trip_update1 = ntest::make_delay_message("A:vj1", "20160101", {
-                std::make_tuple("A:s", "20160101T0807"_pts, "20160101T0807"_pts),
-                std::make_tuple("S1", "20160101T0907"_pts, "20160101T0907"_pts),
-                std::make_tuple("S2", "20160101T1007"_pts, "20160101T1007"_pts),
-                std::make_tuple("A:e", "20160101T1107"_pts, "20160101T1107"_pts),
+                DelayedTimeStop("A:s", "20160101T0807"_pts).delay(7_min),
+                DelayedTimeStop("S1", "20160101T0907"_pts).delay(7_min),
+                DelayedTimeStop("S2", "20160101T1007"_pts).delay(7_min),
+                DelayedTimeStop("A:e", "20160101T1107"_pts).delay(7_min),
             });
         navitia::handle_realtime("delay_vj1", "20160101T1337"_dt, trip_update1, *b.data);
 
         auto trip_update2 = ntest::make_delay_message("A:vj2", "20160101", {
-                std::make_tuple("A:s", "20160101T0907"_pts, "20160101T0907"_pts),
-                std::make_tuple("S1", "20160101T1007"_pts, "20160101T1007"_pts),
-                std::make_tuple("S2", "20160101T1107"_pts, "20160101T1107"_pts),
-                std::make_tuple("A:e", "20160101T1207"_pts, "20160101T1207"_pts),
+                DelayedTimeStop("A:s", "20160101T0907"_pts).delay(7_min),
+                DelayedTimeStop("S1", "20160101T1007"_pts).delay(7_min),
+                DelayedTimeStop("S2", "20160101T1107"_pts).delay(7_min),
+                DelayedTimeStop("A:e", "20160101T1207"_pts).delay(7_min),
             });
         navitia::handle_realtime("delay_vj2", "20160101T1337"_dt, trip_update2, *b.data);
 
         auto trip_update3 = ntest::make_delay_message("A:vj3", "20160101", {
-                std::make_tuple("A:s", "20160101T1007"_pts, "20160101T1007"_pts),
-                std::make_tuple("S1", "20160101T1107"_pts, "20160101T1107"_pts),
-                std::make_tuple("S2", "20160101T1207"_pts, "20160101T1207"_pts),
-                std::make_tuple("A:e", "20160101T1307"_pts, "20160101T1307"_pts),
+                DelayedTimeStop("A:s", "20160101T1007"_pts).delay(7_min),
+                DelayedTimeStop("S1", "20160101T1107"_pts).delay(7_min),
+                DelayedTimeStop("S2", "20160101T1207"_pts).delay(7_min),
+                DelayedTimeStop("A:e", "20160101T1307"_pts).delay(7_min),
             });
         navitia::handle_realtime("delay_vj3", "20160101T1337"_dt, trip_update3, *b.data);
 

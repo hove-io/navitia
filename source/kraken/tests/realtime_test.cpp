@@ -50,6 +50,7 @@ BOOST_GLOBAL_FIXTURE( logger_initialized );
 namespace nt = navitia::type;
 namespace pt = boost::posix_time;
 namespace ntest = navitia::test;
+using ntest::DelayedTimeStop;
 
 static const std::string feed_id = "42";
 static const std::string feed_id_1 = "44";
@@ -219,8 +220,8 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
     transit_realtime::TripUpdate trip_update = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150928T0810"_pts, "20150928T0810"_pts),
-                    std::make_tuple("stop2", "20150928T0910"_pts, "20150928T0910"_pts)
+                    DelayedTimeStop("stop1", "20150928T0810"_pts, "20150928T0810"_pts).delay(9_min),
+                    DelayedTimeStop("stop2", "20150928T0910"_pts, "20150928T0910"_pts).delay(9_min)
             });
     b.data->build_uri();
 
@@ -309,8 +310,8 @@ BOOST_AUTO_TEST_CASE(train_delayed_expected_failure) {
     transit_realtime::TripUpdate trip_update = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150928T0810"_pts, "20150928T0810"_pts),
-                    std::make_tuple("stop2", "20150928T0910"_pts, "20150928T0910"_pts)
+                    DelayedTimeStop("stop1", "20150928T0810"_pts, "20150928T0810"_pts).delay(9_min),
+                    DelayedTimeStop("stop2", "20150928T0910"_pts, "20150928T0910"_pts).delay(9_min)
             });
     b.data->build_uri();
     navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
@@ -330,17 +331,17 @@ BOOST_AUTO_TEST_CASE(two_different_delays_on_same_vj) {
     transit_realtime::TripUpdate trip_update_1 = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150928T0810"_pts, "20150928T0810"_pts),
-                    std::make_tuple("stop2", "20150928T0910"_pts, "20150928T0910"_pts), // <--- delayed
-                    std::make_tuple("stop3", "20150928T1001"_pts, "20150928T1001"_pts)
+                    DelayedTimeStop("stop1", "20150928T0810"_pts, "20150928T0810"_pts),
+                    DelayedTimeStop("stop2", "20150928T0910"_pts, "20150928T0910"_pts).delay(9_min),
+                    DelayedTimeStop("stop3", "20150928T1001"_pts, "20150928T1001"_pts)
             });
 
     transit_realtime::TripUpdate trip_update_2 = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150928T0810"_pts, "20150928T0810"_pts),
-                    std::make_tuple("stop2", "20150928T0910"_pts, "20150928T0910"_pts), // <--- delayed
-                    std::make_tuple("stop3", "20150928T1030"_pts, "20150928T1030"_pts)  // <--- delayed
+                    DelayedTimeStop("stop1", "20150928T0810"_pts, "20150928T0810"_pts),
+                    DelayedTimeStop("stop2", "20150928T0910"_pts, "20150928T0910"_pts).delay(9_min),
+                    DelayedTimeStop("stop3", "20150928T1030"_pts, "20150928T1030"_pts).delay(29_min)
             });
     b.data->build_uri();
 
@@ -434,8 +435,8 @@ BOOST_AUTO_TEST_CASE(train_pass_midnight_delayed) {
     transit_realtime::TripUpdate trip_update = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150928T2330"_pts, "20150928T2330"_pts),
-                    std::make_tuple("stop2", "20150929T0025"_pts, "20150929T0025"_pts)
+                    DelayedTimeStop("stop1", "20150928T2330"_pts, "20150928T2330"_pts).delay(30_min),
+                    DelayedTimeStop("stop2", "20150929T0025"_pts, "20150929T0025"_pts).delay(30_min)
             });
     b.data->build_uri();
 
@@ -498,15 +499,15 @@ BOOST_AUTO_TEST_CASE(add_two_delay_disruption) {
     transit_realtime::TripUpdate trip_update_A = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150928T2330"_pts, "20150928T2330"_pts),
-                    std::make_tuple("stop2", "20150929T0025"_pts, "20150929T0025"_pts)
+                    DelayedTimeStop("stop1", "20150928T2330"_pts, "20150928T2330"_pts).delay(30_min),
+                    DelayedTimeStop("stop2", "20150929T0025"_pts, "20150929T0025"_pts).delay(30_min)
             });
 
     transit_realtime::TripUpdate trip_update_B = ntest::make_delay_message("vj:2",
             "20150928",
             {
-                    std::make_tuple("stop3", "20150928T2230"_pts, "20150928T2230"_pts),
-                    std::make_tuple("stop4", "20150928T2300"_pts, "20150928T2300"_pts)
+                    DelayedTimeStop("stop3", "20150928T2230"_pts, "20150928T2230"_pts).delay(30_min),
+                    DelayedTimeStop("stop4", "20150928T2300"_pts, "20150928T2300"_pts).delay(30_min)
             });
 
     b.data->build_uri();
@@ -578,8 +579,8 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
     transit_realtime::TripUpdate trip_update_A = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150928T0810"_pts, "20150928T0810"_pts),
-                    std::make_tuple("stop2", "20150928T0910"_pts, "20150928T0910"_pts)
+                    DelayedTimeStop("stop1", "20150928T0810"_pts, "20150928T0810"_pts).delay(10_min),
+                    DelayedTimeStop("stop2", "20150928T0910"_pts, "20150928T0910"_pts).delay(10_min)
             });
     b.data->build_uri();
 
@@ -672,15 +673,15 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
 BOOST_AUTO_TEST_CASE(invalid_delay) {
     // we add a non valid delay, it shoudl be rejected and no disruption added
     ed::builder b("20150928");
-    auto vj = b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t).make();
+    auto vj = b.vj("A", "000001", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t).make();
     b.data->build_uri();
 
     transit_realtime::TripUpdate wrong_st_order = ntest::make_delay_message("vj:1",
             "20150928",
             {
                     //stop1 is after stop2, it's not valid
-                    std::make_tuple("stop1", "20150928T1010"_pts, "20150928T1010"_pts),
-                    std::make_tuple("stop2", "20150928T0910"_pts, "20150928T0910"_pts)
+                    DelayedTimeStop("stop1", "20150928T1000"_pts, "20150928T1000"_pts).delay(2_h),
+                    DelayedTimeStop("stop2", "20150928T0910"_pts, "20150928T0910"_pts).delay(10_min)
             });
 
     const auto& pt_data = b.data->pt_data;
@@ -699,9 +700,9 @@ BOOST_AUTO_TEST_CASE(invalid_delay) {
     transit_realtime::TripUpdate dep_before_arr = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150928T0810"_pts, "20150928T0810"_pts),
+                    DelayedTimeStop("stop1", "20150928T0810"_pts, "20150928T0810"_pts).delay(10_min),
                     //departure is before arrival, it's not valid too
-                    std::make_tuple("stop2", "20150928T0910"_pts, "20150928T0900"_pts)
+                    DelayedTimeStop("stop2", "20150928T0910"_pts, "20150928T0900"_pts).arrival_delay(9_min)
             });
 
     navitia::handle_realtime(feed_id, timestamp, dep_before_arr, *b.data);
@@ -714,9 +715,9 @@ BOOST_AUTO_TEST_CASE(invalid_delay) {
     transit_realtime::TripUpdate wrong_first_st = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150926T0810"_pts, "20150927T0210"_pts),
-                    //departure is before arrival, it's not valid too
-                    std::make_tuple("stop2", "20150927T0310"_pts, "20150927T0400"_pts)
+                    DelayedTimeStop("stop1", "20150926T0800"_pts, "20150927T0200"_pts).arrival_delay(10_min)
+                                                                                      .departure_delay(18_h),
+                    DelayedTimeStop("stop2", "20150927T0300"_pts, "20150927T0300"_pts).delay(18_h)
             });
 
     navitia::handle_realtime(feed_id, timestamp, wrong_first_st, *b.data);
@@ -739,8 +740,8 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after) {
     transit_realtime::TripUpdate trip_update = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150929T0610"_pts, "20150929T0610"_pts),
-                    std::make_tuple("stop2", "20150929T0710"_pts, "20150929T0710"_pts)
+                    DelayedTimeStop("stop1", "20150929T0610"_pts, "20150929T0610"_pts).delay(9_min),
+                    DelayedTimeStop("stop2", "20150929T0710"_pts, "20150929T0710"_pts).delay(9_min)
             });
     b.data->build_uri();
 
@@ -806,8 +807,8 @@ BOOST_AUTO_TEST_CASE(train_delayed_pass_midnight_day_after) {
     transit_realtime::TripUpdate trip_update = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150929T1710"_pts, "20150929T1710"_pts),
-                    std::make_tuple("stop2", "20150930T0110"_pts, "20150930T0110"_pts)
+                    DelayedTimeStop("stop1", "20150929T1710"_pts, "20150929T1710"_pts).delay(9_h),
+                    DelayedTimeStop("stop2", "20150930T0110"_pts, "20150930T0110"_pts).delay(16_h)
             });
     b.data->build_uri();
 
@@ -880,14 +881,14 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour) {
     transit_realtime::TripUpdate first_trip_update = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150929T0710"_pts, "20150929T0710"_pts),
-                    std::make_tuple("stop2", "20150929T0810"_pts, "20150929T0810"_pts)
+                    DelayedTimeStop("stop1", "20150929T0710"_pts, "20150929T0710"_pts).delay(23_h),
+                    DelayedTimeStop("stop2", "20150929T0810"_pts, "20150929T0810"_pts).delay(23_h)
             });
     transit_realtime::TripUpdate second_trip_update = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150928T0901"_pts, "20150928T0901"_pts),
-                    std::make_tuple("stop2", "20150928T1001"_pts, "20150928T1001"_pts)
+                    DelayedTimeStop("stop1", "20150928T0901"_pts, "20150928T0901"_pts).delay(24_h),
+                    DelayedTimeStop("stop2", "20150928T1001"_pts, "20150928T1001"_pts).delay(24_h)
             });
     b.data->build_uri();
 
@@ -960,14 +961,14 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_back_to_normal) {
     transit_realtime::TripUpdate first_trip_update = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150929T0710"_pts, "20150929T0710"_pts),
-                    std::make_tuple("stop2", "20150929T0810"_pts, "20150929T0810"_pts)
+                    DelayedTimeStop("stop1", "20150929T0710"_pts, "20150929T0710"_pts).delay(23_h),
+                    DelayedTimeStop("stop2", "20150929T0810"_pts, "20150929T0810"_pts).delay(23_h)
             });
     transit_realtime::TripUpdate second_trip_update = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150928T0801"_pts, "20150928T0801"_pts),
-                    std::make_tuple("stop2", "20150928T0901"_pts, "20150928T0901"_pts)
+                    DelayedTimeStop("stop1", "20150928T0801"_pts, "20150928T0801"_pts),
+                    DelayedTimeStop("stop2", "20150928T0901"_pts, "20150928T0901"_pts)
             });
     b.data->build_uri();
 
@@ -1040,14 +1041,14 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour_on_next_day) {
     transit_realtime::TripUpdate first_trip_update = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150929T0710"_pts, "20150929T0710"_pts),
-                    std::make_tuple("stop2", "20150929T0810"_pts, "20150929T0810"_pts)
+                    DelayedTimeStop("stop1", "20150929T0710"_pts, "20150929T0710"_pts).delay(23_h),
+                    DelayedTimeStop("stop2", "20150929T0810"_pts, "20150929T0810"_pts).delay(23_h)
             });
     transit_realtime::TripUpdate second_trip_update = ntest::make_delay_message("vj:1",
             "20150929",
             {
-                    std::make_tuple("stop1", "20150929T0901"_pts, "20150929T0901"_pts),
-                    std::make_tuple("stop2", "20150929T1001"_pts, "20150929T1001"_pts)
+                    DelayedTimeStop("stop1", "20150929T0901"_pts, "20150929T0901"_pts).delay(25_h),
+                    DelayedTimeStop("stop2", "20150929T1001"_pts, "20150929T1001"_pts).delay(25_h)
             });
     b.data->build_uri();
 
@@ -1120,8 +1121,8 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_cancel) {
     transit_realtime::TripUpdate first_trip_update = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150929T0610"_pts, "20150929T0610"_pts),
-                    std::make_tuple("stop2", "20150929T0710"_pts, "20150929T0710"_pts)
+                    DelayedTimeStop("stop1", "20150929T0610"_pts, "20150929T0610"_pts).delay(22_h),
+                    DelayedTimeStop("stop2", "20150929T0710"_pts, "20150929T0710"_pts).delay(22_h)
             });
     transit_realtime::TripUpdate second_trip_update = make_cancellation_message("vj:1", "20150928");
     b.data->build_uri();
@@ -1188,8 +1189,8 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_day_after_cancel) {
     transit_realtime::TripUpdate first_trip_update = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150929T0610"_pts, "20150929T0610"_pts),
-                    std::make_tuple("stop2", "20150929T0710"_pts, "20150929T0710"_pts)
+                    DelayedTimeStop("stop1", "20150929T0610"_pts, "20150929T0610"_pts).delay(22_h),
+                    DelayedTimeStop("stop2", "20150929T0710"_pts, "20150929T0710"_pts).delay(22_h)
             });
     transit_realtime::TripUpdate second_trip_update = make_cancellation_message("vj:1", "20150929");
     b.data->build_uri();
@@ -1323,8 +1324,8 @@ BOOST_AUTO_TEST_CASE(train_delayed_10_hours_then_canceled) {
     transit_realtime::TripUpdate first_trip_update = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150928T1801"_pts, "20150928T1801"_pts),
-                    std::make_tuple("stop2", "20150928T1901"_pts, "20150928T1901"_pts)
+                    DelayedTimeStop("stop1", "20150928T1801"_pts, "20150928T1801"_pts).delay(10_h),
+                    DelayedTimeStop("stop2", "20150928T1901"_pts, "20150928T1901"_pts).delay(10_h)
             });
     transit_realtime::TripUpdate second_trip_update = make_cancellation_message("vj:1", "20150928");
     b.data->build_uri();
@@ -1394,14 +1395,14 @@ BOOST_AUTO_TEST_CASE(get_impacts_on_vj) {
     transit_realtime::TripUpdate first_trip_update = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150928T0910"_pts, "20150928T0910"_pts),
-                    std::make_tuple("stop2", "20150928T1010"_pts, "20150928T1010"_pts)
+                    DelayedTimeStop("stop1", "20150928T0910"_pts, "20150928T0910"_pts).delay(1_h),
+                    DelayedTimeStop("stop2", "20150928T1010"_pts, "20150928T1010"_pts).delay(1_h)
             });
     transit_realtime::TripUpdate second_trip_update = ntest::make_delay_message("vj:1",
             "20150929",
             {
-                    std::make_tuple("stop1", "20150929T1010"_pts, "20150929T1010"_pts),
-                    std::make_tuple("stop2", "20150929T1110"_pts, "20150929T1110"_pts)
+                    DelayedTimeStop("stop1", "20150929T1010"_pts, "20150929T1010"_pts).delay(2_h),
+                    DelayedTimeStop("stop2", "20150929T1110"_pts, "20150929T1110"_pts).delay(2_h)
             });
     transit_realtime::TripUpdate third_trip_update = make_cancellation_message("vj:1", "20150930");
 
@@ -1469,8 +1470,8 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys) {
         "vj:2",
         "20150928",
         {
-            std::make_tuple("stop1", "20150928T0910"_pts, "20150928T0910"_pts),
-            std::make_tuple("stop2", "20150929T1010"_pts, "20150929T1010"_pts)
+            DelayedTimeStop("stop1", "20150928T0910"_pts, "20150928T0910"_pts).delay(1_h),
+            DelayedTimeStop("stop2", "20150929T1010"_pts, "20150929T1010"_pts).delay(1_h)
         });
     transit_realtime::TripUpdate trip_update_vj3 = make_cancellation_message("vj:3", "20150928");
     navitia::handle_realtime("trip_update_vj2", timestamp, trip_update_vj2, *b.data);
@@ -1499,8 +1500,8 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys_no_base) {
         "vj:1",
         "20150928",
         {
-            std::make_tuple("stop1", "20150928T0910"_pts, "20150928T0910"_pts),
-            std::make_tuple("stop2", "20150929T1010"_pts, "20150929T1010"_pts)
+            DelayedTimeStop("stop1", "20150928T0910"_pts, "20150928T0910"_pts).delay(69_min),
+            DelayedTimeStop("stop2", "20150929T1010"_pts, "20150929T1010"_pts).delay(69_min)
         });
     navitia::handle_realtime("trip_update", timestamp, trip_update, *b.data);
     auto * data_ptr = b.data.get();
@@ -1523,9 +1524,9 @@ BOOST_AUTO_TEST_CASE(unknown_stop_point) {
     transit_realtime::TripUpdate bad_trip_update = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150928T0810"_pts, "20150928T0810"_pts),
-                    std::make_tuple("stop_unknown_toto", "20150928T0910"_pts, "20150928T0910"_pts), // <--- bad
-                    std::make_tuple("stop3", "20150928T1001"_pts, "20150928T1001"_pts)
+                    DelayedTimeStop("stop1", "20150928T0810"_pts, "20150928T0810"_pts).delay(9_min),
+                    DelayedTimeStop("stop_unknown_toto", "20150928T0910"_pts, "20150928T0910"_pts).delay(9_min), // <--- bad
+                    DelayedTimeStop("stop3", "20150928T1001"_pts, "20150928T1001"_pts).delay(9_min)
             });
 
     b.data->build_uri();
@@ -1584,23 +1585,23 @@ BOOST_AUTO_TEST_CASE(ordered_delay_message_test) {
     auto trip_update_1 = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150928T0801"_pts, "20150928T0801"_pts),
-                    std::make_tuple("stop2", "20150928T0910"_pts, "20150928T0910"_pts), // << Delayed
-                    std::make_tuple("stop3", "20150928T1001"_pts, "20150928T1001"_pts)
+                    DelayedTimeStop("stop1", "20150928T0801"_pts, "20150928T0801"_pts),
+                    DelayedTimeStop("stop2", "20150928T0910"_pts, "20150928T0910"_pts).delay(9_min),
+                    DelayedTimeStop("stop3", "20150928T1001"_pts, "20150928T1001"_pts)
             });
     auto trip_update_2 = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150928T0810"_pts, "20150928T0810"_pts),
-                    std::make_tuple("stop2", "20150928T0920"_pts, "20150928T0920"_pts), // << Delayed again
-                    std::make_tuple("stop3", "20150928T1001"_pts, "20150928T1001"_pts)
+                    DelayedTimeStop("stop1", "20150928T0810"_pts, "20150928T0810"_pts),
+                    DelayedTimeStop("stop2", "20150928T0920"_pts, "20150928T0920"_pts).delay(19_min),
+                    DelayedTimeStop("stop3", "20150928T1001"_pts, "20150928T1001"_pts)
             });
     auto trip_update_3 = ntest::make_delay_message("vj:1",
             "20150928",
             {
-                    std::make_tuple("stop1", "20150928T0810"_pts, "20150928T0810"_pts),
-                    std::make_tuple("stop2", "20150928T0925"_pts, "20150928T0925"_pts), // << Delayed again
-                    std::make_tuple("stop3", "20150928T1001"_pts, "20150928T1001"_pts)
+                    DelayedTimeStop("stop1", "20150928T0810"_pts, "20150928T0810"_pts),
+                    DelayedTimeStop("stop2", "20150928T0925"_pts, "20150928T0925"_pts).delay(26_min),
+                    DelayedTimeStop("stop3", "20150928T1001"_pts, "20150928T1001"_pts)
             });
     b.data->build_uri();
 
@@ -1686,10 +1687,10 @@ BOOST_AUTO_TEST_CASE(delays_with_boarding_alighting_times) {
     auto trip_update_1 = ntest::make_delay_message("vj:1",
             "20170102",
             {
-                    std::make_tuple("stop_point:10", "20170102T081000"_pts, "20170102T081100"_pts),
-                    std::make_tuple("stop_point:20", "20170102T082000"_pts, "20170102T082100"_pts),
-                    std::make_tuple("stop_point:30", "20170102T084000"_pts, "20170102T084100"_pts), // << Delayed
-                    std::make_tuple("stop_point:40", "20170102T085000"_pts, "20170102T085100"_pts) // << Delayed
+                    DelayedTimeStop("stop_point:10", "20170102T081000"_pts, "20170102T081100"_pts),
+                    DelayedTimeStop("stop_point:20", "20170102T082000"_pts, "20170102T082100"_pts),
+                    DelayedTimeStop("stop_point:30", "20170102T084000"_pts, "20170102T084100"_pts).delay(10_min),
+                    DelayedTimeStop("stop_point:40", "20170102T085000"_pts, "20170102T085100"_pts).delay(10_min)
             });
     navitia::handle_realtime("feed", "20170101T1337"_dt, trip_update_1, *b.data);
 
@@ -1756,9 +1757,9 @@ BOOST_AUTO_TEST_CASE(delays_on_lollipop_with_boarding_alighting_times) {
     auto trip_update_1 = ntest::make_delay_message("vj:1",
             "20170102",
             {
-                    std::make_tuple("stop_point:10", "20170102T081000"_pts, "20170102T081100"_pts),
-                    std::make_tuple("stop_point:20", "20170102T082000"_pts, "20170102T082100"_pts),
-                    std::make_tuple("stop_point:10", "20170102T084000"_pts, "20170102T084100"_pts), // Delayed
+                    DelayedTimeStop("stop_point:10", "20170102T081000"_pts, "20170102T081100"_pts),
+                    DelayedTimeStop("stop_point:20", "20170102T082000"_pts, "20170102T082100"_pts),
+                    DelayedTimeStop("stop_point:10", "20170102T084000"_pts, "20170102T084100"_pts).delay(10_min),
             });
     navitia::handle_realtime("feed", "20170101T1337"_dt, trip_update_1, *b.data);
 

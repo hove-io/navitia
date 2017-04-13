@@ -46,16 +46,17 @@ www.navitia.io
 
 
 namespace gd = boost::gregorian;
+namespace nd = navitia::type::disruption;
 
 namespace navitia{
 
 
 struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
-    const nt::disruption::Impact& impact;
+    const nd::Impact& impact;
     pbnavitia::Impact* pb_impact;
 
     Filler& filler;
-    PtObjVisitor(const nt::disruption::Impact& impact,
+    PtObjVisitor(const nd::Impact& impact,
                  pbnavitia::Impact* pb_impact, PbCreator::Filler& filler):
         impact(impact),
         pb_impact(pb_impact), filler(filler) {}
@@ -70,7 +71,7 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
     void operator()(const NavitiaPTObject* bo) const {
         add_pt_object(bo);
     }
-    void operator()(const nt::disruption::LineSection& line_section) const {
+    void operator()(const nd::LineSection& line_section) const {
         // a line section is displayed as a disruption on a line with additional information
         auto* pobj = add_pt_object(line_section.line);
 
@@ -82,7 +83,21 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
         filler.copy(0, DumpMessage::No).fill_pb_object(line_section.end_point,
                                                        impacted_section->mutable_to());
     }
-    void operator()(const nt::disruption::UnknownPtObj&) const {}
+
+    pbnavitia::StopTimeUpdateStatus get_effect(nd::StopTimeUpdate::Status status) const {
+        switch (status) {
+        case nd::StopTimeUpdate::Status::ADDED:
+            return pbnavitia::ADDED;
+        case nd::StopTimeUpdate::Status::DELAYED:
+            return pbnavitia::DELAYED;
+        case nd::StopTimeUpdate::Status::DELETED:
+            return pbnavitia::DELETED;
+        case nd::StopTimeUpdate::Status::UNCHANGED:
+            return pbnavitia::UNCHANGED;
+        }
+    }
+
+    void operator()(const nd::UnknownPtObj&) const {}
     void operator()(const nt::MetaVehicleJourney* mvj) const {
         auto* pobj = add_pt_object(mvj);
 
@@ -90,7 +105,8 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
         for (const auto& stu: impact.aux_info.stop_times) {
             auto* impacted_stop = pobj->add_impacted_stops();
             impacted_stop->set_cause(stu.cause);
-            impacted_stop->set_effect(pbnavitia::DELAYED);
+
+            impacted_stop->set_effect(get_effect(stu.status));
 
             filler.copy(0, DumpMessage::No).fill_pb_object(stu.stop_time.stop_point,
                                                            impacted_stop->mutable_stop_point());
@@ -898,8 +914,8 @@ void PbCreator::Filler::fill_pb_object(const nt::StopTime* stop_time, pbnavitia:
     }
 }
 
-void PbCreator::Filler::fill_informed_entity(const nt::disruption::PtObj& ptobj,
-                                             const nt::disruption::Impact& impact,
+void PbCreator::Filler::fill_informed_entity(const nd::PtObj& ptobj,
+                                             const nd::Impact& impact,
                                              pbnavitia::Impact* pb_impact){
     auto filler = copy(depth - 1, dump_message);
         boost::apply_visitor(PtObjVisitor(impact, pb_impact, filler), ptobj);
@@ -907,7 +923,7 @@ void PbCreator::Filler::fill_informed_entity(const nt::disruption::PtObj& ptobj,
 
 
 static pbnavitia::ActiveStatus
-compute_disruption_status(const nt::disruption::Impact& impact,
+compute_disruption_status(const nd::Impact& impact,
                           const pt::ptime& now) {
 
     bool is_future = false;
@@ -928,7 +944,7 @@ compute_disruption_status(const nt::disruption::Impact& impact,
 }
 
 template <typename P>
-void PbCreator::Filler::fill_message(const boost::shared_ptr<nt::disruption::Impact>& impact,
+void PbCreator::Filler::fill_message(const boost::shared_ptr<nd::Impact>& impact,
                                      P pb_object){
     *pb_object->add_impact_uris() = impact->uri;
     pb_creator.impacts.insert(impact);
@@ -938,7 +954,7 @@ template void navitia::PbCreator::Filler::fill_message<pbnavitia::Line*>(boost::
 template void navitia::PbCreator::Filler::fill_message<pbnavitia::StopArea*>(boost::shared_ptr<navitia::type::disruption::Impact> const&, pbnavitia::StopArea*);
 template void navitia::PbCreator::Filler::fill_message<pbnavitia::VehicleJourney*>(boost::shared_ptr<navitia::type::disruption::Impact> const&, pbnavitia::VehicleJourney*);
 
-void PbCreator::Filler::fill_pb_object(const nt::disruption::Impact* impact, pbnavitia::Impact* pb_impact) {
+void PbCreator::Filler::fill_pb_object(const nd::Impact* impact, pbnavitia::Impact* pb_impact) {
     pb_impact->set_disruption_uri(impact->disruption->uri);
 
     if (!impact->disruption->contributor.empty()) {
@@ -980,28 +996,28 @@ void PbCreator::Filler::fill_pb_object(const nt::disruption::Impact* impact, pbn
         pb_channel->set_name(m.channel_name);
         for (const auto& type: m.channel_types){
             switch (type) {
-            case nt::disruption::ChannelType::web:
+            case nd::ChannelType::web:
                 pb_channel->add_channel_types(pbnavitia::Channel::web);
                 break;
-            case nt::disruption::ChannelType::sms:
+            case nd::ChannelType::sms:
                 pb_channel->add_channel_types(pbnavitia::Channel::sms);
                 break;
-            case nt::disruption::ChannelType::email:
+            case nd::ChannelType::email:
                 pb_channel->add_channel_types(pbnavitia::Channel::email);
                 break;
-            case nt::disruption::ChannelType::mobile:
+            case nd::ChannelType::mobile:
                 pb_channel->add_channel_types(pbnavitia::Channel::mobile);
                 break;
-            case nt::disruption::ChannelType::notification:
+            case nd::ChannelType::notification:
                 pb_channel->add_channel_types(pbnavitia::Channel::notification);
                 break;
-            case nt::disruption::ChannelType::twitter:
+            case nd::ChannelType::twitter:
                 pb_channel->add_channel_types(pbnavitia::Channel::twitter);
                 break;
-            case nt::disruption::ChannelType::facebook:
+            case nd::ChannelType::facebook:
                 pb_channel->add_channel_types(pbnavitia::Channel::facebook);
                 break;
-            case nt::disruption::ChannelType::unknown_type:
+            case nd::ChannelType::unknown_type:
                 pb_channel->add_channel_types(pbnavitia::Channel::unknown_type);
                 break;
             }
@@ -1169,8 +1185,8 @@ void PbCreator::Filler::fill_messages(const VjStopTimes* vj_stoptimes,
                                                                 pb_creator.action_period)) {
         bool fill = [&](){
             auto line_section_impacted_obj_it = boost::find_if(message->informed_entities(),
-                                                            [](const nt::disruption::PtObj& ptobj) {
-               return boost::get<nt::disruption::LineSection>(&ptobj) != nullptr;
+                                                            [](const nd::PtObj& ptobj) {
+               return boost::get<nd::LineSection>(&ptobj) != nullptr;
             });
             if (line_section_impacted_obj_it == message->informed_entities().end()) {
                 // there is no line section, thus we want to fill the message

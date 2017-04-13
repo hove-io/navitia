@@ -220,31 +220,31 @@ create_disruption(const std::string& id,
             impact->messages.push_back(create_message(trip_update.GetExtension(kirin::trip_message)));
         }
         std::string wording;
-        nt::disruption::Effect effect = nt::disruption::Effect::UNKNOWN_EFFECT;
+        nt::disruption::Effect trip_effect = nt::disruption::Effect::UNKNOWN_EFFECT;
         if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED) {
             LOG4CPLUS_TRACE(log, "Disruption has NO_SERVICE effect");
             // Yeah, that's quite hardcodded...
             wording = "trip canceled";
-            effect = nt::disruption::Effect::NO_SERVICE;
+            trip_effect = nt::disruption::Effect::NO_SERVICE;
         }
         else if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED
                 && trip_update.stop_time_update_size()) {
-            LOG4CPLUS_TRACE(log, "Disruption has SIGNIFICANT_DELAYS effect");
-            // Yeah, that's quite hardcodded...
-            wording = "trip delayed";
-            effect = nt::disruption::Effect::SIGNIFICANT_DELAYS;
+            LOG4CPLUS_TRACE(log, "a trip has been changed");
+            using nt::disruption::StopTimeUpdate;
+            auto most_important_stoptime_status = StopTimeUpdate::Status::UNCHANGED;
             LOG4CPLUS_TRACE(log, "Adding stop time into impact");
             for (const auto& st: trip_update.stop_time_update()) {
                 auto it = data.pt_data->stop_points_map.find(st.stop_id());
                 if (it == data.pt_data->stop_points_map.cend()) {
-                    LOG4CPLUS_WARN(log, "Disruption: " + disruption.uri + " cannot be handled, because "
-                            "stop point: " + st.stop_id() + " cannot be found");
+                    LOG4CPLUS_WARN(log, "Disruption: " << disruption.uri << " cannot be handled, because "
+                            "stop point: " << st.stop_id() << " cannot be found");
                     return nullptr;
                 }
                 auto* stop_point_ptr = it->second;
                 assert(stop_point_ptr);
                 uint32_t arrival_time = st.arrival().time();
                 uint32_t departure_time = st.departure().time();
+
                 {
                     /*
                      * When st.arrival().has_time() is false, st.arrival().time() will return 0, which, for kraken, is
@@ -281,14 +281,46 @@ create_disruption(const std::string& id,
                 if (st.HasExtension(kirin::stoptime_message)) {
                     message = st.GetExtension(kirin::stoptime_message);
                 }
-                type::disruption::StopTimeUpdate st_update{std::move(stop_time), message};
+                const auto status = [&st]() {
+                    if (st.schedule_relationship() == transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_SKIPPED) {
+                        return StopTimeUpdate::Status::DELETED;
+                    } else if (st.arrival().delay() != 0 || st.departure().delay() != 0) {
+                        return StopTimeUpdate::Status::DELAYED;
+                    } else {
+                        return StopTimeUpdate::Status::UNCHANGED;
+                    }
+                }();
+                // we update the trip status if the stoptime status is the most important status
+                // the most important status is DELAYED then DELETED
+                most_important_stoptime_status = static_cast<StopTimeUpdate::Status>(std::max(static_cast<size_t>(most_important_stoptime_status),
+                                                                                              static_cast<size_t>(status)));
+                StopTimeUpdate st_update{std::move(stop_time), message, status};
                 impact->aux_info.stop_times.emplace_back(std::move(st_update));
             }
+
+            trip_effect = [most_important_stoptime_status]() {
+                switch (most_important_stoptime_status) {
+                case StopTimeUpdate::Status::DELAYED:
+                case StopTimeUpdate::Status::UNCHANGED: // it can be a back to normal case
+                    return nt::disruption::Effect::SIGNIFICANT_DELAYS;
+                case StopTimeUpdate::Status::DELETED:
+                    return nt::disruption::Effect::DETOUR;
+                default:
+                    return nt::disruption::Effect::UNKNOWN_EFFECT;
+                }
+            }();
         } else {
             LOG4CPLUS_ERROR(log, "unhandled real time message");
         }
+        if (wording.empty()) {
+            if ( trip_effect == nt::disruption::Effect::SIGNIFICANT_DELAYS) {
+                wording = "trip delayed";
+            } else if (trip_effect == nt::disruption::Effect::DETOUR) {
+                wording = "trip modified";
+            }
+        }
         impact->application_periods.push_back({begin_app_period, end_app_period});
-        impact->severity = make_severity(id, std::move(wording), effect, timestamp, holder);
+        impact->severity = make_severity(id, std::move(wording), trip_effect, timestamp, holder);
         nd::Impact::link_informed_entity(
                     nd::make_pt_obj(nt::Type_e::MetaVehicleJourney, trip_update.trip().trip_id(), *data.pt_data),
                     impact, data.meta->production_date, nt::RTLevel::RealTime);

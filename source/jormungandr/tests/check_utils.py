@@ -1089,7 +1089,8 @@ def is_valid_disruption(disruption, chaos_disrup=True):
             for impacted_stop in impacted_stops:
                 is_valid_stop_point(get_not_null(impacted_stop, 'stop_point'), depth_check=0)
 
-                assert(get_not_null(impacted_stop, "stop_time_effect") in ('added', 'deleted', 'delayed'))
+                assert(get_not_null(impacted_stop, "stop_time_effect") in ('added', 'deleted', 'delayed',
+                                                                           'unchanged'))
 
                 if 'base_arrival_time' in impacted_stop:
                     get_valid_time(impacted_stop['base_arrival_time'])
