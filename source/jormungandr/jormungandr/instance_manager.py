@@ -32,9 +32,8 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from flask import json
 
 from shapely import geometry
-import configparser
 from zmq import green as zmq
-from navitiacommon import type_pb2, request_pb2, models
+from navitiacommon import type_pb2, request_pb2
 import glob
 import logging
 from jormungandr.protobuf_to_dict import protobuf_to_dict

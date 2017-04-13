@@ -31,7 +31,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from flask import url_for, request
 from collections import OrderedDict
 from functools import wraps
-from sqlalchemy.sql.elements import _type_from_args
 from jormungandr.interfaces.v1.converters_collection_type import resource_type_to_collection,\
     collections_to_resource_type
 from flask.ext.restful.utils import unpack

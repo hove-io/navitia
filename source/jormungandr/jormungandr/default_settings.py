@@ -1,6 +1,5 @@
 # encoding: utf-8
 
-import logging
 import os
 import json
 from flask_restful.inputs import boolean

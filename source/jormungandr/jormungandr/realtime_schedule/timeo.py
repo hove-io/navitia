@@ -37,7 +37,6 @@ from jormungandr import cache, app
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy
 from jormungandr.schedule import RealTimePassage
 from datetime import datetime, time
-from jormungandr.utils import timestamp_to_datetime
 from navitiacommon.ratelimit import RateLimiter, FakeRateLimiter
 
 

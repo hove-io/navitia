@@ -30,7 +30,6 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from flask import url_for
 from jormungandr.interfaces.v1.make_links import create_external_link
 from flask_restful import marshal
 from jormungandr._version import __version__

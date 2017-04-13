@@ -29,20 +29,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr.interfaces.v1 import Uri
-from jormungandr.interfaces.v1 import Coverage
-from jormungandr.interfaces.v1 import Journeys
-from jormungandr.interfaces.v1 import GraphicalIsochrone
-from jormungandr.interfaces.v1 import HeatMap
-from jormungandr.interfaces.v1 import Schedules
-from jormungandr.interfaces.v1 import Places
-from jormungandr.interfaces.v1 import Ptobjects
-from jormungandr.interfaces.v1 import Coord
-from jormungandr.interfaces.v1 import Disruptions
-from jormungandr.interfaces.v1 import Calendars
-from jormungandr.interfaces.v1 import converters_collection_type
-from jormungandr.interfaces.v1 import Status
-from jormungandr.interfaces.v1 import GeoStatus
+from jormungandr.interfaces.v1 import Uri, Coverage, Journeys, GraphicalIsochrone,\
+    HeatMap, Schedules, Places, Ptobjects, Coord, Disruptions, Calendars,\
+    converters_collection_type, Status, GeoStatus
 from werkzeug.routing import BaseConverter, FloatConverter, PathConverter
 from jormungandr.modules_loader import AModule
 from jormungandr import app

@@ -33,11 +33,11 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from flask.ext.restful import fields, marshal_with, reqparse, abort
 from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
-from jormungandr import i_manager, authentication
+from jormungandr import i_manager
 from jormungandr.interfaces.v1.converters_collection_type import collections_to_resource_type
 from jormungandr.interfaces.v1.fields import stop_point, stop_area, route, line, line_group, \
     physical_mode, commercial_mode, company, network, pagination,\
-    journey_pattern_point, NonNullList, poi, poi_type,\
+    journey_pattern_point, poi, poi_type,\
     journey_pattern, trip, connection, error, PbField, contributor, dataset
 from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
 from collections import OrderedDict

@@ -29,9 +29,9 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 import serpy
-from jormungandr.interfaces.v1.serializer.base import PbNestedSerializer, GenericSerializer, EnumField
+from jormungandr.interfaces.v1.serializer.base import GenericSerializer, EnumListField
+from jormungandr.interfaces.v1.serializer.time import LocalTimeField, PeriodSerializer, DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import *
-import logging
 
 
 class Equipments(EnumListField):
@@ -41,6 +41,7 @@ class Equipments(EnumListField):
     def as_getter(self, serializer_field_name, serializer_cls):
         #For enum we need the full object :(
         return lambda x: x.has_equipments
+
 
 class ChannelSerializer(PbNestedSerializer):
     content_type = serpy.Field()
@@ -53,11 +54,13 @@ class MessageSerializer(PbNestedSerializer):
     text = serpy.Field()
     channel = ChannelSerializer()
 
+
 class SeveritySerializer(PbNestedSerializer):
     name = serpy.Field()
     effect = serpy.Field()
     color = serpy.Field()
     priority = serpy.Field()
+
 
 class PtObjectSerializer(GenericSerializer):
     quality = serpy.Field(required=False)
@@ -105,8 +108,10 @@ class PtObjectSerializer(GenericSerializer):
         else:
             return None
 
+
 class TripSerializer(GenericSerializer):
     pass#@TODO
+
 
 class ImpactedStopSerializer(PbNestedSerializer):
     stop_point = serpy.MethodField(display_none=False)
@@ -197,6 +202,7 @@ class StopPointSerializer(GenericSerializer):
         else:
             return None
 
+
 class StopAreaSerializer(GenericSerializer):
     comments = CommentSerializer(many=True, display_none=False)
     comment = FirstCommentField(attr='comments', display_none=False)
@@ -222,6 +228,7 @@ class PlaceSerializer(GenericSerializer):
 #    @TODO "address": PbField(address),
 #    @TODO "poi": PbField(poi),
 
+
 class NetworkSerializer(GenericSerializer):
     lines = serpy.MethodField(display_none=False)
     links = LinkSerializer(attr='impact_uris')
@@ -229,6 +236,7 @@ class NetworkSerializer(GenericSerializer):
 
     def get_lines(self, obj):
         return LineSerializer(obj.lines, many=True, display_none=False).data
+
 
 class RouteSerializer(GenericSerializer):
     is_frequence = serpy.StrField()
@@ -248,6 +256,7 @@ class RouteSerializer(GenericSerializer):
         else:
             return None
 
+
 class LineGroupSerializer(GenericSerializer):
     lines = serpy.MethodField(display_none=False)
     main_line = serpy.MethodField(display_none=False)
@@ -261,6 +270,7 @@ class LineGroupSerializer(GenericSerializer):
             return LineSerializer(obj.main_line).data
         else:
             return None
+
 
 class LineSerializer(GenericSerializer):
     code = serpy.Field()
@@ -279,5 +289,3 @@ class LineSerializer(GenericSerializer):
     geojson = MultiLineStringField(display_none=False)
     links = LinkSerializer(attr='impact_uris')
     line_groups = LineGroupSerializer(many=True, display_none=False)
-
-

@@ -32,14 +32,13 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import logging
 import binascii
 
-from flask_restful import reqparse, abort
 import flask_restful
 from flask import request, g
 from functools import wraps
 from jormungandr.exceptions import RegionNotFound
 import datetime
 import base64
-from navitiacommon.models import User, Instance, db, Key
+from navitiacommon.models import User, Instance, Key
 from jormungandr import cache, app as current_app
 
 
