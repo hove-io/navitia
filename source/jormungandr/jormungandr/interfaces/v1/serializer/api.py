@@ -74,3 +74,7 @@ class LineGroupsSerializer(PTReferentialSerializer):
 
 class NetworksSerializer(PTReferentialSerializer):
     networks = pt.NetworkSerializer(many=True)
+
+
+class PlacesSerializer(PTReferentialSerializer):
+    places = pt.PlaceSerializer(many=True)
