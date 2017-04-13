@@ -54,10 +54,8 @@ from jormungandr.interfaces.common import odt_levels
 from jormungandr.utils import date_to_timestamp
 from jormungandr.resources_utc import ResourceUtc
 from datetime import datetime
-from flask import g, current_app
-
-from jormungandr.interfaces.v1.serializer import serialize_with
-from jormungandr.interfaces.v1.serializer import api
+from flask import g
+from jormungandr.interfaces.v1.decorators import get_serializer
 
 
 class Uri(ResourceUri, ResourceUtc):
@@ -229,11 +227,7 @@ def commercial_modes(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
-            if current_app.config.get('USE_SERPY', False):
-                collections = serialize_with(api.CommercialModesSerializer)
-            else:
-                collections = marshal_with(OrderedDict(self.collections), display_null=False)
-            self.method_decorators.insert(1, collections)
+            self.method_decorators.insert(1, get_serializer(self.collection))
     return CommercialModes
 
 
@@ -323,11 +317,7 @@ def physical_modes(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
-            if current_app.config.get('USE_SERPY', False):
-                collections = serialize_with(api.PhysicalModesSerializer)
-            else:
-                collections = marshal_with(OrderedDict(self.collections), display_null=False)
-            self.method_decorators.insert(1, collections)
+            self.method_decorators.insert(1, get_serializer(self.collection))
     return PhysicalModes
 
 
@@ -347,11 +337,7 @@ def stop_points(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
-            if current_app.config.get('USE_SERPY', False):
-                collections = serialize_with(api.StopPointsSerializer)
-            else:
-                collections = marshal_with(OrderedDict(self.collections), display_null=False)
-            self.method_decorators.insert(1, collections)
+            self.method_decorators.insert(1, get_serializer(self.collection))
             self.parsers["get"].add_argument("original_id", type=unicode,
                             description="original uri of the object you"
                                     "want to query")
@@ -375,11 +361,7 @@ def stop_areas(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False))),
             ]
-            if current_app.config.get('USE_SERPY', False):
-                collections = serialize_with(api.StopAreasSerializer)
-            else:
-                collections = marshal_with(OrderedDict(self.collections), display_null=False)
-            self.method_decorators.insert(1, collections)
+            self.method_decorators.insert(1, get_serializer(self.collection))
             self.parsers["get"].add_argument("original_id", type=unicode,
                             description="original uri of the object you"
                                     "want to query")
@@ -472,11 +454,7 @@ def routes(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
-            if current_app.config.get('USE_SERPY', False):
-                collections = serialize_with(api.RoutesSerializer)
-            else:
-                collections = marshal_with(OrderedDict(self.collections), display_null=False)
-            self.method_decorators.insert(1, collections)
+            self.method_decorators.insert(1, get_serializer(self.collection))
             self.parsers["get"].add_argument("original_id", type=unicode,
                             description="original uri of the object you"
                                     "want to query")
@@ -497,11 +475,7 @@ def line_groups(is_collection):
                 ("error", PbField(error)),
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
             ]
-            if current_app.config.get('USE_SERPY', False):
-                collections = serialize_with(api.LineGroupsSerializer)
-            else:
-                collections = marshal_with(OrderedDict(self.collections), display_null=False)
-            self.method_decorators.insert(1, collections)
+            self.method_decorators.insert(1, get_serializer(self.collection))
             self.parsers["get"].add_argument("original_id", type=unicode,
                             description="original uri of the object you"
                                     "want to query")
@@ -525,11 +499,7 @@ def lines(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
-            if current_app.config.get('USE_SERPY', False):
-                collections = serialize_with(api.LinesSerializer)
-            else:
-                collections = marshal_with(OrderedDict(self.collections), display_null=False)
-            self.method_decorators.insert(1, collections)
+            self.method_decorators.insert(1, get_serializer(self.collection))
 
             self.parsers["get"].add_argument("original_id", type=unicode,
                             description="original uri of the object you"
@@ -586,11 +556,7 @@ def networks(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
-            if current_app.config.get('USE_SERPY', False):
-                collections = serialize_with(api.NetworksSerializer)
-            else:
-                collections = marshal_with(OrderedDict(self.collections), display_null=False)
-            self.method_decorators.insert(1, collections)
+            self.method_decorators.insert(1, get_serializer(self.collection))
             self.parsers["get"].add_argument("original_id", type=unicode,
                             description="original uri of the object you"
                                     "want to query")
@@ -610,12 +576,7 @@ def disruptions(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
                                            display_null=False)))
             ]
-
-            if current_app.config.get('USE_SERPY', False):
-                collections = serialize_with(api.DisruptionsSerializer)
-            else:
-                collections = marshal_with(OrderedDict(self.collections), display_null=False)
-            self.method_decorators.insert(1, collections)
+            self.method_decorators.insert(1, get_serializer(self.collection))
             self.parsers["get"].add_argument("original_id", type=unicode,
                             description="original uri of the object you"
                                     "want to query")
