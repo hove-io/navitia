@@ -43,7 +43,7 @@ The status of the impact depends only of 'now' and is:
       <th align="center" colspan="2"></th>
       <th align="center"> </th>
       <th align="center" colspan="3">Show impacts </th>
-      <th align="center" colspan="3">Status </th>
+      <th align="center"> </th>
     </tr>
     <tr>
       <th>Production period </th>
@@ -51,11 +51,9 @@ The status of the impact depends only of 'now' and is:
       <th>Application period </th>
       <th align="center">Request date</th>
       <th align="center">disruptions API</th>
-      <th align="center">traffic_report API</th>
-      <th align="center">PtRef API</th>
-      <th align="center">disruptions API</th>
-      <th align="center">traffic_report API</th>
-      <th align="center">PtRef API</th>
+      <th align="center">traffic_reports & PtRef API</th>
+      <th align="center">Journeys & Schedules API</th>
+      <th align="center">Status</th>
     </tr>
   </thead>
   <tbody>
@@ -63,8 +61,6 @@ The status of the impact depends only of 'now' and is:
       <td> </td>
       <td align="center"> </td>
       <td> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
@@ -80,15 +76,11 @@ The status of the impact depends only of 'now' and is:
       <td align="center">- </td>
       <td align="center">- </td>
       <td align="center">future </td>
-      <td align="center">- </td>
-      <td align="center">- </td>
     </tr>
     <tr>
       <td> </td>
       <td align="center"> </td>
       <td> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
@@ -99,8 +91,6 @@ The status of the impact depends only of 'now' and is:
       <td>* </td>
       <td align="center"> </td>
       <td> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
@@ -116,15 +106,11 @@ The status of the impact depends only of 'now' and is:
       <td align="center">- </td>
       <td align="center">- </td>
       <td align="center">future </td>
-      <td align="center">- </td>
-      <td align="center">- </td>
     </tr>
     <tr>
       <td>| </td>
       <td align="center">* </td>
       <td> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
@@ -138,17 +124,13 @@ The status of the impact depends only of 'now' and is:
       <td align="center">date3 </td>
       <td align="center"><strong>Yes</strong> </td>
       <td align="center"><strong>Yes</strong> </td>
-      <td align="center"><strong>Yes</strong> </td>
-      <td align="center">future </td>
-      <td align="center">future </td>
+      <td align="center"> </td>
       <td align="center">future </td>
     </tr>
     <tr>
       <td>| </td>
       <td align="center">| </td>
       <td>* </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
@@ -164,15 +146,11 @@ The status of the impact depends only of 'now' and is:
       <td align="center"><strong>Yes</strong> </td>
       <td align="center"><strong>Yes</strong> </td>
       <td align="center">active </td>
-      <td align="center">active </td>
-      <td align="center">active </td>
     </tr>
     <tr>
       <td>| </td>
       <td align="center">| </td>
       <td>| </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
@@ -188,8 +166,6 @@ The status of the impact depends only of 'now' and is:
       <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
     </tr>
     <tr>
       <td>| </td>
@@ -198,17 +174,13 @@ The status of the impact depends only of 'now' and is:
       <td align="center">date5 </td>
       <td align="center"><strong>Yes</strong> </td>
       <td align="center"><strong>Yes</strong> </td>
-      <td align="center"><strong>Yes</strong> </td>
-      <td align="center">passed </td>
-      <td align="center">passed </td>
+      <td align="center"> </td>
       <td align="center">passed </td>
     </tr>
     <tr>
       <td>| </td>
       <td align="center">| </td>
       <td> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
@@ -224,8 +196,6 @@ The status of the impact depends only of 'now' and is:
       <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
     </tr>
     <tr>
       <td>| </td>
@@ -236,15 +206,11 @@ The status of the impact depends only of 'now' and is:
       <td align="center">- </td>
       <td align="center">- </td>
       <td align="center">passed </td>
-      <td align="center">- </td>
-      <td align="center">- </td>
     </tr>
     <tr>
       <td>* </td>
       <td align="center"> </td>
       <td> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
@@ -260,8 +226,6 @@ The status of the impact depends only of 'now' and is:
       <td align="center">- </td>
       <td align="center">- </td>
       <td align="center">passed </td>
-      <td align="center">- </td>
-      <td align="center">- </td>
     </tr>
   </tbody>
 </table>
