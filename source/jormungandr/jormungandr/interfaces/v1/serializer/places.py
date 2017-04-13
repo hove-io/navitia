@@ -117,7 +117,7 @@ class PoiTypeSerializer(serpy.DictSerializer):
 
 
 class PoiSerializer(serpy.DictSerializer):
-    id = CoordId()
+    id = NestedPropertyField(attr='properties.geocoding.id')
     coord = CoordField()
     label = NestedPropertyField(attr='properties.geocoding.label')
     name = NestedPropertyField(attr='properties.geocoding.name')
@@ -137,7 +137,7 @@ class PoiSerializer(serpy.DictSerializer):
 class GeocodePoiSerializer(serpy.DictSerializer):
     embedded_type = LiteralField("poi")
     quality = LiteralField(0)
-    id = CoordId()
+    id = NestedPropertyField(attr='properties.geocoding.id')
     name = NestedPropertyField(attr='properties.geocoding.label')
     poi = serpy.MethodField()
 
