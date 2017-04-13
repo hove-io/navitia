@@ -99,6 +99,35 @@ class EnumField(serpy.Field):
             return None
         return value.lower()
 
+    """
+    Need to find a way to read protobuf
+    """
+    def _jsonschema_type_mapping(self):
+        value = {
+            "type": "string"
+        }
+        enum = []
+        if self.attr == 'id':
+            enum.extend((
+                'bad_filter', 'unknown_api', 'date_out_of_bounds', 'unable_to_parse', 'bad_format', 'no_origin',
+                'no_destination', 'no_origin_nor_destination', 'no_solution', 'unknown_object', 'service_unavailable',
+                'invalid_protobuf_request', 'internal_error'
+            ))
+        elif self.attr == 'embedded_type':
+            enum.extend((
+                'line', 'journey_pattern', 'vehicle_journey', 'stop_point', 'stop_area', 'network', 'physical_mode',
+                'commercial_mode', 'connection', 'journey_pattern_point', 'company', 'route', 'poi', 'contributor',
+                'address', 'poitype', 'administrative_region', 'calendar', 'line_group', 'impact', 'dataset', 'trip'
+            ))
+        elif self.attr == 'effect':
+            enum.extend(('delayed', 'added', 'deleted'))
+        elif self.attr == 'status':
+            enum.extend(('past', 'active', 'future'))
+
+        if len(enum) > 0:
+            value.update(enum=enum)
+
+        return value
 
 class EnumListField(EnumField):
     """WARNING: the enumlist field does not work without a self.attr"""
