@@ -1,3 +1,16 @@
+navitia2 (2.30.0) unstable; urgency=low
+
+  * Kraken: update all identical cause, severity and tag  <https://github.com/CanalTP/navitia/pull/2053>
+  * Kraken: base_*_date_time calculation for arrivals/departures APIs  <https://github.com/CanalTP/navitia/pull/2050>
+  * Jormungandr: Places uri in journeys  <https://github.com/CanalTP/navitia/pull/2039>
+  * Documentation: misc corrections  <https://github.com/CanalTP/navitia/pull/2052>
+  * kraken: log duration of data copy and disruptions application  <https://github.com/CanalTP/navitia/pull/2051>
+  * Jormungandr: add shape param in places for bragi  <https://github.com/CanalTP/navitia/pull/2048>
+  * Jormungandr: fix valhalla authentification when we have no credencials  <https://github.com/CanalTP/navitia/pull/2049>
+  * Jormungandr: Tag "bike_in_pt"  <https://github.com/CanalTP/navitia/pull/2045>
+
+ -- Abderrahim Azime <abderrahim.azime@canaltp.fr>  Fri, 14 Apr 2017 14:04:37 +0100
+
 navitia2 (2.29.1) unstable; urgency=low
 
   * patch changelog
@@ -13,28 +26,28 @@ navitia2 (2.29.0) unstable; urgency=low
   * Ed: fix mistake on source/target  <https://github.com/CanalTP/navitia/pull/2036>
   * Jormungandr: fix places uri  <https://github.com/CanalTP/navitia/pull/2034>
   * Change behavior of passages on first and last production day  <https://github.com/CanalTP/navitia/pull/2032>
-  * Jormun: fetching of the direction in siri lite connector  <https://github.com/CanalTP/navitia/pull/2023>
-  * jormun: a few improvement for docker deployment  <https://github.com/CanalTP/navitia/pull/2031>
+  * Jormungandr: fetching of the direction in siri lite connector  <https://github.com/CanalTP/navitia/pull/2023>
+  * jormungandr: a few improvement for docker deployment  <https://github.com/CanalTP/navitia/pull/2031>
   * kraken: add bike in pt  <https://github.com/CanalTP/navitia/pull/2018>
   * Ed: fix big boulette  <https://github.com/CanalTP/navitia/pull/2030>
-  * Jormun: manage places/uri from mimir  <https://github.com/CanalTP/navitia/pull/2019>
-  * Jormun: set gevent default pool size to 10  <https://github.com/CanalTP/navitia/pull/2026>
+  * Jormungandr: manage places/uri from mimir  <https://github.com/CanalTP/navitia/pull/2019>
+  * Jormungandr: set gevent default pool size to 10  <https://github.com/CanalTP/navitia/pull/2026>
   * Ed: connexe component by mode  <https://github.com/CanalTP/navitia/pull/2024>
   * Jormungandr: add adresses in stoppoint for serpy in depth 3  <https://github.com/CanalTP/navitia/pull/2021>
-  * jormun: set timeout for network operation with zeep  <https://github.com/CanalTP/navitia/pull/2025>
+  * jormungandr: set timeout for network operation with zeep  <https://github.com/CanalTP/navitia/pull/2025>
   * Jormungandr: fix journeys without datetime  <https://github.com/CanalTP/navitia/pull/2022>
 
  -- David Quintanel <david.quintanel@canaltp.fr>  Fri, 31 Mar 2017 11:03:17 +0100
 
 navitia2 (2.28.1) unstable; urgency=low
 
-  * jormun: set timeout for network operation with zeep <https://github.com/CanalTP/navitia/pull/2025> 
+  * jormungandr: set timeout for network operation with zeep <https://github.com/CanalTP/navitia/pull/2025> 
 
  -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Wed, 22 Mar 2017 08:03:06 +0100
 
 navitia2 (2.28.0) unstable; urgency=low
 
-  * raptor: fix stay-in arrival datetime  <https://github.com/CanalTP/navitia/pull/2002>
+  * Kraken: fix stay-in arrival datetime  <https://github.com/CanalTP/navitia/pull/2002>
   * Jormungandr: fix stay-in that pass midnight  <https://github.com/CanalTP/navitia/pull/2012>
   * Jormungandr: fix some links  <https://github.com/CanalTP/navitia/pull/2017>
   * kraken: fix disruptions in departures for realtime  <https://github.com/CanalTP/navitia/pull/2016>
