@@ -42,12 +42,10 @@ TYPE_MAP = {
         'type': 'string',
     },
     'float': {
-        'type': 'number',
-        'format': 'float',
+        'type': 'number'
     },
     'int': {
-        'type': 'number',
-        'format': 'integer',
+        'type': 'integer'
     },
     'bool': {
         'type': 'boolean',
@@ -58,9 +56,36 @@ class JSONSchema(Serializer):
     properties = fields.MethodField('get_properties')
     type = fields.MethodField('get_constant_object')
     required = fields.MethodField('get_required')
+    # Weird name to ensure it will be processed a the end
+    _definitions = fields.MethodField('get_definitions', display_none=False, label='definitions')
+
+    def __init__(self, instance=None, many=False, data=None, context=None, root=False, **kwargs):
+        super(JSONSchema, self).__init__(instance, many, data, context, **kwargs)
+        self.root = root
+        self.definitions = {}
 
     def get_constant_object(self, obj):
         return 'object'
+
+    def get_definitions(self, obj):
+        if self.root:
+            properties = {}
+            definitions = self.definitions
+
+            while definitions:
+                field_name, field = definitions.popitem()
+                schema, nestedDefinitions = self.__class__._from_nested_schema(field)
+                properties[field_name] = schema
+                self.add_new_definitions(definitions, nestedDefinitions, properties.keys())
+
+            return properties
+        else:
+            return None
+
+    def add_new_definitions(self, definitionsToProcessed, newDefinitions, processedDefinitions):
+        reallyNewDefinitions = set(newDefinitions.keys()) - set(processedDefinitions)
+        for k in reallyNewDefinitions:
+            definitionsToProcessed.update({k: newDefinitions.get(k)})
 
     def get_properties(self, obj):
         mapping = {}
@@ -69,31 +94,45 @@ class JSONSchema(Serializer):
         mapping[fields.FloatField] = 'float'
         mapping[fields.BoolField] = 'bool'
         # Map the 2 next fields to avoid exceptions for now
-        mapping[fields.Field] = 'unknown'
-        mapping[fields.MethodField] = 'method'
+        mapping[fields.Field] = 'str'
+        # mapping[fields.MethodField] = 'method'
         properties = {}
 
-        for field_name, field in sorted(obj._field_map.items()):
+        for field_name, field in obj._field_map.items():
+            searchObj = field
+            preTypeMethodName = '_jsonschema_pre_type_mapping'
+            if field.__class__ == fields.MethodField:
+                method = field.as_getter(field_name, obj.__class__)
+                preTypeMethodName = method.__name__ + preTypeMethodName
+                searchObj = obj
+            if hasattr(searchObj, preTypeMethodName):
+                field = getattr(searchObj, preTypeMethodName)()
+
             if hasattr(field, '_jsonschema_type_mapping'):
                 schema = field._jsonschema_type_mapping()
             elif field.__class__ in mapping:
                 pytype = mapping[field.__class__]
                 schema = self.__class__._from_python_type(pytype)
             elif isinstance(field, Serializer):
-                schema = self.__class__._from_nested_schema(field)
+                self.definitions.update({
+                    field.__class__.__name__: field
+                })
+                schema, definitions = self.__class__._from_nested_schema(field, onlyRef=True)
             else:
-                raise ValueError('unsupported field type %s' % field)
+                raise ValueError('unsupported field type %s for attr %s in object %s' % (field, field_name, obj.__class__.__name__))
 
-            properties[field_name] = schema
+            name = field.label or field_name
+            properties[name] = schema
 
         return properties
 
     def get_required(self, obj):
         required = []
 
-        for field_name, field in sorted(obj._field_map.items()):
+        for field_name, field in obj._field_map.items():
             if field.required:
-                required.append(field_name)
+                name = field.label or field_name
+                required.append(name)
 
         return required
 
@@ -107,8 +146,15 @@ class JSONSchema(Serializer):
         return json_schema
 
     @classmethod
-    def _from_nested_schema(cls, field):
-        schema = cls(field).data
+    def _from_nested_schema(cls, field, onlyRef=False):
+        serializer = cls(field)
+        if onlyRef:
+            schema = {
+                '$ref': '#/definitions/' + field.__class__.__name__
+            }
+        else:
+            schema = serializer.data
+        definitions = serializer.definitions
 
         if field.many:
             schema = {
@@ -116,4 +162,4 @@ class JSONSchema(Serializer):
                 'items': schema,
             }
 
-        return schema
+        return schema, definitions

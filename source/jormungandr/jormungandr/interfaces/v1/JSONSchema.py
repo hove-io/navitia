@@ -30,15 +30,16 @@
 # www.navitia.io
 
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
-
-from jormungandr.interfaces.v1.serializer import serialize_with
 from jormungandr.interfaces.v1.serializer import api, JSONSchema
+
+from serpy import Serializer
+
+class ApiSchema(Serializer):
+    ptr = api.PTReferentialSerializer()
 
 class Schema(ResourceUri):
     def __init__(self, **kwargs):
-        ResourceUri.__init__(self, authentication=False, **kwargs)
+        ResourceUri.__init__(self, authentication=False, links=False, **kwargs)
 
-    @serialize_with(JSONSchema.JSONSchema)
     def get(self):
-
-        return api.PTReferentialSerializer(), 200
+        return JSONSchema.JSONSchema(ApiSchema(), root=True).data, 200
