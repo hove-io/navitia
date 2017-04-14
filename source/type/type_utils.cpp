@@ -64,19 +64,22 @@ const nt::StopTime* get_base_stop_time(const nt::StopTime* st_orig) {
 /**
  * Compute base passage from amended passage, knowing amended and base stop-times
  */
-bt::ptime get_base_dt(const nt::StopTime* st_orig, const nt::StopTime* st_base,
-                             const bt::ptime& dt_orig, bool is_departure) {
+bt::ptime get_date_time(const routing::StopEvent stop_event,
+                        const nt::StopTime* st_orig, const nt::StopTime* st_base,
+                        const bt::ptime& dt_orig, bool is_departure) {
     if (st_orig == nullptr || st_base == nullptr) { return bt::not_a_date_time; }
-    // compute the "base validity_pattern" day of dt_orig:
-    // * shift back if amended-vj is shifted compared to base-vj
-    // * shift back if the hour in stop-time of amended-vj is >24h
-    auto validity_pattern_dt_day = dt_orig.date();
-    validity_pattern_dt_day -= boost::gregorian::days(st_orig->vehicle_journey->shift);
-    auto hour_of_day_orig = (is_departure ? st_orig->departure_time : st_orig->arrival_time);
-    validity_pattern_dt_day -= boost::gregorian::days(hour_of_day_orig / DateTimeUtils::SECONDS_PER_DAY);
-    // from the "base validity_pattern" day, we simply have to apply stop_time from base_vj (st_base)
-    auto hour_of_day_base = (is_departure ? st_base->departure_time : st_base->arrival_time);
-    return bt::ptime(validity_pattern_dt_day, boost::posix_time::seconds(hour_of_day_base));
+
+    const uint32_t hour = (stop_event == routing::StopEvent::pick_up) ?
+                st_orig->departure_time : st_orig->arrival_time;
+
+    uint32_t shift_seconds = (st_orig == st_base) ?
+                0 : st_orig->vehicle_journey->shift * DateTimeUtils::SECONDS_PER_DAY;
+
+    if (is_departure) {
+        return (dt_orig - bt::seconds(shift_seconds) - bt::seconds(hour)) + bt::seconds(st_base->departure_time);
+    } else {
+        return (dt_orig - bt::seconds(shift_seconds) - bt::seconds(hour)) + bt::seconds(st_base->arrival_time);
+    }
 }
 
 const nt::StopTime& earliest_stop_time(const std::vector<nt::StopTime>& sts) {

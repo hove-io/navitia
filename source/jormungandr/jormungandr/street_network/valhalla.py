@@ -60,8 +60,12 @@ class Valhalla(AbstractStreetNetworkService):
 
     def _call_valhalla(self, url, method=requests.post, data=None):
         logging.getLogger(__name__).debug('Valhalla routing service , call url : {}'.format(url))
+        logging.getLogger(__name__).debug('data : {}'.format(data))
+        headers = {}
+        if self.api_key:
+            headers['api_key'] = self.api_key
         try:
-            return self.breaker.call(method, url, timeout=self.timeout, data=data, headers={'api_key': self.api_key})
+            return self.breaker.call(method, url, timeout=self.timeout, data=data, headers=headers)
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Valhalla routing service dead (error: {})'.format(e))
             self.record_external_failure('circuit breaker open')

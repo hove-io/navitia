@@ -988,6 +988,8 @@ struct EntryPoint {
         }
         return true;
     }
+
+    static bool is_coord(const std::string&);
 };
 
 template<typename T>

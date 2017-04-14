@@ -27,8 +27,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from navitiacommon import response_pb2
+from navitiacommon import type_pb2
 from jormungandr.scenarios.helpers import *
+from jormungandr.scenarios.new_default import _is_bike_in_pt_journey
 
 def get_walking_walking_journey():
     journey = response_pb2.Journey()
@@ -202,6 +203,26 @@ def get_bike_bike_journey():
     section.duration = 15
     section = journey.sections.add()
     section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section.duration = 5
+
+    return journey
+
+def get_bike_pt_bike_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Bike
+    section.duration = 25
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section.duration = 15
+    section.pt_display_informations.has_equipments.has_equipments.append(type_pb2.hasEquipments.has_bike_accepted)
+    section.origin.stop_point.has_equipments.has_equipments.append(type_pb2.hasEquipments.has_bike_accepted)
+    section.destination.stop_point.has_equipments.has_equipments.append(type_pb2.hasEquipments.has_bike_accepted)
+    section = journey.sections.add()
+    section.type = response_pb2.CROW_FLY
     section.street_network.mode = response_pb2.Bike
     section.duration = 5
 
@@ -674,6 +695,23 @@ def bike_duration_test():
     assert bike_duration(get_bike_bss_journey()) ==  25
 
     assert bike_duration(get_bike_car_journey()) ==  25
+
+
+def bike_in_pt_test():
+    assert not _is_bike_in_pt_journey(get_walking_walking_journey())
+    assert not _is_bike_in_pt_journey(get_walking_bike_journey())
+    assert not _is_bike_in_pt_journey(get_walking_bss_journey())
+    assert not _is_bike_in_pt_journey(get_walking_car_journey())
+    assert not _is_bike_in_pt_journey(get_bss_walking_journey())
+    assert not _is_bike_in_pt_journey(get_bss_bike_journey())
+    assert not _is_bike_in_pt_journey(get_bss_bss_journey())
+    assert not _is_bike_in_pt_journey(get_bss_car_journey())
+    assert not _is_bike_in_pt_journey(get_bike_walking_journey())
+    assert not _is_bike_in_pt_journey(get_bike_bike_journey())
+    assert not _is_bike_in_pt_journey(get_bike_bss_journey())
+    assert not _is_bike_in_pt_journey(get_bike_car_journey())
+    assert _is_bike_in_pt_journey(get_bike_pt_bike_journey())
+
 
 def car_duration_walking_test():
     assert car_duration(get_walking_walking_journey()) ==  0

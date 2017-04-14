@@ -33,6 +33,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from flask.ext.restful import fields, reqparse, abort
 from flask.ext.restful.inputs import boolean
 from flask.globals import g
+from navitiacommon import parser_args_type
 from jormungandr import i_manager, timezone, global_autocomplete, authentication
 from jormungandr.interfaces.v1.fields import disruption_marshaller
 from jormungandr.interfaces.v1.fields import place, NonNullList, NonNullNested, PbField, pagination,\
@@ -47,6 +48,7 @@ from flask_restful import marshal, marshal_with
 import datetime, re
 from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
 import ujson as json
+import geojson
 from jormungandr.interfaces.parsers import coord_format, option_value
 from jormungandr.scenarios.utils import pb_type
 
@@ -200,7 +202,7 @@ class PoiField(fields.Raw):
 
         # TODO add address, properties attributes
         res = {
-            "id": '{};{}'.format(lon, lat),
+            "id": geocoding.get('id'),
             "coord": {
                 "lon": lon,
                 "lat": lat,
@@ -257,7 +259,7 @@ geocode_addr = {
 geocode_poi = {
     "embedded_type": Lit("poi"),
     "quality": Lit(0),
-    "id": CoordId,
+    "id": fields.String(attribute='properties.geocoding.id'),
     "name": fields.String(attribute='properties.geocoding.label'),
     "poi": PoiField()
 }
@@ -300,6 +302,14 @@ places = {
 }
 
 
+def geojson_argument(value):
+    decoded = json.loads(value)
+    if not decoded:
+        raise ValueError('invalid shape')
+
+    return parser_args_type.geojson_argument(decoded)
+        
+
 class Places(ResourceUri):
     def __init__(self, *args, **kwargs):
         ResourceUri.__init__(self, authentication=False, *args, **kwargs)
@@ -341,6 +351,8 @@ class Places(ResourceUri):
                                                      "the objects around this coordinate")
         self.parsers['get'].add_argument("_autocomplete", type=unicode, description="name of the autocomplete service"
                                          " used under the hood")
+        self.parsers['get'].add_argument('shape', type=geojson_argument,
+                                         description='Geographical shape to limit the search.')
 
     def get(self, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
@@ -353,7 +365,8 @@ class Places(ResourceUri):
 
         user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=False)
 
-        args['shape'] = json.loads(user.shape) if user and user.shape else None
+        if args['shape'] is None and user and user.shape:
+            args['shape'] = json.loads(user.shape)
 
         # If a region or coords are asked, we do the search according
         # to the region, else, we do a word wide search
@@ -408,7 +421,7 @@ class PlaceUri(ResourceUri):
             authentication.check_access_to_global_places(user)
             autocomplete = global_autocomplete.get('bragi')
             if autocomplete:
-                response = autocomplete.get_uri(args["uri"], instance=None)
+                response = autocomplete.get_by_uri(args["uri"], instance=None)
             else:
                 raise TechnicalError('world wide autocompletion service not available')
 

@@ -134,7 +134,7 @@ class AbstractTestAuthentication(AbstractTestFixture):
         models.Instance.get_by_name = self.old_instance_getter
 
 
-@dataset({"main_routing_test": {}, "departure_board_test": {}})
+@dataset({"main_routing_test": {}, "departure_board_test": {}}, global_config={'activate_bragi': True})
 class TestBasicAuthentication(AbstractTestAuthentication):
 
     def test_coverage(self):

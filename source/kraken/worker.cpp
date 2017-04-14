@@ -193,8 +193,6 @@ static bool get_geojson_state(const pbnavitia::Request& request) {
         case pbnavitia::ROUTE_SCHEDULES:
         case pbnavitia::NEXT_DEPARTURES:
         case pbnavitia::NEXT_ARRIVALS:
-        case pbnavitia::PREVIOUS_DEPARTURES:
-        case pbnavitia::PREVIOUS_ARRIVALS:
         case pbnavitia::DEPARTURE_BOARDS: result = request.next_stop_times().disable_geojson(); break;
         case pbnavitia::PTREFERENTIAL: result = request.ptref().disable_geojson(); break;
     default: result = false; break;
@@ -373,7 +371,6 @@ void Worker::next_stop_times(const pbnavitia::NextStopTimeRequest& request,
         forbidden_uri.push_back(request.forbidden_uri(i));
 
     bt::ptime from_datetime = bt::from_time_t(request.from_datetime());
-    bt::ptime until_datetime = bt::from_time_t(request.until_datetime());
 
     auto rt_level = get_realtime_level(request.realtime_level());
     try {
@@ -388,20 +385,6 @@ void Worker::next_stop_times(const pbnavitia::NextStopTimeRequest& request,
         case pbnavitia::NEXT_ARRIVALS:
             timetables::passages(this->pb_creator, request.arrival_filter(),
                                  forbidden_uri, from_datetime,
-                                 request.duration(), request.nb_stoptimes(),
-                                 request.depth(), type::AccessibiliteParams(),
-                                 rt_level, api, request.count(), request.start_page());
-            break;
-        case pbnavitia::PREVIOUS_DEPARTURES:
-            timetables::passages(this->pb_creator, request.departure_filter(),
-                                 forbidden_uri, until_datetime,
-                                 request.duration(), request.nb_stoptimes(),
-                                 request.depth(), type::AccessibiliteParams(),
-                                 rt_level, api, request.count(), request.start_page());
-            break;
-        case pbnavitia::PREVIOUS_ARRIVALS:
-            timetables::passages(this->pb_creator, request.arrival_filter(),
-                                 forbidden_uri, until_datetime,
                                  request.duration(), request.nb_stoptimes(),
                                  request.depth(), type::AccessibiliteParams(),
                                  rt_level, api, request.count(), request.start_page());
@@ -502,19 +485,13 @@ streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams& reques
     return result;
 }
 
-
 void Worker::place_uri(const pbnavitia::PlaceUriRequest &request) {
 
     const auto* data = this->pb_creator.data;
-    if(request.uri().size() > 6 && request.uri().substr(0, 6) == "coord:") {
-        type::EntryPoint ep(type::Type_e::Coord, request.uri());
-        type::GeographicalCoord  coord;
-        try{
-            coord = coord_of_entry_point(ep, *data);
-        }catch(const navitia::coord_conversion_exception& e) {
-            this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());
-            return;
-        }
+    if (type::EntryPoint::is_coord(request.uri())) {
+        auto ep = type::EntryPoint(type::Type_e::Coord, request.uri());
+        type::GeographicalCoord coord = ep.coordinates;
+
         try{ 
             auto address = this->pb_creator.data->geo_ref->nearest_addr(coord);
             const auto& way_coord = WayCoord(address.second, coord, address.first);
@@ -1003,8 +980,6 @@ void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
     case pbnavitia::ROUTE_SCHEDULES:
     case pbnavitia::NEXT_DEPARTURES:
     case pbnavitia::NEXT_ARRIVALS:
-    case pbnavitia::PREVIOUS_DEPARTURES:
-    case pbnavitia::PREVIOUS_ARRIVALS:
     case pbnavitia::DEPARTURE_BOARDS: next_stop_times(request.next_stop_times(), request.requested_api()); break;
     case pbnavitia::ISOCHRONE:
     case pbnavitia::NMPLANNER:

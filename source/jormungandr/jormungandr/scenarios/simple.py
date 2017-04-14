@@ -145,7 +145,7 @@ class Scenario(object):
 
     def place_uri(self, request, instance):
         autocomplete = instance.get_autocomplete(request.get('_autocomplete'))
-        return autocomplete.get_uri(uri=request["uri"],
+        return autocomplete.get_by_uri(uri=request["uri"],
                                     instance=instance,
                                     current_datetime=request['_current_datetime'])
 
@@ -184,12 +184,6 @@ class Scenario(object):
 
     def next_departures(self, request, instance):
         return instance.schedule.next_departures(request)
-
-    def previous_arrivals(self, request, instance):
-        return instance.schedule.previous_arrivals(request)
-
-    def previous_departures(self, request, instance):
-        return instance.schedule.previous_departures(request)
 
     def departure_boards(self, request, instance):
         return instance.schedule.departure_boards(request)

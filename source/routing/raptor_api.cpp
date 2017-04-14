@@ -47,24 +47,6 @@ www.navitia.io
 
 namespace navitia { namespace routing {
 
-static navitia::type::Mode_e get_crowfly_mode(const georef::Path& path) {
-    for(const auto& item: path.path_items){
-        switch(item.transportation){
-            case georef::PathItem::TransportCaracteristic::Car:
-                return type::Mode_e::Car;
-            case georef::PathItem::TransportCaracteristic::BssPutBack:
-            case georef::PathItem::TransportCaracteristic::BssTake:
-                return type::Mode_e::Bss;
-            case georef::PathItem::TransportCaracteristic::Bike:
-                return type::Mode_e::Bike;
-            default:
-                break;
-        }
-    }
-    //if we don't use a non walking mode, then we walk :)
-    return type::Mode_e::Walking;
-}
-
 static void add_coord(const type::GeographicalCoord& coord, pbnavitia::Section* pb_section) {
     auto* new_coord = pb_section->add_shape();
     new_coord->set_lon(coord.lon());
@@ -560,7 +542,7 @@ static void add_pathes(PbCreator& pb_creator,
                                             worker.departure_path_finder.distance_to_entry_point);
                 auto departure_time = path.items.front().departures.front() - pt::seconds(crow_fly_duration.to_posix().total_seconds());
                 pb_creator.fill_crowfly_section(origin, destination_tmp, crow_fly_duration,
-                                                get_crowfly_mode(sn_departure_path),
+                                                worker.departure_path_finder.mode,
                                                 departure_time,
                                                 pb_journey);
             } else if (!sn_departure_path.path_items.empty()) {
@@ -625,7 +607,7 @@ static void add_pathes(PbCreator& pb_creator,
                                                 worker.arrival_path_finder.distance_to_entry_point);
                 arrival_time = arrival_time + pt::seconds(crow_fly_duration.to_posix().total_seconds());
                 pb_creator.fill_crowfly_section(origin_tmp, destination, crow_fly_duration,
-                                                get_crowfly_mode(sn_arrival_path),
+                                                worker.arrival_path_finder.mode,
                                                 dt, pb_journey);
             }
             // for stop areas, we don't want to display the fallback section if start

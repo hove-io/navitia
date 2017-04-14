@@ -32,6 +32,7 @@ from copy import deepcopy
 import itertools
 import logging
 from flask.ext.restful import abort
+from flask import g
 from jormungandr.scenarios import simple, journey_filter, helpers
 from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, \
     get_or_default, fill_uris, gen_all_combin, get_pseudo_duration, mode_weight
@@ -46,6 +47,8 @@ from jormungandr.scenarios.simple import get_pb_data_freshness
 import gevent, gevent.pool
 import flask
 from jormungandr import app
+from jormungandr.autocomplete.geocodejson import GeocodeJson
+from jormungandr import global_autocomplete
 
 SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
 JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
@@ -210,6 +213,39 @@ def _tag_direct_path(responses):
                 tag = street_network_mode_tag_map.get(j.sections[0].street_network.mode)
                 if tag:
                     j.tags.extend(tag)
+
+
+def _is_bike_section(s):
+    return ((s.type == response_pb2.CROW_FLY or s.type == response_pb2.STREET_NETWORK) and
+            s.street_network.mode == response_pb2.Bike)
+
+def _is_pt_bike_accepted_section(s):
+    bike_ok = type_pb2.hasEquipments.has_bike_accepted
+    return (s.type == response_pb2.PUBLIC_TRANSPORT and
+            bike_ok in s.pt_display_informations.has_equipments.has_equipments and
+            bike_ok in s.origin.stop_point.has_equipments.has_equipments and
+            bike_ok in s.destination.stop_point.has_equipments.has_equipments)
+
+def _is_bike_in_pt_journey(j):
+    bike_indifferent = [response_pb2.boarding,
+                        response_pb2.landing,
+                        response_pb2.WAITING,
+                        response_pb2.TRANSFER,
+                        response_pb2.ALIGHTING]
+    return _has_pt(j) and \
+           all(_is_bike_section(s)
+               or _is_pt_bike_accepted_section(s)
+               or s.type in bike_indifferent
+                   for s in j.sections)
+
+def _tag_bike_in_pt(responses):
+    '''
+    we tag as 'bike _in_pt' journeys that are using bike as start AND end fallback AND
+    that allow carrying bike in transport (and journey has to include PT)
+    '''
+    for j in itertools.chain.from_iterable(r.journeys for r in responses):
+        if _is_bike_in_pt_journey(j):
+            j.tags.extend(['bike_in_pt'])
 
 
 def tag_journeys(resp):
@@ -662,6 +698,30 @@ def merge_responses(responses):
     return merged_response
 
 
+def get_kraken_id(entrypoint_detail):
+    """
+    returns a usable id for kraken from the entrypoint detail
+    returns None if the original ID needs to be kept
+    """
+    if not entrypoint_detail:
+        # impossible to find the object
+        return None
+
+    emb_type = entrypoint_detail.get('embedded_type')
+    if emb_type in ('stop_point', 'stop_area', 'administrative_region'):
+        # for those object, we need to keep the original id, as there are specific treatment to be done
+        return None
+
+    # for the other objects the id is the object coordinated
+    coord = entrypoint_detail.get(emb_type, {}).get('coord')
+
+    if not coord:
+        # no coordinate, we keep the original id
+        return None
+
+    return '{};{}'.format(coord['lon'], coord['lat'])
+
+
 class Scenario(simple.Scenario):
     """
     TODO: a bit of explanation about the new scenario
@@ -674,6 +734,16 @@ class Scenario(simple.Scenario):
     def fill_journeys(self, request_type, api_request, instance):
 
         krakens_call = get_kraken_calls(api_request)
+
+        # sometimes we need to change the entrypoint id (eg if the id is from another autocomplete system)
+        origin_detail = self.get_entrypoint_detail(api_request.get('origin'), instance)
+        destination_detail = self.get_entrypoint_detail(api_request.get('destination'), instance)
+        # we store the origin/destination detail in g to be able to use them after the marshall
+        g.origin_detail = origin_detail
+        g.destination_detail = destination_detail
+
+        api_request['origin'] = get_kraken_id(origin_detail) or api_request.get('origin')
+        api_request['destination'] = get_kraken_id(destination_detail) or api_request.get('destination')
 
         request = deepcopy(api_request)
         min_asked_journeys = get_or_default(request, 'min_nb_journeys', 1)
@@ -689,6 +759,7 @@ class Scenario(simple.Scenario):
             tmp_resp = self.call_kraken(request_type, request, instance, krakens_call)
             _tag_by_mode(tmp_resp)
             _tag_direct_path(tmp_resp)
+            _tag_bike_in_pt(tmp_resp)
             journey_filter._filter_too_long_journeys(tmp_resp, request)
             responses.extend(tmp_resp)  # we keep the error for building the response
             if nb_journeys(tmp_resp) == 0:
@@ -729,6 +800,7 @@ class Scenario(simple.Scenario):
         resp = []
         logger = logging.getLogger(__name__)
         futures = []
+
         def worker(dep_mode, arr_mode, instance, request, request_id):
             return (dep_mode, arr_mode, instance.send_and_receive(request, request_id=request_id))
 
@@ -825,3 +897,19 @@ class Scenario(simple.Scenario):
 
         one_second = 1
         return best.arrival_date_time - one_second
+
+    def get_entrypoint_detail(self, entrypoint, instance):
+        logging.info("calling autocomplete {} for {}".format(instance.autocomplete, entrypoint))
+        detail = instance.autocomplete.get_object_by_uri(entrypoint, instance=instance)
+
+        if detail:
+            return detail
+
+        if not isinstance(instance.autocomplete, GeocodeJson):
+            bragi = global_autocomplete.get('bragi')
+            if bragi:
+                # if the instance's autocomplete is not a geocodejson autocomplete, we also check in the
+                # global autocomplete instance
+                return bragi.get_object_by_uri(entrypoint, instance=instance)
+
+        return None
