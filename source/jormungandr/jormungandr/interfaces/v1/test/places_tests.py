@@ -26,7 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from jormungandr.interfaces.v1.Places import format_zip_code
+from jormungandr.autocomplete.geocodejson import format_zip_code
 
 
 def test_format_zip_code():

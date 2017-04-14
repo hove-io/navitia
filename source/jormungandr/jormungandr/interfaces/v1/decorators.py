@@ -45,8 +45,8 @@ map_serializer = {
 }
 
 
-def get_serializer(collection, display_null=False):
+def get_serializer(collection, collections, display_null=False):
     if current_app.config.get('USE_SERPY', False):
         return serialize_with(map_serializer.get(collection))
     else:
-        return marshal_with(OrderedDict(collection), display_null=display_null)
+        return marshal_with(OrderedDict(collections), display_null=display_null)

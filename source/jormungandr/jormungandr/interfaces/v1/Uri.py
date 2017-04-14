@@ -91,17 +91,15 @@ class Uri(ResourceUri, ResourceUtc):
                             description="filter vehicle journeys on headsign")
         parser.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
-        parser.add_argument("odt_level", type=option_value(odt_levels),
-                                         default="all",
-                                         description="odt level")
+        parser.add_argument("odt_level", type=option_value(odt_levels), default="all", description="odt level")
         parser.add_argument("_current_datetime", type=date_time_format, default=datetime.utcnow(),
-                                description="The datetime used to consider the state of the pt object"
-                                            " Default is the current date and it is used for debug."
-                                            " Note: it will mainly change the disruptions that concern the object"
-                                            " The timezone should be specified in the format,"
-                                            " else we consider it as UTC")
+                            description="The datetime used to consider the state of the pt object"
+                                        " Default is the current date and it is used for debug."
+                                        " Note: it will mainly change the disruptions that concern the object"
+                                        " The timezone should be specified in the format,"
+                                        " else we consider it as UTC")
         parser.add_argument("distance", type=int, default=200,
-                                description="Distance range of the query. Used only if a coord is in the query")
+                            description="Distance range of the query. Used only if a coord is in the query")
         parser.add_argument("since", type=date_time_format,
                             description="filters objects not valid before this date")
         parser.add_argument("until", type=date_time_format,
@@ -196,16 +194,13 @@ def journey_pattern_points(is_collection):
             Uri.__init__(self, is_collection, "journey_pattern_points")
             self.collections = [
                 ("journey_pattern_points",
-                 NonNullList(fields.Nested(journey_pattern_point,
-                                           display_null=False))),
+                 NonNullList(fields.Nested(journey_pattern_point, display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
-                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
-                                           display_null=False)))
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            collections = marshal_with(OrderedDict(self.collections),
-                                       display_null=False)
+            collections = marshal_with(OrderedDict(self.collections), display_null=False)
             self.method_decorators.insert(1, collections)
     return JourneyPatternPoints
 
@@ -219,15 +214,13 @@ def commercial_modes(is_collection):
             Uri.__init__(self, is_collection, "commercial_modes")
             self.collections = [
                 ("commercial_modes",
-                 NonNullList(fields.Nested(commercial_mode,
-                                           display_null=False))),
+                 NonNullList(fields.Nested(commercial_mode, display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
-                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
-                                           display_null=False)))
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            self.method_decorators.insert(1, get_serializer(self.collection))
+            self.method_decorators.insert(1, get_serializer(collection=self.collection, collections=self.collections))
     return CommercialModes
 
 
@@ -240,16 +233,13 @@ def journey_patterns(is_collection):
             Uri.__init__(self, is_collection, "journey_patterns")
             self.collections = [
                 ("journey_patterns",
-                 NonNullList(fields.Nested(journey_pattern,
-                                           display_null=False))),
+                 NonNullList(fields.Nested(journey_pattern, display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
-                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
-                                           display_null=False)))
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            collections = marshal_with(OrderedDict(self.collections),
-                                       display_null=False)
+            collections = marshal_with(OrderedDict(self.collections), display_null=False)
             self.method_decorators.insert(1, collections)
     return JourneyPatterns
 
@@ -263,16 +253,13 @@ def vehicle_journeys(is_collection):
             Uri.__init__(self, is_collection, "vehicle_journeys")
             self.collections = [
                 ("vehicle_journeys",
-                 NonNullList(fields.Nested(vehicle_journey,
-                                           display_null=False))),
+                 NonNullList(fields.Nested(vehicle_journey, display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
-                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
-                                           display_null=False)))
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            collections = marshal_with(OrderedDict(self.collections),
-                                       display_null=False)
+            collections = marshal_with(OrderedDict(self.collections), display_null=False)
             self.method_decorators.insert(1, collections)
     return VehicleJourneys
 
@@ -286,16 +273,13 @@ def trips(is_collection):
             Uri.__init__(self, is_collection, "trips")
             self.collections = [
                 ("trips",
-                 NonNullList(fields.Nested(trip,
-                                           display_null=False))),
+                 NonNullList(fields.Nested(trip, display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
-                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
-                                           display_null=False)))
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            collections = marshal_with(OrderedDict(self.collections),
-                                       display_null=False)
+            collections = marshal_with(OrderedDict(self.collections), display_null=False)
             self.method_decorators.insert(1, collections)
     return Trips
 
@@ -309,15 +293,13 @@ def physical_modes(is_collection):
             Uri.__init__(self, is_collection, "physical_modes")
             self.collections = [
                 ("physical_modes",
-                 NonNullList(fields.Nested(physical_mode,
-                                           display_null=False))),
+                 NonNullList(fields.Nested(physical_mode, display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
-                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
-                                           display_null=False)))
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            self.method_decorators.insert(1, get_serializer(self.collection))
+            self.method_decorators.insert(1, get_serializer(collection=self.collection, collections=self.collections))
     return PhysicalModes
 
 
@@ -334,13 +316,11 @@ def stop_points(is_collection):
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
-                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
-                                           display_null=False)))
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            self.method_decorators.insert(1, get_serializer(self.collection))
-            self.parsers["get"].add_argument("original_id", type=unicode,
-                            description="original uri of the object you"
-                                    "want to query")
+            self.method_decorators.insert(1, get_serializer(collection=self.collection, collections=self.collections))
+            self.parsers["get"].add_argument("original_id", type=unicode, description="original uri of the object you"
+                                                                                      "want to query")
     return StopPoints
 
 
@@ -353,20 +333,16 @@ def stop_areas(is_collection):
             Uri.__init__(self, is_collection, "stop_areas")
             self.collections = [
                 ("stop_areas",
-                 NonNullList(fields.Nested(stop_area,
-                                           display_null=False))),
+                 NonNullList(fields.Nested(stop_area, display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
-                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
-                                           display_null=False))),
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False))),
             ]
-            self.method_decorators.insert(1, get_serializer(self.collection))
-            self.parsers["get"].add_argument("original_id", type=unicode,
-                            description="original uri of the object you"
-                                    "want to query")
+            self.method_decorators.insert(1, get_serializer(collection=self.collection, collections=self.collections))
+            self.parsers["get"].add_argument("original_id", type=unicode, description="original uri of the object you "
+                                                                                      "want to query")
     return StopAreas
-
 
 
 def connections(is_collection):
@@ -378,16 +354,13 @@ def connections(is_collection):
             Uri.__init__(self, is_collection, "connections")
             self.collections = [
                 ("connections",
-                 NonNullList(fields.Nested(connection,
-                                           display_null=False))),
+                 NonNullList(fields.Nested(connection, display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
-                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
-                                           display_null=False)))
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            collections = marshal_with(OrderedDict(self.collections),
-                                       display_null=False)
+            collections = marshal_with(OrderedDict(self.collections), display_null=False)
             self.method_decorators.insert(1, collections)
     return Connections
 
@@ -401,13 +374,11 @@ def companies(is_collection):
             Uri.__init__(self, is_collection, "companies")
             self.collections = [
                 ("companies",
-                 NonNullList(fields.Nested(company,
-                                           display_null=False))),
+                 NonNullList(fields.Nested(company, display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
-                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
-                                           display_null=False)))
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
             collections = marshal_with(OrderedDict(self.collections), display_null=False)
             self.method_decorators.insert(1, collections)
@@ -423,16 +394,13 @@ def poi_types(is_collection):
             Uri.__init__(self, is_collection, "poi_types")
             self.collections = [
                 ("poi_types",
-                 NonNullList(fields.Nested(poi_type,
-                                           display_null=False))),
+                 NonNullList(fields.Nested(poi_type, display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
-                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
-                                           display_null=False)))
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            collections = marshal_with(OrderedDict(self.collections),
-                                       display_null=False)
+            collections = marshal_with(OrderedDict(self.collections), display_null=False)
             self.method_decorators.insert(1, collections)
     return PoiTypes
 
@@ -446,18 +414,15 @@ def routes(is_collection):
             Uri.__init__(self, is_collection, "routes")
             self.collections = [
                 ("routes",
-                 NonNullList(fields.Nested(route,
-                                           display_null=False))),
+                 NonNullList(fields.Nested(route, display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
-                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
-                                           display_null=False)))
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            self.method_decorators.insert(1, get_serializer(self.collection))
-            self.parsers["get"].add_argument("original_id", type=unicode,
-                            description="original uri of the object you"
-                                    "want to query")
+            self.method_decorators.insert(1, get_serializer(collection=self.collection, collections=self.collections))
+            self.parsers["get"].add_argument("original_id", type=unicode, description="original uri of the object you"
+                                                                                      "want to query")
     return Routes
 
 
@@ -469,16 +434,14 @@ def line_groups(is_collection):
             Uri.__init__(self, is_collection, "line_groups")
             self.collections = [
                 ("line_groups",
-                 NonNullList(fields.Nested(line_group,
-                                           display_null=False))),
+                 NonNullList(fields.Nested(line_group, display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
             ]
-            self.method_decorators.insert(1, get_serializer(self.collection))
-            self.parsers["get"].add_argument("original_id", type=unicode,
-                            description="original uri of the object you"
-                                    "want to query")
+            self.method_decorators.insert(1, get_serializer(collection=self.collection, collections=self.collections))
+            self.parsers["get"].add_argument("original_id", type=unicode, description="original uri of the object you"
+                                                                                      "want to query")
     return LineGroups
 
 
@@ -496,14 +459,12 @@ def lines(is_collection):
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
-                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
-                                           display_null=False)))
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            self.method_decorators.insert(1, get_serializer(self.collection))
+            self.method_decorators.insert(1, get_serializer(collection=self.collection, collections=self.collections))
 
-            self.parsers["get"].add_argument("original_id", type=unicode,
-                            description="original uri of the object you"
-                                    "want to query")
+            self.parsers["get"].add_argument("original_id", type=unicode, description="original uri of the object you"
+                                                                                      "want to query")
     return Lines
 
 
@@ -516,20 +477,16 @@ def pois(is_collection):
             Uri.__init__(self, is_collection, "pois")
             self.collections = [
                 ("pois",
-                 NonNullList(fields.Nested(poi,
-                                           display_null=False))),
+                 NonNullList(fields.Nested(poi, display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
-                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
-                                           display_null=False)))
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            collections = marshal_with(OrderedDict(self.collections),
-                                       display_null=False)
+            collections = marshal_with(OrderedDict(self.collections), display_null=False)
             self.method_decorators.insert(1, collections)
-            self.parsers["get"].add_argument("original_id", type=unicode,
-                            description="original uri of the object you"
-                                    "want to query")
+            self.parsers["get"].add_argument("original_id", type=unicode, description="original uri of the object you"
+                                                                                      "want to query")
             self.parsers["get"].add_argument("bss_stands", type=boolean, default=True,
                                              description="Show bss stands availability")
             args = self.parsers["get"].parse_args()
@@ -548,18 +505,15 @@ def networks(is_collection):
             Uri.__init__(self, is_collection, "networks")
             self.collections = [
                 ("networks",
-                 NonNullList(fields.Nested(network,
-                                           display_null=False))),
+                 NonNullList(fields.Nested(network, display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
-                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
-                                           display_null=False)))
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            self.method_decorators.insert(1, get_serializer(self.collection))
-            self.parsers["get"].add_argument("original_id", type=unicode,
-                            description="original uri of the object you"
-                                    "want to query")
+            self.method_decorators.insert(1, get_serializer(collection=self.collection, collections=self.collections))
+            self.parsers["get"].add_argument("original_id", type=unicode, description="original uri of the object you"
+                                                                                      "want to query")
     return Networks
 
 
@@ -573,13 +527,11 @@ def disruptions(is_collection):
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
-                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
-                                           display_null=False)))
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            self.method_decorators.insert(1, get_serializer(self.collection))
-            self.parsers["get"].add_argument("original_id", type=unicode,
-                            description="original uri of the object you"
-                                    "want to query")
+            self.method_decorators.insert(1, get_serializer(collection=self.collection, collections=self.collections))
+            self.parsers["get"].add_argument("original_id", type=unicode, description="original uri of the object you"
+                                                                                      "want to query")
     return Disruptions
 
 
@@ -592,16 +544,13 @@ def contributors(is_collection):
             Uri.__init__(self, is_collection, "contributors")
             self.collections = [
                 ("contributors",
-                 NonNullList(fields.Nested(contributor,
-                                           display_null=False))),
+                 NonNullList(fields.Nested(contributor, display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
-                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
-                                           display_null=False)))
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            collections = marshal_with(OrderedDict(self.collections),
-                                       display_null=False)
+            collections = marshal_with(OrderedDict(self.collections), display_null=False)
             self.method_decorators.insert(1, collections)
     return Contributors
 
@@ -615,16 +564,13 @@ def datasets(is_collection):
             Uri.__init__(self, is_collection, "datasets")
             self.collections = [
                 ("datasets",
-                 NonNullList(fields.Nested(dataset,
-                                           display_null=False))),
+                 NonNullList(fields.Nested(dataset, display_null=False))),
                 ("pagination", PbField(pagination)),
                 ("error", PbField(error)),
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
-                ("feed_publishers", NonNullList(fields.Nested(feed_publisher,
-                                           display_null=False)))
+                ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            collections = marshal_with(OrderedDict(self.collections),
-                                       display_null=False)
+            collections = marshal_with(OrderedDict(self.collections), display_null=False)
             self.method_decorators.insert(1, collections)
     return Datasets
 
