@@ -107,10 +107,8 @@ def flatten(obj):
 
 def value_by_path(obj, path, default=None):
     new_obj = flatten(obj)
-    if new_obj and path in new_obj:
-        return new_obj[path]
-    else:
-        return default
+    if new_obj:
+        return new_obj.get(path, default)
 
 
 class NestedPropertyField(serpy.Field):

@@ -86,13 +86,9 @@ class AdministrativeRegionSerializer(serpy.DictSerializer):
     label = NestedPropertyField(attr='properties.geocoding.label')
     zip_code = NestedPropertyField(attr='properties.geocoding.postcode')
     coord = CoordField()
-    insee = serpy.MethodField()
+    insee = NestedPropertyField(attr='properties.geocoding.citycode')
     level = IntNestedPropertyField(attr='properties.geocoding.level')
     administrative_regions = serpy.MethodField()
-
-    def get_insee(self, obj):
-        geocoding = obj.get('properties', {}).get('geocoding', {})
-        return geocoding.get('citycode') or geocoding.get('city_code')
 
     def get_administrative_regions(self, obj):
         geocoding = obj.get('properties', {}).get('geocoding', {})
