@@ -575,25 +575,26 @@ def bragi_call_test():
         'http://bob.com/autocomplete?q=rue+bobette&limit=10':
         (bragi_response, 200)
     })
+    from jormungandr import app
+    with app.app_context():
+        # we mock the http call to return the hard coded mock_response
+        with mock.patch('requests.get', mock_requests.get):
+            raw_response = bragi.get({'q': 'rue bobette', 'count': 10}, instance=None)
+            places = raw_response.get('places')
+            assert len(places) == 4
+            bragi_house_jaures_response_check(places[0])
+            bragi_house_lefebvre_response_check(places[1])
+            bragi_street_response_check(places[2])
+            bragi_admin_response_check(places[3])
 
-    # we mock the http call to return the hard coded mock_response
-    with mock.patch('requests.get', mock_requests.get):
-        raw_response = bragi.get({'q': 'rue bobette', 'count': 10}, instance=None)
-        places = raw_response.get('places')
-        assert len(places) == 4
-        bragi_house_jaures_response_check(places[0])
-        bragi_house_lefebvre_response_check(places[1])
-        bragi_street_response_check(places[2])
-        bragi_admin_response_check(places[3])
-
-    with mock.patch('requests.post', mock_requests.get):
-        raw_response = bragi.get({'q': 'rue bobette', 'count': 10, 'shape': geojson()}, instance=None)
-        places = raw_response.get('places')
-        assert len(places) == 4
-        bragi_house_jaures_response_check(places[0])
-        bragi_house_lefebvre_response_check(places[1])
-        bragi_street_response_check(places[2])
-        bragi_admin_response_check(places[3])
+        with mock.patch('requests.post', mock_requests.get):
+            raw_response = bragi.get({'q': 'rue bobette', 'count': 10, 'shape': geojson()}, instance=None)
+            places = raw_response.get('places')
+            assert len(places) == 4
+            bragi_house_jaures_response_check(places[0])
+            bragi_house_lefebvre_response_check(places[1])
+            bragi_street_response_check(places[2])
+            bragi_admin_response_check(places[3])
 
 
 def bragi_make_params_with_instance_test():
