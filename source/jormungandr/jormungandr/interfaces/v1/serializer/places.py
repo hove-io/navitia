@@ -204,8 +204,14 @@ class GeocodeStopAreaSerializer(serpy.DictSerializer):
         return StopAreaSerializer(obj).data
 
 
+class WarningSerializer(serpy.DictSerializer):
+    id = LiteralField("beta_endpoint")
+    message = LiteralField("This service is under construction. You can help through github.com/CanalTP/navitia")
+
+
 class GeocodePlacesSerializer(serpy.DictSerializer):
     places = serpy.MethodField()
+    warnings = serpy.MethodField()
 
     def get_places(self, obj):
         map_serializer = {
@@ -222,3 +228,6 @@ class GeocodePlacesSerializer(serpy.DictSerializer):
                 abort(404, message='Unknown places type {}'.format(type_))
             res.append(map_serializer[type_](feature).data)
         return res
+
+    def get_warnings(self, obj):
+        return [WarningSerializer().data]
