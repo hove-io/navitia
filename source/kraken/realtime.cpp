@@ -275,8 +275,6 @@ create_disruption(const std::string& id,
                 // Don't take into account boarding and alighting duration, we'll get the one from the base stop_time later
                 stop_time.boarding_time = stop_time.departure_time;
                 stop_time.alighting_time = stop_time.arrival_time;
-                stop_time.set_pick_up_allowed(st.departure().has_time());
-                stop_time.set_drop_off_allowed(st.arrival().has_time());
                 std::string message;
                 if (st.HasExtension(kirin::stoptime_message)) {
                     message = st.GetExtension(kirin::stoptime_message);
@@ -290,10 +288,20 @@ create_disruption(const std::string& id,
                         return StopTimeUpdate::Status::UNCHANGED;
                     }
                 }();
+                if (status == StopTimeUpdate::Status::DELETED) {
+                    // for deleted stoptime, we disable pickup/drop_off
+                    // but we keep the departure/arrival to be able to match the stoptime to it's base stoptime
+                    stop_time.set_pick_up_allowed(false);
+                    stop_time.set_drop_off_allowed(false);
+                } else {
+                    stop_time.set_pick_up_allowed(st.departure().has_time());
+                    stop_time.set_drop_off_allowed(st.arrival().has_time());
+                }
                 // we update the trip status if the stoptime status is the most important status
                 // the most important status is DELAYED then DELETED
-                most_important_stoptime_status = static_cast<StopTimeUpdate::Status>(std::max(static_cast<size_t>(most_important_stoptime_status),
-                                                                                              static_cast<size_t>(status)));
+                most_important_stoptime_status = static_cast<StopTimeUpdate::Status>(
+                            std::max(static_cast<size_t>(most_important_stoptime_status),
+                                     static_cast<size_t>(status)));
                 StopTimeUpdate st_update{std::move(stop_time), message, status};
                 impact->aux_info.stop_times.emplace_back(std::move(st_update));
             }

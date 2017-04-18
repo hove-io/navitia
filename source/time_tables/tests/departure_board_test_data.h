@@ -147,9 +147,9 @@ struct departure_board_fixture {
         //
         //
         auto trip_update = ntest::make_delay_message("vjP:1", "20160103", {
-                std::make_tuple("stopP1", "20160103T2340"_pts, "20160103T2340"_pts),
-                std::make_tuple("stopP2", "20160104T0008"_pts, "20160104T0010"_pts),
-                std::make_tuple("stopP3", "20160104T0017"_pts, "20160104T0017"_pts),
+                DelayedTimeStop("stopP1", "20160103T2340"_pts),
+                DelayedTimeStop("stopP2", "20160104T0008"_pts, "20160104T0010"_pts).delay(4_min),
+                DelayedTimeStop("stopP3", "20160104T0017"_pts).delay(4_min),
             });
         navitia::handle_realtime("bib", "20160101T1337"_dt, trip_update, *b.data);
 
@@ -171,9 +171,9 @@ struct departure_board_fixture {
         //
         // 21m
         auto trip_update_q = ntest::make_delay_message("vjQ:1", "20160103", {
-                std::make_tuple("stopQ1", "20160104T0001"_pts, "20160104T0001"_pts),
-                std::make_tuple("stopQ2", "20160104T0005"_pts, "20160104T0006"_pts),
-                std::make_tuple("stopQ3", "20160104T0016"_pts, "20160104T0016"_pts),
+                DelayedTimeStop("stopQ1", "20160104T0001"_pts).delay(21_min),
+                DelayedTimeStop("stopQ2", "20160104T0005"_pts, "20160104T0006"_pts).delay(21_min),
+                DelayedTimeStop("stopQ3", "20160104T0016"_pts).delay(21_min),
             });
         navitia::handle_realtime("Q", "20160101T1337"_dt, trip_update_q, *b.data);
         b.data->build_raptor();

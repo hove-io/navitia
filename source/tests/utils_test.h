@@ -37,6 +37,7 @@ struct DelayedTimeStop {
     navitia::time_duration _arrival_delay = 0_s;
     navitia::time_duration _departure_delay = 0_s;
     std::string _msg = "birds on the tracks";
+    bool _skipped = false;
     DelayedTimeStop(const std::string& n, int arrival_time, int departure_time):
         _stop_name(n), _arrival_time(arrival_time), _departure_time(departure_time) {}
     DelayedTimeStop(const std::string& n, int time):
@@ -45,6 +46,7 @@ struct DelayedTimeStop {
     DelayedTimeStop& arrival_delay(navitia::time_duration delay) { _arrival_delay = delay; return *this; }
     DelayedTimeStop& departure_delay(navitia::time_duration delay) { _departure_delay = delay; return *this; }
     DelayedTimeStop& delay(navitia::time_duration delay) { return arrival_delay(delay).departure_delay(delay); }
+    DelayedTimeStop& skipped() { _skipped = true; return *this; }
 };
 
 inline transit_realtime::TripUpdate
@@ -70,6 +72,10 @@ make_delay_message(const std::string& vj_uri,
         arrival->set_delay(delayed_st._arrival_delay.total_seconds());
         departure->set_time(delayed_st._departure_time);
         departure->set_delay(delayed_st._departure_delay.total_seconds());
+        if (delayed_st._skipped) {
+            stop_time->set_schedule_relationship(
+                        transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_SKIPPED);
+        }
     }
 
     return trip_update;
@@ -162,3 +168,6 @@ std::set<std::string> get_uris(const nt::Indexes& indexes, const nt::Data& data)
         BOOST_CHECK_EQUAL_COLLECTIONS(std::begin(r1), std::end(r1), std::begin(r2), std::end(r2)); \
     }
 
+// maccro to test that a validity pattern ends with a sequence
+#define BOOST_CHECK_END_VP(vp, sequence) \
+    BOOST_CHECK_MESSAGE(boost::algorithm::ends_with(vp->days.to_string(), sequence), vp);
