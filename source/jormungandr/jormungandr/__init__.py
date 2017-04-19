@@ -42,7 +42,7 @@ from jormungandr.exceptions import log_exception
 from jormungandr.helper import ReverseProxied, NavitiaRequest
 from jormungandr import compat, utils
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder=None)
 app.config.from_object('jormungandr.default_settings')
 if 'JORMUNGANDR_CONFIG_FILE' in os.environ:
     app.config.from_envvar('JORMUNGANDR_CONFIG_FILE')
