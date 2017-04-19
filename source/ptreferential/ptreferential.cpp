@@ -35,7 +35,6 @@ www.navitia.io
 #include "type/data.h"
 
 #include <algorithm>
-#include <regex>
 
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/qi_lit.hpp>
