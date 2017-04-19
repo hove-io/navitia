@@ -32,6 +32,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
+from jormungandr.utils import get_lon_lat
 import requests
 from jormungandr.exceptions import TechnicalError, UnknownObject
 from flask import current_app
@@ -327,7 +328,7 @@ class GeocodeJson(AbstractAutocomplete):
 
     def make_url(self, end_point, uri=None):
 
-        if end_point not in ['autocomplete', 'features']:
+        if end_point not in ['autocomplete', 'features', 'reverse']:
             raise TechnicalError('Unknown endpoint')
 
         if not self.host:
@@ -402,8 +403,14 @@ class GeocodeJson(AbstractAutocomplete):
     def get_by_uri(self, uri, instance=None, current_datetime=None):
 
         params = self.basic_params(instance)
+        lon, lat = get_lon_lat(uri)
 
-        url = self.make_url('features', uri)
+        if lon is not None and lat is not None:
+            url = self.make_url('reverse')
+            params['lon'] = lon
+            params['lat'] = lat
+        else:
+            url = self.make_url('features', uri)
+
         raw_response = self.call_bragi(url, requests.get, timeout=self.timeout, params=params)
-
         return self.response_marshaler(raw_response, uri)
