@@ -30,7 +30,6 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask.ext.restful import Resource, fields, marshal_with
 from jormungandr import i_manager
-from jormungandr import app
 
 geo_status = {
         'geo_status': fields.Nested({'street_network_sources': fields.List(fields.String),
@@ -42,6 +41,7 @@ geo_status = {
             'poi_sources': fields.List(fields.String),
         })
 }
+
 
 class GeoStatus(Resource):
     @marshal_with(geo_status)

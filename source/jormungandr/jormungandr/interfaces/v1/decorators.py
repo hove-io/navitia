@@ -1,7 +1,5 @@
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-#
 # This file is part of Navitia,
-# the software to build cool stuff with public transport.
+#     the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
 #     powered by Canal TP (www.canaltp.fr).
@@ -26,24 +24,29 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from jormungandr.autocomplete.geocodejson import format_zip_code
+
+from flask import current_app
+from jormungandr.interfaces.v1.serializer import serialize_with
+from jormungandr.interfaces.v1.serializer import api
+from flask.ext.restful import marshal_with
+from collections import OrderedDict
+
+map_serializer = {
+   "networks": api.NetworksSerializer,
+   "lines": api.LinesSerializer,
+   "commercial_modes": api.CommercialModesSerializer,
+   "physical_modes": api.PhysicalModesSerializer,
+   "stop_points": api.StopPointsSerializer,
+   "stop_areas": api.StopAreasSerializer,
+   "routes": api.RoutesSerializer,
+   "line_groups": api.LineGroupsSerializer,
+   "lines": api.LinesSerializer,
+   "disruptions": api.DisruptionsSerializer,
+}
 
 
-def test_format_zip_code():
-    zip_codes = []
-    assert format_zip_code(zip_codes) == None
-
-    zip_codes = [""]
-    assert format_zip_code(zip_codes) == None
-
-    zip_codes = ["", ""]
-    assert format_zip_code(zip_codes) == None
-
-    zip_codes = ["75000"]
-    assert format_zip_code(zip_codes) == "75000"
-
-    zip_codes = ["75012", "75013"]
-    assert format_zip_code(zip_codes) == "75012-75013"
-
-    zip_codes = ["75013", "75014", "75012"]
-    assert format_zip_code(zip_codes) == "75012-75014"
+def get_serializer(collection, collections, display_null=False):
+    if current_app.config.get('USE_SERPY', False):
+        return serialize_with(map_serializer.get(collection))
+    else:
+        return marshal_with(OrderedDict(collections), display_null=display_null)

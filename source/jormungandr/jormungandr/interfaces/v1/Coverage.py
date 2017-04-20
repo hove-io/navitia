@@ -30,11 +30,11 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask.ext.restful import Resource, fields, marshal_with, reqparse
+from flask.ext.restful import fields, marshal_with, reqparse
 from flask.ext.restful.inputs import boolean
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.StatedResource import StatedResource
-from jormungandr.interfaces.v1.make_links import add_coverage_link, add_coverage_link, add_collection_links, clean_links
+from jormungandr.interfaces.v1.make_links import add_coverage_link, add_collection_links, clean_links
 from jormungandr.interfaces.v1.converters_collection_type import collections_to_resource_type
 from collections import OrderedDict
 from jormungandr.interfaces.v1.fields import NonNullNested, FieldDateTime

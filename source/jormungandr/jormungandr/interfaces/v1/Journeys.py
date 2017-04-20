@@ -29,10 +29,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from functools import cmp_to_key
 import logging
 from flask import request, g
-from flask.ext.restful import fields, reqparse, marshal_with, abort
+from flask.ext.restful import fields, marshal_with, abort
 from flask.ext.restful.inputs import boolean
 from jormungandr import i_manager, app
 from jormungandr.interfaces.v1.fields import disruption_marshaller, Links
@@ -40,28 +39,19 @@ from jormungandr.interfaces.v1.fields import display_informations_vj, error, pla
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
     SectionGeoJson, PbEnum, feed_publisher, Durations
 
-from jormungandr.interfaces.parsers import option_value, date_time_format, default_count_arg_type, date_time_format
-from jormungandr.interfaces.v1.ResourceUri import ResourceUri, complete_links
+from jormungandr.interfaces.parsers import default_count_arg_type
+from jormungandr.interfaces.v1.ResourceUri import complete_links
 from functools import wraps
 from jormungandr.interfaces.v1.fields import DateTime, Integer
 from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.make_links import create_external_link, create_internal_link
 from jormungandr.interfaces.v1.errors import ManageError
-from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import depth_argument, float_gt_0
-from operator import itemgetter
-from datetime import datetime, timedelta
 from collections import defaultdict
-from navitiacommon import type_pb2, response_pb2
+from navitiacommon import response_pb2
 from jormungandr.utils import date_to_timestamp
-from jormungandr.resources_utc import ResourceUtc
-from copy import deepcopy
-from jormungandr.travelers_profile import TravelerProfile
-from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.interfaces.v1.Calendars import calendar
-from navitiacommon.default_traveler_profile_params import acceptable_traveler_types
 from navitiacommon import default_values
-from jormungandr.interfaces.v1.journey_common import JourneyCommon, dt_represents, compute_possible_region
+from jormungandr.interfaces.v1.journey_common import JourneyCommon, compute_possible_region
 from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
 
 

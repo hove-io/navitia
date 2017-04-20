@@ -30,18 +30,15 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask import Flask, request
-from flask.ext.restful import Resource, fields, marshal_with, reqparse, abort
+from flask.ext.restful import fields, marshal_with, reqparse, abort
 from flask.ext.restful.inputs import boolean
 from flask.globals import g
 from jormungandr import i_manager, timezone
 from jormungandr.interfaces.v1.fields import disruption_marshaller
-from jormungandr.interfaces.v1.make_links import add_id_links
 from jormungandr.interfaces.v1.fields import NonNullList, NonNullNested, PbField, error, pt_object, feed_publisher
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument, option_value, default_count_arg_type, date_time_format
-from copy import deepcopy
 import datetime
 
 pt_objects = {

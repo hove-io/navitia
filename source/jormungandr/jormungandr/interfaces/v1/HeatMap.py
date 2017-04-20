@@ -29,25 +29,17 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask.ext.restful import fields, reqparse, marshal_with, abort
+from flask.ext.restful import fields, marshal_with, abort
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.fields import error,\
     PbField, NonNullList, NonNullNested,\
-    feed_publisher, Links, JsonString, place, NonNullString,\
+    Links, JsonString, place,\
     ListLit, beta_endpoint
-from jormungandr.interfaces.parsers import date_time_format
-from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.errors import ManageError
-from jormungandr.interfaces.argument import ArgumentDoc
-from datetime import datetime
 from jormungandr.utils import date_to_timestamp
-from jormungandr.resources_utc import ResourceUtc
-from jormungandr.interfaces.v1.transform_id import transform_id
-from jormungandr.interfaces.parsers import option_value
-from jormungandr.interfaces.v1.Journeys import dt_represents
 from jormungandr.interfaces.parsers import unsigned_integer
-from jormungandr.interfaces.v1.journey_common import JourneyCommon, dt_represents, compute_possible_region
+from jormungandr.interfaces.v1.journey_common import JourneyCommon
 from jormungandr.interfaces.v1.fields import DateTime
 
 

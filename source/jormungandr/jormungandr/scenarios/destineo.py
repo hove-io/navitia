@@ -34,8 +34,8 @@ import copy
 import logging
 from jormungandr.scenarios.utils import JourneySorter, are_equals, compare, add_link
 from navitiacommon import response_pb2
-from operator import itemgetter, indexOf, attrgetter
-from datetime import datetime, timedelta
+from operator import indexOf, attrgetter
+from datetime import datetime
 import pytz
 from collections import defaultdict, OrderedDict
 from jormungandr.scenarios.helpers import has_bss_first_and_walking_last, has_walking_first_and_bss_last, \

@@ -28,7 +28,6 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from collections import OrderedDict
 from jormungandr import app, cache
 from navitiacommon import models
 from navitiacommon.default_traveler_profile_params import default_traveler_profile_params, acceptable_traveler_types

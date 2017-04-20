@@ -42,8 +42,6 @@ from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import date_time_format, default_count_arg_type
 from jormungandr.interfaces.v1.errors import ManageError
 from datetime import datetime
-import aniso8601
-from datetime import timedelta
 from jormungandr.interfaces.v1.fields import disruption_marshaller
 
 disruption = {

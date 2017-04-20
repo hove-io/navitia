@@ -29,33 +29,22 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask.ext.restful import fields, reqparse, marshal_with, abort
 from jormungandr import i_manager
-from jormungandr.interfaces.v1.fields import Links
-from jormungandr.interfaces.v1.fields import error,\
-    PbField, NonNullList, NonNullNested,\
-    feed_publisher
 from jormungandr.interfaces.parsers import date_time_format
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
-from jormungandr.timezone import set_request_timezone
-from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.argument import ArgumentDoc
 from datetime import datetime
-from jormungandr.utils import date_to_timestamp
 from jormungandr.resources_utc import ResourceUtc
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.interfaces.parsers import option_value
 from jormungandr.interfaces.parsers import float_gt_0
 from jormungandr.interfaces.parsers import unsigned_integer
-from functools import wraps
 from flask.ext.restful.inputs import boolean
-from flask import request, g
-from flask.ext.restful import fields, reqparse, marshal_with, abort
+from flask.ext.restful import reqparse, abort
 import logging
 from jormungandr.exceptions import RegionNotFound
 from functools import cmp_to_key
 from jormungandr.instance_manager import instances_comparator
-from navitiacommon import default_values
 from jormungandr.travelers_profile import TravelerProfile
 from navitiacommon.default_traveler_profile_params import acceptable_traveler_types
 

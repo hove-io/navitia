@@ -40,8 +40,7 @@ from flask import logging
 import pybreaker
 import requests as requests
 from jormungandr import cache, app
-from datetime import datetime, time
-from jormungandr.utils import timestamp_to_datetime
+from datetime import datetime
 from navitiacommon.ratelimit import RateLimiter, FakeRateLimiter
 from navitiacommon import type_pb2
 import redis
