@@ -84,7 +84,7 @@ def import_last_stop_dataset(instance_name, wait=True):
 @manager.command
 def refresh_autocomplete_data(wait=True):
     """
-    reimport all the last autocomplete datas alongwith the last dataset of all instances
+    reimport all the last autocomplete datas along with the last dataset of all instances
     with import_stops_in_mimir = true
 
     """
