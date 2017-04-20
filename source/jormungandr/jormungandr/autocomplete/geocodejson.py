@@ -323,8 +323,6 @@ class GeocodeJson(AbstractAutocomplete):
             return GeocodePlacesSerializer(json_response).data
         else:
             from flask.ext.restful import marshal
-            from jormungandr.interfaces.v1.Places import geocodejson
-
             return marshal(json_response, geocodejson)
 
     def make_url(self, end_point, uri=None):
