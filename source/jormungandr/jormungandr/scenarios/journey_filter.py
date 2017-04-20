@@ -118,7 +118,10 @@ def _get_worst_similar(j1, j2, request):
     if get_nb_connections(j1) != get_nb_connections(j2):
         return j1 if get_nb_connections(j1) > get_nb_connections(j2) else j2
 
-    return j1 if get_min_waiting(j1) < get_min_waiting(j2) else j2
+    if get_min_waiting(j1) != get_min_waiting(j2):
+        return j1 if get_min_waiting(j1) < get_min_waiting(j2) else j2
+
+    return j1 if 'bike_in_pt' not in j1.tags else j2
 
 
 def to_be_deleted(journey):
