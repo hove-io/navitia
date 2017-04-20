@@ -29,17 +29,18 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from jormungandr.interfaces.v1.ResourceUri import ResourceUri
+from flask.ext.restful import Resource
 from jormungandr.interfaces.v1.serializer import api, JSONSchema
+from jormungandr import rest_api
 
 from serpy import Serializer
 
 class ApiSchema(Serializer):
     ptr = api.PTReferentialSerializer()
 
-class Schema(ResourceUri):
+class Schema(Resource):
     def __init__(self, **kwargs):
-        ResourceUri.__init__(self, authentication=False, links=False, **kwargs)
+        Resource.__init__(self, **kwargs)
 
     def get(self):
         return JSONSchema.JSONSchema(ApiSchema(), root=True).data, 200

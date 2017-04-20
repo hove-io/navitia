@@ -30,6 +30,7 @@
 # www.navitia.io
 
 from serpy import fields, Serializer
+from jormungandr.interfaces.v1.serializer.base import LiteralField
 
 TYPE_MAP = {
     'unknown': {
@@ -53,9 +54,9 @@ TYPE_MAP = {
 }
 
 class JSONSchema(Serializer):
-    properties = fields.MethodField('get_properties')
-    type = fields.MethodField('get_constant_object')
-    required = fields.MethodField('get_required')
+    properties = fields.MethodField()
+    type = LiteralField('object')
+    required = fields.MethodField()
     # Weird name to ensure it will be processed a the end
     _definitions = fields.MethodField('get_definitions', display_none=False, label='definitions')
 
@@ -64,9 +65,6 @@ class JSONSchema(Serializer):
         self.root = root
         self.definitions = {}
 
-    def get_constant_object(self, obj):
-        return 'object'
-
     def get_definitions(self, obj):
         if self.root:
             properties = {}
@@ -74,7 +72,7 @@ class JSONSchema(Serializer):
 
             while definitions:
                 field_name, field = definitions.popitem()
-                schema, nestedDefinitions = self.__class__._from_nested_schema(field)
+                schema, nestedDefinitions = self._from_nested_schema(field)
                 properties[field_name] = schema
                 self.add_new_definitions(definitions, nestedDefinitions, properties.keys())
 
@@ -101,7 +99,7 @@ class JSONSchema(Serializer):
         for field_name, field in obj._field_map.items():
             searchObj = field
             preTypeMethodName = '_jsonschema_pre_type_mapping'
-            if field.__class__ == fields.MethodField:
+            if isinstance(field, fields.MethodField):
                 method = field.as_getter(field_name, obj.__class__)
                 preTypeMethodName = method.__name__ + preTypeMethodName
                 searchObj = obj
@@ -112,12 +110,12 @@ class JSONSchema(Serializer):
                 schema = field._jsonschema_type_mapping()
             elif field.__class__ in mapping:
                 pytype = mapping[field.__class__]
-                schema = self.__class__._from_python_type(pytype)
+                schema = self._from_python_type(pytype)
             elif isinstance(field, Serializer):
                 self.definitions.update({
                     field.__class__.__name__: field
                 })
-                schema, definitions = self.__class__._from_nested_schema(field, onlyRef=True)
+                schema, definitions = self._from_nested_schema(field, onlyRef=True)
             else:
                 raise ValueError('unsupported field type %s for attr %s in object %s' % (field, field_name, obj.__class__.__name__))
 
@@ -127,14 +125,7 @@ class JSONSchema(Serializer):
         return properties
 
     def get_required(self, obj):
-        required = []
-
-        for field_name, field in obj._field_map.items():
-            if field.required:
-                name = field.label or field_name
-                required.append(name)
-
-        return required
+        return [field.label or field_name for field_name, field in obj._field_map.items() if field.required]
 
     @classmethod
     def _from_python_type(cls, pytype):
