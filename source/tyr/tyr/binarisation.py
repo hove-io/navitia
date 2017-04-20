@@ -574,16 +574,19 @@ def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
 
 
 @celery.task(bind=True)
-def stops2mimir(self, instance_config, input, job_id, dataset_uid):
+def stops2mimir(self, instance_config, input, job_id=None, dataset_uid=None):
     """
     launch stops2mimir
 
     Note: this is temporary, this will be done by tartare when tartare will be available
     """
-    job = models.Job.query.get(job_id)
-    instance = job.instance
-
-    logger = get_instance_logger(instance)
+    # We don't have job_id while doing a reimport of all instances with import_stops_in_mimir = true
+    if job_id:
+        job = models.Job.query.get(job_id)
+        instance = job.instance
+        logger = get_instance_logger(instance)
+    else:
+        logger = logging.getLogger("autocomplete")
     cnx_string = current_app.config['MIMIR_URL']
 
     working_directory = os.path.dirname(input)
@@ -601,6 +604,8 @@ def stops2mimir(self, instance_config, input, job_id, dataset_uid):
             raise ValueError('stops2mimir failed')
     except:
         logger.exception('')
-        job.state = 'failed'
-        models.db.session.commit()
+        if job_id:
+            job.state = 'failed'
+            models.db.session.commit()
+
         raise

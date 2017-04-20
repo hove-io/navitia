@@ -56,12 +56,43 @@ def import_last_autocomplete_dataset(instance_name, wait=True):
 
 
 @manager.command
+def import_last_stop_dataset(instance_name, wait=True):
+    """
+    reimport the last datasets of of all instances with import_stops_in_mimir = true
+
+    you can set wait=False if you don't want to wait for the result
+    """
+    instance = models.Instance.query_existing().filter_by(name=instance_name).first()
+
+    if not instance:
+        raise Exception("cannot find instance {}".format(instance_name))
+
+    files = [d.name for d in instance.last_datasets(nb_dataset=1, family_type='pt')]
+    logger = logging.getLogger(__name__)
+    logger.info('we reimport to mimir the last dataset of %s, composed of: %s',
+                instance.name, files)
+    if len(files) == 1:
+        _file = files[0]
+        future = tasks.import_in_mimir(_file, instance)
+        if wait and future:
+            future.wait()
+        logger.info('last datasets reimport finished for %s', instance.name)
+    else:
+        logger.info('No file to reimport to mimir the last dataset of %s', instance.name)
+
+
+@manager.command
 def refresh_autocomplete_data(wait=True):
     """
-    reimport all the last autocomplete datas
+    reimport all the last autocomplete datas along with the last dataset of all instances
+    with import_stops_in_mimir = true
+
     """
     instances_name = [i.name for i in models.AutocompleteParameter.query.all()]
     for name in instances_name:
         import_last_autocomplete_dataset(instance_name=name, wait=wait)
 
-    # TODO we need to find a way to reimport also the public transport dataset in the autocomplete
+    # we need to reimport also the public transport dataset in the autocomplete
+    navitia_instance = models.Instance.query_existing().filter_by(import_stops_in_mimir=True).all()
+    for name in [i.name for i in navitia_instance]:
+        import_last_stop_dataset(instance_name=name, wait=wait)
