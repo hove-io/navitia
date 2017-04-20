@@ -42,8 +42,9 @@ class PtJourney:
     Given a set of stop_points and their access time from origin and destination respectively, now we can compute the
     public transport journey
     """
-    def __init__(self, instance, orig_fallback_durtaions_pool, dest_fallback_durations_pool,
+    def __init__(self, future_manager, instance, orig_fallback_durtaions_pool, dest_fallback_durations_pool,
                  dep_mode, arr_mode, periode_extremity, journey_params, bike_in_pt, request):
+        self._future_manager = future_manager
         self._instance = instance
         self._orig_fallback_durtaions_pool = orig_fallback_durtaions_pool
         self._dest_fallback_durations_pool = dest_fallback_durations_pool
@@ -97,7 +98,7 @@ class PtJourney:
         return resp
 
     def _async_request(self):
-        self._value = helper_future.create_future(self._do_request)
+        self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):
         return self._value.wait_and_get()
@@ -127,8 +128,9 @@ class _PtJourneySorter(object):
 
 
 class PtJourneyPool:
-    def __init__(self, instance, requested_orig_obj, requested_dest_obj, streetnetwork_path_pool, krakens_call,
+    def __init__(self, future_manager, instance, requested_orig_obj, requested_dest_obj, streetnetwork_path_pool, krakens_call,
                  orig_fallback_durations_pool, dest_fallback_durations_pool, request):
+        self._future_manager = future_manager
         self._instance = instance
         self._requested_orig_obj = requested_orig_obj
         self._requested_dest_obj = requested_dest_obj
@@ -168,10 +170,16 @@ class PtJourneyPool:
                 self._journey_params.direct_path_duration = None
 
             bike_in_pt = (dep_mode == 'bike' and arr_mode == 'bike')
-            pt_journey = PtJourney(self._instance,
-                                   self._orig_fallback_durations_pool, self._dest_fallback_durations_pool,
-                                   dep_mode, arr_mode,
-                                   periode_extremity, self._journey_params, bike_in_pt, self._request)
+            pt_journey = PtJourney(future_manager=self._future_manager,
+                                   instance=self._instance,
+                                   orig_fallback_durtaions_pool=self._orig_fallback_durations_pool,
+                                   dest_fallback_durations_pool=self._dest_fallback_durations_pool,
+                                   dep_mode=dep_mode,
+                                   arr_mode=arr_mode,
+                                   periode_extremity=periode_extremity,
+                                   journey_params=self._journey_params,
+                                   bike_in_pt=bike_in_pt,
+                                   request=self._request)
 
             self._value.append(PtPoolElement(dep_mode, arr_mode, pt_journey))
 

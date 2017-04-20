@@ -35,8 +35,9 @@ class StreetNetworkPath:
     """
     A StreetNetworkPath is a journey from orig_obj to dest_obj purely in street network(without any pt)
     """
-    def __init__(self, instance, orig_obj, dest_obj, mode, fallback_extremity, request, streetnetwork_path_type):
+    def __init__(self, future_manager, instance, orig_obj, dest_obj, mode, fallback_extremity, request, streetnetwork_path_type):
         """
+        :param future_manager: a module that manages the future pool properly
         :param instance: instance of the coverage, all outside services callings pass through it(street network,
                          auto completion)
         :param orig_obj: proto obj
@@ -46,6 +47,7 @@ class StreetNetworkPath:
         :param request: original user request
         :param streetnetwork_path_type: street network path's type
         """
+        self._future_manager = future_manager
         self._instance = instance
         self._orig_obj = orig_obj
         self._dest_obj = dest_obj
@@ -73,7 +75,7 @@ class StreetNetworkPath:
         return dp
 
     def _async_request(self):
-        self._value = helper_future.create_future(self._do_request)
+        self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):
         if self._value:
@@ -86,7 +88,8 @@ class StreetNetworkPathPool:
     A direct path pool is a set of pure street network journeys which are computed by the given street network service.
     According to its usage, a StreetNetworkPath can be direct, begnning_fallback and ending_fallback
     """
-    def __init__(self, instance):
+    def __init__(self, future_manager, instance):
+        self._future_manager = future_manager
         self._instance = instance
         self._value = {}
 
@@ -105,7 +108,7 @@ class StreetNetworkPathPool:
                                                   period_extremity) if streetnetwork_service else None
         if key in self._value:
             return
-        self._value[key] = StreetNetworkPath(streetnetwork_service, requested_orig_obj, requested_dest_obj, mode,
+        self._value[key] = StreetNetworkPath(self._future_manager, streetnetwork_service, requested_orig_obj, requested_dest_obj, mode,
                                              period_extremity, request, streetnetwork_path_type)
 
     def get_all_direct_paths(self):

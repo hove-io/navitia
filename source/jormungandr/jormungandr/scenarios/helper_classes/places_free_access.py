@@ -39,13 +39,14 @@ class PlacesFreeAccess:
     """
     stop_points that are accessible freely from a given place: odt, stop_points of a stop_area, etc.
     """
-    def __init__(self, instance, requested_place_obj):
+    def __init__(self, future_manager, instance, requested_place_obj):
         """
 
         :param instance: instance of the coverage, all outside services callings pass through it(street network,
                          auto completion)
         :param requested_place_obj:
         """
+        self._future_manager = future_manager
         self._instance = instance
         self._requested_place_obj = requested_place_obj
         self._value = None
@@ -80,7 +81,7 @@ class PlacesFreeAccess:
         return PlaceFreeAccessResult(crowfly, odt)
 
     def _async_request(self):
-        self._value = helper_future.create_future(self._do_request)
+        self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):
         return self._value.wait_and_get()

@@ -37,7 +37,8 @@ class ProximitiesByCrowfly:
     """
     A ProximitiesByCrowfly is a set of stop_points that are accessible by crowfly within a time of 'max_duration'.
     """
-    def __init__(self, instance, requested_place_obj, mode, max_duration, max_nb_crowfly=5000):
+    def __init__(self, future_manager, instance, requested_place_obj, mode, max_duration, max_nb_crowfly=5000):
+        self._future_manager = future_manager
         self._instance = instance
         self._requested_place_obj = requested_place_obj
         self._mode = mode
@@ -78,14 +79,14 @@ class ProximitiesByCrowfly:
         return []
 
     def _async_request(self):
-        self._value = helper_future.create_future(self._do_request)
+        self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):
         return self._value.wait_and_get()
 
 
 class ProximitiesByCrowflyPool:
-    def __init__(self, instance, requested_place_obj, modes, request, direct_paths_by_mode, max_nb_crowfly=5000):
+    def __init__(self, future_manager, instance, requested_place_obj, modes, request, direct_paths_by_mode, max_nb_crowfly=5000):
         """
         A ProximitiesByCrowflyPool is a set of ProximitiesByCrowfly grouped by mode
 
@@ -101,6 +102,7 @@ class ProximitiesByCrowflyPool:
                                      15min (max_duration is 30min by default).
         :param max_nb_crowfly:
         """
+        self._future_manager = future_manager
         self._instance = instance
         self._requested_place_obj = requested_place_obj
         # we don't want to compute the same mode several times
@@ -118,8 +120,12 @@ class ProximitiesByCrowflyPool:
 
         for mode in self._modes:
             max_fallback_duration = get_max_fallback_duration(self._request, mode, self._direct_paths_by_mode.get(mode))
-            p = ProximitiesByCrowfly(self. _instance, self._requested_place_obj, mode, max_fallback_duration,
-                                     self._max_nb_crowfly)
+            p = ProximitiesByCrowfly(future_manager=self._future_manager,
+                                     instance=self. _instance,
+                                     requested_place_obj=self._requested_place_obj,
+                                     mode=mode,
+                                     max_duration=max_fallback_duration,
+                                     max_nb_crowfly=self._max_nb_crowfly)
 
             self._value[mode] = p
 

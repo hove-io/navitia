@@ -35,3 +35,4 @@ from proximities_by_crowfly import ProximitiesByCrowflyPool
 from complete_pt_journey import wait_and_complete_pt_journey
 from helper_exceptions import PtException, EntryPointException
 from helper_utils import get_entry_point_or_raise, check_final_results_or_raise
+from helper_future import FutureManager

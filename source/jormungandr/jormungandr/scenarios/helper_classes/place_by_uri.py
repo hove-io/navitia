@@ -30,7 +30,8 @@ import helper_future
 
 
 class PlaceByUri:
-    def __init__(self, instance, uri):
+    def __init__(self, future_manager, instance, uri):
+        self._future_manager = future_manager
         self._instance = instance
         self._uri = uri
         self._value = None
@@ -40,7 +41,7 @@ class PlaceByUri:
         return self._instance.georef.place(self._uri)
 
     def _async_request(self):
-        self._value = helper_future.create_future(self._do_request)
+        self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):
         return self._value.wait_and_get()

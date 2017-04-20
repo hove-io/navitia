@@ -50,10 +50,10 @@ class FallbackDurations:
 
     The returned dict will look like {'stop_point:stopA': 360, 'stop_point:stopB': 180, 'stop_point:stopC': 60}
     """
-    def __init__(self, instance, requested_place_obj, mode, proximities_by_crowfly_pool, places_free_access,
+    def __init__(self, future_manager, instance, requested_place_obj, mode, proximities_by_crowfly_pool, places_free_access,
                  max_duration_to_pt, request, speed_switcher):
         """
-
+        :param future_manager: a module that manages the future pool properly
         :param instance: instance of the coverage, all outside services callings pass through it(street network,
                          auto completion)
         :param requested_place_obj: departure protobuffer obj, returned by kraken
@@ -64,6 +64,7 @@ class FallbackDurations:
         :param request: original user request
         :param speed_switcher: default speed of different modes
         """
+        self._future_manager = future_manager
         self._instance = instance
         self._requested_place_obj = requested_place_obj
         self._mode = mode
@@ -145,7 +146,7 @@ class FallbackDurations:
         return result
 
     def _async_request(self):
-        self._value = helper_future.create_future(self._do_request)
+        self._value = self._future_manager.create_future(self._do_request)
 
     def wait_and_get(self):
         return self._value.wait_and_get() if self._value else None
@@ -155,9 +156,10 @@ class FallbackDurationsPool(dict):
     """
     A fallback durations pool is set of "fallback durations" grouped by mode.
     """
-    def __init__(self, instance, requested_place_obj, modes, proximities_by_crowfly_pool, places_free_access,
+    def __init__(self, future_manager, instance, requested_place_obj, modes, proximities_by_crowfly_pool, places_free_access,
                  direct_paths_by_mode, request):
         super(FallbackDurationsPool, self).__init__()
+        self._future_manager = future_manager
         self._instance = instance
         self._requested_place_obj = requested_place_obj
         self._modes = set(modes)
@@ -179,7 +181,7 @@ class FallbackDurationsPool(dict):
     def _async_request(self):
         for mode in self._modes:
             max_fallback_duration = get_max_fallback_duration(self._request, mode, self._direct_paths_by_mode.get(mode))
-            fallback_durations = FallbackDurations(self._instance, self._requested_place_obj, mode,
+            fallback_durations = FallbackDurations(self._future_manager, self._instance, self._requested_place_obj, mode,
                                                    self._proximities_by_crowfly_pool, self._places_free_access,
                                                    max_fallback_duration,
                                                    self._request, self._speed_switcher)

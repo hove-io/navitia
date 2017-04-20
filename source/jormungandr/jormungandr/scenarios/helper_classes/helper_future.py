@@ -32,16 +32,16 @@ from jormungandr import app
 
 """
 This file encapsulates the implementation of future, one can easily change the implementation of future (ex.
-use concurrent.futures ) by creating a new future class of future and implementing methods 'get_future' and
-'wait_and_get' and use that new class in 'create_future'
+use concurrent.futures ) by
+1. creating a new future class of future and implementing methods 'get_future' and 'wait_and_get'
+2. creating a new PoolManager and implementing __enter__ and __exit__ which allows all created future to be run
+   (the way to do cleaning depends on the library of future to use)
 """
 
 
-class GeventFuture:
-    _pool = gevent.pool.Pool(app.config.get('GREENLET_POOL_SIZE', 8))
-
-    def __init__(self, fun, *args, **kwargs):
-        self._future = self._pool.spawn(fun, *args, **kwargs)
+class _GeventFuture:
+    def __init__(self, pool, fun, *args, **kwargs):
+        self._future = pool.spawn(fun, *args, **kwargs)
 
     def get_future(self):
         return self._future
@@ -50,5 +50,19 @@ class GeventFuture:
         return self._future.get()
 
 
-def create_future(fun, *args, **kwargs):
-    return GeventFuture(fun, *args, **kwargs)
+class _GeventPoolManager:
+    def __init__(self):
+        self._pool = gevent.pool.Pool(app.config.get('GREENLET_POOL_SIZE', 8))
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self._pool.join()
+
+    def create_future(self, fun, *args, **kwargs):
+        return _GeventFuture(self._pool, fun, *args, **kwargs)
+
+
+def FutureManager():
+    return _GeventPoolManager()

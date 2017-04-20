@@ -42,7 +42,7 @@ class Scenario(new_default.Scenario):
         super(Scenario, self).__init__()
 
     @staticmethod
-    def _compute_all(request, instance, krakens_call):
+    def _compute_all(future_manager, request, instance, krakens_call):
         """
         For all krakens_call, call the kraken and aggregate the responses
 
@@ -56,13 +56,13 @@ class Scenario(new_default.Scenario):
 
         logger.debug('requesting places by uri orig: %s dest %s', request['origin'], request['destination'])
 
-        requested_orig = PlaceByUri(instance=instance, uri=request['origin'])
-        requested_dest = PlaceByUri(instance=instance, uri=request['destination'])
+        requested_orig = PlaceByUri(future_manager=future_manager, instance=instance, uri=request['origin'])
+        requested_dest = PlaceByUri(future_manager=future_manager, instance=instance, uri=request['destination'])
 
         requested_orig_obj = get_entry_point_or_raise(requested_orig, request['origin'])
         requested_dest_obj = get_entry_point_or_raise(requested_dest, request['destination'])
 
-        streetnetwork_path_pool = StreetNetworkPathPool(instance=instance)
+        streetnetwork_path_pool = StreetNetworkPathPool(future_manager=future_manager, instance=instance)
         period_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
 
         # we launch direct path asynchronously
@@ -89,22 +89,29 @@ class Scenario(new_default.Scenario):
         # Note :direct_paths_by_mode is a dict of mode vs future of a direct paths, this line is not blocking
         direct_paths_by_mode = streetnetwork_path_pool.get_all_direct_paths()
 
-        orig_proximities_by_crowfly = ProximitiesByCrowflyPool(instance=instance,
+        orig_proximities_by_crowfly = ProximitiesByCrowflyPool(future_manager=future_manager,
+                                                               instance=instance,
                                                                requested_place_obj=requested_orig_obj,
                                                                modes=requested_dep_modes,
                                                                request=request,
                                                                direct_paths_by_mode=direct_paths_by_mode)
 
-        dest_proximities_by_crowfly = ProximitiesByCrowflyPool(instance=instance,
+        dest_proximities_by_crowfly = ProximitiesByCrowflyPool(future_manager=future_manager,
+                                                               instance=instance,
                                                                requested_place_obj=requested_dest_obj,
                                                                modes=requested_arr_modes,
                                                                request=request,
                                                                direct_paths_by_mode=direct_paths_by_mode)
 
-        orig_places_free_access = PlacesFreeAccess(instance=instance, requested_place_obj=requested_orig_obj)
-        dest_places_free_access = PlacesFreeAccess(instance=instance, requested_place_obj=requested_dest_obj)
+        orig_places_free_access = PlacesFreeAccess(future_manager=future_manager,
+                                                   instance=instance,
+                                                   requested_place_obj=requested_orig_obj)
+        dest_places_free_access = PlacesFreeAccess(future_manager=future_manager,
+                                                   instance=instance,
+                                                   requested_place_obj=requested_dest_obj)
 
-        orig_fallback_durations_pool = FallbackDurationsPool(instance=instance,
+        orig_fallback_durations_pool = FallbackDurationsPool(future_manager=future_manager,
+                                                             instance=instance,
                                                              requested_place_obj=requested_orig_obj,
                                                              modes=requested_dep_modes,
                                                              proximities_by_crowfly_pool=orig_proximities_by_crowfly,
@@ -112,7 +119,8 @@ class Scenario(new_default.Scenario):
                                                              direct_paths_by_mode=direct_paths_by_mode,
                                                              request=request)
 
-        dest_fallback_durations_pool = FallbackDurationsPool(instance=instance,
+        dest_fallback_durations_pool = FallbackDurationsPool(future_manager=future_manager,
+                                                             instance=instance,
                                                              requested_place_obj=requested_dest_obj,
                                                              modes=requested_arr_modes,
                                                              proximities_by_crowfly_pool=dest_proximities_by_crowfly,
@@ -120,7 +128,8 @@ class Scenario(new_default.Scenario):
                                                              direct_paths_by_mode=direct_paths_by_mode,
                                                              request=request)
 
-        pt_journey_pool = PtJourneyPool(instance=instance,
+        pt_journey_pool = PtJourneyPool(future_manager=future_manager,
+                                        instance=instance,
                                         requested_orig_obj=requested_orig_obj,
                                         requested_dest_obj=requested_dest_obj,
                                         streetnetwork_path_pool=streetnetwork_path_pool,
@@ -129,7 +138,8 @@ class Scenario(new_default.Scenario):
                                         dest_fallback_durations_pool=dest_fallback_durations_pool,
                                         request=request)
 
-        completed_pt_journeys = wait_and_complete_pt_journey(requested_orig_obj=requested_orig_obj,
+        completed_pt_journeys = wait_and_complete_pt_journey(future_manager=future_manager,
+                                                             requested_orig_obj=requested_orig_obj,
                                                              requested_dest_obj=requested_dest_obj,
                                                              pt_journey_pool=pt_journey_pool,
                                                              streetnetwork_path_pool=streetnetwork_path_pool,
@@ -160,8 +170,9 @@ class Scenario(new_default.Scenario):
         logger = logging.getLogger(__name__)
         logger.warning("using experimental scenario!!")
         try:
-            res = self._compute_all(request, instance, krakens_call)
-            return res
+            with FutureManager() as future_manager:
+                res = self._compute_all(future_manager, request, instance, krakens_call)
+                return res
         except PtException as e:
             return [e.get()]
         except EntryPointException as e:
