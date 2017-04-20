@@ -43,7 +43,9 @@ from shapely.geometry import asShape
 
 
 UpdatedStopTime = make_namedtuple('UpdatedStopTime',
-                                  'stop_id', 'arrival', 'departure', message=None, skipped=False)
+                                  'stop_id', 'arrival', 'departure',
+                                  arrival_delay=0, departure_delay=0,
+                                  message=None, skipped=False)
 
 
 class MockKirinDisruptionsFixture(RabbitMQCnxFixture):
@@ -192,9 +194,11 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         self.send_mock("vjA", "20120614", 'modified',
            [UpdatedStopTime("stop_point:stopB",
                             arrival=tstamp("20120614T080224"), departure=tstamp("20120614T080225"),
+                            arrival_delay=60 + 24, departure_delay=60+25,
                             message='cow on tracks'),
             UpdatedStopTime("stop_point:stopA",
-                            arrival=tstamp("20120614T080400"), departure=tstamp("20120614T080400"))],
+                            arrival=tstamp("20120614T080400"), departure=tstamp("20120614T080400"),
+                            arrival_delay=3 * 60 + 58, departure_delay=3 * 60 + 58)],
            disruption_id='vjA_delayed')
 
         # A new vj is created
@@ -220,7 +224,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
             eq_(get_valid_time(get_not_null(imp_obj1, 'amended_arrival_time')), _dt(h=8, m=2, s=24))
             eq_(get_valid_time(get_not_null(imp_obj1, 'amended_departure_time')), _dt(h=8, m=2, s=25))
             eq_(get_not_null(imp_obj1, 'cause'), 'cow on tracks')
-            # for the moment we output 00000, but we should output the right base departure/arrival
+            eq_(get_not_null(imp_obj1, 'stop_time_effect'), 'delayed')
             eq_(get_valid_time(get_not_null(imp_obj1, 'base_arrival_time')), _dt(8, 1, 0))
             eq_(get_valid_time(get_not_null(imp_obj1, 'base_departure_time')), _dt(8, 1, 0))
 
@@ -228,6 +232,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
             eq_(get_valid_time(get_not_null(imp_obj2, 'amended_arrival_time')), _dt(h=8, m=4, s=0))
             eq_(get_valid_time(get_not_null(imp_obj2, 'amended_departure_time')), _dt(h=8, m=4, s=0))
             eq_(imp_obj2['cause'], '')
+            eq_(get_not_null(imp_obj1, 'stop_time_effect'), 'delayed')
             eq_(get_valid_time(get_not_null(imp_obj2, 'base_departure_time')), _dt(8, 1, 2))
             eq_(get_valid_time(get_not_null(imp_obj2, 'base_arrival_time')), _dt(8, 1, 2))
 
@@ -281,9 +286,11 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         self.send_mock("vjA", "20120614", 'modified',
            [UpdatedStopTime("stop_point:stopB",
                             arrival=tstamp("20120614T080224"), departure=tstamp("20120614T080225"),
+                            arrival_delay=60 + 24, departure_delay=60+25,
                             message='cow on tracks'),
             UpdatedStopTime("stop_point:stopA",
-                            arrival=tstamp("20120614T080400"), departure=tstamp("20120614T080400"))],
+                            arrival=tstamp("20120614T080400"), departure=tstamp("20120614T080400"),
+                            arrival_delay=3 * 60 + 58, departure_delay=3 * 60 + 58)],
            disruption_id='vjA_delayed')
 
         # A new vj is created
@@ -309,7 +316,8 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         # we then try to send a delay on another train.
         # we should not have lost the first delay
         self.send_mock("vjB", "20120614", 'modified',
-           [UpdatedStopTime("stop_point:stopB", tstamp("20120614T180224"), tstamp("20120614T180225")),
+           [UpdatedStopTime("stop_point:stopB", tstamp("20120614T180224"), tstamp("20120614T180225"),
+                            arrival_delay=60 + 24, departure_delay=60 + 25,),
             UpdatedStopTime("stop_point:stopA", tstamp("20120614T180400"), tstamp("20120614T180400"),
                             message="bob's in the place")])
 
@@ -325,11 +333,10 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         ###################################
         self.send_mock("vjA", "20120614", 'modified',
            [UpdatedStopTime("stop_point:stopB",
-                            arrival=tstamp("20120614T080100"), departure=tstamp("20120614T080100"),
-                            message='cow on tracks'),
+                            arrival=tstamp("20120614T080100"), departure=tstamp("20120614T080100")),
             UpdatedStopTime("stop_point:stopA",
                             arrival=tstamp("20120614T080102"), departure=tstamp("20120614T080102"),
-                            skipped=True)],
+                            message='cow on tracks', skipped=True)],
            disruption_id='vjA_skip_A')
 
         # A new vj is created
@@ -358,15 +365,14 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         imp_obj1 = impacted_objs[0]
         eq_(get_valid_time(get_not_null(imp_obj1, 'amended_arrival_time')), _dt(8, 1, 0))
         eq_(get_valid_time(get_not_null(imp_obj1, 'amended_departure_time')), _dt(8, 1, 0))
-        eq_(get_not_null(imp_obj1, 'cause'), 'cow on tracks')
         eq_(get_not_null(imp_obj1, 'stop_time_effect'), 'unchanged')
         eq_(get_valid_time(get_not_null(imp_obj1, 'base_arrival_time')), _dt(8, 1, 0))
         eq_(get_valid_time(get_not_null(imp_obj1, 'base_departure_time')), _dt(8, 1, 0))
 
         imp_obj2 = impacted_objs[1]
-        eq_(get_valid_time(get_not_null(imp_obj2, 'amended_arrival_time')), _dt(8, 1, 2))
-        eq_(get_valid_time(get_not_null(imp_obj2, 'amended_departure_time')), _dt(8, 1, 2))
-        eq_(imp_obj2['cause'], '')
+        assert 'amended_arrival_time' not in imp_obj2
+        assert 'amended_departure_time' not in imp_obj2
+        eq_(get_not_null(imp_obj2, 'cause'), 'cow on tracks')
         eq_(get_not_null(imp_obj2, 'stop_time_effect'), 'deleted')  # the stoptime is marked as deleted
         eq_(get_valid_time(get_not_null(imp_obj2, 'base_departure_time')), _dt(8, 1, 2))
         eq_(get_valid_time(get_not_null(imp_obj2, 'base_arrival_time')), _dt(8, 1, 2))
@@ -463,8 +469,9 @@ def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], 
             stop_time_update = trip_update.stop_time_update.add()
             stop_time_update.stop_id = st.stop_id
             stop_time_update.arrival.time = st.arrival
-            # stop_time_update.arrival.delay = 1
+            stop_time_update.arrival.delay = st.arrival_delay
             stop_time_update.departure.time = st.departure
+            stop_time_update.departure.delay = st.departure_delay
             s = gtfs_realtime_pb2.TripUpdate.StopTimeUpdate.SCHEDULED
             if st.skipped:
                 s = gtfs_realtime_pb2.TripUpdate.StopTimeUpdate.SKIPPED

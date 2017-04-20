@@ -1101,6 +1101,11 @@ def is_valid_disruption(disruption, chaos_disrup=True):
                 if 'amended_departure_time' in impacted_stop:
                     get_valid_time(impacted_stop['amended_departure_time'])
 
+                # if the stop has been deleted, we do not output it's amended times
+                if get_not_null(impacted_stop, "stop_time_effect") == 'deleted':
+                    assert 'amended_arrival_time' not in impacted_stop
+                    assert 'amended_departure_time' not in impacted_stop
+
                 # we need at least either the base or the departure information
                 assert 'base_arrival_time' in impacted_stop and 'base_departure_time' in impacted_stop or \
                        'amended_arrival_time' in impacted_stop and 'amended_arrival_time' in impacted_stop

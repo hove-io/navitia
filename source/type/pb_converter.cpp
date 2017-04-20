@@ -111,9 +111,11 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
             filler.copy(0, DumpMessage::No).fill_pb_object(stu.stop_time.stop_point,
                                                            impacted_stop->mutable_stop_point());
 
-            //TODO output only modified stoptime update
-            filler.copy(0, DumpMessage::No).fill_pb_object(&stu.stop_time,
-                                                           impacted_stop->mutable_amended_stop_time());
+            if (stu.status != nd::StopTimeUpdate::Status::DELETED) {
+                // we don't want to output amended departure/arrival for deleted stops
+                filler.copy(0, DumpMessage::No).fill_pb_object(&stu.stop_time,
+                                                               impacted_stop->mutable_amended_stop_time());
+            }
 
             // we need to get the base stoptime
             const auto* base_st = impact.aux_info.get_base_stop_time(stu);
