@@ -800,7 +800,6 @@ class Scenario(simple.Scenario):
         resp = []
         logger = logging.getLogger(__name__)
         futures = []
-        self.nb_kraken_calls = 0
 
         def worker(dep_mode, arr_mode, instance, request, request_id):
             return (dep_mode, arr_mode, instance.send_and_receive(request, request_id=request_id))
