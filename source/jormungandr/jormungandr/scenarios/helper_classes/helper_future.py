@@ -94,5 +94,7 @@ class _GeventPoolManager(_AbstractPoolManager):
 @contextmanager
 def FutureManager():
     m = _GeventPoolManager()
-    yield m
-    m.clean_futures()
+    try:
+        yield m
+    finally:
+        m.clean_futures()
