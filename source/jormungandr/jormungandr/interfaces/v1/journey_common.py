@@ -193,6 +193,7 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
                                             " Note: it will mainly change the disruptions that concern "
                                             "the object The timezone should be specified in the format,"
                                             " else we consider it as UTC")
+        parser_get.add_argument("min_nb_transfers", type=int, default=0)
 
     def parse_args(self, region=None, uri=None):
         args = self.parsers['get'].parse_args()

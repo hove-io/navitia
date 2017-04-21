@@ -520,7 +520,7 @@ class AbstractAutocompleteAndRouting(AbstractTestFixture):
 
 @config({'scenario': 'new_default'})
 class TestNewDefaultAutocompleteAndRouting(AbstractAutocompleteAndRouting,
-                                         NewDefaultScenarioAbstractTestFixture):
+                                           NewDefaultScenarioAbstractTestFixture):
     pass
 
 @config({'scenario': 'experimental'})

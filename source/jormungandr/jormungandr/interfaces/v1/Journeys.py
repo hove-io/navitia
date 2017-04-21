@@ -304,6 +304,7 @@ class add_journey_href(object):
                     args['first_section_mode[]'] = journey['sections'][0]['mode']
                 if 'last_section_mode[]' in args:
                     args['last_section_mode[]'] = journey['sections'][-1]['mode']
+                args['min_nb_transfers'] = journey['nb_transfers']
 
                 if 'region' in kwargs:
                     args['region'] = kwargs['region']
