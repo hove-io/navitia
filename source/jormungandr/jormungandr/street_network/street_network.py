@@ -38,11 +38,17 @@ import abc
 # http://stackoverflow.com/a/38668373/1614576
 ABC = abc.ABCMeta(str("ABC"), (object,), {})
 
+
 # Regarding to the type of direct path, some special treatments may be done in connector
-class DirectPathType:
-    DIRECT_NO_PT = 0
+class StreetNetworkPathType:
+    DIRECT = 0
     BEGINNING_FALLBACK = 1
     ENDING_FALLBACK = 2
+
+from collections import namedtuple
+StreetNetworkPathKey = namedtuple('StreetNetworkPathKey', ['mode', 'orig_uri', 'dest_uri',
+                                                           'streetnetwork_path_type', 'period_extremity'])
+
 
 class AbstractStreetNetworkService(ABC):
     @abc.abstractmethod
@@ -55,6 +61,18 @@ class AbstractStreetNetworkService(ABC):
         :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
         :param direct_path_type : direct_path need to be treated differently regarding to the used connector
         '''
+        pass
+
+    @abc.abstractmethod
+    def make_path_key(self, mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity):
+        """
+        This method is used for the caching method. It's connector specific.
+        :param orig_uri, dest_uri, mode: matters obviously
+        :param streetnetwork_path_type: whether it's a fallback at the beginning,
+            the end of journey or a direct path without PT also matters especially for car (to know if we park before or after)
+        :param period_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
+
+        """
         pass
 
     def record_external_failure(self, message):
