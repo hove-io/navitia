@@ -96,7 +96,5 @@ def FutureManager():
     m = _GeventPoolManager()
     try:
         yield m
-    except:
-        raise
     finally:
         m.clean_futures()
