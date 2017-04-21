@@ -39,9 +39,8 @@ www.navitia.io
 #include "utils/init.h"
 #include "kraken_zmq.h"
 #include "utils/zmq.h"
-#include <iostream>
 
-static void show_usage(std::string name)
+static void show_usage(const std::string& name)
 {
     std::cerr << "Usage:\n"
               << "\t" << name << " --help\t\tShow this message.\n"
