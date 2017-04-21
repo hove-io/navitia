@@ -177,14 +177,14 @@ class Scenario(new_default.Scenario):
 
         Note that the cleaning process depends on the implementation of futures.
         """
-        with FutureManager() as future_manager:
-            try:
+        try:
+            with FutureManager() as future_manager:
                 res = self._compute_all(future_manager, request, instance, krakens_call)
                 return res
-            except PtException as e:
-                return [e.get()]
-            except EntryPointException as e:
-                return [e.get()]
+        except PtException as e:
+            return [e.get()]
+        except EntryPointException as e:
+            return [e.get()]
 
     def isochrone(self, request, instance):
         return new_default.Scenario().isochrone(request, instance)
