@@ -170,6 +170,14 @@ class Scenario(new_default.Scenario):
         logger = logging.getLogger(__name__)
         logger.warning("using experimental scenario!!")
         try:
+            """
+            All spawned futures must be started(if they're not yet started) when leaving the scope.
+
+            We do this to prevent the programme from being blocked in case where some un-started futures may hold
+            threading locks. If we leave the scope without cleaning these futures, they may hold locks forever.
+
+            Note that the cleaning process depends on the implementation of futures.
+            """
             with FutureManager() as future_manager:
                 res = self._compute_all(future_manager, request, instance, krakens_call)
                 return res

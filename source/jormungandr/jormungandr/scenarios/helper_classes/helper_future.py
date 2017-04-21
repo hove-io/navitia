@@ -58,6 +58,12 @@ class _GeventPoolManager:
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
+        """
+        All spawned futures must be started(if they're not yet started) when leaving the scope.
+
+        We do this to prevent the programme from being blocked in case where some un-started futures may hold threading
+        locks. If we leave the scope without starting these futures, they may hold locks forever.
+        """
         self._pool.join()
 
     def create_future(self, fun, *args, **kwargs):
