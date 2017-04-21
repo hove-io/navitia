@@ -294,9 +294,17 @@ class add_journey_href(object):
                 return objects
             for journey in objects[0]['journeys']:
                 args = dict(request.args)
-                ids = {o['stop_point']['stop_area']['id']
+                ids = {o['stop_point']['id']
                        for s in journey.get('sections', []) if 'from' in s
                        for o in (s['from'], s['to']) if 'stop_point' in o}
+
+                #only one first_section_mode is allowed if present in the request
+                #same for last_section_mode also
+                if 'first_section_mode[]' in args:
+                    args['first_section_mode[]'] = journey['sections'][0]['mode']
+                if 'last_section_mode[]' in args:
+                    args['last_section_mode[]'] = journey['sections'][-1]['mode']
+
                 if 'region' in kwargs:
                     args['region'] = kwargs['region']
                 if "sections" not in journey:#this mean it's an isochrone...

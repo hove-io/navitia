@@ -367,6 +367,10 @@ class AbstractTestFixture(object):
                 assert j['links'][0]['type'] == 'journeys'
                 assert '/journeys?' in j['links'][0]['href']
                 assert 'allowed_id%5B%5D=' in j['links'][0]['href']
+                if 'first_secion_mode%5B%5D=' in j['links'][0]['href']:
+                    assert j['links'][0]['href'].count('first_secion_mode%5B%5D=') == 1
+                if 'last_secion_mode%5B%5D=' in j['links'][0]['href']:
+                    assert j['links'][0]['href'].count('last_secion_mode%5B%5D=') == 1
             else:
                 assert 'links' not in j
 
