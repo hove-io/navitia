@@ -29,7 +29,11 @@
 import gevent
 import gevent.pool
 from jormungandr import app
-
+from contextlib import contextmanager
+# Using abc.ABCMeta in a way it is compatible both with Python 2.7 and Python 3.x
+# http://stackoverflow.com/a/38668373/1614576
+import abc
+ABC = abc.ABCMeta(str("ABC"), (object,), {})
 """
 This file encapsulates the implementation of future, one can easily change the implementation of future (ex.
 use concurrent.futures ) by
@@ -39,7 +43,27 @@ use concurrent.futures ) by
 """
 
 
-class _GeventFuture:
+class _AbstractFuture(ABC):
+    @abc.abstractmethod
+    def get_future(self):
+        pass
+
+    @abc.abstractmethod
+    def wait_and_get(self):
+        pass
+
+
+class _AbstractPoolManager(ABC):
+    @abc.abstractmethod
+    def create_future(self, fun, *args, **kwargs):
+        pass
+
+    @abc.abstractmethod
+    def clean_futures(self):
+        pass
+
+
+class _GeventFuture(_AbstractFuture):
     def __init__(self, pool, fun, *args, **kwargs):
         self._future = pool.spawn(fun, *args, **kwargs)
 
@@ -50,14 +74,14 @@ class _GeventFuture:
         return self._future.get()
 
 
-class _GeventPoolManager:
+class _GeventPoolManager(_AbstractPoolManager):
     def __init__(self):
         self._pool = gevent.pool.Pool(app.config.get('GREENLET_POOL_SIZE', 8))
 
-    def __enter__(self):
-        return self
+    def create_future(self, fun, *args, **kwargs):
+        return _GeventFuture(self._pool, fun, *args, **kwargs)
 
-    def __exit__(self, exc_type, exc_value, traceback):
+    def clean_futures(self):
         """
         All spawned futures must be started(if they're not yet started) when leaving the scope.
 
@@ -66,9 +90,9 @@ class _GeventPoolManager:
         """
         self._pool.join()
 
-    def create_future(self, fun, *args, **kwargs):
-        return _GeventFuture(self._pool, fun, *args, **kwargs)
 
-
+@contextmanager
 def FutureManager():
-    return _GeventPoolManager()
+    m = _GeventPoolManager()
+    yield m
+    m.clean_futures()
