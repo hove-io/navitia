@@ -446,7 +446,7 @@ class AbstractAutocompleteAndRouting(AbstractTestFixture):
                         "geocoding": {
                             "city": "Bobtown",
                             "housenumber": "20",
-                            "id": check_utils.r_coord, # the adresse is just above 'R'
+                            "id": "addr:" + check_utils.r_coord, # the adresse is just above 'R'
                             "label": "20 Rue Bob (Bobtown)",
                             "name": "Rue Bob",
                             "postcode": "02100",
@@ -485,7 +485,9 @@ class AbstractAutocompleteAndRouting(AbstractTestFixture):
             'https://host_of_bragi/autocomplete?q=bobette&{p}'.format(p=params): (bragi_bobette, 200),
             'https://host_of_bragi/features/bobette?pt_dataset=main_routing_test': (bragi_bobette, 200),
             'https://host_of_bragi/autocomplete?q=20+rue+bob&{p}'.format(p=params): (bob_street, 200),
-            'https://host_of_bragi/features/{}?pt_dataset=main_routing_test'.format(check_utils.r_coord): (bob_street, 200)
+            'https://host_of_bragi/reverse?lat={lat}&lon={lon}&pt_dataset=main_routing_test'
+            .format(lon=check_utils.r_coord.split(';')[0], lat=check_utils.r_coord.split(';')[1])
+            : (bob_street, 200)
         })
 
         def get_autocomplete(query):
