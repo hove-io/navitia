@@ -67,7 +67,7 @@ class TestJourneysDistributed(JourneyCommon, DirectPath, NewDefaultScenarioAbstr
         pass
 
     def test_datetime_represents_arrival(self):
-        super(TestJourneysExperimental, self).test_datetime_represents_arrival()
+        super(TestJourneysDistributed, self).test_datetime_represents_arrival()
 
     def test_journeys_wheelchair_profile(self):
         """
