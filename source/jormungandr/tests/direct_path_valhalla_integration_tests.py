@@ -29,7 +29,6 @@
 
 from .tests_mechanism import AbstractTestFixture, dataset
 from jormungandr.street_network.valhalla import Valhalla
-from jormungandr.scenarios import experimental
 import requests as requests
 from mock import MagicMock
 import json
@@ -164,7 +163,7 @@ class MockValhalla(Valhalla):
         return response
 
 
-@dataset({'main_routing_test': {'scenario': 'experimental',
+@dataset({'main_routing_test': {'scenario': 'distributed',
                                 'instance_config': {'street_network': MOCKED_VALHALLA_CONF}}})
 class TestValhallaDirectPath(AbstractTestFixture):
 
