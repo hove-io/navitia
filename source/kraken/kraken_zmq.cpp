@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -40,6 +40,14 @@ www.navitia.io
 #include "kraken_zmq.h"
 #include "utils/zmq.h"
 
+static void show_usage(const std::string& name)
+{
+    std::cerr << "Usage:\n"
+              << "\t" << name << " --help\t\tShow this message.\n"
+              << "\t" << name << " [config_file]\tSpecify the path of the configuration file "
+              << "(default: kraken.ini in the current path)"
+              << std::endl;
+}
 
 int main(int argn, char** argv){
     navitia::init_app();
@@ -57,8 +65,14 @@ int main(int argn, char** argv){
     }
     std::string conf_file;
     if(argn > 1){
-        // The first argument is the path to the configuration file
-        conf_file = argv[1];
+        std::string arg = argv[1];
+        if(arg == "-h" || arg == "--help"){
+            show_usage(argv[0]);
+            return 0;
+        }else{
+            // The first argument is the path to the configuration file
+            conf_file = arg;
+        }
     }else{
         conf_file = path + application + ".ini";
     }
