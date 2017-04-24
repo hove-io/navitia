@@ -31,7 +31,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from abc import abstractmethod, ABCMeta
-from jormungandr.exceptions import UnknownObject
+from jormungandr.exceptions import UnknownObject, TechnicalError, log_exception
 
 
 class AbstractAutocomplete(object):
@@ -61,10 +61,16 @@ class AbstractAutocomplete(object):
     def get_object_by_uri(self, uri, instance=None, current_datetime=None):
         """
         same as get_by_uri, but more user friendly, return the object or none if nothing was found
+
+        Note:
+            We'd like to return a None to the caller even though the autocomplete service is not available
+            (it'd be a pity that a whole journey is found but jormungandr crashes because of autocomplete service)
         """
         details = None
         try:
             details = self.get_by_uri(uri, instance=instance, current_datetime=current_datetime)
+        except TechnicalError as e:
+            log_exception(sender=None, exception=e)
         except UnknownObject:
             pass
 
