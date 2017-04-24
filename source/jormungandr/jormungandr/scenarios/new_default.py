@@ -899,7 +899,7 @@ class Scenario(simple.Scenario):
         return best.arrival_date_time - one_second
 
     def get_entrypoint_detail(self, entrypoint, instance):
-        logging.info("calling autocomplete {} for {}".format(instance.autocomplete, entrypoint))
+        logging.debug("calling autocomplete {} for {}".format(instance.autocomplete, entrypoint))
         detail = instance.autocomplete.get_object_by_uri(entrypoint, instance=instance)
 
         if detail:
