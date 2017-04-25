@@ -168,6 +168,7 @@ std::set<std::string> get_uris(const nt::Indexes& indexes, const nt::Data& data)
         BOOST_CHECK_EQUAL_COLLECTIONS(std::begin(r1), std::end(r1), std::begin(r2), std::end(r2)); \
     }
 
-// maccro to test that a validity pattern ends with a sequence
+// macro to test that a validity pattern ends with a sequence
+// Note: it has been done as a macro and not a function to have a better error message
 #define BOOST_CHECK_END_VP(vp, sequence) \
     BOOST_CHECK_MESSAGE(boost::algorithm::ends_with(vp->days.to_string(), sequence), vp);

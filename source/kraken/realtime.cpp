@@ -305,17 +305,15 @@ create_disruption(const std::string& id,
                 impact->aux_info.stop_times.emplace_back(std::move(st_update));
             }
 
-            trip_effect = [most_important_stoptime_status]() {
-                switch (most_important_stoptime_status) {
-                case StopTimeUpdate::Status::DELAYED:
-                case StopTimeUpdate::Status::UNCHANGED: // it can be a back to normal case
-                    return nt::disruption::Effect::SIGNIFICANT_DELAYS;
-                case StopTimeUpdate::Status::DELETED:
-                    return nt::disruption::Effect::DETOUR;
-                default:
-                    return nt::disruption::Effect::UNKNOWN_EFFECT;
-                }
-            }();
+            switch (most_important_stoptime_status) {
+            case StopTimeUpdate::Status::DELAYED:
+            case StopTimeUpdate::Status::UNCHANGED: // it can be a back to normal case
+                trip_effect = nt::disruption::Effect::SIGNIFICANT_DELAYS; break;
+            case StopTimeUpdate::Status::DELETED:
+                trip_effect = nt::disruption::Effect::DETOUR; break;
+            default:
+                trip_effect = nt::disruption::Effect::UNKNOWN_EFFECT; break;
+            }
         } else {
             LOG4CPLUS_ERROR(log, "unhandled real time message");
         }
