@@ -1,3 +1,9 @@
+navitia2 (2.30.1) unstable; urgency=low
+
+  * Jormungandr: catch technical error of autocomplete <https://github.com/CanalTP/navitia/pull/206>
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Tue, 25 Apr 2017 08:04:59 +0100
+
 navitia2 (2.30.0) unstable; urgency=low
 
   * Kraken: update all identical cause, severity and tag  <https://github.com/CanalTP/navitia/pull/2053>
