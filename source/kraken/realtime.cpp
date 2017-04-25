@@ -299,9 +299,8 @@ create_disruption(const std::string& id,
                 }
                 // we update the trip status if the stoptime status is the most important status
                 // the most important status is DELAYED then DELETED
-                most_important_stoptime_status = static_cast<StopTimeUpdate::Status>(
-                            std::max(static_cast<size_t>(most_important_stoptime_status),
-                                     static_cast<size_t>(status)));
+                most_important_stoptime_status = std::max(most_important_stoptime_status, status);
+
                 StopTimeUpdate st_update{std::move(stop_time), message, status};
                 impact->aux_info.stop_times.emplace_back(std::move(st_update));
             }

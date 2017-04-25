@@ -206,7 +206,7 @@ struct Message {
 struct StopTimeUpdate {
     StopTime stop_time;
     std::string cause; //TODO factorize this cause with a pool
-    enum class Status {
+    enum class Status: uint8_t {
         // Note: status are ordered, from least to most important
         UNCHANGED = 0,
         ADDED,
@@ -222,6 +222,11 @@ struct StopTimeUpdate {
         ar & stop_time & cause & status;
     }
 };
+
+inline bool operator<(StopTimeUpdate::Status a, StopTimeUpdate::Status b) {
+    using T = std::underlying_type<StopTimeUpdate::Status>::type;
+    return static_cast<T>(a) < static_cast<T>(b);
+}
 
 namespace detail {
 struct AuxInfoForMetaVJ {
