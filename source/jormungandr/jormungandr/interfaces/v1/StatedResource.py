@@ -29,6 +29,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from flask.ext.restful import Resource
+from flask import request
 from jormungandr.stat_manager import manage_stat_caller
 from jormungandr import stat_manager
 from jormungandr.quota import quota_control
@@ -61,3 +62,15 @@ class StatedResource(Resource):
                 register_used_coverages([region])
             return result
         return wrapper
+
+    def dispatch_request(self, *args, **kwargs):
+        if request.method == 'OPTIONS':
+            decorators = self.method_decorators
+            self.method_decorators = []
+
+        resp = super(StatedResource, self).dispatch_request(*args, **kwargs)
+
+        if request.method == 'OPTIONS':
+            self.method_decorators = decorators
+
+        return resp

@@ -49,6 +49,9 @@ class LocalTimeField(NestedPbField):
             return ""
         return datetime.utcfromtimestamp(value).strftime('%H%M%S')
 
+    def __init__(self, schema_type=str, schema_metadata={}, **kwargs):
+        schema_metadata.update(pattern='d{2}\d{2}\d{2}')
+        super(LocalTimeField, self).__init__(schema_type, schema_metadata, **kwargs)
 
 class DateTimeField(PbField):
     """
@@ -57,6 +60,9 @@ class DateTimeField(PbField):
     def to_value(self, value):
         return timestamp_to_str(value)
 
+    def __init__(self, schema_type=str, schema_metadata={}, **kwargs):
+        schema_metadata.update(pattern='\d{4}\d{2}\d{2}T\d{2}\d{2}\d{2}')
+        super(DateTimeField, self).__init__(schema_type, schema_metadata, **kwargs)
 
 class PeriodSerializer(PbNestedSerializer):
     begin = DateTimeField()

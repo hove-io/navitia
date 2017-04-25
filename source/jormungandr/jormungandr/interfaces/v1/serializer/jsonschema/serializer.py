@@ -29,8 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from serpy import fields, Serializer
-from jormungandr.interfaces.v1.serializer.base import LiteralField
+import serpy
 
 TYPE_MAP = {
     'unknown': {
@@ -53,17 +52,20 @@ TYPE_MAP = {
     },
 }
 
-class JSONSchema(Serializer):
-    properties = fields.MethodField()
-    type = LiteralField('object')
-    required = fields.MethodField()
+class JsonSchemaSerializer(serpy.Serializer):
+    properties = serpy.MethodField()
+    type = serpy.MethodField()
+    required = serpy.MethodField(display_none=False)
     # Weird name to ensure it will be processed a the end
-    _definitions = fields.MethodField('get_definitions', display_none=False, label='definitions')
+    _definitions = serpy.MethodField('get_definitions', display_none=False, label='definitions')
 
     def __init__(self, instance=None, many=False, data=None, context=None, root=False, **kwargs):
-        super(JSONSchema, self).__init__(instance, many, data, context, **kwargs)
+        super(JsonSchemaSerializer, self).__init__(instance, many, data, context, **kwargs)
         self.root = root
         self.definitions = {}
+
+    def get_type(self, obj):
+        return "object"
 
     def get_definitions(self, obj):
         if self.root:
@@ -87,45 +89,50 @@ class JSONSchema(Serializer):
 
     def get_properties(self, obj):
         mapping = {}
-        mapping[fields.StrField] = 'str'
-        mapping[fields.IntField] = 'int'
-        mapping[fields.FloatField] = 'float'
-        mapping[fields.BoolField] = 'bool'
-        # Map the 2 next fields to avoid exceptions for now
-        mapping[fields.Field] = 'str'
-        # mapping[fields.MethodField] = 'method'
+        mapping[str] = 'str'
+        mapping[int] = 'int'
+        mapping[float] = 'float'
+        mapping[bool] = 'bool'
+        mapping[serpy.StrField] = 'str'
+        mapping[serpy.IntField] = 'int'
+        mapping[serpy.FloatField] = 'float'
+        mapping[serpy.BoolField] = 'bool'
+        # Map the 2 next fields.py to avoid exceptions for now
+        mapping[serpy.Field] = 'str'
+        # mapping[fields.py.MethodField] = 'method'
         properties = {}
 
         for field_name, field in obj._field_map.items():
-            searchObj = field
-            preTypeMethodName = '_jsonschema_pre_type_mapping'
-            if isinstance(field, fields.MethodField):
-                method = field.as_getter(field_name, obj.__class__)
-                preTypeMethodName = method.__name__ + preTypeMethodName
-                searchObj = obj
-            if hasattr(searchObj, preTypeMethodName):
-                field = getattr(searchObj, preTypeMethodName)()
+            schema = {}
+            schema_type = getattr(field, 'schema_type') if hasattr(field, 'schema_type') else None
+            schema_metadata = getattr(field, 'schema_metadata') if hasattr(field, 'schema_metadata') else {}
 
-            if hasattr(field, '_jsonschema_type_mapping'):
-                schema = field._jsonschema_type_mapping()
-            elif field.__class__ in mapping:
-                pytype = mapping[field.__class__]
+            if isinstance(schema_type, basestring) and hasattr(obj, schema_type):
+                schema_type = getattr(obj, schema_type)
+
+            rendered_field = schema_type() if callable(schema_type) else schema_type or field
+
+            if rendered_field.__class__ in mapping:
+                pytype = mapping[rendered_field.__class__]
                 schema = self._from_python_type(pytype)
-            elif isinstance(field, Serializer):
+            elif isinstance(rendered_field, serpy.Serializer):
                 self.definitions.update({
-                    field.__class__.__name__: field
+                    rendered_field.__class__.__name__: rendered_field
                 })
-                schema, definitions = self._from_nested_schema(field, onlyRef=True)
-            else:
-                raise ValueError('unsupported field type %s for attr %s in object %s' % (field, field_name, obj.__class__.__name__))
+                schema, definitions = self._from_nested_schema(rendered_field, onlyRef=True)
+            elif not schema_metadata:
+                raise ValueError('unsupported field type %s for attr %s in object %s' % (rendered_field, field_name, obj.__class__.__name__))
 
-            name = field.label or field_name
+            if schema_metadata:
+                schema.update(schema_metadata)
+            name = field.label if hasattr(field, 'label') and field.label else field_name
             properties[name] = schema
 
         return properties
 
     def get_required(self, obj):
-        return [field.label or field_name for field_name, field in obj._field_map.items() if field.required]
+        required = [field.label or field_name for field_name, field in obj._field_map.items() if field.required]
+        return required if len(required) > 0 else None
 
     @classmethod
     def _from_python_type(cls, pytype):

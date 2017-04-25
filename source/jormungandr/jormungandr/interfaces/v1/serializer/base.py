@@ -29,11 +29,12 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
+from jormungandr.interfaces.v1.serializer import jsonschema
 import serpy
 import operator
 
 
-class PbField(serpy.Field):
+class PbField(jsonschema.Field):
     def __init__(self, *args, **kwargs):
         # used only to put a default value to display_none
         if 'display_none' not in kwargs:
@@ -55,7 +56,7 @@ class PbField(serpy.Field):
                     return op(obj)
                 else:
                     return None
-            except ValueError as e:
+            except ValueError:
                 #HasField throw an exception if the field is repeated...
                 return op(obj)
         return getter
@@ -84,7 +85,9 @@ class PbNestedSerializer(serpy.Serializer, PbField):
     pass
 
 
-class EnumField(serpy.Field):
+class EnumField(jsonschema.Field):
+
+
     def as_getter(self, serializer_field_name, serializer_cls):
         def getter(val):
             attr = self.attr or serializer_field_name
@@ -102,32 +105,32 @@ class EnumField(serpy.Field):
     """
     Need to find a way to read protobuf
     """
-    def _jsonschema_type_mapping(self):
-        value = {
-            "type": "string"
-        }
+
+    def __init__(self, schema_type=None, schema_metadata={}, **kwargs):
+        schema_type = str
         enum = []
-        if self.attr == 'id':
+        attr = kwargs.get('attr')
+        if attr == 'id':
             enum.extend((
                 'bad_filter', 'unknown_api', 'date_out_of_bounds', 'unable_to_parse', 'bad_format', 'no_origin',
                 'no_destination', 'no_origin_nor_destination', 'no_solution', 'unknown_object', 'service_unavailable',
                 'invalid_protobuf_request', 'internal_error'
             ))
-        elif self.attr == 'embedded_type':
+        elif attr == 'embedded_type':
             enum.extend((
                 'line', 'journey_pattern', 'vehicle_journey', 'stop_point', 'stop_area', 'network', 'physical_mode',
                 'commercial_mode', 'connection', 'journey_pattern_point', 'company', 'route', 'poi', 'contributor',
                 'address', 'poitype', 'administrative_region', 'calendar', 'line_group', 'impact', 'dataset', 'trip'
             ))
-        elif self.attr == 'effect':
+        elif attr == 'effect':
             enum.extend(('delayed', 'added', 'deleted'))
-        elif self.attr == 'status':
+        elif attr == 'status':
             enum.extend(('past', 'active', 'future'))
 
         if len(enum) > 0:
-            value.update(enum=enum)
+            schema_metadata.update(enum=enum)
 
-        return value
+        super(EnumField, self).__init__(schema_type, schema_metadata, **kwargs)
 
 class EnumListField(EnumField):
     """WARNING: the enumlist field does not work without a self.attr"""

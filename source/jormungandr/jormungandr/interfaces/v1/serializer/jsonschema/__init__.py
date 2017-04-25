@@ -29,17 +29,15 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask.ext.restful import Resource
-from jormungandr.interfaces.v1.serializer import api, jsonschema
-import serpy
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, StrField, MethodField, IntField, FloatField, BoolField
+from jormungandr.interfaces.v1.serializer.jsonschema.serializer import JsonSchemaSerializer
 
-class ApiSchema(serpy.Serializer):
-    ptr = api.PTReferentialSerializer()
-    test = jsonschema.Field(schema_type=int)
-
-class Schema(Resource):
-    def __init__(self, **kwargs):
-        Resource.__init__(self, **kwargs)
-
-    def get(self):
-        return jsonschema.JsonSchemaSerializer(ApiSchema(), root=True).data, 200
+__all__ = [
+    'JsonSchemaSerializer',
+    'Field',
+    'StrField',
+    'IntField',
+    'FloatField',
+    'BoolField',
+    'MethodField',
+]
