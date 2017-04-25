@@ -300,7 +300,6 @@ class PoiType(flask_restful.Resource):
         except:
             abort(400, status="error", message='Incorrect json provided')
 
-        logger = get_instance_logger(instance)
         try:
             try:
                 validate(poi_types_json, poi_type_conf_format)
