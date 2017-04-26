@@ -64,7 +64,7 @@ class JsonSchemaSerializer(serpy.Serializer):
         self.root = root
         self.definitions = {}
 
-    def get_type(self, obj):
+    def get_type(self, *args):
         return "object"
 
     def get_definitions(self, obj):
@@ -98,7 +98,7 @@ class JsonSchemaSerializer(serpy.Serializer):
         mapping[serpy.FloatField] = 'float'
         mapping[serpy.BoolField] = 'bool'
         # Map the 2 next fields.py to avoid exceptions for now
-        mapping[serpy.Field] = 'str'
+        # mapping[serpy.Field] = 'str'
         # mapping[fields.py.MethodField] = 'method'
         properties = {}
 
@@ -108,7 +108,11 @@ class JsonSchemaSerializer(serpy.Serializer):
             schema_metadata = getattr(field, 'schema_metadata') if hasattr(field, 'schema_metadata') else {}
 
             if isinstance(schema_type, basestring) and hasattr(obj, schema_type):
+                if hasattr(obj, '__name__'):
+                    obj = obj()
                 schema_type = getattr(obj, schema_type)
+                # Get method result or attribute value
+                schema_type = schema_type() if callable(schema_type) else schema_type
 
             rendered_field = schema_type() if callable(schema_type) else schema_type or field
 
@@ -154,7 +158,7 @@ class JsonSchemaSerializer(serpy.Serializer):
             schema = serializer.data
         definitions = serializer.definitions
 
-        if field.many:
+        if onlyRef and field.many:
             schema = {
                 'type': ["array"] if field.required else ['array', 'null'],
                 'items': schema,
