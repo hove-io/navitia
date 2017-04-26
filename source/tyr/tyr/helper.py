@@ -29,6 +29,7 @@
 
 import logging
 import logging.config
+import uuid
 import celery
 
 from configobj import ConfigObj, flatten_errors
@@ -154,7 +155,16 @@ def build_error(config, validate_result):
     return result
 
 
-def get_instance_logger(instance):
+def get_instance_logger(instance, task_id=None):
+    return _get_individual_logger('instance.{}'.format(instance.name), instance.name, task_id)
+
+
+def get_autocomplete_instance_logger(a_instance, task_id=None):
+    #Note: it is called instance.autocomplete to use by default the same logger as 'instance'
+    return _get_individual_logger('instance.autocomplete.{}'.format(a_instance.name), a_instance.name, task_id)
+
+
+def _get_individual_logger(logger_name, name, task_id=None):
     """
     return the logger for this instance
 
@@ -162,17 +172,17 @@ def get_instance_logger(instance):
 
     For file handler, all log will be in a file specific to this instance
     """
-    logger = logging.getLogger('instance.{0}'.format(instance.name))
+    logger = logging.getLogger(logger_name)
 
     # if the logger has already been inited, we can stop
     if logger.handlers:
-        return logger
+        return get_task_logger(logger, task_id)
 
     for handler in logger.parent.handlers:
         #trick for FileHandler, we change the file name
         if isinstance(handler, logging.FileHandler):
             #we use the %(name) notation to use the same grammar as the python module
-            log_filename = handler.stream.name.replace('%(name)', instance.name)
+            log_filename = handler.stream.name.replace('%(name)', name)
             new_handler = logging.FileHandler(log_filename)
             new_handler.setFormatter(handler.formatter)
             handler = new_handler
@@ -180,7 +190,19 @@ def get_instance_logger(instance):
         logger.addHandler(handler)
 
     logger.propagate = False
-    return logger
+    return get_task_logger(logger, task_id)
+
+
+def get_task_logger(logger, task_id=None):
+    """
+    wrap a logger in a Adapter logger.
+    If a job_id has been given we use it as the 'task_id', else we create a unique 'task_id'
+
+    The 'task_id' can be used in the formated to trace tasks
+    """
+    task_id = task_id or str(uuid.uuid4())
+    return logging.LoggerAdapter(logger, extra={'task_id': task_id})
+
 
 def get_named_arg(arg_name, func, args, kwargs):
     if kwargs and arg_name in kwargs:
