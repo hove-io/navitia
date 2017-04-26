@@ -116,14 +116,9 @@ class InstanceManager(object):
 
         for file_name in self.configuration_files:
             logging.getLogger(__name__).info("Initialisation, reading file: %s", file_name)
-            try:
-                with open(file_name) as f:
-                    config_data = json.load(f)
-                    self.register_instance(config_data)
-            except ValueError:
-                logging.getLogger(__name__).warn('Could not load configuration: '
-                                                 '%s is not a valid json file', file_name)
-                continue
+            with open(file_name) as f:
+                config_data = json.load(f)
+                self.register_instance(config_data)
 
         #we fetch the krakens metadata first
         # not on the ping thread to always have the data available (for the tests for example)
