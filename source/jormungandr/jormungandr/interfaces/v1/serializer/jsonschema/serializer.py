@@ -56,7 +56,7 @@ class JsonSchemaSerializer(serpy.Serializer):
     properties = serpy.MethodField()
     type = serpy.MethodField()
     required = serpy.MethodField(display_none=False)
-    # Weird name to ensure it will be processed a the end
+    # Weird name to ensure it will be processed at the end
     _definitions = serpy.MethodField('get_definitions', display_none=False, label='definitions')
 
     def __init__(self, instance=None, many=False, data=None, context=None, root=False, **kwargs):
@@ -97,9 +97,6 @@ class JsonSchemaSerializer(serpy.Serializer):
         mapping[serpy.IntField] = 'int'
         mapping[serpy.FloatField] = 'float'
         mapping[serpy.BoolField] = 'bool'
-        # Map the 2 next fields.py to avoid exceptions for now
-        # mapping[serpy.Field] = 'str'
-        # mapping[fields.py.MethodField] = 'method'
         properties = {}
 
         for field_name, field in obj._field_map.items():
