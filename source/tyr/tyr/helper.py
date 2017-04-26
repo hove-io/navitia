@@ -194,7 +194,7 @@ def get_named_arg(arg_name, func, args, kwargs):
             return None
 
 
-def get_tempfile(file_storage):
+def save_in_tmp(file_storage):
     """
     Save stream file in temp directory
     :param file_storage: stream file

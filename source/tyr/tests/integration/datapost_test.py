@@ -9,14 +9,18 @@ import logging
 @pytest.fixture
 def create_instance_fr():
     with app.app_context():
-        instance = models.Instance('fr')
-        ac_instance = models.AutocompleteParameter(name='fr', street='OSM', address='BANO', poi='OSM', admin='OSM',
-                                                   admin_level=[8])
-        models.db.session.add(instance)
-        models.db.session.add(ac_instance)
+        navitia_instance = models.Instance('fr')
+        autocomplete_instance = models.AutocompleteParameter(name='fr',
+                                                             street='OSM', address='BANO', poi='OSM', admin='OSM',
+                                                             admin_level=[8])
+        models.db.session.add(navitia_instance)
+        models.db.session.add(autocomplete_instance)
         models.db.session.commit()
-        return instance.id
 
+
+def get_jobs_from_db():
+    with app.app_context():
+        return models.Job.get_all()
 
 def test_post_pbf(create_instance_fr):
     assert (not os.path.isfile('/tmp/empty_pbf.osm.pbf'))
@@ -50,12 +54,10 @@ def test_post_bad_instance(create_instance_fr):
 
 
 def test_post_pbf_autocomplete(create_instance_fr):
-    assert (not os.path.isfile('/tmp/empty_pbf.osm.pbf'))
 
     filename = 'empty_pbf.osm.pbf'
     path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tests/fixtures/', filename)
-    f = open(path, 'rb')
-    try:
+    with open(path, 'rb') as f:
         files = {'file': (f, filename)}
         tester = app.test_client()
         response = tester.post('/v0/autocomplete_parameters/fr/update_data', data=files)
@@ -64,5 +66,7 @@ def test_post_pbf_autocomplete(create_instance_fr):
         job = json_response['job']
         assert 'id' in job
         assert type(job['id']) == int
-    finally:
-        f.close()
+
+        jobs = get_jobs_from_db()
+        assert len(jobs) == 1
+        assert jobs[0].id == job['id']

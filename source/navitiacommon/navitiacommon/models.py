@@ -482,6 +482,9 @@ class Job(db.Model, TimestampMixin):
     def __repr__(self):
         return '<Job %r>' % self.id
 
+    @classmethod
+    def get_all(cls):
+        return cls.query.all()
 
 class Metric(db.Model):
     id = db.Column(db.Integer, primary_key=True)
