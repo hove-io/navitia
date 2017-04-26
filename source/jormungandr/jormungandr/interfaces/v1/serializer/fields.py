@@ -37,7 +37,7 @@ class MultiLineStringField(jsonschema.Field):
 
     def __init__(self, schema_type=None, schema_metadata={}, **kwargs):
         schema_metadata.update({
-            'type': 'object',
+            'type': ["object", "null"],
             'properties': {
                 'type': {
                     'type': 'string',
@@ -53,8 +53,7 @@ class MultiLineStringField(jsonschema.Field):
                         }
                     }
                 }
-            },
-            'required': ['type', 'coordinates']
+            }
         })
         super(MultiLineStringField, self).__init__(schema_type, schema_metadata, **kwargs)
 
@@ -73,8 +72,8 @@ class MultiLineStringField(jsonschema.Field):
 
 
 class PropertySerializer(serpy.Serializer):
-    name = serpy.Field()
-    value = serpy.Field()
+    name = jsonschema.Field(schema_type=str)
+    value = jsonschema.Field(schema_type=str)
 
 
 class FeedPublisherSerializer(PbNestedSerializer):
@@ -95,13 +94,13 @@ class CoordSerializer(serpy.Serializer):
 
 
 class CodeSerializer(serpy.Serializer):
-    type = serpy.Field()
-    value = serpy.Field()
+    type = jsonschema.Field(schema_type=str)
+    value = jsonschema.Field(schema_type=str)
 
 
 class CommentSerializer(serpy.Serializer):
-    value = serpy.Field()
-    type = serpy.Field()
+    value = jsonschema.Field(schema_type=str)
+    type = jsonschema.Field(schema_type=str)
 
 
 class FirstCommentField(jsonschema.Field):
@@ -110,7 +109,7 @@ class FirstCommentField(jsonschema.Field):
     even if now we have a list of comments, so we take the first one
     """
 
-    def __init__(self, schema_type=None, schema_metadata={}, **kwargs):
+    def __init__(self, schema_metadata={}, **kwargs):
         schema_type = CommentSerializer()
         for key, value in kwargs.items() :
             setattr(schema_type, key, value)
@@ -133,7 +132,7 @@ class LinkSerializer(jsonschema.Field):
     Add link to disruptions on a pt object
     """
 
-    def __init__(self, schema_type=None, schema_metadata={}, **kwargs):
+    def __init__(self, schema_metadata={}, **kwargs):
         schema_metadata.update({
             'type': 'array',
             'items': [
@@ -166,7 +165,7 @@ class LinkSerializer(jsonschema.Field):
                 }
             ]
         })
-        super(LinkSerializer, self).__init__(schema_type, schema_metadata, **kwargs)
+        super(LinkSerializer, self).__init__(None, schema_metadata, **kwargs)
 
     def to_value(self, value):
         return [create_internal_link(_type="disruption", rel="disruptions", id=uri)

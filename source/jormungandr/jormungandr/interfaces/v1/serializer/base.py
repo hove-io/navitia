@@ -105,8 +105,7 @@ class EnumField(jsonschema.Field):
     """
     Need to find a way to read protobuf
     """
-
-    def __init__(self, schema_type=None, schema_metadata={}, **kwargs):
+    def __init__(self, schema_metadata={}, **kwargs):
         schema_type = str
         enum = []
         attr = kwargs.get('attr')
@@ -143,11 +142,11 @@ class EnumListField(EnumField):
 
 
 class GenericSerializer(PbNestedSerializer):
-    id = serpy.Field(attr='uri')
-    name = serpy.Field()
+    id = jsonschema.Field(schema_type=str, attr='uri')
+    name = jsonschema.Field(schema_type=str)
 
 
-class LiteralField(serpy.Field):
+class LiteralField(jsonschema.Field):
     """
     :return literal value
     """
@@ -180,7 +179,7 @@ def value_by_path(obj, path, default=None):
         return default
 
 
-class NestedPropertyField(serpy.Field):
+class NestedPropertyField(jsonschema.Field):
     def as_getter(self, serializer_field_name, serializer_cls):
         return lambda v: value_by_path(v, self.attr)
 

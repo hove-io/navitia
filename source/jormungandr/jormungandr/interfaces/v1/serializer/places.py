@@ -28,9 +28,21 @@
 import serpy
 from base import LiteralField, NestedPropertyField, IntNestedPropertyField, value_by_path
 from flask.ext.restful import abort
+from jormungandr.interfaces.v1.serializer import jsonschema
 
 
-class CoordField(serpy.Field):
+class CoordField(jsonschema.Field):
+    def __init__(self, schema_type=None, schema_metadata={}, **kwargs):
+        schema_metadata.update({
+            "type": "object",
+            "properties": {
+                "lat": { "type": ["string", "null"] },
+                "lon": { "type": ["string", "null"] }
+            },
+            "required": ["lat", "lon"]
+        })
+        super(CoordField, self).__init__(schema_type, schema_metadata, **kwargs)
+
     def as_getter(self, serializer_field_name, serializer_cls):
         return lambda obj: self.generate_coord_field(obj)
 
@@ -42,7 +54,13 @@ class CoordField(serpy.Field):
         return res
 
 
-class CoordId(serpy.Field):
+class CoordId(jsonschema.Field):
+    def __init__(self, schema_type=None, schema_metadata={}, **kwargs):
+        schema_metadata.update({
+            "type": ["string", "null"]
+        })
+        super(CoordId, self).__init__(schema_type, schema_metadata, **kwargs)
+
     def as_getter(self, serializer_field_name, serializer_cls):
         return lambda obj: self.generate_coord_id(obj)
 
@@ -54,10 +72,10 @@ class CoordId(serpy.Field):
 
 
 class SubAdministrativeRegionField(serpy.DictSerializer):
-    id = serpy.Field()
-    insee = serpy.Field()
-    name = serpy.Field(attr="label")
-    label = serpy.Field()
+    id = jsonschema.Field(schema_type=str)
+    insee = jsonschema.Field(schema_type=str)
+    name = jsonschema.Field(schema_type=str, attr="label")
+    label = jsonschema.Field(schema_type=str)
     level = serpy.IntField()
     coord = serpy.MethodField()
     zip_code = serpy.MethodField()
