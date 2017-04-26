@@ -81,13 +81,8 @@ class InstanceManager(object):
     """
 
     def __init__(self, instances_dir=None, start_ping=False):
-        # if a configuration file is defined in the settings we take it
-        # else we load all .ini/.json files found in the INSTANCES_DIR
-        if instances_dir:
-            self.configuration_files = glob.glob(instances_dir + '/*.ini') +\
-                                       glob.glob(instances_dir + '/*.json')
-        else:
-            self.configuration_files = []
+        # loads all .json files found in INSTANCES_DIR
+        self.configuration_files = glob.glob(instances_dir + '/*.json') if instances_dir else []
         self.start_ping = start_ping
         self.instances = {}
         self.context = zmq.Context()
@@ -121,14 +116,13 @@ class InstanceManager(object):
 
         for file_name in self.configuration_files:
             logging.getLogger(__name__).info("Initialisation, reading file: %s", file_name)
-            if file_name.endswith('.json'):
+            try:
                 with open(file_name) as f:
                     config_data = json.load(f)
                     self.register_instance(config_data)
-
-            else:
-                logging.getLogger(__name__).warn('impossible to init an instance with the configuration '
-                                                 'file %s', file_name)
+            except ValueError:
+                logging.getLogger(__name__).warn('Could not load configuration: '
+                                                 '%s is not a valid json file', file_name)
                 continue
 
         #we fetch the krakens metadata first
