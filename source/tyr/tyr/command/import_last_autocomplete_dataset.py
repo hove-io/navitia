@@ -48,7 +48,7 @@ def import_last_autocomplete_dataset(instance_name, wait=True):
     files = [d.name for d in instance.last_datasets(1)]
     logger = logging.getLogger(__name__)
     logger.info('we reimport the last dataset of autocomplete %s, composed of: %s', instance_name, files)
-    future = tasks.import_autocomplete(files, instance, backup_file=False)
+    future, _ = tasks.import_autocomplete(files, instance, backup_file=False)
     if wait and future:
         future.wait()
 
