@@ -1,4 +1,5 @@
 import os
+import tempfile
 #Path to the directory where the configuration file of each instance of ed are defined
 INSTANCES_DIR = os.path.join(os.path.dirname(__file__), 'fixtures')
 
@@ -9,4 +10,4 @@ EMAIL_CHECK_MX = False
 EMAIL_CHECK_SMTP = False
 
 #Path to the directory where the data sources for autocomplete are stocked
-TYR_AUTOCOMPLETE_DIR = "/tmp/autocomplete"
+TYR_AUTOCOMPLETE_DIR = os.path.join(tempfile.gettempdir(), 'autocomplete')

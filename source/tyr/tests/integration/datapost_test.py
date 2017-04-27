@@ -1,10 +1,10 @@
-from tests.check_utils import api_get, api_post, api_delete, api_put, _dt, _to_json
 import json
 import pytest
 import os
 from navitiacommon import models
 from tyr import app
-import logging
+from flask_restful import current_app
+import shutil
 
 @pytest.fixture
 def create_instance_fr():
@@ -54,19 +54,23 @@ def test_post_bad_instance(create_instance_fr):
 
 
 def test_post_pbf_autocomplete(create_instance_fr):
+    with app.app_context():
+        ac_path = current_app.config['TYR_AUTOCOMPLETE_DIR']
+        assert not os.path.exists(ac_path)
+        filename = 'empty_pbf.osm.pbf'
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tests/fixtures/', filename)
+        with open(path, 'rb') as f:
+            files = {'file': (f, filename)}
+            tester = app.test_client()
+            response = tester.post('/v0/autocomplete_parameters/fr/update_data', data=files)
+            json_response = json.loads(response.data)
+            assert 'job' in json_response
+            job = json_response['job']
+            assert 'id' in job
+            assert type(job['id']) == int
 
-    filename = 'empty_pbf.osm.pbf'
-    path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tests/fixtures/', filename)
-    with open(path, 'rb') as f:
-        files = {'file': (f, filename)}
-        tester = app.test_client()
-        response = tester.post('/v0/autocomplete_parameters/fr/update_data', data=files)
-        json_response = json.loads(response.data)
-        assert 'job' in json_response
-        job = json_response['job']
-        assert 'id' in job
-        assert type(job['id']) == int
+            jobs = get_jobs_from_db()
+            assert len(jobs) == 1
+            assert jobs[0].id == job['id']
+            shutil.rmtree(ac_path)#Remove autocomplete directory
 
-        jobs = get_jobs_from_db()
-        assert len(jobs) == 1
-        assert jobs[0].id == job['id']
