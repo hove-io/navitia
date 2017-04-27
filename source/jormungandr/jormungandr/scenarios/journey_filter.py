@@ -287,7 +287,6 @@ def _filter_too_much_connections(journeys, instance, request):
 
 def _filter_min_transfers(journeys, instance, request):
     """
-    eliminates journeys with number of connections more then max_nb_transfers among journeys
     eliminates journeys with number of connections less then min_nb_transfers among journeys
     """
     logger = logging.getLogger(__name__)
