@@ -101,6 +101,9 @@ def _get_worst_similar(j1, j2, request):
      - more fallback
      - more connection
      - smaller value among min waiting duration
+     - more constrained fallback mode : all else being equal,
+            it's better to know that you can do it by bike for 'bike_in_pt' tag
+            (and traveler presumes he can do it walking too, as the practical case is 0s fallback)
     """
     if request.get('clockwise', True):
         if j1.arrival_date_time != j2.arrival_date_time:
@@ -118,7 +121,30 @@ def _get_worst_similar(j1, j2, request):
     if get_nb_connections(j1) != get_nb_connections(j2):
         return j1 if get_nb_connections(j1) > get_nb_connections(j2) else j2
 
-    return j1 if get_min_waiting(j1) < get_min_waiting(j2) else j2
+    if get_min_waiting(j1) != get_min_waiting(j2):
+        return j1 if get_min_waiting(j1) < get_min_waiting(j2) else j2
+
+
+    def get_mode_rank(section):
+        mode_rank = {response_pb2.Car: 0,
+                     response_pb2.Bike: 1,
+                     response_pb2.Walking: 2}
+        return mode_rank.get(section.street_network.mode)
+
+    def is_fallback(section):
+        return section.type == response_pb2.CROW_FLY or section.type != response_pb2.STREET_NETWORK
+
+    s1 = j1.sections[0]
+    s2 = j2.sections[0]
+    if is_fallback(s1) and is_fallback(s2) and s1.street_network.mode != s2.street_network.mode:
+        return j1 if get_mode_rank(s1) > get_mode_rank(s2) else j2
+
+    s1 = j1.sections[-1]
+    s2 = j2.sections[-1]
+    if is_fallback(s1) and is_fallback(s2) and s1.street_network.mode != s2.street_network.mode:
+        return j1 if get_mode_rank(s1) > get_mode_rank(s2) else j2
+
+    return j2
 
 
 def to_be_deleted(journey):
