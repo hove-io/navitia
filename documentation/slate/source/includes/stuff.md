@@ -81,3 +81,168 @@ So public transport lines can mix different methods to pickup travelers:
     -   line can contain some estimated stop times, and zonal stop point location.
     -   And you will have to call to take it
     -   well, not really a public transport line, more a cab...
+
+Disruptions
+===========
+
+
+In this paragraph, we will explain how the disruptions are displayed in the different APIs.
+
+# Context
+
+## periods
+
+### publication period of a disruption
+The publication period of a disruption is the period on which we want to display the disruption in navitia.
+
+The creator of the disruption might not want the traveller to know of a disruption before a certain date (because it's too uncertain, secret, ...)
+The publication period is the way to control this.
+
+### application periods of a disruption
+The application periods are the list of periods on which the disruption is active.
+For example it's the actual period when railworks are done and train circulation is cut.
+
+## Request date
+
+The request date represents datetime for Journeys API, from_datetime for  Schedules API or now for the others APIs.
+The default value is now.
+
+# Summary
+
+To sum up we display an impact if 'now' is in the publication period.
+
+The status of the impact depends only of 'now' and is:
+
+* 'active' if 'now' is inside an application period
+* 'future' if 'now' is not inside an application period and there is an application period after 'now'
+* 'past' otherwise
+
+<table>
+  <thead>
+    <tr>
+      <th align="center" colspan="2"></th>
+      <th align="center"> </th>
+      <th align="center" colspan="3">Show impacts </th>
+      <th align="center"> </th>
+    </tr>
+    <tr>
+      <th align="center">publication period </th>
+      <th>Application period </th>
+      <th align="center">Request date</th>
+      <th align="center">disruptions API</th>
+      <th align="center">traffic_reports & PtRef API</th>
+      <th align="center">Journeys & Schedules API</th>
+      <th align="center">Status</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td align="center"> </td>
+      <td> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+    </tr>
+    <tr>
+      <td align="center"> </td>
+      <td> </td>
+      <td align="center">date1 </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center">- </td>
+      <td align="center">- </td>
+      <td align="center">future </td>
+    </tr>
+    <tr>
+      <td align="center">* </td>
+      <td> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+    </tr>
+    <tr>
+      <td align="center">| </td>
+      <td> </td>
+      <td align="center">date2 </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center"> </td>
+      <td align="center">future </td>
+    </tr>
+    <tr>
+      <td align="center">| </td>
+      <td>* </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+    </tr>
+    <tr>
+      <td align="center">| </td>
+      <td>| </td>
+      <td align="center">date3 </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center">active </td>
+    </tr>
+    <tr>
+      <td align="center">| </td>
+      <td>| </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+    </tr>
+    <tr>
+      <td align="center">| </td>
+      <td>* </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+    </tr>
+    <tr>
+      <td align="center">| </td>
+      <td> </td>
+      <td align="center">date4 </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center"> </td>
+      <td align="center">passed </td>
+    </tr>
+    <tr>
+      <td align="center">| </td>
+      <td> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+    </tr>
+    <tr>
+      <td align="center">* </td>
+      <td> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+      <td align="center"> </td>
+    </tr>
+    <tr>
+      <td align="center"> </td>
+      <td> </td>
+      <td align="center">date5 </td>
+      <td align="center"><strong>Yes</strong> </td>
+      <td align="center">- </td>
+      <td align="center">- </td>
+      <td align="center">passed </td>
+    </tr>
+  </tbody>
+</table>
