@@ -155,7 +155,7 @@ class Instance(object):
                 override_scenario = 'distributed' if override_scenario == 'experimental' else override_scenario
                 module = import_module('jormungandr.scenarios.{}'.format(override_scenario))
             except ImportError:
-                logger.exception('sceneario not found')
+                logger.exception('scenario not found')
                 abort(404, message='invalid scenario: {}'.format(override_scenario))
             scenario = module.Scenario()
             g.scenario = scenario
