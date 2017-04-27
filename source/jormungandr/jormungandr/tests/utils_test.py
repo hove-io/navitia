@@ -30,6 +30,10 @@
 
 from contextlib import contextmanager
 from flask import appcontext_pushed, g
+from jormungandr.utils import timestamp_to_datetime
+import pytz
+from jormungandr import app
+import datetime
 
 
 class MockResponse(object):
@@ -113,3 +117,17 @@ def user_set(app, fake_user_type, user_name):
         g.user = fake_user_type.get_from_token(user_name)
     with appcontext_pushed.connected_to(handler, app):
         yield
+
+
+def test_timestamp_to_datetime():
+    # timestamp > MAX_INT
+    assert timestamp_to_datetime(18446744071562142720) is None
+
+    with app.app_context():
+        g.timezone = pytz.utc
+        # test valid date
+        assert timestamp_to_datetime(1493296245) == datetime.datetime(2017, 4, 27, 12, 30, 45, tzinfo=pytz.UTC)
+
+        g.timezone = None
+        # test valid date but no timezone
+        assert timestamp_to_datetime(1493296245) is None
