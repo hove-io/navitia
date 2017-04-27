@@ -45,7 +45,7 @@ from shapely.geometry import asShape
 UpdatedStopTime = make_namedtuple('UpdatedStopTime',
                                   'stop_id', 'arrival', 'departure',
                                   arrival_delay=0, departure_delay=0,
-                                  message=None, skipped=False)
+                                  message=None, departure_skipped=False, arrival_skipped=False)
 
 
 class MockKirinDisruptionsFixture(RabbitMQCnxFixture):
@@ -224,6 +224,8 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
             eq_(get_valid_time(get_not_null(imp_obj1, 'amended_arrival_time')), _dt(h=8, m=2, s=24))
             eq_(get_valid_time(get_not_null(imp_obj1, 'amended_departure_time')), _dt(h=8, m=2, s=25))
             eq_(get_not_null(imp_obj1, 'cause'), 'cow on tracks')
+            eq_(get_not_null(imp_obj1, 'departure_status'), 'delayed')
+            eq_(get_not_null(imp_obj1, 'arrival_status'), 'delayed')
             eq_(get_not_null(imp_obj1, 'stop_time_effect'), 'delayed')
             eq_(get_valid_time(get_not_null(imp_obj1, 'base_arrival_time')), _dt(8, 1, 0))
             eq_(get_valid_time(get_not_null(imp_obj1, 'base_departure_time')), _dt(8, 1, 0))
@@ -233,6 +235,8 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
             eq_(get_valid_time(get_not_null(imp_obj2, 'amended_departure_time')), _dt(h=8, m=4, s=0))
             eq_(imp_obj2['cause'], '')
             eq_(get_not_null(imp_obj1, 'stop_time_effect'), 'delayed')
+            eq_(get_not_null(imp_obj1, 'departure_status'), 'delayed')
+            eq_(get_not_null(imp_obj1, 'arrival_status'), 'delayed')
             eq_(get_valid_time(get_not_null(imp_obj2, 'base_departure_time')), _dt(8, 1, 2))
             eq_(get_valid_time(get_not_null(imp_obj2, 'base_arrival_time')), _dt(8, 1, 2))
 
@@ -336,7 +340,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
                             arrival=tstamp("20120614T080100"), departure=tstamp("20120614T080100")),
             UpdatedStopTime("stop_point:stopA",
                             arrival=tstamp("20120614T080102"), departure=tstamp("20120614T080102"),
-                            message='cow on tracks', skipped=True)],
+                            message='cow on tracks', arrival_skipped=True)],
            disruption_id='vjA_skip_A')
 
         # A new vj is created
@@ -366,14 +370,17 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         eq_(get_valid_time(get_not_null(imp_obj1, 'amended_arrival_time')), _dt(8, 1, 0))
         eq_(get_valid_time(get_not_null(imp_obj1, 'amended_departure_time')), _dt(8, 1, 0))
         eq_(get_not_null(imp_obj1, 'stop_time_effect'), 'unchanged')
+        eq_(get_not_null(imp_obj1, 'arrival_status'), 'unchanged')
+        eq_(get_not_null(imp_obj1, 'departure_status'), 'unchanged')
         eq_(get_valid_time(get_not_null(imp_obj1, 'base_arrival_time')), _dt(8, 1, 0))
         eq_(get_valid_time(get_not_null(imp_obj1, 'base_departure_time')), _dt(8, 1, 0))
 
         imp_obj2 = impacted_objs[1]
         assert 'amended_arrival_time' not in imp_obj2
-        assert 'amended_departure_time' not in imp_obj2
         eq_(get_not_null(imp_obj2, 'cause'), 'cow on tracks')
         eq_(get_not_null(imp_obj2, 'stop_time_effect'), 'deleted')  # the stoptime is marked as deleted
+        eq_(get_not_null(imp_obj2, 'arrival_status'), 'deleted')
+        eq_(get_not_null(imp_obj2, 'departure_status'), 'unchanged')  # the departure is not changed
         eq_(get_valid_time(get_not_null(imp_obj2, 'base_departure_time')), _dt(8, 1, 2))
         eq_(get_valid_time(get_not_null(imp_obj2, 'base_arrival_time')), _dt(8, 1, 2))
 
@@ -472,10 +479,15 @@ def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], 
             stop_time_update.arrival.delay = st.arrival_delay
             stop_time_update.departure.time = st.departure
             stop_time_update.departure.delay = st.departure_delay
-            s = gtfs_realtime_pb2.TripUpdate.StopTimeUpdate.SCHEDULED
-            if st.skipped:
-                s = gtfs_realtime_pb2.TripUpdate.StopTimeUpdate.SKIPPED
-            stop_time_update.schedule_relationship = s
+
+            def get_relationship(skipped):
+                if skipped:
+                    return gtfs_realtime_pb2.TripUpdate.StopTimeUpdate.SKIPPED
+                return gtfs_realtime_pb2.TripUpdate.StopTimeUpdate.SCHEDULED
+            stop_time_update.arrival.Extensions[kirin_pb2.stop_time_event_relationship] = \
+                get_relationship(st.arrival_skipped)
+            stop_time_update.departure.Extensions[kirin_pb2.stop_time_event_relationship] = \
+                get_relationship(st.departure_skipped)
             if st.message:
                 stop_time_update.Extensions[kirin_pb2.stoptime_message] = st.message
     else:

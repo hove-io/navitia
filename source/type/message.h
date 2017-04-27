@@ -213,13 +213,15 @@ struct StopTimeUpdate {
         DELETED,
         DELAYED
     };
-    Status status;
+    Status departure_status;
+    Status arrival_status;
     StopTimeUpdate() {}
-    StopTimeUpdate(const StopTime& st, const std::string& c, Status s): stop_time(st), cause(c), status(s) {}
+    StopTimeUpdate(const StopTime& st, const std::string& c, Status dep_status, Status arr_status):
+        stop_time(st), cause(c), departure_status(dep_status), arrival_status(arr_status) {}
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
-        ar & stop_time & cause & status;
+        ar & stop_time & cause & departure_status & arrival_status;
     }
 };
 

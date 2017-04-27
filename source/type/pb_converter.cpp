@@ -106,16 +106,17 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
             auto* impacted_stop = pobj->add_impacted_stops();
             impacted_stop->set_cause(stu.cause);
 
-            impacted_stop->set_effect(get_effect(stu.status));
+            impacted_stop->set_departure_status(get_effect(stu.departure_status));
+            impacted_stop->set_arrival_status(get_effect(stu.arrival_status));
+
+            // for retrocompatibility we set the global 'effect', we set it to the most important status
+            impacted_stop->set_effect(get_effect(std::max(stu.departure_status, stu.arrival_status)));
 
             filler.copy(0, DumpMessage::No).fill_pb_object(stu.stop_time.stop_point,
                                                            impacted_stop->mutable_stop_point());
 
-            if (stu.status != nd::StopTimeUpdate::Status::DELETED) {
-                // we don't want to output amended departure/arrival for deleted stops
-                filler.copy(0, DumpMessage::No).fill_pb_object(&stu.stop_time,
-                                                               impacted_stop->mutable_amended_stop_time());
-            }
+            filler.copy(0, DumpMessage::No).fill_pb_object(&stu,
+                                                           impacted_stop->mutable_amended_stop_time());
 
             // we need to get the base stoptime
             const auto* base_st = impact.aux_info.get_base_stop_time(stu);
@@ -812,15 +813,28 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPointConnection* c, pbnavit
         fill_with_creator(c->destination, [&](){return connection->mutable_destination();});
     }
 }
-void PbCreator::Filler::fill_pb_object(const nt::StopTime* st, pbnavitia::StopTime* stop_time){
 
+static uint32_t get_st_utc_offset(const nt::StopTime* st, const uint32_t time) {
+    static const auto flag = std::numeric_limits<uint32_t>::max();
+    return time == flag ? 0 : st->vehicle_journey->utc_to_local_offset();
+}
+
+void PbCreator::Filler::fill_pb_object(const nd::StopTimeUpdate* stu, pbnavitia::StopTime* stop_time) {
+    const auto* st = &stu->stop_time;
+    // we don't want to output amended departure/arrival for deleted departure/arrival
+    if (stu->arrival_status != nd::StopTimeUpdate::Status::DELETED) {
+        stop_time->set_arrival_time(st->arrival_time + get_st_utc_offset(st, st->arrival_time));
+    }
+    if (stu->departure_status != nd::StopTimeUpdate::Status::DELETED) {
+        stop_time->set_departure_time(st->departure_time + get_st_utc_offset(st, st->departure_time));
+    }
+}
+
+
+void PbCreator::Filler::fill_pb_object(const nt::StopTime* st, pbnavitia::StopTime* stop_time) {
     // arrival/departure in protobuff are as seconds from midnight in local time
-    const auto offset = [&](const uint32_t time) {
-        static const auto flag = std::numeric_limits<uint32_t>::max();
-        return time == flag ? 0 : st->vehicle_journey->utc_to_local_offset();
-    };
-    stop_time->set_arrival_time(st->arrival_time + offset(st->arrival_time));
-    stop_time->set_departure_time(st->departure_time + offset(st->departure_time));
+    stop_time->set_arrival_time(st->arrival_time + get_st_utc_offset(st, st->arrival_time));
+    stop_time->set_departure_time(st->departure_time + get_st_utc_offset(st, st->departure_time));
     stop_time->set_headsign(pb_creator.data->pt_data->headsign_handler.get_headsign(*st));
 
     stop_time->set_pickup_allowed(st->pick_up_allowed());

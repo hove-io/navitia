@@ -116,6 +116,8 @@ class ImpactedStopSerializer(PbNestedSerializer):
     amended_departure_time = LocalTimeField(attr='amended_stop_time.departure_time')
     cause = serpy.Field()
     stop_time_effect = EnumField(attr='effect')
+    departure_status = EnumField()
+    arrival_status = EnumField()
 
     def get_stop_point(self, obj):
         if obj.HasField(str('stop_point')):

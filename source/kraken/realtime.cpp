@@ -279,29 +279,50 @@ create_disruption(const std::string& id,
                 if (st.HasExtension(kirin::stoptime_message)) {
                     message = st.GetExtension(kirin::stoptime_message);
                 }
-                const auto status = [&st]() {
-                    if (st.schedule_relationship() == transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_SKIPPED) {
+                auto get_status = [](const transit_realtime::TripUpdate_StopTimeEvent& event,
+                        const transit_realtime::TripUpdate_StopTimeUpdate& st) {
+                    auto get_relationship = [](const transit_realtime::TripUpdate_StopTimeEvent& event,
+                            const transit_realtime::TripUpdate_StopTimeUpdate& st) {
+                        // we get either the stop_time_event if we have it or we use the GTFS-RT standard (on st)
+                        if (event.HasExtension(kirin::stop_time_event_relationship)) {
+                            return event.GetExtension(kirin::stop_time_event_relationship);
+                        }
+                        return st.schedule_relationship();
+                    };
+
+                    if (get_relationship(event, st) ==
+                            transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_SKIPPED) {
                         return StopTimeUpdate::Status::DELETED;
-                    } else if (st.arrival().delay() != 0 || st.departure().delay() != 0) {
+                    } else if (! event.has_delay() // for retrocompatibility since the old kirin version
+                                                   // was not giving delays
+                               || event.delay() != 0) {
                         return StopTimeUpdate::Status::DELAYED;
                     } else {
                         return StopTimeUpdate::Status::UNCHANGED;
                     }
-                }();
-                if (status == StopTimeUpdate::Status::DELETED) {
-                    // for deleted stoptime, we disable pickup/drop_off
-                    // but we keep the departure/arrival to be able to match the stoptime to it's base stoptime
-                    stop_time.set_pick_up_allowed(false);
+                };
+                const auto departure_status = get_status(st.departure(), st);
+                const auto arrival_status = get_status(st.arrival(), st);
+
+                // for deleted stoptime departure (resp. arrival), we disable pickup (resp. drop_off)
+                // but we keep the departure/arrival to be able to match the stoptime to it's base stoptime
+                if (departure_status == StopTimeUpdate::Status::DELETED) {
                     stop_time.set_drop_off_allowed(false);
                 } else {
-                    stop_time.set_pick_up_allowed(st.departure().has_time());
                     stop_time.set_drop_off_allowed(st.arrival().has_time());
+                }
+
+                if (arrival_status == StopTimeUpdate::Status::DELETED) {
+                    stop_time.set_pick_up_allowed(false);
+                } else {
+                    stop_time.set_pick_up_allowed(st.departure().has_time());
                 }
                 // we update the trip status if the stoptime status is the most important status
                 // the most important status is DELAYED then DELETED
-                most_important_stoptime_status = std::max(most_important_stoptime_status, status);
+                most_important_stoptime_status = std::max(most_important_stoptime_status, departure_status);
+                most_important_stoptime_status = std::max(most_important_stoptime_status, arrival_status);
 
-                StopTimeUpdate st_update{std::move(stop_time), message, status};
+                StopTimeUpdate st_update{std::move(stop_time), message, departure_status, arrival_status};
                 impact->aux_info.stop_times.emplace_back(std::move(st_update));
             }
 

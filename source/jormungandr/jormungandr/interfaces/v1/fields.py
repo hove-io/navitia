@@ -923,7 +923,9 @@ impacted_stop = {
     "amended_arrival_time": Time(time='amended_stop_time.arrival_time'),
     "amended_departure_time": Time(time='amended_stop_time.departure_time'),
     "cause": fields.String(),
-    "stop_time_effect": enum_type(attribute='effect')
+    "stop_time_effect": enum_type(attribute='effect'),
+    "departure_status": enum_type(),
+    "arrival_status": enum_type()
 }
 
 impacted_object = {
