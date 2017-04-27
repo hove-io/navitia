@@ -119,6 +119,17 @@ def date_to_timestamp(date):
 
 
 def timestamp_to_datetime(timestamp):
+    """
+    Convert a timestamp to datetime
+    if timestamp > MAX_INT we return None
+    """
+    from sys import maxint
+    # when a date is > 2038-01-19 03:14:07
+    # we receive a timestamp = 18446744071562142720 (64 bits) > 9223372036854775807 (MAX_INT 32 bits)
+    # And ValueError: timestamp out of range for platform time_t is raised
+    if timestamp >= maxint:
+        return None
+
     dt = datetime.utcfromtimestamp(timestamp)
 
     timezone = get_timezone()
