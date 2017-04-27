@@ -36,7 +36,8 @@ from .check_utils import *
 def impacted_ids(disrupts):
     # for the impacted obj, either get the id, or the headsign (for the display_information field)
     return set(o.impacted_object.get('id',
-                                     o.impacted_object.get('headsign'))
+                                     o.impacted_object.get('headsign',
+                                                           o.impacted_object.get('label')))
                for o in disrupts['line_section_on_line_1'])
 
 
@@ -47,14 +48,42 @@ class TestLineSections(AbstractTestFixture):
         """query navitia with a current date in the publication period of the impacts"""
         return self.query_region('{}?_current_datetime=20170101T100000'.format(q), **kwargs)
 
-    def has_disruption(self, q, object_get, disruption_uri, **kwargs):
-        r = self.default_query(q, **kwargs)
-        return has_disruption(r, object_get, disruption_uri)
-
     def has_disruption(self, object_get, disruption_uri):
         """Little helper calling the detail of an object and checking it's disruptions"""
         r = self.default_query('{col}/{uri}'.format(col=object_get.collection, uri=object_get.uri))
         return has_disruption(r, object_get, disruption_uri)
+
+    def traffic_report_has_dis(self, q,
+                               should_have_dis_on_lines=False,
+                               should_have_dis_on_stop_areas=False):
+
+        wanted_disruption_id = 'line_section_on_line_1'
+
+        r = self.default_query(q)
+        has_disruption = 'line_section_on_line_1' in (d['disruption_id'] for d in r['disruptions'])
+        assert has_disruption
+
+        has_dis_on_line = True
+        has_dis_on_stop_area = True
+        for tr in r['traffic_reports']:
+            if 'lines' in tr:
+                line_links = tr['lines'][0]['links']
+                has_dis_on_line &= line_links and\
+                                   line_links[0]['type'] == 'disruption' and\
+                                   line_links[0]['id'] == wanted_disruption_id
+            else:
+                has_dis_on_line = False
+
+            if 'stop_areas' in tr:
+                stop_areas_links = tr['stop_areas'][0]['links']
+                has_dis_on_stop_area &= stop_areas_links and \
+                                        stop_areas_links[0]['type'] == 'disruption' and \
+                                        stop_areas_links[0]['id'] == wanted_disruption_id
+            else:
+                has_dis_on_stop_area = False
+
+        assert should_have_dis_on_lines == has_dis_on_line
+        assert should_have_dis_on_stop_areas == has_dis_on_stop_area
 
     def test_line_section_structure(self):
         r = self.default_query('stop_points/C_1')
@@ -95,16 +124,25 @@ class TestLineSections(AbstractTestFixture):
         """
         we should be able to find the related line section disruption with /traffic_report
         """
-        def has_dis(q):
-            r = self.default_query(q)
-            return 'line_section_on_line_1' in (d['disruption_id'] for d in r['disruptions'])
 
-        assert not has_dis('stop_areas/A/traffic_reports')
-        assert not has_dis('stop_areas/B/traffic_reports')
-        assert has_dis('stop_areas/C/traffic_reports')
-        assert has_dis('stop_areas/D/traffic_reports')
-        assert has_dis('stop_areas/E/traffic_reports')
-        assert not has_dis('stop_areas/F/traffic_reports')
+        self.traffic_report_has_dis('stop_areas/A/traffic_reports',
+                                    should_have_dis_on_lines=True,
+                                    should_have_dis_on_stop_areas=False)
+        self.traffic_report_has_dis('stop_areas/B/traffic_reports',
+                                    should_have_dis_on_lines=True,
+                                    should_have_dis_on_stop_areas=False)
+        self.traffic_report_has_dis('stop_areas/C/traffic_reports',
+                                    should_have_dis_on_lines=True,
+                                    should_have_dis_on_stop_areas=True)
+        self.traffic_report_has_dis('stop_areas/D/traffic_reports',
+                                    should_have_dis_on_lines=True,
+                                    should_have_dis_on_stop_areas=True)
+        self.traffic_report_has_dis('stop_areas/E/traffic_reports',
+                                    should_have_dis_on_lines=True,
+                                    should_have_dis_on_stop_areas=True)
+        self.traffic_report_has_dis('stop_areas/F/traffic_reports',
+                                    should_have_dis_on_lines=True,
+                                    should_have_dis_on_stop_areas=False)
 
     def test_traffic_reports_on_lines(self):
         """
@@ -126,11 +164,18 @@ class TestLineSections(AbstractTestFixture):
             r = self.default_query(q)
             return 'line_section_on_line_1' in (d['disruption_id'] for d in r['disruptions'])
 
-        assert has_dis('routes/route:line:1:1/traffic_reports')
-        assert has_dis('routes/route:line:1:2/traffic_reports')
-        # route 3 has been impacted by the line section but it has no stoppoint in the line section
-        # so in this case we do not display the disruption
-        assert not has_dis('routes/route:line:1:3/traffic_reports')
+        self.traffic_report_has_dis('routes/route:line:1:1/traffic_reports',
+                                    should_have_dis_on_lines=True,
+                                    should_have_dis_on_stop_areas=True)
+        self.traffic_report_has_dis('routes/route:line:1:2/traffic_reports',
+                                    should_have_dis_on_lines=True,
+                                    should_have_dis_on_stop_areas=True)
+
+        # Since line:1 has been impacted, even though route:line:1:3 is not impacted directly, we still can find
+        # a disruption
+        self.traffic_report_has_dis('routes/route:line:1:3/traffic_reports',
+                                    should_have_dis_on_lines=True,
+                                    should_have_dis_on_stop_areas=False)
 
     def test_traffic_reports_on_vjs(self):
         """
@@ -141,9 +186,15 @@ class TestLineSections(AbstractTestFixture):
             r = self.default_query(q)
             return 'line_section_on_line_1' in (d['disruption_id'] for d in r['disruptions'])
 
-        assert has_dis('vehicle_journeys/vj:1:1/traffic_reports')
-        assert has_dis('vehicle_journeys/vj:1:2/traffic_reports')
-        assert not has_dis('vehicle_journeys/vj:1:3/traffic_reports')
+        self.traffic_report_has_dis('vehicle_journeys/vj:1:1/traffic_reports',
+                                    should_have_dis_on_lines=True,
+                                    should_have_dis_on_stop_areas=True)
+        self.traffic_report_has_dis('vehicle_journeys/vj:1:2/traffic_reports',
+                                    should_have_dis_on_lines=True,
+                                    should_have_dis_on_stop_areas=True)
+        self.traffic_report_has_dis('vehicle_journeys/vj:1:3/traffic_reports',
+                                    should_have_dis_on_lines=True,
+                                    should_have_dis_on_stop_areas=False)
 
     def test_traffic_reports_on_stop_points(self):
         """
@@ -154,19 +205,54 @@ class TestLineSections(AbstractTestFixture):
             r = self.default_query(q)
             return 'line_section_on_line_1' in (d['disruption_id'] for d in r['disruptions'])
 
-        assert not has_dis('stop_points/A_1/traffic_reports')
-        assert not has_dis('stop_points/A_2/traffic_reports')
-        assert not has_dis('stop_points/B_1/traffic_reports')
-        assert not has_dis('stop_points/B_2/traffic_reports')
-        assert has_dis('stop_points/C_1/traffic_reports')
+        self.traffic_report_has_dis('stop_points/A_1/traffic_reports',
+                                    should_have_dis_on_stop_areas=False,
+                                    should_have_dis_on_lines=True)
+
+        self.traffic_report_has_dis('stop_points/A_2/traffic_reports',
+                                    should_have_dis_on_stop_areas=False,
+                                    should_have_dis_on_lines=True)
+
+        self.traffic_report_has_dis('stop_points/B_1/traffic_reports',
+                                    should_have_dis_on_stop_areas=False,
+                                    should_have_dis_on_lines=True)
+
+        self.traffic_report_has_dis('stop_points/B_2/traffic_reports',
+                                    should_have_dis_on_stop_areas=False,
+                                    should_have_dis_on_lines=True)
+
+        self.traffic_report_has_dis('stop_points/C_1/traffic_reports',
+                                    should_have_dis_on_stop_areas=True,
+                                    should_have_dis_on_lines=True)
+
         # even if C_2 is not impacted, we display the line section impact because C has been impacted
-        assert has_dis('stop_points/C_2/traffic_reports')
-        assert has_dis('stop_points/D_1/traffic_reports')
-        assert has_dis('stop_points/D_2/traffic_reports')
-        assert has_dis('stop_points/E_1/traffic_reports')
-        assert has_dis('stop_points/E_2/traffic_reports')
-        assert not has_dis('stop_points/F_1/traffic_reports')
-        assert not has_dis('stop_points/F_2/traffic_reports')
+        self.traffic_report_has_dis('stop_points/C_2/traffic_reports',
+                                    should_have_dis_on_stop_areas=True,
+                                    should_have_dis_on_lines=True)
+
+        self.traffic_report_has_dis('stop_points/D_1/traffic_reports',
+                                    should_have_dis_on_stop_areas=True,
+                                    should_have_dis_on_lines=True)
+
+        self.traffic_report_has_dis('stop_points/D_2/traffic_reports',
+                                    should_have_dis_on_stop_areas=True,
+                                    should_have_dis_on_lines=True)
+
+        self.traffic_report_has_dis('stop_points/E_1/traffic_reports',
+                                    should_have_dis_on_stop_areas=True,
+                                    should_have_dis_on_lines=True)
+
+        self.traffic_report_has_dis('stop_points/E_2/traffic_reports',
+                                    should_have_dis_on_stop_areas=True,
+                                    should_have_dis_on_lines=True)
+
+        self.traffic_report_has_dis('stop_points/F_1/traffic_reports',
+                                    should_have_dis_on_stop_areas=False,
+                                    should_have_dis_on_lines=True)
+
+        self.traffic_report_has_dis('stop_points/F_2/traffic_reports',
+                                    should_have_dis_on_stop_areas=False,
+                                    should_have_dis_on_lines=True)
 
     def test_journeys_use_vj_impacted_by_line_section(self):
         """
@@ -275,29 +361,29 @@ class TestLineSections(AbstractTestFixture):
         dt = 'from_datetime=20170101T080000'
         fresh = 'data_freshness=base_schedule'
         r = self.query_region('stop_areas/A/stop_schedules?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
-        assert 'line_section_on_line_1' not in get_all_element_disruptions(r['stop_schedules'], r)
+        assert 'line_section_on_line_1' in get_all_element_disruptions(r['stop_schedules'], r)
 
         r = self.query_region('stop_areas/B/stop_schedules?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
-        assert 'line_section_on_line_1' not in get_all_element_disruptions(r['stop_schedules'], r)
+        assert 'line_section_on_line_1' in get_all_element_disruptions(r['stop_schedules'], r)
 
         r = self.query_region('stop_areas/C/stop_schedules?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['stop_schedules'], r)
         assert 'line_section_on_line_1' in d
-        assert impacted_ids(d) == {'C_1'}  # the impact is linked in the response only to the stop point
+        assert impacted_ids(d) == {'C_1', 'line:1'}  # the impact is linked in the response only to the stop point
 
         r = self.query_region('stop_areas/D/stop_schedules?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['stop_schedules'], r)
         assert 'line_section_on_line_1' in d
-        assert impacted_ids(d) == {'D_1'}
+        assert impacted_ids(d) == {'D_1', 'line:1'}
 
         r = self.query_region('stop_areas/E/stop_schedules?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['stop_schedules'], r)
         assert 'line_section_on_line_1' in d
-        assert impacted_ids(d) == {'E_1'}
+        assert impacted_ids(d) == {'E_1', 'line:1'}
 
         r = self.query_region('stop_areas/F/stop_schedules?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['stop_schedules'], r)
-        assert 'line_section_on_line_1' not in d
+        assert 'line_section_on_line_1' in d
 
     def test_departures_impacted_by_line_section(self):
         """
@@ -307,26 +393,26 @@ class TestLineSections(AbstractTestFixture):
         dt = 'from_datetime=20170101T080000'
         fresh = 'data_freshness=base_schedule'
         r = self.query_region('stop_areas/A/departures?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
-        assert 'line_section_on_line_1' not in get_all_element_disruptions(r['departures'], r)
+        assert 'line_section_on_line_1' in get_all_element_disruptions(r['departures'], r)
 
         r = self.query_region('stop_areas/B/departures?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
-        assert 'line_section_on_line_1' not in get_all_element_disruptions(r['departures'], r)
+        assert 'line_section_on_line_1' in get_all_element_disruptions(r['departures'], r)
 
         r = self.query_region('stop_areas/C/departures?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['departures'], r)
         assert 'line_section_on_line_1' in d
         # the impact is linked in the response to the stop point and the vj
-        assert impacted_ids(d) == {'C_1', 'vj:1:1'}
+        assert impacted_ids(d) == {'C_1', 'vj:1:1', 'line:1'}
 
         r = self.query_region('stop_areas/D/departures?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['departures'], r)
         assert 'line_section_on_line_1' in d
-        assert impacted_ids(d) == {'D_1', 'vj:1:1'}
+        assert impacted_ids(d) == {'D_1', 'vj:1:1', 'line:1'}
 
         r = self.query_region('stop_areas/E/departures?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['departures'], r)
         assert 'line_section_on_line_1' in d
-        assert impacted_ids(d) == {'E_1', 'vj:1:1'}
+        assert impacted_ids(d) == {'E_1', 'vj:1:1', 'line:1'}
 
         r = self.query_region('stop_areas/F/departures?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['departures'], r)
@@ -339,4 +425,7 @@ class TestLineSections(AbstractTestFixture):
         r = self.query_region('lines/line:1/departures?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['departures'], r)
         assert 'line_section_on_line_1' in d
-        assert impacted_ids(d) == {'C_1', 'D_1', 'E_1', 'vj:1:1'}
+        assert impacted_ids(d) == {u'C_1', u'E_1', u'D_1', u'vj:1:1', u'line:1'}
+
+    def test_line_impacted_by_line_section(self):
+        assert self.has_disruption(ObjGetter('lines', 'line:1'), 'line_section_on_line_1')
