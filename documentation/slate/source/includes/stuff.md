@@ -104,7 +104,8 @@ For example it's the actual period when railworks are done and train circulation
 
 ## Request date
 
-Request date is the navitia call date, the default value is now.
+The request date represents datetime for Jourenys API, from_datetime for  Schedules API or now for the others APIs.
+The default value is now
 
 # Summary
 
