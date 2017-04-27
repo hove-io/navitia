@@ -5,6 +5,7 @@ from navitiacommon import models
 from tyr import app
 from flask_restful import current_app
 import shutil
+from tests.check_utils import api_post
 
 @pytest.fixture
 def create_instance_fr():
@@ -61,9 +62,7 @@ def test_post_pbf_autocomplete(create_instance_fr):
         path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tests/fixtures/', filename)
         with open(path, 'rb') as f:
             files = {'file': (f, filename)}
-            tester = app.test_client()
-            response = tester.post('/v0/autocomplete_parameters/fr/update_data', data=files)
-            json_response = json.loads(response.data)
+            json_response = api_post('/v0/autocomplete_parameters/fr/update_data', data=files)
             assert 'job' in json_response
             job = json_response['job']
             assert 'id' in job
@@ -74,3 +73,24 @@ def test_post_pbf_autocomplete(create_instance_fr):
             assert jobs[0].id == job['id']
             shutil.rmtree(ac_path)#Remove autocomplete directory
 
+
+def test_post_pbf_autocomplete_without_files(create_instance_fr):
+    with app.app_context():
+        ac_path = current_app.config['TYR_AUTOCOMPLETE_DIR']
+        assert not os.path.exists(ac_path)
+        filename = 'empty_pbf.osm.pbf'
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tests/fixtures/', filename)
+        with open(path, 'rb') as f:
+            response = api_post('/v0/autocomplete_parameters/fr/update_data', check=False)
+            assert response[1] == 404
+
+
+def test_post_pbf_autocomplete_instance_not_exist(create_instance_fr):
+    with app.app_context():
+        ac_path = current_app.config['TYR_AUTOCOMPLETE_DIR']
+        assert not os.path.exists(ac_path)
+        filename = 'empty_pbf.osm.pbf'
+        path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tests/fixtures/', filename)
+        with open(path, 'rb') as f:
+            response = api_post('/v0/autocomplete_parameters/bob/update_data', check=False)
+            assert response[1] == 404
