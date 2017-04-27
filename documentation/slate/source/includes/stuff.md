@@ -104,8 +104,8 @@ For example it's the actual period when railworks are done and train circulation
 
 ## Request date
 
-The request date represents datetime for Jourenys API, from_datetime for  Schedules API or now for the others APIs.
-The default value is now
+The request date represents datetime for Journeys API, from_datetime for  Schedules API or now for the others APIs.
+The default value is now.
 
 # Summary
 
@@ -155,33 +155,6 @@ The status of the impact depends only of 'now' and is:
       <td align="center">future </td>
     </tr>
     <tr>
-      <td align="center"> </td>
-      <td> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
-    </tr>
-    <tr>
-      <td align="center"> </td>
-      <td> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
-    </tr>
-    <tr>
-      <td align="center"> </td>
-      <td> </td>
-      <td align="center">date2 </td>
-      <td align="center"><strong>Yes</strong> </td>
-      <td align="center">- </td>
-      <td align="center">- </td>
-      <td align="center">future </td>
-    </tr>
-    <tr>
       <td align="center">* </td>
       <td> </td>
       <td align="center"> </td>
@@ -193,7 +166,7 @@ The status of the impact depends only of 'now' and is:
     <tr>
       <td align="center">| </td>
       <td> </td>
-      <td align="center">date3 </td>
+      <td align="center">date2 </td>
       <td align="center"><strong>Yes</strong> </td>
       <td align="center"><strong>Yes</strong> </td>
       <td align="center"> </td>
@@ -211,7 +184,7 @@ The status of the impact depends only of 'now' and is:
     <tr>
       <td align="center">| </td>
       <td>| </td>
-      <td align="center">date4 </td>
+      <td align="center">date3 </td>
       <td align="center"><strong>Yes</strong> </td>
       <td align="center"><strong>Yes</strong> </td>
       <td align="center"><strong>Yes</strong> </td>
@@ -238,7 +211,7 @@ The status of the impact depends only of 'now' and is:
     <tr>
       <td align="center">| </td>
       <td> </td>
-      <td align="center">date5 </td>
+      <td align="center">date4 </td>
       <td align="center"><strong>Yes</strong> </td>
       <td align="center"><strong>Yes</strong> </td>
       <td align="center"> </td>
@@ -265,25 +238,7 @@ The status of the impact depends only of 'now' and is:
     <tr>
       <td align="center"> </td>
       <td> </td>
-      <td align="center">date6 </td>
-      <td align="center"><strong>Yes</strong> </td>
-      <td align="center">- </td>
-      <td align="center">- </td>
-      <td align="center">passed </td>
-    </tr>
-    <tr>
-      <td align="center"> </td>
-      <td> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
-    </tr>
-    <tr>
-      <td align="center"> </td>
-      <td> </td>
-      <td align="center">date7 </td>
+      <td align="center">date5 </td>
       <td align="center"><strong>Yes</strong> </td>
       <td align="center">- </td>
       <td align="center">- </td>
