@@ -647,7 +647,7 @@ Data::get_target_by_source(Type_e source, Type_e target,
     result.reserve(source_idx.size());
     for(idx_t idx : source_idx) {
         Indexes tmp = get_target_by_one_source(source, target, idx);
-        // Use flat_set's merge when we pass to boost 1.62
+        // TODO: Use flat_set's merge when we pass to boost 1.62
         result.insert(boost::container::ordered_unique_range_t(),
                       tmp.begin(), tmp.end());
     }
