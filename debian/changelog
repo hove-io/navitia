@@ -1,3 +1,21 @@
+navitia2 (2.31.0) unstable; urgency=low
+
+  * Documentations: fix documentations  <https://github.com/CanalTP/navitia/pull/2073>
+  * jormungandr: modifications for same_journey_schedules  <https://github.com/CanalTP/navitia/pull/2064>
+  * Doc: How to display disruptions  <https://github.com/CanalTP/navitia/pull/2040>
+  * Jormungandr: return None if timestamp > MAX_INT  <https://github.com/CanalTP/navitia/pull/2072>
+  * jormungandr: priority to journey with bike_in_pt while eliminating similar journey  <https://github.com/CanalTP/navitia/pull/2062>
+  * jormungandr: Ignore jorm .ini config files  <https://github.com/CanalTP/navitia/pull/2070>
+  * Tyr: add a task id on each long task  <https://github.com/CanalTP/navitia/pull/2068>
+  * Kraken: added a help message  <https://github.com/CanalTP/navitia/pull/2063>
+  * Jormungandr: use geocodejson/reverse API to get an object from coords  <https://github.com/CanalTP/navitia/pull/2060>
+  * Jormungandr: refacto experimental  <https://github.com/CanalTP/navitia/pull/2058>
+  * TYR : Reimport last datasets stops to mimir  <https://github.com/CanalTP/navitia/pull/2054>
+  * Jormungandr: use serpy for api places (geocodejson)  <https://github.com/CanalTP/navitia/pull/2047>
+  * Kraken: use boost for regex  <https://github.com/CanalTP/navitia/pull/2059>
+
+ -- Guillaume Pinot <texitoi@texitoi.eu>  Fri, 28 Apr 2017 17:04:09 +0100
+
 navitia2 (2.30.2) unstable; urgency=low
 
   * Kraken: use boost::container::ordered_unique_range_t for flat_set insert  <https://github.com/CanalTP/navitia/pull/2074> 
