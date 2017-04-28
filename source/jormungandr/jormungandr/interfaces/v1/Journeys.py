@@ -308,13 +308,13 @@ class add_journey_href(object):
                     journey['links'] = [create_external_link('v1.journeys', rel='journeys', **args)]
                 elif allowed_ids and 'public_transport' in (s['type'] for s in journey['sections']):
                     # exactly one first_section_mode
-                    if next(iter(journey['sections'][1:]), {}).get('type', '').startswith('bss'):
+                    if any(s['type'].startswith('bss') for s in journey['sections'][:2]):
                         args['first_section_mode[]'] = 'bss'
                     else:
                         args['first_section_mode[]'] = journey['sections'][0].get('mode', 'walking')
 
                     # exactly one last_section_mode
-                    if next(iter(journey['sections'][-2:]), {}).get('type', '').startswith('bss'):
+                    if any(s['type'].startswith('bss') for s in journey['sections'][-2:]):
                         args['last_section_mode[]'] = 'bss'
                     else:
                         args['last_section_mode[]'] = journey['sections'][-1].get('mode', 'walking')
