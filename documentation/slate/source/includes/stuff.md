@@ -87,27 +87,22 @@ Disruptions
 
 In this paragraph, we will explain how the disruptions are displayed in the different APIs.
 
-### Context
-
-
-#### periods
-
-##### publication period of a disruption
+### publication period of a disruption
 The publication period of a disruption is the period on which we want to display the disruption in navitia.
 
 The creator of the disruption might not want the traveller to know of a disruption before a certain date (because it's too uncertain, secret, ...)
 The publication period is the way to control this.
 
-##### application periods of a disruption
+### application periods of a disruption
 The application periods are the list of periods on which the disruption is active.
 For example it's the actual period when railworks are done and train circulation is cut.
 
-#### Request date
+### Request date
 
 The request date represents datetime for Journeys API, from_datetime for  Schedules API or now for the others APIs.
 The default value is now.
 
-#### Summary
+### Summary
 
 To sum up we display an impact if 'now' is in the publication period.
 
