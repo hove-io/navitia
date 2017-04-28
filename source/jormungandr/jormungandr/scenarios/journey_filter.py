@@ -87,6 +87,8 @@ def final_filter_journeys(response_list, instance, request):
 
     _filter_too_much_connections(journeys, instance, request)
 
+    _filter_min_transfers(journeys, instance, request)
+
     return response_list
 
 
@@ -281,6 +283,21 @@ def _filter_too_much_connections(journeys, instance, request):
             if get_nb_connections(j) > max_connections_allowed:
                 logger.debug("the journey {} has a too much connections, we delete it".format(j.internal_id))
                 mark_as_dead(j, "too_much_connections")
+
+
+def _filter_min_transfers(journeys, instance, request):
+    """
+    eliminates journeys with number of connections less then min_nb_transfers among journeys
+    """
+    logger = logging.getLogger(__name__)
+    min_nb_transfers = get_or_default(request, 'min_nb_transfers', 0)
+
+    for j in journeys:
+        if to_be_deleted(j):
+            continue
+        if get_nb_connections(j) < min_nb_transfers:
+            logger.debug("the journey {} has not enough connections, we delete it".format(j.internal_id))
+            mark_as_dead(j, "not_enough_connections")
 
 
 def get_min_connections(journeys):

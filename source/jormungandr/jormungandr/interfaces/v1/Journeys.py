@@ -294,9 +294,10 @@ class add_journey_href(object):
                 return objects
             for journey in objects[0]['journeys']:
                 args = dict(request.args)
-                ids = {o['stop_point']['stop_area']['id']
+                allowed_ids = {o['stop_point']['id']
                        for s in journey.get('sections', []) if 'from' in s
                        for o in (s['from'], s['to']) if 'stop_point' in o}
+
                 if 'region' in kwargs:
                     args['region'] = kwargs['region']
                 if "sections" not in journey:#this mean it's an isochrone...
@@ -305,10 +306,23 @@ class add_journey_href(object):
                     if 'from' not in args:
                         args['from'] = journey['from']['id']
                     journey['links'] = [create_external_link('v1.journeys', rel='journeys', **args)]
-                elif ids and 'public_transport' in (s['type'] for s in journey['sections']):
+                elif allowed_ids and 'public_transport' in (s['type'] for s in journey['sections']):
+                    # exactly one first_section_mode
+                    if next(iter(journey['sections'][1:]), {}).get('type', '').startswith('bss'):
+                        args['first_section_mode[]'] = 'bss'
+                    else:
+                        args['first_section_mode[]'] = journey['sections'][0].get('mode', 'walking')
+
+                    # exactly one last_section_mode
+                    if next(iter(journey['sections'][-2:]), {}).get('type', '').startswith('bss'):
+                        args['last_section_mode[]'] = 'bss'
+                    else:
+                        args['last_section_mode[]'] = journey['sections'][-1].get('mode', 'walking')
+
+                    args['min_nb_transfers'] = journey['nb_transfers']
                     args['min_nb_journeys'] = 5
-                    ids.update(args.get('allowed_id[]', []))
-                    args['allowed_id[]'] = list(ids)
+                    allowed_ids.update(args.get('allowed_id[]', []))
+                    args['allowed_id[]'] = list(allowed_ids)
                     journey['links'] = [
                         create_external_link('v1.journeys', rel='same_journey_schedules', _type='journeys', **args)
                     ]
