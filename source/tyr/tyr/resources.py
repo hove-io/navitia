@@ -87,7 +87,7 @@ class Job(flask_restful.Resource):
         instance = models.Instance.query_existing().filter_by(name=instance_name).first_or_404()
 
         if not request.files:
-            return {'message': 'the Data file is missing'}, 404
+            return {'message': 'the Data file is missing'}, 400
         content = request.files['file']
         logger = get_instance_logger(instance)
         logger.info('content received: %s', content)

@@ -51,7 +51,7 @@ class update_data(object):
                     filter_by(name=kwargs.get('instance_name')).first_or_404()
 
             if not request.files:
-                return marshal({'error': {'message': 'the Data file is missing'}}, error_fields), 404
+                return marshal({'error': {'message': 'the Data file is missing'}}, error_fields), 400
             content = request.files['file']
             logger = get_instance_logger(instance)
             logger.info('content received: %s', content.filename)

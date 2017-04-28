@@ -8,6 +8,3 @@ EMAIL_CHECK_MX = False
 
 #Validate the email by connecting to the smtp server, but doesn't send an email
 EMAIL_CHECK_SMTP = False
-
-#Path to the directory where the data sources for autocomplete are stocked
-TYR_AUTOCOMPLETE_DIR = os.path.join(tempfile.gettempdir(), 'autocomplete')
