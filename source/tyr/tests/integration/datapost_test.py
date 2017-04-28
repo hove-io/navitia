@@ -18,6 +18,13 @@ def create_instance_fr():
         models.db.session.add(autocomplete_instance)
         models.db.session.commit()
 
+@pytest.yield_fixture(scope="function", autouse=True)
+def autocomplete_path(tmpdir):
+    with app.app_context():
+        current_ac_path = current_app.config['TYR_AUTOCOMPLETE_DIR']
+        current_app.config['TYR_AUTOCOMPLETE_DIR'] = tmpdir.strpath
+        yield
+        current_app.config['TYR_AUTOCOMPLETE_DIR'] = current_ac_path
 
 def get_jobs_from_db(id=None):
     with app.app_context():
@@ -54,10 +61,8 @@ def test_post_bad_instance(create_instance_fr):
     assert resp.status_code == 404
 
 
-def test_post_pbf_autocomplete(create_instance_fr, tmpdir):
+def test_post_pbf_autocomplete(create_instance_fr):
     with app.app_context():
-        ac_path = tmpdir.strpath
-        current_app.config['TYR_AUTOCOMPLETE_DIR'] = ac_path
         filename = 'empty_pbf.osm.pbf'
         path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tests/fixtures/', filename)
         with open(path, 'rb') as f:
@@ -72,10 +77,8 @@ def test_post_pbf_autocomplete(create_instance_fr, tmpdir):
             assert job
 
 
-def test_post_bano_autocomplete(create_instance_fr, tmpdir):
+def test_post_bano_autocomplete(create_instance_fr):
     with app.app_context():
-        ac_path = tmpdir.strpath
-        current_app.config['TYR_AUTOCOMPLETE_DIR'] = ac_path
         filename = 'sample-bano.csv'
         path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tests/fixtures/', filename)
         with open(path, 'rb') as f:
@@ -90,10 +93,8 @@ def test_post_bano_autocomplete(create_instance_fr, tmpdir):
             assert job
 
 
-def test_post_pbf_autocomplete_without_files(create_instance_fr, tmpdir):
+def test_post_pbf_autocomplete_without_files(create_instance_fr):
     with app.app_context():
-        ac_path = tmpdir.strpath
-        current_app.config['TYR_AUTOCOMPLETE_DIR'] = ac_path
         filename = 'empty_pbf.osm.pbf'
         path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tests/fixtures/', filename)
         with open(path, 'rb'):
@@ -101,10 +102,8 @@ def test_post_pbf_autocomplete_without_files(create_instance_fr, tmpdir):
             assert status == 400
 
 
-def test_post_pbf_autocomplete_instance_not_exist(create_instance_fr, tmpdir):
+def test_post_pbf_autocomplete_instance_not_exist(create_instance_fr):
     with app.app_context():
-        ac_path = tmpdir.strpath
-        current_app.config['TYR_AUTOCOMPLETE_DIR'] = ac_path
         filename = 'empty_pbf.osm.pbf'
         path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tests/fixtures/', filename)
         with open(path, 'rb'):
