@@ -435,7 +435,7 @@ Real time and disruption objects
     "base_departure_time": "073600",
     "cause": "",
     "stop_time_effect": "delayed",
-    "departure_status": "delayed"
+    "departure_status": "delayed",
     "arrival_status": "deleted"
 }
 ```
@@ -448,7 +448,7 @@ Real time and disruption objects
 |base_departure_time|*optional* string|Base departure hour (format HHMMSS) of the trip on this stop point|
 |base_arrival_time|*optional* string|Base arrival hour (format HHMMSS) of the trip on this stop point|
 |cause|string|Cause of the modification|
-|stop_time_effect|Enum|Can be: "added", "deleted", "delayed" or "unchanged". Deprecated, consider the more accurate departure_status and arrival_status|
+|stop_time_effect|Enum|Can be: "added", "deleted", "delayed" or "unchanged". *Deprecated*, consider the more accurate departure_status and arrival_status|
 |arrival_status|Enum|Can be: "added", "deleted", "delayed" or "unchanged".|
 |departure_status|Enum|Can be: "added", "deleted", "delayed" or "unchanged".|
 
