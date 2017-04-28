@@ -33,7 +33,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from flask import request, g
 from functools import wraps
 from navitiacommon import stat_pb2
-from datetime import datetime
 import logging
 from jormungandr import app
 from jormungandr.authentication import get_user, get_token, get_app_name, get_used_coverages

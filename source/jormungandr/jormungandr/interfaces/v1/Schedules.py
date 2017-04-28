@@ -37,7 +37,7 @@ from jormungandr import timezone
 from jormungandr.interfaces.v1.fields import stop_point, route, pagination, PbField, stop_date_time, \
     additional_informations, stop_time_properties_links, display_informations_vj, \
     display_informations_route, UrisToLinks, error, \
-    enum_type, SplitDateTime, MultiLineString, NonNullList, PbEnum, feed_publisher
+    enum_type, SplitDateTime, MultiLineString, PbEnum, feed_publisher
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri, complete_links
 import datetime
 from jormungandr.interfaces.argument import ArgumentDoc

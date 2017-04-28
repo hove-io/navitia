@@ -87,6 +87,8 @@ def final_filter_journeys(response_list, instance, request):
 
     _filter_too_much_connections(journeys, instance, request)
 
+    _filter_min_transfers(journeys, instance, request)
+
     return response_list
 
 
@@ -101,6 +103,9 @@ def _get_worst_similar(j1, j2, request):
      - more fallback
      - more connection
      - smaller value among min waiting duration
+     - more constrained fallback mode : all else being equal,
+            it's better to know that you can do it by bike for 'bike_in_pt' tag
+            (and traveler presumes he can do it walking too, as the practical case is 0s fallback)
     """
     if request.get('clockwise', True):
         if j1.arrival_date_time != j2.arrival_date_time:
@@ -118,7 +123,30 @@ def _get_worst_similar(j1, j2, request):
     if get_nb_connections(j1) != get_nb_connections(j2):
         return j1 if get_nb_connections(j1) > get_nb_connections(j2) else j2
 
-    return j1 if get_min_waiting(j1) < get_min_waiting(j2) else j2
+    if get_min_waiting(j1) != get_min_waiting(j2):
+        return j1 if get_min_waiting(j1) < get_min_waiting(j2) else j2
+
+
+    def get_mode_rank(section):
+        mode_rank = {response_pb2.Car: 0,
+                     response_pb2.Bike: 1,
+                     response_pb2.Walking: 2}
+        return mode_rank.get(section.street_network.mode)
+
+    def is_fallback(section):
+        return section.type == response_pb2.CROW_FLY or section.type != response_pb2.STREET_NETWORK
+
+    s1 = j1.sections[0]
+    s2 = j2.sections[0]
+    if is_fallback(s1) and is_fallback(s2) and s1.street_network.mode != s2.street_network.mode:
+        return j1 if get_mode_rank(s1) > get_mode_rank(s2) else j2
+
+    s1 = j1.sections[-1]
+    s2 = j2.sections[-1]
+    if is_fallback(s1) and is_fallback(s2) and s1.street_network.mode != s2.street_network.mode:
+        return j1 if get_mode_rank(s1) > get_mode_rank(s2) else j2
+
+    return j2
 
 
 def to_be_deleted(journey):
@@ -255,6 +283,21 @@ def _filter_too_much_connections(journeys, instance, request):
             if get_nb_connections(j) > max_connections_allowed:
                 logger.debug("the journey {} has a too much connections, we delete it".format(j.internal_id))
                 mark_as_dead(j, "too_much_connections")
+
+
+def _filter_min_transfers(journeys, instance, request):
+    """
+    eliminates journeys with number of connections less then min_nb_transfers among journeys
+    """
+    logger = logging.getLogger(__name__)
+    min_nb_transfers = get_or_default(request, 'min_nb_transfers', 0)
+
+    for j in journeys:
+        if to_be_deleted(j):
+            continue
+        if get_nb_connections(j) < min_nb_transfers:
+            logger.debug("the journey {} has not enough connections, we delete it".format(j.internal_id))
+            mark_as_dead(j, "not_enough_connections")
 
 
 def get_min_connections(journeys):

@@ -44,7 +44,7 @@ import logging
 from .exceptions import DeadSocketException
 from navitiacommon import models
 from importlib import import_module
-from jormungandr import cache, app, utils, global_autocomplete
+from jormungandr import cache, app, global_autocomplete
 from shapely import wkt
 from shapely.geos import ReadingError
 from shapely import geometry

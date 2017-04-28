@@ -34,7 +34,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr import app
 from jormungandr import i_manager
 import signal
-from werkzeug.serving import run_simple
 import sys
 from flask_script import Manager
 

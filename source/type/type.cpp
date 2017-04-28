@@ -948,7 +948,7 @@ std::string to_string(ExceptionDate::ExceptionType t) {
 
 // the new way to represent a coord is : "lon;lat"
 const std::string match_double = "[-+]?[0-9]*\\.?[0-9]*[eE]?[-+]?[0-9]*";
-const auto coord_regex = std::regex("^(" + match_double + ");(" + match_double + ")$");
+const auto coord_regex = boost::regex("^(" + match_double + ");(" + match_double + ")$");
 
 EntryPoint::EntryPoint(const Type_e type, const std::string &uri, int access_duration) : type(type), uri(uri), access_duration(access_duration) {
     if (type == Type_e::Address) {
@@ -978,8 +978,8 @@ EntryPoint::EntryPoint(const Type_e type, const std::string &uri, int access_dur
             }
             return;
         }
-        std::smatch matches;
-        bool res = std::regex_match(uri, matches, coord_regex);
+        boost::smatch matches;
+        bool res = boost::regex_match(uri, matches, coord_regex);
         if (res && matches.size() == 3) {
             set_coord(matches[1], matches[2]);
         } else {
@@ -991,7 +991,7 @@ EntryPoint::EntryPoint(const Type_e type, const std::string &uri, int access_dur
 
 bool EntryPoint::is_coord(const std::string& uri) {
     return (uri.size() > 6 && uri.substr(0, 6) == "coord:")
-        || (std::regex_match(uri, coord_regex) && uri != ";");
+        || (boost::regex_match(uri, coord_regex) && uri != ";");
 }
 
 EntryPoint::EntryPoint(const Type_e type, const std::string &uri) : EntryPoint(type, uri, 0) { }

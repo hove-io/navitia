@@ -1,7 +1,7 @@
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2017, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
-# the software to build cool stuff with public transport.
+#     the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
 #     powered by Canal TP (www.canaltp.fr).
@@ -26,24 +26,29 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from jormungandr.autocomplete.geocodejson import format_zip_code
+import copy
 
 
-def test_format_zip_code():
-    zip_codes = []
-    assert format_zip_code(zip_codes) == None
+class PtException(Exception):
+    def __init__(self, pt_journey_with_error):
+        super(PtException, self).__init__()
+        self._response = copy.deepcopy(pt_journey_with_error)
 
-    zip_codes = [""]
-    assert format_zip_code(zip_codes) == None
+    def get(self):
+        return self._response
 
-    zip_codes = ["", ""]
-    assert format_zip_code(zip_codes) == None
 
-    zip_codes = ["75000"]
-    assert format_zip_code(zip_codes) == "75000"
+def _make_error_response(message, error_id):
+    from navitiacommon import response_pb2
+    r = response_pb2.Response()
+    r.error.message = message
+    r.error.id = error_id
+    return r
 
-    zip_codes = ["75012", "75013"]
-    assert format_zip_code(zip_codes) == "75012-75013"
+class EntryPointException(Exception):
+    def __init__(self, error_id, error_message):
+        super(EntryPointException, self).__init__()
+        self._response = _make_error_response(error_id, error_message)
 
-    zip_codes = ["75013", "75014", "75012"]
-    assert format_zip_code(zip_codes) == "75012-75014"
+    def get(self):
+        return self._response

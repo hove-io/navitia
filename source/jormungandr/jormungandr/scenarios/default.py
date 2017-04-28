@@ -33,18 +33,16 @@ import copy
 import navitiacommon.type_pb2 as type_pb2
 import navitiacommon.request_pb2 as request_pb2
 import navitiacommon.response_pb2 as response_pb2
-from jormungandr.interfaces.common import pb_odt_level
 from jormungandr.scenarios.qualifier import qualifier_one
-from datetime import datetime, timedelta
 import itertools
 from flask import current_app
-import time
-from jormungandr.scenarios.utils import pb_type, pt_object_type, are_equals, count_typed_journeys, journey_sorter, \
+from jormungandr.scenarios.utils import are_equals, count_typed_journeys, journey_sorter, \
     change_ids, updated_request_with_default, fill_uris, get_or_default
 from jormungandr.scenarios import simple
 import logging
-from jormungandr.scenarios.helpers import walking_duration, bss_duration, bike_duration, car_duration, pt_duration
-from jormungandr.scenarios.helpers import select_best_journey_by_time, select_best_journey_by_duration, max_duration_fallback_modes
+from jormungandr.scenarios.helpers import bss_duration, bike_duration, car_duration, pt_duration
+from jormungandr.scenarios.helpers import select_best_journey_by_time, select_best_journey_by_duration, \
+    max_duration_fallback_modes
 from jormungandr.scenarios.helpers import fallback_mode_comparator
 from jormungandr.utils import pb_del_if, date_to_timestamp
 import flask

@@ -50,7 +50,7 @@ from tyr import celery, redis
 from rabbit_mq_handler import RabbitMqHandler
 from navitiacommon import models, utils
 from navitiacommon import models
-from tyr.helper import get_instance_logger, get_named_arg
+from tyr.helper import get_instance_logger, get_named_arg, get_autocomplete_instance_logger, get_task_logger
 from contextlib import contextmanager
 import glob
 from redis.exceptions import ConnectionError
@@ -104,7 +104,7 @@ class Lock(object):
             job_id = get_named_arg('job_id', func, args, kwargs)
             logging.debug('args: %s -- kwargs: %s', args, kwargs)
             job = models.Job.query.get(job_id)
-            logger = get_instance_logger(job.instance)
+            logger = get_instance_logger(job.instance, task_id=job_id)
             task = args[func.func_code.co_varnames.index('self')]
             try:
                 lock = redis.lock('tyr.lock|' + job.instance.name, timeout=self.timeout)
@@ -154,7 +154,7 @@ def fusio2ed(self, instance_config, filename, job_id, dataset_uid):
     job = models.Job.query.get(job_id)
     instance = job.instance
 
-    logger = get_instance_logger(instance)
+    logger = get_instance_logger(instance, task_id=job_id)
     try:
         working_directory = unzip_if_needed(filename)
 
@@ -190,7 +190,7 @@ def gtfs2ed(self, instance_config, gtfs_filename, job_id, dataset_uid):
     job = models.Job.query.get(job_id)
     instance = job.instance
 
-    logger = get_instance_logger(instance)
+    logger = get_instance_logger(instance, task_id=job_id)
     try:
         working_directory = unzip_if_needed(gtfs_filename)
 
@@ -232,7 +232,7 @@ def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
     if os.path.isdir(osm_filename):
         osm_filename = glob.glob('{}/*.pbf'.format(osm_filename))[0]
 
-    logger = get_instance_logger(instance)
+    logger = get_instance_logger(instance, task_id=job_id)
     try:
         connection_string = make_connection_string(instance_config)
         res = None
@@ -261,7 +261,7 @@ def geopal2ed(self, instance_config, filename, job_id, dataset_uid):
 
     job = models.Job.query.get(job_id)
     instance = job.instance
-    logger = get_instance_logger(instance)
+    logger = get_instance_logger(instance, task_id=job_id)
     try:
         working_directory = unzip_if_needed(filename)
 
@@ -287,7 +287,7 @@ def poi2ed(self, instance_config, filename, job_id, dataset_uid):
 
     job = models.Job.query.get(job_id)
     instance = job.instance
-    logger = get_instance_logger(instance)
+    logger = get_instance_logger(instance, task_id=job_id)
     try:
         working_directory = unzip_if_needed(filename)
 
@@ -314,7 +314,7 @@ def synonym2ed(self, instance_config, filename, job_id, dataset_uid):
     job = models.Job.query.get(job_id)
     instance = job.instance
 
-    logger = get_instance_logger(instance)
+    logger = get_instance_logger(instance, task_id=job_id)
     try:
         connection_string = make_connection_string(instance_config)
         res = None
@@ -426,7 +426,7 @@ def reload_data(self, instance_config, job_id):
     job = models.Job.query.get(job_id)
     instance = job.instance
     logging.info("Unqueuing job {}, reload data of instance {}".format(job.id, instance.name))
-    logger = get_instance_logger(instance)
+    logger = get_instance_logger(instance, task_id=job_id)
     try:
         task = navitiacommon.task_pb2.Task()
         task.action = navitiacommon.task_pb2.RELOAD
@@ -449,7 +449,7 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
     job = models.Job.query.get(job_id)
     instance = job.instance
 
-    logger = get_instance_logger(instance)
+    logger = get_instance_logger(instance, task_id=job_id)
     try:
         output_file = instance_config.target_file
 
@@ -488,7 +488,7 @@ def fare2ed(self, instance_config, filename, job_id, dataset_uid):
     job = models.Job.query.get(job_id)
     instance = job.instance
 
-    logger = get_instance_logger(instance)
+    logger = get_instance_logger(instance, task_id=job_id)
     try:
 
         working_directory = unzip_if_needed(filename)
@@ -510,11 +510,11 @@ def fare2ed(self, instance_config, filename, job_id, dataset_uid):
 @celery.task(bind=True)
 def bano2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
     """ launch bano2mimir """
-    logger = logging.getLogger("autocomplete")
+    autocomplete_instance = models.db.session.merge(autocomplete_instance)#reatache the object
+    logger = get_autocomplete_instance_logger(autocomplete_instance, task_id=job_id)
     job = models.Job.query.get(job_id)
     cnx_string = current_app.config['MIMIR_URL']
     working_directory = unzip_if_needed(filename)
-    autocomplete_instance = models.db.session.merge(autocomplete_instance)#reatache the object
 
     if autocomplete_instance.address != 'BANO':
         logger.warn('no bano data will be loaded for instance {} because the address are read from {}'
@@ -540,12 +540,12 @@ def bano2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
 @celery.task(bind=True)
 def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
     """ launch osm2mimir """
-    logger = logging.getLogger("autocomplete")
+    autocomplete_instance = models.db.session.merge(autocomplete_instance)#reatache the object
+    logger = get_autocomplete_instance_logger(autocomplete_instance, task_id=job_id)
     logger.debug('running osm2mimir for {}'.format(job_id))
     job = models.Job.query.get(job_id)
     cnx_string = current_app.config['MIMIR_URL']
     working_directory = unzip_if_needed(filename)
-    autocomplete_instance = models.db.session.merge(autocomplete_instance)#reatache the object
 
     params = ['-i', working_directory, '--connection-string', cnx_string]
     for lvl in autocomplete_instance.admin_level:
@@ -574,16 +574,19 @@ def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
 
 
 @celery.task(bind=True)
-def stops2mimir(self, instance_config, input, job_id, dataset_uid):
+def stops2mimir(self, instance_config, input, job_id=None, dataset_uid=None):
     """
     launch stops2mimir
 
     Note: this is temporary, this will be done by tartare when tartare will be available
     """
-    job = models.Job.query.get(job_id)
-    instance = job.instance
-
-    logger = get_instance_logger(instance)
+    # We don't have job_id while doing a reimport of all instances with import_stops_in_mimir = true
+    if job_id:
+        job = models.Job.query.get(job_id)
+        instance = job.instance
+        logger = get_instance_logger(instance, task_id=job_id)
+    else:
+        logger = get_task_logger(logging.getLogger("autocomplete"))
     cnx_string = current_app.config['MIMIR_URL']
 
     working_directory = os.path.dirname(input)
@@ -601,6 +604,8 @@ def stops2mimir(self, instance_config, input, job_id, dataset_uid):
             raise ValueError('stops2mimir failed')
     except:
         logger.exception('')
-        job.state = 'failed'
-        models.db.session.commit()
+        if job_id:
+            job.state = 'failed'
+            models.db.session.commit()
+
         raise

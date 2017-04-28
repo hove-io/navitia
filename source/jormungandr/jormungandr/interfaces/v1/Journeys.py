@@ -29,10 +29,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from functools import cmp_to_key
 import logging
 from flask import request, g
-from flask.ext.restful import fields, reqparse, marshal_with, abort
+from flask.ext.restful import fields, marshal_with, abort
 from flask.ext.restful.inputs import boolean
 from jormungandr import i_manager, app
 from jormungandr.interfaces.v1.fields import disruption_marshaller, Links
@@ -40,28 +39,19 @@ from jormungandr.interfaces.v1.fields import display_informations_vj, error, pla
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
     SectionGeoJson, PbEnum, feed_publisher, Durations
 
-from jormungandr.interfaces.parsers import option_value, date_time_format, default_count_arg_type, date_time_format
-from jormungandr.interfaces.v1.ResourceUri import ResourceUri, complete_links
+from jormungandr.interfaces.parsers import default_count_arg_type
+from jormungandr.interfaces.v1.ResourceUri import complete_links
 from functools import wraps
 from jormungandr.interfaces.v1.fields import DateTime, Integer
 from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.make_links import create_external_link, create_internal_link
 from jormungandr.interfaces.v1.errors import ManageError
-from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import depth_argument, float_gt_0
-from operator import itemgetter
-from datetime import datetime, timedelta
 from collections import defaultdict
-from navitiacommon import type_pb2, response_pb2
+from navitiacommon import response_pb2
 from jormungandr.utils import date_to_timestamp
-from jormungandr.resources_utc import ResourceUtc
-from copy import deepcopy
-from jormungandr.travelers_profile import TravelerProfile
-from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.interfaces.v1.Calendars import calendar
-from navitiacommon.default_traveler_profile_params import acceptable_traveler_types
 from navitiacommon import default_values
-from jormungandr.interfaces.v1.journey_common import JourneyCommon, dt_represents, compute_possible_region
+from jormungandr.interfaces.v1.journey_common import JourneyCommon, compute_possible_region
 from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
 
 
@@ -304,9 +294,10 @@ class add_journey_href(object):
                 return objects
             for journey in objects[0]['journeys']:
                 args = dict(request.args)
-                ids = {o['stop_point']['stop_area']['id']
+                allowed_ids = {o['stop_point']['id']
                        for s in journey.get('sections', []) if 'from' in s
                        for o in (s['from'], s['to']) if 'stop_point' in o}
+
                 if 'region' in kwargs:
                     args['region'] = kwargs['region']
                 if "sections" not in journey:#this mean it's an isochrone...
@@ -315,10 +306,23 @@ class add_journey_href(object):
                     if 'from' not in args:
                         args['from'] = journey['from']['id']
                     journey['links'] = [create_external_link('v1.journeys', rel='journeys', **args)]
-                elif ids and 'public_transport' in (s['type'] for s in journey['sections']):
+                elif allowed_ids and 'public_transport' in (s['type'] for s in journey['sections']):
+                    # exactly one first_section_mode
+                    if any(s['type'].startswith('bss') for s in journey['sections'][:2]):
+                        args['first_section_mode[]'] = 'bss'
+                    else:
+                        args['first_section_mode[]'] = journey['sections'][0].get('mode', 'walking')
+
+                    # exactly one last_section_mode
+                    if any(s['type'].startswith('bss') for s in journey['sections'][-2:]):
+                        args['last_section_mode[]'] = 'bss'
+                    else:
+                        args['last_section_mode[]'] = journey['sections'][-1].get('mode', 'walking')
+
+                    args['min_nb_transfers'] = journey['nb_transfers']
                     args['min_nb_journeys'] = 5
-                    ids.update(args.get('allowed_id[]', []))
-                    args['allowed_id[]'] = list(ids)
+                    allowed_ids.update(args.get('allowed_id[]', []))
+                    args['allowed_id[]'] = list(allowed_ids)
                     journey['links'] = [
                         create_external_link('v1.journeys', rel='same_journey_schedules', _type='journeys', **args)
                     ]

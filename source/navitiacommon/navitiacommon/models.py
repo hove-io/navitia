@@ -331,13 +331,16 @@ class Instance(db.Model):
         if jobs:
             self.jobs = jobs
 
-    def last_datasets(self, nb_dataset=1):
+    def last_datasets(self, nb_dataset=1, family_type=None):
         """
         return the n last dataset of each family type loaded for this instance
         """
-        family_types = db.session.query(func.distinct(DataSet.family_type)) \
-            .filter(Instance.id == self.id) \
-            .all()
+        query = db.session.query(func.distinct(DataSet.family_type)) \
+            .filter(Instance.id == self.id)
+        if family_type:
+            query = query.filter(DataSet.family_type == family_type)
+
+        family_types = query.all()
 
         result = []
         for family_type in family_types:

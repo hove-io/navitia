@@ -23,7 +23,6 @@ python-dateutil==2.5.3
 pytz==2013.9
 retrying==1.2.3
 aniso8601==0.82
-elasticsearch==1.4.0
 ujson==1.33
 urllib3==1.10.1
 numpy==1.9.0

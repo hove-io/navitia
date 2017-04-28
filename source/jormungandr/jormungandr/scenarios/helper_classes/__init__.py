@@ -1,7 +1,7 @@
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2017, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
-# the software to build cool stuff with public transport.
+#     the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
 #     powered by Canal TP (www.canaltp.fr).
@@ -26,24 +26,13 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from jormungandr.autocomplete.geocodejson import format_zip_code
-
-
-def test_format_zip_code():
-    zip_codes = []
-    assert format_zip_code(zip_codes) == None
-
-    zip_codes = [""]
-    assert format_zip_code(zip_codes) == None
-
-    zip_codes = ["", ""]
-    assert format_zip_code(zip_codes) == None
-
-    zip_codes = ["75000"]
-    assert format_zip_code(zip_codes) == "75000"
-
-    zip_codes = ["75012", "75013"]
-    assert format_zip_code(zip_codes) == "75012-75013"
-
-    zip_codes = ["75013", "75014", "75012"]
-    assert format_zip_code(zip_codes) == "75012-75014"
+from places_free_access import PlacesFreeAccess
+from streetnetwork_path import StreetNetworkPathPool
+from fallback_durations import FallbackDurationsPool
+from place_by_uri import PlaceByUri
+from pt_journey import PtJourneyPool
+from proximities_by_crowfly import ProximitiesByCrowflyPool
+from complete_pt_journey import wait_and_complete_pt_journey
+from helper_exceptions import PtException, EntryPointException
+from helper_utils import get_entry_point_or_raise, check_final_results_or_raise
+from helper_future import FutureManager

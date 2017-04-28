@@ -36,7 +36,6 @@ www.navitia.io
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/map.hpp>
 #include <algorithm>
-#include <regex>
 #include <boost/regex.hpp>
 #include <map>
 #include <unordered_map>

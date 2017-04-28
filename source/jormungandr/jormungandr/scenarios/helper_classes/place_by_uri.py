@@ -1,7 +1,7 @@
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2017, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
-# the software to build cool stuff with public transport.
+#     the software to build cool stuff with public transport.
 #
 # Hope you'll enjoy and contribute to this project,
 #     powered by Canal TP (www.canaltp.fr).
@@ -26,24 +26,22 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from jormungandr.autocomplete.geocodejson import format_zip_code
+import helper_future
 
 
-def test_format_zip_code():
-    zip_codes = []
-    assert format_zip_code(zip_codes) == None
+class PlaceByUri:
+    def __init__(self, future_manager, instance, uri):
+        self._future_manager = future_manager
+        self._instance = instance
+        self._uri = uri
+        self._value = None
+        self._async_request()
 
-    zip_codes = [""]
-    assert format_zip_code(zip_codes) == None
+    def _do_request(self):
+        return self._instance.georef.place(self._uri)
 
-    zip_codes = ["", ""]
-    assert format_zip_code(zip_codes) == None
+    def _async_request(self):
+        self._value = self._future_manager.create_future(self._do_request)
 
-    zip_codes = ["75000"]
-    assert format_zip_code(zip_codes) == "75000"
-
-    zip_codes = ["75012", "75013"]
-    assert format_zip_code(zip_codes) == "75012-75013"
-
-    zip_codes = ["75013", "75014", "75012"]
-    assert format_zip_code(zip_codes) == "75012-75014"
+    def wait_and_get(self):
+        return self._value.wait_and_get()

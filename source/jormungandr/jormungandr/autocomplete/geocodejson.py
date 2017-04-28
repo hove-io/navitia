@@ -32,8 +32,249 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
+from jormungandr.utils import get_lon_lat as get_lon_lat_from_id
 import requests
 from jormungandr.exceptions import TechnicalError, UnknownObject
+from flask import current_app
+from flask.ext.restful import marshal
+from jormungandr.interfaces.v1.fields import Lit, ListLit, beta_endpoint
+from flask.ext.restful import fields
+import re
+
+
+def create_admin_field(geocoding):
+    """
+    This field is needed to respect the geocodejson-spec
+    https://github.com/geocoders/geocodejson-spec/tree/master/draft#feature-object
+    """
+    if not geocoding:
+        return None
+    admin_list = geocoding.get('admin', {})
+    response = []
+    for level, name in admin_list.items():
+        response.append({
+            "insee": None,
+            "name": name,
+            "level": int(level.replace('level', '')),
+            "coord": {"lat": None, "lon": None},
+            "label": None,
+            "id": None,
+            "zip_code": None
+        })
+    return response
+
+
+class CoordId(fields.Raw):
+    def output(self, key, obj):
+        if not obj:
+            return None
+        lon, lat = get_lon_lat(obj)
+        return '{};{}'.format(lon, lat)
+
+
+def format_zip_code(zip_codes):
+    if all(zip_code == "" for zip_code in zip_codes):
+        return None
+    elif len(zip_codes) == 1:
+        return zip_codes[0]
+    else:
+        return '{}-{}'.format(min(zip_codes), max(zip_codes))
+
+
+def create_administrative_regions_field(geocoding):
+    if not geocoding:
+        return None
+    administrative_regions = geocoding.get('administrative_regions', {})
+    response = []
+    for admin in administrative_regions:
+        coord = admin.get('coord', {})
+        lat = str(coord.get('lat')) if coord and coord.get('lat') else None
+        lon = str(coord.get('lon')) if coord and coord.get('lon') else None
+        zip_codes = admin.get('zip_codes', [])
+        response.append({
+            "insee": admin.get('insee'),
+            "name": admin.get('label'),
+            "level":
+                int(admin.get('level')) if admin.get('level') else None,
+            "coord": {
+                "lat": lat,
+                "lon": lon
+            },
+            "label": admin.get('label'),
+            "id": admin.get('id'),
+            "zip_code": format_zip_code(zip_codes)
+        })
+    return response
+
+
+def get_lon_lat(obj):
+    if not obj or not obj.get('geometry') or not obj.get('geometry').get('coordinates'):
+        return None, None
+
+    coordinates = obj.get('geometry', {}).get('coordinates', [])
+    if len(coordinates) == 2:
+        lon = str(coordinates[0])
+        lat = str(coordinates[1])
+    else:
+        lon = None
+        lat = None
+    return lon, lat
+
+
+class AdministrativeRegionField(fields.Raw):
+    """
+    This field is needed to respect Navitia's spec for the sake of compatibility
+    """
+    def output(self, key, obj):
+        if not obj:
+            return None
+
+        lon, lat = get_lon_lat(obj)
+        geocoding = obj.get('properties', {}).get('geocoding', {})
+
+        return {
+            "insee": geocoding.get('citycode') or geocoding.get('city_code'),
+            "level":
+                int(geocoding.get('level')) if geocoding.get('level') else None,
+            "name": geocoding.get('name'),
+            "label": geocoding.get('label'),
+            "id": geocoding.get('id'),
+            "coord": {
+                "lat": lat,
+                "lon": lon
+            },
+            "zip_code": geocoding.get('postcode'),
+            "administrative_regions":
+                create_administrative_regions_field(geocoding) or create_admin_field(geocoding) ,
+        }
+
+
+class AddressField(fields.Raw):
+    def output(self, key, obj):
+        if not obj:
+            return None
+
+        lon, lat = get_lon_lat(obj)
+        geocoding = obj.get('properties', {}).get('geocoding', {})
+        hn = 0
+        numbers = re.findall(r'^\d+', geocoding.get('housenumber') or "0")
+        if len(numbers) > 0:
+            hn = numbers[0]
+
+        return {
+            "id": '{};{}'.format(lon, lat),
+            "coord": {
+                "lon": lon,
+                "lat": lat,
+            },
+            "house_number": int(hn),
+            "label": geocoding.get('label'),
+            "name": geocoding.get('name'),
+            "administrative_regions":
+                create_administrative_regions_field(geocoding) or create_admin_field(geocoding) ,
+        }
+
+
+class PoiField(fields.Raw):
+    def output(self, key, obj):
+        if not obj:
+            return None
+
+        lon, lat = get_lon_lat(obj)
+        geocoding = obj.get('properties', {}).get('geocoding', {})
+        poi_types = geocoding.get('poi_types', [])
+
+        # TODO add address, properties attributes
+        res = {
+            "id": geocoding.get('id'),
+            "coord": {
+                "lon": lon,
+                "lat": lat,
+            },
+            "label": geocoding.get('label'),
+            "name": geocoding.get('name'),
+            "administrative_regions":
+                create_administrative_regions_field(geocoding) or create_admin_field(geocoding),
+        }
+        if isinstance(poi_types, list) and poi_types:
+            res['poi_type'] = poi_types[0]
+        return res
+
+
+class StopAreaField(fields.Raw):
+    def output(self, key, obj):
+        if not obj:
+            return None
+
+        lon, lat = get_lon_lat(obj)
+        geocoding = obj.get('properties', {}).get('geocoding', {})
+
+        # TODO add codes
+        return {
+            "id": geocoding.get('id'),
+            "coord": {
+                "lon": lon,
+                "lat": lat,
+            },
+            "label": geocoding.get('label'),
+            "name": geocoding.get('name'),
+            "administrative_regions":
+                create_administrative_regions_field(geocoding) or create_admin_field(geocoding),
+            "timezone": geocoding.get('timezone'),
+        }
+
+geocode_admin = {
+    "embedded_type": Lit("administrative_region"),
+    "quality": Lit(0),
+    "id": fields.String(attribute='properties.geocoding.id'),
+    "name": fields.String(attribute='properties.geocoding.name'),
+    "administrative_region": AdministrativeRegionField()
+}
+
+
+geocode_addr = {
+    "embedded_type": Lit("address"),
+    "quality": Lit(0),
+    "id": CoordId,
+    "name": fields.String(attribute='properties.geocoding.label'),
+    "address": AddressField()
+}
+
+geocode_poi = {
+    "embedded_type": Lit("poi"),
+    "quality": Lit(0),
+    "id": fields.String(attribute='properties.geocoding.id'),
+    "name": fields.String(attribute='properties.geocoding.label'),
+    "poi": PoiField()
+}
+
+geocode_stop_area = {
+    "embedded_type": Lit("stop_area"),
+    "quality": Lit(0),
+    "id": fields.String(attribute='properties.geocoding.id'),
+    "name": fields.String(attribute='properties.geocoding.label'),
+    "stop_area": StopAreaField()
+}
+
+class GeocodejsonFeature(fields.Raw):
+    def format(self, place):
+        type_ = place.get('properties', {}).get('geocoding', {}).get('type')
+
+        if type_ == 'city':
+            return marshal(place, geocode_admin)
+        elif type_ in ('street', 'house'):
+            return marshal(place, geocode_addr)
+        elif type_ == 'poi':
+            return marshal(place, geocode_poi)
+        elif type_ == 'public_transport:stop_area':
+            return marshal(place, geocode_stop_area)
+
+        return place
+
+geocodejson = {
+    "places": fields.List(GeocodejsonFeature, attribute='features'),
+    "warnings": ListLit([fields.Nested(beta_endpoint)]),
+}
 
 
 class GeocodeJson(AbstractAutocomplete):
@@ -77,14 +318,17 @@ class GeocodeJson(AbstractAutocomplete):
     def response_marshaler(cls, response_bragi, uri=None):
         cls._check_response(response_bragi, uri)
         json_response = response_bragi.json()
-        from flask.ext.restful import marshal
-        from jormungandr.interfaces.v1.Places import geocodejson
 
-        return marshal(json_response, geocodejson)
+        if current_app.config.get('USE_SERPY', False):
+            from jormungandr.interfaces.v1.serializer.places import GeocodePlacesSerializer
+            return GeocodePlacesSerializer(json_response).data
+        else:
+            from flask.ext.restful import marshal
+            return marshal(json_response, geocodejson)
 
     def make_url(self, end_point, uri=None):
 
-        if end_point not in ['autocomplete', 'features']:
+        if end_point not in ['autocomplete', 'features', 'reverse']:
             raise TechnicalError('Unknown endpoint')
 
         if not self.host:
@@ -159,8 +403,14 @@ class GeocodeJson(AbstractAutocomplete):
     def get_by_uri(self, uri, instance=None, current_datetime=None):
 
         params = self.basic_params(instance)
+        lon, lat = get_lon_lat_from_id(uri)
 
-        url = self.make_url('features', uri)
+        if lon is not None and lat is not None:
+            url = self.make_url('reverse')
+            params['lon'] = lon
+            params['lat'] = lat
+        else:
+            url = self.make_url('features', uri)
+
         raw_response = self.call_bragi(url, requests.get, timeout=self.timeout, params=params)
-
         return self.response_marshaler(raw_response, uri)

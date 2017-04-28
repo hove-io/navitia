@@ -35,7 +35,7 @@ import json
 from navitiacommon import response_pb2
 from jormungandr import app
 from jormungandr.exceptions import TechnicalError, InvalidArguments, UnableToParse
-from jormungandr.street_network.street_network import AbstractStreetNetworkService
+from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathKey
 from jormungandr.utils import get_pt_object_coord, is_url, decode_polyline
 
 
@@ -263,3 +263,16 @@ class Geovelo(AbstractStreetNetworkService):
             raise UnableToParse('Geovelo nb response != nb requested')
 
         return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, fallback_extremity)
+
+    def make_path_key(self, mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity):
+        """
+        :param orig_uri, dest_uri, mode: matters obviously
+        :param streetnetwork_path_type: whether it's a fallback at
+        the beginning, the end of journey or a direct path without PT also matters especially for car (to know if we
+        park before or after)
+        :param period_extremity: is a PeriodExtremity (a datetime and it's meaning on the
+        fallback period)
+        Nota: period_extremity is not taken into consideration so far because we assume that a
+        direct path from A to B remains the same even the departure time are different (no realtime)
+        """
+        return StreetNetworkPathKey(mode, orig_uri, dest_uri, streetnetwork_path_type, None)

@@ -27,11 +27,11 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask import g
-from jormungandr.interfaces.v1.make_links import create_internal_link, create_external_link
-from jormungandr.interfaces.v1.serializer.base import EnumField, PbNestedSerializer, EnumListField
-from jormungandr.interfaces.v1.serializer.time import LocalTimeField, DateTimeField, PeriodSerializer
+from jormungandr.interfaces.v1.make_links import create_internal_link
+from jormungandr.interfaces.v1.serializer.base import EnumField, PbNestedSerializer
 import operator
 import serpy
+
 
 class MultiLineStringField(serpy.Field):
 
@@ -53,27 +53,33 @@ class PropertySerializer(serpy.Serializer):
     name = serpy.Field()
     value = serpy.Field()
 
+
 class FeedPublisherSerializer(PbNestedSerializer):
     id = serpy.Field()
     name = serpy.Field()
     url = serpy.Field()
     license = serpy.Field()
 
+
 class ErrorSerializer(PbNestedSerializer):
     id = EnumField(attr='id')
     message = serpy.Field()
+
 
 class CoordSerializer(serpy.Serializer):
     lon = serpy.StrField()
     lat = serpy.StrField()
 
+
 class CodeSerializer(serpy.Serializer):
     type = serpy.Field()
     value = serpy.Field()
 
+
 class CommentSerializer(serpy.Serializer):
     value = serpy.Field()
     type = serpy.Field()
+
 
 class FirstCommentField(serpy.Field):
     """
@@ -90,6 +96,7 @@ class FirstCommentField(serpy.Field):
         else:
             return None
 
+
 class LinkSerializer(serpy.Field):
     """
     Add link to disruptions on a pt object
@@ -97,6 +104,7 @@ class LinkSerializer(serpy.Field):
     def to_value(self, value):
         return [create_internal_link(_type="disruption", rel="disruptions", id=uri)
                 for uri in value]
+
 
 class PaginationSerializer(serpy.Serializer):
     total_result = serpy.Field(attr='totalResult')

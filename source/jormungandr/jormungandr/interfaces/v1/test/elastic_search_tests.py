@@ -29,10 +29,11 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 import mock
-from jormungandr.autocomplete import geocodejson
+from jormungandr.autocomplete.geocodejson import GeocodeJson
 from jormungandr.interfaces.v1 import Places
 from jormungandr.tests.utils_test import MockRequests
 from flask.ext.restful import marshal_with
+from jormungandr.autocomplete.geocodejson import geocodejson
 
 
 def bragi_house_jaures_feature():
@@ -86,7 +87,7 @@ def bragi_house_jaures_feature():
     }
     return house_feature
 
-@marshal_with(Places.geocodejson)
+@marshal_with(geocodejson)
 def get_response(bragi_response):
     return bragi_response
 
@@ -561,7 +562,7 @@ def bragi_call_test():
     """
     test the whole autocomplete with a geocodejson service
     """
-    bragi = geocodejson.GeocodeJson(host='http://bob.com')
+    bragi = GeocodeJson(host='http://bob.com')
 
     bragi_response = {
         "features": [
@@ -575,25 +576,26 @@ def bragi_call_test():
         'http://bob.com/autocomplete?q=rue+bobette&limit=10':
         (bragi_response, 200)
     })
+    from jormungandr import app
+    with app.app_context():
+        # we mock the http call to return the hard coded mock_response
+        with mock.patch('requests.get', mock_requests.get):
+            raw_response = bragi.get({'q': 'rue bobette', 'count': 10}, instance=None)
+            places = raw_response.get('places')
+            assert len(places) == 4
+            bragi_house_jaures_response_check(places[0])
+            bragi_house_lefebvre_response_check(places[1])
+            bragi_street_response_check(places[2])
+            bragi_admin_response_check(places[3])
 
-    # we mock the http call to return the hard coded mock_response
-    with mock.patch('requests.get', mock_requests.get):
-        raw_response = bragi.get({'q': 'rue bobette', 'count': 10}, instance=None)
-        places = raw_response.get('places')
-        assert len(places) == 4
-        bragi_house_jaures_response_check(places[0])
-        bragi_house_lefebvre_response_check(places[1])
-        bragi_street_response_check(places[2])
-        bragi_admin_response_check(places[3])
-
-    with mock.patch('requests.post', mock_requests.get):
-        raw_response = bragi.get({'q': 'rue bobette', 'count': 10, 'shape': geojson()}, instance=None)
-        places = raw_response.get('places')
-        assert len(places) == 4
-        bragi_house_jaures_response_check(places[0])
-        bragi_house_lefebvre_response_check(places[1])
-        bragi_street_response_check(places[2])
-        bragi_admin_response_check(places[3])
+        with mock.patch('requests.post', mock_requests.get):
+            raw_response = bragi.get({'q': 'rue bobette', 'count': 10, 'shape': geojson()}, instance=None)
+            places = raw_response.get('places')
+            assert len(places) == 4
+            bragi_house_jaures_response_check(places[0])
+            bragi_house_lefebvre_response_check(places[1])
+            bragi_street_response_check(places[2])
+            bragi_admin_response_check(places[3])
 
 
 def bragi_make_params_with_instance_test():
@@ -602,7 +604,7 @@ def bragi_make_params_with_instance_test():
     """
     instance = mock.MagicMock()
     instance.name = 'bib'
-    bragi = geocodejson.GeocodeJson(host='http://bob.com/autocomplete')
+    bragi = GeocodeJson(host='http://bob.com/autocomplete')
 
     request = {
         "q": "aa",
@@ -622,7 +624,7 @@ def bragi_make_params_without_instance_test():
     """
     test of generate params without instance
     """
-    bragi = geocodejson.GeocodeJson(host='http://bob.com/autocomplete')
+    bragi = GeocodeJson(host='http://bob.com/autocomplete')
 
     request = {
         "q": "aa",
