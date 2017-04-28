@@ -38,7 +38,7 @@ from validate_email import validate_email
 from datetime import datetime
 from tyr_user_event import TyrUserEvent
 from tyr_end_point_event import EndPointEventMessage, TyrEventsRabbitMq
-from tyr.helper import load_instance_config, get_instance_logger
+from tyr.helper import load_instance_config
 import logging
 import os
 import shutil
@@ -54,7 +54,7 @@ from validations import datetime_format
 from tasks import create_autocomplete_depot, remove_autocomplete_depot
 from navitiacommon import parser_args_type
 from tyr.tasks import import_autocomplete
-from tyr.decorators import update_data
+from tyr.helper import get_instance_logger, save_in_tmp
 from tyr.fields import *
 
 __ALL__ = ['Api', 'Instance', 'User', 'Key']
@@ -1064,6 +1064,16 @@ class AutocompleteDataset(flask_restful.Resource):
 
 
 class AutocompleteUpdateData(flask_restful.Resource):
-    @update_data(True)
-    def post(self, files, instance, ac_instance_name):
-        return import_autocomplete(files, instance)
+    def post(self, ac_instance_name):
+        instance = models.AutocompleteParameter.query.filter_by(name=ac_instance_name).first_or_404()
+
+        if not request.files:
+            return marshal({'error': {'message': 'the Data file is missing'}}, error_fields), 400
+
+        content = request.files['file']
+        logger = get_instance_logger(instance)
+        logger.info('content received: %s', content)
+        filename = save_in_tmp(content)
+        _, job = import_autocomplete([filename], instance)
+        job = models.db.session.merge(job) #reatache the object
+        return marshal({'job': job}, one_job_fields), 200
