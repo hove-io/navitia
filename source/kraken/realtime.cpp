@@ -178,6 +178,29 @@ static type::disruption::Message create_message(const std::string& str_msg) {
     return msg;
 }
 
+static nt::disruption::StopTimeUpdate::Status get_status(const transit_realtime::TripUpdate_StopTimeEvent& event,
+        const transit_realtime::TripUpdate_StopTimeUpdate& st) {
+    auto get_relationship = [](const transit_realtime::TripUpdate_StopTimeEvent& event,
+            const transit_realtime::TripUpdate_StopTimeUpdate& st) {
+        // we get either the stop_time_event if we have it or we use the GTFS-RT standard (on st)
+        if (event.HasExtension(kirin::stop_time_event_relationship)) {
+            return event.GetExtension(kirin::stop_time_event_relationship);
+        }
+        return st.schedule_relationship();
+    };
+
+    if (get_relationship(event, st) ==
+            transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_SKIPPED) {
+        return nt::disruption::StopTimeUpdate::Status::DELETED;
+    } else if (! event.has_delay() // for retrocompatibility since the old kirin version
+                                   // was not giving delays
+               || event.delay() != 0) {
+        return nt::disruption::StopTimeUpdate::Status::DELAYED;
+    } else {
+        return nt::disruption::StopTimeUpdate::Status::UNCHANGED;
+    }
+}
+
 static const type::disruption::Disruption*
 create_disruption(const std::string& id,
                   const boost::posix_time::ptime& timestamp,
@@ -279,28 +302,7 @@ create_disruption(const std::string& id,
                 if (st.HasExtension(kirin::stoptime_message)) {
                     message = st.GetExtension(kirin::stoptime_message);
                 }
-                auto get_status = [](const transit_realtime::TripUpdate_StopTimeEvent& event,
-                        const transit_realtime::TripUpdate_StopTimeUpdate& st) {
-                    auto get_relationship = [](const transit_realtime::TripUpdate_StopTimeEvent& event,
-                            const transit_realtime::TripUpdate_StopTimeUpdate& st) {
-                        // we get either the stop_time_event if we have it or we use the GTFS-RT standard (on st)
-                        if (event.HasExtension(kirin::stop_time_event_relationship)) {
-                            return event.GetExtension(kirin::stop_time_event_relationship);
-                        }
-                        return st.schedule_relationship();
-                    };
 
-                    if (get_relationship(event, st) ==
-                            transit_realtime::TripUpdate_StopTimeUpdate_ScheduleRelationship_SKIPPED) {
-                        return StopTimeUpdate::Status::DELETED;
-                    } else if (! event.has_delay() // for retrocompatibility since the old kirin version
-                                                   // was not giving delays
-                               || event.delay() != 0) {
-                        return StopTimeUpdate::Status::DELAYED;
-                    } else {
-                        return StopTimeUpdate::Status::UNCHANGED;
-                    }
-                };
                 const auto departure_status = get_status(st.departure(), st);
                 const auto arrival_status = get_status(st.arrival(), st);
 

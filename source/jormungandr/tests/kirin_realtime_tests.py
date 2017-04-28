@@ -480,8 +480,8 @@ def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], 
             stop_time_update.departure.time = st.departure
             stop_time_update.departure.delay = st.departure_delay
 
-            def get_relationship(skipped):
-                if skipped:
+            def get_relationship(is_skipped):
+                if is_skipped:
                     return gtfs_realtime_pb2.TripUpdate.StopTimeUpdate.SKIPPED
                 return gtfs_realtime_pb2.TripUpdate.StopTimeUpdate.SCHEDULED
             stop_time_update.arrival.Extensions[kirin_pb2.stop_time_event_relationship] = \
