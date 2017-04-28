@@ -71,7 +71,7 @@ def test_post_pbf_autocomplete(create_instance_fr):
             jobs = get_jobs_from_db()
             assert len(jobs) == 1
             assert jobs[0].id == job['id']
-            shutil.rmtree(ac_path)#Remove autocomplete directory
+            #shutil.rmtree(ac_path)#Remove autocomplete directory
 
 
 def test_post_pbf_autocomplete_without_files(create_instance_fr):
@@ -81,8 +81,8 @@ def test_post_pbf_autocomplete_without_files(create_instance_fr):
         filename = 'empty_pbf.osm.pbf'
         path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tests/fixtures/', filename)
         with open(path, 'rb') as f:
-            response = api_post('/v0/autocomplete_parameters/fr/update_data', check=False)
-            assert response[1] == 404
+            response, status = api_post('/v0/autocomplete_parameters/fr/update_data', check=False)
+            assert status == 404
 
 
 def test_post_pbf_autocomplete_instance_not_exist(create_instance_fr):
@@ -92,5 +92,5 @@ def test_post_pbf_autocomplete_instance_not_exist(create_instance_fr):
         filename = 'empty_pbf.osm.pbf'
         path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'tests/fixtures/', filename)
         with open(path, 'rb') as f:
-            response = api_post('/v0/autocomplete_parameters/bob/update_data', check=False)
-            assert response[1] == 404
+            response, status = api_post('/v0/autocomplete_parameters/bob/update_data', check=False)
+            assert status == 404

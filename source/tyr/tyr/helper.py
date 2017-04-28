@@ -203,13 +203,3 @@ def save_in_tmp(file_storage):
     tmp_file = os.path.join(tempfile.gettempdir(), file_storage.filename)
     file_storage.save(tmp_file)
     return tmp_file
-
-
-def rm_tempfile(filename):
-    """
-    Remove file
-    :param filename:
-    :return:
-    """
-    if os.path.isfile(filename):
-        os.remove(filename)

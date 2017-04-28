@@ -32,7 +32,7 @@ from functools import wraps
 from flask import request
 from flask_restful import marshal
 from navitiacommon import models
-from tyr.helper import get_instance_logger, rm_tempfile, save_in_tmp
+from tyr.helper import get_instance_logger, save_in_tmp
 from tyr.fields import one_job_fields, error_fields
 
 
@@ -58,6 +58,5 @@ class update_data(object):
             filename = save_in_tmp(content)
             feature, job = func(*args, files=[filename], instance=instance, **kwargs)
             job = models.db.session.merge(job) #reatache the object
-            rm_tempfile(filename)
             return marshal({'job': job}, one_job_fields), 200
         return wrapper
