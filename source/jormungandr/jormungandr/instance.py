@@ -147,12 +147,15 @@ class Instance(object):
             """
             return g.scenario
 
+        def replace_experimental_scenario(s):
+            return 'distributed' if s == 'experimental' else s
+
         if override_scenario:
             logger = logging.getLogger(__name__)
             logger.debug('overriding the scenario for %s with %s', self.name, override_scenario)
             try:
                 # for the sake of backwards compatibility... some users may still be using experimental...
-                override_scenario = 'distributed' if override_scenario == 'experimental' else override_scenario
+                override_scenario = replace_experimental_scenario(override_scenario)
                 module = import_module('jormungandr.scenarios.{}'.format(override_scenario))
             except ImportError:
                 logger.exception('scenario not found')
@@ -163,6 +166,8 @@ class Instance(object):
 
         instance_db = self.get_models()
         scenario_name = instance_db.scenario if instance_db else 'new_default'
+        # for the sake of backwards compatibility... some users may still be using experimental...
+        scenario_name = replace_experimental_scenario(scenario_name)
         if not self._scenario or scenario_name != self._scenario_name:
             logger = logging.getLogger(__name__)
             logger.info('loading of scenario %s for instance %s', scenario_name, self.name)
