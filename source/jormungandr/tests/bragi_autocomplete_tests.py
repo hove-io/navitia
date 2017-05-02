@@ -523,7 +523,7 @@ class TestNewDefaultAutocompleteAndRouting(AbstractAutocompleteAndRouting,
                                            NewDefaultScenarioAbstractTestFixture):
     pass
 
-@config({'scenario': 'experimental'})
-class TestExperimentalAutocompleteAndRouting(AbstractAutocompleteAndRouting,
+@config({'scenario': 'distributed'})
+class TestDistributedAutocompleteAndRouting(AbstractAutocompleteAndRouting,
                                          NewDefaultScenarioAbstractTestFixture):
     pass

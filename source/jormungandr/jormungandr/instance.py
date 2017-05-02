@@ -151,9 +151,11 @@ class Instance(object):
             logger = logging.getLogger(__name__)
             logger.debug('overriding the scenario for %s with %s', self.name, override_scenario)
             try:
+                # for the sake of backwards compatibility... some users may still be using experimental...
+                override_scenario = 'distributed' if override_scenario == 'experimental' else override_scenario
                 module = import_module('jormungandr.scenarios.{}'.format(override_scenario))
             except ImportError:
-                logger.exception('sceneario not found')
+                logger.exception('scenario not found')
                 abort(404, message='invalid scenario: {}'.format(override_scenario))
             scenario = module.Scenario()
             g.scenario = scenario

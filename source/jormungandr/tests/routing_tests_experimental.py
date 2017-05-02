@@ -38,8 +38,8 @@ This unit runs all the common tests in journey_common_tests.py along with locals
 unit for scenario experimental
 '''
 
-@config({'scenario': 'experimental'})
-class TestJourneysExperimental(JourneyCommon, DirectPath, NewDefaultScenarioAbstractTestFixture):
+@config({'scenario': 'distributed'})
+class TestJourneysDistributed(JourneyCommon, DirectPath, NewDefaultScenarioAbstractTestFixture):
     """
     Test the experiental scenario
     All the tests are defined in "TestJourneys" class, we only change the scenario
@@ -67,7 +67,7 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, NewDefaultScenarioAbst
         pass
 
     def test_datetime_represents_arrival(self):
-        super(TestJourneysExperimental, self).test_datetime_represents_arrival()
+        super(TestJourneysDistributed, self).test_datetime_represents_arrival()
 
     def test_journeys_wheelchair_profile(self):
         """
@@ -126,13 +126,13 @@ class TestJourneysExperimental(JourneyCommon, DirectPath, NewDefaultScenarioAbst
         assert resp.rows[0].routing_response[0].duration == 0
         assert resp.rows[0].routing_response[0].routing_status == response_pb2.unreached
 
-@config({"scenario": "experimental"})
-class TestExperimentalJourneysWithPtref(JourneysWithPtref, NewDefaultScenarioAbstractTestFixture):
+@config({"scenario": "distributed"})
+class TestDistributedJourneysWithPtref(JourneysWithPtref, NewDefaultScenarioAbstractTestFixture):
     pass
 
 
-@config({"scenario": "experimental"})
-class TestExperimentalOnBasicRouting(OnBasicRouting, NewDefaultScenarioAbstractTestFixture):
+@config({"scenario": "distributed"})
+class TestDistributedOnBasicRouting(OnBasicRouting, NewDefaultScenarioAbstractTestFixture):
     @skip("temporarily disabled")
     def test_isochrone(self):
         super(TestExperimentalOnBasicRouting, self).test_isochrone()
