@@ -171,7 +171,6 @@ class SplitDateTime(DateTime):
         self.time = time
 
     def output(self, key, obj):
-
         date = fields.get_value(self.date, obj) if self.date else None
         time = fields.get_value(self.time, obj)
 
@@ -189,6 +188,34 @@ class SplitDateTime(DateTime):
         t = datetime.datetime.utcfromtimestamp(time)
         return t.strftime("%H%M%S")
 
+
+def _get_pb_value(obj, fields):
+    cur_obj = obj
+    for f in fields.split('.'):
+        if not cur_obj.HasField(f):
+            return None
+        cur_obj = getattr(cur_obj, f)
+    return cur_obj
+
+class Time(DateTime):
+    """
+    output a time from protobuf
+    handle not setted field
+    """
+    def __init__(self, time, *args, **kwargs):
+        super(Time, self).__init__(*args, **kwargs)
+        self.time = time
+
+    def output(self, key, obj):
+        time = _get_pb_value(obj, self.time)
+        if not time:
+            return self.default
+        return self.format_time(time)
+
+    @staticmethod
+    def format_time(time):
+        t = datetime.datetime.utcfromtimestamp(time)
+        return t.strftime("%H%M%S")
 
 class enum_type(fields.Raw):
 
@@ -889,10 +916,12 @@ impacted_stop = {
     "stop_point": NonNullNested(stop_point),
     "base_arrival_time": SplitDateTime(date=None, time='base_stop_time.arrival_time'),
     "base_departure_time": SplitDateTime(date=None, time='base_stop_time.departure_time'),
-    "amended_arrival_time": SplitDateTime(date=None, time='amended_stop_time.arrival_time'),
-    "amended_departure_time": SplitDateTime(date=None, time='amended_stop_time.departure_time'),
+    "amended_arrival_time": Time(time='amended_stop_time.arrival_time'),
+    "amended_departure_time": Time(time='amended_stop_time.departure_time'),
     "cause": fields.String(),
-    "stop_time_effect": enum_type(attribute='effect')
+    "stop_time_effect": enum_type(attribute='effect'),
+    "departure_status": enum_type(),
+    "arrival_status": enum_type()
 }
 
 impacted_object = {

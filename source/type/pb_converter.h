@@ -422,6 +422,7 @@ private:
         void fill_pb_object(const nt::GeographicalCoord*, pbnavitia::Address*);
         void fill_pb_object(const nt::StopPointConnection*, pbnavitia::Connection*);
         void fill_pb_object(const nt::StopTime* , pbnavitia::StopTime*);
+        void fill_pb_object(const nt::disruption::StopTimeUpdate*, pbnavitia::StopTime*);
         void fill_pb_object(const nt::StopTime*, pbnavitia::StopDateTime*);
         void fill_pb_object(const nt::StopTime* , pbnavitia::Properties*);
         void fill_pb_object(const std::string* , pbnavitia::Note*);
