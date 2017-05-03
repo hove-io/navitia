@@ -30,7 +30,6 @@
 # www.navitia.io
 
 import serpy
-import six
 
 
 class Field(serpy.Field):

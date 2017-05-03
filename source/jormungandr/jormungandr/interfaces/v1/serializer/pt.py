@@ -33,6 +33,7 @@ from jormungandr.interfaces.v1.serializer.base import GenericSerializer, EnumLis
 from jormungandr.interfaces.v1.serializer.time import LocalTimeField, PeriodSerializer, DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import *
 from jormungandr.interfaces.v1.serializer import jsonschema
+from jormungandr.interfaces.v1.serializer.jsonschema import schema
 
 
 class Equipments(EnumListField):
@@ -198,7 +199,9 @@ class ImpactedSerializer(PbNestedSerializer):
 
 
 class DisruptionSerializer(PbNestedSerializer):
+    # @schema(type=str)
     id = jsonschema.Field(schema_type=str, attr='uri')
+
     disruption_id = jsonschema.Field(schema_type=str, attr='disruption_uri')
     impact_id = jsonschema.Field(schema_type=str, attr='uri')
     title = jsonschema.Field(schema_type=str),

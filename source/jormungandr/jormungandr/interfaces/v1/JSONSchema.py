@@ -30,10 +30,11 @@
 # www.navitia.io
 
 from flask.ext.restful import Resource
+from jormungandr import app
 from jormungandr.interfaces.v1.serializer import api, jsonschema
 import serpy
 
-class ApiSchema(serpy.Serializer):
+class ApisSchema(serpy.Serializer):
     ptr = api.PTReferentialSerializer()
     test = jsonschema.Field(schema_type=int)
 
@@ -42,4 +43,4 @@ class Schema(Resource):
         Resource.__init__(self, **kwargs)
 
     def get(self):
-        return jsonschema.JsonSchemaSerializer(ApiSchema(), root=True).data, 200
+        return jsonschema.JsonSchemaEndpointsSerializer(app).data, 200

@@ -32,12 +32,6 @@
 import serpy
 
 TYPE_MAP = {
-    'unknown': {
-        'type': 'unknown',
-    },
-    'method': {
-        'type': 'method',
-    },
     'str': {
         'type': 'string',
     },

@@ -29,11 +29,13 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, StrField, MethodField, IntField, FloatField, BoolField
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, StrField, MethodField, IntField, FloatField, BoolField, schema
 from jormungandr.interfaces.v1.serializer.jsonschema.serializer import JsonSchemaSerializer
+from jormungandr.interfaces.v1.serializer.jsonschema.endpoints_serializer import JsonSchemaEndpointsSerializer
 
 __all__ = [
     'JsonSchemaSerializer',
+    'JsonSchemaEndpointsSerializer',
     'Field',
     'StrField',
     'IntField',
