@@ -369,6 +369,7 @@ class AbstractTestFixture(object):
                 assert 'allowed_id%5B%5D=' in j['links'][0]['href']
                 assert j['links'][0]['href'].count('first_section_mode%5B%5D=') == 1
                 assert j['links'][0]['href'].count('last_section_mode%5B%5D=') == 1
+                assert j['links'][0]['href'].count('direct_path=none') == 1
             else:
                 assert 'links' not in j
 
