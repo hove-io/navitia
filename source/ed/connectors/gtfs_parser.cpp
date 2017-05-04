@@ -476,7 +476,7 @@ void RouteGtfsHandler::init(Data&) {
 nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
     if(gtfs_data.line_map.find(row[id_c]) != gtfs_data.line_map.end()) {
         ignored++;
-        LOG4CPLUS_WARN(logger, "dupplicate on route line " + row[id_c]);
+        LOG4CPLUS_WARN(logger, "duplicate on route line " + row[id_c]);
         return nullptr;
     }
 
@@ -529,7 +529,7 @@ nm::Line* RouteGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
 void RouteGtfsHandler::finish(Data& data) {
     BOOST_ASSERT(data.lines.size() == gtfs_data.line_map.size());
     LOG4CPLUS_TRACE(logger, "Nb routes: " << data.lines.size());
-    LOG4CPLUS_TRACE(logger, ignored << " routes have been ignored because of dupplicates");
+    LOG4CPLUS_TRACE(logger, ignored << " routes have been ignored because of duplicates");
 }
 
 void TransfersGtfsHandler::init(Data&) {
