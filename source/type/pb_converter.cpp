@@ -347,9 +347,14 @@ void PbCreator::Filler::fill(NAV* nav_object, PB* pb_object) {
 }
 template<typename NAV, typename F>
 void PbCreator::Filler::fill_with_creator(NAV* nav_object, F creator) {
-    if (nav_object == nullptr) { return; }
-    copy(depth-1, dump_message).fill_pb_object(nav_object, creator());
+    fill_with_creator(nav_object, creator, dump_message);
 }
+template<typename NAV, typename F>
+void PbCreator::Filler::fill_with_creator(NAV* nav_object, F creator, DumpMessage d_m) {
+    if (nav_object == nullptr) { return; }
+    copy(depth-1, d_m).fill_pb_object(nav_object, creator());
+}
+
 
 template<typename T>
 void PbCreator::Filler::fill_pb_object(const T* value, pbnavitia::PtObject* pt_object) {
@@ -1240,10 +1245,7 @@ void PbCreator::Filler::fill_pb_object(const VjStopTimes* vj_stoptimes,
         this->pb_creator.contributors.insert(vj_stoptimes->vj->dataset->contributor);
     }
     if (depth > 0 && vj_stoptimes->vj->route) {
-        auto old_dump_message = dump_message;
-        dump_message = DumpMessage::No;
-        fill_with_creator(vj_stoptimes->vj->route, [&](){return pt_display_info;});
-        dump_message = old_dump_message;
+        fill_with_creator(vj_stoptimes->vj->route, [&](){return pt_display_info;}, DumpMessage::No);
         uris->set_route(vj_stoptimes->vj->route->uri);
         const auto& jp_idx = pb_creator.data->dataRaptor->jp_container.get_jp_from_vj()[navitia::routing::VjIdx(*vj_stoptimes->vj)];
         uris->set_journey_pattern(pb_creator.data->dataRaptor->jp_container.get_id(jp_idx));
