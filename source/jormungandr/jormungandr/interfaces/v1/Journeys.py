@@ -320,6 +320,7 @@ class add_journey_href(object):
                         args['last_section_mode[]'] = journey['sections'][-1].get('mode', 'walking')
 
                     args['min_nb_transfers'] = journey['nb_transfers']
+                    args['direct_path'] = 'only' if 'non_pt' in journey['tags'] else 'none'
                     args['min_nb_journeys'] = 5
                     allowed_ids.update(args.get('allowed_id[]', []))
                     args['allowed_id[]'] = list(allowed_ids)
