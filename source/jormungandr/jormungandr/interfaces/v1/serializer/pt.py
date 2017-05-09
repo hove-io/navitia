@@ -219,7 +219,7 @@ class CommercialModeSerializer(GenericSerializer):
 class StopPointSerializer(GenericSerializer):
     comments = CommentSerializer(many=True, display_none=False)
     comment = FirstCommentField(attr='comments', display_none=False)
-    codes = CodeSerializer(many=True)
+    codes = CodeSerializer(many=True, display_none=False)
     label = serpy.Field()
     coord = CoordSerializer(required=False)
     links = LinkSerializer(attr='impact_uris')
