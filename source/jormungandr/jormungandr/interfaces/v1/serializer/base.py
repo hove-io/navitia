@@ -59,17 +59,23 @@ class PbNestedSerializer(serpy.Serializer, PbField):
 
 class EnumField(serpy.Field):
     def as_getter(self, serializer_field_name, serializer_cls):
-        #For enum we need the full object :(
-        return lambda x: x
+        def getter(val):
+            attr = self.attr or serializer_field_name
+            if not val.HasField(attr):
+                return None
+            enum = val.DESCRIPTOR.fields_by_name[attr].enum_type.values_by_number
+            return enum[getattr(val, attr)].name
+        return getter
 
     def to_value(self, value):
-        if not value.HasField(self.attr):
-            return None
-        enum = value.DESCRIPTOR.fields_by_name[self.attr].enum_type.values_by_number
-        return enum[getattr(value, self.attr)].name.lower()
+        return value.lower()
 
 
 class EnumListField(EnumField):
+    """WARNING: the enumlist field does not work without a self.attr"""
+    def as_getter(self, serializer_field_name, serializer_cls):
+        return lambda x: x
+
     def to_value(self, obj):
         enum = obj.DESCRIPTOR.fields_by_name[self.attr].enum_type.values_by_number
         return [enum[value].name.lower() for value in getattr(obj, self.attr)]
