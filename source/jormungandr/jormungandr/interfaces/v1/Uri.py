@@ -200,8 +200,8 @@ def journey_pattern_points(is_collection):
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            collections = marshal_with(OrderedDict(self.collections), display_null=False)
-            self.method_decorators.insert(1, collections)
+            self.method_decorators.insert(1, get_serializer(collection=self.collection,
+                                                            collections=self.collections))
     return JourneyPatternPoints
 
 
@@ -220,7 +220,8 @@ def commercial_modes(is_collection):
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            self.method_decorators.insert(1, get_serializer(collection=self.collection, collections=self.collections))
+            self.method_decorators.insert(1, get_serializer(collection=self.collection,
+                                                            collections=self.collections))
     return CommercialModes
 
 
@@ -239,8 +240,8 @@ def journey_patterns(is_collection):
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            collections = marshal_with(OrderedDict(self.collections), display_null=False)
-            self.method_decorators.insert(1, collections)
+            self.method_decorators.insert(1, get_serializer(collection=self.collection,
+                                                            collections=self.collections))
     return JourneyPatterns
 
 
@@ -259,8 +260,8 @@ def vehicle_journeys(is_collection):
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            collections = marshal_with(OrderedDict(self.collections), display_null=False)
-            self.method_decorators.insert(1, collections)
+            self.method_decorators.insert(1, get_serializer(collection=self.collection,
+                                                            collections=self.collections))
     return VehicleJourneys
 
 
@@ -279,8 +280,8 @@ def trips(is_collection):
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            collections = marshal_with(OrderedDict(self.collections), display_null=False)
-            self.method_decorators.insert(1, collections)
+            self.method_decorators.insert(1, get_serializer(collection=self.collection,
+                                                            collections=self.collections))
     return Trips
 
 

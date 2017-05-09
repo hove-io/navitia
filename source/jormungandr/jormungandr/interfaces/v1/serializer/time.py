@@ -30,7 +30,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import serpy
 from datetime import datetime
-from jormungandr.interfaces.v1.serializer.base import PbField, PbNestedSerializer
+from jormungandr.interfaces.v1.serializer.base import PbField, PbNestedSerializer, NestedPbField
 from jormungandr.utils import timestamp_to_str
 
 
@@ -39,7 +39,7 @@ from jormungandr.utils import timestamp_to_str
 __date_time_null_value__ = 2**64 - 1
 
 
-class LocalTimeField(serpy.Field):
+class LocalTimeField(NestedPbField):
     """
     This field convert a number of second from midnight to a string with the format: HH:MM:SS
     No conversion from UTC will be done, we expect the time to already be in desired timezone

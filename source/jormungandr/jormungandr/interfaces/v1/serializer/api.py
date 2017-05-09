@@ -36,7 +36,7 @@ class PTReferentialSerializer(serpy.Serializer):
     pagination = PaginationSerializer(attr='pagination', display_none=True, required=True)
     error = ErrorSerializer(display_none=False)
     feed_publishers = FeedPublisherSerializer(many=True, display_none=False)
-    disruptions = pt.DisruptionSerializer(attr='impacts', many=True)
+    disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
 
 
 class LinesSerializer(PTReferentialSerializer):
@@ -46,6 +46,22 @@ class LinesSerializer(PTReferentialSerializer):
 class DisruptionsSerializer(PTReferentialSerializer):
     #we already have a disruptions fields by default
     pass
+
+
+class VehicleJourneysSerializer(PTReferentialSerializer):
+    vehicle_journeys = pt.VehicleJourneySerializer(many=True)
+
+
+class TripsSerializer(PTReferentialSerializer):
+    trips = pt.TripSerializer(many=True)
+
+
+class JourneyPatternsSerializer(PTReferentialSerializer):
+    journey_patterns = pt.JourneyPatternSerializer(many=True)
+
+
+class JourneyPatternPointsSerializer(PTReferentialSerializer):
+    journey_pattern_points = pt.JourneyPatternPointSerializer(many=True)
 
 
 class CommercialModesSerializer(PTReferentialSerializer):
