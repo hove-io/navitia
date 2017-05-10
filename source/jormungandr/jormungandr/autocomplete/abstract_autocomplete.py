@@ -77,8 +77,11 @@ class AbstractAutocomplete(object):
         if not details:
             # impossible to find the object
             return None
+        places = details.get('places', [])
+        if places:
+            return places[0]
+        return None
 
-        return details.get('places', [None])[0]
 
 class GeoStatusResponse(object):
     def __init__(self):
