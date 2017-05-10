@@ -34,6 +34,12 @@ import operator
 
 
 class PbField(serpy.Field):
+    def __init__(self, *args, **kwargs):
+        # used only to put a default value to display_none
+        if 'display_none' not in kwargs:
+            kwargs['display_none'] = False
+        super(PbField, self).__init__(*args, **kwargs)
+
     """
     This field handle protobuf, it aim to handle field absent value:
     When a field is not present protobuf return a default object, but we want a None.
@@ -42,16 +48,37 @@ class PbField(serpy.Field):
     def as_getter(self, serializer_field_name, serializer_cls):
         op = operator.attrgetter(self.attr or serializer_field_name)
         def getter(obj):
+            if obj is None:
+                return None
             try:
                 if obj.HasField(self.attr or serializer_field_name):
                     return op(obj)
                 else:
                     return None
-            except ValueError:
+            except ValueError as e:
                 #HasField throw an exception if the field is repeated...
                 return op(obj)
         return getter
 
+class NestedPbField(PbField):
+    """
+    handle nested pb field.
+    
+    define attr='base_stop_time.departure_time'
+    
+    it will get the departure_time field of the base_stop_time field
+    """
+    def as_getter(self, serializer_field_name, serializer_cls):
+        attr = self.attr or serializer_field_name
+
+        def getter(obj):
+            cur_obj = obj
+            for f in attr.split('.'):
+                if not cur_obj.HasField(f):
+                    return None
+                cur_obj = getattr(cur_obj, f)
+            return cur_obj
+        return getter
 
 class PbNestedSerializer(serpy.Serializer, PbField):
     pass
@@ -61,13 +88,15 @@ class EnumField(serpy.Field):
     def as_getter(self, serializer_field_name, serializer_cls):
         def getter(val):
             attr = self.attr or serializer_field_name
-            if not val.HasField(attr):
+            if val is None or not val.HasField(attr):
                 return None
             enum = val.DESCRIPTOR.fields_by_name[attr].enum_type.values_by_number
             return enum[getattr(val, attr)].name
         return getter
 
     def to_value(self, value):
+        if value is None:
+            return None
         return value.lower()
 
 
@@ -126,3 +155,9 @@ class NestedPropertyField(serpy.Field):
 
 class IntNestedPropertyField(NestedPropertyField):
     to_value = staticmethod(int)
+
+
+class DoubleToStringField(serpy.Field):
+    def to_value(self, value):
+        # we don't want to loose precision while converting a double to string
+        return "{:.16g}".format(value)
