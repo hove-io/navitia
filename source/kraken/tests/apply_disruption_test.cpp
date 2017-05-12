@@ -756,9 +756,9 @@ BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
 
     auto trip_update = ntest::make_delay_message("vj:1", "20120616", {
-            std::make_tuple("stop1", "20120617T0005"_pts, "20120617T0005"_pts),
-            std::make_tuple("stop2", "20120617T0105"_pts, "20120617T0105"_pts),
-            std::make_tuple("stop3", "20120617T0205"_pts, "20120617T0205"_pts),
+            ntest::DelayedTimeStop("stop1", "20120617T0005"_pts).delay(65_min),
+            ntest::DelayedTimeStop("stop2", "20120617T0105"_pts).delay(55_min),
+            ntest::DelayedTimeStop("stop3", "20120617T0205"_pts).delay(80_min),
         });
     navitia::handle_realtime("bob", "20120616T1337"_dt, trip_update, *b.data);
 
@@ -842,9 +842,9 @@ BOOST_AUTO_TEST_CASE(test_shift_of_a_disrupted_delayed_train) {
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
 
     auto trip_update = ntest::make_delay_message("vj:1", "20120616", {
-            std::make_tuple("stop1", "20120617T2300"_pts, "20120617T2300"_pts),
-            std::make_tuple("stop2", "20120618T0005"_pts, "20120618T0005"_pts),
-            std::make_tuple("stop3", "20120618T0100"_pts, "20120618T0100"_pts),
+            ntest::DelayedTimeStop("stop1", "20120617T2300"_pts).delay(24_h),
+            ntest::DelayedTimeStop("stop2", "20120618T0005"_pts).delay(23_h + 50_min),
+            ntest::DelayedTimeStop("stop3", "20120618T0100"_pts).delay(24_h),
         });
     navitia::handle_realtime("bob", "20120616T1337"_dt, trip_update, *b.data);
 
@@ -983,8 +983,8 @@ BOOST_AUTO_TEST_CASE(disrupted_stop_point_then_delayed) {
     BOOST_REQUIRE_EQUAL(vj->shift, 1);
 
     auto trip_update = ntest::make_delay_message("vj:1", "20120616", {
-            std::make_tuple("stop2", "20120618T0015"_pts, "20120618T0015"_pts),
-            std::make_tuple("stop3", "20120618T0100"_pts, "20120618T0100"_pts),
+            ntest::DelayedTimeStop("stop2", "20120618T0015"_pts).delay(48_h),
+            ntest::DelayedTimeStop("stop3", "20120618T0100"_pts).delay(48_h),
         });
 
     navitia::handle_realtime("bob", "20120616T1337"_dt, trip_update, *b.data);

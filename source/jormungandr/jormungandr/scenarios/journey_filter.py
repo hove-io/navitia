@@ -69,6 +69,10 @@ def filter_journeys(response_list, instance, request):
 
     _filter_max_successive_physical_mode(journeys, instance, request)
 
+    _filter_min_transfers(journeys, instance, request)
+
+    _filter_direct_path(journeys, instance, request)
+
     return response_list
 
 
@@ -86,8 +90,6 @@ def final_filter_journeys(response_list, instance, request):
         _filter_similar_line_journeys(journeys, request)
 
     _filter_too_much_connections(journeys, instance, request)
-
-    _filter_min_transfers(journeys, instance, request)
 
     return response_list
 
@@ -298,6 +300,29 @@ def _filter_min_transfers(journeys, instance, request):
         if get_nb_connections(j) < min_nb_transfers:
             logger.debug("the journey {} has not enough connections, we delete it".format(j.internal_id))
             mark_as_dead(j, "not_enough_connections")
+
+
+def _filter_direct_path(journeys, instance, request):
+    """
+    eliminates journeys that are not matching direct path parameter (none, only or indifferent)
+    """
+    logger = logging.getLogger(__name__)
+    dp = get_or_default(request, 'direct_path', 'indifferent')
+
+    if dp == 'indifferent':
+        return
+
+    for j in journeys:
+        if to_be_deleted(j):
+            continue
+        if dp == 'none' and 'non_pt' in j.tags:
+            logger.debug("the journey {} is direct, we delete it as param direct_path=none"
+                         .format(j.internal_id))
+            mark_as_dead(j, "direct_path_none")
+        if dp == 'only' and 'non_pt' not in j.tags:
+            logger.debug("the journey {} uses pt, we delete it as param direct_path=only"
+                         .format(j.internal_id))
+            mark_as_dead(j, "direct_path_only")
 
 
 def get_min_connections(journeys):

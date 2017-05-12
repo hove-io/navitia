@@ -845,6 +845,48 @@ class DirectPath(object):
         assert('walking' in response['journeys'][-1]['tags'])
         eq_(len(response['journeys'][-1]['sections']), 1)
 
+    def test_journey_direct_path_only(self):
+        query = journey_basic_query + \
+                "&first_section_mode[]=walking" + \
+                "&direct_path=only"
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+        eq_(len(response['journeys']), 1)
+
+        # only walking
+        assert('non_pt' in response['journeys'][0]['tags'])
+        eq_(len(response['journeys'][0]['sections']), 1)
+
+    def test_journey_direct_path_none(self):
+        query = journey_basic_query + \
+                "&first_section_mode[]=walking" + \
+                "&direct_path=none"
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+        eq_(len(response['journeys']), 1)
+
+        # only pt journey
+        assert('non_pt' not in response['journeys'][0]['tags'])
+        assert(len(response['journeys'][0]['sections']) > 1)
+
+    def test_journey_direct_path_indifferent(self):
+        query = journey_basic_query + \
+                "&first_section_mode[]=walking" + \
+                "&direct_path=indifferent"
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+        eq_(len(response['journeys']), 2)
+
+        # first is pt journey
+        assert('non_pt' not in response['journeys'][0]['tags'])
+        assert(len(response['journeys'][0]['sections']) > 1)
+        # second is walking
+        assert('non_pt' in response['journeys'][1]['tags'])
+        eq_(len(response['journeys'][1]['sections']), 1)
+
 
 @dataset({})
 class JourneysNoRegion():
@@ -1080,10 +1122,10 @@ class OneDeadRegion():
 
 @dataset({"main_routing_without_pt_test": {'priority': 42}, "main_routing_test": {'priority': 10}})
 class WithoutPt():
-    """
-    Test if we still responds when one kraken has no pt solution
-    """
     def test_one_region_without_pt(self):
+        """
+        Test if we still responds when one kraken has no pt solution
+        """
         query = "v1/"+journey_basic_query+"&debug=true"
         response = self.query(query)
         check_best(response)
@@ -1096,10 +1138,10 @@ class WithoutPt():
         eq_(response['debug']['regions_called'][0], "main_routing_without_pt_test")
         eq_(response['debug']['regions_called'][1], "main_routing_test")
 
-    """
-    Test if we still responds when one kraken has no pt solution using new_default
-    """
     def test_one_region_without_pt_new_default(self):
+        """
+        Test if we still responds when one kraken has no pt solution using new_default
+        """
         query = "v1/"+journey_basic_query+"&debug=true"
         response = self.query(query)
         check_best(response)

@@ -75,6 +75,9 @@ api.add_resource(resources.InstanceDataset,
 api.add_resource(resources.AutocompleteDataset,
                  '/v0/autocomplete_parameters/<ac_instance_name>/last_datasets')
 
+api.add_resource(resources.AutocompleteUpdateData,
+                 '/v0/autocomplete_parameters/<ac_instance_name>/update_data')
+
 @app.errorhandler(Exception)
 def error_handler(exception):
     """

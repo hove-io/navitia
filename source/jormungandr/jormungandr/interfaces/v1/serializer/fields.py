@@ -28,7 +28,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask import g
 from jormungandr.interfaces.v1.make_links import create_internal_link
-from jormungandr.interfaces.v1.serializer.base import EnumField, PbNestedSerializer
+from jormungandr.interfaces.v1.serializer.base import EnumField, PbNestedSerializer, DoubleToStringField
 import operator
 import serpy
 
@@ -67,8 +67,8 @@ class ErrorSerializer(PbNestedSerializer):
 
 
 class CoordSerializer(serpy.Serializer):
-    lon = serpy.StrField()
-    lat = serpy.StrField()
+    lon = DoubleToStringField()
+    lat = DoubleToStringField()
 
 
 class CodeSerializer(serpy.Serializer):
@@ -88,7 +88,9 @@ class FirstCommentField(serpy.Field):
     """
     def as_getter(self, serializer_field_name, serializer_cls):
         op = operator.attrgetter(self.attr or serializer_field_name)
-        return lambda v: next(iter(op(v)), None)
+        def getter(v):
+            return next(iter(op(v)), None)
+        return getter
 
     def to_value(self, item):
         if item:

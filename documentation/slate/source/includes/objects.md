@@ -430,24 +430,27 @@ Real time and disruption objects
     "stop_point": {
         "...": "..."
     },
-    "amended_arrival_time": "073600",
     "amended_departure_time": "073600",
     "base_arrival_time": "073600",
     "base_departure_time": "073600",
     "cause": "",
-    "stop_time_effect": "delayed"
+    "stop_time_effect": "delayed",
+    "departure_status": "delayed",
+    "arrival_status": "deleted"
 }
 ```
 
 |Field|Type|Description|
 |-----|----|-----------|
 |stop_point|[stop_point](#stop-point)|The impacted stop point of the trip|
-|amended_departure_time|string|New departure hour (format HHMMSS) of the trip on this stop point|
-|amended_arrival_time|string|New arrival hour (format HHMMSS) of the trip on this stop point|
-|base_departure_time|string|Base departure hour (format HHMMSS) of the trip on this stop point|
-|base_arrival_time|string|Base arrival hour (format HHMMSS) of the trip on this stop point|
+|amended_departure_time|*optional* string|New departure hour (format HHMMSS) of the trip on this stop point|
+|amended_arrival_time|*optional* string|New arrival hour (format HHMMSS) of the trip on this stop point|
+|base_departure_time|*optional* string|Base departure hour (format HHMMSS) of the trip on this stop point|
+|base_arrival_time|*optional* string|Base arrival hour (format HHMMSS) of the trip on this stop point|
 |cause|string|Cause of the modification|
-|stop_time_effect|Enum|Can be: "added", "deleted", or "delayed".|
+|stop_time_effect|Enum|Can be: "added", "deleted", "delayed" or "unchanged". *Deprecated*, consider the more accurate departure_status and arrival_status|
+|arrival_status|Enum|Can be: "added", "deleted", "delayed" or "unchanged".|
+|departure_status|Enum|Can be: "added", "deleted", "delayed" or "unchanged".|
 
 ### Message
 

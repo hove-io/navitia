@@ -194,6 +194,9 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
                                             "the object The timezone should be specified in the format,"
                                             " else we consider it as UTC")
         parser_get.add_argument("min_nb_transfers", type=int, default=0)
+        parser_get.add_argument("direct_path", type=option_value(['indifferent', 'only', 'none']),
+                                default='indifferent',
+                                description="Specify if direct path should be suggested")
 
     def parse_args(self, region=None, uri=None):
         args = self.parsers['get'].parse_args()

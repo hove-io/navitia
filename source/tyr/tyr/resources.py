@@ -30,16 +30,15 @@
 # www.navitia.io
 
 from flask import current_app, url_for, request
-from flask.globals import g
 import flask_restful
-from flask_restful import fields, marshal_with, marshal, reqparse, inputs, abort
+from flask_restful import marshal_with, marshal, reqparse, inputs, abort
 
 import sqlalchemy
 from validate_email import validate_email
 from datetime import datetime
 from tyr_user_event import TyrUserEvent
 from tyr_end_point_event import EndPointEventMessage, TyrEventsRabbitMq
-from tyr.helper import load_instance_config, get_instance_logger
+from tyr.helper import load_instance_config
 import logging
 import os
 import shutil
@@ -47,200 +46,19 @@ import json
 from jsonschema import validate, ValidationError
 from formats import poi_type_conf_format, parse_error
 
-from navitiacommon import models, parser_args_type
 from navitiacommon.default_traveler_profile_params import default_traveler_profile_params, acceptable_traveler_types
 from navitiacommon import models, utils
 from navitiacommon.models import db
 from functools import wraps
 from validations import datetime_format
 from tasks import create_autocomplete_depot, remove_autocomplete_depot
-import ujson
 from navitiacommon import parser_args_type
+from tyr.tasks import import_autocomplete
+from tyr.helper import get_instance_logger, save_in_tmp
+from tyr.fields import *
 
 __ALL__ = ['Api', 'Instance', 'User', 'Key']
 
-
-class FieldDate(fields.Raw):
-    def format(self, value):
-        if value:
-            return value.isoformat()
-        else:
-            return 'null'
-
-
-class HasShape(fields.Raw):
-    def output(self, key, obj):
-        return obj.has_shape()
-
-
-class Shape(fields.Raw):
-    def __init__(self, **kwargs):
-        super(Shape, self).__init__(**kwargs)
-
-    def output(self, key, obj):
-        if obj.shape == 'null':
-            obj.shape = None
-
-        if hasattr(g, 'disable_geojson') and g.disable_geojson and obj.has_shape():
-            return {}
-
-        if obj.shape is not None:
-            return ujson.loads(obj.shape)
-
-        return obj.shape
-
-
-end_point_fields = {
-    'id': fields.Raw,
-    'name': fields.Raw,
-    'default': fields.Raw,
-    'hostnames': fields.List(fields.String)
-}
-
-key_fields = {
-    'id': fields.Raw,
-    'app_name': fields.Raw,
-    'token': fields.Raw,
-    'valid_until': FieldDate
-}
-
-instance_fields = {
-    'id': fields.Raw,
-    'name': fields.Raw,
-    'discarded': fields.Raw,
-    'is_free': fields.Raw,
-    'import_stops_in_mimir': fields.Raw,
-    'scenario': fields.Raw,
-    'journey_order': fields.Raw,
-    'max_walking_duration_to_pt': fields.Raw,
-    'max_bike_duration_to_pt': fields.Raw,
-    'max_bss_duration_to_pt': fields.Raw,
-    'max_car_duration_to_pt': fields.Raw,
-    'max_nb_transfers': fields.Raw,
-    'walking_speed': fields.Raw,
-    'bike_speed': fields.Raw,
-    'bss_speed': fields.Raw,
-    'car_speed': fields.Raw,
-    'min_bike': fields.Raw,
-    'min_bss': fields.Raw,
-    'min_car': fields.Raw,
-    'min_tc_with_bike': fields.Raw,
-    'min_tc_with_bss': fields.Raw,
-    'min_tc_with_car': fields.Raw,
-    'max_duration_criteria': fields.Raw,
-    'max_duration_fallback_mode': fields.Raw,
-    'max_duration': fields.Raw,
-    'walking_transfer_penalty': fields.Raw,
-    'night_bus_filter_max_factor': fields.Raw,
-    'night_bus_filter_base_factor': fields.Raw,
-    'priority': fields.Raw,
-    'bss_provider': fields.Boolean,
-    'full_sn_geometries': fields.Boolean,
-    'is_open_data': fields.Boolean,
-}
-
-api_fields = {
-    'id': fields.Raw,
-    'name': fields.Raw
-}
-
-billing_plan_fields = {
-    'id': fields.Raw,
-    'name': fields.Raw,
-    'max_request_count': fields.Raw,
-    'max_object_count': fields.Raw,
-    'default': fields.Raw,
-}
-
-billing_plan_fields_full = {
-    'id': fields.Raw,
-    'name': fields.Raw,
-    'max_request_count': fields.Raw,
-    'max_object_count': fields.Raw,
-    'default': fields.Raw,
-    'end_point': fields.Nested(end_point_fields)
-}
-
-user_fields = {
-    'id': fields.Raw,
-    'login': fields.Raw,
-    'email': fields.Raw,
-    'block_until': FieldDate,
-    'type': fields.Raw(),
-    'end_point': fields.Nested(end_point_fields),
-    'billing_plan': fields.Nested(billing_plan_fields),
-    'has_shape': HasShape,
-    'shape': Shape
-}
-
-user_fields_full = {
-    'id': fields.Raw,
-    'login': fields.Raw,
-    'email': fields.Raw,
-    'block_until': FieldDate,
-    'type': fields.Raw(),
-    'keys': fields.List(fields.Nested(key_fields)),
-    'authorizations': fields.List(fields.Nested({
-        'instance': fields.Nested(instance_fields),
-        'api': fields.Nested(api_fields)
-    })),
-    'end_point': fields.Nested(end_point_fields),
-    'billing_plan': fields.Nested(billing_plan_fields),
-    'has_shape': HasShape,
-    'shape': Shape
-}
-
-dataset_field = {
-    'type': fields.Raw,
-    'name': fields.Raw,
-    'family_type': fields.Raw,
-}
-
-jobs_fields = {
-    'jobs': fields.List(fields.Nested({
-        'id': fields.Raw,
-        'state': fields.Raw,
-        'created_at': FieldDate,
-        'updated_at': FieldDate,
-        'data_sets': fields.List(fields.Nested(dataset_field)),
-        'instance': fields.Nested(instance_fields)
-    }))
-}
-
-poi_types_fields = {
-    'poi_types': fields.List(fields.Nested({
-        'uri': fields.Raw,
-        'name': fields.Raw,
-    }))
-}
-
-traveler_profile = {
-    'traveler_type': fields.String,
-    'walking_speed': fields.Raw,
-    'bike_speed': fields.Raw,
-    'bss_speed': fields.Raw,
-    'car_speed': fields.Raw,
-    'wheelchair': fields.Boolean,
-    'max_walking_duration_to_pt': fields.Raw,
-    'max_bike_duration_to_pt': fields.Raw,
-    'max_bss_duration_to_pt': fields.Raw,
-    'max_car_duration_to_pt': fields.Raw,
-    'first_section_mode': fields.List(fields.String),
-    'last_section_mode': fields.List(fields.String),
-    'error': fields.String,
-}
-
-autocomplete_parameter_fields = {
-    'id': fields.Raw,
-    'name': fields.Raw,
-    'created_at': FieldDate,
-    'updated_at': FieldDate,
-    'street': fields.Raw,
-    'address': fields.Raw,
-    'poi': fields.Raw,
-    'admin': fields.Raw,
-    'admin_level': fields.List(fields.Integer),
-}
 
 
 class Api(flask_restful.Resource):
@@ -383,7 +201,8 @@ class Instance(flask_restful.Resource):
                                                                               'keolis',
                                                                               'destineo',
                                                                               'new_default',
-                                                                              'stif'],
+                                                                              'stif',
+                                                                              'distributed'],
                 location=('json', 'values'), default=instance.scenario)
         parser.add_argument('journey_order', type=str, case_sensitive=False,
                 help='the sort order of the journeys in jormungandr', choices=['arrival_time', 'departure_time'],
@@ -1242,3 +1061,19 @@ class AutocompleteDataset(flask_restful.Resource):
         datasets = instance.last_datasets(args['count'])
 
         return marshal(datasets, dataset_field)
+
+
+class AutocompleteUpdateData(flask_restful.Resource):
+    def post(self, ac_instance_name):
+        instance = models.AutocompleteParameter.query.filter_by(name=ac_instance_name).first_or_404()
+
+        if not request.files:
+            return marshal({'error': {'message': 'the Data file is missing'}}, error_fields), 400
+
+        content = request.files['file']
+        logger = get_instance_logger(instance)
+        logger.info('content received: %s', content)
+        filename = save_in_tmp(content)
+        _, job = import_autocomplete([filename], instance)
+        job = models.db.session.merge(job) #reatache the object
+        return marshal({'job': job}, one_job_fields), 200

@@ -40,8 +40,11 @@ map_serializer = {
    "stop_areas": api.StopAreasSerializer,
    "routes": api.RoutesSerializer,
    "line_groups": api.LineGroupsSerializer,
-   "lines": api.LinesSerializer,
    "disruptions": api.DisruptionsSerializer,
+   "vehicle_journeys": api.VehicleJourneysSerializer,
+   "trips": api.TripsSerializer,
+   "journey_patterns": api.JourneyPatternsSerializer,
+   "journey_pattern_points": api.JourneyPatternPointsSerializer,
 }
 
 

@@ -178,10 +178,61 @@ class TestChaosDisruptionsLineSection(ChaosDisruptionsFixture):
 
         response = self.query_region('disruptions')
         # and we call again, we must have the disruption now
-        assert 'bobette_the_disruption' in [d['disruption_id'] for d in response['disruptions']]
+        dis_by_name = {d['disruption_id']: d for d in response['disruptions']}
+
+        assert 'bobette_the_disruption' in dis_by_name
+        is_valid_line_section_disruption(dis_by_name['bobette_the_disruption'])
 
         # the disruption is linked to the trips of the line and to the stoppoints
         assert has_dis(ObjGetter('stop_points', 'stop_point:stopA'), 'bobette_the_disruption')
+        assert has_dis(ObjGetter('vehicle_journeys', 'vjA'), 'bobette_the_disruption')
+
+
+@dataset(MAIN_ROUTING_TEST_SETTING)
+class TestChaosDisruptionsLineSectionOnOneStop(ChaosDisruptionsFixture):
+    """
+    Note: it is done as a new fixture, to spawn a new kraken, in order not the get previous disruptions
+    """
+
+    def test_disruption_on_line_section_on_one_stop(self):
+        """
+        the test blocking a line section
+        the line section is only from B to B, it should block only B
+        """
+        def query_on_date(q, **kwargs):
+            """We do the query on a dt inside the disruption application period"""
+            return self.query_region('{q}?_current_datetime=20120614T120000'.format(q=q), **kwargs)
+
+        def has_dis(obj_get, dis):
+            r = query_on_date('{col}/{uri}'.format(col=obj_get.collection, uri=obj_get.uri))
+            return has_disruption(r, obj_get, dis)
+
+        response = self.query_region('disruptions')
+        assert 'bobette_the_disruption' not in [d['disruption_id'] for d in response['disruptions']]
+        assert not has_dis(ObjGetter('stop_points', 'stop_point:stopA'), 'bobette_the_disruption')
+        assert not has_dis(ObjGetter('stop_points', 'stop_point:stopB'), 'bobette_the_disruption')
+        assert not has_dis(ObjGetter('vehicle_journeys', 'vjA'), 'bobette_the_disruption')
+
+        self.send_mock("bobette_the_disruption", "A",
+                       "line_section", start="stopB", end="stopB",
+                       start_period="20120614T100000", end_period="20120624T170000",
+                       blocking=True)
+
+        response = self.query_region('disruptions')
+        # and we call again, we must have the disruption now
+        dis_by_name = {d['disruption_id']: d for d in response['disruptions']}
+
+        bobette = dis_by_name.get('bobette_the_disruption')
+        assert bobette
+        is_valid_line_section_disruption(bobette)
+
+        section = get_not_null(bobette, 'impacted_objects')[0].get('impacted_section', {})
+        assert section.get('from', {}).get('id') == 'stopB'
+        assert section.get('to', {}).get('id') == 'stopB'
+
+        # the disruption is linked to the trips of the line and to the stoppoints
+        assert not has_dis(ObjGetter('stop_points', 'stop_point:stopA'), 'bobette_the_disruption')
+        assert has_dis(ObjGetter('stop_points', 'stop_point:stopB'), 'bobette_the_disruption')
         assert has_dis(ObjGetter('vehicle_journeys', 'vjA'), 'bobette_the_disruption')
 
 

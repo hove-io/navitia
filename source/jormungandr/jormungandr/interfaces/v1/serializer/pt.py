@@ -110,17 +110,51 @@ class PtObjectSerializer(GenericSerializer):
 
 
 class TripSerializer(GenericSerializer):
-    pass#@TODO
+    pass
+
+
+class ValidityPatternSerializer(PbNestedSerializer):
+    beginning_date = serpy.Field()
+    days = serpy.Field()
+
+
+class WeekPatternSerializer(PbNestedSerializer):
+    monday = serpy.BoolField()
+    tuesday = serpy.BoolField()
+    wednesday = serpy.BoolField()
+    thursday = serpy.BoolField()
+    friday = serpy.BoolField()
+    saturday = serpy.BoolField()
+    sunday = serpy.BoolField()
+
+
+class CalendarPeriodSerializer(PbNestedSerializer):
+    begin = serpy.Field()
+    end = serpy.Field()
+
+
+class CalendarExceptionSerializer(PbNestedSerializer):
+    datetime = serpy.Field(attr='date')
+    type = EnumField()
+
+
+class CalendarSerializer(GenericSerializer):
+    week_pattern = WeekPatternSerializer()
+    validity_pattern = ValidityPatternSerializer(display_none=False)
+    exceptions = CalendarExceptionSerializer(many=True)
+    active_periods = CalendarPeriodSerializer(many=True)
 
 
 class ImpactedStopSerializer(PbNestedSerializer):
     stop_point = serpy.MethodField(display_none=False)
-    base_arrival_time = LocalTimeField(attr='base_stop_time.arrival_time')
-    base_departure_time = LocalTimeField(attr='base_stop_time.departure_time')
-    amended_arrival_time = LocalTimeField(attr='amended_stop_time.arrival_time')
-    amended_departure_time = LocalTimeField(attr='amended_stop_time.departure_time')
+    base_arrival_time = LocalTimeField(attr='base_stop_time.arrival_time', display_none=False)
+    base_departure_time = LocalTimeField(attr='base_stop_time.departure_time', display_none=False)
+    amended_arrival_time = LocalTimeField(attr='amended_stop_time.arrival_time', display_none=False)
+    amended_departure_time = LocalTimeField(attr='amended_stop_time.departure_time', display_none=False)
     cause = serpy.Field()
     stop_time_effect = EnumField(attr='effect')
+    departure_status = EnumField()
+    arrival_status = EnumField()
 
     def get_stop_point(self, obj):
         if obj.HasField(str('stop_point')):
@@ -185,7 +219,7 @@ class CommercialModeSerializer(GenericSerializer):
 class StopPointSerializer(GenericSerializer):
     comments = CommentSerializer(many=True, display_none=False)
     comment = FirstCommentField(attr='comments', display_none=False)
-    codes = CodeSerializer(many=True)
+    codes = CodeSerializer(many=True, display_none=False)
     label = serpy.Field()
     coord = CoordSerializer(required=False)
     links = LinkSerializer(attr='impact_uris')
@@ -289,3 +323,33 @@ class LineSerializer(GenericSerializer):
     geojson = MultiLineStringField(display_none=False)
     links = LinkSerializer(attr='impact_uris')
     line_groups = LineGroupSerializer(many=True, display_none=False)
+
+
+class JourneyPatternPointSerializer(PbNestedSerializer):
+    id = serpy.Field(attr='uri')
+    stop_point = StopPointSerializer(display_none=False)
+
+
+class JourneyPatternSerializer(GenericSerializer):
+    journey_pattern_points = JourneyPatternPointSerializer(many=True)
+    route = RouteSerializer(display_none=False)
+
+
+class StopTimeSerializer(PbNestedSerializer):
+    arrival_time = LocalTimeField()
+    departure_time = LocalTimeField()
+    headsign = serpy.Field()
+    journey_pattern_point = JourneyPatternPointSerializer()
+    stop_point = StopPointSerializer()
+
+
+class VehicleJourneySerializer(GenericSerializer):
+    journey_pattern = JourneyPatternSerializer(display_none=False)
+    stop_times = StopTimeSerializer(many=True)
+    comments = CommentSerializer(many=True, display_none=False)
+    comment = FirstCommentField(attr='comments', display_none=False)
+    codes = CodeSerializer(many=True)
+    validity_pattern = ValidityPatternSerializer()
+    calendars = CalendarSerializer(many=True)
+    trip = TripSerializer()
+    disruptions = LinkSerializer(attr='impact_uris')

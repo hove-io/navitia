@@ -37,6 +37,7 @@ from validate import Validator
 from flask import current_app
 import os
 import sys
+import tempfile
 
 
 def configure_logger(app):
@@ -213,3 +214,14 @@ def get_named_arg(arg_name, func, args, kwargs):
             return args[idx]
         else:
             return None
+
+
+def save_in_tmp(file_storage):
+    """
+    Save stream file in temp directory
+    :param file_storage: stream file
+    :return: fileneme
+    """
+    tmp_file = os.path.join(tempfile.gettempdir(), file_storage.filename)
+    file_storage.save(tmp_file)
+    return tmp_file

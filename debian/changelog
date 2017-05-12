@@ -1,3 +1,15 @@
+navitia2 (2.32.0) unstable; urgency=low
+
+  * Realtime: add test for route point model as line section  <https://github.com/CanalTP/navitia/pull/2079>
+  * Jormungandr: Direct path filter  <https://github.com/CanalTP/navitia/pull/2078>
+  * Jormungandr: migrate vehicle journeys serialization to serpy  <https://github.com/CanalTP/navitia/pull/2082>
+  * Jormungandr: fix serpy enums  <https://github.com/CanalTP/navitia/pull/2080>
+  * Realtime: Partial delete  <https://github.com/CanalTP/navitia/pull/2061>
+  * Jormungandr: rename experimental to distributed  <https://github.com/CanalTP/navitia/pull/2066>
+  * Tyr: Update elasticsearch data  <https://github.com/CanalTP/navitia/pull/2069>
+
+ -- patoche <patrick.degeilh@canaltp.fr>  Fri, 12 May 2017 11:05:59 +0100
+
 navitia2 (2.31.1) unstable; urgency=low
 
   * Jormungandr: fix autocomplete (unknown uri)  <https://github.com/CanalTP/navitia/pull/2083> 

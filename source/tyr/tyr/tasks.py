@@ -228,10 +228,10 @@ def import_autocomplete(files, autocomplete_instance, async=True, backup_file=Tr
         action.kwargs['job_id'] = job.id
     actions.append(finish_job.si(job.id))
     if async:
-        return chain(*actions).delay()
+        return chain(*actions).delay(), job
     else:
         # all job are run in sequence and import_data will only return when all the jobs are finish
-        return chain(*actions).apply()
+        return chain(*actions).apply(), job
 
 
 @celery.task()
