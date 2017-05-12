@@ -241,13 +241,15 @@ void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mod
         predecessors[starting_edge[source_e]] = starting_edge[source_e];
         predecessors[starting_edge[target_e]] = starting_edge[target_e];
 
-        //small enchancement, if the projection is done on a node, we disable the crow fly
-        if (starting_edge.distances[source_e] < 0.01) {
-            predecessors[starting_edge[target_e]] = starting_edge[source_e];
-            distances[starting_edge[target_e]] = bt::pos_infin;
-        } else if (starting_edge.distances[target_e] < 0.01) {
-            predecessors[starting_edge[source_e]] = starting_edge[target_e];
-            distances[starting_edge[source_e]] = bt::pos_infin;
+        if (starting_edge[target_e] != starting_edge[source_e]) { //if we're on a useless edge we do not enhance
+            //small enchancement, if the projection is done on a node, we disable the crow fly
+            if (starting_edge.distances[source_e] < 0.01) {
+                predecessors[starting_edge[target_e]] = starting_edge[source_e];
+                distances[starting_edge[target_e]] = bt::pos_infin;
+            } else if (starting_edge.distances[target_e] < 0.01) {
+                predecessors[starting_edge[source_e]] = starting_edge[target_e];
+                distances[starting_edge[source_e]] = bt::pos_infin;
+            }
         }
     }
 }
