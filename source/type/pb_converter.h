@@ -322,6 +322,13 @@ private:
                 fill_pb_object(nav_obj, pb_list->Add());
             }
         }
+        template<typename Nav, typename Pb>
+        void fill_pb_object_with_line_seciton_message(const std::vector<Nav*>& nav_list,
+                            ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
+            for (auto* nav_obj: nav_list) {
+                fill_pb_object_with_line_section_message(nav_obj, pb_list->Add());
+            }
+        }
 
         template<typename Nav, typename Pb>
         void fill_pb_object(const std::vector<Nav>& nav_list,
@@ -410,6 +417,7 @@ private:
         void fill_pb_object(const nt::PhysicalMode*, pbnavitia::PhysicalMode*);
         void fill_pb_object(const nt::CommercialMode*, pbnavitia::CommercialMode*);
         void fill_pb_object(const nt::Line*, pbnavitia::Line*);
+        void fill_pb_object_with_line_section_message(const nt::Line*, pbnavitia::Line*);
         void fill_pb_object(const nt::Route*, pbnavitia::Route*);
         void fill_pb_object(const nt::LineGroup*, pbnavitia::LineGroup*);
         void fill_pb_object(const nt::Calendar*, pbnavitia::Calendar*);
