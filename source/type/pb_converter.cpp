@@ -624,10 +624,14 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
     }
 
 }
-void PbCreator::Filler::fill_pb_object_with_line_section_message(const nt::Line* l , pbnavitia::Line* line){
+void PbCreator::Filler::fill_line_with_line_section_message(const nt::Line* l , pbnavitia::Line* line){
     fill_pb_object(l, line);
     if (dump_message == DumpMessage::No) { return; }
-
+    /*
+     * Here we dump the impacts which impact LineSection.
+     * We could have link the LineSection impact with the line, but that would change the code and
+     * the behavior too much.
+     * */
     std::set<boost::shared_ptr<nt::disruption::Impact>> added_impact;
     auto pred = [&](const nt::VehicleJourney& vj) {
         for(const auto& impact: vj.meta_vj->impacted_by) {
@@ -1461,7 +1465,7 @@ void PbCreator::pb_fill(const std::vector<N*>& nav_list, int depth, const DumpMe
 template<>
 void PbCreator::pb_fill(const std::vector<nt::Line*>& nav_list, int depth, const DumpMessage dump_message){
     auto* pb_object = get_mutable<nt::Line>(response);
-    Filler(depth, dump_message, *this).fill_pb_object_with_line_seciton_message(nav_list, pb_object);
+    Filler(depth, dump_message, *this).fill_line_with_line_seciton_message(nav_list, pb_object);
 }
 
 template void PbCreator::pb_fill(const std::vector<ng::POI*>& nav_list, int depth, const DumpMessage dump_message);
@@ -1471,7 +1475,6 @@ template void PbCreator::pb_fill(const std::vector<nt::CommercialMode*>& nav_lis
 template void PbCreator::pb_fill(const std::vector<nt::Company*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::Contributor*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::Dataset*>& nav_list, int depth, const DumpMessage dump_message);
-//template void PbCreator::pb_fill(const std::vector<nt::Line*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::LineGroup*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::Network*>& nav_list, int depth, const DumpMessage dump_message);
 template void PbCreator::pb_fill(const std::vector<nt::PhysicalMode*>& nav_list, int depth, const DumpMessage dump_message);
