@@ -78,7 +78,7 @@ with dev_settings.py the tyr settings file
 
 With those 2 files, running the commande ```honcho start``` in the tyr directory will launch all tyr services.
 
-##Running tests
+## Running tests
 
 You need to install the dependancies for developements:
 ```
@@ -516,10 +516,9 @@ To modify a shape, PUT the new shape (so far, simple feature only):
 ```
 To remove a shape, PUT `{"shape":null}`.
 
-
 #### Keys
 
-The API handle the user's token
+The API handles the user's token
 
 To add a token, call:
 
@@ -560,7 +559,7 @@ To delete a token:
 
 #### Authorizations
 
-This API handle access policy for a given user and a given kraken instance.
+This API handles access policy for a given user and a given kraken instance.
 
 This is useful only is the instance is not "free"
 
@@ -587,55 +586,8 @@ This is useful only is the instance is not "free"
     "login": "alex"
 }
 ```
-
-### Simple example
-
-Here a quick example of how to create a user with access to public instances using curl (but you can use whatever you want):
-
-Note: by default tyr is accessed on localhost:5000
-
-Create a user:
-
-    curl -X POST "localhost:5000/v0/users/?email=toto@canaltp.fr&login=bob"
-
-Note: the email must exists
-
-If the creation went well, a json is returned with an id:
-
-```json
-[
-    {
-        "email": "toto@canaltp.fr",
-        "id": 1,
-        "login": "bob"
-    }
-]
-
-```
-
-Use the id in the next query
-
-    curl -X POST "localhost:5000/v0/users/1/keys"
-
-```json
-{
-    "authorizations": [],
-    "email": "toto@canaltp.fr",
-    "id": 1,
-    "keys": [
-        {
-            "id": 1,
-            "token": "faa80b5f-f747-45bf-ad89-b3f2b29dd4aa",
-            "valid_until": null
-        }
-    ],
-    "login": "bob"
-}
-
-```
-
-
-#### EndPoints
+#### Other APIs
+##### EndPoints
 
 Endpoints are used for handling multiple user base with the same plateform. Each user is associated with only one
 endpoint. it's possible for a user to have an account in two separate endpoint with the same email used.
@@ -675,6 +627,22 @@ For creating a new one the POST verb must be use and the request must contain a 
 The hostnames are facultavies, it's only have to be set if we want to enforce the host used for accessing the API.
 Update can be done with the PUT verb with the same kind of json.
 
+##### Billing plans
+
+The API handles the users's billing plan.
+
+#### Parameters
+
+name               | description                                                                          | required | default                                                      
+-------------------|--------------------------------------------------------------------------------------|----------|-----------------------------------------
+name               | name of the billing plan                                                             | yep      |                                       
+end_point_id       | the id of the endpoint for this billing plan (in most case the default value is good enough) | nope     | the default end_point (navitia.io)
+default            | if this plan is the default one for the end_point                                    | nope     | false
+max_request_count  | max request count for this billing plan                                              | nope     |                                    
+max_object_count   | max object count for this billing plan                                               | nope     | 
+
+
+
 ### Simple example
 
 Here a quick example of how to create a user with access to public instances using curl (but you can use whatever you want):
@@ -721,7 +689,7 @@ Use the id in the next query
 
 ```
 
-#### PoiTypes
+## PoiTypes
 It is possible to define what type of POI should be extracted from OSM for a specific instance.
 
 A type of poi is characterised by an uri and a name.
