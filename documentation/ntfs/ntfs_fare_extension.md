@@ -67,7 +67,7 @@ Par exemple : si le tarif par OD permet de partir de n'importe quelle station de
 ## fares.csv (optionnel)
 Ce fichier contient les spécifications tarifaires des tickets déclarés dans le fichier **prices.csv**.
 
-> **Attention : Ce fichier est _SANS_ ligne d'entête.**
+> **Attention : Ce fichier est _AVEC_ ligne d'entête.**
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
