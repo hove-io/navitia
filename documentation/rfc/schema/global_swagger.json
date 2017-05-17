@@ -1,0 +1,13 @@
+{
+    "basePath": "/v1",
+    "host": "api.navitia.io",
+    "paths": {
+        "/coverage/{coverage}/poi_types": {
+            "$ref": "http://api.navitia/io/v1/schema/coverage/{coverage}/poi_types"
+        },
+        "/coverage/{coverage}/poi_types/{id}": {
+            "$ref": "http://api.navitia/io/v1/schema/poi_types/coverage/{coverage}/poi_types/{poi_type_id}"
+        }
+    },
+    "swagger": "2.0"
+}

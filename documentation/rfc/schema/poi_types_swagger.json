@@ -1,0 +1,50 @@
+{
+    "definitions": {
+        "PoiTypes": {
+            "type": "array",
+            "items": {
+                "id": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "id",
+                "name"
+            ]
+        }
+    },
+    "get": {
+        "consumes": [
+            "application/json"
+        ],
+        "description": "",
+        "parameters": [
+            {
+                "description": "id of the coverage",
+                "in": "path",
+                "name": "coverage",
+                "required": false,
+                "type": "string"
+            },
+            {
+                "description": "id of the poi_type",
+                "in": "path",
+                "name": "poi_type_id",
+                "required": false,
+                "type": "string"
+            }
+        ],
+        "produces": [
+            "application/json"
+        ],
+        "responses": {
+            "200": {
+                "$ref": "#/definitions/PoiType"
+            }
+        },
+        "summary": "get the poi types"
+    }
+}
