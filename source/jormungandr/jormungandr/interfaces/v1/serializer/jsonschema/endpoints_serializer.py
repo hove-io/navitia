@@ -80,7 +80,7 @@ class JsonSchemaEndpointsSerializer(serpy.Serializer):
         for endpoint, rules in app.url_map._rules_by_endpoint.items():
             link = {
                 'method': 'GET',
-                'rel': 'related',
+                'rel': 'self',
                 'title': endpoint,
                 'schema': self.get_input_definitions(app.view_functions, endpoint),
             }
@@ -89,7 +89,8 @@ class JsonSchemaEndpointsSerializer(serpy.Serializer):
                 link.update({
                     'href': rule_with_definitions,
                     'targetSchema': {
-                        '$ref': 'OPTIONS ' + rule_with_definitions
+                        '$ref': rule_with_definitions,
+                        'method': 'OPTIONS'
                     }
                 })
                 links.append(link)
@@ -128,7 +129,8 @@ class JsonSchemaEndpointsSerializer(serpy.Serializer):
                             type = TYPE_MAP.get(type_name)
                             schema.update(type)
                         elif not schema_metadata:
-                            raise ValueError('unsupported type "%s" for argument "%s"' % (type_name, argument.name))
+                            pass
+                            # raise ValueError('unsupported type "%s" for argument "%s"' % (type_name, argument.name))
 
                         if argument.action == 'append':
                             schema.update(type='array')

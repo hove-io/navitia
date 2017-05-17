@@ -33,7 +33,6 @@ from jormungandr.interfaces.v1.serializer.base import GenericSerializer, EnumLis
 from jormungandr.interfaces.v1.serializer.time import LocalTimeField, PeriodSerializer, DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import *
 from jormungandr.interfaces.v1.serializer import jsonschema
-from jormungandr.interfaces.v1.serializer.jsonschema import schema
 
 
 class Equipments(EnumListField):
