@@ -1379,17 +1379,26 @@ static std::vector<component_vertex_t> get_useless_nodes(const filtered_graph& g
 
     LOG4CPLUS_INFO(log, "the biggest has " << principal_component->second << " nodes");
 
+    auto big_enough = [&](const size_t size) {
+        return size / principal_component->second >= min_non_connected_graph_ratio;
+    };
+
     for (component_vertex_t vertex_idx = 0;  vertex_idx != vertex_component.size(); ++vertex_idx) {
         auto comp = vertex_component[vertex_idx];
 
         auto nb_elt_in_component = component_size[comp];
 
-        if (nb_elt_in_component / principal_component->second >= min_non_connected_graph_ratio) {
+        if (big_enough(nb_elt_in_component)) {
             continue; //big enough, we skip
         }
         useless_nodes.push_back(vertex_idx);
     }
     LOG4CPLUS_INFO(log, "for mode " << mode << ", " << useless_nodes.size() << " useless nodes");
+    for (const auto& comp_and_size: component_size) {
+        if (big_enough(comp_and_size.second)) {
+            LOG4CPLUS_INFO(log, "we kept a component with " << comp_and_size.second << " nodes");
+        }
+    }
     return useless_nodes;
 }
 
