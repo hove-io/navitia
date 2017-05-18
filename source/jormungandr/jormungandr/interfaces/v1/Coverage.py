@@ -34,40 +34,42 @@ from flask.ext.restful import fields, marshal_with, reqparse
 from flask.ext.restful.inputs import boolean
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.StatedResource import StatedResource
+from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.make_links import add_coverage_link, add_collection_links, clean_links
 from jormungandr.interfaces.v1.converters_collection_type import collections_to_resource_type
 from collections import OrderedDict
 from jormungandr.interfaces.v1.fields import NonNullNested, FieldDateTime
-
-
-region_fields = {
-    "id": fields.String(attribute="region_id"),
-    "start_production_date": fields.String,
-    "end_production_date": fields.String,
-    "last_load_at": FieldDateTime(),
-    "name": fields.String,
-    "status": fields.String,
-    "shape": fields.String,
-    "error": NonNullNested({
-        "code": fields.String,
-        "value": fields.String
-    }),
-    "dataset_created_at": fields.String(),
-
-}
-regions_fields = OrderedDict([
-    ("regions", fields.List(fields.Nested(region_fields)))
-])
+from jormungandr.interfaces.v1.serializer import jsonschema
+from jormungandr.interfaces.v1.serializer.api import CoveragesSerializer
 
 collections = collections_to_resource_type.keys()
 
 
 class Coverage(StatedResource):
 
+    def __init__(self, quota=True, *args, **kwargs):
+        super(Coverage, self).__init__(quota, *args, **kwargs)
+        self.collections = [
+            ("regions", fields.List(fields.Nested({
+                "id": fields.String(attribute="region_id"),
+                "start_production_date": fields.String,
+                "end_production_date": fields.String,
+                "last_load_at": FieldDateTime(),
+                "name": fields.String,
+                "status": fields.String,
+                "shape": fields.String,
+                "error": NonNullNested({
+                    "code": fields.String,
+                    "value": fields.String
+                }),
+                "dataset_created_at": fields.String(),
+            })))
+        ]
+        self.method_decorators.insert(1, get_serializer(collection='coverages', collections=self.collections))
+
     @clean_links()
     @add_coverage_link()
     @add_collection_links(collections)
-    @marshal_with(regions_fields)
     def get(self, region=None, lon=None, lat=None):
 
         parser = reqparse.RequestParser()
@@ -85,4 +87,5 @@ class Coverage(StatedResource):
         return resp, 200
 
     def options(self, **kwargs):
-        return {'youhou?': "youhouuuu!"}, 200
+        response = jsonschema.SwaggerPathSerializer(CoveragesSerializer, endpoint=self).data
+        return response, 200

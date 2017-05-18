@@ -31,6 +31,8 @@ from jormungandr.interfaces.v1.serializer import pt
 from jormungandr.interfaces.v1.serializer.fields import ErrorSerializer, FeedPublisherSerializer, PaginationSerializer
 import serpy
 
+from jormungandr.interfaces.v1.serializer.time import DateTimeField
+
 
 class PTReferentialSerializer(serpy.Serializer):
     pagination = PaginationSerializer(attr='pagination', display_none=True, required=True)
@@ -94,3 +96,20 @@ class NetworksSerializer(PTReferentialSerializer):
 
 class PlacesSerializer(PTReferentialSerializer):
     places = pt.PlaceSerializer(many=True)
+
+
+class CoverageErrorSerializer(serpy.Serializer):
+    code = serpy.StrField()
+    value = serpy.StrField()
+
+
+class CoveragesSerializer(serpy.Serializer):
+    id = serpy.StrField(attr="region_id"),
+    start_production_date = serpy.StrField(),
+    end_production_date = serpy.StrField(),
+    last_load_at = DateTimeField(),
+    name = serpy.StrField(),
+    status = serpy.StrField(),
+    shape = serpy.StrField(),
+    error = CoverageErrorSerializer()
+    dataset_created_at = serpy.StrField(),

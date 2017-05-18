@@ -45,6 +45,7 @@ map_serializer = {
    "trips": api.TripsSerializer,
    "journey_patterns": api.JourneyPatternsSerializer,
    "journey_pattern_points": api.JourneyPatternPointsSerializer,
+   "coverages": api.CoveragesSerializer,
 }
 
 

@@ -47,19 +47,16 @@ TYPE_MAP = {
 }
 
 class JsonSchemaSerializer(serpy.Serializer):
+    # Weird name to ensure it will be processed at the end
+    z_definitions = serpy.MethodField('get_definitions', display_none=False, label='definitions')
     properties = serpy.MethodField()
     type = serpy.MethodField()
     required = serpy.MethodField(display_none=False)
-    # Weird name to ensure it will be processed at the end
-    _definitions = serpy.MethodField('get_definitions', display_none=False, label='definitions')
 
     def __init__(self, instance=None, many=False, data=None, context=None, root=False, **kwargs):
         super(JsonSchemaSerializer, self).__init__(instance, many, data, context, **kwargs)
         self.root = root
         self.definitions = {}
-
-    def get_type(self, *args):
-        return "object"
 
     def get_definitions(self, obj):
         if self.root:
@@ -125,6 +122,9 @@ class JsonSchemaSerializer(serpy.Serializer):
 
         return properties
 
+    def get_type(self, *args):
+        return "object"
+
     def get_required(self, obj):
         required = [field.label or field_name for field_name, field in obj._field_map.items() if field.required]
         return required if len(required) > 0 else None
@@ -140,7 +140,7 @@ class JsonSchemaSerializer(serpy.Serializer):
 
     @classmethod
     def _from_nested_schema(cls, field, onlyRef=False):
-        serializer = cls(field)
+        serializer = JsonSchemaSerializer(field)
         if onlyRef:
             schema = {
                 '$ref': '#/definitions/' + field.__class__.__name__
@@ -156,3 +156,123 @@ class JsonSchemaSerializer(serpy.Serializer):
             }
 
         return schema, definitions
+
+
+class InputArgumentSerializer(serpy.Serializer):
+    description = serpy.StrField()
+    location = serpy.MethodField(label='in')
+    name = serpy.StrField()
+    required = serpy.MethodField()
+    type = serpy.MethodField()
+    default = serpy.StrField(display_none=False)
+    enum = serpy.Field(attr='choices', display_none=False)
+
+    def __init__(self, schema_metadata={}, **kwargs):
+        super(InputArgumentSerializer, self).__init__(**kwargs)
+        self.schema_metadata = schema_metadata
+
+    def to_value(self, instance):
+        if not instance.hidden:
+            data = super(InputArgumentSerializer, self).to_value(instance)
+            if self.schema_metadata:
+                data.update(self.schema_metadata)
+
+            return data
+
+    def get_location(self, obj):
+        return 'query'
+
+    def get_type(self, obj):
+        type = None
+        schema_type = getattr(obj, 'schema_type') or obj.type
+        type_name = schema_type.__name__
+
+        if TYPE_MAP.__contains__(type_name):
+            type = TYPE_MAP.get(type_name).get('type')
+        elif not self.schema_metadata:
+            type = 'not handle : %s' % type_name
+            # raise ValueError('unsupported type "%s" for argument "%s"' % (type_name, argument.name))
+
+        if obj.action == 'append':
+            type = 'array'
+
+        return type
+
+    def get_required(self, obj):
+        return obj.default is None
+
+class SwaggerPathSerializer(serpy.Serializer):
+    definitions = serpy.MethodField(display_none=False)
+    get = serpy.MethodField()
+
+    def __init__(self, instance=None, endpoint=None, **kwargs):
+        super(SwaggerPathSerializer, self).__init__(instance, **kwargs)
+        self.endpoint = endpoint
+        self.has_serialized_object = False
+        self.serialized_object = None
+
+    def serialize(self, field):
+        if not self.has_serialized_object:
+            self.serializer = JsonSchemaSerializer(field)
+            self.serialized_object = JsonSchemaSerializer(field).data
+            self.has_serialized_object = True
+
+        return self.serialized_object
+
+    def get_get(self, obj):
+        schema = self.serialize(obj)
+
+        return {
+            'consumes': ['application/json'],
+            'description': '',
+            'parameters': self.get_parameters(),
+            'produces': ['application/json'],
+            'responses': {
+                '200': schema
+            },
+            'summary': ''
+        }
+
+    def get_parameters(self):
+        definitions = []
+        if self.endpoint and hasattr(self.endpoint, 'parsers'):
+            parser_get = getattr(self.endpoint, 'parsers').get('get')
+            if parser_get:
+                for argument in parser_get.args:
+                    schema_metadata = getattr(argument, 'schema_metadata')
+                    schema = InputArgumentSerializer(instance=argument, schema_metadata=schema_metadata).data
+                    if schema:
+                        definitions.append(schema)
+
+        return definitions
+
+    def get_definitions(self, obj):
+        self.serialize(obj)
+        self.serializer.root = True
+        definitions = self.serializer.get_definitions(None)
+        return definitions
+
+"""
+class Swagger(object):
+    definitions = []
+    get = SwaggerMethod()
+
+class SwaggerDefinitions(object):
+    pass
+
+class SwaggerMethod(object):
+    description = ''
+    parameters=  [SwaggerParam]
+    output_type = CoveragesSerializer
+    summary = ''
+
+class SwaggerParam(object):
+    description = serpy.StrField()
+    location = serpy.MethodField(label='in')
+    name = serpy.StrField()
+    required = serpy.MethodField()
+    type = serpy.MethodField()
+    default = serpy.StrField(display_none=False)
+    enum = serpy.Field(attr='choices', display_none=False)
+"""
+
