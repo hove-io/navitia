@@ -206,22 +206,26 @@ struct PbCreator {
     PbCreator& operator=(const PbCreator&) = delete;
 
     template<typename N, typename P>
-    void fill(const N& item, P* proto, int depth, const DumpMessage dump_message=DumpMessage::Yes) {
-        Filler(depth, dump_message, *this).fill_pb_object(item, proto);
+    void fill(const N& item, P* proto, int depth,
+            const DumpMessage dump_message=DumpMessage::Yes, bool dump_line_section_message=false) {
+        Filler(depth, dump_message, *this, dump_line_section_message).fill_pb_object(item, proto);
     }
 
     template<typename N>
-    void fill(const N& item, int depth , const DumpMessage dump_message=DumpMessage::Yes) {
-        Filler(depth, dump_message, *this).fill_pb_object(item, &response);
+    void fill(const N& item, int depth ,
+            const DumpMessage dump_message=DumpMessage::Yes, bool dump_line_section_message=false) {
+        Filler(depth, dump_message, *this, dump_line_section_message).fill_pb_object(item, &response);
     }
 
     template<typename N>
     void pb_fill(const std::vector<N*>& nav_list, int depth,
-                 const DumpMessage dump_message = DumpMessage::Yes);
+                 const DumpMessage dump_message = DumpMessage::Yes,
+                 bool dump_line_section_message = false);
 
     template <typename P>
-    void fill_message(const boost::shared_ptr<nt::disruption::Impact>& impact, P pb_object, int depth) {
-        Filler(depth, DumpMessage::Yes, *this).fill_message(impact, pb_object);
+    void fill_message(const boost::shared_ptr<nt::disruption::Impact>& impact, P pb_object,
+            int depth, bool dump_line_section_message=false) {
+        Filler(depth, DumpMessage::Yes, *this, dump_line_section_message).fill_message(impact, pb_object);
     }
 
     const type::disruption::Impact* get_impact(const std::string& uri) const;
@@ -298,12 +302,14 @@ private:
         struct PtObjVisitor;
         const int depth;
         DumpMessage dump_message;
-
         PbCreator& pb_creator;
-        Filler(int depth, const DumpMessage dump_message, PbCreator & pb_creator): depth(depth),
-            dump_message(dump_message), pb_creator(pb_creator){}
+        bool dump_line_section_message;
 
-        Filler copy(int, DumpMessage);
+        Filler(int depth, const DumpMessage dump_message, PbCreator & pb_creator, bool dump_line_section_message):
+            depth(depth), dump_message(dump_message), pb_creator(pb_creator),
+            dump_line_section_message(dump_line_section_message){}
+
+        Filler copy(int, DumpMessage, bool dump_line_section_message = false);
 
         template<typename NAV, typename PB>
         void fill(NAV* nav_object, PB* pb_object);
@@ -312,7 +318,7 @@ private:
 
         template<typename NAV, typename PB>
         void fill(const NAV& nav_object, PB* pb_object) {
-            copy(depth-1, dump_message).fill_pb_object(nav_object, pb_object);
+            copy(depth-1, dump_message, false).fill_pb_object(nav_object, pb_object);
         }
 
         template<typename Nav, typename Pb>
@@ -320,13 +326,6 @@ private:
                             ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
             for (auto* nav_obj: nav_list) {
                 fill_pb_object(nav_obj, pb_list->Add());
-            }
-        }
-        template<typename Nav, typename Pb>
-        void fill_line_with_line_seciton_message(const std::vector<Nav*>& nav_list,
-                            ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
-            for (auto* nav_obj: nav_list) {
-                fill_line_with_line_section_message(nav_obj, pb_list->Add());
             }
         }
 
@@ -417,7 +416,6 @@ private:
         void fill_pb_object(const nt::PhysicalMode*, pbnavitia::PhysicalMode*);
         void fill_pb_object(const nt::CommercialMode*, pbnavitia::CommercialMode*);
         void fill_pb_object(const nt::Line*, pbnavitia::Line*);
-        void fill_line_with_line_section_message(const nt::Line*, pbnavitia::Line*);
         void fill_pb_object(const nt::Route*, pbnavitia::Route*);
         void fill_pb_object(const nt::LineGroup*, pbnavitia::LineGroup*);
         void fill_pb_object(const nt::Calendar*, pbnavitia::Calendar*);

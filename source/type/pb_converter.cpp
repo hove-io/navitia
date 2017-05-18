@@ -343,19 +343,19 @@ void PbCreator::Filler::add_contributor(const T* nav) {
 template<typename NAV, typename PB>
 void PbCreator::Filler::fill(NAV* nav_object, PB* pb_object) {
     if (nav_object == nullptr) { return; }
-    copy(depth-1, dump_message).fill_pb_object(nav_object, get_sub_object(nav_object, pb_object));
+    copy(depth-1, dump_message, false).fill_pb_object(nav_object, get_sub_object(nav_object, pb_object));
 }
 template<typename NAV, typename F>
 void PbCreator::Filler::fill_with_creator(NAV* nav_object, F creator) {
     if (nav_object == nullptr) { return; }
-    copy(depth-1, dump_message).fill_pb_object(nav_object, creator());
+    copy(depth-1, dump_message, false).fill_pb_object(nav_object, creator());
 }
 
 template<typename T>
 void PbCreator::Filler::fill_pb_object(const T* value, pbnavitia::PtObject* pt_object) {
     if(value == nullptr) { return; }
 
-    copy(depth, dump_message).fill_pb_object(value, get_sub_object(value, pt_object));
+    copy(depth, dump_message, false).fill_pb_object(value, get_sub_object(value, pt_object));
     pt_object->set_name(get_label(value));
     pt_object->set_uri(value->uri);
 //    add_contributor(value);
@@ -372,11 +372,11 @@ template void PbCreator::Filler::fill_pb_object<nt::StopArea>(const nt::StopArea
 template void PbCreator::Filler::fill_pb_object<nt::StopPoint>(const nt::StopPoint*, pbnavitia::PtObject*);
 template void PbCreator::Filler::fill_pb_object<nt::VehicleJourney>(const nt::VehicleJourney*, pbnavitia::PtObject*);
 
-PbCreator::Filler PbCreator::Filler::copy(int depth, DumpMessage dump_message){
+PbCreator::Filler PbCreator::Filler::copy(int depth, DumpMessage dump_message, bool dump_line_section_message){
     if (depth <= 0) {
-        return PbCreator::Filler(0, dump_message, pb_creator);
+        return PbCreator::Filler(0, dump_message, pb_creator, dump_line_section_message);
     }
-    return PbCreator::Filler(depth, dump_message, pb_creator);
+    return PbCreator::Filler(depth, dump_message, pb_creator, dump_line_section_message);
 }
 
 static pbnavitia::RTLevel to_pb_realtime_level(const navitia::type::RTLevel realtime_level) {
@@ -457,7 +457,7 @@ void PbCreator::Filler::fill_pb_object(const ng::Admin* adm, pbnavitia::Administ
     }
     if (depth > 1) {
         // for the admin we add the main stop area, but with the minimum vital information
-        auto minimum_filler = Filler(0, DumpMessage::No, pb_creator);
+        auto minimum_filler = Filler(0, DumpMessage::No, pb_creator, false);
         for (const auto& sa: adm->main_stop_areas) {
             auto* pb_sa = admin->add_main_stop_areas();
 
@@ -623,36 +623,33 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
         pb_property->set_value(property.second);
     }
 
-}
-void PbCreator::Filler::fill_line_with_line_section_message(const nt::Line* l , pbnavitia::Line* line){
-    fill_pb_object(l, line);
-    if (dump_message == DumpMessage::No) { return; }
-    /*
-     * Here we dump the impacts which impact LineSection.
-     * We could have link the LineSection impact with the line, but that would change the code and
-     * the behavior too much.
-     * */
-    std::set<boost::shared_ptr<nt::disruption::Impact>> added_impact;
-    auto pred = [&](const nt::VehicleJourney& vj) {
-        for(const auto& impact: vj.meta_vj->impacted_by) {
-            auto impact_ptr = impact.lock();
-            if (! impact_ptr)
-                continue;
-            for (const auto& entity: impact_ptr->informed_entities()) {
-                if (boost::get<nt::disruption::LineSection>(&entity) &&
-                        added_impact.insert(impact_ptr).second ) {
-                    fill_messages(vj.meta_vj, line);
-                    return true;
+    if (dump_message == DumpMessage::Yes && dump_line_section_message) {
+        /*
+         * Here we dump the impacts which impact LineSection.
+         * We could have link the LineSection impact with the line, but that would change the code and
+         * the behavior too much.
+         * */
+        std::set<boost::shared_ptr<nt::disruption::Impact>> added_impact;
+        auto pred = [&](const nt::VehicleJourney& vj) {
+            for(const auto& impact: vj.meta_vj->impacted_by) {
+                auto impact_ptr = impact.lock();
+                if (! impact_ptr)
+                    continue;
+                for (const auto& entity: impact_ptr->informed_entities()) {
+                    if (boost::get<nt::disruption::LineSection>(&entity) &&
+                            added_impact.insert(impact_ptr).second ) {
+                        fill_messages(vj.meta_vj, line);
+                        return true;
+                    }
                 }
             }
+            return true;
+        };
+        for(const auto* route: l->route_list) {
+            route->for_each_vehicle_journey(pred);
         }
-        return true;
-    };
-    for(const auto* route: l->route_list) {
-        route->for_each_vehicle_journey(pred);
     }
 }
-
 
 void PbCreator::Filler::fill_pb_object(const nt::Route* r, pbnavitia::Route* route){
 
@@ -1458,33 +1455,30 @@ void PbCreator::Filler::fill_pb_object(const nt::Contributor* c, pbnavitia::Feed
 }
 
 template<typename N>
-void PbCreator::pb_fill(const std::vector<N*>& nav_list, int depth, const DumpMessage dump_message){
+void PbCreator::pb_fill(const std::vector<N*>& nav_list, int depth,
+        const DumpMessage dump_message, bool dump_line_section_message){
     auto* pb_object = get_mutable<typename std::remove_cv<N>::type>(response);
-    Filler(depth, dump_message, *this).fill_pb_object(nav_list, pb_object);
-}
-template<>
-void PbCreator::pb_fill(const std::vector<nt::Line*>& nav_list, int depth, const DumpMessage dump_message){
-    auto* pb_object = get_mutable<nt::Line>(response);
-    Filler(depth, dump_message, *this).fill_line_with_line_seciton_message(nav_list, pb_object);
+    Filler(depth, dump_message, *this, dump_line_section_message).fill_pb_object(nav_list, pb_object);
 }
 
-template void PbCreator::pb_fill(const std::vector<ng::POI*>& nav_list, int depth, const DumpMessage dump_message);
-template void PbCreator::pb_fill(const std::vector<ng::POIType*>& nav_list, int depth, const DumpMessage dump_message);
-template void PbCreator::pb_fill(const std::vector<nt::Calendar*>& nav_list, int depth, const DumpMessage dump_message);
-template void PbCreator::pb_fill(const std::vector<nt::CommercialMode*>& nav_list, int depth, const DumpMessage dump_message);
-template void PbCreator::pb_fill(const std::vector<nt::Company*>& nav_list, int depth, const DumpMessage dump_message);
-template void PbCreator::pb_fill(const std::vector<nt::Contributor*>& nav_list, int depth, const DumpMessage dump_message);
-template void PbCreator::pb_fill(const std::vector<nt::Dataset*>& nav_list, int depth, const DumpMessage dump_message);
-template void PbCreator::pb_fill(const std::vector<nt::LineGroup*>& nav_list, int depth, const DumpMessage dump_message);
-template void PbCreator::pb_fill(const std::vector<nt::Network*>& nav_list, int depth, const DumpMessage dump_message);
-template void PbCreator::pb_fill(const std::vector<nt::PhysicalMode*>& nav_list, int depth, const DumpMessage dump_message);
-template void PbCreator::pb_fill(const std::vector<nt::Route*>& nav_list, int depth, const DumpMessage dump_message);
-template void PbCreator::pb_fill(const std::vector<nt::StopArea*>& nav_list, int depth, const DumpMessage dump_message);
-template void PbCreator::pb_fill(const std::vector<nt::StopPoint*>& nav_list, int depth, const DumpMessage dump_message);
-template void PbCreator::pb_fill(const std::vector<const nt::StopPoint*>& nav_list, int depth, const DumpMessage dump_message);
-template void PbCreator::pb_fill(const std::vector<nt::StopPointConnection*>& nav_list, int depth, const DumpMessage dump_message);
-template void PbCreator::pb_fill(const std::vector<nt::ValidityPattern*>& nav_list, int depth, const DumpMessage dump_message);
-template void PbCreator::pb_fill(const std::vector<nt::VehicleJourney*>& nav_list, int depth, const DumpMessage dump_message);
+template void PbCreator::pb_fill(const std::vector<ng::POI*>&, int, const DumpMessage, bool);
+template void PbCreator::pb_fill(const std::vector<ng::POIType*>&, int, const DumpMessage, bool);
+template void PbCreator::pb_fill(const std::vector<nt::Calendar*>&, int, const DumpMessage, bool);
+template void PbCreator::pb_fill(const std::vector<nt::CommercialMode*>& , int, const DumpMessage, bool);
+template void PbCreator::pb_fill(const std::vector<nt::Company*>&, int, const DumpMessage, bool);
+template void PbCreator::pb_fill(const std::vector<nt::Contributor*>&, int, const DumpMessage, bool);
+template void PbCreator::pb_fill(const std::vector<nt::Dataset*>&, int, const DumpMessage, bool);
+template void PbCreator::pb_fill(const std::vector<nt::Line*>& , int, const DumpMessage, bool);
+template void PbCreator::pb_fill(const std::vector<nt::LineGroup*>&, int, const DumpMessage, bool);
+template void PbCreator::pb_fill(const std::vector<nt::Network*>&, int, const DumpMessage, bool);
+template void PbCreator::pb_fill(const std::vector<nt::PhysicalMode*>&, int, const DumpMessage, bool);
+template void PbCreator::pb_fill(const std::vector<nt::Route*>&, int, const DumpMessage, bool);
+template void PbCreator::pb_fill(const std::vector<nt::StopArea*>&, int, const DumpMessage, bool);
+template void PbCreator::pb_fill(const std::vector<nt::StopPoint*>&, int, const DumpMessage, bool);
+template void PbCreator::pb_fill(const std::vector<const nt::StopPoint*>&, int, const DumpMessage, bool);
+template void PbCreator::pb_fill(const std::vector<nt::StopPointConnection*>&, int, const DumpMessage, bool);
+template void PbCreator::pb_fill(const std::vector<nt::ValidityPattern*>&, int, const DumpMessage, bool);
+template void PbCreator::pb_fill(const std::vector<nt::VehicleJourney*>&, int, const DumpMessage, bool);
 
 const type::disruption::Impact* PbCreator::get_impact(const std::string& uri) const {
     for (const auto& impact: impacts) {
@@ -1895,9 +1889,9 @@ void PbCreator::fill_pb_error(const pbnavitia::Error::error_id id, const std::st
 }
 
 const pbnavitia::Response& PbCreator::get_response(){
-    Filler(0, DumpMessage::No, *this).fill_pb_object(contributors, response.mutable_feed_publishers());
+    Filler(0, DumpMessage::No, *this, false).fill_pb_object(contributors, response.mutable_feed_publishers());
     contributors.clear();
-    Filler(0, DumpMessage::No, *this).fill_pb_object(impacts, response.mutable_impacts());
+    Filler(0, DumpMessage::No, *this, false).fill_pb_object(impacts, response.mutable_impacts());
     impacts.clear();
     return response;
 }
