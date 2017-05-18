@@ -28,19 +28,77 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+import re
 
 from flask.ext.restful import Resource
+from serpy.fields import MethodField
+from flask import request
 from jormungandr import app
 from jormungandr.interfaces.v1.serializer import api, jsonschema
 import serpy
 
-class ApisSchema(serpy.Serializer):
-    ptr = api.PTReferentialSerializer()
-    test = jsonschema.Field(schema_type=int)
+from jormungandr.interfaces.v1.serializer.base import LiteralField, LambdaField
+
+BASE_PATH = 'v1'
+
+
+def set_definitions_in_rule(self, rule):
+    return re.sub(r'<(?P<name>.*?):.*?>', self.definition_repl, rule)
+
+
+args_regexp = re.compile(r'<(?P<name>.*?):.*?>')
+
+
+def format_args(rule):
+    formated_rule = args_regexp.sub(lambda m: '{' + m.group('name') + '}', rule)
+    return formated_rule
+
+base_path_regexp = re.compile('^/{base}'.format(base=BASE_PATH))
+
+
+def get_all_described_paths():
+    paths = []
+    for endpoint, rules in app.url_map._rules_by_endpoint.items():
+        for rule in rules:
+            if 'OPTIONS' not in rule.methods or rule.provide_automatic_options:
+                continue
+
+            formated_rule = format_args(rule.rule)
+
+            # we trim the base path
+            formated_rule = base_path_regexp.sub('', formated_rule)
+
+            paths.append(formated_rule)
+
+    return paths
+
+
+def make_schema_link(path):
+    link = '{root}{base}{path}'.format(root=request.url_root, base=BASE_PATH, path=path)
+    return {
+        '$ref': link,
+        'method': 'OPTIONS'
+    }
+
+
+class JsonSchemaEndpointsSerializer(serpy.Serializer):
+    basePath = LiteralField('/' + BASE_PATH)
+    swagger = LiteralField('2.0')
+    host = LambdaField(lambda *args: request.url_root)
+    paths = MethodField()
+
+    def get_paths(self, obj):
+        return {
+            p: make_schema_link(p) for p in obj
+        }
+
 
 class Schema(Resource):
     def __init__(self, **kwargs):
         Resource.__init__(self, **kwargs)
 
     def get(self):
-        return jsonschema.JsonSchemaEndpointsSerializer(app).data, 200
+
+        path = get_all_described_paths()
+
+        return JsonSchemaEndpointsSerializer(path).data, 200

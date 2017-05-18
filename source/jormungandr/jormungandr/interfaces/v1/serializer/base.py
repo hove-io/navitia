@@ -188,6 +188,17 @@ class IntNestedPropertyField(NestedPropertyField):
     to_value = staticmethod(int)
 
 
+class LambdaField(serpy.Field):
+    getter_takes_serializer = True
+
+    def __init__(self, method, **kwargs):
+        super(LambdaField, self).__init__(**kwargs)
+        self.method = method
+
+    def as_getter(self, serializer_field_name, serializer_cls):
+        return self.method
+
+
 class DoubleToStringField(serpy.Field):
     def to_value(self, value):
         # we don't want to loose precision while converting a double to string

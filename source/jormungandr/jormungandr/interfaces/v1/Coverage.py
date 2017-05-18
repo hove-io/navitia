@@ -83,3 +83,6 @@ class Coverage(StatedResource):
                 if 'shape' in r:
                     del r['shape']
         return resp, 200
+
+    def options(self, **kwargs):
+        return {'youhou?': "youhouuuu!"}, 200

@@ -1,13 +1,19 @@
 {
-    "basePath": "/v1",
-    "host": "api.navitia.io",
+    "basePath": "/v1", 
+    "host": "https://api.navitia.io/", 
     "paths": {
-        "/coverage/{coverage}/poi_types": {
-            "$ref": "http://api.navitia/io/v1/schema/coverage/{coverage}/poi_types"
-        },
-        "/coverage/{coverage}/poi_types/{id}": {
-            "$ref": "http://api.navitia/io/v1/schema/poi_types/coverage/{coverage}/poi_types/{poi_type_id}"
+        "/coverage/": {
+            "$ref": "https://api.navitia.io/v1/coverage/", 
+            "method": "OPTIONS"
+        }, 
+        "/coverage/{lon};{lat}/": {
+            "$ref": "https://api.navitia.io/v1/coverage/{lon};{lat}/", 
+            "method": "OPTIONS"
+        }, 
+        "/coverage/{region}/": {
+            "$ref": "https://api.navitia.io/v1/coverage/{region}/", 
+            "method": "OPTIONS"
         }
-    },
+    }, 
     "swagger": "2.0"
 }
