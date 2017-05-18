@@ -1880,7 +1880,7 @@ BOOST_AUTO_TEST_CASE(skipped_stop_then_delay) {
             "20170101",
             {
                     DelayedTimeStop("A", "20170101T081000"_pts),
-                    DelayedTimeStop("B", "20170101T082000"_pts).skipped(),
+                    DelayedTimeStop("B", "20170101T082000"_pts).departure_skipped(),
                     DelayedTimeStop("C", "20170101T083000"_pts).skipped(),
                     DelayedTimeStop("D", "20170101T084000"_pts),
             });
@@ -1890,7 +1890,7 @@ BOOST_AUTO_TEST_CASE(skipped_stop_then_delay) {
             "20170101",
             {
                     DelayedTimeStop("A", "20170101T081000"_pts),
-                    DelayedTimeStop("B", "20170101T082000"_pts).skipped(),
+                    DelayedTimeStop("B", "20170101T082000"_pts).departure_skipped(),
                     DelayedTimeStop("C", "20170101T083500"_pts).delay(5_min),
                     DelayedTimeStop("D", "20170101T084000"_pts),
             });
@@ -1928,7 +1928,7 @@ BOOST_AUTO_TEST_CASE(skipped_stop_then_delay) {
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).departure_time, "08:20"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).boarding_time, "08:20"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).pick_up_allowed(), false); // disabled
-    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).drop_off_allowed(), false);
+    BOOST_CHECK_EQUAL(vj->stop_time_list.at(1).drop_off_allowed(), true);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).stop_point->uri, "C");
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).arrival_time, "08:35"_t);
     BOOST_CHECK_EQUAL(vj->stop_time_list.at(2).alighting_time, "08:35"_t);
@@ -1946,8 +1946,8 @@ BOOST_AUTO_TEST_CASE(skipped_stop_then_delay) {
     };
 
     BOOST_CHECK(! get_journeys(nt::RTLevel::Base, "A", "B").empty());
-    // impossible to do a journey between A and B
-    BOOST_CHECK(get_journeys(nt::RTLevel::RealTime, "A", "B").empty());
+    // possible to do a journey between A and B
+    BOOST_CHECK(! get_journeys(nt::RTLevel::RealTime, "A", "B").empty());
 
     BOOST_CHECK(! get_journeys(nt::RTLevel::Base, "B", "C").empty());
     // impossible to do a journey between B and C
