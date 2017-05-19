@@ -240,8 +240,8 @@ class TestGraphicalIsochrone(AbstractTestFixture):
             basic_multi_poly = asShape(basic_isochrone['geojson'])
             multi_poly_forbidden_uris = asShape(isochrone_forbidden_uris['geojson'])
 
-        assert not multi_poly_forbidden_uris.contains(basic_multi_poly)
-        assert basic_multi_poly.area > multi_poly_forbidden_uris.area
+            assert not multi_poly_forbidden_uris.contains(basic_multi_poly)
+            assert basic_multi_poly.area > multi_poly_forbidden_uris.area
 
     def test_graphical_isochrones_allowed_id(self):
         basic_query = "v1/coverage/main_routing_test/isochrones?from={}&datetime={}&max_duration={}"
@@ -258,8 +258,8 @@ class TestGraphicalIsochrone(AbstractTestFixture):
             basic_multi_poly = asShape(basic_isochrone['geojson'])
             multi_poly_allowed_id = asShape(isochrone_allowed_id['geojson'])
 
-        assert not multi_poly_allowed_id.contains(basic_multi_poly)
-        assert basic_multi_poly.area > multi_poly_allowed_id.area
+            assert not multi_poly_allowed_id.contains(basic_multi_poly)
+            assert basic_multi_poly.area > multi_poly_allowed_id.area
 
     def test_graphical_isochrones_no_arguments(self):
         q = "v1/coverage/main_routing_test/isochrones"
