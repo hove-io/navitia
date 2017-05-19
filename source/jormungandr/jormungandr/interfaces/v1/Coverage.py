@@ -39,8 +39,8 @@ from jormungandr.interfaces.v1.make_links import add_coverage_link, add_collecti
 from jormungandr.interfaces.v1.converters_collection_type import collections_to_resource_type
 from collections import OrderedDict
 from jormungandr.interfaces.v1.fields import NonNullNested, FieldDateTime
-from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.serializer.api import CoveragesSerializer
+from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerPathDumper
 
 collections = collections_to_resource_type.keys()
 
@@ -87,5 +87,5 @@ class Coverage(StatedResource):
         return resp, 200
 
     def options(self, **kwargs):
-        response = jsonschema.SwaggerPathDumper(CoveragesSerializer).get_datas()
+        response = SwaggerPathDumper(CoveragesSerializer).get_datas()
         return response, 200

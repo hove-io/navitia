@@ -31,6 +31,8 @@
 
 import serpy
 
+from jormungandr.interfaces.v1.serializer.base import LiteralField
+
 TYPE_MAP = {
     'str': {
         'type': 'string',
@@ -58,7 +60,11 @@ def process_method(serializer):
     (schema, definitions_to_process) = get_schema(serializer)
 
     swagger_method = SwaggerMethod()
-    swagger_method.output_type = schema
+    swagger_method.output_type.update({
+        "200": {
+            "schema": schema
+        }
+    })
 
     # recursive definition process
     definitions = process_definitions(definitions_to_process)
@@ -147,6 +153,18 @@ def _from_nested_schema(field, only_ref=False):
 
 
 def get_schema(obj):
+    (properties_schema, definitions) = get_schema_properties(obj)
+    required_properties = [field.label or field_name for field_name, field in obj._field_map.items() if field.required]
+    schema = {
+        "type": "object",
+        "properties": properties_schema,
+        "required": required_properties
+    }
+
+    return schema, definitions
+
+
+def get_schema_properties(obj):
     """
     return schema and a list of nested definitions from a Serializer
     
@@ -162,11 +180,11 @@ def get_schema(obj):
     mapping[serpy.IntField] = 'int'
     mapping[serpy.FloatField] = 'float'
     mapping[serpy.BoolField] = 'bool'
-    properties = {}
+    schema = {}
     definitions = {}
 
     for field_name, field in obj._field_map.items():
-        schema = {}
+        property_schema = {}
         schema_type = getattr(field, 'schema_type') if hasattr(field, 'schema_type') else None
         schema_metadata = getattr(field, 'schema_metadata') if hasattr(field, 'schema_metadata') else {}
 
@@ -181,19 +199,19 @@ def get_schema(obj):
 
         if rendered_field.__class__ in mapping:
             pytype = mapping[rendered_field.__class__]
-            schema = _from_python_type(pytype)
+            property_schema = _from_python_type(pytype)
         elif isinstance(rendered_field, serpy.Serializer):
-            schema, definitions = _from_nested_schema(rendered_field, only_ref=True)
+            property_schema, definitions = _from_nested_schema(rendered_field, only_ref=True)
         elif not schema_metadata:
             raise ValueError('unsupported field type %s for attr %s in object %s' % (
                 rendered_field, field_name, obj.__class__.__name__))
 
         if schema_metadata:
-            schema.update(schema_metadata)
+            property_schema.update(schema_metadata)
         name = field.label if hasattr(field, 'label') and field.label else field_name
-        properties[name] = schema
+        schema[name] = property_schema
 
-    return properties, definitions
+    return schema, definitions
 
 
 class SwaggerPathDumper(object):
@@ -230,7 +248,7 @@ class Swagger(object):
 class SwaggerMethod(object):
     description = ''
     parameters = []
-    output_type = ''  # schema CoveragesSerializer()
+    output_type = {}  # schema CoveragesSerializer()
     summary = ''
 
 
@@ -244,13 +262,18 @@ class SwaggerParam(object):
     enum = serpy.Field(attr='choices', display_none=False)
 
 
-class SwaggerPathSerializer(serpy.Serializer):
-    definitions = serpy.Field(display_none=False)
-    get = serpy.Field()
+class SwaggerResponseSerializer(serpy.DictSerializer):
+    success = serpy.Field(attr='200', label='200')
+
 
 class SwaggerMethodSerializer(serpy.Serializer):
-    consumes = ''
-    produces = ''
-    responses = ''
+    consumes = LiteralField('["application/json"]')
+    produces = LiteralField('["application/json"]')
+    responses = SwaggerResponseSerializer(attr='output_type')
     description = serpy.Field()
     summary = serpy.Field()
+
+
+class SwaggerPathSerializer(serpy.Serializer):
+    definitions = serpy.Field(display_none=False)
+    get = SwaggerMethodSerializer()
