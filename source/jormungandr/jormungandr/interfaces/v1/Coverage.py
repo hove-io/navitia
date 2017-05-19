@@ -87,5 +87,5 @@ class Coverage(StatedResource):
         return resp, 200
 
     def options(self, **kwargs):
-        response = jsonschema.SwaggerPathSerializer(CoveragesSerializer, endpoint=self).data
+        response = jsonschema.SwaggerPathDumper(CoveragesSerializer).get_datas()
         return response, 200

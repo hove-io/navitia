@@ -30,12 +30,11 @@
 # www.navitia.io
 
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, StrField, MethodField, IntField, FloatField, BoolField
-from jormungandr.interfaces.v1.serializer.jsonschema.serializer import JsonSchemaSerializer, SwaggerPathSerializer
+from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerPathDumper
 from jormungandr.interfaces.v1.serializer.jsonschema.endpoints_serializer import JsonSchemaEndpointsSerializer
 
 __all__ = [
-    'JsonSchemaSerializer',
-    'SwaggerPathSerializer',
+    'SwaggerPathDumper',
     'JsonSchemaEndpointsSerializer',
     'Field',
     'StrField',

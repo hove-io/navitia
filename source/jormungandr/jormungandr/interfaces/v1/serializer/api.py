@@ -104,12 +104,12 @@ class CoverageErrorSerializer(serpy.Serializer):
 
 
 class CoveragesSerializer(serpy.Serializer):
-    id = serpy.StrField(attr="region_id"),
-    start_production_date = serpy.StrField(),
-    end_production_date = serpy.StrField(),
-    last_load_at = DateTimeField(),
-    name = serpy.StrField(),
-    status = serpy.StrField(),
-    shape = serpy.StrField(),
+    id = serpy.StrField(attr="region_id")
+    start_production_date = serpy.StrField()
+    end_production_date = serpy.StrField()
+    last_load_at = DateTimeField()
+    name = serpy.StrField()
+    status = serpy.StrField()
+    shape = serpy.StrField()
     error = CoverageErrorSerializer()
-    dataset_created_at = serpy.StrField(),
+    dataset_created_at = serpy.StrField()
