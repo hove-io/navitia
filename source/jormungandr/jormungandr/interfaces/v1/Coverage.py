@@ -74,7 +74,7 @@ class Coverage(StatedResource):
         self.parsers["get"].add_argument("disable_geojson",
                                          help='hide the coverage geojson to reduce response size',
                                          type=boolean, default=False)
-        self.return_type = CoveragesSerializer
+        self.output_type_serializer = CoveragesSerializer
 
     @clean_links
     # @add_coverage_link()

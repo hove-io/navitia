@@ -26,6 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+import serpy
 
 
 class SwaggerDefinitions(object):
@@ -135,41 +136,171 @@ class SwaggerParam(object):
         return args
 
 
+def _from_python_type(pytype):
+    """
+    return schema for python type
+
+    :param pytype: 
+    :return: dict
+    """
+    json_schema = {}
+
+    for key, val in TYPE_MAP[pytype].items():
+        json_schema[key] = val
+
+    return json_schema
+
+
+def _from_nested_schema(field):
+    """
+    return reference and a list of nested definitions from a Serializer
+    or schema depending on param onlyRef
+    """
+    schema = {
+        '$ref': '#/definitions/' + field.__class__.__name__
+    }
+    if field.many:
+        schema = {
+            'type': ["array"] if field.required else ['array', 'null'],
+            'items': schema,
+        }
+
+    return schema, field
+
+
+def get_schema(serializer):
+    # TODO remove this mapping and add a type in the fields
+    mapping = {
+        str: 'str',
+        int: 'int',
+        float: 'float',
+        bool: 'bool',
+        serpy.StrField: 'str',
+        serpy.IntField: 'int',
+        serpy.FloatField: 'float',
+        serpy.BoolField: 'bool'
+    }
+    external_definitions = []
+    properties = {}
+    for field_name, field in serializer._field_map.items():
+        schema = {}
+        schema_type = getattr(field, 'schema_type', None)
+        schema_metadata = getattr(field, 'schema_metadata', None)
+
+        if isinstance(schema_type, basestring) and hasattr(serializer, schema_type):
+            if hasattr(serializer, '__name__'):
+                serializer = serializer()
+            schema_type = getattr(serializer, schema_type)
+            # Get method result or attribute value
+            schema_type = schema_type() if callable(schema_type) else schema_type
+
+        rendered_field = schema_type() if callable(schema_type) else schema_type or field
+
+        if rendered_field.__class__ in mapping:
+            pytype = mapping[rendered_field.__class__]
+            schema = _from_python_type(pytype)
+        elif isinstance(rendered_field, serpy.Serializer):
+            # complex types are stored in the `definition` list and referenced
+            schema, definition = _from_nested_schema(rendered_field)
+            external_definitions.append(definition)
+        elif not schema_metadata:
+            raise ValueError('unsupported field type %s for attr %s in object %s' % (
+                rendered_field, field_name, serializer.__class__.__name__))
+
+        if schema_metadata:
+            schema.update(schema_metadata)
+        name = field.label if hasattr(field, 'label') and field.label else field_name
+        properties[name] = schema
+
+    return properties, external_definitions
+
+
 class SwaggerMethod(object):
     def __init__(self, summary='', parameters=None):
         self.summary = summary
         self.parameters = parameters or []
-        # self.output_type = output
+        self.output_type = None
+        self.definitions = []  # used to store complex type definitions
+
+    def define_output_schema(self, resource):
+        """
+        return schema and a list of nested definitions from a Serializer
+
+        :param obj: serpy.Serializer
+        :return: the list of referenced definitions
+        """
+        obj = resource.output_type_serializer
+
+        self.output_type, external_definitions = get_schema(obj)
+
+        return external_definitions
+
+
+def get_parameters(resource, method_name):
+    """
+    get all parameter for a given HTTP method of a flask resource
+    
+    get the path parameters and the query parameters
+    
+    http://api.navitia.io/v1/coverage/bob/places?q=toto
+                                       |             |
+                                       v             |
+                                    path parameter   |
+                                                     v
+                                              query parameter
+    """
+    params = []
+    request_parser = resource.parsers.get(method_name)
+    if request_parser:
+        for argument in request_parser.args:
+            swagger_params = SwaggerParam.make_from_flask_arg(argument)
+            # several swagger args can be created for one flask arg
+            params += swagger_params
+
+    path_params = SwaggerParam.make_from_flask_route(resource, method_name)
+    params += path_params
+    return params
 
 
 class Swagger(object):
-    definitions = []
+    definitions = {}
     methods = {}
 
     def add_method(self, method_name, resource):
         method_name = method_name.lower()  # a bit hacky, but we want a lower case http verb
 
         if method_name == 'options':
-            return  # we don't want to document options
+            return []  # we don't want to document options
         swagger_method = SwaggerMethod()
-
-        request_parser = resource.parsers.get(method_name)
-        if request_parser:
-            for argument in request_parser.args:
-                swagger_params = SwaggerParam.make_from_flask_arg(argument)
-                # several swagger args can be created for one flask arg
-                swagger_method.parameters += swagger_params
-
-        path_params = SwaggerParam.make_from_flask_route(resource, method_name)
-        swagger_method.parameters += path_params
-
         self.methods[method_name] = swagger_method
+
+        swagger_method.parameters += get_parameters(resource, method_name)
+
+        external_definitions = swagger_method.define_output_schema(resource)
+
+        return external_definitions
+
+    def add_definitions(self, external_definitions):
+        while external_definitions:
+            field = external_definitions.pop()
+            field_name = field.__class__.__name__
+            if field_name in self.definitions:
+                # we already got this definition, we can skip
+                continue
+            schema, nested_definitions = get_schema(field)
+            self.definitions[field_name] = schema
+
+            # the new schema can have it's lot of definition, we add them
+            external_definitions.update(nested_definitions)
 
 
 def make_schema(resource):
     schema = Swagger()
 
+    external_definitions = set()
     for method_name in resource.methods:
-        schema.add_method(method_name, resource)
+        external_definitions.update(schema.add_method(method_name, resource))
+
+    schema.add_definitions(external_definitions)
 
     return schema
