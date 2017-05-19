@@ -3,17 +3,20 @@
         "PoiTypes": {
             "type": "array",
             "items": {
-                "id": {
-                    "type": "string"
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    }
                 },
-                "name": {
-                    "type": "string"
-                }
-            },
-            "required": [
-                "id",
-                "name"
-            ]
+                "required": [
+                    "id",
+                    "name"
+                ]
+            }
         }
     },
     "get": {
