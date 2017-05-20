@@ -240,8 +240,26 @@ class TestGraphicalIsochrone(AbstractTestFixture):
             basic_multi_poly = asShape(basic_isochrone['geojson'])
             multi_poly_forbidden_uris = asShape(isochrone_forbidden_uris['geojson'])
 
-        assert not multi_poly_forbidden_uris.contains(basic_multi_poly)
-        assert basic_multi_poly.area > multi_poly_forbidden_uris.area
+            assert not multi_poly_forbidden_uris.contains(basic_multi_poly)
+            assert basic_multi_poly.area > multi_poly_forbidden_uris.area
+
+    def test_graphical_isochrones_allowed_id(self):
+        basic_query = "v1/coverage/main_routing_test/isochrones?from={}&datetime={}&max_duration={}"
+        basic_query = basic_query.format(s_coord, "20120614T080000", "300")
+        basic_response = self.query(basic_query)
+        q_allowed_id = basic_query + "&allowed_id[]=B"
+        response_allowed_id = self.query(q_allowed_id)
+
+        is_valid_graphical_isochrone(basic_response, self.tester, basic_query)
+        is_valid_graphical_isochrone(response_allowed_id, self.tester, basic_query)
+
+        for basic_isochrone, isochrone_allowed_id in zip(basic_response['isochrones'],
+                                                         response_allowed_id['isochrones']):
+            basic_multi_poly = asShape(basic_isochrone['geojson'])
+            multi_poly_allowed_id = asShape(isochrone_allowed_id['geojson'])
+
+            assert not multi_poly_allowed_id.contains(basic_multi_poly)
+            assert basic_multi_poly.area > multi_poly_allowed_id.area
 
     def test_graphical_isochrones_no_arguments(self):
         q = "v1/coverage/main_routing_test/isochrones"

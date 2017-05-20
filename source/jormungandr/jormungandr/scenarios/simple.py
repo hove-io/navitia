@@ -80,6 +80,9 @@ def isochrone_common(isochrone, request, instance, journey_req):
     if "forbidden_uris[]" in request and request["forbidden_uris[]"]:
         for forbidden_uri in request["forbidden_uris[]"]:
             journey_req.forbidden_uris.append(forbidden_uri)
+    if "allowed_id[]" in request and request["allowed_id[]"]:
+        for allowed_id in request["allowed_id[]"]:
+            journey_req.allowed_id.append(allowed_id)
 
     journey_req.streetnetwork_params.origin_mode = isochrone.origin_modes[0]
     journey_req.streetnetwork_params.destination_mode = isochrone.destination_modes[0]
