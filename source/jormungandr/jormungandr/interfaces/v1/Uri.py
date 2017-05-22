@@ -52,7 +52,7 @@ from flask.ext.restful.inputs import boolean
 from jormungandr.interfaces.parsers import option_value
 from jormungandr.interfaces.common import odt_levels
 from jormungandr.utils import date_to_timestamp
-from jormungandr.resources_utc import ResourceUtc
+from jormungandr.resources_utils import ResourceUtc
 from datetime import datetime
 from flask import g
 from jormungandr.interfaces.v1.decorators import get_serializer
