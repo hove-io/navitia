@@ -46,9 +46,10 @@ collections = collections_to_resource_type.keys()
 
 
 class Coverage(StatedResource):
-
     def __init__(self, quota=True, *args, **kwargs):
-        super(Coverage, self).__init__(quota, *args, **kwargs)
+        super(Coverage, self).__init__(quota=quota,
+                                       output_type_serializer=CoveragesSerializer,
+                                       *args, **kwargs)
         self.collections = [
             ("regions", fields.List(fields.Nested({
                 "id": fields.String(attribute="region_id"),
@@ -66,13 +67,9 @@ class Coverage(StatedResource):
             })))
         ]
         self.method_decorators.insert(1, get_serializer(collection='coverages', collections=self.collections))
-        self.parsers = {
-            'get': reqparse.RequestParser(argument_class=ArgumentDoc)
-        }
         self.parsers["get"].add_argument("disable_geojson",
                                          help='hide the coverage geojson to reduce response size',
                                          type=boolean, default=False)
-        self.output_type_serializer = CoveragesSerializer
 
     @clean_links
     # @add_coverage_link()

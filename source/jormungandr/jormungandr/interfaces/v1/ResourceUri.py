@@ -56,7 +56,7 @@ class ResourceUri(StatedResource):
             self.method_decorators.append(add_id_links())
             self.method_decorators.append(add_computed_resources(self))
             self.method_decorators.append(add_pagination_links())
-            self.method_decorators.append(clean_links())
+            self.method_decorators.append(clean_links)
 
         if authentication:
             #some rare API (eg journey) must handle the authenfication by themself, thus deactivate it
