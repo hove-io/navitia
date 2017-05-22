@@ -27,6 +27,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 import serpy
+import inspect
+import jormungandr
 
 
 class SwaggerDefinitions(object):
@@ -49,14 +51,52 @@ TYPE_MAP = {
     'boolean': {
         'type': 'boolean',
     },
+    str: {
+        'type': 'string',
+    },
+    int: {
+        'type': 'integer'
+    },
+    float: {
+        'type': 'number',
+        'format': 'float'
+    },
+    bool: {
+        'type': 'boolean',
+    },
+    # TODO remove the serpy field mapping and add a type in the fields
+    serpy.StrField: {
+        'type': 'string',
+    },
+    serpy.IntField: {
+        'type': 'integer'
+    },
+    serpy.FloatField: {
+        'type': 'number',
+        'format': 'float'
+    },
+    serpy.BoolField: {
+        'type': 'boolean',
+    },
+}
+
+mapping = {
+    str: 'str',
+    int: 'int',
+    float: 'float',
+    bool: 'bool',
+    serpy.StrField: 'str',
+    serpy.IntField: 'int',
+    serpy.FloatField: 'float',
+    serpy.BoolField: 'bool'
 }
 
 
-def convert_to_swagger_type(type):
-    swagger_type = TYPE_MAP.get(type, {}).get('type')
-    swagger_format = TYPE_MAP.get(type, {}).get('format')
+def convert_to_swagger_type(type_):
+    swagger_type = TYPE_MAP.get(type_, {}).get('type')
+    swagger_format = TYPE_MAP.get(type_, {}).get('format')
 
-    return swagger_type or type, swagger_format
+    return swagger_type or type_, swagger_format
 
 
 class SwaggerParam(object):
@@ -82,9 +122,12 @@ class SwaggerParam(object):
             if location == 'values':
                 location = 'query'
 
-            type = getattr(argument, 'schema_type', None) or argument.type
+            param_type = getattr(argument, 'schema_type', None)
+            if not param_type:
+                # TODO not sure about the type(argument.default)
+                param_type = TYPE_MAP.get(type(argument.default)).get('type')
 
-            swagger_type, swagger_format = convert_to_swagger_type(type)
+            swagger_type, swagger_format = convert_to_swagger_type(param_type)
 
             # TODO handle arrays
             # if argument.action == 'append':
@@ -105,23 +148,19 @@ class SwaggerParam(object):
 
     @classmethod
     def make_from_flask_route(cls, ressource, method_name):
-        import inspect
         associated_function = getattr(ressource, method_name, None)
         if not associated_function:
             return []
 
         params = inspect.getargspec(associated_function)
 
-        print('youhou: {}'.format(params))
-
         args = []
 
-        from jormungandr import app
         for param_name in params.args:
             # we'll try to guess the type of the params based on the flask converters
             # it's a bit hacky, we consider that the type and the variable have the same name
 
-            converter = app.url_map.converters.get(param_name)
+            converter = jormungandr.app.url_map.converters.get(param_name)
             if not converter:
                 continue
 
@@ -169,17 +208,21 @@ def _from_nested_schema(field):
 
 
 def get_schema(serializer):
-    # TODO remove this mapping and add a type in the fields
-    mapping = {
-        str: 'str',
-        int: 'int',
-        float: 'float',
-        bool: 'bool',
-        serpy.StrField: 'str',
-        serpy.IntField: 'int',
-        serpy.FloatField: 'float',
-        serpy.BoolField: 'bool'
+    properties_schema, definitions = get_schema_properties(serializer)
+    required_properties = [
+        field.label or field_name
+        for field_name, field in serializer._field_map.items()
+        if field.required
+    ]
+    schema = {
+        "type": "object",
+        "properties": properties_schema,
+        "required": required_properties
     }
+    return schema, definitions
+
+
+def get_schema_properties(serializer):
     external_definitions = []
     properties = {}
     for field_name, field in serializer._field_map.items():
@@ -197,8 +240,7 @@ def get_schema(serializer):
         rendered_field = schema_type() if callable(schema_type) else schema_type or field
 
         if rendered_field.__class__ in mapping:
-            pytype = mapping[rendered_field.__class__]
-            schema = _from_python_type(pytype)
+            schema = TYPE_MAP.get(rendered_field.__class__, {})
         elif isinstance(rendered_field, serpy.Serializer):
             # complex types are stored in the `definition` list and referenced
             schema, definition = _from_nested_schema(rendered_field)
@@ -215,33 +257,12 @@ def get_schema(serializer):
     return properties, external_definitions
 
 
-class SwaggerMethod(object):
-    def __init__(self, summary='', parameters=None):
-        self.summary = summary
-        self.parameters = parameters or []
-        self.output_type = None
-        self.definitions = []  # used to store complex type definitions
-
-    def define_output_schema(self, resource):
-        """
-        return schema and a list of nested definitions from a Serializer
-
-        :param obj: serpy.Serializer
-        :return: the list of referenced definitions
-        """
-        obj = resource.output_type_serializer
-
-        self.output_type, external_definitions = get_schema(obj)
-
-        return external_definitions
-
-
 def get_parameters(resource, method_name):
     """
     get all parameter for a given HTTP method of a flask resource
-    
+
     get the path parameters and the query parameters
-    
+
     http://api.navitia.io/v1/coverage/bob/places?q=toto
                                        |             |
                                        v             |
@@ -262,6 +283,32 @@ def get_parameters(resource, method_name):
     return params
 
 
+class SwaggerMethod(object):
+    def __init__(self, name=None, summary='', parameters=None):
+        self.name = name
+        self.summary = summary
+        self.parameters = parameters or []
+        self.output_type = None
+
+    def define_output_schema(self, resource):
+        """
+        return schema and a list of nested definitions from a Serializer
+
+        :param obj: serpy.Serializer
+        :return: the list of referenced definitions
+        """
+        obj = resource.output_type_serializer
+
+        output_type, external_definitions = get_schema(obj)
+
+        self.output_type = {
+            "200": {
+                "schema": output_type
+            }
+        }
+        return external_definitions
+
+
 class Swagger(object):
     definitions = {}
     methods = {}
@@ -271,7 +318,7 @@ class Swagger(object):
 
         if method_name == 'options':
             return []  # we don't want to document options
-        swagger_method = SwaggerMethod()
+        swagger_method = SwaggerMethod(name=method_name)
         self.methods[method_name] = swagger_method
 
         swagger_method.parameters += get_parameters(resource, method_name)

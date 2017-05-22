@@ -41,7 +41,7 @@ from jormungandr.interfaces.v1.converters_collection_type import collections_to_
 from collections import OrderedDict
 from jormungandr.interfaces.v1.fields import NonNullNested, FieldDateTime
 from jormungandr.interfaces.v1.serializer.api import CoveragesSerializer
-from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerPathDumper
+from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerPathSerializer
 from jormungandr.interfaces.v1.swagger_schema import make_schema
 
 collections = collections_to_resource_type.keys()
@@ -93,4 +93,4 @@ class Coverage(StatedResource):
 
     def options(self, **kwargs):
         schema = make_schema(resource=self)
-        return schema, 200
+        return SwaggerPathSerializer(schema).data, 200

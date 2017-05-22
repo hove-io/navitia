@@ -30,6 +30,7 @@
 # www.navitia.io
 
 import serpy
+from serpy.fields import MethodField
 
 from jormungandr.interfaces.v1.serializer.base import LiteralField
 
@@ -252,14 +253,14 @@ class SwaggerMethod(object):
     summary = ''
 
 
-class SwaggerParam(object):
-    description = serpy.StrField()
-    location = serpy.MethodField(label='in')
+class SwaggerParamSerializer(serpy.Serializer):
+    description = serpy.Field()
+    location = serpy.Field(label='in')
     name = serpy.StrField()
-    required = serpy.MethodField()
-    type = serpy.MethodField()
+    required = serpy.Field()
+    type = serpy.StrField()
     default = serpy.StrField(display_none=False)
-    enum = serpy.Field(attr='choices', display_none=False)
+    enum = serpy.Field()
 
 
 class SwaggerResponseSerializer(serpy.DictSerializer):
@@ -267,13 +268,18 @@ class SwaggerResponseSerializer(serpy.DictSerializer):
 
 
 class SwaggerMethodSerializer(serpy.Serializer):
-    consumes = LiteralField('["application/json"]')
-    produces = LiteralField('["application/json"]')
+    consumes = LiteralField(["application/json"])
+    produces = LiteralField(["application/json"])
     responses = SwaggerResponseSerializer(attr='output_type')
-    description = serpy.Field()
+    parameters = SwaggerParamSerializer(many=True)
     summary = serpy.Field()
 
 
 class SwaggerPathSerializer(serpy.Serializer):
     definitions = serpy.Field(display_none=False)
-    get = SwaggerMethodSerializer()
+
+    # Hack since for the moment we only handle 'get' method. TODO, find a way to remove this hack
+    get = MethodField(method='get_methods')
+
+    def get_methods(self, obj):
+        return SwaggerMethodSerializer(obj.methods.get('get')).data
