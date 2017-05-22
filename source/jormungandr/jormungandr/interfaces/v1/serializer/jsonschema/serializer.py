@@ -260,7 +260,7 @@ class SwaggerParamSerializer(serpy.Serializer):
     required = serpy.Field()
     type = serpy.StrField()
     default = serpy.StrField(display_none=False)
-    enum = serpy.Field()
+    enum = serpy.Field(display_none=False)
 
 
 class SwaggerResponseSerializer(serpy.DictSerializer):

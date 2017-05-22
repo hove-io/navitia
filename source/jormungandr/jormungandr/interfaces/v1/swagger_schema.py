@@ -54,6 +54,9 @@ TYPE_MAP = {
     str: {
         'type': 'string',
     },
+    unicode: {
+        'type': 'string',
+    },
     int: {
         'type': 'integer'
     },
@@ -118,14 +121,21 @@ class SwaggerParam(object):
 
         args = []
         for location in argument.location:
-            # flask call 'values' parameters in the query (called 'query' in swagger)
+            # flask call 'args' parameters in the query (called 'query' in swagger)
+            if location == 'args':
+                location = 'query'
+            # flask call 'values' parameters in the query and in the body.
+            # for the moment we consider that values is only for query parameters
             if location == 'values':
                 location = 'query'
 
             param_type = getattr(argument, 'schema_type', None)
-            if not param_type:
-                # TODO not sure about the type(argument.default)
-                param_type = TYPE_MAP.get(type(argument.default)).get('type')
+            if param_type is None:
+                # we try to autodetect the type from the default argument
+                if argument.default is not None:
+                    param_type = TYPE_MAP.get(type(argument.default), {}).get('type')
+                if param_type is None:
+                    param_type = argument.type
 
             swagger_type, swagger_format = convert_to_swagger_type(param_type)
 
