@@ -27,36 +27,40 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from jormungandr.interfaces.v1.serializer import jsonschema
 import serpy
 import pytest
+
+from jormungandr.interfaces.v1.serializer import jsonschema
+from jormungandr.interfaces.v1.swagger_schema import get_schema
 
 
 def serpy_supported_serialization_test():
     """
     Supported serpy fields
     """
+
     class SerpySupportedType(serpy.Serializer):
         serpyStrField = serpy.StrField(required=False)
         serpyBoolField = serpy.BoolField()
         serpyFloatField = serpy.FloatField()
         serpyIntField = serpy.IntField()
 
-    serializer = jsonschema.JsonSchemaSerializer(SerpySupportedType, root=True)
-    obj = serializer.data
-    assert obj.get('type') == 'object'
-    assert len(obj.get('required')) == 3
-    properties = obj.get('properties', {})
+    schema, external_definitions = get_schema(SerpySupportedType)
+    assert schema.get('type') == 'object'
+    assert len(schema.get('required')) == 3
+    properties = schema.get('properties', {})
     assert len(properties) == 4
     assert properties.get('serpyStrField', {}).get('type') == 'string'
     assert properties.get('serpyBoolField', {}).get('type') == 'boolean'
     assert properties.get('serpyFloatField', {}).get('type') == 'number'
     assert properties.get('serpyIntField', {}).get('type') == 'integer'
 
+
 def serpy_unsupported_serialization_test():
     """
     Unsupported serpy fields
     """
+
     class SerpyUnsupportedFieldType(serpy.Serializer):
         serpyField = serpy.Field()
 
@@ -67,16 +71,18 @@ def serpy_unsupported_serialization_test():
             pass
 
     with pytest.raises(ValueError):
-        jsonschema.JsonSchemaSerializer(SerpyUnsupportedFieldType, root=True).data
+        get_schema(SerpyUnsupportedFieldType)
 
     with pytest.raises(ValueError):
-        jsonschema.JsonSchemaSerializer(SerpyUnsupportedMethodFieldType, root=True).data
+        get_schema(SerpyUnsupportedMethodFieldType)
+
 
 def serpy_extended_supported_serialization_test():
     """
     Supported custom serpy children fields
     """
-    class jsonchemaSupportedType(serpy.Serializer):
+
+    class JsonchemaSupportedType(serpy.Serializer):
         jsonschemaStrField = jsonschema.StrField(required=False)
         jsonschemaBoolField = jsonschema.BoolField()
         jsonschemaFloatField = jsonschema.FloatField()
@@ -87,11 +93,10 @@ def serpy_extended_supported_serialization_test():
         def get_jsonschemaMethodField(self, obj):
             pass
 
-    serializer = jsonschema.JsonSchemaSerializer(jsonchemaSupportedType, root=True)
-    obj = serializer.data
-    assert obj.get('type') == 'object'
-    assert len(obj.get('required')) == 5
-    properties = obj.get('properties', {})
+    schema, external_definitions = get_schema(JsonchemaSupportedType)
+    assert schema.get('type') == 'object'
+    assert len(schema.get('required')) == 5
+    properties = schema.get('properties', {})
     assert len(properties) == 6
     assert properties.get('jsonschemaStrField', {}).get('type') == 'string'
     assert properties.get('jsonschemaBoolField', {}).get('type') == 'boolean'
@@ -100,20 +105,22 @@ def serpy_extended_supported_serialization_test():
     assert properties.get('jsonschemaField', {}).get('type') == 'integer'
     assert properties.get('jsonschemaMethodField', {}).get('type') == 'string'
 
+
 def schema_type_test():
     """
     Custom fields metadata
     """
-    class jsonchemaMetadata(serpy.Serializer):
+
+    class JsonchemaMetadata(serpy.Serializer):
         metadata = jsonschema.Field(schema_metadata={
-           "type": "string",
-           "description": "meta"
+            "type": "string",
+            "description": "meta"
         })
 
-    class jsonchemaType(serpy.Serializer):
+    class JsonchemaType(serpy.Serializer):
         primitive = jsonschema.Field(schema_type=str)
         function = jsonschema.MethodField(schema_type='get_bibu', display_none=False)
-        serializer = jsonschema.Field(schema_type=jsonchemaMetadata)
+        serializer = jsonschema.Field(schema_type=JsonchemaMetadata)
 
         def get_bibu(self):
             return int
@@ -121,67 +128,50 @@ def schema_type_test():
         def get_function(self):
             pass
 
-    serializer = jsonschema.JsonSchemaSerializer(jsonchemaType, root=True)
-    obj = serializer.data
-    assert obj.get('type') == 'object'
-    properties = obj.get('properties', {})
+    schema, external_definitions = get_schema(JsonchemaType)
+    assert schema.get('type') == 'object'
+    properties = schema.get('properties', {})
     assert len(properties) == 3
     assert properties.get('primitive', {}).get('type') == 'string'
     assert properties.get('function', {}).get('type') == 'integer'
     assert properties.get('serializer', {}).get('type') is None
-    assert properties.get('serializer', {}).get('$ref') == '#/definitions/jsonchemaMetadata'
+    assert properties.get('serializer', {}).get('$ref') == '#/definitions/JsonchemaMetadata'
 
-    serializer = jsonschema.JsonSchemaSerializer(jsonchemaMetadata, root=True)
-    obj = serializer.data
-    properties = obj.get('properties', {})
+    schema, external_definitions = get_schema(JsonchemaMetadata)
+    properties = schema.get('properties', {})
     assert len(properties) == 1
     assert properties.get('metadata', {}).get('type') == 'string'
     assert properties.get('metadata', {}).get('description') == 'meta'
+
 
 def nested_test():
     """
     Nested Serialization
     """
-    class nestedType(serpy.Serializer):
+
+    class NestedType(serpy.Serializer):
         id = jsonschema.StrField()
 
-    class jsonchemaType(serpy.Serializer):
-        nested = nestedType()
+    class JsonchemaType(serpy.Serializer):
+        nested = NestedType()
 
-    class jsonchemaManyType(serpy.Serializer):
-        nested = nestedType(many=True)
+    class JsonchemaManyType(serpy.Serializer):
+        nested = NestedType(many=True)
 
-    serializer = jsonschema.JsonSchemaSerializer(jsonchemaType, root=True)
-    obj = serializer.data
-    assert obj.get('type') == 'object'
-    properties = obj.get('properties', {})
+    schema, external_definitions = get_schema(JsonchemaType)
+    assert schema.get('type') == 'object'
+    properties = schema.get('properties', {})
     assert len(properties) == 1
     nested_data = properties.get('nested', {})
     assert nested_data.get('type') is None
-    assert nested_data.get('$ref') == '#/definitions/nestedType'
-    definitions = obj.get('definitions', {})
-    assert len(definitions) == 1
-    nested_definition = definitions.get('nestedType', {})
-    assert nested_definition.get('type') == 'object'
-    assert nested_definition.get('properties', {}).get('id', {}).get('type') == 'string'
+    assert nested_data.get('$ref') == '#/definitions/NestedType'
+    assert len(external_definitions) == 1
 
-    serializer = jsonschema.JsonSchemaSerializer(jsonchemaManyType, root=True)
-    obj = serializer.data
-    assert obj.get('type') == 'object'
-    properties = obj.get('properties', {})
+    schema, external_definitions = get_schema(JsonchemaManyType)
+    assert schema.get('type') == 'object'
+    properties = schema.get('properties', {})
     assert len(properties) == 1
     nested_data = properties.get('nested', {})
     assert nested_data.get('type') == ['array']
-    assert nested_data.get('items', {}).get('$ref') == '#/definitions/nestedType'
-    definitions = obj.get('definitions', {})
-    assert len(definitions) == 1
-    nested_definition = definitions.get('nestedType', {})
-    assert nested_definition.get('type') == 'object'
-    assert nested_definition.get('properties', {}).get('id', {}).get('type') == 'string'
-
-def constant_value_test():
-    """
-    Always return 'object'
-    """
-    serializer = jsonschema.JsonSchemaSerializer()
-    assert serializer.get_type() == 'object'
+    assert nested_data.get('items', {}).get('$ref') == '#/definitions/NestedType'
+    assert len(external_definitions) == 1
