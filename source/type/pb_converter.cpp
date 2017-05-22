@@ -636,7 +636,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
          * the behavior too much.
          * */
         std::set<boost::shared_ptr<nt::disruption::Impact>> added_impact;
-        auto pred = [&](const nt::VehicleJourney& vj) {
+        auto fill_line_section_message = [&](const nt::VehicleJourney& vj) {
             for(const auto& impact: vj.meta_vj->impacted_by) {
                 auto impact_ptr = impact.lock();
                 if (! impact_ptr)
@@ -652,7 +652,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
             return true;
         };
         for(const auto* route: l->route_list) {
-            route->for_each_vehicle_journey(pred);
+            route->for_each_vehicle_journey(fill_line_section_message);
         }
     }
 }
