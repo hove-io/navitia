@@ -309,6 +309,8 @@ private:
         void fill(NAV* nav_object, PB* pb_object);
         template<typename NAV, typename F>
         void fill_with_creator(NAV* nav_object, F creator);
+        template<typename NAV, typename F>
+        void fill_with_creator(NAV* nav_object, F creator, DumpMessage);
 
         template<typename NAV, typename PB>
         void fill(const NAV& nav_object, PB* pb_object) {

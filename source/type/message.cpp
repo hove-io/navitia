@@ -112,12 +112,18 @@ struct InformedEntitiesLinker: public boost::static_visitor<> {
         auto impacted_vjs = get_impacted_vehicle_journeys(line_section, *impact, production_period, rt_level);
         std::set<type::StopPoint*> impacted_stop_points;
         std::set<type::MetaVehicleJourney*> impacted_meta_vjs;
+        std::set<type::Line*> impacted_lines;
+
         if (impacted_meta_vjs.empty()) {
             LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "line section impact " << impact->uri
                         << " does not impact any vj, it will not be linked to anything");
         }
         for (auto& impacted_vj : impacted_vjs) {
             const auto* vj = impacted_vj.vj;
+            if (impacted_lines.insert(vj->route->line).second) {
+                // it's the first time we see this line, we add the impact to it
+                vj->route->line->add_impact(impact);
+            }
             if (impacted_meta_vjs.insert(vj->meta_vj).second) {
                 // it's the first time we see this metavj, we add the impact to it
                 vj->meta_vj->add_impact(impact);

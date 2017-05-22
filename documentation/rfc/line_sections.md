@@ -109,9 +109,9 @@ We display only the stoppoints impacted by the line section
 `/stop_points/F_1_of_route_1_of_line_1`  --> NO
 
 
-`/routes/route_2_of_the_line_1`  --> NO
+`/routes/route_2_of_the_line_1`  --> YES
 
-`/lines/line_1`  -->  NOT_SPECIFIED
+`/lines/line_1`  -->  YES
 
 `/lines/line_2`  -->  NO
 
@@ -140,7 +140,7 @@ This is for the calls api.navitia.io/v1/coverage/bob/<some pt ref filters>/traff
 
 This /traffic_reports api is meant to be a clever representation of the disruptions active on the object and thus we can do more things on this
 
-`/stop_areas/B/traffic_reports`  --> NO
+`/stop_areas/B/traffic_reports`  --> YES
 
 `/stop_areas/C/traffic_reports`  --> YES
 
@@ -150,7 +150,7 @@ This /traffic_reports api is meant to be a clever representation of the disrupti
 
 `/stop_areas/A/routes/route_1_of_the_line_1/traffic_reports`  --> YES (I think NO would be better it but this will be quite difficult for not that much gain)
 
-`/stop_areas/C/routes/route_2_of_the_line_1/traffic_reports`  --> NO
+`/stop_areas/C/routes/route_2_of_the_line_1/traffic_reports`  --> YES
 
 `/networks/network_of_the_route_1/traffic_reports `  --> YES
 

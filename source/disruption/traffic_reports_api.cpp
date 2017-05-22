@@ -32,6 +32,9 @@ www.navitia.io
 #include "type/pb_converter.h"
 #include "ptreferential/ptreferential.h"
 #include "utils/logger.h"
+#include "type/meta_data.h"
+#include "type/message.h"
+#include <algorithm>
 
 namespace bt = boost::posix_time;
 
@@ -75,6 +78,9 @@ private:
                               const std::vector<std::string>& forbidden_uris,
                               const type::Data &d,
                               const boost::posix_time::ptime now);
+    bool disrupt_is_applicable(const boost::shared_ptr<type::disruption::Impact>&, 
+                               const ptref::Filter&,
+                               const type::Data&) const;
     void sort_disruptions();
 public:
     TrafficReport(): logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"))) {}
@@ -239,12 +245,23 @@ void TrafficReport::add_lines(const std::string& filter,
     } catch(const ptref::ptref_error &ptref_error){
         LOG4CPLUS_WARN(logger, "Disruption::add_lines : ptref : "  + ptref_error.more);
     }
+    std::vector<ptref::Filter> filters;
+    if(! filter.empty()) {
+        filters = ptref::parse(filter);
+    }
+
     for(auto idx : line_list){
         const auto* line = d.pt_data->lines[idx];
         auto v = line->get_publishable_messages(now);
         for(const auto* route: line->route_list){
             auto vr = route->get_publishable_messages(now);
             v.insert(v.end(), vr.begin(), vr.end());
+        }
+        for(const auto&f : filters) {
+            auto pred = [&d, &f, this](const boost::shared_ptr<type::disruption::Impact>& i){
+                return !disrupt_is_applicable(i, f, d);
+            };
+            boost::range::remove_erase_if(v, pred);
         }
         if (!v.empty()){
             NetworkDisrupt& dist = this->find_or_create(line->network);
@@ -259,6 +276,74 @@ void TrafficReport::add_lines(const std::string& filter,
             }
         }
     }
+}
+
+struct DisruptValider: public boost::static_visitor<> {
+    const boost::shared_ptr<type::disruption::Impact>& i;
+    ptref::Filter f;
+    const nt::Data& d;
+    bool res = true;
+    DisruptValider(const boost::shared_ptr<type::disruption::Impact>& i, const ptref::Filter& f, const nt::Data& d):
+        i(i), f(f), d(d) {}
+
+    template <typename NavitiaPTObject>
+    void operator()(NavitiaPTObject*)  {
+    }
+    template <typename NavitiaPTObject>
+    void operator()(NavitiaPTObject)  {
+    }
+
+    void operator()(const nt::disruption::LineSection& line_section)  {
+
+        type::Type_e navitia_type;
+
+        try {
+            navitia_type = type::static_data::get()->typeByCaption(f.object);
+        } catch(...) {
+            throw ptref::parsing_error(ptref::parsing_error::error_type::unknown_object,
+                    "Filter Unknown object type: " + f.object);
+        }
+
+        if ((navitia_type != type::Type_e::StopPoint && navitia_type != type::Type_e::StopArea) ||
+                f.op != ptref::Operator_e::EQ ||
+                f.attribute != "uri") {
+            return;
+        }
+
+        const auto& id = f.value;
+
+        auto impacted_vjs = nt::disruption::get_impacted_vehicle_journeys(line_section, *i, d.meta->production_date,
+                nt::RTLevel::RealTime);
+
+        for (const auto& impacted_vj : impacted_vjs) {
+            const auto& stops = impacted_vj.impacted_stops;
+            auto it = std::find_if(std::begin(stops), std::end(stops),
+                    [&id, &navitia_type](const navitia::type::StopPoint* sp){
+                if (navitia_type == type::Type_e::StopPoint){
+                    return sp->uri == id;
+                }
+                if (navitia_type == type::Type_e::StopPoint){
+                    return sp->stop_area->uri == id;
+                }
+                return false;
+            });
+            if (it != std::end(stops)){
+                res = true;
+                return;
+            }
+        }
+        res= false;
+    }
+};
+
+bool TrafficReport::disrupt_is_applicable(const boost::shared_ptr<type::disruption::Impact>& i,
+        const ptref::Filter& f,
+        const type::Data& d) const{
+
+    DisruptValider v{i, f, d};
+    boost::for_each(i->mut_informed_entities(), boost::apply_visitor(v));
+
+    return v.res;
 }
 
 void TrafficReport::sort_disruptions(){
