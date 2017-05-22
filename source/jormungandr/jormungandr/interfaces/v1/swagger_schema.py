@@ -321,6 +321,10 @@ class SwaggerMethod(object):
 
 class Swagger(object):
     definitions = {}
+    paths = {}
+
+class SwaggerPath(object):
+    definitions = {}
     methods = {}
 
     def add_method(self, method_name, resource):
@@ -352,7 +356,7 @@ class Swagger(object):
 
 
 def make_schema(resource):
-    schema = Swagger()
+    schema = SwaggerPath()
 
     external_definitions = set()
     for method_name in resource.methods:

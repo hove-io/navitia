@@ -34,10 +34,11 @@ from flask.ext.restful import Resource
 from serpy.fields import MethodField
 from flask import request
 from jormungandr import app
-from jormungandr.interfaces.v1.serializer import api, jsonschema
 import serpy
 
 from jormungandr.interfaces.v1.serializer.base import LiteralField, LambdaField
+from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerPathSerializer
+from jormungandr.interfaces.v1.swagger_schema import make_schema, Swagger
 
 BASE_PATH = 'v1'
 
@@ -57,20 +58,27 @@ base_path_regexp = re.compile('^/{base}'.format(base=BASE_PATH))
 
 
 def get_all_described_paths():
-    paths = []
+    swagger = Swagger()
     for endpoint, rules in app.url_map._rules_by_endpoint.items():
         for rule in rules:
             if 'OPTIONS' not in rule.methods or rule.provide_automatic_options:
                 continue
 
-            formated_rule = format_args(rule.rule)
+            view_function = app.view_functions.get(endpoint)
+            if view_function is not None:
+                view_class = view_function.view_class
+                resource = view_class()
+                schema = make_schema(resource)
+                swagger.definitions.update(schema.definitions)
 
-            # we trim the base path
-            formated_rule = base_path_regexp.sub('', formated_rule)
+                formated_rule = format_args(rule.rule)
 
-            paths.append(formated_rule)
+                # we trim the base path
+                formated_rule = base_path_regexp.sub('', formated_rule)
 
-    return paths
+                swagger.paths[formated_rule] = schema
+
+    return swagger
 
 
 def make_schema_link(path):
@@ -86,10 +94,11 @@ class JsonSchemaEndpointsSerializer(serpy.Serializer):
     swagger = LiteralField('2.0')
     host = LambdaField(lambda *args: request.url_root)
     paths = MethodField()
+    definitions = serpy.Field()
 
     def get_paths(self, obj):
         return {
-            p: make_schema_link(p) for p in obj
+            k: SwaggerPathSerializer(v).data for k, v in obj.paths.items()
         }
 
 

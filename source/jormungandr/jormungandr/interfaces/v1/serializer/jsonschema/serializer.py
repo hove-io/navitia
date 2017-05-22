@@ -276,8 +276,6 @@ class SwaggerMethodSerializer(serpy.Serializer):
 
 
 class SwaggerPathSerializer(serpy.Serializer):
-    definitions = serpy.Field(display_none=False)
-
     # Hack since for the moment we only handle 'get' method. TODO, find a way to remove this hack
     get = MethodField(method='get_methods')
 
