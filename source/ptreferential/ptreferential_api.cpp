@@ -51,11 +51,10 @@ static void extract_data(navitia::PbCreator& pb_creator,
     case Type_e::ValidityPattern:
         pb_creator.pb_fill(data.get_data<nt::ValidityPattern>(rows), depth);
         return;
-    case Type_e::Line: {
-            bool dump_line_section_message = true;
-            pb_creator.pb_fill(data.get_data<nt::Line>(rows), depth, DumpMessage::Yes, dump_line_section_message);
-            return;
-        }
+    case Type_e::Line:
+        pb_creator.pb_fill(data.get_data<nt::Line>(rows), depth,
+                {DumpMessage::Yes, DumpLineSectionMessage::Yes});
+        return;
     case Type_e::LineGroup:
         pb_creator.pb_fill(data.get_data<nt::LineGroup>(rows), depth);
         return;
