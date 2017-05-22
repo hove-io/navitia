@@ -28,6 +28,8 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+
+import decorator
 from flask import url_for, request
 from collections import OrderedDict
 from functools import wraps
@@ -293,25 +295,21 @@ class add_id_links(generate_links):
                 self.get_objets(item, collection_name)
 
 
-class clean_links(object):
-
-    def __call__(self, f):
-        @wraps(f)
-        def wrapper(*args, **kwargs):
-            response = f(*args, **kwargs)
-            if isinstance(response, tuple):
-                data, code, header = unpack(response)
-                if code != 200:
-                    return data, code, header
-            else:
-                data = response
-            if (isinstance(data, dict) or isinstance(data, OrderedDict)) and "links" in data:
-                for link in data['links']:
-                    link['href'] = link['href'].replace("%7B", "{")\
-                                               .replace("%7D", "}")\
-                                               .replace("%3B", ";")
-            if isinstance(response, tuple):
-                return data, code, header
-            else:
-                return data
-        return wrapper
+@decorator.decorator
+def clean_links(f, *args, **kwargs):
+    response = f(*args, **kwargs)
+    if isinstance(response, tuple):
+        data, code, header = unpack(response)
+        if code != 200:
+            return data, code, header
+    else:
+        data = response
+    if (isinstance(data, dict) or isinstance(data, OrderedDict)) and "links" in data:
+        for link in data['links']:
+            link['href'] = link['href'].replace("%7B", "{")\
+                                       .replace("%7D", "}")\
+                                       .replace("%3B", ";")
+    if isinstance(response, tuple):
+        return data, code, header
+    else:
+        return data

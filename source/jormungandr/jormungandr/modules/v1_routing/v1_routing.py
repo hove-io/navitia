@@ -41,45 +41,45 @@ from jormungandr.modules.v1_routing.resources import Index
 
 class RegionConverter(BaseConverter):
     """ The region you want to query"""
+    type_ = "string"
+    regex = '[^(/;)]+'
 
     def __init__(self, *args, **kwargs):
         BaseConverter.__init__(self, *args, **kwargs)
-        self.type_ = "string"
-        self.regex = '[^(/;)]+'
 
 
 class LonConverter(FloatConverter):
     """ The longitude of where the coord you want to query"""
+    type_ = "float"
+    regex = '-?\\d+(\\.\\d+)?'
 
     def __init__(self, *args, **kwargs):
         FloatConverter.__init__(self, *args, **kwargs)
-        self.type_ = "float"
-        self.regex = '-?\\d+(\\.\\d+)?'
 
 
 class LatConverter(FloatConverter):
     """ The latitude of where the coord you want to query"""
+    type_ = "float"
+    regex = '-?\\d+(\\.\\d+)?'
 
     def __init__(self, *args, **kwargs):
         FloatConverter.__init__(self, *args, **kwargs)
-        self.type_ = "float"
-        self.regex = '-?\\d+(\\.\\d+)?'
 
 
 class UriConverter(PathConverter):
     """First part of the uri"""
+    type_ = "string"
 
     def __init__(self, *args, **kwargs):
         PathConverter.__init__(self, *args, **kwargs)
-        self.type_ = "string"
 
 
 class IdConverter(BaseConverter):
     """Id of the object you want to query"""
+    type_ = "string"
 
     def __init__(self, *args, **kwargs):
         BaseConverter.__init__(self, *args, **kwargs)
-        self.type_ = "string"
 
 
 class V1Routing(AModule):

@@ -33,6 +33,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from flask.ext.restful import fields, marshal_with, reqparse
 from flask.ext.restful.inputs import boolean
 from jormungandr import i_manager
+from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.v1.StatedResource import StatedResource
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.make_links import add_coverage_link, add_collection_links, clean_links
@@ -41,6 +42,7 @@ from collections import OrderedDict
 from jormungandr.interfaces.v1.fields import NonNullNested, FieldDateTime
 from jormungandr.interfaces.v1.serializer.api import CoveragesSerializer
 from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerPathDumper
+from jormungandr.interfaces.v1.swagger_schema import make_schema
 
 collections = collections_to_resource_type.keys()
 
@@ -66,16 +68,19 @@ class Coverage(StatedResource):
             })))
         ]
         self.method_decorators.insert(1, get_serializer(collection='coverages', collections=self.collections))
+        self.parsers = {
+            'get': reqparse.RequestParser(argument_class=ArgumentDoc)
+        }
+        self.parsers["get"].add_argument("disable_geojson",
+                                         help='hide the coverage geojson to reduce response size',
+                                         type=boolean, default=False)
+        self.return_type = CoveragesSerializer
 
-    @clean_links()
-    @add_coverage_link()
-    @add_collection_links(collections)
+    @clean_links
+    # @add_coverage_link()
+    # @add_collection_links(collections)
     def get(self, region=None, lon=None, lat=None):
-
-        parser = reqparse.RequestParser()
-        parser.add_argument("disable_geojson", type=boolean, default=False)
-
-        args = parser.parse_args()
+        args = self.parsers["get"].parse_args()
 
         resp = i_manager.regions(region, lon, lat)
         if 'regions' in resp:
@@ -87,5 +92,5 @@ class Coverage(StatedResource):
         return resp, 200
 
     def options(self, **kwargs):
-        response = SwaggerPathDumper(CoveragesSerializer).get_datas()
-        return response, 200
+        schema = make_schema(resource=self)
+        return schema, 200
