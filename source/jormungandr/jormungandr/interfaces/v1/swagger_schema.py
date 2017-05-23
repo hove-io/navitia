@@ -160,13 +160,16 @@ class SwaggerParam(object):
     def make_from_flask_route(cls, ressource, method_name, rule_converters):
         args = []
         for name, converter in (rule_converters or {}).items():
+            swagger_type, swagger_format = convert_to_swagger_type(converter.type_)
             custom_format = getattr(converter, 'regex', None)
+            if custom_format:
+                swagger_format = custom_format
             args.append(SwaggerParam(name=name,
                                      description=converter.__doc__,
-                                     type=converter.type_,
-                                     format=custom_format,
+                                     type=swagger_type,
+                                     format=swagger_format,
                                      location='path',
-                                     required=False))
+                                     required=True))
 
         return args
 

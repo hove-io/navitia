@@ -33,7 +33,7 @@ import re
 from flask.ext.restful import Resource
 from serpy.fields import MethodField
 from flask import request
-from jormungandr import app
+from jormungandr import app, _version
 import serpy
 
 from jormungandr.interfaces.v1.serializer.base import LiteralField, LambdaField
@@ -89,12 +89,41 @@ def make_schema_link(path):
     }
 
 
+class JsonSchemaInfo(serpy.Serializer):
+    title = LiteralField('navitia')
+    version = LiteralField(_version.__version__)
+    description = LiteralField("""
+    navitia.io is the open API for building cool stuff with mobility data. It provides the following services
+
+    * journeys computation
+    * line schedules
+    * next departures
+    * exploration of public transport data / search places
+    * and sexy things such as isochrones
+
+    navitia is a HATEOAS API that returns JSON formated results
+    """)
+    contact = LiteralField({
+        'name': 'Navitia',
+        'url': 'https://www.navitia.io/',
+        'email': 'navitia@googlegroups.com'
+    })
+    license = LiteralField({
+        'name': 'license',
+        'url': 'https://www.navitia.io/api-term-of-use'
+    })
+
+
 class JsonSchemaEndpointsSerializer(serpy.Serializer):
     basePath = LiteralField('/' + BASE_PATH)
     swagger = LiteralField('2.0')
-    host = LambdaField(lambda *args: request.url_root)
+    host = LambdaField(lambda *args: request.url_root
+                       .replace('http://', '')
+                       .replace('https://', '')
+                       .rstrip('/'))
     paths = MethodField()
     definitions = serpy.Field()
+    info = LambdaField(lambda s, o: JsonSchemaInfo(o).data)
 
     def get_paths(self, obj):
         return {
