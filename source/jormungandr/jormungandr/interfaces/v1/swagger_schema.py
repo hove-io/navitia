@@ -157,28 +157,14 @@ class SwaggerParam(object):
         return args
 
     @classmethod
-    def make_from_flask_route(cls, ressource, method_name):
-        associated_function = getattr(ressource, method_name, None)
-        if not associated_function:
-            return []
-
-        params = inspect.getargspec(associated_function)
-
+    def make_from_flask_route(cls, ressource, method_name, rule_converters):
         args = []
-
-        for param_name in params.args:
-            # we'll try to guess the type of the params based on the flask converters
-            # it's a bit hacky, we consider that the type and the variable have the same name
-
-            converter = jormungandr.app.url_map.converters.get(param_name)
-            if not converter:
-                continue
-
-            format = getattr(converter, 'regex', None)
-            args.append(SwaggerParam(name=param_name,
+        for name, converter in (rule_converters or {}).items():
+            custom_format = getattr(converter, 'regex', None)
+            args.append(SwaggerParam(name=name,
                                      description=converter.__doc__,
                                      type=converter.type_,
-                                     format=format,
+                                     format=custom_format,
                                      location='path',
                                      required=False))
 
@@ -267,7 +253,7 @@ def get_schema_properties(serializer):
     return properties, external_definitions
 
 
-def get_parameters(resource, method_name):
+def get_parameters(resource, method_name, rule_converters):
     """
     get all parameter for a given HTTP method of a flask resource
 
@@ -279,6 +265,8 @@ def get_parameters(resource, method_name):
                                     path parameter   |
                                                      v
                                               query parameter
+
+    the path parameters are retreived from the flask's rule_converters
     """
     params = []
     request_parser = resource.parsers.get(method_name)
@@ -288,7 +276,7 @@ def get_parameters(resource, method_name):
             # several swagger args can be created for one flask arg
             params += swagger_params
 
-    path_params = SwaggerParam.make_from_flask_route(resource, method_name)
+    path_params = SwaggerParam.make_from_flask_route(resource, method_name, rule_converters)
     params += path_params
     return params
 
@@ -320,14 +308,17 @@ class SwaggerMethod(object):
 
 
 class Swagger(object):
-    definitions = {}
-    paths = {}
+    def __init__(self):
+        self.definitions = {}
+        self.paths = {}
+
 
 class SwaggerPath(object):
-    definitions = {}
-    methods = {}
+    def __init__(self):
+        self.definitions = {}
+        self.methods = {}
 
-    def add_method(self, method_name, resource):
+    def add_method(self, method_name, resource, rule_converters):
         method_name = method_name.lower()  # a bit hacky, but we want a lower case http verb
 
         if method_name == 'options':
@@ -335,7 +326,7 @@ class SwaggerPath(object):
         swagger_method = SwaggerMethod(name=method_name)
         self.methods[method_name] = swagger_method
 
-        swagger_method.parameters += get_parameters(resource, method_name)
+        swagger_method.parameters += get_parameters(resource, method_name, rule_converters)
 
         external_definitions = swagger_method.define_output_schema(resource)
 
@@ -355,12 +346,12 @@ class SwaggerPath(object):
             external_definitions.update(nested_definitions)
 
 
-def make_schema(resource):
+def make_schema(resource, rule_converters=None):
     schema = SwaggerPath()
 
     external_definitions = set()
     for method_name in resource.methods:
-        external_definitions.update(schema.add_method(method_name, resource))
+        external_definitions.update(schema.add_method(method_name, resource, rule_converters))
 
     schema.add_definitions(external_definitions)
 

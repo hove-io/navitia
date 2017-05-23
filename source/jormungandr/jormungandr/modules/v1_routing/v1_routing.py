@@ -29,9 +29,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr.interfaces.v1 import Uri, Coverage, Journeys, GraphicalIsochrone,\
-    HeatMap, Schedules, Places, Ptobjects, Coord, Disruptions, Calendars,\
-    converters_collection_type, Status, GeoStatus
+from jormungandr.interfaces.v1 import Uri, Coverage, Journeys, GraphicalIsochrone, \
+    HeatMap, Schedules, Places, Ptobjects, Coord, Disruptions, Calendars, \
+    converters_collection_type, Status, GeoStatus, JSONSchema
 from werkzeug.routing import BaseConverter, FloatConverter, PathConverter
 from jormungandr.modules_loader import AModule
 from jormungandr import app
@@ -231,3 +231,7 @@ class V1Routing(AModule):
                           region + '<uri:uri>/calendars',
                           region + "calendars/<id:id>",
                           endpoint="calendars")
+
+        self.add_resource(JSONSchema.Schema,
+                          '/schema',
+                          endpoint="schema")

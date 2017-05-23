@@ -68,15 +68,15 @@ def get_all_described_paths():
             if view_function is not None:
                 view_class = view_function.view_class
                 resource = view_class()
-                schema = make_schema(resource)
-                swagger.definitions.update(schema.definitions)
+                schema_path = make_schema(resource, rule._converters)
+                swagger.definitions.update(schema_path.definitions)
 
                 formated_rule = format_args(rule.rule)
 
                 # we trim the base path
                 formated_rule = base_path_regexp.sub('', formated_rule)
 
-                swagger.paths[formated_rule] = schema
+                swagger.paths[formated_rule] = schema_path
 
     return swagger
 
