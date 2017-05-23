@@ -41,6 +41,8 @@ from collections import OrderedDict
 from jormungandr.interfaces.v1.fields import NonNullNested, FieldDateTime
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.serializer.api import CoveragesSerializer
+from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerPathSerializer
+from jormungandr.interfaces.v1.swagger_schema import make_schema
 
 collections = collections_to_resource_type.keys()
 
@@ -71,9 +73,9 @@ class Coverage(StatedResource):
                                          help='hide the coverage geojson to reduce response size',
                                          type=boolean, default=False)
 
-    @clean_links
-    # @add_coverage_link()
-    # @add_collection_links(collections)
+    @clean_links()
+    @add_coverage_link()
+    @add_collection_links(collections)
     def get(self, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
 
