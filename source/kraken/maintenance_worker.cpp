@@ -237,8 +237,9 @@ void MaintenanceWorker::listen_rabbitmq(){
     }
     bool no_local = true;
     bool no_ack = false;
-    std::string task_tag = this->channel->BasicConsume(this->queue_name_task, "", no_local, no_ack);
-    std::string rt_tag = this->channel->BasicConsume(this->queue_name_rt, "", no_local, no_ack);
+    bool exclusive = false;
+    std::string task_tag = this->channel->BasicConsume(this->queue_name_task, "", no_local, no_ack, exclusive);
+    std::string rt_tag = this->channel->BasicConsume(this->queue_name_rt, "", no_local, no_ack, exclusive);
 
     LOG4CPLUS_INFO(logger, "start event loop");
     data_manager.get_data()->is_connected_to_rabbitmq = true;
@@ -302,12 +303,16 @@ void MaintenanceWorker::init_rabbitmq(){
         this->channel->DeclareExchange(exchange_name, "topic", false, true, false);
 
         //creation of queues for this kraken
-        channel->DeclareQueue(this->queue_name_task, false, true, false, false);
+        bool passive = false;
+        bool durable = true;
+        bool exclusive = false;
+        bool auto_delete = false;
+        channel->DeclareQueue(this->queue_name_task, passive, durable, exclusive, auto_delete);
         LOG4CPLUS_INFO(logger, "queue for tasks: " << this->queue_name_task);
         //binding the queue to the exchange for all task for this instance
         channel->BindQueue(queue_name_task, exchange_name, instance_name+".task.*");
 
-        channel->DeclareQueue(this->queue_name_rt, false, true, false, false);
+        channel->DeclareQueue(this->queue_name_rt, passive, durable, exclusive, auto_delete);
         LOG4CPLUS_INFO(logger, "queue for disruptions: " << this->queue_name_rt);
         //binding the queue to the exchange for all task for this instance
         LOG4CPLUS_INFO(logger, "subscribing to [" << boost::algorithm::join(conf.rt_topics(), ", ") << "]");
