@@ -64,15 +64,3 @@ class StatedResource(DocumentedResource):
                 register_used_coverages([region])
             return result
         return wrapper
-
-    def dispatch_request(self, *args, **kwargs):
-        if request.method == 'OPTIONS':
-            decorators = self.method_decorators
-            self.method_decorators = []
-
-        resp = super(StatedResource, self).dispatch_request(*args, **kwargs)
-
-        if request.method == 'OPTIONS':
-            self.method_decorators = decorators
-
-        return resp

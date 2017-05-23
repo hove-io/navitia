@@ -51,6 +51,7 @@ args_regexp = re.compile(r'<(?P<name>.*?):.*?>')
 
 
 def format_args(rule):
+    """format argument like swagger : {arg1}&{arg2}"""
     formated_rule = args_regexp.sub(lambda m: '{' + m.group('name') + '}', rule)
     return formated_rule
 
@@ -58,6 +59,9 @@ base_path_regexp = re.compile('^/{base}'.format(base=BASE_PATH))
 
 
 def get_all_described_paths():
+    """
+    fetch the description of all api routes that have an 'OPTIONS' endpoint
+    """
     swagger = Swagger()
     for endpoint, rules in app.url_map._rules_by_endpoint.items():
         for rule in rules:
@@ -69,6 +73,8 @@ def get_all_described_paths():
                 view_class = view_function.view_class
                 resource = view_class()
                 schema_path = make_schema(resource, rule._converters)
+
+                # the definitions are stored aside and referenced in the response
                 swagger.definitions.update(schema_path.definitions)
 
                 formated_rule = format_args(rule.rule)
@@ -79,14 +85,6 @@ def get_all_described_paths():
                 swagger.paths[formated_rule] = schema_path
 
     return swagger
-
-
-def make_schema_link(path):
-    link = '{root}{base}{path}'.format(root=request.url_root, base=BASE_PATH, path=path)
-    return {
-        '$ref': link,
-        'method': 'OPTIONS'
-    }
 
 
 class JsonSchemaInfo(serpy.Serializer):
@@ -136,7 +134,9 @@ class Schema(Resource):
         Resource.__init__(self, **kwargs)
 
     def get(self):
-
+        """
+        endpoint to get the swagger schema of Navitia
+        """
         path = get_all_described_paths()
 
         return JsonSchemaEndpointsSerializer(path).data, 200

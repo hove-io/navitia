@@ -174,21 +174,6 @@ class SwaggerParam(object):
         return args
 
 
-def _from_python_type(pytype):
-    """
-    return schema for python type
-
-    :param pytype: 
-    :return: dict
-    """
-    json_schema = {}
-
-    for key, val in TYPE_MAP[pytype].items():
-        json_schema[key] = val
-
-    return json_schema
-
-
 def _from_nested_schema(field):
     """
     return reference and a list of nested definitions from a Serializer

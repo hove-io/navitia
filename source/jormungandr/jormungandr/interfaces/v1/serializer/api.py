@@ -28,7 +28,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.interfaces.v1.serializer import pt
-from jormungandr.interfaces.v1.serializer.base import NullableDictField, NullableDictSerializer
+from jormungandr.interfaces.v1.serializer.base import NullableDictSerializer
 from jormungandr.interfaces.v1.serializer.fields import ErrorSerializer, FeedPublisherSerializer, PaginationSerializer
 import serpy
 

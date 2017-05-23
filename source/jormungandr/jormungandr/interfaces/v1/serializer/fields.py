@@ -33,29 +33,8 @@ import operator
 import serpy
 from jormungandr.interfaces.v1.serializer import jsonschema
 
-class MultiLineStringField(jsonschema.Field):
 
-    def __init__(self, schema_type=None, schema_metadata={}, **kwargs):
-        schema_metadata.update({
-            'type': ["object", "null"],
-            'properties': {
-                'type': {
-                    'type': 'string',
-                },
-                'coordinates': {
-                    'type': 'array',
-                    'items': {
-                        'type': 'array',
-                        'minItems': 2,
-                        'maxItems': 2,
-                        'items': {
-                            'type': 'number'
-                        }
-                    }
-                }
-            }
-        })
-        super(MultiLineStringField, self).__init__(schema_type, schema_metadata, **kwargs)
+class MultiLineStringField(jsonschema.Field):
 
     def to_value(self, value):
         if getattr(g, 'disable_geojson', False):
@@ -108,13 +87,6 @@ class FirstCommentField(jsonschema.Field):
     for compatibility issue we want to continue to output a 'comment' field
     even if now we have a list of comments, so we take the first one
     """
-
-    def __init__(self, schema_metadata={}, **kwargs):
-        schema_type = CommentSerializer()
-        for key, value in kwargs.items() :
-            setattr(schema_type, key, value)
-        super(FirstCommentField, self).__init__(schema_type, schema_metadata, **kwargs)
-
     def as_getter(self, serializer_field_name, serializer_cls):
         op = operator.attrgetter(self.attr or serializer_field_name)
         def getter(v):
@@ -127,46 +99,11 @@ class FirstCommentField(jsonschema.Field):
         else:
             return None
 
+
 class LinkSerializer(jsonschema.Field):
     """
     Add link to disruptions on a pt object
     """
-
-    def __init__(self, schema_metadata={}, **kwargs):
-        schema_metadata.update({
-            'type': 'array',
-            'items': [
-                {
-                    'type': 'object',
-                    'properties': {
-                        'type': {
-                            'type': 'string',
-                        },
-                        'rel': {
-                            'type': 'string',
-                        },
-                        'templated': {
-                            'type': 'boolean',
-                        },
-                        'href': {
-                            'type': 'string',
-                        },
-                        'id': {
-                            'type': 'string',
-                        },
-                        'description': {
-                            'type': 'string',
-                        },
-                        'internal': {
-                            'type': 'boolean',
-                        },
-                    },
-                    'required': ['type', 'rel', 'templated']
-                }
-            ]
-        })
-        super(LinkSerializer, self).__init__(None, schema_metadata, **kwargs)
-
     def to_value(self, value):
         return [create_internal_link(_type="disruption", rel="disruptions", id=uri)
                 for uri in value]

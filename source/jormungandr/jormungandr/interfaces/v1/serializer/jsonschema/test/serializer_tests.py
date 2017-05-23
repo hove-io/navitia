@@ -84,8 +84,8 @@ def serpy_extended_supported_serialization_test():
 
     class JsonchemaSupportedType(serpy.Serializer):
         jsonschemaStrField = jsonschema.StrField(required=False)
-        jsonschemaBoolField = jsonschema.BoolField()
-        jsonschemaFloatField = jsonschema.FloatField()
+        jsonschemaBoolField = jsonschema.BoolField(required=True, display_none=True)
+        jsonschemaFloatField = jsonschema.FloatField(required=True, display_none=True)
         jsonschemaIntField = jsonschema.IntField()
         jsonschemaField = jsonschema.Field(schema_type=int)
         jsonschemaMethodField = jsonschema.MethodField(schema_type=str)
@@ -95,7 +95,7 @@ def serpy_extended_supported_serialization_test():
 
     schema, external_definitions = get_schema(JsonchemaSupportedType)
     assert schema.get('type') == 'object'
-    assert len(schema.get('required')) == 5
+    assert set(schema.get('required')) == {'jsonschemaBoolField', 'jsonschemaFloatField'}
     properties = schema.get('properties', {})
     assert len(properties) == 6
     assert properties.get('jsonschemaStrField', {}).get('type') == 'string'
@@ -172,6 +172,6 @@ def nested_test():
     properties = schema.get('properties', {})
     assert len(properties) == 1
     nested_data = properties.get('nested', {})
-    assert nested_data.get('type') == ['array']
+    assert nested_data.get('type') == 'array'
     assert nested_data.get('items', {}).get('$ref') == '#/definitions/NestedType'
     assert len(external_definitions) == 1

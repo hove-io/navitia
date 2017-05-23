@@ -83,19 +83,6 @@ class NestedPbField(PbField):
         return getter
 
 
-class NullableDictField(Field):
-    def __init__(self, *args, **kwargs):
-        super(NullableDictField, self).__init__(*args, **kwargs)
-
-    def as_getter(self, serializer_field_name, serializer_cls):
-        def getter(val):
-            if not val:
-                return None
-            attr = self.attr or serializer_field_name
-            return val.get(attr)
-        return getter
-
-
 class NullableDictSerializer(serpy.Serializer):
     @classmethod
     def default_getter(cls, attr):
@@ -122,34 +109,6 @@ class EnumField(jsonschema.Field):
             return None
         return value.lower()
 
-    """
-    Need to find a way to read protobuf
-    """
-    def __init__(self, schema_metadata={}, **kwargs):
-        schema_type = str
-        enum = []
-        attr = kwargs.get('attr')
-        if attr == 'id':
-            enum.extend((
-                'bad_filter', 'unknown_api', 'date_out_of_bounds', 'unable_to_parse', 'bad_format', 'no_origin',
-                'no_destination', 'no_origin_nor_destination', 'no_solution', 'unknown_object', 'service_unavailable',
-                'invalid_protobuf_request', 'internal_error'
-            ))
-        elif attr == 'embedded_type':
-            enum.extend((
-                'line', 'journey_pattern', 'vehicle_journey', 'stop_point', 'stop_area', 'network', 'physical_mode',
-                'commercial_mode', 'connection', 'journey_pattern_point', 'company', 'route', 'poi', 'contributor',
-                'address', 'poitype', 'administrative_region', 'calendar', 'line_group', 'impact', 'dataset', 'trip'
-            ))
-        elif attr == 'effect':
-            enum.extend(('delayed', 'added', 'deleted'))
-        elif attr == 'status':
-            enum.extend(('past', 'active', 'future'))
-
-        if len(enum) > 0:
-            schema_metadata.update(enum=enum)
-
-        super(EnumField, self).__init__(schema_type, schema_metadata, **kwargs)
 
 class EnumListField(EnumField):
     """WARNING: the enumlist field does not work without a self.attr"""

@@ -121,7 +121,6 @@ class Uri(ResourceUri, ResourceUtc):
                                 description="The filter parameter")
         self.collection = collection
         self.method_decorators.insert(0, ManageError())
-        self.output_type_serializer = None
 
     def get(self, region=None, lon=None, lat=None, uri=None, id=None):
         collection = self.collection
