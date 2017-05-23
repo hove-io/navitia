@@ -36,10 +36,11 @@ class Field(serpy.Field):
     """
     A :class:`Field` that hold metadata for schema.
     """
-
     def __init__(self, schema_type=None, schema_metadata={}, **kwargs):
+        if 'display_none' not in kwargs:
+            kwargs['display_none'] = False
         super(Field, self).__init__(**kwargs)
-        self.schema_type = schema_type
+        self.schema_type = schema_type or str
         self.schema_metadata = schema_metadata
 
 
@@ -49,9 +50,12 @@ class StrField(serpy.StrField):
     """
 
     def __init__(self, schema_metadata={}, **kwargs):
+        if 'display_none' not in kwargs:
+            kwargs['display_none'] = False
         super(StrField, self).__init__(**kwargs)
         self.schema_type = str
         self.schema_metadata = schema_metadata
+
 
 class BoolField(serpy.BoolField):
     """
@@ -59,9 +63,12 @@ class BoolField(serpy.BoolField):
     """
 
     def __init__(self, schema_metadata={}, **kwargs):
+        if 'display_none' not in kwargs:
+            kwargs['display_none'] = False
         super(BoolField, self).__init__(**kwargs)
         self.schema_type = bool
         self.schema_metadata = schema_metadata
+
 
 class FloatField(serpy.FloatField):
     """
@@ -69,9 +76,12 @@ class FloatField(serpy.FloatField):
     """
 
     def __init__(self, schema_metadata={}, **kwargs):
+        if 'display_none' not in kwargs:
+            kwargs['display_none'] = False
         super(FloatField, self).__init__(**kwargs)
         self.schema_type = float
         self.schema_metadata = schema_metadata
+
 
 class IntField(serpy.IntField):
     """
@@ -79,9 +89,12 @@ class IntField(serpy.IntField):
     """
 
     def __init__(self, schema_metadata={}, **kwargs):
+        if 'display_none' not in kwargs:
+            kwargs['display_none'] = False
         super(IntField, self).__init__(**kwargs)
         self.schema_type = int
         self.schema_metadata = schema_metadata
+
 
 class MethodField(serpy.MethodField):
     """
@@ -89,6 +102,8 @@ class MethodField(serpy.MethodField):
     """
 
     def __init__(self, method=None, schema_type=None, schema_metadata={}, **kwargs):
+        if 'display_none' not in kwargs:
+            kwargs['display_none'] = False
         super(MethodField, self).__init__(method, **kwargs)
         self.schema_type = schema_type
         self.schema_metadata = schema_metadata

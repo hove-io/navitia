@@ -199,7 +199,7 @@ def _from_nested_schema(field):
     }
     if field.many:
         schema = {
-            'type': ["array"] if field.required else ['array', 'null'],
+            'type': "array",  # TODO check how swagger handle null arrays
             'items': schema,
         }
 
@@ -216,8 +216,9 @@ def get_schema(serializer):
     schema = {
         "type": "object",
         "properties": properties_schema,
-        "required": required_properties
     }
+    if required_properties:  # swagger is a bit rigid not to have empty required properties
+        schema['required'] = required_properties
     return schema, definitions
 
 
@@ -304,7 +305,8 @@ class SwaggerMethod(object):
 
         self.output_type = {
             "200": {
-                "schema": output_type
+                "schema": output_type,
+                'description': resource.__doc__ or ''
             }
         }
         return external_definitions
