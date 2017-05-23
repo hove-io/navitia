@@ -29,18 +29,18 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from tests.tests_mechanism import dataset, AbstractTestFixture
+from swagger_spec_validator import validator20
 
 
-@dataset({"main_autocomplete_test": {}})
+@dataset({})
 class TestAutocomplete(AbstractTestFixture):
     """
     Test swagger schema
     """
+
     def test_swagger(self):
         """
         Test the global schema
         """
         response = self.query("v1/schema")
-
-        assert response.get('info')
-        #TODO!
+        validator20.validate_spec(response)
