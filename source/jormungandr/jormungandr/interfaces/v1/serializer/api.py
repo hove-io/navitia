@@ -28,10 +28,12 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.interfaces.v1.serializer import pt
+from jormungandr.interfaces.v1.serializer.base import NullableDictField, NullableDictSerializer
 from jormungandr.interfaces.v1.serializer.fields import ErrorSerializer, FeedPublisherSerializer, PaginationSerializer
 import serpy
 
-from jormungandr.interfaces.v1.serializer.time import DateTimeField
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field
+from jormungandr.interfaces.v1.serializer.time import DateTimeField, DateTimeDictField
 
 
 class PTReferentialSerializer(serpy.Serializer):
@@ -98,18 +100,22 @@ class PlacesSerializer(PTReferentialSerializer):
     places = pt.PlaceSerializer(many=True)
 
 
-class CoverageErrorSerializer(serpy.Serializer):
-    code = serpy.StrField()
-    value = serpy.StrField()
+class CoverageErrorSerializer(NullableDictSerializer):
+    code = Field()
+    value = Field()
 
 
-class CoveragesSerializer(serpy.Serializer):
-    id = serpy.StrField(attr="region_id")
-    start_production_date = serpy.StrField()
-    end_production_date = serpy.StrField()
-    last_load_at = DateTimeField()
-    name = serpy.StrField()
-    status = serpy.StrField()
-    shape = serpy.StrField()
-    error = CoverageErrorSerializer()
-    dataset_created_at = serpy.StrField()
+class CoverageSerializer(NullableDictSerializer):
+    id = Field(attr="region_id")
+    start_production_date = Field()
+    end_production_date = Field()
+    last_load_at = DateTimeDictField()
+    name = Field()
+    status = Field()
+    shape = Field()
+    error = CoverageErrorSerializer(display_none=False)
+    dataset_created_at = Field()
+
+
+class CoveragesSerializer(serpy.DictSerializer):
+    regions = CoverageSerializer(many=True)

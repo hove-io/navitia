@@ -29,16 +29,17 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
+from functools import partial
+
 from jormungandr.interfaces.v1.serializer import jsonschema
 import serpy
 import operator
 
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field
 
-class PbField(jsonschema.Field):
+
+class PbField(Field):
     def __init__(self, *args, **kwargs):
-        # used only to put a default value to display_none
-        if 'display_none' not in kwargs:
-            kwargs['display_none'] = False
         super(PbField, self).__init__(*args, **kwargs)
 
     """
@@ -81,12 +82,31 @@ class NestedPbField(PbField):
             return cur_obj
         return getter
 
+
+class NullableDictField(Field):
+    def __init__(self, *args, **kwargs):
+        super(NullableDictField, self).__init__(*args, **kwargs)
+
+    def as_getter(self, serializer_field_name, serializer_cls):
+        def getter(val):
+            if not val:
+                return None
+            attr = self.attr or serializer_field_name
+            return val.get(attr)
+        return getter
+
+
+class NullableDictSerializer(serpy.Serializer):
+    @classmethod
+    def default_getter(cls, attr):
+        return lambda d: d.get(attr)
+
+
 class PbNestedSerializer(serpy.Serializer, PbField):
     pass
 
 
 class EnumField(jsonschema.Field):
-
 
     def as_getter(self, serializer_field_name, serializer_cls):
         def getter(val):

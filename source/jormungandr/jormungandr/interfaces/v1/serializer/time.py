@@ -31,6 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import serpy
 from datetime import datetime
 from jormungandr.interfaces.v1.serializer.base import PbField, PbNestedSerializer, NestedPbField
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field
 from jormungandr.utils import timestamp_to_str
 
 
@@ -63,6 +64,21 @@ class DateTimeField(PbField):
     def __init__(self, schema_metadata={}, **kwargs):
         schema_metadata.update(pattern='\d{4}\d{2}\d{2}T\d{2}\d{2}\d{2}')
         super(DateTimeField, self).__init__(str, schema_metadata, **kwargs)
+
+
+class DateTimeDictField(Field):
+    """
+    custom date format from timestamp
+    """
+    def to_value(self, value):
+        return timestamp_to_str(value) if value else None
+
+    def __init__(self, schema_metadata=None, **kwargs):
+        if schema_metadata is None:
+            schema_metadata = {}
+        # schema_metadata['pattern'] = '\d{4}\d{2}\d{2}T\d{2}\d{2}\d{2}'
+        super(DateTimeDictField, self).__init__(schema_type=str, schema_metadata=schema_metadata, **kwargs)
+
 
 class PeriodSerializer(PbNestedSerializer):
     begin = DateTimeField()
