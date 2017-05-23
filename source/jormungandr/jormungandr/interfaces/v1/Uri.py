@@ -32,6 +32,9 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from flask.ext.restful import fields, marshal_with, reqparse, abort
+
+from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerPathSerializer
+from jormungandr.interfaces.v1.swagger_schema import make_schema
 from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.converters_collection_type import collections_to_resource_type
@@ -56,7 +59,6 @@ from jormungandr.resources_utils import ResourceUtc
 from datetime import datetime
 from flask import g
 from jormungandr.interfaces.v1.decorators import get_serializer
-from jormungandr.interfaces.v1.serializer import jsonschema
 
 
 class Uri(ResourceUri, ResourceUtc):
@@ -119,6 +121,7 @@ class Uri(ResourceUri, ResourceUtc):
                                 description="The filter parameter")
         self.collection = collection
         self.method_decorators.insert(0, ManageError())
+        self.output_type_serializer = None
 
     def get(self, region=None, lon=None, lat=None, uri=None, id=None):
         collection = self.collection
