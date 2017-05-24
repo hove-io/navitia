@@ -52,8 +52,8 @@ args_regexp = re.compile(r'<(?P<name>.*?):.*?>')
 
 def format_args(rule):
     """format argument like swagger : {arg1}&{arg2}"""
-    formated_rule = args_regexp.sub(lambda m: '{' + m.group('name') + '}', rule)
-    return formated_rule
+    formatted_rule = args_regexp.sub(lambda m: '{' + m.group('name') + '}', rule)
+    return formatted_rule
 
 base_path_regexp = re.compile('^/{base}'.format(base=BASE_PATH))
 
@@ -112,6 +112,16 @@ class JsonSchemaInfo(serpy.Serializer):
     })
 
 
+class SecurityDefinitionsSerializer(serpy.Serializer):
+    basicAuth = LiteralField({
+        'type': 'basic'
+    })
+
+
+class SecuritySerializer(serpy.Serializer):
+    basicAuth = LambdaField(lambda s, o: [])
+
+
 class JsonSchemaEndpointsSerializer(serpy.Serializer):
     basePath = LiteralField('/' + BASE_PATH)
     swagger = LiteralField('2.0')
@@ -122,6 +132,8 @@ class JsonSchemaEndpointsSerializer(serpy.Serializer):
     paths = MethodField()
     definitions = serpy.Field()
     info = LambdaField(lambda s, o: JsonSchemaInfo(o).data)
+    securityDefinitions = LambdaField(lambda s, o: SecurityDefinitionsSerializer(o).data)
+    security = LambdaField(lambda s, o: [SecuritySerializer(o).data])
 
     def get_paths(self, obj):
         return {
