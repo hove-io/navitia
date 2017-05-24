@@ -32,16 +32,29 @@
 import serpy
 
 
+def _init(self, parent_class, schema_type=None, schema_metadata={}, **kwargs):
+    """
+    Call the parent constructor with the needed kwargs and 
+    add the remaining kwargs to the schema metadata
+    """
+    if 'display_none' not in kwargs:
+        kwargs['display_none'] = False
+    parent_vars = set(parent_class.__init__.func_code.co_names)
+    parent_kwargs = {k: v for k, v in kwargs.items() if k in parent_vars}
+    remaining_kwargs = {k: v for k, v in kwargs.items() if k not in parent_vars}
+    parent_class.__init__(self, **parent_kwargs)
+    self.schema_type = schema_type
+    self.schema_metadata = schema_metadata or {}
+    # the remaining kwargs are added in the schema metadata to add a bit of syntaxic sugar
+    self.schema_metadata.update(**remaining_kwargs)
+
+
 class Field(serpy.Field):
     """
     A :class:`Field` that hold metadata for schema.
     """
-    def __init__(self, schema_type=None, schema_metadata={}, **kwargs):
-        if 'display_none' not in kwargs:
-            kwargs['display_none'] = False
-        super(Field, self).__init__(**kwargs)
-        self.schema_type = schema_type or str
-        self.schema_metadata = schema_metadata
+    def __init__(self, schema_type=None, schema_metadata=None, **kwargs):
+        _init(self, serpy.Field, schema_type=schema_type or str, schema_metadata=schema_metadata, **kwargs)
 
 
 class StrField(serpy.StrField):
@@ -49,12 +62,8 @@ class StrField(serpy.StrField):
     A :class:`StrField` that hold metadata for schema.
     """
 
-    def __init__(self, schema_metadata={}, **kwargs):
-        if 'display_none' not in kwargs:
-            kwargs['display_none'] = False
-        super(StrField, self).__init__(**kwargs)
-        self.schema_type = str
-        self.schema_metadata = schema_metadata
+    def __init__(self, schema_metadata=None, **kwargs):
+        _init(self, serpy.StrField, schema_type=str, schema_metadata=schema_metadata, **kwargs)
 
 
 class BoolField(serpy.BoolField):
@@ -62,12 +71,8 @@ class BoolField(serpy.BoolField):
     A :class:`BoolField` that hold metadata for schema.
     """
 
-    def __init__(self, schema_metadata={}, **kwargs):
-        if 'display_none' not in kwargs:
-            kwargs['display_none'] = False
-        super(BoolField, self).__init__(**kwargs)
-        self.schema_type = bool
-        self.schema_metadata = schema_metadata
+    def __init__(self, schema_metadata=None, **kwargs):
+        _init(self, serpy.BoolField, schema_type=bool, schema_metadata=schema_metadata, **kwargs)
 
 
 class FloatField(serpy.FloatField):
@@ -75,12 +80,8 @@ class FloatField(serpy.FloatField):
     A :class:`FloatField` that hold metadata for schema.
     """
 
-    def __init__(self, schema_metadata={}, **kwargs):
-        if 'display_none' not in kwargs:
-            kwargs['display_none'] = False
-        super(FloatField, self).__init__(**kwargs)
-        self.schema_type = float
-        self.schema_metadata = schema_metadata
+    def __init__(self, schema_metadata=None, **kwargs):
+        _init(self, serpy.FloatField, schema_type=float, schema_metadata=schema_metadata, **kwargs)
 
 
 class IntField(serpy.IntField):
@@ -88,12 +89,8 @@ class IntField(serpy.IntField):
     A :class:`IntField` that hold metadata for schema.
     """
 
-    def __init__(self, schema_metadata={}, **kwargs):
-        if 'display_none' not in kwargs:
-            kwargs['display_none'] = False
-        super(IntField, self).__init__(**kwargs)
-        self.schema_type = int
-        self.schema_metadata = schema_metadata
+    def __init__(self, schema_metadata=None, **kwargs):
+        _init(self, serpy.IntField, schema_type=int, schema_metadata=schema_metadata, **kwargs)
 
 
 class MethodField(serpy.MethodField):
@@ -101,9 +98,6 @@ class MethodField(serpy.MethodField):
     A :class:`MethodField` that hold metadata for schema.
     """
 
-    def __init__(self, method=None, schema_type=None, schema_metadata={}, **kwargs):
-        if 'display_none' not in kwargs:
-            kwargs['display_none'] = False
-        super(MethodField, self).__init__(method, **kwargs)
-        self.schema_type = schema_type
-        self.schema_metadata = schema_metadata
+    def __init__(self, method=None, schema_type=None, schema_metadata=None, **kwargs):
+        kwargs['method'] = method
+        _init(self, serpy.MethodField, schema_type=schema_type, schema_metadata=schema_metadata, **kwargs)

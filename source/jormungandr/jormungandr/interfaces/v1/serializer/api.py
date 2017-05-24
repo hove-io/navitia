@@ -106,15 +106,17 @@ class CoverageErrorSerializer(NullableDictSerializer):
 
 
 class CoverageSerializer(NullableDictSerializer):
-    id = Field(attr="region_id")
-    start_production_date = Field()
-    end_production_date = Field()
-    last_load_at = DateTimeDictField()
-    name = Field()
+    id = Field(attr="region_id", description='Identifier of the coverage')
+    start_production_date = Field(description='Beginning of the production period. '
+                                              'We only have data on this production period')
+    end_production_date = Field(description='End of the production period. '
+                                            'We only have data on this production period')
+    last_load_at = DateTimeDictField(description='Datetime of the last data loading')
+    name = Field(description='Name of the coverage')
     status = Field()
-    shape = Field()
+    shape = Field(description='GeoJSON of the shape of the coverage')
     error = CoverageErrorSerializer(display_none=False)
-    dataset_created_at = Field()
+    dataset_created_at = Field(description='Creation date of the dataset')
 
 
 class CoveragesSerializer(serpy.DictSerializer):
