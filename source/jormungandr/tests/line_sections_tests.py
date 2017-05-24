@@ -340,3 +340,6 @@ class TestLineSections(AbstractTestFixture):
         d = get_all_element_disruptions(r['departures'], r)
         assert 'line_section_on_line_1' in d
         assert impacted_ids(d) == {'C_1', 'D_1', 'E_1', 'vj:1:1'}
+
+    def test_line_impacted_by_line_section(self):
+        assert self.has_disruption(ObjGetter('lines', 'line:1'), 'line_section_on_line_1')

@@ -334,7 +334,7 @@ void traffic_reports(navitia::PbCreator& pb_creator,
         for(const auto& impact: dist.network_disruptions){
             pb_creator.fill_message(impact, pb_network, depth-1);
         }
-        pb_creator.fill(dist.network, pb_network, depth, DumpMessage::No);
+        pb_creator.fill(dist.network, pb_network, depth, DumpMessageOptions{DumpMessage::No, DumpLineSectionMessage::No});
         for (const auto& line_item: dist.lines) {
             pbnavitia::Line* pb_line = pb_traffic_reports->add_lines();
             pb_creator.fill(line_item.first, pb_line, depth-1, DumpMessage::No);

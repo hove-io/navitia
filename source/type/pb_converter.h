@@ -41,9 +41,25 @@ namespace nt = navitia::type;
 namespace ng = navitia::georef;
 
 // we don't use a boolean to have a more type checks
-enum class DumpMessage {
+enum class DumpMessage: bool {
     Yes,
     No
+};
+
+enum class DumpLineSectionMessage: bool {
+    Yes,
+    No
+};
+
+struct DumpMessageOptions {
+    DumpMessage dump_message;
+    DumpLineSectionMessage dump_line_section;
+    constexpr DumpMessageOptions(DumpMessage dump_message = DumpMessage::Yes,
+            DumpLineSectionMessage dump_line_section = DumpLineSectionMessage::No):
+                        dump_message(dump_message), dump_line_section(dump_line_section){};
+    constexpr bool operator==(const DumpMessageOptions& rhs) const {
+        return dump_message == rhs.dump_message && dump_line_section == rhs.dump_line_section;
+    };
 };
 
 static const auto null_time_period = pt::time_period(pt::not_a_date_time, pt::seconds(0));
@@ -206,22 +222,24 @@ struct PbCreator {
     PbCreator& operator=(const PbCreator&) = delete;
 
     template<typename N, typename P>
-    void fill(const N& item, P* proto, int depth, const DumpMessage dump_message=DumpMessage::Yes) {
-        Filler(depth, dump_message, *this).fill_pb_object(item, proto);
+    void fill(const N& item, P* proto, int depth,
+            const DumpMessageOptions& dump_message_options=DumpMessageOptions{}) {
+        Filler(depth, dump_message_options, *this).fill_pb_object(item, proto);
     }
 
     template<typename N>
-    void fill(const N& item, int depth , const DumpMessage dump_message=DumpMessage::Yes) {
-        Filler(depth, dump_message, *this).fill_pb_object(item, &response);
+    void fill(const N& item, int depth ,
+            const DumpMessageOptions& dump_message_options=DumpMessageOptions{}) {
+        Filler(depth, dump_message_options, *this).fill_pb_object(item, &response);
     }
 
     template<typename N>
     void pb_fill(const std::vector<N*>& nav_list, int depth,
-                 const DumpMessage dump_message = DumpMessage::Yes);
+            const DumpMessageOptions& dump_message_options=DumpMessageOptions{});
 
     template <typename P>
-    void fill_message(const boost::shared_ptr<nt::disruption::Impact>& impact, P pb_object, int depth) {
-        Filler(depth, DumpMessage::Yes, *this).fill_message(impact, pb_object);
+    void fill_message(const boost::shared_ptr<nt::disruption::Impact>& impact, P pb_object,int depth) {
+        Filler(depth, DumpMessageOptions{}, *this).fill_message(impact, pb_object);
     }
 
     const type::disruption::Impact* get_impact(const std::string& uri) const;
@@ -297,13 +315,15 @@ private:
     struct Filler {
         struct PtObjVisitor;
         const int depth;
-        DumpMessage dump_message;
-
+        DumpMessageOptions dump_message_options;
         PbCreator& pb_creator;
-        Filler(int depth, const DumpMessage dump_message, PbCreator & pb_creator): depth(depth),
-            dump_message(dump_message), pb_creator(pb_creator){}
 
-        Filler copy(int, DumpMessage);
+        Filler(int depth,
+               const DumpMessageOptions& dump_message_options,
+               PbCreator & pb_creator):
+                   depth(depth), dump_message_options(dump_message_options), pb_creator(pb_creator){}
+
+        Filler copy(int, const DumpMessageOptions&);
 
         template<typename NAV, typename PB>
         void fill(NAV* nav_object, PB* pb_object);
@@ -312,7 +332,7 @@ private:
 
         template<typename NAV, typename PB>
         void fill(const NAV& nav_object, PB* pb_object) {
-            copy(depth-1, dump_message).fill_pb_object(nav_object, pb_object);
+            copy(depth-1, dump_message_options).fill_pb_object(nav_object, pb_object);
         }
 
         template<typename Nav, typename Pb>
@@ -356,7 +376,7 @@ private:
         template <typename P>
         void fill_messages(const nt::HasMessages* nav_obj, P* pb_obj){
             if (nav_obj == nullptr) {return ;}
-            if (dump_message == DumpMessage::No) { return; }
+            if (dump_message_options.dump_message == DumpMessage::No) { return; }
             for (const auto& message : nav_obj->get_applicable_messages(pb_creator.now,
                                                                         pb_creator.action_period)){
                 fill_message(message, pb_obj);
@@ -464,7 +484,7 @@ pbnavitia::Response get_response(const std::vector<N*>& nt_objects, const nt::Da
                                  const DumpMessage dump_message = DumpMessage::Yes){
     PbCreator creator(&data, now, action_period, disable_geojson);
 
-    creator.pb_fill(nt_objects, depth, dump_message);
+    creator.pb_fill(nt_objects, depth, {dump_message, DumpLineSectionMessage::No});
     return creator.get_response();
 }
 
