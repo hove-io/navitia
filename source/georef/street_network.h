@@ -342,7 +342,7 @@ struct printer_distance_visitor : public distance_visitor {
     void examine_edge(edge_t e, graph_type& g) {
         distance_visitor::examine_edge(e, g);
         file_edge << cpt_e++ << ";" << g[boost::source(e, g)].coord << ";" << g[boost::target(e, g)].coord
-                  << "; LINESTRING(" << g[boost::source(e, g)].coord.lon() << " " << g[boost::source(e, g)].coord.lat()
+                  << ";LINESTRING(" << g[boost::source(e, g)].coord.lon() << " " << g[boost::source(e, g)].coord.lat()
                   << ", " << g[boost::target(e, g)].coord.lon() << " " << g[boost::target(e, g)].coord.lat() << ")"
                   << ";" << this->durations[boost::source(e, g)].total_seconds() << ";" << e
                   << std::endl;
@@ -401,6 +401,30 @@ struct distance_or_target_visitor: virtual public distance_visitor, virtual publ
         distance_visitor::examine_vertex(u, g);
     }
 };
+
+#ifdef _DEBUG_DIJKSTRA_QUANTUM_
+struct printer_distance_or_target_visitor:
+        virtual public printer_distance_visitor,
+        virtual public target_all_visitor {
+    printer_distance_or_target_visitor(const time_duration& max_dur,
+                               const std::vector<time_duration>& dur,
+                               const std::vector<vertex_t>& destinations,
+                               const std::string& name):
+        printer_distance_visitor(max_dur, dur, name), target_all_visitor(destinations) {}
+    printer_distance_or_target_visitor(const printer_distance_or_target_visitor& other) = default;
+    virtual ~printer_distance_or_target_visitor();
+    template <typename graph_type>
+    void finish_vertex(vertex_t u, const graph_type& g){
+        printer_distance_visitor::finish_vertex(u, g);
+        target_all_visitor::finish_vertex(u, g);
+    }
+
+    template <typename G>
+    void examine_vertex(typename boost::graph_traits<G>::vertex_descriptor u, const G& g) {
+        printer_distance_visitor::examine_vertex(u, g);
+    }
+};
+#endif
 
 
 }}//namespace navitia::georef

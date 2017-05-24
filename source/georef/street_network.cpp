@@ -241,13 +241,15 @@ void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mod
         predecessors[starting_edge[source_e]] = starting_edge[source_e];
         predecessors[starting_edge[target_e]] = starting_edge[target_e];
 
-        //small enchancement, if the projection is done on a node, we disable the crow fly
-        if (starting_edge.distances[source_e] < 0.01) {
-            predecessors[starting_edge[target_e]] = starting_edge[source_e];
-            distances[starting_edge[target_e]] = bt::pos_infin;
-        } else if (starting_edge.distances[target_e] < 0.01) {
-            predecessors[starting_edge[source_e]] = starting_edge[target_e];
-            distances[starting_edge[source_e]] = bt::pos_infin;
+        if (starting_edge[target_e] != starting_edge[source_e]) { //if we're on a useless edge we do not enhance
+            //small enchancement, if the projection is done on a node, we disable the crow fly
+            if (starting_edge.distances[source_e] < 0.01) {
+                predecessors[starting_edge[target_e]] = starting_edge[source_e];
+                distances[starting_edge[target_e]] = bt::pos_infin;
+            } else if (starting_edge.distances[target_e] < 0.01) {
+                predecessors[starting_edge[source_e]] = starting_edge[target_e];
+                distances[starting_edge[source_e]] = bt::pos_infin;
+            }
         }
     }
 }
@@ -281,11 +283,21 @@ void PathFinder::start_distance_or_target_dijkstra(const navitia::time_duration&
     computation_launch = true;
     // We start dijkstra from source and target nodes
     try {
+#ifndef _DEBUG_DIJKSTRA_QUANTUM_
         dijkstra(starting_edge[source_e], distance_or_target_visitor(radius, distances, destinations));
+#else
+        dijkstra(starting_edge[source_e],
+                 printer_distance_or_target_visitor(radius, distances, destinations, "direct_path_source"));
+#endif
     } catch(DestinationFound&){}
 
     try {
+#ifndef _DEBUG_DIJKSTRA_QUANTUM_
         dijkstra(starting_edge[target_e], distance_or_target_visitor(radius, distances, destinations));
+#else
+        dijkstra(starting_edge[target_e],
+                 printer_distance_or_target_visitor(radius, distances, destinations, "direct_path_target"));
+#endif
     } catch(DestinationFound&){}
 
 }
@@ -869,6 +881,9 @@ int compute_directions(const navitia::georef::Path& path, const nt::Geographical
 distance_visitor::~distance_visitor() {}
 target_all_visitor::~target_all_visitor() {}
 distance_or_target_visitor::~distance_or_target_visitor() {}
+#ifdef _DEBUG_DIJKSTRA_QUANTUM_
+printer_distance_or_target_visitor::~printer_distance_or_target_visitor() {}
+#endif
 
 /**
   The _DEBUG_DIJKSTRA_QUANTUM_ activate at compil time some dump used in quantum to analyze
@@ -913,7 +928,7 @@ struct printer_all_visitor : public target_all_visitor {
     template <typename graph_type>
     void examine_edge(edge_t e, graph_type& g) {
         file_edge << cpt_e++ << ";" << g[boost::source(e, g)].coord << ";" << g[boost::target(e, g)].coord
-                  << "; LINESTRING(" << g[boost::source(e, g)].coord.lon() << " " << g[boost::source(e, g)].coord.lat()
+                  << ";LINESTRING(" << g[boost::source(e, g)].coord.lon() << " " << g[boost::source(e, g)].coord.lat()
                   << ", " << g[boost::target(e, g)].coord.lon() << " " << g[boost::target(e, g)].coord.lat() << ")"
                      << ";" << e
                   << std::endl;

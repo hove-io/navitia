@@ -1,3 +1,15 @@
+navitia2 (2.33.0) unstable; urgency=low
+
+  * PtRef: Display line section impact in lines  <https://github.com/CanalTP/navitia/pull/2087>
+  * Jormungandr: activate allowed_id for isochrones  <https://github.com/CanalTP/navitia/pull/2092>
+  * Kraken: fix cornercase on dijkstra  <https://github.com/CanalTP/navitia/pull/2085>
+  * Kraken: bug switch arrival/departure  <https://github.com/CanalTP/navitia/pull/2091>
+  * Doc: fix ntfs_fare_extension.md  <https://github.com/CanalTP/navitia/pull/2089>
+  * Streetnetwork: tools for log  <https://github.com/CanalTP/navitia/pull/2084>
+  * Doc : tyr - add billing_plan API  <https://github.com/CanalTP/navitia/pull/2086>
+
+ -- xlqian <patrick.qian@canaltp.fr>  Wed, 24 May 2017 17:05:10 +0100
+
 navitia2 (2.32.0) unstable; urgency=low
 
   * Realtime: add test for route point model as line section  <https://github.com/CanalTP/navitia/pull/2079>
