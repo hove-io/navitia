@@ -29,7 +29,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 import serpy
-from jormungandr.interfaces.v1.serializer.base import GenericSerializer, EnumListField
+from jormungandr.interfaces.v1.serializer.base import GenericSerializer, EnumListField, LiteralField
 from jormungandr.interfaces.v1.serializer.time import LocalTimeField, PeriodSerializer, DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import *
 from jormungandr.interfaces.v1.serializer import jsonschema
@@ -196,9 +196,19 @@ class DisruptionSerializer(PbNestedSerializer):
     contributor = jsonschema.Field(schema_type=str, display_none=True)
 
 
+class PoiTypeSerializer(GenericSerializer):
+    pass
+
+
+class StandsSerializer(PbNestedSerializer):
+    available_places = jsonschema.IntField()
+    available_bikes = jsonschema.IntField()
+    total_stands = jsonschema.IntField()
+
+
 class AdminSerializer(GenericSerializer):
     level = jsonschema.Field(schema_type=int)
-    zip_code = jsonschema.Field(schema_type=str)
+    zip_code = jsonschema.Field(schema_type=str, display_none=True)
     label = jsonschema.Field(schema_type=str)
     insee = jsonschema.Field(schema_type=str)
     coord = CoordSerializer(required=False)
@@ -209,6 +219,22 @@ class AddressSerializer(GenericSerializer):
     coord = CoordSerializer(required=False)
     label = jsonschema.Field(schema_type=str)
     administrative_regions = AdminSerializer(many=True, display_none=False)
+
+
+class PoiSerializer(GenericSerializer):
+    coord = CoordSerializer(required=False)
+    label = jsonschema.Field(schema_type=str)
+    administrative_regions = AdminSerializer(many=True, display_none=False)
+    poi_type = PoiTypeSerializer(display_none=False)
+    properties = jsonschema.MethodField(schema_type='object')
+    address = AddressSerializer()
+    stands = LiteralField(None, schema_type=StandsSerializer, display_none=False)
+
+    def get_properties(self, obj):
+        res = {}
+        for code in obj.properties:
+            res[code.type] = code.value
+        return res
 
 
 class PhysicalModeSerializer(GenericSerializer):
@@ -255,15 +281,13 @@ class StopAreaSerializer(GenericSerializer):
 
 
 class PlaceSerializer(GenericSerializer):
-    id = jsonschema.Field(schema_type=str, attr='uri')
-    name = jsonschema.Field(schema_type=str)
     quality = jsonschema.Field(schema_type=int, display_none=True)
     stop_area = StopAreaSerializer(display_none=False)
     stop_point = StopPointSerializer(display_none=False)
     administrative_region = AdminSerializer(display_none=False)
     embedded_type = EnumField(attr='embedded_type')
-#    @TODO "address": PbField(address),
-#    @TODO "poi": PbField(poi),
+    address = AddressSerializer(display_none=False)
+    poi = PoiSerializer(display_none=False)
 
 
 class NetworkSerializer(GenericSerializer):

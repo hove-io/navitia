@@ -26,12 +26,12 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask import g
-from jormungandr.interfaces.v1.make_links import create_internal_link
-from jormungandr.interfaces.v1.serializer.base import EnumField, PbNestedSerializer, DoubleToStringField
 import operator
 import serpy
+from flask import g
+from jormungandr.interfaces.v1.make_links import create_internal_link
 from jormungandr.interfaces.v1.serializer import jsonschema
+from jormungandr.interfaces.v1.serializer.base import EnumField, PbNestedSerializer, DoubleToStringField
 
 
 class MultiLineStringField(jsonschema.Field):

@@ -39,7 +39,7 @@ from jormungandr.interfaces.v1.serializer.time import DateTimeField, DateTimeDic
 class PTReferentialSerializer(serpy.Serializer):
     pagination = PaginationSerializer(attr='pagination', display_none=True, required=True)
     error = ErrorSerializer(display_none=False)
-    feed_publishers = FeedPublisherSerializer(many=True, display_none=False)
+    feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
 
 

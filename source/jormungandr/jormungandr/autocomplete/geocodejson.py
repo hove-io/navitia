@@ -320,7 +320,7 @@ class GeocodeJson(AbstractAutocomplete):
         json_response = response_bragi.json()
 
         if current_app.config.get('USE_SERPY', False):
-            from jormungandr.interfaces.v1.serializer.places import GeocodePlacesSerializer
+            from jormungandr.interfaces.v1.serializer.geocode_json import GeocodePlacesSerializer
             return GeocodePlacesSerializer(json_response).data
         else:
             from flask.ext.restful import marshal

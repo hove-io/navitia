@@ -33,6 +33,11 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from flask.ext.restful import fields, reqparse, abort
 from flask.ext.restful.inputs import boolean
 from flask.globals import g
+
+from jormungandr.interfaces.v1.serializer.api import PlacesSerializer
+from jormungandr.interfaces.v1.serializer.geocode_json import GeocodePlacesSerializer
+from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerPathSerializer
+from jormungandr.interfaces.v1.swagger_schema import make_schema
 from navitiacommon import parser_args_type
 from jormungandr import i_manager, timezone, global_autocomplete, authentication
 from jormungandr.interfaces.v1.fields import disruption_marshaller
@@ -72,9 +77,6 @@ def geojson_argument(value):
 class Places(ResourceUri):
     def __init__(self, *args, **kwargs):
         ResourceUri.__init__(self, authentication=False, *args, **kwargs)
-        self.parsers = {}
-        self.parsers["get"] = reqparse.RequestParser(
-            argument_class=ArgumentDoc)
         self.parsers["get"].add_argument("q", type=unicode, required=True,
                                          description="The data to search")
         self.parsers["get"].add_argument("type[]", type=option_value(pb_type),
@@ -112,6 +114,7 @@ class Places(ResourceUri):
                                          " used under the hood")
         self.parsers['get'].add_argument('shape', type=geojson_argument,
                                          description='Geographical shape to limit the search.')
+        self.output_type_serializer = PlacesSerializer
 
     def get(self, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
@@ -143,14 +146,15 @@ class Places(ResourceUri):
                 raise TechnicalError('world wide autocompletion service not available')
         return response, 200
 
+    def options(self, **kwargs):
+        schema = make_schema(resource=self)
+        return SwaggerPathSerializer(schema).data, 200
+
 
 class PlaceUri(ResourceUri):
 
     def __init__(self, **kwargs):
         ResourceUri.__init__(self, authentication=False, **kwargs)
-        self.parsers = {}
-        self.parsers["get"] = reqparse.RequestParser(
-            argument_class=ArgumentDoc)
         self.parsers["get"].add_argument("bss_stands", type=boolean, default=True,
                                          description="Show bss stands availability")
         self.parsers['get'].add_argument("disable_geojson", type=boolean, default=False,
@@ -203,9 +207,6 @@ class PlacesNearby(ResourceUri):
 
     def __init__(self, *args, **kwargs):
         ResourceUri.__init__(self, *args, **kwargs)
-        self.parsers = {}
-        self.parsers["get"] = reqparse.RequestParser(
-            argument_class=ArgumentDoc)
         self.parsers["get"].add_argument("type[]", type=unicode,
                                          action="append",
                                          default=["stop_area", "stop_point",
