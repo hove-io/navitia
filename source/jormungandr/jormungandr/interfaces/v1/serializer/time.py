@@ -76,7 +76,7 @@ class DateTimeDictField(Field):
     def __init__(self, schema_metadata=None, **kwargs):
         if schema_metadata is None:
             schema_metadata = {}
-        # schema_metadata['pattern'] = '\d{4}\d{2}\d{2}T\d{2}\d{2}\d{2}'
+        schema_metadata['pattern'] = '\d{4}\d{2}\d{2}T\d{2}\d{2}\d{2}'
         super(DateTimeDictField, self).__init__(schema_type=str, schema_metadata=schema_metadata, **kwargs)
 
 

@@ -26,6 +26,8 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+import copy
+
 import serpy
 import inspect
 import jormungandr
@@ -225,7 +227,7 @@ def get_schema_properties(serializer):
         rendered_field = schema_type() if callable(schema_type) else schema_type or field
 
         if rendered_field.__class__ in mapping:
-            schema = TYPE_MAP.get(rendered_field.__class__, {})
+            schema = copy.deepcopy(TYPE_MAP.get(rendered_field.__class__, {}))
         elif isinstance(rendered_field, serpy.Serializer):
             # complex types are stored in the `definition` list and referenced
             schema, definition = _from_nested_schema(rendered_field)
