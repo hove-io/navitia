@@ -47,7 +47,7 @@ from jormungandr.interfaces.v1.swagger_schema import make_schema
 collections = collections_to_resource_type.keys()
 
 coverage_marshall_fields = [
-    ("regions", fields.List(fields.Nested({
+    ("regions", fields.List(NonNullNested({
         "id": fields.String(attribute="region_id"),
         "start_production_date": fields.String,
         "end_production_date": fields.String,

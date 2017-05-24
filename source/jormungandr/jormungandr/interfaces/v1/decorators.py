@@ -26,8 +26,7 @@
 # www.navitia.io
 
 from flask import current_app
-from jormungandr.interfaces.v1.serializer import serialize_with
-from jormungandr.interfaces.v1.serializer import api
+from jormungandr.interfaces.v1.serializer import serialize_with, api
 from flask.ext.restful import marshal_with
 from collections import OrderedDict
 

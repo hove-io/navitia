@@ -98,6 +98,11 @@ class MethodField(serpy.MethodField):
     A :class:`MethodField` that hold metadata for schema.
     """
 
-    def __init__(self, method=None, schema_type=None, schema_metadata=None, **kwargs):
-        kwargs['method'] = method
-        _init(self, serpy.MethodField, schema_type=schema_type, schema_metadata=schema_metadata, **kwargs)
+    def __init__(self, method=None, schema_type=None, schema_metadata=None,
+                 attr=None, call=False, label=None, required=True, display_none=False, **kwargs):
+        super(MethodField, self).__init__(method=method, attr=attr, call=call, label=label,
+                                          required=required, display_none=display_none)
+        self.schema_type = schema_type
+        self.schema_metadata = schema_metadata or {}
+        # the remaining kwargs are added in the schema metadata to add a bit of syntaxic sugar
+        self.schema_metadata.update(**kwargs)

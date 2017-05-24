@@ -45,37 +45,33 @@ class Equipments(EnumListField):
 
 
 class ChannelSerializer(PbNestedSerializer):
-    content_type = jsonschema.Field(schema_type=str)
-    id = jsonschema.Field(schema_type=str)
-    name = jsonschema.Field(schema_type=str)
+    content_type = jsonschema.Field()
+    id = jsonschema.Field()
+    name = jsonschema.Field()
     types = EnumListField(attr='channel_types')
 
 
 class MessageSerializer(PbNestedSerializer):
-    text = jsonschema.Field(schema_type=str)
+    text = jsonschema.Field()
     channel = ChannelSerializer()
 
 
 class SeveritySerializer(PbNestedSerializer):
-    name = jsonschema.Field(schema_type=str)
-    effect = jsonschema.Field(schema_type=str)
-    color = jsonschema.Field(schema_type=str)
-    priority = jsonschema.Field(schema_type=int)
+    name = jsonschema.Field()
+    effect = jsonschema.Field()
+    color = jsonschema.Field()
+    priority = jsonschema.Field()
 
 
 class PtObjectSerializer(GenericSerializer):
-    quality = jsonschema.Field(schema_type=int, required=False)
-    stop_area = jsonschema.MethodField(schema_type='get_stop_area_jsonschema', display_none=False)
-    line = jsonschema.MethodField(schema_type='get_line_jsonschema', display_none=False)
-    network = jsonschema.MethodField(schema_type='get_network_jsonschema', display_none=False)
-    route = jsonschema.MethodField(schema_type='get_route_jsonschema', display_none=False)
-    commercial_mode = jsonschema.MethodField(schema_type='get_commercial_mode_jsonschema', display_none=False)
-    trip = jsonschema.MethodField(schema_type='get_trip_jsonschema', display_none=False)
+    quality = jsonschema.Field(schema_type=int, required=False, display_none=True)
+    stop_area = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer)
+    line = jsonschema.MethodField(schema_type=lambda: LineSerializer)
+    network = jsonschema.MethodField(schema_type=lambda: NetworkSerializer)
+    route = jsonschema.MethodField(schema_type=lambda: RouteSerializer)
+    commercial_mode = jsonschema.MethodField(schema_type=lambda: CommercialModeSerializer)
+    trip = jsonschema.MethodField(schema_type=lambda: TripSerializer)
     embedded_type = EnumField(attr='embedded_type')
-
-
-    def get_trip_jsonschema(self):
-        return TripSerializer(display_none=False)
 
     def get_trip(self, obj):
         if obj.HasField(str('trip')):
@@ -83,17 +79,11 @@ class PtObjectSerializer(GenericSerializer):
         else:
             return None
 
-    def get_commercial_mode_jsonschema(self):
-        return CommercialModeSerializer(display_none=False)
-
     def get_commercial_mode(self, obj):
         if obj.HasField(str('commercial_mode')):
             return CommercialModeSerializer(obj.commercial_mode, display_none=False).data
         else:
             return None
-
-    def get_route_jsonschema(self):
-        return RouteSerializer(display_none=False)
 
     def get_route(self, obj):
         if obj.HasField(str('route')):
@@ -101,26 +91,17 @@ class PtObjectSerializer(GenericSerializer):
         else:
             return None
 
-    def get_network_jsonschema(self):
-        return NetworkSerializer(display_none=False)
-
     def get_network(self, obj):
         if obj.HasField(str('network')):
             return NetworkSerializer(obj.network, display_none=False).data
         else:
             return None
 
-    def get_line_jsonschema(self):
-        return LineSerializer(display_none=False)
-
     def get_line(self, obj):
         if obj.HasField(str('line')):
             return LineSerializer(obj.line, display_none=False).data
         else:
             return None
-
-    def get_stop_area_jsonschema(self):
-        return StopAreaSerializer(display_none=False)
 
     def get_stop_area(self, obj):
         if obj.HasField(str('stop_area')):
@@ -171,7 +152,7 @@ class ImpactedStopSerializer(PbNestedSerializer):
     base_departure_time = LocalTimeField(attr='base_stop_time.departure_time')
     amended_arrival_time = LocalTimeField(attr='amended_stop_time.arrival_time')
     amended_departure_time = LocalTimeField(attr='amended_stop_time.departure_time')
-    cause = jsonschema.Field(schema_type=str)
+    cause = jsonschema.Field(schema_type=str, display_none=True)
     stop_time_effect = EnumField(attr='effect')
     departure_status = EnumField()
     arrival_status = EnumField()
@@ -208,7 +189,7 @@ class DisruptionSerializer(PbNestedSerializer):
     status = EnumField(attr='status')
     updated_at = DateTimeField()
     tags = serpy.Serializer(many=True, display_none=False)
-    cause = jsonschema.Field(schema_type=str)
+    cause = jsonschema.Field(schema_type=str, display_none=True)
     category = jsonschema.Field(schema_type=str, display_none=False)
     severity = SeveritySerializer()
     messages = MessageSerializer(many=True)
@@ -227,8 +208,8 @@ class AdminSerializer(GenericSerializer):
 
 
 class AddressSerializer(GenericSerializer):
-    house_number = jsonschema.Field(schema_type=int)
-    coord = CoordSerializer(required=False, display_none=False)
+    house_number = jsonschema.Field(schema_type=int, display_none=True)
+    coord = CoordSerializer(required=False)
     label = jsonschema.Field(schema_type=str)
     administrative_regions = AdminSerializer(many=True, display_none=False)
 
@@ -247,7 +228,7 @@ class StopPointSerializer(GenericSerializer):
     codes = CodeSerializer(many=True, display_none=False)
     label = jsonschema.Field(schema_type=str)
     coord = CoordSerializer(required=False)
-    links = LinkSerializer(attr='impact_uris')
+    links = LinkSerializer(attr='impact_uris', display_none=True)
     commercial_modes = CommercialModeSerializer(many=True, display_none=False)
     physical_modes = PhysicalModeSerializer(many=True, display_none=False)
     administrative_regions = AdminSerializer(many=True, display_none=False)
@@ -272,7 +253,7 @@ class StopAreaSerializer(GenericSerializer):
     timezone = jsonschema.Field(schema_type=str)
     label = jsonschema.Field(schema_type=str)
     coord = CoordSerializer(required=False)
-    links = LinkSerializer(attr='impact_uris')
+    links = LinkSerializer(attr='impact_uris', display_none=True)
     commercial_modes = CommercialModeSerializer(many=True, display_none=False)
     physical_modes = PhysicalModeSerializer(many=True, display_none=False)
     administrative_regions = AdminSerializer(many=True, display_none=False)
@@ -293,7 +274,7 @@ class PlaceSerializer(GenericSerializer):
 
 class NetworkSerializer(GenericSerializer):
     lines = jsonschema.MethodField(schema_type='get_lines_jsonschema', display_none=False)
-    links = LinkSerializer(attr='impact_uris')
+    links = LinkSerializer(attr='impact_uris', display_none=True)
     codes = CodeSerializer(many=True, display_none=False)
 
     def get_lines_jsonschema(self):
@@ -311,8 +292,8 @@ class RouteSerializer(GenericSerializer):
     codes = CodeSerializer(many=True, display_none=False)
     direction = PlaceSerializer()
     geojson = MultiLineStringField(display_none=False)
-    links = LinkSerializer(attr='impact_uris')
-    line = jsonschema.MethodField(schema_type='get_line_jsonschema', display_none=False)
+    links = LinkSerializer(attr='impact_uris', display_none=True)
+    line = jsonschema.MethodField(schema_type='get_line_jsonschema')
     stop_points = StopPointSerializer(many=True, display_none=False)
 
     def get_line_jsonschema(self):
@@ -361,7 +342,7 @@ class LineSerializer(GenericSerializer):
     closing_time = LocalTimeField()
     properties = PropertySerializer(many=True, display_none=False)
     geojson = MultiLineStringField(display_none=False)
-    links = LinkSerializer(attr='impact_uris')
+    links = LinkSerializer(attr='impact_uris', display_none=True)
     line_groups = LineGroupSerializer(many=True, display_none=False)
 
 
@@ -392,4 +373,4 @@ class VehicleJourneySerializer(GenericSerializer):
     validity_pattern = ValidityPatternSerializer()
     calendars = CalendarSerializer(many=True)
     trip = TripSerializer()
-    disruptions = LinkSerializer(attr='impact_uris')
+    disruptions = LinkSerializer(attr='impact_uris', display_none=True)

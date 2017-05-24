@@ -27,13 +27,13 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-
 from tests.tests_mechanism import dataset, AbstractTestFixture
 from swagger_spec_validator import validator20
+import flex
 
 
-@dataset({})
-class TestAutocomplete(AbstractTestFixture):
+@dataset({"main_autocomplete_test": {}})
+class TestSwaggerSchema(AbstractTestFixture):
     """
     Test swagger schema
     """
@@ -42,5 +42,25 @@ class TestAutocomplete(AbstractTestFixture):
         """
         Test the global schema
         """
-        response = self.query("v1/schema")
+        response = self.query('v1/schema')
+        flex.core.validate(response)
         validator20.validate_spec(response)
+
+    def _check_schema(self, url):
+        schema = self.query('v1/schema')
+
+        raw_response = self.tester.get(url)
+        req = flex.http.Request(url=url, method='get')
+        resp = flex.http.Response(
+            request=req,
+            content=raw_response.data,
+            url=url,
+            status_code=raw_response.status_code,
+            content_type='application/json')
+        flex.core.validate_api_call(schema, req, resp)
+
+    def test_coverage_schema(self):
+        """
+        Test the coverage schema
+        """
+        self._check_schema('/v1/coverage/')
