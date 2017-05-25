@@ -52,6 +52,9 @@ def test_get_instance(create_instance):
     assert len(resp) == 1
     assert resp[0]['name'] == 'fr'
     assert resp[0]['id'] == create_instance
+    # get does not raise
+    resp = api_get('/v0/instances/{}'.format(create_instance + 1))
+    assert resp == []
 
 
 def test_update_instances(create_instance):
