@@ -147,7 +147,7 @@ class CalendarSerializer(GenericSerializer):
 
 
 class ImpactedStopSerializer(PbNestedSerializer):
-    stop_point = jsonschema.MethodField(schema_type='get_stop_point_jsonschema', display_none=False)
+    stop_point = jsonschema.MethodField(schema_type=lambda: StopPointSerializer)
     base_arrival_time = LocalTimeField(attr='base_stop_time.arrival_time')
     base_departure_time = LocalTimeField(attr='base_stop_time.departure_time')
     amended_arrival_time = LocalTimeField(attr='amended_stop_time.arrival_time')
@@ -156,9 +156,6 @@ class ImpactedStopSerializer(PbNestedSerializer):
     stop_time_effect = EnumField(attr='effect')
     departure_status = EnumField()
     arrival_status = EnumField()
-
-    def get_stop_point_jsonschema(self):
-        return StopPointSerializer(display_none=False)
 
     def get_stop_point(self, obj):
         if obj.HasField(str('stop_point')):
@@ -232,12 +229,9 @@ class StopPointSerializer(GenericSerializer):
     commercial_modes = CommercialModeSerializer(many=True, display_none=False)
     physical_modes = PhysicalModeSerializer(many=True, display_none=False)
     administrative_regions = AdminSerializer(many=True, display_none=False)
-    stop_area = jsonschema.MethodField(schema_type='get_stop_area_jsonschema', display_none=False)
+    stop_area = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer, display_none=False)
     equipments = Equipments(attr='has_equipments')
     address = AddressSerializer(display_none=False)
-
-    def get_stop_area_jsonschema(self):
-        return StopAreaSerializer(display_none=False)
 
     def get_stop_area(self, obj):
         if obj.HasField(str('stop_area')):
@@ -273,12 +267,9 @@ class PlaceSerializer(GenericSerializer):
 
 
 class NetworkSerializer(GenericSerializer):
-    lines = jsonschema.MethodField(schema_type='get_lines_jsonschema', display_none=False)
+    lines = jsonschema.MethodField(schema_type=lambda: LineSerializer, display_none=False)
     links = LinkSerializer(attr='impact_uris', display_none=True)
     codes = CodeSerializer(many=True, display_none=False)
-
-    def get_lines_jsonschema(self):
-        return LineSerializer(many=True, display_none=False)
 
     def get_lines(self, obj):
         return LineSerializer(obj.lines, many=True, display_none=False).data
@@ -293,11 +284,8 @@ class RouteSerializer(GenericSerializer):
     direction = PlaceSerializer()
     geojson = MultiLineStringField(display_none=False)
     links = LinkSerializer(attr='impact_uris', display_none=True)
-    line = jsonschema.MethodField(schema_type='get_line_jsonschema')
+    line = jsonschema.MethodField(schema_type=lambda: LineSerializer)
     stop_points = StopPointSerializer(many=True, display_none=False)
-
-    def get_line_jsonschema(self):
-        return LineSerializer(display_none=False)
 
     def get_line(self, obj):
         if obj.HasField(str('line')):
@@ -307,18 +295,12 @@ class RouteSerializer(GenericSerializer):
 
 
 class LineGroupSerializer(GenericSerializer):
-    lines = jsonschema.MethodField(schema_type='get_lines_jsonschema', display_none=False)
-    main_line = jsonschema.MethodField(schema_type='get_main_line_jsonschema', display_none=False)
+    lines = jsonschema.MethodField(schema_type=lambda: [LineSerializer], display_none=False)
+    main_line = jsonschema.MethodField(schema_type=lambda: LineSerializer, display_none=False)
     comments = CommentSerializer(many=True)
-
-    def get_lines_jsonschema(self):
-        return LineSerializer(many=True, display_none=False)
 
     def get_lines(self, obj):
         return LineSerializer(obj.lines, many=True, display_none=False).data
-
-    def get_main_line_jsonschema(self):
-        return LineSerializer()
 
     def get_main_line(self, obj):
         if obj.HasField(str('main_line')):
