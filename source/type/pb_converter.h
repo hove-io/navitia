@@ -216,6 +216,7 @@ struct PbCreator {
         this->impacts.clear();
         this->routing_section_map.clear();
         this->response.Clear();
+        this->unknown_ticket = nullptr;
     }
 
     PbCreator(const PbCreator&) = delete;
