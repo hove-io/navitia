@@ -56,10 +56,10 @@ struct DumpMessageOptions {
     DumpLineSectionMessage dump_line_section;
     constexpr DumpMessageOptions(DumpMessage dump_message = DumpMessage::Yes,
             DumpLineSectionMessage dump_line_section = DumpLineSectionMessage::No):
-                        dump_message(dump_message), dump_line_section(dump_line_section){};
+                        dump_message(dump_message), dump_line_section(dump_line_section){}
     constexpr bool operator==(const DumpMessageOptions& rhs) const {
         return dump_message == rhs.dump_message && dump_line_section == rhs.dump_line_section;
-    };
+    }
 };
 
 static const auto null_time_period = pt::time_period(pt::not_a_date_time, pt::seconds(0));
