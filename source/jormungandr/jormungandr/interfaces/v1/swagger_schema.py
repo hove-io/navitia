@@ -69,31 +69,6 @@ TYPE_MAP = {
     bool: {
         'type': 'boolean',
     },
-    # TODO remove the serpy field mapping and add a type in the fields
-    serpy.StrField: {
-        'type': 'string',
-    },
-    serpy.IntField: {
-        'type': 'integer'
-    },
-    serpy.FloatField: {
-        'type': 'number',
-        'format': 'float'
-    },
-    serpy.BoolField: {
-        'type': 'boolean',
-    },
-}
-
-mapping = {
-    str: 'str',
-    int: 'int',
-    float: 'float',
-    bool: 'bool',
-    serpy.StrField: 'str',
-    serpy.IntField: 'int',
-    serpy.FloatField: 'float',
-    serpy.BoolField: 'bool'
 }
 
 
@@ -210,23 +185,27 @@ def get_schema(serializer):
 
 
 def get_schema_properties(serializer):
+    """
+    create the schema from a serpy serializer
+    
+    for each serializer field, we'll search for it's schema
+    All complex fields (a field that is another serializer), we add the field's serializer to the external
+    definitions
+    """
     external_definitions = []
     properties = {}
     for field_name, field in serializer._field_map.items():
         schema = {}
         schema_type = getattr(field, 'schema_type', None)
+        # schema_metadata are additional information blindly added to the schema
         schema_metadata = getattr(field, 'schema_metadata', None)
 
-        if isinstance(schema_type, basestring) and hasattr(serializer, schema_type):
-            if hasattr(serializer, '__name__'):
-                serializer = serializer()
-            schema_type = getattr(serializer, schema_type)
-            # Get method result or attribute value
-            schema_type = schema_type() if callable(schema_type) else schema_type
-
+        # for some import order problem, the schema can be a function that returns the real schema
+        # if a schema has not been defined, we consider directly the field
         rendered_field = schema_type() if callable(schema_type) else schema_type or field
 
-        if rendered_field.__class__ in mapping:
+        # if the field's class in a simple known type (str, bool, ...), we got it from TYPE_MAP
+        if rendered_field.__class__ in TYPE_MAP:
             schema = copy.deepcopy(TYPE_MAP.get(rendered_field.__class__, {}))
         elif isinstance(rendered_field, serpy.Serializer):
             # complex types are stored in the `definition` list and referenced

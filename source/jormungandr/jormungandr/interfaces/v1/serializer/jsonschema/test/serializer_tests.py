@@ -29,8 +29,10 @@
 
 import serpy
 import pytest
-
 from jormungandr.interfaces.v1.serializer import jsonschema
+from jormungandr.interfaces.v1.serializer.base import LambdaField
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import StrField, BoolField, FloatField, IntField, \
+    Field, MethodField
 from jormungandr.interfaces.v1.swagger_schema import get_schema
 
 
@@ -40,14 +42,14 @@ def serpy_supported_serialization_test():
     """
 
     class SerpySupportedType(serpy.Serializer):
-        serpyStrField = serpy.StrField(required=False)
-        serpyBoolField = serpy.BoolField()
-        serpyFloatField = serpy.FloatField()
-        serpyIntField = serpy.IntField()
+        serpyStrField = StrField(display_none=True)
+        serpyBoolField = BoolField(display_none=True)
+        serpyFloatField = FloatField()
+        serpyIntField = IntField()
 
     schema, external_definitions = get_schema(SerpySupportedType)
     assert schema.get('type') == 'object'
-    assert len(schema.get('required')) == 3
+    assert len(schema.get('required')) == 2
     properties = schema.get('properties', {})
     assert len(properties) == 4
     assert properties.get('serpyStrField', {}).get('type') == 'string'
@@ -60,18 +62,11 @@ def serpy_unsupported_serialization_test():
     """
     Unsupported serpy fields
     """
-
-    class SerpyUnsupportedFieldType(serpy.Serializer):
-        serpyField = serpy.Field()
-
     class SerpyUnsupportedMethodFieldType(serpy.Serializer):
-        serpyMethodField = serpy.MethodField()
+        serpyMethodField = MethodField()
 
         def get_serpyMethodField(self, obj):
             pass
-
-    with pytest.raises(ValueError):
-        get_schema(SerpyUnsupportedFieldType)
 
     with pytest.raises(ValueError):
         get_schema(SerpyUnsupportedMethodFieldType)
@@ -81,14 +76,19 @@ def serpy_extended_supported_serialization_test():
     """
     Supported custom serpy children fields
     """
+    class CustomSerializer(serpy.Serializer):
+        bob = jsonschema.IntField()
 
     class JsonchemaSupportedType(serpy.Serializer):
-        jsonschemaStrField = jsonschema.StrField(required=False)
-        jsonschemaBoolField = jsonschema.BoolField(required=True, display_none=True)
-        jsonschemaFloatField = jsonschema.FloatField(required=True, display_none=True)
-        jsonschemaIntField = jsonschema.IntField()
-        jsonschemaField = jsonschema.Field(schema_type=int)
-        jsonschemaMethodField = jsonschema.MethodField(schema_type=str)
+        jsonschemaStrField = StrField(required=False)
+        jsonschemaBoolField = BoolField(required=True, display_none=True)
+        jsonschemaFloatField = FloatField(required=True, display_none=True)
+        jsonschemaIntField = IntField()
+        jsonschemaField = Field(schema_type=int)
+        jsonschemaMethodField = MethodField(schema_type=str)
+        lambda_schema = LambdaField(method=lambda **kw: None, schema_type=lambda: CustomSerializer())
+        list_lambda_schema = LambdaField(method=lambda **kw: None,
+                                         schema_type=lambda: CustomSerializer(many=True))
 
         def get_jsonschemaMethodField(self, obj):
             pass
@@ -97,13 +97,20 @@ def serpy_extended_supported_serialization_test():
     assert schema.get('type') == 'object'
     assert set(schema.get('required')) == {'jsonschemaBoolField', 'jsonschemaFloatField'}
     properties = schema.get('properties', {})
-    assert len(properties) == 6
+    assert len(properties) == 8
     assert properties.get('jsonschemaStrField', {}).get('type') == 'string'
     assert properties.get('jsonschemaBoolField', {}).get('type') == 'boolean'
     assert properties.get('jsonschemaFloatField', {}).get('type') == 'number'
     assert properties.get('jsonschemaIntField', {}).get('type') == 'integer'
     assert properties.get('jsonschemaField', {}).get('type') == 'integer'
     assert properties.get('jsonschemaMethodField', {}).get('type') == 'string'
+    assert properties.get('lambda_schema', {}).get('$ref') == '#/definitions/CustomSerializer'
+    assert properties.get('list_lambda_schema', {}).get('type') == 'array'
+    assert properties.get('list_lambda_schema').get('items').get('$ref') == '#/definitions/CustomSerializer'
+
+    # we must find the 'CustomSerializer' in the definitions
+    assert(next(iter(d for d in external_definitions if d.__class__ == CustomSerializer), None))
+
 
 
 def schema_type_test():
@@ -119,11 +126,8 @@ def schema_type_test():
 
     class JsonchemaType(serpy.Serializer):
         primitive = jsonschema.Field(schema_type=str)
-        function = jsonschema.MethodField(schema_type='get_bibu', display_none=False)
+        function = jsonschema.MethodField(schema_type=int, display_none=False)
         serializer = jsonschema.Field(schema_type=JsonchemaMetadata)
-
-        def get_bibu(self):
-            return int
 
         def get_function(self):
             pass

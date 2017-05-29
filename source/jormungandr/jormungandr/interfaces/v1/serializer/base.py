@@ -167,7 +167,7 @@ class IntNestedPropertyField(NestedPropertyField):
     to_value = staticmethod(int)
 
 
-class LambdaField(serpy.Field):
+class LambdaField(Field):
     getter_takes_serializer = True
 
     def __init__(self, method, **kwargs):
