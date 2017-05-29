@@ -26,8 +26,7 @@
 # www.navitia.io
 
 from flask import current_app
-from jormungandr.interfaces.v1.serializer import serialize_with
-from jormungandr.interfaces.v1.serializer import api
+from jormungandr.interfaces.v1.serializer import serialize_with, api
 from flask.ext.restful import marshal_with
 from collections import OrderedDict
 
@@ -45,11 +44,18 @@ map_serializer = {
    "trips": api.TripsSerializer,
    "journey_patterns": api.JourneyPatternsSerializer,
    "journey_pattern_points": api.JourneyPatternPointsSerializer,
+   "coverages": api.CoveragesSerializer,
 }
 
 
 def get_serializer(collection, collections, display_null=False):
-    if current_app.config.get('USE_SERPY', False):
+    try:
+        # we have to do this if this method is used outside a flask application context
+        use_serpy = current_app.config.get('USE_SERPY', False)
+    except RuntimeError:
+        use_serpy = False
+
+    if use_serpy:
         return serialize_with(map_serializer.get(collection))
     else:
         return marshal_with(OrderedDict(collections), display_null=display_null)

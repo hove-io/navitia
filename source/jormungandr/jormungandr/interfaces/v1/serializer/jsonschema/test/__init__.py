@@ -26,6 +26,3 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-
-__all__ = ['Uri', 'Coverage', 'Journeys', 'Places', 'ResourceUri',
-           'Schedules', 'Disruptions', 'Calendars', 'Ptobjects', 'JSONSchema']

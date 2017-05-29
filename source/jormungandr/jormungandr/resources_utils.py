@@ -30,12 +30,18 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+from collections import defaultdict
+
+from flask.ext.restful import reqparse, Resource
+
 from jormungandr import i_manager
 import logging
 import pytz
 from jormungandr.exceptions import RegionNotFound, UnableToParse
+from jormungandr.interfaces.argument import ArgumentDoc
 
-class ResourceUtc:
+
+class ResourceUtc(object):
     def __init__(self):
         self._tz = None
 
@@ -89,3 +95,10 @@ class ResourceUtc:
             dt = dt.astimezone(self.tz())
             return dt.strftime("%Y%m%dT%H%M%S")
         return None  # for the moment I prefer not to display anything instead of something wrong
+
+
+class DocumentedResource(Resource):
+    def __init__(self, output_type_serializer=None):
+        super(Resource, self).__init__()
+        self.parsers = defaultdict(lambda: reqparse.RequestParser(argument_class=ArgumentDoc))
+        self.output_type_serializer = output_type_serializer

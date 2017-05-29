@@ -45,7 +45,7 @@ from jormungandr.interfaces.parsers import option_value, date_time_format, defau
 from jormungandr.interfaces.v1.errors import ManageError
 from flask.ext.restful.inputs import natural, boolean
 from jormungandr.interfaces.v1.fields import disruption_marshaller, NonNullList, NonNullNested
-from jormungandr.resources_utc import ResourceUtc
+from jormungandr.resources_utils import ResourceUtc
 from jormungandr.interfaces.v1.make_links import create_external_link
 from functools import wraps
 from copy import deepcopy

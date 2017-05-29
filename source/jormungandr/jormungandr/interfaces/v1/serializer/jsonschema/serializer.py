@@ -1,3 +1,5 @@
+# coding=utf-8
+
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -27,5 +29,36 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-__all__ = ['Uri', 'Coverage', 'Journeys', 'Places', 'ResourceUri',
-           'Schedules', 'Disruptions', 'Calendars', 'Ptobjects', 'JSONSchema']
+import serpy
+from serpy.fields import MethodField
+from jormungandr.interfaces.v1.serializer.base import LiteralField
+
+
+class SwaggerParamSerializer(serpy.Serializer):
+    description = serpy.Field()
+    location = serpy.Field(label='in')
+    name = serpy.StrField()
+    required = serpy.Field()
+    type = serpy.StrField()
+    default = serpy.StrField(display_none=False)
+    enum = serpy.Field(display_none=False)
+
+
+class SwaggerResponseSerializer(serpy.DictSerializer):
+    success = serpy.Field(attr='200', label='200')
+
+
+class SwaggerMethodSerializer(serpy.Serializer):
+    consumes = LiteralField(["application/json"])
+    produces = LiteralField(["application/json"])
+    responses = SwaggerResponseSerializer(attr='output_type')
+    parameters = SwaggerParamSerializer(many=True)
+    summary = serpy.Field()
+
+
+class SwaggerPathSerializer(serpy.Serializer):
+    # Hack since for the moment we only handle 'get' method. TODO, find a way to remove this hack
+    get = MethodField(method='get_methods')
+
+    def get_methods(self, obj):
+        return SwaggerMethodSerializer(obj.methods.get('get')).data

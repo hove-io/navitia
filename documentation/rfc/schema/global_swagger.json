@@ -1,0 +1,207 @@
+{
+    "basePath": "/v1", 
+    "definitions": {
+        "CoverageErrorSerializer": {
+            "properties": {
+                "code": {
+                    "type": "string"
+                },
+                "value": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "CoverageSerializer": {
+            "properties": {
+                "dataset_created_at": {
+                    "type": "string"
+                },
+                "end_production_date": {
+                    "type": "string"
+                },
+                "error": {
+                    "$ref": "#/definitions/CoverageErrorSerializer"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "last_load_at": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "shape": {
+                    "type": "string"
+                },
+                "start_production_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "host": "localhost:5000",
+    "info": {
+        "contact": {
+            "email": "navitia@googlegroups.com",
+            "name": "Navitia",
+            "url": "https://www.navitia.io/"
+        },
+        "description": "\n    navitia.io is the open API for building cool stuff with mobility data. It provides the following services\n\n    * journeys computation\n    * line schedules\n    * next departures\n    * exploration of public transport data / search places\n    * and sexy things such as isochrones\n\n    navitia is a HATEOAS API that returns JSON formated results\n    ",
+        "license": {
+            "name": "license",
+            "url": "https://www.navitia.io/api-term-of-use"
+        },
+        "title": "navitia",
+        "version": "v2.32.0-41-g13dd135"
+    },
+    "paths": {
+        "/coverage/": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "default": "False",
+                        "description": "hide the coverage geojson to reduce response size",
+                        "in": "query",
+                        "name": "disable_geojson",
+                        "required": false,
+                        "type": "boolean"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "properties": {
+                                "regions": {
+                                    "items": {
+                                        "$ref": "#/definitions/CoverageSerializer"
+                                    },
+                                    "type": "array"
+                                }
+                            },
+                            "required": [
+                                "regions"
+                            ],
+                            "type": "object"
+                        }
+                    }
+                },
+                "summary": ""
+            }
+        },
+        "/coverage/{lon};{lat}/": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "default": "False",
+                        "description": "hide the coverage geojson to reduce response size",
+                        "in": "query",
+                        "name": "disable_geojson",
+                        "required": false,
+                        "type": "boolean"
+                    },
+                    {
+                        "description": " The latitude of where the coord you want to query",
+                        "in": "path",
+                        "name": "lat",
+                        "required": true,
+                        "type": "number"
+                    },
+                    {
+                        "description": " The longitude of where the coord you want to query",
+                        "in": "path",
+                        "name": "lon",
+                        "required": true,
+                        "type": "number"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "properties": {
+                                "regions": {
+                                    "items": {
+                                        "$ref": "#/definitions/CoverageSerializer"
+                                    },
+                                    "type": "array"
+                                }
+                            },
+                            "required": [
+                                "regions"
+                            ],
+                            "type": "object"
+                        }
+                    }
+                },
+                "summary": ""
+            }
+        },
+        "/coverage/{region}/": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "parameters": [
+                    {
+                        "default": "False",
+                        "description": "hide the coverage geojson to reduce response size",
+                        "in": "query",
+                        "name": "disable_geojson",
+                        "required": false,
+                        "type": "boolean"
+                    },
+                    {
+                        "description": " The region you want to query",
+                        "in": "path",
+                        "name": "region",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "schema": {
+                            "properties": {
+                                "regions": {
+                                    "items": {
+                                        "$ref": "#/definitions/CoverageSerializer"
+                                    },
+                                    "type": "array"
+                                }
+                            },
+                            "required": [
+                                "regions"
+                            ],
+                            "type": "object"
+                        }
+                    }
+                },
+                "summary": ""
+            }
+        }
+    }, 
+    "swagger": "2.0"
+}

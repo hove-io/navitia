@@ -31,9 +31,10 @@ from jormungandr.interfaces.v1.make_links import create_internal_link
 from jormungandr.interfaces.v1.serializer.base import EnumField, PbNestedSerializer, DoubleToStringField
 import operator
 import serpy
+from jormungandr.interfaces.v1.serializer import jsonschema
 
 
-class MultiLineStringField(serpy.Field):
+class MultiLineStringField(jsonschema.Field):
 
     def to_value(self, value):
         if getattr(g, 'disable_geojson', False):
@@ -50,20 +51,20 @@ class MultiLineStringField(serpy.Field):
 
 
 class PropertySerializer(serpy.Serializer):
-    name = serpy.Field()
-    value = serpy.Field()
+    name = jsonschema.Field(schema_type=str)
+    value = jsonschema.Field(schema_type=str)
 
 
 class FeedPublisherSerializer(PbNestedSerializer):
-    id = serpy.Field()
-    name = serpy.Field()
-    url = serpy.Field()
-    license = serpy.Field()
+    id = serpy.StrField()
+    name = serpy.StrField()
+    url = serpy.StrField()
+    license = serpy.StrField()
 
 
 class ErrorSerializer(PbNestedSerializer):
     id = EnumField(attr='id')
-    message = serpy.Field()
+    message = serpy.StrField()
 
 
 class CoordSerializer(serpy.Serializer):
@@ -72,16 +73,16 @@ class CoordSerializer(serpy.Serializer):
 
 
 class CodeSerializer(serpy.Serializer):
-    type = serpy.Field()
-    value = serpy.Field()
+    type = jsonschema.Field(schema_type=str)
+    value = jsonschema.Field(schema_type=str)
 
 
 class CommentSerializer(serpy.Serializer):
-    value = serpy.Field()
-    type = serpy.Field()
+    value = jsonschema.Field(schema_type=str)
+    type = jsonschema.Field(schema_type=str)
 
 
-class FirstCommentField(serpy.Field):
+class FirstCommentField(jsonschema.Field):
     """
     for compatibility issue we want to continue to output a 'comment' field
     even if now we have a list of comments, so we take the first one
@@ -99,7 +100,7 @@ class FirstCommentField(serpy.Field):
             return None
 
 
-class LinkSerializer(serpy.Field):
+class LinkSerializer(jsonschema.Field):
     """
     Add link to disruptions on a pt object
     """
@@ -109,7 +110,7 @@ class LinkSerializer(serpy.Field):
 
 
 class PaginationSerializer(serpy.Serializer):
-    total_result = serpy.Field(attr='totalResult')
-    start_page = serpy.Field(attr='startPage')
-    items_per_page = serpy.Field(attr='itemsPerPage')
-    items_on_page = serpy.Field(attr='itemsOnPage')
+    total_result = serpy.IntField(attr='totalResult')
+    start_page = serpy.IntField(attr='startPage')
+    items_per_page = serpy.IntField(attr='itemsPerPage')
+    items_on_page = serpy.IntField(attr='itemsOnPage')

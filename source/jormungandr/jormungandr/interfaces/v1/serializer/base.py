@@ -29,15 +29,17 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
+from functools import partial
+
+from jormungandr.interfaces.v1.serializer import jsonschema
 import serpy
 import operator
 
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field
 
-class PbField(serpy.Field):
+
+class PbField(Field):
     def __init__(self, *args, **kwargs):
-        # used only to put a default value to display_none
-        if 'display_none' not in kwargs:
-            kwargs['display_none'] = False
         super(PbField, self).__init__(*args, **kwargs)
 
     """
@@ -55,7 +57,7 @@ class PbField(serpy.Field):
                     return op(obj)
                 else:
                     return None
-            except ValueError as e:
+            except ValueError:
                 #HasField throw an exception if the field is repeated...
                 return op(obj)
         return getter
@@ -80,11 +82,19 @@ class NestedPbField(PbField):
             return cur_obj
         return getter
 
+
+class NullableDictSerializer(serpy.Serializer):
+    @classmethod
+    def default_getter(cls, attr):
+        return lambda d: d.get(attr)
+
+
 class PbNestedSerializer(serpy.Serializer, PbField):
     pass
 
 
-class EnumField(serpy.Field):
+class EnumField(jsonschema.Field):
+
     def as_getter(self, serializer_field_name, serializer_cls):
         def getter(val):
             attr = self.attr or serializer_field_name
@@ -111,11 +121,11 @@ class EnumListField(EnumField):
 
 
 class GenericSerializer(PbNestedSerializer):
-    id = serpy.Field(attr='uri')
-    name = serpy.Field()
+    id = jsonschema.Field(schema_type=str, attr='uri')
+    name = jsonschema.Field(schema_type=str)
 
 
-class LiteralField(serpy.Field):
+class LiteralField(jsonschema.Field):
     """
     :return literal value
     """
@@ -148,13 +158,24 @@ def value_by_path(obj, path, default=None):
         return default
 
 
-class NestedPropertyField(serpy.Field):
+class NestedPropertyField(jsonschema.Field):
     def as_getter(self, serializer_field_name, serializer_cls):
         return lambda v: value_by_path(v, self.attr)
 
 
 class IntNestedPropertyField(NestedPropertyField):
     to_value = staticmethod(int)
+
+
+class LambdaField(Field):
+    getter_takes_serializer = True
+
+    def __init__(self, method, **kwargs):
+        super(LambdaField, self).__init__(**kwargs)
+        self.method = method
+
+    def as_getter(self, serializer_field_name, serializer_cls):
+        return self.method
 
 
 class DoubleToStringField(serpy.Field):
