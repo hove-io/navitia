@@ -37,22 +37,6 @@ class SwaggerDefinitions(object):
     pass
 
 TYPE_MAP = {
-    'unicode': {
-        'type': 'string',
-    },
-    'str': {
-        'type': 'string',
-    },
-    'float': {
-        'type': 'number',
-        'format': 'float'
-    },
-    'int': {
-        'type': 'integer'
-    },
-    'boolean': {
-        'type': 'boolean',
-    },
     str: {
         'type': 'string',
     },

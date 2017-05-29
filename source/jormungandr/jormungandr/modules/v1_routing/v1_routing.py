@@ -41,7 +41,7 @@ from jormungandr.modules.v1_routing.resources import Index
 
 class RegionConverter(BaseConverter):
     """ The region you want to query"""
-    type_ = "string"
+    type_ = str
     regex = '[^(/;)]+'
 
     def __init__(self, *args, **kwargs):
@@ -50,7 +50,7 @@ class RegionConverter(BaseConverter):
 
 class LonConverter(FloatConverter):
     """ The longitude of where the coord you want to query"""
-    type_ = "float"
+    type_ = float
     regex = '-?\\d+(\\.\\d+)?'
 
     def __init__(self, *args, **kwargs):
@@ -59,7 +59,7 @@ class LonConverter(FloatConverter):
 
 class LatConverter(FloatConverter):
     """ The latitude of where the coord you want to query"""
-    type_ = "float"
+    type_ = float
     regex = '-?\\d+(\\.\\d+)?'
 
     def __init__(self, *args, **kwargs):
@@ -68,7 +68,7 @@ class LatConverter(FloatConverter):
 
 class UriConverter(PathConverter):
     """First part of the uri"""
-    type_ = "string"
+    type_ = str
 
     def __init__(self, *args, **kwargs):
         PathConverter.__init__(self, *args, **kwargs)
@@ -76,7 +76,7 @@ class UriConverter(PathConverter):
 
 class IdConverter(BaseConverter):
     """Id of the object you want to query"""
-    type_ = "string"
+    type_ = str
 
     def __init__(self, *args, **kwargs):
         BaseConverter.__init__(self, *args, **kwargs)
