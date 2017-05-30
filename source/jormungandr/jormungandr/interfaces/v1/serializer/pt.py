@@ -230,7 +230,7 @@ class StopPointSerializer(GenericSerializer):
     physical_modes = PhysicalModeSerializer(many=True, display_none=False)
     administrative_regions = AdminSerializer(many=True, display_none=False)
     stop_area = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer, display_none=False)
-    equipments = Equipments(attr='has_equipments')
+    equipments = Equipments(attr='has_equipments', display_none=True)
     address = AddressSerializer(display_none=False)
 
     def get_stop_area(self, obj):
@@ -257,7 +257,7 @@ class StopAreaSerializer(GenericSerializer):
 class PlaceSerializer(GenericSerializer):
     id = jsonschema.Field(schema_type=str, attr='uri')
     name = jsonschema.Field(schema_type=str)
-    quality = jsonschema.Field(schema_type=int, required=False)
+    quality = jsonschema.Field(schema_type=int, display_none=True)
     stop_area = StopAreaSerializer(display_none=False)
     stop_point = StopPointSerializer(display_none=False)
     administrative_region = AdminSerializer(display_none=False)
@@ -277,7 +277,7 @@ class NetworkSerializer(GenericSerializer):
 
 class RouteSerializer(GenericSerializer):
     is_frequence = serpy.StrField()
-    direction_type = jsonschema.Field(schema_type=str)
+    direction_type = jsonschema.Field(schema_type=str, display_none=True)
     physical_modes = PhysicalModeSerializer(many=True, display_none=False)
     comments = CommentSerializer(many=True, display_none=False)
     codes = CodeSerializer(many=True, display_none=False)
