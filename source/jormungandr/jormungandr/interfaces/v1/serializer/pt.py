@@ -45,7 +45,7 @@ class Equipments(EnumListField):
 
 
 class ChannelSerializer(PbNestedSerializer):
-    content_type = jsonschema.Field()
+    content_type = jsonschema.Field(display_none=True)
     id = jsonschema.Field()
     name = jsonschema.Field()
     types = EnumListField(attr='channel_types')
