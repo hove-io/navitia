@@ -193,7 +193,7 @@ class DisruptionSerializer(PbNestedSerializer):
     impacted_objects = ImpactedSerializer(many=True, display_none=False)
     uri = jsonschema.Field(schema_type=str, attr='uri')
     disruption_uri = jsonschema.Field(schema_type=str)
-    contributor = jsonschema.Field(schema_type=str)
+    contributor = jsonschema.Field(schema_type=str, display_none=True)
 
 
 class AdminSerializer(GenericSerializer):
