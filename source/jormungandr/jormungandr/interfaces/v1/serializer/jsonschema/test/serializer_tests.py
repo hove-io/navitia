@@ -29,11 +29,13 @@
 
 import serpy
 import pytest
+
+from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.serializer.base import LambdaField
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import StrField, BoolField, FloatField, IntField, \
     Field, MethodField
-from jormungandr.interfaces.v1.swagger_schema import get_schema
+from jormungandr.interfaces.v1.swagger_schema import get_schema, SwaggerParam
 
 
 def serpy_supported_serialization_test():
@@ -179,3 +181,37 @@ def nested_test():
     assert nested_data.get('type') == 'array'
     assert nested_data.get('items', {}).get('$ref') == '#/definitions/NestedType'
     assert len(external_definitions) == 1
+
+
+def param_test():
+    from navitiacommon.parser_args_type import option_value
+    flask_arg = ArgumentDoc("kind", type=option_value(['bob', 'bobette', 'bobitto']),
+                            default=['bob', 'bobette'],
+                            description="kind of bob")
+
+    swagger_args = SwaggerParam.make_from_flask_arg(flask_arg)
+
+    assert(len(swagger_args) == 1)
+    swagger_arg = swagger_args[0]
+    assert(swagger_arg.name == 'kind')
+    assert(swagger_arg.type == 'string')
+    assert(swagger_arg.required is False)
+    assert(swagger_arg.location == 'query')
+    assert(swagger_arg.enum == ['bob', 'bobette', 'bobitto'])
+    assert(swagger_arg.description == 'kind of bob')
+    assert(swagger_arg.default == ['bob', 'bobette'])
+    assert(swagger_arg.format is None)  # no additional format provided
+
+
+def param_list_test():
+    flask_arg = ArgumentDoc("pouet", type=str,
+                            action="append")
+
+    swagger_args = SwaggerParam.make_from_flask_arg(flask_arg)
+
+    assert(len(swagger_args) == 1)
+    swagger_arg = swagger_args[0]
+    assert(swagger_arg.name == 'pouet')
+    assert(swagger_arg.type == 'array')
+    assert(swagger_arg.items is not None)
+    assert(swagger_arg.items.type == 'string')

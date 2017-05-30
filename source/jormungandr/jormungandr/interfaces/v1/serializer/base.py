@@ -90,10 +90,19 @@ class NullableDictSerializer(serpy.Serializer):
 
 
 class PbNestedSerializer(serpy.Serializer, PbField):
-    pass
+    def __init__(self, *args, **kwargs):
+        if 'display_none' not in kwargs:
+            kwargs['display_none'] = False
+        super(PbNestedSerializer, self).__init__(*args, **kwargs)
 
 
 class EnumField(jsonschema.Field):
+    def __init__(self, pb_type=None, **kwargs):
+        schema_type = kwargs.pop('schema_type') if 'schema_type' in kwargs else str
+        schema_metadata = kwargs.pop('schema_metadata') if 'schema_metadata' in kwargs else {}
+        if pb_type:
+            schema_metadata['enum'] = self._get_all_possible_values(pb_type)
+        super(EnumField, self).__init__(schema_type=schema_type, schema_metadata=schema_metadata, **kwargs)
 
     def as_getter(self, serializer_field_name, serializer_cls):
         def getter(val):
@@ -108,6 +117,10 @@ class EnumField(jsonschema.Field):
         if value is None:
             return None
         return value.lower()
+
+    @staticmethod
+    def _get_all_possible_values(pb_type):
+        return [v.name for v in pb_type.DESCRIPTOR.values]
 
 
 class EnumListField(EnumField):
@@ -178,7 +191,11 @@ class LambdaField(Field):
         return self.method
 
 
-class DoubleToStringField(serpy.Field):
+class DoubleToStringField(Field):
+
+    def __init__(self, **kwargs):
+        super(DoubleToStringField, self).__init__(schema_type=str, **kwargs)
+
     def to_value(self, value):
         # we don't want to loose precision while converting a double to string
         return "{:.16g}".format(value)

@@ -31,17 +31,22 @@
 
 import serpy
 from serpy.fields import MethodField
-from jormungandr.interfaces.v1.serializer.base import LiteralField
+from jormungandr.interfaces.v1.serializer.base import LiteralField, LambdaField
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, StrField
 
 
 class SwaggerParamSerializer(serpy.Serializer):
-    description = serpy.Field()
-    location = serpy.Field(label='in')
-    name = serpy.StrField()
-    required = serpy.Field()
-    type = serpy.StrField()
-    default = serpy.StrField(display_none=False)
-    enum = serpy.Field(display_none=False)
+    description = Field()
+    location = Field(label='in')
+    name = StrField()
+    required = Field()
+    type = StrField()
+    default = StrField()
+    enum = Field()
+    minimum = Field()
+    maximum = Field()
+    items = LambdaField(method=lambda _, obj: SwaggerParamSerializer(obj.items).data if obj.items else None,
+                        display_none=False)
 
 
 class SwaggerResponseSerializer(serpy.DictSerializer):
@@ -49,7 +54,7 @@ class SwaggerResponseSerializer(serpy.DictSerializer):
 
 
 class SwaggerMethodSerializer(serpy.Serializer):
-    consumes = LiteralField(["application/json"])
+    consumes = LiteralField([""])
     produces = LiteralField(["application/json"])
     responses = SwaggerResponseSerializer(attr='output_type')
     parameters = SwaggerParamSerializer(many=True)
@@ -62,3 +67,8 @@ class SwaggerPathSerializer(serpy.Serializer):
 
     def get_methods(self, obj):
         return SwaggerMethodSerializer(obj.methods.get('get')).data
+
+
+class SwaggerOptionPathSerializer(serpy.Serializer):
+    get = LambdaField(method=lambda _, obj: SwaggerMethodSerializer(obj.methods.get('get')).data)
+    definitions = serpy.Field()

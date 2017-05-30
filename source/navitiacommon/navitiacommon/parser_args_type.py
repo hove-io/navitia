@@ -28,6 +28,8 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from collections import namedtuple
+
 import ujson
 import geojson
 
@@ -59,20 +61,32 @@ def true_false(value, name):
                          .format(name, value))
 
 
-def option_value(optional_values):
-    def to_return(value, name):
+class ParameterDescription(object):
+    def __init__(self, type=None, metadata=None):
+        self.type = type
+        self.metadata = metadata
+
+
+class option_value(object):
+
+    def __init__(self, optional_values):
+        self.optional_values = optional_values
+
+    def __call__(self, value, name):
         # if input value is iterable
         if hasattr(value, '__iter__'):
-            if not all((v in optional_values for v in value)):
+            if not all((v in self.optional_values for v in value)):
                 error = "The {} argument must be in list {}, you gave {}".\
-                    format(name, str(optional_values), value)
+                    format(name, str(self.optional_values), value)
                 raise ValueError(error)
-        elif not (value in optional_values):
+        elif not (value in self.optional_values):
             error = "The {} argument must be in list {}, you gave {}".\
-                format(name, str(optional_values), value)
+                format(name, str(self.optional_values), value)
             raise ValueError(error)
         return value
-    return to_return
+
+    def description(self):
+        return ParameterDescription(type=str, metadata={'enum': self.optional_values})
 
 
 def _make_interval_argument(max_value, min_value):

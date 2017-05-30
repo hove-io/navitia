@@ -28,7 +28,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from flask.ext.restful import Resource
+from flask_restful import Resource
 from flask import request
 
 from jormungandr.resources_utils import DocumentedResource
@@ -43,14 +43,15 @@ class StatedResource(DocumentedResource):
 
     def __init__(self, quota=True, *args, **kwargs):
         DocumentedResource.__init__(self, *args, **kwargs)
-        self.method_decorators = []
+        self.method_decorators = {'get': []}
+        self.get_decorators = self.method_decorators['get']
 
-        self.method_decorators.append(self._stat_regions)
+        self.get_decorators.append(self._stat_regions)
         if stat_manager.save_stat:
-            self.method_decorators.append(manage_stat_caller(stat_manager))
+            self.get_decorators.append(manage_stat_caller(stat_manager))
 
         if quota:
-            self.method_decorators.append(quota_control)
+            self.get_decorators.append(quota_control)
 
     def _register_interpreted_parameters(self, args):
         stat_manager.register_interpreted_parameters(args)

@@ -28,7 +28,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask.ext.restful import abort
+from flask_restful import abort
 from jormungandr.interfaces.v1.converters_collection_type import collections_to_resource_type
 from jormungandr.interfaces.v1.converters_collection_type import resource_type_to_collection
 from jormungandr.interfaces.v1.StatedResource import StatedResource
@@ -36,7 +36,7 @@ from jormungandr.interfaces.v1.make_links import add_id_links, clean_links, add_
 from functools import wraps
 from collections import deque
 from flask import url_for
-from flask.ext.restful.utils import unpack
+from flask_restful.utils import unpack
 from jormungandr.authentication import authentication_required
 
 
@@ -53,15 +53,15 @@ class ResourceUri(StatedResource):
         StatedResource.__init__(self, *args, **kwargs)
         self.region = None
         if links:
-            self.method_decorators.append(add_id_links())
-            self.method_decorators.append(add_computed_resources(self))
-            self.method_decorators.append(add_pagination_links())
-            self.method_decorators.append(clean_links())
+            self.get_decorators.append(add_id_links())
+            self.get_decorators.append(add_computed_resources(self))
+            self.get_decorators.append(add_pagination_links())
+            self.get_decorators.append(clean_links())
 
         if authentication:
             #some rare API (eg journey) must handle the authenfication by themself, thus deactivate it
             #by default ALWAYS use authentication=True
-            self.method_decorators.append(authentication_required)
+            self.get_decorators.append(authentication_required)
 
     def get_filter(self, items, args):
 
