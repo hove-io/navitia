@@ -321,6 +321,7 @@ class add_journey_href(object):
 
                     args['min_nb_transfers'] = journey['nb_transfers']
                     args['direct_path'] = 'only' if 'non_pt' in journey['tags'] else 'none'
+                    args["min_nb_journeys"] = 5
                     args['is_journey_schedules'] = True
                     allowed_ids.update(args.get('allowed_id[]', []))
                     args['allowed_id[]'] = list(allowed_ids)
@@ -483,7 +484,6 @@ class Journeys(JourneyCommon):
 
         # set parameters when is_journey_schedules is set to True
         if args.get("is_journey_schedules"):
-            args["min_nb_journeys"] = 5
             args["_final_line_filter"] = False
 
         if not (args['destination'] or args['origin']):
