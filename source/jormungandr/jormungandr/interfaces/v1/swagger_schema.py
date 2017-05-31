@@ -219,6 +219,11 @@ def get_schema_properties(serializer):
                 rendered_field, field_name, serializer.__class__.__name__))
 
         if schema_metadata:
+            if 'deprecated' in schema_metadata:
+                # the 'deprecated' tag is handled only in swagger 3
+                # since I think it's important to tag the deprecated fields, we do it
+                # and remove the deprecated tag until the swagger 3 migration
+                schema_metadata.pop('deprecated')
             schema.update(schema_metadata)
         name = field.label if hasattr(field, 'label') and field.label else field_name
         properties[name] = schema

@@ -134,8 +134,8 @@ class EnumListField(EnumField):
 
 
 class GenericSerializer(PbNestedSerializer):
-    id = jsonschema.Field(schema_type=str, attr='uri')
-    name = jsonschema.Field(schema_type=str)
+    id = jsonschema.Field(schema_type=str, attr='uri', description='Identifier of the object')
+    name = jsonschema.Field(schema_type=str, description='Name of the object')
 
 
 class LiteralField(jsonschema.Field):

@@ -39,6 +39,11 @@ from jormungandr.interfaces.v1.serializer import jsonschema
 from navitiacommon.type_pb2 import ActiveStatus, Channel
 
 
+LABEL_DESCRIPTION = """
+Label of the stop area. The name is directly taken from the data whereas the label is
+ something we compute for better traveler information. If you don't know what to display, display the label.
+"""
+
 class Equipments(EnumListField):
     """
     hack for equiments their is a useless level in the proto
@@ -271,16 +276,19 @@ class StopPointSerializer(GenericSerializer):
 
 class StopAreaSerializer(GenericSerializer):
     comments = CommentSerializer(many=True, display_none=False)
-    comment = FirstCommentField(attr='comments', display_none=False)
+    comment = FirstCommentField(attr='comments', display_none=False, deprecated=True)
     codes = CodeSerializer(many=True, display_none=False)
     timezone = jsonschema.Field(schema_type=str)
-    label = jsonschema.Field(schema_type=str)
+    label = jsonschema.Field(schema_type=str, description=LABEL_DESCRIPTION)
     coord = CoordSerializer(required=False)
     links = LinkSerializer(attr='impact_uris', display_none=True)
     commercial_modes = CommercialModeSerializer(many=True, display_none=False)
     physical_modes = PhysicalModeSerializer(many=True, display_none=False)
-    administrative_regions = AdminSerializer(many=True, display_none=False)
-    stop_points = StopPointSerializer(many=True, display_none=False)
+    administrative_regions = AdminSerializer(many=True, display_none=False,
+                                             description='Administrative regions of the stop area '
+                                                         'in which is the stop area')
+    stop_points = StopPointSerializer(many=True, display_none=False,
+                                      description='Stop points contained in this stop area')
 
 
 class PlaceSerializer(GenericSerializer):
