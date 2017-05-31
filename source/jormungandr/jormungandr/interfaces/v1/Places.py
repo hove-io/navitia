@@ -96,7 +96,7 @@ class Places(ResourceUri):
                                          description="Type of search: firstletter or type error")
         self.parsers["get"].add_argument("admin_uri[]", type=unicode,
                                          action="append",
-                                         description="If filled, will restrained the search within the "
+                                         description="If filled, will restrain the search within the "
                                                      "given admin uris")
         self.parsers["get"].add_argument("depth", type=depth_argument,
                                          default=1,
