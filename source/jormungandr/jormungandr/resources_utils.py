@@ -77,11 +77,17 @@ class ResourceUtc(object):
         and fetch the tz of this point.
         we'll have to store the tz for stop area and the coord for admin, poi, ...
         """
-
         if self.tz() is None:
             return original_datetime
+
+        if original_datetime.tzinfo is not None:
+            localized_dt = original_datetime
+        else:
+            # if we don't have a timezone in the datetime, we consider it a local time from the coverage's tz
+            localized_dt = self.tz().normalize(self.tz().localize(original_datetime))
+
         try:
-            utctime = self.tz().normalize(self.tz().localize(original_datetime)).astimezone(pytz.utc)
+            utctime = localized_dt.astimezone(pytz.utc)
         except ValueError as e:
             raise UnableToParse("Unable to parse datetime, " + e.message)
 
