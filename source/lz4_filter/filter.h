@@ -70,11 +70,8 @@ public:
 
     template<typename Sink>
     std::streamsize write(Sink& dest, const char* src, std::streamsize size){
-        if(size > buffer_size){
-            size = buffer_size;
-        }
         uint32_t output_size;
-        output_size = LZ4_compress(src, output_buffer, size);
+        output_size = LZ4_compress_default(src, output_buffer, size, buffer_size);
         if(output_size > 0){
             boost::iostreams::write(dest, reinterpret_cast<char*>(&output_size), sizeof(uint32_t));
             boost::iostreams::write(dest, output_buffer, output_size);
@@ -126,7 +123,7 @@ public:
         boost::iostreams::read(src, reinterpret_cast<char*>(&chunk_size), sizeof(uint32_t));
         read_size = boost::iostreams::read(src, input_buffer, chunk_size);
         if(read_size == chunk_size){
-            output_size = LZ4_uncompress_unknownOutputSize(input_buffer, dest, chunk_size, size);
+            output_size = LZ4_decompress_safe(input_buffer, dest, chunk_size, size);
         }else{
             if(chunk_size == 0 && read_size == -1){
                 return -1;//le flux est vide
