@@ -29,7 +29,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 import serpy
-from google.protobuf import type_pb2
+from navitiacommon import type_pb2
 
 from jormungandr.interfaces.v1.serializer.base import GenericSerializer, EnumListField, LiteralField
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import BoolField, Field
