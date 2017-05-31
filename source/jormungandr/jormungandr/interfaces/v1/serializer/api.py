@@ -109,7 +109,7 @@ class CoverageErrorSerializer(NullableDictSerializer):
 
 
 class CoverageSerializer(NullableDictSerializer):
-    id = Field(attr="region_id", description='Identifier of the coverage')
+    id = Field(attr="region_id", schema_type=str, description='Identifier of the coverage')
     start_production_date = Field(schema_type=str, description='Beginning of the production period. '
                                                                'We only have data on this production period')
     end_production_date = Field(schema_type=str, description='End of the production period. '
