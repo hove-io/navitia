@@ -96,7 +96,10 @@ class NetworksSerializer(PTReferentialSerializer):
     networks = pt.NetworkSerializer(many=True)
 
 
-class PlacesSerializer(PTReferentialSerializer):
+class PlacesSerializer(serpy.Serializer):
+    error = ErrorSerializer(display_none=False)
+    feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
+    disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
     places = pt.PlaceSerializer(many=True)
 
 

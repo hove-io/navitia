@@ -272,7 +272,7 @@ class StopPointSerializer(GenericSerializer):
 class StopAreaSerializer(GenericSerializer):
     comments = CommentSerializer(many=True, display_none=False)
     comment = FirstCommentField(attr='comments', display_none=False)
-    codes = CodeSerializer(many=True)
+    codes = CodeSerializer(many=True, display_none=False)
     timezone = jsonschema.Field(schema_type=str)
     label = jsonschema.Field(schema_type=str)
     coord = CoordSerializer(required=False)

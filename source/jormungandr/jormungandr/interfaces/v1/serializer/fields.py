@@ -129,7 +129,7 @@ class LinkSerializer(jsonschema.Field):
     Add link to disruptions on a pt object
     """
     def __init__(self, **kwargs):
-        super(LinkSerializer, self).__init__(schema_type=LinkSchema(), **kwargs)
+        super(LinkSerializer, self).__init__(schema_type=LinkSchema(many=True), **kwargs)
 
     def to_value(self, value):
         return [create_internal_link(_type="disruption", rel="disruptions", id=uri)

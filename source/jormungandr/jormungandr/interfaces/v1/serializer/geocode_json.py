@@ -162,10 +162,10 @@ class GeocodePoiSerializer(serpy.DictSerializer):
 class AddressSerializer(serpy.DictSerializer):
     id = CoordId()
     coord = CoordField()
-    house_number = jsonschema.MethodField()
+    house_number = jsonschema.MethodField(display_none=True)
     label = NestedPropertyField(attr='properties.geocoding.label')
     name = NestedPropertyField(attr='properties.geocoding.name')
-    administrative_regions = jsonschema.MethodField()
+    administrative_regions = jsonschema.MethodField(display_none=True)
 
     def get_house_number(self, obj):
         geocoding = obj.get('properties', {}).get('geocoding', {})
