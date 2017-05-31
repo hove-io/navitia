@@ -117,13 +117,13 @@ def get_costing_options_func_test():
 def format_coord_func_invalid_pt_object_test():
     with pytest.raises(InvalidArguments) as excinfo:
         Valhalla._format_coord(MagicMock())
-    assert '400 Bad Request' in str(excinfo.value)
+    assert '400: Bad Request' in str(excinfo.value)
 
 
 def format_coord_func_invalid_api_test():
     with pytest.raises(ApiNotFound) as excinfo:
         Valhalla._format_coord(make_pt_object(type_pb2.ADDRESS, 1.12, 13.15), 'aaa')
-    assert '404 Not Found' in str(excinfo.value)
+    assert '404: Not Found' in str(excinfo.value)
     assert 'ApiNotFound' in str(excinfo.typename)
 
 
@@ -300,7 +300,7 @@ def format_url_func_invalid_mode_test():
         origin = make_pt_object(type_pb2.ADDRESS, 1.0, 1.0)
         destination = make_pt_object(type_pb2.ADDRESS, 2.0, 2.0)
         valhalla._make_request_arguments("bob", origin, [destination], MOCKED_REQUEST)
-    assert '400 Bad Request' in str(excinfo.value)
+    assert '400: Bad Request' == str(excinfo.value)
     assert 'InvalidArguments' == str(excinfo.typename)
 
 
@@ -354,7 +354,7 @@ def direct_path_func_without_response_valhalla_test():
     valhalla._make_request_arguments = MagicMock(return_value=None)
     with pytest.raises(TechnicalError) as excinfo:
         valhalla.direct_path(None, None, None, None, None, None)
-    assert '500 Internal Server Error' in str(excinfo.value)
+    assert '500: Internal Server Error' == str(excinfo.value)
     assert 'TechnicalError' == str(excinfo.typename)
 
 
@@ -376,7 +376,7 @@ def direct_path_func_with_status_code_400_response_valhalla_test():
                                  fallback_extremity,
                                  MOCKED_REQUEST,
                                  None)
-        assert '500 Internal Server Error' in str(excinfo.value)
+        assert str(excinfo.value) == '500: Internal Server Error'
         assert str(excinfo.value.data['message']) == 'Valhalla service unavailable, impossible to query : http://bob.com/route'
         assert str(excinfo.typename) == 'TechnicalError'
 
@@ -436,7 +436,7 @@ def direct_path_func_with_valid_response_valhalla_test():
 def get_valhalla_mode_invalid_mode_test():
     with pytest.raises(InvalidArguments) as excinfo:
         Valhalla._get_valhalla_mode('bss')
-    assert '400 Bad Request' in str(excinfo.value)
+    assert '400: Bad Request' == str(excinfo.value)
     assert 'InvalidArguments' == str(excinfo.typename)
 
 
