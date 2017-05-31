@@ -321,7 +321,7 @@ class add_journey_href(object):
 
                     args['min_nb_transfers'] = journey['nb_transfers']
                     args['direct_path'] = 'only' if 'non_pt' in journey['tags'] else 'none'
-                    args["min_nb_journeys"] = 5
+                    args['min_nb_journeys'] = 5
                     args['is_journey_schedules'] = True
                     allowed_ids.update(args.get('allowed_id[]', []))
                     args['allowed_id[]'] = list(allowed_ids)
@@ -413,7 +413,8 @@ class Journeys(JourneyCommon):
         parser_get.add_argument("_min_journeys_calls", type=int)
         parser_get.add_argument("_final_line_filter", type=boolean)
         parser_get.add_argument("is_journey_schedules", type=boolean, default=False,
-                                description="True when '/journeys' is called to compute the same journey schedules")
+                                description="True when '/journeys' is called to compute the same journey schedules and "
+                                            "it'll override some inappropriate parameters")
         parser_get.add_argument("min_nb_journeys", type=int)
         parser_get.add_argument("max_nb_journeys", type=int)
         parser_get.add_argument("_max_extra_second_pass", type=int, dest="max_extra_second_pass")
