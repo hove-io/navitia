@@ -47,6 +47,10 @@ app.config.from_object('jormungandr.default_settings')
 if 'JORMUNGANDR_CONFIG_FILE' in os.environ:
     app.config.from_envvar('JORMUNGANDR_CONFIG_FILE')
 
+# there is a import order problem to get this variable in decorators (current_app is not in the context)
+# so we make it a global variable
+USE_SERPY = app.config.get('USE_SERPY')
+
 app.request_class = NavitiaRequest
 CORS(app, vary_headers=True, allow_credentials=True, send_wildcard=False,
         headers=['Access-Control-Request-Headers', 'Authorization'])

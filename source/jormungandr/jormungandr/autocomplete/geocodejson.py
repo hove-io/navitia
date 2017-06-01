@@ -31,6 +31,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
+
+import jormungandr
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
 from jormungandr.utils import get_lon_lat as get_lon_lat_from_id
 import requests
@@ -319,7 +321,7 @@ class GeocodeJson(AbstractAutocomplete):
         cls._check_response(response_bragi, uri)
         json_response = response_bragi.json()
 
-        if current_app.config.get('USE_SERPY', False):
+        if jormungandr.USE_SERPY:
             from jormungandr.interfaces.v1.serializer.geocode_json import GeocodePlacesSerializer
             return GeocodePlacesSerializer(json_response).data
         else:
