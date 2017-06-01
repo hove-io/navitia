@@ -31,7 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from collections import namedtuple
 
 from .tests_mechanism import AbstractTestFixture, dataset
-from jormungandr.realtime_schedule import realtime_proxy, realtime_proxy_manager
+from jormungandr.realtime_schedule import realtime_proxy
 from jormungandr.schedule import RealTimePassage
 import datetime
 from nose.tools import eq_
@@ -55,13 +55,13 @@ class MockedTestProxy(realtime_proxy.RealtimeProxy):
         self.instance = instance
 
     @staticmethod
-    def _create_next_passages(passages):
+    def _create_next_passages(passages, year=2016, month=1, day=2, tzinfo=pytz.UTC):
         next_passages = []
         for next_expected_st, direction in passages:
             t = datetime.datetime.strptime(next_expected_st, "%H:%M:%S")
-            dt = datetime.datetime(year=2016, month=1, day=2,
+            dt = datetime.datetime(year=year, month=month, day=day,
                                    hour=t.hour, minute=t.minute, second=t.second,
-                                   tzinfo=pytz.UTC)
+                                   tzinfo=tzinfo)
             next_passage = RealTimePassage(dt, direction)
             next_passages.append(next_passage)
         return next_passages
@@ -248,8 +248,43 @@ class TestDeparturesWithAnotherSource(AbstractTestFixture):
         response = self.query_region(query)
         stop_schedules = response['stop_schedules'][0]['date_times']
         next_passage_dts = [dt["date_time"] for dt in stop_schedules]
-        print(next_passage_dts)
         assert ['20160102T104242', '20160102T114242'] == next_passage_dts
 
         for dt in stop_schedules:
             assert dt['data_freshness'] == 'realtime'
+
+
+MOCKED_PROXY_WITH_TIMEZONE_CONF = [
+    {
+        "id": "KisioDigital",
+        "class": "tests.proxy_realtime_tests.MockedTestProxyWithTimezone",
+        "args": {}
+    }
+]
+
+
+class MockedTestProxyWithTimezone(MockedTestProxy):
+    def __init__(self, id, object_id_tag, instance):
+        super(MockedTestProxyWithTimezone, self).__init__(id, object_id_tag, instance)
+
+    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None):
+
+        if route_point.fetch_stop_id(self.object_id_tag) == "KisioDigital_C:S0":
+            return self._create_next_passages([("00:03:00", "l'infini"), ("00:04:00", "l'au dela")],
+                                              year=2016, month=1, day=3,
+                                              tzinfo=pytz.timezone("Europe/Paris"))
+
+        return None
+
+
+@dataset({"basic_schedule_test": {'instance_config': {'realtime_proxies': MOCKED_PROXY_WITH_TIMEZONE_CONF}}})
+class TestDeparturesWithTimeZone(AbstractTestFixture):
+
+    query_template = 'stop_points/{sp}/stop_schedules?from_datetime={dt}&show_codes=true{data_freshness}'
+
+    def test_departure_with_timezone(self):
+        query = self.query_template.format(sp='C:S0', dt='20160102T1100', data_freshness='&data_freshness=realtime')
+        response = self.query_region(query)
+        stop_schedules = response['stop_schedules'][0]['date_times']
+        next_passage_dts = [dt["date_time"] for dt in stop_schedules]
+        assert next_passage_dts
