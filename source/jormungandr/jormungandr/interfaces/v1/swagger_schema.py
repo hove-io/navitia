@@ -64,16 +64,20 @@ def convert_to_swagger_type(type_):
 
 
 class SwaggerParam(object):
-    def __init__(self, description=None, name=None, required=None, type=None,
-                 default=None, enum=None, format=None, location=None):
+    def __init__(self, description=None, name=None, required=None, type=None, pattern=None,
+                 default=None, enum=None, minimum=None, maximum=None, format=None, location=None, items=None):
         self.description = description
         self.name = name
         self.required = required
         self.type = type
         self.default = default
-        self.enum = enum
         self.format = format
         self.location = location  # called 'in' in swagger spec
+        self.enum = enum
+        self.minimum = minimum
+        self.maximum = maximum
+        self.items = items
+        self.pattern = pattern
 
     @classmethod
     def make_from_flask_arg(cls, argument):
@@ -91,19 +95,33 @@ class SwaggerParam(object):
                 location = 'query'
 
             param_type = getattr(argument, 'schema_type', None)
+            param_format = {}
+            metadata = {}
             if param_type is None:
+                # we check if the flask's type checker can give a description
+                if hasattr(argument.type, 'description'):
+                    param_description = argument.type.description()
+                    param_type = param_description.type
+                    if param_description.metadata:
+                        metadata.update(param_description.metadata)
+
                 # we try to autodetect the type from the default argument
-                if argument.default is not None:
+                if param_type is None and argument.default is not None:
                     param_type = TYPE_MAP.get(type(argument.default), {}).get('type')
                 if param_type is None:
                     param_type = argument.type
 
+            param_metadata = getattr(argument, 'schema_metadata', None)
+            if param_metadata:
+                # we merge it with the other metadata we can have
+                metadata.update(param_metadata)
+
             swagger_type, swagger_format = convert_to_swagger_type(param_type)
 
-            # TODO handle arrays
-            # if argument.action == 'append':
-            #     schema.update(type='array')
-            enum = argument.choices if len(argument.choices) > 0 else None
+            items = None
+            if argument.action == 'append':
+                items = SwaggerParam(type=swagger_type)
+                swagger_type = 'array'
 
             args.append(SwaggerParam(name=argument.name,
                                      description=argument.description or argument.help,
@@ -112,8 +130,9 @@ class SwaggerParam(object):
                                      format=swagger_format,
                                      default=argument.default,
                                      location=location,
-                                     enum=enum,
-                                     required=argument.required))
+                                     required=argument.required,
+                                     items=items,
+                                     **metadata))
 
         return args
 
@@ -200,6 +219,11 @@ def get_schema_properties(serializer):
                 rendered_field, field_name, serializer.__class__.__name__))
 
         if schema_metadata:
+            if 'deprecated' in schema_metadata:
+                # the 'deprecated' tag is handled only in swagger 3
+                # since I think it's important to tag the deprecated fields, we do it
+                # and remove the deprecated tag until the swagger 3 migration
+                schema_metadata.pop('deprecated')
             schema.update(schema_metadata)
         name = field.label if hasattr(field, 'label') and field.label else field_name
         properties[name] = schema
@@ -250,6 +274,9 @@ class SwaggerMethod(object):
         :return: the list of referenced definitions
         """
         obj = resource.output_type_serializer
+
+        if not obj:
+            return []
 
         output_type, external_definitions = get_schema(obj)
 

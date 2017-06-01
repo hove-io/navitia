@@ -27,6 +27,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
+
+import json
+
 from tests.tests_mechanism import dataset, AbstractTestFixture
 from swagger_spec_validator import validator20
 import flex
@@ -50,6 +53,7 @@ class TestSwaggerSchema(AbstractTestFixture):
         schema = self.query('v1/schema')
 
         raw_response = self.tester.get(url)
+
         req = flex.http.Request(url=url, method='get')
         resp = flex.http.Response(
             request=req,
@@ -58,9 +62,26 @@ class TestSwaggerSchema(AbstractTestFixture):
             status_code=raw_response.status_code,
             content_type='application/json')
         flex.core.validate_api_call(schema, req, resp)
+        return json.loads(raw_response.data)
 
     def test_coverage_schema(self):
         """
         Test the coverage schema
         """
         self._check_schema('/v1/coverage/')
+
+    def test_places_schema(self):
+        """
+        Test the autocomplete schema schema
+        we use a easy query ('e') to get lots of different results
+        """
+        r = self._check_schema('/v1/coverage/main_autocomplete_test/places?q=e')
+
+        # we check that the result contains different type (to be sure to test everything)
+        assert any((o for o in r.get('places', []) if o.get('embedded_type') == 'administrative_region'))
+        assert any((o for o in r.get('places', []) if o.get('embedded_type') == 'stop_area'))
+        assert any((o for o in r.get('places', []) if o.get('embedded_type') == 'address'))
+
+        # we also check an adress with a house number
+        r = self._check_schema('/v1/coverage/main_autocomplete_test/places?q=2 rue')
+        assert any((o for o in r.get('places', []) if o.get('embedded_type') == 'address'))

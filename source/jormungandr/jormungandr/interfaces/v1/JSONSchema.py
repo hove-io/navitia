@@ -118,10 +118,6 @@ class SecurityDefinitionsSerializer(serpy.Serializer):
     })
 
 
-class SecuritySerializer(serpy.Serializer):
-    basicAuth = LambdaField(lambda s, o: [])
-
-
 class JsonSchemaEndpointsSerializer(serpy.Serializer):
     basePath = LiteralField('/' + BASE_PATH)
     swagger = LiteralField('2.0')
@@ -133,7 +129,9 @@ class JsonSchemaEndpointsSerializer(serpy.Serializer):
     definitions = serpy.Field()
     info = LambdaField(lambda s, o: JsonSchemaInfo(o).data)
     securityDefinitions = LambdaField(lambda s, o: SecurityDefinitionsSerializer(o).data)
-    security = LambdaField(lambda s, o: [SecuritySerializer(o).data])
+    security = LiteralField([{
+        'basicAuth': []
+    }])
 
     def get_paths(self, obj):
         return {

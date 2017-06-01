@@ -54,7 +54,7 @@ class Field(serpy.Field):
     A :class:`Field` that hold metadata for schema.
     """
     def __init__(self, schema_type=None, schema_metadata=None, **kwargs):
-        _init(self, serpy.Field, schema_type=schema_type or str, schema_metadata=schema_metadata, **kwargs)
+        _init(self, serpy.Field, schema_type=schema_type, schema_metadata=schema_metadata, **kwargs)
 
 
 class StrField(serpy.StrField):

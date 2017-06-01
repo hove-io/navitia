@@ -31,8 +31,8 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 from flask import request, g
-from flask.ext.restful import fields, marshal_with, abort
-from flask.ext.restful.inputs import boolean
+from flask_restful import fields, marshal_with, abort
+from flask_restful.inputs import boolean
 from jormungandr import i_manager, app
 from jormungandr.interfaces.v1.fields import disruption_marshaller, Links
 from jormungandr.interfaces.v1.fields import display_informations_vj, error, place,\
@@ -434,10 +434,10 @@ class Journeys(JourneyCommon):
         parser_get.add_argument("_min_bike", type=int)
         parser_get.add_argument("bss_stands", type=boolean, default=False, description="Show bss stands availability")
 
-        self.method_decorators.append(complete_links(self))
+        self.get_decorators.append(complete_links(self))
 
         if parser_get.parse_args().get("bss_stands"):
-            self.method_decorators.insert(1, ManageStands(self, 'journeys'))
+            self.get_decorators.insert(1, ManageStands(self, 'journeys'))
 
     @add_debug_info()
     @add_fare_links()

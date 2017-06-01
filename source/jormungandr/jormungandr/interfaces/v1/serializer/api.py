@@ -39,7 +39,7 @@ from jormungandr.interfaces.v1.serializer.time import DateTimeField, DateTimeDic
 class PTReferentialSerializer(serpy.Serializer):
     pagination = PaginationSerializer(attr='pagination', display_none=True, required=True)
     error = ErrorSerializer(display_none=False)
-    feed_publishers = FeedPublisherSerializer(many=True, display_none=False)
+    feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
 
 
@@ -96,27 +96,30 @@ class NetworksSerializer(PTReferentialSerializer):
     networks = pt.NetworkSerializer(many=True)
 
 
-class PlacesSerializer(PTReferentialSerializer):
+class PlacesSerializer(serpy.Serializer):
+    error = ErrorSerializer(display_none=False)
+    feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
+    disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
     places = pt.PlaceSerializer(many=True)
 
 
 class CoverageErrorSerializer(NullableDictSerializer):
-    code = Field()
-    value = Field()
+    code = Field(schema_type=str)
+    value = Field(schema_type=str)
 
 
 class CoverageSerializer(NullableDictSerializer):
-    id = Field(attr="region_id", description='Identifier of the coverage')
-    start_production_date = Field(description='Beginning of the production period. '
-                                              'We only have data on this production period')
-    end_production_date = Field(description='End of the production period. '
-                                            'We only have data on this production period')
+    id = Field(attr="region_id", schema_type=str, description='Identifier of the coverage')
+    start_production_date = Field(schema_type=str, description='Beginning of the production period. '
+                                                               'We only have data on this production period')
+    end_production_date = Field(schema_type=str, description='End of the production period. '
+                                                             'We only have data on this production period')
     last_load_at = DateTimeDictField(description='Datetime of the last data loading')
-    name = Field(description='Name of the coverage')
-    status = Field()
-    shape = Field(description='GeoJSON of the shape of the coverage')
+    name = Field(schema_type=str, description='Name of the coverage')
+    status = Field(schema_type=str)
+    shape = Field(schema_type=str, description='GeoJSON of the shape of the coverage')
     error = CoverageErrorSerializer(display_none=False)
-    dataset_created_at = Field(description='Creation date of the dataset')
+    dataset_created_at = Field(schema_type=str, description='Creation date of the dataset')
 
 
 class CoveragesSerializer(serpy.DictSerializer):

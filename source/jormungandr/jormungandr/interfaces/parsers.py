@@ -30,6 +30,8 @@ from dateutil import parser
 from navitiacommon import parser_args_type
 
 # TODO: to be moved completely into navitiacommon
+from navitiacommon.parser_args_type import ParameterDescription
+
 depth_argument = parser_args_type.depth_argument
 
 float_gt_0 = parser_args_type.float_gt_0
@@ -76,20 +78,24 @@ def unsigned_integer(value):
         raise ValueError("Unable to evaluate, {}".format(e))
 
 
-def coord_format(coord):
-    """
-    Validate coordinates format (lon;lat)
-    """
-    lon_lat_splitted = coord.split(";")
-    if len(lon_lat_splitted) != 2:
-        raise ValueError('Invalid coordinate parameter. It must be lon;lat where lon and lat are floats.')
+class coord_format(object):
+    def __call__(self, coord):
+        """
+        Validate coordinates format (lon;lat)
+        """
+        lon_lat_splitted = coord.split(";")
+        if len(lon_lat_splitted) != 2:
+            raise ValueError('Invalid coordinate parameter. It must be lon;lat where lon and lat are floats.')
 
-    lon, lat = lon_lat_splitted
-    lat = float(lat)
-    if not (-90.0 <= lat <= 90.0):
-        raise ValueError("lat should be between -90 and 90")
-    lon = float(lon)
-    if not (180.0 >= lon >= -180.0):
-        raise ValueError("lon should be between -180 and 180")
+        lon, lat = lon_lat_splitted
+        lat = float(lat)
+        if not (-90.0 <= lat <= 90.0):
+            raise ValueError("lat should be between -90 and 90")
+        lon = float(lon)
+        if not (180.0 >= lon >= -180.0):
+            raise ValueError("lon should be between -180 and 180")
 
-    return coord
+        return coord
+
+    def description(self):
+        return ParameterDescription(type=str, metadata={'pattern': '.*;.*'})
