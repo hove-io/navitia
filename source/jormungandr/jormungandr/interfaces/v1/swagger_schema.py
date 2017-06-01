@@ -27,7 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 import copy
-
+import re
 import serpy
 import inspect
 import jormungandr
@@ -137,7 +137,7 @@ class SwaggerParam(object):
         return args
 
     @classmethod
-    def make_from_flask_route(cls, ressource, method_name, rule_converters):
+    def make_from_flask_route(cls, rule_converters):
         args = []
         for name, converter in (rule_converters or {}).items():
             swagger_type, swagger_format = convert_to_swagger_type(converter.type_)
@@ -160,7 +160,7 @@ def _from_nested_schema(field):
     or schema depending on param onlyRef
     """
     schema = {
-        '$ref': '#/definitions/' + field.__class__.__name__
+        '$ref': '#/definitions/' + get_serializer_name(field)
     }
     if field.many:
         schema = {
@@ -216,7 +216,7 @@ def get_schema_properties(serializer):
             external_definitions.append(definition)
         elif not schema_metadata:
             raise ValueError('unsupported field type %s for attr %s in object %s' % (
-                rendered_field, field_name, serializer.__class__.__name__))
+                rendered_field, field_name, get_serializer_name(serializer)))
 
         if schema_metadata:
             if 'deprecated' in schema_metadata:
@@ -254,14 +254,48 @@ def get_parameters(resource, method_name, rule_converters):
             # several swagger args can be created for one flask arg
             params += swagger_params
 
-    path_params = SwaggerParam.make_from_flask_route(resource, method_name, rule_converters)
+    path_params = SwaggerParam.make_from_flask_route(rule_converters)
     params += path_params
     return params
 
 
+def get_serializer_name(serializer):
+    class_name = serializer.__name__ if inspect.isclass(serializer) else serializer.__class__.__name__
+    # this replace is temporary, we need to find a better way to have good names there since they are now
+    # exposed in the documentation / SDK
+    name = class_name.replace('Serializer', 'Response')
+    return name
+
+
+ARGS_REGEXP = re.compile(r'<(?P<name>.*?):.*?>')
+
+
+def make_id(name, rule):
+    """
+    the operation id is a unique identifier for a swagger method
+
+    rule is string representing a flask rule (like '/v1/coverage/<region:region>/places')
+    name is the http method name (GET)
+    >>> make_id('get', '/v1/coverage/<region:region>/places')
+    'get_coverage__region__places'
+    """
+    # for the moment we do a dump concatenation with a bit of formating, we should see if we need something
+    # better
+    formated_rule = rule.replace('/v1/', '').replace('/', '_').replace(';', '')
+    formated_rule = ARGS_REGEXP.sub(lambda m: '_' + m.group('name') + '_', formated_rule)
+    return '{method}_{rule}'.format(rule=formated_rule, method=name)
+
+
 class SwaggerMethod(object):
-    def __init__(self, name=None, summary='', parameters=None):
+    def __init__(self, name=None, rule=None, summary='', resource=None, parameters=None):
         self.name = name
+        if rule:
+            self.id = make_id(name, rule)
+        if resource:
+            self.tags = [
+                # in the tag we add the name of the Flask resources
+                resource.__class__.__name__
+            ]
         self.summary = summary
         self.parameters = parameters or []
         self.output_type = None
@@ -279,6 +313,9 @@ class SwaggerMethod(object):
             return []
 
         output_type, external_definitions = get_schema(obj)
+
+        # for the api responses, we add a title for better SDK integration
+        output_type['title'] = get_serializer_name(obj)
 
         self.output_type = {
             "200": {
@@ -299,16 +336,17 @@ class SwaggerPath(object):
     def __init__(self):
         self.definitions = {}
         self.methods = {}
+        self.tags = []
 
-    def add_method(self, method_name, resource, rule_converters):
+    def add_method(self, method_name, resource, rule):
         method_name = method_name.lower()  # a bit hacky, but we want a lower case http verb
 
         if method_name == 'options':
             return []  # we don't want to document options
-        swagger_method = SwaggerMethod(name=method_name)
+        swagger_method = SwaggerMethod(name=method_name, rule=rule.rule, resource=resource)
         self.methods[method_name] = swagger_method
 
-        swagger_method.parameters += get_parameters(resource, method_name, rule_converters)
+        swagger_method.parameters += get_parameters(resource, method_name, rule._converters)
 
         external_definitions = swagger_method.define_output_schema(resource)
 
@@ -317,7 +355,7 @@ class SwaggerPath(object):
     def add_definitions(self, external_definitions):
         while external_definitions:
             field = external_definitions.pop()
-            field_name = field.__class__.__name__
+            field_name = get_serializer_name(field)
             if field_name in self.definitions:
                 # we already got this definition, we can skip
                 continue
@@ -328,12 +366,12 @@ class SwaggerPath(object):
             external_definitions.update(nested_definitions)
 
 
-def make_schema(resource, rule_converters=None):
+def make_schema(resource, rule=None):
     schema = SwaggerPath()
 
     external_definitions = set()
     for method_name in resource.methods:
-        external_definitions.update(schema.add_method(method_name, resource, rule_converters))
+        external_definitions.update(schema.add_method(method_name, resource, rule))
 
     schema.add_definitions(external_definitions)
 
