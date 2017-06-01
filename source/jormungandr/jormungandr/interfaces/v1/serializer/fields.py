@@ -137,7 +137,7 @@ class LinkSerializer(jsonschema.Field):
 
 
 class PaginationSerializer(serpy.Serializer):
-    total_result = IntField(attr='totalResult')
-    start_page = IntField(attr='startPage')
-    items_per_page = IntField(attr='itemsPerPage')
-    items_on_page = IntField(attr='itemsOnPage')
+    total_result = IntField(attr='totalResult', display_none=True)
+    start_page = IntField(attr='startPage', display_none=True)
+    items_per_page = IntField(attr='itemsPerPage', display_none=True)
+    items_on_page = IntField(attr='itemsOnPage', display_none=True)
