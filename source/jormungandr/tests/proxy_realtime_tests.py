@@ -50,7 +50,7 @@ MOCKED_PROXY_CONF = [
 
 class MockedTestProxy(realtime_proxy.RealtimeProxy):
     def __init__(self, id, object_id_tag, instance):
-        self.service_id = id
+        self.rt_system_id = id
         self.object_id_tag = object_id_tag if object_id_tag else id
         self.instance = instance
 

@@ -31,9 +31,11 @@ import datetime
 import mock
 from time import sleep
 from jormungandr.realtime_schedule.timeo import Timeo
+from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxyError
 import validators
 from jormungandr.realtime_schedule.tests.utils import MockRoutePoint, _timestamp, _dt
 from jormungandr.tests.utils_test import MockRequests
+from pytest import raises
 
 
 def make_url_test():
@@ -210,10 +212,9 @@ def get_passages_wrong_response_test():
 
     # we need to mock the datetime.now() because for timeo we don't have a choice but to combine
     # the current day with the timeo's response
-    with mock.patch('jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None):
+    with mock.patch('jormungandr.realtime_schedule.timeo.Timeo._get_direction_name', lambda timeo, **kwargs: None),\
+            raises(RealtimeProxyError):
         passages = timeo._get_passages(mock_response, current_dt=_dt("02:02"))
-
-        assert passages is None
 
 
 def next_passage_for_route_point_test():
@@ -294,14 +295,13 @@ def timeo_circuit_breaker_test():
 
     m = Mocker()
     with mock.patch('requests.get', m.get):
-        responses = [timeo._call_timeo('http://bob.com') for _ in range(0, 6)]
+        with raises(RealtimeProxyError):
+            timeo._call_timeo('http://bob.com')
+        assert good_response == timeo._call_timeo('http://bob.com')
+        for _ in range(4):
+            with raises(RealtimeProxyError):
+                timeo._call_timeo('http://bob.com')
 
-        assert responses == [None,
-                             good_response,
-                             None,
-                             None,
-                             None,
-                             None]
 
         # we should have called timeo only 4 times
         assert m.timeo_call == 4
