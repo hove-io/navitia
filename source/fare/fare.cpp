@@ -33,6 +33,7 @@ www.navitia.io
 #include <boost/foreach.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/optional.hpp>
 
 #include "type/datetime.h"
 
@@ -195,9 +196,12 @@ results Fare::compute_fare(const routing::Path& path) const {
 
                                 new_labels[0].push_back(n);
                             } catch (no_ticket) {
-                                LOG4CPLUS_WARN(logger, "Unable to get the OD ticket SA=" << next.stop_area << " zone=" << next.zone
-                                               << ", section start_zone=" << section_key.start_zone << ", dest_zone=" << section_key.start_zone
-                                               << " start_sa=" << section_key.start_stop_area << " dest_sa=" << section_key.dest_stop_area
+                                LOG4CPLUS_WARN(logger, "Unable to get the OD ticket SA=" << next.stop_area
+                                               << " zone=" << next.zone
+                                               << ", section start_zone=" << section_key.start_zone
+                                               << ", dest_zone=" << section_key.dest_zone
+                                               << " start_sa=" << section_key.start_stop_area
+                                               << " dest_sa=" << section_key.dest_stop_area
                                                << " mode=" << section_key.mode);
                             }
 
@@ -351,42 +355,63 @@ bool Transition::valid(const SectionKey& section, const Label& label) const
     return result;
 }
 
-
 DateTicket Fare::get_od(const Label& label, const SectionKey& section) const {
-    OD_key sa(OD_key::StopArea, label.stop_area);
-    OD_key sb(OD_key::Mode, label.mode);
-    OD_key sc(OD_key::Zone, boost::lexical_cast<std::string>(label.zone));
+    OD_key o_sa(OD_key::StopArea, label.stop_area);
+    OD_key o_mode(OD_key::Mode, label.mode);
+    OD_key o_zone(OD_key::Zone, boost::lexical_cast<std::string>(label.zone));
 
-    OD_key da(OD_key::StopArea, section.dest_stop_area);
-    OD_key db(OD_key::Mode, section.mode);
-    OD_key dc(OD_key::Zone, boost::lexical_cast<std::string>(section.dest_zone));
+    OD_key d_sa(OD_key::StopArea, section.dest_stop_area);
+    OD_key d_mode(OD_key::Mode, section.mode);
+    OD_key d_zone(OD_key::Zone, boost::lexical_cast<std::string>(section.dest_zone));
 
+    using OD_map = std::map<OD_key, std::vector<std::string>>;
 
-    auto start_map = od_tickets.find(sa);
-    if(start_map == od_tickets.end())
-        start_map = od_tickets.find(sb);
-    if(start_map == od_tickets.end())
-        start_map = od_tickets.find(sc);
-    if(start_map == od_tickets.end())
+    auto get_od_dest = [&] (const OD_map& od_map, const OD_key& sa, const OD_key& mode, const OD_key& zone) {
+        auto od_t = od_map.find(sa);
+        if (od_t == od_map.end())
+            od_t = od_map.find(mode);
+        if (od_t == od_map.end())
+            od_t = od_map.find(zone);
+        if (od_t == od_map.end())
+            return boost::optional<OD_map::const_iterator>();
+        return boost::optional<OD_map::const_iterator>(od_t);
+    };
+
+    boost::optional<OD_map::const_iterator> od;
+    auto start_od_map = od_tickets.find(o_sa);
+    // if we have some OD-tickets on this origin stop_area,
+    // we look for a precise OD-ticket match destination also
+    if (start_od_map != od_tickets.end()) {
+        od = get_od_dest(start_od_map->second, d_sa, d_mode, d_zone);
+    }
+    // if we haven't found complete OD-ticket match we search on origin's mode
+    if (! od) {
+        start_od_map = od_tickets.find(o_mode);
+        if (start_od_map != od_tickets.end()) {
+            od = get_od_dest(start_od_map->second, d_sa, d_mode, d_zone);
+        }
+    }
+    // if we haven't found complete OD-ticket match we search on origin's zone
+    if (! od) {
+        start_od_map = od_tickets.find(o_zone);
+        if (start_od_map != od_tickets.end()) {
+            od = get_od_dest(start_od_map->second, d_sa, d_mode, d_zone);
+        }
+    }
+    if (! od) {
         throw no_ticket();
+    }
 
-    auto end = start_map->second.find(da);
-    if(end == start_map->second.end())
-        end = start_map->second.find(db);
-    if(end == start_map->second.end())
-        end = start_map->second.find(dc);
-    if(end == start_map->second.end())
-        throw no_ticket();
-
-    // On crée un nouveau ticket en sommant toutes les composantes élémentaires
-    // Un ticket OD stif est en effet la somme de plusieurs tickets
+    // We create a new ticket, sum of all atomic elements
+    // A STIF OD-ticket is always the sum of multiple tickets
     DateTicket ticket;
-    auto it = fare_map.find(end->second.at(0));
+    std::vector<std::string> vec_t = (*od)->second;
+    auto it = fare_map.find(vec_t.at(0));
     if (it != fare_map.end()) {
         ticket = it->second;
     }
-    for (size_t i = 1; i < end->second.size(); ++i) {
-        it = fare_map.find(end->second.at(i));
+    for (size_t i = 1; i < vec_t.size(); ++i) {
+        it = fare_map.find(vec_t.at(i));
         if (it != fare_map.end()) {
             ticket = ticket + it->second;
         } else {
