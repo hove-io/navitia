@@ -28,6 +28,9 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+
+import urllib
+
 from .tests_mechanism import AbstractTestFixture, dataset
 from jormungandr import i_manager
 import mock
@@ -991,19 +994,35 @@ class OnBasicRouting():
         """
         datetime invalid, we got an error
         """
-        datetimes = ["20120614T080000Z", "2012-06-14T08:00:00.222Z"]
-        for datetime in datetimes:
-            query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&debug=true"\
-                .format(from_sa="A", to_sa="D", datetime=datetime)
+        def journey(dt):
+            return self.query_region(
+                "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&debug=true"
+                    .format(from_sa="A", to_sa="D", datetime=dt),
+                check=False)
 
-            response, error_code = self.query_region(query, check=False)
+        # invalid month
+        resp, code = journey("20121501T100000")
+        assert code == 400
+        assert 'month must be in 1..12' in resp['message']
 
-            assert error_code == 400
+        # too much digit
+        _, code = journey("201215001T100000")
+        assert code == 400
 
-            error = get_not_null(response, "error")
+    def test_datetime_withtz(self):
+        """
+        datetime invalid, we got an error
+        """
+        def journey(dt):
+            return self.query_region("journeys?from={from_sa}&to={to_sa}&datetime={datetime}&debug=true"
+                                     .format(from_sa="A", to_sa="D", datetime=dt))
 
-            assert error["message"] == "Unable to parse datetime, Not naive datetime (tzinfo is already set)"
-            assert error["id"] == "unable_to_parse"
+        # those should not raise an error
+        journey("20120615T080000Z")
+        journey("2012-06-15T08:00:00.222Z")
+
+        # it should work also with another timezone (and for fun another format)
+        journey(urllib.quote("2012-06-15 08-00-00+02"))
 
     def test_remove_one_journey_from_batch(self):
         """

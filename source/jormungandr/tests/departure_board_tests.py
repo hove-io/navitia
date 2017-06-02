@@ -27,6 +27,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
+
+import urllib
 from collections import namedtuple
 import itertools
 from .tests_mechanism import AbstractTestFixture, dataset
@@ -187,17 +189,32 @@ class TestDepartureBoard(AbstractTestFixture):
         """
         datetime invalid, we got an error
         """
-        datetimes = ["20120615T080000Z", "2012-06-15T08:00:00.222Z"]
-        for datetime in datetimes:
-            response, error_code = self.query_region("stop_points/stop1/stop_schedules?"
-                                         "from_datetime={dd}".format(dd=datetime), check=False)
+        def sched(dt):
+            return self.query_region("stop_points/stop1/stop_schedules?from_datetime={dd}".format(dd=dt),
+                                     check=False)
 
-            assert error_code == 400
+        # invalid month
+        resp, code = sched("20121501T100000")
+        assert code == 400
+        assert 'month must be in 1..12' in resp['message']
 
-            error = get_not_null(response, "error")
+        # too much digit
+        _, code = sched("201215001T100000")
+        assert code == 400
 
-            assert error["message"] == "Unable to parse datetime, Not naive datetime (tzinfo is already set)"
-            assert error["id"] == "unable_to_parse"
+    def test_datetime_withtz(self):
+        """
+        datetime invalid, we got an error
+        """
+        def sched(dt):
+            return self.query_region("stop_points/stop1/stop_schedules?from_datetime={dt}".format(dt=dt))
+
+        # those should not raise an error
+        sched("20120615T080000Z")
+        sched("2012-06-15T08:00:00.222Z")
+
+        # it should work also with another timezone (and for fun another format)
+        sched(urllib.quote("2012-06-15 08-00-00+02"))
 
     def test_on_datetime(self):
         """

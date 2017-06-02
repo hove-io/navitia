@@ -354,7 +354,9 @@ class StatManager(object):
         journey_request = stat_request.journey_request
         if hasattr(g, 'stat_interpreted_parameters') and g.stat_interpreted_parameters['original_datetime']:
             tz = utils.get_timezone()
-            dt = tz.normalize(tz.localize(g.stat_interpreted_parameters['original_datetime']))
+            dt = g.stat_interpreted_parameters['original_datetime']
+            if dt.tzinfo is None:
+                dt = tz.normalize(tz.localize(dt))
             journey_request.requested_date_time = utils.date_to_timestamp(dt.astimezone(pytz.utc))
             journey_request.clockwise = g.stat_interpreted_parameters['clockwise']
         if 'journeys' in call_result[0] and call_result[0]['journeys']:
