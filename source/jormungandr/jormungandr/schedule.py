@@ -87,9 +87,8 @@ def _update_stop_schedule(stop_schedule, next_realtime_passages):
     del stop_schedule.date_times[:]
     for passage in next_realtime_passages:
         new_dt = stop_schedule.date_times.add()
-        midnight = datetime.datetime.combine(passage.datetime.date(), time=datetime.time(0))
-        pytz.utc.localize(midnight)
-        midnight = midnight.replace(tzinfo=pytz.UTC)
+        # the midnight is calculated from passage.datetime and it keeps the same timezone as passage.datetime
+        midnight = passage.datetime.replace(hour=0, minute=0, second=0, microsecond=0)
         time = (passage.datetime - midnight).total_seconds()
         new_dt.time = int(time)
         new_dt.date = date_to_timestamp(midnight)
