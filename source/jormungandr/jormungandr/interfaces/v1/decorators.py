@@ -25,7 +25,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask import current_app
+import jormungandr
 from jormungandr.interfaces.v1.serializer import serialize_with, api
 from flask.ext.restful import marshal_with
 from collections import OrderedDict
@@ -50,13 +50,7 @@ map_serializer = {
 
 
 def get_serializer(collection, collections, display_null=False):
-    try:
-        # we have to do this if this method is used outside a flask application context
-        use_serpy = current_app.config.get('USE_SERPY', False)
-    except RuntimeError:
-        use_serpy = False
-
-    if use_serpy:
+    if jormungandr.USE_SERPY:
         return serialize_with(map_serializer.get(collection))
     else:
         return marshal_with(OrderedDict(collections), display_null=display_null)
