@@ -106,9 +106,9 @@ def serpy_extended_supported_serialization_test():
     assert properties.get('jsonschemaIntField', {}).get('type') == 'integer'
     assert properties.get('jsonschemaField', {}).get('type') == 'integer'
     assert properties.get('jsonschemaMethodField', {}).get('type') == 'string'
-    assert properties.get('lambda_schema', {}).get('$ref') == '#/definitions/CustomSerializer'
+    assert properties.get('lambda_schema', {}).get('$ref') == '#/definitions/CustomResponse'
     assert properties.get('list_lambda_schema', {}).get('type') == 'array'
-    assert properties.get('list_lambda_schema').get('items').get('$ref') == '#/definitions/CustomSerializer'
+    assert properties.get('list_lambda_schema').get('items').get('$ref') == '#/definitions/CustomResponse'
 
     # we must find the 'CustomSerializer' in the definitions
     assert(next(iter(d for d in external_definitions if d.__class__ == CustomSerializer), None))

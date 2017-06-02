@@ -89,5 +89,6 @@ class Coverage(StatedResource):
         return resp, 200
 
     def options(self, **kwargs):
-        schema = make_schema(resource=self)
+        from flask import request
+        schema = make_schema(resource=self, rule=request.url_rule)
         return SwaggerPathSerializer(schema).data, 200

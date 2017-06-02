@@ -38,7 +38,7 @@ import serpy
 
 from jormungandr.interfaces.v1.serializer.base import LiteralField, LambdaField
 from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerPathSerializer
-from jormungandr.interfaces.v1.swagger_schema import make_schema, Swagger
+from jormungandr.interfaces.v1.swagger_schema import make_schema, Swagger, ARGS_REGEXP
 
 BASE_PATH = 'v1'
 
@@ -47,12 +47,9 @@ def set_definitions_in_rule(self, rule):
     return re.sub(r'<(?P<name>.*?):.*?>', self.definition_repl, rule)
 
 
-args_regexp = re.compile(r'<(?P<name>.*?):.*?>')
-
-
 def format_args(rule):
     """format argument like swagger : {arg1}&{arg2}"""
-    formatted_rule = args_regexp.sub(lambda m: '{' + m.group('name') + '}', rule)
+    formatted_rule = ARGS_REGEXP.sub(lambda m: '{' + m.group('name') + '}', rule)
     return formatted_rule
 
 base_path_regexp = re.compile('^/{base}'.format(base=BASE_PATH))
@@ -72,7 +69,7 @@ def get_all_described_paths():
             if view_function is not None:
                 view_class = view_function.view_class
                 resource = view_class()
-                schema_path = make_schema(resource, rule._converters)
+                schema_path = make_schema(resource=resource, rule=rule)
 
                 # the definitions are stored aside and referenced in the response
                 swagger.definitions.update(schema_path.definitions)

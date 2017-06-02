@@ -59,6 +59,8 @@ class SwaggerMethodSerializer(serpy.Serializer):
     responses = SwaggerResponseSerializer(attr='output_type')
     parameters = SwaggerParamSerializer(many=True)
     summary = serpy.Field()
+    operationId = serpy.Field(attr='id')
+    tags = serpy.Field()
 
 
 class SwaggerPathSerializer(serpy.Serializer):
