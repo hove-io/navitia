@@ -282,6 +282,7 @@ void StopsGtfsHandler::init(Data& data) {
             code_c = csv.get_pos_col("stop_code"),
             lat_c = csv.get_pos_col("stop_lat"),
             lon_c = csv.get_pos_col("stop_lon"),
+            zone_c = csv.get_pos_col("zone_id"),
             type_c = csv.get_pos_col("location_type"),
             parent_c = csv.get_pos_col("parent_station"),
             name_c = csv.get_pos_col("stop_name"),
@@ -431,6 +432,10 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
         if (! parse_common_data(row, sp)) {
             delete sp;
             return {};
+        }
+
+        if (has_col(zone_c, row) && row[zone_c] != "") {
+            sp->fare_zone = boost::lexical_cast<int>(row[zone_c]);
         }
 
         if (has_col(wheelchair_c, row)) {
