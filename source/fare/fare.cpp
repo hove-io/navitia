@@ -197,12 +197,12 @@ results Fare::compute_fare(const routing::Path& path) const {
                                 new_labels[0].push_back(n);
                             } catch (no_ticket) {
                                 LOG4CPLUS_WARN(logger, "Unable to get the OD ticket SA=" << next.stop_area
-                                               << " zone=" << next.zone
+                                               << ", zone=" << next.zone
                                                << ", section start_zone=" << section_key.start_zone
                                                << ", dest_zone=" << section_key.dest_zone
-                                               << " start_sa=" << section_key.start_stop_area
-                                               << " dest_sa=" << section_key.dest_stop_area
-                                               << " mode=" << section_key.mode);
+                                               << ", start_sa=" << section_key.start_stop_area
+                                               << ", dest_sa=" << section_key.dest_stop_area
+                                               << ", mode=" << section_key.mode);
                             }
 
                         } else {
@@ -355,6 +355,19 @@ bool Transition::valid(const SectionKey& section, const Label& label) const
     return result;
 }
 
+using OD_map = std::map<OD_key, std::vector<std::string>>;
+
+static boost::optional<OD_map::const_iterator> get_od_dest(const OD_map& od_map, const OD_key& sa, const OD_key& mode, const OD_key& zone) {
+    auto od_t = od_map.find(sa);
+    if (od_t == od_map.end())
+        od_t = od_map.find(mode);
+    if (od_t == od_map.end())
+        od_t = od_map.find(zone);
+    if (od_t == od_map.end())
+        return boost::optional<OD_map::const_iterator>();
+    return boost::optional<OD_map::const_iterator>(od_t);
+};
+
 DateTicket Fare::get_od(const Label& label, const SectionKey& section) const {
     OD_key o_sa(OD_key::StopArea, label.stop_area);
     OD_key o_mode(OD_key::Mode, label.mode);
@@ -363,19 +376,6 @@ DateTicket Fare::get_od(const Label& label, const SectionKey& section) const {
     OD_key d_sa(OD_key::StopArea, section.dest_stop_area);
     OD_key d_mode(OD_key::Mode, section.mode);
     OD_key d_zone(OD_key::Zone, boost::lexical_cast<std::string>(section.dest_zone));
-
-    using OD_map = std::map<OD_key, std::vector<std::string>>;
-
-    auto get_od_dest = [&] (const OD_map& od_map, const OD_key& sa, const OD_key& mode, const OD_key& zone) {
-        auto od_t = od_map.find(sa);
-        if (od_t == od_map.end())
-            od_t = od_map.find(mode);
-        if (od_t == od_map.end())
-            od_t = od_map.find(zone);
-        if (od_t == od_map.end())
-            return boost::optional<OD_map::const_iterator>();
-        return boost::optional<OD_map::const_iterator>(od_t);
-    };
 
     boost::optional<OD_map::const_iterator> od;
     auto start_od_map = od_tickets.find(o_sa);
