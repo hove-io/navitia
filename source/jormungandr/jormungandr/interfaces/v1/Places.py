@@ -150,9 +150,7 @@ class Places(ResourceUri):
         return response, 200
 
     def options(self, **kwargs):
-        from flask import request
-        schema = make_schema(resource=self, rule=request.url_rule)
-        return SwaggerOptionPathSerializer(schema).data, 200
+        return self.api_description(**kwargs)
 
 
 class PlaceUri(ResourceUri):

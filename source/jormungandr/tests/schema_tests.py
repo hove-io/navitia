@@ -35,6 +35,9 @@ from swagger_spec_validator import validator20
 import flex
 
 
+def get_params(schema):
+    return {p['name']: p for p in schema.get('get', {}).get('parameters', [])}
+
 @dataset({"main_autocomplete_test": {}})
 class TestSwaggerSchema(AbstractTestFixture):
     """
@@ -69,6 +72,37 @@ class TestSwaggerSchema(AbstractTestFixture):
         Test the coverage schema
         """
         self._check_schema('/v1/coverage/')
+
+    def get_api_schema(self, url):
+        response = self.tester.options(url)
+
+        assert response, "response for url {} is null".format(url)
+        assert(response.status_code == 200)
+        data = json.loads(response.data, encoding='utf-8')
+
+        # the schema should not be empty and should be valid
+        assert 'get' in data
+        flex.core.validate(data)
+
+        # the response should also have the 'allow' headers
+        assert response.allow.as_set() == {'head', 'options', 'get'}
+        return data
+
+    def test_options_coverage_schema(self):
+        """
+        Test the partial coverage schema
+        """
+        response = self.get_api_schema('/v1/coverage?schema=true')
+        assert len(get_params(response)) == 1 and 'disable_geojson' in get_params(response)
+
+    def test_no_schema_by_default(self):
+        """
+        Test the 'OPTIONS' method without the 'schema' arg. In this case we do not return the schema
+        """
+        response = self.tester.options('/v1/coverage')
+        assert(response.status_code == 200)
+        assert response.allow.as_set() == {'head', 'options', 'get'}
+        assert response.data == ''  # no schema dumped
 
     def test_places_schema(self):
         """
