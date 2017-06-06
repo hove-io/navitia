@@ -41,6 +41,7 @@ class CustomProxy(RealtimeProxy):
     """
     def __init__(self, passages):
         self.hard_coded_passages = passages
+        self.rt_system_id = 'test'
 
     def status(self):
         return None

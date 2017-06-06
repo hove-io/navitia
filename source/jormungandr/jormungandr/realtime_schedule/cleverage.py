@@ -72,15 +72,14 @@ class Cleverage(RealtimeProxy):
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Cleverage RT service dead, using base '
                                               'schedule (error: {}'.format(e))
-            self.record_external_failure('circuit breaker open')
+            raise RealtimeProxyError('circuit breaker open')
         except requests.Timeout as t:
             logging.getLogger(__name__).error('Cleverage RT service timeout, using base '
                                               'schedule (error: {}'.format(t))
-            self.record_external_failure('timeout')
+            raise RealtimeProxyError('timeout')
         except Exception as e:
             logging.getLogger(__name__).exception('Cleverage RT error, using base schedule')
-            self.record_external_failure(str(e))
-        return None
+            raise RealtimeProxyError(str(e))
 
     def _make_url(self, route_point):
         """
@@ -140,8 +139,7 @@ class Cleverage(RealtimeProxy):
             # TODO better error handling, the response might be in 200 but in error
             logging.getLogger(__name__).error('Cleverage RT service unavailable, impossible to query : {}'
                                               .format(r.url))
-            self.record_external_failure('non 200 response')
-            return None
+            raise RealtimeProxyError('non 200 response')
 
         return self._get_passages(route_point, r.json())
 
