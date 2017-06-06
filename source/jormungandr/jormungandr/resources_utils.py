@@ -33,12 +33,16 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from collections import defaultdict
 
 from flask.ext.restful import reqparse, Resource
+from flask_restful.inputs import boolean
 
+import jormungandr
 from jormungandr import i_manager
 import logging
 import pytz
 from jormungandr.exceptions import RegionNotFound, UnableToParse
 from jormungandr.interfaces.argument import ArgumentDoc
+from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerPathSerializer
+from jormungandr.interfaces.v1.swagger_schema import make_schema
 
 
 class ResourceUtc(object):
@@ -102,3 +106,21 @@ class DocumentedResource(Resource):
         super(Resource, self).__init__()
         self.parsers = defaultdict(lambda: reqparse.RequestParser(argument_class=ArgumentDoc))
         self.output_type_serializer = output_type_serializer
+        self.parsers["options"].add_argument('schema',
+                                             help='dump the swagger schema of the API',
+                                             type=boolean, default=False)
+
+    def api_description(self, **kwargs):
+        """
+        return the API description
+
+        Note: when the migration to swagger is completed, we can rename this function 'options'
+        but for the moment we don't want all DocumentedResource to have an 'options' method
+        """
+        args = self.parsers["options"].parse_args()
+        options_response = jormungandr.app.make_default_options_response()
+        if not args['schema']:
+            return options_response
+        from flask import request
+        schema = make_schema(resource=self, rule=request.url_rule)
+        return SwaggerPathSerializer(schema).data, 200, {'Allow': options_response.allow}

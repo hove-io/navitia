@@ -89,9 +89,4 @@ class Coverage(StatedResource):
         return resp, 200
 
     def options(self, **kwargs):
-        from flask import request
-        if not request.headers.get('DUMP_SCHEMA'):
-            import jormungandr
-            return jormungandr.app.make_default_options_response()
-        schema = make_schema(resource=self, rule=request.url_rule)
-        return SwaggerPathSerializer(schema).data, 200
+        return self.api_description(**kwargs)
