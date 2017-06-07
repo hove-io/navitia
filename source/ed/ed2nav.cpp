@@ -173,7 +173,7 @@ int main(int argc, char * argv[])
         ("name,n", po::value<std::string>(&region_name)->default_value("default"),
             "Name of the region you are extracting")
         ("min_non_connected_ratio,m",
-         po::value<double>(&min_non_connected_graph_ratio)->default_value(0.1),
+         po::value<double>(&min_non_connected_graph_ratio)->default_value(0.01),
          "min ratio for the size of non connected graph")
         ("full_street_network_geometries", "If true export street network geometries allowing kraken to return accurate"
          "geojson for street network sections. Also improve projections accuracy. "
