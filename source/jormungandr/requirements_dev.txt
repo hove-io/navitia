@@ -1,7 +1,7 @@
 -r requirements.txt
 mock==1.0.1
 validators==0.10
-pytest==2.8.7
+pytest==3.1.1
 pytest-mock==1.0
 pytest-cov==2.3.0
 requests-mock==1.0.0
