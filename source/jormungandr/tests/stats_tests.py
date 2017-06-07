@@ -151,7 +151,7 @@ class MockWrapper:
 @dataset({"main_routing_test": {}})
 class TestStatJourneys(AbstractTestFixture):
 
-    def setup(self):
+    def setUp(self):
         """
         We save the original publish_method to be able to put it back after the tests
         each test will override this method with it's own mock check method
@@ -160,7 +160,7 @@ class TestStatJourneys(AbstractTestFixture):
         self.old_save_val = stat_manager.save_stat
         stat_manager.save_stat = True
 
-    def teardown(self):
+    def tearDown(self):
         """
         Here we put back the original method to stat manager.
         """
@@ -194,7 +194,7 @@ class TestStatJourneys(AbstractTestFixture):
 @dataset({"main_ptref_test": {}})
 class TestStatPlaces(AbstractTestFixture):
 
-    def setup(self):
+    def setUp(self):
         """
         We save the original publish_method to be able to put it back after the tests
         each test will override this method with it's own mock check method
@@ -203,7 +203,7 @@ class TestStatPlaces(AbstractTestFixture):
         self.old_save_val = stat_manager.save_stat
         stat_manager.save_stat = True
 
-    def teardown(self):
+    def tearDown(self):
         """
         Here we put back the original method to stat manager.
         """

@@ -51,11 +51,7 @@ class TestPlaces(AbstractTestFixture):
         assert(response['places'][0]['name'] == "rue kb (Condom)")
 
     def test_label_of_admin(self):
-        '''
-        test label of admin "Condom (03430)"
-        '''
-
-
+        """ test label of admin "Condom (03430)" """
         response = self.query_region("places?q=Condom&type[]=administrative_region")
 
         assert(len(response['places']) == 1)
@@ -121,7 +117,7 @@ class TestPlaces(AbstractTestFixture):
         assert(len(response['places_nearby']) > 0)
         is_valid_places(response['places_nearby'])
 
-    def test_places_nearby_with_coords_without_region(self):
+    def test_places_nearby_with_coords_without_region_and_type(self):
         """check places_nearby with /coords and type[]=stop_area"""
 
         response = self.query("/v1/coords/0.000001;0.000898311281954/places_nearby?type[]=stop_area")

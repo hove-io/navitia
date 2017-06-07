@@ -32,7 +32,7 @@ from datetime import timedelta
 
 from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
-from nose.tools import eq_
+from tests.check_utils import eq_
 import jormungandr.scenarios.destineo
 from jormungandr.instance import Instance
 

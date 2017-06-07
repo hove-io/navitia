@@ -28,6 +28,8 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+
+import unittest
 from copy import deepcopy
 import os
 # set default config file if not defined in other tests
@@ -59,7 +61,7 @@ class FakeModel(object):
         self.scenario = scenario
 
 
-class AbstractTestFixture(object):
+class AbstractTestFixture(unittest.TestCase):
     """
     Mother class for all integration tests
 
@@ -151,6 +153,7 @@ class AbstractTestFixture(object):
 
     @classmethod
     def setup_class(cls):
+        cls.tester = app.test_client()
         cls.krakens_pool = {}
         logging.info("Initing the tests {}, let's pop the krakens".format(cls.__name__))
         cls.global_jormun_setup()
@@ -216,9 +219,6 @@ class AbstractTestFixture(object):
         cls.kill_all_krakens()
         for m in cls.mocks:
             m.stop()
-
-    def __init__(self, *args, **kwargs):
-        self.tester = app.test_client()
 
     # ==============================
     # helpers

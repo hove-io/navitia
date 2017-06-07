@@ -594,17 +594,17 @@ class JourneyCommon(object):
 
         # first is bike
         assert('bike' in response['journeys'][0]['tags'])
-        ok_(response['journeys'][0]['debug']['internal_id'])
+        assert(response['journeys'][0]['debug']['internal_id'])
         eq_(len(response['journeys'][0]['sections']), 1)
 
         # second is car
         assert('car' in response['journeys'][1]['tags'])
-        ok_(response['journeys'][1]['debug']['internal_id'])
+        assert(response['journeys'][1]['debug']['internal_id'])
         eq_(len(response['journeys'][1]['sections']), 3)
 
         # last is walking
         assert('walking' in response['journeys'][-1]['tags'])
-        ok_(response['journeys'][-1]['debug']['internal_id'])
+        assert(response['journeys'][-1]['debug']['internal_id'])
         eq_(len(response['journeys'][-1]['sections']), 1)
 
     def test_journey_stop_area_to_stop_point(self):

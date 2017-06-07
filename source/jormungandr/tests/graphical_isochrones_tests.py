@@ -32,7 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
 from jormungandr import app
-from nose.tools import eq_
+from tests.check_utils import eq_
 from shapely.geometry import asShape, Point
 
 

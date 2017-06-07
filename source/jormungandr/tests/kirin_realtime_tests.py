@@ -31,7 +31,7 @@
 # import for the conf to be loaded correctly when only this test is ran
 from datetime import datetime
 import uuid
-from nose.tools.trivial import eq_
+from tests.check_utils import eq_
 from tests.tests_mechanism import dataset
 from jormungandr.utils import str_to_time_stamp, make_namedtuple
 from tests import gtfs_realtime_pb2, kirin_pb2

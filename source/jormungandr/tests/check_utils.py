@@ -31,7 +31,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from collections import deque, defaultdict, namedtuple
 from functools import partial
 from future.moves.itertools import zip_longest
-from nose.tools import *
 import json
 from jormungandr.scenarios.qualifier import compare_field, reverse_compare_field
 from navitiacommon import request_pb2, response_pb2
@@ -47,6 +46,10 @@ from urllib import unquote
 """
 Some small functions to check the service responses
 """
+
+
+def eq_(a, b, msg=None):
+    assert a == b, msg
 
 
 def check_url(tester, url, might_have_additional_args=False, **kwargs):

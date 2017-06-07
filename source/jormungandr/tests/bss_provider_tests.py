@@ -78,8 +78,7 @@ class TestBssProvider(AbstractTestFixture):
     #####
     ############################
 
-
-    def pois_without_stands_on_pois_test(self):
+    def test_pois_without_stands_on_pois(self):
         with mock_bss_providers(pois_supported=['station_unknown']):
             r = self.query_region('pois', display=False)
 
@@ -90,7 +89,7 @@ class TestBssProvider(AbstractTestFixture):
                 assert not 'stands' in p
 
 
-    def pois_with_stands_on_first_of_pois_test(self):
+    def test_pois_with_stands_on_first_of_pois(self):
         with mock_bss_providers(pois_supported=['station_1']):
             r = self.query_region('pois', display=False)
 
@@ -107,8 +106,7 @@ class TestBssProvider(AbstractTestFixture):
                 else:
                     assert not 'stands' in p
 
-
-    def pois_with_stands_on_all_pois_test(self):
+    def test_pois_with_stands_on_all_pois(self):
         with mock_bss_providers(pois_supported=[]):
             r = self.query_region('pois', display=False)
 
@@ -138,8 +136,7 @@ class TestBssProvider(AbstractTestFixture):
     #####
     ############################
 
-
-    def pois_without_stands_on_poi_test(self):
+    def test_pois_without_stands_on_poi(self):
         with mock_bss_providers(pois_supported=['station_unknown']):
             r = self.query_region("pois/station_1", display=False)
 
@@ -150,8 +147,7 @@ class TestBssProvider(AbstractTestFixture):
             is_valid_poi(poi)
             assert not 'stands' in poi
 
-
-    def pois_with_stands_on_first_poi_test(self):
+    def test_pois_with_stands_on_first_poi(self):
         with mock_bss_providers(pois_supported=[]):
             r = self.query_region("pois/station_1", display=False)
 
@@ -166,8 +162,7 @@ class TestBssProvider(AbstractTestFixture):
             assert stands['available_bikes'] == 3
             assert stands['total_stands'] == 16
 
-
-    def pois_with_stands_on_second_poi_test(self):
+    def test_pois_with_stands_on_second_poi(self):
         with mock_bss_providers(pois_supported=[]):
             r = self.query_region("pois/station_2", display=False)
 
@@ -183,7 +178,7 @@ class TestBssProvider(AbstractTestFixture):
             assert stands['total_stands'] == 197
 
 
-    def pois_with_stands_on_first_parking_poi_test(self):
+    def test_pois_with_stands_on_first_parking_poi(self):
         with mock_bss_providers(pois_supported=[]):
             r = self.query_region("pois/parking_1", display=False)
 
@@ -202,7 +197,7 @@ class TestBssProvider(AbstractTestFixture):
     #####
     ############################
 
-    def pois_without_stands_on_place_test(self):
+    def test_pois_without_stands_on_place(self):
         with mock_bss_providers(pois_supported=['station_unknown']):
             r = self.query_region("places/station_1", display=False)
 
@@ -213,8 +208,7 @@ class TestBssProvider(AbstractTestFixture):
             is_valid_poi(poi)
             assert not 'stands' in poi
 
-
-    def pois_with_stands_on_first_place_test(self):
+    def test_pois_with_stands_on_first_place(self):
         with mock_bss_providers(pois_supported=[]):
             r = self.query_region("places/station_1", display=False)
 
@@ -229,8 +223,7 @@ class TestBssProvider(AbstractTestFixture):
             assert stands['available_bikes'] == 3
             assert stands['total_stands'] == 16
 
-
-    def pois_with_stands_on_second_place_test(self):
+    def test_pois_with_stands_on_second_place(self):
         with mock_bss_providers(pois_supported=[]):
             r = self.query_region("places/station_2", display=False)
 
@@ -245,8 +238,7 @@ class TestBssProvider(AbstractTestFixture):
             assert stands['available_bikes'] == 98
             assert stands['total_stands'] == 197
 
-
-    def pois_with_stands_on_first_parking_place_test(self):
+    def test_pois_with_stands_on_first_parking_place(self):
         with mock_bss_providers(pois_supported=[]):
             r = self.query_region("places/parking_1", display=False)
 
@@ -265,8 +257,7 @@ class TestBssProvider(AbstractTestFixture):
     #####
     ############################
 
-
-    def pois_without_stands_on_places_nearby_test(self):
+    def test_pois_without_stands_on_places_nearby(self):
         with mock_bss_providers(pois_supported=['station_unknown']):
             r = self.query_region("places/admin:74435/places_nearby?count=20", display=False)
 
@@ -281,8 +272,7 @@ class TestBssProvider(AbstractTestFixture):
                     is_valid_poi(p[embedded_type])
                 assert not 'stands' in p[embedded_type]
 
-
-    def pois_with_stands_on_second_places_nearby_test(self):
+    def test_pois_with_stands_on_second_places_nearby(self):
         with mock_bss_providers(pois_supported=['station_1']):
             r = self.query_region('places/admin:74435/places_nearby?count=20', display=False)
 
@@ -306,8 +296,7 @@ class TestBssProvider(AbstractTestFixture):
                 else:
                     assert not 'stands' in p[embedded_type]
 
-
-    def pois_with_stands_on_all_places_nearby_test(self):
+    def test_pois_with_stands_on_all_places_nearby(self):
         with mock_bss_providers(pois_supported=[]):
             r = self.query_region('places/admin:74435/places_nearby?count=20', display=False)
 
@@ -336,7 +325,7 @@ class TestBssProvider(AbstractTestFixture):
                 else:
                     assert not 'stands' in p[embedded_type]
 
-    def pois_places_nearby_test_depth_zero(self):
+    def test_pois_places_nearby_depth_zero(self):
         """
         with depth=0 we don't have to poi_type, so it's not possible to use bss availability
         we don't want jormungandr to crash in this case
@@ -360,7 +349,7 @@ class TestBssProvider(AbstractTestFixture):
     ############################
 
 
-    def pois_without_stands_on_places_autocompletion_test(self):
+    def test_pois_without_stands_on_places_autocompletion(self):
         with mock_bss_providers(pois_supported=[]):
             r = self.query_region("places/?q=first station&count=1", display=False)
 
