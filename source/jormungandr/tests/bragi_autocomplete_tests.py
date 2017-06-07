@@ -33,7 +33,7 @@ import mock
 from pytest import raises
 
 from jormungandr.tests.utils_test import MockRequests, MockResponse, user_set, FakeUser
-from tests.check_utils import is_valid_global_autocomplete, eq_
+from tests.check_utils import is_valid_global_autocomplete
 from tests import check_utils
 from tests.tests_mechanism import NewDefaultScenarioAbstractTestFixture
 from .tests_mechanism import AbstractTestFixture, dataset
@@ -508,16 +508,16 @@ class AbstractAutocompleteAndRouting():
             # all journeys should have kept the user's from/to
             for j in journeys_response['journeys']:
                 response_from = j['sections'][0]['from']
-                eq_(response_from['id'], "bobette")
-                eq_(response_from['name'], "bobette's label")
-                eq_(response_from['embedded_type'], "poi")
-                eq_(response_from['poi']['label'], "bobette's label")
+                assert response_from['id'] == "bobette"
+                assert response_from['name'] == "bobette's label"
+                assert response_from['embedded_type'] == "poi"
+                assert response_from['poi']['label'] == "bobette's label"
 
                 response_to = j['sections'][-1]['to']
-                eq_(response_to['id'], journeys_to)
-                eq_(response_to['name'], "20 Rue Bob (Bobtown)")
-                eq_(response_to['embedded_type'], "address")
-                eq_(response_to['address']['label'], "20 Rue Bob (Bobtown)")
+                assert response_to['id'] == journeys_to
+                assert response_to['name'] == "20 Rue Bob (Bobtown)"
+                assert response_to['embedded_type'] == "address"
+                assert response_to['address']['label'] == "20 Rue Bob (Bobtown)"
 
 @config({'scenario': 'new_default'})
 class TestNewDefaultAutocompleteAndRouting(AbstractAutocompleteAndRouting,

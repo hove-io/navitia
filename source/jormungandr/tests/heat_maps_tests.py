@@ -32,7 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
 from jormungandr import app
-from tests.check_utils import eq_
+
 
 def get_duration(coord, response):
     lon, lat = coord.split(';')
@@ -177,7 +177,7 @@ class TestHeatMap(AbstractTestFixture):
         normal_response, error_code = self.query_no_assert(p)
 
         assert error_code == 400
-        eq_(normal_response['message'].lower(), 'unable to parse datetime, unknown string format')
+        assert normal_response['message'].lower() == 'unable to parse datetime, unknown string format'
 
 
     def test_graphical_heat_maps_no_heat_maps(self):

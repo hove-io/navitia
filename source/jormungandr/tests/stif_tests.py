@@ -51,9 +51,9 @@ class TestStif(AbstractTestFixture):
             .format(from_sp="stopA", to_sp="stopB", datetime="20140614T075500")
 
         response = self.query_region(query)
-        eq_(len(response['journeys']), 2)
-        eq_(response['journeys'][0]['arrival_date_time'], '20140614T100000')
-        eq_(response['journeys'][1]['arrival_date_time'], '20140614T110000')
+        assert len(response['journeys']) == 2
+        assert response['journeys'][0]['arrival_date_time'] == '20140614T100000'
+        assert response['journeys'][1]['arrival_date_time'] == '20140614T110000'
 
     def test_stif_override_min_journeys_calls(self):
         """
@@ -65,8 +65,8 @@ class TestStif(AbstractTestFixture):
             .format(from_sp="stopA", to_sp="stopB", datetime="20140614T075500")
 
         response = self.query_region(query)
-        eq_(len(response['journeys']), 1)
-        eq_(response['journeys'][0]['arrival_date_time'], '20140614T100000')
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['arrival_date_time'] == '20140614T100000'
 
     def test_stif_override_final_line_filter(self):
         """
@@ -79,10 +79,10 @@ class TestStif(AbstractTestFixture):
             .format(from_sp="stopA", to_sp="stopB", datetime="20140614T075500")
 
         response = self.query_region(query)
-        eq_(len(response['journeys']), 3)
-        eq_(response['journeys'][0]['arrival_date_time'], '20140614T100000')
-        eq_(response['journeys'][1]['arrival_date_time'], '20140614T110000')
-        eq_(response['journeys'][2]['arrival_date_time'], '20140614T120000')
+        assert len(response['journeys']) == 3
+        assert response['journeys'][0]['arrival_date_time'] == '20140614T100000'
+        assert response['journeys'][1]['arrival_date_time'] == '20140614T110000'
+        assert response['journeys'][2]['arrival_date_time'] == '20140614T120000'
 
     def test_stif_max_successive_buses(self):
         """
@@ -104,7 +104,7 @@ class TestStif(AbstractTestFixture):
             .format(from_sp="stopP", to_sp="stopT", datetime="20140614T145500")
 
         response = self.query_region(query)
-        eq_(len(response['journeys']), 1)
+        assert len(response['journeys']) == 1
 
         #As we modify the value of _max_successive_physical_mode to 5 we want two journeys
         query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default" \
@@ -112,7 +112,7 @@ class TestStif(AbstractTestFixture):
             .format(from_sp="stopP", to_sp="stopT", datetime="20140614T145500")
 
         response = self.query_region(query)
-        eq_(len(response['journeys']), 2)
+        assert len(response['journeys']) == 2
 
     def test_stif_max_successive_buses_with_tram_in_between(self):
         """
@@ -135,7 +135,7 @@ class TestStif(AbstractTestFixture):
             .format(from_sp="stopP", to_sp="stopW", datetime="20140614T145500")
 
         response = self.query_region(query)
-        eq_(len(response['journeys']), 1)
+        assert len(response['journeys']) == 1
 
         #As we modify the value of _max_successive_physical_mode to 5 we want two journeys
         query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default" \
@@ -143,7 +143,7 @@ class TestStif(AbstractTestFixture):
             .format(from_sp="stopP", to_sp="stopW", datetime="20140614T145500")
 
         response = self.query_region(query)
-        eq_(len(response['journeys']), 2)
+        assert len(response['journeys']) == 2
 
         # As we modify the value of _max_additional_connections to 2 we delete the second journey because
         # it contains more then nb_connections + 2 ()
@@ -152,4 +152,4 @@ class TestStif(AbstractTestFixture):
             .format(from_sp="stopP", to_sp="stopW", datetime="20140614T145500")
 
         response = self.query_region(query)
-        eq_(len(response['journeys']), 1)
+        assert len(response['journeys']) == 1

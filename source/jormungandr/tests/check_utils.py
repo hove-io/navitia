@@ -48,10 +48,6 @@ Some small functions to check the service responses
 """
 
 
-def eq_(a, b, msg=None):
-    assert a == b, msg
-
-
 def check_url(tester, url, might_have_additional_args=False, **kwargs):
     """
     Test url status code to 200 and if valid format response as json
@@ -67,8 +63,8 @@ def check_url(tester, url, might_have_additional_args=False, **kwargs):
         assert response.status_code != 404, "unreachable url {}"\
             .format(json.dumps(json.loads(response.data), indent=2))
     else:
-        eq_(response.status_code, 200, "invalid return code, response : {}"
-            .format(json.dumps(json.loads(response.data, encoding='utf-8'), indent=2)))
+        assert response.status_code == 200, "invalid return code, response : {}"\
+            .format(json.dumps(json.loads(response.data, encoding='utf-8'), indent=2))
     return response
 
 
@@ -472,7 +468,7 @@ def is_valid_isochrone(journey, tester, query):
 
     additional_args = query_from_str(journey_links['journeys']['href'])
     for k, v in query.items():
-        eq_(additional_args[k], v)
+        assert additional_args[k] == v
 
 
 def is_valid_journey(journey, tester, query):
@@ -1239,15 +1235,15 @@ def check_journey(journey, ref_journey):
     check the values in a journey
     """
     for section, ref_section in zip_longest(journey['sections'], ref_journey.sections):
-        eq_(section.get('departure_date_time'), ref_section.departure_date_time)
-        eq_(section.get('arrival_date_time'), ref_section.arrival_date_time)
-        eq_(section.get('base_departure_date_time'), ref_section.base_departure_date_time)
-        eq_(section.get('base_arrival_date_time'), ref_section.base_arrival_date_time)
+        assert section.get('departure_date_time') == ref_section.departure_date_time
+        assert section.get('arrival_date_time') == ref_section.arrival_date_time
+        assert section.get('base_departure_date_time') == ref_section.base_departure_date_time
+        assert section.get('base_arrival_date_time') == ref_section.base_arrival_date_time
         for stop_dt, ref_stop_dt in zip_longest(section.get('stop_date_times', []), ref_section.stop_date_times):
-            eq_(stop_dt.get('departure_date_time'), ref_stop_dt.departure_date_time)
-            eq_(stop_dt.get('arrival_date_time'), ref_stop_dt.arrival_date_time)
-            eq_(stop_dt.get('base_departure_date_time'), ref_stop_dt.base_departure_date_time)
-            eq_(stop_dt.get('base_arrival_date_time'), ref_stop_dt.base_arrival_date_time)
+            assert stop_dt.get('departure_date_time') == ref_stop_dt.departure_date_time
+            assert stop_dt.get('arrival_date_time') == ref_stop_dt.arrival_date_time
+            assert stop_dt.get('base_departure_date_time') == ref_stop_dt.base_departure_date_time
+            assert stop_dt.get('base_arrival_date_time') == ref_stop_dt.base_arrival_date_time
 
 
 def generate_pt_journeys(response):

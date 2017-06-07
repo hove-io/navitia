@@ -90,22 +90,22 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         #here we test messages in disruption: message, channel and types
         messages = get_not_null(disruptions[0], 'messages')
         assert len(messages) == 2
-        eq_(messages[0]['text'], 'default_message')
+        assert messages[0]['text'] == 'default_message'
         channel = get_not_null(messages[0], 'channel')
-        eq_(channel['id'], 'sms')
-        eq_(channel['name'], 'sms')
-        eq_(channel['content_type'], 'text')
+        assert channel['id'] == 'sms'
+        assert channel['name'] == 'sms'
+        assert channel['content_type'] == 'text'
         assert len(channel['types']) == 1
-        eq_(channel['types'][0], 'sms')
+        assert channel['types'][0] == 'sms'
 
-        eq_(messages[1]['text'], 'default_message')
+        assert messages[1]['text'] == 'default_message'
         channel = get_not_null(messages[1], 'channel')
-        eq_(channel['id'], 'email')
-        eq_(channel['name'], 'email')
-        eq_(channel['content_type'], 'html')
+        assert channel['id'] == 'email'
+        assert channel['name'] == 'email'
+        assert channel['content_type'] == 'html'
         assert len(channel['types']) == 2
-        eq_(channel['types'][0], 'web')
-        eq_(channel['types'][1], 'email')
+        assert channel['types'][0] == 'web'
+        assert channel['types'][1] == 'email'
 
     def test_current_datetime_out_of_bounds(self):
         """
@@ -464,7 +464,7 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
         response = self.query_region(journey_basic_query + "&disruption_active=false")
         disruptions = self.get_disruptions(response)
         assert disruptions
-        eq_(len(disruptions), 2)
+        assert len(disruptions) == 2
         assert 'blocking_line_disruption' in disruptions
         assert 'blocking_network_disruption' in disruptions
 
@@ -483,7 +483,7 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
         assert 'journeys' in response
         disruptions = self.get_disruptions(response)
         assert disruptions
-        eq_(len(disruptions), 1)
+        assert len(disruptions) == 1
         assert 'blocking_line_disruption' in disruptions
         #we also check that the journey is tagged as disrupted
         assert any(map(lambda j: j.get('status') == 'NO_SERVICE', response['journeys']))
@@ -527,7 +527,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
 
         disrupt = get_disruptions(response['traffic_reports'][0]['network'], response)
         assert disrupt
-        eq_(len(disrupt), 2)
+        assert len(disrupt) == 2
 
         status = self.query_region('status')
         last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
@@ -539,11 +539,11 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
 
         disrupt = get_disruptions(response['traffic_reports'][0]['network'], response)
         assert disrupt
-        eq_(len(disrupt), 3)
+        assert len(disrupt) == 3
 
         for disruption in disrupt:
             if disruption['id'] == 'test_disruption':
-                eq_(disruption['messages'][0]['text'], 'message')
+                assert disruption['messages'][0]['text'] == 'message'
 
         status = self.query_region('status')
         last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
@@ -555,10 +555,10 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
 
         disrupt = get_disruptions(response['traffic_reports'][0]['network'], response)
         assert disrupt
-        eq_(len(disrupt), 3)
+        assert len(disrupt) == 3
         for disruption in disrupt:
             if disruption['id'] == 'test_disruption':
-                eq_(disruption['messages'][0]['text'], 'update')
+                assert disruption['messages'][0]['text'] == 'update'
 
         status = self.query_region('status')
         last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
@@ -570,7 +570,7 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
 
         disrupt = get_disruptions(response['traffic_reports'][0]['network'], response)
         assert disrupt
-        eq_(len(disrupt), 2)
+        assert len(disrupt) == 2
         for disruption in disrupt:
             assert disruption['uri'] != 'test_disruption', 'this disruption must have been deleted'
 

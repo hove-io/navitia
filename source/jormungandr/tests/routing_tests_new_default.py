@@ -31,7 +31,6 @@ from datetime import timedelta
 from .tests_mechanism import NewDefaultScenarioAbstractTestFixture
 from .tests_mechanism import config
 from .check_utils import *
-from tests.check_utils import eq_
 from .journey_common_tests import *
 from unittest import skip
 

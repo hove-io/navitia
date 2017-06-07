@@ -153,7 +153,7 @@ class TestPlaces(AbstractTestFixture):
         lat = 100. / 111319.9
         response, status = self.query_region("bob/{};{}/places_nearby".format(lon, lat), check=False)
 
-        eq_(status, 404)
+        assert status == 404
         #Note: it's not a canonical Navitia error with an Id and a message, but it don't seems to be
         # possible to do this with 404 (handled by flask)
         assert(get_not_null(response, 'message'))
@@ -161,7 +161,7 @@ class TestPlaces(AbstractTestFixture):
         # same with a line (it has no meaning)
         response, status = self.query_region("lines/A/places_nearby".format(lon, lat), check=False)
 
-        eq_(status, 404)
+        assert status == 404
         assert(get_not_null(response, 'message'))
 
     def test_non_existent_places_nearby(self):
@@ -169,10 +169,10 @@ class TestPlaces(AbstractTestFixture):
         place_id = "I_am_not_existent"
         response, status = self.query_region("places/{}/places_nearby".format(place_id), check=False)
 
-        eq_(response["error"]["message"], "The entry point: {} is not valid".format(place_id))
+        assert response["error"]["message"] == "The entry point: {} is not valid".format(place_id)
 
     def test_non_existent_addresse(self):
         """test that a non existent addresse"""
         place_id = "-1.5348252000000002;47.2554241"
         response, status = self.query_region("places/{}".format(place_id), check=False)
-        eq_(response["error"]["message"], u'Unable to find place: -1.5348252000000002;47.2554241')
+        assert response["error"]["message"] == u'Unable to find place: -1.5348252000000002;47.2554241'
