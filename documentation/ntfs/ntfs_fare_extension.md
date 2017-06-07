@@ -38,7 +38,7 @@ Colonne | Type | Contrainte | Commentaire
 "date de fin de validité" | YYYYMMDD | Requis | Date de fin de validité du tarif
 "prix" | Entier | Requis | Valeur en centimes d'euro
 "name" | chaine | Requis | Libellé du billet
-"champ inconnu" | chaine | Requis |
+"champ ignoré" | chaine | Requis |
 "commentaire" | chaine | Requis | commentaire
 "devise" | chaine | Optionnel | Devise (par défaut: euro)
 
@@ -55,7 +55,11 @@ Origin mode | chaine | Requis | Type d'objet d'origine pour ce ticket : "zone", 
 Destination ID | chaine (1) | Requis | Contient soit une zone tarifaire soit une URI de zone d'arrêt ou de mode. Voir ci-dessous.
 Destination name | chaine | Optionnel | Libellé de la zone d'arrêt de départ ou du mode considéré. Ce champ n'est pas lu et sert à la lisibilité du fichier.
 Destination mode | chaine | Requis | Type d'objet de destination pour ce ticket : "zone", "stop" ou "mode".
-ticket_id | chaine | Requis | Identifiant du ticket dont le prix est référencé dans le fichier price.csv
+ticket_id | chaine | Requis (2) | Identifiant du ticket dont le prix est référencé dans le fichier price.csv
+ticket_id2 | chaine | Optionnel (2) | Identifiant du ticket dont le prix est référencé dans le fichier price.csv
+ticket_id3 | chaine | Optionnel (2) | Identifiant du ticket dont le prix est référencé dans le fichier price.csv
+ticket_id4 | chaine | Optionnel (2) | Identifiant du ticket dont le prix est référencé dans le fichier price.csv
+
 
 **(1) Fonctionnement de la description de l'origine (règle identique pour la destination) :**
 * Si le champ **Origin mode** contient la valeur **zone** : le champ **Origin ID** contient une zone tarifaire telle que décrite dans le fichier **stops.txt** dans le champ *fare_zone_id*.  
@@ -63,6 +67,10 @@ Par exemple : pour définir que le tarif par OD fonctionne sur toutes les gares 
 * Si le champ **Origin mode** contient la valeur **stop** : le champ **Origin ID** contient une URI de zone d'arrêt (champ **stop_id** de la zone d'arrêt avec le préfixe _"stop_area:"_)  
 * Si le champ **Origin mode** contient la valeur **mode** : le champ **Origin ID** contient une URI de mode physique (champ **physical_mode_id** du mode physique avec le préfixe _"physical_mode:"_)  
 Par exemple : si le tarif par OD permet de partir de n'importe quelle station de métro, indiquer "physical_mode:metro" dans la colonne Origin_ID
+
+**(2) Gestion des tickets multiples sur une OD :**
+Pour déterminter le prix d'une OD, tous les tickets référencés de cette OD sont étudiés. Si plusieurs tickets sont valides (ie. la date de trajet est incluse dans la plage de validité du ticket), alors le tous les tickets sont considérés comme requis et le prix sera la somme des tickets valides.
+
 
 ## fares.csv (optionnel)
 Ce fichier contient les spécifications tarifaires des tickets déclarés dans le fichier **prices.csv**.
