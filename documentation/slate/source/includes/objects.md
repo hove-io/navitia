@@ -17,10 +17,10 @@ Lots of object are geographically localized :
 
 Navitia
 
--   exposes every date times as local times via an ISO 8601 "YYYYMMDDThhmmss" string
--   can be request using local times via ISO 8601 as "YYYYMMDDThhmmss" or "YYYY-MM-DDThh:mm:ss"
--   can be request using UTC relative times via ISO 8601 as "YYYYMMDDThhmmss+HHMM" or "YYYY-MM-DDThh:mm:ss+HH:MM"
--   can be request using UTC times via ISO 8601 as "YYYYMMDDThhmmssZ" or "YYYY-MM-DDThh:mm:ssZ"
+-   exposes every date times as local times of the coverage via an ISO 8601 "YYYYMMDDThhmmss" string
+-   can be requested using local times of the coverage via ISO 8601 as "YYYYMMDDThhmmss" or "YYYY-MM-DDThh:mm:ss"
+-   can be requested using UTC relative times via ISO 8601 as "YYYYMMDDThhmmss+HHMM" or "YYYY-MM-DDThh:mm:ss+HH:MM"
+-   can be requested using UTC times via ISO 8601 as "YYYYMMDDThhmmssZ" or "YYYY-MM-DDThh:mm:ssZ"
 
 For example:
 
