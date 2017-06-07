@@ -15,12 +15,18 @@ Lots of object are geographically localized :
 
 ### Iso-date-time
 
-Navitia manages every date or time as a UTC date-time. The web-service 
+Navitia
 
 -   exposes every date times as local times via an ISO 8601 "YYYYMMDDThhmmss" string
--   can be request using local times via an ISO 8601 "YYYYMMDDThhmmss" string
+-   can be request using local times via ISO 8601 as "YYYYMMDDThhmmss" or "YYYY-MM-DDThh:mm:ss"
+-   can be request using UTC relative times via ISO 8601 as "YYYYMMDDThhmmss+HHMM" or "YYYY-MM-DDThh:mm:ss+HH:MM"
+-   can be request using UTC times via ISO 8601 as "YYYYMMDDThhmmssZ" or "YYYY-MM-DDThh:mm:ssZ"
 
-For example: <https://api.navitia.io/v1/journeys?from=bob&to=bobette&datetime=20140425T1337>
+For example:
+
+- <https://api.navitia.io/v1/journeys?from=bob&to=bobette&datetime=20140425T1337>
+- <https://api.navitia.io/v1/journeys?from=bob&to=bobette&datetime=2014-04-25T13:37+02:00>
+- <https://api.navitia.io/v1/journeys?from=bob&to=bobette&datetime=2014-04-25T13:37:42Z>
 
 There are lots of ISO 8601 libraries in every kind of language that you should use before breaking down <https://youtu.be/-5wpm-gesOY>
 
