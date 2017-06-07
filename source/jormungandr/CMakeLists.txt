@@ -19,21 +19,24 @@ SET_PROPERTY(TEST jormungandr_serpy PROPERTY
 #I whould have prefered not to set the settings file, but it is not working, so for the moment
 #we do it the weak way.
 set(JORMUN_TEST_PATH "${CMAKE_CURRENT_SOURCE_DIR}/tests")
-add_test(jormungandr_integration_tests nosetests --with-doctest -v
-        --with-xunit --xunit-file=${CMAKE_BINARY_DIR}/nosetest_jormungandr_integration_tests.xml --doctest-tests "--where=${JORMUN_TEST_PATH}"
-        --with-coverage --cover-inclusive --cover-xml --cover-package=jormungandr
-        --cover-xml-file=${CMAKE_BINARY_DIR}/jormungandr_integration_coverage.xml)
+add_test(jormungandr_integration_tests py.test
+        --junit-xml=${CMAKE_BINARY_DIR}/nosetest_jormungandr_integration_tests.xml
+        ${JORMUN_TEST_PATH}
+        --cov=jormungandr
+        --cov-report=xml:${CMAKE_BINARY_DIR}/jormungandr_integration_coverage.xml)
 SET_PROPERTY(TEST jormungandr_integration_tests PROPERTY
     ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}:${CMAKE_SOURCE_DIR}/navitiacommon")
 SET_PROPERTY(TEST jormungandr_integration_tests APPEND PROPERTY
     ENVIRONMENT "KRAKEN_BUILD_DIR=${CMAKE_BINARY_DIR}")
 
-add_test(jormungandr_serpy_integration_tests nosetests --with-doctest -v
-        --with-xunit --xunit-file=${CMAKE_BINARY_DIR}/nosetest_jormungandr_serpy_integration_tests.xml --doctest-tests "--where=${JORMUN_TEST_PATH}"
-        --with-coverage --cover-inclusive --cover-xml --cover-package=jormungandr
-        --cover-xml-file=${CMAKE_BINARY_DIR}/jormungandr_serpy_integration_coverage.xml)
+add_test(jormungandr_serpy_integration_tests py.test
+        --junit-xml=${CMAKE_BINARY_DIR}/nosetest_jormungandr_serpy_integration_tests.xml
+        ${JORMUN_TEST_PATH}
+        --cov=jormungandr
+        --cov-report=xml:${CMAKE_BINARY_DIR}/jormungandr_serpy_integration_coverage.xml)
 SET_PROPERTY(TEST jormungandr_serpy_integration_tests PROPERTY
-    ENVIRONMENT "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}:${CMAKE_SOURCE_DIR}/navitiacommon" "JORMUNGANDR_CONFIG_FILE=${CMAKE_CURRENT_SOURCE_DIR}/tests/integration_tests_serpy_settings.py")
+    ENVIRONMENT "JORMUNGANDR_USE_SERPY=True"
+    "PYTHONPATH=${CMAKE_CURRENT_SOURCE_DIR}:${CMAKE_SOURCE_DIR}/navitiacommon")
 SET_PROPERTY(TEST jormungandr_serpy_integration_tests APPEND PROPERTY
     ENVIRONMENT "KRAKEN_BUILD_DIR=${CMAKE_BINARY_DIR}")
 

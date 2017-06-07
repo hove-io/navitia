@@ -311,10 +311,10 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             response = self.query('v1/coverage/main_routing_test/stop_areas/stopA/stop_schedules?from_datetime=20120614T080000')
             assert 'error' not in response
             _, status = self.query_no_assert('v1/coverage/departure_board_test/stop_areas/stop1/stop_schedules')
-            eq_(status, 403)
+            assert status == 403
             _, status = self.query_no_assert('v1/coverage/empty_routing_test/stop_areas/'
                                              'stopbidon/stop_schedules')
-            eq_(status, 403)
+            assert status == 403
 
     def test_stop_schedules_for_bobitto(self):
         with user_set(app, FakeUserAuth, 'bobitto'):
@@ -341,10 +341,10 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             response = self.query('/v1/journeys?from=stopA&to=stopB&datetime=20120614T080000')
             assert 'error' not in response
             _, status = self.query_no_assert('/v1/journeys?from=stop1&to=stop2&datetime=20120614T080000')
-            eq_(status, 403)
+            assert status == 403
 
             _, status = self.query_no_assert('/v1/coverage/empty_routing_test/journeys?from=stop1&to=stop2&datetime=20120614T080000')
-            eq_(status, 403)
+            assert status == 403
 
     def test_wrong_journeys_for_bobitto(self):
         """
@@ -371,7 +371,7 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             response, status = self.query_no_assert('/v1/journeys?from={from_coord}&to={to_coord}&datetime={d}'
                                                     .format(from_coord=s_coord, to_coord=r_coord, d='20120614T08'))
             assert 'error' in response
-            eq_(response['error']['id'], "no_origin_nor_destination")
+            assert response['error']['id'] == "no_origin_nor_destination"
             assert status == 404
 
     def test_places_for_bobitto(self):

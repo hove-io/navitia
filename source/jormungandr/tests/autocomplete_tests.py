@@ -76,14 +76,14 @@ class TestAutocomplete(AbstractTestFixture):
     """
     Test the autocomplete responses
     """
-    def test_autocomplete_without_test(self):
+    def test_autocomplete_without(self):
         """
         Test of empty result
         """
         response = self.query_region("places?q=bob marley", display=False)
         is_response_empty(response)
 
-    def test_autocomplete_with_one_stop_area_test(self):
+    def test_autocomplete_with_one_stop_area(self):
         """
         Test with one object in the result
         """
@@ -91,7 +91,7 @@ class TestAutocomplete(AbstractTestFixture):
         is_valid_autocomplete(response, 2)
         valid_autocomplete_with_one_stop_area(response)
 
-    def test_autocomplete_with_multi_objects_test(self):
+    def test_autocomplete_with_multi_objects(self):
         """
         Test with 10 objects of different types in the result
         """

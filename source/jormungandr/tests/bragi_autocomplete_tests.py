@@ -30,15 +30,15 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 import mock
+from pytest import raises
+
 from jormungandr.tests.utils_test import MockRequests, MockResponse, user_set, FakeUser
 from tests.check_utils import is_valid_global_autocomplete
 from tests import check_utils
 from tests.tests_mechanism import NewDefaultScenarioAbstractTestFixture
 from .tests_mechanism import AbstractTestFixture, dataset
-from nose.tools import raises
 from jormungandr import app
 from urllib import urlencode
-from nose.tools import eq_
 from .tests_mechanism import config
 
 
@@ -220,7 +220,6 @@ class TestBragiAutocomplete(AbstractTestFixture):
         with mock.patch('requests.get', http_get) as mock_method:
             self.query_region('places?q=bob&type[]=administrative_region&type[]=address')
 
-    @raises(Exception)
     def test_autocomplete_call_with_param_type_not_acceptable(self):
         """
         test not acceptable type
@@ -228,8 +227,10 @@ class TestBragiAutocomplete(AbstractTestFixture):
         """
         def http_get(url, *args, **kwargs):
             return MockResponse({}, 422, '')
-        with mock.patch('requests.get', http_get) as mock_method:
-            self.query_region('places?q=bob&type[]=bobette')
+
+        with raises(Exception):
+            with mock.patch('requests.get', http_get) as mock_method:
+                self.query_region('places?q=bob&type[]=bobette')
 
     def test_autocomplete_call_with_param_type_stop_point(self):
         """
@@ -373,7 +374,7 @@ class TestBragiShape(AbstractTestFixture):
 
 
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF}, global_config={'activate_bragi': True})
-class AbstractAutocompleteAndRouting(AbstractTestFixture):
+class AbstractAutocompleteAndRouting():
     def test_journey_with_external_uri_from_bragi(self):
         """
         This test aim to recreate a classic integration
@@ -507,16 +508,16 @@ class AbstractAutocompleteAndRouting(AbstractTestFixture):
             # all journeys should have kept the user's from/to
             for j in journeys_response['journeys']:
                 response_from = j['sections'][0]['from']
-                eq_(response_from['id'], "bobette")
-                eq_(response_from['name'], "bobette's label")
-                eq_(response_from['embedded_type'], "poi")
-                eq_(response_from['poi']['label'], "bobette's label")
+                assert response_from['id'] == "bobette"
+                assert response_from['name'] == "bobette's label"
+                assert response_from['embedded_type'] == "poi"
+                assert response_from['poi']['label'] == "bobette's label"
 
                 response_to = j['sections'][-1]['to']
-                eq_(response_to['id'], journeys_to)
-                eq_(response_to['name'], "20 Rue Bob (Bobtown)")
-                eq_(response_to['embedded_type'], "address")
-                eq_(response_to['address']['label'], "20 Rue Bob (Bobtown)")
+                assert response_to['id'] == journeys_to
+                assert response_to['name'] == "20 Rue Bob (Bobtown)"
+                assert response_to['embedded_type'] == "address"
+                assert response_to['address']['label'] == "20 Rue Bob (Bobtown)"
 
 @config({'scenario': 'new_default'})
 class TestNewDefaultAutocompleteAndRouting(AbstractAutocompleteAndRouting,

@@ -34,7 +34,6 @@ from .tests_mechanism import AbstractTestFixture, dataset
 from jormungandr.realtime_schedule import realtime_proxy
 from jormungandr.schedule import RealTimePassage
 import datetime
-from nose.tools import eq_
 import pytz
 from .check_utils import is_valid_stop_date_time, get_not_null
 
@@ -188,7 +187,7 @@ class TestDepartures(AbstractTestFixture):
             DepartureCheck(route="L", dt="20160102T101100", data_freshness="base_schedule",
                            direction='Terminus (Quimper)', physical_mode='name physical_mode:0'),
         ]
-        eq_(departures, expected_departures)
+        assert departures == expected_departures
 
         #stop_time with data_freshness = realtime
         d = get_not_null(response["departures"][0], "stop_date_time")

@@ -284,7 +284,7 @@ class JourneyCommon(object):
 
         assert not 'journeys' in response
         assert 'message' in response
-        eq_(response['message'].lower(), "unable to parse datetime, unknown string format")
+        assert response['message'].lower() == "unable to parse datetime, unknown string format"
 
     def test_journeys_date_invalid(self):
         """giving the date with mmsshh (56 45 12) should be a problem"""
@@ -368,9 +368,13 @@ class JourneyCommon(object):
         self.is_valid_journey_response(response, query)
 
         assert(len(response['journeys']) == 2)
+
+        def compare(l1, l2):
+            assert sorted(l1) == sorted(l2)
+
         #Note: we do not test order, because that can change depending on the scenario
-        eq_(sorted(get_used_vj(response)), sorted([[], ['vjB']]))
-        eq_(sorted(get_arrivals(response)), sorted(['20120614T080613', '20120614T180250']))
+        compare(get_used_vj(response), [[], ['vjB']])
+        compare(get_arrivals(response), ['20120614T080613', '20120614T180250'])
 
         # same response if we just give the wheelchair=True
         query = journey_basic_query + "&traveler_type=wheelchair&wheelchair=True"
@@ -379,8 +383,8 @@ class JourneyCommon(object):
         self.is_valid_journey_response(response, query)
 
         assert(len(response['journeys']) == 2)
-        eq_(sorted(get_used_vj(response)), sorted([[], ['vjB']]))
-        eq_(sorted(get_arrivals(response)), sorted(['20120614T080613', '20120614T180250']))
+        compare(get_used_vj(response), [[], ['vjB']])
+        compare(get_arrivals(response), ['20120614T080613', '20120614T180250'])
 
         # but with the wheelchair profile, if we explicitly accept non accessible solutions (not very
         # consistent, but anyway), we should take the non accessible bus that arrive at 08h
@@ -390,8 +394,8 @@ class JourneyCommon(object):
         self.is_valid_journey_response(response, query)
 
         assert(len(response['journeys']) == 2)
-        eq_(sorted(get_used_vj(response)), sorted([['vjA'], []]))
-        eq_(sorted(get_arrivals(response)), sorted(['20120614T080250', '20120614T080613']))
+        compare(get_used_vj(response), [['vjA'], []])
+        compare(get_arrivals(response), ['20120614T080250', '20120614T080613'])
 
     def test_journeys_float_night_bus_filter_max_factor(self):
         """night_bus_filter_max_factor can be a float (and can be null)"""
@@ -430,21 +434,21 @@ class JourneyCommon(object):
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
-        eq_(len(response['journeys']), 1)
-        eq_(response['journeys'][0]['sections'][0]['from']['id'], 'stop_point:uselessA')
-        eq_(response['journeys'][0]['sections'][0]['to']['id'], 'stop_point:stopA')
-        eq_(response['journeys'][0]['sections'][0]['type'], 'street_network')
-        eq_(response['journeys'][0]['sections'][0]['mode'], 'walking')
-        eq_(response['journeys'][0]['sections'][0]['duration'], 0)
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['sections'][0]['from']['id'] == 'stop_point:uselessA'
+        assert response['journeys'][0]['sections'][0]['to']['id'] == 'stop_point:stopA'
+        assert response['journeys'][0]['sections'][0]['type'] == 'street_network'
+        assert response['journeys'][0]['sections'][0]['mode'] == 'walking'
+        assert response['journeys'][0]['sections'][0]['duration'] == 0
 
         query = "journeys?from=stop_point:stopA&to=stop_point:stopB&datetime=20120615T080000"
         query += "&max_duration_to_pt=0"
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
-        eq_(len(response['journeys']), 1)
-        eq_(response['journeys'][0]['departure_date_time'], u'20120615T080100')
-        eq_(response['journeys'][0]['arrival_date_time'], u'20120615T080102')
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['departure_date_time'] == u'20120615T080100'
+        assert response['journeys'][0]['arrival_date_time'] == u'20120615T080102'
 
 
     @mock.patch.object(i_manager, 'dispatch')
@@ -491,18 +495,18 @@ class JourneyCommon(object):
         check_best(response)
         self.is_valid_journey_response(response, journey_basic_query)
         #print response['journeys'][0]['sections'][1]
-        eq_(len(response['journeys']), 2)
-        eq_(len(response['journeys'][0]['sections']), 3)
-        eq_(response['journeys'][0]['co2_emission']['value'], 0.58)
-        eq_(response['journeys'][0]['co2_emission']['unit'], 'gEC')
-        eq_(response['journeys'][0]['sections'][1]['type'], 'public_transport')
-        eq_(len(response['journeys'][0]['sections'][1]['stop_date_times']), 2)
-        eq_(len(response['journeys'][0]['sections'][1]['geojson']['coordinates']), 3)
-        eq_(response['journeys'][0]['sections'][1]['co2_emission']['value'], 0.58)
-        eq_(response['journeys'][0]['sections'][1]['co2_emission']['unit'], 'gEC')
-        eq_(response['journeys'][1]['duration'], 276)
-        eq_(response['journeys'][1]['durations']['total'], 276)
-        eq_(response['journeys'][1]['durations']['walking'], 276)
+        assert len(response['journeys']) == 2
+        assert len(response['journeys'][0]['sections']) == 3
+        assert response['journeys'][0]['co2_emission']['value'] == 0.58
+        assert response['journeys'][0]['co2_emission']['unit'] == 'gEC'
+        assert response['journeys'][0]['sections'][1]['type'] == 'public_transport'
+        assert len(response['journeys'][0]['sections'][1]['stop_date_times']) == 2
+        assert len(response['journeys'][0]['sections'][1]['geojson']['coordinates']) == 3
+        assert response['journeys'][0]['sections'][1]['co2_emission']['value'] == 0.58
+        assert response['journeys'][0]['sections'][1]['co2_emission']['unit'] == 'gEC'
+        assert response['journeys'][1]['duration'] == 276
+        assert response['journeys'][1]['durations']['total'] == 276
+        assert response['journeys'][1]['durations']['walking'] == 276
 
 
     def test_max_duration_to_pt_equals_to_0(self):
@@ -515,7 +519,7 @@ class JourneyCommon(object):
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
-        eq_(len(response['journeys']), 4)
+        assert len(response['journeys']) == 4
 
         query += "&max_duration_to_pt=0"
         response, status = self.query_no_assert(query)
@@ -528,7 +532,7 @@ class JourneyCommon(object):
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
-        eq_(len(response['journeys']), 2)
+        assert len(response['journeys']) == 2
 
         query += "&max_duration_to_pt=0"
         #There is no direct_path but a journey using Metro
@@ -547,7 +551,7 @@ class JourneyCommon(object):
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
-        eq_(len(response['journeys']), 2)
+        assert len(response['journeys']) == 2
 
         query += "&max_duration_to_pt=0"
         response = self.query_region(query)
@@ -582,30 +586,30 @@ class JourneyCommon(object):
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
-        eq_(len(response['journeys']), 4)
+        assert len(response['journeys']) == 4
 
         query += "&max_duration=0"
         response = self.query_region(query)
         # the pt journey is eliminated
         self.is_valid_journey_response(response, query)
-        eq_(len(response['journeys']), 3)
+        assert len(response['journeys']) == 3
 
         check_best(response)
 
         # first is bike
         assert('bike' in response['journeys'][0]['tags'])
-        ok_(response['journeys'][0]['debug']['internal_id'])
-        eq_(len(response['journeys'][0]['sections']), 1)
+        assert(response['journeys'][0]['debug']['internal_id'])
+        assert len(response['journeys'][0]['sections']) == 1
 
         # second is car
         assert('car' in response['journeys'][1]['tags'])
-        ok_(response['journeys'][1]['debug']['internal_id'])
-        eq_(len(response['journeys'][1]['sections']), 3)
+        assert(response['journeys'][1]['debug']['internal_id'])
+        assert len(response['journeys'][1]['sections']) == 3
 
         # last is walking
         assert('walking' in response['journeys'][-1]['tags'])
-        ok_(response['journeys'][-1]['debug']['internal_id'])
-        eq_(len(response['journeys'][-1]['sections']), 1)
+        assert(response['journeys'][-1]['debug']['internal_id'])
+        assert len(response['journeys'][-1]['sections']) == 1
 
     def test_journey_stop_area_to_stop_point(self):
         """
@@ -744,31 +748,31 @@ class JourneyCommon(object):
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
-        eq_(len(response['journeys']), 3)
-        eq_(len(response['journeys'][0]['sections']), 1)
-        eq_(response['journeys'][0]['sections'][0]['mode'], 'bike')
-        eq_(len(response['journeys'][1]['sections']), 3)
-        eq_(response['journeys'][1]['sections'][0]['mode'], 'walking')
-        eq_(len(response['journeys'][2]['sections']), 1)
-        eq_(response['journeys'][2]['sections'][0]['mode'], 'walking')
+        assert len(response['journeys']) == 3
+        assert len(response['journeys'][0]['sections']) == 1
+        assert response['journeys'][0]['sections'][0]['mode'] == 'bike'
+        assert len(response['journeys'][1]['sections']) == 3
+        assert response['journeys'][1]['sections'][0]['mode'] == 'walking'
+        assert len(response['journeys'][2]['sections']) == 1
+        assert response['journeys'][2]['sections'][0]['mode'] == 'walking'
 
         query += '&bike_speed=1.5'
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
-        eq_(len(response['journeys']), 4)
+        assert len(response['journeys']) == 4
         print(response['journeys'][0]['tags'])
         print(response['journeys'][1]['tags'])
         print(response['journeys'][2]['tags'])
         print(response['journeys'][3]['tags'])
-        eq_(len(response['journeys'][0]['sections']), 3)
-        eq_(response['journeys'][0]['sections'][0]['mode'], 'bike')
-        eq_(len(response['journeys'][1]['sections']), 3)
-        eq_(response['journeys'][1]['sections'][0]['mode'], 'walking')
-        eq_(len(response['journeys'][2]['sections']), 1)
-        eq_(response['journeys'][2]['sections'][0]['mode'], 'bike')
-        eq_(len(response['journeys'][3]['sections']), 1)
-        eq_(response['journeys'][3]['sections'][0]['mode'], 'walking')
+        assert len(response['journeys'][0]['sections']) == 3
+        assert response['journeys'][0]['sections'][0]['mode'] == 'bike'
+        assert len(response['journeys'][1]['sections']) == 3
+        assert response['journeys'][1]['sections'][0]['mode'] == 'walking'
+        assert len(response['journeys'][2]['sections']) == 1
+        assert response['journeys'][2]['sections'][0]['mode'] == 'bike'
+        assert len(response['journeys'][3]['sections']) == 1
+        assert response['journeys'][3]['sections'][0]['mode'] == 'walking'
 
     def test_call_kraken_boarding_alighting(self):
         '''
@@ -783,43 +787,43 @@ class JourneyCommon(object):
         check_best(response)
         self.is_valid_journey_response(response, query)
 
-        eq_(len(response['journeys']), 1)
+        assert len(response['journeys']) == 1
         journey = response['journeys'][0]
 
-        eq_(journey['sections'][0]['from']['id'], 'stopA')
-        eq_(journey['sections'][0]['to']['id'], 'stop_point:stopA')
-        eq_(journey['sections'][0]['type'], 'crow_fly')
-        eq_(journey['sections'][0]['duration'], 0)
-        eq_(journey['sections'][0]['departure_date_time'], '20120614T223200')
-        eq_(journey['sections'][0]['arrival_date_time'], '20120614T223200')
+        assert journey['sections'][0]['from']['id'] == 'stopA'
+        assert journey['sections'][0]['to']['id'] == 'stop_point:stopA'
+        assert journey['sections'][0]['type'] == 'crow_fly'
+        assert journey['sections'][0]['duration'] == 0
+        assert journey['sections'][0]['departure_date_time'] == '20120614T223200'
+        assert journey['sections'][0]['arrival_date_time'] == '20120614T223200'
 
-        eq_(journey['sections'][1]['from']['id'], 'stop_point:stopA')
-        eq_(journey['sections'][1]['to']['id'], 'stop_point:stopA')
-        eq_(journey['sections'][1]['type'], 'boarding')
-        eq_(journey['sections'][1]['duration'], 1800)
-        eq_(journey['sections'][1]['departure_date_time'], '20120614T223200')
-        eq_(journey['sections'][1]['arrival_date_time'], '20120614T230200')
+        assert journey['sections'][1]['from']['id'] == 'stop_point:stopA'
+        assert journey['sections'][1]['to']['id'] == 'stop_point:stopA'
+        assert journey['sections'][1]['type'] == 'boarding'
+        assert journey['sections'][1]['duration'] == 1800
+        assert journey['sections'][1]['departure_date_time'] == '20120614T223200'
+        assert journey['sections'][1]['arrival_date_time'] == '20120614T230200'
 
-        eq_(journey['sections'][2]['from']['id'], 'stop_point:stopA')
-        eq_(journey['sections'][2]['to']['id'], 'stop_point:stopB')
-        eq_(journey['sections'][2]['type'], 'public_transport')
-        eq_(journey['sections'][2]['duration'], 180)
-        eq_(journey['sections'][2]['departure_date_time'], '20120614T230200')
-        eq_(journey['sections'][2]['arrival_date_time'], '20120614T230500')
+        assert journey['sections'][2]['from']['id'] == 'stop_point:stopA'
+        assert journey['sections'][2]['to']['id'] == 'stop_point:stopB'
+        assert journey['sections'][2]['type'] == 'public_transport'
+        assert journey['sections'][2]['duration'] == 180
+        assert journey['sections'][2]['departure_date_time'] == '20120614T230200'
+        assert journey['sections'][2]['arrival_date_time'] == '20120614T230500'
 
-        eq_(journey['sections'][3]['from']['id'], 'stop_point:stopB')
-        eq_(journey['sections'][3]['to']['id'], 'stop_point:stopB')
-        eq_(journey['sections'][3]['type'], 'alighting')
-        eq_(journey['sections'][3]['duration'], 1800)
-        eq_(journey['sections'][3]['departure_date_time'], '20120614T230500')
-        eq_(journey['sections'][3]['arrival_date_time'], '20120614T233500')
+        assert journey['sections'][3]['from']['id'] == 'stop_point:stopB'
+        assert journey['sections'][3]['to']['id'] == 'stop_point:stopB'
+        assert journey['sections'][3]['type'] == 'alighting'
+        assert journey['sections'][3]['duration'] == 1800
+        assert journey['sections'][3]['departure_date_time'] == '20120614T230500'
+        assert journey['sections'][3]['arrival_date_time'] == '20120614T233500'
 
-        eq_(journey['sections'][4]['from']['id'], 'stop_point:stopB')
-        eq_(journey['sections'][4]['to']['id'], 'stopB')
-        eq_(journey['sections'][4]['type'], 'crow_fly')
-        eq_(journey['sections'][4]['duration'], 0)
-        eq_(journey['sections'][4]['departure_date_time'], '20120614T233500')
-        eq_(journey['sections'][4]['arrival_date_time'], '20120614T233500')
+        assert journey['sections'][4]['from']['id'] == 'stop_point:stopB'
+        assert journey['sections'][4]['to']['id'] == 'stopB'
+        assert journey['sections'][4]['type'] == 'crow_fly'
+        assert journey['sections'][4]['duration'] == 0
+        assert journey['sections'][4]['departure_date_time'] == '20120614T233500'
+        assert journey['sections'][4]['arrival_date_time'] == '20120614T233500'
 
 
 @dataset({"main_routing_test": {}})
@@ -834,19 +838,19 @@ class DirectPath(object):
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
-        eq_(len(response['journeys']), 4)
+        assert len(response['journeys']) == 4
 
         # first is bike
         assert('bike' in response['journeys'][0]['tags'])
-        eq_(len(response['journeys'][0]['sections']), 1)
+        assert len(response['journeys'][0]['sections']) == 1
 
         # second is car
         assert('car' in response['journeys'][1]['tags'])
-        eq_(len(response['journeys'][1]['sections']), 3)
+        assert len(response['journeys'][1]['sections']) == 3
 
         # last is walking
         assert('walking' in response['journeys'][-1]['tags'])
-        eq_(len(response['journeys'][-1]['sections']), 1)
+        assert len(response['journeys'][-1]['sections']) == 1
 
     def test_journey_direct_path_only(self):
         query = journey_basic_query + \
@@ -855,11 +859,11 @@ class DirectPath(object):
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
-        eq_(len(response['journeys']), 1)
+        assert len(response['journeys']) == 1
 
         # only walking
         assert('non_pt' in response['journeys'][0]['tags'])
-        eq_(len(response['journeys'][0]['sections']), 1)
+        assert len(response['journeys'][0]['sections']) == 1
 
     def test_journey_direct_path_none(self):
         query = journey_basic_query + \
@@ -868,7 +872,7 @@ class DirectPath(object):
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
-        eq_(len(response['journeys']), 1)
+        assert len(response['journeys']) == 1
 
         # only pt journey
         assert('non_pt' not in response['journeys'][0]['tags'])
@@ -881,14 +885,14 @@ class DirectPath(object):
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
-        eq_(len(response['journeys']), 2)
+        assert len(response['journeys']) == 2
 
         # first is pt journey
         assert('non_pt' not in response['journeys'][0]['tags'])
         assert(len(response['journeys'][0]['sections']) > 1)
         # second is walking
         assert('non_pt' in response['journeys'][1]['tags'])
-        eq_(len(response['journeys'][1]['sections']), 1)
+        assert len(response['journeys'][1]['sections']) == 1
 
 
 @dataset({})
@@ -934,9 +938,9 @@ class OnBasicRouting():
         response = self.query_region(query, display=False)
         check_best(response)
         #self.is_valid_journey_response(response, query)# linestring with 1 value (0,0)
-        eq_(len(response['journeys']), 1)
-        eq_(response['journeys'][0]['arrival_date_time'],  "20120614T160000")
-        eq_(response['journeys'][0]['type'], "best")
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['arrival_date_time'] ==  "20120614T160000"
+        assert response['journeys'][0]['type'] == "best"
 
         assert len(response["disruptions"]) == 0
         feed_publishers = response["feed_publishers"]
@@ -961,15 +965,15 @@ class OnBasicRouting():
         check_best(response)
         self.is_valid_journey_response(response, query)
         assert('journeys' in response)
-        eq_(len(response['journeys']), 1)
-        eq_(response['journeys'][0]['sections'][0]['to']['id'], 'G')
-        eq_(response['journeys'][0]['sections'][0]['type'], 'crow_fly')
-        eq_(response['journeys'][0]['sections'][0]['mode'], 'walking')
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['sections'][0]['to']['id'] == 'G'
+        assert response['journeys'][0]['sections'][0]['type'] == 'crow_fly'
+        assert response['journeys'][0]['sections'][0]['mode'] == 'walking'
 
-        eq_(response['journeys'][0]['sections'][1]['from']['id'], 'G')
-        eq_(response['journeys'][0]['sections'][1]['to']['id'], 'H')
-        eq_(response['journeys'][0]['sections'][1]['type'], 'public_transport')
-        eq_(response['journeys'][0]['duration'], 3600)
+        assert response['journeys'][0]['sections'][1]['from']['id'] == 'G'
+        assert response['journeys'][0]['sections'][1]['to']['id'] == 'H'
+        assert response['journeys'][0]['sections'][1]['type'] == 'public_transport'
+        assert response['journeys'][0]['duration'] == 3600
 
     def test_novalidjourney_on_first_call_debug(self):
         """
@@ -984,11 +988,11 @@ class OnBasicRouting():
         response = self.query_region(query, display=True)
         check_best(response)
         #self.is_valid_journey_response(response, query)# linestring with 1 value (0,0)
-        eq_(len(response['journeys']), 2)
-        eq_(response['journeys'][0]['arrival_date_time'], "20120614T150000")
+        assert len(response['journeys']) == 2
+        assert response['journeys'][0]['arrival_date_time'] == "20120614T150000"
         assert('to_delete' in response['journeys'][0]['tags'])
-        eq_(response['journeys'][1]['arrival_date_time'], "20120614T160000")
-        eq_(response['journeys'][1]['type'], "fastest")
+        assert response['journeys'][1]['arrival_date_time'] == "20120614T160000"
+        assert response['journeys'][1]['type'] == "fastest"
 
     def test_datetime_error(self):
         """
@@ -1036,9 +1040,9 @@ class OnBasicRouting():
         response = self.query_region(query, display=False)
         check_best(response)
         self.is_valid_journey_response(response, query)
-        eq_(len(response['journeys']), 1)
-        eq_(response['journeys'][0]['arrival_date_time'], u'20120615T151000')
-        eq_(response['journeys'][0]['type'], "best")
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['arrival_date_time'] == u'20120615T151000'
+        assert response['journeys'][0]['type'] == "best"
 
     def test_max_attemps(self):
         """
@@ -1062,7 +1066,7 @@ class OnBasicRouting():
 
         response = self.query_region(query, display=False)
         self.is_valid_journey_response(response, query)
-        eq_(len(response['journeys']), 1)
+        assert len(response['journeys']) == 1
 
     def test_sp_to_sp(self):
         """
@@ -1079,12 +1083,12 @@ class OnBasicRouting():
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
-        eq_(len(response['journeys']), 1)
-        eq_(response['journeys'][0]['sections'][0]['from']['id'], 'stop_point:uselessA')
-        eq_(response['journeys'][0]['sections'][0]['to']['id'], 'A')
-        eq_(response['journeys'][0]['sections'][0]['type'], 'crow_fly')
-        eq_(response['journeys'][0]['sections'][0]['mode'], 'walking')
-        eq_(response['journeys'][0]['sections'][0]['duration'], 0)
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['sections'][0]['from']['id'] == 'stop_point:uselessA'
+        assert response['journeys'][0]['sections'][0]['to']['id'] == 'A'
+        assert response['journeys'][0]['sections'][0]['type'] == 'crow_fly'
+        assert response['journeys'][0]['sections'][0]['mode'] == 'walking'
+        assert response['journeys'][0]['sections'][0]['duration'] == 0
 
     def test_isochrone(self):
         response = self.query_region("journeys?from=I1&datetime=20120615T070000&max_duration=36000")
@@ -1099,11 +1103,11 @@ class OnBasicRouting():
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
-        eq_(len(response['journeys']), 1)
-        eq_(response['journeys'][0]['sections'][0]['from']['id'], 'admin:93700')
-        eq_(response['journeys'][0]['sections'][0]['to']['id'], 'admin:75000')
-        eq_(response['journeys'][0]['sections'][0]['type'], 'public_transport')
-        eq_(response['journeys'][0]['sections'][0]['additional_informations'][0], 'odt_with_zone')
+        assert len(response['journeys']) == 1
+        assert response['journeys'][0]['sections'][0]['from']['id'] == 'admin:93700'
+        assert response['journeys'][0]['sections'][0]['to']['id'] == 'admin:75000'
+        assert response['journeys'][0]['sections'][0]['type'] == 'public_transport'
+        assert response['journeys'][0]['sections'][0]['additional_informations'][0] == 'odt_with_zone'
 
     def test_heat_map_without_sn(self):
         """
@@ -1132,11 +1136,11 @@ class OneDeadRegion():
         check_best(response)
         self.is_valid_journey_response(response, query)
 
-        eq_(len(response['journeys']), 1)
-        eq_(len(response['journeys'][0]['sections']), 1)
-        eq_(response['journeys'][0]['sections'][0]['type'], 'public_transport')
-        eq_(len(response['debug']['regions_called']), 1)
-        eq_(response['debug']['regions_called'][0], "main_routing_test")
+        assert len(response['journeys']) == 1
+        assert len(response['journeys'][0]['sections']) == 1
+        assert response['journeys'][0]['sections'][0]['type'] == 'public_transport'
+        assert len(response['debug']['regions_called']) == 1
+        assert response['debug']['regions_called'][0] == "main_routing_test"
 
 
 @dataset({"main_routing_without_pt_test": {'priority': 42}, "main_routing_test": {'priority': 10}})
@@ -1150,12 +1154,12 @@ class WithoutPt():
         check_best(response)
         self.is_valid_journey_response(response, query)
 
-        eq_(len(response['journeys']), 2)
-        eq_(len(response['journeys'][0]['sections']), 3)
-        eq_(response['journeys'][0]['sections'][1]['type'], 'public_transport')
-        eq_(len(response['debug']['regions_called']), 2)
-        eq_(response['debug']['regions_called'][0], "main_routing_without_pt_test")
-        eq_(response['debug']['regions_called'][1], "main_routing_test")
+        assert len(response['journeys']) == 2
+        assert len(response['journeys'][0]['sections']) == 3
+        assert response['journeys'][0]['sections'][1]['type'] == 'public_transport'
+        assert len(response['debug']['regions_called']) == 2
+        assert response['debug']['regions_called'][0] == "main_routing_without_pt_test"
+        assert response['debug']['regions_called'][1] == "main_routing_test"
 
     def test_one_region_without_pt_new_default(self):
         """
@@ -1166,12 +1170,12 @@ class WithoutPt():
         check_best(response)
         self.is_valid_journey_response(response, query)
 
-        eq_(len(response['journeys']), 2)
-        eq_(len(response['journeys'][0]['sections']), 3)
-        eq_(response['journeys'][0]['sections'][1]['type'], 'public_transport')
-        eq_(len(response['debug']['regions_called']), 2)
-        eq_(response['debug']['regions_called'][0], "main_routing_without_pt_test")
-        eq_(response['debug']['regions_called'][1], "main_routing_test")
+        assert len(response['journeys']) == 2
+        assert len(response['journeys'][0]['sections']) == 3
+        assert response['journeys'][0]['sections'][1]['type'] == 'public_transport'
+        assert len(response['debug']['regions_called']) == 2
+        assert response['debug']['regions_called'][0] == "main_routing_without_pt_test"
+        assert response['debug']['regions_called'][1] == "main_routing_test"
 
 
 @dataset({"main_ptref_test": {}})
@@ -1185,4 +1189,4 @@ class JourneysWithPtref():
         check_best(response)
         self.is_valid_journey_response(response, query)
 
-        eq_(len(response['journeys']), 1)
+        assert len(response['journeys']) == 1

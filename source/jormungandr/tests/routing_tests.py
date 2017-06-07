@@ -49,24 +49,24 @@ class TestJourneysDefault(JourneyCommon, AbstractTestFixture):
             "&debug=true"
         response = self.query_region(query)
         check_best(response)
-        eq_(len(response['journeys']), 4)
+        assert len(response['journeys']) == 4
 
         query += "&max_duration=0"
         response = self.query_region(query)
         # the pt journey is eliminated
-        eq_(len(response['journeys']), 3)
+        assert len(response['journeys']) == 3
 
         # first is bike
         assert('non_pt_bike' == response['journeys'][0]['type'])
-        eq_(len(response['journeys'][0]['sections']), 1)
+        assert len(response['journeys'][0]['sections']) == 1
 
         # second is empty
         assert('' == response['journeys'][1]['type'])
-        eq_(len(response['journeys'][1]['sections']), 3)
+        assert len(response['journeys'][1]['sections']) == 3
 
         # last is bss
         assert('non_pt_bss' == response['journeys'][2]['type'])
-        eq_(len(response['journeys'][-1]['sections']), 5)
+        assert len(response['journeys'][-1]['sections']) == 5
 
     def test_journey_stop_area_to_stop_point(self):
         """
@@ -110,11 +110,11 @@ class TestOnBasicRoutingDefault(OnBasicRouting, AbstractTestFixture):
             .format(from_sa="A", to_sa="D", datetime="20120614T080000")
 
         response = self.query_region(query, display=False)
-        eq_(len(response['journeys']), 2)
-        eq_(response['journeys'][0]['arrival_date_time'], "20120614T150000")
-        eq_(response['journeys'][0]['type'], "")
-        eq_(response['journeys'][1]['arrival_date_time'], "20120614T160000")
-        eq_(response['journeys'][1]['type'], "best")
+        assert len(response['journeys']) == 2
+        assert response['journeys'][0]['arrival_date_time'] == "20120614T150000"
+        assert response['journeys'][0]['type'] == ""
+        assert response['journeys'][1]['arrival_date_time'] == "20120614T160000"
+        assert response['journeys'][1]['type'] == "best"
 
 @config()
 class TestOneDeadRegionDefault(OneDeadRegion, AbstractTestFixture):

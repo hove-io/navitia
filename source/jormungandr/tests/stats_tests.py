@@ -129,12 +129,12 @@ class MockWrapper:
         assert stat.journeys[1].sections[0].type == "street_network"
 
         #journey_request is stored UTC no matter instance or jormun TZ (but instance TZ is in UTC)
-        eq_(stat.journey_request.requested_date_time, str_to_time_stamp("20120614T080000"))
-        eq_(stat.journey_request.clockwise, True)
-        eq_(stat.journey_request.departure_insee, '03430')
-        eq_(stat.journey_request.departure_admin, 'admin:74435')
-        eq_(stat.journey_request.arrival_insee, '03430')
-        eq_(stat.journey_request.arrival_admin, 'admin:74435')
+        assert stat.journey_request.requested_date_time == str_to_time_stamp("20120614T080000")
+        assert stat.journey_request.clockwise
+        assert stat.journey_request.departure_insee == '03430'
+        assert stat.journey_request.departure_admin == 'admin:74435'
+        assert stat.journey_request.arrival_insee == '03430'
+        assert stat.journey_request.arrival_admin == 'admin:74435'
 
     def check_stat_places_to_publish(self, stat):
         assert stat.user_id != ""
@@ -151,7 +151,7 @@ class MockWrapper:
 @dataset({"main_routing_test": {}})
 class TestStatJourneys(AbstractTestFixture):
 
-    def setup(self):
+    def setUp(self):
         """
         We save the original publish_method to be able to put it back after the tests
         each test will override this method with it's own mock check method
@@ -160,7 +160,7 @@ class TestStatJourneys(AbstractTestFixture):
         self.old_save_val = stat_manager.save_stat
         stat_manager.save_stat = True
 
-    def teardown(self):
+    def tearDown(self):
         """
         Here we put back the original method to stat manager.
         """
@@ -194,7 +194,7 @@ class TestStatJourneys(AbstractTestFixture):
 @dataset({"main_ptref_test": {}})
 class TestStatPlaces(AbstractTestFixture):
 
-    def setup(self):
+    def setUp(self):
         """
         We save the original publish_method to be able to put it back after the tests
         each test will override this method with it's own mock check method
@@ -203,7 +203,7 @@ class TestStatPlaces(AbstractTestFixture):
         self.old_save_val = stat_manager.save_stat
         stat_manager.save_stat = True
 
-    def teardown(self):
+    def tearDown(self):
         """
         Here we put back the original method to stat manager.
         """

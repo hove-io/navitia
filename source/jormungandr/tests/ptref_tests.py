@@ -171,13 +171,13 @@ class TestPtRef(AbstractTestFixture):
 
     def test_ptref_invalid_type(self):
         response, code = self.query_region("AAAAAA/stop_areas", check=False)
-        eq_(code, 400)
-        eq_(response['message'], 'unknown type: AAAAAA')
+        assert code == 400
+        assert response['message'] == 'unknown type: AAAAAA'
 
         coord = "{lon};{lat}".format(lon=1.2, lat=3.4)
         response, code = self.query_region("{coord}/stop_areas".format(coord=coord), check=False)
-        eq_(code, 400)
-        eq_(response['message'], 'unknown type: {coord}'.format(coord=coord))
+        assert code == 400
+        assert response['message'] == 'unknown type: {coord}'.format(coord=coord)
 
     def test_ptref_with_current_datetime(self):
         """
@@ -621,7 +621,7 @@ class TestPtRefRoutingAndPtrefCov(AbstractTestFixture):
     def test_invalid_url(self):
         """the following bad url was causing internal errors, it should only be a 404"""
         _, status = self.query_no_assert("v1/coverage/lines/bob")
-        eq_(status, 404)
+        assert status == 404
 
 
 @dataset({"main_routing_test": {}})
@@ -637,7 +637,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
             is_valid_stop_area(s)
 
         #the default is the search for all stops within 200m, so we should have A and C
-        eq_(len(stops), 2)
+        assert len(stops) == 2
 
         assert set(["stopA", "stopC"]) == set([s['name'] for s in stops])
 
@@ -651,7 +651,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
             is_valid_stop_area(s)
 
         #the default is the search for all stops within 200m, so we should have A and C
-        eq_(len(stops), 2)
+        assert len(stops) == 2
 
         assert set(["stopA", "stopC"]) == set([s['name'] for s in stops])
 
@@ -664,7 +664,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         for s in stops:
             is_valid_stop_area(s)
 
-        eq_(len(stops), 3)
+        assert len(stops) == 3
         assert set(["stopA", "stopB", "stopC"]) == set([s['name'] for s in stops])
 
     def test_with_coord_and_filter(self):
@@ -684,7 +684,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
 
         #the default is the search for all stops within 200m, so we should have all 3 stops
         #we should have 3 stops
-        eq_(len(stops), 2)
+        assert len(stops) == 2
         assert set(["stopA", "stopC"]) == set([s['name'] for s in stops])
 
     def test_all_lines(self):
@@ -692,7 +692,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('lines')
         assert 'error' not in response
         lines = get_not_null(response, 'lines')
-        eq_(len(lines), 4)
+        assert len(lines) == 4
         assert {"1A", "1B", "1C", "1D"} == {l['code'] for l in lines}
 
     def test_line_filter_line_code(self):
@@ -700,7 +700,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('lines?filter=line.code=1A')
         assert 'error' not in response
         lines = get_not_null(response, 'lines')
-        eq_(len(lines), 1)
+        assert len(lines) == 1
         assert "1A" == lines[0]['code']
 
     def test_line_filter_line_code_with_resource_uri(self):
@@ -708,7 +708,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('physical_modes/physical_mode:0x1/lines?filter=line.code=1D')
         assert 'error' not in response
         lines = get_not_null(response, 'lines')
-        eq_(len(lines), 1)
+        assert len(lines) == 1
         assert "1D" == lines[0]['code']
 
     def test_line_filter_line_code_empty_response(self):
@@ -728,7 +728,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('lines?filter=route.code=bob')
         assert 'error' not in response
         lines = get_not_null(response, 'lines')
-        eq_(len(lines), 4)
+        assert len(lines) == 4
         assert {l['code'] for l in all_lines} == {l['code'] for l in lines}
 
     def test_route_filter_line_code(self):
@@ -736,7 +736,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('routes?filter=line.code=1B')
         assert 'error' not in response
         routes = get_not_null(response, 'routes')
-        eq_(len(routes), 1)
+        assert len(routes) == 1
         assert "1B" == routes[0]['line']['code']
 
     def test_headsign(self):
@@ -744,7 +744,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('vehicle_journeys?headsign=vjA')
         assert 'error' not in response
         vjs = get_not_null(response, 'vehicle_journeys')
-        eq_(len(vjs), 1)
+        assert len(vjs) == 1
 
     def test_headsign_with_resource_uri(self):
         """test usage of headsign with resource uri"""
@@ -752,7 +752,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
                                      '?headsign=vjA')
         assert 'error' not in response
         vjs = get_not_null(response, 'vehicle_journeys')
-        eq_(len(vjs), 1)
+        assert len(vjs) == 1
 
     def test_headsign_with_code_filter_and_resource_uri(self):
         """test usage of headsign with code filter and resource uri"""
@@ -760,7 +760,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
                                      '?headsign=vjA&filter=line.code=1A')
         assert 'error' not in response
         vjs = get_not_null(response, 'vehicle_journeys')
-        eq_(len(vjs), 1)
+        assert len(vjs) == 1
 
     def test_multiple_resource_uri_no_final_collection_uri(self):
         """test usage of multiple resource uris with line and physical mode giving result,
@@ -768,15 +768,15 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('physical_modes/physical_mode:0x0/lines/A')
         assert 'error' not in response
         lines = get_not_null(response, 'lines')
-        eq_(len(lines), 1)
+        assert len(lines) == 1
         response = self.query_region('lines/D')
         assert 'error' not in response
         lines = get_not_null(response, 'lines')
-        eq_(len(lines), 1)
+        assert len(lines) == 1
         response = self.query_region('physical_modes/physical_mode:0x1/lines/D')
         assert 'error' not in response
         lines = get_not_null(response, 'lines')
-        eq_(len(lines), 1)
+        assert len(lines) == 1
 
         response, status = self.query_region('physical_modes/physical_mode:0x0/lines/D', False)
         assert status == 404
@@ -789,37 +789,37 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('physical_modes/physical_mode:0x1/lines/D/stop_areas')
         assert 'error' not in response
         stop_areas = get_not_null(response, 'stop_areas')
-        eq_(len(stop_areas), 2)
+        assert len(stop_areas) == 2
         response = self.query_region('physical_modes/physical_mode:0x0/lines/D/stop_areas')
         assert 'error' not in response
         stop_areas = get_not_null(response, 'stop_areas')
-        eq_(len(stop_areas), 1)
+        assert len(stop_areas) == 1
 
     def test_headsign_stop_time_vj(self):
         """test basic print of headsign in stop_times for vj"""
         response = self.query_region('vehicle_journeys?filter=vehicle_journey.name="vjA"')
         assert 'error' not in response
         vjs = get_not_null(response, 'vehicle_journeys')
-        eq_(len(vjs), 1)
-        eq_(len(vjs[0]['stop_times']), 2)
-        eq_(vjs[0]['stop_times'][0]['headsign'], "A00")
-        eq_(vjs[0]['stop_times'][1]['headsign'], "vjA")
+        assert len(vjs) == 1
+        assert len(vjs[0]['stop_times']) == 2
+        assert vjs[0]['stop_times'][0]['headsign'] == "A00"
+        assert vjs[0]['stop_times'][1]['headsign'] == "vjA"
 
     def test_headsign_display_info_journeys(self):
         """test basic print of headsign in section for journeys"""
         response = self.query_region('journeys?from=stop_point:stopB&to=stop_point:stopA&datetime=20120615T000000&max_duration_to_pt=0')
         assert 'error' not in response
         journeys = get_not_null(response, 'journeys')
-        eq_(len(journeys), 1)
-        eq_(len(journeys[0]['sections']), 1)
-        eq_(journeys[0]['sections'][0]['display_informations']['headsign'], "A00")
+        assert len(journeys) == 1
+        assert len(journeys[0]['sections']) == 1
+        assert journeys[0]['sections'][0]['display_informations']['headsign'] == "A00"
 
     def test_headsign_display_info_departures(self):
         """test basic print of headsign in display informations for departures"""
         response = self.query_region('stop_points/stop_point:stopB/departures?from_datetime=20120615T000000')
         assert 'error' not in response
         departures = get_not_null(response, 'departures')
-        eq_(len(departures), 2)
+        assert len(departures) == 2
         assert {"A00", "vjB"} == {d['display_informations']['headsign'] for d in departures}
 
     def test_headsign_display_info_arrivals(self):
@@ -827,18 +827,18 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('stop_points/stop_point:stopB/arrivals?from_datetime=20120615T000000')
         assert 'error' not in response
         arrivals = get_not_null(response, 'arrivals')
-        eq_(len(arrivals), 2)
-        eq_(arrivals[0]['display_informations']['headsign'], "vehicle_journey 2")
+        assert len(arrivals) == 2
+        assert arrivals[0]['display_informations']['headsign'] == "vehicle_journey 2"
 
     def test_headsign_display_info_route_schedules(self):
         """test basic print of headsign in display informations for route schedules"""
         response = self.query_region('routes/A:0/route_schedules?from_datetime=20120615T000000')
         assert 'error' not in response
         route_schedules = get_not_null(response, 'route_schedules')
-        eq_(len(route_schedules), 1)
-        eq_(len(route_schedules[0]['table']['headers']), 1)
+        assert len(route_schedules) == 1
+        assert len(route_schedules[0]['table']['headers']) == 1
         display_info = route_schedules[0]['table']['headers'][0]['display_informations']
-        eq_(display_info['headsign'], "vjA")
+        assert display_info['headsign'] == "vjA"
         assert {"A00", "vjA"} == set(display_info['headsigns'])
 
     def test_trip_id_vj(self):
@@ -869,11 +869,11 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         disruptions = get_not_null(response, 'disruptions')
         assert len(disruptions) == 2
         disruptions_uris = set([d['uri'] for d in disruptions])
-        eq_({"too_bad_line_C", "too_bad_all_lines"}, disruptions_uris)
+        assert {"too_bad_line_C", "too_bad_all_lines"} == disruptions_uris
 
         # we can't access object from the disruption though (we don't think it to be useful for the moment)
         response, status = self.query_region('disruptions/too_bad_line_C/lines', check=False)
-        eq_(status, 404)
+        assert status == 404
         e = get_not_null(response, 'error')
         assert e['id'] == 'unknown_object'
         assert e['message'] == 'ptref : Filters: Unable to find object'
@@ -904,11 +904,11 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('journeys?from=stop_point:stopB&to=stop_point:stopA&datetime=20120615T000000&max_duration_to_pt=0')
         assert 'error' not in response
         journeys = get_not_null(response, 'journeys')
-        eq_(len(journeys), 1)
-        eq_(len(journeys[0]['sections']), 1)
-        eq_(journeys[0]['sections'][0]['display_informations']['headsign'], "A00")
-        eq_(journeys[0]['sections'][0]['display_informations']['color'], "289728")
-        eq_(journeys[0]['sections'][0]['display_informations']['text_color'], "FFD700")
+        assert len(journeys) == 1
+        assert len(journeys[0]['sections']) == 1
+        assert journeys[0]['sections'][0]['display_informations']['headsign'] == "A00"
+        assert journeys[0]['sections'][0]['display_informations']['color'] == "289728"
+        assert journeys[0]['sections'][0]['display_informations']['text_color'] == "FFD700"
 
     def test_stop_points_depth_3(self):
         """
