@@ -31,6 +31,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete, GeoStatusResponse
 from jormungandr.interfaces.v1.decorators import get_serializer
+from jormungandr.interfaces.v1.serializer import api
 from jormungandr.scenarios.utils import build_pagination, pb_type
 from jormungandr.interfaces.v1.fields import NonNullList, place, NonNullNested, PbField, error, feed_publisher,\
     disruption_marshaller
@@ -50,7 +51,7 @@ places = {
 
 class Kraken(AbstractAutocomplete):
 
-    @get_serializer(collection='places', collections=places)
+    @get_serializer(serpy=api.PlacesSerializer, marshall=places)
     def get(self, request, instance):
 
         req = request_pb2.Request()
