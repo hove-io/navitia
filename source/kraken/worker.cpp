@@ -787,13 +787,17 @@ void Worker::graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest& req
     for(int i = 0; i < request.boundary_duration_size(); ++i) {
         boundary_duration.push_back(request.boundary_duration(i));
     }
+    const auto sn = request_journey.streetnetwork_params();
+    const auto end_mode_iso = request_journey.clockwise() ? sn.destination_mode() : sn.origin_mode();
+    const auto end_mode = type::static_data::get()->modeByCaption(end_mode_iso);
+    const double end_speed = get_speed(sn, end_mode);
     navitia::routing::make_graphical_isochrone(
         this->pb_creator, *planner, ep, request_journey.datetimes(0),
         boundary_duration, request_journey.max_transfers(),
         arg.accessibilite_params, arg.forbidden, arg.allowed,
         request_journey.clockwise(), arg.rt_level,
         *street_network_worker,
-        request_journey.streetnetwork_params().walking_speed());
+        end_speed);
 }
 
 void Worker::heat_map(const pbnavitia::HeatMapRequest& request) {
