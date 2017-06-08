@@ -1243,16 +1243,15 @@ struct IsochroneCommon {
     bool clockwise;
     type::GeographicalCoord coord_origin;
     map_stop_point_duration departures;
-    double speed;
     DateTime init_dt;
     type::EntryPoint center;
     DateTime bound;
     bt::ptime datetime;
     IsochroneCommon(){}
     IsochroneCommon(const bool clockwise, const type::GeographicalCoord& coord_origin,
-                    const map_stop_point_duration& departures, const double speed, const DateTime init_dt,
+                    const map_stop_point_duration& departures, const DateTime init_dt,
                     const type::EntryPoint& center, const DateTime bound, bt::ptime datetime):clockwise(clockwise),
-        coord_origin(coord_origin), departures(departures), speed(speed), init_dt(init_dt),
+        coord_origin(coord_origin), departures(departures), init_dt(init_dt),
         center(center), bound(bound), datetime(datetime){}
 };
 
@@ -1268,7 +1267,6 @@ static bool fill_isochrone_common(IsochroneCommon& isochrone_common,
                                   bool clockwise,
                                   const nt::RTLevel rt_level,
                                   georef::StreetNetwork & worker,
-                                  const double& speed,
                                   PbCreator& pb_creator) {
     bt::ptime datetime;
     auto tmp_datetime = parse_datetimes(raptor, {departure_datetime}, pb_creator, clockwise);
@@ -1291,7 +1289,7 @@ static bool fill_isochrone_common(IsochroneCommon& isochrone_common,
     raptor.isochrone(departures, init_dt, bound, max_transfers,
                      accessibilite_params, forbidden, allowed, clockwise, rt_level);
     type::GeographicalCoord coord_origin = center.coordinates;
-    isochrone_common = IsochroneCommon(clockwise, coord_origin, departures, speed, init_dt, center, bound, datetime);
+    isochrone_common = IsochroneCommon(clockwise, coord_origin, departures, init_dt, center, bound, datetime);
     return false;
 }
 
@@ -1318,7 +1316,7 @@ void make_graphical_isochrone(navitia::PbCreator& pb_creator,
     IsochroneCommon isochrone_common;
     auto has_error = fill_isochrone_common(isochrone_common, raptor, center, departure_datetime,
                                            boundary_duration[0], max_transfers, accessibilite_params,
-                                           forbidden, allowed, clockwise, rt_level, worker, speed, pb_creator);
+                                           forbidden, allowed, clockwise, rt_level, worker, pb_creator);
 
     if (has_error) { return; }
 
@@ -1346,14 +1344,14 @@ void make_heat_map(navitia::PbCreator& pb_creator,
                    bool clockwise,
                    const nt::RTLevel rt_level,
                    georef::StreetNetwork & worker,
-                   const double& speed,
-                   const navitia::type::Mode_e mode,
+                   const double& end_speed,
+                   const navitia::type::Mode_e end_mode,
                    const uint32_t resolution) {
 
     IsochroneCommon isochrone_common;
     auto has_error = fill_isochrone_common(isochrone_common, raptor, center, departure_datetime, max_duration,
                                            max_transfers, accessibilite_params, forbidden, allowed, clockwise,
-                                           rt_level, worker, speed, pb_creator);
+                                           rt_level, worker, pb_creator);
     if (has_error) { return; }
 
     if (worker.geo_ref.nb_vertex_by_mode == 0) {
@@ -1364,7 +1362,7 @@ void make_heat_map(navitia::PbCreator& pb_creator,
         return;
     }
 
-    auto heat_map = build_raster_isochrone(worker.geo_ref, speed, mode, isochrone_common.init_dt, raptor,
+    auto heat_map = build_raster_isochrone(worker.geo_ref, end_speed, end_mode, isochrone_common.init_dt, raptor,
                                            isochrone_common.coord_origin, max_duration, clockwise,
                                            isochrone_common.bound, resolution);
     add_heat_map(heat_map, pb_creator, center, clockwise, isochrone_common.datetime);
