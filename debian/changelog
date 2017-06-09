@@ -1,3 +1,25 @@
+navitia2 (2.34.0) unstable; urgency=low
+
+  * Kraken: upgrade of rabbitmq-c lib  <https://github.com/CanalTP/navitia/pull/2093>
+  * Jormungandr: add is_journeys_schedules for stif  <https://github.com/CanalTP/navitia/pull/2097>
+  * All: Upgrade of lz4 library  <https://github.com/CanalTP/navitia/pull/2100>
+  * Jormungandr: fix timezone in realtime  <https://github.com/CanalTP/navitia/pull/2101>
+  * kraken: fix car isochrones  <https://github.com/CanalTP/navitia/pull/2115>
+  * Jormungandr: migrate from nose to pytest  <https://github.com/CanalTP/navitia/pull/2114>
+  * Ed: fix graph component ratio filtering  <https://github.com/CanalTP/navitia/pull/2110>
+  * jormungandr: deactivate by default the schema on OPTIONS  <https://github.com/CanalTP/navitia/pull/2106>
+  * Fare: debug zone fares  <https://github.com/CanalTP/navitia/pull/2108>
+  * jormungandr: refacto of error handling in realtime proxy  <https://github.com/CanalTP/navitia/pull/2107>
+  * Jormungandr: /schema to expose JSON Schema of resources responses  <https://github.com/CanalTP/navitia/pull/2055>
+  * jormungandr: add some stuff for the swagger generation  <https://github.com/CanalTP/navitia/pull/2104>
+  * Jormungandr: handle localized datetime in query  <https://github.com/CanalTP/navitia/pull/2102>
+  * jormungandr: put 'USE_SERPY' outside of the app context  <https://github.com/CanalTP/navitia/pull/2103>
+  * Jormungandr: always display pagination  <https://github.com/CanalTP/navitia/pull/2105>
+  * Jormungandr: documentation of /places  <https://github.com/CanalTP/navitia/pull/2099>
+  * Fare: debug  <https://github.com/CanalTP/navitia/pull/2094>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Fri, 09 Jun 2017 11:06:24 +0100
+
 navitia2 (2.33.0) unstable; urgency=low
 
   * PtRef: Display line section impact in lines  <https://github.com/CanalTP/navitia/pull/2087>
