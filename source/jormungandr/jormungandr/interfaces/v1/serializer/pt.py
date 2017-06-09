@@ -419,8 +419,8 @@ class ContributorSerializer(GenericSerializer):
 class DatasetSerializer(PbNestedSerializer):
     id = jsonschema.Field(schema_type=str, attr='uri', description='Identifier of the object')
     description = jsonschema.Field(schema_type=str, attr='desc')
-    start_validation_date = LocalTimeField(description='Start of the validity period for the dataset')
-    end_validation_date = LocalTimeField(description='End of the validity period for the dataset')
+    start_validation_date = DateTimeField(description='Start of the validity period for the dataset')
+    end_validation_date = DateTimeField(description='End of the validity period for the dataset')
     system = jsonschema.Field(schema_type=str, description='Type of dataset provided (GTFS, Chouette, ...)')
     realtime_level = EnumField()
     contributor = ContributorSerializer(description='Contributor providing the dataset')
