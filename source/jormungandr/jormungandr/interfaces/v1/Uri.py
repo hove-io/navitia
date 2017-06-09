@@ -43,7 +43,6 @@ from jormungandr.interfaces.v1.fields import stop_point, stop_area, route, line,
     journey_pattern_point, poi, poi_type,\
     journey_pattern, trip, connection, error, PbField, contributor, dataset
 from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
-from collections import OrderedDict
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri, protect
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument, date_time_format, default_count_arg_type
@@ -363,7 +362,8 @@ def connections(is_collection):
         """ Retrieves connections"""
 
         def __init__(self):
-            Uri.__init__(self, is_collection, "connections")
+            Uri.__init__(self, is_collection, "connections",
+                         output_type_serializer=api.ConnectionsSerializer)
             self.collections = [
                 ("connections",
                  NonNullList(fields.Nested(connection, display_null=False))),
@@ -372,8 +372,7 @@ def connections(is_collection):
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            collections = marshal_with(OrderedDict(self.collections), display_null=False)
-            self.get_decorators.insert(1, collections)
+            self.get_decorators.insert(1, get_obj_serializer(self))
     return Connections
 
 
@@ -383,7 +382,8 @@ def companies(is_collection):
         """ Retrieves companies"""
 
         def __init__(self):
-            Uri.__init__(self, is_collection, "companies")
+            Uri.__init__(self, is_collection, "companies",
+                         output_type_serializer=api.CompaniesSerializer)
             self.collections = [
                 ("companies",
                  NonNullList(fields.Nested(company, display_null=False))),
@@ -392,8 +392,7 @@ def companies(is_collection):
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            collections = marshal_with(OrderedDict(self.collections), display_null=False)
-            self.get_decorators.insert(1, collections)
+            self.get_decorators.insert(1, get_obj_serializer(self))
     return Companies
 
 
@@ -403,7 +402,8 @@ def poi_types(is_collection):
         """ Retrieves poi types"""
 
         def __init__(self):
-            Uri.__init__(self, is_collection, "poi_types")
+            Uri.__init__(self, is_collection, "poi_types",
+                         output_type_serializer=api.PoiTypesSerializer)
             self.collections = [
                 ("poi_types",
                  NonNullList(fields.Nested(poi_type, display_null=False))),
@@ -412,8 +412,7 @@ def poi_types(is_collection):
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            collections = marshal_with(OrderedDict(self.collections), display_null=False)
-            self.get_decorators.insert(1, collections)
+            self.get_decorators.insert(1, get_obj_serializer(self))
     return PoiTypes
 
 
@@ -489,7 +488,8 @@ def pois(is_collection):
         """ Retrieves pois"""
 
         def __init__(self):
-            Uri.__init__(self, is_collection, "pois")
+            Uri.__init__(self, is_collection, "pois",
+                         output_type_serializer=api.PoisSerializer)
             self.collections = [
                 ("pois",
                  NonNullList(fields.Nested(poi, display_null=False))),
@@ -498,8 +498,7 @@ def pois(is_collection):
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            collections = marshal_with(OrderedDict(self.collections), display_null=False)
-            self.get_decorators.insert(1, collections)
+            self.get_decorators.insert(1, get_obj_serializer(self))
             self.parsers["get"].add_argument("original_id", type=unicode, description="original uri of the object you"
                                                                                       "want to query")
             self.parsers["get"].add_argument("bss_stands", type=boolean, default=True,
@@ -558,7 +557,8 @@ def contributors(is_collection):
         """ Retrieves contributors"""
 
         def __init__(self):
-            Uri.__init__(self, is_collection, "contributors")
+            Uri.__init__(self, is_collection, "contributors",
+                         output_type_serializer=api.ContributorsSerializer)
             self.collections = [
                 ("contributors",
                  NonNullList(fields.Nested(contributor, display_null=False))),
@@ -567,8 +567,7 @@ def contributors(is_collection):
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            collections = marshal_with(OrderedDict(self.collections), display_null=False)
-            self.get_decorators.insert(1, collections)
+            self.get_decorators.insert(1, get_obj_serializer(self))
     return Contributors
 
 
@@ -578,7 +577,8 @@ def datasets(is_collection):
         """ Retrieves datasets"""
 
         def __init__(self):
-            Uri.__init__(self, is_collection, "datasets")
+            Uri.__init__(self, is_collection, "datasets",
+                         output_type_serializer=api.DatasetsSerializer)
             self.collections = [
                 ("datasets",
                  NonNullList(fields.Nested(dataset, display_null=False))),
@@ -587,8 +587,7 @@ def datasets(is_collection):
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
-            collections = marshal_with(OrderedDict(self.collections), display_null=False)
-            self.get_decorators.insert(1, collections)
+            self.get_decorators.insert(1, get_obj_serializer(self))
     return Datasets
 
 

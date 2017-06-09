@@ -391,3 +391,36 @@ class VehicleJourneySerializer(GenericSerializer):
     calendars = CalendarSerializer(many=True)
     trip = TripSerializer()
     disruptions = LinkSerializer(attr='impact_uris', display_none=True)
+
+
+class ConnectionSerializer(PbNestedSerializer):
+    origin = StopPointSerializer()
+    destination = StopPointSerializer()
+    duration = jsonschema.Field(schema_type=int, display_none=True,
+                                description='Duration of connection. '
+                                            'The duration really used to compute connection with a margin')
+    display_duration = jsonschema.Field(schema_type=int, display_none=True,
+                                        description='The duration of the connection as it should be '
+                                                    'displayed to traveler, without margin')
+    max_duration = jsonschema.Field(schema_type=int, display_none=True, deprecated=True,
+                                    description='Parameter used to specify the maximum length allowed '
+                                                'for a traveler to stay at a connection')
+
+
+class CompanieSerializer(GenericSerializer):
+    codes = CodeSerializer(many=True)
+
+
+class ContributorSerializer(GenericSerializer):
+    website = jsonschema.Field(schema_type=str)
+    license = jsonschema.Field(schema_type=str)
+
+
+class DatasetSerializer(PbNestedSerializer):
+    id = jsonschema.Field(schema_type=str, attr='uri', description='Identifier of the object')
+    description = jsonschema.Field(schema_type=str, attr='desc')
+    start_validation_date = LocalTimeField(description='Start of the validity period for the dataset')
+    end_validation_date = LocalTimeField(description='End of the validity period for the dataset')
+    system = jsonschema.Field(schema_type=str, description='Type of dataset provided (GTFS, Chouette, ...)')
+    realtime_level = EnumField()
+    contributor = ContributorSerializer(description='Contributor providing the dataset')
