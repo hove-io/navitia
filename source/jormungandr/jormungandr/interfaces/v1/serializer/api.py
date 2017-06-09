@@ -100,6 +100,30 @@ class NetworksSerializer(PTReferentialSerializer):
     networks = pt.NetworkSerializer(many=True)
 
 
+class ConnectionsSerializer(PTReferentialSerializer):
+    connections = pt.ConnectionSerializer(many=True)
+
+
+class CompaniesSerializer(PTReferentialSerializer):
+    companies = pt.CompanieSerializer(many=True)
+
+
+class PoiTypesSerializer(PTReferentialSerializer):
+    poi_types = pt.PoiTypeSerializer(many=True)
+
+
+class PoisSerializer(PTReferentialSerializer):
+    pois = pt.PoiSerializer(many=True)
+
+
+class ContributorsSerializer(PTReferentialSerializer):
+    contributors = pt.ContributorSerializer(many=True)
+
+
+class DatasetsSerializer(PTReferentialSerializer):
+    datasets = pt.DatasetSerializer(many=True)
+
+
 class PlacesSerializer(serpy.Serializer):
     error = ErrorSerializer(display_none=False)
     feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
