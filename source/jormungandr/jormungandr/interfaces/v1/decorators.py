@@ -25,9 +25,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from flask import current_app
-from jormungandr.interfaces.v1.serializer import serialize_with
-from jormungandr.interfaces.v1.serializer import api
+import jormungandr
+from jormungandr.interfaces.v1.serializer import serialize_with, api
 from flask.ext.restful import marshal_with
 from collections import OrderedDict
 
@@ -45,11 +44,13 @@ map_serializer = {
    "trips": api.TripsSerializer,
    "journey_patterns": api.JourneyPatternsSerializer,
    "journey_pattern_points": api.JourneyPatternPointsSerializer,
+   "coverages": api.CoveragesSerializer,
+   "places": api.PlacesSerializer,
 }
 
 
 def get_serializer(collection, collections, display_null=False):
-    if current_app.config.get('USE_SERPY', False):
+    if jormungandr.USE_SERPY:
         return serialize_with(map_serializer.get(collection))
     else:
         return marshal_with(OrderedDict(collections), display_null=display_null)

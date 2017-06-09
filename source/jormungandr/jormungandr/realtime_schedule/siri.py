@@ -34,7 +34,7 @@ from flask import logging
 import pybreaker
 import requests as requests
 from jormungandr import cache, app
-from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy
+from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy, RealtimeProxyError
 from jormungandr.schedule import RealTimePassage
 import xml.etree.ElementTree as et
 import aniso8601
@@ -71,7 +71,7 @@ class Siri(RealtimeProxy):
             return None
         siri_response = self._call_siri(request)
         if not siri_response or siri_response.status_code != 200:
-            return None
+            raise RealtimeProxyError('invalid response')
         logging.getLogger(__name__).debug('siri for {}: {}'.format(stop, siri_response.text))
         return self._get_passages(siri_response.content, route_point)
 
@@ -91,8 +91,8 @@ class Siri(RealtimeProxy):
         try:
             root = et.fromstring(xml)
         except et.ParseError as e:
-            logging.getLogger(__name__).error("invalid xml: {}".format(e))
-            raise
+            logging.getLogger(__name__).exception("invalid xml")
+            raise RealtimeProxyError('invalid xml')
 
         stop = route_point.fetch_stop_id(self.object_id_tag)
         line = route_point.fetch_line_id(self.object_id_tag)
@@ -134,15 +134,14 @@ class Siri(RealtimeProxy):
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('siri RT service dead, using base '
                                               'schedule (error: {}'.format(e))
-            self.record_external_failure('circuit breaker open')
+            raise RealtimeProxyError('circuit breaker open')
         except requests.Timeout as t:
             logging.getLogger(__name__).error('siri RT service timeout, using base '
                                               'schedule (error: {}'.format(t))
-            self.record_external_failure('timeout')
+            raise RealtimeProxyError('timeout')
         except Exception as e:
             logging.getLogger(__name__).exception('siri RT error, using base schedule')
-            self.record_external_failure(str(e))
-        return None
+            raise RealtimeProxyError(str(e))
 
 
     def _make_request(self, dt, count, monitoring_ref):

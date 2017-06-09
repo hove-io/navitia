@@ -30,16 +30,19 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask.ext.restful import fields, reqparse, abort
-from flask.ext.restful.inputs import boolean
+from flask_restful import fields, reqparse, abort
+from flask_restful.inputs import boolean
 from flask.globals import g
+
+from jormungandr.interfaces.v1.serializer.api import PlacesSerializer
+from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerOptionPathSerializer
+from jormungandr.interfaces.v1.swagger_schema import make_schema
 from navitiacommon import parser_args_type
 from jormungandr import i_manager, timezone, global_autocomplete, authentication
 from jormungandr.interfaces.v1.fields import disruption_marshaller
 from jormungandr.interfaces.v1.fields import place, NonNullList, NonNullNested, PbField, pagination,\
                                              error, feed_publisher
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
-from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type, date_time_format
 from copy import deepcopy
 from jormungandr.interfaces.v1.transform_id import transform_id
@@ -52,7 +55,9 @@ from jormungandr.interfaces.parsers import coord_format, option_value
 from jormungandr.scenarios.utils import pb_type
 
 
-#instance marshal
+# instance marshal
+from navitiacommon.parser_args_type import ParameterDescription
+
 places = {
     "places": NonNullList(NonNullNested(place)),
     "error": PbField(error, attribute='error'),
@@ -61,38 +66,38 @@ places = {
 }
 
 
-def geojson_argument(value):
-    decoded = json.loads(value)
-    if not decoded:
-        raise ValueError('invalid shape')
+class geojson_argument(object):
+    def __call__(self, value):
+        decoded = json.loads(value)
+        if not decoded:
+            raise ValueError('invalid shape')
 
-    return parser_args_type.geojson_argument(decoded)
-        
+        return parser_args_type.geojson_argument(decoded)
+
+    def description(self):
+        return ParameterDescription(type=str)  # TODO a better description of the geojson
+
 
 class Places(ResourceUri):
     def __init__(self, *args, **kwargs):
-        ResourceUri.__init__(self, authentication=False, *args, **kwargs)
-        self.parsers = {}
-        self.parsers["get"] = reqparse.RequestParser(
-            argument_class=ArgumentDoc)
+        ResourceUri.__init__(self, authentication=False, output_type_serializer=PlacesSerializer,
+                             *args, **kwargs)
         self.parsers["get"].add_argument("q", type=unicode, required=True,
                                          description="The data to search")
-        self.parsers["get"].add_argument("type[]", type=option_value(pb_type),
+        self.parsers["get"].add_argument("type[]", type=option_value(pb_type.keys()),
                                          action="append",
                                          default=["stop_area", "address",
                                                   "poi",
                                                   "administrative_region"],
-                                         description="The type of data to\
-                                         search")
+                                         description="The type of data to search")
         self.parsers["get"].add_argument("count", type=default_count_arg_type, default=10,
                                          description="The maximum number of places returned")
         self.parsers["get"].add_argument("search_type", type=int, default=0,
                                          description="Type of search: firstletter or type error")
         self.parsers["get"].add_argument("admin_uri[]", type=unicode,
                                          action="append",
-                                         description="If filled, will\
-                                         restrained the search within the\
-                                         given admin uris")
+                                         description="If filled, will restrain the search within the "
+                                                     "given admin uris")
         self.parsers["get"].add_argument("depth", type=depth_argument,
                                          default=1,
                                          description="The depth of objects")
@@ -101,16 +106,17 @@ class Places(ResourceUri):
                                                      " Default is the current date and it is used for debug."
                                                      " Note: it will mainly change the disruptions that concern "
                                                      "the object The timezone should be specified in the format,"
-                                                     " else we consider it as UTC")
+                                                     " else we consider it as UTC",
+                                         schema_type='datetime', hidden=True)
         self.parsers['get'].add_argument("disable_geojson", type=boolean, default=False,
                                          description="remove geojson from the response")
 
-        self.parsers['get'].add_argument("from", type=coord_format,
+        self.parsers['get'].add_argument("from", type=coord_format(),
                                          description="Coordinates longitude;latitude used to prioritize "
                                                      "the objects around this coordinate")
         self.parsers['get'].add_argument("_autocomplete", type=unicode, description="name of the autocomplete service"
-                                         " used under the hood")
-        self.parsers['get'].add_argument('shape', type=geojson_argument,
+                                         " used under the hood", hidden=True)
+        self.parsers['get'].add_argument('shape', type=geojson_argument(),
                                          description='Geographical shape to limit the search.')
 
     def get(self, region=None, lon=None, lat=None):
@@ -143,14 +149,14 @@ class Places(ResourceUri):
                 raise TechnicalError('world wide autocompletion service not available')
         return response, 200
 
+    def options(self, **kwargs):
+        return self.api_description(**kwargs)
+
 
 class PlaceUri(ResourceUri):
 
     def __init__(self, **kwargs):
         ResourceUri.__init__(self, authentication=False, **kwargs)
-        self.parsers = {}
-        self.parsers["get"] = reqparse.RequestParser(
-            argument_class=ArgumentDoc)
         self.parsers["get"].add_argument("bss_stands", type=boolean, default=True,
                                          description="Show bss stands availability")
         self.parsers['get'].add_argument("disable_geojson", type=boolean, default=False,
@@ -158,7 +164,7 @@ class PlaceUri(ResourceUri):
         args = self.parsers["get"].parse_args()
 
         if args["bss_stands"]:
-            self.method_decorators.insert(1, ManageStands(self, 'places'))
+            self.get_decorators.insert(1, ManageStands(self, 'places'))
 
         if args['disable_geojson']:
             g.disable_geojson = True
@@ -203,9 +209,6 @@ class PlacesNearby(ResourceUri):
 
     def __init__(self, *args, **kwargs):
         ResourceUri.__init__(self, *args, **kwargs)
-        self.parsers = {}
-        self.parsers["get"] = reqparse.RequestParser(
-            argument_class=ArgumentDoc)
         self.parsers["get"].add_argument("type[]", type=unicode,
                                          action="append",
                                          default=["stop_area", "stop_point",
@@ -239,7 +242,7 @@ class PlacesNearby(ResourceUri):
                             description="remove geojson from the response")
         args = self.parsers["get"].parse_args()
         if args["bss_stands"]:
-            self.method_decorators.insert(1, ManageStands(self, 'places_nearby'))
+            self.get_decorators.insert(1, ManageStands(self, 'places_nearby'))
 
     @marshal_with(places_nearby)
     def get(self, region=None, lon=None, lat=None, uri=None):

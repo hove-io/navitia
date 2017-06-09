@@ -49,7 +49,7 @@ class RabbitMQCnxFixture(AbstractTestFixture):
         self._connections.add(producer.connection)
         return producer
 
-    def setup(self):
+    def setUp(self):
         #Note: not a setup_class method, not to conflict with AbstractTestFixture's setup
         self._mock_rabbit_connection = BrokerConnection("pyamqp://guest:guest@localhost:5672")
         self._connections = {self._mock_rabbit_connection}
@@ -59,7 +59,7 @@ class RabbitMQCnxFixture(AbstractTestFixture):
         #wait for the cnx to run the test
         self._wait_for_rabbitmq_cnx()
 
-    def teardown(self):
+    def tearDown(self):
         #we need to release the amqp connection
         self._mock_rabbit_connection.release()
 

@@ -44,7 +44,7 @@ def always_in_error(self, start_time, func_call):
 @dataset({'main_routing_test': {}})
 class TestNoStats(AbstractTestFixture):
 
-    def setup(self):
+    def setUp(self):
         """
          change the persist stat method of the stat manager with a mock function that always fail
         """
@@ -52,7 +52,7 @@ class TestNoStats(AbstractTestFixture):
         self.real_save_stat_val = stat_manager.save_stat
         StatManager._manage_stat = always_in_error
 
-    def teardown(self):
+    def tearDown(self):
         """
         set back the previous params
         """

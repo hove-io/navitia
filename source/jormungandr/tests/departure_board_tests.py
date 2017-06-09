@@ -27,6 +27,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
+
+import urllib
 from collections import namedtuple
 import itertools
 from .tests_mechanism import AbstractTestFixture, dataset
@@ -40,7 +42,7 @@ def is_valid_stop_schedule_datetime(dt_wrapper, tester, only_time):
         get_valid_time(dt)
     else:
         get_valid_datetime(dt)
-    #TODO remove href_mandatory=False after link refactor, they should always be there :)
+    # TODO remove href_mandatory=False after link refactor, they should always be there :)
     check_links(dt_wrapper, tester, href_mandatory=False)
     is_valid_rt_level(get_not_null(dt_wrapper, 'data_freshness'))
 
@@ -61,7 +63,7 @@ def is_valid_stop_schedule(schedules, tester, only_time=False):
         for dt_wrapper in datetimes:
             is_valid_stop_schedule_datetime(dt_wrapper, tester, only_time)
 
-        #TODO remove href_mandatory=False after link refactor, they should always be there :)
+        # TODO remove href_mandatory=False after link refactor, they should always be there :)
         check_links(schedule, tester, href_mandatory=False)
 
 
@@ -70,7 +72,7 @@ def is_valid_route_schedule_header(header):
 
     links = get_not_null(header, 'links')
 
-    #we should have at least:
+    # we should have at least:
     # physical mode and vj link
     # and some optional notes
     links_by_type = {l['type'] for l in links}
@@ -140,7 +142,7 @@ def get_real_notes(obj, full_response):
     return [real_notes[n['id']] for n in get_not_null(obj, 'links') if n['type'] == 'notes']
 
 
-@dataset({"departure_board_test":{}})
+@dataset({"departure_board_test": {}})
 class TestDepartureBoard(AbstractTestFixture):
     """
     Test the structure of the departure board api
@@ -155,11 +157,11 @@ class TestDepartureBoard(AbstractTestFixture):
                                      "calendar=week_cal&from_datetime=20120615T080000")
 
         assert "stop_schedules" in response
-        #all datetime in the response should be only time (no dates since we query if on a period (a calendar))
+        # all datetime in the response should be only time (no dates since we query if on a period (a calendar))
         is_valid_stop_schedule(response["stop_schedules"], self.tester, only_time=True)
         assert len(response["stop_schedules"]) == 1, "there should be only one elt"
 
-        #after the structure check, we check some test specific stuff
+        # after the structure check, we check some test specific stuff
         assert response["stop_schedules"][0]["stop_point"]["id"] == "stop1"
         assert response["stop_schedules"][0]["route"]["line"]["id"] == "line:A"
         dts = response["stop_schedules"][0]["date_times"]
@@ -187,17 +189,34 @@ class TestDepartureBoard(AbstractTestFixture):
         """
         datetime invalid, we got an error
         """
-        datetimes = ["20120615T080000Z", "2012-06-15T08:00:00.222Z"]
-        for datetime in datetimes:
-            response, error_code = self.query_region("stop_points/stop1/stop_schedules?"
-                                         "from_datetime={dd}".format(dd=datetime), check=False)
 
-            assert error_code == 400
+        def sched(dt):
+            return self.query_region("stop_points/stop1/stop_schedules?from_datetime={dd}".format(dd=dt),
+                                     check=False)
 
-            error = get_not_null(response, "error")
+        # invalid month
+        resp, code = sched("20121501T100000")
+        assert code == 400
+        assert 'month must be in 1..12' in resp['message']
 
-            assert error["message"] == "Unable to parse datetime, Not naive datetime (tzinfo is already set)"
-            assert error["id"] == "unable_to_parse"
+        # too much digit
+        _, code = sched("201215001T100000")
+        assert code == 400
+
+    def test_datetime_withtz(self):
+        """
+        datetime invalid, we got an error
+        """
+
+        def sched(dt):
+            return self.query_region("stop_points/stop1/stop_schedules?from_datetime={dt}".format(dt=dt))
+
+        # those should not raise an error
+        sched("20120615T080000Z")
+        sched("2012-06-15T08:00:00.222Z")
+
+        # it should work also with another timezone (and for fun another format)
+        sched(urllib.quote("2012-06-15 08-00-00+02"))
 
     def test_on_datetime(self):
         """
@@ -294,7 +313,6 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["stop_schedules"][0]["date_times"][0]["links"][0]["type"] == "vehicle_journey"
         assert response["stop_schedules"][0]["date_times"][0]["links"][0]["value"] == "vj2"
 
-
         # Stop_schedules in TStop2: Partial Terminus
 
         response = self.query_region("stop_areas/Tstop1/stop_schedules?"
@@ -306,7 +324,6 @@ class TestDepartureBoard(AbstractTestFixture):
         assert len(response["stop_schedules"][0]["date_times"]) == 1
         assert response["stop_schedules"][0]["date_times"][0]["date_time"] == "100000"
         assert response["stop_schedules"][0]["stop_point"]["id"] == "Tstop1"
-
 
         response = self.query_region("stop_areas/Tstop2/stop_schedules?"
                                      "from_datetime=20120615T080000&calendar=cal_partial_terminus")
@@ -383,7 +400,7 @@ class TestDepartureBoard(AbstractTestFixture):
         assert schedule_notes[0]['value'] == 'walk the line'
 
         headers = get_not_null(get_not_null(schedule, 'table'), 'headers')
-        #there is 4 vjs
+        # there is 4 vjs
         assert len(headers) == 4
 
         # we get them by vj to check the vj that have a note
@@ -420,9 +437,9 @@ class TestDepartureBoard(AbstractTestFixture):
         we search for stop_areasS, this type doesn't exist
         """
         response, code = self.query_region("stop_areass/stop1/stop_schedules?"
-                                     "from_datetime=20120615T080000", check=False)
-        eq_(code, 400)
-        eq_(response['message'], 'unknown type: stop_areass')
+                                           "from_datetime=20120615T080000", check=False)
+        assert code == 400
+        assert response['message'] == 'unknown type: stop_areass'
 
     def test_departures(self):
         """
@@ -472,7 +489,7 @@ class TestDepartureBoard(AbstractTestFixture):
             # Our comment is on the 'all' vj, it should have one (and only one) note
             vj_link = [l for l in date_time["links"] if l["type"] == "vehicle_journey" and l["id"] == "all"]
             notes_link = [l for l in date_time["links"] if l["type"] == "notes"]
-            assert(len(vj_link) == 0 or len(notes_link) == 1)
+            assert (len(vj_link) == 0 or len(notes_link) == 1)
 
         # Check that the comment is only on the header and not in the rows
         response = self.query_region("lines/line:A/route_schedules?from_datetime=20120615T080000")
@@ -486,14 +503,15 @@ class TestDepartureBoard(AbstractTestFixture):
             vj_link = [l for l in header["links"] if l["type"] == "vehicle_journey" and l["id"] == "all"]
             notes_link = [l for l in header["links"] if l["type"] == "notes"]
             # Assert that if it's the 'all' vj, there is one and only one note
-            assert(len(vj_link) == 0 or len(notes_link) == 1)
+            assert (len(vj_link) == 0 or len(notes_link) == 1)
 
         for row in response["route_schedules"][0]["table"]["rows"]:
             for date_time in row["date_times"]:
-                vj_link = [l for l in date_time["links"] if l["type"] == "vehicle_journey" and l["id"] == "all"]
+                vj_link = [l for l in date_time["links"] if
+                           l["type"] == "vehicle_journey" and l["id"] == "all"]
                 notes_link = [l for l in date_time["links"] if l["type"] == "notes"]
                 # assert that if it's the 'all' vj there is no note
-                assert(len(vj_link) == 0 or len(notes_link) == 0)
+                assert (len(vj_link) == 0 or len(notes_link) == 0)
 
     def test_line_closed(self):
         """
@@ -546,15 +564,15 @@ def check_stop_schedule(response, reference):
 
     Note: the stop_schedule are not sorted, we just must find all reference StopSchedule
     """
-    eq_(len(response), len(reference))
+    assert len(response) == len(reference)
     for resp in response:
         ref = next(r for r in reference
                    if r.sp == get_not_null(get_not_null(resp, 'stop_point'), 'id')
                    and r.route == get_not_null(get_not_null(resp, 'route'), 'id'))
 
         for (resp_dt, ref_st) in itertools.izip_longest(resp['date_times'], ref.date_times):
-            eq_(get_not_null(resp_dt, 'date_time'), ref_st.dt)
-            eq_(get_not_null(resp_dt, 'links')[0]['id'], ref_st.vj)
+            assert get_not_null(resp_dt, 'date_time') == ref_st.dt
+            assert get_not_null(resp_dt, 'links')[0]['id'] == ref_st.vj
 
 
 def check_departures(response, reference):
@@ -562,14 +580,13 @@ def check_departures(response, reference):
     check the values in a departures
     """
     for (resp, ref) in itertools.izip_longest(response, reference):
-        eq_(get_not_null(get_not_null(resp, 'stop_point'), 'id'), ref.sp)
-        eq_(get_not_null(get_not_null(resp, 'route'), 'id'), ref.route)
-        eq_(get_not_null(get_not_null(resp, 'stop_date_time'), 'departure_date_time'), ref.dt)
+        assert get_not_null(get_not_null(resp, 'stop_point'), 'id') == ref.sp
+        assert get_not_null(get_not_null(resp, 'route'), 'id') == ref.route
+        assert get_not_null(get_not_null(resp, 'stop_date_time'), 'departure_date_time') == ref.dt
 
 
 @dataset({"basic_schedule_test": {}})
 class TestSchedules(AbstractTestFixture):
-
     def test_classic_stop_schedule(self):
         """default is Realtime stopschedule"""
         response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000")
@@ -602,7 +619,7 @@ class TestSchedules(AbstractTestFixture):
         schedules = get_not_null(response, 'stop_schedules')
         assert len(schedules) == 2
 
-        #filtering stop_schedules on line A
+        # filtering stop_schedules on line A
         response, code = self.query_no_assert("v1/coverage/basic_schedule_test/stop_points/S1/stop_schedules"
                                               "?from_datetime=20160101T080000&data_freshness=base_schedule"
                                               "&forbidden_uris[]=A")

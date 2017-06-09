@@ -31,7 +31,6 @@
 # import for the conf to be loaded correctly when only this test is ran
 from datetime import datetime
 import uuid
-from nose.tools.trivial import eq_
 from tests.tests_mechanism import dataset
 from jormungandr.utils import str_to_time_stamp, make_namedtuple
 from tests import gtfs_realtime_pb2, kirin_pb2
@@ -78,12 +77,12 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         isochrone = self.query_region(isochrone_basic_query + "&data_freshness=realtime")
 
         # with no cancellation, we have 2 journeys, one direct and one with the vj:A:0
-        eq_(get_arrivals(response), ['20120614T080222', '20120614T080436'])
-        eq_(get_used_vj(response), [['vjA'], []])
+        assert get_arrivals(response) == ['20120614T080222', '20120614T080436']
+        assert get_used_vj(response) == [['vjA'], []]
 
         # no disruption yet
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
-        eq_(len(pt_response['disruptions']), 0)
+        assert len(pt_response['disruptions']) == 0
 
         is_valid_graphical_isochrone(isochrone, self.tester, isochrone_basic_query + "&data_freshness=realtime")
         geojson = isochrone['isochrones'][0]['geojson']
@@ -99,23 +98,23 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         # we should see the disruption
         def _check_train_cancel_disruption(dis):
             is_valid_disruption(dis, chaos_disrup=False)
-            eq_(dis['disruption_id'], 'disruption_bob')
-            eq_(dis['severity']['effect'], 'NO_SERVICE')
-            eq_(len(dis['impacted_objects']), 1)
+            assert dis['disruption_id'] == 'disruption_bob'
+            assert dis['severity']['effect'] == 'NO_SERVICE'
+            assert len(dis['impacted_objects']) == 1
             ptobj = dis['impacted_objects'][0]['pt_object']
-            eq_(ptobj['embedded_type'], 'trip')
-            eq_(ptobj['id'], 'vjA')
-            eq_(ptobj['name'], 'vjA')
+            assert ptobj['embedded_type'] == 'trip'
+            assert ptobj['id'] == 'vjA'
+            assert ptobj['name'] == 'vjA'
             # for cancellation we do not output the impacted stops
             assert 'impacted_stops' not in dis['impacted_objects'][0]
 
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
-        eq_(len(pt_response['disruptions']), 1)
+        assert len(pt_response['disruptions']) == 1
         _check_train_cancel_disruption(pt_response['disruptions'][0])
 
         # and we should be able to query for the vj's disruption
         disrup_response = self.query_region('vehicle_journeys/vjA/disruptions')
-        eq_(len(disrup_response['disruptions']), 1)
+        assert len(disrup_response['disruptions']) == 1
         _check_train_cancel_disruption(disrup_response['disruptions'][0])
 
         traffic_reports_response = self.query_region('traffic_reports?_current_datetime=20120614T0800')
@@ -126,8 +125,8 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         assert vjs[0]['id'] == 'vjA'
 
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
-        eq_(get_arrivals(new_response), ['20120614T080436', '20120614T180222'])
-        eq_(get_used_vj(new_response), [[], ['vjB']])
+        assert get_arrivals(new_response) == ['20120614T080436', '20120614T180222']
+        assert get_used_vj(new_response) == [[], ['vjB']]
 
         isochrone_realtime = self.query_region(isochrone_basic_query + "&data_freshness=realtime")
         is_valid_graphical_isochrone(isochrone_realtime, self.tester, isochrone_basic_query + "&data_freshness=realtime")
@@ -153,14 +152,14 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
 
         # it should not have changed anything for the theoric
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
-        eq_(get_arrivals(new_base), ['20120614T080222', '20120614T080436'])
-        eq_(get_used_vj(new_base), [['vjA'], []])
+        assert get_arrivals(new_base) == ['20120614T080222', '20120614T080436']
+        assert get_used_vj(new_base) == [['vjA'], []]
         # see http://jira.canaltp.fr/browse/NAVP-266,
         # _current_datetime is needed to make it working
-        #eq_(len(new_base['disruptions']), 1)
+        #assert len(new_base['disruptions']) == 1
 
         # remove links as the calling url is not the same
-        for j in  new_base['journeys']:
+        for j in new_base['journeys']:
             j.pop('links', None)
         for j in response['journeys']:
             j.pop('links', None)
@@ -175,8 +174,8 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         response = self.query_region(journey_basic_query + "&data_freshness=realtime")
 
         # with no cancellation, we have 2 journeys, one direct and one with the vj:A:0
-        eq_(get_arrivals(response), ['20120614T080222', '20120614T080436'])
-        eq_(get_used_vj(response), [['vjA'], []])
+        assert get_arrivals(response) == ['20120614T080222', '20120614T080436']
+        assert get_used_vj(response) == [['vjA'], []]
 
         # we have 2 departures and 1 disruption (linked to the first passage)
         departures = self.query_region("stop_points/stop_point:stopB/departures?_current_datetime=20120614T0800")
@@ -185,11 +184,11 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         assert departures['departures'][0]['stop_date_time']['departure_date_time'] == '20120614T080100'
 
         pt_response = self.query_region('vehicle_journeys')
-        eq_(len(pt_response['vehicle_journeys']), 5)
+        assert len(pt_response['vehicle_journeys']) == 5
 
         # no disruption yet
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
-        eq_(len(pt_response['disruptions']), 0)
+        assert len(pt_response['disruptions']) == 0
 
         self.send_mock("vjA", "20120614", 'modified',
            [UpdatedStopTime("stop_point:stopB",
@@ -203,51 +202,51 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         # A new vj is created
         pt_response = self.query_region('vehicle_journeys')
-        eq_(len(pt_response['vehicle_journeys']), 6)
+        assert len(pt_response['vehicle_journeys']) == 6
 
         vj_ids = [vj['id'] for vj in pt_response['vehicle_journeys']]
         assert 'vjA:modified:0:vjA_delayed' in vj_ids
 
         def _check_train_delay_disruption(dis):
             is_valid_disruption(dis, chaos_disrup=False)
-            eq_(dis['disruption_id'], 'vjA_delayed')
-            eq_(dis['severity']['effect'], 'SIGNIFICANT_DELAYS')
-            eq_(len(dis['impacted_objects']), 1)
+            assert dis['disruption_id'] == 'vjA_delayed'
+            assert dis['severity']['effect'] == 'SIGNIFICANT_DELAYS'
+            assert len(dis['impacted_objects']) == 1
             ptobj = dis['impacted_objects'][0]['pt_object']
-            eq_(ptobj['embedded_type'], 'trip')
-            eq_(ptobj['id'], 'vjA')
-            eq_(ptobj['name'], 'vjA')
+            assert ptobj['embedded_type'] == 'trip'
+            assert ptobj['id'] == 'vjA'
+            assert ptobj['name'] == 'vjA'
             # for delay we should have detail on the impacted stops
             impacted_objs = get_not_null(dis['impacted_objects'][0], 'impacted_stops')
             assert len(impacted_objs) == 2
             imp_obj1 = impacted_objs[0]
-            eq_(get_valid_time(get_not_null(imp_obj1, 'amended_arrival_time')), _dt(h=8, m=2, s=24))
-            eq_(get_valid_time(get_not_null(imp_obj1, 'amended_departure_time')), _dt(h=8, m=2, s=25))
-            eq_(get_not_null(imp_obj1, 'cause'), 'cow on tracks')
-            eq_(get_not_null(imp_obj1, 'departure_status'), 'delayed')
-            eq_(get_not_null(imp_obj1, 'arrival_status'), 'delayed')
-            eq_(get_not_null(imp_obj1, 'stop_time_effect'), 'delayed')
-            eq_(get_valid_time(get_not_null(imp_obj1, 'base_arrival_time')), _dt(8, 1, 0))
-            eq_(get_valid_time(get_not_null(imp_obj1, 'base_departure_time')), _dt(8, 1, 0))
+            assert get_valid_time(get_not_null(imp_obj1, 'amended_arrival_time')) == _dt(h=8, m=2, s=24)
+            assert get_valid_time(get_not_null(imp_obj1, 'amended_departure_time')) == _dt(h=8, m=2, s=25)
+            assert get_not_null(imp_obj1, 'cause') == 'cow on tracks'
+            assert get_not_null(imp_obj1, 'departure_status') == 'delayed'
+            assert get_not_null(imp_obj1, 'arrival_status') == 'delayed'
+            assert get_not_null(imp_obj1, 'stop_time_effect') == 'delayed'
+            assert get_valid_time(get_not_null(imp_obj1, 'base_arrival_time')) == _dt(8, 1, 0)
+            assert get_valid_time(get_not_null(imp_obj1, 'base_departure_time')) == _dt(8, 1, 0)
 
             imp_obj2 = impacted_objs[1]
-            eq_(get_valid_time(get_not_null(imp_obj2, 'amended_arrival_time')), _dt(h=8, m=4, s=0))
-            eq_(get_valid_time(get_not_null(imp_obj2, 'amended_departure_time')), _dt(h=8, m=4, s=0))
-            eq_(imp_obj2['cause'], '')
-            eq_(get_not_null(imp_obj1, 'stop_time_effect'), 'delayed')
-            eq_(get_not_null(imp_obj1, 'departure_status'), 'delayed')
-            eq_(get_not_null(imp_obj1, 'arrival_status'), 'delayed')
-            eq_(get_valid_time(get_not_null(imp_obj2, 'base_departure_time')), _dt(8, 1, 2))
-            eq_(get_valid_time(get_not_null(imp_obj2, 'base_arrival_time')), _dt(8, 1, 2))
+            assert get_valid_time(get_not_null(imp_obj2, 'amended_arrival_time')) == _dt(h=8, m=4, s=0)
+            assert get_valid_time(get_not_null(imp_obj2, 'amended_departure_time')) == _dt(h=8, m=4, s=0)
+            assert imp_obj2['cause'] == ''
+            assert get_not_null(imp_obj1, 'stop_time_effect') == 'delayed'
+            assert get_not_null(imp_obj1, 'departure_status') == 'delayed'
+            assert get_not_null(imp_obj1, 'arrival_status') == 'delayed'
+            assert get_valid_time(get_not_null(imp_obj2, 'base_departure_time')) == _dt(8, 1, 2)
+            assert get_valid_time(get_not_null(imp_obj2, 'base_arrival_time')) == _dt(8, 1, 2)
 
         # we should see the disruption
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
-        eq_(len(pt_response['disruptions']), 1)
+        assert len(pt_response['disruptions']) == 1
         _check_train_delay_disruption(pt_response['disruptions'][0])
 
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
-        eq_(get_arrivals(new_response), ['20120614T080436', '20120614T080520'])
-        eq_(get_used_vj(new_response), [[], ['vjA:modified:0:vjA_delayed']])
+        assert get_arrivals(new_response) == ['20120614T080436', '20120614T080520']
+        assert get_used_vj(new_response), [[] == ['vjA:modified:0:vjA_delayed']]
 
         pt_journey = new_response['journeys'][1]
 
@@ -272,8 +271,8 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         # it should not have changed anything for the theoric
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
-        eq_(get_arrivals(new_base), ['20120614T080222', '20120614T080436'])
-        eq_(get_used_vj(new_base), [['vjA'], []])
+        assert get_arrivals(new_base) == ['20120614T080222', '20120614T080436']
+        assert get_used_vj(new_base), [['vjA'] == []]
 
         # we have one delayed departure
         departures = self.query_region("stop_points/stop_point:stopB/departures?_current_datetime=20120614T0800")
@@ -301,21 +300,21 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         pt_response = self.query_region('vehicle_journeys')
         # No vj cleaning for the moment, vj nb SHOULD be 5, the first vj created for the first
         # disruption is useless
-        eq_(len(pt_response['vehicle_journeys']), 7)
+        assert len(pt_response['vehicle_journeys']) == 7
 
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
-        eq_(len(pt_response['disruptions']), 1)
+        assert len(pt_response['disruptions']) == 1
         _check_train_delay_disruption(pt_response['disruptions'][0])
 
         # so the first real-time vj created for the first disruption should be deactivated
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
-        eq_(get_arrivals(new_response), ['20120614T080436', '20120614T080520'])
-        eq_(get_used_vj(new_response), [[], ['vjA:modified:1:vjA_delayed']])
+        assert get_arrivals(new_response) == ['20120614T080436', '20120614T080520']
+        assert get_used_vj(new_response), [[] == ['vjA:modified:1:vjA_delayed']]
 
         # it should not have changed anything for the theoric
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
-        eq_(get_arrivals(new_base), ['20120614T080222', '20120614T080436'])
-        eq_(get_used_vj(new_base), [['vjA'], []])
+        assert get_arrivals(new_base) == ['20120614T080222', '20120614T080436']
+        assert get_used_vj(new_base), [['vjA'] == []]
 
         # we then try to send a delay on another train.
         # we should not have lost the first delay
@@ -326,11 +325,11 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
                             message="bob's in the place")])
 
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
-        eq_(len(pt_response['disruptions']), 1)
+        assert len(pt_response['disruptions']) == 1
         _check_train_delay_disruption(pt_response['disruptions'][0])
 
         # we should also have the disruption on vjB
-        eq_(len(self.query_region('vehicle_journeys/vjB?_current_datetime=20120614T1337')['disruptions']), 1)
+        assert len(self.query_region('vehicle_journeys/vjB?_current_datetime=20120614T1337')['disruptions']) == 1
 
         ###################################
         # We now send a partial delete on B
@@ -345,44 +344,44 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         # A new vj is created
         vjs = self.query_region('vehicle_journeys?_current_datetime=20120614T1337')
-        eq_(len(vjs['vehicle_journeys']), 9)
+        assert len(vjs['vehicle_journeys']) == 9
 
         vjA = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
         # we now have 2 disruption on vjA
-        eq_(len(vjA['disruptions']), 2)
+        assert len(vjA['disruptions']) == 2
         all_dis = {d['id']: d for d in vjA['disruptions']}
         assert 'vjA_skip_A' in all_dis
 
         dis = all_dis['vjA_skip_A']
 
         is_valid_disruption(dis, chaos_disrup=False)
-        eq_(dis['disruption_id'], 'vjA_skip_A')
-        eq_(dis['severity']['effect'], 'DETOUR')
-        eq_(len(dis['impacted_objects']), 1)
+        assert dis['disruption_id'] == 'vjA_skip_A'
+        assert dis['severity']['effect'] == 'DETOUR'
+        assert len(dis['impacted_objects']) == 1
         ptobj = dis['impacted_objects'][0]['pt_object']
-        eq_(ptobj['embedded_type'], 'trip')
-        eq_(ptobj['id'], 'vjA')
-        eq_(ptobj['name'], 'vjA')
+        assert ptobj['embedded_type'] == 'trip'
+        assert ptobj['id'] == 'vjA'
+        assert ptobj['name'] == 'vjA'
         # for delay we should have detail on the impacted stops
         impacted_objs = get_not_null(dis['impacted_objects'][0], 'impacted_stops')
         assert len(impacted_objs) == 2
         imp_obj1 = impacted_objs[0]
-        eq_(get_valid_time(get_not_null(imp_obj1, 'amended_arrival_time')), _dt(8, 1, 0))
-        eq_(get_valid_time(get_not_null(imp_obj1, 'amended_departure_time')), _dt(8, 1, 0))
-        eq_(get_not_null(imp_obj1, 'stop_time_effect'), 'unchanged')
-        eq_(get_not_null(imp_obj1, 'arrival_status'), 'unchanged')
-        eq_(get_not_null(imp_obj1, 'departure_status'), 'unchanged')
-        eq_(get_valid_time(get_not_null(imp_obj1, 'base_arrival_time')), _dt(8, 1, 0))
-        eq_(get_valid_time(get_not_null(imp_obj1, 'base_departure_time')), _dt(8, 1, 0))
+        assert get_valid_time(get_not_null(imp_obj1, 'amended_arrival_time')) == _dt(8, 1, 0)
+        assert get_valid_time(get_not_null(imp_obj1, 'amended_departure_time')) == _dt(8, 1, 0)
+        assert get_not_null(imp_obj1, 'stop_time_effect') == 'unchanged'
+        assert get_not_null(imp_obj1, 'arrival_status') == 'unchanged'
+        assert get_not_null(imp_obj1, 'departure_status') == 'unchanged'
+        assert get_valid_time(get_not_null(imp_obj1, 'base_arrival_time')) == _dt(8, 1, 0)
+        assert get_valid_time(get_not_null(imp_obj1, 'base_departure_time')) == _dt(8, 1, 0)
 
         imp_obj2 = impacted_objs[1]
         assert 'amended_arrival_time' not in imp_obj2
-        eq_(get_not_null(imp_obj2, 'cause'), 'cow on tracks')
-        eq_(get_not_null(imp_obj2, 'stop_time_effect'), 'deleted')  # the stoptime is marked as deleted
-        eq_(get_not_null(imp_obj2, 'arrival_status'), 'deleted')
-        eq_(get_not_null(imp_obj2, 'departure_status'), 'unchanged')  # the departure is not changed
-        eq_(get_valid_time(get_not_null(imp_obj2, 'base_departure_time')), _dt(8, 1, 2))
-        eq_(get_valid_time(get_not_null(imp_obj2, 'base_arrival_time')), _dt(8, 1, 2))
+        assert get_not_null(imp_obj2, 'cause') == 'cow on tracks'
+        assert get_not_null(imp_obj2, 'stop_time_effect') == 'deleted'  # the stoptime is marked as deleted
+        assert get_not_null(imp_obj2, 'arrival_status') == 'deleted'
+        assert get_not_null(imp_obj2, 'departure_status') == 'unchanged'  # the departure is not changed
+        assert get_valid_time(get_not_null(imp_obj2, 'base_departure_time')) == _dt(8, 1, 2)
+        assert get_valid_time(get_not_null(imp_obj2, 'base_arrival_time')) == _dt(8, 1, 2)
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
 class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
@@ -394,11 +393,11 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
 
         # with no cancellation, we have 2 journeys, one direct and one with the vj:A:0
-        eq_(get_arrivals(response), ['20120614T080222', '20120614T080436']) # pt_walk + vj 08:01
-        eq_(get_used_vj(response), [['vjA'], []])
+        assert get_arrivals(response) == ['20120614T080222', '20120614T080436'] # pt_walk + vj 08:01
+        assert get_used_vj(response), [['vjA'] == []]
 
         pt_response = self.query_region('vehicle_journeys')
-        eq_(len(pt_response['vehicle_journeys']), 5)
+        assert len(pt_response['vehicle_journeys']) == 5
 
         # check that we have the next vj
         s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset
@@ -406,12 +405,12 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
         journey_later_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
             .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T080500")
         later_response = self.query_region(journey_later_query + "&data_freshness=realtime")
-        eq_(get_arrivals(later_response), ['20120614T080936', '20120614T180222']) # pt_walk + vj 18:01
-        eq_(get_used_vj(later_response), [[], ['vjB']])
+        assert get_arrivals(later_response) == ['20120614T080936', '20120614T180222'] # pt_walk + vj 18:01
+        assert get_used_vj(later_response), [[] == ['vjB']]
 
         # no disruption yet
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
-        eq_(len(pt_response['disruptions']), 0)
+        assert len(pt_response['disruptions']) == 0
 
         # sending disruption delaying VJ to the next day
         self.send_mock("vjA", "20120614", 'modified',
@@ -421,37 +420,37 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
 
         # A new vj is created
         pt_response = self.query_region('vehicle_journeys')
-        eq_(len(pt_response['vehicle_journeys']), 6)
+        assert len(pt_response['vehicle_journeys']) == 6
 
         vj_ids = [vj['id'] for vj in pt_response['vehicle_journeys']]
         assert 'vjA:modified:0:96231_2015-07-28_0' in vj_ids
 
         # we should see the disruption
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
-        eq_(len(pt_response['disruptions']), 1)
+        assert len(pt_response['disruptions']) == 1
         is_valid_disruption(pt_response['disruptions'][0], chaos_disrup=False)
-        eq_(pt_response['disruptions'][0]['disruption_id'], '96231_2015-07-28_0')
+        assert pt_response['disruptions'][0]['disruption_id'] == '96231_2015-07-28_0'
 
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
-        eq_(get_arrivals(new_response), ['20120614T080436', '20120614T180222']) # pt_walk + vj 18:01
-        eq_(get_used_vj(new_response), [[], ['vjB']])
+        assert get_arrivals(new_response) == ['20120614T080436', '20120614T180222'] # pt_walk + vj 18:01
+        assert get_used_vj(new_response), [[] == ['vjB']]
 
         # it should not have changed anything for the theoric
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
-        eq_(get_arrivals(new_base), ['20120614T080222', '20120614T080436'])
-        eq_(get_used_vj(new_base), [['vjA'], []])
+        assert get_arrivals(new_base) == ['20120614T080222', '20120614T080436']
+        assert get_used_vj(new_base), [['vjA'] == []]
 
         # the day after, we can use the delayed vj
         journey_day_after_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
             .format(from_coord=s_coord, to_coord=r_coord, datetime="20120615T070000")
         day_after_response = self.query_region(journey_day_after_query + "&data_freshness=realtime")
-        eq_(get_arrivals(day_after_response), ['20120615T070436', '20120615T070520']) # pt_walk + rt 07:02:24
-        eq_(get_used_vj(day_after_response), [[], ['vjA:modified:0:96231_2015-07-28_0']])
+        assert get_arrivals(day_after_response) == ['20120615T070436', '20120615T070520'] # pt_walk + rt 07:02:24
+        assert get_used_vj(day_after_response), [[] == ['vjA:modified:0:96231_2015-07-28_0']]
 
         # it should not have changed anything for the theoric the day after
         day_after_base = self.query_region(journey_day_after_query + "&data_freshness=base_schedule")
-        eq_(get_arrivals(day_after_base), ['20120615T070436', '20120615T080222'])
-        eq_(get_used_vj(day_after_base), [[], ['vjA']])
+        assert get_arrivals(day_after_base) == ['20120615T070436', '20120615T080222']
+        assert get_used_vj(day_after_base), [[] == ['vjA']]
 
 
 def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], disruption_id=None):

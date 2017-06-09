@@ -34,7 +34,6 @@ from .tests_mechanism import AbstractTestFixture, dataset
 from jormungandr.realtime_schedule import realtime_proxy, realtime_proxy_manager
 from jormungandr.schedule import RealTimePassage
 import datetime
-from nose.tools import eq_
 import pytz
 from .check_utils import is_valid_stop_date_time, get_not_null
 from mock import MagicMock

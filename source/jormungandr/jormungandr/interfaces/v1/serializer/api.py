@@ -27,15 +27,23 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+
+import datetime
+import pytz
+
 from jormungandr.interfaces.v1.serializer import pt
+from jormungandr.interfaces.v1.serializer.base import NullableDictSerializer, LambdaField
 from jormungandr.interfaces.v1.serializer.fields import ErrorSerializer, FeedPublisherSerializer, PaginationSerializer
 import serpy
+
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field
+from jormungandr.interfaces.v1.serializer.time import DateTimeField, DateTimeDictField
 
 
 class PTReferentialSerializer(serpy.Serializer):
     pagination = PaginationSerializer(attr='pagination', display_none=True, required=True)
     error = ErrorSerializer(display_none=False)
-    feed_publishers = FeedPublisherSerializer(many=True, display_none=False)
+    feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
 
 
@@ -92,5 +100,55 @@ class NetworksSerializer(PTReferentialSerializer):
     networks = pt.NetworkSerializer(many=True)
 
 
-class PlacesSerializer(PTReferentialSerializer):
+class PlacesSerializer(serpy.Serializer):
+    error = ErrorSerializer(display_none=False)
+    feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
+    disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
     places = pt.PlaceSerializer(many=True)
+
+
+class CoverageErrorSerializer(NullableDictSerializer):
+    code = Field(schema_type=str)
+    value = Field(schema_type=str)
+
+
+class CoverageDateTimeField(DateTimeDictField):
+    """
+    custom date time field for coverage, uses the coverage's timezone to format the date
+    """
+    def __init__(self, field_name=None, **kwargs):
+        super(CoverageDateTimeField, self).__init__(**kwargs)
+        self.field_name = field_name
+
+    def to_value(self, coverage):
+        tz_name = coverage.get('timezone')
+        field_value = coverage.get(self.field_name)
+        if not tz_name or not field_value:
+            return None
+        dt = datetime.datetime.utcfromtimestamp(field_value)
+        tz = pytz.timezone(tz_name)
+        if not tz:
+            return None
+        dt = pytz.utc.localize(dt)
+        dt = dt.astimezone(tz)
+        return dt.strftime("%Y%m%dT%H%M%S")
+
+
+class CoverageSerializer(NullableDictSerializer):
+    id = Field(attr="region_id", schema_type=str, description='Identifier of the coverage')
+    start_production_date = Field(schema_type=str, description='Beginning of the production period. '
+                                                               'We only have data on this production period')
+    end_production_date = Field(schema_type=str, description='End of the production period. '
+                                                             'We only have data on this production period')
+    last_load_at = LambdaField(method=lambda _, o: CoverageDateTimeField('last_load_at').to_value(o),
+                               description='Datetime of the last data loading',
+                               schema_type=str)
+    name = Field(schema_type=str, description='Name of the coverage')
+    status = Field(schema_type=str)
+    shape = Field(schema_type=str, description='GeoJSON of the shape of the coverage')
+    error = CoverageErrorSerializer(display_none=False)
+    dataset_created_at = Field(schema_type=str, description='Creation date of the dataset')
+
+
+class CoveragesSerializer(serpy.DictSerializer):
+    regions = CoverageSerializer(many=True)

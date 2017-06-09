@@ -60,21 +60,21 @@ class TestDisruptions(AbstractTestFixture):
 
         def check_response(traffic_report):
             # the disruptions are grouped by network and we have only one network
-            eq_(len(traffic_report), 1)
+            assert len(traffic_report) == 1
 
             impacted_lines = get_not_null(traffic_report[0], 'lines')
-            eq_(len(impacted_lines), 1)
+            assert len(impacted_lines) == 1
             is_valid_line(impacted_lines[0], depth_check=0)
-            eq_(impacted_lines[0]['id'], 'A')
+            assert impacted_lines[0]['id'] == 'A'
 
             lines_disrupt = get_disruptions(impacted_lines[0], response)
-            eq_(len(lines_disrupt), 2)
+            assert len(lines_disrupt) == 2
             for d in lines_disrupt:
                 is_valid_disruption(d)
-            eq_(lines_disrupt[0]['disruption_id'], 'disruption_on_line_A')
-            eq_(lines_disrupt[0]['contributor'], 'contrib')
-            eq_(lines_disrupt[0]['uri'], 'too_bad_again')
-            eq_(lines_disrupt[0]['severity']['name'], 'bad severity')
+            assert lines_disrupt[0]['disruption_id'] == 'disruption_on_line_A'
+            assert lines_disrupt[0]['contributor'] == 'contrib'
+            assert lines_disrupt[0]['uri'] == 'too_bad_again'
+            assert lines_disrupt[0]['severity']['name'] == 'bad severity'
             # we should be able to find the line in the disruption impacted objects
             impacted_objs = lines_disrupt[0]['impacted_objects']
             # this disruption impacts a line and a network
@@ -86,33 +86,33 @@ class TestDisruptions(AbstractTestFixture):
             assert 'impacted_section' not in impacted_lines[0]
             assert impacted_lines[0]['pt_object']['id'] == 'A'
 
-            eq_(lines_disrupt[1]['uri'], 'later_impact')
+            assert lines_disrupt[1]['uri'] == 'later_impact'
 
             impacted_network = get_not_null(traffic_report[0], 'network')
             is_valid_network(impacted_network, depth_check=0)
-            eq_(impacted_network['id'], 'base_network')
+            assert impacted_network['id'] == 'base_network'
             network_disrupt = get_disruptions(impacted_network, response)
-            eq_(len(network_disrupt), 2)
+            assert len(network_disrupt) == 2
             for d in network_disrupt:
                 is_valid_disruption(d)
-            eq_(network_disrupt[0]['disruption_id'], 'disruption_on_line_A')
-            eq_(network_disrupt[0]['uri'], 'too_bad_again')
+            assert network_disrupt[0]['disruption_id'] == 'disruption_on_line_A'
+            assert network_disrupt[0]['uri'] == 'too_bad_again'
 
-            eq_(network_disrupt[1]['contributor'], '')
+            assert network_disrupt[1]['contributor'] == ''
 
-            eq_(network_disrupt[1]['disruption_id'], 'disruption_on_line_A_but_later')
-            eq_(network_disrupt[1]['uri'], 'later_impact')
+            assert network_disrupt[1]['disruption_id'] == 'disruption_on_line_A_but_later'
+            assert network_disrupt[1]['uri'] == 'later_impact'
 
             impacted_stop_areas = get_not_null(traffic_report[0], 'stop_areas')
-            eq_(len(impacted_stop_areas), 1)
+            assert len(impacted_stop_areas) == 1
             is_valid_stop_area(impacted_stop_areas[0], depth_check=0)
-            eq_(impacted_stop_areas[0]['id'], 'stopA')
+            assert impacted_stop_areas[0]['id'] == 'stopA'
             stop_disrupt = get_disruptions(impacted_stop_areas[0], response)
-            eq_(len(stop_disrupt), 1)
+            assert len(stop_disrupt) == 1
             for d in stop_disrupt:
                 is_valid_disruption(d)
-            eq_(stop_disrupt[0]['disruption_id'], 'disruption_on_stop_A')
-            eq_(stop_disrupt[0]['uri'], 'too_bad')
+            assert stop_disrupt[0]['disruption_id'] == 'disruption_on_stop_A'
+            assert stop_disrupt[0]['uri'] == 'too_bad'
 
         check_response(global_traffic_report)
 
@@ -131,38 +131,38 @@ class TestDisruptions(AbstractTestFixture):
         network = get_not_null(networks, 'networks')[0]
         is_valid_network(network)
         network_disrupt = get_disruptions(network, response)
-        eq_(len(network_disrupt), 2)
+        assert len(network_disrupt) == 2
         for d in network_disrupt:
             is_valid_disruption(d)
-        eq_(network_disrupt[0]['disruption_id'], 'disruption_on_line_A')
-        eq_(network_disrupt[0]['uri'], 'too_bad_again')
-        eq_(network_disrupt[1]['disruption_id'], 'disruption_on_line_A_but_later')
-        eq_(network_disrupt[1]['uri'], 'later_impact')
+        assert network_disrupt[0]['disruption_id'] == 'disruption_on_line_A'
+        assert network_disrupt[0]['uri'] == 'too_bad_again'
+        assert network_disrupt[1]['disruption_id'] == 'disruption_on_line_A_but_later'
+        assert network_disrupt[1]['uri'] == 'later_impact'
 
         lines = self.query_region('lines/A?' + default_date_filter)
         line = get_not_null(lines, 'lines')[0]
         is_valid_line(line)
         lines_disrupt = get_disruptions(line, response)
-        eq_(len(lines_disrupt), 2)
+        assert len(lines_disrupt) == 2
         for d in lines_disrupt:
             is_valid_disruption(d)
-        eq_(lines_disrupt[0]['disruption_id'], 'disruption_on_line_A')
-        eq_(lines_disrupt[0]['uri'], 'too_bad_again')
-        eq_(lines_disrupt[0]['severity']['name'], 'bad severity')
+        assert lines_disrupt[0]['disruption_id'] == 'disruption_on_line_A'
+        assert lines_disrupt[0]['uri'] == 'too_bad_again'
+        assert lines_disrupt[0]['severity']['name'] == 'bad severity'
 
-        eq_(lines_disrupt[1]['disruption_id'], 'disruption_on_line_A_but_later')
-        eq_(lines_disrupt[1]['uri'], 'later_impact')
-        eq_(lines_disrupt[1]['severity']['name'], 'information severity')
+        assert lines_disrupt[1]['disruption_id'] == 'disruption_on_line_A_but_later'
+        assert lines_disrupt[1]['uri'] == 'later_impact'
+        assert lines_disrupt[1]['severity']['name'] == 'information severity'
 
         stops = self.query_region('stop_areas/stopA?' + default_date_filter)
         stop = get_not_null(stops, 'stop_areas')[0]
         is_valid_stop_area(stop)
         stop_disrupt = get_disruptions(stop, response)
-        eq_(len(stop_disrupt), 1)
+        assert len(stop_disrupt) == 1
         for d in stop_disrupt:
             is_valid_disruption(d)
-        eq_(stop_disrupt[0]['disruption_id'], 'disruption_on_stop_A')
-        eq_(stop_disrupt[0]['uri'], 'too_bad')
+        assert stop_disrupt[0]['disruption_id'] == 'disruption_on_stop_A'
+        assert stop_disrupt[0]['uri'] == 'too_bad'
 
     def test_disruption_with_stop_areas(self):
         """
@@ -172,11 +172,11 @@ class TestDisruptions(AbstractTestFixture):
         response = self.query_region('stop_areas/stopA?' + default_date_filter)
 
         stops = get_not_null(response, 'stop_areas')
-        eq_(len(stops), 1)
+        assert len(stops) == 1
         stop = stops[0]
 
         disruptions = get_disruptions(stop, response)
-        eq_(len(disruptions), 1)
+        assert len(disruptions) == 1
         is_valid_disruption(disruptions[0])
 
     def test_disruption_with_departures(self):
@@ -187,12 +187,12 @@ class TestDisruptions(AbstractTestFixture):
         response = self.query_region('stop_points/stop_point:stopB/departures?from_datetime=20120614T080000&_current_datetime=20120614T080000')
 
         departures = get_not_null(response, 'departures')
-        eq_(len(departures), 2)
+        assert len(departures) == 2
 
         departure = departures[0]
         disruptions = get_all_element_disruptions(departure, response)
         assert disruptions
-        eq_(len(disruptions), 1)
+        assert len(disruptions) == 1
         assert 'too_bad_all_lines' in disruptions
         is_valid_disruption(disruptions['too_bad_all_lines'][0].disruption)
 
@@ -209,12 +209,12 @@ class TestDisruptions(AbstractTestFixture):
                                      'from_datetime=20120614T070000&_current_datetime=20120614T080000')
 
         arrivals = get_not_null(response, 'arrivals')
-        eq_(len(arrivals), 2)
+        assert len(arrivals) == 2
 
         arrival = arrivals[0]
         disruptions = get_all_element_disruptions(arrival, response)
         assert disruptions
-        eq_(len(disruptions), 1)
+        assert len(disruptions) == 1
         assert 'too_bad_all_lines' in disruptions
         is_valid_disruption(disruptions['too_bad_all_lines'][0].disruption)
 
@@ -235,26 +235,26 @@ class TestDisruptions(AbstractTestFixture):
         response = self.query_region('stop_areas/stopB/traffic_reports?' + default_date_filter)
 
         traffic_report = get_not_null(response, 'traffic_reports')
-        eq_(len(traffic_report), 1)
+        assert len(traffic_report) == 1
 
         impacted_lines = get_not_null(traffic_report[0], 'lines')
-        eq_(len(impacted_lines), 1)
+        assert len(impacted_lines) == 1
         is_valid_line(impacted_lines[0], depth_check=0)
-        eq_(impacted_lines[0]['id'], 'A')
+        assert impacted_lines[0]['id'] == 'A'
 
         lines_disrupt = get_disruptions(impacted_lines[0], response)
-        eq_(len(lines_disrupt), 2)
-        eq_(lines_disrupt[0]['disruption_id'], 'disruption_on_line_A')
-        eq_(lines_disrupt[0]['uri'], 'too_bad_again')
+        assert len(lines_disrupt) == 2
+        assert lines_disrupt[0]['disruption_id'] == 'disruption_on_line_A'
+        assert lines_disrupt[0]['uri'] == 'too_bad_again'
 
         impacted_network = get_not_null(traffic_report[0], 'network')
 
         is_valid_network(impacted_network, depth_check=0)
-        eq_(impacted_network['id'], 'base_network')
+        assert impacted_network['id'] == 'base_network'
         network_disrupt = get_disruptions(impacted_network, response)
-        eq_(len(network_disrupt), 2)
-        eq_(network_disrupt[0]['disruption_id'], 'disruption_on_line_A')
-        eq_(network_disrupt[0]['uri'], 'too_bad_again')
+        assert len(network_disrupt) == 2
+        assert network_disrupt[0]['disruption_id'] == 'disruption_on_line_A'
+        assert network_disrupt[0]['uri'] == 'too_bad_again'
 
         # but we should not have disruption on stop area, B is not disrupted
         assert 'stop_areas' not in traffic_report[0]
@@ -267,7 +267,7 @@ class TestDisruptions(AbstractTestFixture):
         response = self.query_region('stop_areas/stopB')
 
         stops = get_not_null(response, 'stop_areas')
-        eq_(len(stops), 1)
+        assert len(stops) == 1
         stop = stops[0]
 
         assert 'disruptions' not in stop
@@ -283,13 +283,13 @@ class TestDisruptions(AbstractTestFixture):
         response = self.query_region('traffic_reports?_current_datetime=20120828T090000')
 
         impacts = get_impacts(response)
-        eq_(len(impacts), 3)
+        assert len(impacts) == 3
         assert 'impact_published_later' not in impacts
 
         response = self.query_region('traffic_reports?_current_datetime=20120828T130000')
 
         impacts = get_impacts(response)
-        eq_(len(impacts), 4)
+        assert len(impacts) == 4
         assert 'impact_published_later' in impacts
 
     def test_disruption_datefilter_limits(self):
@@ -330,51 +330,51 @@ class TestDisruptions(AbstractTestFixture):
         response = self.query_region('traffic_reports?_current_datetime=20130225T090000')
 
         impacts = get_impacts(response)
-        eq_(len(impacts), 0)
+        assert len(impacts) == 0
 
         response = self.query_region('traffic_reports?_current_datetime=20130227T090000')
 
         impacts = get_impacts(response)
-        eq_(len(impacts), 1)
+        assert len(impacts) == 1
         assert 'too_bad_route_A:0' in impacts
 
         traffic_report = get_not_null(response, 'traffic_reports')
-        eq_(len(traffic_report), 1)
+        assert len(traffic_report) == 1
 
         impacted_lines = get_not_null(traffic_report[0], 'lines')
-        eq_(len(impacted_lines), 1)
+        assert len(impacted_lines) == 1
         is_valid_line(impacted_lines[0], depth_check=0)
-        eq_(impacted_lines[0]['id'], 'A')
+        assert impacted_lines[0]['id'] == 'A'
 
         lines_disrupt = get_disruptions(impacted_lines[0], response)
-        eq_(len(lines_disrupt), 1)
+        assert len(lines_disrupt) == 1
         for d in lines_disrupt:
             is_valid_disruption(d)
-        eq_(lines_disrupt[0]['disruption_id'], 'disruption_route_A:0')
-        eq_(lines_disrupt[0]['uri'], 'too_bad_route_A:0')
+        assert lines_disrupt[0]['disruption_id'] == 'disruption_route_A:0'
+        assert lines_disrupt[0]['uri'] == 'too_bad_route_A:0'
 
         #Check message, channel and types
         disruption_message = get_not_null(response, 'disruptions')
-        eq_(len(disruption_message), 1)
+        assert len(disruption_message) == 1
         message = get_not_null(disruption_message[0], 'messages')
-        eq_(message[0]['text'], 'no luck')
+        assert message[0]['text'] == 'no luck'
         channel = get_not_null(message[0], 'channel')
-        eq_(channel['id'], 'sms')
-        eq_(channel['name'], 'sms')
+        assert channel['id'] == 'sms'
+        assert channel['name'] == 'sms'
         channel_types = channel['types']
-        eq_(len(channel_types), 2)
-        eq_(channel_types[0], 'web')
-        eq_(channel_types[1], 'sms')
+        assert len(channel_types) == 2
+        assert channel_types[0] == 'web'
+        assert channel_types[1] == 'sms'
 
 
-        eq_(message[1]['text'], 'try again')
+        assert message[1]['text'] == 'try again'
         channel = get_not_null(message[1], 'channel')
-        eq_(channel['id'], 'email')
-        eq_(channel['name'], 'email')
+        assert channel['id'] == 'email'
+        assert channel['name'] == 'email'
         channel_types = channel['types']
-        eq_(len(channel_types), 2)
-        eq_(channel_types[0], 'web')
-        eq_(channel_types[1], 'email')
+        assert len(channel_types) == 2
+        assert channel_types[0] == 'web'
+        assert channel_types[1] == 'email'
 
 
     def test_disruption_on_route_and_line(self):
@@ -384,45 +384,45 @@ class TestDisruptions(AbstractTestFixture):
         response = self.query_region('traffic_reports?_current_datetime=20130425T090000')
 
         impacts = get_impacts(response)
-        eq_(len(impacts), 0)
+        assert len(impacts) == 0
 
         response = self.query_region('traffic_reports?_current_datetime=20130427T090000')
 
         impacts = get_impacts(response)
-        eq_(len(impacts), 3)
+        assert len(impacts) == 3
         assert 'too_bad_route_A:0_and_line' in impacts
 
         traffic_report = get_not_null(response, 'traffic_reports')
-        eq_(len(traffic_report), 1)
+        assert len(traffic_report) == 1
 
         impacted_lines = get_not_null(traffic_report[0], 'lines')
-        eq_(len(impacted_lines), 3)
+        assert len(impacted_lines) == 3
         is_valid_line(impacted_lines[0], depth_check=0)
-        eq_(impacted_lines[0]['id'], 'B')
-        eq_(impacted_lines[1]['id'], 'A')
-        eq_(impacted_lines[2]['id'], 'C')
+        assert impacted_lines[0]['id'] == 'B'
+        assert impacted_lines[1]['id'] == 'A'
+        assert impacted_lines[2]['id'] == 'C'
 
         lines_disrupt = get_disruptions(impacted_lines[1], response)
-        eq_(len(lines_disrupt), 1)
+        assert len(lines_disrupt) == 1
         for d in lines_disrupt:
             is_valid_disruption(d)
-        eq_(lines_disrupt[0]['disruption_id'], 'disruption_route_A:0_and_line')
-        eq_(lines_disrupt[0]['uri'], 'too_bad_route_A:0_and_line')
+        assert lines_disrupt[0]['disruption_id'] == 'disruption_route_A:0_and_line'
+        assert lines_disrupt[0]['uri'] == 'too_bad_route_A:0_and_line'
 
         #Verify message and channel without any channel type
         message = get_not_null(lines_disrupt[0], 'messages')
-        eq_(len(message), 2)
-        eq_(message[0]['text'], 'no luck')
+        assert len(message) == 2
+        assert message[0]['text'] == 'no luck'
         channel = get_not_null(message[0], 'channel')
-        eq_(channel['id'], 'sms')
-        eq_(channel['name'], 'sms channel')
-        eq_(len(channel['types']), 1)
+        assert channel['id'] == 'sms'
+        assert channel['name'] == 'sms channel'
+        assert len(channel['types']) == 1
 
-        eq_(message[1]['text'], 'try again')
+        assert message[1]['text'] == 'try again'
         channel = get_not_null(message[1], 'channel')
-        eq_(channel['id'], 'sms')
-        eq_(channel['name'], 'sms channel')
-        eq_(len(channel['types']), 1)
+        assert channel['id'] == 'sms'
+        assert channel['name'] == 'sms channel'
+        assert len(channel['types']) == 1
 
     def test_disruption_date_filtering(self):
         """

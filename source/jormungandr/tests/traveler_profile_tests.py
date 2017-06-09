@@ -32,6 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr.travelers_profile import TravelerProfile, default_traveler_profiles
 from jormungandr import cache
 
+
 def test_get_traveler_profile_and_override():
     """
      Test traveler profile's factory method make_traveler_profile and override_params

@@ -28,6 +28,8 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+
+import unittest
 from copy import deepcopy
 import os
 # set default config file if not defined in other tests
@@ -59,7 +61,7 @@ class FakeModel(object):
         self.scenario = scenario
 
 
-class AbstractTestFixture(object):
+class AbstractTestFixture(unittest.TestCase):
     """
     Mother class for all integration tests
 
@@ -151,6 +153,7 @@ class AbstractTestFixture(object):
 
     @classmethod
     def setup_class(cls):
+        cls.tester = app.test_client()
         cls.krakens_pool = {}
         logging.info("Initing the tests {}, let's pop the krakens".format(cls.__name__))
         cls.global_jormun_setup()
@@ -216,9 +219,6 @@ class AbstractTestFixture(object):
         cls.kill_all_krakens()
         for m in cls.mocks:
             m.stop()
-
-    def __init__(self, *args, **kwargs):
-        self.tester = app.test_client()
 
     # ==============================
     # helpers
@@ -300,7 +300,7 @@ class AbstractTestFixture(object):
                         assert v == 'departure'
                     continue
 
-                eq_(query_dict[k], v)
+                assert query_dict[k] == v
 
         if has_pt and '/coverage/' in query:
             types = [l['type'] for l in response['links']]
@@ -391,7 +391,7 @@ class AbstractTestFixture(object):
              next((j for j in response.get('journeys', [])), None)
 
         j_departure = get_valid_datetime(j_to_compare['departure_date_time'])
-        eq_(j_departure + timedelta(minutes=1), dt)
+        assert j_departure + timedelta(minutes=1) == dt
 
     @staticmethod
     def check_previous_datetime_link(dt, response, clockwise):
@@ -402,7 +402,7 @@ class AbstractTestFixture(object):
              next((j for j in response.get('journeys', [])), None)
 
         j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
-        eq_(j_departure - timedelta(minutes=1), dt)
+        assert j_departure - timedelta(minutes=1) == dt
 
 
 class NewDefaultScenarioAbstractTestFixture(AbstractTestFixture):
@@ -416,7 +416,7 @@ class NewDefaultScenarioAbstractTestFixture(AbstractTestFixture):
                                          new_default_pagination_journey_comparator(clockwise=clockwise))
 
         j_departure = get_valid_datetime(j_to_compare['departure_date_time'])
-        eq_(j_departure + timedelta(seconds=1), dt)
+        assert j_departure + timedelta(seconds=1) == dt
 
     @staticmethod
     def check_previous_datetime_link(dt, response, clockwise):
@@ -428,7 +428,7 @@ class NewDefaultScenarioAbstractTestFixture(AbstractTestFixture):
                                          new_default_pagination_journey_comparator(clockwise=clockwise))
 
         j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
-        eq_(j_departure - timedelta(seconds=1), dt)
+        assert j_departure - timedelta(seconds=1) == dt
 
 
 def dataset(datasets, global_config={}):

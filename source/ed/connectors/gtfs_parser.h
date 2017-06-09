@@ -222,6 +222,7 @@ struct StopsGtfsHandler : public GenericHandler {
     desc_c,
     lat_c,
     lon_c,
+    zone_c,
     type_c,
     parent_c,
     wheelchair_c,

@@ -30,6 +30,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete, GeoStatusResponse
+from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.scenarios.utils import build_pagination, pb_type
 from jormungandr.interfaces.v1.fields import NonNullList, place, NonNullNested, PbField, error, feed_publisher,\
     disruption_marshaller
@@ -49,7 +50,7 @@ places = {
 
 class Kraken(AbstractAutocomplete):
 
-    @marshal_with(places)
+    @get_serializer(collection='places', collections=places)
     def get(self, request, instance):
 
         req = request_pb2.Request()

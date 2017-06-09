@@ -32,7 +32,6 @@ from datetime import timedelta
 
 from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
-from nose.tools import eq_
 import jormungandr.scenarios.destineo
 from jormungandr.instance import Instance
 
@@ -66,7 +65,7 @@ class TestJourneysDestineo(AbstractTestFixture):
                            key=lambda j: get_valid_datetime(j['departure_date_time']))
 
         j_departure = get_valid_datetime(j_to_compare['departure_date_time'])
-        eq_(j_departure + timedelta(minutes=1), dt)
+        assert j_departure + timedelta(minutes=1) == dt
 
     @staticmethod
     def check_previous_datetime_link(dt, response, clockwise):
@@ -77,7 +76,7 @@ class TestJourneysDestineo(AbstractTestFixture):
                            key=lambda j: get_valid_datetime(j['arrival_date_time']))
 
         j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
-        eq_(j_departure - timedelta(minutes=1), dt)
+        assert j_departure - timedelta(minutes=1) == dt
 
     def test_journeys(self):
         #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
@@ -85,9 +84,9 @@ class TestJourneysDestineo(AbstractTestFixture):
         #not to use the jormungandr database
 
         self.is_valid_journey_response(response, journey_basic_query)
-        eq_(len(response['journeys']), 2)
-        eq_(response['journeys'][0]['type'], 'best')
-        eq_(response['journeys'][1]['type'], 'non_pt_walk')
+        assert len(response['journeys']) == 2
+        assert response['journeys'][0]['type'] == 'best'
+        assert response['journeys'][1]['type'] == 'non_pt_walk'
 
     def test_journeys_destineo_with_bss(self):
         #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
@@ -98,8 +97,8 @@ class TestJourneysDestineo(AbstractTestFixture):
 
         self.is_valid_journey_response(response, query)
         logging.debug([j['type'] for j in response['journeys']])
-        eq_(len(response['journeys']), 4)
-        eq_(response['journeys'][0]['type'], 'best')
-        eq_(response['journeys'][1]['type'], 'non_pt_bss')
-        eq_(response['journeys'][2]['type'], 'non_pt_walk')
-        eq_(response['journeys'][3]['type'], 'non_pt_bike')
+        assert len(response['journeys']) == 4
+        assert response['journeys'][0]['type'] == 'best'
+        assert response['journeys'][1]['type'] == 'non_pt_bss'
+        assert response['journeys'][2]['type'] == 'non_pt_walk'
+        assert response['journeys'][3]['type'] == 'non_pt_bike'

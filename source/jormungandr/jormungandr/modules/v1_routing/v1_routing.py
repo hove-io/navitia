@@ -29,9 +29,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr.interfaces.v1 import Uri, Coverage, Journeys, GraphicalIsochrone,\
-    HeatMap, Schedules, Places, Ptobjects, Coord, Disruptions, Calendars,\
-    converters_collection_type, Status, GeoStatus
+from jormungandr.interfaces.v1 import Uri, Coverage, Journeys, GraphicalIsochrone, \
+    HeatMap, Schedules, Places, Ptobjects, Coord, Disruptions, Calendars, \
+    converters_collection_type, Status, GeoStatus, JSONSchema
 from werkzeug.routing import BaseConverter, FloatConverter, PathConverter
 from jormungandr.modules_loader import AModule
 from jormungandr import app
@@ -41,45 +41,45 @@ from jormungandr.modules.v1_routing.resources import Index
 
 class RegionConverter(BaseConverter):
     """ The region you want to query"""
+    type_ = str
+    regex = '[^(/;)]+'
 
     def __init__(self, *args, **kwargs):
         BaseConverter.__init__(self, *args, **kwargs)
-        self.type_ = "string"
-        self.regex = '[^(/;)]+'
 
 
 class LonConverter(FloatConverter):
     """ The longitude of where the coord you want to query"""
+    type_ = float
+    regex = '-?\\d+(\\.\\d+)?'
 
     def __init__(self, *args, **kwargs):
         FloatConverter.__init__(self, *args, **kwargs)
-        self.type_ = "float"
-        self.regex = '-?\\d+(\\.\\d+)?'
 
 
 class LatConverter(FloatConverter):
     """ The latitude of where the coord you want to query"""
+    type_ = float
+    regex = '-?\\d+(\\.\\d+)?'
 
     def __init__(self, *args, **kwargs):
         FloatConverter.__init__(self, *args, **kwargs)
-        self.type_ = "float"
-        self.regex = '-?\\d+(\\.\\d+)?'
 
 
 class UriConverter(PathConverter):
     """First part of the uri"""
+    type_ = str
 
     def __init__(self, *args, **kwargs):
         PathConverter.__init__(self, *args, **kwargs)
-        self.type_ = "string"
 
 
 class IdConverter(BaseConverter):
     """Id of the object you want to query"""
+    type_ = str
 
     def __init__(self, *args, **kwargs):
         BaseConverter.__init__(self, *args, **kwargs)
-        self.type_ = "string"
 
 
 class V1Routing(AModule):
@@ -231,3 +231,7 @@ class V1Routing(AModule):
                           region + '<uri:uri>/calendars',
                           region + "calendars/<id:id>",
                           endpoint="calendars")
+
+        self.add_resource(JSONSchema.Schema,
+                          '/schema',
+                          endpoint="schema")

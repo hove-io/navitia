@@ -30,7 +30,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask.ext.restful import fields, marshal_with, reqparse
+from flask_restful import fields, marshal_with, reqparse
 from flask import request, g
 from jormungandr import i_manager, utils
 from jormungandr import timezone
@@ -43,9 +43,9 @@ import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import option_value, date_time_format, default_count_arg_type
 from jormungandr.interfaces.v1.errors import ManageError
-from flask.ext.restful.inputs import natural, boolean
+from flask_restful.inputs import natural, boolean
 from jormungandr.interfaces.v1.fields import disruption_marshaller, NonNullList, NonNullNested
-from jormungandr.resources_utc import ResourceUtc
+from jormungandr.resources_utils import ResourceUtc
 from jormungandr.interfaces.v1.make_links import create_external_link
 from functools import wraps
 from copy import deepcopy
@@ -113,7 +113,7 @@ class Schedules(ResourceUri, ResourceUtc):
         parser_get.add_argument("disable_geojson", type=boolean, default=False,
                             description="remove geojson from the response")
 
-        self.method_decorators.append(complete_links(self))
+        self.get_decorators.append(complete_links(self))
 
     def get(self, uri=None, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()

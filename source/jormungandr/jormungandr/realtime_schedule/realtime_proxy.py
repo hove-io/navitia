@@ -33,6 +33,9 @@ from abc import abstractmethod, ABCMeta
 from jormungandr.utils import timestamp_to_datetime, record_external_failure
 from jormungandr import new_relic
 
+class RealtimeProxyError(RuntimeError):
+    pass
+
 
 class RealtimeProxy(object):
     """
@@ -78,11 +81,18 @@ class RealtimeProxy(object):
 
         returns the next realtime passages
         """
-        next_passages = self._get_next_passage_for_route_point(route_point, count, from_dt, current_dt)
 
-        filtered_passage = self._filter_passages(next_passages, count, from_dt)
+        try:
+            next_passages = self._get_next_passage_for_route_point(route_point, count, from_dt, current_dt)
 
-        return filtered_passage
+            filtered_passage = self._filter_passages(next_passages, count, from_dt)
+
+            self.record_call('ok')
+
+            return filtered_passage
+        except RealtimeProxyError as e:
+            self.record_call('failure', reason=str(e))
+            return None
 
     @abstractmethod
     def status(self):
@@ -98,4 +108,10 @@ class RealtimeProxy(object):
         params = {'realtime_system_id': repr(self.rt_system_id), 'message': message}
         new_relic.record_custom_event('realtime_internal_failure', params)
 
-
+    def record_call(self, status, **kwargs):
+        """
+        status can be in: ok, failure
+        """
+        params = {'realtime_system_id': repr(self.rt_system_id), 'status': status}
+        params.update(kwargs)
+        new_relic.record_custom_event('realtime_status', params)

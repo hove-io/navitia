@@ -29,15 +29,17 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
+from functools import partial
+
+from jormungandr.interfaces.v1.serializer import jsonschema
 import serpy
 import operator
 
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field
 
-class PbField(serpy.Field):
+
+class PbField(Field):
     def __init__(self, *args, **kwargs):
-        # used only to put a default value to display_none
-        if 'display_none' not in kwargs:
-            kwargs['display_none'] = False
         super(PbField, self).__init__(*args, **kwargs)
 
     """
@@ -55,7 +57,7 @@ class PbField(serpy.Field):
                     return op(obj)
                 else:
                     return None
-            except ValueError as e:
+            except ValueError:
                 #HasField throw an exception if the field is repeated...
                 return op(obj)
         return getter
@@ -80,11 +82,28 @@ class NestedPbField(PbField):
             return cur_obj
         return getter
 
+
+class NullableDictSerializer(serpy.Serializer):
+    @classmethod
+    def default_getter(cls, attr):
+        return lambda d: d.get(attr)
+
+
 class PbNestedSerializer(serpy.Serializer, PbField):
-    pass
+    def __init__(self, *args, **kwargs):
+        if 'display_none' not in kwargs:
+            kwargs['display_none'] = False
+        super(PbNestedSerializer, self).__init__(*args, **kwargs)
 
 
-class EnumField(serpy.Field):
+class EnumField(jsonschema.Field):
+    def __init__(self, pb_type=None, **kwargs):
+        schema_type = kwargs.pop('schema_type') if 'schema_type' in kwargs else str
+        schema_metadata = kwargs.pop('schema_metadata') if 'schema_metadata' in kwargs else {}
+        if pb_type:
+            schema_metadata['enum'] = self._get_all_possible_values(pb_type)
+        super(EnumField, self).__init__(schema_type=schema_type, schema_metadata=schema_metadata, **kwargs)
+
     def as_getter(self, serializer_field_name, serializer_cls):
         def getter(val):
             attr = self.attr or serializer_field_name
@@ -99,6 +118,10 @@ class EnumField(serpy.Field):
             return None
         return value.lower()
 
+    @staticmethod
+    def _get_all_possible_values(pb_type):
+        return [v.name for v in pb_type.DESCRIPTOR.values]
+
 
 class EnumListField(EnumField):
     """WARNING: the enumlist field does not work without a self.attr"""
@@ -111,11 +134,11 @@ class EnumListField(EnumField):
 
 
 class GenericSerializer(PbNestedSerializer):
-    id = serpy.Field(attr='uri')
-    name = serpy.Field()
+    id = jsonschema.Field(schema_type=str, attr='uri', description='Identifier of the object')
+    name = jsonschema.Field(schema_type=str, description='Name of the object')
 
 
-class LiteralField(serpy.Field):
+class LiteralField(jsonschema.Field):
     """
     :return literal value
     """
@@ -148,7 +171,7 @@ def value_by_path(obj, path, default=None):
         return default
 
 
-class NestedPropertyField(serpy.Field):
+class NestedPropertyField(jsonschema.Field):
     def as_getter(self, serializer_field_name, serializer_cls):
         return lambda v: value_by_path(v, self.attr)
 
@@ -157,7 +180,22 @@ class IntNestedPropertyField(NestedPropertyField):
     to_value = staticmethod(int)
 
 
-class DoubleToStringField(serpy.Field):
+class LambdaField(Field):
+    getter_takes_serializer = True
+
+    def __init__(self, method, **kwargs):
+        super(LambdaField, self).__init__(**kwargs)
+        self.method = method
+
+    def as_getter(self, serializer_field_name, serializer_cls):
+        return self.method
+
+
+class DoubleToStringField(Field):
+
+    def __init__(self, **kwargs):
+        super(DoubleToStringField, self).__init__(schema_type=str, **kwargs)
+
     def to_value(self, value):
         # we don't want to loose precision while converting a double to string
         return "{:.16g}".format(value)

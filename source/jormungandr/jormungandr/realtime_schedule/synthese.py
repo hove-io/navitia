@@ -31,7 +31,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import itertools
 
-from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy
+from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy, RealtimeProxyError
 from jormungandr.schedule import RealTimePassage
 import xml.etree.ElementTree as et
 from jormungandr.interfaces.parsers import date_time_format
@@ -104,24 +104,22 @@ class Synthese(RealtimeProxy):
         """
         try:
             if not self.rate_limiter.acquire(self.rt_system_id, block=False):
-                self.record_external_failure('maximum rate reached')
-                return None  #this should not be cached :(
+                raise RealtimeProxyError('maximum rate reached')
             return self.breaker.call(requests.get, url, timeout=self.timeout)
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Synthese RT service dead, using base '
                                               'schedule (error: {}'.format(e))
-            self.record_external_failure('circuit breaker open')
+            raise RealtimeProxyError('circuit breaker open')
         except requests.Timeout as t:
             logging.getLogger(__name__).error('Synthese RT service timeout, using base '
                                               'schedule (error: {}'.format(t))
-            self.record_external_failure('timeout')
+            raise RealtimeProxyError('timeout')
         except redis.ConnectionError:
             logging.getLogger(__name__).exception('there is an error with Redis')
-            self.record_external_failure('redis error')
+            raise RealtimeProxyError('redis error')
         except Exception as e:
             logging.getLogger(__name__).exception('Synthese RT error, using base schedule')
-            self.record_external_failure(str(e))
-        return None
+            raise RealtimeProxyError(str(e))
 
     def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None):
         url = self._make_url(route_point, count, from_dt)
@@ -136,7 +134,7 @@ class Synthese(RealtimeProxy):
             # TODO better error handling, the response might be in 200 but in error
             logging.getLogger(__name__).error('Synthese RT service unavailable, impossible to query : {}'
                                               .format(r.url))
-            self.record_external_failure('non 200 response')
+            raise RealtimeProxyError('non 200 response')
             return None
 
         logging.getLogger(__name__).debug("synthese response: {}".format(r.text))

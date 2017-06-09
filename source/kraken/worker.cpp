@@ -63,6 +63,20 @@ struct coord_conversion_exception : public recoverable_exception
 };
 }
 
+template <typename T>
+double get_speed(const T& request, const type::Mode_e mode) {
+    switch(mode){
+        case type::Mode_e::Bike:
+            return request.bike_speed();
+        case type::Mode_e::Car:
+            return request.car_speed();
+        case type::Mode_e::Bss:
+            return request.bss_speed();
+        default:
+            return request.walking_speed();
+    }
+}
+
 static type::GeographicalCoord coord_of_entry_point(
         const type::EntryPoint & entry_point,
         const navitia::type::Data& data) {
@@ -773,13 +787,17 @@ void Worker::graphical_isochrone(const pbnavitia::GraphicalIsochroneRequest& req
     for(int i = 0; i < request.boundary_duration_size(); ++i) {
         boundary_duration.push_back(request.boundary_duration(i));
     }
+    const auto sn = request_journey.streetnetwork_params();
+    const auto end_mode_iso = request_journey.clockwise() ? sn.destination_mode() : sn.origin_mode();
+    const auto end_mode = type::static_data::get()->modeByCaption(end_mode_iso);
+    const double end_speed = get_speed(sn, end_mode);
     navitia::routing::make_graphical_isochrone(
         this->pb_creator, *planner, ep, request_journey.datetimes(0),
         boundary_duration, request_journey.max_transfers(),
         arg.accessibilite_params, arg.forbidden, arg.allowed,
         request_journey.clockwise(), arg.rt_level,
         *street_network_worker,
-        request_journey.streetnetwork_params().walking_speed());
+        end_speed);
 }
 
 void Worker::heat_map(const pbnavitia::HeatMapRequest& request) {
@@ -790,14 +808,15 @@ void Worker::heat_map(const pbnavitia::HeatMapRequest& request) {
 
     type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
     auto streetnetwork = request_journey.streetnetwork_params();
-    auto mode_iso = request_journey.clockwise() ? streetnetwork.destination_mode() : streetnetwork.origin_mode();
-    auto mode = type::static_data::get()->modeByCaption(mode_iso);
+    auto end_mode_iso = request_journey.clockwise() ? streetnetwork.destination_mode() : streetnetwork.origin_mode();
+    auto end_mode = type::static_data::get()->modeByCaption(end_mode_iso);
+    auto end_speed = get_speed(streetnetwork, end_mode);
     navitia::routing::make_heat_map(this->pb_creator, *planner, ep, request_journey.datetimes(0),
                                     request_journey.max_duration(), request_journey.max_transfers(),
                                     arg.accessibilite_params, arg.forbidden, arg.allowed,
                                     request_journey.clockwise(), arg.rt_level,
                                     *street_network_worker,
-                                    request_journey.streetnetwork_params().walking_speed(), mode,
+                                    end_speed, end_mode,
                                     request.resolution());
 }
 
@@ -1009,21 +1028,7 @@ void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
 
 void Worker::nearest_stop_points(const pbnavitia::NearestStopPointsRequest& request) {
     const auto* data = this->pb_creator.data;
-    double speed = 0;
-    switch(type::static_data::get()->modeByCaption(request.mode())){
-        case type::Mode_e::Bike:
-            speed = request.bike_speed();
-            break;
-        case type::Mode_e::Car:
-            speed = request.car_speed();
-            break;
-        case type::Mode_e::Bss:
-            speed = request.bss_speed();
-            break;
-        default:
-            speed = request.walking_speed();
-            break;
-    }
+    double speed = get_speed(request, type::static_data::get()->modeByCaption(request.mode()));
     type::EntryPoint entry_point;
     try{
         entry_point = make_sn_entry_point(request.place(), request.mode(), speed, request.max_duration(), *data);

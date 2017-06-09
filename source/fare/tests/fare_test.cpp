@@ -223,25 +223,33 @@ BOOST_FIXTURE_TEST_CASE(simple_journey, fare_load_fixture) {
     BOOST_CHECK_EQUAL(res.tickets.size() , 3);
 }
 
-BOOST_FIXTURE_TEST_CASE(od_paris, fare_load_fixture) {
-    // On teste un peu les OD vers paris
+BOOST_FIXTURE_TEST_CASE(od_to_paris, fare_load_fixture) {
+    // testing OD heading to Paris
     keys.clear();
     keys.push_back("ratp;8711388;8775890;FILGATO-2;2011|07|01;04|40;04|50;4;1;rapidtransit");
     res = f.compute_fare(string_to_path(keys));
     BOOST_CHECK_EQUAL(res.tickets.size() , 1);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value,395);//code 140
 
-    // Le métro doit être gratuit après
+    // Metro should be free after
     keys.push_back("ratp;paris;FILNav31;FILGATO-2;2011|07|01;04|40;04|50;1;1;metro");
     res = f.compute_fare(string_to_path(keys));
     BOOST_CHECK_EQUAL(res.tickets.size() , 1);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value,395);
 
-    // Et le Tramway bien évidemment payant !
-    // Le métro doit être gratuit après
+    // But tramway is obviously charged!
     keys.push_back("ratp;paris;FILNav31;FILGATO-2;2011|07|01;04|40;04|50;1;1;tramway");
     res = f.compute_fare(string_to_path(keys));
     BOOST_CHECK_EQUAL(res.tickets.size() , 2);
+}
+
+BOOST_FIXTURE_TEST_CASE(od_from_zone_1, fare_load_fixture) {
+    // testing OD coming from Zone 1, on stop that has stop's OD
+    keys.clear();
+    keys.push_back("ratp;8738287;Phebus;8739315;2011|07|01;04|40;04|50;1;4;rapidtransit");
+    res = f.compute_fare(string_to_path(keys));
+    BOOST_CHECK_EQUAL(res.tickets.size() , 1);
+    BOOST_CHECK_EQUAL(res.tickets.at(0).value,320);//code 130
 }
 
 BOOST_FIXTURE_TEST_CASE(other_date, fare_load_fixture) {
