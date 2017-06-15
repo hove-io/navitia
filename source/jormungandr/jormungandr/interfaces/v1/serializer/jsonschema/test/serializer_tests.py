@@ -78,7 +78,7 @@ def serpy_extended_supported_serialization_test():
     """
     Supported custom serpy children fields
     """
-    class CustomSerializer(serpy.Serializer):
+    class Custom(serpy.Serializer):
         bob = jsonschema.IntField()
 
     class JsonchemaSupportedType(serpy.Serializer):
@@ -88,9 +88,9 @@ def serpy_extended_supported_serialization_test():
         jsonschemaIntField = IntField()
         jsonschemaField = Field(schema_type=int)
         jsonschemaMethodField = MethodField(schema_type=str)
-        lambda_schema = LambdaField(method=lambda **kw: None, schema_type=lambda: CustomSerializer())
+        lambda_schema = LambdaField(method=lambda **kw: None, schema_type=lambda: Custom())
         list_lambda_schema = LambdaField(method=lambda **kw: None,
-                                         schema_type=lambda: CustomSerializer(many=True))
+                                         schema_type=lambda: Custom(many=True))
 
         def get_jsonschemaMethodField(self, obj):
             pass
@@ -106,12 +106,12 @@ def serpy_extended_supported_serialization_test():
     assert properties.get('jsonschemaIntField', {}).get('type') == 'integer'
     assert properties.get('jsonschemaField', {}).get('type') == 'integer'
     assert properties.get('jsonschemaMethodField', {}).get('type') == 'string'
-    assert properties.get('lambda_schema', {}).get('$ref') == '#/definitions/CustomResponse'
+    assert properties.get('lambda_schema', {}).get('$ref') == '#/definitions/Custom'
     assert properties.get('list_lambda_schema', {}).get('type') == 'array'
-    assert properties.get('list_lambda_schema').get('items').get('$ref') == '#/definitions/CustomResponse'
+    assert properties.get('list_lambda_schema').get('items').get('$ref') == '#/definitions/Custom'
 
     # we must find the 'CustomSerializer' in the definitions
-    assert(next(iter(d for d in external_definitions if d.__class__ == CustomSerializer), None))
+    assert(next(iter(d for d in external_definitions if d.__class__ == Custom), None))
 
 
 
