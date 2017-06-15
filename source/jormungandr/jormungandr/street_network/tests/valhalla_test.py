@@ -336,7 +336,7 @@ def get_response_basic_test():
                                       destination,
                                       fallback_extremity,
                                       StreetNetworkPathType.BEGINNING_FALLBACK,
-                                      mode_base_cost=None)
+                                      mode_park_cost=None)
     assert response.status_code == 200
     assert response.response_type == response_pb2.ITINERARY_FOUND
     assert len(response.journeys) == 1
@@ -346,7 +346,7 @@ def get_response_basic_test():
     assert response.journeys[0].sections[0].length == 52
     assert response.journeys[0].sections[0].duration == 6
     assert response.journeys[0].sections[0].destination == destination
-    # Note: we don't have a park section as there is no mode_base_cost
+    # Note: we don't have a park section as there is no mode_park_cost
 
 
 def get_response_with_park_test():
@@ -359,7 +359,7 @@ def get_response_with_park_test():
                                       destination,
                                       fallback_extremity,
                                       StreetNetworkPathType.BEGINNING_FALLBACK,
-                                      mode_base_cost=5*60)
+                                      mode_park_cost=5*60)
     assert response.status_code == 200
     assert response.response_type == response_pb2.ITINERARY_FOUND
     assert len(response.journeys) == 1
@@ -387,7 +387,7 @@ def get_response_with_leave_parking_test():
                                       destination,
                                       fallback_extremity,
                                       StreetNetworkPathType.ENDING_FALLBACK,
-                                      mode_base_cost=5*60)
+                                      mode_park_cost=5*60)
     assert response.status_code == 200
     assert response.response_type == response_pb2.ITINERARY_FOUND
     assert len(response.journeys) == 1
@@ -407,7 +407,7 @@ def get_response_with_leave_parking_test():
 
 
 def get_response_with_0_duration_park_test():
-    """even if the mode_base_cost is 0, if it's not None we got a park section"""
+    """even if the mode_park_cost is 0, if it's not None we got a park section"""
     resp_json = response_valid()
     origin = make_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
     destination = make_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
@@ -417,7 +417,7 @@ def get_response_with_0_duration_park_test():
                                       destination,
                                       fallback_extremity,
                                       StreetNetworkPathType.BEGINNING_FALLBACK,
-                                      mode_base_cost=0)
+                                      mode_park_cost=0)
     assert response.status_code == 200
     assert response.response_type == response_pb2.ITINERARY_FOUND
     assert len(response.journeys) == 1
@@ -583,10 +583,10 @@ def one_to_many_valhalla_test():
         assert valhalla_response.rows[0].routing_response[2].routing_status == response_pb2.reached
 
 
-def one_to_many_valhalla_with_base_cost_test():
+def one_to_many_valhalla_with_park_cost_test():
     """
-    test with a base Valhalla cost,
-    we add a cost on different cost on car and bike and no cost on walking
+    test with a parking cost,
+    we add a different cost on car and bike and no cost on walking
     """
     instance = MagicMock()
     instance.walking_speed = 1.12
@@ -648,7 +648,7 @@ def one_to_many_valhalla_with_base_cost_test():
         assert valhalla_response.rows[0].routing_response[2].duration == 1337 + 30
         assert valhalla_response.rows[0].routing_response[2].routing_status == response_pb2.reached
 
-        # for bike every reached point have an additional 5mn
+        # for car every reached point have an additional 5mn
         valhalla_response = valhalla.get_street_network_routing_matrix(
             [origin],
             [destination, destination, destination],
