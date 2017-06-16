@@ -193,3 +193,59 @@ class TestValhallaDirectPath(AbstractTestFixture):
         assert len(response['journeys'][2]['sections']) == 1
         assert response['journeys'][2]['duration'] == 20
 
+
+@dataset({
+    'main_routing_test': {
+        'scenario': 'distributed',
+        'instance_config': {
+            'street_network': [{
+                "modes": ['walking', 'car', 'bss', 'bike'],
+                "class": "tests.direct_path_valhalla_integration_tests.MockValhalla",
+                "args": {
+                    "service_url": "http://bob.com",
+                    "costing_options": {
+                        "bicycle": {
+                            "bicycle_type": "Hybrid",
+                            "cycling_speed": 18
+                        },
+                        "pedestrian": {
+                            "walking_speed": 50.1
+                        }
+                    },
+                    "mode_park_cost": {
+                        "car": 5 * 60,
+                        "bike": 30,
+                    },
+                }
+            }]
+        }
+    }
+})
+class TestValhallaParkingCost(AbstractTestFixture):
+    def test_with_a_car_park_cost(self):
+        query = journey_basic_query + \
+                "&first_section_mode[]=bss" + \
+                "&first_section_mode[]=walking" + \
+                "&first_section_mode[]=bike" + \
+                "&first_section_mode[]=car" + \
+                "&debug=true"
+        response = self.query_region(query)
+        check_journeys(response)
+        assert len(response['journeys']) == 3
+
+        assert('walking' in response['journeys'][0]['tags'])
+        assert len(response['journeys'][0]['sections']) == 1
+        assert response['journeys'][0]['duration'] == 20
+        # no park section
+
+        # bike from valhalla
+        assert('bike' in response['journeys'][1]['tags'])
+        assert len(response['journeys'][1]['sections']) == 2
+        assert response['journeys'][1]['duration'] == 10 + 30
+        assert response['journeys'][1]['sections'][1]['type'] == 'park'
+
+        # car from valhalla
+        assert('car' in response['journeys'][2]['tags'])
+        assert len(response['journeys'][2]['sections']) == 2
+        assert response['journeys'][2]['duration'] == 5 + 5 * 60
+        assert response['journeys'][2]['sections'][1]['type'] == 'park'
