@@ -51,7 +51,7 @@ class FallbackDurations:
     The returned dict will look like {'stop_point:stopA': 360, 'stop_point:stopB': 180, 'stop_point:stopC': 60}
     """
     def __init__(self, future_manager, instance, requested_place_obj, mode, proximities_by_crowfly_pool, places_free_access,
-                 max_duration_to_pt, request, speed_switcher):
+                 max_duration_to_pt, request, speed_switcher, origin=True):
         """
         :param future_manager: a module that manages the future pool properly
         :param instance: instance of the coverage, all outside services callings pass through it(street network,
@@ -74,7 +74,7 @@ class FallbackDurations:
         self._request = request
         self._speed_switcher = speed_switcher
         self._value = None
-
+        self._origin = origin
         self._async_request()
 
     def _get_duration(self, resp, place):
@@ -117,12 +117,22 @@ class FallbackDurations:
                 return {center_isochrone.uri: DurationElement(0, response_pb2.reached)}
             else:
                 return result
-        sn_routing_matrix = self._instance.get_street_network_routing_matrix([center_isochrone],
-                                                                             places_isochrone,
-                                                                             self._mode,
-                                                                             self._max_duration_to_pt,
-                                                                             self._request,
-                                                                             **self._speed_switcher)
+
+        if self._origin:
+            sn_routing_matrix = self._instance.get_street_network_routing_matrix([center_isochrone],
+                                                                                 places_isochrone,
+                                                                                 self._mode,
+                                                                                 self._max_duration_to_pt,
+                                                                                 self._request,
+                                                                                 **self._speed_switcher)
+        else:
+            sn_routing_matrix = self._instance.get_street_network_routing_matrix(places_isochrone,
+                                                                                 [center_isochrone],
+                                                                                 self._mode,
+                                                                                 self._max_duration_to_pt,
+                                                                                 self._request,
+                                                                                 **self._speed_switcher)
+
 
         if not len(sn_routing_matrix.rows) or not len(sn_routing_matrix.rows[0].routing_response):
             logger.debug("no fallback durations found from %s by %s", self._requested_place_obj.uri, self._mode)
@@ -157,7 +167,7 @@ class FallbackDurationsPool(dict):
     A fallback durations pool is set of "fallback durations" grouped by mode.
     """
     def __init__(self, future_manager, instance, requested_place_obj, modes, proximities_by_crowfly_pool, places_free_access,
-                 direct_paths_by_mode, request):
+                 direct_paths_by_mode, request, origin=True):
         super(FallbackDurationsPool, self).__init__()
         self._future_manager = future_manager
         self._instance = instance
@@ -167,6 +177,7 @@ class FallbackDurationsPool(dict):
         self._places_free_access = places_free_access
         self._direct_paths_by_mode = direct_paths_by_mode
         self._request = request
+        self._origin = origin
         self._speed_switcher = {
             "walking": instance.walking_speed,
             "bike": instance.bike_speed,
@@ -184,7 +195,7 @@ class FallbackDurationsPool(dict):
             fallback_durations = FallbackDurations(self._future_manager, self._instance, self._requested_place_obj, mode,
                                                    self._proximities_by_crowfly_pool, self._places_free_access,
                                                    max_fallback_duration,
-                                                   self._request, self._speed_switcher)
+                                                   self._request, self._speed_switcher, self._origin)
             self._value[mode] = fallback_durations
 
     def wait_and_get(self, mode):

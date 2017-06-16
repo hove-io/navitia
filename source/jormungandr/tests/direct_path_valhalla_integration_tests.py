@@ -96,14 +96,18 @@ def route_response(mode):
     }
 
 
-def one_to_many_response():
+def sources_to_targets_response():
     return {
-        "locations": [
+        "sources": [
             [
                 {
                     "lon": 2.428405,
                     "lat": 48.625626
-                },
+                }
+            ]
+        ],
+        "targets": [
+            [
                 {
                     "lon": 2.428379,
                     "lat": 48.625679
@@ -111,18 +115,12 @@ def one_to_many_response():
             ]
         ],
         "units": "kilometers",
-        "one_to_many": [
+        "sources_to_targets": [
             [
-                {
-                    "distance": 0,
-                    "time": 0,
-                    "to_index": 0,
-                    "from_index": 0
-                },
                 {
                     "distance": 0.227,
                     "time": 177,
-                    "to_index": 1,
+                    "to_index": 0,
                     "from_index": 0
                 }
             ]
@@ -133,8 +131,8 @@ def one_to_many_response():
 def response_valid(api, mode):
     if api == 'route':
         return route_response(mode)
-    elif api == 'one_to_many':
-        return one_to_many_response()
+    elif api == 'sources_to_targets':
+        return sources_to_targets_response()
 
 
 def check_journeys(resp):

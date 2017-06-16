@@ -129,10 +129,10 @@ def format_coord_func_invalid_api_test():
     assert 'ApiNotFound' in str(excinfo.typename)
 
 
-def format_coord_func_valid_coord_one_to_many_test():
+def format_coord_func_valid_coord_sources_to_targets_test():
     pt_object = make_pt_object(type_pb2.ADDRESS, 1.12, 13.15)
 
-    coord = Valhalla._format_coord(pt_object, 'one_to_many')
+    coord = Valhalla._format_coord(pt_object, 'sources_to_targets')
     coord_res = {'lat': pt_object.address.coord.lat, 'lon': pt_object.address.coord.lon}
     assert len(coord) == 2
     for key, value in coord_res.items():
@@ -541,7 +541,7 @@ def get_valhalla_mode_valid_mode_test():
         assert Valhalla._get_valhalla_mode(kraken_mode) == valhalla_mode
 
 
-def one_to_many_valhalla_test():
+def souces_to_targets_valhalla_test():
     instance = MagicMock()
     instance.walking_speed = 1.12
     valhalla = Valhalla(instance=instance,
@@ -550,7 +550,7 @@ def one_to_many_valhalla_test():
     origin = make_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
     destination = make_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
     response = {
-        'one_to_many': [
+        'sources_to_targets': [
             [
                 {
                     'time': 0
@@ -568,7 +568,7 @@ def one_to_many_valhalla_test():
         ]
     }
     with requests_mock.Mocker() as req:
-        req.post('http://bob.com/one_to_many', json=response, status_code=200)
+        req.post('http://bob.com/sources_to_targets', json=response, status_code=200)
         valhalla_response = valhalla.get_street_network_routing_matrix(
             [origin],
             [destination, destination, destination],
