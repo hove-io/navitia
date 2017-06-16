@@ -286,8 +286,6 @@ class Valhalla(AbstractStreetNetworkService):
             if len(destinations) > 1:
                 logging.getLogger(__name__).error('routing matrix error, no unique center point')
                 raise TechnicalError('routing matrix error, no unique center point')
-            else:
-                origins, destinations = destinations, origins
 
         data = self._make_request_arguments(mode, origins, destinations, request, api='sources_to_targets')
         r = self._call_valhalla('{}/{}'.format(self.service_url, 'sources_to_targets'), requests.post, data)
