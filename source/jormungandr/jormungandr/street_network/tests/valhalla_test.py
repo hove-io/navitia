@@ -553,9 +553,6 @@ def souces_to_targets_valhalla_test():
         'sources_to_targets': [
             [
                 {
-                    'time': 0
-                },
-                {
                     'time': 42
                 },
                 {
@@ -603,9 +600,6 @@ def sources_to_targets_valhalla_with_park_cost_test():
     response = {
         'sources_to_targets': [
             [
-                {
-                    'time': 0
-                },
                 {
                     'time': 42
                 },
