@@ -47,6 +47,7 @@ from functools import cmp_to_key
 from jormungandr.instance_manager import instances_comparator
 from jormungandr.travelers_profile import TravelerProfile
 from navitiacommon.default_traveler_profile_params import acceptable_traveler_types
+import pytz
 
 
 def dt_represents(value):
@@ -240,7 +241,11 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
         if args['destination']:
             args['destination'] = transform_id(args['destination'])
 
-        args['original_datetime'] = args['datetime']
+        if args['datetime']:
+            args['original_datetime'] = args['datetime']
+        else:
+            args['original_datetime'] = pytz.UTC.localize(args['_current_datetime'])
+
 
         if args.get('traveler_type'):
             traveler_profile = TravelerProfile.make_traveler_profile(region, args['traveler_type'])
