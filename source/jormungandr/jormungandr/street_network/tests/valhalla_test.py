@@ -158,7 +158,7 @@ def format_url_func_with_walking_mode_test():
     valhalla = Valhalla(instance=instance,
                         service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
-    data = valhalla._make_request_arguments("walking", origin, [destination], MOCKED_REQUEST)
+    data = valhalla._make_request_arguments("walking", [origin], [destination], MOCKED_REQUEST)
     assert json.loads(data) == json.loads('''{
                         "costing_options": {
                           "pedestrian": {
@@ -196,7 +196,7 @@ def format_url_func_with_bike_mode_test():
                         service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     valhalla.costing_options = None
-    data = valhalla._make_request_arguments("bike", origin, [destination], MOCKED_REQUEST)
+    data = valhalla._make_request_arguments("bike", [origin], [destination], MOCKED_REQUEST)
     assert json.loads(data) == json.loads('''
                                             {
                                               "costing_options": {
@@ -236,7 +236,7 @@ def format_url_func_with_car_mode_test():
                         service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     valhalla.costing_options = None
-    data = valhalla._make_request_arguments("car", origin, [destination], MOCKED_REQUEST)
+    data = valhalla._make_request_arguments("car", [origin], [destination], MOCKED_REQUEST)
     assert json.loads(data) == json.loads(''' {
                                       "locations": [
                                         {
@@ -272,7 +272,7 @@ def format_url_func_with_different_ptobject_test():
                           type_pb2.POI):
         origin = make_pt_object(ptObject_type, 1.0, 1.0)
         destination = make_pt_object(ptObject_type, 2.0, 2.0)
-        data = valhalla._make_request_arguments("car", origin, [destination], MOCKED_REQUEST)
+        data = valhalla._make_request_arguments("car", [origin], [destination], MOCKED_REQUEST)
         assert json.loads(data) == json.loads(''' {
                                          "locations": [
                                            {
@@ -301,7 +301,7 @@ def format_url_func_invalid_mode_test():
     with pytest.raises(InvalidArguments) as excinfo:
         origin = make_pt_object(type_pb2.ADDRESS, 1.0, 1.0)
         destination = make_pt_object(type_pb2.ADDRESS, 2.0, 2.0)
-        valhalla._make_request_arguments("bob", origin, [destination], MOCKED_REQUEST)
+        valhalla._make_request_arguments("bob", [origin], [destination], MOCKED_REQUEST)
     assert '400: Bad Request' == str(excinfo.value)
     assert 'InvalidArguments' == str(excinfo.typename)
 
@@ -583,7 +583,7 @@ def souces_to_targets_valhalla_test():
         assert valhalla_response.rows[0].routing_response[2].routing_status == response_pb2.reached
 
 
-def one_to_many_valhalla_with_park_cost_test():
+def sources_to_targets_valhalla_with_park_cost_test():
     """
     test with a parking cost,
     we add a different cost on car and bike and no cost on walking
@@ -601,7 +601,7 @@ def one_to_many_valhalla_with_park_cost_test():
     origin = make_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
     destination = make_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
     response = {
-        'one_to_many': [
+        'sources_to_targets': [
             [
                 {
                     'time': 0
@@ -619,7 +619,7 @@ def one_to_many_valhalla_with_park_cost_test():
         ]
     }
     with requests_mock.Mocker() as req:
-        req.post('http://bob.com/one_to_many', json=response, status_code=200)
+        req.post('http://bob.com/sources_to_targets', json=response, status_code=200)
         # it changes nothing for walking
         valhalla_response = valhalla.get_street_network_routing_matrix(
             [origin],
