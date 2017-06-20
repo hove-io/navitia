@@ -32,7 +32,7 @@ import serpy
 from navitiacommon import type_pb2
 
 from jormungandr.interfaces.v1.serializer.base import GenericSerializer, EnumListField, LiteralField
-from jormungandr.interfaces.v1.serializer.jsonschema.fields import BoolField, Field, DateTimeType, DateType
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, DateTimeType, DateType
 from jormungandr.interfaces.v1.serializer.time import LocalTimeField, PeriodSerializer, DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import *
 from jormungandr.interfaces.v1.serializer import jsonschema
@@ -45,7 +45,7 @@ Label of the stop area. The name is directly taken from the data whereas the lab
 
 class Equipments(EnumListField):
     """
-    hack for equiments there is a useless level in the proto
+    hack for equiments their is a useless level in the proto
     """
 
     def __init__(self, **kwargs):
@@ -132,13 +132,13 @@ class ValidityPatternSerializer(PbNestedSerializer):
 
 
 class WeekPatternSerializer(PbNestedSerializer):
-    monday = BoolField()
-    tuesday = BoolField()
-    wednesday = BoolField()
-    thursday = BoolField()
-    friday = BoolField()
-    saturday = BoolField()
-    sunday = BoolField()
+    monday = BoolField(display_none=True)
+    tuesday = BoolField(display_none=True)
+    wednesday = BoolField(display_none=True)
+    thursday = BoolField(display_none=True)
+    friday = BoolField(display_none=True)
+    saturday = BoolField(display_none=True)
+    sunday = BoolField(display_none=True)
 
 
 class CalendarPeriodSerializer(PbNestedSerializer):
@@ -195,6 +195,7 @@ class TagsField(Field):
 
 class DisruptionSerializer(PbNestedSerializer):
     id = jsonschema.Field(schema_type=str, attr='uri')
+
     disruption_id = jsonschema.Field(schema_type=str, attr='disruption_uri')
     impact_id = jsonschema.Field(schema_type=str, attr='uri')
     title = jsonschema.Field(schema_type=str),
@@ -267,7 +268,7 @@ class StopPointSerializer(GenericSerializer):
     codes = CodeSerializer(many=True, display_none=False)
     label = jsonschema.Field(schema_type=str)
     coord = CoordSerializer(required=False)
-    links = LinkSerializer(attr='impact_uris', display_none=True)
+    links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
     commercial_modes = CommercialModeSerializer(many=True, display_none=False)
     physical_modes = PhysicalModeSerializer(many=True, display_none=False)
     administrative_regions = AdminSerializer(many=True, display_none=False)
@@ -289,7 +290,7 @@ class StopAreaSerializer(GenericSerializer):
     timezone = jsonschema.Field(schema_type=str)
     label = jsonschema.Field(schema_type=str, description=LABEL_DESCRIPTION)
     coord = CoordSerializer(required=False)
-    links = LinkSerializer(attr='impact_uris', display_none=True)
+    links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
     commercial_modes = CommercialModeSerializer(many=True, display_none=False)
     physical_modes = PhysicalModeSerializer(many=True, display_none=False)
     administrative_regions = AdminSerializer(many=True, display_none=False,
@@ -311,7 +312,7 @@ class PlaceSerializer(GenericSerializer):
 
 class NetworkSerializer(GenericSerializer):
     lines = jsonschema.MethodField(schema_type=lambda: LineSerializer(), display_none=False)
-    links = LinkSerializer(attr='impact_uris', display_none=True)
+    links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
     codes = CodeSerializer(many=True, display_none=False)
 
     def get_lines(self, obj):
@@ -326,7 +327,7 @@ class RouteSerializer(GenericSerializer):
     codes = CodeSerializer(many=True, display_none=False)
     direction = PlaceSerializer()
     geojson = MultiLineStringField(display_none=False)
-    links = LinkSerializer(attr='impact_uris', display_none=True)
+    links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
     line = jsonschema.MethodField(schema_type=lambda: LineSerializer())
     stop_points = StopPointSerializer(many=True, display_none=False)
 
@@ -353,7 +354,7 @@ class LineGroupSerializer(GenericSerializer):
 
 
 class LineSerializer(GenericSerializer):
-    code = jsonschema.Field(schema_type=str)
+    code = jsonschema.Field(schema_type=str, display_none=True)
     color = jsonschema.Field(schema_type=str)
     text_color = jsonschema.Field(schema_type=str)
     comments = CommentSerializer(many=True, display_none=False)
@@ -367,12 +368,12 @@ class LineSerializer(GenericSerializer):
     closing_time = LocalTimeField()
     properties = PropertySerializer(many=True, display_none=False)
     geojson = MultiLineStringField(display_none=False)
-    links = LinkSerializer(attr='impact_uris', display_none=True)
+    links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
     line_groups = LineGroupSerializer(many=True, display_none=False)
 
 
 class JourneyPatternPointSerializer(PbNestedSerializer):
-    id = jsonschema.Field(attr='uri', schema_type=str)
+    id = serpy.Field(attr='uri')
     stop_point = StopPointSerializer(display_none=False)
 
 
@@ -384,7 +385,7 @@ class JourneyPatternSerializer(GenericSerializer):
 class StopTimeSerializer(PbNestedSerializer):
     arrival_time = LocalTimeField()
     departure_time = LocalTimeField()
-    headsign = jsonschema.Field(schema_type=str)
+    headsign = serpy.Field()
     journey_pattern_point = JourneyPatternPointSerializer()
     stop_point = StopPointSerializer()
 
@@ -398,21 +399,21 @@ class VehicleJourneySerializer(GenericSerializer):
     validity_pattern = ValidityPatternSerializer()
     calendars = CalendarSerializer(many=True)
     trip = TripSerializer()
-    disruptions = LinkSerializer(attr='impact_uris', display_none=True)
+    disruptions = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
 
 
 class ConnectionSerializer(PbNestedSerializer):
     origin = StopPointSerializer()
     destination = StopPointSerializer()
     duration = jsonschema.Field(schema_type=int, display_none=True,
-                                description='Duration of connection. '
+                                description='Duration of connection (seconds). '
                                             'The duration really used to compute connection with a margin')
     display_duration = jsonschema.Field(schema_type=int, display_none=True,
-                                        description='The duration of the connection as it should be '
+                                        description='The duration (seconds) of the connection as it should be '
                                                     'displayed to traveler, without margin')
     max_duration = jsonschema.Field(schema_type=int, display_none=True, deprecated=True,
                                     description='Parameter used to specify the maximum length allowed '
-                                                'for a traveler to stay at a connection')
+                                                'for a traveler to stay at a connection (seconds)')
 
 
 class CompanieSerializer(GenericSerializer):

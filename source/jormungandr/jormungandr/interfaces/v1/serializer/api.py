@@ -32,12 +32,16 @@ import datetime
 import pytz
 
 from jormungandr.interfaces.v1.serializer import pt
-from jormungandr.interfaces.v1.serializer.base import NullableDictSerializer, LambdaField
-from jormungandr.interfaces.v1.serializer.fields import ErrorSerializer, FeedPublisherSerializer, PaginationSerializer
+from jormungandr.interfaces.v1.serializer.base import NullableDictSerializer, LambdaField, PbNestedSerializer
+from jormungandr.interfaces.v1.serializer.fields import ErrorSerializer, FeedPublisherSerializer, \
+        PaginationSerializer, LinkSchema
+from jormungandr.interfaces.v1.make_links import create_external_link
+from jormungandr.interfaces.v1.serializer.journey import NoteSerializer, TicketSerializer, \
+        ExceptionSerializer, ContextSerializer, JourneySerializer
 import serpy
 
-from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field
-from jormungandr.interfaces.v1.serializer.time import DateTimeField, DateTimeDictField
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, MethodField
+from jormungandr.interfaces.v1.serializer.time import  DateTimeDictField
 
 
 class PTReferentialSerializer(serpy.Serializer):
@@ -167,12 +171,56 @@ class CoverageSerializer(NullableDictSerializer):
     last_load_at = LambdaField(method=lambda _, o: CoverageDateTimeField('last_load_at').to_value(o),
                                description='Datetime of the last data loading',
                                schema_type=str)
-    name = Field(schema_type=str, description='Name of the coverage')
+    name = Field(schema_type=str, display_none=True, description='Name of the coverage')
     status = Field(schema_type=str)
-    shape = Field(schema_type=str, description='GeoJSON of the shape of the coverage')
+    shape = Field(schema_type=str, display_none=True, description='GeoJSON of the shape of the coverage')
     error = CoverageErrorSerializer(display_none=False)
     dataset_created_at = Field(schema_type=str, description='Creation date of the dataset')
 
 
 class CoveragesSerializer(serpy.DictSerializer):
     regions = CoverageSerializer(many=True)
+
+
+class JourneysSerializer(PbNestedSerializer):
+    journeys = JourneySerializer(many=True)
+    error = ErrorSerializer(display_none=False, attr='error')
+    tickets = TicketSerializer(many=True)
+    disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
+    feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
+    links = MethodField(schema_type=lambda: LinkSchema(), many=True)
+    context = MethodField(schema_type=lambda: ContextSerializer(), display_none=False, many=True)
+    notes = MethodField(schema_type=lambda: NoteSerializer(), display_none=False, many=True)
+    exceptions = MethodField(schema_type=lambda: ExceptionSerializer(), display_none=False, many=True)
+
+    def get_context(self, obj):
+        if obj.HasField(str('car_co2_emission')):
+            return ContextSerializer(obj, display_none=False).data
+        else:
+            return None
+
+    def get_notes(self, obj):
+        #TODO
+        return None
+
+    def get_exceptions(self, obj):
+        #TODO
+        return None
+
+    def get_links(self, obj):
+        response = []
+        for value in obj.links:
+            args = {}
+            for e in value.kwargs:
+                if len(e.values) > 1:
+                    args[e.key] = [v for v in e.values]
+                else:
+                     args[e.key] = e.values[0]
+
+            response.append(create_external_link('v1.{}'.format(value.ressource_name),
+                                                    rel=value.rel,
+                                                    _type=value.type,
+                                                    templated=value.is_templated,
+                                                    description=value.description,
+                                                    **args))
+        return response

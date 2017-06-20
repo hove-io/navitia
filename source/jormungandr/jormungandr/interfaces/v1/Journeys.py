@@ -50,6 +50,8 @@ from collections import defaultdict
 from navitiacommon import response_pb2
 from jormungandr.utils import date_to_timestamp
 from jormungandr.interfaces.v1.Calendars import calendar
+from jormungandr.interfaces.v1.serializer import api
+from jormungandr.interfaces.v1.decorators import get_serializer
 from navitiacommon import default_values
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, compute_possible_region
 from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
@@ -389,10 +391,10 @@ class rig_journey(object):
                     continue
                 logging.debug('for journey changing origin: {old_o} to {new_o}'
                               ', destination to {old_d} to {new_d}'
-                              .format(old_o=j.get('sections', [{}])[0].get('from').get('id'),
-                                      new_o=(g.origin_detail or {}).get('id'),
-                                      old_d=j.get('sections', [{}])[-1].get('to').get('id'),
-                                      new_d=(g.destination_detail or {}).get('id')))
+                              .format(old_o=j.get('sections', [{}])[0].get('from', {}).get('id', ''),
+                                      new_o=(g.origin_detail or {}).get('id', ''),
+                                      old_d=j.get('sections', [{}])[-1].get('to', {}).get('id', ''),
+                                      new_d=(g.destination_detail or {}).get('id', '')))
                 if g.origin_detail:
                     j['sections'][0]['from'] = g.origin_detail
                 if g.destination_detail:
@@ -445,7 +447,7 @@ class Journeys(JourneyCommon):
     @add_fare_links()
     @add_journey_href()
     @rig_journey()
-    @marshal_with(journeys)
+    @get_serializer(serpy=api.JourneysSerializer, marshall=journeys)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['get'].parse_args()

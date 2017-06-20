@@ -124,13 +124,12 @@ class LinkSchema(serpy.Serializer):
     type = StrField()
 
 
-class LinkSerializer(jsonschema.Field):
+class DisruptionLinkSerializer(jsonschema.Field):
     """
     Add link to disruptions on a pt object
     """
     def __init__(self, **kwargs):
-        super(LinkSerializer, self).__init__(schema_type=LinkSchema(), **kwargs)
-        self.many = True
+        super(DisruptionLinkSerializer, self).__init__(schema_type=LinkSchema(many=True), **kwargs)
 
     def to_value(self, value):
         return [create_internal_link(_type="disruption", rel="disruptions", id=uri)

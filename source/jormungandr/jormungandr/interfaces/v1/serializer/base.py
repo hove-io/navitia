@@ -144,6 +144,11 @@ class GenericSerializer(PbNestedSerializer):
     name = jsonschema.Field(schema_type=str, description='Name of the object')
 
 
+class AmountSerializer(PbNestedSerializer):
+    value = jsonschema.Field(schema_type=float)
+    unit = jsonschema.Field(schema_type=str)
+
+
 class LiteralField(jsonschema.Field):
     """
     :return literal value
