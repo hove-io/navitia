@@ -118,7 +118,7 @@ class Scenario(new_default.Scenario):
                                                              places_free_access=orig_places_free_access,
                                                              direct_paths_by_mode=direct_paths_by_mode,
                                                              request=request,
-                                                             origin=True)
+                                                             direct_path_type=StreetNetworkPathType.BEGINNING_FALLBACK)
 
         dest_fallback_durations_pool = FallbackDurationsPool(future_manager=future_manager,
                                                              instance=instance,
@@ -128,7 +128,7 @@ class Scenario(new_default.Scenario):
                                                              places_free_access=dest_places_free_access,
                                                              direct_paths_by_mode=direct_paths_by_mode,
                                                              request=request,
-                                                             origin=False)
+                                                             direct_path_type=StreetNetworkPathType.ENDING_FALLBACK)
 
         pt_journey_pool = PtJourneyPool(future_manager=future_manager,
                                         instance=instance,
