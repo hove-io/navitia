@@ -78,7 +78,8 @@ def output_json(data, code, headers=None):
 def access_log(response, *args, **kwargs):
     logger = logging.getLogger('jormungandr.access')
     query_string = request.query_string.decode(request.url_charset, 'replace')
-    logger.info(u'"%s %s?%s" %s', request.method, request.path, query_string, response.status_code)
+    d = {'method': request.method, 'path': request.path, 'query_string': query_string, 'status': response.status_code}
+    logger.info(u'"%(method)s %(path)s?%(query_string)s" %(status)s', d, extra=d)
     return response
 
 @app.after_request
