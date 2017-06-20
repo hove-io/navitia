@@ -265,9 +265,9 @@ class Valhalla(AbstractStreetNetworkService):
     @classmethod
     def _get_matrix(cls, json_response, mode_park_cost):
         sn_routing_matrix = response_pb2.StreetNetworkRoutingMatrix()
-        for souce_to_target in json_response['sources_to_targets']:
+        for source_to_target in json_response['sources_to_targets']:
             row = sn_routing_matrix.rows.add()
-            for one in souce_to_target:
+            for one in source_to_target:
                 routing = row.routing_response.add()
                 if one['time']:
                     # the mode's base cost represent the initial cost to take the given mode

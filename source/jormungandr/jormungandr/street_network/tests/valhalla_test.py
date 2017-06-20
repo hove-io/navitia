@@ -541,7 +541,7 @@ def get_valhalla_mode_valid_mode_test():
         assert Valhalla._get_valhalla_mode(kraken_mode) == valhalla_mode
 
 
-def souces_to_targets_valhalla_test():
+def sources_to_targets_valhalla_test():
     instance = MagicMock()
     instance.walking_speed = 1.12
     valhalla = Valhalla(instance=instance,
