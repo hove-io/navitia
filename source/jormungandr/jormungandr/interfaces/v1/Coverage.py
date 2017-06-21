@@ -44,7 +44,7 @@ from jormungandr.interfaces.v1.serializer.api import CoveragesSerializer
 from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerPathSerializer
 from jormungandr.interfaces.v1.swagger_schema import make_schema
 
-collections = collections_to_resource_type.keys()
+collections = list(collections_to_resource_type.keys())
 
 coverage_marshall_fields = [
     ("regions", fields.List(NonNullNested({

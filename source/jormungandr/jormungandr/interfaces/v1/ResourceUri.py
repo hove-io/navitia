@@ -38,6 +38,7 @@ from collections import deque
 from flask import url_for
 from flask_restful.utils import unpack
 from jormungandr.authentication import authentication_required
+from six.moves import map
 
 
 def protect(uri):
@@ -180,7 +181,7 @@ class complete_links(object):
     def complete(self, data, collect):
         queue = deque()
         result = deque()
-        queue.extend(data.values())
+        queue.extend(list(data.values()))
         collect_type = collect["type"]
         del_types = collect["del"]
         while queue:
@@ -195,9 +196,9 @@ class complete_links(object):
                         type_ = "Add" if elem['except_type'] == 0 else "Remove"
                         result.append({"id": elem['id'], "date": elem['date'], "type": type_})
 
-                    map(elem.pop, del_types)
+                    list(map(elem.pop, del_types))
                 else:
-                    queue.extend(elem.values())
+                    queue.extend(list(elem.values()))
         return result
 
     def __call__(self, f):

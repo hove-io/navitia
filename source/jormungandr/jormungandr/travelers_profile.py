@@ -31,6 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr import app, cache
 from navitiacommon import models
 from navitiacommon.default_traveler_profile_params import default_traveler_profile_params, acceptable_traveler_types
+from six.moves import map
 
 class TravelerProfile(object):
     def __init__(self, walking_speed=1.12, bike_speed=3.33, bss_speed=3.33, car_speed=11.11, max_duration_to_pt=None,
@@ -84,7 +85,7 @@ class TravelerProfile(object):
             if args.get(arg) is None:
                 args[arg] = profile_attr
 
-        map(override, arg_2_profile_attr)
+        list(map(override, arg_2_profile_attr))
 
     @classmethod
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 300))

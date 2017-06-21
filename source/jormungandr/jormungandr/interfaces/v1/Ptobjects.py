@@ -40,6 +40,7 @@ from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument, option_value, default_count_arg_type, date_time_format
 import datetime
+import six
 
 pt_objects = {
     "pt_objects": NonNullList(NonNullNested(pt_object), attribute='places'),
@@ -58,7 +59,7 @@ class Ptobjects(ResourceUri):
         self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
-        self.parsers["get"].add_argument("q", type=unicode, required=True,
+        self.parsers["get"].add_argument("q", type=six.text_type, required=True,
                                          description="The data to search")
         self.parsers["get"].add_argument("type[]", type=option_value(pt_object_type_values),
                                          action="append",default=pt_object_type_values,
@@ -70,7 +71,7 @@ class Ptobjects(ResourceUri):
         self.parsers["get"].add_argument("search_type", type=int, default=0,
                                          description="Type of search:\
                                          firstletter or type error")
-        self.parsers["get"].add_argument("admin_uri[]", type=unicode,
+        self.parsers["get"].add_argument("admin_uri[]", type=six.text_type,
                                          action="append",
                                          description="If filled, will\
                                          restrained the search within the\

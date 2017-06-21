@@ -51,6 +51,7 @@ from functools import wraps
 from copy import deepcopy
 from navitiacommon import response_pb2
 from jormungandr.exceptions import InvalidArguments
+import six
 
 
 class Schedules(ResourceUri, ResourceUtc):
@@ -63,7 +64,7 @@ class Schedules(ResourceUri, ResourceUtc):
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
-        parser_get.add_argument("filter", type=unicode)
+        parser_get.add_argument("filter", type=six.text_type)
         parser_get.add_argument("from_datetime", type=date_time_format,
                                 description="The datetime from which you want\
                                 the schedules", default=None)
@@ -80,18 +81,18 @@ class Schedules(ResourceUri, ResourceUtc):
                                 description="The current page")
         parser_get.add_argument("max_date_times", type=natural,
                                 description="DEPRECATED, use items_per_schedule")
-        parser_get.add_argument("forbidden_id[]", type=unicode,
+        parser_get.add_argument("forbidden_id[]", type=six.text_type,
                                 description="DEPRECATED, replaced by forbidden_uris[]",
                                 dest="__temporary_forbidden_id[]",
                                 default=[],
                                 action='append')
-        parser_get.add_argument("forbidden_uris[]", type=unicode,
+        parser_get.add_argument("forbidden_uris[]", type=six.text_type,
                                 description="forbidden uris",
                                 dest="forbidden_uris[]",
                                 default=[],
                                 action='append')
 
-        parser_get.add_argument("calendar", type=unicode,
+        parser_get.add_argument("calendar", type=six.text_type,
                                 description="Id of the calendar")
         parser_get.add_argument("distance", type=int, default=200,
                                 description="Distance range of the query. Used only if a coord is in the query")

@@ -122,7 +122,7 @@ class V1Routing(AModule):
                           '/coords/' + lon_lat,
                           endpoint='coord')
 
-        collecs = converters_collection_type.collections_to_resource_type.keys()
+        collecs = list(converters_collection_type.collections_to_resource_type.keys())
         for collection in collecs:
             self.add_resource(getattr(Uri, collection)(True),
                               region + collection,

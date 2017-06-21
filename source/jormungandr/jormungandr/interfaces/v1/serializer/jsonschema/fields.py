@@ -29,6 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import
 import serpy
 
 
@@ -39,7 +40,7 @@ def _init(self, parent_class, schema_type=None, schema_metadata={}, **kwargs):
     """
     if 'display_none' not in kwargs:
         kwargs['display_none'] = False
-    parent_vars = set(parent_class.__init__.func_code.co_names)
+    parent_vars = set(parent_class.__init__.__code__.co_names)
     parent_kwargs = {k: v for k, v in kwargs.items() if k in parent_vars}
     remaining_kwargs = {k: v for k, v in kwargs.items() if k not in parent_vars}
     parent_class.__init__(self, **parent_kwargs)

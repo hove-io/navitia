@@ -26,11 +26,13 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import
 import copy
 import re
 import serpy
 import inspect
 import jormungandr
+import six
 
 
 class SwaggerDefinitions(object):
@@ -40,7 +42,7 @@ TYPE_MAP = {
     str: {
         'type': 'string',
     },
-    unicode: {
+    six.text_type: {
         'type': 'string',
     },
     int: {

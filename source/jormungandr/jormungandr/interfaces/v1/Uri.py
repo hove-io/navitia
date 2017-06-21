@@ -59,6 +59,7 @@ from datetime import datetime
 from flask import g
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.serializer import api
+import six
 
 
 class Uri(ResourceUri, ResourceUtc):
@@ -77,19 +78,19 @@ class Uri(ResourceUri, ResourceUtc):
                             schema_type=int,
                             default=1,
                             description="The depth of your object")
-        parser.add_argument("forbidden_id[]", type=unicode,
+        parser.add_argument("forbidden_id[]", type=six.text_type,
                             description="DEPRECATED, replaced by forbidden_uris[]",
                             dest="__temporary_forbidden_id[]",
                             default=[],
                             action="append")
-        parser.add_argument("forbidden_uris[]", type=unicode,
+        parser.add_argument("forbidden_uris[]", type=six.text_type,
                             description="forbidden uris",
                             dest="forbidden_uris[]",
                             default=[],
                             action="append")
-        parser.add_argument("external_code", type=unicode,
+        parser.add_argument("external_code", type=six.text_type,
                             description="An external code to query")
-        parser.add_argument("headsign", type=unicode,
+        parser.add_argument("headsign", type=six.text_type,
                             description="filter vehicle journeys on headsign")
         parser.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
@@ -114,7 +115,7 @@ class Uri(ResourceUri, ResourceUtc):
                             description="remove geojson from the response")
 
         if is_collection:
-            parser.add_argument("filter", type=unicode, default="",
+            parser.add_argument("filter", type=six.text_type, default="",
                                 description="The filter parameter")
         self.collection = collection
         self.get_decorators.insert(0, ManageError())
@@ -329,7 +330,7 @@ def stop_points(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument("original_id", type=unicode, description="original uri of the object you"
+            self.parsers["get"].add_argument("original_id", type=six.text_type, description="original uri of the object you"
                                                                                       "want to query")
     return StopPoints
 
@@ -351,7 +352,7 @@ def stop_areas(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False))),
             ]
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument("original_id", type=unicode, description="original uri of the object you "
+            self.parsers["get"].add_argument("original_id", type=six.text_type, description="original uri of the object you "
                                                                                       "want to query")
     return StopAreas
 
@@ -433,7 +434,7 @@ def routes(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument("original_id", type=unicode, description="original uri of the object you"
+            self.parsers["get"].add_argument("original_id", type=six.text_type, description="original uri of the object you"
                                                                                       "want to query")
     return Routes
 
@@ -453,7 +454,7 @@ def line_groups(is_collection):
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
             ]
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument("original_id", type=unicode, description="original uri of the object you"
+            self.parsers["get"].add_argument("original_id", type=six.text_type, description="original uri of the object you"
                                                                                       "want to query")
     return LineGroups
 
@@ -477,7 +478,7 @@ def lines(is_collection):
             ]
             self.get_decorators.insert(1, get_obj_serializer(self))
 
-            self.parsers["get"].add_argument("original_id", type=unicode, description="original uri of the object you"
+            self.parsers["get"].add_argument("original_id", type=six.text_type, description="original uri of the object you"
                                                                                       "want to query")
     return Lines
 
@@ -499,7 +500,7 @@ def pois(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument("original_id", type=unicode, description="original uri of the object you"
+            self.parsers["get"].add_argument("original_id", type=six.text_type, description="original uri of the object you"
                                                                                       "want to query")
             self.parsers["get"].add_argument("bss_stands", type=boolean, default=True,
                                              description="Show bss stands availability")
@@ -527,7 +528,7 @@ def networks(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument("original_id", type=unicode, description="original uri of the object you"
+            self.parsers["get"].add_argument("original_id", type=six.text_type, description="original uri of the object you"
                                                                                       "want to query")
     return Networks
 
@@ -546,7 +547,7 @@ def disruptions(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument("original_id", type=unicode, description="original uri of the object you"
+            self.parsers["get"].add_argument("original_id", type=six.text_type, description="original uri of the object you"
                                                                                       "want to query")
     return Disruptions
 

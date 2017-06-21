@@ -39,6 +39,7 @@ from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.fields import fields, enum_type, NonNullList,\
     NonNullNested, NonNullProtobufNested, PbField, error, pagination, NonNullString
 import datetime
+import six
 
 
 week_pattern = {
@@ -92,16 +93,16 @@ class Calendars(ResourceUri):
                                 description="Number of calendars per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 description="The current page")
-        parser_get.add_argument("start_date", type=unicode, default="",
+        parser_get.add_argument("start_date", type=six.text_type, default="",
                                 description="Start date")
-        parser_get.add_argument("end_date", type=unicode, default="",
+        parser_get.add_argument("end_date", type=six.text_type, default="",
                                 description="End date")
-        parser_get.add_argument("forbidden_id[]", type=unicode,
+        parser_get.add_argument("forbidden_id[]", type=six.text_type,
                                 description="DEPRECATED, replaced by forbidden_uris[]",
                                 dest="__temporary_forbidden_id[]",
                                 default=[],
                                 action='append')
-        parser_get.add_argument("forbidden_uris[]", type=unicode,
+        parser_get.add_argument("forbidden_uris[]", type=six.text_type,
                                 description="forbidden uris",
                                 dest="forbidden_uris[]",
                                 default=[],
