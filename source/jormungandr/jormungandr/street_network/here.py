@@ -26,7 +26,6 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-
 from __future__ import absolute_import, print_function, unicode_literals, division
 from navitiacommon import response_pb2
 import logging
@@ -35,7 +34,8 @@ import requests as requests
 from jormungandr import app
 import json
 from jormungandr.exceptions import TechnicalError, InvalidArguments, ApiNotFound
-from jormungandr.utils import is_url, kilometers_to_meters, get_pt_object_coord, decode_polyline
+from jormungandr.utils import is_url, kilometers_to_meters, get_pt_object_coord, decode_polyline, \
+    timestamp_to_datetime
 from copy import deepcopy
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathKey, \
     StreetNetworkPathType
@@ -55,6 +55,10 @@ def get_here_mode(mode):
         return 'car'
     else:  # HERE does not handle bss
         raise TechnicalError('HERE does not handle the mode {}'.format(mode))
+
+
+def _str_to_dt(datetime):
+    return timestamp_to_datetime(datetime).strftime("%Y-%m-%dT%H:%M:%S%z")
 
 
 class Here(AbstractStreetNetworkService):
@@ -94,7 +98,7 @@ class Here(AbstractStreetNetworkService):
             raise TechnicalError('impossible to access HERE service')
 
     @staticmethod
-    def _read_response(response, origin, destination, mode, fallback_extremity):
+    def _read_response(response, origin, destination, mode, fallback_extremity, request):
         resp = response_pb2.Response()
         resp.status_code = 200
         routes = response.get('response', {}).get('route', [])
@@ -116,7 +120,7 @@ class Here(AbstractStreetNetworkService):
             journey.departure_date_time = datetime - journey.duration
             journey.arrival_date_time = datetime
 
-        journey.requested_date_time = journey.departure_date_time  # TODO use the real requested datetime
+        journey.requested_date_time = request['datetime']
         journey.durations.total = journey.duration
 
         if mode == 'walking':
@@ -166,7 +170,7 @@ class Here(AbstractStreetNetworkService):
 
         return resp
 
-    def get_direct_path_params(self, origin, destination, mode):
+    def get_direct_path_params(self, origin, destination, mode, fallback_extremity):
         params = {
             # those are used to identify in the API
             'app_id': self.api_id,
@@ -178,12 +182,17 @@ class Here(AbstractStreetNetworkService):
             'summaryAttributes': 'traveltime',
             # used to get the fasted journeys using the given mode and with traffic data
             'mode': 'fastest;{mode};traffic:enabled'.format(mode=get_here_mode(mode)),
-            # 'departure': ''  # TODO give the departure hour to use traffic data
         }
+        datetime, represents_start_fallback = fallback_extremity
+        if represents_start_fallback:
+            params['departure'] = _str_to_dt(datetime)
+        else:
+            params['arrival'] = _str_to_dt(datetime)
+
         return params
 
     def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
-        params = self.get_direct_path_params(pt_object_origin, pt_object_destination, mode)
+        params = self.get_direct_path_params(pt_object_origin, pt_object_destination, mode, fallback_extremity)
         r = self._call_here(self.routing_service_url, params=params)
         if r.status_code != 200:
             l = logging.getLogger(__name__)
@@ -194,8 +203,12 @@ class Here(AbstractStreetNetworkService):
             resp.response_type = response_pb2.NO_SOLUTION
             return resp
 
-        return self._read_response(r.json(), pt_object_origin, pt_object_destination, mode,
-                                   fallback_extremity)
+        json = r.json()
+
+        logging.getLogger(__name__).debug('here response = {}'.format(json))
+
+        return self._read_response(json, pt_object_origin, pt_object_destination, mode,
+                                   fallback_extremity, request)
 
     @classmethod
     def _get_matrix(cls, json_response, origins, destinations):
@@ -221,7 +234,7 @@ class Here(AbstractStreetNetworkService):
 
         return sn_routing_matrix
 
-    def get_matrix_params(self, origins, destinations, mode, max_duration):
+    def get_matrix_params(self, origins, destinations, mode, max_duration, request):
         params = {
             # those are used to identify in the API
             'app_id': self.api_id,
@@ -230,8 +243,15 @@ class Here(AbstractStreetNetworkService):
             'summaryAttributes': 'traveltime',
             # used to get the fasted journeys using the given mode and with traffic data
             'mode': 'fastest;{mode};traffic:enabled'.format(mode=get_here_mode(mode)),
-            # 'departure': ''  # TODO give the departure hour to use traffic data
         }
+
+        # for the ending fallback matrix (or the beginning of non clockwise query), we do not know the
+        # precise departure/arrival (as it depend on the public transport taken)
+        # for the moment we only give the departure time of the matrix as the requested departure
+        # (so it's a mistake in 50% of the cases).
+        # TODO: do better :D
+        datetime = request['datetime']
+        params['departure'] = _str_to_dt(datetime)
 
         # Note: for the moment we limit to self.max_points the number of n:m asked
         for i, o in enumerate(origins[:self.max_points]):
@@ -245,7 +265,7 @@ class Here(AbstractStreetNetworkService):
         return params
 
     def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration, request, **kwargs):
-        params = self.get_matrix_params(origins, destinations, mode, max_duration)
+        params = self.get_matrix_params(origins, destinations, mode, max_duration, request)
         r = self._call_here(self.matrix_service_url, params=params)
 
         if r.status_code != 200:

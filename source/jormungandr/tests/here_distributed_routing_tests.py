@@ -314,7 +314,7 @@ class TestHere(NewDefaultScenarioAbstractTestFixture):
 
         assert car_fallback.get('departure_date_time') == '20120614T080045'
         assert car_fallback.get('arrival_date_time') == '20120614T080202'
-        
+
         sections = car_fallback.get('sections')
         assert len(sections) == 3
         assert sections[0].get('mode') == 'car'

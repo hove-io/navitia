@@ -154,7 +154,7 @@ def test_matrix(valid_here_matrix):
             [destination, destination, destination],
             mode='walking',
             max_duration=42,
-            request={})
+            request={'datetime': str_to_time_stamp('20170621T174600')})
         assert response.rows[0].routing_response[0].duration == 440
         assert response.rows[0].routing_response[0].routing_status == response_pb2.reached
         assert response.rows[0].routing_response[1].duration == -1
@@ -171,7 +171,8 @@ def here_basic_routing_test(valid_here_routing_response):
                                    mode='walking',
                                    origin=origin,
                                    destination=destination,
-                                   fallback_extremity=fallback_extremity)
+                                   fallback_extremity=fallback_extremity,
+                                   request={'datetime': str_to_time_stamp('20170621T174600')})
     assert response.status_code == 200
     assert response.response_type == response_pb2.ITINERARY_FOUND
     assert len(response.journeys) == 1
