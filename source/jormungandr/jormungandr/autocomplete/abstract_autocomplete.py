@@ -32,13 +32,13 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from abc import abstractmethod, ABCMeta
 from jormungandr.exceptions import UnknownObject, TechnicalError, log_exception
+import six
 
 
-class AbstractAutocomplete(object):
+class AbstractAutocomplete(six.with_metaclass(ABCMeta, object)):
     """
     abstract class managing calls autocomplete
     """
-    __metaclass__ = ABCMeta
 
     @abstractmethod
     def get(self, query, instance):

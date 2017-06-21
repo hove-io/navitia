@@ -28,13 +28,13 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from abc import abstractmethod, ABCMeta
+import six
 
 
-class BssProvider(object):
+class BssProvider(six.with_metaclass(ABCMeta, object)):
     """
     abstract class managing calls to external service providing real-time next passages
     """
-    __metaclass__ = ABCMeta
 
     @abstractmethod
     def support_poi(self, poi):

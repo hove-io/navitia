@@ -32,16 +32,16 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from abc import abstractmethod, ABCMeta
 from jormungandr.utils import timestamp_to_datetime, record_external_failure
 from jormungandr import new_relic
+import six
 
 class RealtimeProxyError(RuntimeError):
     pass
 
 
-class RealtimeProxy(object):
+class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
     """
     abstract class managing calls to external service providing real-time next passages
     """
-    __metaclass__ = ABCMeta
 
     @abstractmethod
     def _get_next_passage_for_route_point(self, route_point, count, from_dt, current_dt):
@@ -64,7 +64,7 @@ class RealtimeProxy(object):
         if from_dt:
             # we need to convert from_dt (which is a timestamp) to a datetime
             from_dt = timestamp_to_datetime(from_dt)
-            passages = filter(lambda p: p.datetime >= from_dt, passages)
+            passages = [p for p in passages if p.datetime >= from_dt]
             if not passages:
                 # if there was some passages and everything was filtered,
                 # we return None to keep the base schedule

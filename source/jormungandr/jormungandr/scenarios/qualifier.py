@@ -34,6 +34,7 @@ import navitiacommon.response_pb2 as response_pb2
 from functools import partial
 from datetime import datetime, timedelta
 import logging
+from six.moves import filter
 
 
 #compute the duration to get to the transport plus the transfers duration
@@ -419,7 +420,7 @@ def qualifier_one(journeys, request_type):
     ]
 
     for name, carac in trip_caracs:
-        sublist = filter(and_filters(carac.constraints), journeys)
+        sublist = list(filter(and_filters(carac.constraints), journeys))
 
         best = min_from_criteria(sublist, carac.criteria)
 

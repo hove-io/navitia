@@ -47,6 +47,8 @@ from jormungandr.scenarios.helpers import fallback_mode_comparator
 from jormungandr.utils import pb_del_if, date_to_timestamp
 import flask
 import gevent, gevent.pool
+from six.moves import map
+from six.moves import range
 
 non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
@@ -210,7 +212,7 @@ class Scenario(simple.Scenario):
                         return []
             return result
 
-        map_forbidden_uris = map(get_uri_odt_with_zones, resp.journeys)
+        map_forbidden_uris = list(map(get_uri_odt_with_zones, resp.journeys))
         for uris in map_forbidden_uris:
             for line_uri in uris:
                 if line_uri not in result.journeys.forbidden_uris:

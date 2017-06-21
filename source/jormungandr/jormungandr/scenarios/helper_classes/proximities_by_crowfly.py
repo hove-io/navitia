@@ -26,9 +26,10 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-import helper_future
+from __future__ import absolute_import
+from . import helper_future
 from jormungandr.street_network.street_network import StreetNetworkPathType
-from helper_utils import get_max_fallback_duration
+from .helper_utils import get_max_fallback_duration
 from jormungandr import utils
 import logging
 

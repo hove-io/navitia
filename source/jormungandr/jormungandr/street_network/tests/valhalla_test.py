@@ -26,6 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import
 import pytest
 
 from jormungandr.street_network.street_network import StreetNetworkPathType
@@ -34,7 +35,7 @@ from jormungandr.exceptions import InvalidArguments, TechnicalError, ApiNotFound
 from navitiacommon import type_pb2, response_pb2
 import pybreaker
 from mock import MagicMock
-from streetnetwork_test_utils import make_pt_object
+from .streetnetwork_test_utils import make_pt_object
 from jormungandr.utils import str_to_time_stamp, PeriodExtremity
 import requests_mock
 import json

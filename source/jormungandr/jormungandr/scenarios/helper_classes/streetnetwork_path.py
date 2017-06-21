@@ -26,7 +26,8 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-import helper_future
+from __future__ import absolute_import
+from . import helper_future
 from jormungandr import utils
 from jormungandr.street_network.street_network import StreetNetworkPathType
 import logging

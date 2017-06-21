@@ -30,6 +30,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from navitiacommon import response_pb2
 from operator import attrgetter
+from six.moves import filter
 
 def has_walking_first(journey):
     for section in journey.sections:
@@ -215,7 +216,7 @@ def filter_journeys_by_fallback_modes(journeys, fallback_modes):
     filter_journey = lambda journey: all(section_is_fallback_or_pt(section) for section in journey.sections) \
             and journey.duration > 0
 
-    return filter(filter_journey, journeys)
+    return list(filter(filter_journey, journeys))
 
 def select_best_journey_by_time(journeys, clockwise, fallback_modes):
     list_journeys = filter_journeys_by_fallback_modes(journeys, fallback_modes)
