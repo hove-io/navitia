@@ -26,6 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import
 import mock
 from mock import PropertyMock
 from jormungandr.parking_space_availability.bss.bss_provider import BssProvider

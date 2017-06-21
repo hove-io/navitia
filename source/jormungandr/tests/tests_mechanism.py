@@ -37,6 +37,7 @@ from datetime import timedelta
 import mock
 import retrying
 from retrying import RetryError
+import six
 
 if not 'JORMUNGANDR_CONFIG_FILE' in os.environ:
     os.environ['JORMUNGANDR_CONFIG_FILE'] = os.path.dirname(os.path.realpath(__file__)) \
@@ -319,7 +320,7 @@ class AbstractTestFixture(unittest.TestCase):
 
         this method is inside AbstractTestFixture because it can be overloaded by not scenario test Fixture
         """
-        if isinstance(query_str, basestring):
+        if isinstance(query_str, six.string_types):
             query_dict = query_from_str(query_str)
         else:
             query_dict = query_str

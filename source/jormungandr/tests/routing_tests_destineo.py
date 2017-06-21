@@ -34,6 +34,7 @@ from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
 import jormungandr.scenarios.destineo
 from jormungandr.instance import Instance
+from six.moves import filter
 
 
 def filter_prev_next_journeys(journeys):
@@ -41,10 +42,10 @@ def filter_prev_next_journeys(journeys):
     filter_journey = lambda journey: any(section_is_pt(section) for section in journey.get('sections', []))
     filter_journey_pure_tc = lambda journey: 'is_pure_tc' in journey['tags']
 
-    list_journeys = filter(filter_journey_pure_tc, journeys)
+    list_journeys = list(filter(filter_journey_pure_tc, journeys))
     if not list_journeys:
         #if there is no pure tc journeys, we consider all journeys with TC
-        list_journeys = filter(filter_journey, journeys)
+        list_journeys = list(filter(filter_journey, journeys))
     return list_journeys
 
 

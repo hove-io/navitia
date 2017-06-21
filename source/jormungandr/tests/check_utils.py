@@ -41,6 +41,7 @@ from shapely.geometry import shape
 import sys
 from jormungandr.interfaces.parsers import unsigned_integer
 from urllib import unquote
+import six
 
 
 """
@@ -418,7 +419,7 @@ def is_valid_feed_publisher(feed_publisher):
 
 
 def is_valid_isochrone_response(response, tester, query_str):
-    if isinstance(query_str, basestring):
+    if isinstance(query_str, six.string_types):
         query_dict = query_from_str(query_str)
     else:
         query_dict = query_str

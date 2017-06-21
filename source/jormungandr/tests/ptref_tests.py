@@ -32,6 +32,7 @@ import urllib
 from .check_utils import journey_basic_query
 from .tests_mechanism import dataset, AbstractTestFixture
 from .check_utils import *
+from six.moves import range
 
 
 @dataset({"main_ptref_test": {}})
