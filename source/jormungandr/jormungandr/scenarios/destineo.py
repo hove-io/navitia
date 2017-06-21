@@ -43,6 +43,8 @@ from jormungandr.scenarios.helpers import has_bss_first_and_walking_last, has_wa
         is_non_pt_bss, is_non_pt_bike, is_non_pt_walk
 import itertools
 from jormungandr.utils import pb_del_if, timestamp_to_str
+from six.moves import filter
+from six.moves import range
 
 non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
@@ -402,10 +404,10 @@ class Scenario(default.Scenario):
         filter_journey = lambda journey: any(section_is_pt(section) for section in journey.sections)
         filter_journey_pure_tc = lambda journey: 'is_pure_tc' in journey.tags
 
-        list_journeys = filter(filter_journey_pure_tc, journeys)
+        list_journeys = list(filter(filter_journey_pure_tc, journeys))
         if not list_journeys:
             #if there is no pure tc journeys, we consider all journeys with TC
-            list_journeys = filter(filter_journey, journeys)
+            list_journeys = list(filter(filter_journey, journeys))
         return list_journeys
 
     def _add_next_link(self, resp, params, clockwise):

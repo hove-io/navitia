@@ -56,6 +56,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import
 import xml.etree.ElementTree as et
 import pytest
 from jormungandr.realtime_schedule.synthese import Synthese, SyntheseRoutePoint

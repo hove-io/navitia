@@ -49,6 +49,9 @@ import flask
 from jormungandr import app
 from jormungandr.autocomplete.geocodejson import GeocodeJson
 from jormungandr import global_autocomplete
+from six.moves import filter
+from six.moves import range
+from six.moves import zip
 
 SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
 JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
@@ -426,7 +429,7 @@ def culling_journeys(resp, request):
         # At this point, max_nb_journeys is smaller than nb_journeys_must_have, we have to make choices
 
         def _inverse_selection(d, indexes):
-            select = np.in1d(range(d.shape[0]), indexes)
+            select = np.in1d(list(range(d.shape[0])), indexes)
             return d[~select]
 
         # Here we mark all journeys as dead that are not must-have
@@ -639,7 +642,7 @@ def type_journeys(resp, req):
     ]
 
     for name, carac in trip_caracs:
-        sublist = filter(and_filters(carac.constraints), resp.journeys)
+        sublist = list(filter(and_filters(carac.constraints), resp.journeys))
         best = min_from_criteria(sublist, carac.criteria)
         if best is not None:
             best.type = name
@@ -687,8 +690,8 @@ def merge_responses(responses):
 
         errors = {r.error.id: r.error for r in responses if r.HasField(str('error'))}
         if len(errors) == 1:
-            merged_response.error.id = errors.values()[0].id
-            merged_response.error.message = errors.values()[0].message
+            merged_response.error.id = list(errors.values())[0].id
+            merged_response.error.message = list(errors.values())[0].message
         else:
             # we need to merge the errors
             merged_response.error.id = response_pb2.Error.no_solution
@@ -865,7 +868,7 @@ class Scenario(simple.Scenario):
 
     @staticmethod
     def __get_best_for_criteria(journeys, criteria):
-        return min_from_criteria(filter(has_pt, journeys),
+        return min_from_criteria(list(filter(has_pt, journeys)),
                                  [criteria, duration_crit, transfers_crit, nonTC_crit])
 
     def get_best(self, journeys, clockwise):

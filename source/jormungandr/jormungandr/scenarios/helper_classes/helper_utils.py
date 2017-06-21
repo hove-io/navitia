@@ -26,13 +26,15 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.utils import PeriodExtremity, SectionSorter
 from navitiacommon import response_pb2
-from helper_exceptions import *
+from .helper_exceptions import *
 import uuid
 import copy
 import logging
+import six
 
 MODE_TO_PB_MODE = {'walking': response_pb2.Walking,
                   'bike': response_pb2.Bike,
@@ -51,7 +53,7 @@ def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end,
     section.begin_date_time = begin
     section.end_date_time = end
     section.street_network.mode = MODE_TO_PB_MODE.get(mode)
-    section.id = unicode(uuid.uuid4())
+    section.id = six.text_type(uuid.uuid4())
     return section
 
 
