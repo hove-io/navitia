@@ -116,6 +116,7 @@ class Here(AbstractStreetNetworkService):
             journey.departure_date_time = datetime - journey.duration
             journey.arrival_date_time = datetime
 
+        journey.requested_date_time = journey.departure_date_time  # TODO use the real requested datetime
         journey.durations.total = journey.duration
 
         if mode == 'walking':
@@ -148,7 +149,13 @@ class Here(AbstractStreetNetworkService):
             "bike": response_pb2.Bike
         }
         section.street_network.mode = map_mode[mode]
-        # for maneuver in leg['maneuver']:  #TODO
+        for maneuver in leg.get('maneuver', []):
+            path_item = section.street_network.path_items.add()
+            # TODO get the street name
+            path_item.length = maneuver.get('length')
+            path_item.duration = maneuver.get('travelTime')
+            # TODO: calculate direction
+            path_item.direction = 0
 
         shape = route.get('shape', [])
         for sh in shape:

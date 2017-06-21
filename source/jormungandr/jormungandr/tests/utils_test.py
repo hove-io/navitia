@@ -40,7 +40,7 @@ class MockResponse(object):
     """
     small class to mock an http response
     """
-    def __init__(self, data, status_code, url, *args, **kwargs):
+    def __init__(self, data, status_code, url=None, *args, **kwargs):
         self.data = data
         self.status_code = status_code
         self.url = url
