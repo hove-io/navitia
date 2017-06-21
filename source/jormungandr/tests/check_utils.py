@@ -40,7 +40,7 @@ import re
 from shapely.geometry import shape
 import sys
 from jormungandr.interfaces.parsers import unsigned_integer
-from urllib import unquote
+from six.moves.urllib.parse import unquote
 import six
 
 

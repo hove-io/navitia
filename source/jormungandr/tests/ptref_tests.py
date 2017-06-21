@@ -28,7 +28,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-import urllib
+from six.moves.urllib.parse import quote, quote_plus
 from .check_utils import journey_basic_query
 from .tests_mechanism import dataset, AbstractTestFixture
 from .check_utils import *
@@ -521,7 +521,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_query_with_strange_char(self):
         q = b'stop_points/stop_point:stop_with name bob \" , é'
-        encoded_q = urllib.quote(q)
+        encoded_q = quote(q)
         response = self.query_region(encoded_q)
 
         stops = get_not_null(response, 'stop_points')
@@ -551,7 +551,7 @@ class TestPtRef(AbstractTestFixture):
 
     def test_journey_with_strange_char(self):
         #we use an encoded url to be able to check the links
-        query = 'journeys?from={}&to={}&datetime=20140105T070000'.format(urllib.quote_plus(b'stop_with name bob \" , é'), urllib.quote_plus(b'stop_area:stop1'))
+        query = 'journeys?from={}&to={}&datetime=20140105T070000'.format(quote_plus(b'stop_with name bob \" , é'), quote_plus(b'stop_area:stop1'))
         response = self.query_region(query, display=True)
 
         self.is_valid_journey_response(response, query)
