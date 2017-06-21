@@ -100,6 +100,7 @@ class StreetNetworkPathPool:
                           period_extremity,
                           request,
                           streetnetwork_path_type):
+
         streetnetwork_service = self._instance.street_network_services.get(mode)
         key = streetnetwork_service.make_path_key(mode,
                                                   requested_orig_obj.uri,
