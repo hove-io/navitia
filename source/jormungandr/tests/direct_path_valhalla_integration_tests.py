@@ -27,6 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import
 from .tests_mechanism import AbstractTestFixture, dataset
 from jormungandr.street_network.valhalla import Valhalla
 import requests as requests

@@ -31,6 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from jormungandr.travelers_profile import TravelerProfile, default_traveler_profiles
 from jormungandr import cache
+from six.moves import map
 
 
 def test_get_traveler_profile_and_override():
@@ -63,10 +64,11 @@ def test_get_traveler_profile_and_override():
 
     standard_profile = default_traveler_profiles['standard']
 
-    def check((arg, attr)):
+    def check(arg_attr):
+        (arg, attr) = arg_attr
         assert(args[arg] == getattr(standard_profile, attr))
 
-    map(check, arg_vs_profile_attr)
+    list(map(check, arg_vs_profile_attr))
 
 
 def test_make_profile_cache_decorator():

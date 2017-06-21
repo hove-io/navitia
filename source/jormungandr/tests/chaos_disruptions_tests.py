@@ -342,9 +342,9 @@ class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
 
             utils.walk_dict(response_json, get_type_id)
             if check_existence:
-                assert any(map(lambda id_: id_ == object_id, links))
+                assert any([id_ == object_id for id_ in links])
             else:
-                assert all(map(lambda id_: id_ != object_id, links))
+                assert all([id_ != object_id for id_ in links])
 
 
         nb_disruptions_map = self.get_nb_disruptions()
@@ -452,8 +452,7 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
 
         response = self.query_region(journey_basic_query + "&disruption_active=true")
 
-        assert all(map(lambda j: len([s for s in j["sections"] if s["type"] == "public_transport"]) == 0,
-                       response["journeys"]))
+        assert all([len([s for s in j["sections"] if s["type"] == "public_transport"]) == 0 for j in response["journeys"]])
 
         # we should then not have disruptions (since we don't get any journey)
         disruptions = self.get_disruptions(response)
@@ -476,7 +475,7 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
                 return
             links.append(v["id"])
         utils.walk_dict(response, get_line_id)
-        assert all(map(lambda id_: id_ != "A", links))
+        assert all([id_ != "A" for id_ in links])
 
         #we also query without disruption and obviously we should not have the network disruptions
         response = self.query_region(journey_basic_query + "&disruption_active=false")
@@ -486,7 +485,7 @@ class TestChaosDisruptionsBlockingOverlapping(ChaosDisruptionsFixture):
         assert len(disruptions) == 1
         assert 'blocking_line_disruption' in disruptions
         #we also check that the journey is tagged as disrupted
-        assert any(map(lambda j: j.get('status') == 'NO_SERVICE', response['journeys']))
+        assert any([j.get('status') == 'NO_SERVICE' for j in response['journeys']])
 
     def get_disruptions(self, response):
         """

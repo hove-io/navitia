@@ -27,8 +27,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from tests_mechanism import AbstractTestFixture, dataset
-from check_utils import *
+from __future__ import absolute_import
+from .tests_mechanism import AbstractTestFixture, dataset
+from .check_utils import *
 
 
 @dataset({"main_stif_test": {}})

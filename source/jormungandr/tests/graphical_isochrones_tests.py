@@ -33,6 +33,8 @@ from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
 from jormungandr import app
 from shapely.geometry import asShape, Point
+from six.moves import range
+from six.moves import zip
 
 
 @dataset({"main_routing_test": {}})

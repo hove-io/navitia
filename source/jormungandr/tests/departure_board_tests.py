@@ -28,7 +28,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-import urllib
+from six.moves.urllib.parse import quote
 from collections import namedtuple
 import itertools
 from .tests_mechanism import AbstractTestFixture, dataset
@@ -216,7 +216,7 @@ class TestDepartureBoard(AbstractTestFixture):
         sched("2012-06-15T08:00:00.222Z")
 
         # it should work also with another timezone (and for fun another format)
-        sched(urllib.quote("2012-06-15 08-00-00+02"))
+        sched(quote("2012-06-15 08-00-00+02"))
 
     def test_on_datetime(self):
         """
