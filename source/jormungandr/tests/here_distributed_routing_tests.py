@@ -30,6 +30,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import pytest
 
 from jormungandr.tests.utils_test import MockResponse
+from jormungandr.utils import str_to_time_stamp
 from tests.check_utils import journey_basic_query, get_not_null, s_coord, r_coord
 from tests.tests_mechanism import AbstractTestFixture, dataset, config, NewDefaultScenarioAbstractTestFixture
 
@@ -226,6 +227,8 @@ HERE_ROUTING_RESPONSE_DIRECT_PATH = {
     }
 }
 
+QUERY_DATETIME_STR = "20120614T070000"
+
 
 def mock_here(_, url, params):
     s = 'geo!8.98312e-05,8.98312e-05'
@@ -243,18 +246,29 @@ def mock_here(_, url, params):
             assert params.get('destination1') == c
             assert params.get('destination2') == a
             assert params.get('destination3') == useless_a
+
+            # we also check that we gave HERE the departure datetime (to get realtime info)
+            # NOTE: since the instance has no timezone we consider the request as UTC
+            assert params.get('departure') == '2012-06-14T07:00:00'
+
             return MockResponse(HERE_BEGGINING_MATRIX_RESPONSE, 200)
         if params['destination0'] == r:
             assert params.get('start0') == a
             assert params.get('start1') == useless_a
             assert params.get('start2') == c
+            assert params.get('departure') == '2012-06-14T07:00:00'
             return MockResponse(HERE_END_MATRIX_RESPONSE, 200)
     elif url == 'https://route.bob.here.com/routing/7.2/calculateroute.json':
         if params['waypoint0'] == s and params['waypoint1'] == r:
+            assert params.get('departure') == '2012-06-14T07:00:00'
             return MockResponse(HERE_ROUTING_RESPONSE_DIRECT_PATH, 200)
         if params['waypoint0'] == s and params['waypoint1'] == b:
+            # for the begin fallback, the constraint is to arrive before the departure of the bus
+            assert params.get('arrival') == '2012-06-14T08:01:00'
             return MockResponse(HERE_ROUTING_RESPONSE_BEGINNING_FALLBACK_PATH, 200)
         if params['waypoint0'] == a and params['waypoint1'] == r:
+            # for the end fallback, the constraint is to leave after the arrival of the bus
+            assert params.get('departure') == '2012-06-14T08:01:02'
             return MockResponse(HERE_ROUTING_RESPONSE_END_FALLBACK_PATH, 200)
     assert False, 'invalid url'
 
@@ -275,7 +289,7 @@ class TestHere(NewDefaultScenarioAbstractTestFixture):
 
     S == B -- A == R
 
-    We want to go from R to S
+    We want to go from S to R
 
     We mock Here response with the following durations:
 
@@ -290,9 +304,10 @@ class TestHere(NewDefaultScenarioAbstractTestFixture):
         """
         q = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&first_section_mode[]=car" \
             "&last_section_mode[]=car&debug=true&min_nb_journeys=0"\
-            .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T070000")
+            .format(from_coord=s_coord, to_coord=r_coord, datetime=QUERY_DATETIME_STR)
         response = self.query_region(q)
-        self.is_valid_journey_response(response, q)
+        # we don't want to check the journeys links as that will make more HERE call (when testing the links)
+        self.is_valid_journey_response(response, q, check_journey_links=False)
 
         journeys = get_not_null(response, 'journeys')
 
