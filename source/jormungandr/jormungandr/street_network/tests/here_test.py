@@ -28,9 +28,11 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 import pytest
+import requests
 import requests_mock
 from mock import MagicMock
 
+from jormungandr.exceptions import TechnicalError
 from jormungandr.street_network.here import Here
 from jormungandr.street_network.tests.streetnetwork_test_utils import make_pt_object
 from jormungandr.utils import PeriodExtremity, str_to_time_stamp
@@ -161,6 +163,24 @@ def test_matrix(valid_here_matrix):
         assert response.rows[0].routing_response[1].routing_status == response_pb2.unreached
         assert response.rows[0].routing_response[2].duration == 701
         assert response.rows[0].routing_response[2].routing_status == response_pb2.reached
+
+
+def test_matrix_timeout():
+    instance = MagicMock()
+    instance.walking_speed = 1.12
+    here = Here(instance=instance, service_base_url='bob.com', app_id='toto', app_code='tata')
+    origin = make_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
+    destination = make_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
+    with requests_mock.Mocker() as req:
+        # a HERE timeout should raise a TechnicalError
+        req.get(requests_mock.ANY, exc=requests.exceptions.Timeout)
+        with pytest.raises(TechnicalError):
+            here.get_street_network_routing_matrix(
+                [origin],
+                [destination, destination, destination],
+                mode='walking',
+                max_duration=42,
+                request={'datetime': str_to_time_stamp('20170621T174600')})
 
 
 def here_basic_routing_test(valid_here_routing_response):
