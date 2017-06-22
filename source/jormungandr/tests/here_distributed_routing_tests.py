@@ -171,7 +171,8 @@ HERE_ROUTING_RESPONSE_END_FALLBACK_PATH = {
                                 "travelTime": 50
                             }
                         ],
-                        "travelTime": 60
+                        "travelTime": 60,
+                        'BaseTime': 60
                     }
                 ],
                 "shape": [
@@ -208,7 +209,8 @@ HERE_ROUTING_RESPONSE_DIRECT_PATH = {
                                 "travelTime": 200
                             },
                         ],
-                        "travelTime": 300
+                        "travelTime": 300,
+                        'BaseTime': 200
                     }
                 ],
                 "shape": [

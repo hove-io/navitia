@@ -145,6 +145,11 @@ class Here(AbstractStreetNetworkService):
         section.begin_date_time = journey.departure_date_time
         section.end_date_time = section.begin_date_time + section.duration
 
+        # since HERE can give us the base time, we display it.
+        # we do not try to do clever stuff (like taking the 'clockwise' into account) here
+        section.base_begin_date_time = section.begin_date_time
+        section.base_end_date_time = section.base_begin_date_time + leg.get('baseTime', section.duration)
+
         section.id = 'section_0'
         section.length = int(leg.get('length', 0))
 
@@ -187,6 +192,8 @@ class Here(AbstractStreetNetworkService):
             'routeAttributes': 'sh',  # to get the shape in the response
             # used to get the travel time in the response
             'summaryAttributes': 'traveltime',
+            # used to get the base time
+            'legAttributes': 'baseTime',
             # used to get the fasted journeys using the given mode and with traffic data
             'mode': 'fastest;{mode};traffic:enabled'.format(mode=get_here_mode(mode)),
             # in HERE it's only possible to constraint the departure
