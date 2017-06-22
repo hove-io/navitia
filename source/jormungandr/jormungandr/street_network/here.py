@@ -83,23 +83,24 @@ class Here(AbstractStreetNetworkService):
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_HERE_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_HERE_TIMEOUT_S'])
 
+        self.log = logging.LoggerAdapter(logging.getLogger(__name__), extra={'streetnetwork_id': id})
+
     def _call_here(self, url, params):
-        log = logging.getLogger(__name__)
-        log.debug('Here routing service, url: {}'.format(url))
+        self.log.debug('Here routing service, url: {}'.format(url))
         try:
             r = self.breaker.call(requests.get, url, timeout=self.timeout, params=params)
             self.record_call('ok')
             return r
         except pybreaker.CircuitBreakerError as e:
-            log.error('Valhalla routing service dead (error: {})'.format(e))
+            self.log.error('Valhalla routing service dead (error: {})'.format(e))
             self.record_call('failure', reason='circuit breaker open')
             raise TechnicalError('HERE service not available')
         except requests.Timeout as t:
-            log.error('Valhalla routing service dead (error: {})'.format(t))
+            self.log.error('Valhalla routing service dead (error: {})'.format(t))
             self.record_call('failure', reason='timeout')
             raise TechnicalError('impossible to access HERE service, timeout reached')
         except Exception as e:
-            log.exception('Valhalla routing error')
+            self.log.exception('Valhalla routing error')
             self.record_call('failure', reason=str(e))
             raise TechnicalError('impossible to access HERE service')
 
@@ -207,9 +208,8 @@ class Here(AbstractStreetNetworkService):
                                              fallback_extremity)
         r = self._call_here(self.routing_service_url, params=params)
         if r.status_code != 200:
-            l = logging.getLogger(__name__)
-            l.debug('impossible to find a path between {o} and {d}, response ({code}) {r}'
-                   .format(o=pt_object_origin, d=pt_object_destination, code=r.status_code, r=r.text))
+            self.log.debug('impossible to find a path between {o} and {d}, response ({code}) {r}'
+                           .format(o=pt_object_origin, d=pt_object_destination, code=r.status_code, r=r.text))
             resp = response_pb2.Response()
             resp.status_code = 200
             resp.response_type = response_pb2.NO_SOLUTION
@@ -217,7 +217,7 @@ class Here(AbstractStreetNetworkService):
 
         json = r.json()
 
-        logging.getLogger(__name__).debug('here response = {}'.format(json))
+        self.log.debug('here response = {}'.format(json))
 
         return self._read_response(json, pt_object_origin, pt_object_destination, mode,
                                    fallback_extremity, request)
@@ -281,8 +281,8 @@ class Here(AbstractStreetNetworkService):
         r = self._call_here(self.matrix_service_url, params=params)
 
         if r.status_code != 200:
-            logging.getLogger(__name__).error('impossible to query HERE: {} with {} response: {}'
-                                              .format(r.url, r.status_code, r.text))
+            self.log.error('impossible to query HERE: {} with {} response: {}'
+                           .format(r.url, r.status_code, r.text))
             raise TechnicalError('invalid HERE call, impossible to query: {}'.format(r.url))
 
         resp_json = r.json()
