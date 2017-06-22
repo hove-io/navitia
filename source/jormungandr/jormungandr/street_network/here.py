@@ -27,6 +27,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
+
+import datetime
+
 from navitiacommon import response_pb2
 import logging
 import pybreaker
@@ -57,8 +60,9 @@ def get_here_mode(mode):
         raise TechnicalError('HERE does not handle the mode {}'.format(mode))
 
 
-def _str_to_dt(datetime):
-    return timestamp_to_datetime(datetime).strftime("%Y-%m-%dT%H:%M:%S%z")
+def _str_to_dt(timestamp):
+    dt = datetime.datetime.utcfromtimestamp(timestamp)
+    return dt.strftime("%Y-%m-%dT%H:%M:%S%z")
 
 
 class Here(AbstractStreetNetworkService):
@@ -83,18 +87,20 @@ class Here(AbstractStreetNetworkService):
         log = logging.getLogger(__name__)
         log.debug('Here routing service, url: {}'.format(url))
         try:
-            return self.breaker.call(requests.get, url, timeout=self.timeout, params=params)
+            r = self.breaker.call(requests.get, url, timeout=self.timeout, params=params)
+            self.record_call('ok')
+            return r
         except pybreaker.CircuitBreakerError as e:
             log.error('Valhalla routing service dead (error: {})'.format(e))
-            self.record_external_failure('circuit breaker open')
+            self.record_call('failure', reason='circuit breaker open')
             raise TechnicalError('HERE service not available')
         except requests.Timeout as t:
             log.error('Valhalla routing service dead (error: {})'.format(t))
-            self.record_external_failure('timeout')
+            self.record_call('failure', reason='timeout')
             raise TechnicalError('impossible to access HERE service, timeout reached')
         except Exception as e:
             log.exception('Valhalla routing error')
-            self.record_external_failure(str(e))
+            self.record_call('failure', reason=str(e))
             raise TechnicalError('impossible to access HERE service')
 
     @staticmethod
