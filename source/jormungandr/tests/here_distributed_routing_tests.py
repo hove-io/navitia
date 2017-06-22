@@ -263,11 +263,9 @@ def mock_here(_, url, params):
             assert params.get('departure') == '2012-06-14T07:00:00'
             return MockResponse(HERE_ROUTING_RESPONSE_DIRECT_PATH, 200)
         if params['waypoint0'] == s and params['waypoint1'] == b:
-            # for the begin fallback, the constraint is to arrive before the departure of the bus
-            assert params.get('arrival') == '2012-06-14T08:01:00'
+            assert params.get('departure') == '2012-06-14T08:01:00'
             return MockResponse(HERE_ROUTING_RESPONSE_BEGINNING_FALLBACK_PATH, 200)
         if params['waypoint0'] == a and params['waypoint1'] == r:
-            # for the end fallback, the constraint is to leave after the arrival of the bus
             assert params.get('departure') == '2012-06-14T08:01:02'
             return MockResponse(HERE_ROUTING_RESPONSE_END_FALLBACK_PATH, 200)
     assert False, 'invalid url'

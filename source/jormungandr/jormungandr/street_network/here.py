@@ -176,7 +176,8 @@ class Here(AbstractStreetNetworkService):
 
         return resp
 
-    def get_direct_path_params(self, origin, destination, mode, fallback_extremity, direct_path_type):
+    def get_direct_path_params(self, origin, destination, mode, fallback_extremity):
+        datetime, clockwise = fallback_extremity
         params = {
             # those are used to identify in the API
             'app_id': self.api_id,
@@ -188,20 +189,15 @@ class Here(AbstractStreetNetworkService):
             'summaryAttributes': 'traveltime',
             # used to get the fasted journeys using the given mode and with traffic data
             'mode': 'fastest;{mode};traffic:enabled'.format(mode=get_here_mode(mode)),
+            # in HERE it's only possible to constraint the departure
+            'departure': _str_to_dt(datetime)
         }
-        datetime, clockwise = fallback_extremity
-
-        # for clockwise we need to constraint the departure time, else the arrival
-        # Note that the the BEGINNING_FALLBAK is always non clockwise (and end END_FALLBACK clockwise)
-        # because the constraint is to be able to get in the bus (resp. leave it)
-        constrainted_dt = 'departure' if clockwise else 'arrival'
-        params[constrainted_dt] = _str_to_dt(datetime)
 
         return params
 
     def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
         params = self.get_direct_path_params(pt_object_origin, pt_object_destination, mode,
-                                             fallback_extremity, direct_path_type)
+                                             fallback_extremity)
         r = self._call_here(self.routing_service_url, params=params)
         if r.status_code != 200:
             l = logging.getLogger(__name__)
