@@ -314,7 +314,7 @@ class AbstractTestFixture(unittest.TestCase):
             assert 'line' in types
             assert 'network' in types
 
-    def is_valid_journey_response(self, response, query_str):
+    def is_valid_journey_response(self, response, query_str, check_journey_links=True):
         """
         check that the journey's response is valid
 
@@ -345,8 +345,9 @@ class AbstractTestFixture(unittest.TestCase):
 
         check_internal_links(response, self.tester)
 
-        #check other links
-        check_links(response, self.tester)
+        # check other links
+        if check_journey_links:
+            check_links(response, self.tester)
 
         # more checks on links, we want the prev/next/first/last,
         # to have forwarded all params, (and the time must be right)
