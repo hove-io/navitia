@@ -41,6 +41,7 @@ import ujson
 import logging
 from jormungandr.new_relic import record_custom_parameter
 from jormungandr.authentication import get_user, get_token, get_app_name, get_used_coverages
+import six
 
 if rest_api.app.config.get('PATCH_WITH_GEVENT_SOCKET', False):
     logger = logging.getLogger('jormungandr.patch_gevent_socket')
@@ -62,7 +63,7 @@ def output_jsonp(data, code, headers=None):
     resp = json.output_json(data, code, headers)
     callback = request.args.get('callback', False)
     if callback:
-        resp.data = unicode(callback) + '(' + resp.data + ')'
+        resp.data = six.text_type(callback) + '(' + resp.data + ')'
     return resp
 
 
