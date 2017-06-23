@@ -28,6 +28,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import
 import mock
 from jormungandr.autocomplete.geocodejson import GeocodeJson
 from jormungandr.interfaces.v1 import Places
@@ -613,7 +614,7 @@ def bragi_make_params_with_instance_test():
 
     params = bragi.make_params(request=request, instance=instance)
     rsp = {'q': 'aa', 'limit': 20, 'pt_dataset': 'bib'}
-    len(rsp.keys()) == len(params.keys())
+    len(list(rsp.keys())) == len(list(params.keys()))
     for key, value in rsp.items():
         assert key in params
         assert value == params[key]
@@ -633,7 +634,7 @@ def bragi_make_params_without_instance_test():
 
     params = bragi.make_params(request=request, instance=None)
     rsp = {'q': 'aa', 'limit': 20}
-    len(rsp.keys()) == len(params.keys())
+    len(list(rsp.keys())) == len(list(params.keys()))
     for key, value in rsp.items():
         assert key in params
         assert value == params[key]

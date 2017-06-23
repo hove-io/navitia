@@ -30,7 +30,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
-from jormungandr import utils
+from jormungandr import utils, new_relic
 from jormungandr.exceptions import ConfigException
 import abc
 
@@ -77,6 +77,14 @@ class AbstractStreetNetworkService(ABC):
 
     def record_external_failure(self, message):
         utils.record_external_failure(message, 'streetnetwork', self.sn_system_id)
+
+    def record_call(self, status, **kwargs):
+        """
+        status can be in: ok, failure
+        """
+        params = {'streetnetwork_id': repr(self.sn_system_id), 'status': status}
+        params.update(kwargs)
+        new_relic.record_custom_event('streetnetwork', params)
 
 
 class StreetNetwork(object):

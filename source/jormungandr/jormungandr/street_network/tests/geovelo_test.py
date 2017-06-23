@@ -26,11 +26,12 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import
 from jormungandr.street_network.geovelo import Geovelo
 from navitiacommon import type_pb2, response_pb2
 import pybreaker
 from mock import MagicMock
-from streetnetwork_test_utils import make_pt_object
+from .streetnetwork_test_utils import make_pt_object
 from jormungandr.utils import str_to_time_stamp, PeriodExtremity
 import requests_mock
 import json

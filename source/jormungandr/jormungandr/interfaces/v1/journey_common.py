@@ -47,6 +47,8 @@ from functools import cmp_to_key
 from jormungandr.instance_manager import instances_comparator
 from jormungandr.travelers_profile import TravelerProfile
 from navitiacommon.default_traveler_profile_params import acceptable_traveler_types
+import pytz
+import six
 
 
 def dt_represents(value):
@@ -141,8 +143,8 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
             argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
 
-        parser_get.add_argument("from", type=unicode, dest="origin")
-        parser_get.add_argument("to", type=unicode, dest="destination")
+        parser_get.add_argument("from", type=six.text_type, dest="origin")
+        parser_get.add_argument("to", type=six.text_type, dest="destination")
         parser_get.add_argument("datetime", type=date_time_format)
         parser_get.add_argument("datetime_represents", dest="clockwise",
                                 type=dt_represents, default=True)
@@ -171,8 +173,8 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
         parser_get.add_argument("bike_speed", type=float_gt_0)
         parser_get.add_argument("bss_speed", type=float_gt_0)
         parser_get.add_argument("car_speed", type=float_gt_0)
-        parser_get.add_argument("forbidden_uris[]", type=unicode, action="append")
-        parser_get.add_argument("allowed_id[]", type=unicode, action="append")
+        parser_get.add_argument("forbidden_uris[]", type=six.text_type, action="append")
+        parser_get.add_argument("allowed_id[]", type=six.text_type, action="append")
         parser_get.add_argument("type", type=option_value(types),
                                 default="all")
         parser_get.add_argument("disruption_active", type=boolean, default=False)  # for retrocomp
@@ -240,7 +242,11 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
         if args['destination']:
             args['destination'] = transform_id(args['destination'])
 
-        args['original_datetime'] = args['datetime']
+        if args['datetime']:
+            args['original_datetime'] = args['datetime']
+        else:
+            args['original_datetime'] = pytz.UTC.localize(args['_current_datetime'])
+
 
         if args.get('traveler_type'):
             traveler_profile = TravelerProfile.make_traveler_profile(region, args['traveler_type'])

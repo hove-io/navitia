@@ -53,6 +53,7 @@ from jormungandr.interfaces.v1.Calendars import calendar
 from navitiacommon import default_values
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, compute_possible_region
 from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
+import six
 
 
 f_datetime = "%Y%m%dT%H%M%S"
@@ -423,7 +424,7 @@ class Journeys(JourneyCommon):
                                 hidden=True)
         parser_get.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
-        parser_get.add_argument("_override_scenario", type=unicode, description="debug param to specify a custom scenario")
+        parser_get.add_argument("_override_scenario", type=six.text_type, description="debug param to specify a custom scenario")
 
         parser_get.add_argument("_walking_transfer_penalty", type=int)
         parser_get.add_argument("_max_successive_physical_mode", type=int)
@@ -515,8 +516,6 @@ class Journeys(JourneyCommon):
             original_datetime = args['original_datetime']
             if original_datetime:
                 new_datetime = self.convert_to_utc(original_datetime)
-            else:
-                new_datetime = args['_current_datetime']
             args['datetime'] = date_to_timestamp(new_datetime)
 
             response = i_manager.dispatch(args, api, instance_name=self.region)
@@ -550,7 +549,7 @@ class Journeys(JourneyCommon):
 
         # if no response have been found for all the possible regions, we have a problem
         # if all response had the same error we give it, else we give a generic 'no solution' error
-        first_response = responses.values()[0]
+        first_response = list(responses.values())[0]
         if all(r.error.id == first_response.error.id for r in responses.values()):
             return first_response
 

@@ -43,6 +43,7 @@ from jormungandr.interfaces.parsers import date_time_format, default_count_arg_t
 from jormungandr.interfaces.v1.errors import ManageError
 from datetime import datetime
 from jormungandr.interfaces.v1.fields import disruption_marshaller
+import six
 
 disruption = {
     "network": PbField(network, attribute='network'),
@@ -74,12 +75,12 @@ class TrafficReport(ResourceUri):
         parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.utcnow(),
                                 description="The datetime we want to publish the disruptions from."
                                             " Default is the current date and it is mainly used for debug.")
-        parser_get.add_argument("forbidden_id[]", type=unicode,
+        parser_get.add_argument("forbidden_id[]", type=six.text_type,
                                 description="DEPRECATED, replaced by forbidden_uris[]",
                                 dest="__temporary_forbidden_id[]",
                                 default=[],
                                 action="append")
-        parser_get.add_argument("forbidden_uris[]", type=unicode,
+        parser_get.add_argument("forbidden_uris[]", type=six.text_type,
                                 description="forbidden uris",
                                 dest="forbidden_uris[]",
                                 default=[],

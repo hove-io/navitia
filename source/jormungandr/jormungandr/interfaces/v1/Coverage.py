@@ -39,12 +39,12 @@ from jormungandr.interfaces.v1.make_links import add_coverage_link, add_collecti
 from jormungandr.interfaces.v1.converters_collection_type import collections_to_resource_type
 from collections import OrderedDict
 from jormungandr.interfaces.v1.fields import NonNullNested, FieldDateTime
-from jormungandr.interfaces.v1.serializer import jsonschema
+from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.serializer.api import CoveragesSerializer
 from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerPathSerializer
 from jormungandr.interfaces.v1.swagger_schema import make_schema
 
-collections = collections_to_resource_type.keys()
+collections = list(collections_to_resource_type.keys())
 
 coverage_marshall_fields = [
     ("regions", fields.List(NonNullNested({
@@ -75,7 +75,7 @@ class Coverage(StatedResource):
     @clean_links()
     @add_coverage_link()
     @add_collection_links(collections)
-    @get_serializer(collection='coverages', collections=coverage_marshall_fields)
+    @get_serializer(serpy=api.CoveragesSerializer, marshall=coverage_marshall_fields)
     def get(self, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
 

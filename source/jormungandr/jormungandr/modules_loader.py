@@ -32,6 +32,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask import Blueprint
 from jormungandr.module_resource import ModuleResourcesManager, ModuleResource
+import six
 
 
 class ModulesLoader(object):
@@ -132,6 +133,6 @@ class AModule(object):
         :type options:
         """
         rule = '/' + self.name + rule
-        if endpoint and (isinstance(endpoint, unicode) or isinstance(endpoint, str)):
+        if endpoint and (isinstance(endpoint, six.text_type) or isinstance(endpoint, str)):
             endpoint = self.name + '.' + endpoint
         self.api.app.add_url_rule(rule, endpoint, view_func, **options)

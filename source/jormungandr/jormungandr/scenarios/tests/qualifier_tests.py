@@ -30,6 +30,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr.scenarios import qualifier
 import navitiacommon.response_pb2 as response_pb2
 from jormungandr.utils import str_to_time_stamp
+from six.moves import range
 
 
 

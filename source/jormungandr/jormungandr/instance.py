@@ -53,6 +53,7 @@ import flask
 import pybreaker
 from jormungandr import georef, planner, schedule, realtime_schedule, ptref, street_network
 import itertools
+import six
 
 type_to_pttype = {
       "stop_area": request_pb2.PlaceCodeRequest.StopArea,
@@ -391,7 +392,7 @@ class Instance(object):
                 socket.close()
                 if not quiet:
                     logger = logging.getLogger(__name__)
-                    logger.error('request on %s failed: %s', self.socket_path, unicode(request))
+                    logger.error('request on %s failed: %s', self.socket_path, six.text_type(request))
                 raise DeadSocketException(self.name, self.socket_path)
 
     def get_id(self, id_):

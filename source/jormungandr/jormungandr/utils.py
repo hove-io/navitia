@@ -41,6 +41,8 @@ import logging
 from jormungandr.exceptions import ConfigException, UnableToParse, InvalidArguments
 from urlparse import urlparse
 from jormungandr import new_relic
+from six.moves import range
+from six.moves import zip
 
 
 DATETIME_FORMAT = "%Y%m%dT%H%M%S"
@@ -290,7 +292,7 @@ def realtime_level_to_pbf(level):
 #we can't use reverse(enumerate(list)) without creating a temporary
 #list, so we define our own reverse enumerate
 def reverse_enumerate(l):
-    return zip(range(len(l)-1, -1, -1), reversed(l))
+    return list(zip(list(range(len(l)-1, -1, -1)), reversed(l)))
 
 
 def pb_del_if(l, pred):

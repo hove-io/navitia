@@ -1,5 +1,6 @@
 # encoding: utf-8
 
+from __future__ import absolute_import
 import os
 import json
 from flask_restful.inputs import boolean
@@ -27,6 +28,8 @@ from jormungandr.logging_utils import IdFilter
 
 log_level = os.getenv('JORMUNGANDR_LOG_LEVEL', 'DEBUG')
 log_format = os.getenv('JORMUNGANDR_LOG_FORMAT', '[%(asctime)s] [%(request_id)s] [%(levelname)5s] [%(process)5s] [%(name)10s] %(message)s')
+log_formatter = os.getenv('JORMUNGANDR_LOG_FORMATTER', 'default') # default or json
+log_extras = json.loads(os.getenv('JORMUNGANDR_LOG_EXTRAS', '{}')) # fields to add to the logger
 
 # logger configuration
 LOGGER = {
@@ -35,6 +38,11 @@ LOGGER = {
     'formatters':{
         'default': {
             'format': log_format,
+        },
+        'json': {
+            '()': 'jormungandr.logging_utils.CustomJsonFormatter',
+            'format': log_format,
+            'extras': log_extras,
         },
     },
     'filters': {
@@ -46,7 +54,7 @@ LOGGER = {
         'default': {
             'level': log_level,
             'class': 'logging.StreamHandler',
-            'formatter': 'default',
+            'formatter': log_formatter,
             'filters': ['IdFilter'],
         },
     },
@@ -117,6 +125,9 @@ CIRCUIT_BREAKER_VALHALLA_TIMEOUT_S = 60  # the circuit breaker retries after thi
 
 CIRCUIT_BREAKER_MAX_GEOVELO_FAIL = 4  # max instance call failures before stopping attempt
 CIRCUIT_BREAKER_GEOVELO_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+
+CIRCUIT_BREAKER_MAX_HERE_FAIL = 4  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_HERE_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
 
 # Default region instance
 # DEFAULT_REGION = 'default'

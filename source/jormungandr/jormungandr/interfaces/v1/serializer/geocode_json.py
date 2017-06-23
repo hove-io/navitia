@@ -25,8 +25,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import
 import serpy
-from base import LiteralField, NestedPropertyField, IntNestedPropertyField, value_by_path
+from .base import LiteralField, NestedPropertyField, IntNestedPropertyField, value_by_path
 from flask.ext.restful import abort
 from jormungandr.interfaces.v1.serializer import jsonschema
 

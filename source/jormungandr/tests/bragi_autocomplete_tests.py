@@ -38,7 +38,7 @@ from tests import check_utils
 from tests.tests_mechanism import NewDefaultScenarioAbstractTestFixture
 from .tests_mechanism import AbstractTestFixture, dataset
 from jormungandr import app
-from urllib import urlencode
+from six.moves.urllib.parse import urlencode
 from .tests_mechanism import config
 
 

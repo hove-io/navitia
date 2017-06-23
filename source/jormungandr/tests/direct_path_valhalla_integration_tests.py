@@ -27,6 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import
 from .tests_mechanism import AbstractTestFixture, dataset
 from jormungandr.street_network.valhalla import Valhalla
 import requests as requests
@@ -96,14 +97,18 @@ def route_response(mode):
     }
 
 
-def one_to_many_response():
+def sources_to_targets_response():
     return {
-        "locations": [
+        "sources": [
             [
                 {
                     "lon": 2.428405,
                     "lat": 48.625626
-                },
+                }
+            ]
+        ],
+        "targets": [
+            [
                 {
                     "lon": 2.428379,
                     "lat": 48.625679
@@ -111,18 +116,12 @@ def one_to_many_response():
             ]
         ],
         "units": "kilometers",
-        "one_to_many": [
+        "sources_to_targets": [
             [
-                {
-                    "distance": 0,
-                    "time": 0,
-                    "to_index": 0,
-                    "from_index": 0
-                },
                 {
                     "distance": 0.227,
                     "time": 177,
-                    "to_index": 1,
+                    "to_index": 0,
                     "from_index": 0
                 }
             ]
@@ -133,8 +132,8 @@ def one_to_many_response():
 def response_valid(api, mode):
     if api == 'route':
         return route_response(mode)
-    elif api == 'one_to_many':
-        return one_to_many_response()
+    elif api == 'sources_to_targets':
+        return sources_to_targets_response()
 
 
 def check_journeys(resp):
@@ -193,3 +192,59 @@ class TestValhallaDirectPath(AbstractTestFixture):
         assert len(response['journeys'][2]['sections']) == 1
         assert response['journeys'][2]['duration'] == 20
 
+
+@dataset({
+    'main_routing_test': {
+        'scenario': 'distributed',
+        'instance_config': {
+            'street_network': [{
+                "modes": ['walking', 'car', 'bss', 'bike'],
+                "class": "tests.direct_path_valhalla_integration_tests.MockValhalla",
+                "args": {
+                    "service_url": "http://bob.com",
+                    "costing_options": {
+                        "bicycle": {
+                            "bicycle_type": "Hybrid",
+                            "cycling_speed": 18
+                        },
+                        "pedestrian": {
+                            "walking_speed": 50.1
+                        }
+                    },
+                    "mode_park_cost": {
+                        "car": 5 * 60,
+                        "bike": 30,
+                    },
+                }
+            }]
+        }
+    }
+})
+class TestValhallaParkingCost(AbstractTestFixture):
+    def test_with_a_car_park_cost(self):
+        query = journey_basic_query + \
+                "&first_section_mode[]=bss" + \
+                "&first_section_mode[]=walking" + \
+                "&first_section_mode[]=bike" + \
+                "&first_section_mode[]=car" + \
+                "&debug=true"
+        response = self.query_region(query)
+        check_journeys(response)
+        assert len(response['journeys']) == 3
+
+        assert('walking' in response['journeys'][0]['tags'])
+        assert len(response['journeys'][0]['sections']) == 1
+        assert response['journeys'][0]['duration'] == 20
+        # no park section
+
+        # bike from valhalla
+        assert('bike' in response['journeys'][1]['tags'])
+        assert len(response['journeys'][1]['sections']) == 2
+        assert response['journeys'][1]['duration'] == 10 + 30
+        assert response['journeys'][1]['sections'][1]['type'] == 'park'
+
+        # car from valhalla
+        assert('car' in response['journeys'][2]['tags'])
+        assert len(response['journeys'][2]['sections']) == 2
+        assert response['journeys'][2]['duration'] == 5 + 5 * 60
+        assert response['journeys'][2]['sections'][1]['type'] == 'park'

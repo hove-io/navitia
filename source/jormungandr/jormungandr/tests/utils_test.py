@@ -28,6 +28,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import
 from contextlib import contextmanager
 from flask import appcontext_pushed, g
 from jormungandr.utils import timestamp_to_datetime
@@ -40,7 +41,7 @@ class MockResponse(object):
     """
     small class to mock an http response
     """
-    def __init__(self, data, status_code, url, *args, **kwargs):
+    def __init__(self, data, status_code, url=None, *args, **kwargs):
         self.data = data
         self.status_code = status_code
         self.url = url
@@ -66,7 +67,7 @@ class MockRequests(object):
 
     def get(self, url, *args, **kwargs):
         if kwargs.get('params'):
-            from urllib import urlencode
+            from six.moves.urllib.parse import urlencode
             url += "?{}".format(urlencode(kwargs.get('params'), doseq=True))
 
         return MockResponse(self.responses[url][0], self.responses[url][1], url)

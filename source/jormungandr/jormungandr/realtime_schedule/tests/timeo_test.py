@@ -27,6 +27,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import
 import datetime
 import mock
 from time import sleep
@@ -36,6 +37,7 @@ import validators
 from jormungandr.realtime_schedule.tests.utils import MockRoutePoint, _timestamp, _dt
 from jormungandr.tests.utils_test import MockRequests
 from pytest import raises
+from six.moves import range
 
 
 def make_url_test():

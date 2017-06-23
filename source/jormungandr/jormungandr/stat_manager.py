@@ -44,6 +44,7 @@ import pytz
 import time
 import sys
 import kombu
+import six
 
 f_datetime = "%Y%m%dT%H%M%S"
 
@@ -236,7 +237,7 @@ class StatManager(object):
             for value in items:
                 stat_parameter = stat_request.parameters.add()
                 stat_parameter.key = key
-                stat_parameter.value = unicode(value)
+                stat_parameter.value = six.text_type(value)
 
         if hasattr(g, 'stat_interpreted_parameters'):
             for item in g.stat_interpreted_parameters.items():
@@ -244,11 +245,11 @@ class StatManager(object):
                     for value in item[1]:
                         stat_parameter = stat_request.interpreted_parameters.add()
                         stat_parameter.key = item[0]
-                        stat_parameter.value = unicode(value)
+                        stat_parameter.value = six.text_type(value)
                 else:
                     stat_parameter = stat_request.interpreted_parameters.add()
                     stat_parameter.key = item[0]
-                    stat_parameter.value = unicode(item[1])
+                    stat_parameter.value = six.text_type(item[1])
                     if item[0] in ('filter', 'departure_filter', 'arrival_filter'):
                         #we parse ptref filter here
                         self.fill_filters(item[1], stat_parameter)
@@ -475,7 +476,7 @@ class StatManager(object):
             stat_coord.lon = float(to_lon)
 
         except ValueError as e:
-            logging.getLogger(__name__).warn('Unable to parse coordinates: %s', unicode(e))
+            logging.getLogger(__name__).warn('Unable to parse coordinates: %s', six.text_type(e))
 
     def fill_sections(self, stat_journey, resp_journey):
         previous_section = None

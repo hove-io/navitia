@@ -29,6 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, StrField, MethodField, IntField, FloatField, BoolField
 
 __all__ = [

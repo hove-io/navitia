@@ -29,7 +29,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-import urllib
+from six.moves.urllib.parse import quote
 
 from .tests_mechanism import AbstractTestFixture, dataset
 from jormungandr import i_manager
@@ -1026,7 +1026,7 @@ class OnBasicRouting():
         journey("2012-06-15T08:00:00.222Z")
 
         # it should work also with another timezone (and for fun another format)
-        journey(urllib.quote("2012-06-15 08-00-00+02"))
+        journey(quote("2012-06-15 08-00-00+02"))
 
     def test_remove_one_journey_from_batch(self):
         """

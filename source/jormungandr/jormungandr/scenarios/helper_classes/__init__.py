@@ -26,13 +26,14 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from places_free_access import PlacesFreeAccess
-from streetnetwork_path import StreetNetworkPathPool
-from fallback_durations import FallbackDurationsPool
-from place_by_uri import PlaceByUri
-from pt_journey import PtJourneyPool
-from proximities_by_crowfly import ProximitiesByCrowflyPool
-from complete_pt_journey import wait_and_complete_pt_journey
-from helper_exceptions import PtException, EntryPointException
-from helper_utils import get_entry_point_or_raise, check_final_results_or_raise
-from helper_future import FutureManager
+from __future__ import absolute_import
+from .places_free_access import PlacesFreeAccess
+from .streetnetwork_path import StreetNetworkPathPool
+from .fallback_durations import FallbackDurationsPool
+from .place_by_uri import PlaceByUri
+from .pt_journey import PtJourneyPool
+from .proximities_by_crowfly import ProximitiesByCrowflyPool
+from .complete_pt_journey import wait_and_complete_pt_journey
+from .helper_exceptions import PtException, EntryPointException
+from .helper_utils import get_entry_point_or_raise, check_final_results_or_raise
+from .helper_future import FutureManager

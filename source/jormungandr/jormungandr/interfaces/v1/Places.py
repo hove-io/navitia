@@ -57,6 +57,7 @@ from jormungandr.scenarios.utils import pb_type
 
 # instance marshal
 from navitiacommon.parser_args_type import ParameterDescription
+import six
 
 places = {
     "places": NonNullList(NonNullNested(place)),
@@ -82,9 +83,9 @@ class Places(ResourceUri):
     def __init__(self, *args, **kwargs):
         ResourceUri.__init__(self, authentication=False, output_type_serializer=PlacesSerializer,
                              *args, **kwargs)
-        self.parsers["get"].add_argument("q", type=unicode, required=True,
+        self.parsers["get"].add_argument("q", type=six.text_type, required=True,
                                          description="The data to search")
-        self.parsers["get"].add_argument("type[]", type=option_value(pb_type.keys()),
+        self.parsers["get"].add_argument("type[]", type=option_value(list(pb_type.keys())),
                                          action="append",
                                          default=["stop_area", "address",
                                                   "poi",
@@ -94,7 +95,7 @@ class Places(ResourceUri):
                                          description="The maximum number of places returned")
         self.parsers["get"].add_argument("search_type", type=int, default=0,
                                          description="Type of search: firstletter or type error")
-        self.parsers["get"].add_argument("admin_uri[]", type=unicode,
+        self.parsers["get"].add_argument("admin_uri[]", type=six.text_type,
                                          action="append",
                                          description="If filled, will restrain the search within the "
                                                      "given admin uris")
@@ -114,7 +115,7 @@ class Places(ResourceUri):
         self.parsers['get'].add_argument("from", type=coord_format(),
                                          description="Coordinates longitude;latitude used to prioritize "
                                                      "the objects around this coordinate")
-        self.parsers['get'].add_argument("_autocomplete", type=unicode, description="name of the autocomplete service"
+        self.parsers['get'].add_argument("_autocomplete", type=six.text_type, description="name of the autocomplete service"
                                          " used under the hood", hidden=True)
         self.parsers['get'].add_argument('shape', type=geojson_argument(),
                                          description='Geographical shape to limit the search.')
@@ -169,7 +170,7 @@ class PlaceUri(ResourceUri):
         if args['disable_geojson']:
             g.disable_geojson = True
 
-        self.parsers['get'].add_argument("_autocomplete", type=unicode, description="name of the autocomplete service"
+        self.parsers['get'].add_argument("_autocomplete", type=six.text_type, description="name of the autocomplete service"
                                          " used under the hood")
 
     def get(self, id, region=None, lon=None, lat=None):
@@ -209,13 +210,13 @@ class PlacesNearby(ResourceUri):
 
     def __init__(self, *args, **kwargs):
         ResourceUri.__init__(self, *args, **kwargs)
-        self.parsers["get"].add_argument("type[]", type=unicode,
+        self.parsers["get"].add_argument("type[]", type=six.text_type,
                                          action="append",
                                          default=["stop_area", "stop_point",
                                                   "poi"],
                                          description="Type of the objects to\
                                          return")
-        self.parsers["get"].add_argument("filter", type=unicode, default="",
+        self.parsers["get"].add_argument("filter", type=six.text_type, default="",
                                          description="Filter your objects")
         self.parsers["get"].add_argument("distance", type=int, default=500,
                                          description="Distance range of the\

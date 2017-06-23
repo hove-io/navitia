@@ -26,11 +26,13 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import
 import copy
 import re
 import serpy
 import inspect
 import jormungandr
+import six
 
 
 class SwaggerDefinitions(object):
@@ -40,7 +42,7 @@ TYPE_MAP = {
     str: {
         'type': 'string',
     },
-    unicode: {
+    six.text_type: {
         'type': 'string',
     },
     int: {
@@ -263,7 +265,7 @@ def get_serializer_name(serializer):
     class_name = serializer.__name__ if inspect.isclass(serializer) else serializer.__class__.__name__
     # this replace is temporary, we need to find a better way to have good names there since they are now
     # exposed in the documentation / SDK
-    name = class_name.replace('Serializer', 'Response')
+    name = class_name.replace('Serializer', '')
     return name
 
 

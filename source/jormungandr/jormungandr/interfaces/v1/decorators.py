@@ -25,32 +25,18 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import
 import jormungandr
 from jormungandr.interfaces.v1.serializer import serialize_with, api
 from flask.ext.restful import marshal_with
 from collections import OrderedDict
 
-map_serializer = {
-   "networks": api.NetworksSerializer,
-   "lines": api.LinesSerializer,
-   "commercial_modes": api.CommercialModesSerializer,
-   "physical_modes": api.PhysicalModesSerializer,
-   "stop_points": api.StopPointsSerializer,
-   "stop_areas": api.StopAreasSerializer,
-   "routes": api.RoutesSerializer,
-   "line_groups": api.LineGroupsSerializer,
-   "disruptions": api.DisruptionsSerializer,
-   "vehicle_journeys": api.VehicleJourneysSerializer,
-   "trips": api.TripsSerializer,
-   "journey_patterns": api.JourneyPatternsSerializer,
-   "journey_pattern_points": api.JourneyPatternPointsSerializer,
-   "coverages": api.CoveragesSerializer,
-   "places": api.PlacesSerializer,
-}
 
-
-def get_serializer(collection, collections, display_null=False):
+def get_serializer(serpy, marshall):
     if jormungandr.USE_SERPY:
-        return serialize_with(map_serializer.get(collection))
+        return serialize_with(serpy)
     else:
-        return marshal_with(OrderedDict(collections), display_null=display_null)
+        return marshal_with(OrderedDict(marshall), display_null=False)
+
+def get_obj_serializer(obj):
+    return get_serializer(serpy=obj.output_type_serializer, marshall=obj.collections)

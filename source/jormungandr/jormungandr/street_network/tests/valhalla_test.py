@@ -26,13 +26,16 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import
 import pytest
+
+from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.street_network.valhalla import Valhalla
 from jormungandr.exceptions import InvalidArguments, TechnicalError, ApiNotFound
 from navitiacommon import type_pb2, response_pb2
 import pybreaker
 from mock import MagicMock
-from streetnetwork_test_utils import make_pt_object
+from .streetnetwork_test_utils import make_pt_object
 from jormungandr.utils import str_to_time_stamp, PeriodExtremity
 import requests_mock
 import json
@@ -127,10 +130,10 @@ def format_coord_func_invalid_api_test():
     assert 'ApiNotFound' in str(excinfo.typename)
 
 
-def format_coord_func_valid_coord_one_to_many_test():
+def format_coord_func_valid_coord_sources_to_targets_test():
     pt_object = make_pt_object(type_pb2.ADDRESS, 1.12, 13.15)
 
-    coord = Valhalla._format_coord(pt_object, 'one_to_many')
+    coord = Valhalla._format_coord(pt_object, 'sources_to_targets')
     coord_res = {'lat': pt_object.address.coord.lat, 'lon': pt_object.address.coord.lon}
     assert len(coord) == 2
     for key, value in coord_res.items():
@@ -156,7 +159,7 @@ def format_url_func_with_walking_mode_test():
     valhalla = Valhalla(instance=instance,
                         service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
-    data = valhalla._make_request_arguments("walking", origin, [destination], MOCKED_REQUEST)
+    data = valhalla._make_request_arguments("walking", [origin], [destination], MOCKED_REQUEST)
     assert json.loads(data) == json.loads('''{
                         "costing_options": {
                           "pedestrian": {
@@ -194,7 +197,7 @@ def format_url_func_with_bike_mode_test():
                         service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     valhalla.costing_options = None
-    data = valhalla._make_request_arguments("bike", origin, [destination], MOCKED_REQUEST)
+    data = valhalla._make_request_arguments("bike", [origin], [destination], MOCKED_REQUEST)
     assert json.loads(data) == json.loads('''
                                             {
                                               "costing_options": {
@@ -234,7 +237,7 @@ def format_url_func_with_car_mode_test():
                         service_url='http://bob.com',
                         costing_options={'bib': 'bom'})
     valhalla.costing_options = None
-    data = valhalla._make_request_arguments("car", origin, [destination], MOCKED_REQUEST)
+    data = valhalla._make_request_arguments("car", [origin], [destination], MOCKED_REQUEST)
     assert json.loads(data) == json.loads(''' {
                                       "locations": [
                                         {
@@ -270,7 +273,7 @@ def format_url_func_with_different_ptobject_test():
                           type_pb2.POI):
         origin = make_pt_object(ptObject_type, 1.0, 1.0)
         destination = make_pt_object(ptObject_type, 2.0, 2.0)
-        data = valhalla._make_request_arguments("car", origin, [destination], MOCKED_REQUEST)
+        data = valhalla._make_request_arguments("car", [origin], [destination], MOCKED_REQUEST)
         assert json.loads(data) == json.loads(''' {
                                          "locations": [
                                            {
@@ -299,7 +302,7 @@ def format_url_func_invalid_mode_test():
     with pytest.raises(InvalidArguments) as excinfo:
         origin = make_pt_object(type_pb2.ADDRESS, 1.0, 1.0)
         destination = make_pt_object(type_pb2.ADDRESS, 2.0, 2.0)
-        valhalla._make_request_arguments("bob", origin, [destination], MOCKED_REQUEST)
+        valhalla._make_request_arguments("bob", [origin], [destination], MOCKED_REQUEST)
     assert '400: Bad Request' == str(excinfo.value)
     assert 'InvalidArguments' == str(excinfo.typename)
 
@@ -324,7 +327,7 @@ def call_valhalla_func_with_unknown_exception_test():
     assert valhalla._call_valhalla(valhalla.service_url) == None
 
 
-def get_response_func_with_unknown_exception_test():
+def get_response_basic_test():
     resp_json = response_valid()
     origin = make_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
     destination = make_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
@@ -332,16 +335,105 @@ def get_response_func_with_unknown_exception_test():
     response = Valhalla._get_response(resp_json, 'walking',
                                       origin,
                                       destination,
-                                      fallback_extremity)
+                                      fallback_extremity,
+                                      StreetNetworkPathType.BEGINNING_FALLBACK,
+                                      mode_park_cost=None)
     assert response.status_code == 200
     assert response.response_type == response_pb2.ITINERARY_FOUND
     assert len(response.journeys) == 1
     assert response.journeys[0].duration == 6
     assert len(response.journeys[0].sections) == 1
     assert response.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
+    assert response.journeys[0].sections[0].length == 52
+    assert response.journeys[0].sections[0].duration == 6
+    assert response.journeys[0].sections[0].destination == destination
+    # Note: we don't have a park section as there is no mode_park_cost
+
+
+def get_response_with_park_test():
+    resp_json = response_valid()
+    origin = make_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
+    destination = make_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
+    fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), True)
+    response = Valhalla._get_response(resp_json, 'walking',
+                                      origin,
+                                      destination,
+                                      fallback_extremity,
+                                      StreetNetworkPathType.BEGINNING_FALLBACK,
+                                      mode_park_cost=5*60)
+    assert response.status_code == 200
+    assert response.response_type == response_pb2.ITINERARY_FOUND
+    assert len(response.journeys) == 1
+    assert response.journeys[0].duration == 6 + 5*60
+    assert len(response.journeys[0].sections) == 2
     assert response.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
     assert response.journeys[0].sections[0].length == 52
+    assert response.journeys[0].sections[0].duration == 6
     assert response.journeys[0].sections[0].destination == destination
+
+    assert response.journeys[0].sections[1].type == response_pb2.PARK
+    assert response.journeys[0].sections[1].length == 0
+    assert response.journeys[0].sections[1].duration == 5 * 60
+    assert response.journeys[0].sections[1].origin == destination
+    assert response.journeys[0].sections[1].destination == destination
+
+
+def get_response_with_leave_parking_test():
+    resp_json = response_valid()
+    origin = make_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
+    destination = make_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
+    fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), True)
+    response = Valhalla._get_response(resp_json, 'walking',
+                                      origin,
+                                      destination,
+                                      fallback_extremity,
+                                      StreetNetworkPathType.ENDING_FALLBACK,
+                                      mode_park_cost=5*60)
+    assert response.status_code == 200
+    assert response.response_type == response_pb2.ITINERARY_FOUND
+    assert len(response.journeys) == 1
+    assert response.journeys[0].duration == 6 + 5*60
+    assert len(response.journeys[0].sections) == 2
+
+    assert response.journeys[0].sections[0].type == response_pb2.LEAVE_PARKING
+    assert response.journeys[0].sections[0].length == 0
+    assert response.journeys[0].sections[0].duration == 5 * 60
+    assert response.journeys[0].sections[0].origin == origin
+    assert response.journeys[0].sections[0].destination == origin
+
+    assert response.journeys[0].sections[1].type == response_pb2.STREET_NETWORK
+    assert response.journeys[0].sections[1].length == 52
+    assert response.journeys[0].sections[1].duration == 6
+    assert response.journeys[0].sections[1].destination == destination
+
+
+def get_response_with_0_duration_park_test():
+    """even if the mode_park_cost is 0, if it's not None we got a park section"""
+    resp_json = response_valid()
+    origin = make_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
+    destination = make_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
+    fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), True)
+    response = Valhalla._get_response(resp_json, 'walking',
+                                      origin,
+                                      destination,
+                                      fallback_extremity,
+                                      StreetNetworkPathType.BEGINNING_FALLBACK,
+                                      mode_park_cost=0)
+    assert response.status_code == 200
+    assert response.response_type == response_pb2.ITINERARY_FOUND
+    assert len(response.journeys) == 1
+    assert response.journeys[0].duration == 6
+    assert len(response.journeys[0].sections) == 2
+    assert response.journeys[0].sections[0].type == response_pb2.STREET_NETWORK
+    assert response.journeys[0].sections[0].length == 52
+    assert response.journeys[0].sections[0].duration == 6
+    assert response.journeys[0].sections[0].destination == destination
+
+    assert response.journeys[0].sections[1].type == response_pb2.PARK
+    assert response.journeys[0].sections[1].length == 0
+    assert response.journeys[0].sections[1].duration == 0  # very quick park section
+    assert response.journeys[0].sections[1].origin == destination
+    assert response.journeys[0].sections[1].destination == destination
 
 
 def direct_path_func_without_response_valhalla_test():
@@ -450,7 +542,7 @@ def get_valhalla_mode_valid_mode_test():
         assert Valhalla._get_valhalla_mode(kraken_mode) == valhalla_mode
 
 
-def one_to_many_valhalla_test():
+def sources_to_targets_valhalla_test():
     instance = MagicMock()
     instance.walking_speed = 1.12
     valhalla = Valhalla(instance=instance,
@@ -459,11 +551,8 @@ def one_to_many_valhalla_test():
     origin = make_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
     destination = make_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
     response = {
-        'one_to_many': [
+        'sources_to_targets': [
             [
-                {
-                    'time': 0
-                },
                 {
                     'time': 42
                 },
@@ -477,7 +566,7 @@ def one_to_many_valhalla_test():
         ]
     }
     with requests_mock.Mocker() as req:
-        req.post('http://bob.com/one_to_many', json=response, status_code=200)
+        req.post('http://bob.com/sources_to_targets', json=response, status_code=200)
         valhalla_response = valhalla.get_street_network_routing_matrix(
             [origin],
             [destination, destination, destination],
@@ -489,4 +578,81 @@ def one_to_many_valhalla_test():
         assert valhalla_response.rows[0].routing_response[1].duration == -1
         assert valhalla_response.rows[0].routing_response[1].routing_status == response_pb2.unknown
         assert valhalla_response.rows[0].routing_response[2].duration == 1337
+        assert valhalla_response.rows[0].routing_response[2].routing_status == response_pb2.reached
+
+
+def sources_to_targets_valhalla_with_park_cost_test():
+    """
+    test with a parking cost,
+    we add a different cost on car and bike and no cost on walking
+    """
+    instance = MagicMock()
+    instance.walking_speed = 1.12
+    valhalla = Valhalla(instance=instance,
+                        service_url='http://bob.com',
+                        costing_options={'bib': 'bom'},
+                        mode_park_cost={
+                            'bike': 30,  # 30s for the bike
+                            'car': 5 * 60  # 5 mn for the car
+                            # and no park section for walking
+                        })
+    origin = make_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
+    destination = make_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
+    response = {
+        'sources_to_targets': [
+            [
+                {
+                    'time': 42
+                },
+                {
+                    'time': None
+                },
+                {
+                    'time': 1337
+                },
+            ]
+        ]
+    }
+    with requests_mock.Mocker() as req:
+        req.post('http://bob.com/sources_to_targets', json=response, status_code=200)
+        # it changes nothing for walking
+        valhalla_response = valhalla.get_street_network_routing_matrix(
+            [origin],
+            [destination, destination, destination],
+            mode='walking',
+            max_duration=42,
+            request=MOCKED_REQUEST)
+        assert valhalla_response.rows[0].routing_response[0].duration == 42
+        assert valhalla_response.rows[0].routing_response[0].routing_status == response_pb2.reached
+        assert valhalla_response.rows[0].routing_response[1].duration == -1
+        assert valhalla_response.rows[0].routing_response[1].routing_status == response_pb2.unknown
+        assert valhalla_response.rows[0].routing_response[2].duration == 1337
+        assert valhalla_response.rows[0].routing_response[2].routing_status == response_pb2.reached
+
+        # for bike every reached point have an additional 30s
+        valhalla_response = valhalla.get_street_network_routing_matrix(
+            [origin],
+            [destination, destination, destination],
+            mode='bike',
+            max_duration=42,
+            request=MOCKED_REQUEST)
+        assert valhalla_response.rows[0].routing_response[0].duration == 42 + 30
+        assert valhalla_response.rows[0].routing_response[0].routing_status == response_pb2.reached
+        assert valhalla_response.rows[0].routing_response[1].duration == -1
+        assert valhalla_response.rows[0].routing_response[1].routing_status == response_pb2.unknown
+        assert valhalla_response.rows[0].routing_response[2].duration == 1337 + 30
+        assert valhalla_response.rows[0].routing_response[2].routing_status == response_pb2.reached
+
+        # for car every reached point have an additional 5mn
+        valhalla_response = valhalla.get_street_network_routing_matrix(
+            [origin],
+            [destination, destination, destination],
+            mode='car',
+            max_duration=42,
+            request=MOCKED_REQUEST)
+        assert valhalla_response.rows[0].routing_response[0].duration == 42 + 5 * 60
+        assert valhalla_response.rows[0].routing_response[0].routing_status == response_pb2.reached
+        assert valhalla_response.rows[0].routing_response[1].duration == -1
+        assert valhalla_response.rows[0].routing_response[1].routing_status == response_pb2.unknown
+        assert valhalla_response.rows[0].routing_response[2].duration == 1337 + 5 * 60
         assert valhalla_response.rows[0].routing_response[2].routing_status == response_pb2.reached

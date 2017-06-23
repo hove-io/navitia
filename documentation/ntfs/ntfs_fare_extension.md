@@ -34,11 +34,11 @@ Il est possible de préciser plusieurs tarifs pour un même billet avec des date
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
 "clef de ticket" | chaine unique | Requis | ID tarif (lien avec prices.csv)
-"date de début de validité" | YYYYMMDD | Requis | Date de début de validité du tarif
-"date de fin de validité" | YYYYMMDD | Requis | Date de fin de validité du tarif
+"date de début de validité" | YYYYMMDD | Requis | Date de début de validité du tarif (inclue)
+"date de fin de validité" | YYYYMMDD | Requis | Date de fin de validité du tarif (exclue : le tarif n'est pas appliqué ce jour)
 "prix" | Entier | Requis | Valeur en centimes d'euro
 "name" | chaine | Requis | Libellé du billet
-"champ inconnu" | chaine | Requis |
+"champ ignoré" | chaine | Requis |
 "commentaire" | chaine | Requis | commentaire
 "devise" | chaine | Optionnel | Devise (par défaut: euro)
 

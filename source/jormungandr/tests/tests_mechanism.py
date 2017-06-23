@@ -37,6 +37,7 @@ from datetime import timedelta
 import mock
 import retrying
 from retrying import RetryError
+import six
 
 if not 'JORMUNGANDR_CONFIG_FILE' in os.environ:
     os.environ['JORMUNGANDR_CONFIG_FILE'] = os.path.dirname(os.path.realpath(__file__)) \
@@ -313,13 +314,13 @@ class AbstractTestFixture(unittest.TestCase):
             assert 'line' in types
             assert 'network' in types
 
-    def is_valid_journey_response(self, response, query_str):
+    def is_valid_journey_response(self, response, query_str, check_journey_links=True):
         """
         check that the journey's response is valid
 
         this method is inside AbstractTestFixture because it can be overloaded by not scenario test Fixture
         """
-        if isinstance(query_str, basestring):
+        if isinstance(query_str, six.string_types):
             query_dict = query_from_str(query_str)
         else:
             query_dict = query_str
@@ -344,8 +345,9 @@ class AbstractTestFixture(unittest.TestCase):
 
         check_internal_links(response, self.tester)
 
-        #check other links
-        check_links(response, self.tester)
+        # check other links
+        if check_journey_links:
+            check_links(response, self.tester)
 
         # more checks on links, we want the prev/next/first/last,
         # to have forwarded all params, (and the time must be right)

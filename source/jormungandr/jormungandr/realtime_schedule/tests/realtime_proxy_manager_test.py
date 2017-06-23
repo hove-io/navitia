@@ -26,6 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import
 import pytest
 import pytz
 from jormungandr.realtime_schedule.realtime_proxy_manager import RealtimeProxyManager

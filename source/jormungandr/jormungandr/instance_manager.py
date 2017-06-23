@@ -249,7 +249,7 @@ class InstanceManager(object):
         elif object_id:
             available_instances = [self.instances[k] for k in self._all_keys_of_id(object_id)]
         else:
-            available_instances = self.instances.values()
+            available_instances = list(self.instances.values())
 
         valid_instances = self._filter_authorized_instances(available_instances, api)
         if available_instances and not valid_instances:

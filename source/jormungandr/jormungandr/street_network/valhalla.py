@@ -37,7 +37,18 @@ import json
 from jormungandr.exceptions import TechnicalError, InvalidArguments, ApiNotFound
 from jormungandr.utils import is_url, kilometers_to_meters, get_pt_object_coord, decode_polyline
 from copy import deepcopy
-from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathKey
+from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathKey, \
+    StreetNetworkPathType
+
+
+def fill_park_section(section, point, type, begin_dt, duration):
+    section.type = type
+    section.duration = duration
+    section.begin_date_time = begin_dt
+    section.end_date_time = begin_dt + duration
+
+    section.origin.CopyFrom(point)
+    section.destination.CopyFrom(point)
 
 
 class Valhalla(AbstractStreetNetworkService):
@@ -57,6 +68,10 @@ class Valhalla(AbstractStreetNetworkService):
         }
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_VALHALLA_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_VALHALLA_TIMEOUT_S'])
+        # the mode's park cost represent the initial cost to leave the given mode
+        # it is used to represent that it takes time to park a car or a bike
+        # since valhalla does not handle such a time, we rig valhalla's result to add it
+        self.mode_park_cost = kwargs.get('mode_park_cost', {})  # a dict giving the park time (in s) by mode
 
     def _call_valhalla(self, url, method=requests.post, data=None):
         logging.getLogger(__name__).debug('Valhalla routing service , call url : {}'.format(url))
@@ -79,7 +94,7 @@ class Valhalla(AbstractStreetNetworkService):
 
     @classmethod
     def _format_coord(cls, pt_object, api='route'):
-        if api not in ['route', 'one_to_many']:
+        if api not in ['route', 'sources_to_targets']:
             logging.getLogger(__name__).error('Valhalla routing service , invalid api {}'.format(api))
             raise ApiNotFound('Valhalla routing service , invalid api {}'.format(api))
 
@@ -106,10 +121,11 @@ class Valhalla(AbstractStreetNetworkService):
         return costing_options
 
     @classmethod
-    def _get_response(cls, json_resp, mode, pt_object_origin, pt_object_destination, fallback_extremity):
-        '''
+    def _get_response(cls, json_resp, mode, pt_object_origin, pt_object_destination,
+                      fallback_extremity, direct_path_type, mode_park_cost=None):
+        """
         :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
-        '''
+        """
         map_mode = {
             "walking": response_pb2.Walking,
             "car": response_pb2.Car,
@@ -120,8 +136,9 @@ class Valhalla(AbstractStreetNetworkService):
         resp.response_type = response_pb2.ITINERARY_FOUND
 
         journey = resp.journeys.add()
-        journey.duration = json_resp['trip']['summary']['time']
+        journey.duration = json_resp['trip']['summary']['time'] + (mode_park_cost or 0)
         datetime, represents_start_fallback = fallback_extremity
+        offset = 0  # offset if there is a leaving park section
         if represents_start_fallback:
             journey.departure_date_time = datetime
             journey.arrival_date_time = datetime + journey.duration
@@ -129,12 +146,21 @@ class Valhalla(AbstractStreetNetworkService):
             journey.departure_date_time = datetime - journey.duration
             journey.arrival_date_time = datetime
 
+        beginning_fallback = (direct_path_type == StreetNetworkPathType.BEGINNING_FALLBACK or
+                              direct_path_type == StreetNetworkPathType.DIRECT)
+        if not beginning_fallback and mode_park_cost is not None:
+            # we also add a LEAVE_PARKING section if needed
+            fill_park_section(section=journey.sections.add(), point=pt_object_origin,
+                              type=response_pb2.LEAVE_PARKING,
+                              begin_dt=journey.departure_date_time, duration=mode_park_cost)
+            offset = mode_park_cost
+
         journey.durations.total = journey.duration
 
         if mode == 'walking':
             journey.durations.walking = journey.duration
 
-        previous_section_endtime = journey.departure_date_time
+        previous_section_endtime = journey.departure_date_time + offset
         for index, leg in enumerate(json_resp['trip']['legs']):
             section = journey.sections.add()
             section.type = response_pb2.STREET_NETWORK
@@ -170,6 +196,11 @@ class Valhalla(AbstractStreetNetworkService):
                 coord.lon = sh[0]
                 coord.lat = sh[1]
 
+        if beginning_fallback and mode_park_cost is not None:
+            fill_park_section(section=journey.sections.add(), point=pt_object_destination,
+                              type=response_pb2.PARK,
+                              begin_dt=previous_section_endtime, duration=mode_park_cost)
+
         return resp
 
     @classmethod
@@ -184,14 +215,11 @@ class Valhalla(AbstractStreetNetworkService):
             raise InvalidArguments('Valhalla, mode {} not implemented'.format(kraken_mode))
         return map_mode.get(kraken_mode)
 
-    def _make_request_arguments(self, mode, pt_object_origin, pt_object_destinations, request, api='route', max_duration=None):
+    def _make_request_arguments(self, mode, pt_object_origins, pt_object_destinations, request, api='route', max_duration=None):
 
+        args = {}
         valhalla_mode = self._get_valhalla_mode(mode)
-        destinations = [self._format_coord(destination, api) for destination in pt_object_destinations]
-        args = {
-            'locations': [self._format_coord(pt_object_origin)] + destinations,
-            'costing': valhalla_mode
-        }
+        args['costing'] = valhalla_mode
 
         costing_options = self._get_costing_options(valhalla_mode, request)
         if costing_options:
@@ -199,7 +227,11 @@ class Valhalla(AbstractStreetNetworkService):
 
         if api == 'route':
             args['directions_options'] = self.directions_options
-        if api == 'one_to_many':
+            args['locations'] = [self._format_coord(pt_object_origins[0])] + [self._format_coord(pt_object_destinations[0])]
+        if api == 'sources_to_targets':
+            args['sources'] = [self._format_coord(origin, api) for origin in pt_object_origins]
+            args['targets'] = [self._format_coord(destination, api) for destination in pt_object_destinations]
+
             for key, value in self.directions_options.items():
                 args[key] = value
         return json.dumps(args)
@@ -216,7 +248,7 @@ class Valhalla(AbstractStreetNetworkService):
                                  format(response.url))
 
     def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
-        data = self._make_request_arguments(mode, pt_object_origin, [pt_object_destination], request, api='route')
+        data = self._make_request_arguments(mode, [pt_object_origin], [pt_object_destination], request, api='route')
         r = self._call_valhalla('{}/{}'.format(self.service_url, 'route'), requests.post, data)
         if r is not None and r.status_code == 400 and r.json()['error_code'] == 442:
             # error_code == 442 => No path could be found for input
@@ -226,17 +258,22 @@ class Valhalla(AbstractStreetNetworkService):
             return resp
         self._check_response(r)
         resp_json = r.json()
-        return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, fallback_extremity)
+        return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination,
+                                  fallback_extremity, direct_path_type,
+                                  mode_park_cost=self.mode_park_cost.get(mode))
 
     @classmethod
-    def _get_matrix(cls, json_response):
+    def _get_matrix(cls, json_response, mode_park_cost):
         sn_routing_matrix = response_pb2.StreetNetworkRoutingMatrix()
-        for one_to_many in json_response['one_to_many']:
+        for source_to_target in json_response['sources_to_targets']:
             row = sn_routing_matrix.rows.add()
-            for one in one_to_many[1:]:
+            for one in source_to_target:
                 routing = row.routing_response.add()
                 if one['time']:
-                    routing.duration = one['time']
+                    # the mode's base cost represent the initial cost to take the given mode
+                    # it is used to represent that it takes time to park a car or a bike
+                    # since valhalla does not handle such a time, we tweak valhalla's result to add it
+                    routing.duration = one['time'] + (mode_park_cost or 0)
                     routing.routing_status = response_pb2.reached
                 else:
                     routing.duration = -1
@@ -244,20 +281,17 @@ class Valhalla(AbstractStreetNetworkService):
         return sn_routing_matrix
 
     def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration, request, **kwargs):
-
-        #for now valhalla only manages 1-n request, so we reverse request if needed
+        # for now valhalla only manages 1-n request, so we reverse request if needed
         if len(origins) > 1:
             if len(destinations) > 1:
                 logging.getLogger(__name__).error('routing matrix error, no unique center point')
                 raise TechnicalError('routing matrix error, no unique center point')
-            else:
-                origins, destinations = destinations, origins
 
-        data = self._make_request_arguments(mode, origins[0], destinations, request, api='one_to_many')
-        r = self._call_valhalla('{}/{}'.format(self.service_url, 'one_to_many'), requests.post, data)
+        data = self._make_request_arguments(mode, origins, destinations, request, api='sources_to_targets')
+        r = self._call_valhalla('{}/{}'.format(self.service_url, 'sources_to_targets'), requests.post, data)
         self._check_response(r)
         resp_json = r.json()
-        return self._get_matrix(resp_json)
+        return self._get_matrix(resp_json, mode_park_cost=self.mode_park_cost.get(mode))
 
     def make_path_key(self, mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity):
         """
