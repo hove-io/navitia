@@ -191,6 +191,9 @@ class Uri(ResourceUri, ResourceUtc):
                                       instance_name=self.region)
         return response
 
+    def options(self, **kwargs):
+        return self.api_description(**kwargs)
+
 
 def journey_pattern_points(is_collection):
     class JourneyPatternPoints(Uri):

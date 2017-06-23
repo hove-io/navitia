@@ -41,7 +41,8 @@ import logging
 import pytz
 from jormungandr.exceptions import RegionNotFound, UnableToParse
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerPathSerializer
+from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerPathSerializer, \
+    SwaggerOptionPathSerializer
 from jormungandr.interfaces.v1.swagger_schema import make_schema
 
 
@@ -129,4 +130,4 @@ class DocumentedResource(Resource):
             return options_response
         from flask import request
         schema = make_schema(resource=self, rule=request.url_rule)
-        return SwaggerPathSerializer(schema).data, 200, {'Allow': options_response.allow}
+        return SwaggerOptionPathSerializer(schema).data, 200, {'Allow': options_response.allow}

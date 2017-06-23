@@ -32,7 +32,7 @@ import serpy
 from navitiacommon import type_pb2
 
 from jormungandr.interfaces.v1.serializer.base import GenericSerializer, EnumListField, LiteralField
-from jormungandr.interfaces.v1.serializer.jsonschema.fields import BoolField, Field
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import BoolField, Field, DateTimeType, DateType
 from jormungandr.interfaces.v1.serializer.time import LocalTimeField, PeriodSerializer, DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import *
 from jormungandr.interfaces.v1.serializer import jsonschema
@@ -124,8 +124,8 @@ class TripSerializer(GenericSerializer):
 
 
 class ValidityPatternSerializer(PbNestedSerializer):
-    beginning_date = Field()
-    days = Field()
+    beginning_date = Field(schema_type=DateType)
+    days = Field(schema_type=str)
 
 
 class WeekPatternSerializer(PbNestedSerializer):
@@ -139,12 +139,12 @@ class WeekPatternSerializer(PbNestedSerializer):
 
 
 class CalendarPeriodSerializer(PbNestedSerializer):
-    begin = Field()
-    end = Field()
+    begin = Field(schema_type=DateType)
+    end = Field(schema_type=DateType)
 
 
 class CalendarExceptionSerializer(PbNestedSerializer):
-    datetime = serpy.Field(attr='date')
+    datetime = jsonschema.Field(attr='date', schema_type=DateTimeType)
     type = EnumField()
 
 
@@ -364,7 +364,7 @@ class LineSerializer(GenericSerializer):
 
 
 class JourneyPatternPointSerializer(PbNestedSerializer):
-    id = serpy.Field(attr='uri')
+    id = jsonschema.Field(attr='uri', schema_type=str)
     stop_point = StopPointSerializer(display_none=False)
 
 
@@ -376,7 +376,7 @@ class JourneyPatternSerializer(GenericSerializer):
 class StopTimeSerializer(PbNestedSerializer):
     arrival_time = LocalTimeField()
     departure_time = LocalTimeField()
-    headsign = serpy.Field()
+    headsign = jsonschema.Field(schema_type=str)
     journey_pattern_point = JourneyPatternPointSerializer()
     stop_point = StopPointSerializer()
 

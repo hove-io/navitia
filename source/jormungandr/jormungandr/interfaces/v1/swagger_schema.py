@@ -34,6 +34,8 @@ import inspect
 import jormungandr
 import six
 
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import CustomSchemaType
+
 
 class SwaggerDefinitions(object):
     pass
@@ -216,6 +218,8 @@ def get_schema_properties(serializer):
             # complex types are stored in the `definition` list and referenced
             schema, definition = _from_nested_schema(rendered_field)
             external_definitions.append(definition)
+        elif isinstance(rendered_field, CustomSchemaType):
+            schema = rendered_field.schema()
         elif not schema_metadata:
             raise ValueError('unsupported field type %s for attr %s in object %s' % (
                 rendered_field, field_name, get_serializer_name(serializer)))
