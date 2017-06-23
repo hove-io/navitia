@@ -1,3 +1,17 @@
+navitia2 (2.35.0) unstable; urgency=low
+
+  * Jormungandr: Ability to call HERE routing service to get realtime car routing data  <https://github.com/CanalTP/navitia/pull/2128>
+  * jormun: modernize of some part of jormungandr (to prepare python 3 migration) <https://github.com/CanalTP/navitia/pull/2126>
+  * jormun: add json logging capabilities  <https://github.com/CanalTP/navitia/pull/2123>
+  * Jormungandr: Use sources to targets in scenario distributed  <https://github.com/CanalTP/navitia/pull/2121>
+  * jormun: Fix stat error on journeys without datetime  <https://github.com/CanalTP/navitia/pull/2122>
+  * Jormungandr: add a parking cost to the car/bike section  <https://github.com/CanalTP/navitia/pull/2119>
+  * Jormungandr: rename all the serializer  <https://github.com/CanalTP/navitia/pull/2120>
+  * All: fix build on debian 9  <https://github.com/CanalTP/navitia/pull/2118>
+  * Jormungandr: serpy for Uris  <https://github.com/CanalTP/navitia/pull/2116>
+
+ -- antoine-de <antoine.desbordes@gmail.com>  Fri, 23 Jun 2017 10:06:39 +0100
+
 navitia2 (2.34.1) unstable; urgency=low
 
   * usage of protobuf 3
