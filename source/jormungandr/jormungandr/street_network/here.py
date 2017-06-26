@@ -62,7 +62,7 @@ def get_here_mode(mode):
 
 def _str_to_dt(timestamp):
     dt = datetime.datetime.utcfromtimestamp(timestamp)
-    return dt.strftime("%Y-%m-%dT%H:%M:%S%z")
+    return dt.strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 class Here(AbstractStreetNetworkService):
