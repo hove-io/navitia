@@ -166,11 +166,6 @@ def _from_nested_schema(field):
     schema = {
         '$ref': '#/definitions/' + get_serializer_name(field)
     }
-    if field.many:
-        schema = {
-            'type': "array",  # TODO check how swagger handle null arrays
-            'items': schema,
-        }
 
     return schema, field
 
@@ -232,6 +227,11 @@ def get_schema_properties(serializer):
                 schema_metadata.pop('deprecated')
             schema.update(schema_metadata)
         name = field.label if hasattr(field, 'label') and field.label else field_name
+        if getattr(field, 'many', False) or getattr(rendered_field, 'many', False):
+            schema = {
+                'type': "array",
+                'items': schema,
+            }
         properties[name] = schema
 
     return properties, external_definitions

@@ -29,6 +29,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 import json
+import logging
 
 from tests.tests_mechanism import dataset, AbstractTestFixture
 import flex
@@ -37,7 +38,8 @@ import flex
 def get_params(schema):
     return {p['name']: p for p in schema.get('get', {}).get('parameters', [])}
 
-@dataset({"main_autocomplete_test": {}})
+
+@dataset({"main_routing_test": {}, "main_autocomplete_test": {}})
 class TestSwaggerSchema(AbstractTestFixture):
     """
     Test swagger schema
@@ -121,5 +123,24 @@ class TestSwaggerSchema(AbstractTestFixture):
         assert any((o for o in r.get('places', []) if o.get('embedded_type') == 'address'))
 
         # we also check an adress with a house number
-        r = self._check_schema('/v1/coverage/main_autocomplete_test/places?q=2 rue')
+        r = self._check_schema('/v1/coverage/main_routing_test/places?q=2 rue')
         assert any((o for o in r.get('places', []) if o.get('embedded_type') == 'address'))
+
+
+    def test_stop_points_schema(self):
+        """
+        Test the stop_points schema
+        """
+        self._check_schema('/v1/coverage/main_routing_test/stop_points')
+
+    def test_stop_areas_schema(self):
+        self._check_schema('/v1/coverage/main_routing_test/stop_areas')
+
+    def test_lines_schema(self):
+        self._check_schema('/v1/coverage/main_routing_test/lines')
+
+    def test_routes_schema(self):
+        self._check_schema('/v1/coverage/main_routing_test/routes')
+
+    def test_networks_schema(self):
+        self._check_schema('/v1/coverage/main_routing_test/networks')

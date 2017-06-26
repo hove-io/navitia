@@ -91,7 +91,7 @@ def serpy_extended_supported_serialization_test():
         jsonschemaMethodField = MethodField(schema_type=str)
         lambda_schema = LambdaField(method=lambda **kw: None, schema_type=lambda: Custom())
         list_lambda_schema = LambdaField(method=lambda **kw: None,
-                                         schema_type=lambda: Custom(many=True))
+                                         schema_type=Custom(many=True))
 
         def get_jsonschemaMethodField(self, obj):
             pass
@@ -113,7 +113,6 @@ def serpy_extended_supported_serialization_test():
 
     # we must find the 'CustomSerializer' in the definitions
     assert(next(iter(d for d in external_definitions if d.__class__ == Custom), None))
-
 
 
 def schema_type_test():
@@ -155,7 +154,6 @@ def nested_test():
     """
     Nested Serialization
     """
-
     class NestedType(serpy.Serializer):
         id = jsonschema.StrField()
 
@@ -205,8 +203,7 @@ def param_test():
 
 
 def param_list_test():
-    flask_arg = ArgumentDoc("pouet", type=str,
-                            action="append")
+    flask_arg = ArgumentDoc("pouet", type=str, action="append")
 
     swagger_args = SwaggerParam.make_from_flask_arg(flask_arg)
 

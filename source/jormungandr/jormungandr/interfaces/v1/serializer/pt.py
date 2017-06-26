@@ -36,8 +36,7 @@ from jormungandr.interfaces.v1.serializer.jsonschema.fields import BoolField, Fi
 from jormungandr.interfaces.v1.serializer.time import LocalTimeField, PeriodSerializer, DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import *
 from jormungandr.interfaces.v1.serializer import jsonschema
-from navitiacommon.type_pb2 import ActiveStatus, Channel
-
+from navitiacommon.type_pb2 import ActiveStatus, Channel, hasEquipments
 
 LABEL_DESCRIPTION = """
 Label of the stop area. The name is directly taken from the data whereas the label is
@@ -46,8 +45,12 @@ Label of the stop area. The name is directly taken from the data whereas the lab
 
 class Equipments(EnumListField):
     """
-    hack for equiments their is a useless level in the proto
+    hack for equiments there is a useless level in the proto
     """
+
+    def __init__(self, **kwargs):
+        super(Equipments, self).__init__(hasEquipments.Equipment, **kwargs)
+
     def as_getter(self, serializer_field_name, serializer_cls):
         #For enum we need the full object :(
         return lambda x: x.has_equipments
