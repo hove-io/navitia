@@ -36,7 +36,9 @@ from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, DateTi
 from jormungandr.interfaces.v1.serializer.time import LocalTimeField, PeriodSerializer, DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import *
 from jormungandr.interfaces.v1.serializer import jsonschema
-from navitiacommon.type_pb2 import ActiveStatus, Channel, hasEquipments
+from navitiacommon.type_pb2 import ActiveStatus, Channel, hasEquipments, Properties
+from navitiacommon.response_pb2 import SectionAdditionalInformationType
+
 
 LABEL_DESCRIPTION = """
 Label of the stop area. The name is directly taken from the data whereas the label is
@@ -47,6 +49,9 @@ class Equipments(EnumListField):
     """
     hack for equiments their is a useless level in the proto
     """
+    def as_getter(self, serializer_field_name, serializer_cls):
+        #For enum we need the full object :(
+        return lambda x: x.has_equipments
 
     def __init__(self, **kwargs):
         super(Equipments, self).__init__(hasEquipments.Equipment, **kwargs)
@@ -54,6 +59,14 @@ class Equipments(EnumListField):
     def as_getter(self, serializer_field_name, serializer_cls):
         #For enum we need the full object :(
         return lambda x: x.has_equipments
+
+class AdditionalInformation(EnumListField):
+    """
+    hack for equiments their is a useless level in the proto
+    """
+    def as_getter(self, serializer_field_name, serializer_cls):
+        #For enum we need the full object :(
+        return lambda x: x.properties
 
 
 class ChannelSerializer(PbNestedSerializer):
@@ -147,7 +160,7 @@ class CalendarPeriodSerializer(PbNestedSerializer):
 
 
 class CalendarExceptionSerializer(PbNestedSerializer):
-    datetime = jsonschema.Field(attr='date', schema_type=DateTimeType)
+    datetime = Field(attr='date', schema_type=DateTimeType)
     type = EnumField()
 
 
@@ -433,3 +446,74 @@ class DatasetSerializer(PbNestedSerializer):
     system = jsonschema.Field(schema_type=str, description='Type of dataset provided (GTFS, Chouette, ...)')
     realtime_level = EnumField()
     contributor = ContributorSerializer(description='Contributor providing the dataset')
+
+
+class DisplayInformationSerializer(PbNestedSerializer):
+    description = jsonschema.Field(schema_type=str)
+    physical_mode = jsonschema.Field(schema_type=str)
+    commercial_mode = jsonschema.Field(schema_type=str)
+    network = jsonschema.Field(schema_type=str)
+    direction = jsonschema.Field(schema_type=str)
+    label = jsonschema.MethodField()
+
+    def get_label(self, obj):
+        if obj.HasField(str('code')):
+            return obj.code
+        elif obj.street_network.HasField(str('name')):
+            return obj.name
+        else:
+            return None
+
+    color = jsonschema.Field(schema_type=str)
+    code = jsonschema.Field(schema_type=str)
+    equipments = Equipments(attr='has_equipments', display_none=True)
+    headsign = jsonschema.Field(schema_type=str)
+    headsigns = serpy.Serializer(many=True, display_none=False) #DisruptionLinks()
+    links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
+    text_color = jsonschema.Field(schema_type=str)
+
+class StopDateTimeSerializer(PbNestedSerializer):
+    departure_date_time = DateTimeField()
+    base_departure_date_time = DateTimeField()
+    arrival_date_time = DateTimeField()
+    base_arrival_date_time = DateTimeField()
+    stop_point = StopPointSerializer()
+    additional_informations = AdditionalInformation(attr='additional_informations', display_none=True)
+    links = jsonschema.MethodField(display_none=True)
+    def get_links(self, obj):
+        response = []
+        if obj.HasField(str("properties")):
+            properties = obj.properties
+
+            for note_ in properties.notes:
+                response.append({"id": note_.uri,
+                                 "type": "notes",  # type should be 'note' but retrocompatibility...
+                                 "rel": "notes",
+                                 "value": note_.note,
+                                 "internal": True})
+
+            for exception in properties.exceptions:
+                response.append({"type": "exceptions", # type should be 'exception' but retrocompatibility...
+                                 "rel": "exceptions",
+                                 "id": exception.uri,
+                                 "date": exception.date,
+                                 "except_type": exception.type,
+                                 "internal": True})
+
+            if properties.HasField(str("destination")) and properties.destination.HasField(str("uri")):
+                response.append({"type": "notes",
+                                 "rel": "notes",
+                                 "id": properties.destination.uri,
+                                 "value": properties.destination.destination,
+                                 "internal": True})
+
+            if properties.HasField(str("vehicle_journey_id")):
+                response.append({"type": "vehicle_journey",
+                                 "rel": "vehicle_journeys",
+                                 # the value has nothing to do here (it's the 'id' field), refactor for the v2
+                                 "value": properties.vehicle_journey_id,
+                                 "id": properties.vehicle_journey_id})
+
+        return response
+
+    data_freshness = EnumField()

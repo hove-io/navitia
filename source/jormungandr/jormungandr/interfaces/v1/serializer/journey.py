@@ -29,13 +29,15 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from jormungandr.interfaces.v1.serializer import jsonschema
-from jormungandr.interfaces.v1.serializer.pt import PlaceSerializer, CalendarSerializer
+from jormungandr.interfaces.v1.serializer.pt import PlaceSerializer, CalendarSerializer, DisplayInformationSerializer, \
+    StopDateTimeSerializer
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
-from jormungandr.interfaces.v1.serializer.fields import LinkSchema
+from jormungandr.interfaces.v1.serializer.fields import LinkSchema, RoundedField
 from jormungandr.interfaces.v1.serializer.base import AmountSerializer, PbNestedSerializer, \
-        LambdaField, EnumField
+        LambdaField, EnumField, EnumListField
 from flask import g
 from navitiacommon.type_pb2 import StopDateTime
+from navitiacommon.response_pb2 import SectionAdditionalInformationType
 
 
 class CO2Serializer(PbNestedSerializer):
@@ -43,7 +45,7 @@ class CO2Serializer(PbNestedSerializer):
 
 
 class ContextSerializer(PbNestedSerializer):
-    car_direct_path = LambdaField(lambda _,obj: CO2Serializer(obj, display_none=False).data,
+    car_direct_path = LambdaField(lambda _, obj: CO2Serializer(obj, display_none=False).data,
                                   schema_type=lambda: CO2Serializer())
 
 
@@ -125,6 +127,13 @@ class ExceptionSerializer(PbNestedSerializer):
     pass
 
 
+class PathSerializer(PbNestedSerializer):
+    length = RoundedField(display_none=True)
+    name = jsonschema.Field(schema_type=str, display_none=True)
+    duration = RoundedField(display_none=True)
+    direction = jsonschema.Field(schema_type=int, display_none=True)
+
+
 class SectionSerializer(PbNestedSerializer):
     id = jsonschema.Field(schema_type=str)
     duration = jsonschema.Field(schema_type=int, display_none=True,
@@ -141,9 +150,10 @@ class SectionSerializer(PbNestedSerializer):
                                            description='Base-schedule arrival date and time of the section')
     to = PlaceSerializer(deprecated=True, attr='destination')
     _from = PlaceSerializer(deprecated=True, attr='origin', label='from')
-    additional_informations = EnumField(many=True)
-    geojson = jsonschema.Field(schema_type=str, display_none=True,
-                               description='GeoJSON of the shape of the section')
+    additional_informations = EnumListField(attr='additional_informations', pb_type=SectionAdditionalInformationType)
+
+    #geojson = jsonschema.Field(schema_type=str, display_none=True,
+    #                           description='GeoJSON of the shape of the section')
 
     mode = jsonschema.MethodField(schema_type=lambda: EnumField())
     def get_mode(self, obj):
@@ -151,18 +161,27 @@ class SectionSerializer(PbNestedSerializer):
             return EnumField(obj.street_network.mode, display_none=False)
         else:
             return None
+    type = EnumField(attr='type', display_none=False)
+    display_informations = DisplayInformationSerializer(attr='pt_display_informations', display_none=False)
+    links = jsonschema.MethodField(display_none=True)
 
-    # TODO:
-    # "type": section_type(),
-    # "links": SectionLinks(attribute="uris"),
-    # "display_informations": PbField(display_informations_vj,
-    #                                 attribute='pt_display_informations'),
-    # "path": NonNullList(NonNullNested({"length": Integer(),
-    #                                    "name": fields.String(),
-    #                                    "duration": Integer(),
-    #                                    "direction": fields.Integer()}),
-    #                     attribute="street_network.path_items"),
-    # "stop_date_times": NonNullList(NonNullNested(stop_date_time)),
+    def get_links(self, obj):
+        links = []
+        if obj.HasField(str("uris")):
+            links = obj.uris.ListFields()
+
+        response = []
+        if links:
+            for type_, value in links:
+                response.append({"type": type_.name, "id": value})
+
+        if obj.HasField(str('pt_display_informations')):
+            for value in obj.pt_display_informations.notes:
+                response.append({"type": 'notes', "id": value.uri, 'value': value.note})
+        return response
+
+    stop_date_times = StopDateTimeSerializer(many=True)
+    path = PathSerializer(attr="street_network.path_items", many=True)
 
 
 class JourneySerializer(PbNestedSerializer):
@@ -181,10 +200,13 @@ class JourneySerializer(PbNestedSerializer):
                               description='Status from the whole journey taking into account the most '
                                           'disturbing information retrieved on every object used '
                                           '(can be "NO_SERVICE", "SIGNIFICANT_DELAYS", ...')
-    tags = jsonschema.Field(schema_type=str, many=True,
-                            description='List of tags on the journey. The tags add additional information '
-                                        'on the journey beside the journey type '
-                                        '(can be "walking", "bike", ...)') # TODO check que ca marche avec les sections
+    tags = jsonschema.MethodField(schema_type=str, many=True,
+                                  description='List of tags on the journey. The tags add additional information '
+                                              'on the journey beside the journey type '
+                                              '(can be "walking", "bike", ...)')
+    def get_tags(self, obj):
+        return [t for t in obj.tags]
+
     co2_emission = AmountSerializer()
     durations = DurationsSerializer()
     fare = FareSerializer()

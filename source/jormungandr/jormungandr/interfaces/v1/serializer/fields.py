@@ -114,6 +114,16 @@ class FirstCommentField(jsonschema.Field):
             return None
 
 
+class RoundedField(jsonschema.Field):
+    def __init__(self, **kwargs):
+        super(RoundedField, self).__init__(schema_type=int, **kwargs)
+
+    def to_value(self, value):
+        if value is None:
+            return None
+        return int(round(value))
+
+
 class LinkSchema(serpy.Serializer):
     """This Class is not used as a serializer, but here only to get the schema of a link"""
     id = StrField()
