@@ -81,7 +81,7 @@ class Coverage(StatedResource):
 
         resp = i_manager.regions(region, lon, lat)
         if 'regions' in resp:
-            resp['regions'] = sorted(resp['regions'], cmp=lambda reg1, reg2: cmp(reg1.get('name'), reg2.get('name')))
+            resp['regions'] = sorted(resp['regions'], key=lambda r: r.get('name', r.get('region_id')))
         if args['disable_geojson']:
             for r in resp['regions']:
                 if 'shape' in r:

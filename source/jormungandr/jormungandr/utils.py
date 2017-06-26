@@ -39,7 +39,7 @@ from builtins import range, zip
 from importlib import import_module
 import logging
 from jormungandr.exceptions import ConfigException, UnableToParse, InvalidArguments
-from urlparse import urlparse
+from six.moves.urllib.parse import urlparse
 from jormungandr import new_relic
 from six.moves import range
 from six.moves import zip
@@ -125,7 +125,7 @@ def timestamp_to_datetime(timestamp):
     Convert a timestamp to datetime
     if timestamp > MAX_INT we return None
     """
-    from sys import maxint
+    maxint = 9223372036854775807
     # when a date is > 2038-01-19 03:14:07
     # we receive a timestamp = 18446744071562142720 (64 bits) > 9223372036854775807 (MAX_INT 32 bits)
     # And ValueError: timestamp out of range for platform time_t is raised
