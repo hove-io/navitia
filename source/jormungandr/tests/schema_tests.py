@@ -31,7 +31,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import json
 
 from tests.tests_mechanism import dataset, AbstractTestFixture
-from swagger_spec_validator import validator20
 import flex
 
 
@@ -56,7 +55,6 @@ class TestSwaggerSchema(AbstractTestFixture):
         """
         response = self.get_schema()
         flex.core.validate(response)
-        validator20.validate_spec(response)
 
     def _check_schema(self, url):
         schema = self.get_schema()
@@ -70,7 +68,7 @@ class TestSwaggerSchema(AbstractTestFixture):
             url=url,
             status_code=raw_response.status_code,
             content_type='application/json')
-        # flex.core.validate_api_call(schema, req, resp)
+        flex.core.validate_api_call(schema, req, resp)
         return json.loads(raw_response.data)
 
     def test_coverage_schema(self):
