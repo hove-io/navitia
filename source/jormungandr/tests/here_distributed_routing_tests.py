@@ -251,24 +251,24 @@ def mock_here(_, url, params):
 
             # we also check that we gave HERE the departure datetime (to get realtime info)
             # NOTE: since the instance has no timezone we consider the request as UTC
-            assert params.get('departure') == '2012-06-14T07:00:00'
+            assert params.get('departure') == '2012-06-14T07:00:00Z'
 
             return MockResponse(HERE_BEGGINING_MATRIX_RESPONSE, 200)
         if params['destination0'] == r:
             assert params.get('start0') == a
             assert params.get('start1') == useless_a
             assert params.get('start2') == c
-            assert params.get('departure') == '2012-06-14T07:00:00'
+            assert params.get('departure') == '2012-06-14T07:00:00Z'
             return MockResponse(HERE_END_MATRIX_RESPONSE, 200)
     elif url == 'https://route.bob.here.com/routing/7.2/calculateroute.json':
         if params['waypoint0'] == s and params['waypoint1'] == r:
-            assert params.get('departure') == '2012-06-14T07:00:00'
+            assert params.get('departure') == '2012-06-14T07:00:00Z'
             return MockResponse(HERE_ROUTING_RESPONSE_DIRECT_PATH, 200)
         if params['waypoint0'] == s and params['waypoint1'] == b:
-            assert params.get('departure') == '2012-06-14T08:01:00'
+            assert params.get('departure') == '2012-06-14T08:01:00Z'
             return MockResponse(HERE_ROUTING_RESPONSE_BEGINNING_FALLBACK_PATH, 200)
         if params['waypoint0'] == a and params['waypoint1'] == r:
-            assert params.get('departure') == '2012-06-14T08:01:02'
+            assert params.get('departure') == '2012-06-14T08:01:02Z'
             return MockResponse(HERE_ROUTING_RESPONSE_END_FALLBACK_PATH, 200)
     assert False, 'invalid url'
 
