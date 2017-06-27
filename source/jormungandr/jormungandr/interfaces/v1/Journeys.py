@@ -425,7 +425,8 @@ class Journeys(JourneyCommon):
         parser_get.add_argument("show_codes", type=boolean, default=False,
                             description="show more identification codes")
         parser_get.add_argument("_override_scenario", type=six.text_type, description="debug param to specify a custom scenario")
-
+        parser_get.add_argument("_street_network", type=six.text_type,
+                                description="choose the streetnetwork component", hidden=True)
         parser_get.add_argument("_walking_transfer_penalty", type=int)
         parser_get.add_argument("_max_successive_physical_mode", type=int)
         parser_get.add_argument("_max_additional_connections", type=int)

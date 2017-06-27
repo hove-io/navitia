@@ -102,7 +102,7 @@ class StreetNetworkPathPool:
                           request,
                           streetnetwork_path_type):
 
-        streetnetwork_service = self._instance.street_network_services.get(mode)
+        streetnetwork_service = self._instance.get_street_network(mode, request)
         key = streetnetwork_service.make_path_key(mode,
                                                   requested_orig_obj.uri,
                                                   requested_dest_obj.uri,
@@ -130,8 +130,9 @@ class StreetNetworkPathPool:
                 return True
         return False
 
-    def wait_and_get(self, requested_orig_obj, requested_dest_obj, mode, period_extremity, streetnetwork_path_type):
-        streetnetwork_service = self._instance.street_network_services.get(mode)
+    def wait_and_get(self, requested_orig_obj, requested_dest_obj, mode, period_extremity,
+                     streetnetwork_path_type, request):
+        streetnetwork_service = self._instance.get_street_network(mode, request)
         key = streetnetwork_service.make_path_key(mode,
                                                   requested_orig_obj.uri,
                                                   requested_dest_obj.uri,

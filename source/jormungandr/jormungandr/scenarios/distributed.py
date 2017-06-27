@@ -80,6 +80,7 @@ class Scenario(new_default.Scenario):
             return [streetnetwork_path_pool.wait_and_get(requested_orig_obj=requested_orig_obj,
                                                          requested_dest_obj=requested_dest_obj,
                                                          mode=mode,
+                                                         request=request,
                                                          period_extremity=period_extremity,
                                                          streetnetwork_path_type=StreetNetworkPathType.DIRECT)
                     for mode in requested_dep_modes]

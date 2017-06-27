@@ -44,8 +44,8 @@ def kraken_class_test():
         'class': KRAKEN_CLASS
     }]
     services = StreetNetwork.get_street_network_services(None, kraken_conf)
-    for mode in ALL_MODES :
-        assert isinstance(services[mode], Kraken)
+    assert len(services) == 1
+    assert isinstance(services[0], Kraken)
 
 
 def valhalla_class_without_url_test():
@@ -93,8 +93,8 @@ def valhalla_class_without_costing_options_test():
         }
     }]
     services = StreetNetwork.get_street_network_services(None, kraken_conf)
-    for mode in ALL_MODES:
-        assert isinstance(services[mode], Valhalla)
+    assert len(services) == 1
+    assert isinstance(services[0], Valhalla)
 
 
 def valhalla_class_with_empty_costing_options_test():
@@ -107,8 +107,8 @@ def valhalla_class_with_empty_costing_options_test():
         }
     }]
     services = StreetNetwork.get_street_network_services(None, kraken_conf)
-    for mode in ALL_MODES:
-        assert isinstance(services[mode], Valhalla)
+    assert len(services) == 1
+    assert isinstance(services[0], Valhalla)
 
 
 def valhalla_class_with_url_valid_test():
@@ -125,8 +125,8 @@ def valhalla_class_with_url_valid_test():
         }
     }]
     services = StreetNetwork.get_street_network_services(None, kraken_conf)
-    for mode in ALL_MODES:
-        assert isinstance(services[mode], Valhalla)
+    assert len(services) == 1
+    assert isinstance(services[0], Valhalla)
 
 def street_network_without_class_test():
     with pytest.raises(KeyError) as excinfo:
@@ -179,22 +179,4 @@ def valhalla_class_with_class_not_exist_test():
         }]
         StreetNetwork.get_street_network_services(None, kraken_conf)
     assert 'impossible to build StreetNetwork, wrongly formated class: jormungandr.street_network.valhalla.bob' \
-           in str(excinfo.value)
-
-
-def streetnetwork_service_without_modes_test():
-    with pytest.raises(KeyError) as excinfo:
-        kraken_conf = [{
-            'class': 'jormungandr.street_network.valhalla.bob',
-            'args': {
-                "service_url": "http://localhost:8002",
-                "costing_options": {
-                    "pedestrian": {
-                        "walking_speed": 50.1
-                    }
-                }
-            }
-        }]
-        StreetNetwork.get_street_network_services(None, kraken_conf)
-    assert 'impossible to build a StreetNetwork, missing mandatory field in configuration: modes' \
            in str(excinfo.value)

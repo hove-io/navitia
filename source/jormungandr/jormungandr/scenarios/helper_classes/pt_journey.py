@@ -165,7 +165,8 @@ class PtJourneyPool:
                                                             self._requested_dest_obj,
                                                             dep_mode,
                                                             periode_extremity,
-                                                            direct_path_type)
+                                                            direct_path_type,
+                                                            request=self._request)
             if dp.journeys:
                 self._journey_params.direct_path_duration = dp.journeys[0].durations.total
             else:

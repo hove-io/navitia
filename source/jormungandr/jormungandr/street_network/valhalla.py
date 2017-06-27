@@ -53,7 +53,7 @@ def fill_park_section(section, point, type, begin_dt, duration):
 
 class Valhalla(AbstractStreetNetworkService):
 
-    def __init__(self, instance, service_url, id='valhalla', timeout=10, api_key=None, **kwargs):
+    def __init__(self, instance, service_url, modes=[], id='valhalla', timeout=10, api_key=None, **kwargs):
         self.instance = instance
         self.sn_system_id = id
         if not is_url(service_url):
@@ -61,6 +61,7 @@ class Valhalla(AbstractStreetNetworkService):
         self.service_url = service_url
         self.api_key = api_key
         self.timeout = timeout
+        self.modes = modes
         self.costing_options = kwargs.get('costing_options', None)
         # kilometres is default units
         self.directions_options = {
