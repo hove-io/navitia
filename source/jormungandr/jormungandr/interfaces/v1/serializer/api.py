@@ -185,7 +185,7 @@ class CoveragesSerializer(serpy.DictSerializer):
 class JourneysSerializer(PbNestedSerializer):
     journeys = JourneySerializer(many=True)
     error = ErrorSerializer(display_none=False, attr='error')
-    tickets = TicketSerializer(many=True)
+    tickets = TicketSerializer(many=True, display_none=True)
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
     feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
     links = MethodField(schema_type=lambda: LinkSchema(), many=True)

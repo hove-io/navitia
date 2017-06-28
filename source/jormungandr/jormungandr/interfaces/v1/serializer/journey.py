@@ -203,13 +203,13 @@ class JourneySerializer(PbNestedSerializer):
     requested_date_time = DateTimeField(deprecated=True)
     to = PlaceSerializer(deprecated=True, attr='destination')
     _from = PlaceSerializer(deprecated=True, attr='origin', label='from')
-    type = jsonschema.Field(schema_type=str, description='Used to qualify the journey '
-                                                         '(can be "best", "comfort", "non_pt_walk", ...')
+    type = jsonschema.Field(schema_type=str, display_none=True,
+                            description='Used to qualify the journey (can be "best", "comfort", "non_pt_walk", ...')
     status = jsonschema.Field(schema_type=str, attr="most_serious_disruption_effect", display_none=True,
                               description='Status from the whole journey taking into account the most '
                                           'disturbing information retrieved on every object used '
                                           '(can be "NO_SERVICE", "SIGNIFICANT_DELAYS", ...')
-    tags = jsonschema.MethodField(schema_type=str, many=True,
+    tags = jsonschema.MethodField(schema_type=str, many=True, display_none=True,
                                   description='List of tags on the journey. The tags add additional information '
                                               'on the journey beside the journey type '
                                               '(can be "walking", "bike", ...)')
