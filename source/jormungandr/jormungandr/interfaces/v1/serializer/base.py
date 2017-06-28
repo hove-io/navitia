@@ -124,7 +124,13 @@ class EnumField(jsonschema.Field):
 
 
 class EnumListField(EnumField):
+
     """WARNING: the enumlist field does not work without a self.attr"""
+
+    def __init__(self, pb_type=None, **kwargs):
+        super(EnumListField, self).__init__(pb_type, **kwargs)
+        self.many = True
+
     def as_getter(self, serializer_field_name, serializer_cls):
         return lambda x: x
 

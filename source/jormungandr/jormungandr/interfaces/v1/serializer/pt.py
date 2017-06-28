@@ -32,12 +32,11 @@ import serpy
 from navitiacommon import type_pb2
 
 from jormungandr.interfaces.v1.serializer.base import GenericSerializer, EnumListField, LiteralField
-from jormungandr.interfaces.v1.serializer.jsonschema.fields import BoolField, Field
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import BoolField, Field, DateTimeType, DateType
 from jormungandr.interfaces.v1.serializer.time import LocalTimeField, PeriodSerializer, DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import *
 from jormungandr.interfaces.v1.serializer import jsonschema
-from navitiacommon.type_pb2 import ActiveStatus, Channel
-
+from navitiacommon.type_pb2 import ActiveStatus, Channel, hasEquipments
 
 LABEL_DESCRIPTION = """
 Label of the stop area. The name is directly taken from the data whereas the label is
@@ -46,8 +45,12 @@ Label of the stop area. The name is directly taken from the data whereas the lab
 
 class Equipments(EnumListField):
     """
-    hack for equiments their is a useless level in the proto
+    hack for equiments there is a useless level in the proto
     """
+
+    def __init__(self, **kwargs):
+        super(Equipments, self).__init__(hasEquipments.Equipment, **kwargs)
+
     def as_getter(self, serializer_field_name, serializer_cls):
         #For enum we need the full object :(
         return lambda x: x.has_equipments
@@ -124,8 +127,8 @@ class TripSerializer(GenericSerializer):
 
 
 class ValidityPatternSerializer(PbNestedSerializer):
-    beginning_date = Field()
-    days = Field()
+    beginning_date = Field(schema_type=DateType)
+    days = Field(schema_type=str)
 
 
 class WeekPatternSerializer(PbNestedSerializer):
@@ -139,12 +142,12 @@ class WeekPatternSerializer(PbNestedSerializer):
 
 
 class CalendarPeriodSerializer(PbNestedSerializer):
-    begin = Field()
-    end = Field()
+    begin = Field(schema_type=DateType)
+    end = Field(schema_type=DateType)
 
 
 class CalendarExceptionSerializer(PbNestedSerializer):
-    datetime = serpy.Field(attr='date')
+    datetime = jsonschema.Field(attr='date', schema_type=DateTimeType)
     type = EnumField()
 
 
@@ -364,7 +367,7 @@ class LineSerializer(GenericSerializer):
 
 
 class JourneyPatternPointSerializer(PbNestedSerializer):
-    id = serpy.Field(attr='uri')
+    id = jsonschema.Field(attr='uri', schema_type=str)
     stop_point = StopPointSerializer(display_none=False)
 
 
@@ -376,7 +379,7 @@ class JourneyPatternSerializer(GenericSerializer):
 class StopTimeSerializer(PbNestedSerializer):
     arrival_time = LocalTimeField()
     departure_time = LocalTimeField()
-    headsign = serpy.Field()
+    headsign = jsonschema.Field(schema_type=str)
     journey_pattern_point = JourneyPatternPointSerializer()
     stop_point = StopPointSerializer()
 
