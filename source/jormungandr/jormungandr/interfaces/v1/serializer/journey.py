@@ -32,9 +32,9 @@ from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.serializer.pt import PlaceSerializer, CalendarSerializer, DisplayInformationSerializer, \
     StopDateTimeSerializer
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
-from jormungandr.interfaces.v1.serializer.fields import LinkSchema, RoundedField
+from jormungandr.interfaces.v1.serializer.fields import LinkSchema, RoundedField, SectionGeoJsonField
 from jormungandr.interfaces.v1.serializer.base import AmountSerializer, PbNestedSerializer, \
-        LambdaField, EnumField, EnumListField
+        LambdaField, EnumField, EnumListField, NestedEnumField
 from flask import g
 from navitiacommon.type_pb2 import StopDateTime
 from navitiacommon.response_pb2 import SectionAdditionalInformationType
@@ -148,19 +148,28 @@ class SectionSerializer(PbNestedSerializer):
                                              description='Base-schedule departure date and time of the section')
     base_arrival_date_time = DateTimeField(attr='base_end_date_time',
                                            description='Base-schedule arrival date and time of the section')
-    to = PlaceSerializer(deprecated=True, attr='destination')
-    _from = PlaceSerializer(deprecated=True, attr='origin', label='from')
+    to = jsonschema.MethodField(schema_type=lambda: PlaceSerializer(), deprecated=True, attr='destination')
+    def get_to(self, obj):
+        if obj.HasField(str('type')):
+            enum = obj.DESCRIPTOR.fields_by_name['type'].enum_type.values_by_number
+            ret_value = enum[getattr(obj, 'type')].name
+            if ret_value == 'WAITING':
+                return None
+        return PlaceSerializer(obj.destination).data
+
+    _from = jsonschema.MethodField(schema_type=lambda: PlaceSerializer(), deprecated=True,
+                                   attr='origin', label='from')
+    def get__from(self, obj):
+        if obj.HasField(str('type')):
+            enum = obj.DESCRIPTOR.fields_by_name['type'].enum_type.values_by_number
+            ret_value = enum[getattr(obj, 'type')].name
+            if ret_value == 'WAITING':
+                return None
+        return PlaceSerializer(obj.origin).data
+
     additional_informations = EnumListField(attr='additional_informations', pb_type=SectionAdditionalInformationType)
-
-    #geojson = jsonschema.Field(schema_type=str, display_none=True,
-    #                           description='GeoJSON of the shape of the section')
-
-    mode = jsonschema.MethodField(schema_type=lambda: EnumField())
-    def get_mode(self, obj):
-        if obj.HasField(str('street_network')) and obj.street_network.HasField(str('mode')):
-            return EnumField(obj.street_network.mode, display_none=False)
-        else:
-            return None
+    geojson = SectionGeoJsonField(display_none=False, description='GeoJSON of the shape of the section')
+    mode = NestedEnumField(attr='street_network.mode')
     type = EnumField(attr='type', display_none=False)
     display_informations = DisplayInformationSerializer(attr='pt_display_informations', display_none=False)
     links = jsonschema.MethodField(display_none=True)

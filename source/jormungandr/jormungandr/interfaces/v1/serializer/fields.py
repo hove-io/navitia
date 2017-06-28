@@ -34,6 +34,7 @@ from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.serializer.base import EnumField, PbNestedSerializer, DoubleToStringField
 from jormungandr.interfaces.v1.serializer.jsonschema import IntField
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import StrField, BoolField
+from navitiacommon import response_pb2
 
 
 class MultiLineStringField(jsonschema.Field):
@@ -151,3 +152,49 @@ class PaginationSerializer(serpy.Serializer):
     start_page = IntField(attr='startPage', display_none=True)
     items_per_page = IntField(attr='itemsPerPage', display_none=True)
     items_on_page = IntField(attr='itemsOnPage', display_none=True)
+
+
+class SectionGeoJsonField(jsonschema.Field):
+    class SectionGeoJsonSchema(serpy.Serializer):
+        """used not as a serializer, but only for the schema"""
+        class Point2D(serpy.Serializer):
+            pass  # TODO make this work :D
+        type = StrField()
+        coordinates = Point2D(many=True)
+
+    def __init__(self, **kwargs):
+        super(SectionGeoJsonField, self).__init__(schema_type=SectionGeoJsonField.SectionGeoJsonSchema,
+                                                  **kwargs)
+
+    def as_getter(self, serializer_field_name, serializer_cls):
+        def getter(v):
+            return v
+        return getter
+
+    def to_value(self, value):
+        if not hasattr(value, 'type'):
+            return None
+
+        coords = []
+        if value.type == response_pb2.STREET_NETWORK:
+            coords = value.street_network.coordinates
+        elif value.type == response_pb2.CROW_FLY and len(value.shape) != 0:
+            coords = value.shape
+        elif value.type == response_pb2.PUBLIC_TRANSPORT:
+            coords = value.shape
+        elif value.type == response_pb2.TRANSFER:
+            coords.append(value.origin.stop_point.coord)
+            coords.append(value.destination.stop_point.coord)
+        else:
+            return
+
+        response = {
+            "type": "LineString",
+            "coordinates": [],
+            "properties": [{
+                "length": 0 if not value.HasField(str("length")) else value.length
+            }]
+        }
+        for coord in coords:
+            response["coordinates"].append([coord.lon, coord.lat])
+        return response

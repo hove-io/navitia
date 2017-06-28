@@ -123,6 +123,28 @@ class EnumField(jsonschema.Field):
         return [v.name for v in pb_type.DESCRIPTOR.values]
 
 
+class NestedEnumField(EnumField):
+    def as_getter(self, serializer_field_name, serializer_cls):
+        def getter(val):
+            attr = self.attr or serializer_field_name
+            enum_field = attr.split('.')[-1]
+            cur_obj = val
+            for f in attr.split('.')[:-1]:
+                if not cur_obj.HasField(f):
+                    return None
+
+                cur_obj = getattr(cur_obj, f)
+                if not cur_obj:
+                    return None
+
+            if not cur_obj.HasField(enum_field):
+                return None
+            enum = cur_obj.DESCRIPTOR.fields_by_name[enum_field].enum_type.values_by_number
+            ret_value = enum[getattr(cur_obj, enum_field)].name
+            return ret_value
+        return getter
+
+
 class EnumListField(EnumField):
 
     """WARNING: the enumlist field does not work without a self.attr"""
