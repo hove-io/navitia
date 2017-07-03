@@ -37,11 +37,13 @@ from jormungandr.street_network.street_network import AbstractStreetNetworkServi
     StreetNetworkPathKey
 from jormungandr import utils
 
-class Kraken(AbstractStreetNetworkService):
-    sn_system_id = 'kraken'
 
-    def __init__(self, instance, service_url, timeout=10, api_key=None, **kwargs):
+class Kraken(AbstractStreetNetworkService):
+
+    def __init__(self, instance, service_url, modes=[], id='kraken', timeout=10, api_key=None, **kwargs):
         self.instance = instance
+        self.modes = modes
+        self.sn_system_id = id
 
     def _reverse_journeys(self, response):
         if not getattr(response, "journeys"):

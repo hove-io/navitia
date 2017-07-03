@@ -67,7 +67,7 @@ def _str_to_dt(timestamp):
 
 class Here(AbstractStreetNetworkService):
 
-    def __init__(self, instance, service_base_url, id='here', timeout=10, api_id=None, api_code=None,
+    def __init__(self, instance, service_base_url, modes=[], id='here', timeout=10, api_id=None, api_code=None,
                  **kwargs):
         self.instance = instance
         self.sn_system_id = id
@@ -78,6 +78,7 @@ class Here(AbstractStreetNetworkService):
         self.matrix_service_url = 'https://matrix.{base_url}/calculatematrix.json'.format(base_url=service_base_url)
         self.api_id = api_id
         self.api_code = api_code
+        self.modes = modes
         self.timeout = timeout
         self.max_points = 100  # max number of point asked in the routing matrix
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_HERE_FAIL'],

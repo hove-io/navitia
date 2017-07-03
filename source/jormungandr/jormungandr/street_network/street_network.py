@@ -92,7 +92,7 @@ class StreetNetwork(object):
     @staticmethod
     def get_street_network_services(instance, street_network_configurations):
         log = logging.getLogger(__name__)
-        street_network_services = {}
+        street_network_services = []
         for config in street_network_configurations:
             # Set default arguments
             if 'args' not in config:
@@ -101,10 +101,9 @@ class StreetNetwork(object):
                 config['args'].update({'service_url': None})
             if 'instance' not in config['args']:
                 config['args'].update({'instance': instance})
-
-            modes = config.get('modes')
-            if not modes:
-                raise KeyError('impossible to build a StreetNetwork, missing mandatory field in configuration: modes')
+            # for retrocompatibility, since 'modes' was originaly outside 'args'
+            if 'modes' not in config['args']:
+                config['args']['modes'] = config.get('modes', [])
 
             try:
                 service = utils.create_object(config)
@@ -115,8 +114,7 @@ class StreetNetwork(object):
                 raise ConfigException("impossible to build StreetNetwork, wrongly formated class: {}"
                                       .format(e))
 
-            for mode in modes:
-                street_network_services[mode] = service
-                log.info('** StreetNetwork {} used for direct_path with mode: {} **'
-                         .format(type(service).__name__, mode))
+            street_network_services.append(service)
+            log.info('** StreetNetwork {} used for direct_path with mode: {} **'
+                     .format(type(service).__name__, service.modes))
         return street_network_services

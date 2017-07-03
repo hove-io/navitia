@@ -41,7 +41,7 @@ from jormungandr.utils import get_pt_object_coord, is_url, decode_polyline
 
 class Geovelo(AbstractStreetNetworkService):
 
-    def __init__(self, instance, service_url, id='geovelo', timeout=10, api_key=None, **kwargs):
+    def __init__(self, instance, service_url, modes=[], id='geovelo', timeout=10, api_key=None, **kwargs):
         self.instance = instance
         self.sn_system_id = id
         if not is_url(service_url):
@@ -49,6 +49,7 @@ class Geovelo(AbstractStreetNetworkService):
         self.service_url = service_url
         self.api_key = api_key
         self.timeout = timeout
+        self.modes = modes
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_GEOVELO_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_GEOVELO_TIMEOUT_S'])
 

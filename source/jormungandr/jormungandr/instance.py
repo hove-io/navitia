@@ -80,7 +80,8 @@ def _set_default_street_network_config(street_network_configs):
         street_network_configs = []
     default_sn_class = 'jormungandr.street_network.kraken.Kraken'
 
-    modes_in_configs = set(list(itertools.chain.from_iterable(config['modes'] for config in street_network_configs)))
+    modes_in_configs = set(list(itertools.chain.from_iterable(config.get('modes', []) for config in \
+            street_network_configs)))
     modes_not_set = set(STREET_NETWORK_MODES) - modes_in_configs
     if modes_not_set:
         street_network_configs.append({"modes": list(modes_not_set),
@@ -128,7 +129,6 @@ class Instance(object):
                                  'cannot initialize instance {}'.format(autocomplete_type, name))
 
         self.zmq_socket_type = zmq_socket_type
-
 
     def get_models(self):
         if self.name not in g.instances_model:
@@ -484,13 +484,27 @@ class Instance(object):
             if self.publication_date != pub_date:
                 return True
         except DeadSocketException:
-            #we don't do anything on error, a new session will be established to an available kraken on
+            # we don't do anything on error, a new session will be established to an available kraken on
             # the next request. We don't want to purge all our cache for a small error.
             logging.getLogger(__name__).debug('timeout on init for %s', self.name)
         return False
 
+    def get_street_network(self, mode, request):
+        overriden_sn_id = request.get('_street_network')
+        if overriden_sn_id:
+            def predicate(s):
+                return s.sn_system_id == overriden_sn_id
+        else:
+            def predicate(s):
+                return mode in s.modes
+        sn = next((s for s in self.street_network_services if predicate(s)), None)
+        if sn is None:
+            raise TechnicalError('impossible to find a streetnetwork module for {} ({})'.format(
+                mode, overriden_sn_id))
+        return sn
+
     def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration_to_pt, request, **kwargs):
-        service = self.street_network_services.get(mode)
+        service = self.get_street_network(mode, request)
         if not service:
             return None
         return service.get_street_network_routing_matrix(origins,
@@ -501,10 +515,10 @@ class Instance(object):
                                                          **kwargs)
 
     def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
-        '''
+        """
         :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
-        '''
-        service = self.street_network_services.get(mode)
+        """
+        service = self.get_street_network(mode, request)
         if not service:
             return None
         return service.direct_path(mode,
