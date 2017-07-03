@@ -200,7 +200,6 @@ void autocomplete(navitia::PbCreator& pb_creator, const std::string &q,
     //It's always better to get more objects from the disctionnary and apply some rules to delete
     //unwanted objects.
     nbmax = nbmax * 10;
-    //bool addType = d.pt_data->stop_area_autocomplete.is_address_type(q, d.geo_ref->synonyms);
     std::vector<const georef::Admin*> admin_ptr = admin_uris_to_admin_ptr(admins, d);
 
     //Compute number of words in the query:

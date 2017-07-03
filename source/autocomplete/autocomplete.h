@@ -515,26 +515,6 @@ struct Autocomplete
         return vec;
     }
 
-    bool is_address_type(const std::string & str, const std::set<std::string>& ghostwords,
-                         const autocomplete_map& synonyms) const{
-        bool result = false;
-        auto vec_token = tokenize(str, ghostwords, synonyms);
-        std::vector<std::string> vecTpye = {"rue", "avenue", "place", "boulevard","chemin", "impasse"};
-        auto vtok = vec_token.begin();
-        while(vtok != vec_token.end() && (result == false)){
-            //Comparer avec le vectorType:
-            auto vtype = vecTpye.begin();
-            while(vtype != vecTpye.end() && (result == false)){
-                if (*vtok == *vtype){
-                    result = true;
-
-                }
-                ++vtype;
-            }
-            ++vtok;
-        }
-        return result;
-    }
 };
 
 extern template struct Autocomplete<navitia::type::idx_t>;
