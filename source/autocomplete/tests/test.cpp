@@ -223,25 +223,6 @@ BOOST_AUTO_TEST_CASE(regex_toknize_without_tests){
     BOOST_CHECK(vec.find("soie") != vec.end());    
 }
 
-BOOST_AUTO_TEST_CASE(regex_address_type_tests){
-
-    autocomplete_map synonyms;
-    synonyms["hotel de ville"]="mairie";
-    synonyms["cc"]="centre commercial";
-    synonyms["ld"]="Lieu-Dit";
-    synonyms["av"]="avenue";
-    synonyms["r"]="rue";
-    synonyms["bvd"]="boulevard";
-    synonyms["bld"]="boulevard";
-    synonyms["bd"]="boulevard";
-    //AddressType = {"rue", "avenue", "place", "boulevard","chemin", "impasse"}
-    std::set<std::string> ghostwords;
-
-    Autocomplete<unsigned int> ac;
-    bool addtype = ac.is_address_type("r", ghostwords, synonyms);
-    BOOST_CHECK_EQUAL(addtype, true);
-}
-
 BOOST_AUTO_TEST_CASE(regex_synonyme_gare_sncf_tests){
 
     autocomplete_map synonyms;
