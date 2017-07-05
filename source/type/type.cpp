@@ -237,18 +237,31 @@ std::set<StopPoint*> VehicleJourney::get_sections_stop_points(
        const StopArea* start_stop,
        const StopArea* end_stop
 ) const {
-     /*
-     * We are checking if the journey pass first by the start_point of the line_section and
-     * the end_point. We can have start_point == end_point.
+    /*
+     * Identify all the smallest sections starting with start_stop and
+     * ending with end_stop. Then we return the set of stop points
+     * corresponding to the identified sections.
      *
-     * We perform the check on the base_vj stop_times, if it exists, in order to be able to
-     * apply multiple line_section disruption.
+     * For example, if we want the section A B:
+     *    A B C D E A B
+     *    ***       ***
+     * we return {A, B} (not everything)
+     *
+     * Note:
+     *
+     * We are checking if the journey pass first by the start_point of
+     * the line_section and the end_point. We can have start_point ==
+     * end_point.
+     *
+     * We perform the check on the base_vj stop_times, if it exists,
+     * in order to be able to apply multiple line_section disruption.
      *
      * If we have a line A :
      *
      *      s1----->s2----->s3----->s4----->s5
      *
-     * if you first impact [s2, s3] then in another disruption impact [s2, s4], you need the base stops
+     * if you first impact [s2, s3] then in another disruption impact
+     * [s2, s4], you need the base stops
      *
      * There is also the temporal problem.
      * For example if we have two disruptions :

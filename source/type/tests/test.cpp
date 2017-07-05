@@ -222,65 +222,51 @@ BOOST_AUTO_TEST_CASE(tz_handler_overflow_test) {
 BOOST_AUTO_TEST_CASE(get_sections_stop_points){
     ed::builder b("20120614");
     // 0 1 0 2 3 0 4 2
-    b.vj("A")
-        ("0", 8000, 8000)
-        ("1", 8000, 8000)
-        ("0", 8000, 8000)
-        ("2", 8000, 8000)
-        ("3", 8000, 8000)
-        ("0", 8000, 8000)
-        ("4", 8000, 8000)
-        ("2", 8000, 8000)
-        ("5", 8000, 8000)
-        ("2", 8000, 8000);
+    const auto* vj = b.vj("A")
+        ("0", "09:00"_t)
+        ("1", "09:00"_t)
+        ("0", "09:00"_t)
+        ("2", "09:00"_t)
+        ("3", "09:00"_t)
+        ("0", "09:00"_t)
+        ("4", "09:00"_t)
+        ("2", "09:00"_t)
+        ("5", "09:00"_t)
+        ("2", "09:00"_t)
+        .make();
     b.data->pt_data->index();
     b.data->complete();
     b.finish();
 
-    const auto* vj = b.data->pt_data->vehicle_journeys.at(0);
-    const auto sa = std::vector<type::StopArea*>{
-        b.data->pt_data->stop_areas_map.at("0"),
-        b.data->pt_data->stop_areas_map.at("1"),
-        b.data->pt_data->stop_areas_map.at("2"),
-        b.data->pt_data->stop_areas_map.at("3"),
-        b.data->pt_data->stop_areas_map.at("4"),
-        b.data->pt_data->stop_areas_map.at("5"),
-    };
-    const auto sp = std::vector<type::StopPoint*>{
-        b.data->pt_data->stop_points_map.at("0"),
-        b.data->pt_data->stop_points_map.at("1"),
-        b.data->pt_data->stop_points_map.at("2"),
-        b.data->pt_data->stop_points_map.at("3"),
-        b.data->pt_data->stop_points_map.at("4"),
-        b.data->pt_data->stop_points_map.at("5"),
-    };
+    auto sa = [&](const std::string& id) { return b.get<type::StopArea>(id); };
+    auto sp = [&](const std::string& id) { return b.get<type::StopPoint>(id); };
 
     // 0 1 0 2 3 0 4 2 5 2
     //   *
-    BOOST_CHECK_EQUAL(vj->get_sections_stop_points(sa[1], sa[1]),
-                      std::set<type::StopPoint*>({sp[1]}));
+    BOOST_CHECK_EQUAL(vj->get_sections_stop_points(sa("1"), sa("1")),
+                      std::set<type::StopPoint*>({sp("1")}));
     // 0 1 0 2 3 0 4 2 5 2
     //   *******
-    BOOST_CHECK_EQUAL(vj->get_sections_stop_points(sa[1], sa[3]),
-                      std::set<type::StopPoint*>({sp[1], sp[0], sp[2], sp[3]}));
+    BOOST_CHECK_EQUAL(vj->get_sections_stop_points(sa("1"), sa("3")),
+                      std::set<type::StopPoint*>({sp("1"), sp("0"), sp("2"), sp("3")}));
     // 0 1 0 2 3 0 4 2 5 2
     //
     // 4 is after 0 -> empty
-    BOOST_CHECK_EQUAL(vj->get_sections_stop_points(sa[4], sa[0]),
+    BOOST_CHECK_EQUAL(vj->get_sections_stop_points(sa("4"), sa("0")),
                       std::set<type::StopPoint*>({}));
     // 0 1 0 2 3 0 4 2 5 2
     // *   *     *
     // route point, only the corresponding stop point
-    BOOST_CHECK_EQUAL(vj->get_sections_stop_points(sa[0], sa[0]),
-                      std::set<type::StopPoint*>({sp[0]}));
+    BOOST_CHECK_EQUAL(vj->get_sections_stop_points(sa("0"), sa("0")),
+                      std::set<type::StopPoint*>({sp("0")}));
     // 0 1 0 2 3 0 4 2 5 2
     //     *****
     // shortest sections, thus we don't have 1
-    BOOST_CHECK_EQUAL(vj->get_sections_stop_points(sa[0], sa[3]),
-                      std::set<type::StopPoint*>({sp[0], sp[2], sp[3]}));
+    BOOST_CHECK_EQUAL(vj->get_sections_stop_points(sa("0"), sa("3")),
+                      std::set<type::StopPoint*>({sp("0"), sp("2"), sp("3")}));
     // 0 1 0 2 3 0 4 2 5 2
     //     ***   *****
     // shortest sections, thus we don't have 1, 3 and 5
-    BOOST_CHECK_EQUAL(vj->get_sections_stop_points(sa[0], sa[2]),
-                      std::set<type::StopPoint*>({sp[0], sp[2], sp[4]}));
+    BOOST_CHECK_EQUAL(vj->get_sections_stop_points(sa("0"), sa("2")),
+                      std::set<type::StopPoint*>({sp("0"), sp("2"), sp("4")}));
 }
