@@ -262,26 +262,29 @@ std::set<StopPoint*> VehicleJourney::get_sections_stop_points(
      *  - s1/s2 from the 5th to the 10th,
      *  - s1/s2/s5 from the 11th to the 15th
      * */
-    std::pair<boost::optional<uint16_t>, boost::optional<uint16_t>> bounds_st;
+    std::set<StopPoint*> res;
+    boost::optional<uint16_t> start_idx;
     const auto* base_vj = this->get_corresponding_base();
     const auto* vj = base_vj ? base_vj : this;
-    for(auto& st: vj->stop_time_list) {
+    for (const auto& st: vj->stop_time_list) {
         // The line section is using stop_areas so we make sure we have one
-        if(st.stop_point && st.stop_point->stop_area) {
-            if(!bounds_st.first && st.stop_point->stop_area->uri == start_stop->uri) {
-                bounds_st.first = st.order();
-            }
-            // We can set the end stop_time multiple time since we want the last stop_time passing at end_stop
-            if(bounds_st.first && st.stop_point->stop_area->uri == end_stop->uri) {
-                bounds_st.second = st.order();
-            }
-        }
-    }
+        if (!st.stop_point || !st.stop_point->stop_area) { continue; }
 
-    std::set<StopPoint*> res;
-    if (bounds_st.first && bounds_st.second) {
-        for (auto i = *bounds_st.first; i <= *bounds_st.second; ++i) {
-            res.insert(vj->stop_time_list[i].stop_point);
+        // we want the shortest section, thus, we set the idx each
+        // time we see it
+        if (st.stop_point->stop_area->idx == start_stop->idx) {
+            start_idx = st.order();
+        }
+
+        // we want the shortest section, thus, we finish the section
+        // as soon as we see the end stop
+        if (start_idx && st.stop_point->stop_area->idx == end_stop->idx) {
+            for (uint16_t i = *start_idx, last = st.order(); i <= last; ++i) {
+                res.insert(vj->stop_time_list[i].stop_point);
+            }
+
+            // the section is finished, we are no more in a section
+            start_idx = boost::none;
         }
     }
     return res;

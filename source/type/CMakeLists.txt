@@ -110,7 +110,7 @@ target_link_libraries(fill_pb_placemark_test ed data types routing fare georef a
 ADD_BOOST_TEST(fill_pb_placemark_test)
 
 add_executable(type_test tests/test.cpp)
-target_link_libraries(type_test types data utils ${BOOST_DEV_LIBS} log4cplus)
+target_link_libraries(type_test types data ed utils ${BOOST_DEV_LIBS} log4cplus)
 add_dependencies(type_test protobuf_files)
 ADD_BOOST_TEST(type_test)
 
