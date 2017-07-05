@@ -1763,21 +1763,15 @@ BOOST_AUTO_TEST_CASE(test_ways){
     way->uri = "2";
     geo_ref.ways.push_back(way);
 
-    auto res = ac.find_complete_way("rue de la loire saint seb", nbmax, [](int){return true;}, ghostwords, geo_ref);
+    auto res = ac.find_complete("rue de la loire saint seb", nbmax, [](int){return true;}, ghostwords);
     BOOST_REQUIRE_EQUAL(res.size(), 3);
 
-    BOOST_REQUIRE_EQUAL(res[0].idx, 2); // The first one is "rue de la Loire"
-    BOOST_REQUIRE_EQUAL(std::get<0>(res[0].scores), 6);
-    BOOST_REQUIRE_EQUAL(res[1].idx, 1); // The second one is "rue De BOURDAILLERIE"
-    BOOST_REQUIRE_EQUAL(std::get<0>(res[1].scores), 5);
-    BOOST_REQUIRE_EQUAL(res[2].idx, 0); // The second one is "rue De BOURDAILLERIE"
-    BOOST_REQUIRE_EQUAL(std::get<0>(res[2].scores), 1);
-
+    BOOST_CHECK_EQUAL(res[0].idx, 2); // The first one is "rue de la Loire"
+    BOOST_CHECK_EQUAL(res[1].idx, 1); // The second one is "rue De BOURDAILLERIE"
+    BOOST_CHECK_EQUAL(res[2].idx, 0); // The third one is "rue CERNAVODA"
 }
 
-
 BOOST_AUTO_TEST_CASE(test_toknizer_with_delimitor_synonyms_tests){
-
     autocomplete_map synonyms;
     synonyms["cc"]="centre commercial";
     synonyms["ld"]="Lieu-Dit";
