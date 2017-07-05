@@ -187,16 +187,21 @@ class ImpactedSerializer(PbNestedSerializer):
     impacted_section = ImpactedSectionSerializer(display_none=False)
 
 
+class TagsField(Field):
+    def __init__(self, **kwargs):
+        super(TagsField, self).__init__(schema_type=str, **kwargs)
+        self.many = True
+
+
 class DisruptionSerializer(PbNestedSerializer):
     id = jsonschema.Field(schema_type=str, attr='uri')
-
     disruption_id = jsonschema.Field(schema_type=str, attr='disruption_uri')
     impact_id = jsonschema.Field(schema_type=str, attr='uri')
     title = jsonschema.Field(schema_type=str),
     application_periods = PeriodSerializer(many=True)
     status = EnumField(attr='status', pb_type=ActiveStatus)
     updated_at = DateTimeField()
-    tags = serpy.Serializer(many=True, display_none=False)
+    tags = TagsField()
     cause = jsonschema.Field(schema_type=str, display_none=True)
     category = jsonschema.Field(schema_type=str, display_none=False)
     severity = SeveritySerializer()
