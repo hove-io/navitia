@@ -188,7 +188,9 @@ struct State {
     }
 
     std::string concat() const {
-        return mode + "&" + zone + "&" + stop_area + "&" + line + "&" + network + "&" + ticket;
+        std::stringstream res;
+        res << mode << "&" << zone << "&" << stop_area << "&" << line << "&" << network << "&" << ticket;
+        return res.str();
     }
 
     template<class Archive> void serialize(Archive & ar, const unsigned int) {

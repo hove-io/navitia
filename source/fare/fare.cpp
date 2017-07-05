@@ -204,7 +204,6 @@ results Fare::compute_fare(const routing::Path& path) const {
                                                << ", dest_sa=" << section_key.dest_stop_area
                                                << ", mode=" << section_key.mode);
                             }
-
                         } else {
                             new_labels[0].push_back(next);
                         }
