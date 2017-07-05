@@ -330,7 +330,7 @@ def create_object(configuration):
         log.warn('impossible to build object {} : {}'.format(class_path, e))
         raise ConfigException(class_path)
     except ImportError:
-        log.warn('impossible to build object {}, cannot find class'.format(class_path))
+        log.exception('impossible to build object {}, cannot find class'.format(class_path))
         raise ConfigException(class_path)
 
     try:
