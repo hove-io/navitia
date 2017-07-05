@@ -322,8 +322,9 @@ bool Transition::valid(const SectionKey& section, const Label& label) const
     {
         if(cond.key == "zone" && boost::lexical_cast<int>(cond.value) != section.start_zone)
             result = false;
-        else if(cond.key == "stoparea" && cond.value != section.start_stop_area)
+        else if(cond.key == "stoparea" && ! boost::iequals(cond.value, section.start_stop_area)){
             result = false;
+        }
         else if(cond.key == "duration") {
             // Dans le fichier CSV, on rentre le temps en minutes, en interne on travaille en secondes
             int duration = boost::lexical_cast<int>(cond.value) * 60;
@@ -343,8 +344,9 @@ bool Transition::valid(const SectionKey& section, const Label& label) const
     {
         if(cond.key == "zone" && boost::lexical_cast<int>(cond.value) != section.dest_zone)
             result = false;
-        else if(cond.key == "stoparea" && cond.value != section.dest_stop_area)
+        else if(cond.key == "stoparea" && ! boost::iequals(cond.value, section.dest_stop_area)) {
             result = false;
+        }
         else if(cond.key == "duration") {
             // Dans le fichier CSV, on rentre le temps en minutes, en interne on travaille en secondes
             int duration = boost::lexical_cast<int>(cond.value) * 60;

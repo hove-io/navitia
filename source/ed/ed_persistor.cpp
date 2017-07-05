@@ -1391,7 +1391,7 @@ void EdPersistor::insert_transitions(const ed::Data& data) {
         std::string start_cond;
         std::string sep = "";
         for (const auto& c: transition.start_conditions) {
-            start_cond += c.to_string() + sep;
+            start_cond += sep + c.to_string();
             sep = "&";
         }
         values.push_back(start_cond);
@@ -1399,7 +1399,7 @@ void EdPersistor::insert_transitions(const ed::Data& data) {
         std::string end_cond;
         sep = "";
         for (const auto& c: transition.end_conditions) {
-            end_cond += c.to_string() + sep;
+            end_cond += sep + c.to_string();
             sep = "&";
         }
         values.push_back(end_cond);
@@ -1411,7 +1411,7 @@ void EdPersistor::insert_transitions(const ed::Data& data) {
             continue;
         }
 
-        LOG4CPLUS_INFO(logger, "transition : " << boost::algorithm::join(values, ","));
+        LOG4CPLUS_INFO(logger, "transition : " << boost::algorithm::join(values, ";"));
         this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();
