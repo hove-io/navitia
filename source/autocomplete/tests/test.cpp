@@ -609,7 +609,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_duplicate_words_and_weight_test){
 4. In the result the administrative_region is the first one
 5. All the stop_areas with same quality are sorted first by the number of stoppoints,
    then by size of the stop name
-   (because the name "Quimper" is aggregated after the stop name and we check the position of if)
+   (because the name "Quimper" is aggregated after the stop name and we check its position)
 6. There 10 elements in the result.
 */
 BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_and_SA_test) {

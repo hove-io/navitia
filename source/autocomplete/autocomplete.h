@@ -68,7 +68,7 @@ using autocomplete_map = std::map<std::string, std::string, Compare>;
 template<class T>
 struct Autocomplete
 {
-    /// structure qui contient la position des mots dans autocomplete et le nombre de match.
+    /// struct that contains the position of the word in the autocomplete and the number of match
     struct fl_quality {
         T idx = 0;
         int nb_found = 0;
@@ -77,9 +77,6 @@ struct Autocomplete
         navitia::type::GeographicalCoord coord;
         int house_number = -1;
         std::tuple<int, size_t, int> scores = std::make_tuple(0, 0, 0);
-        int score() const {
-            return std::get<0>(scores) * 100 + std::get<1>(scores) * 10 + std::get<2>(scores);
-        }
         bool operator<(const fl_quality & other) const{
             return this->quality > other.quality;
         }
@@ -318,15 +315,23 @@ struct Autocomplete
     /**
      * compute the scores of a result
      *
-     * it's a list of scores and the scores are compared lexicographicaly
+     * the score is:
+     *  - the absolute score of the object (like the size of the admin, the number of stoppoints, ...)
+     *  - the length of the longuest common substring beetween the string to search and the indexed string
+     *  - the position of this substring in the indexed string
+     *      this position is used because sometime we have unwanted token far in the indexed string
+     *     (like "Busval d'Oise Bus 95-01 (Zone Aéroportuaire Aéroport Charles de Gaulle 1 RER B)"
+     *     that will match the 'RER B' query, but is less relevant that the "RER B" object :)
+     *
+     * the scores are compared lexicographicaly
      * @param str: string to search
      * @param position: element to score
      */
     std::tuple<int, size_t, int> compute_result_scores(const std::string& str, T position) const {
         auto global_score = word_quality_list.at(position).score;
 
-        // TODO lache un com'!
         const auto& indexed_str = indexed_string.at(position);
+        auto lcs_and_pos = longest_common_substring(str, indexed_str);
 
         return std::make_tuple(
             global_score,
@@ -369,7 +374,6 @@ struct Autocomplete
         });
         return vec_quality;
     }
-
 
     std::vector<fl_quality> compute_vec_quality(const std::string& str,
                                                 const std::vector<T>& index_result,

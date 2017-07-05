@@ -161,7 +161,7 @@ std::pair<size_t, size_t> longest_common_substring(const std::string& str1, cons
     }
     auto curr = std::vector<size_t>(str2.size());
     auto prev = std::vector<size_t>(str2.size());
-    size_t maxSubstr = 0;
+    size_t max_substr = 0;
     size_t position = 0;
 
     for (size_t i = 0; i < str1.size(); ++i) {
@@ -175,14 +175,14 @@ std::pair<size_t, size_t> longest_common_substring(const std::string& str1, cons
             } else {
                 curr[j] = 1 + prev[j - 1];
             }
-            if (maxSubstr < curr[j]) {
-                maxSubstr = curr[j];
+            if (max_substr < curr[j]) {
+                max_substr = curr[j];
                 position = j;
             }
         }
         std::swap(curr, prev);
     }
-    return {maxSubstr, position};
+    return {max_substr, position};
 }
 
 // https://isocpp.org/wiki/faq/templates#separate-template-class-defn-from-decl
