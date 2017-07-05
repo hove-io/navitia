@@ -266,8 +266,9 @@ class Valhalla(AbstractStreetNetworkService):
     @classmethod
     def _get_matrix(cls, json_response, mode_park_cost):
         sn_routing_matrix = response_pb2.StreetNetworkRoutingMatrix()
+        #kraken dosn't handle n-m, we can't have more than one row as they will be ignored
+        row = sn_routing_matrix.rows.add()
         for source_to_target in json_response['sources_to_targets']:
-            row = sn_routing_matrix.rows.add()
             for one in source_to_target:
                 routing = row.routing_response.add()
                 if one['time']:
