@@ -48,6 +48,12 @@ www.navitia.io
 #include "routing/raptor.h"
 #include "ed/build_helper.h"
 #include "type/pb_converter.h"
+#include "tests/utils_test.h"
+
+struct logger_initialized {
+    logger_initialized()   { init_logger(); }
+};
+BOOST_GLOBAL_FIXTURE( logger_initialized );
 
 namespace pt = boost::posix_time;
 using namespace navitia::autocomplete;
@@ -468,9 +474,9 @@ BOOST_AUTO_TEST_CASE(autocomplete_add_string_with_Line){
 
     auto res = ac.find_complete("jean-jau", nbmax, [](int){return true;}, ghostwords);
     BOOST_REQUIRE_EQUAL(res.size(), 3);
-    BOOST_CHECK_EQUAL(res.at(0).idx, 1);
-    BOOST_CHECK_EQUAL(res.at(1).idx, 3);
-    BOOST_CHECK_EQUAL(res.at(2).idx, 6);
+    BOOST_CHECK_EQUAL(res.at(0).idx, 6);
+    BOOST_CHECK_EQUAL(res.at(1).idx, 1);
+    BOOST_CHECK_EQUAL(res.at(2).idx, 3);
 }
 
 BOOST_AUTO_TEST_CASE(autocompletesynonym_and_weight_test){
@@ -576,17 +582,12 @@ BOOST_AUTO_TEST_CASE(autocomplete_duplicate_words_and_weight_test){
 
     auto res = ac.find_complete("gare", nbmax, [](int){return true;}, ghostwords);
     BOOST_REQUIRE_EQUAL(res.size(), 8);
-    BOOST_CHECK_EQUAL(res.at(0).quality, 100);
-    BOOST_CHECK_EQUAL(res.at(0).idx, 7);
-    BOOST_CHECK_EQUAL(res.at(1).idx, 4);
-    BOOST_CHECK_EQUAL(res.at(2).idx, 1);
-    BOOST_CHECK_EQUAL(res.at(3).idx, 3);
-    BOOST_CHECK_EQUAL(res.at(4).idx, 5);
-    BOOST_CHECK_EQUAL(res.at(5).idx, 0);
-    BOOST_CHECK_EQUAL(res.at(6).idx, 2);
-    BOOST_CHECK_EQUAL(res.at(7).idx, 6);
-    BOOST_CHECK_EQUAL(res.at(7).quality, 100);
-
+    std::set<size_t> indexes;
+    for (auto i = 0; i< 8; ++i) {
+        BOOST_CHECK_EQUAL(res.at(i).quality, 100);
+        indexes.insert(res.at(i).idx);
+    }
+    BOOST_CHECK_EQUAL_RANGE(indexes, std::set<size_t>({0, 1, 2, 3, 4, 5, 6, 7}));
 
     auto res1 = ac.find_complete("gare tours", nbmax, [](int){return true;}, ghostwords);
     BOOST_REQUIRE_EQUAL(res1.size(), 1);
@@ -606,9 +607,10 @@ BOOST_AUTO_TEST_CASE(autocomplete_duplicate_words_and_weight_test){
 2. All the stop_areas are attached to the same administrative_region.
 3. Call with "quimer" and count = 10
 4. In the result the administrative_region is the first one
-5. All the stop_areas with same quality are sorted by name (case insensitive).
+5. All the stop_areas with same quality are sorted first by the number of stoppoints,
+   then by size of the stop name
+   (because the name "Quimper" is aggregated after the stop name and we check the position of if)
 6. There 10 elements in the result.
-7. We don't have penalty on "admin weight" and "stoparea weight".
 */
 BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_and_SA_test) {
     std::vector<std::string> admins;
@@ -616,7 +618,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_and_SA_test) {
     ed::builder b("20140614");
     b.sa("IUT", 0, 0);
     b.sa("Gare", 0, 0);
-    b.sa("Resistance", 0, 0);
+    b.sa("Resistance", 0, 0)("bob");
     b.sa("Becharles", 0, 0);
     b.sa("Yoyo", 0, 0);
     b.sa("Luther King", 0, 0);
@@ -652,9 +654,9 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_and_SA_test) {
     BOOST_CHECK_EQUAL(resp.places(7).quality(), 90);
     BOOST_CHECK_EQUAL(resp.places(8).quality(), 80);
     BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
-    BOOST_CHECK_EQUAL(resp.places(1).uri(), "Becharles");
-    BOOST_CHECK_EQUAL(resp.places(7).uri(), "Zebre");
-    BOOST_CHECK_EQUAL(resp.places(8).uri(), "Luther King");
+    BOOST_CHECK_EQUAL(resp.places(1).uri(), "Resistance"); // the only sa with 2 stop points
+    BOOST_CHECK_EQUAL(resp.places(7).uri(), "Becharles"); // longuest stop name
+    BOOST_CHECK_EQUAL(resp.places(8).uri(), "Luther King"); // 2 words, so the quality is lower
     BOOST_CHECK_EQUAL(resp.places(9).uri(), "Marcel Paul");
 
     pb_creator.init(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
@@ -663,7 +665,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_and_SA_test) {
     BOOST_REQUIRE_EQUAL(resp.places_size(), 10);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
     BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
-    BOOST_CHECK_EQUAL(resp.places(1).uri(), "Becharles");
+    BOOST_CHECK_EQUAL(resp.places(1).uri(), "Resistance");
     BOOST_CHECK_EQUAL(resp.places(9).uri(), "Marcel Paul");
 }
 
@@ -672,7 +674,6 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_and_SA_test) {
 2. All the stop_areas are attached to the same administrative_region.
 3. Call with "quimer" and count = 5
 4. In the result the administrative_region is absent
-5. We don't have penalty on "admin weight" and "stoparea weight".
 */
 BOOST_AUTO_TEST_CASE(autocomplete_functional_test_SA_test) {
     std::vector<std::string> admins;
@@ -714,7 +715,8 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_SA_test) {
     BOOST_CHECK_EQUAL(resp.places(0).quality(), 90);
     BOOST_CHECK_EQUAL(resp.places(1).quality(), 90);
     BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
-    BOOST_CHECK_EQUAL(resp.places(4).uri(), "IUT");
+    // becharles is the 4th longuest (with Bourgogne, thus it's the alphabetical sort that decide)
+    BOOST_CHECK_EQUAL(resp.places(4).uri(), "Becharles");
 }
 
 /*
@@ -725,7 +727,6 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_SA_test) {
 5. All the stop_areas with same quality are sorted by name (case insensitive).
 6. The addresses have different quality values due to diferent number of words.
 7. There 10 elements in the result.
-8. We don't have penalty on "admin weight" and "stoparea weight".
 */
 BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_SA_and_Address_test) {
     std::vector<std::string> admins;
@@ -783,9 +784,9 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_SA_and_Address_test) {
     BOOST_CHECK_EQUAL(resp.places(1).quality(), 90);
 
     BOOST_CHECK_EQUAL(resp.places(0).uri(), "Quimper");
-    BOOST_CHECK_EQUAL(resp.places(1).uri(), "Becharles");
-    BOOST_CHECK_EQUAL(resp.places(7).name(), "quai NEUF (Quimper)");
-    BOOST_CHECK_EQUAL(resp.places(8).name(), "rue VIS (Quimper)");
+    BOOST_CHECK_EQUAL(resp.places(1).uri(), "IUT");
+    BOOST_CHECK_EQUAL(resp.places(7).name(), "rue VIS (Quimper)");
+    BOOST_CHECK_EQUAL(resp.places(8).name(), "quai NEUF (Quimper)");
     BOOST_CHECK_EQUAL(resp.places(9).name(), "rue DU TREGOR (Quimper)");
 }
 
@@ -1110,10 +1111,10 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_SA_temp_test) {
     BOOST_CHECK_EQUAL(resp.places(1).uri(), "Santec"); //score = 7 but quality = 100
     BOOST_CHECK_EQUAL(resp.places(1).quality(), 100);
     BOOST_CHECK_EQUAL(resp.places(2).uri(), "Fontenay-le-Comte-Santé Nantes"); //score = 75
-    BOOST_CHECK_EQUAL(resp.places(3).uri(), "Bourgogne"); //score = 70
-    BOOST_CHECK_EQUAL(resp.places(3).quality(), 90);
-    BOOST_CHECK_EQUAL(resp.places(4).uri(), "gare de Santes Nantes"); //score = 70
-    BOOST_CHECK_EQUAL(resp.places(4).quality(), 60);
+    BOOST_CHECK_EQUAL(resp.places(3).uri(), "gare de Santes Nantes"); //score = 70
+    BOOST_CHECK_EQUAL(resp.places(3).quality(), 60);
+    BOOST_CHECK_EQUAL(resp.places(4).uri(), "Bourgogne"); //score = 70
+    BOOST_CHECK_EQUAL(resp.places(4).quality(), 90);
     BOOST_CHECK_EQUAL(resp.places(5).uri(), "gare de Santeuil-le-Perchay Nantes"); //score = 50
     BOOST_CHECK_EQUAL(resp.places(5).quality(), 40);
     BOOST_CHECK_EQUAL(resp.places(6).uri(), "gare de Santenay-les-Bains Nantes"); //score = 45
@@ -1766,11 +1767,11 @@ BOOST_AUTO_TEST_CASE(test_ways){
     BOOST_REQUIRE_EQUAL(res.size(), 3);
 
     BOOST_REQUIRE_EQUAL(res[0].idx, 2); // The first one is "rue de la Loire"
-    BOOST_REQUIRE_EQUAL(res[0].score, 6);
+    BOOST_REQUIRE_EQUAL(std::get<0>(res[0].scores), 6);
     BOOST_REQUIRE_EQUAL(res[1].idx, 1); // The second one is "rue De BOURDAILLERIE"
-    BOOST_REQUIRE_EQUAL(res[1].score, 5);
+    BOOST_REQUIRE_EQUAL(std::get<0>(res[1].scores), 5);
     BOOST_REQUIRE_EQUAL(res[2].idx, 0); // The second one is "rue De BOURDAILLERIE"
-    BOOST_REQUIRE_EQUAL(res[2].score, 1);
+    BOOST_REQUIRE_EQUAL(std::get<0>(res[2].scores), 1);
 
 }
 
@@ -1925,4 +1926,24 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_orleans) {
 
     BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
     BOOST_CHECK_EQUAL(resp.places(0).uri(), "Porte d'Orléans");
+}
+
+BOOST_AUTO_TEST_CASE(longuest_substring_test) {
+    const std::string str1 = "ligne b";
+    const std::string str2 = "chronoplus bus b ligne b - technocite <> tarnos femmes d'un siecle";
+
+    auto res = longest_common_substring(str1, str2);
+
+    BOOST_CHECK_EQUAL(res.first, str1.size()); // length of 'ligne b'
+    BOOST_CHECK_EQUAL(res.second, 23); // position of the end of 'ligne b' in str2
+}
+
+BOOST_AUTO_TEST_CASE(longuest_substring_test_2) {
+    const auto str1 = "blabla ligne b toto";
+    const auto str2 = "bliblilignebragnagna";
+
+    auto res = longest_common_substring(str1, str2);
+
+    BOOST_CHECK_EQUAL(res.first, std::string("ligne").size());
+    BOOST_CHECK_EQUAL(res.second, 10); // position of the end of 'ligne' in str2
 }

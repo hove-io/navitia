@@ -175,7 +175,7 @@ Autocomplete<T>::compute_vec_quality(const std::string& str,
             quality.idx = i;
             quality.nb_found = word_quality_list.at(quality.idx).word_count;
             quality.word_len = wordLength;
-            quality.score = word_quality_list.at(quality.idx).score;
+            quality.scores = this->compute_result_scores(str, quality.idx);
             quality.quality = 100;
 
             // whole_way_name = road name + "(" +  city name + ")"
@@ -192,12 +192,42 @@ Autocomplete<T>::compute_vec_quality(const std::string& str,
             auto it_req = std::begin(tokens_req);
             auto it_can = std::begin(tokens_candidate);
             for (; it_req != std::end(tokens_req) && it_can != std::end(tokens_candidate); ++it_req, ++it_can ) {
-                quality.score += (*it_can).find(*it_req) != std::string::npos;
+                std::get<0>(quality.scores) += (*it_can).find(*it_req) != std::string::npos;
             }
             vec_quality.emplace_back(std::move(quality));
         }
     }
     return vec_quality;
+}
+
+std::pair<size_t, size_t> longest_common_substring(const std::string& str1, const std::string& str2) {
+    if (str1.empty() || str2.empty()) {
+        return {0, 0};
+    }
+    auto curr = std::vector<size_t>(str2.size());
+    auto prev = std::vector<size_t>(str2.size());
+    size_t maxSubstr = 0;
+    size_t position = 0;
+
+    for (size_t i = 0; i < str1.size(); ++i) {
+        for (size_t j = 0; j < str2.size(); ++j) {
+            if (str1[i] != str2[j]) {
+                curr[j] = 0;
+                continue;
+            }
+            if (i == 0 || j == 0) {
+                curr[j] = 1;
+            } else {
+                curr[j] = 1 + prev[j - 1];
+            }
+            if (maxSubstr < curr[j]) {
+                maxSubstr = curr[j];
+                position = j;
+            }
+        }
+        std::swap(curr, prev);
+    }
+    return {maxSubstr, position};
 }
 
 template<class T>
@@ -212,7 +242,9 @@ Autocomplete<T>::find_complete_way(const std::string& str,
     auto index_result = find(vec);
     // Créer un vector de réponse:
     auto vec_quality = compute_vec_quality(str, index_result, geo_ref, keep_element, words_length(vec));
-    sort_and_truncate_by_score(vec_quality, nbmax);
+    sort_and_truncate(vec_quality, nbmax, [](const fl_quality& a, const fl_quality& b) {
+        return a.scores > b.scores;
+    });
     return vec_quality;
 }
 

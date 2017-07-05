@@ -809,8 +809,7 @@ void builder::finish() {
  }
 
  void builder::build_autocomplete() {
-    data->pt_data->build_autocomplete(*(data->geo_ref));
-    data->geo_ref->build_autocomplete_list();
+    data->build_autocomplete();
     data->compute_labels();
 }
 }
