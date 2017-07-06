@@ -62,8 +62,6 @@ private:
 
     void load_prices();
 
-    void load_fares();
-
     void load_od();
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance("log");

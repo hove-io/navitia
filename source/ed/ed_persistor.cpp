@@ -1388,21 +1388,21 @@ void EdPersistor::insert_transitions(const ed::Data& data) {
         values.push_back(std::to_string(count++));
         values.push_back(ed::connectors::to_string(start));
         values.push_back(ed::connectors::to_string(end));
-        std::string start_cond;
+        std::stringstream start_cond;
         std::string sep = "";
         for (const auto& c: transition.start_conditions) {
-            start_cond += c.to_string() + sep;
+            start_cond << sep << c.to_string();
             sep = "&";
         }
-        values.push_back(start_cond);
+        values.push_back(start_cond.str());
 
-        std::string end_cond;
+        std::stringstream end_cond;
         sep = "";
         for (const auto& c: transition.end_conditions) {
-            end_cond += c.to_string() + sep;
+            end_cond << sep << c.to_string();
             sep = "&";
         }
-        values.push_back(end_cond);
+        values.push_back(end_cond.str());
         values.push_back(ed::connectors::to_string(transition.global_condition));
         if (! transition.ticket_key.empty()) //we do not add empty ticket, to have null in db
             values.push_back(transition.ticket_key);
@@ -1411,7 +1411,7 @@ void EdPersistor::insert_transitions(const ed::Data& data) {
             continue;
         }
 
-        LOG4CPLUS_INFO(logger, "transition : " << boost::algorithm::join(values, ","));
+        LOG4CPLUS_INFO(logger, "transition : " << boost::algorithm::join(values, ";"));
         this->lotus.insert(values);
     }
     this->lotus.finish_bulk_insert();
