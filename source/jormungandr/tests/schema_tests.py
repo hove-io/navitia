@@ -57,6 +57,8 @@ class TestSwaggerSchema(AbstractTestFixture):
         """
         response = self.get_schema()
         flex.core.validate(response)
+        for typename in response.get('definitions'):
+            assert typename  # we should newer have empty names
 
     def _check_schema(self, url):
         schema = self.get_schema()
