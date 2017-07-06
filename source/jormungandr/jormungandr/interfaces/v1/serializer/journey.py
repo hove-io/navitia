@@ -32,7 +32,7 @@ from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.serializer.pt import PlaceSerializer, CalendarSerializer, DisplayInformationSerializer, \
     StopDateTimeSerializer
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
-from jormungandr.interfaces.v1.serializer.fields import LinkSchema, RoundedField, SectionGeoJsonField
+from jormungandr.interfaces.v1.serializer.fields import LinkSchema, RoundedField, SectionGeoJsonField, StrField
 from jormungandr.interfaces.v1.serializer.base import AmountSerializer, PbNestedSerializer, \
         LambdaField, EnumField, EnumListField, NestedEnumField
 from flask import g
@@ -50,7 +50,7 @@ class ContextSerializer(PbNestedSerializer):
 
 
 class CostSerializer(PbNestedSerializer):
-    value = jsonschema.Field(schema_type=str)
+    value = StrField()
     currency = jsonschema.Field(schema_type=str)
 
 

@@ -49,10 +49,6 @@ class Equipments(EnumListField):
     """
     hack for equiments their is a useless level in the proto
     """
-    def as_getter(self, serializer_field_name, serializer_cls):
-        #For enum we need the full object :(
-        return lambda x: x.has_equipments
-
     def __init__(self, **kwargs):
         super(Equipments, self).__init__(hasEquipments.Equipment, **kwargs)
 
