@@ -42,34 +42,28 @@ static void create_place_pb(const std::vector<Autocomplete<nt::idx_t>::fl_qualit
                             navitia::PbCreator& pb_creator){
     for(auto result_item : result){
         pbnavitia::PtObject* place = pb_creator.add_places();
+        place->set_quality(result_item.quality);
+        place->add_scores(std::get<0>(result_item.scores));
+        place->add_scores(std::get<1>(result_item.scores));
+        place->add_scores(std::get<2>(result_item.scores));
         switch(type){
         case nt::Type_e::StopArea:
             pb_creator.fill(data.pt_data->stop_areas[result_item.idx], place, depth);
-            place->set_quality(result_item.quality);
-            place->set_score(result_item.score);
             break;
         case nt::Type_e::Admin:
             pb_creator.fill(data.geo_ref->admins[result_item.idx], place, depth);
-            place->set_quality(result_item.quality);
-            place->set_score(result_item.score);
             break;
         case nt::Type_e::StopPoint:
             pb_creator.fill(data.pt_data->stop_points[result_item.idx], place, depth);
-            place->set_quality(result_item.quality);
-            place->set_score(result_item.score);
             break;
         case nt::Type_e::Address:{
             const auto& way_coord = navitia::WayCoord(data.geo_ref->ways[result_item.idx],
                     result_item.coord, result_item.house_number);
             pb_creator.fill(&way_coord, place, depth);
-            place->set_quality(result_item.quality);
-            place->set_score(result_item.score);
             break;
         }
         case nt::Type_e::POI:
             pb_creator.fill(data.geo_ref->pois[result_item.idx], place, depth);
-            place->set_quality(result_item.quality);
-            place->set_score(result_item.score);
             break;
         case nt::Type_e::Network:
             pb_creator.fill(data.pt_data->networks[result_item.idx], place, depth);
@@ -333,8 +327,10 @@ void autocomplete(navitia::PbCreator& pb_creator, const std::string &q,
         if ((a.quality() != b.quality()) && (a.quality() == 100  || b.quality() == 100)) {
             return a.quality() > b.quality();
         }
-        if (a.score() != b.score()) {
-            return a.score() > b.score();
+        for (auto s_idx = 0; s_idx < std::min(a.scores_size(), b.scores_size()) ; ++s_idx) {
+            if (a.scores(s_idx) != b.scores(s_idx)) {
+                return a.scores(s_idx) > b.scores(s_idx);
+            }
         }
         if (a.quality() != b.quality()) {
             return a.quality() > b.quality();
