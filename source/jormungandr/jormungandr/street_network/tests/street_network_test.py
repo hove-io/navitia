@@ -160,7 +160,6 @@ def valhalla_class_with_class_invalid_test():
             }
         }]
         StreetNetwork.get_street_network_services(None, kraken_conf)
-    assert 'impossible to build StreetNetwork, wrongly formated class: jormungandr' in str(excinfo.value)
 
 
 def valhalla_class_with_class_not_exist_test():
@@ -178,5 +177,3 @@ def valhalla_class_with_class_not_exist_test():
             }
         }]
         StreetNetwork.get_street_network_services(None, kraken_conf)
-    assert 'impossible to build StreetNetwork, wrongly formated class: jormungandr.street_network.valhalla.bob' \
-           in str(excinfo.value)

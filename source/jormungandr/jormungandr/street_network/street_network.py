@@ -110,9 +110,6 @@ class StreetNetwork(object):
             except KeyError as e:
                 raise KeyError('impossible to build a StreetNetwork, missing mandatory field in configuration: {}'
                                .format(e.message))
-            except ConfigException as e:
-                raise ConfigException("impossible to build StreetNetwork, wrongly formated class: {}"
-                                      .format(e))
 
             street_network_services.append(service)
             log.info('** StreetNetwork {} used for direct_path with mode: {} **'
