@@ -85,17 +85,23 @@ Par exemple : indiquer "mode=physical_mode:metro" pour indiquer que le voyageur 
 * Description par un réseau : Indiquer une URI de réseau (champ **network_id** du réseau avec le préfixe _"network:"_)  
 Par exemple, indiquer "network=network:Filbleu" pour indiquer que le voyageur se trouve sur le réseau Filbleu avant le changement
 * Description par une ligne : Indiquer une URI de ligne (champ **line_id** de la ligne avec le préfixe _"line:"_)  
-* Description par une zone d'arrêt : Indiquer une URI de zone d'arrêt (champ **stop_id** de l'arrêt ayant pour **location_type** la valeur **1** avec le préfixe _"stoparea:"_)  
 * Indiquer **"\*"** pour ne pas fournir de contrainte particulière
 
 **Conditions de début et fin de trajet :**  
 Ces deux champs permettent d'ajouter des conditions au départ (ou à l'arrivée) du trajet :
 * Restriction à une zone tarifaire : préciser dans le champ la valeur _"zone=[fare_zone_id]"_  
 Par exemple : si le voyageur est sur la commune de Paris, on peut indiquer _"zone=1"_ afin de créer une règle applicable uniquement depuis Paris.
+* Restriction à une zone d'arrêt : préciser dans le champ la valeur _"stoparea=[stop_area_id]"_
+(champ **stop_id** de l'arrêt ayant pour **location_type** la valeur **1** avec le préfixe _"stoparea:"_)
+Par exemple : si le voyageur est sur la zone d'arrêt sa:Orsay , on peut indiquer _"stoparea=sa:Orsay"_
+afin de créer une règle applicable uniquement depuis Orsay.
+On a donc une autre modélisation des OD, qui permet de combiner avec d'autres choses :
+Par exemple : `*;network=network:SNCF;stoparea=stop_area:SNC:Troyes;stoparea=stop_area:SNC:Reims;;1`
+appliquera le ticket "1" uniquement pour les sections qui font Troyes-Reims sur le réseau SNCF.
 * Restriction à une durée de voyage : préciser dans le champ la valeur _"duration<[nombre de minutes]"_.  
 Par exemple : indiquer _"duration<60"_ pour préciser que le ticket n'est encore valable que si le voyageur l'utilise depuis moins de 60 minutes.
 * Restriction à un nombre de correspondances : préciser dans le champ la valeur _"nb_changes<[nombre de correspondances]"_.  
-Par exemple : indiquer _"nb_changes<2"_ pour préciser que le ticket n'est utilsable que pour une correspondance.
+Par exemple : indiquer _"nb_changes<2"_ pour préciser que le ticket n'est utilisable que pour une correspondance.
 
 **Condition globale :**  
 Ce champ précise la condition globale d'utilisation du ticket :
@@ -103,3 +109,15 @@ Ce champ précise la condition globale d'utilisation du ticket :
 * "exclusive": correspond à un ticket à tarification spéciale sans correspondance (Noctilien, navettes aéroport…)
 * "with_changes": correspond à un billet de type Origine-Destination permettant tous les changements
 * "symetric": spécifie que ce tarif est également disponible en intervertissant l'état de début et de fin (par exemple : s'il est possible de changer du bus au tramway, la réciproque est vraie)
+
+**Fonctionnement grossier :**
+_warning : description sous réserve, non-contractuelle_
+Pour chaque ligne de ce fichier, le ticket est applicable avec une vérification faite au moment d'emprunter
+une nouvelle section de transport.
+Avant d'appliquer le ticket, on va donc vérifier la validité de :
+
+* l'état avant changement (ticket déjà présent, mode précédent, réseau précédent, ligne précédente)
+* l'état après changement (mode, réseau, ligne)
+* la condition sur le debut de la section à emprunter (zone tarifaire, zone d'arrêt, durée, nombre de changements, ticket)
+* la condition sur la fin de la section à emprunter (zone tarifaire, zone d'arrêt, durée)
+* la condition globale

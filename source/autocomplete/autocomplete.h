@@ -55,6 +55,8 @@ struct Compare {
     }
 };
 
+std::pair<size_t, size_t> longest_common_substring(const std::string&, const std::string&);
+
 using autocomplete_map = std::map<std::string, std::string, Compare>;
 /** Map de type Autocomplete
   *
@@ -66,21 +68,18 @@ using autocomplete_map = std::map<std::string, std::string, Compare>;
 template<class T>
 struct Autocomplete
 {
-    /// structure qui contient la position des mots dans autocomplete et le nombre de match.
-    struct fl_quality{
-        T idx;
-        int nb_found;
-        int word_len;
-        int score;
-        int quality;
+    /// struct that contains the position of the word in the autocomplete and the number of match
+    struct fl_quality {
+        T idx = 0;
+        int nb_found = 0;
+        int word_len = 0;
+        int quality = 0;
         navitia::type::GeographicalCoord coord;
-        int house_number;
-
-        fl_quality() :idx(0), nb_found(0), word_len(0), score(0), quality(0), house_number(-1) {}
+        int house_number = -1;
+        std::tuple<int, size_t, int> scores = std::make_tuple(0, 0, 0);
         bool operator<(const fl_quality & other) const{
             return this->quality > other.quality;
         }
-
     };
 
     /// Structure temporaire pour garder les informations sur chaque ObjetTC:
@@ -117,8 +116,11 @@ struct Autocomplete
     /// Structure pour garder les informations comme nombre des mots, la distance des mots...dans chaque Autocomplete (Position)
     std::map<T, word_quality> word_quality_list;
 
+    // for each T, we store the originaly indexed string (for better score handling)
+    std::map<T, std::string> indexed_string;
+
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
-        ar & word_dictionnary & word_quality_list &pattern_dictionnary &object_type;
+        ar & word_dictionnary & word_quality_list & pattern_dictionnary & object_type & indexed_string;
     }
 
     /// Efface les structures de données sérialisées
@@ -128,6 +130,7 @@ struct Autocomplete
         temp_pattern_map.clear();
         pattern_dictionnary.clear();
         word_quality_list.clear();
+        indexed_string.clear();
     }
 
     // Méthodes permettant de construire l'indexe
@@ -157,6 +160,7 @@ struct Autocomplete
         wc.word_distance = distance;
         wc.score = 0;
         word_quality_list[position] = wc;
+        indexed_string[position] = strip_accents_and_lower(str);
     }
 
     void add_vec_pattern(const std::set<std::string> &vec_words, T position){
@@ -303,13 +307,37 @@ struct Autocomplete
         }
     };
 
-    void sort_and_truncate_by_score(std::vector<fl_quality>& input, size_t nbmax) const {
-        sort_and_truncate(input, nbmax, [](const fl_quality& a, const fl_quality& b){return a.score > b.score;});
-    }
-
     std::vector<fl_quality> sort_and_truncate_by_quality(std::vector<fl_quality> input, size_t nbmax) const {
         sort_and_truncate(input, nbmax, [](const fl_quality& a, const fl_quality& b){return a.quality > b.quality;});
         return input;
+    }
+
+    /**
+     * compute the scores of a result
+     *
+     * the score is:
+     *  - the absolute score of the object (like the size of the admin, the number of stoppoints, ...)
+     *  - the length of the longuest common substring beetween the string to search and the indexed string
+     *  - the position of this substring in the indexed string
+     *      this position is used because sometime we have unwanted token far in the indexed string
+     *     (like "Busval d'Oise Bus 95-01 (Zone Aéroportuaire Aéroport Charles de Gaulle 1 RER B)"
+     *     that will match the 'RER B' query, but is less relevant that the "RER B" object :)
+     *
+     * the scores are compared lexicographicaly
+     * @param str: string to search
+     * @param position: element to score
+     */
+    std::tuple<int, size_t, int> compute_result_scores(const std::string& str, T position) const {
+        auto global_score = word_quality_list.at(position).score;
+
+        const auto& indexed_str = indexed_string.at(position);
+        auto lcs_and_pos = longest_common_substring(str, indexed_str);
+
+        return std::make_tuple(
+            global_score,
+            lcs_and_pos.first,
+            -1 * lcs_and_pos.second // we want to minimize the position
+        );
     }
 
     /** On passe une chaîne de charactère contenant des mots et on trouve toutes les positions contenant au moins un des mots*/
@@ -317,7 +345,7 @@ struct Autocomplete
                                           size_t nbmax,
                                           std::function<bool(T)> keep_element,
                                           const std::set<std::string>& ghostwords)
-                                          const{
+                                          const {
         auto vec = tokenize(str, ghostwords);
         int wordLength = 0;
         fl_quality quality;
@@ -329,32 +357,29 @@ struct Autocomplete
         // Créer un vector de réponse:
         std::vector<fl_quality> vec_quality;
 
-        for(auto i : index_result){
-            if(keep_element(i)) {
+        for (auto i : index_result) {
+            if (keep_element(i)) {
                 quality.idx = i;
                 quality.nb_found = word_quality_list.at(quality.idx).word_count;
                 quality.word_len = wordLength;
-                quality.score = word_quality_list.at(quality.idx).score;
+                quality.scores = this->compute_result_scores(str, quality.idx);
+
                 quality.quality = 100;
                 vec_quality.push_back(quality);
             }
         }
-        sort_and_truncate_by_score(vec_quality, nbmax);
+
+        sort_and_truncate(vec_quality, nbmax, [](const fl_quality& a, const fl_quality& b) {
+            return a.scores > b.scores;
+        });
         return vec_quality;
     }
-
 
     std::vector<fl_quality> compute_vec_quality(const std::string& str,
                                                 const std::vector<T>& index_result,
                                                 const navitia::georef::GeoRef& geo_ref,
                                                 std::function<bool(T)> keep_element,
                                                 int word_length) const;
-
-    std::vector<fl_quality> find_complete_way(const std::string& str,
-                                              size_t nbmax,
-                                              std::function<bool(T)> keep_element,
-                                              const std::set<std::string>& ghostwords,
-                                              const navitia::georef::GeoRef& geo_ref) const;
 
     /** Recherche des patterns les plus proche : faute de frappe */
     std::vector<fl_quality> find_partial_with_pattern(const std::string & str,
@@ -409,7 +434,7 @@ struct Autocomplete
                     quality.idx = pair.first;
                     quality.nb_found = pair.second.nb_found;
                     quality.word_len = wordLength;
-                    quality.score = word_quality_list.at(quality.idx).score;
+                    quality.scores = this->compute_result_scores(str, quality.idx);
                     quality.quality = calc_quality_pattern(quality, word_weight, max_score, pattern_count);
                     vec_quality.push_back(quality);
                 }
@@ -515,26 +540,6 @@ struct Autocomplete
         return vec;
     }
 
-    bool is_address_type(const std::string & str, const std::set<std::string>& ghostwords,
-                         const autocomplete_map& synonyms) const{
-        bool result = false;
-        auto vec_token = tokenize(str, ghostwords, synonyms);
-        std::vector<std::string> vecTpye = {"rue", "avenue", "place", "boulevard","chemin", "impasse"};
-        auto vtok = vec_token.begin();
-        while(vtok != vec_token.end() && (result == false)){
-            //Comparer avec le vectorType:
-            auto vtype = vecTpye.begin();
-            while(vtype != vecTpye.end() && (result == false)){
-                if (*vtok == *vtype){
-                    result = true;
-
-                }
-                ++vtype;
-            }
-            ++vtok;
-        }
-        return result;
-    }
 };
 
 extern template struct Autocomplete<navitia::type::idx_t>;

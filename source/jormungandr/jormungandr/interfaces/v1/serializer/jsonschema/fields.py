@@ -107,3 +107,33 @@ class MethodField(serpy.MethodField):
         self.schema_metadata = schema_metadata or {}
         # the remaining kwargs are added in the schema metadata to add a bit of syntaxic sugar
         self.schema_metadata.update(**kwargs)
+
+
+class CustomSchemaType(object):
+    def schema(self):
+        # by default we look for a _schema variable, but it can be overriden
+        return self._schema
+
+
+class DateTimeType(CustomSchemaType):
+    _schema = {
+        'type': 'string',
+        'format': 'navitia-date-time',  # we do not respect the official swagger datetime format :(
+        'pattern': '\d{4}\d{2}\d{2}T\d{2}\d{2}\d{2}'
+    }
+
+
+class DateType(CustomSchemaType):
+    _schema = {
+        'type': 'string',
+        'format': 'navitia-date',  # we do not respect the official swagger date format :(
+        'pattern': '\d{4}\d{2}\d{2}'
+    }
+
+
+class TimeType(CustomSchemaType):
+    _schema = {
+        'type': 'string',
+        'format': 'navitia-time',
+        'pattern': '\d{2}\d{2}\d{2}'
+    }

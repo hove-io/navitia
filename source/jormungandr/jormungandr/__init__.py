@@ -41,6 +41,7 @@ import sys
 from jormungandr.exceptions import log_exception
 from jormungandr.helper import ReverseProxied, NavitiaRequest
 from jormungandr import compat, utils
+import six
 
 app = Flask(__name__)
 app.config.from_object('jormungandr.default_settings')

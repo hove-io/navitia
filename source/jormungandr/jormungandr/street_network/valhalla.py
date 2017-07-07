@@ -53,7 +53,7 @@ def fill_park_section(section, point, type, begin_dt, duration):
 
 class Valhalla(AbstractStreetNetworkService):
 
-    def __init__(self, instance, service_url, id='valhalla', timeout=10, api_key=None, **kwargs):
+    def __init__(self, instance, service_url, modes=[], id='valhalla', timeout=10, api_key=None, **kwargs):
         self.instance = instance
         self.sn_system_id = id
         if not is_url(service_url):
@@ -61,6 +61,7 @@ class Valhalla(AbstractStreetNetworkService):
         self.service_url = service_url
         self.api_key = api_key
         self.timeout = timeout
+        self.modes = modes
         self.costing_options = kwargs.get('costing_options', None)
         # kilometres is default units
         self.directions_options = {
@@ -265,8 +266,9 @@ class Valhalla(AbstractStreetNetworkService):
     @classmethod
     def _get_matrix(cls, json_response, mode_park_cost):
         sn_routing_matrix = response_pb2.StreetNetworkRoutingMatrix()
+        #kraken dosn't handle n-m, we can't have more than one row as they will be ignored
+        row = sn_routing_matrix.rows.add()
         for source_to_target in json_response['sources_to_targets']:
-            row = sn_routing_matrix.rows.add()
             for one in source_to_target:
                 routing = row.routing_response.add()
                 if one['time']:

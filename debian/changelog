@@ -1,3 +1,17 @@
+navitia2 (2.36.0) unstable; urgency=low
+
+  * Jormun: a few changes for python 3  <https://github.com/CanalTP/navitia/pull/2129>
+  * Kraken: better autocomplete  <https://github.com/CanalTP/navitia/pull/2137>
+  * jormun: add a streetnetwok connector for asgard  <https://github.com/CanalTP/navitia/pull/2135>
+  * kraken: impact on the shortest line sections  <https://github.com/CanalTP/navitia/pull/2134>
+  * Fare: debug + doc for stop_area management  <https://github.com/CanalTP/navitia/pull/2138>
+  * jormun: valhalla matrix must return a vector and not a matrix  <https://github.com/CanalTP/navitia/pull/2136>
+  * jormungandr: choose streetnetwork at request  <https://github.com/CanalTP/navitia/pull/2132>
+  * Jormungandr: add schema for pt collections  <https://github.com/CanalTP/navitia/pull/2131>
+  * Jormungandr: fix here time  <https://github.com/CanalTP/navitia/pull/2130>
+
+ -- kadhikari <krishna.adhikari@canaltp.fr>  Fri, 07 Jul 2017 10:07:58 +0100
+
 navitia2 (2.35.0) unstable; urgency=low
 
   * Jormungandr: Ability to call HERE routing service to get realtime car routing data  <https://github.com/CanalTP/navitia/pull/2128>

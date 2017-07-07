@@ -54,7 +54,7 @@ def valid_autocomplete_with_multi_object(response):
     assert len(places) == 10
     assert places[0]['embedded_type'] == 'administrative_region'
     assert places[1]['embedded_type'] == 'stop_area'
-    assert places[1]['name'] == 'Becharles (Quimper)'
+    assert places[1]['name'] == 'IUT (Quimper)'
     assert places[2]['embedded_type'] == 'stop_area'
     assert places[3]['embedded_type'] == 'stop_area'
     assert places[4]['embedded_type'] == 'stop_area'

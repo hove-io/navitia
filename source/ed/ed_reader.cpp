@@ -1705,7 +1705,7 @@ void EdReader::fill_transitions(navitia::type::Data& data, pqxx::work& work) {
         }
         else end_v = state_map[end];
 
-        //add the edge the the fare graph
+        //add the edge to the fare graph
         boost::add_edge(start_v, end_v, transition, data.fare->g);
     }
 }

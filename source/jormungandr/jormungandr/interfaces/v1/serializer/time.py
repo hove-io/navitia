@@ -31,7 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import serpy
 from datetime import datetime
 from jormungandr.interfaces.v1.serializer.base import PbField, PbNestedSerializer, NestedPbField
-from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, TimeType, DateTimeType
 from jormungandr.utils import timestamp_to_str
 
 
@@ -40,7 +40,7 @@ from jormungandr.utils import timestamp_to_str
 __date_time_null_value__ = 2**64 - 1
 
 
-class LocalTimeField(NestedPbField):
+class LocalTimeField(NestedPbField, TimeType):
     """
     This field convert a number of second from midnight to a string with the format: HH:MM:SS
     No conversion from UTC will be done, we expect the time to already be in desired timezone
@@ -50,33 +50,21 @@ class LocalTimeField(NestedPbField):
             return ""
         return datetime.utcfromtimestamp(value).strftime('%H%M%S')
 
-    def __init__(self, schema_metadata={}, **kwargs):
-        schema_metadata.update(pattern='d{2}\d{2}\d{2}')
-        super(LocalTimeField, self).__init__(str, schema_metadata, **kwargs)
 
-class DateTimeField(PbField):
+class DateTimeField(PbField, DateTimeType):
     """
     custom date format from timestamp
     """
     def to_value(self, value):
         return timestamp_to_str(value)
 
-    def __init__(self, schema_metadata={}, **kwargs):
-        schema_metadata.update(pattern='\d{4}\d{2}\d{2}T\d{2}\d{2}\d{2}')
-        super(DateTimeField, self).__init__(str, schema_metadata, **kwargs)
 
-
-class DateTimeDictField(Field):
+class DateTimeDictField(Field, DateTimeType):
     """
     custom date format from timestamp
     """
     def to_value(self, value):
         return timestamp_to_str(value) if value else None
-
-    def __init__(self, schema_metadata=None, **kwargs):
-        if schema_metadata is None:
-            schema_metadata = {}
-        schema_metadata['pattern'] = '\d{4}\d{2}\d{2}T\d{2}\d{2}\d{2}'
         super(DateTimeDictField, self).__init__(schema_type=str, schema_metadata=schema_metadata, **kwargs)
 
 

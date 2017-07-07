@@ -146,8 +146,8 @@ def get_api(url):
 
 class MockValhalla(Valhalla):
 
-    def __init__(self, instance, service_url, timeout=10, api_key=None, **kwargs):
-        Valhalla.__init__(self, instance, service_url, timeout, api_key, **kwargs)
+    def __init__(self, instance, service_url, modes=[], id='valhalla', timeout=10, api_key=None, **kwargs):
+        Valhalla.__init__(self, instance, service_url, modes, id, timeout, api_key, **kwargs)
 
     def _format_url(self, mode, pt_object_origin, pt_object_destination, api='route'):
         return '{}/{}'.format(self.service_url, api)

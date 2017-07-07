@@ -65,7 +65,8 @@ def wait_and_complete_pt_journey(future_manager,
                                          orig_places_free_access=orig_places_free_access,
                                          dest_places_free_access=dest_places_free_access,
                                          orig_fallback_durations_pool=orig_fallback_durations_pool,
-                                         dest_fallback_durations_pool=dest_fallback_durations_pool)
+                                         dest_fallback_durations_pool=dest_fallback_durations_pool,
+                                         request=request)
         futures.append(f)
     # return a generator, so we block the main thread later when they are evaluated
     return (f.wait_and_get() for f in futures)

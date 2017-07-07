@@ -1,10 +1,23 @@
 The line sections is a way to impact some routes between 2 stops areas
 
-We know (thanks to @eturk!) how to handle blocking line section (the buses don't stop anymore at the stops between the 2 stops), now we need to kown how to show them
+# Blocking a line section
 
-Here's a proposal on how to handle them:
+For each vehicle journey corresponding to the line/route, we get the corresponding base vehicle journey and identify all the smallest sections starting with the first stop and ending with the other.  Then, the new vehicle journey doesn't stop at all corresponding stop points.
 
-# representation
+For example, if we want the section A B on the following lollipop vehicle journey:
+
+```
+A B C D E A B
+***       ***
+```
+
+The disrupted vehicle journey will not stop at A and B:
+
+```
+C D E
+```
+
+# Displaying line sections
 
 The chosen approach is a bit like how delays are handled with `impacted_objects` being a `trip` and `impacted_stops` being the stop_times of this trip
 
