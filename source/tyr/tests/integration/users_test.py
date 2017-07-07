@@ -153,6 +153,9 @@ def test_add_user_without_shape(mock_rabbit):
     assert resp['has_shape'] is False
     assert mock_rabbit.called
 
+    # we did not give any coord, so we don't have some
+    assert resp['default_coord'] is None
+
     # with disable_geojson=true by default
     resp = api_get('/v0/users/')
     assert len(resp) == 1
@@ -172,7 +175,9 @@ def test_add_user(mock_rabbit, geojson_polygon):
     """
     creation of a user passing arguments as a json
     """
-    user = {'login': 'user1', 'email': 'user1@example.com', 'shape': geojson_polygon, 'has_shape': True}
+    coord = '2.37730;48.84550'
+    user = {'login': 'user1', 'email': 'user1@example.com', 'shape': geojson_polygon, 'has_shape': True,
+            'default_coord': coord}
     data = json.dumps(user)
     resp = api_post('/v0/users/', data=data, content_type='application/json')
 
@@ -186,6 +191,7 @@ def test_add_user(mock_rabbit, geojson_polygon):
 
     check(resp)
     assert resp['shape'] == geojson_polygon
+    assert resp['default_coord'] == coord
 
     resp = api_get('/v0/users/')
     assert len(resp) == 1
@@ -211,6 +217,17 @@ def test_add_user_with_invalid_geojson(mock_rabbit, invalid_geojsonfixture):
     creation of a user passing arguments as a json
     """
     user = {'login': 'user1', 'email': 'user1@example.com', 'shape': invalid_geojsonfixture, 'has_shape': True}
+    data = json.dumps(user)
+    resp, status = api_post('/v0/users/', check=False, data=data, content_type='application/json')
+    assert status == 400
+    assert mock_rabbit.call_count == 0
+
+
+def test_add_user_with_invalid_coord(mock_rabbit):
+    """
+    creation of a user passing wrongly formated coord
+    """
+    user = {'login': 'user1', 'email': 'user1@example.com', 'default_coord': 'bob'}
     data = json.dumps(user)
     resp, status = api_post('/v0/users/', check=False, data=data, content_type='application/json')
     assert status == 400

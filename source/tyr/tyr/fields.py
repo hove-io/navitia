@@ -142,7 +142,8 @@ user_fields = {
     'end_point': fields.Nested(end_point_fields),
     'billing_plan': fields.Nested(billing_plan_fields),
     'has_shape': HasShape,
-    'shape': Shape
+    'shape': Shape,
+    'default_coord': fields.Raw,
 }
 
 user_fields_full = {
@@ -159,7 +160,8 @@ user_fields_full = {
     'end_point': fields.Nested(end_point_fields),
     'billing_plan': fields.Nested(billing_plan_fields),
     'has_shape': HasShape,
-    'shape': Shape
+    'shape': Shape,
+    'default_coord': fields.Raw,
 }
 
 dataset_field = {

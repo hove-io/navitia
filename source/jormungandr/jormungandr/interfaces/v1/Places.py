@@ -51,13 +51,11 @@ from flask_restful import marshal_with
 import datetime
 from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
 import ujson as json
-from jormungandr.interfaces.parsers import coord_format, option_value
+from jormungandr.interfaces.parsers import option_value
 from jormungandr.scenarios.utils import pb_type
-
-
-# instance marshal
-from navitiacommon.parser_args_type import ParameterDescription
+from navitiacommon.parser_args_type import ParameterDescription, coord_format
 import six
+
 
 places = {
     "places": NonNullList(NonNullNested(place)),
@@ -133,6 +131,9 @@ class Places(ResourceUri):
 
         if args['shape'] is None and user and user.shape:
             args['shape'] = json.loads(user.shape)
+
+        if args['from'] is None and user and user.default_coord:
+            args['from'] = coord_format()(user.default_coord)
 
         # If a region or coords are asked, we do the search according
         # to the region, else, we do a word wide search

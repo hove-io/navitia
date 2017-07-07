@@ -61,7 +61,7 @@ class ArrayOfEnum(ARRAY):
         super_rp = super(ArrayOfEnum, self).result_processor(dialect, coltype)
 
         def handle_raw_string(value):
-            if value==None:
+            if value is None:
                 return []
             inner = re.match(r"^{(.*)}$", value).group(1)
             return inner.split(",")
@@ -124,8 +124,10 @@ class User(db.Model):
     type = db.Column(db.Enum('with_free_instances', 'without_free_instances', 'super_user', name='user_type'),
                              default='with_free_instances', nullable=False)
 
+    # Note: we don't store postgis object for the shape and the default_coord
+    # because we don't want postgis dependency for the tyr database
     shape = db.Column(db.Text, nullable=True)
-
+    default_coord = db.Column(db.Text, nullable=True)
 
     def __init__(self, login=None, email=None, block_until=None, keys=None, authorizations=None):
         self.login = login
