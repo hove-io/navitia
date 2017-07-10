@@ -115,10 +115,7 @@ class FirstCommentField(jsonschema.Field):
             return None
 
 
-class RoundedField(jsonschema.Field):
-    def __init__(self, **kwargs):
-        super(RoundedField, self).__init__(schema_type=int, **kwargs)
-
+class RoundedField(IntField):
     def to_value(self, value):
         if value is None:
             return None

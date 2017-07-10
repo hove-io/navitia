@@ -47,7 +47,7 @@ Label of the stop area. The name is directly taken from the data whereas the lab
 
 class Equipments(EnumListField):
     """
-    hack for equiments their is a useless level in the proto
+    hack for equipments their is a useless level in the proto
     """
     def __init__(self, **kwargs):
         super(Equipments, self).__init__(hasEquipments.Equipment, **kwargs)
@@ -141,13 +141,13 @@ class ValidityPatternSerializer(PbNestedSerializer):
 
 
 class WeekPatternSerializer(PbNestedSerializer):
-    monday = BoolField(display_none=True)
-    tuesday = BoolField(display_none=True)
-    wednesday = BoolField(display_none=True)
-    thursday = BoolField(display_none=True)
-    friday = BoolField(display_none=True)
-    saturday = BoolField(display_none=True)
-    sunday = BoolField(display_none=True)
+    monday = BoolField()
+    tuesday = BoolField()
+    wednesday = BoolField()
+    thursday = BoolField()
+    friday = BoolField()
+    saturday = BoolField()
+    sunday = BoolField()
 
 
 class CalendarPeriodSerializer(PbNestedSerializer):
@@ -382,7 +382,7 @@ class LineSerializer(GenericSerializer):
 
 
 class JourneyPatternPointSerializer(PbNestedSerializer):
-    id = serpy.Field(attr='uri')
+    id = jsonschema.Field(attr='uri', schema_type=str)
     stop_point = StopPointSerializer(display_none=False)
 
 
@@ -394,7 +394,7 @@ class JourneyPatternSerializer(GenericSerializer):
 class StopTimeSerializer(PbNestedSerializer):
     arrival_time = LocalTimeField()
     departure_time = LocalTimeField()
-    headsign = serpy.Field()
+    headsign = jsonschema.Field(schema_type=str)
     journey_pattern_point = JourneyPatternPointSerializer()
     stop_point = StopPointSerializer()
 
@@ -455,7 +455,7 @@ class DisplayInformationSerializer(PbNestedSerializer):
     def get_label(self, obj):
         if obj.HasField(str('code')):
             return obj.code
-        elif obj.street_network.HasField(str('name')):
+        elif obj.HasField(str('name')):
             return obj.name
         else:
             return None

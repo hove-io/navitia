@@ -124,6 +124,13 @@ class EnumField(jsonschema.Field):
 
 
 class NestedEnumField(EnumField):
+    """
+    handle nested Enum field.
+
+    define attr='street_network.mode'
+
+    it will get the mode of the street_network field
+    """
     def as_getter(self, serializer_field_name, serializer_cls):
         def getter(val):
             attr = self.attr or serializer_field_name

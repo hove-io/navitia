@@ -38,6 +38,7 @@ from jormungandr.interfaces.v1.serializer.base import AmountSerializer, PbNested
 from flask import g
 from navitiacommon.type_pb2 import StopDateTime
 from navitiacommon.response_pb2 import SectionAdditionalInformationType
+from jormungandr.interfaces.v1.make_links import create_internal_link
 
 
 class CO2Serializer(PbNestedSerializer):
@@ -60,18 +61,10 @@ class FareSerializer(PbNestedSerializer):
     links = jsonschema.MethodField(schema_type=lambda: LinkSchema(), many=True, attr='ticket_id')
 
     def get_links(self, obj):
-        ticket_ids = []
-        try:
-            for s_id in obj.ticket_id:
-                ticket_ids.append(s_id)
-        except ValueError:
+        if not hasattr(obj, 'ticket_id'):
             return None
-        response = []
-        for value in ticket_ids:
-            response.append({"type": "ticket", "rel": "tickets",
-                             "internal": True, "templated": False,
-                             "id": value})
-        return response
+
+        return [create_internal_link(id=value, rel='tickets', _type='ticket') for value in obj.ticket_id]
 
 
 class TicketSerializer(PbNestedSerializer):
@@ -83,18 +76,10 @@ class TicketSerializer(PbNestedSerializer):
     links = jsonschema.MethodField(schema_type=lambda: LinkSchema(), many=True)
 
     def get_links(self, obj):
-        section_ids = []
-        try:
-            for s_id in obj.section_id:
-                section_ids.append(s_id)
-        except ValueError:
+        if not hasattr(obj, 'section_id'):
             return None
-        response = []
-        for value in section_ids:
-            response.append({"type": "section", "rel": "sections",
-                             "internal": True, "templated": False,
-                             "id": value})
-        return response
+
+        return [create_internal_link(id=value, rel='sections', _type='section') for value in obj.section_id]
 
 
 class DurationsSerializer(PbNestedSerializer):
@@ -148,7 +133,7 @@ class SectionSerializer(PbNestedSerializer):
                                              description='Base-schedule departure date and time of the section')
     base_arrival_date_time = DateTimeField(attr='base_end_date_time',
                                            description='Base-schedule arrival date and time of the section')
-    to = jsonschema.MethodField(schema_type=lambda: PlaceSerializer(), deprecated=True, attr='destination')
+    to = jsonschema.MethodField(schema_type=PlaceSerializer(), attr='destination')
     def get_to(self, obj):
         if obj.HasField(str('type')):
             enum = obj.DESCRIPTOR.fields_by_name['type'].enum_type.values_by_number
@@ -170,20 +155,15 @@ class SectionSerializer(PbNestedSerializer):
     additional_informations = EnumListField(attr='additional_informations', pb_type=SectionAdditionalInformationType)
     geojson = SectionGeoJsonField(display_none=False, description='GeoJSON of the shape of the section')
     mode = NestedEnumField(attr='street_network.mode')
-    type = EnumField(attr='type', display_none=False)
+    type = EnumField(display_none=False)
     display_informations = DisplayInformationSerializer(attr='pt_display_informations', display_none=False)
     links = jsonschema.MethodField(display_none=True)
 
     def get_links(self, obj):
-        links = []
-        if obj.HasField(str("uris")):
-            links = obj.uris.ListFields()
-
         response = []
-        if links:
-            for type_, value in links:
+        if obj.HasField(str("uris")):
+            for type_, value in obj.uris.ListFields():
                 response.append({"type": type_.name, "id": value})
-
         if obj.HasField(str('pt_display_informations')):
             for value in obj.pt_display_informations.notes:
                 response.append({"type": 'notes', "id": value.uri, 'value': value.note})
@@ -212,10 +192,10 @@ class JourneySerializer(PbNestedSerializer):
     tags = jsonschema.MethodField(schema_type=str, many=True, display_none=True,
                                   description='List of tags on the journey. The tags add additional information '
                                               'on the journey beside the journey type '
+
                                               '(can be "walking", "bike", ...)')
     def get_tags(self, obj):
         return [t for t in obj.tags]
-
     co2_emission = AmountSerializer()
     durations = DurationsSerializer()
     fare = FareSerializer()

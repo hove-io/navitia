@@ -208,6 +208,8 @@ class JourneysSerializer(PbNestedSerializer):
         return None
 
     def get_links(self, obj):
+        # note: some request args can be there several times,
+        # but when there is only one elt, flask does not want lists
         response = []
         for value in obj.links:
             args = {}
