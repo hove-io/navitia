@@ -142,8 +142,7 @@ class SectionSerializer(PbNestedSerializer):
                 return None
         return PlaceSerializer(obj.destination).data
 
-    _from = jsonschema.MethodField(schema_type=lambda: PlaceSerializer(), deprecated=True,
-                                   attr='origin', label='from')
+    _from = jsonschema.MethodField(schema_type=PlaceSerializer(), attr='origin', label='from')
     def get__from(self, obj):
         if obj.HasField(str('type')):
             enum = obj.DESCRIPTOR.fields_by_name['type'].enum_type.values_by_number
