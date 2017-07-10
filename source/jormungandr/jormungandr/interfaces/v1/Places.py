@@ -46,7 +46,7 @@ from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type, date_time_format
 from copy import deepcopy
 from jormungandr.interfaces.v1.transform_id import transform_id
-from jormungandr.exceptions import TechnicalError
+from jormungandr.exceptions import TechnicalError, InvalidArguments
 from flask_restful import marshal_with
 import datetime
 from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
@@ -110,7 +110,7 @@ class Places(ResourceUri):
         self.parsers['get'].add_argument("disable_geojson", type=boolean, default=False,
                                          description="remove geojson from the response")
 
-        self.parsers['get'].add_argument("from", type=coord_format(),
+        self.parsers['get'].add_argument("from", type=coord_format(nullable=True),
                                          description="Coordinates longitude;latitude used to prioritize "
                                                      "the objects around this coordinate")
         self.parsers['get'].add_argument("_autocomplete", type=six.text_type, description="name of the autocomplete service"
@@ -132,8 +132,12 @@ class Places(ResourceUri):
         if args['shape'] is None and user and user.shape:
             args['shape'] = json.loads(user.shape)
 
-        if args['from'] is None and user and user.default_coord:
-            args['from'] = coord_format()(user.default_coord)
+        if user and user.default_coord:
+            if args['from'] is None:
+                args['from'] = coord_format()(user.default_coord)
+        else:
+            if args['from'] == '':
+                raise InvalidArguments("if 'from' is provided it cannot be null")
 
         # If a region or coords are asked, we do the search according
         # to the region, else, we do a word wide search

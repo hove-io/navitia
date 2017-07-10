@@ -117,10 +117,16 @@ def geojson_argument(value):
 
 
 class coord_format(object):
+    def __init__(self, nullable=False):
+        super(coord_format, self).__init__()
+        self.nullable = nullable
+
     def __call__(self, coord):
         """
         Validate coordinates format (lon;lat)
         """
+        if coord == '' and self.nullable:
+            return coord
         lon_lat_splitted = coord.split(";")
         if len(lon_lat_splitted) != 2:
             raise ValueError('Invalid coordinate parameter. It must be lon;lat where lon and lat are floats.')

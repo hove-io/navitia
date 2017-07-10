@@ -388,6 +388,30 @@ class TestBragiShape(AbstractTestFixture):
             with mock.patch('requests.get', http_get):
                 self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi&from=1;2')
 
+    def test_places_for_user_with_coord_and_coord_overriden_to_null(self):
+        """
+        Test that with a default_coord on user, if the user gives an empty coord we do not pass a coord
+        """
+        with user_set(app, FakeUserBragi, "test_user_with_coord"):
+            def http_get(url, *args, **kwargs):
+                params = kwargs.pop('params')
+                assert params
+                assert not params.get('lon')
+                assert not params.get('lat')
+                return MockResponse({}, 200, '')
+
+            with mock.patch('requests.get', http_get):
+                self.query('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi&from=')
+
+    def test_places_with_empty_coord(self):
+        """
+        Test that we get an error if we give an empty coord
+        (and if there is no user defined coord to override)
+        """
+        r, s = self.query_no_assert('v1/coverage/main_routing_test/places?q=toto&_autocomplete=bragi&from=')
+        assert s == 400
+        assert "if 'from' is provided it cannot be null" in r.get('message')
+
     def test_global_place_uri(self):
         mock_requests = MockRequests({
             'https://host_of_bragi/features/bob': (BRAGI_MOCK_RESPONSE, 200)
