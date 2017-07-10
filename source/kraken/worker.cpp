@@ -299,20 +299,29 @@ void Worker::feed_publisher(){
     if (!conf.display_contributors()){
         this->pb_creator.clear_feed_publishers();
     }
-    if (d->meta->license.empty()){
-        return;
+    if (! d->meta->license.empty()) {
+        auto pt_feed_publisher = this->pb_creator.add_feed_publishers();
+        // instance_name is required
+        pt_feed_publisher->set_id(d->meta->instance_name);
+        if (!d->meta->publisher_name.empty()){
+            pt_feed_publisher->set_name(d->meta->publisher_name);
+        }
+        if (!d->meta->publisher_url.empty()){
+            pt_feed_publisher->set_url(d->meta->publisher_url);
+        }
+        if (!d->meta->license.empty()){
+            pt_feed_publisher->set_license(d->meta->license);
+        }
     }
-    auto pb_feed_publisher = this->pb_creator.add_feed_publishers();
-    // instance_name is required
-    pb_feed_publisher->set_id(d->meta->instance_name);
-    if (!d->meta->publisher_name.empty()){
-        pb_feed_publisher->set_name(d->meta->publisher_name);
-    }
-    if (!d->meta->publisher_url.empty()){
-        pb_feed_publisher->set_url(d->meta->publisher_url);
-    }
-    if (!d->meta->license.empty()){
-        pb_feed_publisher->set_license(d->meta->license);
+
+    if (d->meta->street_network_source == "osm") {
+        // we hardcode the osm feed_publisher
+        auto osm_fp = this->pb_creator.add_feed_publishers();
+        // instance_name is required
+        osm_fp->set_id("osm");
+        osm_fp->set_name("openstreetmap");
+        osm_fp->set_url("https://www.openstreetmap.org/copyright");
+        osm_fp->set_license("ODbL");
     }
 }
 
