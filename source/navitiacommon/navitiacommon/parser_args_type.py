@@ -116,4 +116,33 @@ def geojson_argument(value):
     return value
 
 
+class coord_format(object):
+    def __init__(self, nullable=False):
+        super(coord_format, self).__init__()
+        self.nullable = nullable
+
+    def __call__(self, coord):
+        """
+        Validate coordinates format (lon;lat)
+        """
+        if coord == '' and self.nullable:
+            return coord
+        lon_lat_splitted = coord.split(";")
+        if len(lon_lat_splitted) != 2:
+            raise ValueError('Invalid coordinate parameter. It must be lon;lat where lon and lat are floats.')
+
+        lon, lat = lon_lat_splitted
+        lat = float(lat)
+        if not (-90.0 <= lat <= 90.0):
+            raise ValueError("lat should be between -90 and 90")
+        lon = float(lon)
+        if not (180.0 >= lon >= -180.0):
+            raise ValueError("lon should be between -180 and 180")
+
+        return coord
+
+    def description(self):
+        return ParameterDescription(type=str, metadata={'pattern': '.*;.*'})
+
+
 default_count_arg_type = _make_interval_argument(max_value=1000, min_value=0)

@@ -81,7 +81,8 @@ class FakeUser:
     We create a user independent from a database
     """
     def __init__(self, name, id,
-                 have_access_to_free_instances=True, is_super_user=False, is_blocked=False, shape=None):
+                 have_access_to_free_instances=True, is_super_user=False, is_blocked=False, shape=None,
+                 default_coord=None):
         """
         We just need a fake user, we don't really care about its identity
         """
@@ -92,6 +93,7 @@ class FakeUser:
         self.end_point_id = None
         self._is_blocked = is_blocked
         self.shape = shape
+        self.default_coord = default_coord
 
     @classmethod
     def get_from_token(cls, token):

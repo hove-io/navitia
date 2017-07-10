@@ -45,10 +45,10 @@ import shutil
 import json
 from jsonschema import validate, ValidationError
 from formats import poi_type_conf_format, parse_error
-
 from navitiacommon.default_traveler_profile_params import default_traveler_profile_params, acceptable_traveler_types
 from navitiacommon import models, utils
 from navitiacommon.models import db
+from navitiacommon.parser_args_type import coord_format
 from functools import wraps
 from validations import datetime_format
 from tasks import create_autocomplete_depot, remove_autocomplete_depot
@@ -58,7 +58,6 @@ from tyr.helper import get_instance_logger, save_in_tmp
 from tyr.fields import *
 
 __ALL__ = ['Api', 'Instance', 'User', 'Key']
-
 
 
 class Api(flask_restful.Resource):
@@ -398,6 +397,7 @@ class User(flask_restful.Resource):
                             location=('json', 'values'),
                             choices=['with_free_instances', 'without_free_instances', 'super_user'])
         parser.add_argument('shape', type=parser_args_type.geojson_argument, required=False, location=('json', 'values'))
+        parser.add_argument('default_coord', type=coord_format(), required=False, location=('json', 'values'))
         args = parser.parse_args()
 
         if not validate_email(args['email'],
@@ -428,6 +428,7 @@ class User(flask_restful.Resource):
             user.end_point = end_point
             user.billing_plan = billing_plan
             user.shape = ujson.dumps(args['shape'])
+            user.default_coord = args['default_coord']
             db.session.add(user)
             db.session.commit()
 
@@ -459,6 +460,7 @@ class User(flask_restful.Resource):
                             help='billing id of the end_point', location=('json', 'values'))
         parser.add_argument('shape', type=parser_args_type.geojson_argument,
                             default=ujson.loads(user.shape), required=False, location=('json', 'values'))
+        parser.add_argument('default_coord', type=coord_format(), required=False, location=('json', 'values'))
         args = parser.parse_args()
 
         if not validate_email(args['email'],
@@ -492,6 +494,7 @@ class User(flask_restful.Resource):
             user.end_point = end_point
             user.billing_plan = billing_plan
             user.shape = ujson.dumps(args['shape'])
+            user.default_coord = args['default_coord']
             db.session.commit()
 
             tyr_user_event = TyrUserEvent()
