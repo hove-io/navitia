@@ -1048,7 +1048,7 @@ display_informations     | [display_informations](#display-informations) | Usefu
 additional_informations  | *enum* string                                 | Other information. It can be: <ul><li>`regular`: no on demand transport (odt)</li><li>`has_date_time_estimated`: section with at least one estimated date time</li><li>`odt_with_stop_time`: odt with fixed schedule, but travelers have to call agency!</li><li>`odt_with_stop_point`: odt where pickup or drop off are specific points</li><li>`odt_with_zone`: odt which is like a cab, from wherever you want to wherever you want, whenever it is possible</li></ul>
 geojson                  | [GeoJson](http://www.geojson.org)             |
 path                     | Array of [path](#path)                        | The path of this section
-transfer_type            | *enum* string                                 | The type of this transfer it can be: `walking`, `guaranteed`, `extension`
+transfer_type            | *enum* string                                 | The type of this transfer it can be: `walking`, `stay_in`
 stop_date_times          | Array of [stop_date_time](#stop_date_time)    | List of the stop times of this section
 departure_date_time      | [iso-date-time](#iso-date-time)               | Date and time of departure
 arrival_date_time        | [iso-date-time](#iso-date-time)               | Date and time of arrival
