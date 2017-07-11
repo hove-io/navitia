@@ -40,11 +40,8 @@ www.navitia.io
 namespace navitia { namespace type {
 
 struct MetaData{
-
     boost::gregorian::date_period production_date;
-
     boost::posix_time::ptime publication_date;
-
 
     std::string shape;
 

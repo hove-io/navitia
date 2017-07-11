@@ -944,15 +944,19 @@ class OnBasicRouting():
 
         assert len(response["disruptions"]) == 0
         feed_publishers = response["feed_publishers"]
-        assert len(feed_publishers) == 1
+        assert len(feed_publishers) == 2
         for feed_publisher in feed_publishers:
             is_valid_feed_publisher(feed_publisher)
 
-        feed_publisher = feed_publishers[0]
-        assert (feed_publisher["id"] == "base_contributor")
+        feed_publisher = next(f for f in feed_publishers if f['id'] == "base_contributor")
         assert (feed_publisher["name"] == "base contributor")
         assert (feed_publisher["license"] == "L-contributor")
         assert (feed_publisher["url"] == "www.canaltp.fr")
+
+        osm = next(f for f in feed_publishers if f['id'] == "osm")
+        assert (osm["name"] == "openstreetmap")
+        assert (osm["license"] == "ODbL")
+        assert (osm["url"] == "https://www.openstreetmap.org/copyright")
 
     def test_sp_outside_georef(self):
         """
