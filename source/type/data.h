@@ -142,7 +142,7 @@ public:
     /// public transport (PT) referential
     std::unique_ptr<PT_Data> pt_data;
 
-    std::unique_ptr<navitia::georef::GeoRef> geo_ref;
+    boost::shared_ptr<navitia::georef::GeoRef> geo_ref;
 
     /// precomputed data for raptor (public transport routing algorithm)
     std::unique_ptr<navitia::routing::dataRAPTOR> dataRaptor;
@@ -200,13 +200,20 @@ public:
 
     mutable std::atomic<bool> is_realtime_loaded;
 
+    //indicate if we are running a cloning operation, serialization will be lighter if we are
+    mutable std::atomic<bool> clonning;
+
     Data(size_t data_identifier=0);
     ~Data();
 
     friend class boost::serialization::access;
     template<class Archive> void save(Archive & ar, const unsigned int) const {
-        ar & pt_data & geo_ref & meta & fare & last_load_at & loaded & last_load & is_connected_to_rabbitmq
+        ar & pt_data & meta & fare & last_load_at & loaded & last_load & is_connected_to_rabbitmq
            & is_realtime_loaded;
+        //we don't want to deep copy georef data since we won't update them anyway
+        if(!clonning){
+            ar & geo_ref;
+        }
     }
     template<class Archive> void load(Archive & ar, const unsigned int version) {
         this->version = version;
@@ -215,8 +222,12 @@ public:
             auto msg = boost::format("Warning data version don't match with the data version of kraken %u (current version: %d)") % version % v;
             throw wrong_version(msg.str());
         }
-        ar & pt_data & geo_ref & meta & fare & last_load_at & loaded & last_load & is_connected_to_rabbitmq
+        ar & pt_data & meta & fare & last_load_at & loaded & last_load & is_connected_to_rabbitmq
            & is_realtime_loaded;
+        //we don't want to deep copy georef data since we won't update them anyway
+        if(!clonning){
+            ar & geo_ref;
+        }
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 

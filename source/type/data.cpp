@@ -64,13 +64,13 @@ namespace navitia { namespace type {
 
 wrong_version::~wrong_version() noexcept {}
 
-const unsigned int Data::data_version = 65; //< *INCREMENT* every time serialized data are modified
+const unsigned int Data::data_version = 66; //< *INCREMENT* every time serialized data are modified
 
 Data::Data(size_t data_identifier) :
     data_identifier(data_identifier),
     meta(std::make_unique<MetaData>()),
     pt_data(std::make_unique<PT_Data>()),
-    geo_ref(std::make_unique<navitia::georef::GeoRef>()),
+    geo_ref(boost::make_shared<navitia::georef::GeoRef>()),
     dataRaptor(std::make_unique<navitia::routing::dataRAPTOR>()),
     fare(std::make_unique<navitia::fare::Fare>()),
     find_admins(
@@ -81,6 +81,7 @@ Data::Data(size_t data_identifier) :
     loaded = false;
     is_connected_to_rabbitmq = false;
     is_realtime_loaded = false;
+    clonning = false;
 }
 
 Data::~Data(){}
@@ -788,10 +789,15 @@ struct Pipe {
 // in our object.  To avoid having the whole binary_oarchive in
 // memory, we construct a pipe between 2 threads.
 void Data::clone_from(const Data& from) {
+    this->clonning = true;
+    from.clonning = true;
     Pipe p;
     std::thread write([&]() {boost::archive::binary_oarchive oa(p.out); oa << from;});
     { boost::archive::binary_iarchive ia(p.in); ia >> *this; }
     write.join();
+    this->geo_ref = from.geo_ref;
+    this->clonning = false;
+    from.clonning = false;
 }
 
 }} //namespace navitia::type
