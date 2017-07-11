@@ -34,10 +34,9 @@ import pytz
 from jormungandr.interfaces.v1.serializer import pt
 from jormungandr.interfaces.v1.serializer.base import NullableDictSerializer, LambdaField, PbNestedSerializer
 from jormungandr.interfaces.v1.serializer.fields import ErrorSerializer, FeedPublisherSerializer, \
-        PaginationSerializer, LinkSchema
+        PaginationSerializer, LinkSchema, NoteSerializer, ExceptionSerializer
 from jormungandr.interfaces.v1.make_links import create_external_link
-from jormungandr.interfaces.v1.serializer.journey import NoteSerializer, TicketSerializer, \
-        ExceptionSerializer, ContextSerializer, JourneySerializer
+from jormungandr.interfaces.v1.serializer.journey import TicketSerializer, ContextSerializer, JourneySerializer
 import serpy
 
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, MethodField
@@ -190,8 +189,8 @@ class JourneysSerializer(PbNestedSerializer):
     feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
     links = MethodField(schema_type=lambda: LinkSchema(), many=True)
     context = MethodField(schema_type=lambda: ContextSerializer(), display_none=False, many=True)
-    notes = MethodField(schema_type=lambda: NoteSerializer(), display_none=False, many=True)
-    exceptions = MethodField(schema_type=lambda: ExceptionSerializer(), display_none=False, many=True)
+    notes = MethodField(schema_type=lambda: NoteSerializer(), many=True)
+    exceptions = MethodField(schema_type=lambda: ExceptionSerializer(), many=True)
 
     def get_context(self, obj):
         if obj.HasField(str('car_co2_emission')):
@@ -200,12 +199,34 @@ class JourneysSerializer(PbNestedSerializer):
             return None
 
     def get_notes(self, obj):
-        #TODO
-        return None
+        #TODO: This function is not complete
+        if not hasattr(obj, 'notes'):
+            return None
+
+        response = []
+        for note in obj.notes:
+            response.append({
+                "type": "notes",
+                "id": note.id,
+                "value": note.value
+            })
+
+        return response
 
     def get_exceptions(self, obj):
-        #TODO
-        return None
+        #TODO: This function is not complete
+        if not hasattr(obj, 'exceptions'):
+            return None
+
+        response = []
+        for exception in obj.exceptions:
+            response.append({
+                "type": "exceptions",
+                "id": exception.id,
+                "date": exception.date
+            })
+
+        return response
 
     def get_links(self, obj):
         # note: some request args can be there several times,

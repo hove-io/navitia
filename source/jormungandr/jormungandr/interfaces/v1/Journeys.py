@@ -391,10 +391,10 @@ class rig_journey(object):
                     continue
                 logging.debug('for journey changing origin: {old_o} to {new_o}'
                               ', destination to {old_d} to {new_d}'
-                              .format(old_o=j.get('sections', [{}])[0].get('from', {}).get('id', ''),
-                                      new_o=(g.origin_detail or {}).get('id', ''),
-                                      old_d=j.get('sections', [{}])[-1].get('to', {}).get('id', ''),
-                                      new_d=(g.destination_detail or {}).get('id', '')))
+                              .format(old_o=j.get('sections', [{}])[0].get('from').get('id'),
+                                      new_o=(g.origin_detail or {}).get('id'),
+                                      old_d=j.get('sections', [{}])[-1].get('to').get('id'),
+                                      new_d=(g.destination_detail or {}).get('id')))
                 if g.origin_detail:
                     j['sections'][0]['from'] = g.origin_detail
                 if g.destination_detail:

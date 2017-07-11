@@ -30,7 +30,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.serializer.pt import PlaceSerializer, CalendarSerializer, DisplayInformationSerializer, \
-    StopDateTimeSerializer
+    StopDateTimeSerializer, TagsField
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import LinkSchema, RoundedField, SectionGeoJsonField, StrField
 from jormungandr.interfaces.v1.serializer.base import AmountSerializer, PbNestedSerializer, \
@@ -58,7 +58,7 @@ class CostSerializer(PbNestedSerializer):
 class FareSerializer(PbNestedSerializer):
     found = jsonschema.BoolField()
     total = CostSerializer()
-    links = jsonschema.MethodField(schema_type=lambda: LinkSchema(), many=True, attr='ticket_id')
+    links = jsonschema.MethodField(schema_type=LinkSchema(), many=True, attr='ticket_id')
 
     def get_links(self, obj):
         if not hasattr(obj, 'ticket_id'):
@@ -73,7 +73,7 @@ class TicketSerializer(PbNestedSerializer):
     comment = jsonschema.Field(schema_type=str)
     found = jsonschema.BoolField()
     cost = CostSerializer()
-    links = jsonschema.MethodField(schema_type=lambda: LinkSchema(), many=True)
+    links = jsonschema.MethodField(schema_type=LinkSchema(), many=True)
 
     def get_links(self, obj):
         if not hasattr(obj, 'section_id'):
@@ -100,16 +100,6 @@ class JourneyDebugSerializer(PbNestedSerializer):
     nb_sections = jsonschema.Field(schema_type=int, display_none=True,
                                    description='Number of sections')
     internal_id = jsonschema.Field(schema_type=str, display_none=False)
-
-
-class NoteSerializer(PbNestedSerializer):
-    #TODO
-    pass
-
-
-class ExceptionSerializer(PbNestedSerializer):
-    #TODO
-    pass
 
 
 class PathSerializer(PbNestedSerializer):

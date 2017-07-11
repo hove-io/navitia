@@ -47,7 +47,7 @@ Label of the stop area. The name is directly taken from the data whereas the lab
 
 class Equipments(EnumListField):
     """
-    hack for equipments their is a useless level in the proto
+    hack for equipments as there is a useless level in the proto
     """
     def __init__(self, **kwargs):
         super(Equipments, self).__init__(hasEquipments.Equipment, **kwargs)
@@ -58,7 +58,7 @@ class Equipments(EnumListField):
 
 class AdditionalInformation(EnumListField):
     """
-    hack for equiments their is a useless level in the proto
+    hack for AdditionalInformation as there is a useless level in the proto
     """
     def as_getter(self, serializer_field_name, serializer_cls):
         #For enum we need the full object :(

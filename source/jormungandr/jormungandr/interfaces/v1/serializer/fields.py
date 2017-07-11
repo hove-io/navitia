@@ -33,15 +33,17 @@ from jormungandr.interfaces.v1.make_links import create_internal_link
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.serializer.base import EnumField, PbNestedSerializer, DoubleToStringField
 from jormungandr.interfaces.v1.serializer.jsonschema import IntField
-from jormungandr.interfaces.v1.serializer.jsonschema.fields import StrField, BoolField
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import StrField, BoolField, Field, DateTimeType
 from navitiacommon import response_pb2
+
+
+class Point2D(serpy.Serializer):
+    pass  # TODO make this work :D
 
 
 class MultiLineStringField(jsonschema.Field):
     class MultiLineStringSchema(serpy.Serializer):
         """used not as a serializer, but only for the schema"""
-        class Point2D(serpy.Serializer):
-            pass  # TODO make this work :D
         type = StrField()
         coordinates = Point2D(many=True)
 
@@ -154,8 +156,6 @@ class PaginationSerializer(serpy.Serializer):
 class SectionGeoJsonField(jsonschema.Field):
     class SectionGeoJsonSchema(serpy.Serializer):
         """used not as a serializer, but only for the schema"""
-        class Point2D(serpy.Serializer):
-            pass  # TODO make this work :D
         type = StrField()
         coordinates = Point2D(many=True)
 
@@ -195,3 +195,15 @@ class SectionGeoJsonField(jsonschema.Field):
         for coord in coords:
             response["coordinates"].append([coord.lon, coord.lat])
         return response
+
+
+class NoteSerializer(serpy.Serializer):
+    type = jsonschema.Field(schema_type=str)
+    id = jsonschema.Field(schema_type=str)
+    value = jsonschema.Field(schema_type=str)
+
+
+class ExceptionSerializer(serpy.Serializer):
+    type = jsonschema.Field(schema_type=str)
+    id = jsonschema.Field(schema_type=str)
+    date = Field(attr='date', schema_type=DateTimeType)
