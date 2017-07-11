@@ -35,10 +35,18 @@ import zeep
 import logging
 import pybreaker
 
+from jormungandr.ptref import FeedPublisher
+
+DEFAULT_ATOS_FEED_PUBLISHER = {
+    'id': 'atos',
+    'name': 'atos'
+}
+
 
 class AtosProvider(BssProvider):
 
-    def __init__(self, id_ao, network, url, operators={'keolis'}, timeout=5, **kwargs):
+    def __init__(self, id_ao, network, url, operators={'keolis'}, timeout=5,
+                 feed_publisher=DEFAULT_ATOS_FEED_PUBLISHER, **kwargs):
         self.id_ao = id_ao
         self.network = network.lower()
         self.WS_URL = url
@@ -46,6 +54,7 @@ class AtosProvider(BssProvider):
         self.timeout = timeout
         self._client = None
         self.breaker = pybreaker.CircuitBreaker(fail_max=kwargs.get('fail_max', 5), reset_timeout=kwargs.get('reset_timeout', 120))
+        self._feed_publisher = FeedPublisher(**feed_publisher)
 
     def __repr__(self):
         return self.WS_URL + str(self.id_ao)
@@ -83,3 +92,6 @@ class AtosProvider(BssProvider):
 
     def status(self):
         return {'network': self.network, 'operators': self.operators, 'id_ao': self.id_ao}
+
+    def feed_publisher(self):
+        return self._feed_publisher

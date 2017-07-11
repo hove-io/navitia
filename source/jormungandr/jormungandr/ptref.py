@@ -99,3 +99,11 @@ class PtRef(object):
             if req.ptref.count > result.pagination.itemsOnPage:
                 # we did not get as much results as planned, we can stop
                 return
+
+
+class FeedPublisher(object):
+    def __init__(self, id, name, license='', url=''):
+        self.id = id
+        self.name = name
+        self.license = license
+        self.url = url
