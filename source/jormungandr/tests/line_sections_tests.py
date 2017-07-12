@@ -106,6 +106,16 @@ class TestLineSections(AbstractTestFixture):
         assert has_dis('stop_areas/E/traffic_reports')
         assert not has_dis('stop_areas/F/traffic_reports')
 
+    def test_traffic_reports_on_networks(self):
+        def has_dis(q):
+            r = self.default_query(q)
+            return 'line_section_on_line_1' in (d['disruption_id'] for d in r['disruptions'])
+
+        assert has_dis('networks/base_network/traffic_reports')
+        assert not has_dis('networks/network:other/traffic_reports')
+        r = self.default_query('traffic_reports')
+        assert len(r['traffic_reports']) == 1 # only one network (base_network) is disrupted
+
     def test_traffic_reports_on_lines(self):
         """
         we should be able to find the related line section disruption with /traffic_report

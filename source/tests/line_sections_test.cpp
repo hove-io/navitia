@@ -58,7 +58,7 @@ int main(int argc, const char* const argv[]) {
     ed::builder b("20170101");
     b.sa("A", 0., 1.)("A_1", 0., 1.)("A_2", 0., 1.);
     b.sa("B", 0., 2.)("B_1", 0., 2.)("B_2", 0., 2.);
-    b.sa("C", 0., 3.)("C_1", 0., 3.)("C_2", 0., 3.);
+    b.sa("C", 0., 3.)("C_1", 0., 3.)("C_2", 0., 3.)("C_3", 0., 1.);
     b.sa("D", 0., 4.)("D_1", 0., 4.)("D_2", 0., 4.);
     b.sa("E", 0., 5.)("E_1", 0., 5.)("E_2", 0., 5.);
     b.sa("F", 0., 6.)("F_1", 0., 6.)("F_2", 0., 6.);
@@ -96,6 +96,10 @@ int main(int argc, const char* const argv[]) {
             ("A_1", "11:00"_t)
             ("B_1", "11:15"_t)
             ("F_1", "12:30"_t);
+
+    b.vj_with_network("network:other","line:B","11111111","",true, "")
+            ("C_3", "08:10"_t, "08:11"_t)
+            ("stop_area:other", "08:20"_t, "08:21"_t);
 
     b.generate_dummy_basis();
     b.finish();
