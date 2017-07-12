@@ -41,29 +41,36 @@ class BssProviderManager(object):
             self.bss_providers.append(self._init_class(configuration['class'], arguments))
 
     def handle_places(self, places):
+        providers = set()
         for place in places or []:
             if 'poi_type' in place:
-                place = self.handle_poi(place)
+                provider = self._handle_poi(place)
             elif 'embedded_type' in place and place['embedded_type'] == 'poi':
-                place['poi'] = self.handle_poi(place['poi'])
-        return places
+                provider = self._handle_poi(place['poi'])
+            if provider:
+                providers.add(provider)
+        return providers
 
     def handle_journeys(self, journeys):
+        providers = set()
         for poi in get_from_to_pois_of_journeys(journeys):
-            self.handle_poi(poi)
-        return journeys
+            provider = self._handle_poi(poi)
+            if provider:
+                providers.add(provider)
+        return providers
 
-    def handle_poi(self, item):
+    def _handle_poi(self, item):
         if 'poi_type' in item and item['poi_type']['id'] == 'poi_type:amenity:bicycle_rental':
-            provider = self.find_provider(item)
+            provider = self._find_provider(item)
             if provider:
                 item['stands'] = provider.get_informations(item)
-        return item
+                return provider
+        return None
 
-    def find_provider(self, poi):
-        for instance in self._get_providers():
-            if instance.support_poi(poi):
-                return instance
+    def _find_provider(self, poi):
+        for provider in self._get_providers():
+            if provider.support_poi(poi):
+                return provider
 
     def _get_providers(self):
         return self.bss_providers

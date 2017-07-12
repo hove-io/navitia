@@ -29,6 +29,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.parking_space_availability.bss.bss_provider import BssProvider
 from jormungandr.parking_space_availability.bss.stands import Stands
+from jormungandr.ptref import FeedPublisher
 
 
 class BssMockProvider(BssProvider):
@@ -41,3 +42,6 @@ class BssMockProvider(BssProvider):
 
     def status(self):
         return {}
+
+    def feed_publisher(self):
+        return FeedPublisher(id='mock', name='mock provider')

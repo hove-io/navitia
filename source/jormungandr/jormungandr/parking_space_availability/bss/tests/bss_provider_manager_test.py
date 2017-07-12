@@ -81,12 +81,16 @@ def realtime_places_handle_test():
         }
     ]
     manager = BssProviderManager(CONFIG)
-    places_with_stands = manager.handle_places(places)
-    assert 'stands' in places_with_stands[0]['poi']
-    stands = places_with_stands[0]['poi']['stands']
+    providers = manager.handle_places(places)
+    assert 'stands' in places[0]['poi']
+    stands = places[0]['poi']['stands']
     assert stands.available_places == 5
     assert stands.available_bikes == 9
     assert stands.total_stands == 14
+
+    assert providers and len(providers) == 1
+    f = providers.pop().feed_publisher()
+    assert f and f.name == 'mock provider'
 
 
 def realtime_pois_handle_test():
@@ -103,9 +107,9 @@ def realtime_pois_handle_test():
         }
     ]
     manager = BssProviderManager(CONFIG)
-    pois_with_stands = manager.handle_places(pois)
-    assert 'stands' in pois_with_stands[0]
-    stands = pois_with_stands[0]['stands']
+    manager.handle_places(pois)
+    assert 'stands' in pois[0]
+    stands = pois[0]['stands']
     assert stands.available_places == 5
     assert stands.available_bikes == 9
     assert stands.total_stands == 14
@@ -123,9 +127,9 @@ def realtime_poi_supported_handle_test():
         'id': 'station_1'
     }
     manager = BssProviderManager(CONFIG)
-    poi_with_stands = manager.handle_poi(poi)
-    assert 'stands' in poi_with_stands
-    stands = poi_with_stands['stands']
+    manager._handle_poi(poi)
+    assert 'stands' in poi
+    stands = poi['stands']
     assert stands.available_places == 5
     assert stands.available_bikes == 9
     assert stands.total_stands == 14
@@ -143,8 +147,8 @@ def realtime_poi_not_supported_handle_test():
         'id': 'station_2'
     }
     manager = BssProviderManager(CONFIG)
-    poi_with_stands = manager.handle_poi(poi)
-    assert not 'stands' in poi_with_stands
+    manager._handle_poi(poi)
+    assert 'stands' not in poi
 
 
 def realtime_place_find_provider_test():
@@ -159,7 +163,7 @@ def realtime_place_find_provider_test():
         'id': 'station_1'
     }
     manager = BssProviderManager(CONFIG)
-    provider = manager.find_provider(poi)
+    provider = manager._find_provider(poi)
     assert provider == manager.bss_providers[0]
 
 
@@ -197,9 +201,9 @@ def realtime_journey_handle_test():
     ]
 
     manager = BssProviderManager(CONFIG)
-    journeys_with_stand = manager.handle_journeys(journeys)
-    journey_from = journeys_with_stand[0]['sections'][0]['from']
-    journey_to = journeys_with_stand[0]['sections'][0]['to']
+    manager.handle_journeys(journeys)
+    journey_from = journeys[0]['sections'][0]['from']
+    journey_to = journeys[0]['sections'][0]['to']
     assert 'stands' in journey_from['poi']
     assert 'stands' in journey_to['poi']
 
