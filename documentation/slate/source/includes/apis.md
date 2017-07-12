@@ -958,6 +958,7 @@ The [isochrones](#isochrones) service exposes another response structure, which 
 | nop     | disruption_active    | boolean | For compatibility use only.<br>If true the algorithm take the disruptions into account, and thus avoid disrupted public transport.<br>Rq: `disruption_active=true` = `data_freshness=realtime` <br>Use `data_freshness` parameter instead       |  False     |
 | nop     | wheelchair           | boolean | If true the traveler is considered to be using a wheelchair, thus only accessible public transport are used<br>be warned: many data are currently too faint to provide acceptable answers with this parameter on       | False       |
 | nop     | direct_path          | enum    | Specify if direct paths should be suggested.<br>possible values: <ul><li>indifferent</li><li>none</li><li>only</li></ul>      | indifferent |
+| nop     | bss_stands           | boolean | Activate the output of BSS availability in the bicycle_rental pois of response     | False       |
 | nop     | debug                | boolean | Debug mode<br>No journeys are filtered in this mode     | False       |
 
 ### Precisions on `forbidden_uris[]` and `allowed_id[]`
