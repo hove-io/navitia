@@ -39,7 +39,9 @@ def _add_feed_publisher(response, providers):
     """
     feeds = response.get('feed_publishers', [])
     for p in providers or []:
-        feeds.append(p.feed_publisher())
+        f = p.feed_publisher()
+        if f:
+            feeds.append(f)
 
 
 class ManageStands(object):

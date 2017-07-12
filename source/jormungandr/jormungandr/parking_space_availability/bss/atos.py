@@ -37,10 +37,7 @@ import pybreaker
 
 from jormungandr.ptref import FeedPublisher
 
-DEFAULT_ATOS_FEED_PUBLISHER = {
-    'id': 'atos',
-    'name': 'atos'
-}
+DEFAULT_ATOS_FEED_PUBLISHER = None
 
 
 class AtosProvider(BssProvider):
@@ -54,7 +51,7 @@ class AtosProvider(BssProvider):
         self.timeout = timeout
         self._client = None
         self.breaker = pybreaker.CircuitBreaker(fail_max=kwargs.get('fail_max', 5), reset_timeout=kwargs.get('reset_timeout', 120))
-        self._feed_publisher = FeedPublisher(**feed_publisher)
+        self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
 
     def __repr__(self):
         return self.WS_URL + str(self.id_ao)

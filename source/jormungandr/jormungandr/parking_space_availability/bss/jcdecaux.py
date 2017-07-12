@@ -57,7 +57,7 @@ class JcdecauxProvider(BssProvider):
         fail_max = kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_JCDECAUX_FAIL'])
         reset_timeout = kwargs.get('circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_JCDECAUX_TIMEOUT_S'])
         self.breaker = pybreaker.CircuitBreaker(fail_max=fail_max, reset_timeout=reset_timeout)
-        self._feed_publisher = FeedPublisher(**feed_publisher)
+        self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
 
     def support_poi(self, poi):
         properties = poi.get('properties', {})
