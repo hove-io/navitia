@@ -157,7 +157,6 @@ class SectionSerializer(PbNestedSerializer):
             for value in obj.pt_display_informations.notes:
                 response.append({"type": 'notes', "id": value.uri, 'value': value.note})
         return response
-
     stop_date_times = StopDateTimeSerializer(many=True)
     path = PathSerializer(attr="street_network.path_items", many=True)
 
@@ -178,13 +177,7 @@ class JourneySerializer(PbNestedSerializer):
                               description='Status from the whole journey taking into account the most '
                                           'disturbing information retrieved on every object used '
                                           '(can be "NO_SERVICE", "SIGNIFICANT_DELAYS", ...')
-    tags = jsonschema.MethodField(schema_type=str, many=True, display_none=True,
-                                  description='List of tags on the journey. The tags add additional information '
-                                              'on the journey beside the journey type '
-
-                                              '(can be "walking", "bike", ...)')
-    def get_tags(self, obj):
-        return [t for t in obj.tags]
+    tags = TagsField(display_none=True)
     co2_emission = AmountSerializer()
     durations = DurationsSerializer()
     fare = FareSerializer()
@@ -196,3 +189,13 @@ class JourneySerializer(PbNestedSerializer):
         if not hasattr(g, 'debug') or not g.debug:
             return None
         return JourneyDebugSerializer(obj, display_none=False).data
+
+
+class DescribedField(LambdaField):
+    """
+    This class does not output anything, it's here only for description purpose
+    (for field added outside of serpy, but that we want to describe in swagger
+    """
+    def __init__(self, **kwargs):
+        # the field returns always None and None are not displayed, so nothing is very displayed
+        super(DescribedField, self).__init__(method=lambda *args: None, display_none=False, **kwargs)

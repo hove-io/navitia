@@ -34,9 +34,10 @@ import pytz
 from jormungandr.interfaces.v1.serializer import pt
 from jormungandr.interfaces.v1.serializer.base import NullableDictSerializer, LambdaField, PbNestedSerializer
 from jormungandr.interfaces.v1.serializer.fields import ErrorSerializer, FeedPublisherSerializer, \
-        PaginationSerializer, LinkSchema
+        PaginationSerializer, LinkSchema, NoteSerializer, ExceptionSerializer
 from jormungandr.interfaces.v1.make_links import create_external_link
-from jormungandr.interfaces.v1.serializer.journey import TicketSerializer, ContextSerializer, JourneySerializer
+from jormungandr.interfaces.v1.serializer.journey import TicketSerializer, ContextSerializer, JourneySerializer, \
+    DescribedField
 import serpy
 
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, MethodField
@@ -189,7 +190,8 @@ class JourneysSerializer(PbNestedSerializer):
     feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
     links = MethodField(schema_type=lambda: LinkSchema(), many=True)
     context = MethodField(schema_type=lambda: ContextSerializer(), display_none=False, many=True)
-    #TODO: We need to add add descriptions for attributes notes and exceptions to be used by SDK
+    notes = DescribedField(schema_type=NoteSerializer(), many=True)
+    exceptions = DescribedField(schema_type=ExceptionSerializer(), many=True)
 
     def get_context(self, obj):
         if obj.HasField(str('car_co2_emission')):

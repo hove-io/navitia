@@ -195,3 +195,15 @@ class SectionGeoJsonField(jsonschema.Field):
         for coord in coords:
             response["coordinates"].append([coord.lon, coord.lat])
         return response
+
+
+class NoteSerializer(serpy.Serializer):
+    type = jsonschema.Field(schema_type=str)
+    id = jsonschema.Field(schema_type=str)
+    value = jsonschema.Field(schema_type=str)
+
+
+class ExceptionSerializer(serpy.Serializer):
+    type = jsonschema.Field(schema_type=str)
+    id = jsonschema.Field(schema_type=str)
+    date = Field(attr='date', schema_type=DateTimeType)

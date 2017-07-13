@@ -201,6 +201,12 @@ class TagsField(Field):
         super(TagsField, self).__init__(schema_type=str, **kwargs)
         self.many = True
 
+    def as_getter(self, serializer_field_name, serializer_cls):
+        op = operator.attrgetter(self.attr or serializer_field_name)
+        def getter(v):
+            return list(op(v))
+        return getter
+
 
 class DisruptionSerializer(PbNestedSerializer):
     id = jsonschema.Field(schema_type=str, attr='uri')
@@ -211,7 +217,7 @@ class DisruptionSerializer(PbNestedSerializer):
     application_periods = PeriodSerializer(many=True)
     status = EnumField(attr='status', pb_type=ActiveStatus)
     updated_at = DateTimeField()
-    tags = TagsField()
+    tags = TagsField(display_none=True)
     cause = jsonschema.Field(schema_type=str, display_none=True)
     category = jsonschema.Field(schema_type=str, display_none=False)
     severity = SeveritySerializer()
