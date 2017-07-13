@@ -186,8 +186,14 @@ get_matching_routes(const type::Data* data,
                                                                                    destination_code.second);
 
     const auto possible_stop_areas = data->pt_data->codes.get_objs<nt::StopArea>(destination_code.first,
-                                                                                 destination_code.second)
-            ;
+                                                                                 destination_code.second);
+
+    if (possible_stop_points.empty() && possible_stop_areas.empty()) {
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"), "no stops matche the code "
+                       << destination_code.second << " (key = " << destination_code.first << ")"
+                       << " impossible to find matching routes");
+        return {};
+    }
     std::set<const nt::Route*> routes;
     const auto& data_raptor = data->dataRaptor;
     for (const auto jpp: data_raptor->jpps_from_sp[routing::SpIdx(start->idx)]) {
@@ -208,5 +214,15 @@ get_matching_routes(const type::Data* data,
     }
 
     return std::vector<const type::Route*>(routes.begin(), routes.end());
+}
+
+void fill_matching_routes(navitia::PbCreator& pb_creator,
+                          const type::Data* data,
+                          const type::Line* line,
+                          const type::StopPoint* start,
+                          const std::pair<std::string, std::string>& destination_code) {
+    const auto routes = get_matching_routes(data, line, start, destination_code);
+    // we don't need any detail, we just add routes with a 0 depth
+    pb_creator.pb_fill(routes, 0);
 }
 }}
