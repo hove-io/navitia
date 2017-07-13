@@ -137,7 +137,7 @@ class TestLineSections(AbstractTestFixture):
             return 'line_section_on_line_1' in (d['disruption_id'] for d in r['disruptions'])
 
         assert has_dis('routes/route:line:1:1/traffic_reports')
-        assert has_dis('routes/route:line:1:2/traffic_reports')
+        assert not has_dis('routes/route:line:1:2/traffic_reports')
         # route 3 has been impacted by the line section but it has no stoppoint in the line section
         # so in this case we do not display the disruption
         assert not has_dis('routes/route:line:1:3/traffic_reports')
@@ -152,7 +152,7 @@ class TestLineSections(AbstractTestFixture):
             return 'line_section_on_line_1' in (d['disruption_id'] for d in r['disruptions'])
 
         assert has_dis('vehicle_journeys/vj:1:1/traffic_reports')
-        assert has_dis('vehicle_journeys/vj:1:2/traffic_reports')
+        assert not has_dis('vehicle_journeys/vj:1:2/traffic_reports')
         assert not has_dis('vehicle_journeys/vj:1:3/traffic_reports')
 
     def test_traffic_reports_on_stop_points(self):
@@ -170,11 +170,11 @@ class TestLineSections(AbstractTestFixture):
         assert not has_dis('stop_points/B_2/traffic_reports')
         assert has_dis('stop_points/C_1/traffic_reports')
         # even if C_2 is not impacted, we display the line section impact because C has been impacted
-        assert has_dis('stop_points/C_2/traffic_reports')
+        assert not has_dis('stop_points/C_2/traffic_reports')
         assert has_dis('stop_points/D_1/traffic_reports')
-        assert has_dis('stop_points/D_2/traffic_reports')
+        assert not has_dis('stop_points/D_2/traffic_reports')
         assert has_dis('stop_points/E_1/traffic_reports')
-        assert has_dis('stop_points/E_2/traffic_reports')
+        assert not has_dis('stop_points/E_2/traffic_reports')
         assert not has_dis('stop_points/F_1/traffic_reports')
         assert not has_dis('stop_points/F_2/traffic_reports')
 
