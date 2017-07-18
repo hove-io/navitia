@@ -733,6 +733,7 @@ coordinates, returning a [places](#place) collection.
   nop      | admin_uri[] | array of string | If filled, will filter the search within the given admin uris       |
   nop      | filter      | string          | Use to filter returned objects. for example: places_type.id=theater |
   nop      | disable_geojson | boolean     | remove geojson from the response  | False
+  nop      | bss_stands      | boolean     | Activate the output of BSS availability in the bicycle_rental pois of response     | True
 
 Filters can be added:
 

@@ -148,7 +148,7 @@ void TrafficReport::add_stop_areas(const type::Indexes& network_idx,
 
        // build a map of messages per stop_area (iterate only on stop_points of the network)
        std::map<const nt::StopArea*, std::vector<boost::shared_ptr<nt::disruption::Impact>>> sa_messages;
-       for (auto sp_idx: stop_points) {
+       for (const auto& sp_idx: stop_points) {
            const auto* sp = d.pt_data->stop_points[sp_idx];
            const auto* sa = sp->stop_area;
            if (sa_messages.find(sa) == sa_messages.end()) {
@@ -160,21 +160,22 @@ void TrafficReport::add_stop_areas(const type::Indexes& network_idx,
            sa_messages[sa].insert(sa_messages[sa].end(), sp_mess.begin(), sp_mess.end());
        }
 
-       for (auto sa_mess : sa_messages) {
-           if (!sa_mess.second.empty()) {
-               NetworkDisrupt& dist = this->find_or_create(network);
-               auto find_predicate = [&](const std::pair<const type::StopArea*, DisruptionSet>& item) {
-                   return item.first == sa_mess.first;
-               };
-               auto it = boost::find_if(dist.stop_areas, find_predicate);
-               if (it == dist.stop_areas.end()) {
-                   auto ds = DisruptionSet(sa_mess.second.begin(), sa_mess.second.end());
-                   dist.stop_areas.push_back(std::make_pair(sa_mess.first, ds));
-               } else {
-                   it->second.insert(sa_mess.second.begin(), sa_mess.second.end());
-               }
+       for (const auto& sa_mess : sa_messages) {
+           if (sa_mess.second.empty()) {
+               continue;
            }
 
+           NetworkDisrupt& dist = this->find_or_create(network);
+           auto find_predicate = [&](const std::pair<const type::StopArea*, DisruptionSet>& item) {
+               return item.first == sa_mess.first;
+           };
+           auto it = boost::find_if(dist.stop_areas, find_predicate);
+           if (it == dist.stop_areas.end()) {
+               auto ds = DisruptionSet(sa_mess.second.begin(), sa_mess.second.end());
+               dist.stop_areas.push_back(std::make_pair(sa_mess.first, ds));
+           } else {
+               it->second.insert(sa_mess.second.begin(), sa_mess.second.end());
+           }
        }
    }
 }
