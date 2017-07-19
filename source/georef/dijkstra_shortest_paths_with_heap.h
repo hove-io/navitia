@@ -32,6 +32,7 @@ www.navitia.io
 
 namespace boost {
   // Call breadth first search
+  // Allow to pass color map so that user deals with the allocation (and white init)
   template <class Graph, class SourceInputIter, class DijkstraVisitor,
             class PredecessorMap, class DistanceMap,
             class WeightMap, class Compare, class Combine,
