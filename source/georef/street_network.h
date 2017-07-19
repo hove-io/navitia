@@ -30,11 +30,11 @@ www.navitia.io
 
 #pragma once
 #include "georef.h"
+#include "dijkstra_shortest_paths_with_heap.h"
 #include "routing/raptor_utils.h"
 #include "type/time_duration.h"
 #include <boost/graph/filtered_graph.hpp>
 #include <boost/graph/two_bit_color_map.hpp>
-#include <boost/graph/dijkstra_shortest_paths.hpp>
 #include <boost/format.hpp>
 
 namespace bt = boost::posix_time;
@@ -132,6 +132,9 @@ struct PathFinder {
     /// Predecessors array for the Dijkstra
     std::vector<vertex_t> predecessors;
 
+    /// helper for dijkstra internal heap (to avoid extra alloc)
+    std::vector<std::size_t> index_in_heap_map;
+
     /// Color map for the dijkstra shortest path (to avoid extra alloc)
     boost::two_bit_color_map<> color;
 
@@ -179,16 +182,17 @@ struct PathFinder {
 
         //we filter the graph to only use certain mean of transport
         using filtered_graph = boost::filtered_graph<georef::Graph, boost::keep_all, TransportationModeFilter>;
-        boost::dijkstra_shortest_paths_no_init(filtered_graph(geo_ref.graph, {}, TransportationModeFilter(mode, geo_ref)),
-                                               start, &predecessors[0], &distances[0],
-                                               boost::get(&Edge::duration, geo_ref.graph), // weigth map
-                                               boost::identity_property_map(),
-                                               std::less<navitia::time_duration>(),
-                                               SpeedDistanceCombiner(speed_factor), //we multiply the edge duration by a speed factor
-                                               navitia::seconds(0),
-                                               visitor,
-                                               color
-                                               );
+        boost::dijkstra_shortest_paths_no_init_with_heap(
+                filtered_graph(geo_ref.graph, {}, TransportationModeFilter(mode, geo_ref)),
+                &start, &start + 1, &predecessors[0], &distances[0],
+                boost::get(&Edge::duration, geo_ref.graph), // weigth map
+                std::less<navitia::time_duration>(),
+                SpeedDistanceCombiner(speed_factor), //we multiply the edge duration by a speed factor
+                navitia::seconds(0),
+                visitor,
+                color,
+                &index_in_heap_map[0]
+                );
     }
 
     //shouldn't be used outside of class apart from tests

@@ -233,6 +233,7 @@ void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mod
     distances.assign(n, bt::pos_infin);
     //for the predecessors no need to clean the values, the important one will be updated during search
     predecessors.resize(n);
+    index_in_heap_map.resize(n);
 
     if (starting_edge.found) {
         //durations initializations
