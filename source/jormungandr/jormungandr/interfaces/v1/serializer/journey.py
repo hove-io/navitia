@@ -42,7 +42,7 @@ from jormungandr.interfaces.v1.make_links import create_internal_link
 
 
 class CO2Serializer(PbNestedSerializer):
-    co2_emission = AmountSerializer(attr='car_co2_emission')
+    co2_emission = AmountSerializer(attr='car_co2_emission', display_none=True, required=True)
 
 
 class ContextSerializer(PbNestedSerializer):
@@ -58,13 +58,26 @@ class CostSerializer(PbNestedSerializer):
 class FareSerializer(PbNestedSerializer):
     found = jsonschema.BoolField()
     total = CostSerializer()
-    links = jsonschema.MethodField(schema_type=LinkSchema(), many=True, attr='ticket_id')
+    links = jsonschema.MethodField(schema_type=LinkSchema(), many=True, attr='ticket_id', display_none=True)
 
     def get_links(self, obj):
         if not hasattr(obj, 'ticket_id'):
-            return None
+            return []
 
         return [create_internal_link(id=value, rel='tickets', _type='ticket') for value in obj.ticket_id]
+
+    #TODO check that retro compatibility is really useful
+    def to_value(self, value):
+        if value is None:
+            return {
+                'found': False,
+                'links': [],
+                'total': {
+                    'currency': '',
+                    'value': '0.0'
+                }
+            }
+        return super(FareSerializer, self).to_value(value)
 
 
 class TicketSerializer(PbNestedSerializer):
@@ -113,7 +126,7 @@ class SectionSerializer(PbNestedSerializer):
     id = jsonschema.Field(schema_type=str)
     duration = jsonschema.Field(schema_type=int, display_none=True,
                                 description='Duration of the section (seconds)')
-    co2_emission = AmountSerializer()
+    co2_emission = AmountSerializer(required=True, display_none=True)
     transfer_type = EnumField()
     departure_date_time = DateTimeField(attr='begin_date_time',
                                         description='Departure date and time of the section')
@@ -124,6 +137,7 @@ class SectionSerializer(PbNestedSerializer):
     base_arrival_date_time = DateTimeField(attr='base_end_date_time',
                                            description='Base-schedule arrival date and time of the section')
     to = jsonschema.MethodField(schema_type=PlaceSerializer(), attr='destination')
+
     def get_to(self, obj):
         if obj.HasField(str('type')):
             enum = obj.DESCRIPTOR.fields_by_name['type'].enum_type.values_by_number
@@ -144,7 +158,34 @@ class SectionSerializer(PbNestedSerializer):
     additional_informations = EnumListField(attr='additional_informations', pb_type=SectionAdditionalInformationType)
     geojson = SectionGeoJsonField(display_none=False, description='GeoJSON of the shape of the section')
     mode = NestedEnumField(attr='street_network.mode')
-    type = EnumField(display_none=False)
+    type = jsonschema.MethodField(schema_type=lambda: EnumField())
+
+    def get_type(self, obj):
+        def if_on_demand_stop_time(stop):
+            properties = stop.properties
+            descriptor = properties.DESCRIPTOR
+            enum = descriptor.enum_types_by_name["AdditionalInformation"]
+            for v in properties.additional_informations:
+                if enum.values_by_number[v].name == 'on_demand_transport':
+                    return True
+            return False
+
+        try:
+            if obj.stop_date_times:
+                first_stop = obj.stop_date_times[0]
+                last_stop = obj.stop_date_times[-1]
+                if if_on_demand_stop_time(first_stop):
+                    return 'on_demand_transport'
+                elif if_on_demand_stop_time(last_stop):
+                    return 'on_demand_transport'
+                return 'public_transport'
+        except ValueError:
+            pass
+
+        if obj is None or not obj.HasField('type') or obj.type is None:
+            return ''
+        enum = obj.DESCRIPTOR.fields_by_name['type'].enum_type.values_by_number
+        return enum[getattr(obj, 'type')].name.lower()
     display_informations = DisplayInformationSerializer(attr='pt_display_informations', display_none=False)
     links = jsonschema.MethodField(display_none=True)
 
@@ -158,7 +199,7 @@ class SectionSerializer(PbNestedSerializer):
                 response.append({"type": 'notes', "id": value.uri, 'value': value.note})
         return response
     stop_date_times = StopDateTimeSerializer(many=True)
-    path = PathSerializer(attr="street_network.path_items", many=True)
+    path = PathSerializer(attr="street_network.path_items", many=True, display_none=False)
 
 
 class JourneySerializer(PbNestedSerializer):
@@ -178,9 +219,9 @@ class JourneySerializer(PbNestedSerializer):
                                           'disturbing information retrieved on every object used '
                                           '(can be "NO_SERVICE", "SIGNIFICANT_DELAYS", ...')
     tags = TagsField(display_none=True)
-    co2_emission = AmountSerializer()
+    co2_emission = AmountSerializer(required=True, display_none=True)
     durations = DurationsSerializer()
-    fare = FareSerializer()
+    fare = FareSerializer(display_none=True)
     calendars = CalendarSerializer(many=True)
     sections = SectionSerializer(many=True, display_none=False)
     debug = jsonschema.MethodField(schema_type=lambda: JourneyDebugSerializer(), display_none=False)
@@ -189,13 +230,3 @@ class JourneySerializer(PbNestedSerializer):
         if not hasattr(g, 'debug') or not g.debug:
             return None
         return JourneyDebugSerializer(obj, display_none=False).data
-
-
-class DescribedField(LambdaField):
-    """
-    This class does not output anything, it's here only for description purpose
-    (for field added outside of serpy, but that we want to describe in swagger
-    """
-    def __init__(self, **kwargs):
-        # the field returns always None and None are not displayed, so nothing is very displayed
-        super(DescribedField, self).__init__(method=lambda *args: None, display_none=False, **kwargs)

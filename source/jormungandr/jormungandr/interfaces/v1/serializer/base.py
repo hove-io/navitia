@@ -177,6 +177,15 @@ class AmountSerializer(PbNestedSerializer):
     value = jsonschema.Field(schema_type=float)
     unit = jsonschema.Field(schema_type=str)
 
+    #TODO check that retro compatibility is really useful
+    def to_value(self, value):
+        if value is None:
+            return {
+                'value': 0.0,
+                'unit': ''
+            }
+        return super(AmountSerializer, self).to_value(value)
+
 
 class LiteralField(jsonschema.Field):
     """
@@ -239,3 +248,14 @@ class DoubleToStringField(Field):
     def to_value(self, value):
         # we don't want to loose precision while converting a double to string
         return "{:.16g}".format(value)
+
+
+class DescribedField(LambdaField):
+    """
+    This class does not output anything, it's here only for description purpose
+    (for field added outside of serpy, but that we want to describe in swagger)
+    """
+    def __init__(self, **kwargs):
+        # the field returns always None and None are not displayed, so nothing is displayed
+        super(DescribedField, self).__init__(method=lambda *args: None, display_none=False, **kwargs)
+

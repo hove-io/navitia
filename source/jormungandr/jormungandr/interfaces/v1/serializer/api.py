@@ -32,12 +32,12 @@ import datetime
 import pytz
 
 from jormungandr.interfaces.v1.serializer import pt
-from jormungandr.interfaces.v1.serializer.base import NullableDictSerializer, LambdaField, PbNestedSerializer
+from jormungandr.interfaces.v1.serializer.base import NullableDictSerializer, LambdaField, PbNestedSerializer, \
+    DescribedField
 from jormungandr.interfaces.v1.serializer.fields import ErrorSerializer, FeedPublisherSerializer, \
         PaginationSerializer, LinkSchema, NoteSerializer, ExceptionSerializer
 from jormungandr.interfaces.v1.make_links import create_external_link
-from jormungandr.interfaces.v1.serializer.journey import TicketSerializer, ContextSerializer, JourneySerializer, \
-    DescribedField
+from jormungandr.interfaces.v1.serializer.journey import TicketSerializer, ContextSerializer, JourneySerializer
 import serpy
 
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, MethodField
