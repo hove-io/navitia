@@ -79,7 +79,7 @@ static Label next_label(Label label, Ticket ticket, const SectionKey& section) {
             label.stop_area = section.start_stop_area;
         }
         if (label.tickets.size() == 0) {
-            throw navitia::exception("internal problem");
+            throw navitia::recoverable_exception("internal problem");
         }
         label.tickets.back().sections.push_back(section);
     }
