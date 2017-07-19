@@ -109,6 +109,7 @@ class SiriLite(RealtimeProxy):
                      for vj in d.get('MonitoredStopVisit', [])
                      if vj.get('MonitoredVehicleJourney', {}).get('LineRef', {}).get('value') == line_code]
         if not schedules:
+            self.record_additional_info('no_departure')
             return None
         next_passages = []
         for next_expected_st in schedules:
@@ -118,6 +119,7 @@ class SiriLite(RealtimeProxy):
             if not destination:
                 self.log.debug('no destination for next st {} for routepoint {}, skipping departure'
                                .format(next_expected_st, route_point))
+                self.record_additional_info('no_destination')
                 continue
 
             possible_routes = self.get_matching_routes(
@@ -130,12 +132,15 @@ class SiriLite(RealtimeProxy):
                               'passages on all the routes'.format(destination, route_point))
             if route_point.pb_route.uri not in possible_routes:
                 # the next passage does not concern our route point, we can skip it
+                self.record_additional_info('no_route_found')
                 continue
             # for the moment we handle only the NextStop and the direction
             expected_dt = next_expected_st.get('MonitoredVehicleJourney', {})\
                                           .get('MonitoredCall', {})\
                                           .get('ExpectedDepartureTime')
             if not expected_dt:
+                # TODO, if needed we could add a check on the line opening/closing time
+                self.record_additional_info('no_departure_time')
                 continue
             dt = self._get_dt(expected_dt)
             destination = next_expected_st.get('MonitoredVehicleJourney', {}).get('DestinationName', [])

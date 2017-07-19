@@ -112,6 +112,14 @@ class PtRef(object):
         req.matching_routes.destination_code = destination_code
         req.matching_routes.destination_code_key = destination_code_key
 
+        result = self.instance.send_and_receive(req)
+
+        if result.HasField('error'):
+            raise PTRefException('impossible to find matching routes because {}'.format(result.error.message))
+
+        return result.routes
+
+
 class FeedPublisher(object):
     def __init__(self, id, name, license='', url=''):
         self.id = id
