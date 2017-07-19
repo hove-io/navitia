@@ -1,4 +1,5 @@
 "avant changement";" après changement";" début trajet";" fin trajet";" condition globale";"clef ticket"
+"*";"mode=bobette"; ; ; ;
 "*";" mode=metro";" ";" ";" ";"tickett"
 "*";" mode=bus";" ";" ";" ";"tickett"
 "*";" mode=Tramway";" ";" ";" ";"tickett"
