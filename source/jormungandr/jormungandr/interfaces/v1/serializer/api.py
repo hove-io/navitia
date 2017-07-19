@@ -189,7 +189,7 @@ class JourneysSerializer(PbNestedSerializer):
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
     feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
     links = MethodField(schema_type=lambda: LinkSchema(), many=True)
-    context = MethodField(schema_type=lambda: ContextSerializer(), display_none=False, many=True)
+    context = MethodField(schema_type=lambda: ContextSerializer(), display_none=True, many=True)
     notes = DescribedField(schema_type=NoteSerializer(), many=True)
     exceptions = DescribedField(schema_type=ExceptionSerializer(), many=True)
 

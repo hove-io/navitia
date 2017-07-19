@@ -246,18 +246,14 @@ class AdminSerializer(GenericSerializer):
     coord = CoordSerializer(required=False)
 
 
-class AddressSerializer(PbNestedSerializer):
-    id = jsonschema.Field(schema_type=str, attr='uri', description='Identifier of the object')
-    name = jsonschema.Field(schema_type=str, description='Name of the object', display_none=False)
+class AddressSerializer(GenericSerializer):
     house_number = jsonschema.Field(schema_type=int, display_none=True)
     coord = CoordSerializer(required=False)
     label = jsonschema.Field(schema_type=str, display_none=False)
     administrative_regions = AdminSerializer(many=True, display_none=False)
 
 
-class PoiSerializer(PbNestedSerializer):
-    id = jsonschema.Field(schema_type=str, attr='uri', description='Identifier of the object')
-    name = jsonschema.Field(schema_type=str, description='Name of the object', display_none=False)
+class PoiSerializer(GenericSerializer):
     coord = CoordSerializer(required=False)
     label = jsonschema.Field(schema_type=str)
     administrative_regions = AdminSerializer(many=True, display_none=False)
@@ -319,9 +315,7 @@ class StopAreaSerializer(GenericSerializer):
                                       description='Stop points contained in this stop area')
 
 
-class PlaceSerializer(PbNestedSerializer):
-    id = jsonschema.Field(schema_type=str, attr='uri', description='Identifier of the object')
-    name = jsonschema.Field(schema_type=str, description='Name of the object', display_none=False)
+class PlaceSerializer(GenericSerializer):
     quality = jsonschema.Field(schema_type=int, display_none=True)
     stop_area = StopAreaSerializer(display_none=False)
     stop_point = StopPointSerializer(display_none=False)
@@ -465,7 +459,7 @@ class DisplayInformationSerializer(PbNestedSerializer):
     label = jsonschema.MethodField()
 
     def get_label(self, obj):
-        if obj.HasField(str('code')):
+        if obj.HasField(str('code')) and obj.code != '':
             return obj.code
         elif obj.HasField(str('name')):
             return obj.name

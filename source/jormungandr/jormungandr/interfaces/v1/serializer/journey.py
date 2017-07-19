@@ -46,7 +46,7 @@ class CO2Serializer(PbNestedSerializer):
 
 
 class ContextSerializer(PbNestedSerializer):
-    car_direct_path = LambdaField(lambda _, obj: CO2Serializer(obj, display_none=False).data,
+    car_direct_path = LambdaField(lambda _, obj: CO2Serializer(obj, display_none=True).data,
                                   schema_type=lambda: CO2Serializer())
 
 
@@ -122,6 +122,36 @@ class PathSerializer(PbNestedSerializer):
     direction = jsonschema.Field(schema_type=int, display_none=True)
 
 
+class SectionTypeEnum(EnumField):
+    def as_getter(self, serializer_field_name, serializer_cls):
+        def getter(value):
+            # TODO, this should be done in kraken
+            def if_on_demand_stop_time(stop):
+                properties = stop.properties
+                descriptor = properties.DESCRIPTOR
+                enum = descriptor.enum_types_by_name["AdditionalInformation"]
+                return any(enum.values_by_number[v].name == 'on_demand_transport'
+                           for v in properties.additional_informations)
+
+            try:
+                if value.stop_date_times:
+                    first_stop = value.stop_date_times[0]
+                    last_stop = value.stop_date_times[-1]
+                    if if_on_demand_stop_time(first_stop):
+                        return 'on_demand_transport'
+                    elif if_on_demand_stop_time(last_stop):
+                        return 'on_demand_transport'
+                    return 'public_transport'
+            except ValueError:
+                pass
+            attr = self.attr or serializer_field_name
+            if value is None or not value.HasField(attr):
+                return None
+            enum = value.DESCRIPTOR.fields_by_name[attr].enum_type.values_by_number
+            return enum[getattr(value, attr)].name
+        return getter
+
+
 class SectionSerializer(PbNestedSerializer):
     id = jsonschema.Field(schema_type=str)
     duration = jsonschema.Field(schema_type=int, display_none=True,
@@ -158,34 +188,8 @@ class SectionSerializer(PbNestedSerializer):
     additional_informations = EnumListField(attr='additional_informations', pb_type=SectionAdditionalInformationType)
     geojson = SectionGeoJsonField(display_none=False, description='GeoJSON of the shape of the section')
     mode = NestedEnumField(attr='street_network.mode')
-    type = jsonschema.MethodField(schema_type=lambda: EnumField())
+    type = SectionTypeEnum()
 
-    def get_type(self, obj):
-        def if_on_demand_stop_time(stop):
-            properties = stop.properties
-            descriptor = properties.DESCRIPTOR
-            enum = descriptor.enum_types_by_name["AdditionalInformation"]
-            for v in properties.additional_informations:
-                if enum.values_by_number[v].name == 'on_demand_transport':
-                    return True
-            return False
-
-        try:
-            if obj.stop_date_times:
-                first_stop = obj.stop_date_times[0]
-                last_stop = obj.stop_date_times[-1]
-                if if_on_demand_stop_time(first_stop):
-                    return 'on_demand_transport'
-                elif if_on_demand_stop_time(last_stop):
-                    return 'on_demand_transport'
-                return 'public_transport'
-        except ValueError:
-            pass
-
-        if obj is None or not obj.HasField('type') or obj.type is None:
-            return ''
-        enum = obj.DESCRIPTOR.fields_by_name['type'].enum_type.values_by_number
-        return enum[getattr(obj, 'type')].name.lower()
     display_informations = DisplayInformationSerializer(attr='pt_display_informations', display_none=False)
     links = jsonschema.MethodField(display_none=True)
 
