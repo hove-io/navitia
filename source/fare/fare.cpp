@@ -314,6 +314,11 @@ DateTicket DateTicket::operator +(const DateTicket& other) const{
 
 bool Transition::valid(const SectionKey& section, const Label& label) const
 {
+    if (label.tickets.size() == 0 && ticket_key == "" && global_condition != Transition::GlobalCondition::with_changes) {
+        // the transition is a continuation and we don't have any
+        // ticket, thus this transition is not valid
+        return false;
+    }
     bool result = true;
     if(label.current_type == Ticket::ODFare && this->global_condition != Transition::GlobalCondition::with_changes)
         result = false;
