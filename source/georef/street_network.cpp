@@ -215,7 +215,7 @@ StreetNetwork::get_direct_path(const type::EntryPoint& origin, const type::Entry
     return res;
 }
 
-PathFinder::PathFinder(const GeoRef& gref) : geo_ref(gref) {}
+PathFinder::PathFinder(const GeoRef& gref) : geo_ref(gref), color(boost::num_vertices(geo_ref.graph)) {}
 
 void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mode, const float speed_factor) {
     computation_launch = false;
@@ -251,6 +251,10 @@ void PathFinder::init(const type::GeographicalCoord& start_coord, nt::Mode_e mod
                 distances[starting_edge[source_e]] = bt::pos_infin;
             }
         }
+    }
+
+    if (color.n != n) {
+        color = boost::two_bit_color_map<>(n);
     }
 }
 

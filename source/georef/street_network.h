@@ -132,6 +132,9 @@ struct PathFinder {
     /// Predecessors array for the Dijkstra
     std::vector<vertex_t> predecessors;
 
+    /// Color map for the dijkstra shortest path (to avoid extra alloc)
+    boost::two_bit_color_map<> color;
+
     PathFinder(const GeoRef& geo_ref);
 
     /**
@@ -168,7 +171,11 @@ struct PathFinder {
     template<class Visitor>
     void dijkstra(vertex_t start, Visitor visitor) {
         // Note: the predecessors have been updated in init
-        boost::two_bit_color_map<> color(boost::num_vertices(geo_ref.graph));
+
+        // Fill color map in white before dijkstra
+        std::fill(color.data.get(),
+                  color.data.get() + (color.n + color.elements_per_char - 1) / color.elements_per_char,
+                  0);
 
         //we filter the graph to only use certain mean of transport
         using filtered_graph = boost::filtered_graph<georef::Graph, boost::keep_all, TransportationModeFilter>;
