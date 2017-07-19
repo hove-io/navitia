@@ -358,16 +358,17 @@ bool Transition::valid(const SectionKey& section, const Label& label) const
 
 using OD_map = std::map<OD_key, std::vector<std::string>>;
 
-static boost::optional<OD_map::const_iterator> get_od_dest(const OD_map& od_map, const OD_key& sa, const OD_key& mode, const OD_key& zone) {
+static boost::optional<OD_map::const_iterator>
+get_od_dest(const OD_map& od_map, const OD_key& sa, const OD_key& mode, const OD_key& zone) {
     auto od_t = od_map.find(sa);
     if (od_t == od_map.end())
         od_t = od_map.find(mode);
     if (od_t == od_map.end())
         od_t = od_map.find(zone);
     if (od_t == od_map.end())
-        return boost::optional<OD_map::const_iterator>();
-    return boost::optional<OD_map::const_iterator>(od_t);
-};
+        return boost::none;
+    return od_t;
+}
 
 DateTicket Fare::get_od(const Label& label, const SectionKey& section) const {
     OD_key o_sa(OD_key::StopArea, label.stop_area);
