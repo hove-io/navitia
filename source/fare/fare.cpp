@@ -319,46 +319,42 @@ bool Transition::valid(const SectionKey& section, const Label& label) const
         // ticket, thus this transition is not valid
         return false;
     }
-    bool result = true;
-    if(label.current_type == Ticket::ODFare && this->global_condition != Transition::GlobalCondition::with_changes)
-        result = false;
-    for(Condition cond: this->start_conditions)
-    {
-        if(cond.key == "zone" && boost::lexical_cast<int>(cond.value) != section.start_zone)
-            result = false;
-        else if(cond.key == "stoparea" && ! boost::iequals(cond.value, section.start_stop_area)){
-            result = false;
-        }
-        else if(cond.key == "duration") {
+    if (label.current_type == Ticket::ODFare && global_condition != Transition::GlobalCondition::with_changes) {
+        // an OD need a with_changes rule to use a transition
+        return false;
+    }
+
+    for (const Condition& cond: this->start_conditions) {
+        if (cond.key == "zone" && boost::lexical_cast<int>(cond.value) != section.start_zone) {
+            return false;
+        } else if (cond.key == "stoparea" && ! boost::iequals(cond.value, section.start_stop_area)) {
+            return false;
+        } else if(cond.key == "duration") {
             // Dans le fichier CSV, on rentre le temps en minutes, en interne on travaille en secondes
             int duration = boost::lexical_cast<int>(cond.value) * 60;
             int ticket_duration = section.duration_at_begin(label.start_time);
-            result &= compare(ticket_duration, duration, cond.comparaison);
-        }
-        else if(cond.key == "nb_changes") {
+            if (!compare(ticket_duration, duration, cond.comparaison)) { return false; }
+        } else if (cond.key == "nb_changes") {
             int nb_changes = boost::lexical_cast<int>(cond.value);
-            result &= compare(label.nb_changes, nb_changes, cond.comparaison);
-        }
-        else if(cond.key == "ticket" && label.tickets.size() > 0) {
+            if (!compare(label.nb_changes, nb_changes, cond.comparaison)) { return false; }
+        } else if (cond.key == "ticket" && label.tickets.size() > 0) {
             LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), label.tickets.back().key << " " << cond.value);
-            result &= compare(label.tickets.back().key, cond.value, cond.comparaison);
+            if (!compare(label.tickets.back().key, cond.value, cond.comparaison)) { return false; }
         }
     }
-    for(Condition cond: this->end_conditions)
-    {
-        if(cond.key == "zone" && boost::lexical_cast<int>(cond.value) != section.dest_zone)
-            result = false;
-        else if(cond.key == "stoparea" && ! boost::iequals(cond.value, section.dest_stop_area)) {
-            result = false;
-        }
-        else if(cond.key == "duration") {
+    for (const Condition& cond: this->end_conditions) {
+        if (cond.key == "zone" && boost::lexical_cast<int>(cond.value) != section.dest_zone) {
+            return false;
+        } else if (cond.key == "stoparea" && ! boost::iequals(cond.value, section.dest_stop_area)) {
+            return false;
+        } else if (cond.key == "duration") {
             // Dans le fichier CSV, on rentre le temps en minutes, en interne on travaille en secondes
             int duration = boost::lexical_cast<int>(cond.value) * 60;
             int ticket_duration = section.duration_at_end(label.start_time);
-            result &= compare(ticket_duration, duration, cond.comparaison);
+            if (!compare(ticket_duration, duration, cond.comparaison)) { return false; }
         }
     }
-    return result;
+    return true;
 }
 
 using OD_map = std::map<OD_key, std::vector<std::string>>;
