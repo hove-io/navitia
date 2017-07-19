@@ -197,7 +197,14 @@ class JourneysSerializer(PbNestedSerializer):
         if obj.HasField(str('car_co2_emission')):
             return ContextSerializer(obj, display_none=False).data
         else:
-            return None
+            return {
+                'car_direct_path': {
+                    'co2_emission': {
+                        'unit': '',
+                        'value': 0.0
+                    }
+                }
+            }
 
     def get_links(self, obj):
         # note: some request args can be there several times,

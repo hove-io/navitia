@@ -226,7 +226,7 @@ class JourneySerializer(PbNestedSerializer):
     co2_emission = AmountSerializer(required=True, display_none=True)
     durations = DurationsSerializer()
     fare = FareSerializer(display_none=True)
-    calendars = CalendarSerializer(many=True)
+    calendars = CalendarSerializer(many=True, display_none=False)
     sections = SectionSerializer(many=True, display_none=False)
     debug = jsonschema.MethodField(schema_type=lambda: JourneyDebugSerializer(), display_none=False)
 

@@ -160,7 +160,20 @@ class CalendarExceptionSerializer(PbNestedSerializer):
     type = EnumField()
 
 
-class CalendarSerializer(GenericSerializer):
+class CalendarSerializer(PbNestedSerializer):
+    id = jsonschema.MethodField(schema_type=str, description='Identifier of the object')
+    def get_id(self, obj):
+        if obj.HasField(str('uri')) and obj.uri:
+            return obj.uri
+        else:
+            return None
+    name = jsonschema.MethodField(schema_type=str, description='Name of the object')
+    def get_name(self, obj):
+        if obj.HasField(str('name')) and obj.name:
+            return obj.name
+        else:
+            return None
+
     week_pattern = WeekPatternSerializer()
     validity_pattern = ValidityPatternSerializer(display_none=False)
     exceptions = CalendarExceptionSerializer(many=True)
