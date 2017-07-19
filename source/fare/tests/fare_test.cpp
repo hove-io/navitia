@@ -425,7 +425,7 @@ BOOST_FIXTURE_TEST_CASE(tram_with_od, fare_load_fixture) {
 BOOST_FIXTURE_TEST_CASE(exclusive_line, fare_load_fixture) {
     // On teste les lignes à tarif exclusif
     keys.clear();
-    keys.push_back(";paris;098098001:1;areoport;2011|07|31;09|28;09|39;4;4;Bus");
+    keys.push_back(";paris;098098001:1;areoport;2011|07|31;09|28;09|39;4;4;bobette");
     res = f.compute_fare(string_to_path(keys));
     BOOST_CHECK_EQUAL(res.tickets.size(), 1);
     BOOST_CHECK_EQUAL(res.tickets.at(0).value, 1150); // Kof ! c'est cher la navette AF
