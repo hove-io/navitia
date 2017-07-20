@@ -232,7 +232,12 @@ class DisruptionSerializer(PbNestedSerializer):
     updated_at = DateTimeField()
     tags = TagsField(display_none=True)
     cause = jsonschema.Field(schema_type=str, display_none=True)
-    category = jsonschema.Field(schema_type=str, display_none=False)
+    category = jsonschema.MethodField(display_none=False)
+    def get_category(self, obj):
+        if obj.HasField(str("category")) and obj.category:
+            return obj.category
+        return None
+
     severity = SeveritySerializer()
     messages = MessageSerializer(many=True)
     impacted_objects = ImpactedSerializer(many=True, display_none=False)
