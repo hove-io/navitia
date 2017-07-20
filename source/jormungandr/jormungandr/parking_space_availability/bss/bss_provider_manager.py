@@ -43,6 +43,7 @@ class BssProviderManager(object):
     def handle_places(self, places):
         providers = set()
         for place in places or []:
+            provider = None
             if 'poi_type' in place:
                 provider = self._handle_poi(place)
             elif 'embedded_type' in place and place['embedded_type'] == 'poi':
