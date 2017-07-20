@@ -232,7 +232,7 @@ class DisruptionSerializer(PbNestedSerializer):
     updated_at = DateTimeField()
     tags = TagsField(display_none=True)
     cause = jsonschema.Field(schema_type=str, display_none=True)
-    category = jsonschema.MethodField(display_none=False)
+    category = jsonschema.MethodField(schema_type=str, display_none=False)
     def get_category(self, obj):
         if obj.HasField(str("category")) and obj.category:
             return obj.category
