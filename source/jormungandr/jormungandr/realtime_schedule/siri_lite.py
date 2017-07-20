@@ -110,7 +110,7 @@ class SiriLite(RealtimeProxy):
                      if vj.get('MonitoredVehicleJourney', {}).get('LineRef', {}).get('value') == line_code]
         if not schedules:
             self.record_additional_info('no_departure')
-            return None
+            return []
         next_passages = []
         for next_expected_st in schedules:
             destination = next_expected_st.get('MonitoredVehicleJourney', {})\
