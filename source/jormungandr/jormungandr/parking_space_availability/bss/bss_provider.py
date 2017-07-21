@@ -47,3 +47,7 @@ class BssProvider(six.with_metaclass(ABCMeta, object)):
     @abstractmethod
     def status(self):
         pass
+
+    @abstractmethod
+    def feed_publisher(self):
+        pass

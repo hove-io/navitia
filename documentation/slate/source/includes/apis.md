@@ -733,6 +733,7 @@ coordinates, returning a [places](#place) collection.
   nop      | admin_uri[] | array of string | If filled, will filter the search within the given admin uris       |
   nop      | filter      | string          | Use to filter returned objects. for example: places_type.id=theater |
   nop      | disable_geojson | boolean     | remove geojson from the response  | False
+  nop      | bss_stands      | boolean     | Activate the output of BSS availability in the bicycle_rental pois of response     | True
 
 Filters can be added:
 
@@ -958,6 +959,7 @@ The [isochrones](#isochrones) service exposes another response structure, which 
 | nop     | disruption_active    | boolean | For compatibility use only.<br>If true the algorithm take the disruptions into account, and thus avoid disrupted public transport.<br>Rq: `disruption_active=true` = `data_freshness=realtime` <br>Use `data_freshness` parameter instead       |  False     |
 | nop     | wheelchair           | boolean | If true the traveler is considered to be using a wheelchair, thus only accessible public transport are used<br>be warned: many data are currently too faint to provide acceptable answers with this parameter on       | False       |
 | nop     | direct_path          | enum    | Specify if direct paths should be suggested.<br>possible values: <ul><li>indifferent</li><li>none</li><li>only</li></ul>      | indifferent |
+| nop     | bss_stands           | boolean | Activate the output of BSS availability in the bicycle_rental pois of response     | False       |
 | nop     | debug                | boolean | Debug mode<br>No journeys are filtered in this mode     | False       |
 
 ### Precisions on `forbidden_uris[]` and `allowed_id[]`
@@ -1048,7 +1050,7 @@ display_informations     | [display_informations](#display-informations) | Usefu
 additional_informations  | *enum* string                                 | Other information. It can be: <ul><li>`regular`: no on demand transport (odt)</li><li>`has_date_time_estimated`: section with at least one estimated date time</li><li>`odt_with_stop_time`: odt with fixed schedule, but travelers have to call agency!</li><li>`odt_with_stop_point`: odt where pickup or drop off are specific points</li><li>`odt_with_zone`: odt which is like a cab, from wherever you want to wherever you want, whenever it is possible</li></ul>
 geojson                  | [GeoJson](http://www.geojson.org)             |
 path                     | Array of [path](#path)                        | The path of this section
-transfer_type            | *enum* string                                 | The type of this transfer it can be: `walking`, `guaranteed`, `extension`
+transfer_type            | *enum* string                                 | The type of this transfer it can be: `walking`, `stay_in`
 stop_date_times          | Array of [stop_date_time](#stop_date_time)    | List of the stop times of this section
 departure_date_time      | [iso-date-time](#iso-date-time)               | Date and time of departure
 arrival_date_time        | [iso-date-time](#iso-date-time)               | Date and time of arrival

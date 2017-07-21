@@ -32,13 +32,15 @@ from mock import PropertyMock
 from jormungandr.parking_space_availability.bss.bss_provider import BssProvider
 from jormungandr.parking_space_availability.bss.bss_provider_manager import get_from_to_pois_of_journeys
 from jormungandr.parking_space_availability.bss.stands import Stands
+from jormungandr.ptref import FeedPublisher
 from tests.check_utils import is_valid_poi, get_not_null, journey_basic_query
 from tests.tests_mechanism import AbstractTestFixture, dataset
 
-class MockBssProvider(BssProvider):
 
-    def __init__(self, pois_supported):
+class MockBssProvider(BssProvider):
+    def __init__(self, pois_supported, name='mock bss provider'):
         self.pois_supported = pois_supported
+        self.name = name
 
     def support_poi(self, poi):
         return not self.pois_supported or poi['id'] in self.pois_supported
@@ -51,11 +53,16 @@ class MockBssProvider(BssProvider):
     def status(self):
         return {}
 
+    def feed_publisher(self):
+        return FeedPublisher(id='mock_bss', name=self.name, license='the death license',
+                             url='bob.com')
+
 
 def mock_bss_providers(pois_supported):
     providers = [MockBssProvider(pois_supported=pois_supported)]
     return mock.patch('jormungandr.parking_space_availability.bss.BssProviderManager._get_providers',
                       new_callable=PropertyMock, return_value=lambda: providers)
+
 
 @dataset({"main_routing_test": {}})
 class TestBssProvider(AbstractTestFixture):
@@ -379,6 +386,12 @@ class TestBssProvider(AbstractTestFixture):
                 is_valid_poi(poi)
                 assert 'stands' not in poi
 
+            # since no stands have been added, we have not added the bss provider as a feed publisher
+            # thus we only have the 'static' data feed publisher
+            feeds = get_not_null(response, 'feed_publishers')
+            assert len(feeds) == 1
+            assert next(f for f in feeds if f['name'] == 'routing api data')
+
     def test_journey_sections_from_to_poi_with_stands(self):
         supported_pois = ['station_1']
         with mock_bss_providers(pois_supported=supported_pois):
@@ -396,3 +409,61 @@ class TestBssProvider(AbstractTestFixture):
                     assert poi['stands']['total_stands'] == 16
                 else:
                     assert 'stands' not in poi
+
+            # check the feed publishers
+            # we have the feed publisher of the 'static' data
+            feeds = get_not_null(response, 'feed_publishers')
+            tc_data = next(f for f in feeds if f['name'] == 'routing api data')
+            assert tc_data == {
+                'id': 'builder',
+                'name': 'routing api data',
+                'license': 'ODBL',
+                'url': 'www.canaltp.fr',
+            }
+            # we check that the feedpublisher of the bss provider has been added
+            bss_provider = next(f for f in feeds if f['name'] == 'mock bss provider')
+            assert bss_provider == {
+                'id': 'mock_bss',
+                'name': 'mock bss provider',
+                'license': 'the death license',
+                'url': 'bob.com',
+            }
+
+    def test_journey_sections_with_different_providers(self):
+        """
+        each poi is handled by a different bss provider, we should find both providers in the feed publishers
+        """
+        providers = [MockBssProvider(pois_supported='station_1', name='provider 1'),
+                     MockBssProvider(pois_supported='station_2', name='provider 2')]
+        with mock.patch('jormungandr.parking_space_availability.bss.BssProviderManager._get_providers',
+                        new_callable=PropertyMock, return_value=lambda: providers):
+            query = journey_basic_query + "&first_section_mode=bss&last_section_mode=bss&bss_stands=true"
+            response = self.query_region(query)
+            self.is_valid_journey_response(response, query)
+
+            # check the feed publishers
+            # we have the feed publisher of the 'static' data
+            feeds = get_not_null(response, 'feed_publishers')
+            tc_data = next(f for f in feeds if f['name'] == 'routing api data')
+            assert tc_data == {
+                'id': 'builder',
+                'name': 'routing api data',
+                'license': 'ODBL',
+                'url': 'www.canaltp.fr',
+            }
+            # we check that the feedpublisher of the bss providers has been added
+            bss_provider_1 = next(f for f in feeds if f['name'] == 'provider 1')
+            assert bss_provider_1 == {
+                'id': 'mock_bss',
+                'name': 'provider 1',
+                'license': 'the death license',
+                'url': 'bob.com',
+            }
+            bss_provider_2 = next(f for f in feeds if f['name'] == 'provider 2')
+            assert bss_provider_2 == {
+                'id': 'mock_bss',
+                'name': 'provider 2',
+                'license': 'the death license',
+                'url': 'bob.com',
+            }
+

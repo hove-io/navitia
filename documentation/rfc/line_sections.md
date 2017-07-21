@@ -4,18 +4,97 @@ The line sections is a way to impact some routes between 2 stops areas
 
 For each vehicle journey corresponding to the line/route, we get the corresponding base vehicle journey and identify all the smallest sections starting with the first stop and ending with the other.  Then, the new vehicle journey doesn't stop at all corresponding stop points.
 
-For example, if we want the section A B on the following lollipop vehicle journey:
+## Case of a lollipop vehicle journey
+
+For example, if we want to disrupt the section B C on the following lollipop vehicle journey:
 
 ```
-A B C D E A B
-***       ***
+Vehicle does:
+A - B - C - D - E - B - C - F
+
+      E <---- D
+      |       ^
+      v       |
+A --> B ====> C --> F
+      [#######]
 ```
 
-The disrupted vehicle journey will not stop at A and B:
+The disrupted vehicle journey will not stop at B and C:
 
 ```
-C D E
+    [###]           [###]
+A --------- D - E --------- F
 ```
+
+## Case of multiple stop_points from a same stop_area in a vehicle journey
+
+### Consecutive stop_point
+
+This is very specific (case of a bus C2 at Commerce in Nantes, France):
+```
+    +---------------------------+     +------------------------------------------------------------+
+    |     stop_area:Cirque      |     |                    stop_area:Commerce                      |
+    |                           |     |                                                            |
+--- | --> stop_point:Cirque --- | --- | --> stop_point:Commerce1 --------> stop_point:Commerce2 ---|----->
+    |                           |     |                                                            |
+    +---------------------------+     +------------------------------------------------------------+
+
+section disrupted for Cirque -> Commerce (and resulting vehicle journey):
+          [####################################################]
+-------------------------------------------------------------------------> stop_point:Commerce2 --------->
+
+sections disrupted for Commerce -> Commerce (and resulting vehicle journey):
+                                            [##################]           [##################]
+--------> stop_point:Cirque ----------------------------------------------------------------------------->
+```
+The idea is the same, we take **all** the **shortest** sections matching the stop area provided.
+
+If a line section disruption is created from `Cirque` (stop area) to `Commerce` (stop area),
+then the section disrupted is `stop_point:Cirque -> stop_point:Commerce1`.
+
+If a line section disruption is created from `Commerce` to `Commerce` (to disrupt only one stop),
+then the sections disrupted are `stop_point:Commerce1 -> stop_point:Commerce1` and `stop_point:Commerce2 -> stop_point:Commerce2`.
+So there is no way right now to disrupt only one of the stop_points.
+
+
+### Lollipop on same stop_area (but different stop_points)
+
+The behaviour is the same:
+```
+    +----------------+     +--------------------------------+
+    |     s_a:A      |     |              s_a:B             |
+    |                |     |                                |
+--- | --> s_p:A1 --- | --- | --> s_p:B1           s_p:B2 ---|----->
+    |                |     |       |                ^       |
+    |                |     |       |                |       |
+    +----------------+     +--------------------------------+
+                                   |                |
+                           +--------------------------------+
+                           |       |      s_a:C     |       |
+                           |       |                |       |
+                           |       +---> s_p:C1 ----+       |
+                           |                                |
+                           +--------------------------------+
+
+section disrupted for A -> B (and resulting vehicle journey):
+           [##########################]
+-----------------------------------+              s_p:B2 --------->
+                                   |                ^
+                                   |                |
+                                   +---> s_p:C1 ----+
+
+sections disrupted for B -> B (and resulting vehicle journey):
+                                [#####]          [#####]
+--------> s_p:A1 ------------------+                +------------->
+                                   |                |
+                                   +---> s_p:C1 ----+
+```
+If a line section disruption is created from `A` to `B`,
+then the section disrupted is `s_p:A1 -> s_p:B1` (no other and no shorter section matches stop_areas)
+
+If a line section disruption is created from `B` to `B`,
+then the sections disrupted are `s_p:B1 -> s_p:B1` and `s_p:B2 -> s_p:B2`.
+
 
 # Displaying line sections
 

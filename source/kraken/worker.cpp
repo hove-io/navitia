@@ -299,20 +299,29 @@ void Worker::feed_publisher(){
     if (!conf.display_contributors()){
         this->pb_creator.clear_feed_publishers();
     }
-    if (d->meta->license.empty()){
-        return;
+    if (! d->meta->license.empty()) {
+        auto pt_feed_publisher = this->pb_creator.add_feed_publishers();
+        // instance_name is required
+        pt_feed_publisher->set_id(d->meta->instance_name);
+        if (!d->meta->publisher_name.empty()){
+            pt_feed_publisher->set_name(d->meta->publisher_name);
+        }
+        if (!d->meta->publisher_url.empty()){
+            pt_feed_publisher->set_url(d->meta->publisher_url);
+        }
+        if (!d->meta->license.empty()){
+            pt_feed_publisher->set_license(d->meta->license);
+        }
     }
-    auto pb_feed_publisher = this->pb_creator.add_feed_publishers();
-    // instance_name is required
-    pb_feed_publisher->set_id(d->meta->instance_name);
-    if (!d->meta->publisher_name.empty()){
-        pb_feed_publisher->set_name(d->meta->publisher_name);
-    }
-    if (!d->meta->publisher_url.empty()){
-        pb_feed_publisher->set_url(d->meta->publisher_url);
-    }
-    if (!d->meta->license.empty()){
-        pb_feed_publisher->set_license(d->meta->license);
+
+    if (d->meta->street_network_source == "osm") {
+        // we hardcode the osm feed_publisher
+        auto osm_fp = this->pb_creator.add_feed_publishers();
+        // instance_name is required
+        osm_fp->set_id("osm");
+        osm_fp->set_name("openstreetmap");
+        osm_fp->set_url("https://www.openstreetmap.org/copyright");
+        osm_fp->set_license("ODbL");
     }
 }
 
@@ -1018,6 +1027,7 @@ void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
     case pbnavitia::heat_map: heat_map(request.heat_map()); break;
     case pbnavitia::street_network_routing_matrix: street_network_routing_matrix(request.sn_routing_matrix()); break;
     case pbnavitia::odt_stop_points: odt_stop_points(request.coord()); break;
+    case pbnavitia::matching_routes: get_matching_routes(request.matching_routes()); break;
     default:
         LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
         this->pb_creator.fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API");
@@ -1057,4 +1067,27 @@ void Worker::odt_stop_points(const pbnavitia::GeographicalCoord& request) {
     this->pb_creator.pb_fill(zonal_sps, 0);
 }
 
+void Worker::get_matching_routes(const pbnavitia::MatchingRoute& matching_route) {
+    const auto* line = find_or_default(matching_route.line_uri(),
+                                       this->pb_creator.data->get_assoc_data<nt::Line>());
+    if (! line) {
+        this->pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse,
+                                       "Cannot find line " + matching_route.line_uri());
+        return;
+    }
+
+    const auto* start = find_or_default(matching_route.start_stop_point_uri(),
+                                        this->pb_creator.data->get_assoc_data<nt::StopPoint>());
+    if (! start) {
+        this->pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse,
+                                       "Cannot find stoppoint " + matching_route.start_stop_point_uri());
+        return;
+    }
+
+    ptref::fill_matching_routes(this->pb_creator,
+                                this->pb_creator.data,
+                                line,
+                                start,
+                                {matching_route.destination_code_key(), matching_route.destination_code()});
+}
 }

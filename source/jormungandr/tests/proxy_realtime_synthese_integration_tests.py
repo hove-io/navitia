@@ -259,7 +259,7 @@ class TestSyntheseSchedules(AbstractTestFixture):
             query = self.query_template.format(sp='SP_21')
             response = self.query_region(query)
             scs = get_not_null(response, 'stop_schedules')
-            assert len(scs) == 2
+            assert len(scs) == 3
             assert _get_schedule(response, 'SP_21', 'C1') == [{
                 'rt': False, 'dt': '20160102T090000'
             }]

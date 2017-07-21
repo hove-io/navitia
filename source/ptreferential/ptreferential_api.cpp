@@ -170,5 +170,59 @@ void query_pb(navitia::PbCreator& pb_creator,
     pagination->set_itemsonpage(final_indexes.size());    
 }
 
+/**
+ * From a line, a start stoppoint and a destination get all the routes of the line that would match
+ * start -> destination
+ *
+ * this function is used when we got a destination from an external system with data different than ours
+ * and we need to find the routes (hopefully only one) that match that destination
+ */
+std::vector<const type::Route*>
+get_matching_routes(const type::Data* data,
+                    const type::Line* line,
+                    const type::StopPoint* start,
+                    const std::pair<std::string, std::string>& destination_code) {
+    const auto possible_stop_points = data->pt_data->codes.get_objs<nt::StopPoint>(destination_code.first,
+                                                                                   destination_code.second);
 
+    const auto possible_stop_areas = data->pt_data->codes.get_objs<nt::StopArea>(destination_code.first,
+                                                                                 destination_code.second);
+
+    if (possible_stop_points.empty() && possible_stop_areas.empty()) {
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"), "no stops matche the code "
+                       << destination_code.second << " (key = " << destination_code.first << ")"
+                       << " impossible to find matching routes");
+        return {};
+    }
+    std::set<const nt::Route*> routes;
+    const auto& data_raptor = data->dataRaptor;
+    for (const auto jpp: data_raptor->jpps_from_sp[routing::SpIdx(start->idx)]) {
+        const auto& jp = data_raptor->jp_container.get(jpp.jp_idx);
+        const auto* r = data->get_data<nt::Route>()[jp.route_idx.val];
+        if (r->line != line) {
+            continue;
+        }
+        for (const auto next_jpp_idx: boost::make_iterator_range(jp.jpps.begin() + jpp.order,
+                                                             jp.jpps.end())) {
+            const auto next_jpp = data_raptor->jp_container.get(next_jpp_idx);
+            const auto sp = data->get_data<nt::StopPoint>()[next_jpp.sp_idx.val];
+            if (contains(possible_stop_points, sp) || contains(possible_stop_areas, sp->stop_area)) {
+                routes.insert(r);
+                break;
+            }
+        }
+    }
+
+    return std::vector<const type::Route*>(routes.begin(), routes.end());
+}
+
+void fill_matching_routes(navitia::PbCreator& pb_creator,
+                          const type::Data* data,
+                          const type::Line* line,
+                          const type::StopPoint* start,
+                          const std::pair<std::string, std::string>& destination_code) {
+    const auto routes = get_matching_routes(data, line, start, destination_code);
+    // we don't need any detail, we just add routes with a 0 depth
+    pb_creator.pb_fill(routes, 0);
+}
 }}

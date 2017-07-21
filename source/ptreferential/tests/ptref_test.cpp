@@ -32,6 +32,7 @@ www.navitia.io
 #define BOOST_TEST_MODULE ptref_test
 #include <boost/test/unit_test.hpp>
 #include "ptreferential/ptreferential.h"
+#include "ptreferential/ptreferential_api.h"
 #include "ptreferential/reflexion.h"
 #include "ptreferential/ptref_graph.h"
 #include "ed/build_helper.h"
@@ -889,4 +890,59 @@ BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
     //no line for contributor "c2"
     BOOST_CHECK_THROW(make_query(nt::Type_e::Line, "contributor.uri=c2", *(b.data)),
                       ptref_error);
+}
+
+
+BOOST_AUTO_TEST_CASE(get_potential_routes_test) {
+    ed::builder b("201601011T1739");
+    b.generate_dummy_basis();
+    b.vj("A").route("r1")("stop1", "09:00"_t)("stop2", "10:00"_t)("stop3", "11:00"_t);
+    b.vj("A").route("r1")("stop1", "09:10"_t)("stop2", "10:10"_t)("stop3", "11:10"_t);
+    b.vj("A").route("r2")("stop1", "09:10"_t)("stop2", "10:10"_t)("stop3", "11:10"_t);
+    b.vj("A").route("r3")("stop2", "09:10"_t)("stop3", "10:10"_t)("stop4", "11:10"_t);
+    b.vj("B").route("r3")("stop1", "09:10"_t)("stop2", "10:10"_t)("stop3", "11:10"_t);
+
+    b.finish();
+    b.data->build_uri();
+
+    b.data->pt_data->codes.add(b.get<nt::StopPoint>("stop1"), "code_key", "stop1 code");
+    b.data->pt_data->codes.add(b.get<nt::StopPoint>("stop2"), "code_key", "stop2 code");
+    b.data->pt_data->codes.add(b.get<nt::StopPoint>("stop3"), "code_key", "stop3 code");
+    b.data->pt_data->codes.add(b.get<nt::StopArea>("stop3"), "code_key", "stoparea3 code");
+    b.data->pt_data->codes.add(b.get<nt::StopPoint>("stop4"), "code_key", "stop4 code");
+
+    auto routes_names = [](const std::vector<const nt::Route*> routes) {
+        std::set<std::string> res;
+        for (const auto* r: routes) {
+            res.insert(r->uri);
+        }
+        return res;
+    };
+
+    // only r1 and r2 go first on stop1 then stop3
+    auto routes = navitia::ptref::get_matching_routes(b.data.get(),
+                                                      b.get<nt::Line>("A"),
+                                                      b.get<nt::StopPoint>("stop1"),
+                                                      {"code_key", "stop3 code"});
+    BOOST_CHECK_EQUAL_RANGE(routes_names(routes), std::set<std::string>({"r1", "r2"}));
+
+    // r1, r2 and r3 go first on stop2 then stop3 (even if s3 is not the final destination of r3)
+    routes = navitia::ptref::get_matching_routes(b.data.get(),
+                                                 b.get<nt::Line>("A"),
+                                                 b.get<nt::StopPoint>("stop2"),
+                                                {"code_key", "stop3 code"});
+    BOOST_CHECK_EQUAL_RANGE(routes_names(routes), std::set<std::string>({"r1", "r2", "r3"}));
+    // same as above, but we do the lookup with the stoparea's code, it should work too
+    routes = navitia::ptref::get_matching_routes(b.data.get(),
+                                                 b.get<nt::Line>("A"),
+                                                 b.get<nt::StopPoint>("stop2"),
+                                                {"code_key", "stoparea3 code"});
+    BOOST_CHECK_EQUAL_RANGE(routes_names(routes), std::set<std::string>({"r1", "r2", "r3"}));
+
+    // there is no route that first goes to stop2 then stop1
+    routes = navitia::ptref::get_matching_routes(b.data.get(),
+                                                 b.get<nt::Line>("A"),
+                                                 b.get<nt::StopPoint>("stop2"),
+                                                {"code_key", "stop1 code"});
+    BOOST_CHECK_EQUAL_RANGE(routes_names(routes), std::set<std::string>({}));
 }

@@ -76,7 +76,7 @@ struct Autocomplete
         int quality = 0;
         navitia::type::GeographicalCoord coord;
         int house_number = -1;
-        std::tuple<int, size_t, int> scores = std::make_tuple(0, 0, 0);
+        std::tuple<int, size_t, int> scores = std::make_tuple(0, size_t(0), 0);
         bool operator<(const fl_quality & other) const{
             return this->quality > other.quality;
         }

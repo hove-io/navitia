@@ -32,6 +32,18 @@ from jormungandr import i_manager, bss_provider_manager
 from functools import wraps
 import logging
 
+
+def _add_feed_publisher(response, providers):
+    """
+    add the feed publisher of the providers to the global feed_publishers of the response
+    """
+    feeds = response.get('feed_publishers', [])
+    for p in providers or []:
+        f = p.feed_publisher()
+        if f:
+            feeds.append(f)
+
+
 class ManageStands(object):
 
     def __init__(self, resource, attribute):
@@ -52,7 +64,8 @@ class ManageStands(object):
                     add_bss_availability = bss_provider_manager.handle_journeys if self.attribute == 'journeys' \
                         else bss_provider_manager.handle_places
                     try:
-                        response[self.attribute] = add_bss_availability(response[self.attribute])
+                        providers = add_bss_availability(response[self.attribute])
+                        _add_feed_publisher(response, providers)
                     except:
                         logger = logging.getLogger(__name__)
                         logger.exception('Error while handling BSS realtime availability')

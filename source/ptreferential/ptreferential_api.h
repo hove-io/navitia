@@ -47,4 +47,16 @@ void query_pb(navitia::PbCreator& pb_creator,
               const boost::optional<boost::posix_time::ptime>& since,
               const boost::optional<boost::posix_time::ptime>& until,
               const type::Data& data);
+
+std::vector<const type::Route*> get_matching_routes(const type::Data*,
+                                               const type::Line*,
+                                               const type::StopPoint* start,
+                                               const std::pair<std::string, std::string>& destination_code);
+
+
+void fill_matching_routes(navitia::PbCreator& pb_creator,
+                          const type::Data*,
+                          const type::Line*,
+                          const type::StopPoint* start,
+                          const std::pair<std::string, std::string>& destination_code);
 }}

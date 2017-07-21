@@ -95,6 +95,8 @@ int main(int argc, const char* const argv[]) {
     b.connection("F", "G", 2*60);
     // Empty license for global feed publisher
     b.data->meta->license = "";
+    // and we set the streetnetwork provider as osm to test the osm licence
+    b.data->meta->street_network_source = "osm";
     b.data->pt_data->codes.add(b.sps.at("A"), "external_code", "stop_point:A");
     b.data->pt_data->codes.add(b.sps.at("A"), "source", "Ain");
     b.data->pt_data->codes.add(b.sps.at("A"), "source", "Aisne");

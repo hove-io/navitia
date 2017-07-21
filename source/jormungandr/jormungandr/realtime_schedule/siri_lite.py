@@ -30,7 +30,7 @@
 # www.navitia.io
 from __future__ import absolute_import
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy, RealtimeProxyError
-from flask import logging
+import logging
 import pybreaker
 import pytz
 import requests as requests
@@ -43,13 +43,15 @@ class SiriLite(RealtimeProxy):
     """
     class managing calls to a siri lite external service providing real-time next passages
     """
-    def __init__(self, id, service_url, object_id_tag=None, timeout=10, **kwargs):
+    def __init__(self, id, service_url, object_id_tag=None, instance=None, timeout=10, **kwargs):
         self.service_url = service_url
         self.timeout = timeout  # timeout in seconds
         self.rt_system_id = id
         self.object_id_tag = object_id_tag if object_id_tag else id
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config.get('CIRCUIT_BREAKER_MAX_SIRILITE_FAIL', 5),
                                                 reset_timeout=app.config.get('CIRCUIT_BREAKER_SIRILITE_TIMEOUT_S', 60))
+        self.instance = instance
+        self.log = logging.LoggerAdapter(logging.getLogger(__name__), extra={'rt_proxy': id})
 
     def __repr__(self):
         """
@@ -59,19 +61,17 @@ class SiriLite(RealtimeProxy):
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_SIRILITE', 30))
     def _call(self, url):
-        logging.getLogger(__name__).debug('sirilite RT service, call url: {}'.format(url))
+        self.log.debug('sirilite RT service, call url: {}'.format(url))
         try:
             return self.breaker.call(requests.get, url, timeout=self.timeout)
         except pybreaker.CircuitBreakerError as e:
-            logging.getLogger(__name__).error('sirilite RT service dead, using base '
-                                              'schedule (error: {}'.format(e))
+            self.log.error('sirilite RT service dead, using base schedule (error: {}'.format(e))
             raise RealtimeProxyError('circuit breaker open')
         except requests.Timeout as t:
-            logging.getLogger(__name__).error('sitelite RT service timeout, using base '
-                                              'schedule (error: {}'.format(t))
+            self.log.error('sitelite RT service timeout, using base schedule (error: {}'.format(t))
             raise RealtimeProxyError('timeout')
         except Exception as e:
-            logging.getLogger(__name__).exception('sirilite RT error, using base schedule')
+            self.log.exception('sirilite RT error, using base schedule')
             raise RealtimeProxyError(str(e))
 
     def _make_url(self, route_point):
@@ -82,15 +82,17 @@ class SiriLite(RealtimeProxy):
         stop_id = route_point.fetch_stop_id(self.object_id_tag)
         line_id = route_point.fetch_line_id(self.object_id_tag)
 
-        #we don't use the line_id now, but we want to check that we have it
+        # Note: we don't use the line_id now because the stif's SIRILite does not handle it
+        # but we want to check that we have it
+        # if the stif starts to handle it, we can add it with '&LineRef={line_id}'
         if not stop_id or not line_id:
             # one of the id is missing, we'll not find any realtime
-            logging.getLogger(__name__).debug('missing realtime id for {obj}: stop code={s}'.
+            self.log.debug('missing realtime id for {obj}: stop code={s}'.
                                               format(obj=route_point, s=stop_id))
             self.record_internal_failure('missing id')
             return None
 
-        url = "{base_url}{stop_id}".format(base_url=self.service_url, stop_id=stop_id)
+        url = "{base_url}&MonitoringRef={stop_id}".format(base_url=self.service_url, stop_id=stop_id)
 
         return url
 
@@ -98,38 +100,59 @@ class SiriLite(RealtimeProxy):
         return pytz.utc.localize(datetime.strptime(datetime_str, "%Y-%m-%dT%H:%M:%S.%fZ"))
 
     def _get_passages(self, route_point, resp):
-        logging.getLogger(__name__).debug('sirilite response: {}'.format(resp))
+        self.log.debug('sirilite response: {}'.format(resp))
 
         line_code = route_point.fetch_line_id(self.object_id_tag)
-        monitored_stop_visit = resp.get('siri', {})\
-                                   .get('serviceDelivery', {})\
-                                   .get('stopMonitoringDelivery', {})\
-                                   .get('monitoredStopVisit', [])
-        schedules = (vj for vj in monitored_stop_visit
-                        if vj.get('monitoredVehicleJourney', {}).get('lineRef', {}).get('value', '') == line_code)
-        #TODO: we should use the destination to find the correct route
-        if schedules:
-            next_passages = []
-            for next_expected_st in schedules:
-                # for the moment we handle only the NextStop and the direction
-                expected_dt = next_expected_st.get('monitoredVehicleJourney', {})\
-                                              .get('monitoredCall', {})\
-                                              .get('expectedDepartureTime')
-                if not expected_dt:
-                    continue
-                dt = self._get_dt(expected_dt)
-                destination = next_expected_st.get('monitoredVehicleJourney', {}).get('destinationName', [])
-                if destination:
-                    direction = destination[0].get('value')
-                else:
-                    direction = None
-                is_real_time = True
-                next_passage = RealTimePassage(dt, direction, is_real_time)
-                next_passages.append(next_passage)
+        stop_deliveries = resp.get('Siri', {}).get('ServiceDelivery', {}).get('StopMonitoringDelivery', [])
+        schedules = [vj
+                     for d in stop_deliveries
+                     for vj in d.get('MonitoredStopVisit', [])
+                     if vj.get('MonitoredVehicleJourney', {}).get('LineRef', {}).get('value') == line_code]
+        if not schedules:
+            self.record_additional_info('no_departure')
+            return []
+        next_passages = []
+        for next_expected_st in schedules:
+            destination = next_expected_st.get('MonitoredVehicleJourney', {})\
+                .get('DestinationRef', {}).get('value')
 
-            return next_passages
-        else:
-            return None
+            if not destination:
+                self.log.debug('no destination for next st {} for routepoint {}, skipping departure'
+                               .format(next_expected_st, route_point))
+                self.record_additional_info('no_destination')
+                continue
+
+            possible_routes = self.get_matching_routes(
+                destination=destination,
+                line=route_point.fetch_line_uri(),
+                start=route_point.pb_stop_point.uri
+            )
+            if possible_routes and len(possible_routes) > 1:
+                self.log.info('multiple possible routes for destination {} and routepoint {}, we add the '
+                              'passages on all the routes'.format(destination, route_point))
+            if route_point.pb_route.uri not in possible_routes:
+                # the next passage does not concern our route point, we can skip it
+                self.record_additional_info('no_route_found')
+                continue
+            # for the moment we handle only the NextStop and the direction
+            expected_dt = next_expected_st.get('MonitoredVehicleJourney', {})\
+                                          .get('MonitoredCall', {})\
+                                          .get('ExpectedDepartureTime')
+            if not expected_dt:
+                # TODO, if needed we could add a check on the line opening/closing time
+                self.record_additional_info('no_departure_time')
+                continue
+            dt = self._get_dt(expected_dt)
+            destination = next_expected_st.get('MonitoredVehicleJourney', {}).get('DestinationName', [])
+            if destination:
+                direction = destination[0].get('value')
+            else:
+                direction = None
+            is_real_time = True
+            next_passage = RealTimePassage(dt, direction, is_real_time)
+            next_passages.append(next_passage)
+
+        return next_passages
 
     def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None):
         url = self._make_url(route_point)
@@ -138,9 +161,7 @@ class SiriLite(RealtimeProxy):
         r = self._call(url)
 
         if r.status_code != 200:
-            # TODO better error handling, the response might be in 200 but in error
-            logging.getLogger(__name__).error('sirilite RT service unavailable, impossible to query : {}'
-                                              .format(r.url))
+            self.log.error('sirilite RT service unavailable, impossible to query : {}'.format(r.url))
             raise RealtimeProxyError('non 200 response')
 
         return self._get_passages(route_point, r.json())
@@ -152,3 +173,11 @@ class SiriLite(RealtimeProxy):
                                     'fail_counter': self.breaker.fail_counter,
                                     'reset_timeout': self.breaker.reset_timeout},
                 }
+
+    def get_matching_routes(self, line, start, destination):
+        pb_routes = self.instance.ptref.get_matching_routes(line_uri=line,
+                                                            start_sp_uri=start,
+                                                            destination_code=destination,
+                                                            destination_code_key=self.object_id_tag)
+
+        return [r.uri for r in pb_routes]

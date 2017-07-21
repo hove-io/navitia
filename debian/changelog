@@ -1,3 +1,18 @@
+navitia2 (2.37.0) unstable; urgency=low
+
+  * Jormungandr&Kraken: realtime proxy for stif  <https://github.com/CanalTP/navitia/pull/2151>
+  * Streetnetwork: remove allocs around dijkstra  <https://github.com/CanalTP/navitia/pull/2150>
+  * Fare: Fix a crash  <https://github.com/CanalTP/navitia/pull/2149>
+  * Doc: populate RFC for VJ using 2 SP of 1 unique SA  <https://github.com/CanalTP/navitia/pull/2148>
+  * Kraken : stop_point management in traffic_reports  <https://github.com/CanalTP/navitia/pull/2146>
+  * Jormungandr: add a feed publisher for bss  <https://github.com/CanalTP/navitia/pull/2145>
+  * Kraken: add an osm feed_publisher  <https://github.com/CanalTP/navitia/pull/2143>
+  * Doc: update transfer_type possible values  <https://github.com/CanalTP/navitia/pull/2142>
+  * Jormun & Tyr: add a default coord to a user  <https://github.com/CanalTP/navitia/pull/2140>
+  * kraken: fix debian 7 compilation problem  <https://github.com/CanalTP/navitia/pull/2141>
+
+ -- Guillaume Pinot <texitoi@texitoi.eu>  Fri, 21 Jul 2017 10:07:15 +0100
+
 navitia2 (2.36.0) unstable; urgency=low
 
   * Jormun: a few changes for python 3  <https://github.com/CanalTP/navitia/pull/2129>

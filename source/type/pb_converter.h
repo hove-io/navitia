@@ -339,7 +339,7 @@ private:
         template<typename Nav, typename Pb>
         void fill_pb_object(const std::vector<Nav*>& nav_list,
                             ::google::protobuf::RepeatedPtrField<Pb>* pb_list) {
-            for (auto* nav_obj: nav_list) {
+            for (const auto* nav_obj: nav_list) {
                 fill_pb_object(nav_obj, pb_list->Add());
             }
         }
