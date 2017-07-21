@@ -127,6 +127,8 @@ class Worker {
          * */
         void street_network_routing_matrix(const pbnavitia::StreetNetworkRoutingMatrixRequest& request);
         void odt_stop_points(const pbnavitia::GeographicalCoord& request);
+
+        void get_matching_routes(const pbnavitia::MatchingRoute&);
 };
 
 type::EntryPoint make_sn_entry_point(const std::string& place,

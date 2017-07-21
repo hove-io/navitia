@@ -115,3 +115,11 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         params = {'realtime_system_id': repr(self.rt_system_id), 'status': status}
         params.update(kwargs)
         new_relic.record_custom_event('realtime_status', params)
+
+    def record_additional_info(self, status, **kwargs):
+        """
+        status can be in: ok, failure
+        """
+        params = {'realtime_system_id': repr(self.rt_system_id), 'status': status}
+        params.update(kwargs)
+        new_relic.record_custom_event('realtime_proxy_additional_info', params)

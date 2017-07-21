@@ -1027,6 +1027,7 @@ void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
     case pbnavitia::heat_map: heat_map(request.heat_map()); break;
     case pbnavitia::street_network_routing_matrix: street_network_routing_matrix(request.sn_routing_matrix()); break;
     case pbnavitia::odt_stop_points: odt_stop_points(request.coord()); break;
+    case pbnavitia::matching_routes: get_matching_routes(request.matching_routes()); break;
     default:
         LOG4CPLUS_WARN(logger, "Unknown API : " + API_Name(request.requested_api()));
         this->pb_creator.fill_pb_error(pbnavitia::Error::unknown_api, "Unknown API");
@@ -1066,4 +1067,27 @@ void Worker::odt_stop_points(const pbnavitia::GeographicalCoord& request) {
     this->pb_creator.pb_fill(zonal_sps, 0);
 }
 
+void Worker::get_matching_routes(const pbnavitia::MatchingRoute& matching_route) {
+    const auto* line = find_or_default(matching_route.line_uri(),
+                                       this->pb_creator.data->get_assoc_data<nt::Line>());
+    if (! line) {
+        this->pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse,
+                                       "Cannot find line " + matching_route.line_uri());
+        return;
+    }
+
+    const auto* start = find_or_default(matching_route.start_stop_point_uri(),
+                                        this->pb_creator.data->get_assoc_data<nt::StopPoint>());
+    if (! start) {
+        this->pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse,
+                                       "Cannot find stoppoint " + matching_route.start_stop_point_uri());
+        return;
+    }
+
+    ptref::fill_matching_routes(this->pb_creator,
+                                this->pb_creator.data,
+                                line,
+                                start,
+                                {matching_route.destination_code_key(), matching_route.destination_code()});
+}
 }

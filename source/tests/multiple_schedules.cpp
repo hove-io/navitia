@@ -51,6 +51,8 @@ int main(int argc, const char* const argv[]) {
 
     b.vj("C").route("C1")("SP_20", "08:00"_t)("SP_21", "09:00"_t)("SP_22", "11:00"_t);
     b.vj("C").route("C2")("SP_20", "09:00"_t)("SP_21", "10:00"_t)("SP_22", "12:00"_t);
+    // we add a backward route on line C
+    b.vj("C").route("C-backward")("SP_22", "09:10"_t)("SP_21", "10:10"_t)("SP_20", "12:10"_t);
 
     b.data->complete();
     b.finish();
@@ -70,7 +72,9 @@ int main(int argc, const char* const argv[]) {
 
     b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_1"), "KisioDigital", "syn_stoppoint1");
     b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_11"), "KisioDigital", "syn_stoppoint11");
+    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_20"), "KisioDigital", "syn_stoppoint20");
     b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_21"), "KisioDigital", "syn_stoppoint21");
+    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_22"), "KisioDigital", "syn_stoppoint22");
     b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_31"), "KisioDigital", "syn_stoppoint31");
     b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_41"), "KisioDigital", "syn_stoppoint41");
 

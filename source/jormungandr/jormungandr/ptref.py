@@ -45,6 +45,10 @@ PT_TYPE_RESPONSE_MAPPING = {
 }
 
 
+class PTRefException(Exception):
+    pass
+
+
 class PtRef(object):
     def __init__(self, instance):
         self.instance = instance
@@ -99,6 +103,21 @@ class PtRef(object):
             if req.ptref.count > result.pagination.itemsOnPage:
                 # we did not get as much results as planned, we can stop
                 return
+
+    def get_matching_routes(self, line_uri, start_sp_uri, destination_code, destination_code_key):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.matching_routes
+        req.matching_routes.line_uri = line_uri
+        req.matching_routes.start_stop_point_uri = start_sp_uri
+        req.matching_routes.destination_code = destination_code
+        req.matching_routes.destination_code_key = destination_code_key
+
+        result = self.instance.send_and_receive(req)
+
+        if result.HasField('error'):
+            raise PTRefException('impossible to find matching routes because {}'.format(result.error.message))
+
+        return result.routes
 
 
 class FeedPublisher(object):

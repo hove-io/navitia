@@ -1462,7 +1462,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Contributor* c, pbnavitia::Feed
 
 template<typename N>
 void PbCreator::pb_fill(const std::vector<N*>& nav_list, int depth,
-        const DumpMessageOptions& dump_message_options){
+        const DumpMessageOptions& dump_message_options) {
     auto* pb_object = get_mutable<typename std::remove_cv<N>::type>(response);
     Filler(depth, dump_message_options, *this).fill_pb_object(nav_list, pb_object);
 }
@@ -1479,6 +1479,7 @@ template void PbCreator::pb_fill(const std::vector<nt::LineGroup*>&, int, const 
 template void PbCreator::pb_fill(const std::vector<nt::Network*>&, int, const DumpMessageOptions&);
 template void PbCreator::pb_fill(const std::vector<nt::PhysicalMode*>&, int, const DumpMessageOptions&);
 template void PbCreator::pb_fill(const std::vector<nt::Route*>&, int, const DumpMessageOptions&);
+template void PbCreator::pb_fill(const std::vector<const nt::Route*>&, int, const DumpMessageOptions&);
 template void PbCreator::pb_fill(const std::vector<nt::StopArea*>&, int, const DumpMessageOptions&);
 template void PbCreator::pb_fill(const std::vector<nt::StopPoint*>&, int, const DumpMessageOptions&);
 template void PbCreator::pb_fill(const std::vector<const nt::StopPoint*>&, int, const DumpMessageOptions&);
