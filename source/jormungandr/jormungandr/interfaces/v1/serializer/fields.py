@@ -33,14 +33,17 @@ from jormungandr.interfaces.v1.make_links import create_internal_link
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.serializer.base import EnumField, PbNestedSerializer, DoubleToStringField
 from jormungandr.interfaces.v1.serializer.jsonschema import IntField
-from jormungandr.interfaces.v1.serializer.jsonschema.fields import StrField, BoolField
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import StrField, BoolField, Field, DateTimeType
+from navitiacommon import response_pb2
+
+
+class Point2D(serpy.Serializer):
+    pass  # TODO make this work :D
 
 
 class MultiLineStringField(jsonschema.Field):
     class MultiLineStringSchema(serpy.Serializer):
         """used not as a serializer, but only for the schema"""
-        class Point2D(serpy.Serializer):
-            pass  # TODO make this work :D
         type = StrField()
         coordinates = Point2D(many=True)
 
@@ -114,6 +117,13 @@ class FirstCommentField(jsonschema.Field):
             return None
 
 
+class RoundedField(IntField):
+    def to_value(self, value):
+        if value is None:
+            return None
+        return int(round(value))
+
+
 class LinkSchema(serpy.Serializer):
     """This Class is not used as a serializer, but here only to get the schema of a link"""
     id = StrField()
@@ -124,13 +134,12 @@ class LinkSchema(serpy.Serializer):
     type = StrField()
 
 
-class LinkSerializer(jsonschema.Field):
+class DisruptionLinkSerializer(jsonschema.Field):
     """
     Add link to disruptions on a pt object
     """
     def __init__(self, **kwargs):
-        super(LinkSerializer, self).__init__(schema_type=LinkSchema(), **kwargs)
-        self.many = True
+        super(DisruptionLinkSerializer, self).__init__(schema_type=LinkSchema(many=True), **kwargs)
 
     def to_value(self, value):
         return [create_internal_link(_type="disruption", rel="disruptions", id=uri)
@@ -142,3 +151,59 @@ class PaginationSerializer(serpy.Serializer):
     start_page = IntField(attr='startPage', display_none=True)
     items_per_page = IntField(attr='itemsPerPage', display_none=True)
     items_on_page = IntField(attr='itemsOnPage', display_none=True)
+
+
+class SectionGeoJsonField(jsonschema.Field):
+    class SectionGeoJsonSchema(serpy.Serializer):
+        """used not as a serializer, but only for the schema"""
+        type = StrField()
+        coordinates = Point2D(many=True)
+
+    def __init__(self, **kwargs):
+        super(SectionGeoJsonField, self).__init__(schema_type=SectionGeoJsonField.SectionGeoJsonSchema,
+                                                  **kwargs)
+
+    def as_getter(self, serializer_field_name, serializer_cls):
+        def getter(v):
+            return v
+        return getter
+
+    def to_value(self, value):
+        if not hasattr(value, 'type'):
+            return None
+
+        coords = []
+        if value.type == response_pb2.STREET_NETWORK:
+            coords = value.street_network.coordinates
+        elif value.type == response_pb2.CROW_FLY and len(value.shape) != 0:
+            coords = value.shape
+        elif value.type == response_pb2.PUBLIC_TRANSPORT:
+            coords = value.shape
+        elif value.type == response_pb2.TRANSFER:
+            coords.append(value.origin.stop_point.coord)
+            coords.append(value.destination.stop_point.coord)
+        else:
+            return
+
+        response = {
+            "type": "LineString",
+            "coordinates": [],
+            "properties": [{
+                "length": 0 if not value.HasField(str("length")) else value.length
+            }]
+        }
+        for coord in coords:
+            response["coordinates"].append([coord.lon, coord.lat])
+        return response
+
+
+class NoteSerializer(serpy.Serializer):
+    type = jsonschema.Field(schema_type=str)
+    id = jsonschema.Field(schema_type=str)
+    value = jsonschema.Field(schema_type=str)
+
+
+class ExceptionSerializer(serpy.Serializer):
+    type = jsonschema.Field(schema_type=str)
+    id = jsonschema.Field(schema_type=str)
+    date = Field(attr='date', schema_type=DateTimeType)

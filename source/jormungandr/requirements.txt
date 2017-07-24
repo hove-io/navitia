@@ -35,5 +35,5 @@ zeep==1.1.0
 --no-binary=gevent,greenlet #the wheel is built against python 2.7.4 and debian is on 2.7.3 :(
 gevent==1.1.2
 Flask-Cache==0.13.1
-git+https://github.com/kinnou02/serpy.git@508b5530d7b2a51aa83e0db17e5821b9b9f25bdf#egg=serpy
+git+https://github.com/canaltp/serpy.git@ctp#egg=serpy
 python-json-logger==0.1.7

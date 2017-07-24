@@ -50,6 +50,8 @@ from collections import defaultdict
 from navitiacommon import response_pb2
 from jormungandr.utils import date_to_timestamp
 from jormungandr.interfaces.v1.Calendars import calendar
+from jormungandr.interfaces.v1.serializer import api
+from jormungandr.interfaces.v1.decorators import get_serializer
 from navitiacommon import default_values
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, compute_possible_region
 from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
@@ -445,7 +447,7 @@ class Journeys(JourneyCommon):
     @add_fare_links()
     @add_journey_href()
     @rig_journey()
-    @marshal_with(journeys)
+    @get_serializer(serpy=api.JourneysSerializer, marshall=journeys)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['get'].parse_args()

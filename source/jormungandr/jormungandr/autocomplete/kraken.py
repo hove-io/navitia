@@ -96,7 +96,7 @@ class Kraken(AbstractAutocomplete):
             status.poi_sources.append(resp.geo_status.poi_source)
         return status
 
-    @marshal_with(places)
+    @get_serializer(serpy=api.PlacesSerializer, marshall=places)
     def get_by_uri(self, uri, instance=None, current_datetime=None):
         req = request_pb2.Request()
         req.requested_api = type_pb2.place_uri

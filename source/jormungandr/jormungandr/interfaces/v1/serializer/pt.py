@@ -32,11 +32,13 @@ import serpy
 from navitiacommon import type_pb2
 
 from jormungandr.interfaces.v1.serializer.base import GenericSerializer, EnumListField, LiteralField
-from jormungandr.interfaces.v1.serializer.jsonschema.fields import BoolField, Field, DateTimeType, DateType
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, DateTimeType, DateType
 from jormungandr.interfaces.v1.serializer.time import LocalTimeField, PeriodSerializer, DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import *
 from jormungandr.interfaces.v1.serializer import jsonschema
-from navitiacommon.type_pb2 import ActiveStatus, Channel, hasEquipments
+from navitiacommon.type_pb2 import ActiveStatus, Channel, hasEquipments, Properties
+from navitiacommon.response_pb2 import SectionAdditionalInformationType
+
 
 LABEL_DESCRIPTION = """
 Label of the stop area. The name is directly taken from the data whereas the label is
@@ -45,15 +47,22 @@ Label of the stop area. The name is directly taken from the data whereas the lab
 
 class Equipments(EnumListField):
     """
-    hack for equiments there is a useless level in the proto
+    hack for equipments as there is a useless level in the proto
     """
-
     def __init__(self, **kwargs):
         super(Equipments, self).__init__(hasEquipments.Equipment, **kwargs)
 
     def as_getter(self, serializer_field_name, serializer_cls):
         #For enum we need the full object :(
         return lambda x: x.has_equipments
+
+class AdditionalInformation(EnumListField):
+    """
+    hack for AdditionalInformation as there is a useless level in the proto
+    """
+    def as_getter(self, serializer_field_name, serializer_cls):
+        #For enum we need the full object :(
+        return lambda x: x.properties
 
 
 class ChannelSerializer(PbNestedSerializer):
@@ -147,11 +156,24 @@ class CalendarPeriodSerializer(PbNestedSerializer):
 
 
 class CalendarExceptionSerializer(PbNestedSerializer):
-    datetime = jsonschema.Field(attr='date', schema_type=DateTimeType)
+    datetime = Field(attr='date', schema_type=DateTimeType)
     type = EnumField()
 
 
-class CalendarSerializer(GenericSerializer):
+class CalendarSerializer(PbNestedSerializer):
+    id = jsonschema.MethodField(schema_type=str, description='Identifier of the object')
+    def get_id(self, obj):
+        if obj.HasField(str('uri')) and obj.uri:
+            return obj.uri
+        else:
+            return None
+    name = jsonschema.MethodField(schema_type=str, description='Name of the object')
+    def get_name(self, obj):
+        if obj.HasField(str('name')) and obj.name:
+            return obj.name
+        else:
+            return None
+
     week_pattern = WeekPatternSerializer()
     validity_pattern = ValidityPatternSerializer(display_none=False)
     exceptions = CalendarExceptionSerializer(many=True)
@@ -192,18 +214,30 @@ class TagsField(Field):
         super(TagsField, self).__init__(schema_type=str, **kwargs)
         self.many = True
 
+    def as_getter(self, serializer_field_name, serializer_cls):
+        op = operator.attrgetter(self.attr or serializer_field_name)
+        def getter(v):
+            return list(op(v))
+        return getter
+
 
 class DisruptionSerializer(PbNestedSerializer):
     id = jsonschema.Field(schema_type=str, attr='uri')
+
     disruption_id = jsonschema.Field(schema_type=str, attr='disruption_uri')
     impact_id = jsonschema.Field(schema_type=str, attr='uri')
     title = jsonschema.Field(schema_type=str),
     application_periods = PeriodSerializer(many=True)
     status = EnumField(attr='status', pb_type=ActiveStatus)
     updated_at = DateTimeField()
-    tags = TagsField()
+    tags = TagsField(display_none=True)
     cause = jsonschema.Field(schema_type=str, display_none=True)
-    category = jsonschema.Field(schema_type=str, display_none=False)
+    category = jsonschema.MethodField(schema_type=str, display_none=False)
+    def get_category(self, obj):
+        if obj.HasField(str("category")) and obj.category:
+            return obj.category
+        return None
+
     severity = SeveritySerializer()
     messages = MessageSerializer(many=True)
     impacted_objects = ImpactedSerializer(many=True, display_none=False)
@@ -233,7 +267,7 @@ class AdminSerializer(GenericSerializer):
 class AddressSerializer(GenericSerializer):
     house_number = jsonschema.Field(schema_type=int, display_none=True)
     coord = CoordSerializer(required=False)
-    label = jsonschema.Field(schema_type=str)
+    label = jsonschema.Field(schema_type=str, display_none=False)
     administrative_regions = AdminSerializer(many=True, display_none=False)
 
 
@@ -267,7 +301,7 @@ class StopPointSerializer(GenericSerializer):
     codes = CodeSerializer(many=True, display_none=False)
     label = jsonschema.Field(schema_type=str)
     coord = CoordSerializer(required=False)
-    links = LinkSerializer(attr='impact_uris', display_none=True)
+    links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
     commercial_modes = CommercialModeSerializer(many=True, display_none=False)
     physical_modes = PhysicalModeSerializer(many=True, display_none=False)
     administrative_regions = AdminSerializer(many=True, display_none=False)
@@ -289,7 +323,7 @@ class StopAreaSerializer(GenericSerializer):
     timezone = jsonschema.Field(schema_type=str)
     label = jsonschema.Field(schema_type=str, description=LABEL_DESCRIPTION)
     coord = CoordSerializer(required=False)
-    links = LinkSerializer(attr='impact_uris', display_none=True)
+    links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
     commercial_modes = CommercialModeSerializer(many=True, display_none=False)
     physical_modes = PhysicalModeSerializer(many=True, display_none=False)
     administrative_regions = AdminSerializer(many=True, display_none=False,
@@ -311,7 +345,7 @@ class PlaceSerializer(GenericSerializer):
 
 class NetworkSerializer(GenericSerializer):
     lines = jsonschema.MethodField(schema_type=lambda: LineSerializer(), display_none=False)
-    links = LinkSerializer(attr='impact_uris', display_none=True)
+    links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
     codes = CodeSerializer(many=True, display_none=False)
 
     def get_lines(self, obj):
@@ -326,7 +360,7 @@ class RouteSerializer(GenericSerializer):
     codes = CodeSerializer(many=True, display_none=False)
     direction = PlaceSerializer()
     geojson = MultiLineStringField(display_none=False)
-    links = LinkSerializer(attr='impact_uris', display_none=True)
+    links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
     line = jsonschema.MethodField(schema_type=lambda: LineSerializer())
     stop_points = StopPointSerializer(many=True, display_none=False)
 
@@ -353,7 +387,7 @@ class LineGroupSerializer(GenericSerializer):
 
 
 class LineSerializer(GenericSerializer):
-    code = jsonschema.Field(schema_type=str)
+    code = jsonschema.Field(schema_type=str, display_none=True)
     color = jsonschema.Field(schema_type=str)
     text_color = jsonschema.Field(schema_type=str)
     comments = CommentSerializer(many=True, display_none=False)
@@ -367,7 +401,7 @@ class LineSerializer(GenericSerializer):
     closing_time = LocalTimeField()
     properties = PropertySerializer(many=True, display_none=False)
     geojson = MultiLineStringField(display_none=False)
-    links = LinkSerializer(attr='impact_uris', display_none=True)
+    links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
     line_groups = LineGroupSerializer(many=True, display_none=False)
 
 
@@ -398,21 +432,21 @@ class VehicleJourneySerializer(GenericSerializer):
     validity_pattern = ValidityPatternSerializer()
     calendars = CalendarSerializer(many=True)
     trip = TripSerializer()
-    disruptions = LinkSerializer(attr='impact_uris', display_none=True)
+    disruptions = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
 
 
 class ConnectionSerializer(PbNestedSerializer):
     origin = StopPointSerializer()
     destination = StopPointSerializer()
     duration = jsonschema.Field(schema_type=int, display_none=True,
-                                description='Duration of connection. '
+                                description='Duration of connection (seconds). '
                                             'The duration really used to compute connection with a margin')
     display_duration = jsonschema.Field(schema_type=int, display_none=True,
-                                        description='The duration of the connection as it should be '
+                                        description='The duration (seconds) of the connection as it should be '
                                                     'displayed to traveler, without margin')
     max_duration = jsonschema.Field(schema_type=int, display_none=True, deprecated=True,
                                     description='Parameter used to specify the maximum length allowed '
-                                                'for a traveler to stay at a connection')
+                                                'for a traveler to stay at a connection (seconds)')
 
 
 class CompanieSerializer(GenericSerializer):
@@ -432,3 +466,74 @@ class DatasetSerializer(PbNestedSerializer):
     system = jsonschema.Field(schema_type=str, description='Type of dataset provided (GTFS, Chouette, ...)')
     realtime_level = EnumField()
     contributor = ContributorSerializer(description='Contributor providing the dataset')
+
+
+class DisplayInformationSerializer(PbNestedSerializer):
+    description = jsonschema.Field(schema_type=str)
+    physical_mode = jsonschema.Field(schema_type=str)
+    commercial_mode = jsonschema.Field(schema_type=str)
+    network = jsonschema.Field(schema_type=str)
+    direction = jsonschema.Field(schema_type=str)
+    label = jsonschema.MethodField()
+
+    def get_label(self, obj):
+        if obj.HasField(str('code')) and obj.code != '':
+            return obj.code
+        elif obj.HasField(str('name')):
+            return obj.name
+        else:
+            return None
+
+    color = jsonschema.Field(schema_type=str)
+    code = jsonschema.Field(schema_type=str)
+    equipments = Equipments(attr='has_equipments', display_none=True)
+    headsign = jsonschema.Field(schema_type=str)
+    headsigns = serpy.Serializer(many=True, display_none=False) #DisruptionLinks()
+    links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
+    text_color = jsonschema.Field(schema_type=str)
+
+class StopDateTimeSerializer(PbNestedSerializer):
+    departure_date_time = DateTimeField()
+    base_departure_date_time = DateTimeField()
+    arrival_date_time = DateTimeField()
+    base_arrival_date_time = DateTimeField()
+    stop_point = StopPointSerializer()
+    additional_informations = AdditionalInformation(attr='additional_informations', display_none=True)
+    links = jsonschema.MethodField(display_none=True)
+    def get_links(self, obj):
+        response = []
+        if obj.HasField(str("properties")):
+            properties = obj.properties
+
+            for note_ in properties.notes:
+                response.append({"id": note_.uri,
+                                 "type": "notes",  # type should be 'note' but retrocompatibility...
+                                 "rel": "notes",
+                                 "value": note_.note,
+                                 "internal": True})
+
+            for exception in properties.exceptions:
+                response.append({"type": "exceptions", # type should be 'exception' but retrocompatibility...
+                                 "rel": "exceptions",
+                                 "id": exception.uri,
+                                 "date": exception.date,
+                                 "except_type": exception.type,
+                                 "internal": True})
+
+            if properties.HasField(str("destination")) and properties.destination.HasField(str("uri")):
+                response.append({"type": "notes",
+                                 "rel": "notes",
+                                 "id": properties.destination.uri,
+                                 "value": properties.destination.destination,
+                                 "internal": True})
+
+            if properties.HasField(str("vehicle_journey_id")):
+                response.append({"type": "vehicle_journey",
+                                 "rel": "vehicle_journeys",
+                                 # the value has nothing to do here (it's the 'id' field), refactor for the v2
+                                 "value": properties.vehicle_journey_id,
+                                 "id": properties.vehicle_journey_id})
+
+        return response
+
+    data_freshness = EnumField()
