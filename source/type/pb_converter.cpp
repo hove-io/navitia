@@ -1649,8 +1649,7 @@ void PbCreator::fill_street_sections(const type::EntryPoint& ori_dest, const geo
     for (auto section = sections->begin(); section != sections->end(); ++section) {
         auto destination_coord = get_coord(section->destination());
         auto sn = section->mutable_street_network();
-        if (destination_coord.IsInitialized() ||
-                sn->coordinates().size() == 0) {
+        if (! destination_coord.IsInitialized() || sn->coordinates().size() == 0) {
             continue;
         }
         auto last_coord = sn->coordinates(sn->coordinates_size()-1);
