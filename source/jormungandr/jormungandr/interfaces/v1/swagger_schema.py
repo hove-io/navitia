@@ -120,10 +120,10 @@ class SwaggerParam(object):
                 metadata.update(param_metadata)
 
             swagger_type, swagger_format = convert_to_swagger_type(param_type)
-            if swagger_format and not hasattr(metadata, 'format'):
+            if swagger_format and not 'format' in metadata:
                 metadata['format'] = swagger_format
 
-            if argument.default and not hasattr(metadata, 'default'):
+            if argument.default and not 'default' in metadata:
                 metadata['default'] = argument.default
 
             items = None
@@ -218,7 +218,7 @@ def get_schema_properties(serializer):
         elif isinstance(rendered_field, CustomSchemaType):
             ts = rendered_field.schema()
             swagger_type, _ = convert_to_swagger_type(ts.type)
-            schema = ts.metadata
+            schema = copy.deepcopy(ts.metadata)
             schema['type'] = swagger_type
         elif not schema_metadata:
             raise ValueError('unsupported field type %s for attr %s in object %s' % (

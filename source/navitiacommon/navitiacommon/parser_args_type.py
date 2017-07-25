@@ -45,7 +45,7 @@ class CustomSchemaType(object):
         return self._schema
 
 
-class depth_argument(CustomSchemaType):
+class DepthArgument(CustomSchemaType):
     def __call__(self, value, name):
         conv_value = int(value)
         if conv_value > 3:
@@ -56,7 +56,7 @@ class depth_argument(CustomSchemaType):
     def schema(self):
         return TypeSchema(type=int, metadata={'minimum': 0, 'maximum': 3})
 
-class float_gt_0(CustomSchemaType):
+class PositiveFloat(CustomSchemaType):
     def __call__(self, value, name):
         conv_value = float(value)
         if conv_value <= 0:
@@ -68,7 +68,7 @@ class float_gt_0(CustomSchemaType):
         return TypeSchema(type=float, metadata={'minimum': 0})
 
 
-class true_false(CustomSchemaType):
+class TrueFalse(CustomSchemaType):
     def __call__(self, value, name):
         if isinstance(value, bool):
             return value
@@ -84,7 +84,7 @@ class true_false(CustomSchemaType):
         return TypeSchema(type=bool)
 
 
-class option_value(CustomSchemaType):
+class OptionValue(CustomSchemaType):
 
     def __init__(self, optional_values):
         self.optional_values = optional_values
@@ -106,7 +106,7 @@ class option_value(CustomSchemaType):
         return TypeSchema(type=str, metadata={'enum': self.optional_values})
 
 
-class interval_value(CustomSchemaType):
+class IntervalValue(CustomSchemaType):
 
     def __init__(self, type=int, min_value=None, max_value=None):
         self.type = type
@@ -127,7 +127,7 @@ class interval_value(CustomSchemaType):
             metadata['minimum'] = self.min_value
         if self.max_value:
             metadata['maximum'] = self.max_value
-        return TypeSchema(type=self.type, metadata={'minimum': self.min_value, 'maximum': self.max_value})
+        return TypeSchema(type=self.type, metadata=metadata)
 
 
 def geojson_argument(value):
@@ -150,9 +150,9 @@ def geojson_argument(value):
     return value
 
 
-class coord_format(CustomSchemaType):
+class CoordFormat(CustomSchemaType):
     def __init__(self, nullable=False):
-        super(coord_format, self).__init__()
+        super(CoordFormat, self).__init__()
         self.nullable = nullable
 
     def __call__(self, coord):

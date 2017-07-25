@@ -38,7 +38,7 @@ from jormungandr.interfaces.v1.fields import PbField, error, network, line,\
 from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import date_time_format, default_count_arg_type, BooleanType
+from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_type, BooleanType
 from jormungandr.interfaces.v1.errors import ManageError
 from datetime import datetime
 from jormungandr.interfaces.v1.fields import disruption_marshaller
@@ -71,7 +71,7 @@ class TrafficReport(ResourceUri):
                                 description="Number of disruptions per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 description="The current page")
-        parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.utcnow(),
+        parser_get.add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.utcnow(),
                                 description="The datetime we want to publish the disruptions from."
                                             " Default is the current date and it is mainly used for debug.")
         parser_get.add_argument("forbidden_id[]", type=six.text_type,

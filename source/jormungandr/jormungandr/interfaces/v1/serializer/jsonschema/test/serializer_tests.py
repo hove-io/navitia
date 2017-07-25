@@ -183,8 +183,8 @@ def nested_test():
 
 
 def param_test():
-    from navitiacommon.parser_args_type import option_value
-    flask_arg = ArgumentDoc("kind", type=option_value(['bob', 'bobette', 'bobitto']),
+    from navitiacommon.parser_args_type import OptionValue
+    flask_arg = ArgumentDoc("kind", type=OptionValue(['bob', 'bobette', 'bobitto']),
                             default=['bob', 'bobette'],
                             description="kind of bob")
 

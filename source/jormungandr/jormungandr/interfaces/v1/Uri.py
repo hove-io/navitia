@@ -45,7 +45,7 @@ from jormungandr.interfaces.v1.fields import stop_point, stop_area, route, line,
 from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri, protect
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import depth_argument, date_time_format, default_count_arg_type, \
+from jormungandr.interfaces.parsers import depth_argument, DateTimeFormat, default_count_arg_type, \
     BooleanType
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.Coord import Coord
@@ -96,7 +96,7 @@ class Uri(ResourceUri, ResourceUtc):
         parser.add_argument("odt_level", type=option_value(odt_levels), default="all",
                             schema_type=str, schema_metadata={"enum": odt_levels},
                             description="odt level")
-        parser.add_argument("_current_datetime", type=date_time_format, default=datetime.utcnow(), hidden=True,
+        parser.add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.utcnow(), hidden=True,
                             description="The datetime used to consider the state of the pt object"
                                         " Default is the current date and it is used for debug."
                                         " Note: it will mainly change the disruptions that concern the object"
@@ -104,10 +104,10 @@ class Uri(ResourceUri, ResourceUtc):
                                         " else we consider it as UTC")
         parser.add_argument("distance", type=int, default=200,
                                 description="Distance range of the query. Used only if a coord is in the query")
-        parser.add_argument("since", type=date_time_format,
+        parser.add_argument("since", type=DateTimeFormat(),
                             schema_type=str,
                             description="filters objects not valid before this date")
-        parser.add_argument("until", type=date_time_format,
+        parser.add_argument("until", type=DateTimeFormat(),
                             schema_type=str,
                             description="filters objects not valid after this date")
         parser.add_argument("disable_geojson", type=BooleanType(), default=False,

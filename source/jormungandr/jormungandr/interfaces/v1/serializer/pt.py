@@ -499,7 +499,7 @@ class StopDateTimeSerializer(PbNestedSerializer):
     base_arrival_date_time = DateTimeField()
     stop_point = StopPointSerializer()
     additional_informations = AdditionalInformation(attr='additional_informations', display_none=True)
-    links = jsonschema.MethodField(display_none=True, schema_type=LinkSchema())
+    links = jsonschema.MethodField(display_none=True, schema_type=LinkSchema(many=True))
     def get_links(self, obj):
         response = []
         if obj.HasField(str("properties")):

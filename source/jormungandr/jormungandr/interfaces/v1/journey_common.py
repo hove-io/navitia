@@ -30,7 +30,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr import i_manager
-from jormungandr.interfaces.parsers import date_time_format, BooleanType
+from jormungandr.interfaces.parsers import DateTimeFormat, BooleanType
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
 from datetime import datetime
@@ -38,7 +38,7 @@ from jormungandr.resources_utils import ResourceUtc
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.interfaces.parsers import option_value
 from jormungandr.interfaces.parsers import float_gt_0
-from jormungandr.interfaces.parsers import unsigned_integer
+from jormungandr.interfaces.parsers import UnsignedInteger
 from flask.ext.restful import reqparse, abort
 import logging
 from jormungandr.exceptions import RegionNotFound
@@ -147,7 +147,7 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
 
         parser_get.add_argument("from", type=six.text_type, dest="origin")
         parser_get.add_argument("to", type=six.text_type, dest="destination")
-        parser_get.add_argument("datetime", type=date_time_format())
+        parser_get.add_argument("datetime", type=DateTimeFormat())
         parser_get.add_argument("datetime_represents", dest="clockwise",
                                 type=dt_represents(), default=True)
         parser_get.add_argument("max_transfers", type=int, default=42)
@@ -183,7 +183,7 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
         # no default value for data_freshness because we need to maintain retrocomp with disruption_active
         parser_get.add_argument("data_freshness",
                                 type=option_value(['base_schedule', 'adapted_schedule', 'realtime']))
-        parser_get.add_argument("max_duration", type=unsigned_integer())
+        parser_get.add_argument("max_duration", type=UnsignedInteger())
         parser_get.add_argument("wheelchair", type=BooleanType(), default=None)
         # for retrocompatibility purpose, we duplicate (without []):
         parser_get.add_argument("first_section_mode",
@@ -191,7 +191,7 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
         parser_get.add_argument("last_section_mode",
                                 type=option_value(modes), action="append")
         parser_get.add_argument("traveler_type", type=option_value(acceptable_traveler_types))
-        parser_get.add_argument("_current_datetime", type=date_time_format(), default=datetime.utcnow(),
+        parser_get.add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.utcnow(),
                                 description="The datetime used to consider the state of the pt object"
                                             " Default is the current date and it is used for debug."
                                             " Note: it will mainly change the disruptions that concern "

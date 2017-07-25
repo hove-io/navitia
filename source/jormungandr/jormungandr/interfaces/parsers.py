@@ -35,15 +35,15 @@ from navitiacommon import parser_args_type
 # TODO: to be moved completely into navitiacommon
 from navitiacommon.parser_args_type import TypeSchema, CustomSchemaType
 
-depth_argument = parser_args_type.depth_argument
+depth_argument = parser_args_type.DepthArgument()
 
-float_gt_0 = parser_args_type.float_gt_0()
+float_gt_0 = parser_args_type.PositiveFloat()
 
-true_false = parser_args_type.true_false
+true_false = parser_args_type.TrueFalse()
 
-option_value = parser_args_type.option_value
+option_value = parser_args_type.OptionValue
 
-default_count_arg_type = parser_args_type.interval_value(min_value=0, max_value=1000)
+default_count_arg_type = parser_args_type.IntervalValue(min_value=0, max_value=1000)
 
 
 def parse_input_date(date):
@@ -56,7 +56,7 @@ def parse_input_date(date):
     return parser.parse(date, dayfirst=False, yearfirst=True)
 
 
-class date_time_format(DateTimeType):
+class DateTimeFormat(DateTimeType):
     def __call__(self, value):
         """
         we want to valid the date format
@@ -72,7 +72,7 @@ class date_time_format(DateTimeType):
 
 
 
-class unsigned_integer(CustomSchemaType):
+class UnsignedInteger(CustomSchemaType):
     def __call__(self, value):
         try:
             d = int(value)

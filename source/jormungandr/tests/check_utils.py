@@ -39,7 +39,7 @@ import logging
 import re
 from shapely.geometry import shape
 import sys
-from jormungandr.interfaces.parsers import unsigned_integer
+from jormungandr.interfaces.parsers import UnsignedInteger
 from six.moves.urllib.parse import unquote
 import six
 
@@ -235,11 +235,11 @@ def get_valid_int(str):
 
 def get_valid_unsigned_int(str):
     assert str != ""
-    if isinstance(str, unsigned_integer):
+    if isinstance(str, UnsignedInteger):
         return str
 
     try:
-        return unsigned_integer(str)
+        return UnsignedInteger()(str)
     except ValueError:
         assert False
 

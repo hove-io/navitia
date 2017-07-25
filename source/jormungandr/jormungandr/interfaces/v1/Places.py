@@ -42,7 +42,7 @@ from jormungandr.interfaces.v1.fields import disruption_marshaller
 from jormungandr.interfaces.v1.fields import place, NonNullList, NonNullNested, PbField, pagination,\
                                              error, feed_publisher
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
-from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type, date_time_format, \
+from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type, DateTimeFormat, \
     BooleanType
 from copy import deepcopy
 from jormungandr.interfaces.v1.transform_id import transform_id
@@ -53,7 +53,7 @@ from jormungandr.parking_space_availability.bss.stands_manager import ManageStan
 import ujson as json
 from jormungandr.interfaces.parsers import option_value
 from jormungandr.scenarios.utils import pb_type
-from navitiacommon.parser_args_type import TypeSchema, coord_format, CustomSchemaType
+from navitiacommon.parser_args_type import TypeSchema, CoordFormat, CustomSchemaType
 import six
 
 
@@ -100,7 +100,7 @@ class Places(ResourceUri):
         self.parsers["get"].add_argument("depth", type=depth_argument,
                                          default=1,
                                          description="The depth of objects")
-        self.parsers["get"].add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
+        self.parsers["get"].add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.datetime.utcnow(),
                                          description="The datetime used to consider the state of the pt object"
                                                      " Default is the current date and it is used for debug."
                                                      " Note: it will mainly change the disruptions that concern "
@@ -110,7 +110,7 @@ class Places(ResourceUri):
         self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
                                          description="remove geojson from the response")
 
-        self.parsers['get'].add_argument("from", type=coord_format(nullable=True),
+        self.parsers['get'].add_argument("from", type=CoordFormat(nullable=True),
                                          description="Coordinates longitude;latitude used to prioritize "
                                                      "the objects around this coordinate")
         self.parsers['get'].add_argument("_autocomplete", type=six.text_type, description="name of the autocomplete service"
@@ -134,7 +134,7 @@ class Places(ResourceUri):
 
         if user and user.default_coord:
             if args['from'] is None:
-                args['from'] = coord_format()(user.default_coord)
+                args['from'] = CoordFormat()(user.default_coord)
         else:
             if args['from'] == '':
                 raise InvalidArguments("if 'from' is provided it cannot be null")
@@ -238,7 +238,7 @@ class PlacesNearby(ResourceUri):
         self.parsers["get"].add_argument("bss_stands", type=BooleanType(), default=True,
                                          description="Show bss stands availability")
 
-        self.parsers["get"].add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
+        self.parsers["get"].add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.datetime.utcnow(),
                                          description="The datetime used to consider the state of the pt object"
                                                      " Default is the current date and it is used for debug."
                                                      " Note: it will mainly change the disruptions that concern "

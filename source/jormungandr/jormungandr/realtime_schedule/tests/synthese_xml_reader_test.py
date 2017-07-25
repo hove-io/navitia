@@ -60,7 +60,7 @@ from __future__ import absolute_import
 import xml.etree.ElementTree as et
 import pytest
 from jormungandr.realtime_schedule.synthese import Synthese, SyntheseRoutePoint
-from jormungandr.interfaces.parsers import date_time_format
+from jormungandr.interfaces.parsers import DateTimeFormat
 import pytz
 
 
@@ -97,7 +97,7 @@ def get_xml_parser():
 
 def make_dt(str):
     tz = pytz.timezone("Europe/Paris")
-    dt = date_time_format(str)
+    dt = DateTimeFormat()(str)
     return tz.normalize(tz.localize(dt)).astimezone(pytz.utc)
 
 

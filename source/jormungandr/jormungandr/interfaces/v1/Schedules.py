@@ -41,7 +41,7 @@ from jormungandr.interfaces.v1.fields import stop_point, route, pagination, PbFi
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri, complete_links
 import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import option_value, date_time_format, default_count_arg_type, \
+from jormungandr.interfaces.parsers import option_value, DateTimeFormat, default_count_arg_type, \
     BooleanType
 from jormungandr.interfaces.v1.errors import ManageError
 from flask_restful.inputs import natural
@@ -66,10 +66,10 @@ class Schedules(ResourceUri, ResourceUtc):
             argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
         parser_get.add_argument("filter", type=six.text_type)
-        parser_get.add_argument("from_datetime", type=date_time_format,
+        parser_get.add_argument("from_datetime", type=DateTimeFormat(),
                                 description="The datetime from which you want\
                                 the schedules", default=None)
-        parser_get.add_argument("until_datetime", type=date_time_format,
+        parser_get.add_argument("until_datetime", type=DateTimeFormat(),
                                 description="The datetime until which you want\
                                 the schedules", default=None)
         parser_get.add_argument("duration", type=int, default=3600 * 24,
@@ -107,7 +107,7 @@ class Schedules(ResourceUri, ResourceUtc):
                                             'maintenances, ...). '
                                             'realtime is to have the freshest possible data',
                                 type=option_value(['base_schedule', 'adapted_schedule', 'realtime']))
-        parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
+        parser_get.add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.datetime.utcnow(),
                                 description="The datetime we want to publish the disruptions from."
                                             " Default is the current date and it is mainly used for debug.")
         parser_get.add_argument("items_per_schedule", type=natural, default=10000,
