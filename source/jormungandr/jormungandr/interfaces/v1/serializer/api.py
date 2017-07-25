@@ -189,9 +189,9 @@ class JourneysSerializer(PbNestedSerializer):
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
     feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
     links = MethodField(schema_type=lambda: LinkSchema(many=True), display_none=True)
-    context = MethodField(schema_type=lambda: ContextSerializer(), display_none=True, many=True)
-    notes = DescribedField(schema_type=NoteSerializer(), many=True)
-    exceptions = DescribedField(schema_type=ExceptionSerializer(), many=True)
+    context = MethodField(schema_type=lambda: ContextSerializer(many=True), display_none=True)
+    notes = DescribedField(schema_type=NoteSerializer(many=True))
+    exceptions = DescribedField(schema_type=ExceptionSerializer(many=True))
 
     def get_context(self, obj):
         if obj.HasField(str('car_co2_emission')):

@@ -58,7 +58,7 @@ class CostSerializer(PbNestedSerializer):
 class FareSerializer(PbNestedSerializer):
     found = jsonschema.BoolField()
     total = CostSerializer()
-    links = jsonschema.MethodField(schema_type=LinkSchema(many=True), attr='ticket_id', display_none=True)
+    links = jsonschema.MethodField(schema_type=lambda: LinkSchema(many=True), attr='ticket_id', display_none=True)
 
     def get_links(self, obj):
         if not hasattr(obj, 'ticket_id'):
@@ -86,7 +86,7 @@ class TicketSerializer(PbNestedSerializer):
     comment = jsonschema.Field(schema_type=str)
     found = jsonschema.BoolField()
     cost = CostSerializer()
-    links = jsonschema.MethodField(schema_type=LinkSchema(many=True))
+    links = jsonschema.MethodField(schema_type=lambda: LinkSchema(many=True))
 
     def get_links(self, obj):
         if not hasattr(obj, 'section_id'):
@@ -192,7 +192,7 @@ class SectionSerializer(PbNestedSerializer):
 
     display_informations = DisplayInformationSerializer(attr='pt_display_informations', display_none=False)
 
-    links = jsonschema.MethodField(display_none=True, schema_type=LinkSchema(many=True))
+    links = jsonschema.MethodField(display_none=True, schema_type=lambda: LinkSchema(many=True))
     def get_links(self, obj):
         response = []
         if obj.HasField(str("uris")):
