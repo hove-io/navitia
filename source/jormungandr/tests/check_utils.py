@@ -235,7 +235,7 @@ def get_valid_int(str):
 
 def get_valid_unsigned_int(str):
     assert str != ""
-    if type(str) is unsigned_integer:
+    if isinstance(str, unsigned_integer):
         return str
 
     try:

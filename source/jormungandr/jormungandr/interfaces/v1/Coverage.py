@@ -31,8 +31,8 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask.ext.restful import fields, marshal_with, reqparse
-from flask.ext.restful.inputs import boolean
 from jormungandr import i_manager
+from jormungandr.interfaces.parsers import BooleanType
 from jormungandr.interfaces.v1.StatedResource import StatedResource
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.make_links import add_coverage_link, add_collection_links, clean_links
@@ -70,7 +70,7 @@ class Coverage(StatedResource):
                                        *args, **kwargs)
         self.parsers["get"].add_argument("disable_geojson",
                                          help='hide the coverage geojson to reduce response size',
-                                         type=boolean, default=False)
+                                         type=BooleanType(), default=False)
 
     @clean_links()
     @add_coverage_link()

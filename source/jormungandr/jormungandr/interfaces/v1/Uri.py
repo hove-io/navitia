@@ -45,12 +45,12 @@ from jormungandr.interfaces.v1.fields import stop_point, stop_area, route, line,
 from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri, protect
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import depth_argument, date_time_format, default_count_arg_type
+from jormungandr.interfaces.parsers import depth_argument, date_time_format, default_count_arg_type, \
+    BooleanType
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.Coord import Coord
 from jormungandr.interfaces.v1.fields import disruption_marshaller, feed_publisher, NonNullList, NonNullNested
 from jormungandr.timezone import set_request_timezone
-from flask_restful.inputs import boolean
 from jormungandr.interfaces.parsers import option_value
 from jormungandr.interfaces.common import odt_levels
 from jormungandr.utils import date_to_timestamp
@@ -72,7 +72,6 @@ class Uri(ResourceUri, ResourceUtc):
         parser.add_argument("start_page", type=int, default=0,
                             description="The page where you want to start")
         parser.add_argument("count", type=default_count_arg_type, default=25,
-                            schema_type=int, schema_metadata={"minimum": 0, "maximum": 1000},
                             description="Number of objects you want on a page")
         parser.add_argument("depth", type=depth_argument,
                             schema_type=int,
@@ -92,7 +91,7 @@ class Uri(ResourceUri, ResourceUtc):
                             description="An external code to query")
         parser.add_argument("headsign", type=six.text_type,
                             description="filter vehicle journeys on headsign")
-        parser.add_argument("show_codes", type=boolean, default=False,
+        parser.add_argument("show_codes", type=BooleanType(), default=False,
                             description="show more identification codes")
         parser.add_argument("odt_level", type=option_value(odt_levels), default="all",
                             schema_type=str, schema_metadata={"enum": odt_levels},
@@ -111,7 +110,7 @@ class Uri(ResourceUri, ResourceUtc):
         parser.add_argument("until", type=date_time_format,
                             schema_type=str,
                             description="filters objects not valid after this date")
-        parser.add_argument("disable_geojson", type=boolean, default=False,
+        parser.add_argument("disable_geojson", type=BooleanType(), default=False,
                             description="remove geojson from the response")
 
         if is_collection:
@@ -505,7 +504,7 @@ def pois(is_collection):
             self.get_decorators.insert(1, get_obj_serializer(self))
             self.parsers["get"].add_argument("original_id", type=six.text_type, description="original uri of the object you"
                                                                                       "want to query")
-            self.parsers["get"].add_argument("bss_stands", type=boolean, default=True,
+            self.parsers["get"].add_argument("bss_stands", type=BooleanType(), default=True,
                                              description="Show bss stands availability")
             args = self.parsers["get"].parse_args()
             if args["bss_stands"]:

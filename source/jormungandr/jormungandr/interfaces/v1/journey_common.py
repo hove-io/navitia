@@ -30,7 +30,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr import i_manager
-from jormungandr.interfaces.parsers import date_time_format
+from jormungandr.interfaces.parsers import date_time_format, BooleanType
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
 from datetime import datetime
@@ -39,7 +39,6 @@ from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.interfaces.parsers import option_value
 from jormungandr.interfaces.parsers import float_gt_0
 from jormungandr.interfaces.parsers import unsigned_integer
-from flask.ext.restful.inputs import boolean
 from flask.ext.restful import reqparse, abort
 import logging
 from jormungandr.exceptions import RegionNotFound
@@ -49,15 +48,21 @@ from jormungandr.travelers_profile import TravelerProfile
 from navitiacommon.default_traveler_profile_params import acceptable_traveler_types
 import pytz
 import six
+from navitiacommon.parser_args_type import CustomSchemaType, TypeSchema
 
 
-def dt_represents(value):
-    if value == "arrival":
-        return False
-    elif value == "departure":
-        return True
-    else:
-        raise ValueError("Unable to parse datetime_represents")
+class dt_represents(CustomSchemaType):
+    def __call__(self, value, name):
+        if value == "arrival":
+            return False
+        elif value == "departure":
+            return True
+        else:
+            raise ValueError("Unable to parse {}".format(name))
+
+    def schema(self):
+        return TypeSchema(type=str, metadata={'enum': ['arrival', 'departure'],
+                                              'default': 'departure'})
 
 
 def compute_regions(args):
@@ -118,8 +123,8 @@ def compute_possible_region(region, args):
 
 
 class JourneyCommon(ResourceUri, ResourceUtc) :
-    def __init__(self):
-        ResourceUri.__init__(self, authentication=False)
+    def __init__(self, output_type_serializer):
+        ResourceUri.__init__(self, authentication=False, output_type_serializer=output_type_serializer)
         ResourceUtc.__init__(self)
 
         modes = ["walking", "car", "bike", "bss"]
@@ -138,16 +143,13 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
             'non_pt_bike': "A journey without public transport, only biking",
             'non_pt_bss': "A journey without public transport, only bike sharing",
         }
-        self.parsers = {}
-        self.parsers["get"] = reqparse.RequestParser(
-            argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
 
         parser_get.add_argument("from", type=six.text_type, dest="origin")
         parser_get.add_argument("to", type=six.text_type, dest="destination")
-        parser_get.add_argument("datetime", type=date_time_format)
+        parser_get.add_argument("datetime", type=date_time_format())
         parser_get.add_argument("datetime_represents", dest="clockwise",
-                                type=dt_represents, default=True)
+                                type=dt_represents(), default=True)
         parser_get.add_argument("max_transfers", type=int, default=42)
         parser_get.add_argument("max_nb_transfers", type=int, dest="max_transfers")
         parser_get.add_argument("first_section_mode[]",
@@ -177,24 +179,24 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
         parser_get.add_argument("allowed_id[]", type=six.text_type, action="append")
         parser_get.add_argument("type", type=option_value(types),
                                 default="all")
-        parser_get.add_argument("disruption_active", type=boolean, default=False)  # for retrocomp
+        parser_get.add_argument("disruption_active", type=BooleanType(), default=False)  # for retrocomp
         # no default value for data_freshness because we need to maintain retrocomp with disruption_active
         parser_get.add_argument("data_freshness",
                                 type=option_value(['base_schedule', 'adapted_schedule', 'realtime']))
-        parser_get.add_argument("max_duration", type=unsigned_integer)
-        parser_get.add_argument("wheelchair", type=boolean, default=None)
+        parser_get.add_argument("max_duration", type=unsigned_integer())
+        parser_get.add_argument("wheelchair", type=BooleanType(), default=None)
         # for retrocompatibility purpose, we duplicate (without []):
         parser_get.add_argument("first_section_mode",
                                 type=option_value(modes), action="append")
         parser_get.add_argument("last_section_mode",
                                 type=option_value(modes), action="append")
         parser_get.add_argument("traveler_type", type=option_value(acceptable_traveler_types))
-        parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.utcnow(),
+        parser_get.add_argument("_current_datetime", type=date_time_format(), default=datetime.utcnow(),
                                 description="The datetime used to consider the state of the pt object"
                                             " Default is the current date and it is used for debug."
                                             " Note: it will mainly change the disruptions that concern "
                                             "the object The timezone should be specified in the format,"
-                                            " else we consider it as UTC")
+                                            " else we consider it as UTC", hidden=True)
         parser_get.add_argument("min_nb_transfers", type=int, default=0)
         parser_get.add_argument("direct_path", type=option_value(['indifferent', 'only', 'none']),
                                 default='indifferent',

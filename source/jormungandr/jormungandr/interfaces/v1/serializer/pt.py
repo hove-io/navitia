@@ -474,7 +474,7 @@ class DisplayInformationSerializer(PbNestedSerializer):
     commercial_mode = jsonschema.Field(schema_type=str)
     network = jsonschema.Field(schema_type=str)
     direction = jsonschema.Field(schema_type=str)
-    label = jsonschema.MethodField()
+    label = jsonschema.MethodField(schema_type=str)
 
     def get_label(self, obj):
         if obj.HasField(str('code')) and obj.code != '':
@@ -499,7 +499,7 @@ class StopDateTimeSerializer(PbNestedSerializer):
     base_arrival_date_time = DateTimeField()
     stop_point = StopPointSerializer()
     additional_informations = AdditionalInformation(attr='additional_informations', display_none=True)
-    links = jsonschema.MethodField(display_none=True)
+    links = jsonschema.MethodField(display_none=True, schema_type=LinkSchema())
     def get_links(self, obj):
         response = []
         if obj.HasField(str("properties")):

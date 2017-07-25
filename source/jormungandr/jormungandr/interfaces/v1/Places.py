@@ -31,7 +31,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask_restful import fields, reqparse, abort
-from flask_restful.inputs import boolean
 from flask.globals import g
 
 from jormungandr.interfaces.v1.serializer.api import PlacesSerializer
@@ -43,7 +42,8 @@ from jormungandr.interfaces.v1.fields import disruption_marshaller
 from jormungandr.interfaces.v1.fields import place, NonNullList, NonNullNested, PbField, pagination,\
                                              error, feed_publisher
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
-from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type, date_time_format
+from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type, date_time_format, \
+    BooleanType
 from copy import deepcopy
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.exceptions import TechnicalError, InvalidArguments
@@ -53,7 +53,7 @@ from jormungandr.parking_space_availability.bss.stands_manager import ManageStan
 import ujson as json
 from jormungandr.interfaces.parsers import option_value
 from jormungandr.scenarios.utils import pb_type
-from navitiacommon.parser_args_type import ParameterDescription, coord_format
+from navitiacommon.parser_args_type import TypeSchema, coord_format, CustomSchemaType
 import six
 
 
@@ -65,7 +65,7 @@ places = {
 }
 
 
-class geojson_argument(object):
+class geojson_argument(CustomSchemaType):
     def __call__(self, value):
         decoded = json.loads(value)
         if not decoded:
@@ -73,8 +73,8 @@ class geojson_argument(object):
 
         return parser_args_type.geojson_argument(decoded)
 
-    def description(self):
-        return ParameterDescription(type=str)  # TODO a better description of the geojson
+    def schema(self):
+        return TypeSchema(type=str)  # TODO a better description of the geojson
 
 
 class Places(ResourceUri):
@@ -107,7 +107,7 @@ class Places(ResourceUri):
                                                      "the object The timezone should be specified in the format,"
                                                      " else we consider it as UTC",
                                          schema_type='datetime', hidden=True)
-        self.parsers['get'].add_argument("disable_geojson", type=boolean, default=False,
+        self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
                                          description="remove geojson from the response")
 
         self.parsers['get'].add_argument("from", type=coord_format(nullable=True),
@@ -163,9 +163,9 @@ class PlaceUri(ResourceUri):
 
     def __init__(self, **kwargs):
         ResourceUri.__init__(self, authentication=False, **kwargs)
-        self.parsers["get"].add_argument("bss_stands", type=boolean, default=True,
+        self.parsers["get"].add_argument("bss_stands", type=BooleanType(), default=True,
                                          description="Show bss stands availability")
-        self.parsers['get'].add_argument("disable_geojson", type=boolean, default=False,
+        self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
                                          description="remove geojson from the response")
         args = self.parsers["get"].parse_args()
 
@@ -235,7 +235,7 @@ class PlacesNearby(ResourceUri):
         self.parsers["get"].add_argument("start_page", type=int, default=0,
                                          description="The page number of the\
                                          ptref result")
-        self.parsers["get"].add_argument("bss_stands", type=boolean, default=True,
+        self.parsers["get"].add_argument("bss_stands", type=BooleanType(), default=True,
                                          description="Show bss stands availability")
 
         self.parsers["get"].add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
@@ -244,7 +244,7 @@ class PlacesNearby(ResourceUri):
                                                      " Note: it will mainly change the disruptions that concern "
                                                      "the object The timezone should be specified in the format,"
                                                      " else we consider it as UTC")
-        self.parsers['get'].add_argument("disable_geojson", type=boolean, default=False,
+        self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
                             description="remove geojson from the response")
         args = self.parsers["get"].parse_args()
         if args["bss_stands"]:

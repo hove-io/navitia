@@ -28,20 +28,22 @@
 # www.navitia.io
 from __future__ import absolute_import
 from dateutil import parser
+import flask
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import DateTimeType
 from navitiacommon import parser_args_type
 
 # TODO: to be moved completely into navitiacommon
-from navitiacommon.parser_args_type import ParameterDescription
+from navitiacommon.parser_args_type import TypeSchema, CustomSchemaType
 
 depth_argument = parser_args_type.depth_argument
 
-float_gt_0 = parser_args_type.float_gt_0
+float_gt_0 = parser_args_type.float_gt_0()
 
 true_false = parser_args_type.true_false
 
 option_value = parser_args_type.option_value
 
-default_count_arg_type = parser_args_type.default_count_arg_type
+default_count_arg_type = parser_args_type.interval_value(min_value=0, max_value=1000)
 
 
 def parse_input_date(date):
@@ -54,26 +56,40 @@ def parse_input_date(date):
     return parser.parse(date, dayfirst=False, yearfirst=True)
 
 
-def date_time_format(value):
-    """
-    we want to valid the date format
-    """
-    try:
-        d = parse_input_date(value)
-        if d.year < 1970:
-            raise ValueError('date is too early!')
+class date_time_format(DateTimeType):
+    def __call__(self, value):
+        """
+        we want to valid the date format
+        """
+        try:
+            d = parse_input_date(value)
+            if d.year < 1970:
+                raise ValueError('date is too early!')
 
-        return d
-    except ValueError as e:
-        raise ValueError("Unable to parse datetime, {}".format(e))
+            return d
+        except ValueError as e:
+            raise ValueError("Unable to parse datetime, {}".format(e))
 
 
-def unsigned_integer(value):
-    try:
-        d = int(value)
-        if d < 0:
-            raise ValueError('invalid positive int')
 
-        return d
-    except ValueError as e:
-        raise ValueError("Unable to evaluate, {}".format(e))
+class unsigned_integer(CustomSchemaType):
+    def __call__(self, value):
+        try:
+            d = int(value)
+            if d < 0:
+                raise ValueError('invalid positive int')
+
+            return d
+        except ValueError as e:
+            raise ValueError("Unable to evaluate, {}".format(e))
+
+    def schema(self):
+        return TypeSchema(type=int, metadata={'minimum': 0})
+
+
+class BooleanType(CustomSchemaType):
+    def __call__(self, value):
+        return flask.ext.restful.inputs.boolean(value)
+
+    def schema(self):
+        return TypeSchema(type=bool)

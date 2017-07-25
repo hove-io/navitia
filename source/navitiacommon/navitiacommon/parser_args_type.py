@@ -33,41 +33,58 @@ from collections import namedtuple
 import ujson
 import geojson
 
-def depth_argument(value, name):
-    conv_value = int(value)
-    if conv_value > 3:
-        raise ValueError("The {} argument has to be <= 3, you gave : {}"
-                         .format(name, value))
-    return conv_value
-
-
-def float_gt_0(value, name):
-    conv_value = float(value)
-    if conv_value <= 0:
-        raise ValueError("The {} argument has to be > 0, you gave : {}"
-                         .format(name, value))
-    return conv_value
-
-
-def true_false(value, name):
-    if isinstance(value, bool):
-        return value
-    if value.lower() == "true":
-        return True
-    elif value.lower() == "false":
-        return False
-    else:
-        raise ValueError("The {} argument must be true or false, you gave : {}"
-                         .format(name, value))
-
-
-class ParameterDescription(object):
+class TypeSchema(object):
     def __init__(self, type=None, metadata=None):
         self.type = type
         self.metadata = metadata
 
 
-class option_value(object):
+class CustomSchemaType(object):
+    def schema(self):
+        # by default we look for a _schema variable, but it can be overriden
+        return self._schema
+
+
+class depth_argument(CustomSchemaType):
+    def __call__(self, value, name):
+        conv_value = int(value)
+        if conv_value > 3:
+            raise ValueError("The {} argument has to be <= 3, you gave : {}"
+                             .format(name, value))
+        return conv_value
+
+    def schema(self):
+        return TypeSchema(type=int, metadata={'minimum': 0, 'maximum': 3})
+
+class float_gt_0(CustomSchemaType):
+    def __call__(self, value, name):
+        conv_value = float(value)
+        if conv_value <= 0:
+            raise ValueError("The {} argument has to be > 0, you gave : {}"
+                             .format(name, value))
+        return conv_value
+
+    def schema(self):
+        return TypeSchema(type=float, metadata={'minimum': 0})
+
+
+class true_false(CustomSchemaType):
+    def __call__(self, value, name):
+        if isinstance(value, bool):
+            return value
+        if value.lower() == "true":
+            return True
+        elif value.lower() == "false":
+            return False
+        else:
+            raise ValueError("The {} argument must be true or false, you gave : {}"
+                             .format(name, value))
+
+    def schema(self):
+        return TypeSchema(type=bool)
+
+
+class option_value(CustomSchemaType):
 
     def __init__(self, optional_values):
         self.optional_values = optional_values
@@ -85,15 +102,32 @@ class option_value(object):
             raise ValueError(error)
         return value
 
-    def description(self):
-        return ParameterDescription(type=str, metadata={'enum': self.optional_values})
+    def schema(self):
+        return TypeSchema(type=str, metadata={'enum': self.optional_values})
 
 
-def _make_interval_argument(max_value, min_value):
-    def to_return(value):
-        v = int(value)
-        return min(max(v, min_value), max_value)
-    return to_return
+class interval_value(CustomSchemaType):
+
+    def __init__(self, type=int, min_value=None, max_value=None):
+        self.type = type
+        self.min_value = min_value
+        self.max_value = max_value
+
+    def __call__(self, value, name):
+        v = self.type(value)
+        if self.min_value:
+            v = max(v, self.min_value)
+        if self.max_value:
+            v = min(v, self.max_value)
+        return v
+
+    def schema(self):
+        metadata = {}
+        if self.min_value:
+            metadata['minimum'] = self.min_value
+        if self.max_value:
+            metadata['maximum'] = self.max_value
+        return TypeSchema(type=self.type, metadata={'minimum': self.min_value, 'maximum': self.max_value})
 
 
 def geojson_argument(value):
@@ -116,7 +150,7 @@ def geojson_argument(value):
     return value
 
 
-class coord_format(object):
+class coord_format(CustomSchemaType):
     def __init__(self, nullable=False):
         super(coord_format, self).__init__()
         self.nullable = nullable
@@ -141,8 +175,6 @@ class coord_format(object):
 
         return coord
 
-    def description(self):
-        return ParameterDescription(type=str, metadata={'pattern': '.*;.*'})
+    def schema(self):
+        return TypeSchema(type=str, metadata={'pattern': '.*;.*'})
 
-
-default_count_arg_type = _make_interval_argument(max_value=1000, min_value=0)

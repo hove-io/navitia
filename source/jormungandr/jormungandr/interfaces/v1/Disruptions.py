@@ -31,7 +31,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask.ext.restful import marshal_with, reqparse, fields
-from flask.ext.restful.inputs import boolean
 from flask.globals import g
 from jormungandr import i_manager, timezone
 from jormungandr.interfaces.v1.fields import PbField, error, network, line,\
@@ -39,7 +38,7 @@ from jormungandr.interfaces.v1.fields import PbField, error, network, line,\
 from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import date_time_format, default_count_arg_type
+from jormungandr.interfaces.parsers import date_time_format, default_count_arg_type, BooleanType
 from jormungandr.interfaces.v1.errors import ManageError
 from datetime import datetime
 from jormungandr.interfaces.v1.fields import disruption_marshaller
@@ -87,7 +86,7 @@ class TrafficReport(ResourceUri):
                                 action="append")
         parser_get.add_argument("distance", type=int, default=200,
                                 description="Distance range of the query. Used only if a coord is in the query")
-        parser_get.add_argument("disable_geojson", type=boolean, default=False,
+        parser_get.add_argument("disable_geojson", type=BooleanType(), default=False,
                             description="remove geojson from the response")
         self.collection = 'traffic_reports'
 

@@ -64,7 +64,7 @@ class HeatMap(JourneyCommon):
     def __init__(self):
         super(HeatMap, self).__init__()
         parser_get = self.parsers["get"]
-        parser_get.add_argument("resolution", type=unsigned_integer, default=500)
+        parser_get.add_argument("resolution", type=unsigned_integer(), default=500)
 
     @marshal_with(heat_maps)
     @ManageError()

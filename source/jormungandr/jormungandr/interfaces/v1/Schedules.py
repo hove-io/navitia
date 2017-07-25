@@ -41,9 +41,10 @@ from jormungandr.interfaces.v1.fields import stop_point, route, pagination, PbFi
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri, complete_links
 import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import option_value, date_time_format, default_count_arg_type
+from jormungandr.interfaces.parsers import option_value, date_time_format, default_count_arg_type, \
+    BooleanType
 from jormungandr.interfaces.v1.errors import ManageError
-from flask_restful.inputs import natural, boolean
+from flask_restful.inputs import natural
 from jormungandr.interfaces.v1.fields import disruption_marshaller, NonNullList, NonNullNested
 from jormungandr.resources_utils import ResourceUtc
 from jormungandr.interfaces.v1.make_links import create_external_link
@@ -96,7 +97,7 @@ class Schedules(ResourceUri, ResourceUtc):
                                 description="Id of the calendar")
         parser_get.add_argument("distance", type=int, default=200,
                                 description="Distance range of the query. Used only if a coord is in the query")
-        parser_get.add_argument("show_codes", type=boolean, default=False,
+        parser_get.add_argument("show_codes", type=BooleanType(), default=False,
                             description="show more identification codes")
         #Note: no default param for data freshness, the default depends on the API
         parser_get.add_argument("data_freshness",
@@ -111,7 +112,7 @@ class Schedules(ResourceUri, ResourceUtc):
                                             " Default is the current date and it is mainly used for debug.")
         parser_get.add_argument("items_per_schedule", type=natural, default=10000,
                                 description="maximum number of date_times per schedule")
-        parser_get.add_argument("disable_geojson", type=boolean, default=False,
+        parser_get.add_argument("disable_geojson", type=BooleanType(), default=False,
                             description="remove geojson from the response")
 
         self.get_decorators.append(complete_links(self))

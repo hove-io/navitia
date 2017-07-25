@@ -191,8 +191,8 @@ class SectionSerializer(PbNestedSerializer):
     type = SectionTypeEnum()
 
     display_informations = DisplayInformationSerializer(attr='pt_display_informations', display_none=False)
-    links = jsonschema.MethodField(display_none=True)
 
+    links = jsonschema.MethodField(display_none=True, schema_type=LinkSchema(), many=True)
     def get_links(self, obj):
         response = []
         if obj.HasField(str("uris")):
@@ -202,6 +202,7 @@ class SectionSerializer(PbNestedSerializer):
             for value in obj.pt_display_informations.notes:
                 response.append({"type": 'notes', "id": value.uri, 'value': value.note})
         return response
+
     stop_date_times = StopDateTimeSerializer(many=True)
     path = PathSerializer(attr="street_network.path_items", many=True, display_none=False)
 

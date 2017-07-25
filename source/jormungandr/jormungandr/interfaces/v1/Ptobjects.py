@@ -31,14 +31,14 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask.ext.restful import fields, marshal_with, reqparse, abort
-from flask.ext.restful.inputs import boolean
 from flask.globals import g
 from jormungandr import i_manager, timezone
 from jormungandr.interfaces.v1.fields import disruption_marshaller
 from jormungandr.interfaces.v1.fields import NonNullList, NonNullNested, PbField, error, pt_object, feed_publisher
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import depth_argument, option_value, default_count_arg_type, date_time_format
+from jormungandr.interfaces.parsers import depth_argument, option_value, default_count_arg_type, date_time_format, \
+    BooleanType
 import datetime
 import six
 
@@ -85,7 +85,7 @@ class Ptobjects(ResourceUri):
                                                      " Note: it will mainly change the disruptions that concern "
                                                      "the object The timezone should be specified in the format,"
                                                      " else we consider it as UTC")
-        self.parsers['get'].add_argument("disable_geojson", type=boolean, default=False,
+        self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
                             description="remove geojson from the response")
 
     @marshal_with(pt_objects)
