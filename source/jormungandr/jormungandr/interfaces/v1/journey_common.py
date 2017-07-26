@@ -177,7 +177,7 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
         parser_get.add_argument("car_speed", type=float_gt_0)
         parser_get.add_argument("forbidden_uris[]", type=six.text_type, action="append")
         parser_get.add_argument("allowed_id[]", type=six.text_type, action="append")
-        parser_get.add_argument("type", type=option_value(types),
+        parser_get.add_argument("type", type=option_value(types.keys()),
                                 default="all")
         parser_get.add_argument("disruption_active", type=BooleanType(), default=False)  # for retrocomp
         # no default value for data_freshness because we need to maintain retrocomp with disruption_active
