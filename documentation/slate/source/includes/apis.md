@@ -1011,7 +1011,7 @@ Here is a typical journey, all sections are detailed below
 |Field|Type|Description|
 |-----|----|-----------|
 |journeys|array of [journeys](#journey)|List of computed journeys|
-|links|[link](#link)|Links related to the journeys|
+|links|array of [link](#link)|Links related to the journeys|
 
 #### Journey
 
