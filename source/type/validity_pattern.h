@@ -55,6 +55,7 @@ public:
     void remove(boost::gregorian::date day);
     void remove(int day);
     void reset() { days.reset(); }
+    bool empty() const { return days.none(); }
     std::string str() const;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
         ar & beginning_date & days & idx & uri;

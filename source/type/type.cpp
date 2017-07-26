@@ -405,6 +405,22 @@ template<> std::vector<FrequencyVehicleJourney*>& get_vjs(Route* r) {
 }
 }// anonymous namespace
 
+static bool is_useless(const nt::VehicleJourney& vj) {
+    // a vj is useless if all it's validity pattern are empty
+    for (const auto l_vj: vj.validity_patterns) {
+        if (! l_vj.second->empty()) { return false; }
+    }
+    return true;
+}
+
+
+static void cleanup_useless_vj_link(const nt::VehicleJourney* vj, nt::PT_Data& pt_data) {
+    // clean all backref to a vehicle journey before deleting it
+    // need to be thorough !!
+    // TODO
+    LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"), "we are going to cleanup the vj " << vj->uri);
+}
+
 template<typename VJ>
 VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
                                        const RTLevel level,
@@ -462,14 +478,37 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
 
     // Desactivating the other vjs. The last creation has priority on
     // all the already existing vjs.
+    std::vector<std::pair<RTLevel, size_t>> vj_idx_to_remove;
     const auto mask = ~canceled_vp.days;
-    for_all_vjs([&] (VehicleJourney& vj) {
+    for (const auto& rt_vjs: rtlevel_to_vjs_map) {
+        auto& vjs = rt_vjs.second;
+        if (vjs.empty()) { continue; }
+        // reverse iteration for later deletion
+        for (int i = vjs.size() - 1; i >= 0; --i) {
+            auto& vj = vjs[i];
+
             for (const auto l: enum_range_from(level)) {
-                auto new_vp = *vj.validity_patterns[l];
-                new_vp.days &= (mask << vj.shift);
-                vj.validity_patterns[l] = pt_data.get_or_create_validity_pattern(new_vp);
-             }
-        });
+                auto new_vp = *vj->validity_patterns[l];
+                new_vp.days &= (mask << vj->shift);
+                vj->validity_patterns[l] = pt_data.get_or_create_validity_pattern(new_vp);
+            }
+            if (is_useless(*vj)) {
+                vj_idx_to_remove.push_back({level, i});
+            }
+        }
+    }
+
+    for (const auto& level_and_vj_idx_to_remove: vj_idx_to_remove) {
+        auto rt_level = level_and_vj_idx_to_remove.first;
+        auto vj_idx = level_and_vj_idx_to_remove.second;
+        auto& vj = this->rtlevel_to_vjs_map[rt_level][vj_idx];
+
+        cleanup_useless_vj_link(vj.get(), pt_data);
+
+        // once all the links to the vj have been cleaned we can destroy the object
+        // (by removing the unique_ptr from the vector)
+        this->rtlevel_to_vjs_map[rt_level].erase(this->rtlevel_to_vjs_map[rt_level].begin() + vj_idx);
+    }
 
     // inserting the vj in the model
     pt_data.vehicle_journeys.push_back(ret);
