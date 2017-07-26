@@ -90,7 +90,7 @@ Networks are fed by agencies in GTFS format.
 |closing_time|string|Closing hour at format HHMMSS|
 |routes|array of [route](#route)|Routes of the line|
 |commercial_mode|[commercial_mode](#commercial-mode)|Commercial mode of the line|
-|physical_mode|array of [physical_mode](#physical-mode)|Physical modes of the line|
+|physical_modes|array of [physical_mode](#physical-mode)|Physical modes of the line|
 
 ### Route
 
