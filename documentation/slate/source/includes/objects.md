@@ -370,7 +370,7 @@ Real time and disruption objects
 |impact_id     | string                         |for traceability: Id of original input impact
 |severity      | [severity](#severity)          |gives some categorization element
 |application_periods |array of [period](#period)       |dates where the current disruption is active
-|messages            |[message](#message)     |text to provide to the traveler
+|messages            |array of [message](#message)     |texts to provide to the traveler
 |updated_at          |[iso-date-time](#iso-date-time) |date_time of last modifications 
 |impacted_objects    |array of [impacted_object](#impacted_object) |The list of public transport objects which are affected by the disruption
 |cause               |string                   |why is there such a disruption?
