@@ -64,7 +64,7 @@ VJ::VJ(builder& b,
     is_frequency(is_frequency),
     wheelchair_boarding(wheelchair_boarding),
     _uri(uri),
-    meta_vj_name(meta_vj_name),
+    _meta_vj_name(meta_vj_name),
     physical_mode(physical_mode),
     start_time(start_time),
     end_time(end_time),
@@ -138,8 +138,8 @@ nt::VehicleJourney* VJ::make() {
     }
 
     std::string name;
-    if (! meta_vj_name.empty()) {
-        name = meta_vj_name;
+    if (! _meta_vj_name.empty()) {
+        name = _meta_vj_name;
     } else if (! _uri.empty()) {
         name = _uri;
     } else {

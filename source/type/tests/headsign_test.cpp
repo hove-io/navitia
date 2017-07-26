@@ -54,8 +54,8 @@ namespace nt = navitia::type;
 struct HeadsignFixture {
     ed::builder b;
     HeadsignFixture() : b("20120614") {
-        b.vj("A", "1111", "", true, "A1", "metaVJA")("stop00", 8000)("stop01", 8100);
-        b.vj("A", "1111", "", true, "A2", "metaVJA")("stop10", 8000)("stop11", 8100)("stop12", 8200);
+        b.vj("A").uri("A1").meta_vj("metaVJA").vp("01")("stop00", 8000)("stop01", 8100);
+        b.vj("A").uri("A2").meta_vj("metaVJA").vp("10")("stop10", 8000)("stop11", 8100)("stop12", 8200);
         b.vj("C")("stop20", 8000)("stop21", 8100)("stop22", 8200);
         b.vj("D")("stop30", 8000);
         b.vj("E")("stop40", 8000);

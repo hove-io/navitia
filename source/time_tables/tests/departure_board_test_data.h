@@ -222,11 +222,11 @@ struct calendar_fixture {
                                                           ("stop2", "18:00"_t, "18:10"_t);
 
         // Check partial terminus tag
-        b.vj("A", "10111111", "", true, "vj1", "")("Tstop1", "10:00"_t, "10:00"_t)
-                                                  ("Tstop2", "10:30"_t, "10:30"_t);
-        b.vj("A", "00000011", "", true, "vj2", "")("Tstop1", "10:30"_t, "10:30"_t)
-                                                  ("Tstop2", "11:00"_t,"11:00"_t)
-                                                  ("Tstop3", "11:30"_t,"11:30"_t);
+        b.vj("A").vp("10111111").uri("vj1")("Tstop1", "10:00"_t, "10:00"_t)
+                                           ("Tstop2", "10:30"_t, "10:30"_t);
+        b.vj("A").vp("00000011").uri("vj2")("Tstop1", "10:30"_t, "10:30"_t)
+                                           ("Tstop2", "11:00"_t, "11:00"_t)
+                                           ("Tstop3", "11:30"_t, "11:30"_t);
 
         // Check date_time_estimated at stoptime
         b.vj("B", "10111111", "", true, "date_time_estimated", "")
@@ -246,12 +246,6 @@ struct calendar_fixture {
                 ("stop1_D", "00:10"_t, "00:10"_t)
                 ("stop2_D", "01:40"_t, "01:40"_t)
                 ("stop3_D", "02:50"_t, "02:50"_t);
-
-        b.vj("A", "10111111", "", true, "vj1", "")("Tstop1", "10:00"_t, "10:00"_t)
-                                                  ("Tstop2", "10:30"_t, "10:30"_t);
-        b.vj("A", "00000011", "", true, "vj2", "")("Tstop1", "10:30"_t, "10:30"_t)
-                                                  ("Tstop2", "11:00"_t,"11:00"_t)
-                                                  ("Tstop3", "11:30"_t,"11:30"_t);
         /*
                                                    StopR3                            StopR4
                                             ------------------------------------------
