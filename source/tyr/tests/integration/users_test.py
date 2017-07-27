@@ -657,7 +657,7 @@ def test_get_users_with_disable_geojson_false(create_multiple_users, geojson_pol
     assert foodefault.get('has_shape') is False
     assert foodefault.get('shape') is None
 
-def test_get_billing_plans(create_billing_plan):
+def test_get_billing_plan(create_billing_plan):
     """
     We create a billing_plan.
     """
@@ -668,26 +668,25 @@ def test_get_billing_plans(create_billing_plan):
     assert resp['max_object_count'] == 100
 
 
-def test_delete_billing_plans(create_billing_plan):
+def test_delete_billing_plan(create_billing_plan):
     """
     We start by creating a billing_plan.
-    Delete the billing_plan    """
+    Delete the billing_plan
+    """
     resp = api_get('/v0/billing_plans/{}'.format(create_billing_plan))
 
-    print resp
     _, status = api_delete('/v0/billing_plans/{}'.format(resp['id']), check=False, no_json=True)
     assert status == 204
 
 
-def test_delete_billing_plans_used_by_an_user(create_user, geojson_polygon):
+def test_delete_billing_plan_used_by_an_user(create_user, geojson_polygon):
     """
     We start by creating the user with a shape.
-    We request the user with parameter disable_geojson=true
+    We request the user with parameter disable_geojson=false
     We try to delete the billing_plan of this user but in vain.
     """
     resp = api_get('/v0/users/{}?disable_geojson=false'.format(create_user))
 
-    print resp
     assert resp['has_shape'] is True
     assert resp['shape'] == geojson_polygon
 
