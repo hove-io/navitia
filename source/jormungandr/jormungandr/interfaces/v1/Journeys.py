@@ -412,31 +412,39 @@ class Journeys(JourneyCommon):
 
         parser_get = self.parsers["get"]
 
-        parser_get.add_argument("count", type=default_count_arg_type)
-        parser_get.add_argument("_min_journeys_calls", type=int)
-        parser_get.add_argument("_final_line_filter", type=BooleanType())
+        parser_get.add_argument("count", type=default_count_arg_type,
+                                help='Fixed number of different journeys')
+        parser_get.add_argument("_min_journeys_calls", type=int, hidden=True)
+        parser_get.add_argument("_final_line_filter", type=BooleanType(), hidden=True)
         parser_get.add_argument("is_journey_schedules", type=BooleanType(), default=False,
-                                description="True when '/journeys' is called to compute the same journey schedules and "
+                                description="True when '/journeys' is called to compute"
+                                            " the same journey schedules and "
                                             "it'll override some specific parameters")
-        parser_get.add_argument("min_nb_journeys", type=int)
-        parser_get.add_argument("max_nb_journeys", type=int)
-        parser_get.add_argument("_max_extra_second_pass", type=int, dest="max_extra_second_pass")
+        parser_get.add_argument("min_nb_journeys", type=int,
+                                help='Minimum number of different suggested journeys')
+        parser_get.add_argument("max_nb_journeys", type=int,
+                                help='Maximum number of different suggested journeys')
+        parser_get.add_argument("_max_extra_second_pass", type=int, dest="max_extra_second_pass", hidden=True)
 
-        parser_get.add_argument("debug", type=BooleanType(), default=False,
-                                hidden=True)
-        parser_get.add_argument("show_codes", type=BooleanType(), default=False,
-                            description="show more identification codes")
-        parser_get.add_argument("_override_scenario", type=six.text_type, description="debug param to specify a custom scenario")
-        parser_get.add_argument("_street_network", type=six.text_type,
-                                description="choose the streetnetwork component", hidden=True)
-        parser_get.add_argument("_walking_transfer_penalty", type=int)
-        parser_get.add_argument("_max_successive_physical_mode", type=int)
-        parser_get.add_argument("_max_additional_connections", type=int)
-        parser_get.add_argument("_night_bus_filter_base_factor", type=int)
-        parser_get.add_argument("_night_bus_filter_max_factor", type=float)
-        parser_get.add_argument("_min_car", type=int)
-        parser_get.add_argument("_min_bike", type=int)
-        parser_get.add_argument("bss_stands", type=BooleanType(), default=False, description="Show bss stands availability")
+        parser_get.add_argument("debug", type=BooleanType(), default=False, hidden=True,
+                                help='Activate debug mode.\n'
+                                     'No journeys are filtered in this mode.')
+        parser_get.add_argument("show_codes", type=BooleanType(), default=False, hidden=True, deprecated=True,
+                                description="show more identification codes")
+        parser_get.add_argument("_override_scenario", type=six.text_type, hidden=True,
+                                description="debug param to specify a custom scenario")
+        parser_get.add_argument("_street_network", type=six.text_type, hidden=True,
+                                description="choose the streetnetwork component")
+        parser_get.add_argument("_walking_transfer_penalty", hidden=True, type=int)
+        parser_get.add_argument("_max_successive_physical_mode", hidden=True, type=int)
+        parser_get.add_argument("_max_additional_connections", hidden=True, type=int)
+        parser_get.add_argument("_night_bus_filter_base_factor", hidden=True, type=int)
+        parser_get.add_argument("_night_bus_filter_max_factor", hidden=True, type=float)
+        parser_get.add_argument("_min_car", hidden=True, type=int)
+        parser_get.add_argument("_min_bike", hidden=True, type=int)
+        parser_get.add_argument("bss_stands", type=BooleanType(), default=False,
+                                description="Show bss stands availability "
+                                            "in the bicycle_rental pois of response")
 
         self.get_decorators.append(complete_links(self))
 

@@ -142,40 +142,88 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
         }
         parser_get = self.parsers["get"]
 
-        parser_get.add_argument("from", type=six.text_type, dest="origin")
-        parser_get.add_argument("to", type=six.text_type, dest="destination")
-        parser_get.add_argument("datetime", type=DateTimeFormat())
+        parser_get.add_argument("from", type=six.text_type, dest="origin",
+                                help='The id of the departure of your journey. '
+                                     'If not provided an isochrone is computed.')
+        parser_get.add_argument("to", type=six.text_type, dest="destination",
+                                help='The id of the arrival of your journey. '
+                                     'If not provided an isochrone is computed.')
+        parser_get.add_argument("datetime", type=DateTimeFormat(),
+                                help='Date and time to go/arrive (see `datetime_represents`).\n'
+                                     'Note: the datetime must be in the coverage’s publication period.')
         parser_get.add_argument("datetime_represents", dest="clockwise",
-                                type=DatetimeRepresents(), default=True)
-        parser_get.add_argument("max_transfers", type=int, default=42)
-        parser_get.add_argument("max_nb_transfers", type=int, dest="max_transfers")
-        parser_get.add_argument("first_section_mode[]",
-                                type=OptionValue(modes),
-                                dest="origin_mode", action="append")
-        parser_get.add_argument("last_section_mode[]",
-                                type=OptionValue(modes),
-                                dest="destination_mode", action="append")
+                                type=DatetimeRepresents(), default=True,
+                                help="Determine how datetime is handled.\n\n"
+                                     "Possible values:\n"
+                                     " * 'departure' - Compute journeys starting after datetime\n"
+                                     " * 'arrival' - Compute journeys arriving before datetime")
+        parser_get.add_argument("max_transfers", type=int, default=42, hidden=True, deprecated=True)
+        parser_get.add_argument("max_nb_transfers", type=int, dest="max_transfers",
+                                help='Maximum number of transfers in each journey')
+        parser_get.add_argument("min_nb_transfers", type=int, default=0,
+                                help='Minimum number of transfers in each journey')
+        parser_get.add_argument("first_section_mode[]", type=OptionValue(modes),
+                                dest="origin_mode", action="append",
+                                help='Force the first section mode '
+                                     'if the first section is not a public transport one.\n'
+                                     '`bss` stands for bike sharing system.\n'
+                                     'Note 1: It’s an array, you can give multiple modes.\n'
+                                     'Note 2: Choosing `bss` implicitly allows the walking mode since '
+                                     'you might have to walk to the bss station.\n'
+                                     'Note 3: The parameter is inclusive, not exclusive, '
+                                     'so if you want to forbid a mode, you need to add all the other modes. '
+                                     'Eg: If you never want to use a car, you need: '
+                                     '`first_section_mode[]=walking&first_section_mode[]=bss&'
+                                     'first_section_mode[]=bike&last_section_mode[]=walking&'
+                                     'last_section_mode[]=bss&last_section_mode[]=bike`')
+        parser_get.add_argument("last_section_mode[]", type=OptionValue(modes),
+                                dest="destination_mode", action="append",
+                                help='Same as first_section_mode but for the last section.')
+        # for retrocompatibility purpose, we duplicate (without []):
+        parser_get.add_argument("first_section_mode", hidden=True,
+                                type=OptionValue(modes), action="append")
+        parser_get.add_argument("last_section_mode", hidden=True,
+                                type=OptionValue(modes), action="append")
+
         parser_get.add_argument("max_duration_to_pt", type=int,
-                                description="maximal duration of non public transport in second")
-
+                                description="Maximal duration of non public transport in second")
         parser_get.add_argument("max_walking_duration_to_pt", type=int,
-                                description="maximal duration of walking on public transport in second")
-
+                                description="Maximal duration of walking on public transport in second")
         parser_get.add_argument("max_bike_duration_to_pt", type=int,
-                                description="maximal duration of bike on public transport in second")
+                                description="Maximal duration of bike on public transport in second")
         parser_get.add_argument("max_bss_duration_to_pt", type=int,
-                                description="maximal duration of bss on public transport in second")
+                                description="Maximal duration of bss on public transport in second")
         parser_get.add_argument("max_car_duration_to_pt", type=int,
-                                description="maximal duration of car on public transport in second")
+                                description="Maximal duration of car on public transport in second")
 
-        parser_get.add_argument("walking_speed", type=float_gt_0)
-        parser_get.add_argument("bike_speed", type=float_gt_0)
-        parser_get.add_argument("bss_speed", type=float_gt_0)
-        parser_get.add_argument("car_speed", type=float_gt_0)
-        parser_get.add_argument("forbidden_uris[]", type=six.text_type, action="append")
-        parser_get.add_argument("allowed_id[]", type=six.text_type, action="append")
+        parser_get.add_argument("walking_speed", type=float_gt_0,
+                                help='Walking speed for the fallback sections.\n'
+                                     'Speed unit must be in meter/second')
+        parser_get.add_argument("bike_speed", type=float_gt_0,
+                                help='Biking speed for the fallback sections.\n'
+                                     'Speed unit must be in meter/second')
+        parser_get.add_argument("bss_speed", type=float_gt_0,
+                                help='Speed while using a bike from a bike sharing system for the '
+                                     'fallback sections.\n'
+                                     'Speed unit must be in meter/second')
+        parser_get.add_argument("car_speed", type=float_gt_0,
+                                help='Driving speed for the fallback sections.\n'
+                                     'Speed unit must be in meter/second')
+        parser_get.add_argument("forbidden_uris[]", type=six.text_type, action="append",
+                                help='If you want to avoid lines, modes, networks, etc.\n'
+                                     'Note: the forbidden_uris[] concern only the public transport objects. '
+                                     'You can’t for example forbid the use of the bike with them, '
+                                     'you have to set the fallback modes for this '
+                                     '(first_section_mode[] and last_section_mode[])')
+        parser_get.add_argument("allowed_id[]", type=six.text_type, action="append",
+                                help='If you want to use only a small subset of '
+                                     'the public transport objects in your solution.\n'
+                                     'Note: The constraint intersects with forbidden_uris[]. '
+                                     'For example, if you ask for '
+                                     '`allowed_id[]=line:A&forbidden_uris[]=physical_mode:Bus`, '
+                                     'only vehicles of the line A that are not buses will be used.')
         parser_get.add_argument("type", type=DescribedOptionValue(types), default="all", deprecated=True,
-                                help='DEPRECATED, desired type of journey.')
+                                help='DEPRECATED, desired type of journey.', hidden=True)
         parser_get.add_argument("disruption_active", type=BooleanType(), default=False, deprecated=True,
                                 help='DEPRECATED, replaced by `data_freshness`.\n'
                                      'If true the algorithm takes the disruptions into account, '
@@ -183,22 +231,43 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
                                      'Nota: `disruption_active=true` <=> `data_freshness=realtime`')
         # no default value for data_freshness because we need to maintain retrocomp with disruption_active
         parser_get.add_argument("data_freshness",
-                                type=OptionValue(['base_schedule', 'adapted_schedule', 'realtime']))
-        parser_get.add_argument("max_duration", type=UnsignedInteger())
-        parser_get.add_argument("wheelchair", type=BooleanType(), default=None)
-        # for retrocompatibility purpose, we duplicate (without []):
-        parser_get.add_argument("first_section_mode",
-                                type=OptionValue(modes), action="append")
-        parser_get.add_argument("last_section_mode",
-                                type=OptionValue(modes), action="append")
-        parser_get.add_argument("traveler_type", type=OptionValue(acceptable_traveler_types))
-        parser_get.add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.utcnow(),
-                                description="The datetime used to consider the state of the pt object"
-                                            " Default is the current date and it is used for debug."
-                                            " Note: it will mainly change the disruptions that concern "
-                                            "the object The timezone should be specified in the format,"
-                                            " else we consider it as UTC", hidden=True)
-        parser_get.add_argument("min_nb_transfers", type=int, default=0)
+                                type=OptionValue(['base_schedule', 'adapted_schedule', 'realtime']),
+                                help="Define the freshness of data to use to compute journeys.\n"
+                                     "When using the following parameter `&data_freshness=base_schedule` "
+                                     "you can get disrupted journeys in the response. "
+                                     "You can then display the disruption message to the traveler and "
+                                     "make a realtime request to get a new undisrupted solution.\n\n"
+                                     "Possible values:\n"
+                                     " * 'base_schedule' - Use theoric schedule information\n"
+                                     " * 'realtime' - Use all realtime information\n"
+                                     " * 'adapted_schedule' - DEPRECATED")
+        parser_get.add_argument("max_duration", type=UnsignedInteger(),
+                                help='Maximum duration of journeys in secondes.\n'
+                                     'Really useful when computing an isochrone.')
+        parser_get.add_argument("wheelchair", type=BooleanType(), default=None,
+                                help='If true the traveler is considered to be using a wheelchair, '
+                                     'thus only accessible public transport are used.\n'
+                                     'Be warned: many data are currently too faint to provide '
+                                     'acceptable answers with this parameter on.')
+        parser_get.add_argument("traveler_type", type=OptionValue(acceptable_traveler_types),
+                                help='Define speeds and accessibility values for different kind of people.\n'
+                                     'Each profile also automatically determines appropriate first and '
+                                     'last section modes to the covered area.\n'
+                                     'Note: this means that you might get car, bike, etc. fallback routes '
+                                     'even if you set `forbidden_uris[]`!\n'
+                                     'You can overload all parameters '
+                                     '(especially speeds, distances, first and last modes) by setting '
+                                     'all of them specifically.\n'
+                                     'We advise that you don’t rely on the traveler_type’s fallback modes '
+                                     '(`first_section_mode[]` and `last_section_mode[]`) '
+                                     'and set them yourself.')
+        parser_get.add_argument("_current_datetime", hidden=True,
+                                type=DateTimeFormat(), default=datetime.utcnow(),
+                                description="The datetime used to consider the state of the pt object.\n"
+                                            "Default is the current date and it is used for debug.\n"
+                                            "Note: it will mainly change the disruptions that concern "
+                                            "the object. The timezone should be specified in the format, "
+                                            "else we consider it as UTC")
         parser_get.add_argument("direct_path", type=OptionValue(['indifferent', 'only', 'none']),
                                 default='indifferent',
                                 description="Specify if direct path should be suggested")
