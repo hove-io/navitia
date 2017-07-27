@@ -39,6 +39,8 @@ from jormungandr.interfaces.v1.fields import stop_point, route, pagination, PbFi
     display_informations_route, UrisToLinks, error, \
     enum_type, SplitDateTime, MultiLineString, PbEnum, feed_publisher
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri, complete_links
+from jormungandr.interfaces.v1.decorators import get_serializer
+from jormungandr.interfaces.v1.serializer import api
 import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_type
@@ -345,7 +347,7 @@ class NextDepartures(Schedules):
         super(NextDepartures, self).__init__("next_departures")
 
     @add_passages_links()
-    @marshal_with(departures)
+    @get_serializer(serpy=api.DeparturesSerializer, marshall=departures)
     @ManageError()
     def get(self, uri=None, region=None, lon=None, lat=None,
             dest="nb_stoptimes"):
@@ -359,7 +361,7 @@ class NextArrivals(Schedules):
         super(NextArrivals, self).__init__("next_arrivals")
 
     @add_passages_links()
-    @marshal_with(arrivals)
+    @get_serializer(serpy=api.ArrivalsSerializer, marshall=arrivals)
     @ManageError()
     def get(self, uri=None, region=None, lon=None, lat=None):
         return super(NextArrivals, self).get(uri=uri, region=region, lon=lon,

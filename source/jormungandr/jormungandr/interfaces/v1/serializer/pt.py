@@ -470,7 +470,7 @@ class DisplayInformationSerializer(PbNestedSerializer):
     physical_mode = jsonschema.Field(schema_type=str)
     commercial_mode = jsonschema.Field(schema_type=str)
     network = jsonschema.Field(schema_type=str)
-    direction = jsonschema.Field(schema_type=str)
+    direction = jsonschema.Field(schema_type=str, display_none=True)
     label = jsonschema.MethodField(schema_type=str)
 
     def get_label(self, obj):
