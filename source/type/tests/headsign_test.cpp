@@ -66,7 +66,7 @@ struct HeadsignFixture {
 
 BOOST_FIXTURE_TEST_CASE(headsign_handler_functionnal_test, HeadsignFixture) {
     nt::HeadsignHandler& headsign_handler = b.data->pt_data->headsign_handler;
-    auto& vj_vec = b.data->pt_data->vehicle_journeys;
+    const auto& vj_vec = b.data->pt_data->vehicle_journeys;
 
     headsign_handler.affect_headsign_to_stop_time(vj_vec[0]->stop_time_list.at(0), "A00");
     headsign_handler.affect_headsign_to_stop_time(vj_vec[0]->stop_time_list.at(1), vj_vec[1]->name);
