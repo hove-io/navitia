@@ -395,15 +395,6 @@ static bool concerns_base_at_period(const VehicleJourney& vj,
     return intersect;
 }
 
-namespace {
-template<typename VJ> std::vector<VJ*>& get_vjs(Route* r);
-template<> std::vector<DiscreteVehicleJourney*>& get_vjs(Route* r) {
-    return r->discrete_vehicle_journey_list;
-}
-template<> std::vector<FrequencyVehicleJourney*>& get_vjs(Route* r) {
-    return r->frequency_vehicle_journey_list;
-}
-}// anonymous namespace
 
 static bool is_useless(const nt::VehicleJourney& vj) {
     // a vj is useless if all it's validity pattern are empty
@@ -413,12 +404,80 @@ static bool is_useless(const nt::VehicleJourney& vj) {
     return true;
 }
 
+template <typename C>
+static C::iterator erase_vj_from_list(const nt::VehicleJourney* vj, C& vjs) {
+    auto it = std::find(vjs.begin(), vjs.end(), vj);
+    if (it == vjs.end()) {
+        LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"),
+                       "impossible to find the vj " << vj->uri << " in the list, something is strange");
+    }
+    return vjs.erase(it);
+}
 
-static void cleanup_useless_vj_link(const nt::VehicleJourney* vj, nt::PT_Data& pt_data) {
+namespace {
+template<typename VJ> std::vector<VJ*>& get_vjs(Route* r);
+template<> std::vector<DiscreteVehicleJourney*>& get_vjs(Route* r) {
+    return r->discrete_vehicle_journey_list;
+}
+template<> std::vector<FrequencyVehicleJourney*>& get_vjs(Route* r) {
+    return r->frequency_vehicle_journey_list;
+}
+
+void cleanup_useless_vj_link(const nt::VehicleJourney* vj, nt::PT_Data& pt_data) {
     // clean all backref to a vehicle journey before deleting it
     // need to be thorough !!
-    // TODO
-    LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"), "we are going to cleanup the vj " << vj->uri);
+    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("logger"), "we are going to cleanup the vj " << vj->uri);
+
+    if (vj->dataset) {
+        erase_vj_from_list(vj, vj->dataset->vehiclejourney_list);
+    }
+    if (vj->physical_mode) {
+        erase_vj_from_list(vj, vj->physical_mode->vehicle_journey_list);
+    }
+    if (dynamic_cast<const nt::FrequencyVehicleJourney*>(vj)) {
+        erase_vj_from_list(vj, vj->route->frequency_vehicle_journey_list);
+    } else if (dynamic_cast<const nt::DiscreteVehicleJourney*>(vj)) {
+        erase_vj_from_list(vj, vj->route->discrete_vehicle_journey_list);
+    } else {
+        throw std::logic_error("c'est la merde"); // TODO remove this
+    }
+
+    pt_data.headsign_handler.forget_vj(vj);
+
+    // remove the vj from the global list/map
+    auto next_vj = erase_vj_from_list(vj, pt_data.vehicle_journeys);
+    // afterward, we MUST reindex all vehicle journeys
+    std::for_each(next_vj, pt_data.vehicle_journeys.end(), Indexer<nt::idx_t>());
+
+    pt_data.vehicle_journeys_map.erase(vj->uri);
+}
+}// anonymous namespace
+
+void MetaVehicleJourney::clean_up_useless_vjs(nt::PT_Data& pt_data) {
+    std::vector<std::pair<RTLevel, size_t>> vj_idx_to_remove;
+    for (const auto& rt_vjs: rtlevel_to_vjs_map) {
+        auto& vjs = rt_vjs.second;
+        if (vjs.empty()) { continue; }
+        // reverse iteration for later deletion
+        for (int i = vjs.size() - 1; i >= 0; --i) {
+            auto& vj = vjs[i];
+            if (is_useless(*vj)) {
+                vj_idx_to_remove.push_back({rt_vjs.first, i});
+            }
+        }
+    }
+
+    for (const auto& level_and_vj_idx_to_remove: vj_idx_to_remove) {
+        auto rt_level = level_and_vj_idx_to_remove.first;
+        auto vj_idx = level_and_vj_idx_to_remove.second;
+        auto& vj = this->rtlevel_to_vjs_map[rt_level][vj_idx];
+
+        cleanup_useless_vj_link(vj.get(), pt_data);
+
+        // once all the links to the vj have been cleaned we can destroy the object
+        // (by removing the unique_ptr from the vector)
+        this->rtlevel_to_vjs_map[rt_level].erase(this->rtlevel_to_vjs_map[rt_level].begin() + vj_idx);
+    }
 }
 
 template<typename VJ>
@@ -434,7 +493,6 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
     VJ* ret = vj_ptr.get();
     vj_ptr->meta_vj = this;
     vj_ptr->uri = uri;
-    vj_ptr->idx = pt_data.vehicle_journeys.size();
     vj_ptr->realtime_level = level;
     vj_ptr->shift = 0;
     if (!sts.empty()) {
@@ -478,39 +536,20 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
 
     // Desactivating the other vjs. The last creation has priority on
     // all the already existing vjs.
-    std::vector<std::pair<RTLevel, size_t>> vj_idx_to_remove;
     const auto mask = ~canceled_vp.days;
-    for (const auto& rt_vjs: rtlevel_to_vjs_map) {
-        auto& vjs = rt_vjs.second;
-        if (vjs.empty()) { continue; }
-        // reverse iteration for later deletion
-        for (int i = vjs.size() - 1; i >= 0; --i) {
-            auto& vj = vjs[i];
-
+    for_all_vjs([&] (VehicleJourney& vj) {
             for (const auto l: enum_range_from(level)) {
-                auto new_vp = *vj->validity_patterns[l];
-                new_vp.days &= (mask << vj->shift);
-                vj->validity_patterns[l] = pt_data.get_or_create_validity_pattern(new_vp);
-            }
-            if (is_useless(*vj)) {
-                vj_idx_to_remove.push_back({level, i});
-            }
-        }
-    }
+                auto new_vp = *vj.validity_patterns[l];
+                new_vp.days &= (mask << vj.shift);
+                vj.validity_patterns[l] = pt_data.get_or_create_validity_pattern(new_vp);
+             }
+    });
 
-    for (const auto& level_and_vj_idx_to_remove: vj_idx_to_remove) {
-        auto rt_level = level_and_vj_idx_to_remove.first;
-        auto vj_idx = level_and_vj_idx_to_remove.second;
-        auto& vj = this->rtlevel_to_vjs_map[rt_level][vj_idx];
-
-        cleanup_useless_vj_link(vj.get(), pt_data);
-
-        // once all the links to the vj have been cleaned we can destroy the object
-        // (by removing the unique_ptr from the vector)
-        this->rtlevel_to_vjs_map[rt_level].erase(this->rtlevel_to_vjs_map[rt_level].begin() + vj_idx);
-    }
+    // we clean up all the now useless vehicle journeys
+    clean_up_useless_vjs(pt_data);
 
     // inserting the vj in the model
+    vj_ptr->idx = pt_data.vehicle_journeys.size();
     pt_data.vehicle_journeys.push_back(ret);
     pt_data.vehicle_journeys_map[ret->uri] = ret;
     if (route) {

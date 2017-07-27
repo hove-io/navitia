@@ -547,6 +547,8 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
                 disruptions_collection.insert(share_ptr);
             }
         }
+        // we check if we now have useless vehicle_journeys to cleanup
+        mvj->clean_up_useless_vjs(pt_data);
     }
 
     void operator()(nt::StopPoint* stop_point) {
