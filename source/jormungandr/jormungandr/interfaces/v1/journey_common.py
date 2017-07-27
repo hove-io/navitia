@@ -30,15 +30,13 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr import i_manager
-from jormungandr.interfaces.parsers import DateTimeFormat, BooleanType
+from jormungandr.interfaces.parsers import DateTimeFormat
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
 from datetime import datetime
 from jormungandr.resources_utils import ResourceUtc
 from jormungandr.interfaces.v1.transform_id import transform_id
-from jormungandr.interfaces.parsers import option_value
-from jormungandr.interfaces.parsers import float_gt_0
-from jormungandr.interfaces.parsers import UnsignedInteger
+from jormungandr.interfaces.parsers import float_gt_0, UnsignedInteger
 from flask.ext.restful import reqparse, abort
 import logging
 from jormungandr.exceptions import RegionNotFound
@@ -48,21 +46,20 @@ from jormungandr.travelers_profile import TravelerProfile
 from navitiacommon.default_traveler_profile_params import acceptable_traveler_types
 import pytz
 import six
-from navitiacommon.parser_args_type import CustomSchemaType, TypeSchema
+from navitiacommon.parser_args_type import CustomSchemaType, TypeSchema, BooleanType, OptionValue, \
+    DescribedOptionValue
 
 
-class dt_represents(CustomSchemaType):
+class DatetimeRepresents(CustomSchemaType):
     def __call__(self, value, name):
         if value == "arrival":
             return False
-        elif value == "departure":
+        if value == "departure":
             return True
-        else:
-            raise ValueError("Unable to parse {}".format(name))
+        raise ValueError("Unable to parse {}".format(name))
 
     def schema(self):
-        return TypeSchema(type=str, metadata={'enum': ['arrival', 'departure'],
-                                              'default': 'departure'})
+        return TypeSchema(type=str, metadata={'enum': ['arrival', 'departure'], 'default': 'departure'})
 
 
 def compute_regions(args):
@@ -149,14 +146,14 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
         parser_get.add_argument("to", type=six.text_type, dest="destination")
         parser_get.add_argument("datetime", type=DateTimeFormat())
         parser_get.add_argument("datetime_represents", dest="clockwise",
-                                type=dt_represents(), default=True)
+                                type=DatetimeRepresents(), default=True)
         parser_get.add_argument("max_transfers", type=int, default=42)
         parser_get.add_argument("max_nb_transfers", type=int, dest="max_transfers")
         parser_get.add_argument("first_section_mode[]",
-                                type=option_value(modes),
+                                type=OptionValue(modes),
                                 dest="origin_mode", action="append")
         parser_get.add_argument("last_section_mode[]",
-                                type=option_value(modes),
+                                type=OptionValue(modes),
                                 dest="destination_mode", action="append")
         parser_get.add_argument("max_duration_to_pt", type=int,
                                 description="maximal duration of non public transport in second")
@@ -177,20 +174,24 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
         parser_get.add_argument("car_speed", type=float_gt_0)
         parser_get.add_argument("forbidden_uris[]", type=six.text_type, action="append")
         parser_get.add_argument("allowed_id[]", type=six.text_type, action="append")
-        parser_get.add_argument("type", type=option_value(types.keys()),
-                                default="all")
-        parser_get.add_argument("disruption_active", type=BooleanType(), default=False)  # for retrocomp
+        parser_get.add_argument("type", type=DescribedOptionValue(types), default="all", deprecated=True,
+                                help='DEPRECATED, desired type of journey.')
+        parser_get.add_argument("disruption_active", type=BooleanType(), default=False, deprecated=True,
+                                help='DEPRECATED, replaced by `data_freshness`.\n'
+                                     'If true the algorithm takes the disruptions into account, '
+                                     'and thus avoid disrupted public transport.\n'
+                                     'Nota: `disruption_active=true` <=> `data_freshness=realtime`')
         # no default value for data_freshness because we need to maintain retrocomp with disruption_active
         parser_get.add_argument("data_freshness",
-                                type=option_value(['base_schedule', 'adapted_schedule', 'realtime']))
+                                type=OptionValue(['base_schedule', 'adapted_schedule', 'realtime']))
         parser_get.add_argument("max_duration", type=UnsignedInteger())
         parser_get.add_argument("wheelchair", type=BooleanType(), default=None)
         # for retrocompatibility purpose, we duplicate (without []):
         parser_get.add_argument("first_section_mode",
-                                type=option_value(modes), action="append")
+                                type=OptionValue(modes), action="append")
         parser_get.add_argument("last_section_mode",
-                                type=option_value(modes), action="append")
-        parser_get.add_argument("traveler_type", type=option_value(acceptable_traveler_types))
+                                type=OptionValue(modes), action="append")
+        parser_get.add_argument("traveler_type", type=OptionValue(acceptable_traveler_types))
         parser_get.add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.utcnow(),
                                 description="The datetime used to consider the state of the pt object"
                                             " Default is the current date and it is used for debug."
@@ -198,7 +199,7 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
                                             "the object The timezone should be specified in the format,"
                                             " else we consider it as UTC", hidden=True)
         parser_get.add_argument("min_nb_transfers", type=int, default=0)
-        parser_get.add_argument("direct_path", type=option_value(['indifferent', 'only', 'none']),
+        parser_get.add_argument("direct_path", type=OptionValue(['indifferent', 'only', 'none']),
                                 default='indifferent',
                                 description="Specify if direct path should be suggested")
 

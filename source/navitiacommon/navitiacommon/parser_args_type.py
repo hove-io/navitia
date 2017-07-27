@@ -32,6 +32,7 @@ from collections import namedtuple
 
 import ujson
 import geojson
+import flask
 
 class TypeSchema(object):
     def __init__(self, type=None, metadata=None):
@@ -68,17 +69,11 @@ class PositiveFloat(CustomSchemaType):
         return TypeSchema(type=float, metadata={'minimum': 0})
 
 
-class TrueFalse(CustomSchemaType):
-    def __call__(self, value, name):
+class BooleanType(CustomSchemaType):
+    def __call__(self, value):
         if isinstance(value, bool):
-            return value
-        if value.lower() == "true":
-            return True
-        elif value.lower() == "false":
-            return False
-        else:
-            raise ValueError("The {} argument must be true or false, you gave : {}"
-                             .format(name, value))
+             return value
+        return flask.ext.restful.inputs.boolean(value)
 
     def schema(self):
         return TypeSchema(type=bool)
@@ -104,6 +99,18 @@ class OptionValue(CustomSchemaType):
 
     def schema(self):
         return TypeSchema(type=str, metadata={'enum': self.optional_values})
+
+
+class DescribedOptionValue(OptionValue):
+    def __init__(self, optional_values):
+        self.description = "Possible values:\n"
+        self.description += '\n'.join([" * '{}' - {}".format(k, v) for k,v in optional_values.iteritems()])
+        super(DescribedOptionValue, self).__init__(optional_values.keys())
+
+    def schema(self):
+        ts = super(DescribedOptionValue, self).schema()
+        ts.metadata['description'] = self.description
+        return ts
 
 
 class IntervalValue(CustomSchemaType):

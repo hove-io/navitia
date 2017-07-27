@@ -38,7 +38,7 @@ from jormungandr.interfaces.v1.fields import display_informations_vj, error, pla
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
     SectionGeoJson, PbEnum, feed_publisher, Durations
 
-from jormungandr.interfaces.parsers import default_count_arg_type, BooleanType
+from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.ResourceUri import complete_links
 from functools import wraps
 from jormungandr.interfaces.v1.fields import DateTime, Integer
@@ -55,7 +55,7 @@ from navitiacommon import default_values
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, compute_possible_region
 from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
 import six
-
+from navitiacommon.parser_args_type import BooleanType
 
 f_datetime = "%Y%m%dT%H%M%S"
 class SectionLinks(fields.Raw):

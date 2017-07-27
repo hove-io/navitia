@@ -37,10 +37,10 @@ from jormungandr.interfaces.v1.fields import disruption_marshaller
 from jormungandr.interfaces.v1.fields import NonNullList, NonNullNested, PbField, error, pt_object, feed_publisher
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import depth_argument, option_value, default_count_arg_type, DateTimeFormat, \
-    BooleanType
+from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type, DateTimeFormat
 import datetime
 import six
+from navitiacommon.parser_args_type import BooleanType, OptionValue
 
 pt_objects = {
     "pt_objects": NonNullList(NonNullNested(pt_object), attribute='places'),
@@ -61,7 +61,7 @@ class Ptobjects(ResourceUri):
             argument_class=ArgumentDoc)
         self.parsers["get"].add_argument("q", type=six.text_type, required=True,
                                          description="The data to search")
-        self.parsers["get"].add_argument("type[]", type=option_value(pt_object_type_values),
+        self.parsers["get"].add_argument("type[]", type=OptionValue(pt_object_type_values),
                                          action="append",default=pt_object_type_values,
                                          description="The type of data to\
                                          search")

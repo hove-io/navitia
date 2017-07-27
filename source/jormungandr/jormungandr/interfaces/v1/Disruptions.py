@@ -38,11 +38,12 @@ from jormungandr.interfaces.v1.fields import PbField, error, network, line,\
 from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_type, BooleanType
+from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_type
 from jormungandr.interfaces.v1.errors import ManageError
 from datetime import datetime
 from jormungandr.interfaces.v1.fields import disruption_marshaller
 import six
+from navitiacommon.parser_args_type import BooleanType
 
 disruption = {
     "network": PbField(network, attribute='network'),

@@ -45,13 +45,11 @@ from jormungandr.interfaces.v1.fields import stop_point, stop_area, route, line,
 from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri, protect
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import depth_argument, DateTimeFormat, default_count_arg_type, \
-    BooleanType
+from jormungandr.interfaces.parsers import depth_argument, DateTimeFormat, default_count_arg_type
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.Coord import Coord
 from jormungandr.interfaces.v1.fields import disruption_marshaller, feed_publisher, NonNullList, NonNullNested
 from jormungandr.timezone import set_request_timezone
-from jormungandr.interfaces.parsers import option_value
 from jormungandr.interfaces.common import odt_levels
 from jormungandr.utils import date_to_timestamp
 from jormungandr.resources_utils import ResourceUtc
@@ -60,6 +58,7 @@ from flask import g
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.serializer import api
 import six
+from navitiacommon.parser_args_type import BooleanType, OptionValue
 
 
 class Uri(ResourceUri, ResourceUtc):
@@ -93,7 +92,7 @@ class Uri(ResourceUri, ResourceUtc):
                             description="filter vehicle journeys on headsign")
         parser.add_argument("show_codes", type=BooleanType(), default=False,
                             description="show more identification codes")
-        parser.add_argument("odt_level", type=option_value(odt_levels), default="all",
+        parser.add_argument("odt_level", type=OptionValue(odt_levels), default="all",
                             schema_type=str, schema_metadata={"enum": odt_levels},
                             description="odt level")
         parser.add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.utcnow(), hidden=True,

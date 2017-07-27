@@ -103,7 +103,7 @@ class SwaggerParam(object):
             # we check if the flask's type checker can give a description
             if isinstance(argument.type, CustomSchemaType):
                 ts = argument.type.schema()
-                param_type = ts.type # override
+                param_type = ts.type # overwrite if already set
                 if ts.metadata:
                     metadata.update(ts.metadata)
 
@@ -120,11 +120,19 @@ class SwaggerParam(object):
                 metadata.update(param_metadata)
 
             swagger_type, swagger_format = convert_to_swagger_type(param_type)
-            if swagger_format and not 'format' in metadata:
+            if swagger_format and 'format' not in metadata:
                 metadata['format'] = swagger_format
 
-            if argument.default and not 'default' in metadata:
+            if argument.default and 'default' not in metadata:
                 metadata['default'] = argument.default
+
+            desc_meta = metadata.get('description', None)
+            if argument.description or argument.help:
+                metadata['description'] = argument.description or argument.help
+                if desc_meta:
+                    metadata['description'] += '\n\n'
+            if desc_meta:
+                metadata['description'] += desc_meta
 
             items = None
             if argument.action == 'append':
@@ -132,8 +140,6 @@ class SwaggerParam(object):
                 swagger_type = 'array'
 
             args.append(SwaggerParam(name=argument.name,
-                                     description=argument.description or argument.help,
-                                     # TODO refactor to remove argument.description and always use help
                                      type=swagger_type,
                                      location=location,
                                      required=argument.required,

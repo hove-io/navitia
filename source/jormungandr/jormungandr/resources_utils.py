@@ -40,10 +40,10 @@ import logging
 import pytz
 from jormungandr.exceptions import RegionNotFound, UnableToParse
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import BooleanType
 from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerPathSerializer, \
     SwaggerOptionPathSerializer
 from jormungandr.interfaces.v1.swagger_schema import make_schema
+from navitiacommon.parser_args_type import BooleanType
 
 
 class ResourceUtc(object):

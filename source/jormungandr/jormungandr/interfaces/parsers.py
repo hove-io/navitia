@@ -28,7 +28,6 @@
 # www.navitia.io
 from __future__ import absolute_import
 from dateutil import parser
-import flask
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import DateTimeType
 from navitiacommon import parser_args_type
 
@@ -38,10 +37,6 @@ from navitiacommon.parser_args_type import TypeSchema, CustomSchemaType
 depth_argument = parser_args_type.DepthArgument()
 
 float_gt_0 = parser_args_type.PositiveFloat()
-
-true_false = parser_args_type.TrueFalse()
-
-option_value = parser_args_type.OptionValue
 
 default_count_arg_type = parser_args_type.IntervalValue(min_value=0, max_value=1000)
 
@@ -85,11 +80,3 @@ class UnsignedInteger(CustomSchemaType):
 
     def schema(self):
         return TypeSchema(type=int, metadata={'minimum': 0})
-
-
-class BooleanType(CustomSchemaType):
-    def __call__(self, value):
-        return flask.ext.restful.inputs.boolean(value)
-
-    def schema(self):
-        return TypeSchema(type=bool)

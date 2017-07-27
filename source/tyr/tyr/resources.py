@@ -48,7 +48,7 @@ from formats import poi_type_conf_format, parse_error
 from navitiacommon.default_traveler_profile_params import default_traveler_profile_params, acceptable_traveler_types
 from navitiacommon import models, utils
 from navitiacommon.models import db
-from navitiacommon.parser_args_type import CoordFormat, PositiveFloat, TrueFalse, OptionValue, geojson_argument
+from navitiacommon.parser_args_type import CoordFormat, PositiveFloat, BooleanType, OptionValue, geojson_argument
 from functools import wraps
 from validations import datetime_format
 from tasks import create_autocomplete_depot, remove_autocomplete_depot
@@ -734,7 +734,7 @@ class TravelerProfile(flask_restful.Resource):
                             location=('json', 'values'))
         parser.add_argument('car_speed', type=PositiveFloat(), required=False,
                             location=('json', 'values'))
-        parser.add_argument('wheelchair', type=TrueFalse(), required=False,
+        parser.add_argument('wheelchair', type=BooleanType(), required=False,
                             location=('json', 'values'))
         parser.add_argument('max_walking_duration_to_pt', type=PositiveFloat(), required=False,
                             help='in second', location=('json', 'values'))

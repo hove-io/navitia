@@ -36,10 +36,11 @@ from jormungandr.interfaces.v1.serializer.jsonschema import IntField
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import StrField, BoolField, Field, DateTimeType
 from navitiacommon import response_pb2
 
-point_2D_schema = {'type': 'array',
-                   'items':{'type': 'array',
-                            'items':{'type':'number',
-                                     'format': 'float'}}}
+point_2D_schema = {
+    'type': 'array',
+    'items':{'type': 'array',
+             'items':{'type':'number',
+                      'format': 'float'}}}
 
 class MultiLineStringField(jsonschema.Field):
     class MultiLineStringSchema(serpy.Serializer):
@@ -139,7 +140,7 @@ class DisruptionLinkSerializer(jsonschema.Field):
     Add link to disruptions on a pt object
     """
     def __init__(self, **kwargs):
-        super(DisruptionLinkSerializer, self).__init__(schema_type=lambda: LinkSchema(many=True), **kwargs)
+        super(DisruptionLinkSerializer, self).__init__(schema_type=LinkSchema(many=True), **kwargs)
 
     def to_value(self, value):
         return [create_internal_link(_type="disruption", rel="disruptions", id=uri)

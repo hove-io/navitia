@@ -32,7 +32,6 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask.ext.restful import fields, marshal_with, reqparse
 from jormungandr import i_manager
-from jormungandr.interfaces.parsers import BooleanType
 from jormungandr.interfaces.v1.StatedResource import StatedResource
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.make_links import add_coverage_link, add_collection_links, clean_links
@@ -43,6 +42,7 @@ from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.serializer.api import CoveragesSerializer
 from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerPathSerializer
 from jormungandr.interfaces.v1.swagger_schema import make_schema
+from navitiacommon.parser_args_type import BooleanType
 
 collections = list(collections_to_resource_type.keys())
 

@@ -89,7 +89,7 @@ def serpy_extended_supported_serialization_test():
         jsonschemaIntField = IntField()
         jsonschemaField = Field(schema_type=int)
         jsonschemaMethodField = MethodField(schema_type=str)
-        lambda_schema = LambdaField(method=lambda **kw: None, schema_type=lambda: Custom())
+        lambda_schema = LambdaField(method=lambda **kw: None, schema_type=Custom())
         list_lambda_schema = LambdaField(method=lambda **kw: None,
                                          schema_type=Custom(many=True))
 

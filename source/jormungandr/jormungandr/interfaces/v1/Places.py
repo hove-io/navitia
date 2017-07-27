@@ -42,8 +42,7 @@ from jormungandr.interfaces.v1.fields import disruption_marshaller
 from jormungandr.interfaces.v1.fields import place, NonNullList, NonNullNested, PbField, pagination,\
                                              error, feed_publisher
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
-from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type, DateTimeFormat, \
-    BooleanType
+from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type, DateTimeFormat
 from copy import deepcopy
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.exceptions import TechnicalError, InvalidArguments
@@ -51,9 +50,9 @@ from flask_restful import marshal_with
 import datetime
 from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
 import ujson as json
-from jormungandr.interfaces.parsers import option_value
 from jormungandr.scenarios.utils import pb_type
-from navitiacommon.parser_args_type import TypeSchema, CoordFormat, CustomSchemaType
+from navitiacommon.parser_args_type import TypeSchema, CoordFormat, CustomSchemaType, BooleanType, \
+    OptionValue
 import six
 
 
@@ -83,7 +82,7 @@ class Places(ResourceUri):
                              *args, **kwargs)
         self.parsers["get"].add_argument("q", type=six.text_type, required=True,
                                          description="The data to search")
-        self.parsers["get"].add_argument("type[]", type=option_value(list(pb_type.keys())),
+        self.parsers["get"].add_argument("type[]", type=OptionValue(list(pb_type.keys())),
                                          action="append",
                                          default=["stop_area", "address",
                                                   "poi",

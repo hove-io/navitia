@@ -233,11 +233,9 @@ def get_valid_int(str):
     except ValueError:
         assert False
 
+
 def get_valid_unsigned_int(str):
     assert str != ""
-    if isinstance(str, UnsignedInteger):
-        return str
-
     try:
         return UnsignedInteger()(str)
     except ValueError:

@@ -41,8 +41,7 @@ from jormungandr.interfaces.v1.fields import stop_point, route, pagination, PbFi
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri, complete_links
 import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import option_value, DateTimeFormat, default_count_arg_type, \
-    BooleanType
+from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_type
 from jormungandr.interfaces.v1.errors import ManageError
 from flask_restful.inputs import natural
 from jormungandr.interfaces.v1.fields import disruption_marshaller, NonNullList, NonNullNested
@@ -53,6 +52,7 @@ from copy import deepcopy
 from navitiacommon import response_pb2
 from jormungandr.exceptions import InvalidArguments
 import six
+from navitiacommon.parser_args_type import BooleanType, OptionValue
 
 
 class Schedules(ResourceUri, ResourceUtc):
@@ -106,7 +106,7 @@ class Schedules(ResourceUri, ResourceUtc):
                                             'adapted_schedule is for planned ahead disruptions (strikes, '
                                             'maintenances, ...). '
                                             'realtime is to have the freshest possible data',
-                                type=option_value(['base_schedule', 'adapted_schedule', 'realtime']))
+                                type=OptionValue(['base_schedule', 'adapted_schedule', 'realtime']))
         parser_get.add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.datetime.utcnow(),
                                 description="The datetime we want to publish the disruptions from."
                                             " Default is the current date and it is mainly used for debug.")
