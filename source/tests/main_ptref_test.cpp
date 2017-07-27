@@ -79,11 +79,11 @@ struct data_set {
 
         // we add a stop area with a strange name (with space and special char)
         b.sa("stop_with name bob \" , é", 20, 20);
-        b.vj("line:B", "", "", true, "vj_b", "", "physical_mode:Car")
+        b.vj("line:B").physical_mode("physical_mode:Car")
                 ("stop_point:stop_with name bob \" , é", "8:00"_t)("stop_area:stop1", "9:00"_t);
 
         // add a line with a unicode name
-        b.vj("line:Ça roule", "11111111", "", true, "vj_b")
+        b.vj("line:Ça roule").uri("vj_b")
                 ("stop_area:stop2", 10 * 3600 + 15 * 60, 10 * 3600 + 15 * 60)
                 ("stop_area:stop1", 11 * 3600 + 10 * 60, 11 * 3600 + 10 * 60);
 

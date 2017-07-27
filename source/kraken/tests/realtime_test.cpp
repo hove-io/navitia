@@ -384,13 +384,12 @@ BOOST_AUTO_TEST_CASE(two_different_delays_on_same_vj) {
         res = compute(nt::RTLevel::RealTime, "stop1", "stop2");
         BOOST_REQUIRE_EQUAL(res.size(), 1);
         BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0910"_dt);
-
     }
 
     // we add a second time the realtime message
     navitia::handle_realtime(feed_id_1, timestamp, trip_update_2, *b.data);
 
-    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 3);
+    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
@@ -641,7 +640,7 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
 
     navitia::delete_disruption(std::string(disrup.uri), *b.data->pt_data, *b.data->meta);
 
-    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 3);
+    BOOST_REQUIRE_EQUAL(pt_data->vehicle_journeys.size(), 2);
     BOOST_REQUIRE_EQUAL(pt_data->meta_vjs.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
@@ -1618,7 +1617,7 @@ BOOST_AUTO_TEST_CASE(ordered_delay_message_test) {
     navitia::handle_realtime("feed_43", "20150101T1338"_dt, trip_update_2, *b.data);
     navitia::handle_realtime("feed_44", "20150101T1339"_dt, trip_update_3, *b.data);
 
-    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 4);
+    BOOST_CHECK_EQUAL(pt_data->vehicle_journeys.size(), 2);
     BOOST_CHECK_EQUAL(pt_data->routes.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
@@ -1900,7 +1899,7 @@ BOOST_AUTO_TEST_CASE(skipped_stop_then_delay) {
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
-    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 3);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
 
     // Check the original vj
     auto* vj = b.get<nt::VehicleJourney>("vj:1");
@@ -1908,13 +1907,8 @@ BOOST_AUTO_TEST_CASE(skipped_stop_then_delay) {
     BOOST_CHECK_END_VP(vj->base_validity_pattern(), "1111111");
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.size(), 4);
 
-    // first impacted vj (useless now)
-    vj = b.get<nt::VehicleJourney>("vj:1:modified:0:feed");
-    BOOST_CHECK_END_VP(vj->rt_validity_pattern(), "0000000");
-    BOOST_CHECK_END_VP(vj->base_validity_pattern(), "0000000");
-
     // Check the realtime vj
-    vj = b.get<nt::VehicleJourney>("vj:1:modified:1:feed");
+    vj = b.get<nt::VehicleJourney>("vj:1:modified:0:feed");
     BOOST_CHECK_END_VP(vj->rt_validity_pattern(), "0000001");
     BOOST_CHECK_END_VP(vj->base_validity_pattern(), "0000000");
     // The realtime vj should have all 3 stop_times but lose the ability to pickup/dropoff on B

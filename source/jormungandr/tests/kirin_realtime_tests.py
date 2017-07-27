@@ -247,7 +247,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
         assert get_arrivals(new_response) == ['20120614T080436', '20120614T080520']
-        assert get_used_vj(new_response), [[] == ['vjA:modified:0:vjA_delayed']]
+        assert get_used_vj(new_response) == [[], ['vjA:modified:0:vjA_delayed']]
 
         pt_journey = new_response['journeys'][1]
 
@@ -297,11 +297,9 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
                             arrival_delay=3 * 60 + 58, departure_delay=3 * 60 + 58)],
            disruption_id='vjA_delayed')
 
-        # A new vj is created
+        # A new vj is created, but a useless vj has been cleaned, so the number of vj does not change
         pt_response = self.query_region('vehicle_journeys')
-        # No vj cleaning for the moment, vj nb SHOULD be 5, the first vj created for the first
-        # disruption is useless
-        assert len(pt_response['vehicle_journeys']) == 7
+        assert len(pt_response['vehicle_journeys']) == 6
 
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
         assert len(pt_response['disruptions']) == 1
@@ -345,7 +343,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         # A new vj is created
         vjs = self.query_region('vehicle_journeys?_current_datetime=20120614T1337')
-        assert len(vjs['vehicle_journeys']) == 9
+        assert len(vjs['vehicle_journeys']) == 7
 
         vjA = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
         # we now have 2 disruption on vjA
