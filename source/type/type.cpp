@@ -44,6 +44,7 @@ www.navitia.io
 #include "third_party/eos_portable_archive/portable_oarchive.hpp"
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
+#include <boost/range/algorithm/find.hpp>
 
 namespace bt = boost::posix_time;
 
@@ -405,8 +406,8 @@ static bool is_useless(const nt::VehicleJourney& vj) {
 }
 
 template <typename C>
-static C::iterator erase_vj_from_list(const nt::VehicleJourney* vj, C& vjs) {
-    auto it = std::find(vjs.begin(), vjs.end(), vj);
+static typename C::iterator erase_vj_from_list(const nt::VehicleJourney* vj, C& vjs) {
+    auto it = boost::range::find(vjs, vj);
     if (it == vjs.end()) {
         LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"),
                        "impossible to find the vj " << vj->uri << " in the list, something is strange");
