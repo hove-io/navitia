@@ -413,7 +413,7 @@ class Journeys(JourneyCommon):
         parser_get = self.parsers["get"]
 
         parser_get.add_argument("count", type=default_count_arg_type,
-                                description='Fixed number of different journeys')
+                                help='Fixed number of different journeys')
         parser_get.add_argument("_min_journeys_calls", type=int, hidden=True)
         parser_get.add_argument("_final_line_filter", type=BooleanType(), hidden=True)
         parser_get.add_argument("is_journey_schedules", type=BooleanType(), default=False,
@@ -421,13 +421,13 @@ class Journeys(JourneyCommon):
                                      "the same journey schedules and "
                                      "it'll override some specific parameters")
         parser_get.add_argument("min_nb_journeys", type=int,
-                                description='Minimum number of different suggested journeys')
+                                help='Minimum number of different suggested journeys')
         parser_get.add_argument("max_nb_journeys", type=int,
-                                description='Maximum number of different suggested journeys')
+                                help='Maximum number of different suggested journeys')
         parser_get.add_argument("_max_extra_second_pass", type=int, dest="max_extra_second_pass", hidden=True)
 
         parser_get.add_argument("debug", type=BooleanType(), default=False, hidden=True,
-                                description='Activate debug mode.\n'
+                                help='Activate debug mode.\n'
                                      'No journeys are filtered in this mode.')
         parser_get.add_argument("show_codes", type=BooleanType(), default=False, hidden=True, deprecated=True,
                                 help="show more identification codes")
