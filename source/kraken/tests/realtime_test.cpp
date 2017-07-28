@@ -300,9 +300,7 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
     BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0910"_dt);
 }
 
-BOOST_AUTO_TEST_CASE_EXPECTED_FAILURES(train_delayed_expected_failure, 1)
-
-BOOST_AUTO_TEST_CASE(train_delayed_expected_failure) {
+BOOST_AUTO_TEST_CASE(train_delayed_vj_cleaned_up) {
 
     ed::builder b("20150928");
     b.vj("A", "000001", "", true, "vj:1")("stop1", "08:01"_t)("stop2", "09:01"_t);
@@ -317,10 +315,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_expected_failure) {
     navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
     navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
 
-    /*****************Expected Failure********************/
-    BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2); // Current size is 3, hopefully it should be 2
-    /*****************************************************/
-
+    BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(two_different_delays_on_same_vj) {
