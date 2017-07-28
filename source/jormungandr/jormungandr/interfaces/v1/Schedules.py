@@ -263,7 +263,7 @@ class StopSchedules(Schedules):
     def __init__(self):
         super(StopSchedules, self).__init__("departure_boards")
 
-    @marshal_with(stop_schedules)
+    @get_serializer(serpy=api.StopSchedulesSerializer, marshall=stop_schedules)
     @ManageError()
     def get(self, uri=None, region=None, lon=None, lat=None):
         return super(StopSchedules, self).get(uri=uri, region=region, lon=lon,

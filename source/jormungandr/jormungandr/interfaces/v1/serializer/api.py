@@ -38,7 +38,7 @@ from jormungandr.interfaces.v1.serializer.fields import ErrorSerializer, FeedPub
         PaginationSerializer, LinkSchema, NoteSerializer, ExceptionSerializer
 from jormungandr.interfaces.v1.make_links import create_external_link
 from jormungandr.interfaces.v1.serializer.journey import TicketSerializer, ContextSerializer, JourneySerializer
-from jormungandr.interfaces.v1.serializer.schedule import PassageSerializer
+from jormungandr.interfaces.v1.serializer import schedule
 import serpy
 
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, MethodField
@@ -229,8 +229,12 @@ class JourneysSerializer(PbNestedSerializer):
 
 
 class DeparturesSerializer(PTReferentialSerializer):
-    departures = PassageSerializer(many=True, attr='next_departures', display_none=True)
+    departures = schedule.PassageSerializer(many=True, attr='next_departures', display_none=True)
 
 
 class ArrivalsSerializer(PTReferentialSerializer):
-    arrivals = PassageSerializer(many=True, attr='next_arrivals', display_none=True)
+    arrivals = schedule.PassageSerializer(many=True, attr='next_arrivals', display_none=True)
+
+
+class StopSchedulesSerializer(PTReferentialSerializer):
+    stop_schedules = schedule.StopScheduleSerializer(many=True, display_none=True)

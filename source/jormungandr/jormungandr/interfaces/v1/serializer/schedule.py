@@ -27,10 +27,28 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from jormungandr.interfaces.v1.serializer.base import PbNestedSerializer
+from datetime import datetime
+from jormungandr.interfaces.v1.serializer.base import PbNestedSerializer, EnumField
 from jormungandr.interfaces.v1.serializer import pt
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.serializer.fields import LinkSchema
+from jormungandr.interfaces.v1.make_links import create_internal_link
+from jormungandr.utils import timestamp_to_str
+
+def _get_links(obj):
+    display_info = obj.pt_display_informations
+    uris = display_info.uris
+    l = [("line", uris.line),
+         ("company", uris.company),
+         ("vehicle_journey", uris.vehicle_journey),
+         ("route", uris.route),
+         ("commercial_mode", uris.commercial_mode),
+         ("physical_mode", uris.physical_mode),
+         ("network", uris.network),
+         ("note", uris.note)]
+    return [{"type": v[0], "id": v[1]} for v in l if v[1] != ""] + \
+        [{"type": "notes", "rel": "notes", "id": value.uri, "value": value.note, "internal": True}
+         for value in display_info.notes]
 
 
 class PassageSerializer(PbNestedSerializer):
@@ -41,15 +59,60 @@ class PassageSerializer(PbNestedSerializer):
     links = jsonschema.MethodField(schema_type=LinkSchema(), many=True)
 
     def get_links(self, obj):
-        display_info = obj.pt_display_informations
-        uris = display_info.uris
-        l = [("line", uris.line),
-             ("company", uris.company),
-             ("vehicle_journey", uris.vehicle_journey),
-             ("route", uris.route),
-             ("commercial_mode", uris.commercial_mode),
-             ("physical_mode", uris.physical_mode),
-             ("network", uris.network),
-             ("note", uris.note)]
-        return [{"type": v[0], "id": v[1]} for v in l if v[1] != ""] + \
-            [create_internal_link(id=value, rel="notes", _type="notes") for value in display_info.notes]
+        return _get_links(obj)
+
+
+class DateTimeSerializer(PbNestedSerializer):
+    date_time = jsonschema.MethodField(schema_type=LinkSchema())
+    additional_informations = pt.AdditionalInformation(attr='additional_informations', display_none=True)
+    links = jsonschema.MethodField(schema_type=LinkSchema(), many=True)
+    data_freshness = EnumField(attr="realtime_level")
+
+    def get_date_time(self, obj):
+        if obj.HasField('date'):
+            return timestamp_to_str(obj.date + obj.time)
+        return datetime.utcfromtimestamp(obj.time).strftime('%H%M%S')
+
+    def get_links(self, obj):
+        properties = obj.properties
+        r = []
+        #Note: all those links should be created with crete_{internal|external}_links,
+        # but for retrocompatibility purpose we cannot do that :( Change it for the v2!
+        for note_ in properties.notes:
+            r.append({"id": note_.uri,
+                      "type": "notes",  # type should be 'note' but retrocompatibility...
+                      "rel": "notes",
+                      "value": note_.note,
+                      "internal": True})
+        for exception in properties.exceptions:
+            r.append({"type": "exceptions",  # type should be 'exception' but retrocompatibility...
+                      "rel": "exceptions",
+                      "id": exception.uri,
+                      "date": exception.date,
+                      "except_type": exception.type,
+                      "internal": True})
+        if properties.destination and properties.destination.uri:
+            r.append({"type": "notes",
+                      "rel": "notes",
+                      "id": properties.destination.uri,
+                      "value": properties.destination.destination,
+                      "internal": True})
+        if properties.vehicle_journey_id:
+            r.append({"type": "vehicle_journey",
+                      "rel": "vehicle_journeys",
+                      # the value has nothing to do here (it's the 'id' field), refactor for the v2
+                      "value": properties.vehicle_journey_id,
+                      "id": properties.vehicle_journey_id})
+        return r
+
+
+class StopScheduleSerializer(PbNestedSerializer):
+    stop_point = pt.StopPointSerializer()
+    route = pt.RouteSerializer()
+    additional_informations = EnumField(attr="response_status")
+    display_informations = pt.DisplayInformationSerializer(attr='pt_display_informations')
+    date_times = DateTimeSerializer(many=True, display_none=True)
+    links = jsonschema.MethodField(schema_type=LinkSchema(), many=True)
+
+    def get_links(self, obj):
+        return _get_links(obj)
