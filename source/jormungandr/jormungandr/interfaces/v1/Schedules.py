@@ -62,58 +62,54 @@ class Schedules(ResourceUri, ResourceUtc):
         ResourceUtc.__init__(self)
         self.endpoint = endpoint
         self.parsers = {}
-        self.parsers["get"] = reqparse.RequestParser(
-            argument_class=ArgumentDoc)
+        self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
         parser_get.add_argument("filter", type=six.text_type)
-        parser_get.add_argument("from_datetime", type=DateTimeFormat(),
-                                description="The datetime from which you want\
-                                the schedules", default=None)
-        parser_get.add_argument("until_datetime", type=DateTimeFormat(),
-                                description="The datetime until which you want\
-                                the schedules", default=None)
+        parser_get.add_argument("from_datetime", type=DateTimeFormat(), default=None,
+                                help="The datetime from which you want the schedules")
+        parser_get.add_argument("until_datetime", type=DateTimeFormat(), default=None,
+                                help="The datetime until which you want the schedules")
         parser_get.add_argument("duration", type=int, default=3600 * 24,
-                                description="Maximum duration between datetime\
-                                and the retrieved stop time")
+                                help="Maximum duration between datetime and the retrieved stop time")
         parser_get.add_argument("depth", type=int, default=2)
         parser_get.add_argument("count", type=default_count_arg_type, default=10,
-                                description="Number of schedules per page")
+                                help="Number of schedules per page")
         parser_get.add_argument("start_page", type=int, default=0,
-                                description="The current page")
+                                help="The current page")
         parser_get.add_argument("max_date_times", type=natural,
-                                description="DEPRECATED, use items_per_schedule")
+                                help="DEPRECATED, replaced by `items_per_schedule`")
         parser_get.add_argument("forbidden_id[]", type=six.text_type,
-                                description="DEPRECATED, replaced by forbidden_uris[]",
+                                help="DEPRECATED, replaced by `forbidden_uris[]`",
                                 dest="__temporary_forbidden_id[]",
                                 default=[],
                                 action='append')
         parser_get.add_argument("forbidden_uris[]", type=six.text_type,
-                                description="forbidden uris",
+                                help="forbidden uris",
                                 dest="forbidden_uris[]",
                                 default=[],
                                 action='append')
 
         parser_get.add_argument("calendar", type=six.text_type,
-                                description="Id of the calendar")
+                                help="Id of the calendar")
         parser_get.add_argument("distance", type=int, default=200,
-                                description="Distance range of the query. Used only if a coord is in the query")
+                                help="Distance range of the query. Used only if a coord is in the query")
         parser_get.add_argument("show_codes", type=BooleanType(), default=False,
-                            description="show more identification codes")
+                                help="show more identification codes")
         #Note: no default param for data freshness, the default depends on the API
         parser_get.add_argument("data_freshness",
-                                description='freshness of the data. '
-                                            'base_schedule is the long term planned schedule. '
-                                            'adapted_schedule is for planned ahead disruptions (strikes, '
-                                            'maintenances, ...). '
-                                            'realtime is to have the freshest possible data',
+                                help='freshness of the data. '
+                                     'base_schedule is the long term planned schedule. '
+                                     'adapted_schedule is for planned ahead disruptions (strikes, '
+                                     'maintenances, ...). '
+                                     'realtime is to have the freshest possible data',
                                 type=OptionValue(['base_schedule', 'adapted_schedule', 'realtime']))
         parser_get.add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.datetime.utcnow(),
-                                description="The datetime we want to publish the disruptions from."
-                                            " Default is the current date and it is mainly used for debug.")
+                                help="The datetime we want to publish the disruptions from."
+                                     " Default is the current date and it is mainly used for debug.")
         parser_get.add_argument("items_per_schedule", type=natural, default=10000,
-                                description="maximum number of date_times per schedule")
+                                help="maximum number of date_times per schedule")
         parser_get.add_argument("disable_geojson", type=BooleanType(), default=False,
-                            description="remove geojson from the response")
+                                help="remove geojson from the response")
 
         self.get_decorators.append(complete_links(self))
 

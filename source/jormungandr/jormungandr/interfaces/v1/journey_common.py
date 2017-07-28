@@ -193,15 +193,15 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
                                 type=OptionValue(modes), action="append")
 
         parser_get.add_argument("max_duration_to_pt", type=int,
-                                description="Maximal duration of non public transport in second")
+                                help="Maximal duration of non public transport in second")
         parser_get.add_argument("max_walking_duration_to_pt", type=int,
-                                description="Maximal duration of walking on public transport in second")
+                                help="Maximal duration of walking on public transport in second")
         parser_get.add_argument("max_bike_duration_to_pt", type=int,
-                                description="Maximal duration of bike on public transport in second")
+                                help="Maximal duration of bike on public transport in second")
         parser_get.add_argument("max_bss_duration_to_pt", type=int,
-                                description="Maximal duration of bss on public transport in second")
+                                help="Maximal duration of bss on public transport in second")
         parser_get.add_argument("max_car_duration_to_pt", type=int,
-                                description="Maximal duration of car on public transport in second")
+                                help="Maximal duration of car on public transport in second")
 
         parser_get.add_argument("walking_speed", type=float_gt_0,
                                 description='Walking speed for the fallback sections.\n'

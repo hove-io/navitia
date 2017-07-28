@@ -68,9 +68,8 @@ class Coverage(StatedResource):
         super(Coverage, self).__init__(quota=quota,
                                        output_type_serializer=CoveragesSerializer,
                                        *args, **kwargs)
-        self.parsers["get"].add_argument("disable_geojson",
-                                         help='hide the coverage geojson to reduce response size',
-                                         type=BooleanType(), default=False)
+        self.parsers["get"].add_argument("disable_geojson", type=BooleanType(), default=False,
+                                         help='hide the coverage geojson to reduce response size')
 
     @clean_links()
     @add_coverage_link()

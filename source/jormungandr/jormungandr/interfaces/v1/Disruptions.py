@@ -69,26 +69,26 @@ class TrafficReport(ResourceUri):
         parser_get = self.parsers["get"]
         parser_get.add_argument("depth", type=int, default=1)
         parser_get.add_argument("count", type=default_count_arg_type, default=10,
-                                description="Number of disruptions per page")
+                                help="Number of disruptions per page")
         parser_get.add_argument("start_page", type=int, default=0,
-                                description="The current page")
+                                help="The current page")
         parser_get.add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.utcnow(),
-                                description="The datetime we want to publish the disruptions from."
-                                            " Default is the current date and it is mainly used for debug.")
+                                help="The datetime we want to publish the disruptions from."
+                                     " Default is the current date and it is mainly used for debug.")
         parser_get.add_argument("forbidden_id[]", type=six.text_type,
-                                description="DEPRECATED, replaced by forbidden_uris[]",
+                                help="DEPRECATED, replaced by `forbidden_uris[]`",
                                 dest="__temporary_forbidden_id[]",
                                 default=[],
                                 action="append")
         parser_get.add_argument("forbidden_uris[]", type=six.text_type,
-                                description="forbidden uris",
+                                help="forbidden uris",
                                 dest="forbidden_uris[]",
                                 default=[],
                                 action="append")
         parser_get.add_argument("distance", type=int, default=200,
-                                description="Distance range of the query. Used only if a coord is in the query")
+                                help="Distance range of the query. Used only if a coord is in the query")
         parser_get.add_argument("disable_geojson", type=BooleanType(), default=False,
-                            description="remove geojson from the response")
+                                help="remove geojson from the response")
         self.collection = 'traffic_reports'
 
     @marshal_with(traffic)
