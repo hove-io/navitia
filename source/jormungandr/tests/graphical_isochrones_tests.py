@@ -276,20 +276,20 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         assert error_code == 404
         assert normal_response['error']['message'] == 'The region isochrones doesn\'t exists'
 
-    def test_graphical_isochrones_invald_duration(self):
+    def test_graphical_isochrones_invalid_duration(self):
         q = "v1/coverage/main_routing_test/isochrones?datetime={}&from={}&max_duration={}"
         q = q.format('20120614T080000', s_coord, '-3600')
         normal_response, error_code = self.query_no_assert(q)
 
         assert error_code == 400
-        assert normal_response['message'] == 'Unable to evaluate, invalid positive int'
+        assert 'Unable to evaluate, invalid positive int' in normal_response['message']
 
         p = "v1/coverage/main_routing_test/isochrones?datetime={}&from={}&max_duration={}"
         p = p.format('20120614T080000', s_coord, 'toto')
         normal_response, error_code = self.query_no_assert(p)
 
         assert error_code == 400
-        assert normal_response['message'] == 'Unable to evaluate, invalid literal for int() with base 10: \'toto\''
+        assert 'Unable to evaluate, invalid literal for int() with base 10: \'toto\'' in normal_response['message']
 
     def test_graphical_isochrones_null_speed(self):
         q = "v1/coverage/main_routing_test/isochrones?datetime={}&from={}&max_duration={}&walking_speed=0"
@@ -297,7 +297,7 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         normal_response, error_code = self.query_no_assert(q)
 
         assert error_code == 400
-        assert normal_response['message'] == 'The walking_speed argument has to be > 0, you gave : 0'
+        assert 'The walking_speed argument has to be > 0, you gave : 0' in normal_response['message']
 
     def test_graphical_isochrones_no_duration(self):
         q = "v1/coverage/main_routing_test/isochrones?datetime={}&from={}"
@@ -322,14 +322,14 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         normal_response, error_code = self.query_no_assert(q)
 
         assert error_code == 400
-        assert normal_response['message'] == 'Unable to parse datetime, year is out of range'
+        assert 'Unable to parse datetime, year is out of range' in normal_response['message']
 
         p = "v1/coverage/main_routing_test/isochrones?datetime={}&from={}&max_duration={}"
         p = p.format('toto', s_coord, 3600)
         normal_response, error_code = self.query_no_assert(p)
 
         assert error_code == 400
-        assert normal_response['message'].lower() == 'unable to parse datetime, unknown string format'
+        assert 'unable to parse datetime, unknown string format' in normal_response['message'].lower()
 
     def test_graphical_isochrones_no_isochrones(self):
         q = "v1/coverage/main_routing_test/isochrones?datetime={}&from={}&max_duration={}"
