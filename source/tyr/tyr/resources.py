@@ -929,6 +929,8 @@ class BillingPlan(flask_restful.Resource):
         try:
             db.session.delete(billing_plan)
             db.session.commit()
+        except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
+            return ({'error': 'billing_plan used'}, 409)  # Conflict
         except Exception:
             logging.exception("fail")
             raise
