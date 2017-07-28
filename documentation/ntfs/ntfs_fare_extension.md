@@ -107,7 +107,13 @@ Par exemple : indiquer _"nb_changes<2"_ pour préciser que le ticket n'est utili
 Ce champ précise la condition globale d'utilisation du ticket :
 * vide ou "nothing" : ce ticket n'a aucune condition spécifique
 * "exclusive": correspond à un ticket à tarification spéciale sans correspondance (Noctilien, navettes aéroport…)
-* "with_changes": correspond à un billet de type Origine-Destination permettant tous les changements
+* "with_changes": correspond à un billet de type Origine-Destination permettant tous les changements.
+Par exemple: 
+```
+*;network=network:SNCF;;;with_changes;
+network=network:SNCF;network=network:SNCF;;;with_changes;
+```
+permet d'autoriser les correspondances en gardant le même ticket sur le réseau SNCF (donc d'avoir des tickets OD qui fonctionnent aussi avec correspondance).
 * "symetric": spécifie que ce tarif est également disponible en intervertissant l'état de début et de fin (par exemple : s'il est possible de changer du bus au tramway, la réciproque est vraie)
 
 **Fonctionnement grossier :**
