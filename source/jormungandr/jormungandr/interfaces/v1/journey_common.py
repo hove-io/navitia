@@ -140,6 +140,13 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
             'non_pt_bike': "A journey without public transport, only biking",
             'non_pt_bss': "A journey without public transport, only bike sharing",
         }
+        data_freshnesses = {
+            'base_schedule': 'Use theoric schedule information',
+            'realtime': 'Use all realtime information',
+            'adapted_schedule': 'Use of adapted schedule information (like strike adjusting, etc.). '
+                                'Prefer `realtime` for traveler information as it will also contain '
+                                'adapted information schedule.'
+        }
         parser_get = self.parsers["get"]
 
         parser_get.add_argument("from", type=six.text_type, dest="origin",
@@ -180,9 +187,9 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
                                 dest="destination_mode", action="append",
                                 help='Same as first_section_mode but for the last section.')
         # for retrocompatibility purpose, we duplicate (without []):
-        parser_get.add_argument("first_section_mode", hidden=True,
+        parser_get.add_argument("first_section_mode", hidden=True, deprecated=True,
                                 type=OptionValue(modes), action="append")
-        parser_get.add_argument("last_section_mode", hidden=True,
+        parser_get.add_argument("last_section_mode", hidden=True, deprecated=True,
                                 type=OptionValue(modes), action="append")
 
         parser_get.add_argument("max_duration_to_pt", type=int,
@@ -230,17 +237,12 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
                                      'and thus avoid disrupted public transport.\n'
                                      'Nota: `disruption_active=true` <=> `data_freshness=realtime`')
         # no default value for data_freshness because we need to maintain retrocomp with disruption_active
-        parser_get.add_argument("data_freshness",
-                                type=OptionValue(['base_schedule', 'adapted_schedule', 'realtime']),
+        parser_get.add_argument("data_freshness", type=DescribedOptionValue(data_freshnesses),
                                 help="Define the freshness of data to use to compute journeys.\n"
                                      "When using the following parameter `&data_freshness=base_schedule` "
                                      "you can get disrupted journeys in the response. "
                                      "You can then display the disruption message to the traveler and "
-                                     "make a realtime request to get a new undisrupted solution.\n\n"
-                                     "Possible values:\n"
-                                     " * 'base_schedule' - Use theoric schedule information\n"
-                                     " * 'realtime' - Use all realtime information\n"
-                                     " * 'adapted_schedule' - DEPRECATED")
+                                     "make a `realtime` request to get a new undisrupted solution.")
         parser_get.add_argument("max_duration", type=UnsignedInteger(),
                                 help='Maximum duration of journeys in secondes.\n'
                                      'Really useful when computing an isochrone.')
@@ -263,14 +265,14 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
                                      'and set them yourself.')
         parser_get.add_argument("_current_datetime", hidden=True,
                                 type=DateTimeFormat(), default=datetime.utcnow(),
-                                description="The datetime used to consider the state of the pt object.\n"
-                                            "Default is the current date and it is used for debug.\n"
-                                            "Note: it will mainly change the disruptions that concern "
-                                            "the object. The timezone should be specified in the format, "
-                                            "else we consider it as UTC")
+                                help="The datetime used to consider the state of the pt object.\n"
+                                     "Default is the current date and it is used for debug.\n"
+                                     "Note: it will mainly change the disruptions that concern "
+                                     "the object. The timezone should be specified in the format, "
+                                     "else we consider it as UTC")
         parser_get.add_argument("direct_path", type=OptionValue(['indifferent', 'only', 'none']),
                                 default='indifferent',
-                                description="Specify if direct path should be suggested")
+                                help="Specify if direct path should be suggested")
 
     def parse_args(self, region=None, uri=None):
         args = self.parsers['get'].parse_args()
