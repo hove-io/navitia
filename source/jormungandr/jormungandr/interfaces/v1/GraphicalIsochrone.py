@@ -38,7 +38,7 @@ from jormungandr.interfaces.v1.fields import error,\
 from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.utils import date_to_timestamp
-from jormungandr.interfaces.parsers import unsigned_integer
+from jormungandr.interfaces.parsers import UnsignedInteger
 from jormungandr.interfaces.v1.journey_common import JourneyCommon
 from jormungandr.interfaces.v1.fields import DateTime
 
@@ -67,10 +67,10 @@ graphical_isochrones = {
 class GraphicalIsochrone(JourneyCommon):
 
     def __init__(self):
-        super(GraphicalIsochrone, self).__init__()
+        super(GraphicalIsochrone, self).__init__(output_type_serializer=None) #TODO implement and change to a real one
         parser_get = self.parsers["get"]
-        parser_get.add_argument("min_duration", type=unsigned_integer, default=0)
-        parser_get.add_argument("boundary_duration[]", type=unsigned_integer, action="append")
+        parser_get.add_argument("min_duration", type=UnsignedInteger(), default=0)
+        parser_get.add_argument("boundary_duration[]", type=UnsignedInteger(), action="append")
 
     @marshal_with(graphical_isochrones)
     @ManageError()

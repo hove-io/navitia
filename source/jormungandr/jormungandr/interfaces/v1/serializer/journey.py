@@ -47,7 +47,7 @@ class CO2Serializer(PbNestedSerializer):
 
 class ContextSerializer(PbNestedSerializer):
     car_direct_path = LambdaField(lambda _, obj: CO2Serializer(obj, display_none=True).data,
-                                  schema_type=lambda: CO2Serializer())
+                                  schema_type=CO2Serializer())
 
 
 class CostSerializer(PbNestedSerializer):
@@ -58,7 +58,7 @@ class CostSerializer(PbNestedSerializer):
 class FareSerializer(PbNestedSerializer):
     found = jsonschema.BoolField()
     total = CostSerializer()
-    links = jsonschema.MethodField(schema_type=LinkSchema(), many=True, attr='ticket_id', display_none=True)
+    links = jsonschema.MethodField(schema_type=LinkSchema(many=True), attr='ticket_id', display_none=True)
 
     def get_links(self, obj):
         if not hasattr(obj, 'ticket_id'):
@@ -86,7 +86,7 @@ class TicketSerializer(PbNestedSerializer):
     comment = jsonschema.Field(schema_type=str)
     found = jsonschema.BoolField()
     cost = CostSerializer()
-    links = jsonschema.MethodField(schema_type=LinkSchema(), many=True)
+    links = jsonschema.MethodField(schema_type=LinkSchema(many=True))
 
     def get_links(self, obj):
         if not hasattr(obj, 'section_id'):
@@ -191,8 +191,8 @@ class SectionSerializer(PbNestedSerializer):
     type = SectionTypeEnum()
 
     display_informations = DisplayInformationSerializer(attr='pt_display_informations', display_none=False)
-    links = jsonschema.MethodField(display_none=True)
 
+    links = jsonschema.MethodField(display_none=True, schema_type=LinkSchema(many=True))
     def get_links(self, obj):
         response = []
         if obj.HasField(str("uris")):
@@ -202,6 +202,7 @@ class SectionSerializer(PbNestedSerializer):
             for value in obj.pt_display_informations.notes:
                 response.append({"type": 'notes', "id": value.uri, 'value': value.note})
         return response
+
     stop_date_times = StopDateTimeSerializer(many=True)
     path = PathSerializer(attr="street_network.path_items", many=True, display_none=False)
 
@@ -228,7 +229,7 @@ class JourneySerializer(PbNestedSerializer):
     fare = FareSerializer(display_none=True)
     calendars = CalendarSerializer(many=True, display_none=False)
     sections = SectionSerializer(many=True, display_none=False)
-    debug = jsonschema.MethodField(schema_type=lambda: JourneyDebugSerializer(), display_none=False)
+    debug = jsonschema.MethodField(schema_type=JourneyDebugSerializer(), display_none=False)
 
     def get_debug(self, obj):
         if not hasattr(g, 'debug') or not g.debug:

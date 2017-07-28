@@ -32,7 +32,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import logging
 from flask import request, g
 from flask_restful import fields, marshal_with, abort
-from flask_restful.inputs import boolean
 from jormungandr import i_manager, app
 from jormungandr.interfaces.v1.fields import disruption_marshaller, Links
 from jormungandr.interfaces.v1.fields import display_informations_vj, error, place,\
@@ -56,7 +55,7 @@ from navitiacommon import default_values
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, compute_possible_region
 from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
 import six
-
+from navitiacommon.parser_args_type import BooleanType
 
 f_datetime = "%Y%m%dT%H%M%S"
 class SectionLinks(fields.Raw):
@@ -408,35 +407,44 @@ class Journeys(JourneyCommon):
 
     def __init__(self):
         # journeys must have a custom authentication process
-        super(Journeys, self).__init__()
+
+        super(Journeys, self).__init__(output_type_serializer=api.JourneysSerializer)
 
         parser_get = self.parsers["get"]
 
-        parser_get.add_argument("count", type=default_count_arg_type)
-        parser_get.add_argument("_min_journeys_calls", type=int)
-        parser_get.add_argument("_final_line_filter", type=boolean)
-        parser_get.add_argument("is_journey_schedules", type=boolean, default=False,
-                                description="True when '/journeys' is called to compute the same journey schedules and "
+        parser_get.add_argument("count", type=default_count_arg_type,
+                                description='Fixed number of different journeys')
+        parser_get.add_argument("_min_journeys_calls", type=int, hidden=True)
+        parser_get.add_argument("_final_line_filter", type=BooleanType(), hidden=True)
+        parser_get.add_argument("is_journey_schedules", type=BooleanType(), default=False,
+                                description="True when '/journeys' is called to compute"
+                                            " the same journey schedules and "
                                             "it'll override some specific parameters")
-        parser_get.add_argument("min_nb_journeys", type=int)
-        parser_get.add_argument("max_nb_journeys", type=int)
-        parser_get.add_argument("_max_extra_second_pass", type=int, dest="max_extra_second_pass")
+        parser_get.add_argument("min_nb_journeys", type=int,
+                                description='Minimum number of different suggested journeys')
+        parser_get.add_argument("max_nb_journeys", type=int,
+                                description='Maximum number of different suggested journeys')
+        parser_get.add_argument("_max_extra_second_pass", type=int, dest="max_extra_second_pass", hidden=True)
 
-        parser_get.add_argument("debug", type=boolean, default=False,
-                                hidden=True)
-        parser_get.add_argument("show_codes", type=boolean, default=False,
-                            description="show more identification codes")
-        parser_get.add_argument("_override_scenario", type=six.text_type, description="debug param to specify a custom scenario")
-        parser_get.add_argument("_street_network", type=six.text_type,
-                                description="choose the streetnetwork component", hidden=True)
-        parser_get.add_argument("_walking_transfer_penalty", type=int)
-        parser_get.add_argument("_max_successive_physical_mode", type=int)
-        parser_get.add_argument("_max_additional_connections", type=int)
-        parser_get.add_argument("_night_bus_filter_base_factor", type=int)
-        parser_get.add_argument("_night_bus_filter_max_factor", type=float)
-        parser_get.add_argument("_min_car", type=int)
-        parser_get.add_argument("_min_bike", type=int)
-        parser_get.add_argument("bss_stands", type=boolean, default=False, description="Show bss stands availability")
+        parser_get.add_argument("debug", type=BooleanType(), default=False, hidden=True,
+                                description='Activate debug mode.\n'
+                                     'No journeys are filtered in this mode.')
+        parser_get.add_argument("show_codes", type=BooleanType(), default=False, hidden=True, deprecated=True,
+                                description="show more identification codes")
+        parser_get.add_argument("_override_scenario", type=six.text_type, hidden=True,
+                                description="debug param to specify a custom scenario")
+        parser_get.add_argument("_street_network", type=six.text_type, hidden=True,
+                                description="choose the streetnetwork component")
+        parser_get.add_argument("_walking_transfer_penalty", hidden=True, type=int)
+        parser_get.add_argument("_max_successive_physical_mode", hidden=True, type=int)
+        parser_get.add_argument("_max_additional_connections", hidden=True, type=int)
+        parser_get.add_argument("_night_bus_filter_base_factor", hidden=True, type=int)
+        parser_get.add_argument("_night_bus_filter_max_factor", hidden=True, type=float)
+        parser_get.add_argument("_min_car", hidden=True, type=int)
+        parser_get.add_argument("_min_bike", hidden=True, type=int)
+        parser_get.add_argument("bss_stands", type=BooleanType(), default=False,
+                                description="Show bss stands availability "
+                                            "in the bicycle_rental pois of response")
 
         self.get_decorators.append(complete_links(self))
 
@@ -562,3 +570,6 @@ class Journeys(JourneyCommon):
         er.message = "No journey found"
 
         return resp
+
+    def options(self, **kwargs):
+        return self.api_description(**kwargs)

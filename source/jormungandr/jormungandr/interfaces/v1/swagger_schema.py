@@ -31,7 +31,6 @@ import copy
 import re
 import serpy
 import inspect
-import jormungandr
 import six
 
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import CustomSchemaType
@@ -99,21 +98,21 @@ class SwaggerParam(object):
                 location = 'query'
 
             param_type = getattr(argument, 'schema_type', None)
-            param_format = {}
             metadata = {}
-            if param_type is None:
-                # we check if the flask's type checker can give a description
-                if hasattr(argument.type, 'description'):
-                    param_description = argument.type.description()
-                    param_type = param_description.type
-                    if param_description.metadata:
-                        metadata.update(param_description.metadata)
 
-                # we try to autodetect the type from the default argument
-                if param_type is None and argument.default is not None:
-                    param_type = TYPE_MAP.get(type(argument.default), {}).get('type')
-                if param_type is None:
-                    param_type = argument.type
+            # we check if the flask's type checker can give a description
+            if isinstance(argument.type, CustomSchemaType):
+                ts = argument.type.schema()
+                param_type = ts.type # overwrite if already set
+                if ts.metadata:
+                    metadata.update(ts.metadata)
+
+            if param_type is None:
+                param_type = argument.type
+
+            # we try to autodetect the type from the default argument
+            if param_type is None and argument.default is not None:
+                param_type = TYPE_MAP.get(type(argument.default), {}).get('type')
 
             param_metadata = getattr(argument, 'schema_metadata', None)
             if param_metadata:
@@ -121,6 +120,19 @@ class SwaggerParam(object):
                 metadata.update(param_metadata)
 
             swagger_type, swagger_format = convert_to_swagger_type(param_type)
+            if swagger_format and 'format' not in metadata:
+                metadata['format'] = swagger_format
+
+            if argument.default and 'default' not in metadata:
+                metadata['default'] = argument.default
+
+            desc_meta = metadata.get('description', None)
+            if argument.description or argument.help:
+                metadata['description'] = argument.description or argument.help
+                if desc_meta:
+                    metadata['description'] += '\n\n'
+            if desc_meta:
+                metadata['description'] += desc_meta
 
             items = None
             if argument.action == 'append':
@@ -128,11 +140,7 @@ class SwaggerParam(object):
                 swagger_type = 'array'
 
             args.append(SwaggerParam(name=argument.name,
-                                     description=argument.description or argument.help,
-                                     # TODO refactor to remove argument.description and always use help
                                      type=swagger_type,
-                                     format=swagger_format,
-                                     default=argument.default,
                                      location=location,
                                      required=argument.required,
                                      items=items,
@@ -214,7 +222,10 @@ def get_schema_properties(serializer):
             schema, definition = _from_nested_schema(rendered_field)
             external_definitions.append(definition)
         elif isinstance(rendered_field, CustomSchemaType):
-            schema = rendered_field.schema()
+            ts = rendered_field.schema()
+            swagger_type, _ = convert_to_swagger_type(ts.type)
+            schema = copy.deepcopy(ts.metadata)
+            schema['type'] = swagger_type
         elif not schema_metadata:
             raise ValueError('unsupported field type %s for attr %s in object %s' % (
                 rendered_field, field_name, get_serializer_name(serializer)))

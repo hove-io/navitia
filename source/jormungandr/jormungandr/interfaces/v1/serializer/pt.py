@@ -276,15 +276,12 @@ class PoiSerializer(GenericSerializer):
     label = jsonschema.Field(schema_type=str)
     administrative_regions = AdminSerializer(many=True, display_none=False)
     poi_type = PoiTypeSerializer(display_none=False)
-    properties = jsonschema.MethodField(schema_type='object')
+    properties = jsonschema.MethodField(schema_metadata={'additionalProperties':'string'})
     address = AddressSerializer()
     stands = LiteralField(None, schema_type=StandsSerializer, display_none=False)
 
     def get_properties(self, obj):
-        res = {}
-        for code in obj.properties:
-            res[code.type] = code.value
-        return res
+        return {p.type: p.value for p in obj.properties}
 
 
 class PhysicalModeSerializer(GenericSerializer):
@@ -474,7 +471,7 @@ class DisplayInformationSerializer(PbNestedSerializer):
     commercial_mode = jsonschema.Field(schema_type=str)
     network = jsonschema.Field(schema_type=str)
     direction = jsonschema.Field(schema_type=str)
-    label = jsonschema.MethodField()
+    label = jsonschema.MethodField(schema_type=str)
 
     def get_label(self, obj):
         if obj.HasField(str('code')) and obj.code != '':
@@ -488,7 +485,8 @@ class DisplayInformationSerializer(PbNestedSerializer):
     code = jsonschema.Field(schema_type=str)
     equipments = Equipments(attr='has_equipments', display_none=True)
     headsign = jsonschema.Field(schema_type=str)
-    headsigns = serpy.Serializer(many=True, display_none=False) #DisruptionLinks()
+    headsigns = jsonschema.Field(display_none=False, schema_metadata={'type':'array',
+                                                                      'items':{'type':'string'}})
     links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
     text_color = jsonschema.Field(schema_type=str)
 
@@ -499,7 +497,7 @@ class StopDateTimeSerializer(PbNestedSerializer):
     base_arrival_date_time = DateTimeField()
     stop_point = StopPointSerializer()
     additional_informations = AdditionalInformation(attr='additional_informations', display_none=True)
-    links = jsonschema.MethodField(display_none=True)
+    links = jsonschema.MethodField(display_none=True, schema_type=lambda: LinkSchema(many=True))
     def get_links(self, obj):
         response = []
         if obj.HasField(str("properties")):

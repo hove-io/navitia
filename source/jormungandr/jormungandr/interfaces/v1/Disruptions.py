@@ -31,7 +31,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask.ext.restful import marshal_with, reqparse, fields
-from flask.ext.restful.inputs import boolean
 from flask.globals import g
 from jormungandr import i_manager, timezone
 from jormungandr.interfaces.v1.fields import PbField, error, network, line,\
@@ -39,11 +38,12 @@ from jormungandr.interfaces.v1.fields import PbField, error, network, line,\
 from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import date_time_format, default_count_arg_type
+from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_type
 from jormungandr.interfaces.v1.errors import ManageError
 from datetime import datetime
 from jormungandr.interfaces.v1.fields import disruption_marshaller
 import six
+from navitiacommon.parser_args_type import BooleanType
 
 disruption = {
     "network": PbField(network, attribute='network'),
@@ -72,7 +72,7 @@ class TrafficReport(ResourceUri):
                                 description="Number of disruptions per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 description="The current page")
-        parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.utcnow(),
+        parser_get.add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.utcnow(),
                                 description="The datetime we want to publish the disruptions from."
                                             " Default is the current date and it is mainly used for debug.")
         parser_get.add_argument("forbidden_id[]", type=six.text_type,
@@ -87,7 +87,7 @@ class TrafficReport(ResourceUri):
                                 action="append")
         parser_get.add_argument("distance", type=int, default=200,
                                 description="Distance range of the query. Used only if a coord is in the query")
-        parser_get.add_argument("disable_geojson", type=boolean, default=False,
+        parser_get.add_argument("disable_geojson", type=BooleanType(), default=False,
                             description="remove geojson from the response")
         self.collection = 'traffic_reports'
 

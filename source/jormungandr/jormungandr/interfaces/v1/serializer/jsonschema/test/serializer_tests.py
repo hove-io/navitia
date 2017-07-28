@@ -89,7 +89,7 @@ def serpy_extended_supported_serialization_test():
         jsonschemaIntField = IntField()
         jsonschemaField = Field(schema_type=int)
         jsonschemaMethodField = MethodField(schema_type=str)
-        lambda_schema = LambdaField(method=lambda **kw: None, schema_type=lambda: Custom())
+        lambda_schema = LambdaField(method=lambda **kw: None, schema_type=Custom())
         list_lambda_schema = LambdaField(method=lambda **kw: None,
                                          schema_type=Custom(many=True))
 
@@ -183,8 +183,8 @@ def nested_test():
 
 
 def param_test():
-    from navitiacommon.parser_args_type import option_value
-    flask_arg = ArgumentDoc("kind", type=option_value(['bob', 'bobette', 'bobitto']),
+    from navitiacommon.parser_args_type import OptionValue
+    flask_arg = ArgumentDoc("kind", type=OptionValue(['bob', 'bobette', 'bobitto']),
                             default=['bob', 'bobette'],
                             description="kind of bob")
 

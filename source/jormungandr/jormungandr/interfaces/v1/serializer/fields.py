@@ -36,16 +36,17 @@ from jormungandr.interfaces.v1.serializer.jsonschema import IntField
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import StrField, BoolField, Field, DateTimeType
 from navitiacommon import response_pb2
 
-
-class Point2D(serpy.Serializer):
-    pass  # TODO make this work :D
-
+point_2D_schema = {
+    'type': 'array',
+    'items':{'type': 'array',
+             'items':{'type':'number',
+                      'format': 'float'}}}
 
 class MultiLineStringField(jsonschema.Field):
     class MultiLineStringSchema(serpy.Serializer):
         """used not as a serializer, but only for the schema"""
         type = StrField()
-        coordinates = Point2D(many=True)
+        coordinates = jsonschema.Field(schema_metadata=point_2D_schema)
 
     def __init__(self, **kwargs):
         super(MultiLineStringField, self).__init__(schema_type=MultiLineStringField.MultiLineStringSchema,
@@ -157,7 +158,7 @@ class SectionGeoJsonField(jsonschema.Field):
     class SectionGeoJsonSchema(serpy.Serializer):
         """used not as a serializer, but only for the schema"""
         type = StrField()
-        coordinates = Point2D(many=True)
+        coordinates = jsonschema.Field(schema_metadata=point_2D_schema)
 
     def __init__(self, **kwargs):
         super(SectionGeoJsonField, self).__init__(schema_type=SectionGeoJsonField.SectionGeoJsonSchema,
