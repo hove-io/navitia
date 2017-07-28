@@ -683,10 +683,12 @@ def test_delete_billing_plan_used_by_an_user(create_user, geojson_polygon):
     """
     We start by creating the user with a shape.
     We request the user with parameter disable_geojson=false
+    A default billing_plan is created and used with name = 'nav_ctp'
     We try to delete the billing_plan of this user but in vain.
     """
     resp = api_get('/v0/users/{}?disable_geojson=false'.format(create_user))
 
+    assert resp['billing_plan']['name'] == 'nav_ctp'
     assert resp['has_shape'] is True
     assert resp['shape'] == geojson_polygon
 
