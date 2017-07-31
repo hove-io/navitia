@@ -65,8 +65,8 @@ class PassageSerializer(PbNestedSerializer):
 class DateTimeSerializer(PbNestedSerializer):
     date_time = jsonschema.MethodField(schema_type=LinkSchema(), display_none=True)
     additional_informations = pt.AdditionalInformation(attr='additional_informations', display_none=True)
-    links = jsonschema.MethodField(schema_type=LinkSchema(), many=True)
-    data_freshness = EnumField(attr="realtime_level")
+    links = jsonschema.MethodField(schema_type=LinkSchema(), many=True, display_none=True)
+    data_freshness = EnumField(attr="realtime_level", display_none=True)
 
     def get_date_time(self, obj):
         __date_time_null_value__ = 2**64 - 1
@@ -112,7 +112,7 @@ class DateTimeSerializer(PbNestedSerializer):
 class StopScheduleSerializer(PbNestedSerializer):
     stop_point = pt.StopPointSerializer()
     route = pt.RouteSerializer()
-    additional_informations = EnumField(attr="response_status")
+    additional_informations = EnumField(attr="response_status", display_none=True)
     display_informations = pt.DisplayInformationSerializer(attr='pt_display_informations')
     date_times = DateTimeSerializer(many=True, display_none=True)
     links = jsonschema.MethodField(schema_type=LinkSchema(), many=True)
@@ -144,6 +144,7 @@ class RouteScheduleSerializer(PbNestedSerializer):
     table = TableSerializer()
     display_informations = pt.DisplayInformationSerializer(attr='pt_display_informations')
     geojson = MultiLineStringField(display_none=False)
+    additional_informations = EnumField(attr="response_status", display_none=True)
     links = jsonschema.MethodField(schema_type=LinkSchema(), many=True)
 
     def get_links(self, obj):
