@@ -186,7 +186,7 @@ def param_test():
     from navitiacommon.parser_args_type import OptionValue
     flask_arg = ArgumentDoc("kind", type=OptionValue(['bob', 'bobette', 'bobitto']),
                             default=['bob', 'bobette'],
-                            description="kind of bob")
+                            help="kind of bob")
 
     swagger_args = SwaggerParam.make_from_flask_arg(flask_arg)
 

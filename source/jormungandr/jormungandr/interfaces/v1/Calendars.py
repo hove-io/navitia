@@ -90,32 +90,32 @@ class Calendars(ResourceUri):
         parser_get = self.parsers["get"]
         parser_get.add_argument("depth", type=int, default=1)
         parser_get.add_argument("count", type=default_count_arg_type, default=10,
-                                description="Number of calendars per page")
+                                help="Number of calendars per page")
         parser_get.add_argument("start_page", type=int, default=0,
-                                description="The current page")
+                                help="The current page")
         parser_get.add_argument("start_date", type=six.text_type, default="",
-                                description="Start date")
+                                help="Start date")
         parser_get.add_argument("end_date", type=six.text_type, default="",
-                                description="End date")
+                                help="End date")
         parser_get.add_argument("forbidden_id[]", type=six.text_type,
-                                description="DEPRECATED, replaced by forbidden_uris[]",
+                                help="DEPRECATED, replaced by `forbidden_uris[]`",
                                 dest="__temporary_forbidden_id[]",
                                 default=[],
                                 action='append')
         parser_get.add_argument("forbidden_uris[]", type=six.text_type,
-                                description="forbidden uris",
+                                help="forbidden uris",
                                 dest="forbidden_uris[]",
                                 default=[],
                                 action='append')
         parser_get.add_argument("distance", type=int, default=200,
-                                description="Distance range of the query. Used only if a coord is in the query")
+                                help="Distance range of the query. Used only if a coord is in the query")
 
         self.parsers["get"].add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.datetime.utcnow(),
-                                         description="The datetime used to consider the state of the pt object"
-                                                     " Default is the current date and it is used for debug."
-                                                     " Note: it will mainly change the disruptions that concern "
-                                                     "the object The timezone should be specified in the format,"
-                                                     " else we consider it as UTC")
+                                         help="The datetime used to consider the state of the pt object"
+                                              " Default is the current date and it is used for debug."
+                                              " Note: it will mainly change the disruptions that concern "
+                                              "the object The timezone should be specified in the format,"
+                                              " else we consider it as UTC")
 
     @marshal_with(calendars)
     @ManageError()

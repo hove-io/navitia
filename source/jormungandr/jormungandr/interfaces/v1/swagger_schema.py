@@ -127,8 +127,8 @@ class SwaggerParam(object):
                 metadata['default'] = argument.default
 
             desc_meta = metadata.get('description', None)
-            if argument.description or argument.help:
-                metadata['description'] = argument.description or argument.help
+            if argument.help:
+                metadata['description'] = argument.help
                 if desc_meta:
                     metadata['description'] += '\n\n'
             if desc_meta:

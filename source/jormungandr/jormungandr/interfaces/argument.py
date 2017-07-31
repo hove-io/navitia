@@ -28,6 +28,8 @@
 # www.navitia.io
 
 from __future__ import absolute_import
+from flask import current_app
+import flask_restful
 from flask.ext.restful import reqparse
 import six
 
@@ -37,14 +39,31 @@ class ArgumentDoc(reqparse.Argument):
     def __init__(self, name, default=None, dest=None, required=False,
                  ignore=False, type=six.text_type, location=('values',),
                  choices=(), action='store', help=None, operators=('=',),
-                 case_sensitive=True, description=None, hidden=False,
+                 case_sensitive=True, hidden=False,
                  deprecated=False, schema_type=None, schema_metadata={}, ):
         super(ArgumentDoc, self).__init__(name, default, dest, required,
                                           ignore, type, location, choices,
                                           action, help, operators,
                                           case_sensitive)
-        self.description = description
         self.hidden = hidden
         self.schema_type = schema_type
         self.schema_metadata = schema_metadata
         self.deprecated = deprecated # not used for now, but usefull "comment" (to be used in swagger v3.0)
+
+    def handle_validation_error(self, error, bundle_errors):
+        """
+        Override method to output message from exception and from argument's help
+        """
+        error_str = six.text_type(error)
+        error_msg = u''
+        if error_str:
+            error_msg += error_str
+        if self.help:
+            if error_msg:
+                error_msg += u'\n'
+            error_msg += u'Help: {}'.format(self.help)
+        msg = {self.name: error_msg}
+
+        if current_app.config.get("BUNDLE_ERRORS", False) or bundle_errors:
+            return error, msg
+        flask_restful.abort(400, message=msg)

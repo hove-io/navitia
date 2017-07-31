@@ -136,4 +136,4 @@ class TestIsochrone(AbstractTestFixture):
         query += "&count=toto"
         response, code = self.query_no_assert(query)
         assert code == 400
-        assert response['message'] == "invalid literal for int() with base 10: 'toto'"
+        assert "invalid literal for int() with base 10: 'toto'" in response['message']

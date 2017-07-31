@@ -60,33 +60,27 @@ class Ptobjects(ResourceUri):
         self.parsers["get"] = reqparse.RequestParser(
             argument_class=ArgumentDoc)
         self.parsers["get"].add_argument("q", type=six.text_type, required=True,
-                                         description="The data to search")
+                                         help="The data to search")
         self.parsers["get"].add_argument("type[]", type=OptionValue(pt_object_type_values),
                                          action="append",default=pt_object_type_values,
-                                         description="The type of data to\
-                                         search")
+                                         help="The type of data to search")
         self.parsers["get"].add_argument("count", type=default_count_arg_type, default=10,
-                                         description="The maximum number of\
-                                         ptobjects returned")
+                                         help="The maximum number of ptobjects returned")
         self.parsers["get"].add_argument("search_type", type=int, default=0,
-                                         description="Type of search:\
-                                         firstletter or type error")
-        self.parsers["get"].add_argument("admin_uri[]", type=six.text_type,
-                                         action="append",
-                                         description="If filled, will\
-                                         restrained the search within the\
-                                         given admin uris")
-        self.parsers["get"].add_argument("depth", type=depth_argument,
-                                         default=1,
-                                         description="The depth of objects")
+                                         help="Type of search: firstletter or type error")
+        self.parsers["get"].add_argument("admin_uri[]", type=six.text_type, action="append",
+                                         help="If filled, will restrained the search within "
+                                              "the given admin uris")
+        self.parsers["get"].add_argument("depth", type=depth_argument, default=1,
+                                         help="The depth of objects")
         self.parsers["get"].add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.datetime.utcnow(),
-                                         description="The datetime used to consider the state of the pt object"
-                                                     " Default is the current date and it is used for debug."
-                                                     " Note: it will mainly change the disruptions that concern "
-                                                     "the object The timezone should be specified in the format,"
-                                                     " else we consider it as UTC")
+                                         help="The datetime used to consider the state of the pt object.\n"
+                                              "Default is the current date and it is used for debug.\n"
+                                              "Note: it will mainly change the disruptions that concern "
+                                              "the object. The timezone should be specified in the format, "
+                                              "else we consider it as UTC")
         self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
-                            description="remove geojson from the response")
+                                         help="remove geojson from the response")
 
     @marshal_with(pt_objects)
     def get(self, region=None, lon=None, lat=None):
