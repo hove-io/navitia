@@ -1152,7 +1152,7 @@ void make_isochrone(navitia::PbCreator& pb_creator,
     auto departures = get_stop_points(origin, raptor.data, worker);
 
     if(departures.size() == 0){
-        pb_creator.set_response_type(pbnavitia::NO_ORIGIN_POINT);
+        pb_creator.fill_pb_error(pbnavitia::Error::unknown_object, "The entry point: " + origin.uri + " is not valid");
         return;
     }
 
@@ -1279,7 +1279,8 @@ static bool fill_isochrone_common(IsochroneCommon& isochrone_common,
     auto departures = get_stop_points(center, raptor.data, worker);
 
     if (departures.empty()) {
-        pb_creator.set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
+        pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination, pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
+                                 "no origin point nor destination point");
         return true;
     }
     int day = (datetime.date() - raptor.data.meta->production_date.begin()).days();
