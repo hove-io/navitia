@@ -46,7 +46,7 @@ def _get_links(obj):
          ("physical_mode", uris.physical_mode),
          ("network", uris.network),
          ("note", uris.note)]
-    return [{"type": v[0], "id": v[1]} for v in l if v[1] != ""] + \
+    return [{"type": k, "id": v} for k, v in l if v != ""] + \
         [{"type": "notes", "rel": "notes", "id": value.uri, "value": value.note, "internal": True}
          for value in display_info.notes]
 
