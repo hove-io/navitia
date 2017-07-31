@@ -238,3 +238,7 @@ class ArrivalsSerializer(PTReferentialSerializer):
 
 class StopSchedulesSerializer(PTReferentialSerializer):
     stop_schedules = schedule.StopScheduleSerializer(many=True, display_none=True)
+
+
+class RouteSchedulesSerializer(PTReferentialSerializer):
+    route_schedules = schedule.RouteScheduleSerializer(many=True, display_none=True)

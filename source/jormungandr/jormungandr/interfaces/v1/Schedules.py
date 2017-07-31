@@ -233,7 +233,7 @@ class RouteSchedules(Schedules):
     def __init__(self):
         super(RouteSchedules, self).__init__("route_schedules")
 
-    @marshal_with(route_schedules)
+    @get_serializer(serpy=api.RouteSchedulesSerializer, marshall=route_schedules)
     @ManageError()
     def get(self, uri=None, region=None, lon=None, lat=None):
         return super(RouteSchedules, self).get(uri=uri, region=region, lon=lon,

@@ -28,10 +28,10 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from datetime import datetime
-from jormungandr.interfaces.v1.serializer.base import PbNestedSerializer, EnumField
+from jormungandr.interfaces.v1.serializer.base import PbNestedSerializer, EnumField, EnumListField
 from jormungandr.interfaces.v1.serializer import pt
 from jormungandr.interfaces.v1.serializer import jsonschema
-from jormungandr.interfaces.v1.serializer.fields import LinkSchema
+from jormungandr.interfaces.v1.serializer.fields import LinkSchema, MultiLineStringField
 from jormungandr.interfaces.v1.make_links import create_internal_link
 from jormungandr.utils import timestamp_to_str
 
@@ -63,12 +63,15 @@ class PassageSerializer(PbNestedSerializer):
 
 
 class DateTimeSerializer(PbNestedSerializer):
-    date_time = jsonschema.MethodField(schema_type=LinkSchema())
+    date_time = jsonschema.MethodField(schema_type=LinkSchema(), display_none=True)
     additional_informations = pt.AdditionalInformation(attr='additional_informations', display_none=True)
     links = jsonschema.MethodField(schema_type=LinkSchema(), many=True)
     data_freshness = EnumField(attr="realtime_level")
 
     def get_date_time(self, obj):
+        __date_time_null_value__ = 2**64 - 1
+        if obj.time == __date_time_null_value__:
+            return ""
         if obj.HasField('date'):
             return timestamp_to_str(obj.date + obj.time)
         return datetime.utcfromtimestamp(obj.time).strftime('%H%M%S')
@@ -112,6 +115,35 @@ class StopScheduleSerializer(PbNestedSerializer):
     additional_informations = EnumField(attr="response_status")
     display_informations = pt.DisplayInformationSerializer(attr='pt_display_informations')
     date_times = DateTimeSerializer(many=True, display_none=True)
+    links = jsonschema.MethodField(schema_type=LinkSchema(), many=True)
+
+    def get_links(self, obj):
+        return _get_links(obj)
+
+
+class RowSerializer(PbNestedSerializer):
+    stop_point = pt.StopPointSerializer()
+    date_times = DateTimeSerializer(many=True, display_none=True)
+
+
+class HeaderSerializer(PbNestedSerializer):
+    additional_informations = EnumListField(attr='additional_informations', display_none=True)
+    display_informations = pt.DisplayInformationSerializer(attr='pt_display_informations')
+    links = jsonschema.MethodField(schema_type=LinkSchema(), many=True)
+
+    def get_links(self, obj):
+        return _get_links(obj)
+
+
+class TableSerializer(PbNestedSerializer):
+    rows = RowSerializer(many=True, display_none=True)
+    headers = HeaderSerializer(many=True, display_none=True)
+
+
+class RouteScheduleSerializer(PbNestedSerializer):
+    table = TableSerializer()
+    display_informations = pt.DisplayInformationSerializer(attr='pt_display_informations')
+    geojson = MultiLineStringField(display_none=False)
     links = jsonschema.MethodField(schema_type=LinkSchema(), many=True)
 
     def get_links(self, obj):
