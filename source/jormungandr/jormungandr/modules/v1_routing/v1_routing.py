@@ -133,6 +133,9 @@ class V1Routing(AModule):
                               coord + '<uri:uri>/' + collection,
                               endpoint=collection + '.collection', hide=hide)
 
+            if collection == 'connections':
+                # connections api cannot be query by id
+                continue
             self.add_resource(getattr(Uri, collection)(False),
                               region + collection + '/<id:id>',
                               coord + collection + '/<id:id>',
