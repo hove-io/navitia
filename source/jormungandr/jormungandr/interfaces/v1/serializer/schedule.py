@@ -79,7 +79,7 @@ class DateTimeSerializer(PbNestedSerializer):
     def get_links(self, obj):
         properties = obj.properties
         r = []
-        #Note: all those links should be created with crete_{internal|external}_links,
+        #Note: all those links should be created with create_{internal|external}_links,
         # but for retrocompatibility purpose we cannot do that :( Change it for the v2!
         for note_ in properties.notes:
             r.append({"id": note_.uri,
