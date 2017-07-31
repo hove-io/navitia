@@ -71,8 +71,8 @@ struct VJ {
     const bool is_frequency;
     const bool wheelchair_boarding;
     std::string _uri;
-    const std::string meta_vj_name;
-    const std::string physical_mode;
+    std::string _meta_vj_name;
+    std::string _physical_mode;
     const uint32_t start_time;
     const uint32_t end_time;
     const uint32_t headway_secs;
@@ -133,6 +133,9 @@ struct VJ {
 
     VJ& uri(const std::string& u) { _uri = u; return *this; }
     VJ& valid_all_days() { _vp.days.set(); return *this; }
+    VJ& meta_vj(const std::string& m) { _meta_vj_name = m; return *this; }
+    VJ& vp(const std::string& v) { _vp = {_vp.beginning_date, v}; return *this; }
+    VJ& physical_mode(const std::string& p) { _physical_mode = p; return *this; }
 
     // create the vj
     nt::VehicleJourney* make();
