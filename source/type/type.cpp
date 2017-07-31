@@ -439,8 +439,6 @@ void cleanup_useless_vj_link(const nt::VehicleJourney* vj, nt::PT_Data& pt_data)
         erase_vj_from_list(vj, vj->route->frequency_vehicle_journey_list);
     } else if (dynamic_cast<const nt::DiscreteVehicleJourney*>(vj)) {
         erase_vj_from_list(vj, vj->route->discrete_vehicle_journey_list);
-    } else {
-        throw std::logic_error("c'est la merde"); // TODO remove this
     }
 
     pt_data.headsign_handler.forget_vj(vj);
