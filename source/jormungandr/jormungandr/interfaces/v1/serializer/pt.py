@@ -209,9 +209,9 @@ class ImpactedSerializer(PbNestedSerializer):
     impacted_section = ImpactedSectionSerializer(display_none=False)
 
 
-class TagsField(Field):
+class StringListField(Field):
     def __init__(self, **kwargs):
-        super(TagsField, self).__init__(schema_type=str, **kwargs)
+        super(StringListField, self).__init__(schema_type=str, **kwargs)
         self.many = True
 
     def as_getter(self, serializer_field_name, serializer_cls):
@@ -230,7 +230,7 @@ class DisruptionSerializer(PbNestedSerializer):
     application_periods = PeriodSerializer(many=True)
     status = EnumField(attr='status', pb_type=ActiveStatus)
     updated_at = DateTimeField()
-    tags = TagsField(display_none=True)
+    tags = StringListField(display_none=True)
     cause = jsonschema.Field(schema_type=str, display_none=True)
     category = jsonschema.MethodField(schema_type=str, display_none=False)
     def get_category(self, obj):
@@ -470,7 +470,7 @@ class DisplayInformationSerializer(PbNestedSerializer):
     physical_mode = jsonschema.Field(schema_type=str)
     commercial_mode = jsonschema.Field(schema_type=str)
     network = jsonschema.Field(schema_type=str)
-    direction = jsonschema.Field(schema_type=str)
+    direction = jsonschema.Field(schema_type=str, display_none=True)
     label = jsonschema.MethodField(schema_type=str)
 
     def get_label(self, obj):
@@ -484,9 +484,8 @@ class DisplayInformationSerializer(PbNestedSerializer):
     color = jsonschema.Field(schema_type=str)
     code = jsonschema.Field(schema_type=str)
     equipments = Equipments(attr='has_equipments', display_none=True)
-    headsign = jsonschema.Field(schema_type=str)
-    headsigns = jsonschema.Field(display_none=False, schema_metadata={'type':'array',
-                                                                      'items':{'type':'string'}})
+    headsign = jsonschema.Field(schema_type=str, display_none=True)
+    headsigns = StringListField(display_none=False)
     links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
     text_color = jsonschema.Field(schema_type=str)
 

@@ -30,7 +30,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.serializer.pt import PlaceSerializer, CalendarSerializer, DisplayInformationSerializer, \
-    StopDateTimeSerializer, TagsField
+    StopDateTimeSerializer, StringListField
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import LinkSchema, RoundedField, SectionGeoJsonField, StrField
 from jormungandr.interfaces.v1.serializer.base import AmountSerializer, PbNestedSerializer, \
@@ -223,7 +223,7 @@ class JourneySerializer(PbNestedSerializer):
                               description='Status from the whole journey taking into account the most '
                                           'disturbing information retrieved on every object used '
                                           '(can be "NO_SERVICE", "SIGNIFICANT_DELAYS", ...')
-    tags = TagsField(display_none=True)
+    tags = StringListField(display_none=True)
     co2_emission = AmountSerializer(required=True, display_none=True)
     durations = DurationsSerializer()
     fare = FareSerializer(display_none=True)

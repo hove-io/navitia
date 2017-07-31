@@ -39,6 +39,8 @@ from jormungandr.interfaces.v1.fields import stop_point, route, pagination, PbFi
     display_informations_route, UrisToLinks, error, \
     enum_type, SplitDateTime, MultiLineString, PbEnum, feed_publisher
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri, complete_links
+from jormungandr.interfaces.v1.decorators import get_obj_serializer
+from jormungandr.interfaces.v1.serializer import api
 import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_type
@@ -57,8 +59,8 @@ from navitiacommon.parser_args_type import BooleanType, OptionValue
 
 class Schedules(ResourceUri, ResourceUtc):
 
-    def __init__(self, endpoint):
-        ResourceUri.__init__(self)
+    def __init__(self, endpoint, *args, **kwargs):
+        ResourceUri.__init__(self, *args, **kwargs)
         ResourceUtc.__init__(self)
         self.endpoint = endpoint
         self.parsers = {}
@@ -111,6 +113,8 @@ class Schedules(ResourceUri, ResourceUtc):
         parser_get.add_argument("disable_geojson", type=BooleanType(), default=False,
                                 help="remove geojson from the response")
 
+        self.get_decorators.insert(0, ManageError())
+        self.get_decorators.insert(1, get_obj_serializer(self))
         self.get_decorators.append(complete_links(self))
 
     def get(self, uri=None, region=None, lon=None, lat=None):
@@ -229,13 +233,9 @@ route_schedules = {
 class RouteSchedules(Schedules):
 
     def __init__(self):
-        super(RouteSchedules, self).__init__("route_schedules")
-
-    @marshal_with(route_schedules)
-    @ManageError()
-    def get(self, uri=None, region=None, lon=None, lat=None):
-        return super(RouteSchedules, self).get(uri=uri, region=region, lon=lon,
-                                               lat=lat)
+        self.collections = route_schedules
+        super(RouteSchedules, self).__init__("route_schedules",
+                                             output_type_serializer=api.RouteSchedulesSerializer)
 
 
 stop_schedule = {
@@ -259,13 +259,9 @@ stop_schedules = {
 class StopSchedules(Schedules):
 
     def __init__(self):
-        super(StopSchedules, self).__init__("departure_boards")
-
-    @marshal_with(stop_schedules)
-    @ManageError()
-    def get(self, uri=None, region=None, lon=None, lat=None):
-        return super(StopSchedules, self).get(uri=uri, region=region, lon=lon,
-                                              lat=lat)
+        self.collections = stop_schedules
+        super(StopSchedules, self).__init__("departure_boards",
+                                            output_type_serializer=api.StopSchedulesSerializer)
 
 
 passage = {
@@ -342,25 +338,16 @@ class add_passages_links:
 class NextDepartures(Schedules):
 
     def __init__(self):
-        super(NextDepartures, self).__init__("next_departures")
-
-    @add_passages_links()
-    @marshal_with(departures)
-    @ManageError()
-    def get(self, uri=None, region=None, lon=None, lat=None,
-            dest="nb_stoptimes"):
-        return super(NextDepartures, self).get(uri=uri, region=region, lon=lon,
-                                               lat=lat)
+        self.collections = departures
+        super(NextDepartures, self).__init__("next_departures",
+                                             output_type_serializer=api.DeparturesSerializer)
+        self.get_decorators.append(add_passages_links())
 
 
 class NextArrivals(Schedules):
 
     def __init__(self):
-        super(NextArrivals, self).__init__("next_arrivals")
-
-    @add_passages_links()
-    @marshal_with(arrivals)
-    @ManageError()
-    def get(self, uri=None, region=None, lon=None, lat=None):
-        return super(NextArrivals, self).get(uri=uri, region=region, lon=lon,
-                                             lat=lat)
+        self.collections = arrivals
+        super(NextArrivals, self).__init__("next_arrivals",
+                                           output_type_serializer=api.ArrivalsSerializer)
+        self.get_decorators.append(add_passages_links())
