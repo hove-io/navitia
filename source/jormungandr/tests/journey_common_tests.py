@@ -155,7 +155,12 @@ class JourneyCommon(object):
 
         assert status == 400, "the response should not be valid"
 
-        assert response['message'].startswith("The type argument must be in list")
+        m = "parameter \"type\" invalid: The type argument must be in list [u'all', u'non_pt_bss', " \
+            "u'non_pt_bike', u'fastest', u'less_fallback_bss', u'best', u'less_fallback_bike', " \
+            "u'rapid', u'car', u'comfort', u'no_train', u'less_fallback_walk', u'non_pt_walk'], " \
+            "you gave sponge_bob\n" \
+            "type description: DEPRECATED, desired type of journey."
+        assert response['message'] == m
 
     def test_journeys_no_bss_and_walking(self):
         query = journey_basic_query + "&first_section_mode=walking&first_section_mode=bss"
