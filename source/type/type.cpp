@@ -411,6 +411,7 @@ static typename C::iterator erase_vj_from_list(const nt::VehicleJourney* vj, C& 
     if (it == vjs.end()) {
         LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"),
                        "impossible to find the vj " << vj->uri << " in the list, something is strange");
+        return it;
     }
     return vjs.erase(it);
 }
