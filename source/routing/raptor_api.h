@@ -105,7 +105,7 @@ void make_pt_response(navitia::PbCreator& pb_creator,
                       uint32_t max_extra_second_pass = 0,
                       const boost::optional<navitia::time_duration>& direct_path_duration = boost::none);
 
-routing::map_stop_point_duration
+boost::optional<routing::map_stop_point_duration>
 get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         georef::StreetNetwork & worker, bool use_second = false);
 

@@ -90,12 +90,16 @@ class TestIsochrone(AbstractTestFixture):
     def test_from_isochrone_sa(self):
         query = "v1/coverage/basic_routing_test/journeys?from={}&datetime={}"
         query = query.format("stopA", "20120614T080000")
-        response = self.query(query)
+        normal_response, error_code = self.query_no_assert(query)
+        assert normal_response['error']['message'] == 'The entry point: stopA is not valid'
+        assert error_code == 404
 
     def test_to_isochrone_sa(self):
         query = "v1/coverage/basic_routing_test/journeys?to={}&datetime={}&datetime_represents=arrival"
         query = query.format("stopA", "20120614T080000")
-        response = self.query(query)
+        normal_response, error_code = self.query_no_assert(query)
+        assert normal_response['error']['message'] == 'The entry point: stopA is not valid'
+        assert error_code == 404
 
     def test_reverse_isochrone_coord(self):
         q = "v1/coverage/basic_routing_test/journeys?max_duration=100000" \

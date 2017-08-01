@@ -1051,7 +1051,7 @@ void Worker::nearest_stop_points(const pbnavitia::NearestStopPointsRequest& requ
     street_network_worker->init(entry_point, {});
     //kraken don't handle reverse isochrone
     auto result = routing::get_stop_points(entry_point, *data, *street_network_worker, false);
-    for(const auto& item: result){
+    for(const auto& item: *result){
         auto* nsp = pb_creator.add_nearest_stop_points();
         this->pb_creator.fill(planner->get_sp(item.first), nsp->mutable_stop_point(), 0);
         nsp->set_access_duration(item.second.total_seconds());
