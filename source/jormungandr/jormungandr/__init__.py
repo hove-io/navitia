@@ -39,7 +39,7 @@ from flask.ext.cache import Cache
 from flask.ext.cors import CORS
 import sys
 from jormungandr.exceptions import log_exception
-from jormungandr.helper import ReverseProxied, NavitiaRequest
+from jormungandr.helper import ReverseProxied, NavitiaRequest, NavitiaRule
 from jormungandr import compat, utils
 import six
 
@@ -52,6 +52,7 @@ if 'JORMUNGANDR_CONFIG_FILE' in os.environ:
 # so we make it a global variable
 USE_SERPY = app.config.get('USE_SERPY')
 
+app.url_rule_class = NavitiaRule
 app.request_class = NavitiaRequest
 CORS(app, vary_headers=True, allow_credentials=True, send_wildcard=False,
         headers=['Access-Control-Request-Headers', 'Authorization'])

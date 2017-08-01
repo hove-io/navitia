@@ -60,6 +60,9 @@ class TestSwaggerSchema(AbstractTestFixture):
         for typename in response.get('definitions'):
             assert typename  # we should newer have empty names
 
+        # we don't want to document /connections apis
+        assert not any('connections' in p for p in response['paths'])
+
     def _check_schema(self, url):
         schema = self.get_schema()
 
