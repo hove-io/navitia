@@ -357,12 +357,12 @@ class stop_time_properties_links(fields.Raw):
 class get_label(fields.Raw):
 
     def output(self, key, obj):
-        if obj.code != '':
-            return obj.code
+        if obj.name != '':
+            return obj.name
         else:
-            if obj.name != '':
-                return obj.name
-
+            if obj.code != '':
+                return obj.code
+			
 class get_key_value(fields.Raw):
 
     def output(self, key, obj):
