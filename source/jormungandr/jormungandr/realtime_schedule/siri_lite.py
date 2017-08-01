@@ -132,7 +132,6 @@ class SiriLite(RealtimeProxy):
                               'passages on all the routes'.format(destination, route_point))
             if route_point.pb_route.uri not in possible_routes:
                 # the next passage does not concern our route point, we can skip it
-                self.record_additional_info('no_route_found')
                 continue
             # for the moment we handle only the NextStop and the direction
             expected_dt = next_expected_st.get('MonitoredVehicleJourney', {})\
