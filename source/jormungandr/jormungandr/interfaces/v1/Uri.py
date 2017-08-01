@@ -86,8 +86,10 @@ class Uri(ResourceUri, ResourceUtc):
                             dest="forbidden_uris[]",
                             default=[],
                             action="append")
+        # for the top level collection apis (/v1/networks, /v1/lines, ...) the external_code is mandatory
+        external_code_mandatory = '.external_codes' in self.endpoint
         parser.add_argument("external_code", type=six.text_type,
-                            help="An external code to query")
+                            help="An external code to query", required=external_code_mandatory)
         parser.add_argument("headsign", type=six.text_type,
                             help="filter vehicle journeys on headsign")
         parser.add_argument("show_codes", type=BooleanType(), default=False,

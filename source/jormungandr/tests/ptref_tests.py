@@ -619,6 +619,23 @@ class TestPtRefRoutingAndPtrefCov(AbstractTestFixture):
         assert len(lines) == 1
         assert 'A' in [code['value'] for code in lines[0]['codes'] if code['type'] == 'external_code']
 
+    def test_external_code_no_code(self):
+        """the external_code is a mandatory parameter for collection without coverage"""
+        r, status = self.query_no_assert("v1/lines")
+        assert status == 400
+        assert "parameter \"external_code\" invalid: " \
+               "Missing required parameter in the post body or the query string" \
+               "\nexternal_code description: An external code to query" == \
+               r.get('message')
+
+    def test_parameter_error_message(self):
+        """test the parameter validation error message"""
+        r, status = self.query_no_assert("v1/coverage/lines?disable_geojson=12")
+        assert status == 400
+        assert "parameter \"disable_geojson\" invalid: Invalid literal for boolean(): 12\n" \
+               "disable_geojson description: hide the coverage geojson to reduce response size" == \
+               r.get('message')
+
     def test_invalid_url(self):
         """the following bad url was causing internal errors, it should only be a 404"""
         _, status = self.query_no_assert("v1/coverage/lines/bob")
