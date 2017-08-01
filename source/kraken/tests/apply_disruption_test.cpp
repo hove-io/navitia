@@ -2096,3 +2096,39 @@ BOOST_AUTO_TEST_CASE(impact_lollipop_with_boarding_alighting_times) {
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).boarding_time, "08:41"_t);
     BOOST_REQUIRE_EQUAL(vj->stop_time_list.at(2).alighting_time, "08:45"_t);
 }
+
+/*
+ * When applying a delay message on a line, it does nothing
+ * (as we do not have enough information to delay each vehicle_journeys)
+ */
+BOOST_AUTO_TEST_CASE(test_delay_on_line_does_nothing) {
+    ed::builder b("20120614");
+    b.vj("A").uri("vj:1")("stop1", "23:00"_t)("stop2", "24:15"_t)("stop3", "25:00"_t);
+
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = bg::date_period("20120614"_d, 7_days);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
+    BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1);
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "lineA_delayed")
+                              .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
+                              .on(nt::Type_e::Line, "A")
+                              .application_periods(btp("20120617T2200"_dt, "20120618T0000"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.size(), 1);
+    BOOST_CHECK_EQUAL(b.get<nt::Line>("A")->get_impacts().size(), 1); // the impact is linked to the line
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->routes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1); // we should not have created a VJ
+    // no message on the metavj or vj
+    BOOST_CHECK_EQUAL(b.get<nt::VehicleJourney>("vj:1")->get_impacts().size(), 0);
+    BOOST_CHECK_EQUAL(b.get<nt::VehicleJourney>("vj:1")->meta_vj->get_impacts().size(), 0);
+}
