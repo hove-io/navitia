@@ -170,6 +170,12 @@ class RoutePoint(object):
         self.pb_stop_point = stop_point
         self.pb_route = route
 
+    def __str__(self):
+        return '({} {})'.format(self.pb_stop_point.uri, self.pb_route.uri)
+
+    def __unicode__(self):
+        return str(self)
+
     def __key(self):
         return (self.pb_stop_point.uri, self.pb_route.uri)
 
