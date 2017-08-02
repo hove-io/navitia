@@ -29,7 +29,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from jormungandr.interfaces.v1.serializer import jsonschema
-from jormungandr.interfaces.v1.serializer.pt import PlaceSerializer, CalendarSerializer, DisplayInformationSerializer, \
+from jormungandr.interfaces.v1.serializer.pt import PlaceSerializer, CalendarSerializer, VJDisplayInformationSerializer, \
     StopDateTimeSerializer, StringListField
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import LinkSchema, RoundedField, SectionGeoJsonField, StrField
@@ -190,7 +190,7 @@ class SectionSerializer(PbNestedSerializer):
     mode = NestedEnumField(attr='street_network.mode')
     type = SectionTypeEnum()
 
-    display_informations = DisplayInformationSerializer(attr='pt_display_informations', display_none=False)
+    display_informations = VJDisplayInformationSerializer(attr='pt_display_informations', display_none=False)
 
     links = jsonschema.MethodField(display_none=True, schema_type=LinkSchema(many=True))
     def get_links(self, obj):

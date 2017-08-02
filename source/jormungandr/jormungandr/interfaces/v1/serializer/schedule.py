@@ -56,7 +56,7 @@ class PassageSerializer(PbNestedSerializer):
     route = pt.RouteSerializer()
     stop_point = pt.StopPointSerializer()
     stop_date_time = pt.StopDateTimeSerializer()
-    display_informations = pt.DisplayInformationSerializer(attr='pt_display_informations')
+    display_informations = pt.VJDisplayInformationSerializer(attr='pt_display_informations')
     links = jsonschema.MethodField(schema_type=LinkSchema(many=True))
 
     def get_links(self, obj):
@@ -114,7 +114,7 @@ class StopScheduleSerializer(PbNestedSerializer):
     stop_point = pt.StopPointSerializer()
     route = pt.RouteSerializer()
     additional_informations = EnumField(attr="response_status", display_none=True)
-    display_informations = pt.DisplayInformationSerializer(attr='pt_display_informations')
+    display_informations = pt.RouteDisplayInformationSerializer(attr='pt_display_informations')
     date_times = DateTimeTypeSerializer(many=True, display_none=True)
     links = jsonschema.MethodField(schema_type=LinkSchema(many=True))
 
@@ -129,7 +129,7 @@ class RowSerializer(PbNestedSerializer):
 
 class HeaderSerializer(PbNestedSerializer):
     additional_informations = EnumListField(attr='additional_informations', display_none=True)
-    display_informations = pt.DisplayInformationSerializer(attr='pt_display_informations')
+    display_informations = pt.VJDisplayInformationSerializer(attr='pt_display_informations')
     links = jsonschema.MethodField(schema_type=LinkSchema(many=True))
 
     def get_links(self, obj):
@@ -143,7 +143,7 @@ class TableSerializer(PbNestedSerializer):
 
 class RouteScheduleSerializer(PbNestedSerializer):
     table = TableSerializer()
-    display_informations = pt.DisplayInformationSerializer(attr='pt_display_informations')
+    display_informations = pt.VJDisplayInformationSerializer(attr='pt_display_informations')
     geojson = MultiLineStringField(display_none=False)
     additional_informations = EnumField(attr="response_status", display_none=True)
     links = jsonschema.MethodField(schema_type=LinkSchema(many=True))

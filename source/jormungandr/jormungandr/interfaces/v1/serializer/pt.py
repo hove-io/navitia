@@ -465,9 +465,7 @@ class DatasetSerializer(PbNestedSerializer):
     contributor = ContributorSerializer(description='Contributor providing the dataset')
 
 
-class DisplayInformationSerializer(PbNestedSerializer):
-    description = jsonschema.Field(schema_type=str)
-    physical_mode = jsonschema.Field(schema_type=str)
+class RouteDisplayInformationSerializer(PbNestedSerializer):
     commercial_mode = jsonschema.Field(schema_type=str)
     network = jsonschema.Field(schema_type=str)
     direction = jsonschema.Field(schema_type=str, display_none=True)
@@ -483,11 +481,17 @@ class DisplayInformationSerializer(PbNestedSerializer):
 
     color = jsonschema.Field(schema_type=str)
     code = jsonschema.Field(schema_type=str)
-    equipments = Equipments(attr='has_equipments', display_none=True)
-    headsign = jsonschema.Field(schema_type=str, display_none=True)
-    headsigns = StringListField(display_none=False)
     links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
     text_color = jsonschema.Field(schema_type=str)
+
+
+class VJDisplayInformationSerializer(RouteDisplayInformationSerializer):
+    description = jsonschema.Field(schema_type=str)
+    physical_mode = jsonschema.Field(schema_type=str)
+    equipments = Equipments(attr='has_equipments')
+    headsign = jsonschema.Field(schema_type=str, display_none=True)
+    headsigns = StringListField(display_none=False)
+
 
 class StopDateTimeSerializer(PbNestedSerializer):
     departure_date_time = DateTimeField()
