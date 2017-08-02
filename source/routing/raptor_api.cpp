@@ -923,7 +923,6 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         }
         LOG4CPLUS_DEBUG(logger, result.size() << " sp found for admin");
     } else {
-        LOG4CPLUS_WARN(logger, "invalid entry point object " << ep.uri);
         return boost::none;
     }
 
@@ -1054,6 +1053,18 @@ void make_response(navitia::PbCreator& pb_creator,
     worker.init(origin, {destination});
     auto departures = get_stop_points(origin, raptor.data, worker);
     auto destinations = get_stop_points(destination, raptor.data, worker, true);
+    if (!departures){
+        pb_creator.fill_pb_error(pbnavitia::Error::unknown_object,
+                                 "The entry point: " + origin.uri + " is not valid");
+        return;
+    }
+
+    if (!destinations){
+        pb_creator.fill_pb_error(pbnavitia::Error::unknown_object,
+                                 "The entry point: " + destination.uri + " is not valid");
+        return;
+    }
+
     const auto direct_path = get_direct_path(worker, origin, destination);
 
     if(departures && (departures->size() == 0) && destinations && (destinations->size() == 0)){
@@ -1153,7 +1164,7 @@ void make_isochrone(navitia::PbCreator& pb_creator,
     datetime = tmp_datetime.front();
     worker.init(origin);
     auto departures = get_stop_points(origin, raptor.data, worker);
-    if (departures == nullptr) {
+    if (!departures) {
         pb_creator.fill_pb_error(pbnavitia::Error::unknown_object, "The entry point: " + origin.uri + " is not valid");
         return;
     }
