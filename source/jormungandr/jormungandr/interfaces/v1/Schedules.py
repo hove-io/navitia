@@ -80,7 +80,7 @@ class Schedules(ResourceUri, ResourceUtc):
                                 help="The current page")
         parser_get.add_argument("max_date_times", type=UnsignedInteger(), deprecated=True,
                                 help="DEPRECATED, replaced by `items_per_schedule`")
-        parser_get.add_argument("forbidden_id[]", type=six.text_type,deprecated=True,
+        parser_get.add_argument("forbidden_id[]", type=six.text_type, deprecated=True,
                                 help="DEPRECATED, replaced by `forbidden_uris[]`",
                                 dest="__temporary_forbidden_id[]",
                                 default=[],

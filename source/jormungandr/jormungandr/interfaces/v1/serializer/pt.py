@@ -499,6 +499,7 @@ class StopDateTimeSerializer(PbNestedSerializer):
     arrival_date_time = DateTimeField()
     base_arrival_date_time = DateTimeField()
     stop_point = StopPointSerializer()
+    # additional_informations is a nullable field, add nullable=True when we migrate to swagger 3
     additional_informations = AdditionalInformation(attr='additional_informations', display_none=True)
     links = jsonschema.MethodField(display_none=True, schema_type=lambda: LinkSchema(many=True))
     def get_links(self, obj):
