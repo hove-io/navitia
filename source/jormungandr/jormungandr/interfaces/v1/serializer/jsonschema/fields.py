@@ -128,3 +128,9 @@ class TimeType(CustomSchemaType):
     _schema = TypeSchema(type=str,
                          metadata={'format': 'navitia-time',
                                    'pattern': '\d{2}\d{2}\d{2}'})
+
+class TimeOrDateTimeType(CustomSchemaType):
+    # either a time or a datetime
+    _schema = TypeSchema(type=str,
+                         metadata={'format': 'navitia-time-or-date-time',
+                                   'pattern': '(\d{4}\d{2}\d{2}T)?\d{2}\d{2}\d{2}'})
