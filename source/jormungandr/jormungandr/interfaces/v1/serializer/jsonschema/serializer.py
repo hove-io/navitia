@@ -46,6 +46,7 @@ class SwaggerParamSerializer(serpy.Serializer):
     enum = Field()
     minimum = Field()
     maximum = Field()
+    format = Field()
     items = LambdaField(method=lambda _, obj: SwaggerParamSerializer(obj.items).data if obj.items else None,
                         display_none=False)
 

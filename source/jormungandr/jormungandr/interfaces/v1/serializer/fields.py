@@ -38,15 +38,23 @@ from navitiacommon import response_pb2
 
 point_2D_schema = {
     'type': 'array',
-    'items':{'type': 'array',
-             'items':{'type':'number',
-                      'format': 'float'}}}
+    'items': {
+        'type': 'array',
+        'items': {
+            'type': 'number',
+            'format': 'float'
+        }
+    }
+}
 
 class MultiLineStringField(jsonschema.Field):
     class MultiLineStringSchema(serpy.Serializer):
         """used not as a serializer, but only for the schema"""
         type = StrField()
-        coordinates = jsonschema.Field(schema_metadata=point_2D_schema)
+        coordinates = jsonschema.Field(schema_metadata={
+            'type': 'array',
+            'items': point_2D_schema
+        })
 
     def __init__(self, **kwargs):
         super(MultiLineStringField, self).__init__(schema_type=MultiLineStringField.MultiLineStringSchema,

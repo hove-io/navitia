@@ -43,7 +43,8 @@ from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.serializer import api
 import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_type
+from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_type, depth_argument, \
+    UnsignedInteger
 from jormungandr.interfaces.v1.errors import ManageError
 from flask_restful.inputs import natural
 from jormungandr.interfaces.v1.fields import disruption_marshaller, NonNullList, NonNullNested
@@ -63,7 +64,6 @@ class Schedules(ResourceUri, ResourceUtc):
         ResourceUri.__init__(self, *args, **kwargs)
         ResourceUtc.__init__(self)
         self.endpoint = endpoint
-        self.parsers = {}
         self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
         parser_get.add_argument("filter", type=six.text_type)
@@ -73,14 +73,14 @@ class Schedules(ResourceUri, ResourceUtc):
                                 help="The datetime until which you want the schedules")
         parser_get.add_argument("duration", type=int, default=3600 * 24,
                                 help="Maximum duration between datetime and the retrieved stop time")
-        parser_get.add_argument("depth", type=int, default=2)
+        parser_get.add_argument("depth", type=depth_argument, default=2)
         parser_get.add_argument("count", type=default_count_arg_type, default=10,
                                 help="Number of schedules per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 help="The current page")
-        parser_get.add_argument("max_date_times", type=natural,
+        parser_get.add_argument("max_date_times", type=UnsignedInteger(), deprecated=True,
                                 help="DEPRECATED, replaced by `items_per_schedule`")
-        parser_get.add_argument("forbidden_id[]", type=six.text_type,
+        parser_get.add_argument("forbidden_id[]", type=six.text_type, deprecated=True,
                                 help="DEPRECATED, replaced by `forbidden_uris[]`",
                                 dest="__temporary_forbidden_id[]",
                                 default=[],
@@ -105,10 +105,12 @@ class Schedules(ResourceUri, ResourceUtc):
                                      'maintenances, ...). '
                                      'realtime is to have the freshest possible data',
                                 type=OptionValue(['base_schedule', 'adapted_schedule', 'realtime']))
-        parser_get.add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.datetime.utcnow(),
+        parser_get.add_argument("_current_datetime", type=DateTimeFormat(),
+                                schema_metadata={'default': 'now'}, hidden=True,
+                                default=datetime.datetime.utcnow(),
                                 help="The datetime we want to publish the disruptions from."
                                      " Default is the current date and it is mainly used for debug.")
-        parser_get.add_argument("items_per_schedule", type=natural, default=10000,
+        parser_get.add_argument("items_per_schedule", type=UnsignedInteger(), default=10000,
                                 help="maximum number of date_times per schedule")
         parser_get.add_argument("disable_geojson", type=BooleanType(), default=False,
                                 help="remove geojson from the response")
@@ -116,6 +118,9 @@ class Schedules(ResourceUri, ResourceUtc):
         self.get_decorators.insert(0, ManageError())
         self.get_decorators.insert(1, get_obj_serializer(self))
         self.get_decorators.append(complete_links(self))
+
+    def options(self, **kwargs):
+        return self.api_description(**kwargs)
 
     def get(self, uri=None, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
