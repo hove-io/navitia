@@ -143,7 +143,7 @@ class TableSerializer(PbNestedSerializer):
 
 class RouteScheduleSerializer(PbNestedSerializer):
     table = TableSerializer()
-    display_informations = pt.VJDisplayInformationSerializer(attr='pt_display_informations')
+    display_informations = pt.RouteDisplayInformationSerializer(attr='pt_display_informations')
     geojson = MultiLineStringField(display_none=False)
     additional_informations = EnumField(attr="response_status", display_none=True)
     links = jsonschema.MethodField(schema_type=LinkSchema(many=True))

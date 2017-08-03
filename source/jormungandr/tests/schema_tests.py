@@ -109,6 +109,7 @@ class TestSwaggerSchema(AbstractTestFixture):
             flex.core.validate_api_call(schema, req, resp)
             return obj
         except ValidationError as e:
+            logging.exception('validation error')
             if hard_check:
                 raise
             return obj, collect_all_errors(e)
