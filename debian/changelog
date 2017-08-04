@@ -1,3 +1,24 @@
+navitia2 (2.38.0) unstable; urgency=low
+
+  * Doc: disruption object doc fix  <https://github.com/CanalTP/navitia/pull/2155>
+  * Doc: Line doc fix  <https://github.com/CanalTP/navitia/pull/2156>
+  * Doc: fix journey main response doc  <https://github.com/CanalTP/navitia/pull/2157>
+  * Jormun: add the line name in display information  <https://github.com/CanalTP/navitia/pull/2175>
+  * Jormgundanr: add swagger definitions for schedules  <https://github.com/CanalTP/navitia/pull/2173>
+  * Jormun: do not log when a schedule doesn't match our route_point  <https://github.com/CanalTP/navitia/pull/2169>
+  * Kraken: no delays on line  <https://github.com/CanalTP/navitia/pull/2167>
+  * jormungandr: better parameter validation messages  <https://github.com/CanalTP/navitia/pull/2162>
+  * jormungandr: hide /connections api  <https://github.com/CanalTP/navitia/pull/2164>
+  * Jormungandr: use serpy for the schedule APIs  <https://github.com/CanalTP/navitia/pull/2163>
+  * Kraken: clean useless vehicle journeys  <https://github.com/CanalTP/navitia/pull/2159>
+  * Doc: flask args described with "help" param  <https://github.com/CanalTP/navitia/pull/2161>
+  * Doc: Swagger journey  <https://github.com/CanalTP/navitia/pull/2153>
+  * tyr: send error 409 while deleting billing_plan used in user  <https://github.com/CanalTP/navitia/pull/2158>
+  * Jormungandr: serpy journeys  <https://github.com/CanalTP/navitia/pull/2124>
+  * kraken: fix shape on BSS  <https://github.com/CanalTP/navitia/pull/2152>
+
+ -- Guillaume Pinot <texitoi@texitoi.eu>  Fri, 04 Aug 2017 12:08:11 +0100
+
 navitia2 (2.37.0) unstable; urgency=low
 
   * Jormungandr&Kraken: realtime proxy for stif  <https://github.com/CanalTP/navitia/pull/2151>
