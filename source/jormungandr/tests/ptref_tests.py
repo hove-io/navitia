@@ -927,6 +927,9 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         assert journeys[0]['sections'][0]['display_informations']['headsign'] == "A00"
         assert journeys[0]['sections'][0]['display_informations']['color'] == "289728"
         assert journeys[0]['sections'][0]['display_informations']['text_color'] == "FFD700"
+        assert journeys[0]['sections'][0]['display_informations']['label'] == "1A"
+        assert journeys[0]['sections'][0]['display_informations']['code'] == "1A"
+        assert journeys[0]['sections'][0]['display_informations']['name'] == "A"
 
     def test_stop_points_depth_3(self):
         """

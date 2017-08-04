@@ -209,6 +209,7 @@ class TestDepartures(AbstractTestFixture):
         d = get_not_null(response["departures"][2], "display_informations")
         get_not_null(d, "physical_mode")
         get_not_null(d, "headsign")
+        get_not_null(d, "name")
 
     def test_stop_schedule_limit_per_items(self):
         """

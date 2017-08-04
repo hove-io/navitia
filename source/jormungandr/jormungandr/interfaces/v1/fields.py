@@ -559,6 +559,7 @@ display_informations_route = {
     "code": fields.String(attribute="code"),
     "links": DisruptionLinks(),
     "text_color": fields.String(attribute="text_color"),
+    "name": fields.String(attribute="name"),
 }
 
 display_informations_vj = {
@@ -575,6 +576,7 @@ display_informations_vj = {
     "headsigns": NonNullList(fields.String()),
     "links": DisruptionLinks(),
     "text_color": fields.String(attribute="text_color"),
+    "name": fields.String(attribute="name"),
 }
 
 
