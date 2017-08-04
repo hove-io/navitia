@@ -90,6 +90,7 @@ def is_valid_route_schedule(schedule, only_time=False):
     get_not_null(d, 'direction')
     get_not_null(d, 'label')
     get_not_null(d, 'network')
+    get_not_null(d, 'name')
 
     shape(get_not_null(schedule, 'geojson'))
 
@@ -126,6 +127,7 @@ def is_valid_departure(departure):
     get_not_null(d, 'network')
     get_not_null(d, 'physical_mode')
     get_not_null(d, 'headsign')
+    get_not_null(d, 'name')
 
     route = get_not_null(departure, 'route')
     is_valid_route(route)
@@ -546,9 +548,11 @@ class TestDepartureBoard(AbstractTestFixture):
 
         display_information_route = get_not_null(schedule, 'display_informations')
         assert display_information_route['direction'] == 'stop2'
-        assert display_information_route['label'] == 'line:A'
+        assert display_information_route['label'] == 'A'
         assert display_information_route['color'] == '289728'
         assert display_information_route['text_color'] == 'FFD700'
+        assert display_information_route['name'] == 'line:A'
+        assert display_information_route['code'] == 'A'
 
 
 StopSchedule = namedtuple('StopSchedule', ['sp', 'route', 'date_times'])

@@ -271,6 +271,7 @@ struct calendar_fixture {
         b.lines["D"]->closing_time = boost::posix_time::time_duration(6,0,0);
         b.lines["line:A"]->color = "289728";
         b.lines["line:A"]->text_color = "FFD700";
+        b.lines["line:A"]->code = "A";
 
         b.finish();
         b.data->build_uri();
