@@ -51,7 +51,7 @@ def parse_input_date(date):
     return parser.parse(date, dayfirst=False, yearfirst=True)
 
 
-class DateTimeFormat(DateTimeType):
+class DateTimeFormat(CustomSchemaType):
     def __call__(self, value):
         """
         we want to valid the date format
@@ -65,6 +65,8 @@ class DateTimeFormat(DateTimeType):
         except ValueError as e:
             raise ValueError("Unable to parse datetime, {}".format(e))
 
+    def schema(self):
+        return TypeSchema(type=str, metadata={'format': 'date-time'})
 
 
 class UnsignedInteger(CustomSchemaType):

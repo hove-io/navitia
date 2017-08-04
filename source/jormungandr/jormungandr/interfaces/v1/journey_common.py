@@ -151,10 +151,12 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
 
         parser_get.add_argument("from", type=six.text_type, dest="origin",
                                 help='The id of the departure of your journey. '
-                                     'If not provided an isochrone is computed.')
+                                     'If not provided an isochrone is computed.',
+                                schema_metadata={'format': 'place'})
         parser_get.add_argument("to", type=six.text_type, dest="destination",
                                 help='The id of the arrival of your journey. '
-                                     'If not provided an isochrone is computed.')
+                                     'If not provided an isochrone is computed.',
+                                schema_metadata={'format': 'place'})
         parser_get.add_argument("datetime", type=DateTimeFormat(),
                                 help='Date and time to go/arrive (see `datetime_represents`).\n'
                                      'Note: the datetime must be in the coverage’s publication period.')
@@ -202,7 +204,6 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
                                 help="Maximal duration of bss on public transport in second")
         parser_get.add_argument("max_car_duration_to_pt", type=int,
                                 help="Maximal duration of car on public transport in second")
-
         parser_get.add_argument("walking_speed", type=float_gt_0,
                                 help='Walking speed for the fallback sections.\n'
                                      'Speed unit must be in meter/second')
@@ -221,14 +222,16 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
                                      'Note: the forbidden_uris[] concern only the public transport objects. '
                                      'You can’t for example forbid the use of the bike with them, '
                                      'you have to set the fallback modes for this '
-                                     '(first_section_mode[] and last_section_mode[])')
+                                     '(first_section_mode[] and last_section_mode[])',
+                                schema_metadata={'format': 'pt-object'})
         parser_get.add_argument("allowed_id[]", type=six.text_type, action="append",
                                 help='If you want to use only a small subset of '
                                      'the public transport objects in your solution.\n'
                                      'Note: The constraint intersects with forbidden_uris[]. '
                                      'For example, if you ask for '
                                      '`allowed_id[]=line:A&forbidden_uris[]=physical_mode:Bus`, '
-                                     'only vehicles of the line A that are not buses will be used.')
+                                     'only vehicles of the line A that are not buses will be used.',
+                                schema_metadata={'format': 'pt-object'})
         parser_get.add_argument("type", type=DescribedOptionValue(types), default="all", deprecated=True,
                                 help='DEPRECATED, desired type of journey.', hidden=True)
         parser_get.add_argument("disruption_active", type=BooleanType(), default=False, deprecated=True,
