@@ -488,7 +488,7 @@ class RouteDisplayInformationSerializer(PbNestedSerializer):
 class VJDisplayInformationSerializer(RouteDisplayInformationSerializer):
     description = jsonschema.Field(schema_type=str)
     physical_mode = jsonschema.Field(schema_type=str)
-    equipments = Equipments(attr='has_equipments')
+    equipments = Equipments(attr='has_equipments', display_none=True)
     headsign = jsonschema.Field(schema_type=str, display_none=True)
     headsigns = StringListField(display_none=False)
 
