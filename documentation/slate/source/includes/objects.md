@@ -90,7 +90,7 @@ Networks are fed by agencies in GTFS format.
 |closing_time|string|Closing hour at format HHMMSS|
 |routes|array of [route](#route)|Routes of the line|
 |commercial_mode|[commercial_mode](#commercial-mode)|Commercial mode of the line|
-|physical_mode|array of [physical_mode](#physical-mode)|Physical modes of the line|
+|physical_modes|array of [physical_mode](#physical-mode)|Physical modes of the line|
 
 ### Route
 
@@ -370,7 +370,7 @@ Real time and disruption objects
 |impact_id     | string                         |for traceability: Id of original input impact
 |severity      | [severity](#severity)          |gives some categorization element
 |application_periods |array of [period](#period)       |dates where the current disruption is active
-|messages            |[message](#message)     |text to provide to the traveler
+|messages            |array of [message](#message)     |texts to provide to the traveler
 |updated_at          |[iso-date-time](#iso-date-time) |date_time of last modifications 
 |impacted_objects    |array of [impacted_object](#impacted_object) |The list of public transport objects which are affected by the disruption
 |cause               |string                   |why is there such a disruption?

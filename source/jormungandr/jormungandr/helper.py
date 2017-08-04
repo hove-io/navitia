@@ -32,6 +32,8 @@ import re
 from flask import Request
 import uuid
 
+from werkzeug.routing import Rule
+
 
 class ReverseProxied(object):
     """
@@ -64,3 +66,12 @@ class NavitiaRequest(Request):
     def __init__(self, *args, **kwargs):
         super(Request, self).__init__(*args, **kwargs)
         self.id = str(uuid.uuid4())
+
+
+class NavitiaRule(Rule):
+    """
+    custom class to add a 'hide' variable to hide a rule in swagger
+    """
+    def __init__(self, *args, **kwargs):
+        self.hide = kwargs.pop('hide', False)
+        super(NavitiaRule, self).__init__(*args, **kwargs)

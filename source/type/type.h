@@ -857,6 +857,8 @@ struct MetaVehicleJourney: public Header, HasMessages {
                        std::vector<StopTime>,
                        PT_Data&);
 
+    void clean_up_useless_vjs(PT_Data&);
+
     template<typename T>
     void for_all_vjs(T fun) const{
         for (const auto& rt_vjs: rtlevel_to_vjs_map) {

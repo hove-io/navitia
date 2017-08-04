@@ -31,6 +31,7 @@
 
 from __future__ import absolute_import
 import serpy
+from navitiacommon.parser_args_type import TypeSchema, CustomSchemaType
 
 
 def _init(self, parent_class, schema_type=None, schema_metadata={}, **kwargs):
@@ -109,31 +110,27 @@ class MethodField(serpy.MethodField):
         self.schema_metadata.update(**kwargs)
 
 
-class CustomSchemaType(object):
-    def schema(self):
-        # by default we look for a _schema variable, but it can be overriden
-        return self._schema
-
-
 class DateTimeType(CustomSchemaType):
-    _schema = {
-        'type': 'string',
-        'format': 'navitia-date-time',  # we do not respect the official swagger datetime format :(
-        'pattern': '\d{4}\d{2}\d{2}T\d{2}\d{2}\d{2}'
-    }
+    # we do not respect the official swagger datetime format :(
+    _schema = TypeSchema(type=str,
+                         metadata={'format': 'navitia-date-time',
+                                   'pattern': '\d{4}\d{2}\d{2}T\d{2}\d{2}\d{2}'})
 
 
 class DateType(CustomSchemaType):
-    _schema = {
-        'type': 'string',
-        'format': 'navitia-date',  # we do not respect the official swagger date format :(
-        'pattern': '\d{4}\d{2}\d{2}'
-    }
+    # we do not respect the official swagger datetime format :(
+    _schema = TypeSchema(type=str,
+                         metadata={'format': 'navitia-date',
+                                   'pattern': '\d{4}\d{2}\d{2}'})
 
 
 class TimeType(CustomSchemaType):
-    _schema = {
-        'type': 'string',
-        'format': 'navitia-time',
-        'pattern': '\d{2}\d{2}\d{2}'
-    }
+    _schema = TypeSchema(type=str,
+                         metadata={'format': 'navitia-time',
+                                   'pattern': '\d{2}\d{2}\d{2}'})
+
+class TimeOrDateTimeType(CustomSchemaType):
+    # either a time or a datetime
+    _schema = TypeSchema(type=str,
+                         metadata={'format': 'navitia-time-or-date-time',
+                                   'pattern': '(\d{4}\d{2}\d{2}T)?\d{2}\d{2}\d{2}'})

@@ -124,6 +124,15 @@ def create_multiple_users(request, geojson_polygon):
 
     return d
 
+@pytest.fixture
+def create_billing_plan():
+    with app.app_context():
+        billing_plan = models.BillingPlan(name='test', max_request_count=10, max_object_count=100,
+                                          end_point_id=models.EndPoint.get_default().id)
+        models.db.session.add(billing_plan)
+        models.db.session.commit()
+        return billing_plan.id
+
 
 def test_get_users_empty():
     resp = api_get('/v0/users/')
@@ -647,3 +656,41 @@ def test_get_users_with_disable_geojson_false(create_multiple_users, geojson_pol
     assert foodefault
     assert foodefault.get('has_shape') is False
     assert foodefault.get('shape') is None
+
+def test_get_billing_plan(create_billing_plan):
+    """
+    We create a billing_plan.
+    """
+    resp = api_get('/v0/billing_plans/{}'.format(create_billing_plan))
+
+    assert resp['name'] == 'test'
+    assert resp['max_request_count'] == 10
+    assert resp['max_object_count'] == 100
+
+
+def test_delete_billing_plan(create_billing_plan):
+    """
+    We start by creating a billing_plan.
+    Delete the billing_plan
+    """
+    resp = api_get('/v0/billing_plans/{}'.format(create_billing_plan))
+
+    _, status = api_delete('/v0/billing_plans/{}'.format(resp['id']), check=False, no_json=True)
+    assert status == 204
+
+
+def test_delete_billing_plan_used_by_an_user(create_user, geojson_polygon):
+    """
+    We start by creating the user with a shape.
+    We request the user with parameter disable_geojson=false
+    A default billing_plan is created and used with name = 'nav_ctp'
+    We try to delete the billing_plan of this user but in vain.
+    """
+    resp = api_get('/v0/users/{}?disable_geojson=false'.format(create_user))
+
+    assert resp['billing_plan']['name'] == 'nav_ctp'
+    assert resp['has_shape'] is True
+    assert resp['shape'] == geojson_polygon
+
+    _, status = api_delete('/v0/billing_plans/{}'.format(resp['billing_plan']['id']), check=False, no_json=True)
+    assert status == 409

@@ -48,11 +48,10 @@ from formats import poi_type_conf_format, parse_error
 from navitiacommon.default_traveler_profile_params import default_traveler_profile_params, acceptable_traveler_types
 from navitiacommon import models, utils
 from navitiacommon.models import db
-from navitiacommon.parser_args_type import coord_format
+from navitiacommon.parser_args_type import CoordFormat, PositiveFloat, BooleanType, OptionValue, geojson_argument
 from functools import wraps
 from validations import datetime_format
 from tasks import create_autocomplete_depot, remove_autocomplete_depot
-from navitiacommon import parser_args_type
 from tyr.tasks import import_autocomplete
 from tyr.helper import get_instance_logger, save_in_tmp
 from tyr.fields import *
@@ -396,8 +395,8 @@ class User(flask_restful.Resource):
                             help='type of user: [with_free_instances, without_free_instances, super_user]',
                             location=('json', 'values'),
                             choices=['with_free_instances', 'without_free_instances', 'super_user'])
-        parser.add_argument('shape', type=parser_args_type.geojson_argument, required=False, location=('json', 'values'))
-        parser.add_argument('default_coord', type=coord_format(), required=False, location=('json', 'values'))
+        parser.add_argument('shape', type=geojson_argument, required=False, location=('json', 'values'))
+        parser.add_argument('default_coord', type=CoordFormat(), required=False, location=('json', 'values'))
         args = parser.parse_args()
 
         if not validate_email(args['email'],
@@ -458,9 +457,9 @@ class User(flask_restful.Resource):
                             help='block until argument is not correct', location=('json', 'values'))
         parser.add_argument('billing_plan_id', type=int, default=user.billing_plan_id,
                             help='billing id of the end_point', location=('json', 'values'))
-        parser.add_argument('shape', type=parser_args_type.geojson_argument,
+        parser.add_argument('shape', type=geojson_argument,
                             default=ujson.loads(user.shape), required=False, location=('json', 'values'))
-        parser.add_argument('default_coord', type=coord_format(), required=False, location=('json', 'values'))
+        parser.add_argument('default_coord', type=CoordFormat(), required=False, location=('json', 'values'))
         args = parser.parse_args()
 
         if not validate_email(args['email'],
@@ -727,36 +726,36 @@ class TravelerProfile(flask_restful.Resource):
         fb_modes = ['walking', 'car', 'bss', 'bike']
 
         parser = reqparse.RequestParser()
-        parser.add_argument('walking_speed', type=parser_args_type.float_gt_0, required=False,
+        parser.add_argument('walking_speed', type=PositiveFloat(), required=False,
                             location=('json', 'values'))
-        parser.add_argument('bike_speed', type=parser_args_type.float_gt_0, required=False,
+        parser.add_argument('bike_speed', type=PositiveFloat(), required=False,
                             location=('json', 'values'))
-        parser.add_argument('bss_speed', type=parser_args_type.float_gt_0, required=False,
+        parser.add_argument('bss_speed', type=PositiveFloat(), required=False,
                             location=('json', 'values'))
-        parser.add_argument('car_speed', type=parser_args_type.float_gt_0, required=False,
+        parser.add_argument('car_speed', type=PositiveFloat(), required=False,
                             location=('json', 'values'))
-        parser.add_argument('wheelchair', type=parser_args_type.true_false, required=False,
+        parser.add_argument('wheelchair', type=BooleanType(), required=False,
                             location=('json', 'values'))
-        parser.add_argument('max_walking_duration_to_pt', type=parser_args_type.float_gt_0, required=False,
+        parser.add_argument('max_walking_duration_to_pt', type=PositiveFloat(), required=False,
                             help='in second', location=('json', 'values'))
-        parser.add_argument('max_bike_duration_to_pt', type=parser_args_type.float_gt_0, required=False,
+        parser.add_argument('max_bike_duration_to_pt', type=PositiveFloat(), required=False,
                             help='in second', location=('json', 'values'))
-        parser.add_argument('max_bss_duration_to_pt', type=parser_args_type.float_gt_0, required=False,
+        parser.add_argument('max_bss_duration_to_pt', type=PositiveFloat(), required=False,
                             help='in second', location=('json', 'values'))
-        parser.add_argument('max_car_duration_to_pt', type=parser_args_type.float_gt_0, required=False,
+        parser.add_argument('max_car_duration_to_pt', type=PositiveFloat(), required=False,
                             help='in second', location=('json', 'values'))
         parser.add_argument('first_section_mode[]',
-                            type=parser_args_type.option_value(fb_modes), case_sensitive=False,
+                            type=OptionValue(fb_modes), case_sensitive=False,
                             required=False, action='append', dest='first_section_mode', location='values')
         parser.add_argument('last_section_mode[]',
-                            type=parser_args_type.option_value(fb_modes), case_sensitive=False,
+                            type=OptionValue(fb_modes), case_sensitive=False,
                             required=False, action='append', dest='last_section_mode', location='values')
 
         # flask parser returns a list for first_section_mode and last_section_mode
         parser.add_argument('first_section_mode',
-                            type=parser_args_type.option_value(fb_modes), required=False, location='json')
+                            type=OptionValue(fb_modes), required=False, location='json')
         parser.add_argument('last_section_mode',
-                            type=parser_args_type.option_value(fb_modes), required=False, location='json')
+                            type=OptionValue(fb_modes), required=False, location='json')
 
         self.args = parser.parse_args()
 
@@ -929,6 +928,8 @@ class BillingPlan(flask_restful.Resource):
         try:
             db.session.delete(billing_plan)
             db.session.commit()
+        except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError):
+            return ({'error': 'billing_plan used'}, 409)  # Conflict
         except Exception:
             logging.exception("fail")
             raise

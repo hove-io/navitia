@@ -45,13 +45,11 @@ from jormungandr.interfaces.v1.fields import stop_point, stop_area, route, line,
 from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri, protect
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import depth_argument, date_time_format, default_count_arg_type
+from jormungandr.interfaces.parsers import depth_argument, DateTimeFormat, default_count_arg_type
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.Coord import Coord
 from jormungandr.interfaces.v1.fields import disruption_marshaller, feed_publisher, NonNullList, NonNullNested
 from jormungandr.timezone import set_request_timezone
-from flask_restful.inputs import boolean
-from jormungandr.interfaces.parsers import option_value
 from jormungandr.interfaces.common import odt_levels
 from jormungandr.utils import date_to_timestamp
 from jormungandr.resources_utils import ResourceUtc
@@ -60,6 +58,7 @@ from flask import g
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.serializer import api
 import six
+from navitiacommon.parser_args_type import BooleanType, OptionValue
 
 
 class Uri(ResourceUri, ResourceUtc):
@@ -70,53 +69,52 @@ class Uri(ResourceUri, ResourceUtc):
         ResourceUtc.__init__(self)
         parser = self.parsers["get"]
         parser.add_argument("start_page", type=int, default=0,
-                            description="The page where you want to start")
+                            help="The page where you want to start")
         parser.add_argument("count", type=default_count_arg_type, default=25,
-                            schema_type=int, schema_metadata={"minimum": 0, "maximum": 1000},
-                            description="Number of objects you want on a page")
+                            help="Number of objects you want on a page")
         parser.add_argument("depth", type=depth_argument,
                             schema_type=int,
                             default=1,
-                            description="The depth of your object")
+                            help="The depth of your object")
         parser.add_argument("forbidden_id[]", type=six.text_type,
-                            description="DEPRECATED, replaced by forbidden_uris[]",
+                            help="DEPRECATED, replaced by `forbidden_uris[]`",
                             dest="__temporary_forbidden_id[]",
                             default=[],
                             action="append")
         parser.add_argument("forbidden_uris[]", type=six.text_type,
-                            description="forbidden uris",
+                            help="forbidden uris",
                             dest="forbidden_uris[]",
                             default=[],
                             action="append")
+        # for the top level collection apis (/v1/networks, /v1/lines, ...) the external_code is mandatory
+        external_code_mandatory = '.external_codes' in self.endpoint
         parser.add_argument("external_code", type=six.text_type,
-                            description="An external code to query")
+                            help="An external code to query", required=external_code_mandatory)
         parser.add_argument("headsign", type=six.text_type,
-                            description="filter vehicle journeys on headsign")
-        parser.add_argument("show_codes", type=boolean, default=False,
-                            description="show more identification codes")
-        parser.add_argument("odt_level", type=option_value(odt_levels), default="all",
+                            help="filter vehicle journeys on headsign")
+        parser.add_argument("show_codes", type=BooleanType(), default=False,
+                            help="show more identification codes")
+        parser.add_argument("odt_level", type=OptionValue(odt_levels), default="all",
                             schema_type=str, schema_metadata={"enum": odt_levels},
-                            description="odt level")
-        parser.add_argument("_current_datetime", type=date_time_format, default=datetime.utcnow(), hidden=True,
-                            description="The datetime used to consider the state of the pt object"
-                                        " Default is the current date and it is used for debug."
-                                        " Note: it will mainly change the disruptions that concern the object"
-                                        " The timezone should be specified in the format,"
-                                        " else we consider it as UTC")
+                            help="odt level")
+        parser.add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.utcnow(), hidden=True,
+                            help="The datetime used to consider the state of the pt object"
+                                 " Default is the current date and it is used for debug."
+                                 " Note: it will mainly change the disruptions that concern the object"
+                                 " The timezone should be specified in the format,"
+                                 " else we consider it as UTC")
         parser.add_argument("distance", type=int, default=200,
-                                description="Distance range of the query. Used only if a coord is in the query")
-        parser.add_argument("since", type=date_time_format,
-                            schema_type=str,
-                            description="filters objects not valid before this date")
-        parser.add_argument("until", type=date_time_format,
-                            schema_type=str,
-                            description="filters objects not valid after this date")
-        parser.add_argument("disable_geojson", type=boolean, default=False,
-                            description="remove geojson from the response")
+                            help="Distance range of the query. Used only if a coord is in the query")
+        parser.add_argument("since", type=DateTimeFormat(),
+                            help="filters objects not valid before this date")
+        parser.add_argument("until", type=DateTimeFormat(),
+                            help="filters objects not valid after this date")
+        parser.add_argument("disable_geojson", type=BooleanType(), default=False,
+                            help="remove geojson from the response")
 
         if is_collection:
             parser.add_argument("filter", type=six.text_type, default="",
-                                description="The filter parameter")
+                                help="The filter parameter")
         self.collection = collection
         self.get_decorators.insert(0, ManageError())
 
@@ -333,8 +331,8 @@ def stop_points(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument("original_id", type=six.text_type, description="original uri of the object you"
-                                                                                      "want to query")
+            self.parsers["get"].add_argument("original_id", type=six.text_type,
+                                             help="original uri of the object you want to query")
     return StopPoints
 
 
@@ -355,8 +353,8 @@ def stop_areas(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False))),
             ]
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument("original_id", type=six.text_type, description="original uri of the object you "
-                                                                                      "want to query")
+            self.parsers["get"].add_argument("original_id", type=six.text_type,
+                                             help="original uri of the object you want to query")
     return StopAreas
 
 
@@ -437,8 +435,8 @@ def routes(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument("original_id", type=six.text_type, description="original uri of the object you"
-                                                                                      "want to query")
+            self.parsers["get"].add_argument("original_id", type=six.text_type,
+                                             help="original uri of the object you want to query")
     return Routes
 
 
@@ -457,8 +455,8 @@ def line_groups(is_collection):
                 ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts")),
             ]
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument("original_id", type=six.text_type, description="original uri of the object you"
-                                                                                      "want to query")
+            self.parsers["get"].add_argument("original_id", type=six.text_type,
+                                             help="original uri of the object you want to query")
     return LineGroups
 
 
@@ -481,8 +479,8 @@ def lines(is_collection):
             ]
             self.get_decorators.insert(1, get_obj_serializer(self))
 
-            self.parsers["get"].add_argument("original_id", type=six.text_type, description="original uri of the object you"
-                                                                                      "want to query")
+            self.parsers["get"].add_argument("original_id", type=six.text_type,
+                                             help="original uri of the object you want to query")
     return Lines
 
 
@@ -503,10 +501,10 @@ def pois(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument("original_id", type=six.text_type, description="original uri of the object you"
-                                                                                      "want to query")
-            self.parsers["get"].add_argument("bss_stands", type=boolean, default=True,
-                                             description="Show bss stands availability")
+            self.parsers["get"].add_argument("original_id", type=six.text_type,
+                                             help="original uri of the object you want to query")
+            self.parsers["get"].add_argument("bss_stands", type=BooleanType(), default=True,
+                                             help="Show bss stands availability")
             args = self.parsers["get"].parse_args()
             if args["bss_stands"]:
                 self.get_decorators.insert(2, ManageStands(self, 'pois'))
@@ -531,8 +529,8 @@ def networks(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument("original_id", type=six.text_type, description="original uri of the object you"
-                                                                                      "want to query")
+            self.parsers["get"].add_argument("original_id", type=six.text_type,
+                                             help="original uri of the object you want to query")
     return Networks
 
 
@@ -550,8 +548,8 @@ def disruptions(is_collection):
                 ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False)))
             ]
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument("original_id", type=six.text_type, description="original uri of the object you"
-                                                                                      "want to query")
+            self.parsers["get"].add_argument("original_id", type=six.text_type,
+                                             help="original uri of the object you want to query")
     return Disruptions
 
 

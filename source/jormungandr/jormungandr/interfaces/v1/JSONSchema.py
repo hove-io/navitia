@@ -66,6 +66,10 @@ def get_all_described_paths():
             if 'OPTIONS' not in rule.methods or rule.provide_automatic_options:
                 continue
 
+            if rule.hide:
+                # we might want to hide some rule
+                continue
+
             view_function = app.view_functions.get(endpoint)
             if view_function is not None:
                 view_class = view_function.view_class

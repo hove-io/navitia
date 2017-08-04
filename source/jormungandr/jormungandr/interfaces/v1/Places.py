@@ -31,7 +31,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask_restful import fields, reqparse, abort
-from flask_restful.inputs import boolean
 from flask.globals import g
 
 from jormungandr.interfaces.v1.serializer.api import PlacesSerializer
@@ -43,7 +42,7 @@ from jormungandr.interfaces.v1.fields import disruption_marshaller
 from jormungandr.interfaces.v1.fields import place, NonNullList, NonNullNested, PbField, pagination,\
                                              error, feed_publisher
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
-from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type, date_time_format
+from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type, DateTimeFormat
 from copy import deepcopy
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.exceptions import TechnicalError, InvalidArguments
@@ -51,9 +50,9 @@ from flask_restful import marshal_with
 import datetime
 from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
 import ujson as json
-from jormungandr.interfaces.parsers import option_value
 from jormungandr.scenarios.utils import pb_type
-from navitiacommon.parser_args_type import ParameterDescription, coord_format
+from navitiacommon.parser_args_type import TypeSchema, CoordFormat, CustomSchemaType, BooleanType, \
+    OptionValue
 import six
 
 
@@ -65,7 +64,7 @@ places = {
 }
 
 
-class geojson_argument(object):
+class geojson_argument(CustomSchemaType):
     def __call__(self, value):
         decoded = json.loads(value)
         if not decoded:
@@ -73,8 +72,8 @@ class geojson_argument(object):
 
         return parser_args_type.geojson_argument(decoded)
 
-    def description(self):
-        return ParameterDescription(type=str)  # TODO a better description of the geojson
+    def schema(self):
+        return TypeSchema(type=str)  # TODO a better description of the geojson
 
 
 class Places(ResourceUri):
@@ -82,41 +81,39 @@ class Places(ResourceUri):
         ResourceUri.__init__(self, authentication=False, output_type_serializer=PlacesSerializer,
                              *args, **kwargs)
         self.parsers["get"].add_argument("q", type=six.text_type, required=True,
-                                         description="The data to search")
-        self.parsers["get"].add_argument("type[]", type=option_value(list(pb_type.keys())),
+                                         help="The data to search")
+        self.parsers["get"].add_argument("type[]", type=OptionValue(list(pb_type.keys())),
                                          action="append",
-                                         default=["stop_area", "address",
-                                                  "poi",
-                                                  "administrative_region"],
-                                         description="The type of data to search")
+                                         default=["stop_area", "address", "poi", "administrative_region"],
+                                         help="The type of data to search")
         self.parsers["get"].add_argument("count", type=default_count_arg_type, default=10,
-                                         description="The maximum number of places returned")
-        self.parsers["get"].add_argument("search_type", type=int, default=0,
-                                         description="Type of search: firstletter or type error")
+                                         help="The maximum number of places returned")
+        self.parsers["get"].add_argument("search_type", type=int, default=0, hidden=True,
+                                         help="Type of search: firstletter or type error")
         self.parsers["get"].add_argument("admin_uri[]", type=six.text_type,
                                          action="append",
-                                         description="If filled, will restrain the search within the "
-                                                     "given admin uris")
+                                         help="If filled, will restrain the search within the "
+                                              "given admin uris")
         self.parsers["get"].add_argument("depth", type=depth_argument,
                                          default=1,
-                                         description="The depth of objects")
-        self.parsers["get"].add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
-                                         description="The datetime used to consider the state of the pt object"
-                                                     " Default is the current date and it is used for debug."
-                                                     " Note: it will mainly change the disruptions that concern "
-                                                     "the object The timezone should be specified in the format,"
-                                                     " else we consider it as UTC",
+                                         help="The depth of objects")
+        self.parsers["get"].add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.datetime.utcnow(),
+                                         help="The datetime used to consider the state of the pt object.\n"
+                                              "Default is the current date and it is used for debug.\n"
+                                              "Note: it will mainly change the disruptions that concern "
+                                              "the object. The timezone should be specified in the format, "
+                                              "else we consider it as UTC",
                                          schema_type='datetime', hidden=True)
-        self.parsers['get'].add_argument("disable_geojson", type=boolean, default=False,
-                                         description="remove geojson from the response")
+        self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
+                                         help="remove geojson from the response")
 
-        self.parsers['get'].add_argument("from", type=coord_format(nullable=True),
-                                         description="Coordinates longitude;latitude used to prioritize "
-                                                     "the objects around this coordinate")
-        self.parsers['get'].add_argument("_autocomplete", type=six.text_type, description="name of the autocomplete service"
-                                         " used under the hood", hidden=True)
+        self.parsers['get'].add_argument("from", type=CoordFormat(nullable=True),
+                                         help="Coordinates longitude;latitude used to prioritize "
+                                              "the objects around this coordinate")
+        self.parsers['get'].add_argument("_autocomplete", type=six.text_type, hidden=True,
+                                         help="name of the autocomplete service, used under the hood")
         self.parsers['get'].add_argument('shape', type=geojson_argument(),
-                                         description='Geographical shape to limit the search.')
+                                         help='Geographical shape to limit the search.')
 
     def get(self, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
@@ -134,7 +131,7 @@ class Places(ResourceUri):
 
         if user and user.default_coord:
             if args['from'] is None:
-                args['from'] = coord_format()(user.default_coord)
+                args['from'] = CoordFormat()(user.default_coord)
         else:
             if args['from'] == '':
                 raise InvalidArguments("if 'from' is provided it cannot be null")
@@ -163,10 +160,10 @@ class PlaceUri(ResourceUri):
 
     def __init__(self, **kwargs):
         ResourceUri.__init__(self, authentication=False, **kwargs)
-        self.parsers["get"].add_argument("bss_stands", type=boolean, default=True,
-                                         description="Show bss stands availability")
-        self.parsers['get'].add_argument("disable_geojson", type=boolean, default=False,
-                                         description="remove geojson from the response")
+        self.parsers["get"].add_argument("bss_stands", type=BooleanType(), default=True,
+                                         help="Show bss stands availability")
+        self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
+                                         help="remove geojson from the response")
         args = self.parsers["get"].parse_args()
 
         if args["bss_stands"]:
@@ -175,8 +172,8 @@ class PlaceUri(ResourceUri):
         if args['disable_geojson']:
             g.disable_geojson = True
 
-        self.parsers['get'].add_argument("_autocomplete", type=six.text_type, description="name of the autocomplete service"
-                                         " used under the hood")
+        self.parsers['get'].add_argument("_autocomplete", type=six.text_type, hidden=True,
+                                         help="name of the autocomplete service, used under the hood")
 
     def get(self, id, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
@@ -219,33 +216,29 @@ class PlacesNearby(ResourceUri):
                                          action="append",
                                          default=["stop_area", "stop_point",
                                                   "poi"],
-                                         description="Type of the objects to\
-                                         return")
+                                         help="Type of the objects to return")
         self.parsers["get"].add_argument("filter", type=six.text_type, default="",
-                                         description="Filter your objects")
+                                         help="Filter your objects")
         self.parsers["get"].add_argument("distance", type=int, default=500,
-                                         description="Distance range of the\
-                                         query")
+                                         help="Distance range of the query")
         self.parsers["get"].add_argument("count", type=default_count_arg_type, default=10,
-                                         description="Elements per page")
-        self.parsers["get"].add_argument("depth", type=depth_argument,
-                                         default=1,
-                                         description="Maximum depth on\
-                                         objects")
+                                         help="Elements per page")
+        self.parsers["get"].add_argument("depth", type=depth_argument, default=1,
+                                         help="Maximum depth on objects")
         self.parsers["get"].add_argument("start_page", type=int, default=0,
-                                         description="The page number of the\
-                                         ptref result")
-        self.parsers["get"].add_argument("bss_stands", type=boolean, default=True,
-                                         description="Show bss stands availability")
+                                         help="The page number of the ptref result")
+        self.parsers["get"].add_argument("bss_stands", type=BooleanType(), default=True,
+                                         help="Show bss stands availability")
 
-        self.parsers["get"].add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
-                                         description="The datetime used to consider the state of the pt object"
-                                                     " Default is the current date and it is used for debug."
-                                                     " Note: it will mainly change the disruptions that concern "
-                                                     "the object The timezone should be specified in the format,"
-                                                     " else we consider it as UTC")
-        self.parsers['get'].add_argument("disable_geojson", type=boolean, default=False,
-                            description="remove geojson from the response")
+        self.parsers["get"].add_argument("_current_datetime", type=DateTimeFormat(),
+                                         default=datetime.datetime.utcnow(),
+                                         help="The datetime used to consider the state of the pt object.\n"
+                                              "Default is the current date and it is used for debug.\n"
+                                              "Note: it will mainly change the disruptions that concern "
+                                              "the object. The timezone should be specified in the format, "
+                                              "else we consider it as UTC")
+        self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
+                                         help="remove geojson from the response")
         args = self.parsers["get"].parse_args()
         if args["bss_stands"]:
             self.get_decorators.insert(1, ManageStands(self, 'places_nearby'))

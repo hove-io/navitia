@@ -31,12 +31,39 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import json
 import logging
 
+from flex.exceptions import ValidationError
+
 from tests.tests_mechanism import dataset, AbstractTestFixture
 import flex
 
 
 def get_params(schema):
     return {p['name']: p for p in schema.get('get', {}).get('parameters', [])}
+
+
+def collect_all_errors(validation_error):
+    """
+    collect all errors from a flex ValidationError
+
+    the ValidationError is an aggregate of dict and list to have structured errors,
+    we destructure them to get a simple dict with a 'path' to the error and the error
+    """
+    def _collect(err, key):
+        errors = {}
+        if isinstance(err, dict):
+            for k, v in err.items():
+                if k == 'default_factory':
+                    continue
+                errors.update(_collect(v, key='{prev}.{k}'.format(prev=key, k=k)))
+            return errors
+
+        if isinstance(err, list):
+            for i, e in enumerate(err):
+                errors.update(_collect(e, key='{k}[{i}]'.format(k=key, i=i)))
+            return errors
+
+        return {key: err}
+    return _collect(validation_error.messages, key='.')
 
 
 @dataset({"main_routing_test": {}, "main_autocomplete_test": {}})
@@ -60,7 +87,10 @@ class TestSwaggerSchema(AbstractTestFixture):
         for typename in response.get('definitions'):
             assert typename  # we should newer have empty names
 
-    def _check_schema(self, url):
+        # we don't want to document /connections apis
+        assert not any('connections' in p for p in response['paths'])
+
+    def _check_schema(self, url, hard_check=True):
         schema = self.get_schema()
 
         raw_response = self.tester.get(url)
@@ -72,8 +102,17 @@ class TestSwaggerSchema(AbstractTestFixture):
             url=url,
             status_code=raw_response.status_code,
             content_type='application/json')
-        flex.core.validate_api_call(schema, req, resp)
-        return json.loads(raw_response.data)
+
+        obj = json.loads(raw_response.data)
+
+        try:
+            flex.core.validate_api_call(schema, req, resp)
+            return obj
+        except ValidationError as e:
+            logging.exception('validation error')
+            if hard_check:
+                raise
+            return obj, collect_all_errors(e)
 
     def test_coverage_schema(self):
         """
@@ -146,3 +185,60 @@ class TestSwaggerSchema(AbstractTestFixture):
 
     def test_networks_schema(self):
         self._check_schema('/v1/coverage/main_routing_test/networks')
+
+    def test_journeys_schema(self):
+        self._check_schema('/v1/coverage/main_routing_test/journeys?'
+                           'from=0.001527130369323005;0.0004491559909773545&'
+                           'to=station_1&'
+                           'datetime=20120615T080000')
+
+    def test_stop_schedule(self):
+        """
+        test the stop_schedule swagger
+
+        the problem with this API is that we return sometime `null` field and swagger does not like this
+        since the navitia SDK handle those and we haven't found a way around those (we can't use swagger3 yet)
+        we consider those error acceptable
+        """
+        # Note: swagger does not handle '/' in parameters, so we cannot express our '<uris>'
+        # so the '/' is urlencoded as %2F to be able to test the call
+
+        obj, errors = self._check_schema('/v1/coverage/main_routing_test/stop_areas%2FstopB/stop_schedules?'
+                           'from_datetime=20120614T165200', hard_check=False)
+
+        # we have some errors, but only on additional_informations
+        assert len(errors) == 2
+        for k, e in errors.items():
+            assert k.endswith('additional_informations[0].type[0]')
+            assert e == "Got value `None` of type `null`. Value must be of type(s): `(u'string',)`"
+
+        # we check that the response is not empty
+        assert any((o.get('date_times') for o in obj.get('stop_schedules', [])))
+
+    def test_route_schedule(self):
+        """
+        test the route_schedule swagger
+
+        the problem with this API is that we return sometime `null` field and swagger does not like this
+        since the navitia SDK handle those and we haven't found a way around those (we can't use swagger3 yet)
+        we consider those error acceptable
+        """
+        # Note: swagger does not handle '/' in parameters, so we cannot express our '<uris>'
+        # so the '/' is urlencoded as %2F to be able to test the call
+
+        _, errors = self._check_schema('/v1/coverage/main_routing_test/routes%2FA:0/route_schedules?'
+                                       'from_datetime=20120614T165200', hard_check=False)
+
+        # we have some errors, but only on additional_informations
+        assert len(errors) == 1
+        for k, e in errors.items():
+            assert k.endswith('additional_informations[0].type[0]')
+            assert e == "Got value `None` of type `null`. Value must be of type(s): `(u'string',)`"
+
+    def test_departures(self):
+        self._check_schema('/v1/coverage/main_routing_test/stop_areas%2FstopB/departures?'
+                           'from_datetime=20120614T165200')
+
+    def test_arrivals(self):
+        self._check_schema('/v1/coverage/main_routing_test/stop_areas%2FstopB/arrivals?'
+                           'from_datetime=20120614T165200')

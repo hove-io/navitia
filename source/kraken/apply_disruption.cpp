@@ -155,8 +155,13 @@ struct add_impacts_visitor : public apply_impacts_visitor {
             LOG4CPLUS_TRACE(log, "canceling " << mvj->uri);
             mvj->cancel_vj(rt_level, impact->application_periods, pt_data, r);
             mvj->push_unique_impact(impact);
-        } else if (impact->severity->effect == nt::disruption::Effect::SIGNIFICANT_DELAYS ||
-                   impact->severity->effect == nt::disruption::Effect::DETOUR ) {
+        } else if ((impact->severity->effect == nt::disruption::Effect::SIGNIFICANT_DELAYS ||
+                   impact->severity->effect == nt::disruption::Effect::DETOUR) &&
+                   // we don't want to apply delay or detour without stoptime's information
+                   // if there is no stoptimes it should be modeled as a NO_SERVICE
+                   // else it is something else, like for example a SIGNIFICANT_DELAYS on a line
+                   // and in this case we do not have enough information to apply the impact
+                   ! impact->aux_info.stop_times.empty()) {
             LOG4CPLUS_TRACE(log, "modifying " << mvj->uri);
             auto canceled_vp = compute_base_disrupted_vp(impact->application_periods,
                                                          meta.production_date);
@@ -547,6 +552,8 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
                 disruptions_collection.insert(share_ptr);
             }
         }
+        // we check if we now have useless vehicle_journeys to cleanup
+        mvj->clean_up_useless_vjs(pt_data);
     }
 
     void operator()(nt::StopPoint* stop_point) {

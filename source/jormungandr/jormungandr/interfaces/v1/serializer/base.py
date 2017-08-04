@@ -123,6 +123,35 @@ class EnumField(jsonschema.Field):
         return [v.name for v in pb_type.DESCRIPTOR.values]
 
 
+class NestedEnumField(EnumField):
+    """
+    handle nested Enum field.
+
+    define attr='street_network.mode'
+
+    it will get the mode of the street_network field
+    """
+    def as_getter(self, serializer_field_name, serializer_cls):
+        def getter(val):
+            attr = self.attr or serializer_field_name
+            enum_field = attr.split('.')[-1]
+            cur_obj = val
+            for f in attr.split('.')[:-1]:
+                if not cur_obj.HasField(f):
+                    return None
+
+                cur_obj = getattr(cur_obj, f)
+                if not cur_obj:
+                    return None
+
+            if not cur_obj.HasField(enum_field):
+                return None
+            enum = cur_obj.DESCRIPTOR.fields_by_name[enum_field].enum_type.values_by_number
+            ret_value = enum[getattr(cur_obj, enum_field)].name
+            return ret_value
+        return getter
+
+
 class EnumListField(EnumField):
 
     """WARNING: the enumlist field does not work without a self.attr"""
@@ -142,6 +171,20 @@ class EnumListField(EnumField):
 class GenericSerializer(PbNestedSerializer):
     id = jsonschema.Field(schema_type=str, attr='uri', description='Identifier of the object')
     name = jsonschema.Field(schema_type=str, description='Name of the object')
+
+
+class AmountSerializer(PbNestedSerializer):
+    value = jsonschema.Field(schema_type=float)
+    unit = jsonschema.Field(schema_type=str)
+
+    #TODO check that retro compatibility is really useful
+    def to_value(self, value):
+        if value is None:
+            return {
+                'value': 0.0,
+                'unit': ''
+            }
+        return super(AmountSerializer, self).to_value(value)
 
 
 class LiteralField(jsonschema.Field):
@@ -205,3 +248,14 @@ class DoubleToStringField(Field):
     def to_value(self, value):
         # we don't want to loose precision while converting a double to string
         return "{:.16g}".format(value)
+
+
+class DescribedField(LambdaField):
+    """
+    This class does not output anything, it's here only for description purpose
+    (for field added outside of serpy, but that we want to describe in swagger)
+    """
+    def __init__(self, **kwargs):
+        # the field returns always None and None are not displayed, so nothing is displayed
+        super(DescribedField, self).__init__(method=lambda *args: None, display_none=False, **kwargs)
+

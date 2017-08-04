@@ -124,19 +124,24 @@ class V1Routing(AModule):
 
         collecs = list(converters_collection_type.collections_to_resource_type.keys())
         for collection in collecs:
+            # we want to hide the connections apis, as they are only for debug
+            hide = collection == 'connections'
             self.add_resource(getattr(Uri, collection)(True),
                               region + collection,
                               coord + collection,
                               region + '<uri:uri>/' + collection,
                               coord + '<uri:uri>/' + collection,
-                              endpoint=collection + '.collection')
+                              endpoint=collection + '.collection', hide=hide)
 
+            if collection == 'connections':
+                # connections api cannot be query by id
+                continue
             self.add_resource(getattr(Uri, collection)(False),
                               region + collection + '/<id:id>',
                               coord + collection + '/<id:id>',
                               region + '<uri:uri>/' + collection + '/<id:id>',
                               coord + '<uri:uri>/' + collection + '/<id:id>',
-                              endpoint=collection + '.id')
+                              endpoint=collection + '.id', hide=hide)
 
         collecs = ["routes", "lines", "line_groups", "networks", "stop_areas", "stop_points",
                    "vehicle_journeys"]

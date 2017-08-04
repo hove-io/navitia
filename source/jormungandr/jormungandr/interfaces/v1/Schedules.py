@@ -39,11 +39,14 @@ from jormungandr.interfaces.v1.fields import stop_point, route, pagination, PbFi
     display_informations_route, UrisToLinks, error, \
     enum_type, SplitDateTime, MultiLineString, PbEnum, feed_publisher
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri, complete_links
+from jormungandr.interfaces.v1.decorators import get_obj_serializer
+from jormungandr.interfaces.v1.serializer import api
 import datetime
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import option_value, date_time_format, default_count_arg_type
+from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_type, depth_argument, \
+    UnsignedInteger
 from jormungandr.interfaces.v1.errors import ManageError
-from flask_restful.inputs import natural, boolean
+from flask_restful.inputs import natural
 from jormungandr.interfaces.v1.fields import disruption_marshaller, NonNullList, NonNullNested
 from jormungandr.resources_utils import ResourceUtc
 from jormungandr.interfaces.v1.make_links import create_external_link
@@ -52,69 +55,72 @@ from copy import deepcopy
 from navitiacommon import response_pb2
 from jormungandr.exceptions import InvalidArguments
 import six
+from navitiacommon.parser_args_type import BooleanType, OptionValue
 
 
 class Schedules(ResourceUri, ResourceUtc):
 
-    def __init__(self, endpoint):
-        ResourceUri.__init__(self)
+    def __init__(self, endpoint, *args, **kwargs):
+        ResourceUri.__init__(self, *args, **kwargs)
         ResourceUtc.__init__(self)
         self.endpoint = endpoint
-        self.parsers = {}
-        self.parsers["get"] = reqparse.RequestParser(
-            argument_class=ArgumentDoc)
+        self.parsers["get"] = reqparse.RequestParser(argument_class=ArgumentDoc)
         parser_get = self.parsers["get"]
         parser_get.add_argument("filter", type=six.text_type)
-        parser_get.add_argument("from_datetime", type=date_time_format,
-                                description="The datetime from which you want\
-                                the schedules", default=None)
-        parser_get.add_argument("until_datetime", type=date_time_format,
-                                description="The datetime until which you want\
-                                the schedules", default=None)
+        parser_get.add_argument("from_datetime", type=DateTimeFormat(), default=None,
+                                help="The datetime from which you want the schedules")
+        parser_get.add_argument("until_datetime", type=DateTimeFormat(), default=None,
+                                help="The datetime until which you want the schedules")
         parser_get.add_argument("duration", type=int, default=3600 * 24,
-                                description="Maximum duration between datetime\
-                                and the retrieved stop time")
-        parser_get.add_argument("depth", type=int, default=2)
+                                help="Maximum duration between datetime and the retrieved stop time")
+        parser_get.add_argument("depth", type=depth_argument, default=2)
         parser_get.add_argument("count", type=default_count_arg_type, default=10,
-                                description="Number of schedules per page")
+                                help="Number of schedules per page")
         parser_get.add_argument("start_page", type=int, default=0,
-                                description="The current page")
-        parser_get.add_argument("max_date_times", type=natural,
-                                description="DEPRECATED, use items_per_schedule")
-        parser_get.add_argument("forbidden_id[]", type=six.text_type,
-                                description="DEPRECATED, replaced by forbidden_uris[]",
+                                help="The current page")
+        parser_get.add_argument("max_date_times", type=UnsignedInteger(), deprecated=True,
+                                help="DEPRECATED, replaced by `items_per_schedule`")
+        parser_get.add_argument("forbidden_id[]", type=six.text_type, deprecated=True,
+                                help="DEPRECATED, replaced by `forbidden_uris[]`",
                                 dest="__temporary_forbidden_id[]",
                                 default=[],
                                 action='append')
         parser_get.add_argument("forbidden_uris[]", type=six.text_type,
-                                description="forbidden uris",
+                                help="forbidden uris",
                                 dest="forbidden_uris[]",
                                 default=[],
                                 action='append')
 
         parser_get.add_argument("calendar", type=six.text_type,
-                                description="Id of the calendar")
+                                help="Id of the calendar")
         parser_get.add_argument("distance", type=int, default=200,
-                                description="Distance range of the query. Used only if a coord is in the query")
-        parser_get.add_argument("show_codes", type=boolean, default=False,
-                            description="show more identification codes")
+                                help="Distance range of the query. Used only if a coord is in the query")
+        parser_get.add_argument("show_codes", type=BooleanType(), default=False,
+                                help="show more identification codes")
         #Note: no default param for data freshness, the default depends on the API
         parser_get.add_argument("data_freshness",
-                                description='freshness of the data. '
-                                            'base_schedule is the long term planned schedule. '
-                                            'adapted_schedule is for planned ahead disruptions (strikes, '
-                                            'maintenances, ...). '
-                                            'realtime is to have the freshest possible data',
-                                type=option_value(['base_schedule', 'adapted_schedule', 'realtime']))
-        parser_get.add_argument("_current_datetime", type=date_time_format, default=datetime.datetime.utcnow(),
-                                description="The datetime we want to publish the disruptions from."
-                                            " Default is the current date and it is mainly used for debug.")
-        parser_get.add_argument("items_per_schedule", type=natural, default=10000,
-                                description="maximum number of date_times per schedule")
-        parser_get.add_argument("disable_geojson", type=boolean, default=False,
-                            description="remove geojson from the response")
+                                help='freshness of the data. '
+                                     'base_schedule is the long term planned schedule. '
+                                     'adapted_schedule is for planned ahead disruptions (strikes, '
+                                     'maintenances, ...). '
+                                     'realtime is to have the freshest possible data',
+                                type=OptionValue(['base_schedule', 'adapted_schedule', 'realtime']))
+        parser_get.add_argument("_current_datetime", type=DateTimeFormat(),
+                                schema_metadata={'default': 'now'}, hidden=True,
+                                default=datetime.datetime.utcnow(),
+                                help="The datetime we want to publish the disruptions from."
+                                     " Default is the current date and it is mainly used for debug.")
+        parser_get.add_argument("items_per_schedule", type=UnsignedInteger(), default=10000,
+                                help="maximum number of date_times per schedule")
+        parser_get.add_argument("disable_geojson", type=BooleanType(), default=False,
+                                help="remove geojson from the response")
 
+        self.get_decorators.insert(0, ManageError())
+        self.get_decorators.insert(1, get_obj_serializer(self))
         self.get_decorators.append(complete_links(self))
+
+    def options(self, **kwargs):
+        return self.api_description(**kwargs)
 
     def get(self, uri=None, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
@@ -232,13 +238,9 @@ route_schedules = {
 class RouteSchedules(Schedules):
 
     def __init__(self):
-        super(RouteSchedules, self).__init__("route_schedules")
-
-    @marshal_with(route_schedules)
-    @ManageError()
-    def get(self, uri=None, region=None, lon=None, lat=None):
-        return super(RouteSchedules, self).get(uri=uri, region=region, lon=lon,
-                                               lat=lat)
+        self.collections = route_schedules
+        super(RouteSchedules, self).__init__("route_schedules",
+                                             output_type_serializer=api.RouteSchedulesSerializer)
 
 
 stop_schedule = {
@@ -262,13 +264,9 @@ stop_schedules = {
 class StopSchedules(Schedules):
 
     def __init__(self):
-        super(StopSchedules, self).__init__("departure_boards")
-
-    @marshal_with(stop_schedules)
-    @ManageError()
-    def get(self, uri=None, region=None, lon=None, lat=None):
-        return super(StopSchedules, self).get(uri=uri, region=region, lon=lon,
-                                              lat=lat)
+        self.collections = stop_schedules
+        super(StopSchedules, self).__init__("departure_boards",
+                                            output_type_serializer=api.StopSchedulesSerializer)
 
 
 passage = {
@@ -345,25 +343,16 @@ class add_passages_links:
 class NextDepartures(Schedules):
 
     def __init__(self):
-        super(NextDepartures, self).__init__("next_departures")
-
-    @add_passages_links()
-    @marshal_with(departures)
-    @ManageError()
-    def get(self, uri=None, region=None, lon=None, lat=None,
-            dest="nb_stoptimes"):
-        return super(NextDepartures, self).get(uri=uri, region=region, lon=lon,
-                                               lat=lat)
+        self.collections = departures
+        super(NextDepartures, self).__init__("next_departures",
+                                             output_type_serializer=api.DeparturesSerializer)
+        self.get_decorators.append(add_passages_links())
 
 
 class NextArrivals(Schedules):
 
     def __init__(self):
-        super(NextArrivals, self).__init__("next_arrivals")
-
-    @add_passages_links()
-    @marshal_with(arrivals)
-    @ManageError()
-    def get(self, uri=None, region=None, lon=None, lat=None):
-        return super(NextArrivals, self).get(uri=uri, region=region, lon=lon,
-                                             lat=lat)
+        self.collections = arrivals
+        super(NextArrivals, self).__init__("next_arrivals",
+                                           output_type_serializer=api.ArrivalsSerializer)
+        self.get_decorators.append(add_passages_links())

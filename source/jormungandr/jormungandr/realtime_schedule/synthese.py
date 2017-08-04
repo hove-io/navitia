@@ -34,7 +34,7 @@ import itertools
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy, RealtimeProxyError
 from jormungandr.schedule import RealTimePassage
 import xml.etree.ElementTree as et
-from jormungandr.interfaces.parsers import date_time_format
+from jormungandr.interfaces.parsers import DateTimeFormat
 import pytz
 from flask import logging
 import pybreaker
@@ -183,7 +183,7 @@ class Synthese(RealtimeProxy):
         exceptions :
             ValueError: Unable to parse datetime, day is out of range for month (for example)
         """
-        dt = date_time_format(xml_journey.get('dateTime'))
+        dt = DateTimeFormat()(xml_journey.get('dateTime'))
         utc_dt = self.timezone.normalize(self.timezone.localize(dt)).astimezone(pytz.utc)
         passage = RealTimePassage(utc_dt)
         passage.is_real_time = (xml_journey.get('realTime') == 'yes')

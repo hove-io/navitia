@@ -64,8 +64,8 @@ VJ::VJ(builder& b,
     is_frequency(is_frequency),
     wheelchair_boarding(wheelchair_boarding),
     _uri(uri),
-    meta_vj_name(meta_vj_name),
-    physical_mode(physical_mode),
+    _meta_vj_name(meta_vj_name),
+    _physical_mode(physical_mode),
     start_time(start_time),
     end_time(end_time),
     headway_secs(headway_secs),
@@ -138,8 +138,8 @@ nt::VehicleJourney* VJ::make() {
     }
 
     std::string name;
-    if (! meta_vj_name.empty()) {
-        name = meta_vj_name;
+    if (! _meta_vj_name.empty()) {
+        name = _meta_vj_name;
     } else if (! _uri.empty()) {
         name = _uri;
     } else {
@@ -197,20 +197,20 @@ nt::VehicleJourney* VJ::make() {
         }
     }
     //add physical mode
-    if (!physical_mode.empty()) {
+    if (!_physical_mode.empty()) {
         // at this moment, the physical_modes_map might not be filled, we look up in the vector
         auto it = boost::find_if(pt_data.physical_modes, [this](const nt::PhysicalMode* phy) {
-            return phy->uri == this->physical_mode;
+            return phy->uri == this->_physical_mode;
         });
         if (it != std::end(pt_data.physical_modes)) {
             vj->physical_mode = *it;
         }
     }
     if (!vj->physical_mode) {
-        if (physical_mode.empty() && pt_data.physical_modes.size()){
+        if (_physical_mode.empty() && pt_data.physical_modes.size()){
             vj->physical_mode = pt_data.physical_modes.front();
         } else {
-            const auto name = physical_mode.empty() ? "physical_mode:0" : physical_mode;
+            const auto name = _physical_mode.empty() ? "physical_mode:0" : _physical_mode;
             auto* physical_mode = new navitia::type::PhysicalMode();
             physical_mode->idx = pt_data.physical_modes.size();
             physical_mode->uri = name;

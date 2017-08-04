@@ -32,12 +32,17 @@ import datetime
 import pytz
 
 from jormungandr.interfaces.v1.serializer import pt
-from jormungandr.interfaces.v1.serializer.base import NullableDictSerializer, LambdaField
-from jormungandr.interfaces.v1.serializer.fields import ErrorSerializer, FeedPublisherSerializer, PaginationSerializer
+from jormungandr.interfaces.v1.serializer.base import NullableDictSerializer, LambdaField, PbNestedSerializer, \
+    DescribedField
+from jormungandr.interfaces.v1.serializer.fields import ErrorSerializer, FeedPublisherSerializer, \
+        PaginationSerializer, LinkSchema, NoteSerializer, ExceptionSerializer
+from jormungandr.interfaces.v1.make_links import create_external_link
+from jormungandr.interfaces.v1.serializer.journey import TicketSerializer, ContextSerializer, JourneySerializer
+from jormungandr.interfaces.v1.serializer import schedule
 import serpy
 
-from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field
-from jormungandr.interfaces.v1.serializer.time import DateTimeField, DateTimeDictField
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, MethodField
+from jormungandr.interfaces.v1.serializer.time import DateTimeDictField
 
 
 class PTReferentialSerializer(serpy.Serializer):
@@ -167,12 +172,73 @@ class CoverageSerializer(NullableDictSerializer):
     last_load_at = LambdaField(method=lambda _, o: CoverageDateTimeField('last_load_at').to_value(o),
                                description='Datetime of the last data loading',
                                schema_type=str)
-    name = Field(schema_type=str, description='Name of the coverage')
+    name = Field(schema_type=str, display_none=True, description='Name of the coverage')
     status = Field(schema_type=str)
-    shape = Field(schema_type=str, description='GeoJSON of the shape of the coverage')
+    shape = Field(schema_type=str, display_none=True, description='GeoJSON of the shape of the coverage')
     error = CoverageErrorSerializer(display_none=False)
     dataset_created_at = Field(schema_type=str, description='Creation date of the dataset')
 
 
 class CoveragesSerializer(serpy.DictSerializer):
     regions = CoverageSerializer(many=True)
+
+
+class JourneysSerializer(PbNestedSerializer):
+    journeys = JourneySerializer(many=True)
+    error = ErrorSerializer(display_none=False, attr='error')
+    tickets = TicketSerializer(many=True, display_none=True)
+    disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
+    feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
+    links = MethodField(schema_type=LinkSchema(many=True), display_none=True)
+    context = MethodField(schema_type=ContextSerializer(), display_none=True)
+    notes = DescribedField(schema_type=NoteSerializer(many=True))
+    exceptions = DescribedField(schema_type=ExceptionSerializer(many=True))
+
+    def get_context(self, obj):
+        if obj.HasField(str('car_co2_emission')):
+            return ContextSerializer(obj, display_none=False).data
+        else:
+            return {
+                'car_direct_path': {
+                    'co2_emission': {
+                        'unit': '',
+                        'value': 0.0
+                    }
+                }
+            }
+
+    def get_links(self, obj):
+        # note: some request args can be there several times,
+        # but when there is only one elt, flask does not want lists
+        response = []
+        for value in obj.links:
+            args = {}
+            for e in value.kwargs:
+                if len(e.values) > 1:
+                    args[e.key] = [v for v in e.values]
+                else:
+                     args[e.key] = e.values[0]
+
+            response.append(create_external_link('v1.{}'.format(value.ressource_name),
+                                                    rel=value.rel,
+                                                    _type=value.type,
+                                                    templated=value.is_templated,
+                                                    description=value.description,
+                                                    **args))
+        return response
+
+
+class DeparturesSerializer(PTReferentialSerializer):
+    departures = schedule.PassageSerializer(many=True, attr='next_departures', display_none=True)
+
+
+class ArrivalsSerializer(PTReferentialSerializer):
+    arrivals = schedule.PassageSerializer(many=True, attr='next_arrivals', display_none=True)
+
+
+class StopSchedulesSerializer(PTReferentialSerializer):
+    stop_schedules = schedule.StopScheduleSerializer(many=True, display_none=True)
+
+
+class RouteSchedulesSerializer(PTReferentialSerializer):
+    route_schedules = schedule.RouteScheduleSerializer(many=True, display_none=True)

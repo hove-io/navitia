@@ -185,4 +185,11 @@ void HeadsignHandler::affect_headsign_to_stop_time(const StopTime& stop_time,
     update_headsign_mvj_after_remove(*vj, prev_headsign_for_stop_time);
 }
 
+void HeadsignHandler::forget_vj(const VehicleJourney*) {
+    // actually we never wants to forget vj
+    // it would be MANDATORY to do it if we added realtime vjs to the headsigns handler,
+    // but for the moment we only index base schedule VJ
+    // if that change be sure to add the mechanism here to remove the useless VJ before we delete it
+}
+
 }} //namespace navitia::type

@@ -155,7 +155,12 @@ class JourneyCommon(object):
 
         assert status == 400, "the response should not be valid"
 
-        assert response['message'].startswith("The type argument must be in list")
+        m = "parameter \"type\" invalid: The type argument must be in list [u'all', u'non_pt_bss', " \
+            "u'non_pt_bike', u'fastest', u'less_fallback_bss', u'best', u'less_fallback_bike', " \
+            "u'rapid', u'car', u'comfort', u'no_train', u'less_fallback_walk', u'non_pt_walk'], " \
+            "you gave sponge_bob\n" \
+            "type description: DEPRECATED, desired type of journey."
+        assert response['message'] == m
 
     def test_journeys_no_bss_and_walking(self):
         query = journey_basic_query + "&first_section_mode=walking&first_section_mode=bss"
@@ -284,7 +289,7 @@ class JourneyCommon(object):
 
         assert not 'journeys' in response
         assert 'message' in response
-        assert response['message'].lower() == "unable to parse datetime, unknown string format"
+        assert "unable to parse datetime, unknown string format" in response['message'].lower()
 
     def test_journeys_date_invalid(self):
         """giving the date with mmsshh (56 45 12) should be a problem"""
@@ -296,7 +301,7 @@ class JourneyCommon(object):
 
         assert not 'journeys' in response
         assert 'message' in response
-        assert response['message'] == "Unable to parse datetime, hour must be in 0..23"
+        assert "Unable to parse datetime, hour must be in 0..23" in response['message']
 
     def test_journeys_date_valid_invalid(self):
         """some format of date are bizarrely interpreted, and can result in date in 800"""
@@ -308,7 +313,7 @@ class JourneyCommon(object):
 
         assert not 'journeys' in response
         assert 'message' in response
-        assert response['message'] == "Unable to parse datetime, date is too early!"
+        assert "Unable to parse datetime, date is too early!" in response['message']
 
     def test_journeys_bad_speed(self):
         """speed <= 0 is invalid"""
@@ -322,9 +327,8 @@ class JourneyCommon(object):
 
                 assert not 'journeys' in response
                 assert 'message' in response
-                assert response['message'] == \
-                    "The {sn}_speed argument has to be > 0, you gave : {speed}"\
-                        .format(sn=sn, speed=speed)
+                assert "The {sn}_speed argument has to be > 0, you gave : {speed}".format(sn=sn, speed=speed)\
+                       in response['message']
 
     def test_journeys_date_valid_not_zeropadded(self):
         """giving the date with non zero padded month should be a problem"""
@@ -336,7 +340,7 @@ class JourneyCommon(object):
 
         assert not 'journeys' in response
         assert 'message' in response
-        assert response['message'] == "Unable to parse datetime, year is out of range"
+        assert "Unable to parse datetime, year is out of range" in response['message']
 
     def test_journeys_do_not_loose_precision(self):
         """do we have a good precision given back in the id"""

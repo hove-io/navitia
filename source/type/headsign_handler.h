@@ -62,6 +62,8 @@ struct HeadsignHandler {
         ar & headsign_changes & headsign_mvj;
     }
 
+    void forget_vj(const VehicleJourney*);
+
 protected:
     bool has_headsign_or_name(const VehicleJourney& vj, const std::string& headsign) const;
     void update_headsign_mvj_after_remove(const VehicleJourney& vj,

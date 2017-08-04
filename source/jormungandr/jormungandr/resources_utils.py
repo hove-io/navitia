@@ -33,7 +33,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from collections import defaultdict
 
 from flask.ext.restful import reqparse, Resource
-from flask_restful.inputs import boolean
 
 import jormungandr
 from jormungandr import i_manager
@@ -44,6 +43,7 @@ from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerPathSerializer, \
     SwaggerOptionPathSerializer
 from jormungandr.interfaces.v1.swagger_schema import make_schema
+from navitiacommon.parser_args_type import BooleanType
 
 
 class ResourceUtc(object):
@@ -115,7 +115,7 @@ class DocumentedResource(Resource):
         self.output_type_serializer = output_type_serializer
         self.parsers["options"].add_argument('schema',
                                              help='dump the swagger schema of the API',
-                                             type=boolean, default=False)
+                                             type=BooleanType(), default=False)
 
     def api_description(self, **kwargs):
         """
