@@ -136,7 +136,9 @@ class SwaggerParam(object):
 
             items = None
             if argument.action == 'append':
-                items = SwaggerParam(type=swagger_type)
+                items = SwaggerParam(type=swagger_type,
+                                     format=metadata.pop('format', None),
+                                     enum=metadata.pop('enum', None))
                 swagger_type = 'array'
 
             args.append(SwaggerParam(name=argument.name,

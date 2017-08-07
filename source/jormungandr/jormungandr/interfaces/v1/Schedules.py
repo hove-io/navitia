@@ -84,13 +84,14 @@ class Schedules(ResourceUri, ResourceUtc):
                                 help="DEPRECATED, replaced by `forbidden_uris[]`",
                                 dest="__temporary_forbidden_id[]",
                                 default=[],
-                                action='append')
+                                action='append',
+                                schema_metadata={'format': 'pt-object'})
         parser_get.add_argument("forbidden_uris[]", type=six.text_type,
                                 help="forbidden uris",
                                 dest="forbidden_uris[]",
                                 default=[],
-                                action='append')
-
+                                action='append',
+                                schema_metadata={'format': 'pt-object'})
         parser_get.add_argument("calendar", type=six.text_type,
                                 help="Id of the calendar")
         parser_get.add_argument("distance", type=int, default=200,
