@@ -90,18 +90,18 @@ class TestIsochrone(AbstractTestFixture):
     #In the previous version, the result contained no_solution with error message : 'several errors occured: \n * '
     #with status code 200.
     #After this correction, since the EntryPoint is absent an error is raised.
-    def test_from_isochrone_sa(self):
+    def test_isochrone_from_unkown_sa(self):
         query = "v1/coverage/basic_routing_test/journeys?from={}&datetime={}"
-        query = query.format("stopA", "20120614T080000")
+        query = query.format("bob", "20120614T080000")
         normal_response, error_code = self.query_no_assert(query)
-        assert normal_response['error']['message'] == 'The entry point: stopA is not valid'
+        assert normal_response['error']['message'] == 'The entry point: bob is not valid'
         assert error_code == 404
 
-    def test_to_isochrone_sa(self):
+    def test_isochrone_to_unknown_sa(self):
         query = "v1/coverage/basic_routing_test/journeys?to={}&datetime={}&datetime_represents=arrival"
-        query = query.format("stopA", "20120614T080000")
+        query = query.format("bob", "20120614T080000")
         normal_response, error_code = self.query_no_assert(query)
-        assert normal_response['error']['message'] == 'The entry point: stopA is not valid'
+        assert normal_response['error']['message'] == 'The entry point: bob is not valid'
         assert error_code == 404
 
     def test_isochrone_from_point(self):

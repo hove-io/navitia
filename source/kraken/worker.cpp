@@ -1054,13 +1054,14 @@ void Worker::nearest_stop_points(const pbnavitia::NearestStopPointsRequest& requ
     if (!result){
         this->pb_creator.fill_pb_error(pbnavitia::Error::unknown_object, "The entry point: " + entry_point.uri + " is not valid");
         return;
-    } else {
-        for(const auto& item: *result){
-            auto* nsp = pb_creator.add_nearest_stop_points();
-            this->pb_creator.fill(planner->get_sp(item.first), nsp->mutable_stop_point(), 0);
-            nsp->set_access_duration(item.second.total_seconds());
-        }
     }
+
+    for(const auto& item: *result){
+        auto* nsp = pb_creator.add_nearest_stop_points();
+        this->pb_creator.fill(planner->get_sp(item.first), nsp->mutable_stop_point(), 0);
+        nsp->set_access_duration(item.second.total_seconds());
+    }
+
 }
 
 void Worker::odt_stop_points(const pbnavitia::GeographicalCoord& request) {
