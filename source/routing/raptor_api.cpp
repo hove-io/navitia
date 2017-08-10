@@ -1290,8 +1290,10 @@ static bool fill_isochrone_common(IsochroneCommon& isochrone_common,
     datetime = tmp_datetime.front();
     worker.init(center);
     auto departures = get_stop_points(center, raptor.data, worker);
-
-    if (departures && departures->empty()) {
+    if (!departures) {
+        pb_creator.fill_pb_error(pbnavitia::Error::unknown_object, "The entry point: " + center.uri + " is not valid");
+        return true;
+    } else if (departures->empty()) {
         pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination, pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
                                  "no origin point nor destination point");
         return true;

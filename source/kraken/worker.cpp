@@ -1051,7 +1051,10 @@ void Worker::nearest_stop_points(const pbnavitia::NearestStopPointsRequest& requ
     street_network_worker->init(entry_point, {});
     //kraken don't handle reverse isochrone
     auto result = routing::get_stop_points(entry_point, *data, *street_network_worker, false);
-    if (result){
+    if (!result){
+        this->pb_creator.fill_pb_error(pbnavitia::Error::unknown_object, "The entry point: " + entry_point.uri + " is not valid");
+        return;
+    } else {
         for(const auto& item: *result){
             auto* nsp = pb_creator.add_nearest_stop_points();
             this->pb_creator.fill(planner->get_sp(item.first), nsp->mutable_stop_point(), 0);
