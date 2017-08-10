@@ -27,17 +27,19 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import
+
 import mock
 from mock import PropertyMock
-from jormungandr.parking_space_availability.bss.bss_provider import BssProvider
-from jormungandr.parking_space_availability.bss.bss_provider_manager import get_from_to_pois_of_journeys
-from jormungandr.parking_space_availability.bss.stands import Stands
+
+from jormungandr.parking_space_availability import AbstrcatParkingPlacesProvider
+from jormungandr.parking_space_availability import Stands
+from jormungandr.parking_space_availability import get_from_to_pois_of_journeys
 from jormungandr.ptref import FeedPublisher
 from tests.check_utils import is_valid_poi, get_not_null, journey_basic_query
 from tests.tests_mechanism import AbstractTestFixture, dataset
 
 
-class MockBssProvider(BssProvider):
+class MockBssProvider(AbstrcatParkingPlacesProvider):
     def __init__(self, pois_supported, name='mock bss provider'):
         self.pois_supported = pois_supported
         self.name = name
