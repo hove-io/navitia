@@ -52,7 +52,7 @@ def _handle(response, provider_manager, attr, logger, err_msg):
         logger.exception(err_msg)
 
 
-class ManageStands(object):
+class ManageParkingPlaces(object):
 
     def __init__(self, resource, attribute):
         """

@@ -27,13 +27,14 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr.parking_space_availability.bss.bss_provider import BssProvider
-from jormungandr.parking_space_availability.bss.stands import Stands
-from jormungandr import cache, app
+
+import logging
 import pybreaker
 import requests as requests
-import logging
 
+from jormungandr import cache, app
+from jormungandr.parking_space_availability import AbstrcatParkingPlacesProvider
+from jormungandr.parking_space_availability.bss.stands import Stands
 from jormungandr.ptref import FeedPublisher
 
 DEFAULT_JCDECAUX_FEED_PUBLISHER = {
@@ -43,7 +44,8 @@ DEFAULT_JCDECAUX_FEED_PUBLISHER = {
     'url': 'https://developer.jcdecaux.com/#/opendata/license'
 }
 
-class JcdecauxProvider(BssProvider):
+
+class JcdecauxProvider(AbstrcatParkingPlacesProvider):
 
     WS_URL_TEMPLATE = 'https://api.jcdecaux.com/vls/v1/stations/{}?contract={}&apiKey={}'
 

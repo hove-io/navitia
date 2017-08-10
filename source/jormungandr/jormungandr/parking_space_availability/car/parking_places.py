@@ -31,9 +31,12 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 class ParkingPlaces(object):
 
-    def __init__(self, available_places, total_places):
+    def __init__(self, available_places, occupied_places, available_disabled, occupied_disabled):
         self.available_places = available_places
-        self.total_stands = total_places
+        self.occupied_places = occupied_places
+        self.total_stands = available_places + occupied_places
+        self.available_disabled = available_disabled
+        self.occupied_disabled = occupied_disabled
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__

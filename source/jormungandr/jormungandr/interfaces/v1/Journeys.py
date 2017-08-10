@@ -53,7 +53,7 @@ from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.decorators import get_serializer
 from navitiacommon import default_values
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, compute_possible_region
-from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
+from jormungandr.parking_space_availability.parking_places_manager import ManageParkingPlaces
 import six
 from navitiacommon.parser_args_type import BooleanType
 
@@ -445,11 +445,13 @@ class Journeys(JourneyCommon):
         parser_get.add_argument("bss_stands", type=BooleanType(), default=False,
                                 help="Show bss stands availability "
                                      "in the bicycle_rental pois of response")
-
+        parser_get.add_argument("car_parking", type=BooleanType(), default=False,
+                                help="Show car parking availability "
+                                     "in the parking pois of response")
         self.get_decorators.append(complete_links(self))
 
-        if parser_get.parse_args().get("bss_stands"):
-            self.get_decorators.insert(1, ManageStands(self, 'journeys'))
+        if parser_get.parse_args().get("bss_stands") or parser_get.parse_args().get("car_parking"):
+            self.get_decorators.insert(1, ManageParkingPlaces(self, 'journeys'))
 
     @add_debug_info()
     @add_fare_links()

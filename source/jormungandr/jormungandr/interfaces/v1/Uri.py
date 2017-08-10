@@ -35,7 +35,7 @@ from flask_restful import fields, marshal_with, reqparse, abort
 
 from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerPathSerializer
 from jormungandr.interfaces.v1.swagger_schema import make_schema
-from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
+from jormungandr.parking_space_availability.parking_places_manager import ManageParkingPlaces
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.converters_collection_type import collections_to_resource_type
 from jormungandr.interfaces.v1.fields import stop_point, stop_area, route, line, line_group, \
@@ -505,9 +505,12 @@ def pois(is_collection):
                                              help="original uri of the object you want to query")
             self.parsers["get"].add_argument("bss_stands", type=BooleanType(), default=True,
                                              help="Show bss stands availability")
+            self.parsers["get"].add_argument("car_parking", type=BooleanType(), default=True,
+                                             help="Show car parking availability "
+                                             "in the parking pois of response")
             args = self.parsers["get"].parse_args()
-            if args["bss_stands"]:
-                self.get_decorators.insert(2, ManageStands(self, 'pois'))
+            if args["bss_stands"] or args["car_parking"]:
+                self.get_decorators.insert(2, ManageParkingPlaces(self, 'pois'))
 
     return Pois
 

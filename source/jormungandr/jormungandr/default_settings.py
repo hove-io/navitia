@@ -73,6 +73,7 @@ BSS_PROVIDER = []
 for key, value in os.environ.items():
     if key.startswith('JORMUNGANDR_BSS_PROVIDER_'):
         BSS_PROVIDER.append(json.loads(value))
+CAR_PARKING_PROVIDER = []
 
 #Parameters for statistics
 SAVE_STAT = boolean(os.getenv('JORMUNGANDR_SAVE_STAT', False))

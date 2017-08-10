@@ -28,19 +28,20 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr.parking_space_availability.bss.bss_provider import BssProvider
-from jormungandr.parking_space_availability.bss.stands import Stands
-from jormungandr import cache, app
-import zeep
+
 import logging
 import pybreaker
+import zeep
 
+from jormungandr import cache, app
+from jormungandr.parking_space_availability import AbstrcatParkingPlacesProvider
+from jormungandr.parking_space_availability.bss.stands import Stands
 from jormungandr.ptref import FeedPublisher
 
 DEFAULT_ATOS_FEED_PUBLISHER = None
 
 
-class AtosProvider(BssProvider):
+class AtosProvider(AbstrcatParkingPlacesProvider):
 
     def __init__(self, id_ao, network, url, operators={'keolis'}, timeout=5,
                  feed_publisher=DEFAULT_ATOS_FEED_PUBLISHER, **kwargs):

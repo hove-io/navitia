@@ -27,22 +27,27 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-import logging
-from jormungandr.parking_space_availability.abstract_provider_manager import AbstrcatProviderManager
+from jormungandr.parking_space_availability.abstract_provider_manager import AbstractProviderManager
+
+POI_TYPE_ID = 'poi_type:amenity:parking'
 
 
-class BssProviderManager(AbstrcatProviderManager):
+class CarParkingProviderManager(AbstractProviderManager):
+
     def __init__(self, car_parking_providers_configurations):
-        self.bss_providers = []
-        self.log = logging.getLogger(__name__)
+        self.car_parking_providers = []
         for configuration in car_parking_providers_configurations:
             arguments = configuration.get('args', {})
             self.car_parking_providers.append(self._init_class(configuration['class'], arguments))
+        super(CarParkingProviderManager, self).__init__()
 
     def _handle_poi(self, item):
-        if 'poi_type' in item and item['poi_type']['id'] == 'poi_type:amenity:bicycle_rental':
+        if 'poi_type' in item and item['poi_type']['id'] == POI_TYPE_ID:
             provider = self._find_provider(item)
             if provider:
-                item['stands'] = provider.get_informations(item)
+                item['parking_places'] = provider.get_informations(item)
                 return provider
         return None
+
+    def _get_providers(self):
+        return self.car_parking_providers

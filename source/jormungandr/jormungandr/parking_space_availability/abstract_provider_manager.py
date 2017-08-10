@@ -29,7 +29,8 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from abc import abstractmethod, ABCMeta
 import six
-
+from importlib import import_module
+import logging
 
 def get_from_to_pois_of_journeys(journeys):
     # utility that returns 'from' and 'to' pois for each section for the given journeys
@@ -38,10 +39,25 @@ def get_from_to_pois_of_journeys(journeys):
     return (place['poi'] for place in from_to_places if 'poi' in place)
 
 
-class AbstrcatProviderManager(six.with_metaclass(ABCMeta, object)):
+class AbstractProviderManager(six.with_metaclass(ABCMeta, object)):
+
+    def __init__(self):
+        self.log = logging.getLogger(__name__)
+
     @abstractmethod
     def _handle_poi(self, item):
         pass
+
+    @abstractmethod
+    def _get_providers(self):
+        pass
+
+    def handle(self, response, attribute):
+        if attribute == 'journeys':
+            return self.handle_journeys(response[attribute])
+        elif attribute in ('places', 'places_nearby', 'pois'):
+            return self.handle_places(response[attribute])
+        return None
 
     def handle_places(self, places):
         providers = set()
@@ -63,3 +79,20 @@ class AbstrcatProviderManager(six.with_metaclass(ABCMeta, object)):
                 providers.add(provider)
         return providers
 
+    def _find_provider(self, poi):
+        for provider in self._get_providers():
+            if provider.support_poi(poi):
+                return provider
+        return None
+
+    def _init_class(self, cls, arguments):
+        try:
+            if '.' not in cls:
+                self.log.warn('impossible to build, wrongly formated class: {}'.format(cls))
+
+            module_path, name = cls.rsplit('.', 1)
+            module = import_module(module_path)
+            attr = getattr(module, name)
+            return attr(**arguments)
+        except ImportError:
+            self.log.warn('impossible to build, cannot find class: {}'.format(cls))
