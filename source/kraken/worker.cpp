@@ -577,7 +577,7 @@ void Worker::place_code(const pbnavitia::PlaceCodeRequest &request) {
         fill_or_error<nt::Line>(request, pb_creator);
         break;
     case pbnavitia::PlaceCodeRequest::Route:
-        fill_or_error<nt::Line>(request, pb_creator);
+        fill_or_error<nt::Route>(request, pb_creator);
         break;
     case pbnavitia::PlaceCodeRequest::VehicleJourney:
         fill_or_error<nt::VehicleJourney>(request, pb_creator);
