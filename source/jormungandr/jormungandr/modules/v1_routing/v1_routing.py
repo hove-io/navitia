@@ -181,7 +181,9 @@ class V1Routing(AModule):
                           region + 'journeys',
                           coord + 'journeys',
                           '/journeys',
-                          endpoint='journeys')
+                          endpoint='journeys',
+                          # we don't want to document those routes as we consider them deprecated
+                          hide_routes=(region + '<uri:uri>/journeys', coord + '<uri:uri>/journeys'))
 
         if app.config['GRAPHICAL_ISOCHRONE']:
             self.add_resource(GraphicalIsochrone.GraphicalIsochrone,
