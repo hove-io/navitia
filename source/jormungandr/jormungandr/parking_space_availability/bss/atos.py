@@ -34,14 +34,14 @@ import pybreaker
 import zeep
 
 from jormungandr import cache, app
-from jormungandr.parking_space_availability import AbstrcatParkingPlacesProvider
+from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
 from jormungandr.parking_space_availability.bss.stands import Stands
 from jormungandr.ptref import FeedPublisher
 
 DEFAULT_ATOS_FEED_PUBLISHER = None
 
 
-class AtosProvider(AbstrcatParkingPlacesProvider):
+class AtosProvider(AbstractParkingPlacesProvider):
 
     def __init__(self, id_ao, network, url, operators={'keolis'}, timeout=5,
                  feed_publisher=DEFAULT_ATOS_FEED_PUBLISHER, **kwargs):

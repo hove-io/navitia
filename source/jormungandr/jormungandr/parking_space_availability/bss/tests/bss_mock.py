@@ -28,12 +28,12 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from jormungandr.parking_space_availability import AbstrcatParkingPlacesProvider
+from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
 from jormungandr.parking_space_availability.bss.stands import Stands
 from jormungandr.ptref import FeedPublisher
 
 
-class BssMockProvider(AbstrcatParkingPlacesProvider):
+class BssMockProvider(AbstractParkingPlacesProvider):
 
     def support_poi(self, poi):
         return poi['id'] == 'station_1'

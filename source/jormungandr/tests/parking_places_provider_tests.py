@@ -31,7 +31,7 @@ from __future__ import absolute_import
 import mock
 from mock import PropertyMock
 
-from jormungandr.parking_space_availability import AbstrcatParkingPlacesProvider
+from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
 from jormungandr.parking_space_availability import Stands
 from jormungandr.parking_space_availability import get_from_to_pois_of_journeys
 from jormungandr.ptref import FeedPublisher
@@ -39,7 +39,7 @@ from tests.check_utils import is_valid_poi, get_not_null, journey_basic_query
 from tests.tests_mechanism import AbstractTestFixture, dataset
 
 
-class MockBssProvider(AbstrcatParkingPlacesProvider):
+class MockBssProvider(AbstractParkingPlacesProvider):
     def __init__(self, pois_supported, name='mock bss provider'):
         self.pois_supported = pois_supported
         self.name = name

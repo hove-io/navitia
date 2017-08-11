@@ -31,7 +31,7 @@ from abc import abstractmethod, ABCMeta
 import six
 
 
-class AbstrcatParkingPlacesProvider(six.with_metaclass(ABCMeta, object)):
+class AbstractParkingPlacesProvider(six.with_metaclass(ABCMeta, object)):
     """
     abstract class managing calls to external service providing real-time next passages
     """

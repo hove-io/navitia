@@ -50,15 +50,15 @@ def car_parking_space_availability_start_support_poi_test():
     """
     STAR car provider support
     """
-    provider = StarProvider({'Keolis Rennes'}, 42, 'toto')
+    provider = StarProvider({'Keolis Rennes'}, 'toto', 42)
     assert provider.support_poi(poi)
 
 def car_parking_space_get_information_test():
-    parking_places = ParkingPlaces(available_places=4,
-                                   occupied_places=3,
-                                   available_disabled=2,
-                                   occupied_disabled=1)
-    provider = StarProvider('Keolis Rennes', 42, 'toto')
+    parking_places = ParkingPlaces(available=4,
+                                   occupied=3,
+                                   available_PRM=2,
+                                   occupied_PRM=1)
+    provider = StarProvider('Keolis Rennes', 'toto', 42)
     star_response = """
     {
         "records":[
@@ -93,10 +93,10 @@ def car_parking_space_get_information_test():
         ]
     }
     """
-    empty_parking = ParkingPlaces(available_places=0,
-                                  occupied_places=0,
-                                  available_disabled=0,
-                                  occupied_disabled=0)
+    empty_parking = ParkingPlaces(available=0,
+                                  occupied=0,
+                                  available_PRM=0,
+                                  occupied_PRM=0)
     provider._call_webservice = MagicMock(return_value=json.loads(star_response))
     assert provider.get_informations(poi) == empty_parking
 

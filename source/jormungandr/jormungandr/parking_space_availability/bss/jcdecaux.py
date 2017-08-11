@@ -33,7 +33,7 @@ import pybreaker
 import requests as requests
 
 from jormungandr import cache, app
-from jormungandr.parking_space_availability import AbstrcatParkingPlacesProvider
+from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
 from jormungandr.parking_space_availability.bss.stands import Stands
 from jormungandr.ptref import FeedPublisher
 
@@ -45,7 +45,7 @@ DEFAULT_JCDECAUX_FEED_PUBLISHER = {
 }
 
 
-class JcdecauxProvider(AbstrcatParkingPlacesProvider):
+class JcdecauxProvider(AbstractParkingPlacesProvider):
 
     WS_URL_TEMPLATE = 'https://api.jcdecaux.com/vls/v1/stations/{}?contract={}&apiKey={}'
 

@@ -34,24 +34,30 @@ import pybreaker
 import requests as requests
 import jmespath
 
-from jormungandr import cache, app
-from jormungandr.parking_space_availability import AbstrcatParkingPlacesProvider
+from jormungandr import cache, app, utils, new_relic
+from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
 from jormungandr.parking_space_availability.car.parking_places import ParkingPlaces
 from jormungandr.ptref import FeedPublisher
 
 DEFAULT_STAR_FEED_PUBLISHER = None
 
 
-class StarProvider(AbstrcatParkingPlacesProvider):
+class StarProvider(AbstractParkingPlacesProvider):
 
     WS_URL_TEMPLATE = 'http://data.explore.star.fr/api/records/1.0/search/?dataset={}&refine.idparc={}'
 
-    def __init__(self, operators, timeout, dataset, feed_publisher=DEFAULT_STAR_FEED_PUBLISHER):
+    def __init__(self, operators, dataset, timeout=1, feed_publisher=DEFAULT_STAR_FEED_PUBLISHER, **kwargs):
         self.operators = [o.lower() for o in operators]
         self.timeout = timeout
         self.dataset = dataset
-        self.breaker = pybreaker.CircuitBreaker(fail_max=5, reset_timeout=10)
+
+        fail_max = kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_STAR_FAIL'])
+        reset_timeout = kwargs.get('circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_STAR_TIMEOUT_S'])
+
+        self.breaker = pybreaker.CircuitBreaker(fail_max=fail_max, reset_timeout=reset_timeout)
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
+
+        self.log = logging.LoggerAdapter(logging.getLogger(__name__), extra={'dataset': self.dataset})
 
     def support_poi(self, poi):
         properties = poi.get('properties', {})
@@ -66,25 +72,34 @@ class StarProvider(AbstrcatParkingPlacesProvider):
         if not data:
             return
 
-        available_places = jmespath.search('records[0].fields.nombreplacesdisponibles', data) or 0
-        occupied_places = jmespath.search('records[0].fields.nombreplacesoccupees', data) or 0
-        available_disabled = jmespath.search('records[0].fields.nombreplacesdisponiblespmr', data) or 0
-        occupied_disabled = jmespath.search('records[0].fields.nombreplacesoccupeespmr', data) or 0
+        available = jmespath.search('records[0].fields.nombreplacesdisponibles', data) or 0
+        occupied = jmespath.search('records[0].fields.nombreplacesoccupees', data) or 0
+        # Person with reduced mobility
+        available_PRM = jmespath.search('records[0].fields.nombreplacesdisponiblespmr', data) or 0
+        occupied_PRM = jmespath.search('records[0].fields.nombreplacesoccupeespmr', data) or 0
 
-        return ParkingPlaces(available_places, occupied_places, available_disabled, occupied_disabled)
+        return ParkingPlaces(available, occupied, available_PRM, occupied_PRM)
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_STAR', 30))
     def _call_webservice(self, parking_id):
         try:
             data = self.breaker.call(requests.get, self.WS_URL_TEMPLATE.format(self.dataset, parking_id),
                                      timeout=self.timeout)
+            # record in newrelic
+            self.record_call("OK")
             return data.json()
         except pybreaker.CircuitBreakerError as e:
-            logging.getLogger(__name__).error('STAR service dead (error: {})'.format(e))
+            msg = 'STAR service dead (error: {})'.format(e)
+            self.log.error(msg)
+            utils.record_external_failure(msg, 'parking', 'STAR')
         except requests.Timeout as t:
-            logging.getLogger(__name__).error('STAR service timeout (error: {})'.format(t))
+            msg = 'STAR service timeout (error: {})'.format(t)
+            self.log.error(msg)
+            utils.record_external_failure(msg, 'parking', 'STAR')
         except:
-            logging.getLogger(__name__).exception('STAR service error')
+            msg = 'STAR service error'
+            self.log.exception(msg)
+            utils.record_external_failure(msg, 'parking', 'STAR')
 
         return None
 
@@ -93,3 +108,11 @@ class StarProvider(AbstrcatParkingPlacesProvider):
 
     def feed_publisher(self):
         return self._feed_publisher
+
+    def record_call(self, status, **kwargs):
+        """
+        status can be in: ok, failure
+        """
+        params = {'parking_service': 'STAR', 'dataset': self.dataset, 'status': status}
+        params.update(kwargs)
+        new_relic.record_custom_event('parking_service', params)
