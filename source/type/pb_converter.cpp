@@ -1943,6 +1943,10 @@ pbnavitia::TrafficReports* PbCreator::add_traffic_reports(){
     return response.add_traffic_reports();
 }
 
+pbnavitia::LineReport* PbCreator::add_line_reports(){
+    return response.add_line_reports();
+}
+
 pbnavitia::NearestStopPoint* PbCreator::add_nearest_stop_points(){
     return response.add_nearest_stop_points();
 }
@@ -2014,6 +2018,10 @@ int PbCreator::stop_schedules_size(){
 
 int PbCreator::traffic_reports_size(){
     return response.traffic_reports_size();
+}
+
+int PbCreator::line_reports_size(){
+    return response.line_reports_size();
 }
 
 int PbCreator::calendars_size(){

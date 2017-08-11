@@ -280,6 +280,7 @@ struct PbCreator {
     pbnavitia::HeatMap* add_heat_maps();
     pbnavitia::PtObject* add_places();
     pbnavitia::TrafficReports* add_traffic_reports();
+    pbnavitia::LineReport* add_line_reports();
     pbnavitia::NearestStopPoint* add_nearest_stop_points();
     pbnavitia::JourneyPattern* add_journey_patterns();
     pbnavitia::JourneyPatternPoint* add_journey_pattern_points();
@@ -301,6 +302,7 @@ struct PbCreator {
     int departure_boards_size();
     int stop_schedules_size();
     int traffic_reports_size();
+    int line_reports_size();
     int calendars_size();
     pbnavitia::GeoStatus* mutable_geo_status();
     pbnavitia::Status* mutable_status();

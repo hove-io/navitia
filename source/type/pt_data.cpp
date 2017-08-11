@@ -260,4 +260,10 @@ PT_Data::~PT_Data() {
         delete cal;
     }
 }
+
+#define GENERIC_PT_DATA_COLLECTION_SPECIALIZATION(type_name, collection_name) \
+    template<> const std::vector<type_name*>& PT_Data::collection() const { return collection_name; }
+ITERATE_NAVITIA_PT_TYPES(GENERIC_PT_DATA_COLLECTION_SPECIALIZATION)
+#undef GENERIC_PT_DATA_COLLECTION_SPECIALIZATION
+
 }}
