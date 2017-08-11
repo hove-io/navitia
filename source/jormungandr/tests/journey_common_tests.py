@@ -829,6 +829,16 @@ class JourneyCommon(object):
         assert journey['sections'][4]['departure_date_time'] == '20120614T233500'
         assert journey['sections'][4]['arrival_date_time'] == '20120614T233500'
 
+    def test_journey_from_non_valid_object_type(self):
+        """
+        When the departure is not a Place, the response status should be 404
+        """
+        query = "vehicle_journeys/vehicle_journey:SNC/journeys?datetime={datetime}".format(datetime="20120614T080000")
+        response, status = self.query_region(query, check=False)
+        assert status == 404
+        assert response['error']['id'] == u'unknown_object'
+        assert response['error']['message'] == u'The entry point: vehicle_journey:SNC is not valid'
+
 
 @dataset({"main_routing_test": {}})
 class DirectPath(object):

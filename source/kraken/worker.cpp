@@ -555,7 +555,7 @@ template<typename T>
 static void fill_or_error(const pbnavitia::PlaceCodeRequest &request, PbCreator& pb_creator) {
     const auto& objs = pb_creator.data->pt_data->codes.get_objs<T>(request.type_code(), request.code());
     if (objs.empty()) {
-        pb_creator.fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object");
+        pb_creator.fill_pb_error(pbnavitia::Error::unknown_object, "Unknown object");
     } else {
         // FIXME: add every object or (as before) just the first one?
         pb_creator.fill(objs.front(), pb_creator.add_places(), 0);
@@ -942,7 +942,7 @@ void Worker::street_network_routing_matrix(const pbnavitia::StreetNetworkRouting
             auto* k = row->add_routing_response();
             auto it = nearest.find(coord.uri());
             if(it == nearest.end()) {
-                throw navitia::recoverable_exception("Cannot found object: " + coord.uri());
+                throw navitia::recoverable_exception("Cannot find object: " + coord.uri());
             }
             k->set_duration(it->second.time_duration.total_seconds());
             switch(it->second.routing_status){
@@ -1051,11 +1051,17 @@ void Worker::nearest_stop_points(const pbnavitia::NearestStopPointsRequest& requ
     street_network_worker->init(entry_point, {});
     //kraken don't handle reverse isochrone
     auto result = routing::get_stop_points(entry_point, *data, *street_network_worker, false);
-    for(const auto& item: result){
+    if (!result){
+        this->pb_creator.fill_pb_error(pbnavitia::Error::unknown_object, "The entry point: " + entry_point.uri + " is not valid");
+        return;
+    }
+
+    for(const auto& item: *result){
         auto* nsp = pb_creator.add_nearest_stop_points();
         this->pb_creator.fill(planner->get_sp(item.first), nsp->mutable_stop_point(), 0);
         nsp->set_access_duration(item.second.total_seconds());
-    }   
+    }
+
 }
 
 void Worker::odt_stop_points(const pbnavitia::GeographicalCoord& request) {
