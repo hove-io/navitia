@@ -375,8 +375,9 @@ void Worker::traffic_reports(const pbnavitia::TrafficReportsRequest &request){
 void Worker::line_reports(const pbnavitia::LineReportsRequest &request){
     const auto* data = this->pb_creator.data;
     std::vector<std::string> forbidden_uris;
-    for(int i = 0; i < request.forbidden_uris_size(); ++i)
-        forbidden_uris.push_back(request.forbidden_uris(i));
+    for (const auto& uri: request.forbidden_uris()) {
+        forbidden_uris.push_back(uri);
+    }
     navitia::disruption::line_reports(this->pb_creator,
                                       *data,
                                       request.depth(),
