@@ -259,3 +259,13 @@ class DescribedField(LambdaField):
         # the field returns always None and None are not displayed, so nothing is displayed
         super(DescribedField, self).__init__(method=lambda *args: None, display_none=False, **kwargs)
 
+
+class BetaEndpointsSerializer(serpy.Serializer):
+    def __init__(self, *args, **kwargs):
+        super(BetaEndpointsSerializer, self).__init__(many=True, *args, **kwargs)
+
+    def as_getter(self, serializer_field_name, serializer_cls):
+        return lambda _obj: [None]
+
+    id = LiteralField("beta_endpoint", schema_type=str)
+    message = LiteralField('This service is under construction. You can help through github.com/CanalTP/navitia', schema_type=str)

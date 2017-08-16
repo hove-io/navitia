@@ -27,7 +27,8 @@
 
 from __future__ import absolute_import
 import serpy
-from .base import LiteralField, NestedPropertyField, IntNestedPropertyField, value_by_path
+from .base import LiteralField, NestedPropertyField, IntNestedPropertyField, value_by_path, \
+    BetaEndpointsSerializer
 from flask.ext.restful import abort
 from jormungandr.interfaces.v1.serializer import jsonschema
 
@@ -219,17 +220,9 @@ class GeocodeStopAreaSerializer(serpy.DictSerializer):
         return StopAreaSerializer(obj).data
 
 
-class WarningSerializer(serpy.DictSerializer):
-    id = LiteralField("beta_endpoint")
-    message = LiteralField("This service is under construction. You can help through github.com/CanalTP/navitia")
-
-
 class GeocodePlacesSerializer(serpy.DictSerializer):
     places = jsonschema.MethodField()
-    warnings = LiteralField([{
-        'id': 'beta_endpoint',
-        'message': 'This service is under construction. You can help through github.com/CanalTP/navitia'
-    }])
+    warnings = BetaEndpointsSerializer()
 
     def get_places(self, obj):
         map_serializer = {

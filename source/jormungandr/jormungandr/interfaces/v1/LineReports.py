@@ -38,7 +38,7 @@ from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_typ
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.fields import PbField, line, pt_object, NonNullList, NonNullNested,\
-    pagination, disruption_marshaller, error
+    pagination, disruption_marshaller, error, ListLit, beta_endpoint
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
 
@@ -57,6 +57,7 @@ line_reports = {
     "error": PbField(error, attribute='error'),
     "pagination": NonNullNested(pagination),
     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
+    "warnings": ListLit([fields.Nested(beta_endpoint)]),
 }
 
 

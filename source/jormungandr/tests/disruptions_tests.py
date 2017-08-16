@@ -528,6 +528,9 @@ class TestDisruptions(AbstractTestFixture):
 
     def test_line_reports(self):
         response = self.query_region("line_reports?_current_datetime=20120801T000000")
+        warnings = get_not_null(response, 'warnings')
+        assert len(warnings) == 1
+        assert warnings[0]['id'] == 'beta_endpoint'
         assert len(get_not_null(response, 'disruptions')) == 2
         line_reports = get_not_null(response, 'line_reports')
         for line_report in line_reports:

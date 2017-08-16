@@ -31,7 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import datetime
 import pytz
 
-from jormungandr.interfaces.v1.serializer import pt, schedule, report
+from jormungandr.interfaces.v1.serializer import pt, schedule, report, base
 from jormungandr.interfaces.v1.serializer.base import NullableDictSerializer, LambdaField, PbNestedSerializer, \
     DescribedField
 from jormungandr.interfaces.v1.serializer.fields import ErrorSerializer, FeedPublisherSerializer, \
@@ -245,3 +245,4 @@ class RouteSchedulesSerializer(PTReferentialSerializer):
 
 class LineReportsSerializer(PTReferentialSerializer):
     line_reports = report.LineReportSerializer(many=True, display_none=True)
+    warnings = base.BetaEndpointsSerializer()
