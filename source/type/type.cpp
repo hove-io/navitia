@@ -445,9 +445,9 @@ void cleanup_useless_vj_link(const nt::VehicleJourney* vj, nt::PT_Data& pt_data)
     pt_data.headsign_handler.forget_vj(vj);
 
     // remove the vj from the global list/map
-    auto next_vj = erase_vj_from_list(vj, pt_data.vehicle_journeys);
+    erase_vj_from_list(vj, pt_data.vehicle_journeys);
     // afterward, we MUST reindex all vehicle journeys
-    std::for_each(next_vj, pt_data.vehicle_journeys.end(), Indexer<nt::idx_t>());
+    std::for_each(pt_data.vehicle_journeys.begin(), pt_data.vehicle_journeys.end(), Indexer<nt::idx_t>());
 
     pt_data.vehicle_journeys_map.erase(vj->uri);
 }

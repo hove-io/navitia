@@ -67,6 +67,18 @@ struct SimpleDataset {
     }
 };
 
+// Check if new indexes are unique and continuous
+void test_vjs_indexes(const std::vector<navitia::type::VehicleJourney*>& vjs){
+    int prec = -1;
+    // Check if new indexes are unique and continuous
+    std::for_each(vjs.begin(), vjs.end(),
+            [&prec](const navitia::type::VehicleJourney* vj){
+        BOOST_REQUIRE_EQUAL((static_cast<int>(vj->idx) - prec), 1);
+        prec = static_cast<int>(vj->idx);
+    });
+
+}
+
 BOOST_FIXTURE_TEST_CASE(simple_train_cancellation, SimpleDataset) {
     const auto& disrup = b.impact(nt::RTLevel::RealTime)
                      .severity(nt::disruption::Effect::NO_SERVICE)
@@ -227,6 +239,8 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_stops_different_hours) {
                               *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 9);
+
+    test_vjs_indexes(b.data->pt_data->vehicle_journeys);
 
     auto get_adapted = [&b](const nt::VehicleJourney* vj, int nb_adapted_vj) {
         BOOST_REQUIRE_EQUAL(vj->meta_vj->get_adapted_vj().size(), nb_adapted_vj);
@@ -698,6 +712,8 @@ BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
                               .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
+    test_vjs_indexes(b.data->pt_data->vehicle_journeys);
+
     // Base VJ
     auto* vj  = b.data->pt_data->vehicle_journeys_map["vj:1"];
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->base_validity_pattern()->days.to_string(), "111111"),
@@ -722,6 +738,8 @@ BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
     navitia::delete_disruption("stop1_closed", *b.data->pt_data, *b.data->meta);
     navitia::delete_disruption("stop2_closed", *b.data->pt_data, *b.data->meta);
     navitia::delete_disruption("stop3_closed", *b.data->pt_data, *b.data->meta);
+
+    test_vjs_indexes(b.data->pt_data->vehicle_journeys);
 
     check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys, "1111111");
 }
@@ -1148,6 +1166,7 @@ BOOST_AUTO_TEST_CASE(stop_point_deletion_test) {
                               .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
+    test_vjs_indexes(b.data->pt_data->vehicle_journeys);
 
     const auto* mvj_A = b.data->pt_data->meta_vjs["VjA"];
     const auto* mvj_B = b.data->pt_data->meta_vjs["VjB"];
@@ -1170,6 +1189,8 @@ BOOST_AUTO_TEST_CASE(stop_point_deletion_test) {
     navitia::delete_disruption("stop_area_closed_3", *b.data->pt_data, *b.data->meta);
     BOOST_CHECK_EQUAL(mvj_A->impacted_by.size(), 0);
     BOOST_CHECK_EQUAL(mvj_B->impacted_by.size(), 2);
+
+    test_vjs_indexes(b.data->pt_data->vehicle_journeys);
 
 }
 
@@ -1405,6 +1426,8 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_line_section) {
                               .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
+    test_vjs_indexes(b.data->pt_data->vehicle_journeys);
+
     // it should not have created another vj
     BOOST_CHECK_EQUAL(b.data->pt_data->lines.size(), 1);
     BOOST_CHECK_EQUAL(b.data->pt_data->routes.size(), 1);
@@ -1539,6 +1562,8 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section_cancelling_vj) {
 
     // Deleting the disruption
     navitia::delete_disruption("line_section_on_line:A_diverted", *b.data->pt_data, *b.data->meta);
+
+    test_vjs_indexes(b.data->pt_data->vehicle_journeys);
 
     vj = b.get<nt::VehicleJourney>("vj:1");
     adapted_vp = vj->adapted_validity_pattern()->days;
@@ -1723,6 +1748,8 @@ BOOST_AUTO_TEST_CASE(add_line_section_impact_on_line_with_repeated_stops) {
 
     BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 4);
 
+    test_vjs_indexes(b.data->pt_data->vehicle_journeys);
+
     // Make sur there is no impacts anymore
     BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("s1")->get_impacts().size(), 0);
     BOOST_CHECK_EQUAL(b.get<nt::StopPoint>("s2")->get_impacts().size(), 0);
@@ -1854,6 +1881,8 @@ BOOST_AUTO_TEST_CASE(add_multiple_impact_on_line_section) {
                               *b.data->pt_data, *b.data->meta);
 
     BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 8);
+
+    test_vjs_indexes(b.data->pt_data->vehicle_journeys);
 
     auto* vj = b.get<nt::VehicleJourney>("vj:1");
     auto adapted_vp = vj->adapted_validity_pattern()->days;
@@ -2131,4 +2160,98 @@ BOOST_AUTO_TEST_CASE(test_delay_on_line_does_nothing) {
     // no message on the metavj or vj
     BOOST_CHECK_EQUAL(b.get<nt::VehicleJourney>("vj:1")->get_impacts().size(), 0);
     BOOST_CHECK_EQUAL(b.get<nt::VehicleJourney>("vj:1")->meta_vj->get_impacts().size(), 0);
+}
+
+
+/**
+ *
+ * vehicle_journeys are re-indexed after applying disruptions and their indexes must be unique and continuous
+ */
+BOOST_AUTO_TEST_CASE(test_indexes_after_applying_disruption) {
+    using btp = boost::posix_time::time_period;
+
+    ed::builder b("20170101");
+
+    b.vj("l1").uri("vj:0")
+            ("A", "08:10"_t)
+            ("B", "08:20"_t);
+    b.vj("l1").uri("vj:1")
+            ("A", "09:10"_t)
+            ("B", "09:20"_t);
+    b.vj("l1").uri("vj:2")
+            ("A", "10:10"_t)
+            ("B", "10:20"_t)
+            ("C", "10:30"_t)
+            ("D", "10:40"_t);
+    b.vj("l1").uri("vj:3")
+            ("A", "11:10"_t)
+            ("B", "11:20"_t)
+            ("C", "11:30"_t)
+            ("D", "11:40"_t)
+            ("E", "11:50"_t)
+            ("F", "11:55"_t);
+
+    const auto it1 = b.sas.find("A");
+    b.data->pt_data->routes.front()->destination= it1->second;
+
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+
+    // Only appliable on vj:2
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Disruption_C")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::StopPoint, "C")
+                              .application_periods(btp("20170101T100000"_dt, "20170101T110000"_dt))
+                              .publish(btp("20170101T100000"_dt, "20170101T110000"_dt))
+                              .msg("Disruption on stop_point C")
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 5);
+
+    // Only appliable on vj:3
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Disruption_C1")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::StopPoint, "C")
+                              .application_periods(btp("20170101T110000"_dt, "20170101T235900"_dt))
+                              .publish(btp("20170101T110000"_dt, "20170101T235900"_dt))
+                              .msg("Disruption on stop_point C")
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 6);
+
+    // Only appliable on vj:2, and will trigger the cleaning up of vj and the re-indexing of vj
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Disruption_D")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::StopPoint, "D")
+                              .application_periods(btp("20170101T100000"_dt, "20170101T110000"_dt))
+                              .publish(btp("20170101T100000"_dt, "20170101T110000"_dt))
+                              .msg("Disruption on stop_point D")
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    b.data->build_raptor();
+
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->vehicle_journeys.size(), 6);
+
+    test_vjs_indexes(b.data->pt_data->vehicle_journeys);
+
+    navitia::PbCreator pb_creator(b.data.get(), bt::second_clock::universal_time(), null_time_period);
+
+    pb_creator.pb_fill(b.data->pt_data->vehicle_journeys, 3);
+
+    auto resp = pb_creator.get_response();
+    BOOST_REQUIRE_EQUAL(resp.vehicle_journeys_size(), 6);
+
+    BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(0).uri(), "vj:0");
+    BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(1).uri(), "vj:1");
+    BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(2).uri(), "vj:2");
+    BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(3).uri(), "vj:3");
+    BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(4).uri(), "vj:3:Adapted:0:Disruption_C1");
+    BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(5).uri(), "vj:2:Adapted:1:Disruption_C:Disruption_D");
+
 }
