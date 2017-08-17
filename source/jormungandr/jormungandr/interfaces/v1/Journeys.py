@@ -442,13 +442,16 @@ class Journeys(JourneyCommon):
         parser_get.add_argument("_night_bus_filter_max_factor", hidden=True, type=float)
         parser_get.add_argument("_min_car", hidden=True, type=int)
         parser_get.add_argument("_min_bike", hidden=True, type=int)
+        parser_get.add_argument("bss_stands", type=BooleanType(), default=False,
+                                help="Show bss stands availability "
+                                     "in the bicycle_rental pois of response")
         parser_get.add_argument("parking_status", type=BooleanType(), default=False,
                                 help="Show parking(bss, car parking) status availability "
                                      "in the pois(bicycle_rental, car parking) of response")
 
         self.get_decorators.append(complete_links(self))
 
-        if parser_get.parse_args().get("parking_status"):
+        if parser_get.parse_args().get("bss_stands") or parser_get.parse_args().get("parking_status"):
             self.get_decorators.insert(1, ManageParkingPlaces(self, 'journeys'))
 
     @add_debug_info()

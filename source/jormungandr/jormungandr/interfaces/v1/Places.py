@@ -160,6 +160,8 @@ class PlaceUri(ResourceUri):
 
     def __init__(self, **kwargs):
         ResourceUri.__init__(self, authentication=False, **kwargs)
+        self.parsers["get"].add_argument("bss_stands", type=BooleanType(), default=True,
+                                         help="Show bss stands availability")
         self.parsers["get"].add_argument("parking_status", type=BooleanType(), default=True,
                                          help="Show parking(bss, car parking) status availability "
                                          "in the pois(bicycle_rental, car parking) of response")
@@ -167,7 +169,7 @@ class PlaceUri(ResourceUri):
                                          help="remove geojson from the response")
         args = self.parsers["get"].parse_args()
 
-        if args["parking_status"]:
+        if args["parking_status"] or args["bss_stands"]:
             self.get_decorators.insert(1, ManageParkingPlaces(self, 'places'))
 
         if args['disable_geojson']:
@@ -228,6 +230,8 @@ class PlacesNearby(ResourceUri):
                                          help="Maximum depth on objects")
         self.parsers["get"].add_argument("start_page", type=int, default=0,
                                          help="The page number of the ptref result")
+        self.parsers["get"].add_argument("bss_stands", type=BooleanType(), default=True,
+                                         help="Show bss stands availability")
         self.parsers["get"].add_argument("parking_status", type=BooleanType(), default=True,
                                          help="Show parking(bss, car parking) status availability "
                                          "in the pois(bicycle_rental, car parking) of response")
@@ -241,7 +245,7 @@ class PlacesNearby(ResourceUri):
         self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
                                          help="remove geojson from the response")
         args = self.parsers["get"].parse_args()
-        if args["parking_status"]:
+        if args["parking_status"] or args["bss_stands"]:
             self.get_decorators.insert(1, ManageParkingPlaces(self, 'places_nearby'))
 
     @marshal_with(places_nearby)
