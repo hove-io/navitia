@@ -1,4 +1,4 @@
-/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2017, Canal TP and/or its affiliates. All rights reserved.
   
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -56,6 +56,7 @@ struct LineReport {
         add_objects(filter, forbidden_uris, d, now, stop_areas);
         add_objects(filter, forbidden_uris, d, now, stop_points);
     }
+
     template<typename T>
     void add_objects(const std::string& filter,
                      const std::vector<std::string>& forbidden_uris,
@@ -77,6 +78,7 @@ struct LineReport {
             }
         }
     }
+
     bool has_disruption(const boost::posix_time::ptime& current_time) const {
         return line->has_publishable_message(current_time)
             || ! networks.empty()
@@ -84,6 +86,7 @@ struct LineReport {
             || ! stop_areas.empty()
             || ! stop_points.empty();
     }
+
     void to_pb(navitia::PbCreator& pb_creator, const size_t depth) const {
         auto* report = pb_creator.add_line_reports();
         pb_creator.fill(line, report->mutable_line(), depth-1);
@@ -131,7 +134,7 @@ void line_reports(navitia::PbCreator& pb_creator,
     pb_creator.make_paginate(total_results, start_page, count, pb_creator.line_reports_size());
     if (pb_creator.line_reports_size() == 0) {
         pb_creator.fill_pb_error(pbnavitia::Error::no_solution, pbnavitia::NO_SOLUTION,
-                                 "no solution found");
+                                 "no result for this request");
     }
 }
 
