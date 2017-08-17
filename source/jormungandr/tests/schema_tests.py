@@ -89,6 +89,8 @@ class TestSwaggerSchema(AbstractTestFixture):
 
         # we don't want to document /connections apis
         assert not any('connections' in p for p in response['paths'])
+        # we also don't want this api, as we consider it deprecated
+        assert not any('/coverage/{lon};{lat}/{uri}/journeys' in p for p in response['paths'])
 
     def _check_schema(self, url, hard_check=True):
         schema = self.get_schema()

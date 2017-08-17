@@ -72,6 +72,9 @@ class NavitiaRule(Rule):
     """
     custom class to add a 'hide' variable to hide a rule in swagger
     """
-    def __init__(self, *args, **kwargs):
-        self.hide = kwargs.pop('hide', False)
-        super(NavitiaRule, self).__init__(*args, **kwargs)
+    def __init__(self, name, **kwargs):
+        routes_to_hide = kwargs.pop('hide_routes', [])
+        name_no_version = name.replace('/v1', '')
+        self.hide = kwargs.pop('hide', False) or name_no_version in routes_to_hide
+
+        super(NavitiaRule, self).__init__(name, **kwargs)
