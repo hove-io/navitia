@@ -31,12 +31,14 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 class ParkingPlaces(object):
 
-    def __init__(self, available, occupied, available_PRM, occupied_PRM):
+    def __init__(self, available, occupied, available_PRM=None, occupied_PRM=None):
         self.available = available
         self.occupied = occupied
         self.total_stands = available + occupied
-        self.available_PRM = available_PRM
-        self.occupied_PRM = occupied_PRM
+        # When *_PRM are None, the information isn't available in by the service
+        if available_PRM is not None and occupied_PRM is not None:
+            self.available_PRM = available_PRM
+            self.occupied_PRM = occupied_PRM
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__

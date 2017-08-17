@@ -503,13 +503,12 @@ def pois(is_collection):
             self.get_decorators.insert(1, get_obj_serializer(self))
             self.parsers["get"].add_argument("original_id", type=six.text_type,
                                              help="original uri of the object you want to query")
-            self.parsers["get"].add_argument("bss_stands", type=BooleanType(), default=True,
-                                             help="Show bss stands availability")
-            self.parsers["get"].add_argument("car_parking", type=BooleanType(), default=True,
-                                             help="Show car parking availability "
-                                             "in the parking pois of response")
+            self.parsers["get"].add_argument("parking_status", type=BooleanType(), default=True,
+                                             help="Show parking(bss, car parking) status availability "
+                                             "in the pois(bicycle_rental, car parking) of response")
+
             args = self.parsers["get"].parse_args()
-            if args["bss_stands"] or args["car_parking"]:
+            if args["parking_status"]:
                 self.get_decorators.insert(2, ManageParkingPlaces(self, 'pois'))
 
     return Pois

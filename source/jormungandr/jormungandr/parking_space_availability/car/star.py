@@ -75,8 +75,8 @@ class StarProvider(AbstractParkingPlacesProvider):
         available = jmespath.search('records[0].fields.nombreplacesdisponibles', data) or 0
         occupied = jmespath.search('records[0].fields.nombreplacesoccupees', data) or 0
         # Person with reduced mobility
-        available_PRM = jmespath.search('records[0].fields.nombreplacesdisponiblespmr', data) or 0
-        occupied_PRM = jmespath.search('records[0].fields.nombreplacesoccupeespmr', data) or 0
+        available_PRM = jmespath.search('records[0].fields.nombreplacesdisponiblespmr', data)
+        occupied_PRM = jmespath.search('records[0].fields.nombreplacesoccupeespmr', data)
 
         return ParkingPlaces(available, occupied, available_PRM, occupied_PRM)
 

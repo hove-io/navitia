@@ -57,7 +57,7 @@ def car_parking_space_get_information_test():
     parking_places = ParkingPlaces(available=4,
                                    occupied=3,
                                    available_PRM=2,
-                                   occupied_PRM=1)
+                                   occupied_PRM=0)
     provider = StarProvider('Keolis Rennes', 'toto', 42)
     star_response = """
     {
@@ -67,7 +67,7 @@ def car_parking_space_get_information_test():
                     "nombreplacesdisponibles": 4,
                     "nombreplacesoccupees": 3,
                     "nombreplacesdisponiblespmr": 2,
-                    "nombreplacesoccupeespmr": 1
+                    "nombreplacesoccupeespmr": 0
                 }
             }
         ]
@@ -95,8 +95,8 @@ def car_parking_space_get_information_test():
     """
     empty_parking = ParkingPlaces(available=0,
                                   occupied=0,
-                                  available_PRM=0,
-                                  occupied_PRM=0)
+                                  available_PRM=None,
+                                  occupied_PRM=None)
     provider._call_webservice = MagicMock(return_value=json.loads(star_response))
     assert provider.get_informations(poi) == empty_parking
 
@@ -109,3 +109,25 @@ def car_parking_space_get_information_test():
     provider._call_webservice = MagicMock(return_value=json.loads(star_response))
     assert provider.get_informations(poi) == empty_parking
 
+    # Information of PRM is not provided
+    parking_places = ParkingPlaces(available=4,
+                                   occupied=3)
+    provider = StarProvider('Keolis Rennes', 'toto', 42)
+    star_response = """
+    {
+        "records":[
+            {
+                "fields": {
+                    "nombreplacesdisponibles": 4,
+                    "nombreplacesoccupees": 3
+                }
+            }
+        ]
+    }
+    """
+
+    provider._call_webservice = MagicMock(return_value=json.loads(star_response))
+    info = provider.get_informations(poi)
+    assert info == parking_places
+    assert not hasattr(info, "available_PRM")
+    assert not hasattr(info, "occupied_PRM")
