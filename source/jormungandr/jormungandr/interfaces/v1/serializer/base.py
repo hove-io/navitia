@@ -192,6 +192,8 @@ class LiteralField(jsonschema.Field):
     :return literal value
     """
     def __init__(self, value, *args, **kwargs):
+        if 'display_none' not in kwargs:
+            kwargs['display_none'] = True
         super(LiteralField, self).__init__(*args, **kwargs)
         self.value = value
 

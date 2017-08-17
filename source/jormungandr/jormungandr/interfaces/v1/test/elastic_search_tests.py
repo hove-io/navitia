@@ -35,7 +35,8 @@ from jormungandr.interfaces.v1 import Places
 from jormungandr.tests.utils_test import MockRequests
 from flask.ext.restful import marshal_with
 from jormungandr.autocomplete.geocodejson import geocodejson
-
+from jormungandr.interfaces.v1.serializer.geocode_json import GeocodePlacesSerializer
+from jormungandr.interfaces.v1.decorators import get_serializer
 
 def bragi_house_jaures_feature():
     house_feature = {
@@ -88,7 +89,7 @@ def bragi_house_jaures_feature():
     }
     return house_feature
 
-@marshal_with(geocodejson)
+@get_serializer(serpy=GeocodePlacesSerializer, marshall=geocodejson)
 def get_response(bragi_response):
     return bragi_response
 
@@ -114,7 +115,10 @@ def bragi_house_reading_test():
             bragi_house_jaures_feature()
         ]
     }
-    navitia_response = get_response(bragi_response).get('places', {})
+    response = get_response(bragi_response)
+    assert len(response['warnings']) == 1
+    assert response['warnings'][0]['id'] == 'beta_endpoint'
+    navitia_response = response.get('places', {})
     bragi_house_jaures_response_check(navitia_response[0])
 
 
