@@ -364,6 +364,7 @@ bool VehicleJourney::has_landing() const{
 
 }
 
+namespace {
 template <typename F>
 static bool concerns_base_at_period(const VehicleJourney& vj,
                                     const std::vector<bt::time_period>& periods,
@@ -406,17 +407,16 @@ static bool is_useless(const nt::VehicleJourney& vj) {
 }
 
 template <typename C>
-static typename C::iterator erase_vj_from_list(const nt::VehicleJourney* vj, C& vjs) {
+static void erase_vj_from_list(const nt::VehicleJourney* vj, C& vjs) {
     auto it = boost::range::find(vjs, vj);
     if (it == vjs.end()) {
         LOG4CPLUS_WARN(log4cplus::Logger::getInstance("logger"),
                        "impossible to find the vj " << vj->uri << " in the list, something is strange");
-        return it;
+        return;
     }
-    return vjs.erase(it);
+    vjs.erase(it);
 }
 
-namespace {
 template<typename VJ> std::vector<VJ*>& get_vjs(Route* r);
 template<> std::vector<DiscreteVehicleJourney*>& get_vjs(Route* r) {
     return r->discrete_vehicle_journey_list;
