@@ -45,7 +45,7 @@ class CarParkingProviderManager(AbstractProviderManager):
         if 'poi_type' in item and item['poi_type']['id'] == POI_TYPE_ID:
             provider = self._find_provider(item)
             if provider:
-                item['parking_places'] = provider.get_informations(item)
+                item['car_park'] = provider.get_informations(item)
                 return provider
         return None
 

@@ -397,7 +397,7 @@ class TestBssProvider(AbstractTestFixture):
     def test_journey_sections_from_to_poi_with_stands(self):
         supported_pois = ['station_1']
         with mock_bss_providers(pois_supported=supported_pois):
-            query = journey_basic_query + "&first_section_mode=bss&last_section_mode=bss&parking_status=true"
+            query = journey_basic_query + "&first_section_mode=bss&last_section_mode=bss&add_poi_infos[]=bss_stands"
             response = self.query_region(query)
             self.is_valid_journey_response(response, query)
             journeys = get_not_null(response, 'journeys')
@@ -439,7 +439,7 @@ class TestBssProvider(AbstractTestFixture):
                      MockBssProvider(pois_supported='station_2', name='provider 2')]
         with mock.patch('jormungandr.parking_space_availability.bss.BssProviderManager._get_providers',
                         new_callable=PropertyMock, return_value=lambda: providers):
-            query = journey_basic_query + "&first_section_mode=bss&last_section_mode=bss&parking_status=true"
+            query = journey_basic_query + "&first_section_mode=bss&last_section_mode=bss&add_poi_infos[]=bss_stands"
             response = self.query_region(query)
             self.is_valid_journey_response(response, query)
 

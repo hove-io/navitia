@@ -71,16 +71,19 @@ class ManageParkingPlaces(object):
                 instance = i_manager.instances.get(self.resource.region)
 
                 resource_args = self.resource.parsers["get"].parse_args()
-                show_bss_stands = resource_args.get('bss_stands')
-                show_parking_status = resource_args.get('parking_status')
+                if 'none' in resource_args.get('add_poi_infos'):
+                    return response, status, h
 
-                if show_parking_status or show_bss_stands and instance and instance.bss_provider:
+                show_bss_stands = resource_args.get('bss_stands') or 'bss_stands' in resource_args.get('add_poi_infos')
+                show_car_park = 'car_park' in resource_args.get('add_poi_infos')
+
+                if show_bss_stands and instance and instance.bss_provider:
                     _handle(response, bss_provider_manager, self.attribute, self.logger,
                             'Error while handling BSS realtime availability')
 
-                if show_parking_status and instance and instance.car_parking_provider:
+                if show_car_park and instance and instance.car_parking_provider:
                     _handle(response, car_parking_provider_manager, self.attribute, self.logger,
-                            'Error while handling Car Parking realtime availability')
+                            'Error while handling car park realtime availability')
 
             return response, status, h
         return wrapper

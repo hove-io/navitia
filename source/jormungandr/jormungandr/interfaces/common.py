@@ -38,3 +38,5 @@ pb_odt_level = {
     'zonal': type_pb2.zonal,
     'all': type_pb2.all
 }
+
+add_poi_infos_types = ('bss_stands', 'car_park', 'none')

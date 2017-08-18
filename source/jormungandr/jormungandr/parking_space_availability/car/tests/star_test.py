@@ -93,8 +93,8 @@ def car_parking_space_get_information_test():
         ]
     }
     """
-    empty_parking = ParkingPlaces(available=0,
-                                  occupied=0,
+    empty_parking = ParkingPlaces(available=None,
+                                  occupied=None,
                                   available_PRM=None,
                                   occupied_PRM=None)
     provider._call_webservice = MagicMock(return_value=json.loads(star_response))

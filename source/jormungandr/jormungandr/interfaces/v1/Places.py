@@ -53,6 +53,7 @@ import ujson as json
 from jormungandr.scenarios.utils import pb_type
 from navitiacommon.parser_args_type import TypeSchema, CoordFormat, CustomSchemaType, BooleanType, \
     OptionValue
+from jormungandr.interfaces.common import add_poi_infos_types
 import six
 
 
@@ -162,14 +163,16 @@ class PlaceUri(ResourceUri):
         ResourceUri.__init__(self, authentication=False, **kwargs)
         self.parsers["get"].add_argument("bss_stands", type=BooleanType(), default=True,
                                          help="Show bss stands availability")
-        self.parsers["get"].add_argument("parking_status", type=BooleanType(), default=True,
-                                         help="Show parking(bss, car parking) status availability "
-                                         "in the pois(bicycle_rental, car parking) of response")
+        self.parsers["get"].add_argument("add_poi_infos[]", type=OptionValue(add_poi_infos_types),
+                                         default=['bss_stands', 'car_park'],
+                                         dest="add_poi_infos", action="append",
+                                         help="Show more information about the poi if it's available, for instance, "
+                                              "show BSS/car park availability in the pois(BSS/car park) of response")
         self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
                                          help="remove geojson from the response")
         args = self.parsers["get"].parse_args()
 
-        if args["parking_status"] or args["bss_stands"]:
+        if args["add_poi_infos"] or args["bss_stands"]:
             self.get_decorators.insert(1, ManageParkingPlaces(self, 'places'))
 
         if args['disable_geojson']:
@@ -232,9 +235,11 @@ class PlacesNearby(ResourceUri):
                                          help="The page number of the ptref result")
         self.parsers["get"].add_argument("bss_stands", type=BooleanType(), default=True,
                                          help="Show bss stands availability")
-        self.parsers["get"].add_argument("parking_status", type=BooleanType(), default=True,
-                                         help="Show parking(bss, car parking) status availability "
-                                         "in the pois(bicycle_rental, car parking) of response")
+        self.parsers["get"].add_argument("add_poi_infos[]", type=OptionValue(add_poi_infos_types),
+                                         default=['bss_stands', 'car_park'],
+                                         dest="add_poi_infos", action="append",
+                                         help="Show more information about the poi if it's available, for instance, "
+                                              "show BSS/car park availability in the pois(BSS/car park) of response")
         self.parsers["get"].add_argument("_current_datetime", type=DateTimeFormat(),
                                          default=datetime.datetime.utcnow(),
                                          help="The datetime used to consider the state of the pt object.\n"
@@ -245,7 +250,7 @@ class PlacesNearby(ResourceUri):
         self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
                                          help="remove geojson from the response")
         args = self.parsers["get"].parse_args()
-        if args["parking_status"] or args["bss_stands"]:
+        if args["add_poi_infos"] or args["bss_stands"]:
             self.get_decorators.insert(1, ManageParkingPlaces(self, 'places_nearby'))
 
     @marshal_with(places_nearby)
