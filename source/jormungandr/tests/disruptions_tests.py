@@ -525,3 +525,45 @@ class TestDisruptions(AbstractTestFixture):
         assert code == 200
         disruptions = get_not_null(response, 'disruptions')
         assert len(disruptions) == 9
+
+    def test_line_reports(self):
+        response = self.query_region("line_reports?_current_datetime=20120801T000000")
+        warnings = get_not_null(response, 'warnings')
+        assert len(warnings) == 1
+        assert warnings[0]['id'] == 'beta_endpoint'
+        assert len(get_not_null(response, 'disruptions')) == 2
+        line_reports = get_not_null(response, 'line_reports')
+        for line_report in line_reports:
+            is_valid_line_report(line_report)
+        assert len(line_reports) == 4
+        assert line_reports[0]['line']['id'] == 'A'
+        assert len(line_reports[0]['pt_objects']) == 3
+        assert line_reports[0]['pt_objects'][0]['id'] == 'A'
+        assert line_reports[0]['pt_objects'][1]['id'] == 'base_network'
+        assert line_reports[0]['pt_objects'][2]['id'] == 'stopA'
+
+        for line_report in line_reports[1:]:
+            assert len(line_report['pt_objects']) == 2
+            assert line_report['pt_objects'][0]['id'] == 'base_network'
+            assert line_report['pt_objects'][1]['id'] == 'stopA'
+
+
+@dataset({"line_sections_test": {}})
+class TestDisruptionsLineSections(AbstractTestFixture):
+    def test_line_reports(self):
+        response = self.query_region("line_reports?_current_datetime=20170103T120000")
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) == 1
+        line_reports = get_not_null(response, 'line_reports')
+        assert len(line_reports) == 1
+        is_valid_line_report(line_reports[0])
+        assert line_reports[0]['line']['id'] == 'line:1'
+        assert len(line_reports[0]['pt_objects']) == 4
+        assert line_reports[0]['pt_objects'][0]['id'] == 'C_1'
+        assert line_reports[0]['pt_objects'][1]['id'] == 'D_1'
+        assert line_reports[0]['pt_objects'][2]['id'] == 'D_3'
+        assert line_reports[0]['pt_objects'][3]['id'] == 'E_1'
+        for pt_object in line_reports[0]['pt_objects']:
+            assert pt_object['embedded_type'] == 'stop_point'
+            assert len(pt_object['stop_point']['links']) == 1
+            assert pt_object['stop_point']['links'][0]['id'] == 'line_section_on_line_1'

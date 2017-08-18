@@ -771,6 +771,11 @@ def is_valid_line_group(line_group, depth_check=1):
         for l in line_group.get('lines', []):
             is_valid_line(l, depth_check - 1)
 
+def is_valid_line_report(line_report, depth_check=1):
+    is_valid_line(get_not_null(line_report, 'line'), depth_check - 1)
+    pt_objects = get_not_null(line_report, 'pt_objects')
+    for pt_object in pt_objects:
+        is_valid_pt_object(pt_object, 0)
 
 def is_valid_poi(poi, depth_check=1):
     get_not_null(poi, 'name')

@@ -143,6 +143,22 @@ class Scenario(object):
         resp = instance.send_and_receive(req)
         return resp
 
+    def line_reports(self, request, instance):
+        req = request_pb2.Request()
+        req.requested_api = type_pb2.line_reports
+        req.line_reports.depth = request['depth']
+        req.line_reports.filter = request['filter']
+        req.line_reports.count = request['count']
+        req.line_reports.start_page = request['start_page']
+        req._current_datetime = date_to_timestamp(request['_current_datetime'])
+
+        if request["forbidden_uris[]"]:
+            for forbidden_uri in request["forbidden_uris[]"]:
+                req.traffic_reports.forbidden_uris.append(forbidden_uri)
+
+        resp = instance.send_and_receive(req)
+        return resp
+
     def places(self, request, instance):
         return instance.get_autocomplete(request.get('_autocomplete')).get(request, instance)
 

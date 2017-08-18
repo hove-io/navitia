@@ -1018,6 +1018,18 @@ template<> inline Type_e get_type_e<CommercialMode>() {
 template<> inline Type_e get_type_e<Contributor>() {
     return Type_e::Contributor;
 }
+template<> inline Type_e get_type_e<Network>() {
+    return Type_e::Network;
+}
+template<> inline Type_e get_type_e<Route>() {
+    return Type_e::Route;
+}
+template<> inline Type_e get_type_e<StopArea>() {
+    return Type_e::StopArea;
+}
+template<> inline Type_e get_type_e<StopPoint>() {
+    return Type_e::StopPoint;
+}
 
 } //namespace navitia::type
 

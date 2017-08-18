@@ -40,6 +40,7 @@ www.navitia.io
 #include "time_tables/passages.h"
 #include "time_tables/departure_boards.h"
 #include "disruption/traffic_reports_api.h"
+#include "disruption/line_reports_api.h"
 #include "calendar/calendar_api.h"
 #include "routing/raptor.h"
 #include "type/meta_data.h"
@@ -369,6 +370,21 @@ void Worker::traffic_reports(const pbnavitia::TrafficReportsRequest &request){
                                                 request.start_page(),
                                                 request.filter(),
                                                 forbidden_uris);
+}
+
+void Worker::line_reports(const pbnavitia::LineReportsRequest &request){
+    const auto* data = this->pb_creator.data;
+    std::vector<std::string> forbidden_uris;
+    for (const auto& uri: request.forbidden_uris()) {
+        forbidden_uris.push_back(uri);
+    }
+    navitia::disruption::line_reports(this->pb_creator,
+                                      *data,
+                                      request.depth(),
+                                      request.count(),
+                                      request.start_page(),
+                                      request.filter(),
+                                      forbidden_uris);
 }
 
 void Worker::calendars(const pbnavitia::CalendarsRequest &request){
@@ -1017,6 +1033,7 @@ void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
     case pbnavitia::places_nearby: proximity_list(request.places_nearby()); break;
     case pbnavitia::PTREFERENTIAL: pt_ref(request.ptref()); break;
     case pbnavitia::traffic_reports : traffic_reports(request.traffic_reports()); break;
+    case pbnavitia::line_reports : line_reports(request.line_reports()); break;
     case pbnavitia::calendars : calendars(request.calendars()); break;
     case pbnavitia::place_code : place_code(request.place_code()); break;
     case pbnavitia::nearest_stop_points : nearest_stop_points(request.nearest_stop_points()); break;

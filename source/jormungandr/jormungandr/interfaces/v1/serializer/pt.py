@@ -87,6 +87,7 @@ class SeveritySerializer(PbNestedSerializer):
 class PtObjectSerializer(GenericSerializer):
     quality = jsonschema.Field(schema_type=int, required=False, display_none=True)
     stop_area = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer())
+    stop_point = jsonschema.MethodField(schema_type=lambda: StopPointSerializer())
     line = jsonschema.MethodField(schema_type=lambda: LineSerializer())
     network = jsonschema.MethodField(schema_type=lambda: NetworkSerializer())
     route = jsonschema.MethodField(schema_type=lambda: RouteSerializer())
@@ -127,6 +128,12 @@ class PtObjectSerializer(GenericSerializer):
     def get_stop_area(self, obj):
         if obj.HasField(str('stop_area')):
             return StopAreaSerializer(obj.stop_area, display_none=False).data
+        else:
+            return None
+
+    def get_stop_point(self, obj):
+        if obj.HasField(str('stop_point')):
+            return StopPointSerializer(obj.stop_point, display_none=False).data
         else:
             return None
 

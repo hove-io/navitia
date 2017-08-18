@@ -31,14 +31,13 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import datetime
 import pytz
 
-from jormungandr.interfaces.v1.serializer import pt
+from jormungandr.interfaces.v1.serializer import pt, schedule, report, base
 from jormungandr.interfaces.v1.serializer.base import NullableDictSerializer, LambdaField, PbNestedSerializer, \
     DescribedField
 from jormungandr.interfaces.v1.serializer.fields import ErrorSerializer, FeedPublisherSerializer, \
         PaginationSerializer, LinkSchema, NoteSerializer, ExceptionSerializer
 from jormungandr.interfaces.v1.make_links import create_external_link
 from jormungandr.interfaces.v1.serializer.journey import TicketSerializer, ContextSerializer, JourneySerializer
-from jormungandr.interfaces.v1.serializer import schedule
 import serpy
 
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, MethodField
@@ -242,3 +241,8 @@ class StopSchedulesSerializer(PTReferentialSerializer):
 
 class RouteSchedulesSerializer(PTReferentialSerializer):
     route_schedules = schedule.RouteScheduleSerializer(many=True, display_none=True)
+
+
+class LineReportsSerializer(PTReferentialSerializer):
+    line_reports = report.LineReportSerializer(many=True, display_none=True)
+    warnings = base.BetaEndpointsSerializer()
