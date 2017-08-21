@@ -27,22 +27,27 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-
-from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
-from jormungandr.parking_space_availability.bss.stands import Stands
-from jormungandr.ptref import FeedPublisher
+from abc import abstractmethod, ABCMeta
+import six
 
 
-class BssMockProvider(AbstractParkingPlacesProvider):
+class AbstractParkingPlacesProvider(six.with_metaclass(ABCMeta, object)):
+    """
+    abstract class managing calls to external service providing real-time next passages
+    """
 
+    @abstractmethod
     def support_poi(self, poi):
-        return poi['id'] == 'station_1'
+        pass
 
+    @abstractmethod
     def get_informations(self, poi):
-        return Stands(5, 9)
+        pass
 
+    @abstractmethod
     def status(self):
-        return {}
+        pass
 
+    @abstractmethod
     def feed_publisher(self):
-        return FeedPublisher(id='mock', name='mock provider')
+        pass

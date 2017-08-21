@@ -99,6 +99,9 @@ priority = 0
 # activate / desactivate call to bss provider
 bss_provider = True
 
+# activate / desactivate call to car parking provider
+car_park_provider = True
+
 #Maximum number of connections allowed in journeys is calculated as
 #max_additional_connections + minimum connections among the journeys
 max_additional_connections = 2

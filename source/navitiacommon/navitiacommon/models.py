@@ -314,6 +314,9 @@ class Instance(db.Model):
     bss_provider = db.Column(db.Boolean, default=default_values.bss_provider,
                                   nullable=False, server_default=true())
 
+    car_park_provider = db.Column(db.Boolean, default=default_values.car_park_provider,
+                                     nullable=False, server_default=true())
+
     max_additional_connections = db.Column(db.Integer, default=default_values.max_additional_connections,
                                   nullable=False, server_default='2')
 

@@ -27,22 +27,27 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
+from jormungandr.parking_space_availability.abstract_provider_manager import AbstractProviderManager
 
-from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
-from jormungandr.parking_space_availability.bss.stands import Stands
-from jormungandr.ptref import FeedPublisher
+POI_TYPE_ID = 'poi_type:amenity:parking'
 
 
-class BssMockProvider(AbstractParkingPlacesProvider):
+class CarParkingProviderManager(AbstractProviderManager):
 
-    def support_poi(self, poi):
-        return poi['id'] == 'station_1'
+    def __init__(self, car_park_providers_configurations):
+        self.car_park_providers = []
+        for configuration in car_park_providers_configurations:
+            arguments = configuration.get('args', {})
+            self.car_park_providers.append(self._init_class(configuration['class'], arguments))
+        super(CarParkingProviderManager, self).__init__()
 
-    def get_informations(self, poi):
-        return Stands(5, 9)
+    def _handle_poi(self, item):
+        if 'poi_type' in item and item['poi_type']['id'] == POI_TYPE_ID:
+            provider = self._find_provider(item)
+            if provider:
+                item['car_park'] = provider.get_informations(item)
+                return provider
+        return None
 
-    def status(self):
-        return {}
-
-    def feed_publisher(self):
-        return FeedPublisher(id='mock', name='mock provider')
+    def _get_providers(self):
+        return self.car_park_providers

@@ -26,3 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from abstract_parking_places_provider import AbstractParkingPlacesProvider
+from abstract_provider_manager import AbstractProviderManager
+from abstract_provider_manager import get_from_to_pois_of_journeys
+from bss.stands import Stands
