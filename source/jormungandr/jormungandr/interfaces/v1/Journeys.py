@@ -446,7 +446,7 @@ class Journeys(JourneyCommon):
         parser_get.add_argument("bss_stands", type=BooleanType(), default=False,
                                 help="Show bss stands availability "
                                      "in the bicycle_rental pois of response")
-        parser_get.add_argument("add_poi_infos[]", type=OptionValue(add_poi_infos_types), default=['none'],
+        parser_get.add_argument("add_poi_infos[]", type=OptionValue(add_poi_infos_types), default=[],
                                 dest="add_poi_infos", action="append",
                                 help="Show more information about the poi if it's available, for instance, show "
                                      "BSS/car park availability in the pois(BSS/car park) of response")

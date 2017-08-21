@@ -71,8 +71,6 @@ class ManageParkingPlaces(object):
                 instance = i_manager.instances.get(self.resource.region)
 
                 resource_args = self.resource.parsers["get"].parse_args()
-                if 'none' in resource_args.get('add_poi_infos'):
-                    return response, status, h
 
                 show_bss_stands = resource_args.get('bss_stands') or 'bss_stands' in resource_args.get('add_poi_infos')
                 show_car_park = 'car_park' in resource_args.get('add_poi_infos')

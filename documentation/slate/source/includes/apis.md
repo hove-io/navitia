@@ -733,7 +733,7 @@ coordinates, returning a [places](#place) collection.
   nop      | admin_uri[] | array of string | If filled, will filter the search within the given admin uris       |
   nop      | filter      | string          | Use to filter returned objects. for example: places_type.id=theater |
   nop      | disable_geojson | boolean     | remove geojson from the response  | False
-  nop      | add_poi_infos  | boolean      | Activate the output of additional infomations about the poi. For example, parking availability(BSS, car parking etc.) in the bicycle_rental, car parking pois of response     | [`bss_stands`, `car_park`]
+  nop      | add_poi_infos  | boolean      | Activate the output of additional infomations about the poi. For example, parking availability(BSS, car parking etc.) in the bicycle_rental, car parking pois of response. When an emtpy string is passed to this parameter, it deactivates all   | [`bss_stands`, `car_park`]
 
 Filters can be added:
 
@@ -959,7 +959,7 @@ The [isochrones](#isochrones) service exposes another response structure, which 
 | nop     | disruption_active    | boolean | For compatibility use only.<br>If true the algorithm take the disruptions into account, and thus avoid disrupted public transport.<br>Rq: `disruption_active=true` = `data_freshness=realtime` <br>Use `data_freshness` parameter instead       |  False     |
 | nop     | wheelchair           | boolean | If true the traveler is considered to be using a wheelchair, thus only accessible public transport are used<br>be warned: many data are currently too faint to provide acceptable answers with this parameter on       | False       |
 | nop     | direct_path          | enum    | Specify if direct paths should be suggested.<br>possible values: <ul><li>indifferent</li><li>none</li><li>only</li></ul>      | indifferent |
-| nop      | add_poi_infos  | boolean      | Activate the output of additional infomations about the poi. For example, parking availability(BSS, car parking etc.) in the bicycle_rental, car parking pois of response     | [`none`]
+| nop      | add_poi_infos  | boolean      | Activate the output of additional infomations about the poi. For example, parking availability(BSS, car parking etc.) in the bicycle_rental, car parking pois of response. When an emtpy string is passed to this parameter, it deactivates all    | []
 | nop     | debug                | boolean | Debug mode<br>No journeys are filtered in this mode     | False       |
 
 ### Precisions on `forbidden_uris[]` and `allowed_id[]`
