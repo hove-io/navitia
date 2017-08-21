@@ -44,9 +44,10 @@ DEFAULT_STAR_FEED_PUBLISHER = None
 
 class StarProvider(AbstractParkingPlacesProvider):
 
-    WS_URL_TEMPLATE = 'http://data.explore.star.fr/api/records/1.0/search/?dataset={}&refine.idparc={}'
+    def __init__(self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_STAR_FEED_PUBLISHER, **kwargs):
 
-    def __init__(self, operators, dataset, timeout=1, feed_publisher=DEFAULT_STAR_FEED_PUBLISHER, **kwargs):
+        self.ws_service_template = url + '/?dataset={}&refine.idparc={}'
+
         self.operators = [o.lower() for o in operators]
         self.timeout = timeout
         self.dataset = dataset
@@ -83,7 +84,7 @@ class StarProvider(AbstractParkingPlacesProvider):
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_STAR', 30))
     def _call_webservice(self, parking_id):
         try:
-            data = self.breaker.call(requests.get, self.WS_URL_TEMPLATE.format(self.dataset, parking_id),
+            data = self.breaker.call(requests.get, self.ws_service_template.format(self.dataset, parking_id),
                                      timeout=self.timeout)
             # record in newrelic
             self.record_call("OK")
@@ -91,14 +92,17 @@ class StarProvider(AbstractParkingPlacesProvider):
         except pybreaker.CircuitBreakerError as e:
             msg = 'STAR service dead (error: {})'.format(e)
             self.log.error(msg)
+            # record in newrelic
             utils.record_external_failure(msg, 'parking', 'STAR')
         except requests.Timeout as t:
             msg = 'STAR service timeout (error: {})'.format(t)
             self.log.error(msg)
+            # record in newrelic
             utils.record_external_failure(msg, 'parking', 'STAR')
         except:
             msg = 'STAR service error'
             self.log.exception(msg)
+            # record in newrelic
             utils.record_external_failure(msg, 'parking', 'STAR')
 
         return None

@@ -296,9 +296,9 @@ class Instance(object):
         return get_value_or_default('bss_provider', instance_db, self.name)
 
     @property
-    def car_parking_provider(self):
+    def car_park_provider(self):
         instance_db = self.get_models()
-        return get_value_or_default('car_parking_provider', instance_db, self.name)
+        return get_value_or_default('car_park_provider', instance_db, self.name)
 
     @property
     def max_additional_connections(self):

@@ -71,12 +71,12 @@ LOGGER = {
 # This should be moved in a central configuration system like ectd, consul, etc...
 BSS_PROVIDER = []
 # Car parking places availability service
-CAR_PARKING_PROVIDER = []
+CAR_PARK_PROVIDER = []
 for key, value in os.environ.items():
     if key.startswith('JORMUNGANDR_BSS_PROVIDER_'):
         BSS_PROVIDER.append(json.loads(value))
-    elif key.startswith('JORMUNGANDR_CAR_PARKING_PROVIDER_'):
-        CAR_PARKING_PROVIDER.append(json.loads(value))
+    elif key.startswith('JORMUNGANDR_CAR_PARK_PROVIDER_'):
+        CAR_PARK_PROVIDER.append(json.loads(value))
 
 #Parameters for statistics
 SAVE_STAT = boolean(os.getenv('JORMUNGANDR_SAVE_STAT', False))

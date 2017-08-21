@@ -15,8 +15,8 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('instance', sa.Column('car_parking_provider', sa.Boolean(), server_default='true', nullable=False))
+    op.add_column('instance', sa.Column('car_park_provider', sa.Boolean(), server_default='true', nullable=False))
 
 
 def downgrade():
-    op.drop_column('instance', 'car_parking_provider')
+    op.drop_column('instance', 'car_park_provider')

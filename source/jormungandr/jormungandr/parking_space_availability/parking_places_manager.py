@@ -28,7 +28,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask.ext.restful.utils import unpack
-from jormungandr import i_manager, bss_provider_manager, car_parking_provider_manager
+from jormungandr import i_manager, bss_provider_manager, car_park_provider_manager
 from functools import wraps
 import logging
 
@@ -81,8 +81,8 @@ class ManageParkingPlaces(object):
                     _handle(response, bss_provider_manager, self.attribute, self.logger,
                             'Error while handling BSS realtime availability')
 
-                if show_car_park and instance and instance.car_parking_provider:
-                    _handle(response, car_parking_provider_manager, self.attribute, self.logger,
+                if show_car_park and instance and instance.car_park_provider:
+                    _handle(response, car_park_provider_manager, self.attribute, self.logger,
                             'Error while handling car park realtime availability')
 
             return response, status, h

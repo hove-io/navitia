@@ -34,11 +34,11 @@ POI_TYPE_ID = 'poi_type:amenity:parking'
 
 class CarParkingProviderManager(AbstractProviderManager):
 
-    def __init__(self, car_parking_providers_configurations):
-        self.car_parking_providers = []
-        for configuration in car_parking_providers_configurations:
+    def __init__(self, car_park_providers_configurations):
+        self.car_park_providers = []
+        for configuration in car_park_providers_configurations:
             arguments = configuration.get('args', {})
-            self.car_parking_providers.append(self._init_class(configuration['class'], arguments))
+            self.car_park_providers.append(self._init_class(configuration['class'], arguments))
         super(CarParkingProviderManager, self).__init__()
 
     def _handle_poi(self, item):
@@ -50,4 +50,4 @@ class CarParkingProviderManager(AbstractProviderManager):
         return None
 
     def _get_providers(self):
-        return self.car_parking_providers
+        return self.car_park_providers
