@@ -50,7 +50,7 @@ def car_park_space_availability_start_support_poi_test():
     """
     STAR car provider support
     """
-    provider = StarProvider({'Keolis Rennes'}, 'toto', 42)
+    provider = StarProvider("fake.url", {'Keolis Rennes'}, 'toto', 42)
     assert provider.support_poi(poi)
 
 def car_park_space_get_information_test():
@@ -58,7 +58,7 @@ def car_park_space_get_information_test():
                                    occupied=3,
                                    available_PRM=2,
                                    occupied_PRM=0)
-    provider = StarProvider('Keolis Rennes', 'toto', 42)
+    provider = StarProvider("fake.url", {'Keolis Rennes'}, 'toto', 42)
     star_response = """
     {
         "records":[
