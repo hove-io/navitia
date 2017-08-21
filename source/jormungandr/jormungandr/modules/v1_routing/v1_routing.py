@@ -31,7 +31,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.interfaces.v1 import Uri, Coverage, Journeys, GraphicalIsochrone, \
     HeatMap, Schedules, Places, Ptobjects, Coord, Disruptions, Calendars, \
-    converters_collection_type, Status, GeoStatus, JSONSchema
+    converters_collection_type, Status, GeoStatus, JSONSchema, LineReports
 from werkzeug.routing import BaseConverter, FloatConverter, PathConverter
 from jormungandr.modules_loader import AModule
 from jormungandr import app
@@ -181,7 +181,9 @@ class V1Routing(AModule):
                           region + 'journeys',
                           coord + 'journeys',
                           '/journeys',
-                          endpoint='journeys')
+                          endpoint='journeys',
+                          # we don't want to document those routes as we consider them deprecated
+                          hide_routes=(region + '<uri:uri>/journeys', coord + '<uri:uri>/journeys'))
 
         if app.config['GRAPHICAL_ISOCHRONE']:
             self.add_resource(GraphicalIsochrone.GraphicalIsochrone,
@@ -223,6 +225,11 @@ class V1Routing(AModule):
                           region + 'traffic_reports',
                           region + '<uri:uri>/traffic_reports',
                           endpoint='traffic_reports')
+
+        self.add_resource(LineReports.LineReports,
+                          region + 'line_reports',
+                          region + '<uri:uri>/line_reports',
+                          endpoint='line_reports')
 
         self.add_resource(Status.Status,
                           region + 'status',

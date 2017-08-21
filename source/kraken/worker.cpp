@@ -40,6 +40,7 @@ www.navitia.io
 #include "time_tables/passages.h"
 #include "time_tables/departure_boards.h"
 #include "disruption/traffic_reports_api.h"
+#include "disruption/line_reports_api.h"
 #include "calendar/calendar_api.h"
 #include "routing/raptor.h"
 #include "type/meta_data.h"
@@ -371,6 +372,21 @@ void Worker::traffic_reports(const pbnavitia::TrafficReportsRequest &request){
                                                 forbidden_uris);
 }
 
+void Worker::line_reports(const pbnavitia::LineReportsRequest &request){
+    const auto* data = this->pb_creator.data;
+    std::vector<std::string> forbidden_uris;
+    for (const auto& uri: request.forbidden_uris()) {
+        forbidden_uris.push_back(uri);
+    }
+    navitia::disruption::line_reports(this->pb_creator,
+                                      *data,
+                                      request.depth(),
+                                      request.count(),
+                                      request.start_page(),
+                                      request.filter(),
+                                      forbidden_uris);
+}
+
 void Worker::calendars(const pbnavitia::CalendarsRequest &request){
     const auto* data = this->pb_creator.data;
     std::vector<std::string> forbidden_uris;
@@ -555,7 +571,7 @@ template<typename T>
 static void fill_or_error(const pbnavitia::PlaceCodeRequest &request, PbCreator& pb_creator) {
     const auto& objs = pb_creator.data->pt_data->codes.get_objs<T>(request.type_code(), request.code());
     if (objs.empty()) {
-        pb_creator.fill_pb_error(pbnavitia::Error::unknown_object, "Unknow object");
+        pb_creator.fill_pb_error(pbnavitia::Error::unknown_object, "Unknown object");
     } else {
         // FIXME: add every object or (as before) just the first one?
         pb_creator.fill(objs.front(), pb_creator.add_places(), 0);
@@ -577,7 +593,7 @@ void Worker::place_code(const pbnavitia::PlaceCodeRequest &request) {
         fill_or_error<nt::Line>(request, pb_creator);
         break;
     case pbnavitia::PlaceCodeRequest::Route:
-        fill_or_error<nt::Line>(request, pb_creator);
+        fill_or_error<nt::Route>(request, pb_creator);
         break;
     case pbnavitia::PlaceCodeRequest::VehicleJourney:
         fill_or_error<nt::VehicleJourney>(request, pb_creator);
@@ -942,7 +958,7 @@ void Worker::street_network_routing_matrix(const pbnavitia::StreetNetworkRouting
             auto* k = row->add_routing_response();
             auto it = nearest.find(coord.uri());
             if(it == nearest.end()) {
-                throw navitia::recoverable_exception("Cannot found object: " + coord.uri());
+                throw navitia::recoverable_exception("Cannot find object: " + coord.uri());
             }
             k->set_duration(it->second.time_duration.total_seconds());
             switch(it->second.routing_status){
@@ -1017,6 +1033,7 @@ void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
     case pbnavitia::places_nearby: proximity_list(request.places_nearby()); break;
     case pbnavitia::PTREFERENTIAL: pt_ref(request.ptref()); break;
     case pbnavitia::traffic_reports : traffic_reports(request.traffic_reports()); break;
+    case pbnavitia::line_reports : line_reports(request.line_reports()); break;
     case pbnavitia::calendars : calendars(request.calendars()); break;
     case pbnavitia::place_code : place_code(request.place_code()); break;
     case pbnavitia::nearest_stop_points : nearest_stop_points(request.nearest_stop_points()); break;
@@ -1051,11 +1068,17 @@ void Worker::nearest_stop_points(const pbnavitia::NearestStopPointsRequest& requ
     street_network_worker->init(entry_point, {});
     //kraken don't handle reverse isochrone
     auto result = routing::get_stop_points(entry_point, *data, *street_network_worker, false);
-    for(const auto& item: result){
+    if (!result){
+        this->pb_creator.fill_pb_error(pbnavitia::Error::unknown_object, "The entry point: " + entry_point.uri + " is not valid");
+        return;
+    }
+
+    for(const auto& item: *result){
         auto* nsp = pb_creator.add_nearest_stop_points();
         this->pb_creator.fill(planner->get_sp(item.first), nsp->mutable_stop_point(), 0);
         nsp->set_access_duration(item.second.total_seconds());
-    }   
+    }
+
 }
 
 void Worker::odt_stop_points(const pbnavitia::GeographicalCoord& request) {

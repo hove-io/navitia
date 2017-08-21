@@ -1,3 +1,14 @@
+navitia2 (2.39.0) unstable; urgency=low
+
+  * Kraken: fix vehicle_journeys bad index  <https://github.com/CanalTP/navitia/pull/2181>
+  * All: add line_reports API  <https://github.com/CanalTP/navitia/pull/2180>
+  * Jormungandr: hide some deprecated routes  <https://github.com/CanalTP/navitia/pull/2179>
+  * Kraken: fix search route by external_codes  <https://github.com/CanalTP/navitia/pull/2178>
+  * kraken: Fix error unknown origin point  <https://github.com/CanalTP/navitia/pull/2165>
+  * Jormungandr: better swagger  <https://github.com/CanalTP/navitia/pull/2176>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Mon, 21 Aug 2017 12:08:05 +0100
+
 navitia2 (2.38.0) unstable; urgency=low
 
   * Doc: disruption object doc fix  <https://github.com/CanalTP/navitia/pull/2155>

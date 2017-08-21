@@ -27,7 +27,8 @@
 
 from __future__ import absolute_import
 import serpy
-from .base import LiteralField, NestedPropertyField, IntNestedPropertyField, value_by_path
+from .base import LiteralField, NestedPropertyField, IntNestedPropertyField, value_by_path, \
+    BetaEndpointsSerializer
 from flask.ext.restful import abort
 from jormungandr.interfaces.v1.serializer import jsonschema
 
@@ -72,31 +73,47 @@ class CoordId(jsonschema.Field):
         return None
 
 
-class SubAdministrativeRegionField(serpy.DictSerializer):
-    id = jsonschema.Field(schema_type=str)
-    insee = jsonschema.Field(schema_type=str)
-    name = jsonschema.Field(schema_type=str, attr="label")
-    label = jsonschema.Field(schema_type=str)
-    level = serpy.IntField()
-    coord = jsonschema.MethodField()
-    zip_code = jsonschema.MethodField()
+class AdministrativeRegionsSerializer(serpy.Field):
+    def as_getter(self, serializer_field_name, serializer_cls):
+        return lambda obj: self.make(obj)
 
-    def get_coord(self, obj):
-        lat = value_by_path(obj, 'coord.lat')
-        lon = value_by_path(obj, 'coord.lon')
-        res = {'lat': None, 'lon': None}
-        if lon and lat:
-            res.update({'lat': str(lat), 'lon': str(lon)})
-        return res
-
-    def get_zip_code(self, obj):
-        zip_codes = obj.get('zip_codes', [])
-        if all(zip_code == "" for zip_code in zip_codes):
-            return None
-        elif len(zip_codes) == 1:
-            return zip_codes[0]
-        else:
-            return '{}-{}'.format(min(zip_codes), max(zip_codes))
+    def make(self, obj):
+        admins = value_by_path(obj, 'properties.geocoding.administrative_regions', [])
+        if admins:
+            def make_admin(admin):
+                res = {
+                    'id': admin['id'],
+                    'insee': admin['insee'],
+                    'name': admin['label'],
+                    'label': admin['label'],
+                    'level': admin['level'],
+                    'coord': {
+                        'lon': str(admin['coord']['lon']),
+                        'lat': str(admin['coord']['lat']),
+                    },
+                }
+                zip_codes = admin.get('zip_codes', [])
+                if all(zip_code == "" for zip_code in zip_codes):
+                    pass
+                elif len(zip_codes) == 1:
+                    res['zip_code'] = zip_codes[0]
+                else:
+                    res['zip_code'] = '{}-{}'.format(min(zip_codes), max(zip_codes))
+                return res
+            return [make_admin(admin) for admin in admins]
+        admins = obj.get('properties', {}).get('geocoding', {}).get('admin', {})
+        return [
+            {
+                "insee": None,
+                "name": name,
+                "level": int(level.replace('level', '')),
+                "coord": {"lat": None, "lon": None},
+                "label": None,
+                "id": None,
+                "zip_code": None
+            }
+            for level, name in admins.items()
+        ]
 
 
 class AdministrativeRegionSerializer(serpy.DictSerializer):
@@ -107,12 +124,7 @@ class AdministrativeRegionSerializer(serpy.DictSerializer):
     coord = CoordField()
     insee = NestedPropertyField(attr='properties.geocoding.citycode')
     level = IntNestedPropertyField(attr='properties.geocoding.level')
-    administrative_regions = jsonschema.MethodField()
-
-    def get_administrative_regions(self, obj):
-        geocoding = obj.get('properties', {}).get('geocoding', {})
-
-        return [SubAdministrativeRegionField(r).data for r in geocoding.get('administrative_regions', [])]
+    administrative_regions = AdministrativeRegionsSerializer()
 
 
 class GeocodeAdminSerializer(serpy.DictSerializer):
@@ -136,13 +148,8 @@ class PoiSerializer(serpy.DictSerializer):
     coord = CoordField()
     label = NestedPropertyField(attr='properties.geocoding.label')
     name = NestedPropertyField(attr='properties.geocoding.name')
-    administrative_regions = jsonschema.MethodField()
+    administrative_regions = AdministrativeRegionsSerializer()
     poi_type = jsonschema.MethodField(display_none=False)
-
-    def get_administrative_regions(self, obj):
-        geocoding = obj.get('properties', {}).get('geocoding', {})
-
-        return [SubAdministrativeRegionField(r).data for r in geocoding.get('administrative_regions', [])]
 
     def get_poi_type(self, obj):
         poi_types = obj.get('properties', {}).get('geocoding', {}).get('poi_types', [])
@@ -166,7 +173,7 @@ class AddressSerializer(serpy.DictSerializer):
     house_number = jsonschema.MethodField(display_none=True)
     label = NestedPropertyField(attr='properties.geocoding.label')
     name = NestedPropertyField(attr='properties.geocoding.name')
-    administrative_regions = jsonschema.MethodField(display_none=True)
+    administrative_regions = AdministrativeRegionsSerializer()
 
     def get_house_number(self, obj):
         geocoding = obj.get('properties', {}).get('geocoding', {})
@@ -176,11 +183,6 @@ class AddressSerializer(serpy.DictSerializer):
         if len(numbers) > 0:
             hn = numbers[0]
         return int(hn)
-
-    def get_administrative_regions(self, obj):
-        geocoding = obj.get('properties', {}).get('geocoding', {})
-
-        return [SubAdministrativeRegionField(r).data for r in geocoding.get('administrative_regions', [])]
 
 
 class GeocodeAddressSerializer(serpy.DictSerializer):
@@ -199,13 +201,8 @@ class StopAreaSerializer(serpy.DictSerializer):
     coord = CoordField()
     label = NestedPropertyField(attr='properties.geocoding.label')
     name = NestedPropertyField(attr='properties.geocoding.name')
-    administrative_regions = jsonschema.MethodField()
-    timezone = LiteralField(None)
-
-    def get_administrative_regions(self, obj):
-        geocoding = obj.get('properties', {}).get('geocoding', {})
-
-        return [SubAdministrativeRegionField(r).data for r in geocoding.get('administrative_regions', [])]
+    administrative_regions = AdministrativeRegionsSerializer()
+    timezone = NestedPropertyField(attr='properties.geocoding.timezone')
 
 
 class GeocodeStopAreaSerializer(serpy.DictSerializer):
@@ -219,17 +216,9 @@ class GeocodeStopAreaSerializer(serpy.DictSerializer):
         return StopAreaSerializer(obj).data
 
 
-class WarningSerializer(serpy.DictSerializer):
-    id = LiteralField("beta_endpoint")
-    message = LiteralField("This service is under construction. You can help through github.com/CanalTP/navitia")
-
-
 class GeocodePlacesSerializer(serpy.DictSerializer):
     places = jsonschema.MethodField()
-    warnings = LiteralField([{
-        'id': 'beta_endpoint',
-        'message': 'This service is under construction. You can help through github.com/CanalTP/navitia'
-    }])
+    warnings = BetaEndpointsSerializer()
 
     def get_places(self, obj):
         map_serializer = {

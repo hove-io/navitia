@@ -110,6 +110,7 @@ class Worker {
         void journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API api);
         void pt_ref(const pbnavitia::PTRefRequest &request);
         void traffic_reports(const pbnavitia::TrafficReportsRequest &request);
+        void line_reports(const pbnavitia::LineReportsRequest &request);
         void calendars(const pbnavitia::CalendarsRequest &request);
         void pt_object(const pbnavitia::PtobjectRequest &request);
         void place_code(const pbnavitia::PlaceCodeRequest &request);

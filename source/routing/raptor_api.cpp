@@ -808,7 +808,7 @@ std::vector<georef::Admin*> find_admins(const type::EntryPoint& ep, const type::
     return data.geo_ref->find_admins(ep.coordinates);
 }
 
-routing::map_stop_point_duration
+boost::optional<routing::map_stop_point_duration>
 get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         georef::StreetNetwork & worker, bool use_second){
     routing::map_stop_point_duration result;
@@ -922,6 +922,8 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
             }
         }
         LOG4CPLUS_DEBUG(logger, result.size() << " sp found for admin");
+    } else {
+        return boost::none;
     }
 
     return result;
@@ -1051,9 +1053,21 @@ void make_response(navitia::PbCreator& pb_creator,
     worker.init(origin, {destination});
     auto departures = get_stop_points(origin, raptor.data, worker);
     auto destinations = get_stop_points(destination, raptor.data, worker, true);
+    if (!departures){
+        pb_creator.fill_pb_error(pbnavitia::Error::unknown_object,
+                                 "The entry point: " + origin.uri + " is not valid");
+        return;
+    }
+
+    if (!destinations){
+        pb_creator.fill_pb_error(pbnavitia::Error::unknown_object,
+                                 "The entry point: " + destination.uri + " is not valid");
+        return;
+    }
+
     const auto direct_path = get_direct_path(worker, origin, destination);
 
-    if(departures.size() == 0 && destinations.size() == 0){
+    if(departures && (departures->size() == 0) && destinations && (destinations->size() == 0)){
         make_pathes(pb_creator, pathes, worker, direct_path, origin, destination, datetimes, clockwise);
         if (pb_creator.has_response_type(pbnavitia::NO_SOLUTION)) {
             pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
@@ -1063,7 +1077,7 @@ void make_response(navitia::PbCreator& pb_creator,
         return;
     }
 
-    if(departures.size() == 0){
+    if(departures && departures->size() == 0){
         make_pathes(pb_creator, pathes, worker, direct_path, origin, destination, datetimes, clockwise);
         if (pb_creator.has_response_type(pbnavitia::NO_SOLUTION)) {
             pb_creator.fill_pb_error(pbnavitia::Error::no_origin,
@@ -1072,7 +1086,7 @@ void make_response(navitia::PbCreator& pb_creator,
         return;
     }
 
-    if(destinations.size() == 0){
+    if(destinations && destinations->size() == 0){
         make_pathes(pb_creator, pathes, worker, direct_path, origin, destination, datetimes, clockwise);
         if (pb_creator.has_response_type(pbnavitia::NO_SOLUTION)) {
             pb_creator.fill_pb_error(pbnavitia::Error::no_destination,
@@ -1103,7 +1117,7 @@ void make_response(navitia::PbCreator& pb_creator,
             }
         }
         std::vector<Path> tmp = raptor.compute_all(
-            departures, destinations, init_dt, rt_level, transfer_penalty, bound, max_transfers,
+            *departures, *destinations, init_dt, rt_level, transfer_penalty, bound, max_transfers,
             accessibilite_params, forbidden, allowed, clockwise, direct_path_dur,
             max_extra_second_pass);
         LOG4CPLUS_DEBUG(logger, "raptor found " << tmp.size() << " solutions");
@@ -1150,9 +1164,8 @@ void make_isochrone(navitia::PbCreator& pb_creator,
     datetime = tmp_datetime.front();
     worker.init(origin);
     auto departures = get_stop_points(origin, raptor.data, worker);
-
-    if(departures.size() == 0){
-        pb_creator.set_response_type(pbnavitia::NO_ORIGIN_POINT);
+    if (!departures) {
+        pb_creator.fill_pb_error(pbnavitia::Error::unknown_object, "The entry point: " + origin.uri + " is not valid");
         return;
     }
 
@@ -1161,7 +1174,7 @@ void make_isochrone(navitia::PbCreator& pb_creator,
     DateTime init_dt = DateTimeUtils::set(day, time);
     DateTime bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
 
-    raptor.isochrone(departures, init_dt, bound, max_transfers,
+    raptor.isochrone(*departures, init_dt, bound, max_transfers,
                      accessibilite_params, forbidden, allowed, clockwise, rt_level);
 
     add_isochrone_response(raptor, origin, pb_creator, raptor.data.pt_data->stop_points, clockwise,
@@ -1277,19 +1290,22 @@ static bool fill_isochrone_common(IsochroneCommon& isochrone_common,
     datetime = tmp_datetime.front();
     worker.init(center);
     auto departures = get_stop_points(center, raptor.data, worker);
-
-    if (departures.empty()) {
-        pb_creator.set_response_type(pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT);
+    if (!departures) {
+        pb_creator.fill_pb_error(pbnavitia::Error::unknown_object, "The entry point: " + center.uri + " is not valid");
+        return true;
+    } else if (departures->empty()) {
+        pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination, pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
+                                 "no origin point nor destination point");
         return true;
     }
     int day = (datetime.date() - raptor.data.meta->production_date.begin()).days();
     int time = datetime.time_of_day().total_seconds();
     DateTime init_dt = DateTimeUtils::set(day, time);
     DateTime bound = build_bound(clockwise, max_duration, init_dt);
-    raptor.isochrone(departures, init_dt, bound, max_transfers,
+    raptor.isochrone(*departures, init_dt, bound, max_transfers,
                      accessibilite_params, forbidden, allowed, clockwise, rt_level);
     type::GeographicalCoord coord_origin = center.coordinates;
-    isochrone_common = IsochroneCommon(clockwise, coord_origin, departures, init_dt, center, bound, datetime);
+    isochrone_common = IsochroneCommon(clockwise, coord_origin, *departures, init_dt, center, bound, datetime);
     return false;
 }
 

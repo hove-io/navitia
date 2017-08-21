@@ -59,8 +59,16 @@ namespace type {
 typedef std::map<std::string, std::string> code_value_map_type;
 typedef std::map<std::string, code_value_map_type> type_code_codes_map_type;
 struct PT_Data : boost::noncopyable{
-#define COLLECTION_AND_MAP(type_name, collection_name) std::vector<type_name*> collection_name; std::unordered_map<std::string, type_name *> collection_name##_map;
+    template<typename T> const std::vector<T*>& collection() const {
+        static_assert(!std::is_same<T, T>::value, "PT_Data::collection() not implemented");
+        static const std::vector<T*> collection;
+        return collection;
+    }
+#define COLLECTION_AND_MAP(type_name, collection_name)                  \
+    std::vector<type_name*> collection_name;                            \
+    std::unordered_map<std::string, type_name *> collection_name##_map;
     ITERATE_NAVITIA_PT_TYPES(COLLECTION_AND_MAP)
+#undef COLLECTION_AND_MAP
 
     std::vector<StopPointConnection*> stop_point_connections;
 
@@ -174,6 +182,11 @@ struct PT_Data : boost::noncopyable{
     ~PT_Data();
 
 };
+
+#define GENERIC_PT_DATA_COLLECTION_SPECIALIZATION(type_name, collection_name) \
+    template<> const std::vector<type_name*>& PT_Data::collection() const;
+ITERATE_NAVITIA_PT_TYPES(GENERIC_PT_DATA_COLLECTION_SPECIALIZATION)
+#undef GENERIC_PT_DATA_COLLECTION_SPECIALIZATION
 
 }
 }

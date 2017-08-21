@@ -80,12 +80,12 @@ class Uri(ResourceUri, ResourceUtc):
                             help="DEPRECATED, replaced by `forbidden_uris[]`",
                             dest="__temporary_forbidden_id[]",
                             default=[],
-                            action="append")
+                            action="append", schema_metadata={'format': 'pt-object'})
         parser.add_argument("forbidden_uris[]", type=six.text_type,
                             help="forbidden uris",
                             dest="forbidden_uris[]",
                             default=[],
-                            action="append")
+                            action="append", schema_metadata={'format': 'pt-object'})
         # for the top level collection apis (/v1/networks, /v1/lines, ...) the external_code is mandatory
         external_code_mandatory = '.external_codes' in self.endpoint
         parser.add_argument("external_code", type=six.text_type,
