@@ -48,6 +48,12 @@ places = {
     "feed_publishers": fields.List(NonNullNested(feed_publisher))
 }
 
+FEED_PUBLISHER_BANO = {
+    "id": "bano",
+    "name": "Base d'Adresses Nationale Ouverte",
+    "license": "ODbL",
+    "url": "http://bano.openstreetmap.fr/data/lisezmoi-bano.txt"
+}
 
 class Kraken(AbstractAutocomplete):
 
@@ -77,6 +83,13 @@ class Kraken(AbstractAutocomplete):
         if len(resp.places) == 0 and request['search_type'] == 0:
             req.places.search_type = 1
             resp = instance.send_and_receive(req)
+
+        # add bano into the feed publisher if not existent
+        has_bano = next((True for f in resp.feed_publishers if f.id == FEED_PUBLISHER_BANO['id']), None)
+        if not has_bano:
+            bano = resp.feed_publishers.add()
+            for k, v in FEED_PUBLISHER_BANO.items():
+                setattr(bano, k, v)
         build_pagination(request, resp)
         return resp
 

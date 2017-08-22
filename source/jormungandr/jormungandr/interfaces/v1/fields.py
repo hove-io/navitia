@@ -800,6 +800,13 @@ beta_endpoint = {
 }
 
 
+feed_publisher_bano = {
+    "id": Lit("bano"),
+    "name": Lit("Base d'Adresses Nationale Ouverte"),
+    "license": Lit("ODbL"),
+    "url": Lit("http://bano.openstreetmap.fr/data/lisezmoi-bano.txt")
+}
+
 class UrisToLinks():
 
     def output(self, key, obj):
