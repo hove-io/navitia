@@ -135,6 +135,10 @@ class PlacesSerializer(serpy.Serializer):
     places = pt.PlaceSerializer(many=True)
 
 
+class PlacesNearbySerializer(PTReferentialSerializer):
+    places_nearby = pt.PlaceNearbySerializer(many=True)
+
+
 class CoverageErrorSerializer(NullableDictSerializer):
     code = Field(schema_type=str)
     value = Field(schema_type=str)
@@ -246,3 +250,7 @@ class RouteSchedulesSerializer(PTReferentialSerializer):
 class LineReportsSerializer(PTReferentialSerializer):
     line_reports = report.LineReportSerializer(many=True, display_none=True)
     warnings = base.BetaEndpointsSerializer()
+
+
+class TrafficReportsSerializer(PTReferentialSerializer):
+    traffic_reports = report.TrafficReportSerializer(many=True, display_none=True)

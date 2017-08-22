@@ -33,7 +33,8 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from flask_restful import fields, reqparse, abort
 from flask.globals import g
 
-from jormungandr.interfaces.v1.serializer.api import PlacesSerializer
+from jormungandr.interfaces.v1.decorators import get_serializer
+from jormungandr.interfaces.v1.serializer.api import PlacesSerializer, PlacesNearbySerializer
 from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerOptionPathSerializer
 from jormungandr.interfaces.v1.swagger_schema import make_schema
 from navitiacommon import parser_args_type
@@ -217,16 +218,15 @@ places_types = {'stop_areas', 'stop_points', 'pois',
 class PlacesNearby(ResourceUri):
 
     def __init__(self, *args, **kwargs):
-        ResourceUri.__init__(self, *args, **kwargs)
-        self.parsers["get"].add_argument("type[]", type=six.text_type,
+        ResourceUri.__init__(self, output_type_serializer=PlacesNearbySerializer, *args, **kwargs)
+        self.parsers["get"].add_argument("type[]", type=OptionValue(list(pb_type.keys())),
                                          action="append",
-                                         default=["stop_area", "stop_point",
-                                                  "poi"],
+                                         default=["stop_area", "stop_point", "poi"],
                                          help="Type of the objects to return")
         self.parsers["get"].add_argument("filter", type=six.text_type, default="",
                                          help="Filter your objects")
         self.parsers["get"].add_argument("distance", type=int, default=500,
-                                         help="Distance range of the query")
+                                         help="Distance range of the query in meters")
         self.parsers["get"].add_argument("count", type=default_count_arg_type, default=10,
                                          help="Elements per page")
         self.parsers["get"].add_argument("depth", type=depth_argument, default=1,
@@ -241,7 +241,7 @@ class PlacesNearby(ResourceUri):
                                          help="Show more information about the poi if it's available, for instance, "
                                               "show BSS/car park availability in the pois(BSS/car park) of response")
         self.parsers["get"].add_argument("_current_datetime", type=DateTimeFormat(),
-                                         default=datetime.datetime.utcnow(),
+                                         default=datetime.datetime.utcnow(), hidden=True,
                                          help="The datetime used to consider the state of the pt object.\n"
                                               "Default is the current date and it is used for debug.\n"
                                               "Note: it will mainly change the disruptions that concern "
@@ -253,7 +253,7 @@ class PlacesNearby(ResourceUri):
         if args["add_poi_infos"] or args["bss_stands"]:
             self.get_decorators.insert(1, ManageParkingPlaces(self, 'places_nearby'))
 
-    @marshal_with(places_nearby)
+    @get_serializer(serpy=PlacesNearbySerializer, marshall=places_nearby)
     def get(self, region=None, lon=None, lat=None, uri=None):
         self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
@@ -284,3 +284,6 @@ class PlacesNearby(ResourceUri):
         response = i_manager.dispatch(args, "places_nearby",
                                       instance_name=self.region)
         return response, 200
+
+    def options(self, **kwargs):
+        return self.api_description(**kwargs)

@@ -347,6 +347,10 @@ class PlaceSerializer(GenericSerializer):
     poi = PoiSerializer(display_none=False)
 
 
+class PlaceNearbySerializer(PlaceSerializer):
+    distance = jsonschema.IntField(display_none=True)
+
+
 class NetworkSerializer(GenericSerializer):
     lines = jsonschema.MethodField(schema_type=lambda: LineSerializer(), display_none=False)
     links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)

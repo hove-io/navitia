@@ -30,20 +30,23 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask.ext.restful import marshal_with, reqparse, fields
-from flask.globals import g
+
 from jormungandr import i_manager, timezone
-from jormungandr.interfaces.v1.fields import PbField, error, network, line,\
-    NonNullList, NonNullNested, pagination, stop_area
-from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
-from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_type
+from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
-from datetime import datetime
-from jormungandr.interfaces.v1.fields import disruption_marshaller
-import six
+from jormungandr.interfaces.v1.fields import PbField, error, network, line,\
+    NonNullList, NonNullNested, pagination, stop_area, disruption_marshaller
+from jormungandr.interfaces.v1.ResourceUri import ResourceUri
+from jormungandr.interfaces.v1.serializer import api
+from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
 from navitiacommon.parser_args_type import BooleanType
+
+from flask.ext.restful import marshal_with, reqparse, fields
+from flask.globals import g
+from datetime import datetime
+import six
 
 disruption = {
     "network": PbField(network, attribute='network'),
@@ -52,7 +55,7 @@ disruption = {
     "vehicle_journeys": NonNullList(NonNullNested(vehicle_journey))
 }
 
-traffic = {
+traffic_reports = {
     "traffic_reports": NonNullList(NonNullNested(disruption)),
     "error": PbField(error, attribute='error'),
     "pagination": NonNullNested(pagination),
@@ -62,24 +65,23 @@ traffic = {
 
 class TrafficReport(ResourceUri):
     def __init__(self):
-        ResourceUri.__init__(self)
-        self.parsers = {}
-        self.parsers["get"] = reqparse.RequestParser(
-            argument_class=ArgumentDoc)
+        ResourceUri.__init__(self, output_type_serializer=api.TrafficReportsSerializer)
         parser_get = self.parsers["get"]
-        parser_get.add_argument("depth", type=int, default=1)
+        parser_get.add_argument("depth", type=int, default=1, help="The depth of your object")
         parser_get.add_argument("count", type=default_count_arg_type, default=10,
-                                help="Number of disruptions per page")
+                                help="Number of objects per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 help="The current page")
-        parser_get.add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.utcnow(),
+        parser_get.add_argument("_current_datetime", hidden=True,
+                                type=DateTimeFormat(), default=datetime.utcnow(),
                                 help="The datetime we want to publish the disruptions from."
                                      " Default is the current date and it is mainly used for debug.")
         parser_get.add_argument("forbidden_id[]", type=six.text_type,
                                 help="DEPRECATED, replaced by `forbidden_uris[]`",
                                 dest="__temporary_forbidden_id[]",
                                 default=[],
-                                action="append")
+                                action="append",
+                                schema_metadata={'format': 'pt-object'})
         parser_get.add_argument("forbidden_uris[]", type=six.text_type,
                                 help="forbidden uris",
                                 dest="forbidden_uris[]",
@@ -90,9 +92,13 @@ class TrafficReport(ResourceUri):
         parser_get.add_argument("disable_geojson", type=BooleanType(), default=False,
                                 help="remove geojson from the response")
         self.collection = 'traffic_reports'
+        self.collections = traffic_reports
+        self.get_decorators.insert(0, ManageError())
+        self.get_decorators.insert(1, get_obj_serializer(self))
 
-    @marshal_with(traffic)
-    @ManageError()
+    def options(self, **kwargs):
+        return self.api_description(**kwargs)
+
     def get(self, region=None, lon=None, lat=None, uri=None):
         self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
