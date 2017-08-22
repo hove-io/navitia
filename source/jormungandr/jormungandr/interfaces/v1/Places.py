@@ -50,7 +50,7 @@ from flask_restful import marshal_with
 import datetime
 from jormungandr.parking_space_availability.parking_places_manager import ManageParkingPlaces
 import ujson as json
-from jormungandr.scenarios.utils import pb_type
+from jormungandr.scenarios.utils import places_type
 from navitiacommon.parser_args_type import TypeSchema, CoordFormat, CustomSchemaType, BooleanType, \
     OptionValue
 from jormungandr.interfaces.common import add_poi_infos_types
@@ -83,7 +83,7 @@ class Places(ResourceUri):
                              *args, **kwargs)
         self.parsers["get"].add_argument("q", type=six.text_type, required=True,
                                          help="The data to search")
-        self.parsers["get"].add_argument("type[]", type=OptionValue(list(pb_type.keys())),
+        self.parsers["get"].add_argument("type[]", type=OptionValue(list(places_type.keys())),
                                          action="append",
                                          default=["stop_area", "address", "poi", "administrative_region"],
                                          help="The type of data to search")

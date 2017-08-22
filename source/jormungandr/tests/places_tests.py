@@ -176,3 +176,11 @@ class TestPlaces(AbstractTestFixture):
         place_id = "-1.5348252000000002;47.2554241"
         response, status = self.query_region("places/{}".format(place_id), check=False)
         assert response["error"]["message"] == u'Unable to find place: -1.5348252000000002;47.2554241'
+
+    def test_line_forbidden(self):
+        """ test that line is not an allowed type """
+        response, status = self.query_region("places?q=A&type[]=line", check=False)
+
+        assert status == 400
+        assert 'parameter "type[]" invalid' in response["message"]
+        assert 'you gave line' in response["message"]
