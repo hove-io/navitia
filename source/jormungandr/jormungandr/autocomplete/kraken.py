@@ -32,7 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete, GeoStatusResponse
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer import api
-from jormungandr.scenarios.utils import build_pagination, pb_type
+from jormungandr.scenarios.utils import build_pagination, places_type
 from jormungandr.interfaces.v1.fields import NonNullList, place, NonNullNested, PbField, error, feed_publisher,\
     disruption_marshaller
 from flask.ext.restful import marshal_with, fields, abort
@@ -63,10 +63,10 @@ class Kraken(AbstractAutocomplete):
         req._current_datetime = date_to_timestamp(request['_current_datetime'])
         if request["type[]"]:
             for type in request["type[]"]:
-                if type not in pb_type:
+                if type not in places_type:
                     abort(422, message="{} is not an acceptable type".format(type))
 
-                req.places.types.append(pb_type[type])
+                req.places.types.append(places_type[type])
 
         if request["admin_uri[]"]:
             for admin_uri in request["admin_uri[]"]:
