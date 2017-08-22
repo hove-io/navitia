@@ -135,6 +135,13 @@ class PlacesSerializer(serpy.Serializer):
     places = pt.PlaceSerializer(many=True)
 
 
+class PtObjectsSerializer(serpy.Serializer):
+    error = ErrorSerializer(display_none=False)
+    feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
+    disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
+    pt_objects = pt.PtObjectSerializer(many=True, attr='places')
+
+
 class PlacesNearbySerializer(PTReferentialSerializer):
     places_nearby = pt.PlaceNearbySerializer(many=True)
 

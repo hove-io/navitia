@@ -30,17 +30,24 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+
 from flask.ext.restful import fields, marshal_with, reqparse, abort
 from flask.globals import g
+
 from jormungandr import i_manager, timezone
+from jormungandr.interfaces.v1.decorators import get_obj_serializer
+from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.fields import disruption_marshaller
 from jormungandr.interfaces.v1.fields import NonNullList, NonNullNested, PbField, error, pt_object, feed_publisher
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
+from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type, DateTimeFormat
+from navitiacommon.parser_args_type import BooleanType, OptionValue
+
 import datetime
 import six
-from navitiacommon.parser_args_type import BooleanType, OptionValue
+
 
 pt_objects = {
     "pt_objects": NonNullList(NonNullNested(pt_object), attribute='places'),
@@ -55,10 +62,7 @@ pt_object_type_values = ["network", "commercial_mode", "line", "line_group", "ro
 class Ptobjects(ResourceUri):
 
     def __init__(self, *args, **kwargs):
-        ResourceUri.__init__(self, *args, **kwargs)
-        self.parsers = {}
-        self.parsers["get"] = reqparse.RequestParser(
-            argument_class=ArgumentDoc)
+        ResourceUri.__init__(self, output_type_serializer=api.PtObjectsSerializer, *args, **kwargs)
         self.parsers["get"].add_argument("q", type=six.text_type, required=True,
                                          help="The data to search")
         self.parsers["get"].add_argument("type[]", type=OptionValue(pt_object_type_values),
@@ -66,7 +70,7 @@ class Ptobjects(ResourceUri):
                                          help="The type of data to search")
         self.parsers["get"].add_argument("count", type=default_count_arg_type, default=10,
                                          help="The maximum number of ptobjects returned")
-        self.parsers["get"].add_argument("search_type", type=int, default=0,
+        self.parsers["get"].add_argument("search_type", type=int, default=0, hidden=True,
                                          help="Type of search: firstletter or type error")
         self.parsers["get"].add_argument("admin_uri[]", type=six.text_type, action="append",
                                          help="If filled, will restrained the search within "
@@ -78,11 +82,17 @@ class Ptobjects(ResourceUri):
                                               "Default is the current date and it is used for debug.\n"
                                               "Note: it will mainly change the disruptions that concern "
                                               "the object. The timezone should be specified in the format, "
-                                              "else we consider it as UTC")
+                                              "else we consider it as UTC",
+                                         schema_type='datetime', hidden=True)
         self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
                                          help="remove geojson from the response")
+        self.collection = 'pt_objects'
+        self.collections = pt_objects
+        self.get_decorators.insert(0, get_obj_serializer(self))
 
-    @marshal_with(pt_objects)
+    def options(self, **kwargs):
+        return self.api_description(**kwargs)
+
     def get(self, region=None, lon=None, lat=None):
         self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
