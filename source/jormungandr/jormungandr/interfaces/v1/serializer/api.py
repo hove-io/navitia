@@ -261,3 +261,7 @@ class LineReportsSerializer(PTReferentialSerializer):
 
 class TrafficReportsSerializer(PTReferentialSerializer):
     traffic_reports = report.TrafficReportSerializer(many=True, display_none=True)
+
+
+class CalendarsSerializer(PTReferentialSerializer):
+    calendars = pt.CalendarSerializer(many=True, display_none=True)
