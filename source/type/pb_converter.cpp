@@ -1258,7 +1258,30 @@ void PbCreator::Filler::fill_messages(const VjStopTimes* vj_stoptimes,
 
         fill_message(message, pt_display_info);
     }
+
+    // here we add all the impacts on stop_point and stop_area of section.from
+    const auto& from_sp = vj_stoptimes->stop_times.front()->stop_point;
+    for (const auto& sp_message: from_sp->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
+        fill_message(sp_message, pt_display_info);
+    }
+
+    const auto& from_sa = vj_stoptimes->stop_times.front()->stop_point->stop_area;
+    for (const auto& sp_message: from_sa->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
+        fill_message(sp_message, pt_display_info);
+    }
+
+    // here we add all the impacts on stop_point and stop_area of section.to
+    const auto& to_sa = vj_stoptimes->stop_times.back()->stop_point->stop_area;
+    for (const auto& sp_message: to_sa->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
+        fill_message(sp_message, pt_display_info);
+    }
+
+    const auto& to_sp = vj_stoptimes->stop_times.back()->stop_point;
+    for (const auto& sp_message: to_sp->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
+        fill_message(sp_message, pt_display_info);
+    }
 }
+
 
 void PbCreator::Filler::fill_pb_object(const VjStopTimes* vj_stoptimes,
                                        pbnavitia::PtDisplayInfo* pt_display_info) {

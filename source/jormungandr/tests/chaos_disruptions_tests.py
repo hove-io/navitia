@@ -297,6 +297,64 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
 
         assert len(response['disruptions']) == 0
 
+    def test_disruption_on_journey_display_informaions(self):
+        """
+        same kind of test with a call on journeys
+        we add one disruption on stop_area of the section and we should get it in display_informations.links[]
+        we add one on line and we should also get it in display_informations.links[]
+        we add one disruption on stop_point of the section and we should get it in display_informations.links[]
+        """
+
+        #we already have created a disruption on stopA (stop_area stopB)
+        query = journey_basic_query+'&_current_datetime=20160314T144100'
+        response = self.query_region(query)
+
+        #the response must be still valid (this test the kraken data reloading)
+        self.is_valid_journey_response(response, query)
+
+        #we search for the disruption on stop_area in section.disdisplay_informations.links[]
+        display_infos = [s['display_informations'] for j in response['journeys'] for s in j['sections']
+                         if s['type'] == 'public_transport']
+        links = [link for di in display_infos for link in di['links'] if link['rel'] == 'disruptions']
+        assert len(links) == 1
+        assert links[0]['id'] == 'impact_bob_the_disruption_1'
+
+        #we create a disruption on line
+        self.send_mock("bob_the_disruption_on_line", "A", "line")
+        query = journey_basic_query+'&_current_datetime=20160314T144100'
+        response = self.query_region(query)
+
+        #the response must be still valid (this test the kraken data reloading)
+        self.is_valid_journey_response(response, query)
+
+        #we search for the disruption on stop_area and line in section.disdisplay_informations.links[]
+        display_infos = [s['display_informations'] for j in response['journeys'] for s in j['sections']
+                         if s['type'] == 'public_transport']
+        links = [link for di in display_infos for link in di['links'] if link['rel'] == 'disruptions']
+        assert len(links) == 2
+        assert any(link['id'] == 'impact_bob_the_disruption_1' for link in links)
+        assert any(link['id'] == 'impact_bob_the_disruption_on_line_1' for link in links)
+
+        #we create a disruption on a stop_point A
+        self.send_mock("bob_the_disruption_on_stop_point", "stop_point:stopA", "stop_point")
+        query = journey_basic_query+'&_current_datetime=20160314T144100'
+        response = self.query_region(query)
+
+        #the response must be still valid (this test the kraken data reloading)
+        self.is_valid_journey_response(response, query)
+
+        #the response must be still valid (this test the kraken data reloading)
+        self.is_valid_journey_response(response, query)
+
+        #we search for the disruption on stop_area, stop_point and line in section.disdisplay_informations.links[]
+        display_infos = [s['display_informations'] for j in response['journeys'] for s in j['sections']
+                         if s['type'] == 'public_transport']
+        links = [link for di in display_infos for link in di['links'] if link['rel'] == 'disruptions']
+        assert len(links) == 3
+        assert any(link['id'] == 'impact_bob_the_disruption_1' for link in links)
+        assert any(link['id'] == 'impact_bob_the_disruption_on_line_1' for link in links)
+        assert any(link['id'] == 'impact_bob_the_disruption_on_stop_point_1' for link in links)
+
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
 class TestChaosDisruptionsBlocking(ChaosDisruptionsFixture):
