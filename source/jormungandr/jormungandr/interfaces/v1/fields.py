@@ -807,6 +807,13 @@ feed_publisher_bano = {
     "url": Lit("http://bano.openstreetmap.fr/data/lisezmoi-bano.txt")
 }
 
+feed_publisher_osm = {
+    "id": Lit("osm"),
+    "name": Lit("openstreetmap"),
+    "license": Lit("ODbL"),
+    "url": Lit("https://www.openstreetmap.org/copyright")
+}
+
 class UrisToLinks():
 
     def output(self, key, obj):
