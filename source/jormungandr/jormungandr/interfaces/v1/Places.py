@@ -219,7 +219,7 @@ class PlacesNearby(ResourceUri):
 
     def __init__(self, *args, **kwargs):
         ResourceUri.__init__(self, output_type_serializer=PlacesNearbySerializer, *args, **kwargs)
-        self.parsers["get"].add_argument("type[]", type=OptionValue(list(pb_type.keys())),
+        self.parsers["get"].add_argument("type[]", type=OptionValue(list(places_type.keys())),
                                          action="append",
                                          default=["stop_area", "stop_point", "poi"],
                                          help="Type of the objects to return")
