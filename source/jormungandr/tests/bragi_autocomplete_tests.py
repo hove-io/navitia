@@ -143,7 +143,6 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['address']['name'] == 'Rue Bob'
             assert r[0]['address']['label'] == '20 Rue Bob (Bobtown)'
             fbs = response['feed_publishers']
-            assert len(fbs) >= 2
             assert {fb['id'] for fb in fbs} >= {u'osm', u'bano'}
 
     def test_autocomplete_call_with_param_from(self):
