@@ -241,12 +241,10 @@ class PlacesNearby(ResourceUri):
                                          help="Show more information about the poi if it's available, for instance, "
                                               "show BSS/car park availability in the pois(BSS/car park) of response")
         self.parsers["get"].add_argument("_current_datetime", type=DateTimeFormat(),
-                                         default=datetime.datetime.utcnow(), hidden=True,
-                                         help="The datetime used to consider the state of the pt object.\n"
-                                              "Default is the current date and it is used for debug.\n"
-                                              "Note: it will mainly change the disruptions that concern "
-                                              "the object. The timezone should be specified in the format, "
-                                              "else we consider it as UTC")
+                                         schema_metadata={'default': 'now'}, hidden=True,
+                                         default=datetime.datetime.utcnow(),
+                                         help="The datetime we want to publish the disruptions from."
+                                              " Default is the current date and it is mainly used for debug.")
         self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
                                          help="remove geojson from the response")
         args = self.parsers["get"].parse_args()

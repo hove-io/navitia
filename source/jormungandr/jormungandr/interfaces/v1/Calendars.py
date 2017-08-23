@@ -34,7 +34,7 @@ from flask.ext.restful import marshal_with, reqparse
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import default_count_arg_type, DateTimeFormat
+from jormungandr.interfaces.parsers import default_count_arg_type, DateTimeFormat, depth_argument
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.fields import fields, enum_type, NonNullList,\
@@ -88,20 +88,22 @@ class Calendars(ResourceUri):
     def __init__(self):
         ResourceUri.__init__(self, output_type_serializer=api.CalendarsSerializer)
         parser_get = self.parsers["get"]
-        parser_get.add_argument("depth", type=int, default=1, help="The depth of your object")
+        parser_get.add_argument("depth", type=depth_argument, default=1,
+                                help="The depth of your object")
         parser_get.add_argument("count", type=default_count_arg_type, default=10,
                                 help="Number of calendars per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 help="The current page")
         parser_get.add_argument("start_date", type=six.text_type, default="",
-                                help="Start date")
+                                help="The current page")
         parser_get.add_argument("end_date", type=six.text_type, default="",
                                 help="End date")
-        parser_get.add_argument("forbidden_id[]", type=six.text_type, hidden=True,
+        parser_get.add_argument("forbidden_id[]", type=six.text_type, deprecated=True,
                                 help="DEPRECATED, replaced by `forbidden_uris[]`",
                                 dest="__temporary_forbidden_id[]",
                                 default=[],
-                                action='append')
+                                action='append',
+                                schema_metadata={'format': 'pt-object'})
         parser_get.add_argument("forbidden_uris[]", type=six.text_type,
                                 help="forbidden uris",
                                 dest="forbidden_uris[]",
@@ -110,8 +112,9 @@ class Calendars(ResourceUri):
                                 schema_metadata={'format': 'pt-object'})
         parser_get.add_argument("distance", type=int, default=200,
                                 help="Distance range of the query. Used only if a coord is in the query")
-        parser_get.add_argument("_current_datetime", hidden=True,
-                                type=DateTimeFormat(), default=datetime.utcnow(),
+        parser_get.add_argument("_current_datetime", type=DateTimeFormat(),
+                                schema_metadata={'default': 'now'}, hidden=True,
+                                default=datetime.utcnow(),
                                 help="The datetime we want to publish the disruptions from."
                                      " Default is the current date and it is mainly used for debug.")
         self.collection = 'calendars'

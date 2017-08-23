@@ -77,13 +77,11 @@ class Ptobjects(ResourceUri):
                                               "the given admin uris")
         self.parsers["get"].add_argument("depth", type=depth_argument, default=1,
                                          help="The depth of objects")
-        self.parsers["get"].add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.datetime.utcnow(),
-                                         help="The datetime used to consider the state of the pt object.\n"
-                                              "Default is the current date and it is used for debug.\n"
-                                              "Note: it will mainly change the disruptions that concern "
-                                              "the object. The timezone should be specified in the format, "
-                                              "else we consider it as UTC",
-                                         schema_type='datetime', hidden=True)
+        self.parsers["get"].add_argument("_current_datetime", type=DateTimeFormat(),
+                                         schema_metadata={'default': 'now'}, hidden=True,
+                                         default=datetime.datetime.utcnow(),
+                                         help="The datetime we want to publish the disruptions from."
+                                              " Default is the current date and it is mainly used for debug.")
         self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
                                          help="remove geojson from the response")
         self.collection = 'pt_objects'
