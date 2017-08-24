@@ -216,9 +216,25 @@ class GeocodeStopAreaSerializer(serpy.DictSerializer):
         return StopAreaSerializer(obj).data
 
 
+feed_publisher_bano = {
+    "id": "bano",
+    "name": "Base d'Adresses Nationale Ouverte",
+    "license": "ODbL",
+    "url": "http://bano.openstreetmap.fr/data/lisezmoi-bano.txt"
+}
+
+feed_publisher_osm = {
+    "id": "osm",
+    "license": "ODbL",
+    "name": "openstreetmap",
+    "url": "https://www.openstreetmap.org/copyright"
+}
+
+
 class GeocodePlacesSerializer(serpy.DictSerializer):
     places = jsonschema.MethodField()
     warnings = BetaEndpointsSerializer()
+    feed_publishers = jsonschema.MethodField()
 
     def get_places(self, obj):
         map_serializer = {
@@ -235,3 +251,6 @@ class GeocodePlacesSerializer(serpy.DictSerializer):
                 abort(404, message='Unknown places type {}'.format(type_))
             res.append(map_serializer[type_](feature).data)
         return res
+
+    def get_feed_publishers(self, _):
+        return [feed_publisher_bano, feed_publisher_osm]

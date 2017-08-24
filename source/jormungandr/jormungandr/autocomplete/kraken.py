@@ -49,10 +49,6 @@ places = {
 }
 
 
-def _has_feed_publisher(resp, fp_id):
-    return next((True for f in resp.feed_publishers if f.id == fp_id), None)
-
-
 class Kraken(AbstractAutocomplete):
 
     @get_serializer(serpy=api.PlacesSerializer, marshall=places)
