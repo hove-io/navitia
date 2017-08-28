@@ -95,7 +95,7 @@ class Calendars(ResourceUri):
         parser_get.add_argument("start_page", type=int, default=0,
                                 help="The current page")
         parser_get.add_argument("start_date", type=six.text_type, default="",
-                                help="The current page")
+                                help="Start date")
         parser_get.add_argument("end_date", type=six.text_type, default="",
                                 help="End date")
         parser_get.add_argument("forbidden_id[]", type=six.text_type, deprecated=True,
