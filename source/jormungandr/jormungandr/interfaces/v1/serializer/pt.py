@@ -81,7 +81,7 @@ class SeveritySerializer(PbNestedSerializer):
     name = jsonschema.Field(schema_type=str)
     effect = jsonschema.Field(schema_type=str)
     color = jsonschema.Field(schema_type=str)
-    priority = jsonschema.Field(schema_type=str)
+    priority = jsonschema.Field(schema_type=int)
 
 
 class PtObjectSerializer(GenericSerializer):
@@ -148,13 +148,13 @@ class ValidityPatternSerializer(PbNestedSerializer):
 
 
 class WeekPatternSerializer(PbNestedSerializer):
-    monday = BoolField()
-    tuesday = BoolField()
-    wednesday = BoolField()
-    thursday = BoolField()
-    friday = BoolField()
-    saturday = BoolField()
-    sunday = BoolField()
+    monday = BoolField(display_none=True)
+    tuesday = BoolField(display_none=True)
+    wednesday = BoolField(display_none=True)
+    thursday = BoolField(display_none=True)
+    friday = BoolField(display_none=True)
+    saturday = BoolField(display_none=True)
+    sunday = BoolField(display_none=True)
 
 
 class CalendarPeriodSerializer(PbNestedSerializer):
@@ -163,7 +163,7 @@ class CalendarPeriodSerializer(PbNestedSerializer):
 
 
 class CalendarExceptionSerializer(PbNestedSerializer):
-    datetime = Field(attr='date', schema_type=DateTimeType)
+    datetime = Field(attr='date', schema_type=DateType)
     type = EnumField()
 
 
@@ -237,7 +237,7 @@ class DisruptionSerializer(PbNestedSerializer):
     application_periods = PeriodSerializer(many=True)
     status = EnumField(attr='status', pb_type=ActiveStatus)
     updated_at = DateTimeField()
-    tags = StringListField(display_none=True)
+    tags = StringListField(display_none=False)
     cause = jsonschema.Field(schema_type=str, display_none=True)
     category = jsonschema.MethodField(schema_type=str, display_none=False)
     def get_category(self, obj):
@@ -348,7 +348,7 @@ class PlaceSerializer(GenericSerializer):
 
 
 class PlaceNearbySerializer(PlaceSerializer):
-    distance = jsonschema.IntField(display_none=True)
+    distance = jsonschema.StrField(display_none=True)
 
 
 class NetworkSerializer(GenericSerializer):

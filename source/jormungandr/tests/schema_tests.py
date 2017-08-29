@@ -66,31 +66,12 @@ def collect_all_errors(validation_error):
     return _collect(validation_error.messages, key='.')
 
 
-@dataset({"main_routing_test": {}, "main_autocomplete_test": {}})
-class TestSwaggerSchema(AbstractTestFixture):
-    """
-    Test swagger schema
-    """
-
+class SchemaChecker:
     def get_schema(self):
         """Since the schema is quite long to get we cache it"""
         if not hasattr(self, '_schema'):
             self._schema = self.query('v1/schema')
         return self._schema
-
-    def test_swagger(self):
-        """
-        Test the global schema
-        """
-        response = self.get_schema()
-        flex.core.validate(response)
-        for typename in response.get('definitions'):
-            assert typename  # we should newer have empty names
-
-        # we don't want to document /connections apis
-        assert not any('connections' in p for p in response['paths'])
-        # we also don't want this api, as we consider it deprecated
-        assert not any('/coverage/{lon};{lat}/{uri}/journeys' in p for p in response['paths'])
 
     def _check_schema(self, url, hard_check=True):
         schema = self.get_schema()
@@ -115,6 +96,27 @@ class TestSwaggerSchema(AbstractTestFixture):
             if hard_check:
                 raise
             return obj, collect_all_errors(e)
+
+
+@dataset({"main_routing_test": {}, "main_autocomplete_test": {}})
+class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
+    """
+    Test swagger schema
+    """
+
+    def test_swagger(self):
+        """
+        Test the global schema
+        """
+        response = self.get_schema()
+        flex.core.validate(response)
+        for typename in response.get('definitions'):
+            assert typename  # we should newer have empty names
+
+        # we don't want to document /connections apis
+        assert not any('connections' in p for p in response['paths'])
+        # we also don't want this api, as we consider it deprecated
+        assert not any('/coverage/{lon};{lat}/{uri}/journeys' in p for p in response['paths'])
 
     def test_coverage_schema(self):
         """
@@ -244,3 +246,20 @@ class TestSwaggerSchema(AbstractTestFixture):
     def test_arrivals(self):
         self._check_schema('/v1/coverage/main_routing_test/stop_areas%2FstopB/arrivals?'
                            'from_datetime=20120614T165200')
+
+    def test_traffic_reports(self):
+        self._check_schema('/v1/coverage/main_routing_test/traffic_reports?'
+                           '_current_datetime=20120801T0000')
+
+    def test_places_nearby(self):
+        self._check_schema('/v1/coverage/main_routing_test/stop_areas%2FstopA/places_nearby')
+
+    def test_pt_objects(self):
+        self._check_schema('/v1/coverage/main_routing_test/pt_objects?q=1')
+        self._check_schema('/v1/coverage/main_routing_test/pt_objects?q=stop')
+
+
+@dataset({"main_ptref_test": {}})
+class TestSwaggerSchemaPtref(AbstractTestFixture, SchemaChecker):
+    def test_calendars(self):
+        self._check_schema('/v1/coverage/main_ptref_test/calendars')

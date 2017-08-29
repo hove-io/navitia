@@ -37,7 +37,7 @@ from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_typ
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.fields import PbField, error, network, line,\
-    NonNullList, NonNullNested, pagination, stop_area, disruption_marshaller
+    NonNullList, NonNullNested, pagination, stop_area, disruption_marshaller, feed_publisher
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
@@ -60,6 +60,7 @@ traffic_reports = {
     "error": PbField(error, attribute='error'),
     "pagination": NonNullNested(pagination),
     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
+    "feed_publishers": fields.List(NonNullNested(feed_publisher))
 }
 
 

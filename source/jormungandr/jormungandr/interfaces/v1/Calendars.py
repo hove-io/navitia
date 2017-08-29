@@ -38,7 +38,8 @@ from jormungandr.interfaces.parsers import default_count_arg_type, DateTimeForma
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.fields import fields, enum_type, NonNullList,\
-    NonNullNested, NonNullProtobufNested, PbField, error, pagination, NonNullString
+    NonNullNested, NonNullProtobufNested, PbField, error, pagination, NonNullString, \
+    feed_publisher, disruption_marshaller
 from jormungandr.interfaces.v1.serializer import api
 
 from datetime import datetime
@@ -80,7 +81,9 @@ calendar = {
 calendars = {
     "calendars": NonNullList(NonNullNested(calendar)),
     "error": PbField(error, attribute='error'),
-    "pagination": NonNullNested(pagination)
+    "pagination": NonNullNested(pagination),
+    "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
+    "feed_publishers": fields.List(NonNullNested(feed_publisher))
 }
 
 

@@ -209,6 +209,7 @@ places_nearby = {
     "error": PbField(error, attribute='error'),
     "pagination": PbField(pagination),
     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
+    "feed_publishers": fields.List(NonNullNested(feed_publisher))
 }
 
 places_types = {'stop_areas', 'stop_points', 'pois',
