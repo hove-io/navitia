@@ -48,7 +48,7 @@ from copy import deepcopy
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.exceptions import TechnicalError, InvalidArguments
 from flask_restful import marshal_with
-import datetime
+from datetime import datetime
 from jormungandr.parking_space_availability.parking_places_manager import ManageParkingPlaces
 import ujson as json
 from jormungandr.scenarios.utils import places_type
@@ -99,13 +99,12 @@ class Places(ResourceUri):
         self.parsers["get"].add_argument("depth", type=depth_argument,
                                          default=1,
                                          help="The depth of objects")
-        self.parsers["get"].add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.datetime.utcnow(),
-                                         help="The datetime used to consider the state of the pt object.\n"
-                                              "Default is the current date and it is used for debug.\n"
-                                              "Note: it will mainly change the disruptions that concern "
-                                              "the object. The timezone should be specified in the format, "
-                                              "else we consider it as UTC",
-                                         schema_type='datetime', hidden=True)
+        self.parsers["get"].add_argument("_current_datetime", type=DateTimeFormat(),
+                                         schema_metadata={'default': 'now'}, hidden=True,
+                                         default=datetime.utcnow(),
+                                         help='The datetime considered as "now". Used for debug, default is '
+                                              'the moment of the request. It will mainly change the output '
+                                              'of the disruptions.')
         self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
                                          help="remove geojson from the response")
 
@@ -186,7 +185,7 @@ class PlaceUri(ResourceUri):
         args = self.parsers["get"].parse_args()
         args.update({
             "uri": transform_id(id),
-            "_current_datetime": datetime.datetime.utcnow()})
+            "_current_datetime": datetime.utcnow()})
         if any([region, lon, lat]):
             self.region = i_manager.get_region(region, lon, lat)
             timezone.set_request_timezone(self.region)
@@ -243,9 +242,10 @@ class PlacesNearby(ResourceUri):
                                               "show BSS/car park availability in the pois(BSS/car park) of response")
         self.parsers["get"].add_argument("_current_datetime", type=DateTimeFormat(),
                                          schema_metadata={'default': 'now'}, hidden=True,
-                                         default=datetime.datetime.utcnow(),
-                                         help="The datetime we want to publish the disruptions from."
-                                              " Default is the current date and it is mainly used for debug.")
+                                         default=datetime.utcnow(),
+                                         help='The datetime considered as "now". Used for debug, default is '
+                                              'the moment of the request. It will mainly change the output '
+                                              'of the disruptions.')
         self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
                                          help="remove geojson from the response")
         args = self.parsers["get"].parse_args()

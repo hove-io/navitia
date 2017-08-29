@@ -70,10 +70,12 @@ class LineReports(ResourceUri):
                                 help="Number of objects per page")
         parser_get.add_argument("start_page", type=int, default=0,
                                 help="The current page")
-        parser_get.add_argument("_current_datetime", hidden=True,
-                                type=DateTimeFormat(), default=datetime.utcnow(),
-                                help="The datetime we want to publish the disruptions from."
-                                     " Default is the current date and it is mainly used for debug.")
+        parser_get.add_argument("_current_datetime", type=DateTimeFormat(),
+                                schema_metadata={'default': 'now'}, hidden=True,
+                                default=datetime.utcnow(),
+                                help='The datetime considered as "now". Used for debug, default is '
+                                     'the moment of the request. It will mainly change the output '
+                                     'of the disruptions.')
         parser_get.add_argument("forbidden_uris[]", type=six.text_type,
                                 help="forbidden uris",
                                 dest="forbidden_uris[]",

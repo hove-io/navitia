@@ -45,7 +45,7 @@ from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type, DateTimeFormat
 from navitiacommon.parser_args_type import BooleanType, OptionValue
 
-import datetime
+from datetime import datetime
 import six
 
 
@@ -79,9 +79,10 @@ class Ptobjects(ResourceUri):
                                          help="The depth of objects")
         self.parsers["get"].add_argument("_current_datetime", type=DateTimeFormat(),
                                          schema_metadata={'default': 'now'}, hidden=True,
-                                         default=datetime.datetime.utcnow(),
-                                         help="The datetime we want to publish the disruptions from."
-                                              " Default is the current date and it is mainly used for debug.")
+                                         default=datetime.utcnow(),
+                                         help='The datetime considered as "now". Used for debug, default is '
+                                              'the moment of the request. It will mainly change the output '
+                                              'of the disruptions.')
         self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
                                          help="remove geojson from the response")
         self.collection = 'pt_objects'

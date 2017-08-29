@@ -77,8 +77,9 @@ class TrafficReport(ResourceUri):
         parser_get.add_argument("_current_datetime", type=DateTimeFormat(),
                                 schema_metadata={'default': 'now'}, hidden=True,
                                 default=datetime.utcnow(),
-                                help="The datetime we want to publish the disruptions from."
-                                     " Default is the current date and it is mainly used for debug.")
+                                help='The datetime considered as "now". Used for debug, default is '
+                                     'the moment of the request. It will mainly change the output '
+                                     'of the disruptions.')
         parser_get.add_argument("forbidden_id[]", type=six.text_type, deprecated=True,
                                 help="DEPRECATED, replaced by `forbidden_uris[]`",
                                 dest="__temporary_forbidden_id[]",
