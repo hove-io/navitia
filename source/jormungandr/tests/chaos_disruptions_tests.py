@@ -262,7 +262,7 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
         query = journey_basic_query+'&_current_datetime=20160314T144100'
         response = self.query_region(query)
 
-        #the response must be still valid (this test the kraken data reloading)
+        #the response must be still valid (this tests the kraken data reloading)
         self.is_valid_journey_response(response, query)
 
         stops_b_to = [s['to']['stop_point'] for j in response['journeys'] for s in j['sections']
@@ -287,7 +287,7 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
         query = journey_basic_query+'&_current_datetime=20090314T144100'
         response = self.query_region(query)
 
-        #the response must be still valid (this test the kraken data reloading)
+        #the response must be still valid (this tests the kraken data reloading)
         self.is_valid_journey_response(response, query)
 
         stops_b_to = [s['to']['stop_point'] for j in response['journeys'] for s in j['sections']
@@ -297,7 +297,7 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
 
         assert len(response['disruptions']) == 0
 
-    def test_disruption_on_journey_display_informaions(self):
+    def test_disruption_on_journey_display_informations(self):
         """
         same kind of test with a call on journeys
         we add one disruption on stop_area of the section and we should get it in display_informations.links[]
@@ -309,10 +309,10 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
         query = journey_basic_query+'&_current_datetime=20160314T144100'
         response = self.query_region(query)
 
-        #the response must be still valid (this test the kraken data reloading)
+        #the response must be still valid (this tests the kraken data reloading)
         self.is_valid_journey_response(response, query)
 
-        #we search for the disruption on stop_area in section.disdisplay_informations.links[]
+        #we search for the disruption on stop_area in section.display_informations.links[]
         display_infos = [s['display_informations'] for j in response['journeys'] for s in j['sections']
                          if s['type'] == 'public_transport']
         links = [link for di in display_infos for link in di['links'] if link['rel'] == 'disruptions']
@@ -324,10 +324,10 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
         query = journey_basic_query+'&_current_datetime=20160314T144100'
         response = self.query_region(query)
 
-        #the response must be still valid (this test the kraken data reloading)
+        #the response must be still valid (this tests the kraken data reloading)
         self.is_valid_journey_response(response, query)
 
-        #we search for the disruption on stop_area and line in section.disdisplay_informations.links[]
+        #we search for the disruption on stop_area and line in section.display_informations.links[]
         display_infos = [s['display_informations'] for j in response['journeys'] for s in j['sections']
                          if s['type'] == 'public_transport']
         links = [link for di in display_infos for link in di['links'] if link['rel'] == 'disruptions']
@@ -340,10 +340,7 @@ class TestChaosDisruptions2(ChaosDisruptionsFixture):
         query = journey_basic_query+'&_current_datetime=20160314T144100'
         response = self.query_region(query)
 
-        #the response must be still valid (this test the kraken data reloading)
-        self.is_valid_journey_response(response, query)
-
-        #the response must be still valid (this test the kraken data reloading)
+        #the response must be still valid (this tests the kraken data reloading)
         self.is_valid_journey_response(response, query)
 
         #we search for the disruption on stop_area, stop_point and line in section.disdisplay_informations.links[]
