@@ -77,6 +77,7 @@ class Kraken(AbstractAutocomplete):
         if len(resp.places) == 0 and request['search_type'] == 0:
             req.places.search_type = 1
             resp = instance.send_and_receive(req)
+
         build_pagination(request, resp)
         return resp
 

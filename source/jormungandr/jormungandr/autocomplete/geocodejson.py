@@ -39,7 +39,7 @@ import requests
 from jormungandr.exceptions import TechnicalError, UnknownObject
 from flask import current_app
 from flask.ext.restful import marshal
-from jormungandr.interfaces.v1.fields import Lit, ListLit, beta_endpoint
+from jormungandr.interfaces.v1.fields import Lit, ListLit, beta_endpoint, feed_publisher_bano, feed_publisher_osm
 from flask.ext.restful import fields
 import re
 
@@ -276,6 +276,8 @@ class GeocodejsonFeature(fields.Raw):
 geocodejson = {
     "places": fields.List(GeocodejsonFeature, attribute='features'),
     "warnings": ListLit([fields.Nested(beta_endpoint)]),
+    "feed_publishers": ListLit([fields.Nested(feed_publisher_bano),
+                                fields.Nested(feed_publisher_osm)])
 }
 
 

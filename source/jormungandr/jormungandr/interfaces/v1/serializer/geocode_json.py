@@ -31,6 +31,7 @@ from .base import LiteralField, NestedPropertyField, IntNestedPropertyField, val
     BetaEndpointsSerializer
 from flask.ext.restful import abort
 from jormungandr.interfaces.v1.serializer import jsonschema
+from jormungandr.interfaces.v1.fields import raw_feed_publisher_bano, raw_feed_publisher_osm
 
 
 class CoordField(jsonschema.Field):
@@ -219,6 +220,8 @@ class GeocodeStopAreaSerializer(serpy.DictSerializer):
 class GeocodePlacesSerializer(serpy.DictSerializer):
     places = jsonschema.MethodField()
     warnings = BetaEndpointsSerializer()
+    feed_publishers = LiteralField([raw_feed_publisher_bano,
+                                    raw_feed_publisher_osm])
 
     def get_places(self, obj):
         map_serializer = {

@@ -799,6 +799,23 @@ beta_endpoint = {
     'message': Lit("This service is under construction. You can help through github.com/CanalTP/navitia"),
 }
 
+raw_feed_publisher_bano = {
+    "id": "bano",
+    "name": "Base d'Adresses Nationale Ouverte",
+    "license": "ODbL",
+    "url": "http://bano.openstreetmap.fr/data/lisezmoi-bano.txt"
+}
+
+raw_feed_publisher_osm = {
+    "id": "osm",
+    "license": "ODbL",
+    "name": "openstreetmap",
+    "url": "https://www.openstreetmap.org/copyright"
+}
+
+feed_publisher_bano = {k: Lit(v) for k, v in raw_feed_publisher_bano.items()}
+
+feed_publisher_osm = {k: Lit(v) for k, v in raw_feed_publisher_osm.items()}
 
 class UrisToLinks():
 
