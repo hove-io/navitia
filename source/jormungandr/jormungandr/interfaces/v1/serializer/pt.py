@@ -81,7 +81,7 @@ class SeveritySerializer(PbNestedSerializer):
     name = jsonschema.Field(schema_type=str)
     effect = jsonschema.Field(schema_type=str)
     color = jsonschema.Field(schema_type=str)
-    priority = jsonschema.Field(schema_type=str)
+    priority = jsonschema.Field(schema_type=int)
 
 
 class PtObjectSerializer(GenericSerializer):
@@ -163,7 +163,7 @@ class CalendarPeriodSerializer(PbNestedSerializer):
 
 
 class CalendarExceptionSerializer(PbNestedSerializer):
-    datetime = Field(attr='date', schema_type=DateTimeType)
+    datetime = Field(attr='date', schema_type=DateType)
     type = EnumField()
 
 
@@ -237,7 +237,7 @@ class DisruptionSerializer(PbNestedSerializer):
     application_periods = PeriodSerializer(many=True)
     status = EnumField(attr='status', pb_type=ActiveStatus)
     updated_at = DateTimeField()
-    tags = StringListField(display_none=True)
+    tags = StringListField(display_none=False)
     cause = jsonschema.Field(schema_type=str, display_none=True)
     category = jsonschema.MethodField(schema_type=str, display_none=False)
     def get_category(self, obj):
@@ -345,6 +345,10 @@ class PlaceSerializer(GenericSerializer):
     embedded_type = EnumField(attr='embedded_type')
     address = AddressSerializer(display_none=False)
     poi = PoiSerializer(display_none=False)
+
+
+class PlaceNearbySerializer(PlaceSerializer):
+    distance = jsonschema.StrField(display_none=True)
 
 
 class NetworkSerializer(GenericSerializer):

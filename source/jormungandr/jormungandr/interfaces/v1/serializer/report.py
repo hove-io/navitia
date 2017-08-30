@@ -32,6 +32,14 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr.interfaces.v1.serializer.base import PbNestedSerializer
 from jormungandr.interfaces.v1.serializer import pt
 
+
 class LineReportSerializer(PbNestedSerializer):
     line = pt.LineSerializer()
     pt_objects = pt.PtObjectSerializer(many=True, display_none=True)
+
+
+class TrafficReportSerializer(PbNestedSerializer):
+    network = pt.NetworkSerializer()
+    lines = pt.LineSerializer(many=True)
+    stop_areas = pt.StopAreaSerializer(many=True)
+    vehicle_journeys = pt.VehicleJourneySerializer(many=True)

@@ -41,7 +41,7 @@ from jormungandr.interfaces.v1.fields import stop_point, route, pagination, PbFi
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri, complete_links
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.serializer import api
-import datetime
+from datetime import datetime, timedelta
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_type, depth_argument, \
     UnsignedInteger
@@ -108,9 +108,10 @@ class Schedules(ResourceUri, ResourceUtc):
                                 type=OptionValue(['base_schedule', 'adapted_schedule', 'realtime']))
         parser_get.add_argument("_current_datetime", type=DateTimeFormat(),
                                 schema_metadata={'default': 'now'}, hidden=True,
-                                default=datetime.datetime.utcnow(),
-                                help="The datetime we want to publish the disruptions from."
-                                     " Default is the current date and it is mainly used for debug.")
+                                default=datetime.utcnow(),
+                                help='The datetime considered as "now". Used for debug, default is '
+                                     'the moment of the request. It will mainly change the output '
+                                     'of the disruptions.')
         parser_get.add_argument("items_per_schedule", type=UnsignedInteger(), default=10000,
                                 help="maximum number of date_times per schedule")
         parser_get.add_argument("disable_geojson", type=BooleanType(), default=False,
@@ -329,13 +330,13 @@ class add_passages_links:
                 kwargs_links["uri"] = kwargs["uri"]
             if 'from_datetime' in kwargs_links:
                 kwargs_links.pop('from_datetime')
-            delta = datetime.timedelta(seconds=1)
-            dt = datetime.datetime.strptime(min_dt, "%Y%m%dT%H%M%S")
+            delta = timedelta(seconds=1)
+            dt = datetime.strptime(min_dt, "%Y%m%dT%H%M%S")
             if g.stat_interpreted_parameters.get('data_freshness') != 'realtime':
                 kwargs_links['until_datetime'] = (dt - delta).strftime("%Y%m%dT%H%M%S")
                 response["links"].append(create_external_link("v1."+api, rel="prev", _type=api, **kwargs_links))
                 kwargs_links.pop('until_datetime')
-                kwargs_links['from_datetime'] = (datetime.datetime.strptime(max_dt, "%Y%m%dT%H%M%S") + delta).strftime("%Y%m%dT%H%M%S")
+                kwargs_links['from_datetime'] = (datetime.strptime(max_dt, "%Y%m%dT%H%M%S") + delta).strftime("%Y%m%dT%H%M%S")
                 response["links"].append(create_external_link("v1."+api, rel="next", _type=api, **kwargs_links))
             return response, status, other
         return wrapper

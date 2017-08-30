@@ -33,7 +33,8 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from flask_restful import fields, reqparse, abort
 from flask.globals import g
 
-from jormungandr.interfaces.v1.serializer.api import PlacesSerializer
+from jormungandr.interfaces.v1.decorators import get_serializer
+from jormungandr.interfaces.v1.serializer.api import PlacesSerializer, PlacesNearbySerializer
 from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerOptionPathSerializer
 from jormungandr.interfaces.v1.swagger_schema import make_schema
 from navitiacommon import parser_args_type
@@ -47,7 +48,7 @@ from copy import deepcopy
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.exceptions import TechnicalError, InvalidArguments
 from flask_restful import marshal_with
-import datetime
+from datetime import datetime
 from jormungandr.parking_space_availability.parking_places_manager import ManageParkingPlaces
 import ujson as json
 from jormungandr.scenarios.utils import places_type
@@ -98,13 +99,12 @@ class Places(ResourceUri):
         self.parsers["get"].add_argument("depth", type=depth_argument,
                                          default=1,
                                          help="The depth of objects")
-        self.parsers["get"].add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.datetime.utcnow(),
-                                         help="The datetime used to consider the state of the pt object.\n"
-                                              "Default is the current date and it is used for debug.\n"
-                                              "Note: it will mainly change the disruptions that concern "
-                                              "the object. The timezone should be specified in the format, "
-                                              "else we consider it as UTC",
-                                         schema_type='datetime', hidden=True)
+        self.parsers["get"].add_argument("_current_datetime", type=DateTimeFormat(),
+                                         schema_metadata={'default': 'now'}, hidden=True,
+                                         default=datetime.utcnow(),
+                                         help='The datetime considered as "now". Used for debug, default is '
+                                              'the moment of the request. It will mainly change the output '
+                                              'of the disruptions.')
         self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
                                          help="remove geojson from the response")
 
@@ -185,7 +185,7 @@ class PlaceUri(ResourceUri):
         args = self.parsers["get"].parse_args()
         args.update({
             "uri": transform_id(id),
-            "_current_datetime": datetime.datetime.utcnow()})
+            "_current_datetime": datetime.utcnow()})
         if any([region, lon, lat]):
             self.region = i_manager.get_region(region, lon, lat)
             timezone.set_request_timezone(self.region)
@@ -208,6 +208,7 @@ places_nearby = {
     "error": PbField(error, attribute='error'),
     "pagination": PbField(pagination),
     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
+    "feed_publishers": fields.List(NonNullNested(feed_publisher))
 }
 
 places_types = {'stop_areas', 'stop_points', 'pois',
@@ -217,16 +218,15 @@ places_types = {'stop_areas', 'stop_points', 'pois',
 class PlacesNearby(ResourceUri):
 
     def __init__(self, *args, **kwargs):
-        ResourceUri.__init__(self, *args, **kwargs)
-        self.parsers["get"].add_argument("type[]", type=six.text_type,
+        ResourceUri.__init__(self, output_type_serializer=PlacesNearbySerializer, *args, **kwargs)
+        self.parsers["get"].add_argument("type[]", type=OptionValue(list(places_type.keys())),
                                          action="append",
-                                         default=["stop_area", "stop_point",
-                                                  "poi"],
+                                         default=["stop_area", "stop_point", "poi"],
                                          help="Type of the objects to return")
         self.parsers["get"].add_argument("filter", type=six.text_type, default="",
                                          help="Filter your objects")
         self.parsers["get"].add_argument("distance", type=int, default=500,
-                                         help="Distance range of the query")
+                                         help="Distance range of the query in meters")
         self.parsers["get"].add_argument("count", type=default_count_arg_type, default=10,
                                          help="Elements per page")
         self.parsers["get"].add_argument("depth", type=depth_argument, default=1,
@@ -241,19 +241,18 @@ class PlacesNearby(ResourceUri):
                                          help="Show more information about the poi if it's available, for instance, "
                                               "show BSS/car park availability in the pois(BSS/car park) of response")
         self.parsers["get"].add_argument("_current_datetime", type=DateTimeFormat(),
-                                         default=datetime.datetime.utcnow(),
-                                         help="The datetime used to consider the state of the pt object.\n"
-                                              "Default is the current date and it is used for debug.\n"
-                                              "Note: it will mainly change the disruptions that concern "
-                                              "the object. The timezone should be specified in the format, "
-                                              "else we consider it as UTC")
+                                         schema_metadata={'default': 'now'}, hidden=True,
+                                         default=datetime.utcnow(),
+                                         help='The datetime considered as "now". Used for debug, default is '
+                                              'the moment of the request. It will mainly change the output '
+                                              'of the disruptions.')
         self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
                                          help="remove geojson from the response")
         args = self.parsers["get"].parse_args()
         if args["add_poi_infos"] or args["bss_stands"]:
             self.get_decorators.insert(1, ManageParkingPlaces(self, 'places_nearby'))
 
-    @marshal_with(places_nearby)
+    @get_serializer(serpy=PlacesNearbySerializer, marshall=places_nearby)
     def get(self, region=None, lon=None, lat=None, uri=None):
         self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
@@ -284,3 +283,6 @@ class PlacesNearby(ResourceUri):
         response = i_manager.dispatch(args, "places_nearby",
                                       instance_name=self.region)
         return response, 200
+
+    def options(self, **kwargs):
+        return self.api_description(**kwargs)

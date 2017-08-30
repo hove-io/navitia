@@ -97,12 +97,12 @@ class Uri(ResourceUri, ResourceUtc):
         parser.add_argument("odt_level", type=OptionValue(odt_levels), default="all",
                             schema_type=str, schema_metadata={"enum": odt_levels},
                             help="odt level")
-        parser.add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.utcnow(), hidden=True,
-                            help="The datetime used to consider the state of the pt object"
-                                 " Default is the current date and it is used for debug."
-                                 " Note: it will mainly change the disruptions that concern the object"
-                                 " The timezone should be specified in the format,"
-                                 " else we consider it as UTC")
+        parser.add_argument("_current_datetime", type=DateTimeFormat(),
+                            schema_metadata={'default': 'now'}, hidden=True,
+                            default=datetime.utcnow(),
+                            help='The datetime considered as "now". Used for debug, default is '
+                                 'the moment of the request. It will mainly change the output '
+                                 'of the disruptions.')
         parser.add_argument("distance", type=int, default=200,
                             help="Distance range of the query. Used only if a coord is in the query")
         parser.add_argument("since", type=DateTimeFormat(),
