@@ -291,7 +291,7 @@ struct VehicleJourney: public Header, Nameable, hasVehicleProperties{
 struct StopPoint : public Header, Nameable, hasProperties{
     const static nt::Type_e type = nt::Type_e::StopPoint;
     nt::GeographicalCoord coord;
-    int fare_zone;
+    std::string fare_zone;
     bool is_zonal = false;
     boost::optional<nt::MultiPolygon> area;
 
@@ -300,7 +300,7 @@ struct StopPoint : public Header, Nameable, hasProperties{
     StopArea* stop_area;
     Network* network;
 
-    StopPoint(): fare_zone(0), stop_area(NULL), network(NULL) {}
+    StopPoint(): fare_zone(), stop_area(NULL), network(NULL) {}
 
     bool operator<(const StopPoint& other) const;
 };

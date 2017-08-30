@@ -325,7 +325,7 @@ bool Transition::valid(const SectionKey& section, const Label& label) const
     }
 
     for (const Condition& cond: this->start_conditions) {
-        if (cond.key == "zone" && boost::lexical_cast<int>(cond.value) != section.start_zone) {
+        if (cond.key == "zone" && cond.value != section.start_zone) {
             return false;
         } else if (cond.key == "stoparea" && ! boost::iequals(cond.value, section.start_stop_area)) {
             return false;
@@ -343,7 +343,7 @@ bool Transition::valid(const SectionKey& section, const Label& label) const
         }
     }
     for (const Condition& cond: this->end_conditions) {
-        if (cond.key == "zone" && boost::lexical_cast<int>(cond.value) != section.dest_zone) {
+        if (cond.key == "zone" && cond.value != section.dest_zone) {
             return false;
         } else if (cond.key == "stoparea" && ! boost::iequals(cond.value, section.dest_stop_area)) {
             return false;
@@ -374,11 +374,11 @@ get_od_dest(const OD_map& od_map, const OD_key& sa, const OD_key& mode, const OD
 DateTicket Fare::get_od(const Label& label, const SectionKey& section) const {
     OD_key o_sa(OD_key::StopArea, label.stop_area);
     OD_key o_mode(OD_key::Mode, label.mode);
-    OD_key o_zone(OD_key::Zone, boost::lexical_cast<std::string>(label.zone));
+    OD_key o_zone(OD_key::Zone, label.zone);
 
     OD_key d_sa(OD_key::StopArea, section.dest_stop_area);
     OD_key d_mode(OD_key::Mode, section.mode);
-    OD_key d_zone(OD_key::Zone, boost::lexical_cast<std::string>(section.dest_zone));
+    OD_key d_zone(OD_key::Zone, section.dest_zone);
 
     boost::optional<OD_map::const_iterator> od;
     auto start_od_map = od_tickets.find(o_sa);

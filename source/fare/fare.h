@@ -240,7 +240,7 @@ struct Label {
     int nb_changes = 0;//< nombre de changement effectués depuis le dernier ticket
     std::string stop_area; //< stop_area d'achat du billet
    // std::string dest_stop_area; //< on est obligé de descendre à ce stop_area
-    int zone = -1;
+    std::string zone;
     std::string mode;
     std::string line;
     std::string network;
@@ -273,8 +273,8 @@ struct SectionKey {
     std::string line;
     uint32_t start_time;
     uint32_t dest_time;
-    int start_zone;
-    int dest_zone;
+    std::string start_zone;
+    std::string dest_zone;
     std::string mode;
     boost::gregorian::date date;
     size_t path_item_idx;

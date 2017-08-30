@@ -435,7 +435,7 @@ StopsGtfsHandler::stop_point_and_area StopsGtfsHandler::handle_line(Data& data, 
         }
 
         if (has_col(zone_c, row) && row[zone_c] != "") {
-            sp->fare_zone = boost::lexical_cast<int>(row[zone_c]);
+            sp->fare_zone = row[zone_c];
         }
 
         if (has_col(wheelchair_c, row)) {
