@@ -145,8 +145,6 @@ CIRCUIT_BREAKER_HERE_TIMEOUT_S = 60  # the circuit breaker retries after this ti
 # DEFAULT_REGION = 'default'
 
 
-GRAPHICAL_ISOCHRONE = boolean(os.getenv('JORMUNGANDR_GRAPHICAL_ISOCHRONE', False))
-HEAT_MAP = boolean(os.getenv('JORMUNGANDR_HEAT_MAP', False))
 # This parameter are used to apply gevent's monkey patch
 # The Goal is to activate parallel calling valhalla, without the patch, parallel http calling may not work
 PATCH_WITH_GEVENT_SOCKET = bool(os.getenv('JORMUNGANDR_PATCH_WITH_GEVENT_SOCKET', False))

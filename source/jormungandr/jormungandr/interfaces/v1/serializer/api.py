@@ -31,7 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import datetime
 import pytz
 
-from jormungandr.interfaces.v1.serializer import pt, schedule, report, base, status, geo_status
+from jormungandr.interfaces.v1.serializer import pt, schedule, report, base, status, geo_status, graphical_isochron
 from jormungandr.interfaces.v1.serializer.base import NullableDictSerializer, LambdaField, PbNestedSerializer, \
     DescribedField
 from jormungandr.interfaces.v1.serializer.fields import ErrorSerializer, FeedPublisherSerializer, \
@@ -194,6 +194,26 @@ class CoveragesSerializer(serpy.DictSerializer):
     regions = CoverageSerializer(many=True)
 
 
+def _get_links_impl(obj):
+    # note: some request args can be there several times,
+    # but when there is only one elt, flask does not want lists
+    response = []
+    for value in obj.links:
+        args = {}
+        for e in value.kwargs:
+            if len(e.values) > 1:
+                args[e.key] = [v for v in e.values]
+            else:
+                 args[e.key] = e.values[0]
+
+        response.append(create_external_link('v1.{}'.format(value.ressource_name),
+                                             rel=value.rel,
+                                             _type=value.type,
+                                             templated=value.is_templated,
+                                             description=value.description,
+                                             **args))
+    return response
+
 class JourneysSerializer(PbNestedSerializer):
     journeys = JourneySerializer(many=True)
     error = ErrorSerializer(display_none=False, attr='error')
@@ -219,24 +239,7 @@ class JourneysSerializer(PbNestedSerializer):
             }
 
     def get_links(self, obj):
-        # note: some request args can be there several times,
-        # but when there is only one elt, flask does not want lists
-        response = []
-        for value in obj.links:
-            args = {}
-            for e in value.kwargs:
-                if len(e.values) > 1:
-                    args[e.key] = [v for v in e.values]
-                else:
-                     args[e.key] = e.values[0]
-
-            response.append(create_external_link('v1.{}'.format(value.ressource_name),
-                                                    rel=value.rel,
-                                                    _type=value.type,
-                                                    templated=value.is_templated,
-                                                    description=value.description,
-                                                    **args))
-        return response
+        return _get_links_impl(obj)
 
 
 class DeparturesSerializer(PTReferentialSerializer):
@@ -274,3 +277,14 @@ class StatusSerializer(serpy.DictSerializer):
 
 class GeoStatusSerializer(serpy.DictSerializer):
     geo_status = geo_status.GeoStatusSerializer()
+
+
+class GraphicalIsrochoneSerializer(serpy.Serializer):
+    isochrones = graphical_isochron.GraphicalIsrochoneSerializer(attr='graphical_isochrones', many=True)
+    error = ErrorSerializer(display_none=False, attr='error')
+    feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
+    links = MethodField(schema_type=LinkSchema(many=True), display_none=True)
+    warnings = base.BetaEndpointsSerializer()
+
+    def get_links(self, obj):
+        return _get_links_impl(obj)
