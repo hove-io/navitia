@@ -519,6 +519,19 @@ class TestPtRef(AbstractTestFixture):
 
         assert get_not_null(pt_objs[0], 'id') == 'stop_area:stop2'
 
+    def test_line_label_pt_objects(self):
+        response = self.query_region('pt_objects?q=line:A&type[]=line')
+        is_valid_pt_objects_response(response)
+        pt_objs = get_not_null(response, 'pt_objects')
+        assert len(pt_objs) == 1
+        assert get_not_null(pt_objs[0], 'name') == 'base_network Car line:A'
+
+        response = self.query_region('pt_objects?q=line:Ca roule&type[]=line')
+        pt_objs = get_not_null(response, 'pt_objects')
+        assert len(pt_objs) == 1
+        # not valid as there is no commercial mode (which impact name)
+        assert get_not_null(pt_objs[0], 'name') == 'base_network line:Ça roule'
+
     def test_query_with_strange_char(self):
         q = b'stop_points/stop_point:stop_with name bob \" , é'
         encoded_q = quote(q)

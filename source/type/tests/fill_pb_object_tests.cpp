@@ -232,3 +232,22 @@ BOOST_AUTO_TEST_CASE(ptref_indexes_test) {
     objs = navitia::ptref_indexes<nt::Contributor>(b.get<nt::Line>("B"), *b.data);
     BOOST_CHECK_EQUAL_RANGE(uris(objs), std::set<std::string>({"c1"}));
 }
+
+BOOST_AUTO_TEST_CASE(label_formater_line) {
+    auto network_rer = new navitia::type::Network();
+    network_rer->name = "RER";
+    auto comm_mode_rer = new navitia::type::CommercialMode();
+    comm_mode_rer->name = "Rer";
+    auto rer_a = new navitia::type::Line();
+    rer_a->name = "a";
+    rer_a->network = network_rer;
+    BOOST_CHECK_EQUAL(rer_a->get_label(), "RER a");
+    rer_a->commercial_mode = comm_mode_rer;
+    BOOST_CHECK_EQUAL(rer_a->get_label(), "Rer a");
+    rer_a->code = "A";
+    BOOST_CHECK_EQUAL(rer_a->get_label(), "Rer A");
+    network_rer->name = "Transilien";
+    BOOST_CHECK_EQUAL(rer_a->get_label(), "Transilien Rer A");
+    rer_a->commercial_mode = nullptr;
+    BOOST_CHECK_EQUAL(rer_a->get_label(), "Transilien A");
+}
