@@ -38,6 +38,7 @@ www.navitia.io
 #include "ed/build_helper.h"
 #include "type/pb_converter.h"
 #include "tests/utils_test.h"
+#include "utils/functions.h"
 
 using namespace navitia::type;
 
@@ -234,15 +235,15 @@ BOOST_AUTO_TEST_CASE(ptref_indexes_test) {
 }
 
 BOOST_AUTO_TEST_CASE(label_formater_line) {
-    auto network_rer = new navitia::type::Network();
+    auto network_rer = std::make_unique<navitia::type::Network>();
     network_rer->name = "RER";
-    auto comm_mode_rer = new navitia::type::CommercialMode();
+    auto comm_mode_rer = std::make_unique<navitia::type::CommercialMode>();
     comm_mode_rer->name = "Rer";
-    auto rer_a = new navitia::type::Line();
+    auto rer_a = std::make_unique<navitia::type::Line>();
     rer_a->name = "a";
-    rer_a->network = network_rer;
+    rer_a->network = network_rer.get();
     BOOST_CHECK_EQUAL(rer_a->get_label(), "RER a");
-    rer_a->commercial_mode = comm_mode_rer;
+    rer_a->commercial_mode = comm_mode_rer.get();
     BOOST_CHECK_EQUAL(rer_a->get_label(), "Rer a");
     rer_a->code = "A";
     BOOST_CHECK_EQUAL(rer_a->get_label(), "Rer A");
