@@ -148,13 +148,13 @@ class ValidityPatternSerializer(PbNestedSerializer):
 
 
 class WeekPatternSerializer(PbNestedSerializer):
-    monday = BoolField(display_none=True)
-    tuesday = BoolField(display_none=True)
-    wednesday = BoolField(display_none=True)
-    thursday = BoolField(display_none=True)
-    friday = BoolField(display_none=True)
-    saturday = BoolField(display_none=True)
-    sunday = BoolField(display_none=True)
+    monday = BoolField()
+    tuesday = BoolField()
+    wednesday = BoolField()
+    thursday = BoolField()
+    friday = BoolField()
+    saturday = BoolField()
+    sunday = BoolField()
 
 
 class CalendarPeriodSerializer(PbNestedSerializer):
