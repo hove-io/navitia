@@ -31,7 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import datetime
 import pytz
 
-from jormungandr.interfaces.v1.serializer import pt, schedule, report, base, status
+from jormungandr.interfaces.v1.serializer import pt, schedule, report, base, status, geo_status
 from jormungandr.interfaces.v1.serializer.base import NullableDictSerializer, LambdaField, PbNestedSerializer, \
     DescribedField
 from jormungandr.interfaces.v1.serializer.fields import ErrorSerializer, FeedPublisherSerializer, \
@@ -270,3 +270,7 @@ class CalendarsSerializer(PTReferentialSerializer):
 
 class StatusSerializer(serpy.DictSerializer):
     status = status.StatusSerializer()
+
+
+class GeoStatusSerializer(serpy.DictSerializer):
+    geo_status = geo_status.GeoStatusSerializer()

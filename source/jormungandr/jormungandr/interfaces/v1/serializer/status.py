@@ -28,7 +28,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-
+from jormungandr.interfaces.v1.serializer.base import ForwardSerializer
 import serpy
 
 
@@ -64,18 +64,13 @@ class _ParametersSerializer(serpy.Serializer):
     walking_transfer_penalty = serpy.IntField()
 
 
-class _ForwardSerializer(serpy.Serializer):
-    def to_value(self, instance):
-        return instance
-
-
 class _TravelerProfilesSerializer(serpy.Serializer):
     bike_speed = serpy.FloatField()
     bss_speed = serpy.FloatField()
     car_speed = serpy.FloatField()
-    first_section_mode = _ForwardSerializer(attr=str('first_section_mode'), many=True)
+    first_section_mode = ForwardSerializer(many=True)
     is_from_db = serpy.BoolField()
-    last_section_mode = _ForwardSerializer(attr=str('last_section_mode'), many=True)
+    last_section_mode = ForwardSerializer(many=True)
     max_bike_duration_to_pt = serpy.IntField()
     max_bss_duration_to_pt = serpy.IntField()
     max_car_duration_to_pt = serpy.IntField()
@@ -101,7 +96,7 @@ class StatusSerializer(serpy.DictSerializer):
     parameters = _ParametersSerializer()
     publication_date = serpy.StrField()
     realtime_contributors = serpy.MethodField()
-    realtime_proxies = _ForwardSerializer(attr=str('realtime_proxies'), many=True)
+    realtime_proxies = ForwardSerializer(many=True)
     start_production_date = serpy.StrField()
     status = serpy.StrField()
     traveler_profiles = _TravelerProfilesSerializer(many=True)

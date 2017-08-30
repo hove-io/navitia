@@ -1,4 +1,4 @@
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2017, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -28,25 +28,15 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask.ext.restful import Resource, fields, marshal_with
-from jormungandr import i_manager
-from jormungandr.interfaces.v1.serializer.api import GeoStatusSerializer
-from jormungandr.interfaces.v1.decorators import get_serializer
-
-geo_status = {
-        'geo_status': fields.Nested({'street_network_sources': fields.List(fields.String),
-            'nb_admins': fields.Raw,
-            'nb_admins_from_cities': fields.Raw,
-            'nb_ways': fields.Raw,
-            'nb_addresses': fields.Raw,
-            'nb_pois': fields.Raw,
-            'poi_sources': fields.List(fields.String),
-        })
-}
+from jormungandr.interfaces.v1.serializer.base import ForwardSerializer
+import serpy
 
 
-class GeoStatus(Resource):
-    @get_serializer(serpy=GeoStatusSerializer, marshall=geo_status)
-    def get(self, region):
-        instance = i_manager.get_instances(region)[0]
-        return {'geo_status': instance.autocomplete.geo_status(instance)}, 200
+class GeoStatusSerializer(serpy.Serializer):
+    nb_addresses = serpy.IntField()
+    nb_admins = serpy.IntField()
+    nb_admins_from_cities = serpy.IntField()
+    nb_pois = serpy.IntField()
+    nb_ways = serpy.IntField()
+    poi_sources = ForwardSerializer(many=True)
+    street_network_sources = ForwardSerializer(many=True)
