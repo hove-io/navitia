@@ -32,14 +32,15 @@ from flask.ext.restful import Resource, fields, marshal_with
 from jormungandr import i_manager, travelers_profile
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.interfaces.v1.fields import instance_status_with_parameters
-
+from jormungandr.interfaces.v1.serializer.api import StatusSerializer
+from jormungandr.interfaces.v1.decorators import get_serializer
 status = {
     "status": fields.Nested(instance_status_with_parameters)
 }
 
 
 class Status(Resource):
-    @marshal_with(status)
+    @get_serializer(serpy=StatusSerializer, marshall=status)
     def get(self, region):
         response = protobuf_to_dict(i_manager.dispatch({}, "status", instance_name=region), use_enum_labels=True)
         instance = i_manager.instances[region]
