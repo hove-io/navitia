@@ -41,7 +41,8 @@ from jormungandr.utils import date_to_timestamp
 from jormungandr.interfaces.parsers import UnsignedInteger
 from jormungandr.interfaces.v1.journey_common import JourneyCommon
 from jormungandr.interfaces.v1.fields import DateTime
-
+from jormungandr.interfaces.v1.serializer.api import HeatMapSerializer
+from jormungandr.interfaces.v1.decorators import get_serializer
 
 heat_map = {
     "heat_matrix": JsonString(),
@@ -66,7 +67,7 @@ class HeatMap(JourneyCommon):
         parser_get = self.parsers["get"]
         parser_get.add_argument("resolution", type=UnsignedInteger(), default=500)
 
-    @marshal_with(heat_maps)
+    @get_serializer(serpy=HeatMapSerializer, marshall=heat_maps)
     @ManageError()
     def get(self, region=None, uri=None):
 

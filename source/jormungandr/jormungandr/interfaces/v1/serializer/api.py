@@ -31,7 +31,8 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import datetime
 import pytz
 
-from jormungandr.interfaces.v1.serializer import pt, schedule, report, base, status, geo_status, graphical_isochron
+from jormungandr.interfaces.v1.serializer import pt, schedule, report, base, status, geo_status, graphical_isochron, \
+    heat_map
 from jormungandr.interfaces.v1.serializer.base import NullableDictSerializer, LambdaField, PbNestedSerializer, \
     DescribedField
 from jormungandr.interfaces.v1.serializer.fields import ErrorSerializer, FeedPublisherSerializer, \
@@ -283,6 +284,15 @@ class GraphicalIsrochoneSerializer(serpy.Serializer):
     isochrones = graphical_isochron.GraphicalIsrochoneSerializer(attr='graphical_isochrones', many=True)
     error = ErrorSerializer(display_none=False, attr='error')
     feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
+    links = MethodField(schema_type=LinkSchema(many=True), display_none=True)
+    warnings = base.BetaEndpointsSerializer()
+
+    def get_links(self, obj):
+        return _get_links_impl(obj)
+
+class HeatMapSerializer(serpy.Serializer):
+    heat_maps = heat_map.HeatMapSerializer(many=True)
+    error = ErrorSerializer(display_none=False, attr='error')
     links = MethodField(schema_type=LinkSchema(many=True), display_none=True)
     warnings = base.BetaEndpointsSerializer()
 

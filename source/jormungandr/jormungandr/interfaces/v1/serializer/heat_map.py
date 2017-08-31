@@ -31,18 +31,11 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr.interfaces.v1.serializer.pt import PlaceSerializer
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
 from jormungandr.interfaces.v1.serializer.base import JsonStringSerializer
-
 import serpy
 
 
-class GraphicalIsrochoneSerializer(serpy.Serializer):
-
-    geojson = JsonStringSerializer()
-    max_duration = serpy.IntField()
-    min_duration = serpy.IntField()
+class HeatMapSerializer(serpy.Serializer):
+    heat_matrix = JsonStringSerializer()
     origin = PlaceSerializer(attr='origin', label='from')
     to = PlaceSerializer(attr='destination', label='to')
     requested_date_time = DateTimeField()
-    min_date_time = DateTimeField()
-    max_date_time = DateTimeField()
-
