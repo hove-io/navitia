@@ -36,6 +36,7 @@ www.navitia.io
 #include <iostream>
 #include <set>
 #include <boost/assign.hpp>
+#include <boost/algorithm/string.hpp>
 #include "utils/functions.h"
 #include "utils/logger.h"
 
@@ -876,11 +877,22 @@ type::hasOdtProperties Line::get_odt_properties() const{
 }
 
 std::string Line::get_label() const {
-    //LineName = NetworkName + ModeName + LineCode + (LineName)
+    //LineLabel = NetworkName + ModeName + LineCode
+    //            \__ if different__/      '-> LineName if empty
     std::stringstream s;
-    if (network) { s << network->name << " "; }
-    if (commercial_mode) { s << commercial_mode->name << " "; }
-    s << code << " (" << name << ")";
+    if (commercial_mode) {
+        if (network && ! boost::iequals(network->name, commercial_mode->name)) {
+            s << network->name << " ";
+        }
+        s << commercial_mode->name << " ";
+    } else if (network) {
+        s << network->name << " ";
+    }
+    if (! code.empty()){
+        s << code;
+    } else if (! name.empty()) {
+        s << name;
+    }
     return s.str();
 }
 
@@ -892,11 +904,14 @@ bool Route::operator<(const Route & other) const{
 }
 
 std::string Route::get_label() const {
-    //RouteName = NetworkName + ModeName + LineCode + (RouteName)
+    //RouteLabel = LineLabel + (RouteName)
     std::stringstream s;
-    if (line->network) { s << line->network->name << " "; }
-    if (line->commercial_mode) { s << line->commercial_mode->name << " "; }
-    s << line->code << " (" << name << ")";
+    if (line) {
+        s << line->get_label();
+    }
+    if (! name.empty()) {
+        s << " (" << name << ")";
+    }
     return s.str();
 }
 
