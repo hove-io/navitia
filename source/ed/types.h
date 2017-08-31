@@ -300,7 +300,7 @@ struct StopPoint : public Header, Nameable, hasProperties{
     StopArea* stop_area;
     Network* network;
 
-    StopPoint(): fare_zone(), stop_area(NULL), network(NULL) {}
+    StopPoint(): fare_zone(), stop_area(nullptr), network(nullptr) {}
 
     bool operator<(const StopPoint& other) const;
 };
