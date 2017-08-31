@@ -35,7 +35,7 @@ from jormungandr.realtime_schedule import realtime_proxy, realtime_proxy_manager
 from jormungandr.schedule import RealTimePassage
 import datetime
 import pytz
-from .check_utils import is_valid_stop_date_time, get_not_null
+from .check_utils import is_valid_stop_date_time, get_not_null, is_valid_notes
 from mock import MagicMock
 from navitiacommon import type_pb2
 from jormungandr.realtime_schedule.timeo import Timeo
@@ -151,6 +151,7 @@ class TestDepartures(AbstractTestFixture):
     def test_stop_schedule_without_rt(self):
         query = self.query_template.format(sp='C:S0', dt='20160102T0900', data_freshness='', c_dt='20160102T0900')
         response = self.query_region(query)
+        is_valid_notes(response["notes"])
         stop_schedules = response['stop_schedules']
         assert len(stop_schedules) == 1
         stop_times = stop_schedules[0]['date_times']
@@ -162,6 +163,7 @@ class TestDepartures(AbstractTestFixture):
     def test_stop_schedule_with_rt_and_without_destination(self):
         query = self.query_template.format(sp='S41', dt='20160102T0900', data_freshness='', c_dt='20160102T0900')
         response = self.query_region(query)
+        is_valid_notes(response["notes"])
         stop_schedules = response['stop_schedules']
         assert len(stop_schedules) == 1
         stop_times = stop_schedules[0]['date_times']
@@ -188,6 +190,7 @@ class TestDepartures(AbstractTestFixture):
         query = self.query_template.format(sp='S42', dt='20160102T0900', data_freshness='', c_dt='20160102T0900')
 
         response = self.query_region(query)
+        is_valid_notes(response["notes"])
         stop_schedules = response['stop_schedules']
         assert len(stop_schedules) == 3
         stop_times = stop_schedules[0]['date_times']
@@ -213,6 +216,7 @@ class TestDepartures(AbstractTestFixture):
     def test_stop_schedule_with_from_datetime_tomorrow(self):
         query = self.query_template.format(sp='S42', dt='20160102T0900', data_freshness='', c_dt='20160101T0900')
         response = self.query_region(query)
+        is_valid_notes(response["notes"])
         stop_schedules = response['stop_schedules']
         assert len(stop_schedules) == 3
         for stop_schedule in stop_schedules:

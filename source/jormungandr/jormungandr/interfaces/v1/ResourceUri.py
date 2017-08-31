@@ -191,7 +191,10 @@ class complete_links(object):
             elif hasattr(elem, 'keys'):
                 if elem.get('type') == collect_type:
                     if collect_type == "notes":
-                        result.append({"id": elem['id'], "value": elem['value'], "type": collect_type})
+                        result.append({"id": elem['id'],
+                                       "category": elem['category'],
+                                       "value": elem['value'],
+                                       "type": collect_type})
                     elif collect_type == "exceptions":
                         type_ = "Add" if elem['except_type'] == 0 else "Remove"
                         result.append({"id": elem['id'], "date": elem['date'], "type": type_})

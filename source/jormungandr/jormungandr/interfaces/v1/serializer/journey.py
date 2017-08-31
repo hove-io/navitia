@@ -28,7 +28,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from jormungandr.interfaces.v1.serializer import jsonschema
+from jormungandr.interfaces.v1.serializer import jsonschema, base
 from jormungandr.interfaces.v1.serializer.pt import PlaceSerializer, CalendarSerializer, VJDisplayInformationSerializer, \
     StopDateTimeSerializer, StringListField
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
@@ -199,8 +199,7 @@ class SectionSerializer(PbNestedSerializer):
             for type_, value in obj.uris.ListFields():
                 response.append({"type": type_.name, "id": value})
         if obj.HasField(str('pt_display_informations')):
-            for value in obj.pt_display_informations.notes:
-                response.append({"type": 'notes', "id": value.uri, 'value': value.note})
+            response.extend(base.make_notes(obj.pt_display_informations.notes))
         return response
 
     stop_date_times = StopDateTimeSerializer(many=True)

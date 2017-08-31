@@ -811,6 +811,18 @@ def is_valid_codes(codes):
         get_not_null(code, "value")
 
 
+def is_valid_notes(notes):
+    for note in notes:
+        is_valid_note(note)
+
+
+def is_valid_note(note):
+    get_not_null(note, "id")
+    get_not_null(note, "value")
+    assert get_not_null(note, "type") == "notes"
+    assert get_not_null(note, "category") in ["comment", "destination"]
+
+
 def is_valid_places(places, depth_check=1):
     for p in places:
         is_valid_place(p, depth_check)

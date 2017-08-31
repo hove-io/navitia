@@ -49,7 +49,7 @@ from collections import defaultdict
 from navitiacommon import response_pb2
 from jormungandr.utils import date_to_timestamp
 from jormungandr.interfaces.v1.Calendars import calendar
-from jormungandr.interfaces.v1.serializer import api
+from jormungandr.interfaces.v1.serializer import api, base
 from jormungandr.interfaces.v1.decorators import get_serializer
 from navitiacommon import default_values
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, compute_possible_region
@@ -74,8 +74,7 @@ class SectionLinks(fields.Raw):
                 response.append({"type": type_.name, "id": value})
 
         if obj.HasField(str('pt_display_informations')):
-            for value in obj.pt_display_informations.notes:
-                response.append({"type": 'notes', "id": value.uri, 'value': value.note})
+            response.extend(base.make_notes(obj.pt_display_informations.notes))
         return response
 
 
