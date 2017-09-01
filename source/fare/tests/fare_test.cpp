@@ -125,8 +125,8 @@ static navitia::routing::Path string_to_path(const std::vector<std::string>& key
         item.stop_times.push_back(first_st);
         item.stop_times.push_back(last_st);
 
-        first_sp->fare_zone = boost::lexical_cast<int>(start_zone);
-        last_sp->fare_zone = boost::lexical_cast<int>(dest_zone);
+        first_sp->fare_zone = start_zone;
+        last_sp->fare_zone = dest_zone;
 
         item.type = navitia::routing::ItemType::public_transport;
 
