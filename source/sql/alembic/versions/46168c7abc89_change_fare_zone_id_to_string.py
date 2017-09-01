@@ -16,9 +16,9 @@ import geoalchemy2 as ga
 from sqlalchemy.dialects import postgresql
 
 def upgrade():
-    op.execute("ALTER TABLE stop_point ALTER COLUMN fare_zone TYPE text;")
+    op.execute("ALTER TABLE navitia.stop_point ALTER COLUMN fare_zone TYPE text;")
 
 
 def downgrade():
-    op.execute("ALTER TABLE stop_point ALTER COLUMN fare_zone TYPE integer;")
+    op.execute("ALTER TABLE navitia.stop_point ALTER COLUMN fare_zone TYPE integer;")
 
