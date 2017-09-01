@@ -507,7 +507,7 @@ class VJDisplayInformationSerializer(RouteDisplayInformationSerializer):
 
 def make_properties_links(properties):
     if properties is None:
-        return None
+        return []
 
     response = base.make_notes(properties.notes)
 
