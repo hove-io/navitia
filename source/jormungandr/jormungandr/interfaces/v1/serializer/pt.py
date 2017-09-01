@@ -509,16 +509,15 @@ def make_properties_links(properties):
     if properties is None:
         return None
 
-    response = []
-    response.extend(base.make_notes(properties.notes))
+    response = base.make_notes(properties.notes)
 
-    for exception in properties.exceptions:
-        response.append({"type": "exceptions", # type should be 'exception' but retrocompatibility...
-                         "rel": "exceptions",
-                         "id": exception.uri,
-                         "date": exception.date,
-                         "except_type": exception.type,
-                         "internal": True})
+    response.extend([{"type": "exceptions", # type should be 'exception' but retrocompatibility...
+                      "rel": "exceptions",
+                      "id": exception.uri,
+                      "date": exception.date,
+                      "except_type": exception.type,
+                      "internal": True}
+                     for exception in properties.exceptions])
 
     if properties.HasField(str("destination")) and properties.destination.HasField(str("uri")):
         response.append({"type": "notes",
