@@ -820,7 +820,7 @@ def is_valid_note(note):
     get_not_null(note, "id")
     get_not_null(note, "value")
     assert get_not_null(note, "type") == "notes"
-    assert get_not_null(note, "category") in ["comment", "destination"]
+    assert get_not_null(note, "category") in ["comment", "terminus"]
 
 
 def is_valid_places(places, depth_check=1):

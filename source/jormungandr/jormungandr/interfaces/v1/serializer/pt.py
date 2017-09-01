@@ -523,7 +523,7 @@ def make_properties_links(properties):
     if properties.HasField(str("destination")) and properties.destination.HasField(str("uri")):
         response.append({"type": "notes",
                          "rel": "notes",
-                         "category": "destination",
+                         "category": "terminus",
                          "id": properties.destination.uri,
                          "value": properties.destination.destination,
                          "internal": True})
