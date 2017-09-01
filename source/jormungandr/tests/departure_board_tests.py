@@ -158,6 +158,7 @@ class TestDepartureBoard(AbstractTestFixture):
         response = self.query_region("stop_points/stop1/stop_schedules?"
                                      "calendar=week_cal&from_datetime=20120615T080000")
 
+        is_valid_notes(response["notes"])
         assert "stop_schedules" in response
         # all datetime in the response should be only time (no dates since we query if on a period (a calendar))
         is_valid_stop_schedule(response["stop_schedules"], self.tester, only_time=True)
@@ -227,6 +228,7 @@ class TestDepartureBoard(AbstractTestFixture):
         response = self.query_region("stop_areas/stop1/stop_schedules?"
                                      "from_datetime=20120615T080000")
 
+        is_valid_notes(response["notes"])
         assert "stop_schedules" in response
         # all datetime in the response should be datetime
         is_valid_stop_schedule(response["stop_schedules"], self.tester, only_time=False)
@@ -246,6 +248,7 @@ class TestDepartureBoard(AbstractTestFixture):
         response = self.query_region("stop_areas/stop1/stop_schedules?"
                                      "from_datetime=20120615T080000&disable_geojson=true")
 
+        is_valid_notes(response["notes"])
         assert "stop_schedules" in response
         # all datetime in the response should be datetime
         is_valid_stop_schedule(response["stop_schedules"], self.tester, only_time=False)
@@ -266,6 +269,7 @@ class TestDepartureBoard(AbstractTestFixture):
         response = self.query_region("stop_areas/Tstop1/stop_schedules?"
                                      "from_datetime=20120615T080000")
 
+        is_valid_notes(response["notes"])
         assert "stop_schedules" in response
         is_valid_stop_schedule(response["stop_schedules"], self.tester, only_time=False)
         assert len(response["stop_schedules"]) == 1, "there should be only one elt"
@@ -288,6 +292,7 @@ class TestDepartureBoard(AbstractTestFixture):
         response = self.query_region("stop_areas/Tstop2/stop_schedules?"
                                      "from_datetime=20120615T080000")
 
+        is_valid_notes(response["notes"])
         assert "stop_schedules" in response
         is_valid_stop_schedule(response["stop_schedules"], self.tester, only_time=False)
         assert len(response["stop_schedules"]) == 1, "there should be only one elt"
@@ -303,6 +308,7 @@ class TestDepartureBoard(AbstractTestFixture):
         response = self.query_region("stop_areas/Tstop2/stop_schedules?"
                                      "from_datetime=20120615T100000")
 
+        is_valid_notes(response["notes"])
         assert "stop_schedules" in response
         is_valid_stop_schedule(response["stop_schedules"], self.tester, only_time=False)
         assert len(response["stop_schedules"]) == 1, "there should be only one elt"
@@ -320,6 +326,7 @@ class TestDepartureBoard(AbstractTestFixture):
         response = self.query_region("stop_areas/Tstop1/stop_schedules?"
                                      "from_datetime=20120615T080000&calendar=cal_partial_terminus")
 
+        is_valid_notes(response["notes"])
         assert "stop_schedules" in response
         assert len(response["stop_schedules"]) == 1, "there should be only one elt"
         assert response["stop_schedules"][0]["route"]["id"] == "A:1"
@@ -330,6 +337,7 @@ class TestDepartureBoard(AbstractTestFixture):
         response = self.query_region("stop_areas/Tstop2/stop_schedules?"
                                      "from_datetime=20120615T080000&calendar=cal_partial_terminus")
 
+        is_valid_notes(response["notes"])
         assert "stop_schedules" in response
         assert len(response["stop_schedules"]) == 1, "there should be only one elt"
 
@@ -340,6 +348,7 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["stop_schedules"][0]["stop_point"]["id"] == "Tstop2"
 
         response = self.query_region("stop_areas/StopR3/stop_schedules?from_datetime=20120615T080000")
+        is_valid_notes(response["notes"])
         assert "stop_schedules" in response
         assert len(response["stop_schedules"]) == 1, "there should be only one elt"
         assert response["stop_schedules"][0]["route"]["id"] == "R:5"
@@ -349,6 +358,7 @@ class TestDepartureBoard(AbstractTestFixture):
         assert response["notes"][0]["value"] == "StopR4"
 
         response = self.query_region("stop_areas/StopR2/stop_schedules?from_datetime=20120615T080000")
+        is_valid_notes(response["notes"])
         assert "stop_schedules" in response
         assert len(response["stop_schedules"]) == 1, "there should be only one elt"
         assert response["stop_schedules"][0]["route"]["id"] == "R:5"
@@ -364,6 +374,7 @@ class TestDepartureBoard(AbstractTestFixture):
         response = self.query_region("stop_areas/Tstop3/stop_schedules?"
                                      "from_datetime=20120615T080000")
 
+        is_valid_notes(response["notes"])
         assert "stop_schedules" in response
         assert len(response["stop_schedules"]) == 1
         assert response["stop_schedules"][0]["additional_informations"] == "terminus"
@@ -375,6 +386,7 @@ class TestDepartureBoard(AbstractTestFixture):
         response = self.query_region("stop_areas/Tstop1/stop_schedules?"
                                      "from_datetime=20120620T080000")
 
+        is_valid_notes(response["notes"])
         assert "stop_schedules" in response
         assert len(response["stop_schedules"]) == 1
         assert response["stop_schedules"][0]["additional_informations"] == "no_departure_this_day"
@@ -385,6 +397,7 @@ class TestDepartureBoard(AbstractTestFixture):
         """
         response = self.query_region("routes/line:A:0/route_schedules?from_datetime=20120615T080000")
 
+        is_valid_notes(response["notes"])
         schedules = get_not_null(response, 'route_schedules')
 
         assert len(schedules) == 1, "there should be only one elt"
@@ -427,6 +440,7 @@ class TestDepartureBoard(AbstractTestFixture):
         """
         response = self.query_region("routes/line:A:0/route_schedules?calendar=week_cal")
 
+        is_valid_notes(response["notes"])
         schedules = get_not_null(response, 'route_schedules')
 
         assert len(schedules) == 1, "there should be only one elt"
@@ -449,6 +463,7 @@ class TestDepartureBoard(AbstractTestFixture):
         """
         response = self.query_region("stop_points/ODTstop1/departures?from_datetime=20120615T080000")
 
+        is_valid_notes(response["notes"])
         assert "departures" in response
         assert len(response["departures"]) == 2
 
@@ -480,6 +495,7 @@ class TestDepartureBoard(AbstractTestFixture):
         """
         # Check if the comment is on the stop_time
         response = self.query_region("stop_points/stop1/stop_schedules?from_datetime=20120615T080000")
+        is_valid_notes(response["notes"])
         assert 'error' not in response
         assert 'stop_schedules' in response
         assert len(response["stop_schedules"]) == 1
@@ -495,6 +511,7 @@ class TestDepartureBoard(AbstractTestFixture):
 
         # Check that the comment is only on the header and not in the rows
         response = self.query_region("lines/line:A/route_schedules?from_datetime=20120615T080000")
+        is_valid_notes(response["notes"])
         assert 'error' not in response
         assert 'route_schedules' in response
         assert len(response["route_schedules"]) == 1
@@ -540,6 +557,7 @@ class TestDepartureBoard(AbstractTestFixture):
         """
         response = self.query_region("routes/line:A:0/route_schedules?from_datetime=20120615T080000")
 
+        is_valid_notes(response["notes"])
         schedules = get_not_null(response, 'route_schedules')
 
         assert len(schedules) == 1, "there should be only one elt"
@@ -595,6 +613,7 @@ class TestSchedules(AbstractTestFixture):
         """default is Realtime stopschedule"""
         response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000")
 
+        is_valid_notes(response["notes"])
         stop_sched = response["stop_schedules"]
         is_valid_stop_schedule(stop_sched, self.tester)
 
@@ -604,6 +623,7 @@ class TestSchedules(AbstractTestFixture):
         response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000"
                                      "&data_freshness=base_schedule")
 
+        is_valid_notes(response["notes"])
         stop_sched = response["stop_schedules"]
         is_valid_stop_schedule(stop_sched, self.tester)
 
@@ -668,6 +688,7 @@ class TestSchedules(AbstractTestFixture):
         response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000"
                                      "&data_freshness=realtime")
 
+        is_valid_notes(response["notes"])
         stop_sched = response["stop_schedules"]
         is_valid_stop_schedule(stop_sched, self.tester)
 
@@ -680,6 +701,7 @@ class TestSchedules(AbstractTestFixture):
         response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000"
                                      "&data_freshness=realtime&items_per_schedule=1")
 
+        is_valid_notes(response["notes"])
         stop_sched = response["stop_schedules"]
         is_valid_stop_schedule(stop_sched, self.tester)
 
@@ -694,6 +716,7 @@ class TestSchedules(AbstractTestFixture):
         response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000"
                                      "&data_freshness=realtime&items_per_schedule=0")
 
+        is_valid_notes(response["notes"])
         stop_sched = response["stop_schedules"]
 
         check_stop_schedule(stop_sched,
@@ -706,6 +729,7 @@ class TestSchedules(AbstractTestFixture):
         response = self.query_region("stop_points/S1/stop_schedules?from_datetime=20160101T080000"
                                      "&data_freshness=realtime&max_date_times=0")
 
+        is_valid_notes(response["notes"])
         stop_sched = response["stop_schedules"]
 
         check_stop_schedule(stop_sched,
@@ -724,6 +748,7 @@ class TestSchedules(AbstractTestFixture):
         """
         response = self.query_region("stop_points/S1/stop_schedules?_current_datetime=20160101T080000")
 
+        is_valid_notes(response["notes"])
         stop_sched = response["stop_schedules"]
         is_valid_stop_schedule(stop_sched, self.tester)
 
@@ -754,6 +779,7 @@ class TestSchedules(AbstractTestFixture):
         """
         response = self.query_region("stop_points/S1/departures?_current_datetime=20160101T080000")
 
+        is_valid_notes(response["notes"])
         departures = response["departures"]
         is_valid_departures(departures)
         # Since data_freshness is specified, it's set to realtime by default, and there shouldn't be (prev, next) links
@@ -769,6 +795,7 @@ class TestSchedules(AbstractTestFixture):
         response = self.query_region("stop_points/S1/departures?_current_datetime=20160101T080000"
                                      "&data_freshness=base_schedule")
 
+        is_valid_notes(response["notes"])
         departures = response["departures"]
         is_valid_departures(departures)
         # test if there are 'prev' and 'next' links for api navigation
@@ -784,6 +811,7 @@ class TestSchedules(AbstractTestFixture):
         """
         response = self.query_region("stop_points/S1/departures?from_datetime=20160101T080000")
 
+        is_valid_notes(response["notes"])
         departures = response["departures"]
         is_valid_departures(departures)
         self.check_departure_rt_sol(departures)
@@ -797,6 +825,7 @@ class TestSchedules(AbstractTestFixture):
         response = self.query_region("stop_points/S1/departures?from_datetime=20160101T080000"
                                      "&data_freshness=base_schedule")
 
+        is_valid_notes(response["notes"])
         departures = response["departures"]
         is_valid_departures(departures)
         self.check_departure_base_schedule_sol(departures)
@@ -810,6 +839,7 @@ class TestSchedules(AbstractTestFixture):
         response = self.query_region("stop_points/S11/departures?from_datetime=20160101T080000"
                                      "&data_freshness=base_schedule")
 
+        is_valid_notes(response["notes"])
         departures = response["departures"]
 
         is_valid_departures(departures)
@@ -830,6 +860,7 @@ class TestSchedules(AbstractTestFixture):
         response = self.query_region("stop_points/S11/arrivals?from_datetime=20160101T080000"
                                      "&data_freshness=base_schedule")
 
+        is_valid_notes(response["notes"])
         arrivals = response["arrivals"]
 
         is_valid_departures(arrivals)
@@ -848,6 +879,7 @@ class TestSchedules(AbstractTestFixture):
         response = self.query_region("stop_points/stopP2/arrivals?from_datetime=20160103T100000"
                                      "&data_freshness=realtime")
 
+        is_valid_notes(response["notes"])
         arrivals = response["arrivals"]
 
         is_valid_departures(arrivals)
@@ -869,6 +901,7 @@ class TestSchedules(AbstractTestFixture):
         response = self.query_region("stop_points/stopP2/departures?from_datetime=20160103T100000"
                                      "&data_freshness=realtime")
 
+        is_valid_notes(response["notes"])
         departures = response["departures"]
 
         is_valid_departures(departures)
@@ -890,6 +923,7 @@ class TestSchedules(AbstractTestFixture):
         response = self.query_region("stop_points/stopQ2/arrivals?from_datetime=20160103T230000"
                                      "&data_freshness=realtime")
 
+        is_valid_notes(response["notes"])
         arrivals = response["arrivals"]
 
         is_valid_departures(arrivals)
@@ -911,6 +945,7 @@ class TestSchedules(AbstractTestFixture):
         response = self.query_region("stop_points/stopQ2/departures?from_datetime=20160103T100000"
                                      "&data_freshness=realtime")
 
+        is_valid_notes(response["notes"])
         departures = response["departures"]
 
         is_valid_departures(departures)
@@ -932,6 +967,7 @@ class TestSchedules(AbstractTestFixture):
         response = self.query_region("stop_points/stopQ2/arrivals?from_datetime=20160103T230000"
                                      "&data_freshness=base_schedule")
 
+        is_valid_notes(response["notes"])
         arrivals = response["arrivals"]
 
         is_valid_departures(arrivals)
@@ -953,6 +989,7 @@ class TestSchedules(AbstractTestFixture):
         response = self.query_region("stop_points/stopQ2/departures?from_datetime=20160103T100000"
                                      "&data_freshness=base_schedule")
 
+        is_valid_notes(response["notes"])
         departures = response["departures"]
 
         is_valid_departures(departures)
@@ -972,6 +1009,7 @@ class TestSchedules(AbstractTestFixture):
         response = self.query_region("stop_points/stopf2/arrivals?from_datetime=20160103T100000"
                                      "&data_freshness=base_schedule")
 
+        is_valid_notes(response["notes"])
         arrivals = response["arrivals"]
 
         is_valid_departures(arrivals)
@@ -1007,6 +1045,7 @@ class TestSchedules(AbstractTestFixture):
         response = self.query_region("stop_points/stopf2/departures?from_datetime=20160103T100000"
                                      "&data_freshness=base_schedule")
 
+        is_valid_notes(response["notes"])
         departures = response["departures"]
 
         is_valid_departures(departures)

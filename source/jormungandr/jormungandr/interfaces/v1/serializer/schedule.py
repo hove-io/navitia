@@ -29,8 +29,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from datetime import datetime
 from jormungandr.interfaces.v1.serializer.base import PbNestedSerializer, EnumField, EnumListField
-from jormungandr.interfaces.v1.serializer import pt
-from jormungandr.interfaces.v1.serializer import jsonschema
+from jormungandr.interfaces.v1.serializer import pt, jsonschema, base
 from jormungandr.interfaces.v1.serializer.fields import LinkSchema, MultiLineStringField
 from jormungandr.interfaces.v1.make_links import create_internal_link
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import TimeOrDateTimeType
@@ -45,11 +44,8 @@ def _get_links(obj):
          ("route", uris.route),
          ("commercial_mode", uris.commercial_mode),
          ("physical_mode", uris.physical_mode),
-         ("network", uris.network),
-         ("note", uris.note)]
-    return [{"type": k, "id": v} for k, v in l if v != ""] + \
-        [{"type": "notes", "rel": "notes", "id": value.uri, "value": value.note, "internal": True}
-         for value in display_info.notes]
+         ("network", uris.network)]
+    return [{"type": k, "id": v} for k, v in l if v != ""] + base.make_notes(display_info.notes)
 
 
 class PassageSerializer(PbNestedSerializer):
@@ -66,7 +62,7 @@ class PassageSerializer(PbNestedSerializer):
 class DateTimeTypeSerializer(PbNestedSerializer):
     date_time = jsonschema.MethodField(schema_type=TimeOrDateTimeType, display_none=True)
     additional_informations = pt.AdditionalInformation(attr='additional_informations', display_none=True)
-    links = jsonschema.MethodField(schema_type=LinkSchema(many=True), display_none=True)
+    links = pt.PropertiesLinksSerializer(attr="properties")
     data_freshness = EnumField(attr="realtime_level", display_none=True)
 
     def get_date_time(self, obj):
@@ -76,38 +72,6 @@ class DateTimeTypeSerializer(PbNestedSerializer):
         if obj.HasField('date'):
             return timestamp_to_str(obj.date + obj.time)
         return datetime.utcfromtimestamp(obj.time).strftime('%H%M%S')
-
-    def get_links(self, obj):
-        properties = obj.properties
-        r = []
-        #Note: all those links should be created with create_{internal|external}_links,
-        # but for retrocompatibility purpose we cannot do that :( Change it for the v2!
-        for note_ in properties.notes:
-            r.append({"id": note_.uri,
-                      "type": "notes",  # type should be 'note' but retrocompatibility...
-                      "rel": "notes",
-                      "value": note_.note,
-                      "internal": True})
-        for exception in properties.exceptions:
-            r.append({"type": "exceptions",  # type should be 'exception' but retrocompatibility...
-                      "rel": "exceptions",
-                      "id": exception.uri,
-                      "date": exception.date,
-                      "except_type": exception.type,
-                      "internal": True})
-        if properties.destination and properties.destination.uri:
-            r.append({"type": "notes",
-                      "rel": "notes",
-                      "id": properties.destination.uri,
-                      "value": properties.destination.destination,
-                      "internal": True})
-        if properties.vehicle_journey_id:
-            r.append({"type": "vehicle_journey",
-                      "rel": "vehicle_journeys",
-                      # the value has nothing to do here (it's the 'id' field), refactor for the v2
-                      "value": properties.vehicle_journey_id,
-                      "id": properties.vehicle_journey_id})
-        return r
 
 
 class StopScheduleSerializer(PbNestedSerializer):
