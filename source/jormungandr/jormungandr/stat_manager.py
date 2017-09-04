@@ -45,6 +45,8 @@ import time
 import sys
 import kombu
 import six
+import pybreaker
+import retrying
 
 f_datetime = "%Y%m%dT%H%M%S"
 
@@ -114,36 +116,33 @@ def tz_str_to_utc_timestamp(dt_str, timezone):
 class StatManager(object):
 
     def __init__(self):
-        if 'SAVE_STAT' in app.config:
-            self.save_stat = app.config['SAVE_STAT']
-        else:
-            self.save_stat = False
         self.connection = None
         self.producer = None
-        if 'BROKER_URL' in app.config:
-            self.broker_url = app.config['BROKER_URL']
-        else:
-            self.broker_url = None
-        if 'EXCHANGE_NAME' in app.config:
-            self.exchange_name = app.config['EXCHANGE_NAME']
-        else:
-            self.exchange_name = None
+
+        self.save_stat = app.config.get('SAVE_STAT', False)
+        self.broker_url = app.config.get('BROKER_URL', None)
+        self.exchange_name = app.config.get('EXCHANGE_NAME', None)
+        self.connection_timeout = app.config.get('STAT_CONNECTION_TIMEOUT', 1)
 
         if self.save_stat:
-            self._init_rabbitmq()
+            try:
+                self._init_rabbitmq()
+            except Exception:
+                logging.getLogger(__name__).exception('Unable to activate the producer of stat')
 
         self.lock = Lock()
+        fail_max = app.config.get('STAT_CIRCUIT_BREAKER_MAX_FAIL', 5)
+        reset_timeout = app.config.get('STAT_CIRCUIT_BREAKER_TIMEOUT_S', 60)
+
+        self.breaker = pybreaker.CircuitBreaker(fail_max=fail_max, reset_timeout=reset_timeout)
 
     def _init_rabbitmq(self):
         """
         connection to rabbitmq and initialize queues
         """
-        try:
-            self.connection = kombu.Connection(self.broker_url)
-            exchange = kombu.Exchange(self.exchange_name, type="topic")
-            self.producer = self.connection.Producer(exchange=exchange)
-        except:
-            logging.getLogger(__name__).exception('Unable to activate the producer of stat')
+        self.connection = kombu.Connection(self.broker_url, connect_timeout=self.connection_timeout)
+        exchange = kombu.Exchange(self.exchange_name, type="topic")
+        self.producer = self.connection.Producer(exchange=exchange)
 
     def manage_stat(self, start_time, call_result):
         """
@@ -166,7 +165,10 @@ class StatManager(object):
         self.fill_coverages(stat_request)
         self.fill_parameters(stat_request)
         self.fill_result(stat_request, call_result)
-        self.publish_request(stat_request)
+
+        retry = retrying.Retrying(stop_max_attempt_number=2,
+                retry_on_exception=lambda e: not isinstance(e, pybreaker.CircuitBreakerError))
+        retry.call(self.breaker.call, self.publish_request, stat_request.api, stat_request.SerializeToString())
 
     def fill_info_response(self, stat_info_response, call_result):
         """
@@ -486,24 +488,20 @@ class StatManager(object):
                 self.fill_section(stat_section, resp_section, previous_section)
                 previous_section = stat_section
 
-    def publish_request(self, stat_request):
-        pbf = stat_request.SerializeToString()
+    def publish_request(self, api, pbf):
         with self.lock:
             try:
                 if self.producer is None:
                     #if the initialization failed we have to retry the creation of the objects
                     self._init_rabbitmq()
-                self.producer.publish(pbf, routing_key=stat_request.api)
+                self.producer.publish(pbf, routing_key=api)
             except self.connection.connection_errors + self.connection.channel_errors:
                 logging.getLogger(__name__).exception('Server went away, will be reconnected..')
                 #Relese and close the previous connection
                 if self.connection and self.connection.connected:
                     self.connection.release()
-                #Initialize a new connection to RabbitMQ
-                self._init_rabbitmq()
-                #If connection is established publish the stat message.
-                if self.save_stat:
-                    self.producer.publish(pbf, routing_key=stat_request.api)
+                self.producer = None
+                raise
 
     def fill_admin_from(self, stat_section, admin):
         if admin[0]:
