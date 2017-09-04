@@ -258,6 +258,17 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
         self._check_schema('/v1/coverage/main_routing_test/pt_objects?q=1')
         self._check_schema('/v1/coverage/main_routing_test/pt_objects?q=stop')
 
+    def test_isochrones(self):
+        query = "/v1/coverage/main_routing_test/isochrones?from={}&datetime={}&max_duration={}"
+        query = query.format("0.0000898312;0.0000898312", "20120614T080000", "3600")
+        self._check_schema(query)
+
+    def test_heatmaps(self):
+        # test heat_map with <from>
+        query = "/v1/coverage/main_routing_test/heat_maps?datetime={}&from={}&max_duration={}&resolution=50"
+        query = query.format('20120614T080100', 'stopB', '3600')
+
+        self._check_schema(query)
 
 @dataset({"main_ptref_test": {}})
 class TestSwaggerSchemaPtref(AbstractTestFixture, SchemaChecker):

@@ -34,7 +34,7 @@ from jormungandr import i_manager
 from jormungandr.interfaces.v1.fields import error,\
     PbField, NonNullList, NonNullNested,\
     Links, JsonString, place,\
-    ListLit, beta_endpoint
+    ListLit, beta_endpoint, feed_publisher
 from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.utils import date_to_timestamp
@@ -57,13 +57,14 @@ heat_maps = {
     "error": PbField(error, attribute='error'),
     "links": fields.List(Links()),
     "warnings": ListLit([fields.Nested(beta_endpoint)]),
+    "feed_publishers": fields.List(NonNullNested(feed_publisher)),
 }
 
 
 class HeatMap(JourneyCommon):
 
     def __init__(self):
-        super(HeatMap, self).__init__(output_type_serializer=None) #TODO implement and change to a real one
+        super(HeatMap, self).__init__(output_type_serializer=HeatMapSerializer)
         parser_get = self.parsers["get"]
         parser_get.add_argument("resolution", type=UnsignedInteger(), default=500)
 
@@ -91,3 +92,6 @@ class HeatMap(JourneyCommon):
         response = i_manager.dispatch(args, "heat_maps", self.region)
 
         return response
+
+    def options(self, **kwargs):
+        return self.api_description(**kwargs)

@@ -30,19 +30,38 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.interfaces.v1.serializer.pt import PlaceSerializer
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
-from jormungandr.interfaces.v1.serializer.base import JsonStringSerializer
+from jormungandr.interfaces.v1.serializer.jsonschema import MethodField
+from jormungandr.interfaces.v1.serializer.fields import point_2D_schema, IntField
 
 import serpy
 
 
 class GraphicalIsrochoneSerializer(serpy.Serializer):
 
-    geojson = JsonStringSerializer()
-    max_duration = serpy.IntField()
-    min_duration = serpy.IntField()
+    geojson = MethodField(schema_metadata={
+        'type': 'object',
+        'properties': {
+            'type': {
+                # Must be MultiPolygon
+                'enum': ['MultiPolygon']
+            },
+            'coordinates': {
+                'type': 'array',
+                'items': {
+                    'type': 'array',
+                    'items': point_2D_schema
+                }
+            }
+        }
+    })
+    max_duration = IntField()
+    min_duration = IntField()
     origin = PlaceSerializer(attr='origin', label='from')
     to = PlaceSerializer(attr='destination', label='to')
     requested_date_time = DateTimeField()
     min_date_time = DateTimeField()
     max_date_time = DateTimeField()
 
+    def get_geojson(self, obj):
+        import ujson
+        return ujson.loads(str(obj.geojson))

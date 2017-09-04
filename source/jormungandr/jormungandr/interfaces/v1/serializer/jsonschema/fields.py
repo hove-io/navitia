@@ -41,6 +41,7 @@ def _init(self, parent_class, schema_type=None, schema_metadata={}, **kwargs):
     """
     if 'display_none' not in kwargs:
         kwargs['display_none'] = False
+    self.many = kwargs.pop('many', False)
     parent_vars = set(parent_class.__init__.__code__.co_names)
     parent_kwargs = {k: v for k, v in kwargs.items() if k in parent_vars}
     remaining_kwargs = {k: v for k, v in kwargs.items() if k not in parent_vars}

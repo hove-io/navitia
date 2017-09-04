@@ -195,33 +195,36 @@ class CoveragesSerializer(serpy.DictSerializer):
     regions = CoverageSerializer(many=True)
 
 
-def _get_links_impl(obj):
-    # note: some request args can be there several times,
-    # but when there is only one elt, flask does not want lists
-    response = []
-    for value in obj.links:
-        args = {}
-        for e in value.kwargs:
-            if len(e.values) > 1:
-                args[e.key] = [v for v in e.values]
-            else:
-                 args[e.key] = e.values[0]
+class JourneysCommon(PbNestedSerializer):
+    error = ErrorSerializer(display_none=False)
+    feed_publishers = FeedPublisherSerializer(many=True, display_none=True, attr='feed_publishers')
+    links = MethodField(schema_type=LinkSchema(many=True))
 
-        response.append(create_external_link('v1.{}'.format(value.ressource_name),
-                                             rel=value.rel,
-                                             _type=value.type,
-                                             templated=value.is_templated,
-                                             description=value.description,
-                                             **args))
-    return response
+    def get_links(self, obj):
+        # note: some request args can be there several times,
+        # but when there is only one elt, flask does not want lists
+        response = []
+        for value in obj.links:
+            args = {}
+            for e in value.kwargs:
+                if len(e.values) > 1:
+                    args[e.key] = [v for v in e.values]
+                else:
+                     args[e.key] = e.values[0]
 
-class JourneysSerializer(PbNestedSerializer):
+            response.append(create_external_link('v1.{}'.format(value.ressource_name),
+                                                 rel=value.rel,
+                                                 _type=value.type,
+                                                 templated=value.is_templated,
+                                                 description=value.description,
+                                                 **args))
+        return response
+
+
+class JourneysSerializer(JourneysCommon):
     journeys = JourneySerializer(many=True)
-    error = ErrorSerializer(display_none=False, attr='error')
     tickets = TicketSerializer(many=True, display_none=True)
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
-    feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
-    links = MethodField(schema_type=LinkSchema(many=True), display_none=True)
     context = MethodField(schema_type=ContextSerializer(), display_none=True)
     notes = DescribedField(schema_type=NoteSerializer(many=True))
     exceptions = DescribedField(schema_type=ExceptionSerializer(many=True))
@@ -238,9 +241,6 @@ class JourneysSerializer(PbNestedSerializer):
                     }
                 }
             }
-
-    def get_links(self, obj):
-        return _get_links_impl(obj)
 
 
 class DeparturesSerializer(PTReferentialSerializer):
@@ -280,21 +280,12 @@ class GeoStatusSerializer(serpy.DictSerializer):
     geo_status = geo_status.GeoStatusSerializer()
 
 
-class GraphicalIsrochoneSerializer(serpy.Serializer):
+class GraphicalIsrochoneSerializer(JourneysCommon):
     isochrones = graphical_isochron.GraphicalIsrochoneSerializer(attr='graphical_isochrones', many=True)
-    error = ErrorSerializer(display_none=False, attr='error')
-    feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
-    links = MethodField(schema_type=LinkSchema(many=True), display_none=True)
     warnings = base.BetaEndpointsSerializer()
 
-    def get_links(self, obj):
-        return _get_links_impl(obj)
 
-class HeatMapSerializer(serpy.Serializer):
+class HeatMapSerializer(JourneysCommon):
     heat_maps = heat_map.HeatMapSerializer(many=True)
-    error = ErrorSerializer(display_none=False, attr='error')
-    links = MethodField(schema_type=LinkSchema(many=True), display_none=True)
     warnings = base.BetaEndpointsSerializer()
 
-    def get_links(self, obj):
-        return _get_links_impl(obj)

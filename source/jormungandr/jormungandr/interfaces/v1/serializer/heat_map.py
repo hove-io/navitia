@@ -30,12 +30,55 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.interfaces.v1.serializer.pt import PlaceSerializer
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
-from jormungandr.interfaces.v1.serializer.base import JsonStringSerializer
+from jormungandr.interfaces.v1.serializer import base
+from jormungandr.interfaces.v1.serializer.jsonschema import MethodField, FloatField, IntField
 import serpy
 
 
+class CellLatSchema(serpy.Serializer):
+    # This Class is not used as a serializer, but here only to get the schema
+    min_lat = FloatField()
+    max_lat = FloatField()
+    center_lat = FloatField()
+
+
+class LineHeadersSchema(serpy.Serializer):
+    # This Class is not used as a serializer, but here only to get the schema
+    cell_lat = CellLatSchema()
+
+
+class CellLonSchema(serpy.Serializer):
+    # This Class is not used as a serializer, but here only to get the schema
+    center_lon = FloatField()
+    max_lon = FloatField()
+    min_lon = FloatField()
+
+
+class LinesSchema(serpy.Serializer):
+    # This Class is not used as a serializer, but here only to get the schema
+    duration = IntField(schema_metadata={
+                            'type': 'array',
+                            'items': {
+                                # TODO: Can this be handled more elegantly?
+                                'type': ['null', 'number'],
+                                'format': 'integer'
+                            }
+                        })
+    cell_lon = CellLonSchema()
+
+
+class HeatMatrixSchema(serpy.Serializer):
+    # This Class is not used as a serializer, but here only to get the schema
+    line_headers = LineHeadersSchema(many=True)
+    lines = LinesSchema(many=True)
+
+
 class HeatMapSerializer(serpy.Serializer):
-    heat_matrix = JsonStringSerializer()
+    heat_matrix = MethodField(schema_type=HeatMatrixSchema)
     origin = PlaceSerializer(attr='origin', label='from')
     to = PlaceSerializer(attr='destination', label='to')
     requested_date_time = DateTimeField()
+
+    def get_heat_matrix(self, obj):
+        import ujson
+        return ujson.loads(str(obj.heat_matrix))
