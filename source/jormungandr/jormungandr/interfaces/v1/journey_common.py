@@ -266,13 +266,12 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
                                      'We advise that you don’t rely on the traveler_type’s fallback modes '
                                      '(`first_section_mode[]` and `last_section_mode[]`) '
                                      'and set them yourself.')
-        parser_get.add_argument("_current_datetime", hidden=True,
-                                type=DateTimeFormat(), default=datetime.utcnow(),
-                                help="The datetime used to consider the state of the pt object.\n"
-                                     "Default is the current date and it is used for debug.\n"
-                                     "Note: it will mainly change the disruptions that concern "
-                                     "the object. The timezone should be specified in the format, "
-                                     "else we consider it as UTC")
+        parser_get.add_argument("_current_datetime", type=DateTimeFormat(),
+                                schema_metadata={'default': 'now'}, hidden=True,
+                                default=datetime.utcnow(),
+                                help='The datetime considered as "now". Used for debug, default is '
+                                     'the moment of the request. It will mainly change the output '
+                                     'of the disruptions.')
         parser_get.add_argument("direct_path", type=OptionValue(['indifferent', 'only', 'none']),
                                 default='indifferent',
                                 help="Specify if direct path should be suggested")

@@ -294,7 +294,7 @@ stop_point = Table('stop_point', metadata,*[
     Column('properties_id', BIGINT(), primary_key=False),
     Column('uri', TEXT(), primary_key=False, nullable=False),
     Column('coord', Geography(geometry_type='POINT', srid=4326, spatial_index=False), primary_key=False),
-    Column('fare_zone', INTEGER(), primary_key=False),
+    Column('fare_zone', TEXT(), primary_key=False),
     Column('name', TEXT(), primary_key=False, nullable=False),
     Column('stop_area_id', BIGINT(), primary_key=False, nullable=False),
     Column('platform_code', TEXT(), primary_key=False),

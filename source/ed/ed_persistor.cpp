@@ -731,7 +731,7 @@ void EdPersistor::insert_stop_points(const std::vector<types::StopPoint*>& stop_
         values.push_back(navitia::encode_uri(sp->uri));
         values.push_back(sp->name);
         values.push_back("POINT(" + std::to_string(sp->coord.lon()) + " " + std::to_string(sp->coord.lat()) + ")");
-        values.push_back(std::to_string(sp->fare_zone));
+        values.push_back(sp->fare_zone);
         if(sp->stop_area != NULL){
             values.push_back(std::to_string(sp->stop_area->idx));
         }else{

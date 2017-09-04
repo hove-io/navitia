@@ -34,13 +34,12 @@ from future.moves.itertools import zip_longest
 import six
 from six.moves import range
 
-pb_type = {
+places_type = {
     'stop_area': type_pb2.STOP_AREA,
     'stop_point': type_pb2.STOP_POINT,
     'address': type_pb2.ADDRESS,
     'poi': type_pb2.POI,
-    'administrative_region': type_pb2.ADMINISTRATIVE_REGION,
-    'line': type_pb2.LINE
+    'administrative_region': type_pb2.ADMINISTRATIVE_REGION
 }
 
 

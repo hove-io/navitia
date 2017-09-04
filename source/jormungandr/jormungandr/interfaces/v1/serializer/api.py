@@ -49,6 +49,7 @@ class PTReferentialSerializer(serpy.Serializer):
     error = ErrorSerializer(display_none=False)
     feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
+    notes = DescribedField(schema_type=NoteSerializer(many=True))
 
 
 class LinesSerializer(PTReferentialSerializer):
@@ -133,6 +134,17 @@ class PlacesSerializer(serpy.Serializer):
     feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
     places = pt.PlaceSerializer(many=True)
+
+
+class PtObjectsSerializer(serpy.Serializer):
+    error = ErrorSerializer(display_none=False)
+    feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
+    disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
+    pt_objects = pt.PtObjectSerializer(many=True, attr='places')
+
+
+class PlacesNearbySerializer(PTReferentialSerializer):
+    places_nearby = pt.PlaceNearbySerializer(many=True)
 
 
 class CoverageErrorSerializer(NullableDictSerializer):
@@ -246,3 +258,11 @@ class RouteSchedulesSerializer(PTReferentialSerializer):
 class LineReportsSerializer(PTReferentialSerializer):
     line_reports = report.LineReportSerializer(many=True, display_none=True)
     warnings = base.BetaEndpointsSerializer()
+
+
+class TrafficReportsSerializer(PTReferentialSerializer):
+    traffic_reports = report.TrafficReportSerializer(many=True, display_none=True)
+
+
+class CalendarsSerializer(PTReferentialSerializer):
+    calendars = pt.CalendarSerializer(many=True, display_none=True)

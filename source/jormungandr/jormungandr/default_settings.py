@@ -70,9 +70,13 @@ LOGGER = {
 # Bike self-service configuration
 # This should be moved in a central configuration system like ectd, consul, etc...
 BSS_PROVIDER = []
+# Car parking places availability service
+CAR_PARK_PROVIDER = []
 for key, value in os.environ.items():
     if key.startswith('JORMUNGANDR_BSS_PROVIDER_'):
         BSS_PROVIDER.append(json.loads(value))
+    elif key.startswith('JORMUNGANDR_CAR_PARK_PROVIDER_'):
+        CAR_PARK_PROVIDER.append(json.loads(value))
 
 #Parameters for statistics
 SAVE_STAT = boolean(os.getenv('JORMUNGANDR_SAVE_STAT', False))
@@ -116,6 +120,9 @@ CIRCUIT_BREAKER_SYNTHESE_TIMEOUT_S = 60  # the circuit breaker retries after thi
 
 CIRCUIT_BREAKER_MAX_JCDECAUX_FAIL = 4  # max instance call failures before stopping attempt
 CIRCUIT_BREAKER_JCDECAUX_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
+
+CIRCUIT_BREAKER_MAX_STAR_FAIL = 4  # max instance call failures before stopping attempt
+CIRCUIT_BREAKER_STAR_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)
 
 CIRCUIT_BREAKER_MAX_CLEVERAGE_FAIL = 4  # max instance call failures before stopping attempt
 CIRCUIT_BREAKER_CLEVERAGE_TIMEOUT_S = 60  # the circuit breaker retries after this timeout (in seconds)

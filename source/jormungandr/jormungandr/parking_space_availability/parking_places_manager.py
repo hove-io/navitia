@@ -28,7 +28,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask.ext.restful.utils import unpack
-from jormungandr import i_manager, bss_provider_manager
+from jormungandr import i_manager, bss_provider_manager, car_park_provider_manager
 from functools import wraps
 import logging
 
@@ -44,7 +44,15 @@ def _add_feed_publisher(response, providers):
             feeds.append(f)
 
 
-class ManageStands(object):
+def _handle(response, provider_manager, attr, logger, err_msg):
+    try:
+        providers = provider_manager.handle(response, attr)
+        _add_feed_publisher(response, providers)
+    except:
+        logger.exception(err_msg)
+
+
+class ManageParkingPlaces(object):
 
     def __init__(self, resource, attribute):
         """
@@ -53,6 +61,7 @@ class ManageStands(object):
         """
         self.resource = resource
         self.attribute = attribute
+        self.logger = logging.getLogger(__name__)
 
     def __call__(self, f):
         @wraps(f)
@@ -60,14 +69,19 @@ class ManageStands(object):
             response, status, h = unpack(f(*args, **kwargs))
             if status == 200 and self.attribute in response:
                 instance = i_manager.instances.get(self.resource.region)
-                if instance and instance.bss_provider:
-                    add_bss_availability = bss_provider_manager.handle_journeys if self.attribute == 'journeys' \
-                        else bss_provider_manager.handle_places
-                    try:
-                        providers = add_bss_availability(response[self.attribute])
-                        _add_feed_publisher(response, providers)
-                    except:
-                        logger = logging.getLogger(__name__)
-                        logger.exception('Error while handling BSS realtime availability')
+
+                resource_args = self.resource.parsers["get"].parse_args()
+
+                show_bss_stands = resource_args.get('bss_stands') or 'bss_stands' in resource_args.get('add_poi_infos')
+                show_car_park = 'car_park' in resource_args.get('add_poi_infos')
+
+                if show_bss_stands and instance and instance.bss_provider:
+                    _handle(response, bss_provider_manager, self.attribute, self.logger,
+                            'Error while handling BSS realtime availability')
+
+                if show_car_park and instance and instance.car_park_provider:
+                    _handle(response, car_park_provider_manager, self.attribute, self.logger,
+                            'Error while handling car park realtime availability')
+
             return response, status, h
         return wrapper

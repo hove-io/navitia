@@ -1,4 +1,4 @@
-# Copyright (c) 2001-2017, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -26,20 +26,28 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-
 from __future__ import absolute_import, print_function, unicode_literals, division
+from jormungandr.parking_space_availability.abstract_provider_manager import AbstractProviderManager
 
-from jormungandr.interfaces.v1.serializer.base import PbNestedSerializer
-from jormungandr.interfaces.v1.serializer import pt
-
-
-class LineReportSerializer(PbNestedSerializer):
-    line = pt.LineSerializer()
-    pt_objects = pt.PtObjectSerializer(many=True, display_none=True)
+POI_TYPE_ID = 'poi_type:amenity:parking'
 
 
-class TrafficReportSerializer(PbNestedSerializer):
-    network = pt.NetworkSerializer()
-    lines = pt.LineSerializer(many=True)
-    stop_areas = pt.StopAreaSerializer(many=True)
-    vehicle_journeys = pt.VehicleJourneySerializer(many=True)
+class CarParkingProviderManager(AbstractProviderManager):
+
+    def __init__(self, car_park_providers_configurations):
+        self.car_park_providers = []
+        for configuration in car_park_providers_configurations:
+            arguments = configuration.get('args', {})
+            self.car_park_providers.append(self._init_class(configuration['class'], arguments))
+        super(CarParkingProviderManager, self).__init__()
+
+    def _handle_poi(self, item):
+        if 'poi_type' in item and item['poi_type']['id'] == POI_TYPE_ID:
+            provider = self._find_provider(item)
+            if provider:
+                item['car_park'] = provider.get_informations(item)
+                return provider
+        return None
+
+    def _get_providers(self):
+        return self.car_park_providers

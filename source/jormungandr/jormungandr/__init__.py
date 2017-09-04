@@ -94,6 +94,9 @@ stat_manager = StatManager()
 
 from jormungandr.parking_space_availability.bss.bss_provider_manager import BssProviderManager
 bss_provider_manager = BssProviderManager(app.config['BSS_PROVIDER'])
+from jormungandr.parking_space_availability.car.car_park_provider_manager import CarParkingProviderManager
+car_park_provider_manager = CarParkingProviderManager(app.config['CAR_PARK_PROVIDER'])
+
 
 from jormungandr import api
 

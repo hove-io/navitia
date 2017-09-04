@@ -1,3 +1,17 @@
+navitia2 (2.40.0) unstable; urgency=low
+
+  * Jormungandr: category in notes: fix artemis  <https://github.com/CanalTP/navitia/pull/2190>
+  * Jormungandr: category in note  <https://github.com/CanalTP/navitia/pull/2189>
+  * ed: fare zone id changed to string  <https://github.com/CanalTP/navitia/pull/2187>
+  * Kraken: change label for line/route in /pt_objects  <https://github.com/CanalTP/navitia/pull/2186>
+  * Jormungandr: serpy + swagger of traffic_reports, places_nearby, pt_objects and calendars  <https://github.com/CanalTP/navitia/pull/2183>
+  * Jormungandr: add more feed publishers into autocomplete response  <https://github.com/CanalTP/navitia/pull/2184>
+  * kraken: add impacts on stop_point and stop_area in display_informations.links  <https://github.com/CanalTP/navitia/pull/2185>
+  * Jormun: line is forbidden as type[] for places  <https://github.com/CanalTP/navitia/pull/2182>
+  * Jormungandr: add p+r parking using STAR service  <https://github.com/CanalTP/navitia/pull/2177>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Mon, 04 Sep 2017 10:09:48 +0100
+
 navitia2 (2.39.0) unstable; urgency=low
 
   * Kraken: fix vehicle_journeys bad index  <https://github.com/CanalTP/navitia/pull/2181>

@@ -272,3 +272,12 @@ class BetaEndpointsSerializer(serpy.Serializer):
     id = LiteralField("beta_endpoint", schema_type=str)
     message = LiteralField('This service is under construction. You can help through github.com/CanalTP/navitia',
                            schema_type=str)
+
+def make_notes(notes):
+    return [{"type": "notes",
+             "rel": "notes",
+             "category": "comment",
+             "id": value.uri,
+             "value": value.note,
+             "internal": True}
+            for value in notes]

@@ -35,7 +35,7 @@ from flask_restful import fields, marshal_with, reqparse, abort
 
 from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerPathSerializer
 from jormungandr.interfaces.v1.swagger_schema import make_schema
-from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
+from jormungandr.parking_space_availability.parking_places_manager import ManageParkingPlaces
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.converters_collection_type import collections_to_resource_type
 from jormungandr.interfaces.v1.fields import stop_point, stop_area, route, line, line_group, \
@@ -50,7 +50,7 @@ from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.Coord import Coord
 from jormungandr.interfaces.v1.fields import disruption_marshaller, feed_publisher, NonNullList, NonNullNested
 from jormungandr.timezone import set_request_timezone
-from jormungandr.interfaces.common import odt_levels
+from jormungandr.interfaces.common import odt_levels, add_poi_infos_types
 from jormungandr.utils import date_to_timestamp
 from jormungandr.resources_utils import ResourceUtc
 from datetime import datetime
@@ -97,12 +97,12 @@ class Uri(ResourceUri, ResourceUtc):
         parser.add_argument("odt_level", type=OptionValue(odt_levels), default="all",
                             schema_type=str, schema_metadata={"enum": odt_levels},
                             help="odt level")
-        parser.add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.utcnow(), hidden=True,
-                            help="The datetime used to consider the state of the pt object"
-                                 " Default is the current date and it is used for debug."
-                                 " Note: it will mainly change the disruptions that concern the object"
-                                 " The timezone should be specified in the format,"
-                                 " else we consider it as UTC")
+        parser.add_argument("_current_datetime", type=DateTimeFormat(),
+                            schema_metadata={'default': 'now'}, hidden=True,
+                            default=datetime.utcnow(),
+                            help='The datetime considered as "now". Used for debug, default is '
+                                 'the moment of the request. It will mainly change the output '
+                                 'of the disruptions.')
         parser.add_argument("distance", type=int, default=200,
                             help="Distance range of the query. Used only if a coord is in the query")
         parser.add_argument("since", type=DateTimeFormat(),
@@ -505,9 +505,16 @@ def pois(is_collection):
                                              help="original uri of the object you want to query")
             self.parsers["get"].add_argument("bss_stands", type=BooleanType(), default=True,
                                              help="Show bss stands availability")
+            self.parsers["get"].add_argument("add_poi_infos[]", type=OptionValue(add_poi_infos_types),
+                                             default=['bss_stands', 'car_park'],
+                                             dest="add_poi_infos", action="append",
+                                             help="Show more information about the poi if it's available, for instance,"
+                                                  " show BSS/car park availability in the pois(BSS/car park) of "
+                                                  "response")
+
             args = self.parsers["get"].parse_args()
-            if args["bss_stands"]:
-                self.get_decorators.insert(2, ManageStands(self, 'pois'))
+            if args["add_poi_infos"] or args["bss_stands"]:
+                self.get_decorators.insert(2, ManageParkingPlaces(self, 'pois'))
 
     return Pois
 

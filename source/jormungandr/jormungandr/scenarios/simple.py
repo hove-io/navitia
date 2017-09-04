@@ -34,7 +34,7 @@ from jormungandr.utils import date_to_timestamp, timestamp_to_str, dt_to_str, ti
 import navitiacommon.type_pb2 as type_pb2
 import navitiacommon.request_pb2 as request_pb2
 from jormungandr.interfaces.common import pb_odt_level
-from jormungandr.scenarios.utils import pb_type, pt_object_type, add_link
+from jormungandr.scenarios.utils import places_type, pt_object_type, add_link
 from jormungandr.scenarios.utils import build_pagination
 from jormungandr.scenarios.utils import updated_common_journey_request_with_default
 
@@ -218,10 +218,10 @@ class Scenario(object):
         req._current_datetime = date_to_timestamp(request["_current_datetime"])
         if request["type[]"]:
             for type in request["type[]"]:
-                if type not in pb_type:
+                if type not in places_type:
                     abort(422, message="{} is not an acceptable type".format(type))
 
-                req.places_nearby.types.append(pb_type[type])
+                req.places_nearby.types.append(places_type[type])
         req.places_nearby.filter = request["filter"]
         resp = instance.send_and_receive(req)
         build_pagination(request, resp)

@@ -34,6 +34,7 @@ import logging
 from flask.globals import g
 import pytz
 from jormungandr.interfaces.v1.make_links import create_internal_link, create_external_link
+from jormungandr.interfaces.v1.serializer import pt, base
 from jormungandr.utils import timestamp_to_str
 from navitiacommon import response_pb2, type_pb2
 import ujson
@@ -322,36 +323,7 @@ class notes(fields.Raw):
 class stop_time_properties_links(fields.Raw):
 
     def output(self, key, obj):
-        properties = obj.properties
-        r = []
-        #Note: all those links should be created with crete_{internal|external}_links,
-        # but for retrocompatibility purpose we cannot do that :( Change it for the v2!
-        for note_ in properties.notes:
-            r.append({"id": note_.uri,
-                      "type": "notes",  # type should be 'note' but retrocompatibility...
-                      "rel": "notes",
-                      "value": note_.note,
-                      "internal": True})
-        for exception in properties.exceptions:
-            r.append({"type": "exceptions",  # type should be 'exception' but retrocompatibility...
-                      "rel": "exceptions",
-                      "id": exception.uri,
-                      "date": exception.date,
-                      "except_type": exception.type,
-                      "internal": True})
-        if properties.destination and properties.destination.uri:
-            r.append({"type": "notes",
-                      "rel": "notes",
-                      "id": properties.destination.uri,
-                      "value": properties.destination.destination,
-                      "internal": True})
-        if properties.vehicle_journey_id:
-            r.append({"type": "vehicle_journey",
-                      "rel": "vehicle_journeys",
-                      # the value has nothing to do here (it's the 'id' field), refactor for the v2
-                      "value": properties.vehicle_journey_id,
-                      "id": properties.vehicle_journey_id})
-        return r
+        return pt.make_properties_links(obj.properties)
 
 
 class get_label(fields.Raw):
@@ -799,6 +771,23 @@ beta_endpoint = {
     'message': Lit("This service is under construction. You can help through github.com/CanalTP/navitia"),
 }
 
+raw_feed_publisher_bano = {
+    "id": "bano",
+    "name": "Base d'Adresses Nationale Ouverte",
+    "license": "ODbL",
+    "url": "http://bano.openstreetmap.fr/data/lisezmoi-bano.txt"
+}
+
+raw_feed_publisher_osm = {
+    "id": "osm",
+    "license": "ODbL",
+    "name": "openstreetmap",
+    "url": "https://www.openstreetmap.org/copyright"
+}
+
+feed_publisher_bano = {k: Lit(v) for k, v in raw_feed_publisher_bano.items()}
+
+feed_publisher_osm = {k: Lit(v) for k, v in raw_feed_publisher_osm.items()}
 
 class UrisToLinks():
 
@@ -823,16 +812,8 @@ class UrisToLinks():
                              "id": uris.physical_mode})
         if uris.network != '':
             response.append({"type": "network", "id": uris.network})
-        if uris.note != '':
-            response.append({"type": "note", "id": uris.note})
 
-        for value in display_info.notes:
-            response.append({"type": 'notes',
-                            # Note: type should be 'note' but for retrocompatibility, we can't change it
-                             "rel": 'notes',
-                             "id": value.uri,
-                             'value': value.note,
-                             'internal': True})
+        response.extend(base.make_notes(display_info.notes))
         return response
 
 

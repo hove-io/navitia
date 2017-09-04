@@ -38,6 +38,7 @@ www.navitia.io
 #include "ed/build_helper.h"
 #include "type/pb_converter.h"
 #include "tests/utils_test.h"
+#include "utils/functions.h"
 
 using namespace navitia::type;
 
@@ -231,4 +232,23 @@ BOOST_AUTO_TEST_CASE(ptref_indexes_test) {
     // the contributors of the line B is only c1
     objs = navitia::ptref_indexes<nt::Contributor>(b.get<nt::Line>("B"), *b.data);
     BOOST_CHECK_EQUAL_RANGE(uris(objs), std::set<std::string>({"c1"}));
+}
+
+BOOST_AUTO_TEST_CASE(label_formater_line) {
+    auto network_rer = std::make_unique<navitia::type::Network>();
+    network_rer->name = "RER";
+    auto comm_mode_rer = std::make_unique<navitia::type::CommercialMode>();
+    comm_mode_rer->name = "Rer";
+    auto rer_a = std::make_unique<navitia::type::Line>();
+    rer_a->name = "a";
+    rer_a->network = network_rer.get();
+    BOOST_CHECK_EQUAL(rer_a->get_label(), "RER a");
+    rer_a->commercial_mode = comm_mode_rer.get();
+    BOOST_CHECK_EQUAL(rer_a->get_label(), "Rer a");
+    rer_a->code = "A";
+    BOOST_CHECK_EQUAL(rer_a->get_label(), "Rer A");
+    network_rer->name = "Transilien";
+    BOOST_CHECK_EQUAL(rer_a->get_label(), "Transilien Rer A");
+    rer_a->commercial_mode = nullptr;
+    BOOST_CHECK_EQUAL(rer_a->get_label(), "Transilien A");
 }

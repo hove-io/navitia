@@ -31,3 +31,4 @@ debian/*.debhelper
 source/jormungandr/jormungandr/_version.py
 /source/jormungandr/jormungandr/.cache
 /source/jormungandr/.cache
+/source/jormungandr/tests/.cache

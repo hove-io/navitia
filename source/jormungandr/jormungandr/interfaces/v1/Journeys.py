@@ -49,13 +49,14 @@ from collections import defaultdict
 from navitiacommon import response_pb2
 from jormungandr.utils import date_to_timestamp
 from jormungandr.interfaces.v1.Calendars import calendar
-from jormungandr.interfaces.v1.serializer import api
+from jormungandr.interfaces.v1.serializer import api, base
 from jormungandr.interfaces.v1.decorators import get_serializer
 from navitiacommon import default_values
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, compute_possible_region
-from jormungandr.parking_space_availability.bss.stands_manager import ManageStands
+from jormungandr.parking_space_availability.parking_places_manager import ManageParkingPlaces
 import six
-from navitiacommon.parser_args_type import BooleanType
+from navitiacommon.parser_args_type import BooleanType, OptionValue
+from jormungandr.interfaces.common import add_poi_infos_types
 
 f_datetime = "%Y%m%dT%H%M%S"
 class SectionLinks(fields.Raw):
@@ -73,8 +74,7 @@ class SectionLinks(fields.Raw):
                 response.append({"type": type_.name, "id": value})
 
         if obj.HasField(str('pt_display_informations')):
-            for value in obj.pt_display_informations.notes:
-                response.append({"type": 'notes', "id": value.uri, 'value': value.note})
+            response.extend(base.make_notes(obj.pt_display_informations.notes))
         return response
 
 
@@ -445,11 +445,14 @@ class Journeys(JourneyCommon):
         parser_get.add_argument("bss_stands", type=BooleanType(), default=False,
                                 help="Show bss stands availability "
                                      "in the bicycle_rental pois of response")
-
+        parser_get.add_argument("add_poi_infos[]", type=OptionValue(add_poi_infos_types), default=[],
+                                dest="add_poi_infos", action="append",
+                                help="Show more information about the poi if it's available, for instance, show "
+                                     "BSS/car park availability in the pois(BSS/car park) of response")
         self.get_decorators.append(complete_links(self))
 
-        if parser_get.parse_args().get("bss_stands"):
-            self.get_decorators.insert(1, ManageStands(self, 'journeys'))
+        if parser_get.parse_args().get("add_poi_infos") or parser_get.parse_args().get("bss_stands"):
+            self.get_decorators.insert(1, ManageParkingPlaces(self, 'journeys'))
 
     @add_debug_info()
     @add_fare_links()

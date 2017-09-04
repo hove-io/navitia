@@ -146,7 +146,7 @@ struct Dataset;
 struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
     const static Type_e type = Type_e::StopPoint;
     GeographicalCoord coord;
-    int fare_zone;
+    std::string fare_zone;
     bool is_zonal = false;
     std::string platform_code;
     std::string label;
@@ -166,7 +166,7 @@ struct StopPoint : public Header, Nameable, hasProperties, HasMessages {
             & admin_list & _properties & impacts & dataset_list;
     }
 
-    StopPoint(): fare_zone(0),  stop_area(nullptr), network(nullptr) {}
+    StopPoint(): fare_zone(),  stop_area(nullptr), network(nullptr) {}
 
     Indexes get(Type_e type, const PT_Data & data) const;
     bool operator<(const StopPoint & other) const;

@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_CHECK_CLOSE(data.stop_points[0]->coord.lat(), 45.0296, 0.1);
     BOOST_CHECK_CLOSE(data.stop_points[0]->coord.lon(), 0.5881, 0.1);
     BOOST_CHECK_EQUAL(data.stop_points[0]->stop_area, data.stop_areas[0]);
-    BOOST_CHECK_EQUAL(data.stop_points[0]->fare_zone, 4);
+    BOOST_CHECK_EQUAL(data.stop_points[0]->fare_zone, "4");
 
     // check stops properties
     navitia::type::hasProperties has_properties;

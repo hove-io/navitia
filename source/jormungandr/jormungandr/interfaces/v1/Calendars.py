@@ -34,11 +34,15 @@ from flask.ext.restful import marshal_with, reqparse
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.parsers import default_count_arg_type, DateTimeFormat
+from jormungandr.interfaces.parsers import default_count_arg_type, DateTimeFormat, depth_argument
+from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.interfaces.v1.fields import fields, enum_type, NonNullList,\
-    NonNullNested, NonNullProtobufNested, PbField, error, pagination, NonNullString
-import datetime
+    NonNullNested, NonNullProtobufNested, PbField, error, pagination, NonNullString, \
+    feed_publisher, disruption_marshaller
+from jormungandr.interfaces.v1.serializer import api
+
+from datetime import datetime
 import six
 
 
@@ -77,18 +81,18 @@ calendar = {
 calendars = {
     "calendars": NonNullList(NonNullNested(calendar)),
     "error": PbField(error, attribute='error'),
-    "pagination": NonNullNested(pagination)
+    "pagination": NonNullNested(pagination),
+    "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
+    "feed_publishers": fields.List(NonNullNested(feed_publisher))
 }
 
 
 class Calendars(ResourceUri):
     def __init__(self):
-        ResourceUri.__init__(self)
-        self.parsers = {}
-        self.parsers["get"] = reqparse.RequestParser(
-            argument_class=ArgumentDoc)
+        ResourceUri.__init__(self, output_type_serializer=api.CalendarsSerializer)
         parser_get = self.parsers["get"]
-        parser_get.add_argument("depth", type=int, default=1)
+        parser_get.add_argument("depth", type=depth_argument, default=1,
+                                help="The depth of your object")
         parser_get.add_argument("count", type=default_count_arg_type, default=10,
                                 help="Number of calendars per page")
         parser_get.add_argument("start_page", type=int, default=0,
@@ -97,28 +101,34 @@ class Calendars(ResourceUri):
                                 help="Start date")
         parser_get.add_argument("end_date", type=six.text_type, default="",
                                 help="End date")
-        parser_get.add_argument("forbidden_id[]", type=six.text_type,
+        parser_get.add_argument("forbidden_id[]", type=six.text_type, deprecated=True,
                                 help="DEPRECATED, replaced by `forbidden_uris[]`",
                                 dest="__temporary_forbidden_id[]",
                                 default=[],
-                                action='append')
+                                action='append',
+                                schema_metadata={'format': 'pt-object'})
         parser_get.add_argument("forbidden_uris[]", type=six.text_type,
                                 help="forbidden uris",
                                 dest="forbidden_uris[]",
                                 default=[],
-                                action='append')
+                                action="append",
+                                schema_metadata={'format': 'pt-object'})
         parser_get.add_argument("distance", type=int, default=200,
                                 help="Distance range of the query. Used only if a coord is in the query")
+        parser_get.add_argument("_current_datetime", type=DateTimeFormat(),
+                                schema_metadata={'default': 'now'}, hidden=True,
+                                default=datetime.utcnow(),
+                                help='The datetime considered as "now". Used for debug, default is '
+                                     'the moment of the request. It will mainly change the output '
+                                     'of the disruptions.')
+        self.collection = 'calendars'
+        self.collections = calendars
+        self.get_decorators.insert(0, ManageError())
+        self.get_decorators.insert(1, get_obj_serializer(self))
 
-        self.parsers["get"].add_argument("_current_datetime", type=DateTimeFormat(), default=datetime.datetime.utcnow(),
-                                         help="The datetime used to consider the state of the pt object"
-                                              " Default is the current date and it is used for debug."
-                                              " Note: it will mainly change the disruptions that concern "
-                                              "the object The timezone should be specified in the format,"
-                                              " else we consider it as UTC")
+    def options(self, **kwargs):
+        return self.api_description(**kwargs)
 
-    @marshal_with(calendars)
-    @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None, id=None):
         self.region = i_manager.get_region(region, lon, lat)
         args = self.parsers["get"].parse_args()

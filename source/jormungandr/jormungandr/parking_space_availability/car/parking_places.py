@@ -27,27 +27,22 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from abc import abstractmethod, ABCMeta
-import six
 
 
-class BssProvider(six.with_metaclass(ABCMeta, object)):
-    """
-    abstract class managing calls to external service providing real-time next passages
-    """
+class ParkingPlaces(object):
 
-    @abstractmethod
-    def support_poi(self, poi):
-        pass
+    def __init__(self, available=None, occupied=None, available_PRM=None, occupied_PRM=None):
+        if available is not None:
+            self.available = available
+        if occupied is not None:
+            self.occupied = occupied
+        if available_PRM is not None:
+            self.available_PRM = available_PRM
+        if occupied_PRM is not None:
+            self.occupied_PRM = occupied_PRM
 
-    @abstractmethod
-    def get_informations(self, poi):
-        pass
+        if any(True for n in [available, occupied, available_PRM, occupied_PRM] if n is not None):
+            self.total_places = (available or 0) + (occupied or 0) + (available_PRM or 0) + (occupied_PRM or 0)
 
-    @abstractmethod
-    def status(self):
-        pass
-
-    @abstractmethod
-    def feed_publisher(self):
-        pass
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__

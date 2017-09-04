@@ -37,3 +37,4 @@ gevent==1.1.2
 Flask-Cache==0.13.1
 git+https://github.com/canaltp/serpy.git@ctp#egg=serpy
 python-json-logger==0.1.7
+jmespath==0.9.3

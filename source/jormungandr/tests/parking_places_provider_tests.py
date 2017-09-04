@@ -27,17 +27,19 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import
+
 import mock
 from mock import PropertyMock
-from jormungandr.parking_space_availability.bss.bss_provider import BssProvider
-from jormungandr.parking_space_availability.bss.bss_provider_manager import get_from_to_pois_of_journeys
-from jormungandr.parking_space_availability.bss.stands import Stands
+
+from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
+from jormungandr.parking_space_availability import Stands
+from jormungandr.parking_space_availability import get_from_to_pois_of_journeys
 from jormungandr.ptref import FeedPublisher
 from tests.check_utils import is_valid_poi, get_not_null, journey_basic_query
 from tests.tests_mechanism import AbstractTestFixture, dataset
 
 
-class MockBssProvider(BssProvider):
+class MockBssProvider(AbstractParkingPlacesProvider):
     def __init__(self, pois_supported, name='mock bss provider'):
         self.pois_supported = pois_supported
         self.name = name
@@ -395,7 +397,7 @@ class TestBssProvider(AbstractTestFixture):
     def test_journey_sections_from_to_poi_with_stands(self):
         supported_pois = ['station_1']
         with mock_bss_providers(pois_supported=supported_pois):
-            query = journey_basic_query + "&first_section_mode=bss&last_section_mode=bss&bss_stands=true"
+            query = journey_basic_query + "&first_section_mode=bss&last_section_mode=bss&add_poi_infos[]=bss_stands"
             response = self.query_region(query)
             self.is_valid_journey_response(response, query)
             journeys = get_not_null(response, 'journeys')
@@ -437,7 +439,7 @@ class TestBssProvider(AbstractTestFixture):
                      MockBssProvider(pois_supported='station_2', name='provider 2')]
         with mock.patch('jormungandr.parking_space_availability.bss.BssProviderManager._get_providers',
                         new_callable=PropertyMock, return_value=lambda: providers):
-            query = journey_basic_query + "&first_section_mode=bss&last_section_mode=bss&bss_stands=true"
+            query = journey_basic_query + "&first_section_mode=bss&last_section_mode=bss&add_poi_infos[]=bss_stands"
             response = self.query_region(query)
             self.is_valid_journey_response(response, query)
 

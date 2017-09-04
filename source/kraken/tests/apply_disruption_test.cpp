@@ -68,7 +68,7 @@ struct SimpleDataset {
 };
 
 // Check if new indexes are unique and continuous
-void test_vjs_indexes(const std::vector<navitia::type::VehicleJourney*>& vjs){
+static void test_vjs_indexes(const std::vector<navitia::type::VehicleJourney*>& vjs){
     int prec = -1;
     // Check if new indexes are unique and continuous
     std::for_each(vjs.begin(), vjs.end(),

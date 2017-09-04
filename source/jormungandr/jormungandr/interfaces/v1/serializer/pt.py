@@ -35,7 +35,7 @@ from jormungandr.interfaces.v1.serializer.base import GenericSerializer, EnumLis
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, DateTimeType, DateType
 from jormungandr.interfaces.v1.serializer.time import LocalTimeField, PeriodSerializer, DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import *
-from jormungandr.interfaces.v1.serializer import jsonschema
+from jormungandr.interfaces.v1.serializer import jsonschema, base
 from navitiacommon.type_pb2 import ActiveStatus, Channel, hasEquipments, Properties
 from navitiacommon.response_pb2 import SectionAdditionalInformationType
 
@@ -81,7 +81,7 @@ class SeveritySerializer(PbNestedSerializer):
     name = jsonschema.Field(schema_type=str)
     effect = jsonschema.Field(schema_type=str)
     color = jsonschema.Field(schema_type=str)
-    priority = jsonschema.Field(schema_type=str)
+    priority = jsonschema.Field(schema_type=int)
 
 
 class PtObjectSerializer(GenericSerializer):
@@ -163,7 +163,7 @@ class CalendarPeriodSerializer(PbNestedSerializer):
 
 
 class CalendarExceptionSerializer(PbNestedSerializer):
-    datetime = Field(attr='date', schema_type=DateTimeType)
+    datetime = Field(attr='date', schema_type=DateType)
     type = EnumField()
 
 
@@ -237,7 +237,7 @@ class DisruptionSerializer(PbNestedSerializer):
     application_periods = PeriodSerializer(many=True)
     status = EnumField(attr='status', pb_type=ActiveStatus)
     updated_at = DateTimeField()
-    tags = StringListField(display_none=True)
+    tags = StringListField(display_none=False)
     cause = jsonschema.Field(schema_type=str, display_none=True)
     category = jsonschema.MethodField(schema_type=str, display_none=False)
     def get_category(self, obj):
@@ -345,6 +345,10 @@ class PlaceSerializer(GenericSerializer):
     embedded_type = EnumField(attr='embedded_type')
     address = AddressSerializer(display_none=False)
     poi = PoiSerializer(display_none=False)
+
+
+class PlaceNearbySerializer(PlaceSerializer):
+    distance = jsonschema.StrField(display_none=True)
 
 
 class NetworkSerializer(GenericSerializer):
@@ -501,6 +505,46 @@ class VJDisplayInformationSerializer(RouteDisplayInformationSerializer):
     headsigns = StringListField(display_none=False)
 
 
+def make_properties_links(properties):
+    if properties is None:
+        return []
+
+    response = base.make_notes(properties.notes)
+
+    response.extend([{"type": "exceptions", # type should be 'exception' but retrocompatibility...
+                      "rel": "exceptions",
+                      "id": exception.uri,
+                      "date": exception.date,
+                      "except_type": exception.type,
+                      "internal": True}
+                     for exception in properties.exceptions])
+
+    if properties.HasField(str("destination")) and properties.destination.HasField(str("uri")):
+        response.append({"type": "notes",
+                         "rel": "notes",
+                         "category": "terminus",
+                         "id": properties.destination.uri,
+                         "value": properties.destination.destination,
+                         "internal": True})
+
+    if properties.HasField(str("vehicle_journey_id")):
+        response.append({"type": "vehicle_journey",
+                         "rel": "vehicle_journeys",
+                         "value": properties.vehicle_journey_id,# to remove for the v2
+                         "id": properties.vehicle_journey_id})
+
+    return response
+
+
+class PropertiesLinksSerializer(PbNestedSerializer):
+    def __init__(self, **kwargs):
+        super(PropertiesLinksSerializer, self).__init__(schema_type=LinkSchema(many=True),
+                                                        display_none=True,
+                                                        **kwargs)
+
+    def to_value(self, properties):
+        return make_properties_links(properties)
+
 class StopDateTimeSerializer(PbNestedSerializer):
     departure_date_time = DateTimeField()
     base_departure_date_time = DateTimeField()
@@ -509,41 +553,5 @@ class StopDateTimeSerializer(PbNestedSerializer):
     stop_point = StopPointSerializer()
     # additional_informations is a nullable field, add nullable=True when we migrate to swagger 3
     additional_informations = AdditionalInformation(attr='additional_informations', display_none=True)
-    links = jsonschema.MethodField(display_none=True, schema_type=lambda: LinkSchema(many=True))
-    def get_links(self, obj):
-        response = []
-        if obj.HasField(str("properties")):
-            properties = obj.properties
-
-            for note_ in properties.notes:
-                response.append({"id": note_.uri,
-                                 "type": "notes",  # type should be 'note' but retrocompatibility...
-                                 "rel": "notes",
-                                 "value": note_.note,
-                                 "internal": True})
-
-            for exception in properties.exceptions:
-                response.append({"type": "exceptions", # type should be 'exception' but retrocompatibility...
-                                 "rel": "exceptions",
-                                 "id": exception.uri,
-                                 "date": exception.date,
-                                 "except_type": exception.type,
-                                 "internal": True})
-
-            if properties.HasField(str("destination")) and properties.destination.HasField(str("uri")):
-                response.append({"type": "notes",
-                                 "rel": "notes",
-                                 "id": properties.destination.uri,
-                                 "value": properties.destination.destination,
-                                 "internal": True})
-
-            if properties.HasField(str("vehicle_journey_id")):
-                response.append({"type": "vehicle_journey",
-                                 "rel": "vehicle_journeys",
-                                 # the value has nothing to do here (it's the 'id' field), refactor for the v2
-                                 "value": properties.vehicle_journey_id,
-                                 "id": properties.vehicle_journey_id})
-
-        return response
-
+    links = PropertiesLinksSerializer(attr="properties")
     data_freshness = EnumField()

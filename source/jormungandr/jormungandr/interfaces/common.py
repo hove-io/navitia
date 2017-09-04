@@ -38,3 +38,6 @@ pb_odt_level = {
     'zonal': type_pb2.zonal,
     'all': type_pb2.all
 }
+
+# When an emtpy string is passed, it deactivates all
+add_poi_infos_types = ('bss_stands', 'car_park', '')
