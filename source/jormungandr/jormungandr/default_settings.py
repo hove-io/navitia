@@ -82,6 +82,11 @@ for key, value in os.environ.items():
 SAVE_STAT = boolean(os.getenv('JORMUNGANDR_SAVE_STAT', False))
 BROKER_URL = os.getenv('JORMUNGANDR_BROKER_URL', 'amqp://guest:guest@localhost:5672//')
 EXCHANGE_NAME = os.getenv('JORMUNGANDR_EXCHANGE_NAME', 'stat_persistor_exchange')
+STAT_CONNECTION_TIMEOUT = float(os.getenv('JORMUNGANDR_STAT_CONNECTION_TIMEOUT', 1))#connection_timeout in second
+# max instance call failures before stopping attempt
+STAT_CIRCUIT_BREAKER_MAX_FAIL = int(os.getenv('JORMUNGANDR_STAT_CIRCUIT_BREAKER_MAX_FAIL', 5))
+# the circuit breaker retries after this timeout (in seconds)
+STAT_CIRCUIT_BREAKER_TIMEOUT_S = int(os.getenv('JORMUNGANDR_STAT_CIRCUIT_BREAKER_TIMEOUT_S', 60))
 
 #Cache configuration, see https://pythonhosted.org/Flask-Cache/ for more information
 default_cache = {
