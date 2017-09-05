@@ -56,7 +56,7 @@ class GraphicalIsrochoneSerializer(serpy.Serializer):
     })
     max_duration = IntField()
     min_duration = IntField()
-    origin = PlaceSerializer(attr='origin', label='from')
+    origin = PlaceSerializer(label='from')
     to = PlaceSerializer(attr='destination', label='to')
     requested_date_time = DateTimeField()
     min_date_time = DateTimeField()

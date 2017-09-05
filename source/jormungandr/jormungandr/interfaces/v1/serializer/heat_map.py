@@ -67,7 +67,7 @@ class HeatMatrixSchema(serpy.Serializer):
 
 class HeatMapSerializer(serpy.Serializer):
     heat_matrix = MethodField(schema_type=HeatMatrixSchema)
-    origin = PlaceSerializer(attr='origin', label='from')
+    origin = PlaceSerializer(label='from')
     to = PlaceSerializer(attr='destination', label='to')
     requested_date_time = DateTimeField()
 

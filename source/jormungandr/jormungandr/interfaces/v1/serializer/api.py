@@ -197,7 +197,7 @@ class CoveragesSerializer(serpy.DictSerializer):
 
 class JourneysCommon(PbNestedSerializer):
     error = ErrorSerializer(display_none=False)
-    feed_publishers = FeedPublisherSerializer(many=True, display_none=True, attr='feed_publishers')
+    feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
     links = MethodField(schema_type=LinkSchema(many=True))
 
     def get_links(self, obj):
