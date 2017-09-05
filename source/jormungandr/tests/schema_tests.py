@@ -193,7 +193,7 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
     def test_journeys_schema(self):
         self._check_schema('/v1/coverage/main_routing_test/journeys?'
                            'from=0.001527130369323005;0.0004491559909773545&'
-                           'to=station_1&'
+                           'to=poi:station_1&'
                            'datetime=20120615T080000')
 
     def test_stop_schedule(self):
