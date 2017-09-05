@@ -55,14 +55,7 @@ class CellLonSchema(serpy.Serializer):
 
 class LinesSchema(serpy.Serializer):
     # This Class is not used as a serializer, but here only to get the schema
-    duration = IntField(schema_metadata={
-                            'type': 'array',
-                            'items': {
-                                # TODO: Can this be handled more elegantly?
-                                'type': ['null', 'number'],
-                                'format': 'integer'
-                            }
-                        })
+    duration = IntField(many=True)
     cell_lon = CellLonSchema()
 
 

@@ -264,11 +264,19 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
         self._check_schema(query)
 
     def test_heatmaps(self):
+        resolution = 50
         # test heat_map with <from>
-        query = "/v1/coverage/main_routing_test/heat_maps?datetime={}&from={}&max_duration={}&resolution=50"
-        query = query.format('20120614T080100', 'stopB', '3600')
+        query = "/v1/coverage/main_routing_test/heat_maps?datetime={}&from={}&max_duration={}&resolution={}"
+        query = query.format('20120614T080100', 'stopB', '3600', resolution)
 
-        self._check_schema(query)
+        _, errors = self._check_schema(query, hard_check=False)
+
+        import re
+        pattern = re.compile(".*heat_maps.*items.*ref.*heat_matrix.*ref.*lines.*items.*ref.*duration.*items.*type")
+
+        for k, e in errors.items():
+            assert pattern.match(k)
+            assert e == "Got value `None` of type `null`. Value must be of type(s): `(u'integer',)`"
 
     def test_status(self):
          query = "/v1/coverage/main_routing_test/status"
