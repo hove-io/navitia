@@ -952,3 +952,8 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region("stop_points?depth=3")
         for s in get_not_null(response, 'stop_points'):
             is_valid_stop_point(s, depth_check=3)
+
+    def test_pois_uri_poi_types(self):
+        response = self.query_region("pois/poi:station_1/poi_types")
+        assert len(response["poi_types"]) == 1
+        assert response["poi_types"][0]["id"] == "poi_type:amenity:bicycle_rental"
