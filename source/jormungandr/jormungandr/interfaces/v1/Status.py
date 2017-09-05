@@ -34,12 +34,17 @@ from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.interfaces.v1.fields import instance_status_with_parameters
 from jormungandr.interfaces.v1.serializer.api import StatusSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
+from jormungandr.interfaces.v1.StatedResource import StatedResource
 status = {
     "status": fields.Nested(instance_status_with_parameters)
 }
 
 
-class Status(Resource):
+class Status(StatedResource):
+    def __init__(self, *args, **kwargs):
+        super(Status, self).__init__(output_type_serializer=StatusSerializer,
+                                     *args, **kwargs)
+
     @get_serializer(serpy=StatusSerializer, marshall=status)
     def get(self, region):
         response = protobuf_to_dict(i_manager.dispatch({}, "status", instance_name=region), use_enum_labels=True)
@@ -52,3 +57,6 @@ class Status(Resource):
         for realtime_proxy in instance.realtime_proxy_manager.realtime_proxies.values():
             response['status']['realtime_proxies'].append(realtime_proxy.status())
         return response, 200
+
+    def options(self, **kwargs):
+        return self.api_description(**kwargs)

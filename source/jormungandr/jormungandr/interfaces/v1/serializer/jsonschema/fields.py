@@ -105,8 +105,10 @@ class MethodField(serpy.MethodField):
                  attr=None, call=False, label=None, required=True, display_none=False, **kwargs):
         super(MethodField, self).__init__(method=method, attr=attr, call=call, label=label,
                                           required=required, display_none=display_none)
+
         self.schema_type = schema_type
         self.schema_metadata = schema_metadata or {}
+        self.many = kwargs.pop('many', False)
         # the remaining kwargs are added in the schema metadata to add a bit of syntaxic sugar
         self.schema_metadata.update(**kwargs)
 

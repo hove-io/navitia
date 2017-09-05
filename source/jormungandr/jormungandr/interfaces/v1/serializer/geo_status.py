@@ -28,15 +28,16 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr.interfaces.v1.serializer.base import ForwardSerializer
+from jormungandr.interfaces.v1.serializer.jsonschema import IntField
+from jormungandr.interfaces.v1.serializer.pt import StringListField
 import serpy
 
 
 class GeoStatusSerializer(serpy.Serializer):
-    nb_addresses = serpy.IntField()
-    nb_admins = serpy.IntField()
-    nb_admins_from_cities = serpy.IntField()
-    nb_pois = serpy.IntField()
-    nb_ways = serpy.IntField()
-    poi_sources = ForwardSerializer(many=True)
-    street_network_sources = ForwardSerializer(many=True)
+    nb_addresses = IntField()
+    nb_admins = IntField()
+    nb_admins_from_cities = IntField()
+    nb_pois = IntField()
+    nb_ways = IntField()
+    poi_sources = StringListField(display_none=True)
+    street_network_sources = StringListField(display_none=True)

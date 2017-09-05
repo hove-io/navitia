@@ -270,6 +270,14 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
 
         self._check_schema(query)
 
+    def test_status(self):
+         query = "/v1/coverage/main_routing_test/status"
+         self._check_schema(query)
+
+    def test_geo_status(self):
+        query = '/v1/coverage/main_routing_test/_geo_status'
+        self._check_schema(query)
+
 @dataset({"main_ptref_test": {}})
 class TestSwaggerSchemaPtref(AbstractTestFixture, SchemaChecker):
     def test_calendars(self):

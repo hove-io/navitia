@@ -222,9 +222,12 @@ class StringListField(Field):
         self.many = True
 
     def as_getter(self, serializer_field_name, serializer_cls):
-        op = operator.attrgetter(self.attr or serializer_field_name)
+        obj_op = operator.attrgetter(self.attr or serializer_field_name)
+        dic_op = operator.itemgetter(self.attr or serializer_field_name)
         def getter(v):
-            return list(op(v))
+            if isinstance(v, dict):
+                return list(dic_op(v))
+            return list(obj_op(v))
         return getter
 
 
