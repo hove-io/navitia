@@ -281,14 +281,3 @@ def make_notes(notes):
              "value": value.note,
              "internal": True}
             for value in notes]
-
-
-class ForwardSerializer(serpy.Serializer):
-    def to_value(self, instance):
-        return instance
-
-
-class JsonStringSerializer(serpy.Serializer):
-    def to_value(self, obj):
-        import ujson
-        return ujson.loads(str(obj))

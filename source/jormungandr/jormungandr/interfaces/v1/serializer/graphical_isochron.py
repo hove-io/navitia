@@ -31,7 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr.interfaces.v1.serializer.pt import PlaceSerializer
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
 from jormungandr.interfaces.v1.serializer.jsonschema import MethodField
-from jormungandr.interfaces.v1.serializer.fields import point_2D_schema, IntField
+from jormungandr.interfaces.v1.serializer.fields import point_2D_schema, Field
 
 import serpy
 
@@ -54,8 +54,8 @@ class GraphicalIsrochoneSerializer(serpy.Serializer):
             }
         }
     })
-    max_duration = IntField()
-    min_duration = IntField()
+    max_duration = Field(schema_type=int)
+    min_duration = Field(schema_type=int)
     origin = PlaceSerializer(label='from')
     to = PlaceSerializer(attr='destination', label='to')
     requested_date_time = DateTimeField()

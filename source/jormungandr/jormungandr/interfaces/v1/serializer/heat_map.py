@@ -30,15 +30,15 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.interfaces.v1.serializer.pt import PlaceSerializer
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
-from jormungandr.interfaces.v1.serializer.jsonschema import MethodField, FloatField, IntField
+from jormungandr.interfaces.v1.serializer.jsonschema import MethodField, Field
 import serpy
 
 
 class CellLatSchema(serpy.Serializer):
     # This Class is not used as a serializer, but here only to get the schema
-    min_lat = FloatField()
-    max_lat = FloatField()
-    center_lat = FloatField()
+    min_lat = Field(schema_type=float)
+    max_lat = Field(schema_type=float)
+    center_lat = Field(schema_type=float)
 
 
 class LineHeadersSchema(serpy.Serializer):
@@ -48,14 +48,14 @@ class LineHeadersSchema(serpy.Serializer):
 
 class CellLonSchema(serpy.Serializer):
     # This Class is not used as a serializer, but here only to get the schema
-    center_lon = FloatField()
-    max_lon = FloatField()
-    min_lon = FloatField()
+    center_lon = Field(schema_type=float)
+    max_lon = Field(schema_type=float)
+    min_lon = Field(schema_type=float)
 
 
 class LinesSchema(serpy.Serializer):
     # This Class is not used as a serializer, but here only to get the schema
-    duration = IntField(many=True)
+    duration = Field(schema_type=int, many=True)
     cell_lon = CellLonSchema()
 
 
