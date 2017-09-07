@@ -35,11 +35,11 @@ POI_TYPE_ID = 'poi_type:amenity:parking'
 class CarParkingProviderManager(AbstractProviderManager):
 
     def __init__(self, car_park_providers_configurations):
+        super(CarParkingProviderManager, self).__init__()
         self.car_park_providers = []
         for configuration in car_park_providers_configurations:
             arguments = configuration.get('args', {})
             self.car_park_providers.append(self._init_class(configuration['class'], arguments))
-        super(CarParkingProviderManager, self).__init__()
 
     def _handle_poi(self, item):
         if 'poi_type' in item and item['poi_type']['id'] == POI_TYPE_ID:
