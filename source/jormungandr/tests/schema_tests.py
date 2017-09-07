@@ -258,6 +258,33 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
         self._check_schema('/v1/coverage/main_routing_test/pt_objects?q=1')
         self._check_schema('/v1/coverage/main_routing_test/pt_objects?q=stop')
 
+    def test_isochrones(self):
+        query = "/v1/coverage/main_routing_test/isochrones?from={}&datetime={}&max_duration={}"
+        query = query.format("0.0000898312;0.0000898312", "20120614T080000", "3600")
+        self._check_schema(query)
+
+    def test_heatmaps(self):
+        resolution = 50
+        # test heat_map with <from>
+        query = "/v1/coverage/main_routing_test/heat_maps?datetime={}&from={}&max_duration={}&resolution={}"
+        query = query.format('20120614T080100', 'stopB', '3600', resolution)
+
+        _, errors = self._check_schema(query, hard_check=False)
+
+        import re
+        pattern = re.compile(".*heat_maps.*items.*ref.*heat_matrix.*ref.*lines.*items.*ref.*duration.*items.*type")
+
+        for k, e in errors.items():
+            assert pattern.match(k)
+            assert e == "Got value `None` of type `null`. Value must be of type(s): `(u'integer',)`"
+
+    def test_status(self):
+         query = "/v1/coverage/main_routing_test/status"
+         self._check_schema(query)
+
+    def test_geo_status(self):
+        query = '/v1/coverage/main_routing_test/_geo_status'
+        self._check_schema(query)
 
 @dataset({"main_ptref_test": {}})
 class TestSwaggerSchemaPtref(AbstractTestFixture, SchemaChecker):

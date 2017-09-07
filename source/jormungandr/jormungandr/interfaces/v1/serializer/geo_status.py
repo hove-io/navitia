@@ -1,6 +1,4 @@
-# coding=utf-8
-
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2017, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -29,16 +27,17 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import
-from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, StrField, MethodField, IntField, FloatField, \
-    BoolField, JsonStrField
+from __future__ import absolute_import, print_function, unicode_literals, division
+from jormungandr.interfaces.v1.serializer.jsonschema import Field
+from jormungandr.interfaces.v1.serializer.pt import StringListField
+import serpy
 
-__all__ = [
-    'Field',
-    'StrField',
-    'IntField',
-    'FloatField',
-    'BoolField',
-    'MethodField',
-    'JsonStrField'
-]
+
+class GeoStatusSerializer(serpy.Serializer):
+    nb_addresses = Field(schema_type=int)
+    nb_admins = Field(schema_type=int)
+    nb_admins_from_cities = Field(schema_type=int)
+    nb_pois = Field(schema_type=int)
+    nb_ways = Field(schema_type=int)
+    poi_sources = StringListField(display_none=True)
+    street_network_sources = StringListField(display_none=True)

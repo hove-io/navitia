@@ -41,7 +41,8 @@ from jormungandr.utils import date_to_timestamp
 from jormungandr.interfaces.parsers import UnsignedInteger
 from jormungandr.interfaces.v1.journey_common import JourneyCommon
 from jormungandr.interfaces.v1.fields import DateTime
-
+from jormungandr.interfaces.v1.serializer.api import GraphicalIsrochoneSerializer
+from jormungandr.interfaces.v1.decorators import get_serializer
 
 graphical_isochrone = {
     "geojson": JsonString(),
@@ -67,12 +68,12 @@ graphical_isochrones = {
 class GraphicalIsochrone(JourneyCommon):
 
     def __init__(self):
-        super(GraphicalIsochrone, self).__init__(output_type_serializer=None) #TODO implement and change to a real one
+        super(GraphicalIsochrone, self).__init__(output_type_serializer=GraphicalIsrochoneSerializer)
         parser_get = self.parsers["get"]
         parser_get.add_argument("min_duration", type=UnsignedInteger(), default=0)
         parser_get.add_argument("boundary_duration[]", type=UnsignedInteger(), action="append")
 
-    @marshal_with(graphical_isochrones)
+    @get_serializer(serpy=GraphicalIsrochoneSerializer, marshall=graphical_isochrones)
     @ManageError()
     def get(self, region=None, uri=None):
 
@@ -96,3 +97,6 @@ class GraphicalIsochrone(JourneyCommon):
         response = i_manager.dispatch(args, "graphical_isochrones", self.region)
 
         return response
+
+    def options(self, **kwargs):
+        return self.api_description(**kwargs)

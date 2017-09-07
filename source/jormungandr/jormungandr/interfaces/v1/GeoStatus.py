@@ -30,6 +30,9 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask.ext.restful import Resource, fields, marshal_with
 from jormungandr import i_manager
+from jormungandr.interfaces.v1.serializer.api import GeoStatusSerializer
+from jormungandr.interfaces.v1.decorators import get_serializer
+from jormungandr.interfaces.v1.StatedResource import StatedResource
 
 geo_status = {
         'geo_status': fields.Nested({'street_network_sources': fields.List(fields.String),
@@ -43,8 +46,14 @@ geo_status = {
 }
 
 
-class GeoStatus(Resource):
-    @marshal_with(geo_status)
+class GeoStatus(StatedResource):
+    def __init__(self, *args, **kwargs):
+        super(GeoStatus, self).__init__(output_type_serializer=GeoStatusSerializer, *args, **kwargs)
+
+    @get_serializer(serpy=GeoStatusSerializer, marshall=geo_status)
     def get(self, region):
         instance = i_manager.get_instances(region)[0]
         return {'geo_status': instance.autocomplete.geo_status(instance)}, 200
+
+    def options(self, **kwargs):
+        return self.api_description(**kwargs)
