@@ -34,7 +34,7 @@ import serpy
 from navitiacommon.parser_args_type import TypeSchema, CustomSchemaType
 
 
-def _init(self, parent_class, schema_type=None, schema_metadata={}, **kwargs):
+def _init(self, parent_class, schema_type=None, schema_metadata=None, **kwargs):
     """
     Call the parent constructor with the needed kwargs and 
     add the remaining kwargs to the schema metadata
@@ -132,8 +132,21 @@ class TimeType(CustomSchemaType):
                          metadata={'format': 'navitia-time',
                                    'pattern': '\d{2}\d{2}\d{2}'})
 
+
 class TimeOrDateTimeType(CustomSchemaType):
     # either a time or a datetime
     _schema = TypeSchema(type=str,
                          metadata={'format': 'navitia-time-or-date-time',
                                    'pattern': '(\d{4}\d{2}\d{2}T)?\d{2}\d{2}\d{2}'})
+
+
+class JsonStrField(Field):
+    """
+    A :class:`JsonStrField` a json parser
+    """
+    def __init__(self, schema_type=None, schema_metadata=None, **kwargs):
+        super(JsonStrField, self).__init__(schema_type=schema_type, schema_metadata=schema_metadata, **kwargs)
+
+    def to_value(self, value):
+        import ujson
+        return ujson.loads(value)

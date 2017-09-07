@@ -30,7 +30,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.interfaces.v1.serializer.pt import PlaceSerializer
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
-from jormungandr.interfaces.v1.serializer.jsonschema import MethodField, Field
+from jormungandr.interfaces.v1.serializer.jsonschema import JsonStrField, Field
 import serpy
 
 
@@ -66,11 +66,8 @@ class HeatMatrixSchema(serpy.Serializer):
 
 
 class HeatMapSerializer(serpy.Serializer):
-    heat_matrix = MethodField(schema_type=HeatMatrixSchema)
+    heat_matrix = JsonStrField(schema_type=HeatMatrixSchema)
     origin = PlaceSerializer(label='from')
     to = PlaceSerializer(attr='destination', label='to')
     requested_date_time = DateTimeField()
 
-    def get_heat_matrix(self, obj):
-        import ujson
-        return ujson.loads(str(obj.heat_matrix))

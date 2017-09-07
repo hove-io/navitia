@@ -1,3 +1,4 @@
+
 # Copyright (c) 2001-2017, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -30,7 +31,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.interfaces.v1.serializer.pt import PlaceSerializer
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
-from jormungandr.interfaces.v1.serializer.jsonschema import MethodField
+from jormungandr.interfaces.v1.serializer.jsonschema import JsonStrField
 from jormungandr.interfaces.v1.serializer.fields import point_2D_schema, Field
 
 import serpy
@@ -38,7 +39,7 @@ import serpy
 
 class GraphicalIsrochoneSerializer(serpy.Serializer):
 
-    geojson = MethodField(schema_metadata={
+    geojson = JsonStrField(schema_metadata={
         'type': 'object',
         'properties': {
             'type': {
@@ -62,6 +63,3 @@ class GraphicalIsrochoneSerializer(serpy.Serializer):
     min_date_time = DateTimeField()
     max_date_time = DateTimeField()
 
-    def get_geojson(self, obj):
-        import ujson
-        return ujson.loads(str(obj.geojson))
