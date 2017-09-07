@@ -35,11 +35,11 @@ POI_TYPE_ID = 'poi_type:amenity:bicycle_rental'
 class BssProviderManager(AbstractProviderManager):
 
     def __init__(self, bss_providers_configuration):
+        super(BssProviderManager, self).__init__()
         self.bss_providers = []
         for configuration in bss_providers_configuration:
             arguments = configuration.get('args', {})
             self.bss_providers.append(self._init_class(configuration['class'], arguments))
-        super(BssProviderManager, self).__init__()
 
     def _handle_poi(self, item):
         if 'poi_type' in item and item['poi_type']['id'] == POI_TYPE_ID:
