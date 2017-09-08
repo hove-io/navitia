@@ -264,13 +264,13 @@ A container containing either a [admin](#admin), [poi](#poi), [address](#address
 |-----|----|-----------|
 |id|string|The id of the embedded object|
 |name|string|The name of the embedded object|
-|quality|*optional* integer|The quality of the place|
 |embedded_type|[embedded_type](#embedded-type)|The type of the embedded object|
-|administrative_region|*optional* [admin](#admin)|Embedded administrative region|
-|stop_area|*optional* [stop_area](#stop-area)|Embedded Stop area|
-|poi|*optional* [poi](#poi)|Embedded poi|
-|address|*optional* [address](#address)|Embedded address|
-|stop_point|*optional* [stop_point](#stop-point)|Embedded Stop point|
+|quality|integer|The quality of the place|
+|administrative_region|[admin](#admin)|Embedded administrative region|
+|stop_area|[stop_area](#stop-area)|Embedded Stop area|
+|poi|[poi](#poi)|Embedded poi|
+|address|[address](#address)|Embedded address|
+|stop_point|[stop_point](#stop-point)|Embedded Stop point|
 
 
 ### Trip
@@ -318,16 +318,16 @@ A container containing either a [network](#network), [commercial_mode](#commerci
 |-----|----|-----------|
 |id|string|The id of the embedded object|
 |name|string|The name of the embedded object|
-|quality|*optional* integer|The quality of the object|
 |embedded_type|[embedded_type](#embedded-type)|The type of the embedded object|
-|stop_area|*optional* [stop_area](#stop-area)|Embedded Stop area|
-|stop_point|*optional* [stop_point](#stop-point)|Embedded Stop point|
-|network|*optional* [network](#network)|Embedded network|
-|commercial_mode|*optional* [commercial_mode](#commercial-mode)|Embedded commercial_mode|
-|stop_area|*optional* [stop_area](#stop-area)|Embedded Stop area|
-|line|*optional* [line](#line)|Embedded line|
-|route|*optional* [route](#route)|Embedded route|
-|trip|*optional* [trip](#trip)|Embedded trip|
+|quality|integer|The quality of the object|
+|stop_area|[stop_area](#stop-area)|Embedded Stop area|
+|stop_point|[stop_point](#stop-point)|Embedded Stop point|
+|network|[network](#network)|Embedded network|
+|commercial_mode|[commercial_mode](#commercial-mode)|Embedded commercial_mode|
+|stop_area|[stop_area](#stop-area)|Embedded Stop area|
+|line|[line](#line)|Embedded line|
+|route|[route](#route)|Embedded route|
+|trip|[trip](#trip)|Embedded trip|
 
 Real time and disruption objects
 --------------------------------
@@ -374,7 +374,7 @@ Real time and disruption objects
 |updated_at          |[iso-date-time](#iso-date-time) |date_time of last modifications 
 |impacted_objects    |array of [impacted_object](#impacted_object) |The list of public transport objects which are affected by the disruption
 |cause               |string                   |why is there such a disruption?
-|category            |string (optional)        |The category of the disruption, such as "construction works" or "incident"
+|category            |string                   |The category of the disruption, such as "construction works" or "incident"
 
 
 ### Impacted_object
@@ -398,8 +398,8 @@ Real time and disruption objects
 |Field|Type|Description|
 |-----|----|-----------|
 |pt_object|[pt_object](#pt_object)|The impacted public transport object|
-|impacted_section|*optional* [impacted_section](#impacted_section)|Only for line section impact, the impacted section|
-|impacted_stops|*optional* array of [impacted_stop](#impacted_stop)|Only for [trip](#trip) delay, the list of delays, stop by stop
+|impacted_section|[impacted_section](#impacted_section)|Only for line section impact, the impacted section|
+|impacted_stops|array of [impacted_stop](#impacted_stop)|Only for [trip](#trip) delay, the list of delays, stop by stop
 
 ### Impacted_section
 
@@ -449,10 +449,10 @@ Real time and disruption objects
 |Field|Type|Description|
 |-----|----|-----------|
 |stop_point|[stop_point](#stop-point)|The impacted stop point of the trip|
-|amended_departure_time|*optional* string|New departure hour (format HHMMSS) of the trip on this stop point|
-|amended_arrival_time|*optional* string|New arrival hour (format HHMMSS) of the trip on this stop point|
-|base_departure_time|*optional* string|Base departure hour (format HHMMSS) of the trip on this stop point|
-|base_arrival_time|*optional* string|Base arrival hour (format HHMMSS) of the trip on this stop point|
+|amended_departure_time|string|New departure hour (format HHMMSS) of the trip on this stop point|
+|amended_arrival_time|string|New arrival hour (format HHMMSS) of the trip on this stop point|
+|base_departure_time|string|Base departure hour (format HHMMSS) of the trip on this stop point|
+|base_arrival_time|string|Base arrival hour (format HHMMSS) of the trip on this stop point|
 |cause|string|Cause of the modification|
 |stop_time_effect|Enum|Can be: "added", "deleted", "delayed" or "unchanged". *Deprecated*, consider the more accurate departure_status and arrival_status|
 |arrival_status|Enum|Can be: "added", "deleted", "delayed" or "unchanged".|
