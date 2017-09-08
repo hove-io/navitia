@@ -19,11 +19,11 @@ The only arguments are the ones of [paging](#paging).
 
 ### Accesses
 
-| url | Result |
-|-----------------------------------------|-------------------------------------|
-| `coverage`                              | List of the areas covered by navitia|
-| `coverage/{region_id}`                  | Information about a specific region |
-| `coverage/{lon;lat}`                    | Information about a specific region |
+| url                                      | Result                                                                           |
+|------------------------------------------|----------------------------------------------------------------------------------|
+| `/coverage`                              | List of the areas covered by navitia                                             |
+| `/coverage/{region_id}`                  | Information about a specific region                                              |
+| `/coverage/{lon;lat}`                    | Information about a specific region, navitia guesses the region from coordinates |
 
 ### Fields
 
@@ -236,12 +236,12 @@ paginate results.
 
 ### Accesses
 
-| url | Result |
-|---------------------------------------------------------|-------------------------------------|
-| `/coverage/{region_id}/{collection_name}`               | Collection of objects of a region   |
-| `/coverage/{region_id}/{collection_name}/{object_id}`   | Information about a specific region |
-| `/coverage/{lon;lat}/{collection_name}`                 | Collection of objects of a region   |
-| `/coverage/{lon;lat}/{collection_name}/{object_id}`     | Information about a specific region |
+| url                                                     | Result                                                                           |
+|---------------------------------------------------------|----------------------------------------------------------------------------------|
+| `/coverage/{region_id}/{collection_name}`               | Collection of objects of a region                                                |
+| `/coverage/{region_id}/{collection_name}/{object_id}`   | Information about a specific object                                              |
+| `/coverage/{lon;lat}/{collection_name}`                 | Collection of objects of a region, , navitia guesses the region from coordinates |
+| `/coverage/{lon;lat}/{collection_name}/{object_id}`     | Information about a specific object, navitia guesses the region from coordinates |
 
 ### Collections
 
@@ -716,12 +716,12 @@ coordinates, returning a [places](#place) collection.
 
 ### Accesses
 
-| url | Result |
-|--------------------------------------------------------|-----------------------------------------------------------|
-| `/coord/{lon;lat}/places_nearby`                       | List of objects near the resource without any region id   |
-| `/coverage/{lon;lat}/coords/{lon;lat}/places_nearby`   | List of objects near the resource without any region id   |
-| `/coverage/{region_id}/coords/{lon;lat}/places_nearby` | List of objects near a coordinate                         |
-| `/coverage/{region_id}/{resource_path}/places_nearby`  | List of objects near the resource                         |
+| url                                                    | Result                                                                         |
+|--------------------------------------------------------|--------------------------------------------------------------------------------|
+| `/coverage/{lon;lat}/coords/{lon;lat}/places_nearby`   | List of objects near the resource, navitia guesses the region from coordinates |
+| `/coord/{lon;lat}/places_nearby`                       | List of objects near the resource without any region id (same result as above) |
+| `/coverage/{region_id}/coords/{lon;lat}/places_nearby` | List of objects near a coordinate                                              |
+| `/coverage/{region_id}/{resource_path}/places_nearby`  | List of objects near the resource                                              |
 
 
 ### Parameters
@@ -1305,10 +1305,10 @@ access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource
 
 ### Accesses
 
-| url | Result |
-|---------------------------------------------------------|-----------------------------------------------------------|
-| `/coverage/{region_id}/{resource_path}/route_schedules` | List of the entire route schedules for a given resource   |
-| `/coverage/{lon;lat}/coords/{lon;lat}/route_schedules`  | List of the entire route schedules for coordinates        |
+| url                                                     | Result                                                                                          |
+|---------------------------------------------------------|-------------------------------------------------------------------------------------------------|
+| `/coverage/{region_id}/{resource_path}/route_schedules` | List of the entire route schedules for a given resource                                         |
+| `/coverage/{lon;lat}/coords/{lon;lat}/route_schedules`  | List of the entire route schedules for coordinates, navitia guesses the region from coordinates |
 
 ### Parameters
 
@@ -1435,9 +1435,9 @@ You can access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_
 ### Accesses
 
 | url | Result |
-|--------------------------------------------------------|----------------------------------------------------------------------------------|
-| `/coverage/{region_id}/{resource_path}/stop_schedules` |List of the stop schedules grouped by ``stop_point/route`` for a given resource  |
-| `/coverage/{lon;lat}/coords/{lon;lat}/stop_schedules`  | List of the stop schedules grouped by ``stop_point/route`` for coordinates       |
+|--------------------------------------------------------|-----------------------------------------------------------------------------------|
+| `/coverage/{region_id}/{resource_path}/stop_schedules` | List of the stop schedules grouped by ``stop_point/route`` for a given resource   |
+| `/coverage/{lon;lat}/coords/{lon;lat}/stop_schedules`  | List of the stop schedules grouped by ``stop_point/route`` for coordinates, navitia guesses the region from coordinates |
 
 
 ### Parameters
@@ -1535,7 +1535,7 @@ Departures are ordered chronologically in ascending order as:
 | url | Result |
 |----------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
 | `/coverage/{region_id}/{resource_path}/departures` | List of the next departures, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here) |
-| `/coverage/{lon;lat}/coords/{lon;lat}/departures`  | List of the next departures, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here) |
+| `/coverage/{lon;lat}/coords/{lon;lat}/departures`  | List of the next departures, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here), navitia guesses the region from coordinates |
 
 ### Parameters
 
@@ -1613,7 +1613,7 @@ object. Arrivals are ordered chronologically in ascending order.
 | url | Result |
 |--------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
 | `/coverage/{region_id}/{resource_path}/arrivals` | List of the arrivals, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here)        |
-| `/coverage/{lon;lat}/coords/{lon;lat}/arrivals`  | List of the arrivals, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here)        |
+| `/coverage/{lon;lat}/coords/{lon;lat}/arrivals`  | List of the arrivals, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here), navitia guesses the region from coordinates  |
 
 ### Parameters
 
