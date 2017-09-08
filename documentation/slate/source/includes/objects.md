@@ -264,8 +264,8 @@ A container containing either a [admin](#admin), [poi](#poi), [address](#address
 |-----|----|-----------|
 |id|string|The id of the embedded object|
 |name|string|The name of the embedded object|
-|embedded_type|[embedded_type](#embedded-type)|The type of the embedded object|
 |quality|integer|The quality of the place|
+|embedded_type|[place embedded_type](#place-embedded-type)|The type of the embedded object|
 |administrative_region|[admin](#admin)|Embedded administrative region|
 |stop_area|[stop_area](#stop-area)|Embedded Stop area|
 |poi|[poi](#poi)|Embedded poi|
@@ -318,8 +318,8 @@ A container containing either a [network](#network), [commercial_mode](#commerci
 |-----|----|-----------|
 |id|string|The id of the embedded object|
 |name|string|The name of the embedded object|
-|embedded_type|[embedded_type](#embedded-type)|The type of the embedded object|
 |quality|integer|The quality of the object|
+|embedded_type|[pt-object embedded_type](#pt-object-embedded-type)|The type of the embedded object|
 |stop_area|[stop_area](#stop-area)|Embedded Stop area|
 |stop_point|[stop_point](#stop-point)|Embedded Stop point|
 |network|[network](#network)|Embedded network|
@@ -369,8 +369,8 @@ Real time and disruption objects
 |disruption_id | string                         |for traceability: Id of original input disruption
 |impact_id     | string                         |for traceability: Id of original input impact
 |severity      | [severity](#severity)          |gives some categorization element
-|application_periods |array of [period](#period)       |dates where the current disruption is active
-|messages            |array of [message](#message)     |texts to provide to the traveler
+|application_periods |array of [period](#period)      |dates where the current disruption is active
+|messages            |array of [message](#message)    |texts to provide to the traveler
 |updated_at          |[iso-date-time](#iso-date-time) |date_time of last modifications 
 |impacted_objects    |array of [impacted_object](#impacted_object) |The list of public transport objects which are affected by the disruption
 |cause               |string                   |why is there such a disruption?
@@ -623,32 +623,35 @@ pt-date-time (pt stands for "public transport") is a complex date time object to
 |date_time|[pt-date-time](#pt-date-time)|A public transport date time|
 |stop_point|[stop_point](#stop-point)|A stop point|
 
-### <a name="embedded-type"></a>Embedded type
+### <a name="place-embedded-type"></a>Place embedded type
 
-Enum used to identify what kind of objects *[/places](#places)*, *[/pt_objects](#pt-objects)* or *[/disruptions](#disruption)* services are managing.
+Enum used to identify what kind of objects *[/places](#places)* and *[/places_nearby](#places-nearby-api)* services are managing.
+It's also used inside different responses (journeys, ...).
 
 
 | Value                                             | Description                                                   |
 |---------------------------------------------------|---------------------------------------------------------------|
 | [administrative_region](#administrative-region)   | a city, a district, a neighborhood                            |
+| [stop_area](#stop-area)                           | a nameable zone, where there are some stop points             |
+| [stop_point](#stop-point)                         | a location where vehicles can pickup or drop off passengers   |
+| [address](#address)                               | a point located in a street                                   |
+| [poi](#poi)                                       | a point of interest                                           |
+
+### <a name="pt-object-embedded-type"></a>PT-object embedded type
+
+Enum used to identify what kind of objects *[/pt_objects](#pt-objects)* service is managing.
+It's also used inside different responses (disruptions, ...).
+
+
+| Value                                             | Description                                                   |
+|---------------------------------------------------|---------------------------------------------------------------|
 | [network](#network)                               | a public transport network                                    |
 | [commercial_mode](#commercial-mode)               | a public transport branded mode                               |
 | [line](#line)                                     | a public transport line                                       |
 | [route](#route)                                   | a public transport route                                      |
 | [stop_area](#stop-area)                           | a nameable zone, where there are some stop points             |
 | [stop_point](#stop-point)                         | a location where vehicles can pickup or drop off passengers   |
-| [address](#address)                               | a point located in a street                                   |
-| [poi](#poi)                                       | a point of interest                                           |
 | [trip](#trip)                                     | a trip                                                        |
-
-<aside class="notice">
-    This enum is used by 3 services :<br>
-    <ul>
-    <li>Using <b>places</b> service, navitia would returned objects among administrative_region, stop_area, poi, address and stop_point types<br>
-    <li>Using <b>pt_objects</b> service, navitia would returned objects among network, commercial_mode, stop_area, line and route types<br>
-    <li>Using <b>disruptions</b> service, navitia would returned objects among network, commercial_mode, stop_area, line, route and trips types<br>
-    </ul>
-</aside>
 
 
 ### equipment
