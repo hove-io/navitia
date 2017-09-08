@@ -81,8 +81,8 @@ class FareSerializer(PbNestedSerializer):
 
 
 class TicketSerializer(PbNestedSerializer):
-    id = jsonschema.Field(schema_type=str, description='Identifier of the object')
-    name = jsonschema.Field(schema_type=str, description='Name of the object')
+    id = jsonschema.Field(schema_type=str, required=True, description='Identifier of the object')
+    name = jsonschema.Field(schema_type=str, required=True, description='Name of the object')
     comment = jsonschema.Field(schema_type=str)
     found = jsonschema.BoolField()
     cost = CostSerializer()
@@ -153,7 +153,7 @@ class SectionTypeEnum(EnumField):
 
 
 class SectionSerializer(PbNestedSerializer):
-    id = jsonschema.Field(schema_type=str)
+    id = jsonschema.Field(schema_type=str, required=True)
     duration = jsonschema.Field(schema_type=int, display_none=True,
                                 description='Duration of the section (seconds)')
     co2_emission = AmountSerializer(required=True, display_none=True)

@@ -184,7 +184,7 @@ class CoverageSerializer(NullableDictSerializer):
     last_load_at = LambdaField(method=lambda _, o: CoverageDateTimeField('last_load_at').to_value(o),
                                description='Datetime of the last data loading',
                                schema_type=str)
-    name = Field(schema_type=str, display_none=True, description='Name of the coverage')
+    name = Field(schema_type=str, required=True, display_none=True, description='Name of the coverage')
     status = Field(schema_type=str)
     shape = Field(schema_type=str, display_none=True, description='GeoJSON of the shape of the coverage')
     error = CoverageErrorSerializer(display_none=False)
