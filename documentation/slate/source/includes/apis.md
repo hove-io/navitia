@@ -997,22 +997,22 @@ Let's illustrate all of that with an example.
 
 ![example](forbidden_example.png)
 
-We want to go from SPA to SPB. Lines LA and LB can go from SPA to SPB. There is another stop point SPC connected to SPA with lines LC and LD, and connected to SB with lines LE and LF.
+We want to go from stop A to stop B. Lines 1 and 2 can go from stop A to B. There is another stop C connected to A with lines 3 and 4, and connected to B with lines 5 and 6.
 
 Without any constraint, all these objects can be used to propose a solution. Let's study some examples:
 
-| `forbidden_uris[]` | `allowed_id[]` | Result
-|--------------------|----------------|--------
-| LA, LB             |                | All the journeys will pass by SPC, using either of LC, LD, LE and LF
-| SPA                |                | No solution, as we can't get in any transport
-| SPB                |                | No solution, as we can't get out at destination
-|                    | SPC            | No solution, as we can't get in neither get out
-| LA, LB             | LC             | No solution, as only LC can be taken
-|                    | LC, LE         | All the journeys will pass by SPC using LC and LE
-|                    | LC, LD, LE     | All the journeys will pass by SPC using (LC or LD) and LE
-|                    | LC, LE, SPC    | No solution, as we can't get in neither get out
-|                    | SPA, SPC, SPB  | As without any constraint, passing via SPC is not needed
-| SPA, SPB           | SPA, SPB       | No solution, as no stop point are allowed.
+| `forbidden_uris[]` | `allowed_id[]`         | Result
+|--------------------|------------------------|--------
+| line 1, line 2     |                        | All the journeys will pass by stop C, using either of line 3, 4, 5 and 6
+| stop A             |                        | No solution, as we can't get in any transport
+| stop B             |                        | No solution, as we can't get out at destination
+|                    | stop C                 | No solution, as we can't get in neither get out
+| line 1, line 2     | line 3                 | No solution, as only line 3 can be taken
+|                    | line 3, line 5         | All the journeys will pass by stop C using line 3 and 5
+|                    | line 3, line 4, line5  | All the journeys will pass by stop C using (line 3 or 4) and line 5
+|                    | line 3, line 5, stop C | No solution, as we can't get in neither get out
+|                    | stop A, stop C, stop B | As without any constraint, passing via stop C is not needed
+| stop A, stop B     | stop A, stop B         | No solution, as no stop point are allowed.
 
 ### Objects
 
