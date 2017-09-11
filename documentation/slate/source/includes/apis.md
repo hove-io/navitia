@@ -964,20 +964,23 @@ The [isochrones](#isochrones) service exposes another response structure, which 
 
 ### Precisions on `forbidden_uris[]` and `allowed_id[]`
 
-These parameters are filtering the vehicle journeys and the stop points used to compute the journeys. The journeys can only use allowed vehicle journeys (as present in the `public_transport` or `on_demand_transport` sections). They also can only use the allowed stop points (as present in the `street_network`, `waiting` and `crow_fly` sections).
+These parameters are filtering the vehicle journeys and the stop points used to compute the journeys.
+The principle is to create only a blacklist using them (no whitelist is ever managed).
+The journeys can only use allowed vehicle journeys (as present in the `public_transport` or `on_demand_transport` sections).
+They also can only use the allowed stop points (as present in the `street_network`, `waiting` and `crow_fly` sections).
 
 For filtering vehicle journeys, the identifier of a line, route, commercial mode, physical mode or network can be used. 
 
 For filtering stop points, the identifier of a stop point or stop area can be used.
 
-`forbidden_uris[]` removes the corresponding vehicle journeys (or stop points) from the list of allowed vehicle journeys (resp. stop_points).
+`forbidden_uris[]` adds the corresponding vehicle journeys (or stop points) to the blacklist of vehicle journeys (resp. stop_points).
 
 `allowed_id[]` works in 2 parts:
 
--   If an id related to a stop point is given, only the corresponding stop points will be allowed. Else, all the stop points are allowed.
--   If an id related to a vehicle journey is given, only the corresponding vehicle journeys will be allowed. Else, all the vehicle journeys are allowed.
+-   If an id related to a stop point is given, only the corresponding stop points will be allowed (practically, all other are blacklisted). Else, all the stop points are allowed.
+-   If an id related to a vehicle journey is given, only the corresponding vehicle journeys will be allowed (practically, all other are blacklisted). Else, all the vehicle journeys are allowed.
 
-The constraints of `forbidden_uris[]` and `allowed_id[]` are combined. For example, if you give `allowed_id[]=network:SN&forbidden_uris[]=line:A`, only the vehicle journeys of the network SN that are not from the line A can be used to compute the journeys.
+The blacklisting constraints of `forbidden_uris[]` and `allowed_id[]` are combined. For example, if you give `allowed_id[]=network:SN&forbidden_uris[]=line:A`, only the vehicle journeys of the network SN that are not from the line A can be used to compute the journeys.
 
 Let's illustrate all of that with an example.
 
