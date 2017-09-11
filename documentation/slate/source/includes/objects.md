@@ -189,6 +189,12 @@ As "direction" is a [place](#place) , it can be a poi in some data.
 |name|string|Name of the commercial mode|
 |physical_modes|array of [physical_mode](#physical-mode)|Physical modes of this commercial mode|
 
+Commercial modes are close from physical modes, but not normalized and can refer to a brand,
+something that can be specific to a network, and known to the traveler.
+Examples: RER in Paris, Busway in Nantes, and also of course Bus, Métro, etc.
+
+Integrators should mainly use that value for text output to the traveler.
+
 ### <a name="physical-mode"></a>Physical Mode
 
 ``` json
@@ -204,8 +210,14 @@ As "direction" is a [place](#place) , it can be a poi in some data.
 |name|string|Name of the physical mode|
 |commercial_modes|array of [commercial_mode](#commercial-mode)|Commercial modes of this physical mode|
 
-Physical modes are fastened and normalized. If you want to propose modes
-filter in your application, you should use [physical_mode](#physical-mode) rather than
+Physical modes are fastened and normalized (though the list can -rarely- be extended,
+and is driven before Navitia so it is subject to mistakes in inputs).
+So it's easier for integrators to map it to a pictogram, but prefer [commercial_mode](#commercial-mode) for a text output.
+
+The idea is to use physical modes when building a request to Navitia,
+and commercial modes when building an output to the traveler.
+
+Example: If you want to propose modes filter in your application, you should use [physical_mode](#physical-mode) rather than
 [commercial_mode](#commercial-mode).
 
 Here is the valid id list:
@@ -220,6 +232,7 @@ Here is the valid id list:
 -   physical_mode:LocalTrain
 -   physical_mode:LongDistanceTrain
 -   physical_mode:Metro
+-   physical_mode:RailShuttle
 -   physical_mode:RapidTransit
 -   physical_mode:Shuttle
 -   physical_mode:Taxi
