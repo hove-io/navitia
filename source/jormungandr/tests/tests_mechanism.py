@@ -188,7 +188,7 @@ class AbstractTestFixture(unittest.TestCase):
                 assert False, 'impossible to start a kraken'
 
         #we block the stat manager not to send anything to rabbit mq
-        def mock_publish(self, stat):
+        def mock_publish(self, stat, pbf):
             pass
 
         #we don't want to initialize rabbit for test.
