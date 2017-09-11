@@ -42,7 +42,7 @@ from jormungandr.interfaces.v1.make_links import create_internal_link
 
 
 class CO2Serializer(PbNestedSerializer):
-    co2_emission = AmountSerializer(attr='car_co2_emission', display_none=True, required=True)
+    co2_emission = AmountSerializer(attr='car_co2_emission', display_none=True)
 
 
 class ContextSerializer(PbNestedSerializer):
@@ -81,8 +81,8 @@ class FareSerializer(PbNestedSerializer):
 
 
 class TicketSerializer(PbNestedSerializer):
-    id = jsonschema.Field(schema_type=str, required=True, description='Identifier of the object')
-    name = jsonschema.Field(schema_type=str, required=True, description='Name of the object')
+    id = jsonschema.Field(schema_type=str, display_none=True, description='Identifier of the object')
+    name = jsonschema.Field(schema_type=str, display_none=True, description='Name of the object')
     comment = jsonschema.Field(schema_type=str)
     found = jsonschema.BoolField()
     cost = CostSerializer()
@@ -153,10 +153,10 @@ class SectionTypeEnum(EnumField):
 
 
 class SectionSerializer(PbNestedSerializer):
-    id = jsonschema.Field(schema_type=str, required=True)
+    id = jsonschema.Field(schema_type=str, display_none=True)
     duration = jsonschema.Field(schema_type=int, display_none=True,
                                 description='Duration of the section (seconds)')
-    co2_emission = AmountSerializer(required=True, display_none=True)
+    co2_emission = AmountSerializer(display_none=True)
     transfer_type = EnumField()
     departure_date_time = DateTimeField(attr='begin_date_time',
                                         description='Departure date and time of the section')
@@ -223,7 +223,7 @@ class JourneySerializer(PbNestedSerializer):
                                           'disturbing information retrieved on every object used '
                                           '(can be "NO_SERVICE", "SIGNIFICANT_DELAYS", ...')
     tags = StringListField(display_none=True)
-    co2_emission = AmountSerializer(required=True, display_none=True)
+    co2_emission = AmountSerializer(display_none=True)
     durations = DurationsSerializer()
     fare = FareSerializer(display_none=True)
     calendars = CalendarSerializer(many=True, display_none=False)

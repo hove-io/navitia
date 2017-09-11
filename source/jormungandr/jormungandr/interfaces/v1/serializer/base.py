@@ -169,9 +169,9 @@ class EnumListField(EnumField):
 
 
 class GenericSerializer(PbNestedSerializer):
-    id = jsonschema.Field(schema_type=str, required=True, attr='uri',
+    id = jsonschema.Field(schema_type=str, display_none=True, attr='uri',
                           description='Identifier of the object')
-    name = jsonschema.Field(schema_type=str, required=True, description='Name of the object')
+    name = jsonschema.Field(schema_type=str, display_none=True, description='Name of the object')
 
 
 class AmountSerializer(PbNestedSerializer):
@@ -270,9 +270,9 @@ class BetaEndpointsSerializer(serpy.Serializer):
     def as_getter(self, serializer_field_name, serializer_cls):
         return lambda _obj: [None]
 
-    id = LiteralField("beta_endpoint", schema_type=str, required=True)
+    id = LiteralField("beta_endpoint", schema_type=str, display_none=True)
     message = LiteralField('This service is under construction. You can help through github.com/CanalTP/navitia',
-                           schema_type=str, required=True)
+                           schema_type=str, display_none=True)
 
 def make_notes(notes):
     return [{"type": "notes",
