@@ -210,8 +210,7 @@ Integrators should mainly use that value for text output to the traveler.
 |name|string|Name of the physical mode|
 |commercial_modes|array of [commercial_mode](#commercial-mode)|Commercial modes of this physical mode|
 
-Physical modes are fastened and normalized (though the list can -rarely- be extended,
-and is driven before Navitia so it is subject to mistakes in inputs).
+Physical modes are fastened and normalized (though the list can -rarely- be extended).
 So it's easier for integrators to map it to a pictogram, but prefer [commercial_mode](#commercial-mode) for a text output.
 
 The idea is to use physical modes when building a request to Navitia,

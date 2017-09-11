@@ -240,7 +240,7 @@ paginate results.
 |---------------------------------------------------------|----------------------------------------------------------------------------------|
 | `/coverage/{region_id}/{collection_name}`               | Collection of objects of a region                                                |
 | `/coverage/{region_id}/{collection_name}/{object_id}`   | Information about a specific object                                              |
-| `/coverage/{lon;lat}/{collection_name}`                 | Collection of objects of a region, , navitia guesses the region from coordinates |
+| `/coverage/{lon;lat}/{collection_name}`                 | Collection of objects of a region, navitia guesses the region from coordinates |
 | `/coverage/{lon;lat}/{collection_name}/{object_id}`     | Information about a specific object, navitia guesses the region from coordinates |
 
 ### Collections
@@ -965,20 +965,31 @@ The [isochrones](#isochrones) service exposes another response structure, which 
 ### Precisions on `forbidden_uris[]` and `allowed_id[]`
 
 These parameters are filtering the vehicle journeys and the stop points used to compute the journeys.
-The principle is to create only a blacklist using them (no whitelist is ever managed).
+`allowed_id[]` is used to allow *only* certain route options by *excluding* all others.
+`forbidden_uris[]` is used to *exclude* specific route options.
+
+Examples:
+
+* A user doesn't like line A metro in hers city. She excludes this in the user interface, and it is implemented in the API by `forbidden_uris[]=line:A`.
+* A user would only like to use Buses and Tramways. It is implemented in the API by `allowed_id[]=physical_mode:Bus&allowed_id[]=physical_mode:Tramway`.
+
+#### Technically
+
 The journeys can only use allowed vehicle journeys (as present in the `public_transport` or `on_demand_transport` sections).
-They also can only use the allowed stop points (as present in the `street_network`, `waiting` and `crow_fly` sections).
+They also can only use the allowed stop points for getting in or out of a vehicle (as present in the `street_network`, `waiting` and `crow_fly` sections).
 
 For filtering vehicle journeys, the identifier of a line, route, commercial mode, physical mode or network can be used. 
 
 For filtering stop points, the identifier of a stop point or stop area can be used.
 
-`forbidden_uris[]` adds the corresponding vehicle journeys (or stop points) to the blacklist of vehicle journeys (resp. stop_points).
+The principle is to create only a blacklist using those 2 parameters (no whitelist is ever managed):
 
-`allowed_id[]` works in 2 parts:
+* `forbidden_uris[]` adds the corresponding vehicle journeys (or stop points) to the blacklist of vehicle journeys (resp. stop_points).
 
--   If an id related to a stop point is given, only the corresponding stop points will be allowed (practically, all other are blacklisted). Else, all the stop points are allowed.
--   If an id related to a vehicle journey is given, only the corresponding vehicle journeys will be allowed (practically, all other are blacklisted). Else, all the vehicle journeys are allowed.
+* `allowed_id[]` works in 2 parts:
+
+    * If an id related to a stop point is given, only the corresponding stop points are allowed (practically, all other are blacklisted). Else, all the stop points are allowed.
+    * If an id related to a vehicle journey is given, only the corresponding vehicle journeys are allowed (practically, all other are blacklisted). Else, all the vehicle journeys are allowed.
 
 The blacklisting constraints of `forbidden_uris[]` and `allowed_id[]` are combined. For example, if you give `allowed_id[]=network:SN&forbidden_uris[]=line:A`, only the vehicle journeys of the network SN that are not from the line A can be used to compute the journeys.
 
