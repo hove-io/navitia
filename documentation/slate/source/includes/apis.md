@@ -970,8 +970,8 @@ These parameters are filtering the vehicle journeys and the stop points used to 
 
 Examples:
 
-* A user doesn't like line A metro in hers city. She excludes this in the user interface, and it is implemented in the API by `forbidden_uris[]=line:A`.
-* A user would only like to use Buses and Tramways. It is implemented in the API by `allowed_id[]=physical_mode:Bus&allowed_id[]=physical_mode:Tramway`.
+* A user doesn't like line A metro in hers city. She adds the parameter `forbidden_uris[]=line:A` when calling the API.
+* A user would only like to use Buses and Tramways. She adds the parameter `allowed_id[]=physical_mode:Bus&allowed_id[]=physical_mode:Tramway`.
 
 #### Technically
 
@@ -982,7 +982,7 @@ For filtering vehicle journeys, the identifier of a line, route, commercial mode
 
 For filtering stop points, the identifier of a stop point or stop area can be used.
 
-The principle is to create only a blacklist using those 2 parameters (no whitelist is ever managed):
+The principle is to create a blacklist using those 2 parameters:
 
 * `forbidden_uris[]` adds the corresponding vehicle journeys (or stop points) to the blacklist of vehicle journeys (resp. stop_points).
 
