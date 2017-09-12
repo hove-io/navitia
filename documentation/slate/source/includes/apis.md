@@ -976,7 +976,7 @@ Examples:
 #### Technically
 
 The journeys can only use allowed vehicle journeys (as present in the `public_transport` or `on_demand_transport` sections).
-They also can only use the allowed stop points for getting in or out of a vehicle (as present in the `street_network`, `waiting` and `crow_fly` sections).
+They also can only use the allowed stop points for getting in or out of a vehicle (as present in the `street_network`, `transfer` and `crow_fly` sections).
 
 For filtering vehicle journeys, the identifier of a line, route, commercial mode, physical mode or network can be used. 
 
