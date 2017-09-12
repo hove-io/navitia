@@ -416,7 +416,7 @@ class TestBragiShape(AbstractTestFixture):
 
     def test_global_place_uri(self):
         mock_requests = MockRequests({
-            # the pt_dataset is added because there is no authentication so all the known pt_dataset are added
+            # there is no authentication so all the known pt_dataset are added as parameters
             'https://host_of_bragi/features/bob?pt_dataset=main_routing_test': (BRAGI_MOCK_RESPONSE, 200)
         })
         with mock.patch('requests.get', mock_requests.get):
@@ -429,7 +429,6 @@ class TestBragiShape(AbstractTestFixture):
             assert r[0]['embedded_type'] == 'address'
             assert r[0]['address']['name'] == 'Rue Bob'
             assert r[0]['address']['label'] == '20 Rue Bob (Bobtown)'
-
 
 
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF}, global_config={'activate_bragi': True})
