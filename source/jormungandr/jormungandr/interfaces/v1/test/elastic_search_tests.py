@@ -585,7 +585,7 @@ def bragi_call_test():
     with app.app_context():
         # we mock the http call to return the hard coded mock_response
         with mock.patch('requests.get', mock_requests.get):
-            raw_response = bragi.get({'q': 'rue bobette', 'count': 10}, instance=None)
+            raw_response = bragi.get({'q': 'rue bobette', 'count': 10}, instances=[])
             places = raw_response.get('places')
             assert len(places) == 4
             bragi_house_jaures_response_check(places[0])
@@ -594,7 +594,7 @@ def bragi_call_test():
             bragi_admin_response_check(places[3])
 
         with mock.patch('requests.post', mock_requests.get):
-            raw_response = bragi.get({'q': 'rue bobette', 'count': 10, 'shape': geojson()}, instance=None)
+            raw_response = bragi.get({'q': 'rue bobette', 'count': 10, 'shape': geojson()}, instances=[])
             places = raw_response.get('places')
             assert len(places) == 4
             bragi_house_jaures_response_check(places[0])
@@ -616,8 +616,8 @@ def bragi_make_params_with_instance_test():
         "count": 20
     }
 
-    params = bragi.make_params(request=request, instance=instance)
-    rsp = {'q': 'aa', 'limit': 20, 'pt_dataset': 'bib'}
+    params = bragi.make_params(request=request, instances=[instance])
+    rsp = {'q': 'aa', 'limit': 20, 'pt_dataset': ['bib']}
     len(list(rsp.keys())) == len(list(params.keys()))
     for key, value in rsp.items():
         assert key in params
@@ -636,9 +636,9 @@ def bragi_make_params_without_instance_test():
         "count": 20
     }
 
-    params = bragi.make_params(request=request, instance=None)
+    params = bragi.make_params(request=request, instances=[])
     rsp = {'q': 'aa', 'limit': 20}
-    len(list(rsp.keys())) == len(list(params.keys()))
+    assert len(list(rsp.keys())) == len(list(params.keys()))
     for key, value in rsp.items():
         assert key in params
         assert value == params[key]

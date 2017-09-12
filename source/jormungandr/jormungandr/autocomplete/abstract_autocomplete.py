@@ -41,11 +41,11 @@ class AbstractAutocomplete(six.with_metaclass(ABCMeta, object)):
     """
 
     @abstractmethod
-    def get(self, query, instance):
+    def get(self, query, instances):
         pass
 
     @abstractmethod
-    def get_by_uri(self, uri, instance=None, current_datetime=None):
+    def get_by_uri(self, uri, instances=None, current_datetime=None):
         """
         look for an object with its uri
 
@@ -58,7 +58,7 @@ class AbstractAutocomplete(six.with_metaclass(ABCMeta, object)):
     def geo_status(self, instance):
         pass
 
-    def get_object_by_uri(self, uri, instance=None, current_datetime=None):
+    def get_object_by_uri(self, uri, instances=None, current_datetime=None):
         """
         same as get_by_uri, but more user friendly, return the object or none if nothing was found
 
@@ -68,7 +68,7 @@ class AbstractAutocomplete(six.with_metaclass(ABCMeta, object)):
         """
         details = None
         try:
-            details = self.get_by_uri(uri, instance=instance, current_datetime=current_datetime)
+            details = self.get_by_uri(uri, instances=instances, current_datetime=current_datetime)
         except TechnicalError as e:
             log_exception(sender=None, exception=e)
         except UnknownObject:

@@ -44,7 +44,7 @@ from .tests_mechanism import config
 
 class FakeUserBragi(FakeUser):
     @classmethod
-    def get_from_token(cls, token):
+    def get_from_token(cls, token, valid_until):
         """
         Create an empty user
         """
@@ -416,7 +416,8 @@ class TestBragiShape(AbstractTestFixture):
 
     def test_global_place_uri(self):
         mock_requests = MockRequests({
-            'https://host_of_bragi/features/bob': (BRAGI_MOCK_RESPONSE, 200)
+            # the pt_dataset is added because there is no authentication so all the known pt_dataset are added
+            'https://host_of_bragi/features/bob?pt_dataset=main_routing_test': (BRAGI_MOCK_RESPONSE, 200)
         })
         with mock.patch('requests.get', mock_requests.get):
             response = self.query("/v1/places/bob")

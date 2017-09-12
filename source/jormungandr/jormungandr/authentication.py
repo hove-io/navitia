@@ -39,7 +39,7 @@ from jormungandr.exceptions import RegionNotFound
 import datetime
 import base64
 from navitiacommon.models import User, Instance, Key
-from jormungandr import cache, app as current_app
+from jormungandr import cache, app as current_app, app
 
 
 def authentication_required(func):
@@ -135,26 +135,6 @@ def has_access(region, api, abort, user):
         else:
             return False
 
-@cache.memoize(current_app.config['CACHE_CONFIGURATION'].get('TIMEOUT_AUTHENTICATION', 300))
-def has_access_to_global_places(user):
-    """
-    Since there is only open data in the global /places by default, to access the global places the user
-    should be either a super user or have access to the open data
-    """
-    if current_app.config.get('PUBLIC', False):
-        #if jormungandr is on public mode we skip the authentification process
-        return True
-    if not user:
-        # a user is mandatory even for free region
-        return False
-    return user.is_super_user or user.have_access_to_free_instances
-
-
-def check_access_to_global_places(user):
-    if not has_access_to_global_places(user):
-        abort_request(user=user)
-
-
 
 @cache.memoize(current_app.config['CACHE_CONFIGURATION'].get('TIMEOUT_AUTHENTICATION', 300))
 def cache_get_user(token):
@@ -168,6 +148,24 @@ def cache_get_user(token):
 @cache.memoize(current_app.config['CACHE_CONFIGURATION'].get('TIMEOUT_AUTHENTICATION', 300))
 def cache_get_key(token):
     return Key.get_by_token(token)
+
+
+@cache.memoize(current_app.config['CACHE_CONFIGURATION'].get('TIMEOUT_AUTHENTICATION', 300))
+def get_all_available_instances(user):
+    """
+    get the list of instances that a user can use (for the autocomplete apis)
+    if Jormungandr has no authentication set (or no database), the user can use all the instances
+    else we use the jormungandr db to fetch the list (based on the user's authorization)
+    """
+    if app.config.get('PUBLIC', False) or app.config.get('DISABLE_DATABASE', False):
+        from jormungandr import i_manager
+        return i_manager.instances.values()
+
+    if not user:
+        # for not-public navitia a user is mandatory
+        abort_request(user=user)
+    return user.get_all_available_instances()
+
 
 def get_user(token, abort_if_no_token=True):
     """

@@ -36,6 +36,8 @@ import pytz
 from jormungandr import app
 import datetime
 
+from navitiacommon import models
+
 
 class MockResponse(object):
     """
@@ -76,7 +78,7 @@ class MockRequests(object):
         return self.get(*args, **kwargs)
 
 
-class FakeUser:
+class FakeUser(models.User):
     """
     We create a user independent from a database
     """
@@ -88,15 +90,18 @@ class FakeUser:
         """
         self.id = id
         self.login = name
-        self.have_access_to_free_instances = have_access_to_free_instances
-        self.is_super_user = is_super_user
+        self.type = 'with_free_instances'
+        if not have_access_to_free_instances:
+            self.type = 'without_free_instances'
+        if is_super_user:
+            self.type = 'super_user'
         self.end_point_id = None
         self._is_blocked = is_blocked
         self.shape = shape
         self.default_coord = default_coord
 
     @classmethod
-    def get_from_token(cls, token):
+    def get_from_token(cls, token, valid_until):
         """
         Create an empty user
         Must be overridden
@@ -117,7 +122,7 @@ def user_set(app, fake_user_type, user_name):
     """
 
     def handler(sender, **kwargs):
-        g.user = fake_user_type.get_from_token(user_name)
+        g.user = fake_user_type.get_from_token(user_name, valid_until=None)
     with appcontext_pushed.connected_to(handler, app):
         yield
 

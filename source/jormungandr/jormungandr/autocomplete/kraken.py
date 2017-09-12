@@ -30,6 +30,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete, GeoStatusResponse
+from jormungandr.exceptions import InvalidArguments
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.scenarios.utils import build_pagination, places_type
@@ -52,8 +53,10 @@ places = {
 class Kraken(AbstractAutocomplete):
 
     @get_serializer(serpy=api.PlacesSerializer, marshall=places)
-    def get(self, request, instance):
-
+    def get(self, request, instances):
+        if len(instances) != 1:
+            raise InvalidArguments('kraken autocomplete works only for one (and only one) instance')
+        instance = instances[0]
         req = request_pb2.Request()
         req.requested_api = type_pb2.places
         req.places.q = request['q']
@@ -98,7 +101,10 @@ class Kraken(AbstractAutocomplete):
         return status
 
     @get_serializer(serpy=api.PlacesSerializer, marshall=places)
-    def get_by_uri(self, uri, instance=None, current_datetime=None):
+    def get_by_uri(self, uri, instances=None, current_datetime=None):
+        if len(instances) != 1:
+            raise InvalidArguments('kraken search by uri works only for one (and only one) instance')
+        instance = instances[0]
         req = request_pb2.Request()
         req.requested_api = type_pb2.place_uri
         req.place_uri.uri = uri
