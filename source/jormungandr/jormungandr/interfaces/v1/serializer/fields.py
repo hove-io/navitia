@@ -135,7 +135,7 @@ class RoundedField(IntField):
 
 class LinkSchema(serpy.Serializer):
     """This Class is not used as a serializer, but here only to get the schema of a link"""
-    id = StrField(display_none=True)
+    id = StrField()
     title = StrField()
     rel = StrField()
     templated = BoolField()
