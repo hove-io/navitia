@@ -165,6 +165,22 @@ bool Impact::is_valid(const boost::posix_time::ptime& publication_date, const bo
     return false;
 }
 
+bool Impact::is_relevent() const {
+    auto is_unchanged = [this](const nt::disruption::StopTimeUpdate& stu) {
+        const auto* base_st = aux_info.get_base_stop_time(stu);
+        if (base_st == nullptr) { return false; }
+        if (base_st->arrival_time != stu.stop_time.arrival_time) { return false; }
+        if (base_st->departure_time != stu.stop_time.departure_time) { return false; }
+        return true;
+    };
+    if (severity->effect == nt::disruption::Effect::SIGNIFICANT_DELAYS
+        && ! aux_info.stop_times.empty()
+        && std::all_of(aux_info.stop_times.begin(), aux_info.stop_times.end(), is_unchanged)) {
+        return false;
+    }
+    return true;
+}
+
 const type::ValidityPattern Impact::get_impact_vp(const boost::gregorian::date_period& production_date) const {
     type::ValidityPattern impact_vp{production_date.begin()}; // bitset are all initialised to 0
     for (const auto& period: this->application_periods) {

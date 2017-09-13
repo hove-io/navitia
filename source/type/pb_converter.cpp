@@ -1232,26 +1232,31 @@ void PbCreator::Filler::fill_messages(const VjStopTimes* vj_stoptimes,
     for (const auto& message : meta_vj->get_applicable_messages(pb_creator.now,
                                                                 pb_creator.action_period)) {
         bool fill = [&](){
+            // useless disruption
+            if (! message->is_relevent()) { return false; }
+
+            // line section thing
             auto line_section_impacted_obj_it = boost::find_if(message->informed_entities(),
                                                             [](const nd::PtObj& ptobj) {
                return boost::get<nd::LineSection>(&ptobj) != nullptr;
             });
-            if (line_section_impacted_obj_it == message->informed_entities().end()) {
-                // there is no line section, thus we want to fill the message
-                return true;
-            }
-            // note in this we take the premise that an impact cannot impact a line section AND a vj
-            for (const auto& st: vj_stoptimes->stop_times) {
-                // if one stop point of the stoptimes is impacted by the same impact
-                // it means the section is impacted
-                for (const auto& sp_message: st->stop_point->get_applicable_messages(
-                         pb_creator.now, pb_creator.action_period)) {
-                    if (sp_message == message) {
-                        return true;
+            if (line_section_impacted_obj_it != message->informed_entities().end()) {
+                // note in this we take the premise that an impact
+                // cannot impact a line section AND a vj
+                for (const auto& st: vj_stoptimes->stop_times) {
+                    // if one stop point of the stoptimes is impacted by the same impact
+                    // it means the section is impacted
+                    for (const auto& sp_message: st->stop_point->get_applicable_messages(
+                             pb_creator.now, pb_creator.action_period)) {
+                        if (sp_message == message) {
+                            return true;
+                        }
                     }
                 }
+                return false;
             }
-            return false;
+            // nothing special, let's fill it
+            return true;
         }();
 
         if (! fill) { continue; }
