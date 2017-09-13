@@ -495,11 +495,12 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
         """
         test the v1/places authentication
 
-        this API is never restricted, but the user's authentication drives the underlying query made to
-        bragi (the external autocomplete service).
+        Only users with open data access can use this API and the user's authentication drives the underlying
+        query made to bragi (the external autocomplete service).
 
         navitia gives bragi all the instances the user can use
         """
+        no_check = lambda *args, **kwargs: MockResponse({"features": []}, 200, url='')
         # bob is a normal user, it can access the open_data, and it can access main_routing_test
         # he thus can use main_routing_test and empty_routing_test (because it's opendata)
         with user_set(app, FakeUserAuth, 'bob'):
@@ -509,14 +510,18 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
 
         # user_without_any_coverage cannot access anything, so no pt_dataset is given
         with user_set(app, FakeUserAuth, 'user_without_any_coverage'):
-            with mock.patch('requests.get', DatasetChecker(datasets=None)):
+            with mock.patch('requests.get', no_check):
                 r, status = self.query_no_assert('/v1/places?q=bob')
-                assert status == 200
+                assert status == 403
 
-        # tgv has not access to the open_data but can use main_routing_test
+        # tgv has not access to the open_data but can use main_routing_test, it cannot use the global place
         with user_set(app, FakeUserAuth, 'tgv'):
-            with mock.patch('requests.get', DatasetChecker({'main_routing_test'})):
+            with mock.patch('requests.get', no_check):
                 _, status = self.query_no_assert('/v1/places?q=bob')
+                assert status == 403
+            # but it can use the main_routing_test places
+            with mock.patch('requests.get', DatasetChecker({'main_routing_test'})):
+                _, status = self.query_no_assert('/v1/coverage/main_routing_test/places?q=bob')
                 assert status == 200
 
         # super_user can use all the instances

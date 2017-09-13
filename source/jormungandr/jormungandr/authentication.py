@@ -156,6 +156,8 @@ def get_all_available_instances(user):
     get the list of instances that a user can use (for the autocomplete apis)
     if Jormungandr has no authentication set (or no database), the user can use all the instances
     else we use the jormungandr db to fetch the list (based on the user's authorization)
+
+    Note: only users with access to free instances can use global /places
     """
     if app.config.get('PUBLIC', False) or app.config.get('DISABLE_DATABASE', False):
         from jormungandr import i_manager
@@ -164,6 +166,10 @@ def get_all_available_instances(user):
     if not user:
         # for not-public navitia a user is mandatory
         abort_request(user=user)
+    if not user.have_access_to_free_instances:
+        # only users with access to opendata can use the global /places
+        abort_request(user=user)
+
     return user.get_all_available_instances()
 
 
