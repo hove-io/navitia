@@ -67,8 +67,8 @@ class AdditionalInformation(EnumListField):
 
 class ChannelSerializer(PbNestedSerializer):
     content_type = jsonschema.Field(schema_type=str, display_none=True)
-    id = jsonschema.Field(schema_type=str)
-    name = jsonschema.Field(schema_type=str)
+    id = jsonschema.Field(schema_type=str, display_none=True)
+    name = jsonschema.Field(schema_type=str, display_none=True)
     types = EnumListField(attr='channel_types', pb_type=Channel.ChannelType)
 
 
@@ -85,7 +85,7 @@ class SeveritySerializer(PbNestedSerializer):
 
 
 class PtObjectSerializer(GenericSerializer):
-    quality = jsonschema.Field(schema_type=int, required=False, display_none=True)
+    quality = jsonschema.Field(schema_type=int, required=False, display_none=True, deprecated=True)
     stop_area = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer())
     stop_point = jsonschema.MethodField(schema_type=lambda: StopPointSerializer())
     line = jsonschema.MethodField(schema_type=lambda: LineSerializer())
@@ -93,7 +93,7 @@ class PtObjectSerializer(GenericSerializer):
     route = jsonschema.MethodField(schema_type=lambda: RouteSerializer())
     commercial_mode = jsonschema.MethodField(schema_type=lambda: CommercialModeSerializer())
     trip = jsonschema.MethodField(schema_type=lambda: TripSerializer())
-    embedded_type = EnumField(attr='embedded_type')
+    embedded_type = EnumField(attr='embedded_type', display_none=True)
 
     def get_trip(self, obj):
         if obj.HasField(str('trip')):
@@ -168,7 +168,7 @@ class CalendarExceptionSerializer(PbNestedSerializer):
 
 
 class CalendarSerializer(PbNestedSerializer):
-    id = jsonschema.MethodField(schema_type=str, description='Identifier of the object')
+    id = jsonschema.MethodField(schema_type=str, display_none=True, description='Identifier of the object')
     def get_id(self, obj):
         if obj.HasField(str('uri')) and obj.uri:
             return obj.uri
@@ -232,7 +232,7 @@ class StringListField(Field):
 
 
 class DisruptionSerializer(PbNestedSerializer):
-    id = jsonschema.Field(schema_type=str, attr='uri')
+    id = jsonschema.Field(schema_type=str, display_none=True, attr='uri')
 
     disruption_id = jsonschema.Field(schema_type=str, attr='disruption_uri')
     impact_id = jsonschema.Field(schema_type=str, attr='uri')
@@ -341,11 +341,11 @@ class StopAreaSerializer(GenericSerializer):
 
 
 class PlaceSerializer(GenericSerializer):
-    quality = jsonschema.Field(schema_type=int, display_none=True)
+    quality = jsonschema.Field(schema_type=int, display_none=True, required=False, deprecated=True)
     stop_area = StopAreaSerializer(display_none=False)
     stop_point = StopPointSerializer(display_none=False)
     administrative_region = AdminSerializer(display_none=False)
-    embedded_type = EnumField(attr='embedded_type')
+    embedded_type = EnumField(attr='embedded_type', display_none=True)
     address = AddressSerializer(display_none=False)
     poi = PoiSerializer(display_none=False)
 
@@ -417,7 +417,7 @@ class LineSerializer(GenericSerializer):
 
 
 class JourneyPatternPointSerializer(PbNestedSerializer):
-    id = jsonschema.Field(attr='uri', schema_type=str)
+    id = jsonschema.Field(attr='uri', display_none=True, schema_type=str)
     stop_point = StopPointSerializer(display_none=False)
 
 
@@ -470,7 +470,8 @@ class ContributorSerializer(GenericSerializer):
 
 
 class DatasetSerializer(PbNestedSerializer):
-    id = jsonschema.Field(schema_type=str, attr='uri', description='Identifier of the object')
+    id = jsonschema.Field(schema_type=str, display_none=True, attr='uri',
+                          description='Identifier of the object')
     description = jsonschema.Field(schema_type=str, attr='desc')
     start_validation_date = DateTimeField(description='Start of the validity period for the dataset')
     end_validation_date = DateTimeField(description='End of the validity period for the dataset')

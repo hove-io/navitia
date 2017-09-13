@@ -80,14 +80,14 @@ class PropertySerializer(serpy.Serializer):
 
 
 class FeedPublisherSerializer(PbNestedSerializer):
-    id = StrField()
+    id = StrField(display_none=True)
     name = StrField()
     url = StrField()
     license = StrField()
 
 
 class ErrorSerializer(PbNestedSerializer):
-    id = EnumField(attr='id')
+    id = EnumField(attr='id', display_none=True)
     message = StrField()
 
 
@@ -208,12 +208,12 @@ class SectionGeoJsonField(jsonschema.Field):
 
 class NoteSerializer(serpy.Serializer):
     type = jsonschema.Field(schema_type=str)
-    id = jsonschema.Field(schema_type=str)
+    id = jsonschema.Field(schema_type=str, display_none=True)
     value = jsonschema.Field(schema_type=str)
     category = jsonschema.Field(schema_type=str, schema_metadata={'enum': ['comment', 'terminus']})
 
 
 class ExceptionSerializer(serpy.Serializer):
     type = jsonschema.Field(schema_type=str)
-    id = jsonschema.Field(schema_type=str)
+    id = jsonschema.Field(schema_type=str, display_none=True)
     date = Field(attr='date', schema_type=DateTimeType)

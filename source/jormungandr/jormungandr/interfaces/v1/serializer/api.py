@@ -46,7 +46,7 @@ from jormungandr.interfaces.v1.serializer.time import DateTimeDictField
 
 
 class PTReferentialSerializer(serpy.Serializer):
-    pagination = PaginationSerializer(attr='pagination', display_none=True, required=True)
+    pagination = PaginationSerializer(attr='pagination', display_none=True)
     error = ErrorSerializer(display_none=False)
     feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
@@ -176,7 +176,7 @@ class CoverageDateTimeField(DateTimeDictField):
 
 
 class CoverageSerializer(NullableDictSerializer):
-    id = Field(attr="region_id", schema_type=str, description='Identifier of the coverage')
+    id = Field(attr="region_id", schema_type=str, display_none=True, description='Identifier of the coverage')
     start_production_date = Field(schema_type=str, description='Beginning of the production period. '
                                                                'We only have data on this production period')
     end_production_date = Field(schema_type=str, description='End of the production period. '
