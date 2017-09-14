@@ -486,24 +486,27 @@ class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
         # it's not in journeys
         response = self.query_region(journey_basic_query + "&data_freshness=realtime&_current_datetime=20120614T1337")
         assert not has_the_disruption(response)
+        #no realtime flags on journeys yet
 
         # it's not in departures
         response = self.query_region("stop_points/stop_point:stopB/departures?_current_datetime=20120614T080000&data_freshness=realtime")
         assert not has_the_disruption(response)
+        assert response['departures'][0]['stop_date_time']['data_freshness'] == 'realtime'
 
         # it's not in arrivals
         response = self.query_region("stop_points/stop_point:stopA/arrivals?_current_datetime=20120614T080000&data_freshness=realtime")
-        print response
         assert not has_the_disruption(response)
+        assert response['arrivals'][0]['stop_date_time']['data_freshness'] == 'realtime'
 
         # it's not in stop_schedules
-        response = self.query_region("stop_points/stop_point:stopB/stop_schedules?_current_datetime=20120614T080000&data_freshness=realtime")
+        response = self.query_region("stop_points/stop_point:stopB/lines/A/stop_schedules?_current_datetime=20120614T080000&data_freshness=realtime")
         assert not has_the_disruption(response)
+        assert response['stop_schedules'][0]['date_times'][0]['data_freshness'] == 'realtime'
 
         # it's not in route_schedules
-        response = self.query_region("stop_points/stop_point:stopB/route_schedules?_current_datetime=20120614T080100&data_freshness=realtime")
+        response = self.query_region("stop_points/stop_point:stopB/lines/A/route_schedules?_current_datetime=20120614T080100&data_freshness=realtime")
         assert not has_the_disruption(response)
-
+        #no realtime flags on route_schedules yet
 
 
 def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], disruption_id=None):

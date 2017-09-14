@@ -165,7 +165,8 @@ bool Impact::is_valid(const boost::posix_time::ptime& publication_date, const bo
     return false;
 }
 
-bool Impact::is_relevent() const {
+bool Impact::is_relevant(const std::vector<const StopTime*>& stop_times) const {
+    // No delay on the section
     auto is_unchanged = [this](const nt::disruption::StopTimeUpdate& stu) {
         const auto* base_st = aux_info.get_base_stop_time(stu);
         if (base_st == nullptr) { return false; }
@@ -178,6 +179,27 @@ bool Impact::is_relevent() const {
         && std::all_of(aux_info.stop_times.begin(), aux_info.stop_times.end(), is_unchanged)) {
         return false;
     }
+
+    // line section not relevant
+    auto line_section_impacted_obj_it = boost::find_if(informed_entities(), [](const PtObj& ptobj) {
+            return boost::get<LineSection>(&ptobj) != nullptr;
+        });
+    if (line_section_impacted_obj_it != informed_entities().end()) {
+        // note in this we take the premise that an impact
+        // cannot impact a line section AND a vj
+        for (const auto& st: stop_times) {
+            // if one stop point of the stoptimes is impacted by the same impact
+            // it means the section is impacted
+            for (const auto& sp_message: st->stop_point->get_impacts()) {
+                if (sp_message.get() == this) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // else, no reason to not be interested by it
     return true;
 }
 
