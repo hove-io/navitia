@@ -169,6 +169,29 @@ bool StopTime::is_valid_day(u_int32_t day, const bool is_arrival, const RTLevel 
     return vehicle_journey->validity_patterns[rt_level]->check(day);
 }
 
+const StopTime* StopTime::get_base_stop_time() const {
+    const nt::StopTime* st_base = nullptr;
+    size_t nb_st_found = 0;
+    if (vehicle_journey == nullptr) { return nullptr; }
+    auto base_vj = vehicle_journey->get_corresponding_base();
+    if (base_vj == nullptr) { return nullptr; }
+
+    if (vehicle_journey == base_vj) { return this; }
+    for (const auto& st_it: base_vj->stop_time_list) {
+        if (stop_point == st_it.stop_point) {
+            st_base = &st_it;
+            ++nb_st_found;
+        }
+    }
+    //TODO handle lolipop vj, bob-commerce-commerce-bobito vj...
+    if (nb_st_found != 1) {
+        auto logger = log4cplus::Logger::getInstance("log");
+        LOG4CPLUS_DEBUG(logger, "Ignored stop_time finding: impossible to match exactly one base stop_time");
+        return nullptr;
+    }
+    return st_base;
+}
+
 bool FrequencyVehicleJourney::is_valid(int day, const RTLevel rt_level) const {
     if (day < 0)
         return false;

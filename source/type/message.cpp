@@ -167,16 +167,17 @@ bool Impact::is_valid(const boost::posix_time::ptime& publication_date, const bo
 
 bool Impact::is_relevant(const std::vector<const StopTime*>& stop_times) const {
     // No delay on the section
-    auto is_unchanged = [this](const nt::disruption::StopTimeUpdate& stu) {
-        const auto* base_st = aux_info.get_base_stop_time(stu);
-        if (base_st == nullptr) { return false; }
-        if (base_st->arrival_time != stu.stop_time.arrival_time) { return false; }
-        if (base_st->departure_time != stu.stop_time.departure_time) { return false; }
-        return true;
-    };
-    if (severity->effect == nt::disruption::Effect::SIGNIFICANT_DELAYS
-        && ! aux_info.stop_times.empty()
-        && std::all_of(aux_info.stop_times.begin(), aux_info.stop_times.end(), is_unchanged)) {
+    if (severity->effect == nt::disruption::Effect::SIGNIFICANT_DELAYS && ! aux_info.stop_times.empty()) {
+        const auto nb_aux = aux_info.stop_times.size();
+        for (const auto& st: stop_times) {
+            const auto base_st = st->get_base_stop_time();
+            if (base_st == nullptr) { return true; }
+            const auto idx = base_st->order();
+            if (idx >= nb_aux) { return true; }
+            const auto& amended_st = aux_info.stop_times.at(idx).stop_time;
+            if (base_st->arrival_time != amended_st.arrival_time) { return true; }
+            if (base_st->departure_time != amended_st.departure_time) { return true; }
+        }
         return false;
     }
 
