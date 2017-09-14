@@ -39,7 +39,7 @@ from jormungandr.exceptions import RegionNotFound
 import datetime
 import base64
 from navitiacommon.models import User, Instance, Key
-from jormungandr import cache, app as current_app, app
+from jormungandr import cache, app as current_app
 
 
 def authentication_required(func):
@@ -159,7 +159,7 @@ def get_all_available_instances(user):
 
     Note: only users with access to free instances can use global /places
     """
-    if app.config.get('PUBLIC', False) or app.config.get('DISABLE_DATABASE', False):
+    if current_app.config.get('PUBLIC', False) or current_app.config.get('DISABLE_DATABASE', False):
         from jormungandr import i_manager
         return i_manager.instances.values()
 
