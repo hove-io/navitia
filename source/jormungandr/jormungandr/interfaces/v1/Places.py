@@ -31,14 +31,16 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask_restful import fields, reqparse, abort
-from flask.globals import g
+from flask.globals import g, current_app
 
+from jormungandr.authentication import abort_request, get_all_available_instances
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer.api import PlacesSerializer, PlacesNearbySerializer
 from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerOptionPathSerializer
 from jormungandr.interfaces.v1.swagger_schema import make_schema
+from jormungandr import cache
 from navitiacommon import parser_args_type
-from jormungandr import i_manager, timezone, global_autocomplete, authentication
+from jormungandr import i_manager, timezone, global_autocomplete, authentication, app
 from jormungandr.interfaces.v1.fields import disruption_marshaller
 from jormungandr.interfaces.v1.fields import place, NonNullList, NonNullNested, PbField, pagination,\
                                              error, feed_publisher
@@ -145,12 +147,11 @@ class Places(ResourceUri):
             timezone.set_request_timezone(self.region)
             response = i_manager.dispatch(args, "places", instance_name=self.region)
         else:
-            authentication.check_access_to_global_places(user)
+            available_instances = get_all_available_instances(user)
             autocomplete = global_autocomplete.get('bragi')
-            if autocomplete:
-                response = autocomplete.get(args, instance=None)
-            else:
+            if not autocomplete:
                 raise TechnicalError('world wide autocompletion service not available')
+            response = autocomplete.get(args, instances=available_instances)
         return response, 200
 
     def options(self, **kwargs):
@@ -192,12 +193,11 @@ class PlaceUri(ResourceUri):
             response = i_manager.dispatch(args, "place_uri", instance_name=self.region)
         else:
             user = authentication.get_user(token=authentication.get_token(), abort_if_no_token=False)
-            authentication.check_access_to_global_places(user)
+            available_instances = get_all_available_instances(user)
             autocomplete = global_autocomplete.get('bragi')
-            if autocomplete:
-                response = autocomplete.get_by_uri(args["uri"], instance=None)
-            else:
+            if not autocomplete:
                 raise TechnicalError('world wide autocompletion service not available')
+            response = autocomplete.get_by_uri(args["uri"], instances=available_instances)
 
         return response, 200
 

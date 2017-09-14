@@ -903,7 +903,7 @@ class Scenario(simple.Scenario):
 
     def get_entrypoint_detail(self, entrypoint, instance):
         logging.debug("calling autocomplete {} for {}".format(instance.autocomplete, entrypoint))
-        detail = instance.autocomplete.get_object_by_uri(entrypoint, instance=instance)
+        detail = instance.autocomplete.get_object_by_uri(entrypoint, instances=[instance])
 
         if detail:
             return detail
@@ -913,6 +913,6 @@ class Scenario(simple.Scenario):
             if bragi:
                 # if the instance's autocomplete is not a geocodejson autocomplete, we also check in the
                 # global autocomplete instance
-                return bragi.get_object_by_uri(entrypoint, instance=instance)
+                return bragi.get_object_by_uri(entrypoint, instances=[instance])
 
         return None
