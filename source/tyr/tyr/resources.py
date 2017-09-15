@@ -753,9 +753,9 @@ class TravelerProfile(flask_restful.Resource):
 
         # flask parser returns a list for first_section_mode and last_section_mode
         parser.add_argument('first_section_mode',
-                            type=OptionValue(fb_modes), required=False, location='json')
+                            type=OptionValue(fb_modes), action='append', required=False, location='json')
         parser.add_argument('last_section_mode',
-                            type=OptionValue(fb_modes), required=False, location='json')
+                            type=OptionValue(fb_modes), action='append', required=False, location='json')
 
         self.args = parser.parse_args()
 

@@ -576,7 +576,7 @@ class AutocompleteParameter(db.Model, TimestampMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False, unique=True)
     street = db.Column(db.Enum(*street_source_types, name='source_street'), nullable=True)
-    address = db.Column(db.Enum(address_source_types, name='source_address'), nullable=True)
+    address = db.Column(db.Enum(*address_source_types, name='source_address'), nullable=True)
     poi = db.Column(db.Enum(*poi_source_types, name='source_poi'), nullable=True)
     admin = db.Column(db.Enum(*admin_source_types, name='source_admin'), nullable=True)
     admin_level = db.Column(ARRAY(db.Integer), nullable=False)
