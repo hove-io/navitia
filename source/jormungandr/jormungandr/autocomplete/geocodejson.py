@@ -311,7 +311,7 @@ class GeocodeJson(AbstractAutocomplete):
 
     @classmethod
     def _check_response(cls, response, uri):
-        if response == None:
+        if response is None:
             raise TechnicalError('impossible to access autocomplete service')
         if response.status_code == 404:
             raise UnknownObject(uri)
@@ -343,14 +343,13 @@ class GeocodeJson(AbstractAutocomplete):
             url = '{url}/{uri}'.format(url=url, uri=uri)
         return url
 
-    def basic_params(self, instance):
-        params = {}
-        if instance:
-            params["pt_dataset"] = instance.name
-        return params
+    def basic_params(self, instances):
+        if not instances:
+            return {}
+        return {'pt_dataset': [i.name for i in instances]}
 
-    def make_params(self, request, instance):
-        params = self.basic_params(instance)
+    def make_params(self, request, instances):
+        params = self.basic_params(instances)
         params.update({
             "q": request["q"],
             "limit": request["count"]
@@ -376,9 +375,8 @@ class GeocodeJson(AbstractAutocomplete):
             params["lon"], params["lat"] = self.get_coords(request["from"])
         return params
 
-    def get(self, request, instance):
-
-        params = self.make_params(request, instance)
+    def get(self, request, instances):
+        params = self.make_params(request, instances)
 
         shape = request.get('shape', None)
 
@@ -404,9 +402,9 @@ class GeocodeJson(AbstractAutocomplete):
         """
         return param.split(";")
 
-    def get_by_uri(self, uri, instance=None, current_datetime=None):
+    def get_by_uri(self, uri, instances=None, current_datetime=None):
 
-        params = self.basic_params(instance)
+        params = self.basic_params(instances)
         lon, lat = get_lon_lat_from_id(uri)
 
         if lon is not None and lat is not None:

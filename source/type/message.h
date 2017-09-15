@@ -282,6 +282,7 @@ struct Impact {
     static void link_informed_entity(PtObj ptobj, boost::shared_ptr<Impact>& impact, const boost::gregorian::date_period&, type::RTLevel);
 
     bool is_valid(const boost::posix_time::ptime& current_time, const boost::posix_time::time_period& action_period) const;
+    bool is_relevant(const std::vector<const StopTime*>& stop_times) const;
 
     const type::ValidityPattern get_impact_vp(const boost::gregorian::date_period& production_date) const;
 

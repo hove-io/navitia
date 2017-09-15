@@ -93,8 +93,6 @@ class ResourceUri(StatedResource):
                         filter_list.append(filter_)
                     else:
                         filter_list.append(type_ + ".uri=" + protect(item))
-                elif type_ == 'poi':
-                    filter_list.append(type_ + '.uri=' + protect(item.split(":")[-1]))
                 else:
                     filter_list.append(type_ + ".uri=" + protect(item))
                 type_ = None

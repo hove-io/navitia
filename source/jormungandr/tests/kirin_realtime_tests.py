@@ -452,6 +452,110 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
         assert get_used_vj(day_after_base), [[] == ['vjA']]
 
 
+@dataset(MAIN_ROUTING_TEST_SETTING)
+class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
+    def test_vj_on_time(self):
+        """
+        We don't want to output an on time disruption on journeys,
+        departures, arrivals and route_schedules (also on
+        stop_schedules, but no vj disruption is outputed for the
+        moment).
+        """
+        disruptions_before = self.query_region('disruptions?_current_datetime=20120614T080000')
+        nb_disruptions_before = len(disruptions_before['disruptions'])
+
+        # New disruption same as base schedule
+        self.send_mock("vjA", "20120614", 'modified',
+           [UpdatedStopTime("stop_point:stopB",
+                            arrival_delay=0, departure_delay=0,
+                            arrival=tstamp("20120614T080100"), departure=tstamp("20120614T080100"),
+                            message='on time'),
+            UpdatedStopTime("stop_point:stopA",
+                            arrival_delay=0, departure_delay=0,
+                            arrival=tstamp("20120614T080102"), departure=tstamp("20120614T080102"))],
+           disruption_id='vjA_on_time')
+
+        def has_the_disruption(response):
+            return len([d['id'] for d in response['disruptions'] if d['id'] == 'vjA_on_time']) != 0
+
+        # We have a new diruption
+        disruptions_after = self.query_region('disruptions?_current_datetime=20120614T080000')
+        assert nb_disruptions_before + 1 == len(disruptions_after['disruptions'])
+        assert has_the_disruption(disruptions_after)
+
+        # it's not in journeys
+        response = self.query_region(journey_basic_query + "&data_freshness=realtime&_current_datetime=20120614T080000")
+        assert not has_the_disruption(response)
+        #no realtime flags on journeys yet
+
+        # it's not in departures
+        response = self.query_region("stop_points/stop_point:stopB/departures?_current_datetime=20120614T080000&data_freshness=realtime")
+        assert not has_the_disruption(response)
+        assert response['departures'][0]['stop_date_time']['data_freshness'] == 'realtime'
+
+        # it's not in arrivals
+        response = self.query_region("stop_points/stop_point:stopA/arrivals?_current_datetime=20120614T080000&data_freshness=realtime")
+        assert not has_the_disruption(response)
+        assert response['arrivals'][0]['stop_date_time']['data_freshness'] == 'realtime'
+
+        # it's not in stop_schedules
+        response = self.query_region("stop_points/stop_point:stopB/lines/A/stop_schedules?_current_datetime=20120614T080000&data_freshness=realtime")
+        assert not has_the_disruption(response)
+        assert response['stop_schedules'][0]['date_times'][0]['data_freshness'] == 'realtime'
+
+        # it's not in route_schedules
+        response = self.query_region("stop_points/stop_point:stopB/lines/A/route_schedules?_current_datetime=20120614T080100&data_freshness=realtime")
+        assert not has_the_disruption(response)
+        #no realtime flags on route_schedules yet
+
+        # New disruption one second late
+        self.send_mock("vjA", "20120614", 'modified',
+           [UpdatedStopTime("stop_point:stopB",
+                            arrival_delay=1, departure_delay=1,
+                            arrival=tstamp("20120614T080101"), departure=tstamp("20120614T080101"),
+                            message='on time'),
+            UpdatedStopTime("stop_point:stopA",
+                            arrival_delay=1, departure_delay=1,
+                            arrival=tstamp("20120614T080103"), departure=tstamp("20120614T080103"))],
+           disruption_id='vjA_late')
+
+        def has_the_disruption(response):
+            return len([d['id'] for d in response['disruptions'] if d['id'] == 'vjA_late']) != 0
+
+        # We have a new diruption
+        disruptions_after = self.query_region('disruptions?_current_datetime=20120614T080000')
+        assert nb_disruptions_before + 2 == len(disruptions_after['disruptions'])
+        assert has_the_disruption(disruptions_after)
+
+        # it's in journeys
+        response = self.query_region(journey_basic_query + "&data_freshness=realtime&_current_datetime=20120614T080000")
+        assert has_the_disruption(response)
+        #no realtime flags on journeys yet
+
+        # it's in departures
+        response = self.query_region("stop_points/stop_point:stopB/departures?_current_datetime=20120614T080000&data_freshness=realtime")
+        assert has_the_disruption(response)
+        assert response['departures'][0]['stop_date_time']['departure_date_time'] == '20120614T080101'
+        assert response['departures'][0]['stop_date_time']['data_freshness'] == 'realtime'
+
+        # it's in arrivals
+        response = self.query_region("stop_points/stop_point:stopA/arrivals?_current_datetime=20120614T080000&data_freshness=realtime")
+        assert has_the_disruption(response)
+        assert response['arrivals'][0]['stop_date_time']['arrival_date_time'] == '20120614T080103'
+        assert response['arrivals'][0]['stop_date_time']['data_freshness'] == 'realtime'
+
+        # it's in stop_schedules
+        response = self.query_region("stop_points/stop_point:stopB/lines/A/stop_schedules?_current_datetime=20120614T080000&data_freshness=realtime")
+        #assert has_the_disruption(response) # stop_schedules doesn't output vj disruptions
+        assert response['stop_schedules'][0]['date_times'][0]['date_time'] == '20120614T080101'
+        assert response['stop_schedules'][0]['date_times'][0]['data_freshness'] == 'realtime'
+
+        # it's in route_schedules
+        response = self.query_region("stop_points/stop_point:stopB/lines/A/route_schedules?_current_datetime=20120614T080100&data_freshness=realtime")
+        assert has_the_disruption(response)
+        #no realtime flags on route_schedules yet
+
+
 def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], disruption_id=None):
     feed_message = gtfs_realtime_pb2.FeedMessage()
     feed_message.header.gtfs_realtime_version = '1.0'

@@ -34,13 +34,14 @@ import serpy
 from navitiacommon.parser_args_type import TypeSchema, CustomSchemaType
 
 
-def _init(self, parent_class, schema_type=None, schema_metadata={}, **kwargs):
+def _init(self, parent_class, schema_type=None, schema_metadata=None, **kwargs):
     """
     Call the parent constructor with the needed kwargs and 
     add the remaining kwargs to the schema metadata
     """
     if 'display_none' not in kwargs:
         kwargs['display_none'] = False
+    self.many = kwargs.pop('many', False)
     parent_vars = set(parent_class.__init__.__code__.co_names)
     parent_kwargs = {k: v for k, v in kwargs.items() if k in parent_vars}
     remaining_kwargs = {k: v for k, v in kwargs.items() if k not in parent_vars}
@@ -104,8 +105,10 @@ class MethodField(serpy.MethodField):
                  attr=None, call=False, label=None, required=True, display_none=False, **kwargs):
         super(MethodField, self).__init__(method=method, attr=attr, call=call, label=label,
                                           required=required, display_none=display_none)
+
         self.schema_type = schema_type
         self.schema_metadata = schema_metadata or {}
+        self.many = kwargs.pop('many', False)
         # the remaining kwargs are added in the schema metadata to add a bit of syntaxic sugar
         self.schema_metadata.update(**kwargs)
 
@@ -129,8 +132,21 @@ class TimeType(CustomSchemaType):
                          metadata={'format': 'navitia-time',
                                    'pattern': '\d{2}\d{2}\d{2}'})
 
+
 class TimeOrDateTimeType(CustomSchemaType):
     # either a time or a datetime
     _schema = TypeSchema(type=str,
                          metadata={'format': 'navitia-time-or-date-time',
                                    'pattern': '(\d{4}\d{2}\d{2}T)?\d{2}\d{2}\d{2}'})
+
+
+class JsonStrField(Field):
+    """
+    A :class:`JsonStrField` a json parser
+    """
+    def __init__(self, schema_type=None, schema_metadata=None, **kwargs):
+        super(JsonStrField, self).__init__(schema_type=schema_type, schema_metadata=schema_metadata, **kwargs)
+
+    def to_value(self, value):
+        import ujson
+        return ujson.loads(value)

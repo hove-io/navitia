@@ -19,11 +19,11 @@ The only arguments are the ones of [paging](#paging).
 
 ### Accesses
 
-| url | Result |
-|-----------------------------------------|-------------------------------------|
-| `coverage`                              | List of the areas covered by navitia|
-| `coverage/{region_id}`                  | Information about a specific region |
-| `coverage/{lon;lat}`                    | Information about a specific region |
+| url                                      | Result                                                                           |
+|------------------------------------------|----------------------------------------------------------------------------------|
+| `/coverage`                              | List of the areas covered by navitia                                             |
+| `/coverage/{region_id}`                  | Information about a specific region                                              |
+| `/coverage/{lon;lat}`                    | Information about a specific region, navitia guesses the region from coordinates |
 
 ### Fields
 
@@ -236,12 +236,12 @@ paginate results.
 
 ### Accesses
 
-| url | Result |
-|---------------------------------------------------------|-------------------------------------|
-| `/coverage/{region_id}/{collection_name}`               | Collection of objects of a region   |
-| `/coverage/{region_id}/{collection_name}/{object_id}`   | Information about a specific region |
-| `/coverage/{lon;lat}/{collection_name}`                 | Collection of objects of a region   |
-| `/coverage/{lon;lat}/{collection_name}/{object_id}`     | Information about a specific region |
+| url                                                     | Result                                                                           |
+|---------------------------------------------------------|----------------------------------------------------------------------------------|
+| `/coverage/{region_id}/{collection_name}`               | Collection of objects of a region                                                |
+| `/coverage/{region_id}/{collection_name}/{object_id}`   | Information about a specific object                                              |
+| `/coverage/{lon;lat}/{collection_name}`                 | Collection of objects of a region, navitia guesses the region from coordinates |
+| `/coverage/{lon;lat}/{collection_name}/{object_id}`     | Information about a specific object, navitia guesses the region from coordinates |
 
 ### Collections
 
@@ -716,12 +716,12 @@ coordinates, returning a [places](#place) collection.
 
 ### Accesses
 
-| url | Result |
-|--------------------------------------------------------|-----------------------------------------------------------|
-| `/coord/{lon;lat}/places_nearby`                       | List of objects near the resource without any region id   |
-| `/coverage/{lon;lat}/coords/{lon;lat}/places_nearby`   | List of objects near the resource without any region id   |
-| `/coverage/{region_id}/coords/{lon;lat}/places_nearby` | List of objects near a coordinate                         |
-| `/coverage/{region_id}/{resource_path}/places_nearby`  | List of objects near the resource                         |
+| url                                                    | Result                                                                         |
+|--------------------------------------------------------|--------------------------------------------------------------------------------|
+| `/coverage/{lon;lat}/coords/{lon;lat}/places_nearby`   | List of objects near the resource, navitia guesses the region from coordinates |
+| `/coord/{lon;lat}/places_nearby`                       | List of objects near the resource without any region id (same result as above) |
+| `/coverage/{region_id}/coords/{lon;lat}/places_nearby` | List of objects near a coordinate                                              |
+| `/coverage/{region_id}/{resource_path}/places_nearby`  | List of objects near the resource                                              |
 
 
 ### Parameters
@@ -964,41 +964,55 @@ The [isochrones](#isochrones) service exposes another response structure, which 
 
 ### Precisions on `forbidden_uris[]` and `allowed_id[]`
 
-These parameters are filtering the vehicle journeys and the stop points used to compute the journeys. The journeys can only use allowed vehicle journeys (as present in the `public_transport` or `on_demand_transport` sections). They also can only use the allowed stop points (as present in the `street_network`, `waiting` and `crow_fly` sections).
+These parameters are filtering the vehicle journeys and the stop points used to compute the journeys.
+`allowed_id[]` is used to allow *only* certain route options by *excluding* all others.
+`forbidden_uris[]` is used to *exclude* specific route options.
+
+Examples:
+
+* A user doesn't like line A metro in hers city. She adds the parameter `forbidden_uris[]=line:A` when calling the API.
+* A user would only like to use Buses and Tramways. She adds the parameter `allowed_id[]=physical_mode:Bus&allowed_id[]=physical_mode:Tramway`.
+
+#### Technically
+
+The journeys can only use allowed vehicle journeys (as present in the `public_transport` or `on_demand_transport` sections).
+They also can only use the allowed stop points for getting in or out of a vehicle (as present in the `street_network`, `transfer` and `crow_fly` sections).
 
 For filtering vehicle journeys, the identifier of a line, route, commercial mode, physical mode or network can be used. 
 
 For filtering stop points, the identifier of a stop point or stop area can be used.
 
-`forbidden_uris[]` removes the corresponding vehicle journeys (or stop points) from the list of allowed vehicle journeys (resp. stop_points).
+The principle is to create a blacklist using those 2 parameters:
 
-`allowed_id[]` works in 2 parts:
+* `forbidden_uris[]` adds the corresponding vehicle journeys (or stop points) to the blacklist of vehicle journeys (resp. stop_points).
 
--   If an id related to a stop point is given, only the corresponding stop points will be allowed. Else, all the stop points are allowed.
--   If an id related to a vehicle journey is given, only the corresponding vehicle journeys will be allowed. Else, all the vehicle journeys are allowed.
+* `allowed_id[]` works in 2 parts:
 
-The constraints of `forbidden_uris[]` and `allowed_id[]` are combined. For example, if you give `allowed_id[]=network:SN&forbidden_uris[]=line:A`, only the vehicle journeys of the network SN that are not from the line A can be used to compute the journeys.
+    * If an id related to a stop point is given, only the corresponding stop points are allowed (practically, all other are blacklisted). Else, all the stop points are allowed.
+    * If an id related to a vehicle journey is given, only the corresponding vehicle journeys are allowed (practically, all other are blacklisted). Else, all the vehicle journeys are allowed.
+
+The blacklisting constraints of `forbidden_uris[]` and `allowed_id[]` are combined. For example, if you give `allowed_id[]=network:SN&forbidden_uris[]=line:A`, only the vehicle journeys of the network SN that are not from the line A can be used to compute the journeys.
 
 Let's illustrate all of that with an example.
 
 ![example](forbidden_example.png)
 
-We want to go from SPA to SPB. Lines LA and LB can go from SPA to SPB. There is another stop point SPC connected to SPA with lines LC and LD, and connected to SB with lines LE and LF.
+We want to go from stop A to stop B. Lines 1 and 2 can go from stop A to B. There is another stop C connected to A with lines 3 and 4, and connected to B with lines 5 and 6.
 
 Without any constraint, all these objects can be used to propose a solution. Let's study some examples:
 
-| `forbidden_uris[]` | `allowed_id[]` | Result
-|--------------------|----------------|--------
-| LA, LB             |                | All the journeys will pass by SPC, using either of LC, LD, LE and LF
-| SPA                |                | No solution, as we can't get in any transport
-| SPB                |                | No solution, as we can't get out at destination
-|                    | SPC            | No solution, as we can't get in neither get out
-| LA, LB             | LC             | No solution, as only LC can be taken
-|                    | LC, LE         | All the journeys will pass by SPC using LC and LE
-|                    | LC, LD, LE     | All the journeys will pass by SPC using (LC or LD) and LE
-|                    | LC, LE, SPC    | No solution, as we can't get in neither get out
-|                    | SPA, SPC, SPB  | As without any constraint, passing via SPC is not needed
-| SPA, SPB           | SPA, SPB       | No solution, as no stop point are allowed.
+| `forbidden_uris[]` | `allowed_id[]`         | Result
+|--------------------|------------------------|--------
+| line 1, line 2     |                        | All the journeys will pass by stop C, using either of line 3, 4, 5 and 6
+| stop A             |                        | No solution, as we can't get in any transport
+| stop B             |                        | No solution, as we can't get out at destination
+|                    | stop C                 | No solution, as we can't get in neither get out
+| line 1, line 2     | line 3                 | No solution, as only line 3 can be taken
+|                    | line 3, line 5         | All the journeys will pass by stop C using line 3 and 5
+|                    | line 3, line 4, line5  | All the journeys will pass by stop C using (line 3 or 4) and line 5
+|                    | line 3, line 5, stop C | No solution, as we can't get in neither get out
+|                    | stop A, stop C, stop B | As without any constraint, passing via stop C is not needed
+| stop A, stop B     | stop A, stop B         | No solution, as no stop point are allowed.
 
 ### Objects
 
@@ -1305,10 +1319,10 @@ access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource
 
 ### Accesses
 
-| url | Result |
-|---------------------------------------------------------|-----------------------------------------------------------|
-| `/coverage/{region_id}/{resource_path}/route_schedules` | List of the entire route schedules for a given resource   |
-| `/coverage/{lon;lat}/coords/{lon;lat}/route_schedules`  | List of the entire route schedules for coordinates        |
+| url                                                     | Result                                                                                          |
+|---------------------------------------------------------|-------------------------------------------------------------------------------------------------|
+| `/coverage/{region_id}/{resource_path}/route_schedules` | List of the entire route schedules for a given resource                                         |
+| `/coverage/{lon;lat}/coords/{lon;lat}/route_schedules`  | List of the entire route schedules for coordinates, navitia guesses the region from coordinates |
 
 ### Parameters
 
@@ -1435,9 +1449,9 @@ You can access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_
 ### Accesses
 
 | url | Result |
-|--------------------------------------------------------|----------------------------------------------------------------------------------|
-| `/coverage/{region_id}/{resource_path}/stop_schedules` |List of the stop schedules grouped by ``stop_point/route`` for a given resource  |
-| `/coverage/{lon;lat}/coords/{lon;lat}/stop_schedules`  | List of the stop schedules grouped by ``stop_point/route`` for coordinates       |
+|--------------------------------------------------------|-----------------------------------------------------------------------------------|
+| `/coverage/{region_id}/{resource_path}/stop_schedules` | List of the stop schedules grouped by ``stop_point/route`` for a given resource   |
+| `/coverage/{lon;lat}/coords/{lon;lat}/stop_schedules`  | List of the stop schedules grouped by ``stop_point/route`` for coordinates, navitia guesses the region from coordinates |
 
 
 ### Parameters
@@ -1535,7 +1549,7 @@ Departures are ordered chronologically in ascending order as:
 | url | Result |
 |----------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
 | `/coverage/{region_id}/{resource_path}/departures` | List of the next departures, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here) |
-| `/coverage/{lon;lat}/coords/{lon;lat}/departures`  | List of the next departures, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here) |
+| `/coverage/{lon;lat}/coords/{lon;lat}/departures`  | List of the next departures, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here), navitia guesses the region from coordinates |
 
 ### Parameters
 
@@ -1613,7 +1627,7 @@ object. Arrivals are ordered chronologically in ascending order.
 | url | Result |
 |--------------------------------------------------|---------------------------------------------------------------------------------------------------------------|
 | `/coverage/{region_id}/{resource_path}/arrivals` | List of the arrivals, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here)        |
-| `/coverage/{lon;lat}/coords/{lon;lat}/arrivals`  | List of the arrivals, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here)        |
+| `/coverage/{lon;lat}/coords/{lon;lat}/arrivals`  | List of the arrivals, multi-route oriented, only time sorted (no grouped by ``stop_point/route`` here), navitia guesses the region from coordinates  |
 
 ### Parameters
 

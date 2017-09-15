@@ -778,6 +778,8 @@ struct StopTime {
 
     bool is_valid_day(u_int32_t day, const bool is_arrival, const RTLevel rt_level) const;
 
+    const StopTime* get_base_stop_time() const;
+
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
             ar & arrival_time & departure_time & boarding_time & alighting_time & vehicle_journey
             & stop_point & shape_from_prev & properties & local_traffic_zone;

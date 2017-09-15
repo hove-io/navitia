@@ -37,6 +37,7 @@ from jormungandr.utils import str_to_time_stamp
 from jormungandr import app
 import time
 import mock
+from navitiacommon import stat_pb2
 
 
 class MockWrapper:
@@ -44,11 +45,17 @@ class MockWrapper:
     def __init__(self):
         self.called = False #TODO: use mock!
 
-    def mock_journey_stat(self, stat):
+    def mock_journey_stat(self, api, pbf):
+        stat = stat_pb2.StatRequest()
+        stat.ParseFromString(pbf)
+        assert api == stat.api
         self.check_stat_journey_to_publish(stat)
         self.called = True
 
-    def mock_coverage_stat(self, stat):
+    def mock_coverage_stat(self, api, pbf):
+        stat = stat_pb2.StatRequest()
+        stat.ParseFromString(pbf)
+        assert api == stat.api
         self.check_stat_coverage_to_publish(stat)
         self.called = True
 
@@ -64,7 +71,10 @@ class MockWrapper:
         #Verify elements of request.error
         assert stat.error.id == ""
 
-    def mock_places_stat(self, stat):
+    def mock_places_stat(self, api, pbf):
+        stat = stat_pb2.StatRequest()
+        stat.ParseFromString(pbf)
+        assert api == stat.api
         self.check_stat_places_to_publish(stat)
 
     def check_stat_journey_to_publish(self, stat):
@@ -216,7 +226,7 @@ class TestStatPlaces(AbstractTestFixture):
         """
         # we override the stat method with a mock method to test the place_uri
         mock = MockWrapper()
-        StatManager.publish_request = mock.check_stat_places_to_publish
+        StatManager.publish_request = mock.mock_places_stat
         response = self.query_region("places/stop_area:stop1", display=False)
         assert mock.called
 

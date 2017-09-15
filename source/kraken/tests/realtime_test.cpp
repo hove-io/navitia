@@ -38,6 +38,7 @@ www.navitia.io
 #include "ed/build_helper.h"
 #include "tests/utils_test.h"
 #include "routing/raptor.h"
+#include "routing/raptor_api.h"
 #include "kraken/apply_disruption.h"
 #include "disruption/traffic_reports_api.h"
 #include "type/pb_converter.h"
@@ -1950,4 +1951,101 @@ BOOST_AUTO_TEST_CASE(skipped_stop_then_delay) {
     journeys = get_journeys(nt::RTLevel::RealTime, "A", "C");
     BOOST_REQUIRE_EQUAL(journeys.size(), 1);
     BOOST_CHECK_EQUAL(journeys[0].items.back().arrival, "20170101T083500"_dt);
+}
+
+/*
+ * Test that we display delays on journeys only if the traveler is
+ * really impacted by it.
+ *
+ * delay: +5      0      0     +5      0
+ *         A ---- B ---- C ---- D ---- E
+ *
+ * A to B -> print disruption
+ * B to C -> no disruption
+ * C to D -> print disruption
+ * C to E -> print disruption
+ */
+BOOST_AUTO_TEST_CASE(train_delayed_and_on_time) {
+    ed::builder b("20150928");
+    b.vj("1").uri("vj:1")
+        ("A", "08:00"_t)
+        ("B", "09:00"_t)
+        ("C", "10:00"_t)
+        ("D", "11:00"_t)
+        ("E", "12:00"_t);
+
+    transit_realtime::TripUpdate trip_update = ntest::make_delay_message("vj:1",
+            "20150928",
+            {
+                    DelayedTimeStop("A", "20150928T0805"_pts).delay(5_min),
+                    DelayedTimeStop("B", "20150928T0900"_pts).delay(0_min),
+                    DelayedTimeStop("C", "20150928T1000"_pts).delay(0_min),
+                    DelayedTimeStop("D", "20150928T1105"_pts).delay(5_min),
+                    DelayedTimeStop("E", "20150928T1200"_pts).delay(0_min)
+            });
+    b.data->build_uri();
+
+    navitia::handle_realtime("bob", timestamp, trip_update, *b.data);
+
+    const auto& pt_data = b.data->pt_data;
+    pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+
+    navitia::routing::RAPTOR raptor(*(b.data));
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    auto compute = [&](const char* from, const char* to, nt::RTLevel level) {
+        navitia::type::Type_e origin_type = b.data->get_type_of_id(from);
+        navitia::type::Type_e destination_type = b.data->get_type_of_id(to);
+        navitia::type::EntryPoint origin(origin_type, from);
+        navitia::type::EntryPoint destination(destination_type, to);
+
+        navitia::PbCreator pb_creator(b.data.get(), "20150928T073000"_dt, null_time_period);
+        make_response(pb_creator, raptor, origin, destination,
+                      {ntest::to_posix_timestamp("20150928T073000")},
+                      true, navitia::type::AccessibiliteParams(), {}, {},
+                      sn_worker, level, 2_min);
+        return  pb_creator.get_response();
+    };
+
+    auto res = compute("A", "B", nt::RTLevel::RealTime);
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.impacts_size(), 1);
+
+    res = compute("A", "B", nt::RTLevel::Base);
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.impacts_size(), 1);
+
+    res = compute("B", "C", nt::RTLevel::RealTime);
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.impacts_size(), 0);
+
+    res = compute("B", "C", nt::RTLevel::Base);
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.impacts_size(), 0);
+
+    res = compute("C", "D", nt::RTLevel::RealTime);
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.impacts_size(), 1);
+
+    res = compute("C", "D", nt::RTLevel::Base);
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.impacts_size(), 1);
+
+    res = compute("C", "E", nt::RTLevel::RealTime);
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.impacts_size(), 1);
+
+    res = compute("C", "E", nt::RTLevel::Base);
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.impacts_size(), 1);
 }

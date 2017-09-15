@@ -164,7 +164,10 @@ void passages(PbCreator& pb_creator,
         } else {
             passage = pb_creator.add_next_arrivals();
         }
-        pb_creator.action_period = pt::time_period(base_ptime, pt::seconds(1));
+
+        // We need one second before because else, on terminus, we may
+        // miss something as period exclude the end.
+        pb_creator.action_period = pt::time_period(base_ptime - pt::seconds(1), pt::seconds(2));
 
         auto departure_dt = get_date_time(vis.stop_event(), dt_stop_time.second, dt_stop_time.second,
                                           base_ptime, true);

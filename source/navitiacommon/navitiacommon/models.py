@@ -190,6 +190,29 @@ class User(db.Model):
     def has_shape(self):
         return self.shape is not None
 
+    # Note: the private methods below exist to be mocked in the integration tests
+
+    def _get_all_explicitly_authorized_instances(self):
+        return Instance.query_existing().join(Authorization).filter(Authorization.user_id == self.id).all()
+
+    def _get_all_free_instances(self):
+        return Instance.query_existing().filter_by(is_free=True).all()
+
+    def _get_all_instances(self):
+        return Instance.query_existing().all()
+
+    def get_all_available_instances(self):
+        if self.is_super_user:
+            return self._get_all_instances()
+        instances = self._get_all_explicitly_authorized_instances()
+
+        if self.type == 'with_free_instances':
+            free_instances = self._get_all_free_instances()
+            instances = list(set(instances + free_instances))
+
+        return instances
+
+
 class Key(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
@@ -553,7 +576,7 @@ class AutocompleteParameter(db.Model, TimestampMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.Text, nullable=False, unique=True)
     street = db.Column(db.Enum(*street_source_types, name='source_street'), nullable=True)
-    address = db.Column(db.Enum(address_source_types, name='source_address'), nullable=True)
+    address = db.Column(db.Enum(*address_source_types, name='source_address'), nullable=True)
     poi = db.Column(db.Enum(*poi_source_types, name='source_poi'), nullable=True)
     admin = db.Column(db.Enum(*admin_source_types, name='source_admin'), nullable=True)
     admin_level = db.Column(ARRAY(db.Integer), nullable=False)

@@ -1229,33 +1229,8 @@ void PbCreator::Filler::fill_messages(const VjStopTimes* vj_stoptimes,
     if (vj_stoptimes == nullptr) { return ; }
     if (dump_message_options.dump_message == DumpMessage::No) { return; }
     const auto* meta_vj = vj_stoptimes->vj->meta_vj;
-    for (const auto& message : meta_vj->get_applicable_messages(pb_creator.now,
-                                                                pb_creator.action_period)) {
-        bool fill = [&](){
-            auto line_section_impacted_obj_it = boost::find_if(message->informed_entities(),
-                                                            [](const nd::PtObj& ptobj) {
-               return boost::get<nd::LineSection>(&ptobj) != nullptr;
-            });
-            if (line_section_impacted_obj_it == message->informed_entities().end()) {
-                // there is no line section, thus we want to fill the message
-                return true;
-            }
-            // note in this we take the premise that an impact cannot impact a line section AND a vj
-            for (const auto& st: vj_stoptimes->stop_times) {
-                // if one stop point of the stoptimes is impacted by the same impact
-                // it means the section is impacted
-                for (const auto& sp_message: st->stop_point->get_applicable_messages(
-                         pb_creator.now, pb_creator.action_period)) {
-                    if (sp_message == message) {
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }();
-
-        if (! fill) { continue; }
-
+    for (const auto& message: meta_vj->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
+        if (! message->is_relevant(vj_stoptimes->stop_times)) { continue; }
         fill_message(message, pt_display_info);
     }
 

@@ -37,6 +37,19 @@ import json
 import mock
 
 
+class DatasetChecker(object):
+    def __init__(self, datasets):
+        self.datasets = datasets
+
+    def __call__(self, *args, **kwargs):
+        d = kwargs.get('params', {}).get('pt_dataset')
+        if d is not None:
+            assert set(d) == self.datasets
+        else:
+            assert d == self.datasets
+        return MockResponse({"features": []}, 200, url='')
+
+
 authorizations = {
     'bob': {
         "main_routing_test": {'ALL': True},
@@ -71,11 +84,17 @@ authorizations = {
         "departure_board_test": {'ALL': True},
         "empty_routing_test": {'ALL': True}
     },
+    'user_without_any_coverage': {
+        "main_routing_test": {'ALL': False},
+        "departure_board_test": {'ALL': False},
+        "empty_routing_test": {'ALL': False}
+    }
 }
+
 
 class FakeUserAuth(FakeUser):
     @classmethod
-    def get_from_token(cls, token):
+    def get_from_token(cls, token, valid_until):
         """
         Create an empty user
         """
@@ -85,7 +104,21 @@ class FakeUserAuth(FakeUser):
         """
         This is made to avoid using of database
         """
+        if self.is_super_user:
+            return True
         return authorizations[self.login][instance_name][api_name]
+
+    def _get_all_explicitly_authorized_instances(self):
+        """mocked to avoid using the db"""
+        authorized_instance_names = [i for i, a in authorizations[self.login].items() if a['ALL']]
+        return [mock_instances[n] for n in authorized_instance_names]
+
+    def _get_all_free_instances(self):
+        """mocked to avoid using the db"""
+        return [i for i in mock_instances.values() if i.is_free]
+
+    def _get_all_instances(self):
+        return mock_instances.values()
 
 user_in_db_auth = {
     'bob': FakeUserAuth('bob', 1),
@@ -97,8 +130,9 @@ user_in_db_auth = {
                                       True, False, True),
     'test_user_not_blocked': FakeUserAuth('test_user_not_blocked', 6,
                                           True, False, False),
-    'super_user_not_open': FakeUserAuth('super_user_not_open', 7,
-                                        have_access_to_free_instances=False, is_super_user=True),
+    'super_user': FakeUserAuth('super_user', 7, is_super_user=True),
+    'user_without_any_coverage': FakeUserAuth('user_without_any_coverage', 8,
+                                              have_access_to_free_instances=False)
 }
 
 
@@ -113,9 +147,9 @@ class FakeInstance(models.Instance):
         return mock_instances.get(name)
 
 mock_instances = {
-    'main_routing_test': FakeInstance('main_routing_test', False),
-    'departure_board_test': FakeInstance('departure_board_test', False),
-    'empty_routing_test': FakeInstance('empty_routing_test', True),
+    'main_routing_test': FakeInstance('main_routing_test', is_free=False),
+    'departure_board_test': FakeInstance('departure_board_test', is_free=False),
+    'empty_routing_test': FakeInstance('empty_routing_test', is_free=True),
 }
 
 
@@ -124,6 +158,8 @@ class AbstractTestAuthentication(AbstractTestFixture):
     def setUp(self):
         self.old_public_val = app.config['PUBLIC']
         app.config['PUBLIC'] = False
+        self.old_db_val = app.config['DISABLE_DATABASE']
+        app.config['DISABLE_DATABASE'] = False
         self.app = app.test_client()
 
         self.old_instance_getter = models.Instance.get_by_name
@@ -131,10 +167,11 @@ class AbstractTestAuthentication(AbstractTestFixture):
 
     def tearDown(self):
         app.config['PUBLIC'] = self.old_public_val
+        app.config['DISABLE_DATABASE'] = self.old_db_val
         models.Instance.get_by_name = self.old_instance_getter
 
 
-@dataset({"main_routing_test": {}, "departure_board_test": {}}, global_config={'activate_bragi': True})
+@dataset({"main_routing_test": {}, "departure_board_test": {}})
 class TestBasicAuthentication(AbstractTestAuthentication):
 
     def test_coverage(self):
@@ -187,24 +224,6 @@ class TestBasicAuthentication(AbstractTestAuthentication):
             assert get_not_null(r, 'error')['message'] \
                    == "The region the_marvelous_unknown_region doesn't exists"
 
-    def test_global_places(self):
-        """
-        test the v1/places authentication
-        """
-        bragi_response_get = lambda *args, **kwargs: MockResponse({"features": []}, 200, url='')
-        with mock.patch('requests.get', bragi_response_get):
-            # bob is a normal user, it can access the open_data, he thus can access the global places
-            with user_set(app, FakeUserAuth, 'bob'):
-                r, status = self.query_no_assert('/v1/places?q=bob')
-                assert status == 200
-            # tgv has not access to the open_data, he cannot access the global places
-            with user_set(app, FakeUserAuth, 'tgv'):
-                _, status = self.query_no_assert('/v1/places?q=bob')
-                assert status == 403
-            # super_user_not_open cannot access the open data, but since he is a super user, he can access /places
-            with user_set(app, FakeUserAuth, 'super_user_not_open'):
-                _, status = self.query_no_assert('/v1/places?q=bob')
-                assert status == 200
 
 @dataset({"main_routing_test": {}})
 class TestIfUserIsBlocked(AbstractTestAuthentication):
@@ -237,7 +256,8 @@ class TestIfUserIsNotBlocked(AbstractTestAuthentication):
                 assert(self.app.get(request).status_code == status_code)
                 
 
-@dataset({"main_routing_test": {}, "departure_board_test": {}, "empty_routing_test": {}})
+@dataset({"main_routing_test": {}, "departure_board_test": {}, "empty_routing_test": {}},
+         global_config={'activate_bragi': True})
 class TestOverlappingAuthentication(AbstractTestAuthentication):
 
     def test_coverage(self):
@@ -471,6 +491,99 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             assert len(stop_points) == 1
             assert stop_points[0]['id'] == 'stop_point:stopB'
 
-    #TODO add more tests on:
+    def test_places_authentication(self):
+        """
+        test the v1/places authentication
+
+        Only users with open data access can use this API and the user's authentication drives the underlying
+        query made to bragi (the external autocomplete service).
+
+        navitia gives bragi all the instances the user can use
+        """
+        no_check = lambda *args, **kwargs: MockResponse({"features": []}, 200, url='')
+        # bob is a normal user, it can access the open_data, and it can access main_routing_test
+        # he thus can use main_routing_test and empty_routing_test (because it's opendata)
+        with user_set(app, FakeUserAuth, 'bob'):
+            with mock.patch('requests.get', DatasetChecker({'main_routing_test', 'empty_routing_test'})):
+                r, status = self.query_no_assert('/v1/places?q=bob')
+                assert status == 200
+
+        # user_without_any_coverage cannot access anything, so no pt_dataset is given
+        with user_set(app, FakeUserAuth, 'user_without_any_coverage'):
+            with mock.patch('requests.get', no_check):
+                r, status = self.query_no_assert('/v1/places?q=bob')
+                assert status == 403
+
+        # tgv has not access to the open_data but can use main_routing_test, it cannot use the global place
+        with user_set(app, FakeUserAuth, 'tgv'):
+            with mock.patch('requests.get', no_check):
+                _, status = self.query_no_assert('/v1/places?q=bob')
+                assert status == 403
+            # but it can use the main_routing_test places
+            with mock.patch('requests.get', DatasetChecker({'main_routing_test'})):
+                _, status = self.query_no_assert('/v1/coverage/main_routing_test/places?q=bob')
+                assert status == 200
+
+        # super_user can use all the instances
+        with user_set(app, FakeUserAuth, 'super_user'):
+            with mock.patch('requests.get', DatasetChecker({'main_routing_test',
+                                                            'empty_routing_test',
+                                                            'departure_board_test'})):
+                _, status = self.query_no_assert('/v1/places?q=bob')
+                assert status == 200
+
+        # but when querying /v1/coverage/<something>/places only one pt_dataset is given to bragi
+        with user_set(app, FakeUserAuth, 'super_user'):
+            with mock.patch('requests.get', DatasetChecker({'main_routing_test'})):
+                _, status = self.query_no_assert('/v1/coverage/main_routing_test/places?q=bob')
+                assert status == 200
+            with mock.patch('requests.get', DatasetChecker({'departure_board_test'})):
+                _, status = self.query_no_assert('/v1/coverage/departure_board_test/places?q=bob')
+                assert status == 200
+
+    def test_places_authentication_no_user(self):
+        """a user is mandatory to use the places api API"""
+        with mock.patch('requests.get', DatasetChecker({})):
+            _, status = self.query_no_assert('/v1/places?q=bob')
+            assert status == 401
+            _, status = self.query_no_assert('/v1/coverage/departure_board_test/places?q=bob')
+            assert status == 401
+
+
+@dataset({"main_routing_test": {}, "departure_board_test": {}, "empty_routing_test": {}},
+         global_config={'activate_bragi': True})
+class AuthenticationPublicNavitia(AbstractTestFixture):
+    def test_global_places_authentication(self):
+        """
+        On a public navitia, a user can use all the instances
+        """
+        with user_set(app, FakeUserAuth, 'bob'):
+            with mock.patch('requests.get', DatasetChecker({'main_routing_test',
+                                                            'empty_routing_test',
+                                                            'departure_board_test'})):
+                r, status = self.query_no_assert('/v1/places?q=bob')
+                assert status == 200
+
+    def test_speficic_places_authentication(self):
+        """
+        for a specific coverage's places, there is still only one coverage
+        """
+        with user_set(app, FakeUserAuth, 'bob'):
+            with mock.patch('requests.get', DatasetChecker({'main_routing_test'})):
+                _, status = self.query_no_assert('/v1/coverage/main_routing_test/places?q=bob')
+                assert status == 200
+
+    def test_global_places_authentication_no_user(self):
+        """even without a user we can access all the places apis"""
+        with mock.patch('requests.get', DatasetChecker({'main_routing_test'})):
+            _, status = self.query_no_assert('/v1/coverage/main_routing_test/places?q=bob')
+            assert status == 200
+        with mock.patch('requests.get', DatasetChecker({'main_routing_test',
+                                                        'empty_routing_test',
+                                                        'departure_board_test'})):
+            _, status = self.query_no_assert('/v1/places?q=bob')
+            assert status == 200
+
+    # TODO add more tests on:
     # * disruptions
     # * get by external code ?

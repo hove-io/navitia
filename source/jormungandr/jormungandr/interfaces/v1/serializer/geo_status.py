@@ -1,4 +1,4 @@
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2017, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -26,28 +26,18 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr.parking_space_availability.abstract_provider_manager import AbstractProviderManager
+from jormungandr.interfaces.v1.serializer.jsonschema import Field
+from jormungandr.interfaces.v1.serializer.pt import StringListField
+import serpy
 
-POI_TYPE_ID = 'poi_type:amenity:parking'
 
-
-class CarParkingProviderManager(AbstractProviderManager):
-
-    def __init__(self, car_park_providers_configurations):
-        super(CarParkingProviderManager, self).__init__()
-        self.car_park_providers = []
-        for configuration in car_park_providers_configurations:
-            arguments = configuration.get('args', {})
-            self.car_park_providers.append(self._init_class(configuration['class'], arguments))
-
-    def _handle_poi(self, item):
-        if 'poi_type' in item and item['poi_type']['id'] == POI_TYPE_ID:
-            provider = self._find_provider(item)
-            if provider:
-                item['car_park'] = provider.get_informations(item)
-                return provider
-        return None
-
-    def _get_providers(self):
-        return self.car_park_providers
+class GeoStatusSerializer(serpy.Serializer):
+    nb_addresses = Field(schema_type=int)
+    nb_admins = Field(schema_type=int)
+    nb_admins_from_cities = Field(schema_type=int)
+    nb_pois = Field(schema_type=int)
+    nb_ways = Field(schema_type=int)
+    poi_sources = StringListField(display_none=True)
+    street_network_sources = StringListField(display_none=True)
