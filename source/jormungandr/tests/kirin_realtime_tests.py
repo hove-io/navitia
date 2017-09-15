@@ -461,7 +461,7 @@ class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
         stop_schedules, but no vj disruption is outputed for the
         moment).
         """
-        disruptions_before = self.query_region('disruptions?_current_datetime=20120614T1337')
+        disruptions_before = self.query_region('disruptions?_current_datetime=20120614T080000')
         nb_disruptions_before = len(disruptions_before['disruptions'])
 
         # New disruption same as base schedule
@@ -479,12 +479,12 @@ class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
             return len([d['id'] for d in response['disruptions'] if d['id'] == 'vjA_on_time']) != 0
 
         # We have a new diruption
-        disruptions_after = self.query_region('disruptions?_current_datetime=20120614T1337')
+        disruptions_after = self.query_region('disruptions?_current_datetime=20120614T080000')
         assert nb_disruptions_before + 1 == len(disruptions_after['disruptions'])
         assert has_the_disruption(disruptions_after)
 
         # it's not in journeys
-        response = self.query_region(journey_basic_query + "&data_freshness=realtime&_current_datetime=20120614T1337")
+        response = self.query_region(journey_basic_query + "&data_freshness=realtime&_current_datetime=20120614T080000")
         assert not has_the_disruption(response)
         #no realtime flags on journeys yet
 
@@ -523,12 +523,12 @@ class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
             return len([d['id'] for d in response['disruptions'] if d['id'] == 'vjA_late']) != 0
 
         # We have a new diruption
-        disruptions_after = self.query_region('disruptions?_current_datetime=20120614T1337')
+        disruptions_after = self.query_region('disruptions?_current_datetime=20120614T080000')
         assert nb_disruptions_before + 2 == len(disruptions_after['disruptions'])
         assert has_the_disruption(disruptions_after)
 
         # it's in journeys
-        response = self.query_region(journey_basic_query + "&data_freshness=realtime&_current_datetime=20120614T1337")
+        response = self.query_region(journey_basic_query + "&data_freshness=realtime&_current_datetime=20120614T080000")
         assert has_the_disruption(response)
         #no realtime flags on journeys yet
 

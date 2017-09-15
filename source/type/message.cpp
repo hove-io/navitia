@@ -168,6 +168,9 @@ bool Impact::is_valid(const boost::posix_time::ptime& publication_date, const bo
 bool Impact::is_relevant(const std::vector<const StopTime*>& stop_times) const {
     // No delay on the section
     if (severity->effect == nt::disruption::Effect::SIGNIFICANT_DELAYS && ! aux_info.stop_times.empty()) {
+        // We don't handle removed or added stop, but we already match
+        // on SIGNIFICANT_DELAYS, thus we should not have that here
+        // (removed and added stop should be a DETOUR)
         const auto nb_aux = aux_info.stop_times.size();
         for (const auto& st: stop_times) {
             const auto base_st = st->get_base_stop_time();

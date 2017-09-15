@@ -1953,8 +1953,12 @@ BOOST_AUTO_TEST_CASE(skipped_stop_then_delay) {
     BOOST_CHECK_EQUAL(journeys[0].items.back().arrival, "20170101T083500"_dt);
 }
 
-/*delay: +5      0      0     +5      0
- *        A ---- B ---- C ---- D ---- E
+/*
+ * Test that we display delays on journeys only if the traveler is
+ * really impacted by it.
+ *
+ * delay: +5      0      0     +5      0
+ *         A ---- B ---- C ---- D ---- E
  *
  * A to B -> print disruption
  * B to C -> no disruption
@@ -1963,7 +1967,7 @@ BOOST_AUTO_TEST_CASE(skipped_stop_then_delay) {
  */
 BOOST_AUTO_TEST_CASE(train_delayed_and_on_time) {
     ed::builder b("20150928");
-    b.vj("1", "000001", "", true, "vj:1")
+    b.vj("1").uri("vj:1")
         ("A", "08:00"_t)
         ("B", "09:00"_t)
         ("C", "10:00"_t)
