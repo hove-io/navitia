@@ -165,6 +165,48 @@ bool Impact::is_valid(const boost::posix_time::ptime& publication_date, const bo
     return false;
 }
 
+bool Impact::is_relevant(const std::vector<const StopTime*>& stop_times) const {
+    // No delay on the section
+    if (severity->effect == nt::disruption::Effect::SIGNIFICANT_DELAYS && ! aux_info.stop_times.empty()) {
+        // We don't handle removed or added stop, but we already match
+        // on SIGNIFICANT_DELAYS, thus we should not have that here
+        // (removed and added stop should be a DETOUR)
+        const auto nb_aux = aux_info.stop_times.size();
+        for (const auto& st: stop_times) {
+            const auto base_st = st->get_base_stop_time();
+            if (base_st == nullptr) { return true; }
+            const auto idx = base_st->order();
+            if (idx >= nb_aux) { return true; }
+            const auto& amended_st = aux_info.stop_times.at(idx).stop_time;
+            if (base_st->arrival_time != amended_st.arrival_time) { return true; }
+            if (base_st->departure_time != amended_st.departure_time) { return true; }
+        }
+        return false;
+    }
+
+    // line section not relevant
+    auto line_section_impacted_obj_it = boost::find_if(informed_entities(), [](const PtObj& ptobj) {
+            return boost::get<LineSection>(&ptobj) != nullptr;
+        });
+    if (line_section_impacted_obj_it != informed_entities().end()) {
+        // note in this we take the premise that an impact
+        // cannot impact a line section AND a vj
+        for (const auto& st: stop_times) {
+            // if one stop point of the stoptimes is impacted by the same impact
+            // it means the section is impacted
+            for (const auto& sp_message: st->stop_point->get_impacts()) {
+                if (sp_message.get() == this) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    // else, no reason to not be interested by it
+    return true;
+}
+
 const type::ValidityPattern Impact::get_impact_vp(const boost::gregorian::date_period& production_date) const {
     type::ValidityPattern impact_vp{production_date.begin()}; // bitset are all initialised to 0
     for (const auto& period: this->application_periods) {
