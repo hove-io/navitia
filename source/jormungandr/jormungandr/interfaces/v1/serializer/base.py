@@ -28,19 +28,18 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-
 from functools import partial
-
 from jormungandr.interfaces.v1.serializer import jsonschema
 import serpy
+import six
 import operator
-
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field
 
 
 class PbField(Field):
-    def __init__(self, *args, **kwargs):
+    def __init__(self, default_value=None, *args, **kwargs):
         super(PbField, self).__init__(*args, **kwargs)
+        self.default_value = default_value
 
     """
     This field handle protobuf, it aim to handle field absent value:
@@ -51,16 +50,24 @@ class PbField(Field):
         op = operator.attrgetter(self.attr or serializer_field_name)
         def getter(obj):
             if obj is None:
-                return None
+                return self.default_value
             try:
                 if obj.HasField(self.attr or serializer_field_name):
                     return op(obj)
                 else:
-                    return None
+                    return self.default_value
             except ValueError:
                 #HasField throw an exception if the field is repeated...
                 return op(obj)
         return getter
+
+
+class PbStrField(PbField):
+    def __init__(self, default_value=None, *args, **kwargs):
+        super(PbStrField, self).__init__(default_value, schema_type=str, *args, **kwargs)
+
+    to_value = staticmethod(six.text_type)
+
 
 class NestedPbField(PbField):
     """

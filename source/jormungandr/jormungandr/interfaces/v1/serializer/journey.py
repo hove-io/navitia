@@ -34,7 +34,7 @@ from jormungandr.interfaces.v1.serializer.pt import PlaceSerializer, CalendarSer
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import LinkSchema, RoundedField, SectionGeoJsonField, StrField
 from jormungandr.interfaces.v1.serializer.base import AmountSerializer, PbNestedSerializer, \
-        LambdaField, EnumField, EnumListField, NestedEnumField
+    LambdaField, EnumField, EnumListField, NestedEnumField, PbField, PbStrField
 from flask import g
 from navitiacommon.type_pb2 import StopDateTime
 from navitiacommon.response_pb2 import SectionAdditionalInformationType
@@ -51,8 +51,8 @@ class ContextSerializer(PbNestedSerializer):
 
 
 class CostSerializer(PbNestedSerializer):
-    value = StrField()
-    currency = jsonschema.Field(schema_type=str)
+    value = PbStrField(default_value='')
+    currency = PbField(schema_type=str, default_value='')
 
 
 class FareSerializer(PbNestedSerializer):
@@ -85,7 +85,7 @@ class TicketSerializer(PbNestedSerializer):
     name = jsonschema.Field(schema_type=str, display_none=True, description='Name of the object')
     comment = jsonschema.Field(schema_type=str)
     found = jsonschema.BoolField()
-    cost = CostSerializer()
+    cost = CostSerializer(display_none=True)
     links = jsonschema.MethodField(schema_type=LinkSchema(many=True))
 
     def get_links(self, obj):
