@@ -90,11 +90,12 @@ public:
 
     bool load(const std::string& database,
               const boost::optional<std::string>& chaos_database = boost::none,
-              const std::vector<std::string>& contributors = {}){
+              const std::vector<std::string>& contributors = {},
+              const size_t raptor_cache_size = 10){
         bool success;
         ++ data_identifier;
         auto data = create_data(data_identifier.load());
-        success = data->load(database, chaos_database, contributors);
+        success = data->load(database, chaos_database, contributors, raptor_cache_size);
         if (success) {
             set_data(std::move(data));
         }

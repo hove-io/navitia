@@ -41,7 +41,8 @@ class Data{
     public:
         bool load(const std::string&,
                   const boost::optional<std::string>&,
-                  const std::vector<std::string>&) {
+                  const std::vector<std::string>&,
+                  const size_t) {
             return load_status;
         }
         mutable std::atomic<bool> is_connected_to_rabbitmq;

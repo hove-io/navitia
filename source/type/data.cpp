@@ -86,8 +86,9 @@ Data::Data(size_t data_identifier) :
 Data::~Data(){}
 
 bool Data::load(const std::string& filename,
-        const boost::optional<std::string>& chaos_database,
-        const std::vector<std::string>& contributors) {
+                const boost::optional<std::string>& chaos_database,
+                const std::vector<std::string>& contributors,
+                const size_t raptor_cache_size) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     loading = true;
     try {
@@ -105,7 +106,7 @@ bool Data::load(const std::string& filename,
         if (chaos_database) {
             fill_disruption_from_database(*chaos_database, *pt_data, *meta, contributors);
         }
-        build_raptor();
+        build_raptor(raptor_cache_size);
     } catch(const wrong_version& ex) {
         LOG4CPLUS_ERROR(logger, "Cannot load data: " << ex.what());
         last_load = false;
