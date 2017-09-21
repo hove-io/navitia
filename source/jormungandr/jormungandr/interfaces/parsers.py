@@ -39,10 +39,9 @@ depth_argument = parser_args_type.DepthArgument()
 
 float_gt_0 = parser_args_type.PositiveFloat()
 
-parser_min_count = app.config['PARSER_MIN_COUNT']
 parser_max_count = app.config['PARSER_MAX_COUNT']
 
-default_count_arg_type = parser_args_type.IntervalValue(min_value=parser_min_count, max_value=parser_max_count)
+default_count_arg_type = parser_args_type.IntervalValue(min_value=0, max_value=parser_max_count)
 
 
 def parse_input_date(date):
