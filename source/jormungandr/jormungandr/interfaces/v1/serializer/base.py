@@ -28,13 +28,11 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-
 from functools import partial
-
 from jormungandr.interfaces.v1.serializer import jsonschema
 import serpy
+import six
 import operator
-
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field
 
 
@@ -53,7 +51,7 @@ class PbField(Field):
             if obj is None:
                 return None
             try:
-                if obj.HasField(self.attr or serializer_field_name):
+                if self.display_none or obj.HasField(self.attr or serializer_field_name):
                     return op(obj)
                 else:
                     return None
@@ -61,6 +59,14 @@ class PbField(Field):
                 #HasField throw an exception if the field is repeated...
                 return op(obj)
         return getter
+
+
+class PbStrField(PbField):
+    def __init__(self, *args, **kwargs):
+        super(PbStrField, self).__init__(schema_type=str, *args, **kwargs)
+
+    to_value = staticmethod(six.text_type)
+
 
 class NestedPbField(PbField):
     """
