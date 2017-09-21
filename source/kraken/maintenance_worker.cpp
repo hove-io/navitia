@@ -160,7 +160,8 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
     boost::shared_ptr<nt::Data> data{};
     pt::ptime begin = pt::microsec_clock::universal_time();
     for (auto& envelope: envelopes) {
-        LOG4CPLUS_DEBUG(logger, "realtime info received!");
+        const auto routing_key = envelope->RoutingKey();
+        LOG4CPLUS_DEBUG(logger, "realtime info received from " << routing_key);
         assert(envelope);
         transit_realtime::FeedMessage feed_message;
         if(! feed_message.ParseFromString(envelope->Message()->Body())){
@@ -182,7 +183,8 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
                 make_and_apply_disruption(entity.GetExtension(chaos::disruption), *data->pt_data, *data->meta);
             } else if(entity.has_trip_update()) {
                 LOG4CPLUS_DEBUG(logger, "RT trip update" << entity.id());
-                handle_realtime(entity.id(),
+                handle_realtime(routing_key,
+                                entity.id(),
                                 navitia::from_posix_timestamp(feed_message.header().timestamp()),
                                 entity.trip_update(),
                                 *data);
