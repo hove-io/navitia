@@ -29,7 +29,7 @@
 from __future__ import absolute_import
 from dateutil import parser
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import DateTimeType
-form jormungandr import app
+from jormungandr import app
 from navitiacommon import parser_args_type
 
 # TODO: to be moved completely into navitiacommon
