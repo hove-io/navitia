@@ -51,8 +51,8 @@ class ContextSerializer(PbNestedSerializer):
 
 
 class CostSerializer(PbNestedSerializer):
-    value = PbStrField(default_value='')
-    currency = PbField(schema_type=str, default_value='')
+    value = PbStrField()
+    currency = PbField(schema_type=str)
 
 
 class FareSerializer(PbNestedSerializer):
