@@ -710,10 +710,6 @@ Also known as `/places_nearby` service.
 This endpoint allowe you to search for public transport objects that are near another object, or nearby
 coordinates, returning a [places](#place) collection.
 
-<aside class="warning">
-    There is no pagination for this api.
-</aside>
-
 ### Accesses
 
 | url                                                    | Result                                                                         |
@@ -732,7 +728,9 @@ coordinates, returning a [places](#place) collection.
   nop      | type[]      | array of string | Type of objects you want to query | [`stop_area`, `stop_point`, `poi`, `administrative_region`]
   nop      | admin_uri[] | array of string | If filled, will filter the search within the given admin uris       |
   nop      | filter      | string          | Use to filter returned objects. for example: places_type.id=theater |
-  nop      | disable_geojson | boolean     | remove geojson from the response  | False
+  nop      | disable_geojson | boolean     | Remove geojson from the response  | False
+  nop      | count       | int             | Elements per page                 | 10
+  nop      | start_page  | int             | The page number (cf the [paging section](#paging)) | 0
   nop      | add_poi_infos  | boolean      | Activate the output of additional infomations about the poi. For example, parking availability(BSS, car parking etc.) in the bicycle_rental, car parking pois of response. Pass `add_poi_infos[]=&` (empty string) to deactivate all.   | [`bss_stands`, `car_park`]
 
 Filters can be added:
@@ -745,7 +743,10 @@ Filters can be added:
     -   "distance=10000" Paris is not so big
     -   "type[]=poi" to take pois only
     -   "filter=poi_type.id=poi_type:amenity:parking" to get parking
+    -   "count=100" for classic pagination (to get the 100 nearest ones)
     -   <https://api.navitia.io/v1/coverage/fr-idf/places/admin:7444/places_nearby?distance=10000&count=100&type[]=poi&filter=poi_type.id=poi_type:amenity:parking>
+
+The results are sorted by distance.
 
 <a name="journeys"></a>Journeys
 -------------------------------
