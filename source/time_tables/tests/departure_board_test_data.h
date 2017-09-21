@@ -275,6 +275,13 @@ struct calendar_fixture {
 
         b.finish();
         b.data->build_uri();
+
+        b.data->pt_data->codes.add(b.get<nt::VehicleJourney>("R:vj1"), "source", "Code-R-vj1");
+        b.data->pt_data->codes.add(b.get<nt::StopPoint>("StopR1"), "source", "Code-StopR1");
+        b.data->pt_data->codes.add(b.get<nt::StopPoint>("StopR2"), "source", "Code-StopR2");
+        b.data->pt_data->codes.add(b.get<nt::StopPoint>("StopR3"), "source", "Code-StopR3");
+        b.data->pt_data->codes.add(b.get<nt::StopPoint>("StopR4"), "source", "Code-StopR4");
+
         beg = b.data->meta->production_date.begin();
         end_of_year = beg + boost::gregorian::years(1) + boost::gregorian::days(1);
 
