@@ -99,6 +99,7 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         # we should see the disruption
         def _check_train_cancel_disruption(dis):
             is_valid_disruption(dis, chaos_disrup=False)
+            assert dis['contributor'] == rt_topic
             assert dis['disruption_id'] == 'disruption_bob'
             assert dis['severity']['effect'] == 'NO_SERVICE'
             assert len(dis['impacted_objects']) == 1
