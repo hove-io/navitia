@@ -1,3 +1,9 @@
+navitia2 (2.41.1) unstable; urgency=low
+
+  * kraken: use raptor_cache_size parameter <https://github.com/CanalTP/navitia/pull/2203>
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Fri, 22 Sep 2017 09:09:45 +0100
+
 navitia2 (2.41.0) unstable; urgency=low
 
   * Kraken: no disruptions on time for journeys and schedules  <https://github.com/CanalTP/navitia/pull/2199>
