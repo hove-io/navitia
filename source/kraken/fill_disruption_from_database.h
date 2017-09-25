@@ -202,7 +202,7 @@ namespace navitia {
                     severity->set_effect(transit_realtime::Alert::Effect::Alert_Effect_NO_SERVICE);
                 } else if (effect == "reduced_service") {
                     severity->set_effect(transit_realtime::Alert::Effect::Alert_Effect_REDUCED_SERVICE);
-                } else if (effect == "significant_delays'") {
+                } else if (effect == "significant_delays") {
                     severity->set_effect(transit_realtime::Alert::Effect::Alert_Effect_SIGNIFICANT_DELAYS);
                 } else if (effect == "detour") {
                     severity->set_effect(transit_realtime::Alert::Effect::Alert_Effect_DETOUR);
