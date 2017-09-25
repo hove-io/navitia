@@ -29,6 +29,7 @@
 from __future__ import absolute_import
 from dateutil import parser
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import DateTimeType
+from jormungandr import app
 from navitiacommon import parser_args_type
 
 # TODO: to be moved completely into navitiacommon
@@ -38,7 +39,9 @@ depth_argument = parser_args_type.DepthArgument()
 
 float_gt_0 = parser_args_type.PositiveFloat()
 
-default_count_arg_type = parser_args_type.IntervalValue(min_value=0, max_value=1000)
+parser_max_count = app.config['PARSER_MAX_COUNT']
+
+default_count_arg_type = parser_args_type.IntervalValue(min_value=0, max_value=parser_max_count)
 
 
 def parse_input_date(date):
