@@ -2049,3 +2049,67 @@ BOOST_AUTO_TEST_CASE(train_delayed_and_on_time) {
     BOOST_CHECK_EQUAL(res.journeys_size(), 1);
     BOOST_CHECK_EQUAL(res.impacts_size(), 1);
 }
+
+BOOST_AUTO_TEST_CASE(train_delayed_3_times_different_id) {
+    ed::builder b("20150928");
+    b.vj("1").uri("vj:1")
+        ("A", "08:00"_t)
+        ("B", "09:00"_t);
+
+    transit_realtime::TripUpdate trip_update1 = ntest::make_delay_message("vj:1",
+            "20150928",
+            {
+                    DelayedTimeStop("A", "20150928T0801"_pts).delay(1_min),
+                    DelayedTimeStop("B", "20150928T0900"_pts).delay(0_min)
+            });
+    b.data->build_uri();
+
+    navitia::handle_realtime("bob1", timestamp, trip_update1, *b.data);
+
+    transit_realtime::TripUpdate trip_update2 = ntest::make_delay_message("vj:1",
+            "20150928",
+            {
+                    DelayedTimeStop("A", "20150928T0805"_pts).delay(5_min),
+                    DelayedTimeStop("B", "20150928T0900"_pts).delay(0_min)
+            });
+    b.data->build_uri();
+
+    navitia::handle_realtime("bob2", timestamp, trip_update2, *b.data);
+
+    transit_realtime::TripUpdate trip_update3 = ntest::make_delay_message("vj:1",
+            "20150928",
+            {
+                    DelayedTimeStop("A", "20150928T0802"_pts).delay(2_min),
+                    DelayedTimeStop("B", "20150928T0900"_pts).delay(0_min)
+            });
+    b.data->build_uri();
+
+    navitia::handle_realtime("bob3", timestamp, trip_update2, *b.data);
+
+    const auto& pt_data = b.data->pt_data;
+    pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+
+    navitia::routing::RAPTOR raptor(*(b.data));
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    auto compute = [&](const char* from, const char* to, nt::RTLevel level) {
+        navitia::type::Type_e origin_type = b.data->get_type_of_id(from);
+        navitia::type::Type_e destination_type = b.data->get_type_of_id(to);
+        navitia::type::EntryPoint origin(origin_type, from);
+        navitia::type::EntryPoint destination(destination_type, to);
+
+        navitia::PbCreator pb_creator(b.data.get(), "20150928T073000"_dt, null_time_period);
+        make_response(pb_creator, raptor, origin, destination,
+                      {ntest::to_posix_timestamp("20150928T073000")},
+                      true, navitia::type::AccessibiliteParams(), {}, {},
+                      sn_worker, level, 2_min);
+        return  pb_creator.get_response();
+    };
+
+    auto res = compute("A", "B", nt::RTLevel::RealTime);
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.impacts_size(), 3);
+}

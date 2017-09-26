@@ -848,7 +848,7 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPointConnection* c, pbnavit
 
 static uint32_t get_st_utc_offset(const nt::StopTime* st, const uint32_t time) {
     static const auto flag = std::numeric_limits<uint32_t>::max();
-    return time == flag ? 0 : st->vehicle_journey->utc_to_local_offset();
+    return time == flag || st->vehicle_journey == nullptr ? 0 : st->vehicle_journey->utc_to_local_offset();
 }
 
 void PbCreator::Filler::fill_pb_object(const nd::StopTimeUpdate* stu, pbnavitia::StopTime* stop_time) {

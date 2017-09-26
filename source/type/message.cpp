@@ -329,6 +329,16 @@ void DisruptionHolder::clean_weak_impacts(){
     clean_up_weak_ptr(weak_impacts);
 }
 
+void DisruptionHolder::forget_vj(const VehicleJourney* vj) {
+    for (const auto& impact: vj->meta_vj->get_impacts()) {
+        for (auto& stu: impact->aux_info.stop_times) {
+            if (stu.stop_time.vehicle_journey == vj) {
+                stu.stop_time.vehicle_journey = nullptr;
+            }
+        }
+    }
+}
+
 namespace detail {
 
 const StopTime* AuxInfoForMetaVJ::get_base_stop_time(const StopTimeUpdate& stu) const {
