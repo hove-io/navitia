@@ -624,6 +624,9 @@ def is_valid_section(section, query):
 
     assert section['type']  # type cannot be empty
 
+    if section['type'] == 'public_transport':#, 'on_demand_transport':
+        is_valid_rt_level(section['data_freshness'])
+
     #for street network section, we must have a valid path
     if section['type'] == 'street_network':
         assert section['mode']  # mode cannot be empty for street network

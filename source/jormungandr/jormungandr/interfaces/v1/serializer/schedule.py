@@ -31,6 +31,7 @@ from datetime import datetime
 from jormungandr.interfaces.v1.serializer.base import PbNestedSerializer, EnumField, EnumListField
 from jormungandr.interfaces.v1.serializer import pt, jsonschema, base
 from jormungandr.interfaces.v1.serializer.fields import LinkSchema, MultiLineStringField
+from jormungandr.interfaces.v1.serializer.time import DateTimeField
 from jormungandr.interfaces.v1.make_links import create_internal_link
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import TimeOrDateTimeType
 from jormungandr.utils import timestamp_to_str
@@ -61,6 +62,7 @@ class PassageSerializer(PbNestedSerializer):
 
 class DateTimeTypeSerializer(PbNestedSerializer):
     date_time = jsonschema.MethodField(schema_type=TimeOrDateTimeType, display_none=True)
+    base_date_time = DateTimeField()
     additional_informations = pt.AdditionalInformation(attr='additional_informations', display_none=True)
     links = pt.PropertiesLinksSerializer(attr="properties")
     data_freshness = EnumField(attr="realtime_level", display_none=True)

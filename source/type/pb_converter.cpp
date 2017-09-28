@@ -38,6 +38,7 @@ www.navitia.io
 #include <boost/date_time/date_defs.hpp>
 #include <boost/geometry/algorithms/length.hpp>
 #include "type/geographical_coord.h"
+#include <type/type_utils.h>
 #include <boost/geometry.hpp>
 #include "fare/fare.h"
 #include "time_tables/thermometer.h"
@@ -383,19 +384,6 @@ PbCreator::Filler PbCreator::Filler::copy(int depth, const DumpMessageOptions& d
         return PbCreator::Filler(0, dump_message_options, pb_creator);
     }
     return PbCreator::Filler(depth, dump_message_options, pb_creator);
-}
-
-static pbnavitia::RTLevel to_pb_realtime_level(const navitia::type::RTLevel realtime_level) {
-    switch (realtime_level) {
-    case nt::RTLevel::Base:
-        return pbnavitia::BASE_SCHEDULE;
-    case nt::RTLevel::Adapted:
-        return pbnavitia::ADAPTED_SCHEDULE;
-    case nt::RTLevel::RealTime:
-        return pbnavitia::REALTIME;
-    default:
-        throw navitia::exception("realtime level case not handled");
-    }
 }
 
 void PbCreator::Filler::fill_pb_object(const nt::Contributor* cb, pbnavitia::Contributor* contrib){
@@ -1344,6 +1332,15 @@ void PbCreator::Filler::fill_pb_object(const StopTimeCalandar* stop_time_calenda
     if (! stop_time_calendar->calendar_id) {
         //for calendar we don't want to have a date
         rs_date_time->set_date(navitia::to_int_date(navitia::to_posix_time(stop_time_calendar->date_time, *pb_creator.data)));
+
+        if (auto base_st = get_base_stop_time(stop_time_calendar->stop_time)) {
+            auto base_dt = get_date_time(routing::StopEvent::pick_up,
+                                         stop_time_calendar->stop_time,
+                                         base_st,
+                                         navitia::to_posix_time(stop_time_calendar->date_time, *pb_creator.data),
+                                         true);
+            rs_date_time->set_base_date_time(to_posix_timestamp(base_dt));
+        }
     }
 
     pbnavitia::Properties* hn = rs_date_time->mutable_properties();

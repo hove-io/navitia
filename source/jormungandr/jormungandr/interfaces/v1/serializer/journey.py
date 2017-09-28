@@ -166,6 +166,7 @@ class SectionSerializer(PbNestedSerializer):
                                              description='Base-schedule departure date and time of the section')
     base_arrival_date_time = DateTimeField(attr='base_end_date_time',
                                            description='Base-schedule arrival date and time of the section')
+    data_freshness = EnumField(attr="realtime_level", display_none=False)
     to = jsonschema.MethodField(schema_type=PlaceSerializer(), attr='destination')
 
     def get_to(self, obj):
