@@ -34,7 +34,7 @@ from jormungandr.interfaces.v1.serializer.pt import PlaceSerializer, CalendarSer
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import LinkSchema, RoundedField, SectionGeoJsonField, StrField
 from jormungandr.interfaces.v1.serializer.base import AmountSerializer, PbNestedSerializer, \
-        LambdaField, EnumField, EnumListField, NestedEnumField
+    LambdaField, EnumField, EnumListField, NestedEnumField, PbField, PbStrField
 from flask import g
 from navitiacommon.type_pb2 import StopDateTime
 from navitiacommon.response_pb2 import SectionAdditionalInformationType
@@ -51,8 +51,8 @@ class ContextSerializer(PbNestedSerializer):
 
 
 class CostSerializer(PbNestedSerializer):
-    value = StrField()
-    currency = jsonschema.Field(schema_type=str)
+    value = PbStrField()
+    currency = PbField(schema_type=str)
 
 
 class FareSerializer(PbNestedSerializer):
@@ -85,7 +85,7 @@ class TicketSerializer(PbNestedSerializer):
     name = jsonschema.Field(schema_type=str, display_none=True, description='Name of the object')
     comment = jsonschema.Field(schema_type=str)
     found = jsonschema.BoolField()
-    cost = CostSerializer()
+    cost = CostSerializer(display_none=True)
     links = jsonschema.MethodField(schema_type=LinkSchema(many=True))
 
     def get_links(self, obj):
@@ -166,6 +166,7 @@ class SectionSerializer(PbNestedSerializer):
                                              description='Base-schedule departure date and time of the section')
     base_arrival_date_time = DateTimeField(attr='base_end_date_time',
                                            description='Base-schedule arrival date and time of the section')
+    data_freshness = EnumField(attr="realtime_level", display_none=False)
     to = jsonschema.MethodField(schema_type=PlaceSerializer(), attr='destination')
 
     def get_to(self, obj):

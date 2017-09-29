@@ -37,7 +37,7 @@ from jormungandr import timezone
 from jormungandr.interfaces.v1.fields import stop_point, route, pagination, PbField, stop_date_time, \
     additional_informations, stop_time_properties_links, display_informations_vj, \
     display_informations_route, UrisToLinks, error, \
-    enum_type, SplitDateTime, MultiLineString, PbEnum, feed_publisher
+    enum_type, SplitDateTime, MultiLineString, PbEnum, feed_publisher, DateTime
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri, complete_links
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.serializer import api
@@ -198,6 +198,7 @@ class Schedules(ResourceUri, ResourceUtc):
 
 date_time = {
     "date_time": SplitDateTime(date='date', time='time'),
+    "base_date_time": DateTime(),
     "additional_informations": additional_informations(),
     "links": stop_time_properties_links(),
     'data_freshness': enum_type(attribute='realtime_level'),

@@ -142,7 +142,10 @@ class TestDepartures(AbstractTestFixture):
         stop_schedule_A = response['stop_schedules'][0]
         assert stop_schedule_A['route']['name'] == 'A'
         next_passage_dts = [dt["date_time"] for dt in stop_schedule_A['date_times']]
-        assert ['20160102T110000', '20160103T090000', '20160103T100000'] == next_passage_dts
+        next_passage_base_dts = [dt["base_date_time"] for dt in stop_schedule_A['date_times']]
+        values = ['20160102T110000', '20160103T090000', '20160103T100000']
+        assert values == next_passage_dts
+        assert values == next_passage_base_dts
 
         for dt in stop_schedule_A['date_times']:
             assert dt['data_freshness'] == 'base_schedule'
@@ -218,6 +221,10 @@ class TestDepartures(AbstractTestFixture):
         query = self.query_template.format(sp='C:S0', dt='20160102T1100', data_freshness='') + \
                 '&items_per_schedule=1'
         response = self.query_region(query)
+
+        # no base_date_time with rt proxy
+        assert not [dt for ss in response['stop_schedules'] for dt in ss['date_times'] if dt.get('base_date_time') is not None]
+
         for stop_sched in response['stop_schedules']:
             assert len(stop_sched['date_times']) == 1
 

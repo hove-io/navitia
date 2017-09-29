@@ -369,6 +369,7 @@ public:
     size_t nb_disruptions() const { return disruptions_by_uri.size(); }
     void add_weak_impact(boost::weak_ptr<Impact>);
     void clean_weak_impacts();
+    void forget_vj(const VehicleJourney*);
     const std::vector<boost::weak_ptr<Impact>>&
     get_weak_impacts() const{ return weak_impacts;}
     // causes, severities and tags are a pool (weak_ptr because the owner ship
