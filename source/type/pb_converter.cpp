@@ -38,7 +38,7 @@ www.navitia.io
 #include <boost/date_time/date_defs.hpp>
 #include <boost/geometry/algorithms/length.hpp>
 #include "type/geographical_coord.h"
-#include <type/type_utils.h>
+#include "type/type_utils.h"
 #include <boost/geometry.hpp>
 #include "fare/fare.h"
 #include "time_tables/thermometer.h"
