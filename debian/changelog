@@ -1,3 +1,17 @@
+navitia2 (2.42.0) unstable; urgency=low
+
+  * All: add more reatime information in the response  <https://github.com/CanalTP/navitia/pull/2211>
+  * Kraken: fix typo for disruption effect management  <https://github.com/CanalTP/navitia/pull/2209>
+  * Jormun: add possibility to configure max count value  <https://github.com/CanalTP/navitia/pull/2207>
+  * Jormun: default conf for max count value  <https://github.com/CanalTP/navitia/pull/2206>
+  * Kraken: don't segfault when 2 different disruptions modify the same vj  <https://github.com/CanalTP/navitia/pull/2210>
+  * Kraken: populate the contributor of the disruption for realtime  <https://github.com/CanalTP/navitia/pull/2208>
+  * Doc: add a section on /places_nearby pagination  <https://github.com/CanalTP/navitia/pull/2205>
+  * Kraken: add codes to test features  <https://github.com/CanalTP/navitia/pull/2204>
+  * Jormungandr: fix unknown ticket cost in serpy  <https://github.com/CanalTP/navitia/pull/2202>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Fri, 29 Sep 2017 17:09:58 +0100
+
 navitia2 (2.41.1) unstable; urgency=low
 
   * kraken: use raptor_cache_size parameter <https://github.com/CanalTP/navitia/pull/2203>
