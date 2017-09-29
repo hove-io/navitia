@@ -188,6 +188,7 @@ section = {
     "base_departure_date_time": DateTime(attribute="base_begin_date_time"),
     "arrival_date_time": DateTime(attribute="end_date_time"),
     "base_arrival_date_time": DateTime(attribute="base_end_date_time"),
+    'data_freshness': enum_type(attribute='realtime_level'),
     "co2_emission": NonNullNested({
         'value': fields.Raw,
         'unit': fields.String

@@ -31,6 +31,7 @@ www.navitia.io
 #include "raptor_api.h"
 #include "raptor.h"
 #include "georef/street_network.h"
+#include "type/type_utils.h"
 #include "type/pb_converter.h"
 #include "type/datetime.h"
 #include "type/meta_data.h"
@@ -435,6 +436,7 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
                 auto base_arr_dt = get_base_dt(item.stop_times.back(), base_arr_st, item.arrival, false);
                 pb_section->set_base_end_date_time(navitia::to_posix_timestamp(base_arr_dt));
             }
+            pb_section->set_realtime_level(to_pb_realtime_level(item.stop_times.front()->vehicle_journey->realtime_level));
         }
 
         arrival_time = item.arrival;

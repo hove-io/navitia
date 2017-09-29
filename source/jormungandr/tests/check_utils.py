@@ -615,6 +615,13 @@ def is_valid_heat_maps(heat_map, tester, query):
         assert ('from' in g) ^ ('to' in g)
     return True
 
+def is_rt_dt_coherent(data_freshness, base_dt, amended_dt):
+    if base_dt is None:
+        return
+    if data_freshness == 'base_schedule':
+        assert base_dt == amended_dt
+    elif base_dt != amended_dt:
+        assert data_freshness != 'base_schedule'
 
 def is_valid_section(section, query):
     arrival = get_valid_datetime(section['arrival_date_time'])
@@ -623,6 +630,15 @@ def is_valid_section(section, query):
     assert (arrival - departure).seconds == section['duration']
 
     assert section['type']  # type cannot be empty
+
+    if section['type'] in {'public_transport', 'on_demand_transport'}:
+        is_valid_rt_level(section['data_freshness'])
+        is_rt_dt_coherent(section['data_freshness'],
+                          section.get('base_arrival_date_time'),
+                          section['arrival_date_time'])
+        is_rt_dt_coherent(section['data_freshness'],
+                          section.get('base_departure_date_time'),
+                          section['departure_date_time'])
 
     #for street network section, we must have a valid path
     if section['type'] == 'street_network':
