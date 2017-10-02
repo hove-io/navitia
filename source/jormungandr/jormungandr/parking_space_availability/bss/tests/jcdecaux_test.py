@@ -68,10 +68,10 @@ def parking_space_availability_jcdecaux_get_informations_test():
     """
     Jcdecaux validate return good stands informations or None if an error occured
     """
-    webservice_response = {
+    webservice_response = {'2': {
         'available_bike_stands': 4,
         'available_bikes': 8
-    }
+    }}
     provider = JcdecauxProvider(u"vélib'", 'Paris', 'api_key', {'jcdecaux'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
     assert provider.get_informations(poi) == Stands(4, 8)
@@ -92,12 +92,13 @@ def parking_space_availability_jcdecaux_get_informations_unauthorized_test():
     assert provider.get_informations(poi) is None
 
 def test_call_mocked_request():
-    webservice_response = {
+    webservice_response = [{
+        'number': 2,
         'available_bike_stands': 4,
         'available_bikes': 8
-    }
+    }]
     provider = JcdecauxProvider(u"vélib'", 'Paris', 'api_key', {'jcdecaux'})
     with requests_mock.Mocker() as m:
-        m.get('https://api.jcdecaux.com/vls/v1/stations/2', json=webservice_response)
+        m.get('https://api.jcdecaux.com/vls/v1/stations/', json=webservice_response)
         assert provider.get_informations(poi) == Stands(4, 8)
         assert m.called
