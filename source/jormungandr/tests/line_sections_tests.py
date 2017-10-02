@@ -35,9 +35,9 @@ from .check_utils import *
 
 def impacted_ids(disrupts):
     # for the impacted obj, either get the id, or the headsign (for the display_information field)
-    return set(o.impacted_object.get('id',
-                                     o.impacted_object.get('headsign'))
-               for o in disrupts['line_section_on_line_1'])
+    return set(o.impacted_object.get('id', o.impacted_object.get('headsign'))
+               for o in disrupts['line_section_on_line_1']
+               if 'id' in o.impacted_object or 'headsign' in o.impacted_object)
 
 
 @dataset({"line_sections_test": {}})
