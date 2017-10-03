@@ -47,7 +47,7 @@ DEFAULT_JCDECAUX_FEED_PUBLISHER = {
 
 class JcdecauxProvider(AbstractParkingPlacesProvider):
 
-    WS_URL_TEMPLATE = 'https://api.jcdecaux.com/vls/v1/stations/{}?contract={}&apiKey={}'
+    WS_URL_TEMPLATE = 'https://api.jcdecaux.com/vls/v1/stations/?contract={}&apiKey={}'
 
     def __init__(self, network, contract, api_key, operators={'jcdecaux'}, timeout=10,
                  feed_publisher=DEFAULT_JCDECAUX_FEED_PUBLISHER, **kwargs):
@@ -67,10 +67,13 @@ class JcdecauxProvider(AbstractParkingPlacesProvider):
                properties.get('network', '').lower() == self.network
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_JCDECAUX', 30))
-    def _call_webservice(self, station_id):
+    def _call_webservice(self):
         try:
-            data = self.breaker.call(requests.get, self.WS_URL_TEMPLATE.format(station_id, self.contract, self.api_key), timeout=self.timeout)
-            return data.json()
+            data = self.breaker.call(requests.get, self.WS_URL_TEMPLATE.format(self.contract, self.api_key), timeout=self.timeout)
+            stands = {}
+            for s in data.json():
+                stands[str(s['number'])] = s
+            return stands
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('JCDecaux service dead (error: {})'.format(e))
         except requests.Timeout as t:
@@ -81,12 +84,18 @@ class JcdecauxProvider(AbstractParkingPlacesProvider):
 
     def get_informations(self, poi):
         ref = poi.get('properties', {}).get('ref')
-        data = self._call_webservice(ref)
-        if data and 'available_bike_stands' in data and 'available_bikes' in data:
-            return Stands(data['available_bike_stands'], data['available_bikes'])
+        data = self._call_webservice()
+        if not data or ref not in data:
+            return None
+        if 'available_bike_stands' in data[ref] and 'available_bikes' in data[ref]:
+            return Stands(data[ref]['available_bike_stands'], data[ref]['available_bikes'])
 
     def status(self):
         return {'network': self.network, 'operators': self.operators, 'contract': self.contract}
 
     def feed_publisher(self):
         return self._feed_publisher
+
+    def __repr__(self):
+        #TODO: make this shit python 3 compatible
+        return ('jcdecaux-{}-{}'.format(self.network, self.contract)).encode('utf-8')
