@@ -1345,8 +1345,9 @@ void PbCreator::Filler::fill_pb_object(const StopTimeCalandar* stop_time_calenda
         const std::vector<const nt::StopTime*> stop_times = {stop_time_calendar->stop_time};
         const auto meta_vj = stop_time_calendar->stop_time->vehicle_journey->meta_vj;
         for (const auto& message: meta_vj->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
-            if (! message->is_relevant(stop_times)) { continue; }
-            fill_message(message, rs_date_time);
+            if (message->is_relevant(stop_times)) {
+                fill_message(message, rs_date_time);
+            }
         }
     }
 
