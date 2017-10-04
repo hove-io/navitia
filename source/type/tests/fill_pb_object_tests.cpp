@@ -42,6 +42,11 @@ www.navitia.io
 
 using namespace navitia::type;
 
+struct logger_initialized {
+    logger_initialized()   { init_logger(); }
+};
+BOOST_GLOBAL_FIXTURE( logger_initialized );
+
 BOOST_AUTO_TEST_CASE(test_pt_displayinfo_destination) {
     ed::builder b("20120614");
     b.vj("A")("stop1", 8000, 8050);
@@ -251,4 +256,20 @@ BOOST_AUTO_TEST_CASE(label_formater_line) {
     BOOST_CHECK_EQUAL(rer_a->get_label(), "Transilien Rer A");
     rer_a->commercial_mode = nullptr;
     BOOST_CHECK_EQUAL(rer_a->get_label(), "Transilien A");
+}
+
+BOOST_AUTO_TEST_CASE(pb_convertor_ptref) {
+    ed::builder b("20161026");
+    b.generate_dummy_basis();
+
+    b.vj("A great \"uri\" for café");
+    b.finish();
+    b.data->build_uri();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+
+    auto modes = navitia::ptref_indexes<navitia::type::PhysicalMode>(
+        b.data->pt_data->lines.front(),
+        *b.data);
+    BOOST_CHECK_EQUAL(modes.size(), 1);
 }
