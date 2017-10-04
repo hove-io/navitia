@@ -64,7 +64,7 @@ class DateTimeTypeSerializer(PbNestedSerializer):
     date_time = jsonschema.MethodField(schema_type=TimeOrDateTimeType, display_none=True)
     base_date_time = DateTimeField()
     additional_informations = pt.AdditionalInformation(attr='additional_informations', display_none=True)
-    links = jsonschema.MethodField(schema_type=LinkSchema(many=True))
+    links = jsonschema.MethodField(schema_type=LinkSchema(many=True), display_none=True)
     data_freshness = EnumField(attr="realtime_level", display_none=True)
 
     def get_links(self, obj):
