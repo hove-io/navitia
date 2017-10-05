@@ -974,7 +974,7 @@ Examples:
 * A user doesn't like line A metro in hers city. She adds the parameter `forbidden_uris[]=line:A` when calling the API.
 * A user would only like to use Buses and Tramways. She adds the parameter `allowed_id[]=physical_mode:Bus&allowed_id[]=physical_mode:Tramway`.
 
-#### Technically
+*Technically*
 
 The journeys can only use allowed vehicle journeys (as present in the `public_transport` or `on_demand_transport` sections).
 They also can only use the allowed stop points for getting in or out of a vehicle (as present in the `street_network`, `transfer` and `crow_fly` sections).
