@@ -37,6 +37,10 @@ www.navitia.io
 namespace bg = boost::gregorian;
 using btp = boost::posix_time::time_period;
 
+/*
+ * A dataset with a negative time offset. Cape Verde is UTC-01 without
+ * DST.
+ */
 int main(int argc, const char* const argv[]) {
     navitia::init_app();
 
@@ -46,6 +50,9 @@ int main(int argc, const char* const argv[]) {
     navitia::type::TimeZoneHandler::dst_periods timezones = {{-3600, {production_date}}};
     ed::builder b("20170101", "canal tp", "Atlantic/Cape_Verde", timezones);
 
+    // Times here are UTC
+
+    // UTC and local pass midnight vj
     b.vj("line:1", "000010")
         .uri("vj:1:1")
         ("A", "23:00"_t)
@@ -56,6 +63,7 @@ int main(int argc, const char* const argv[]) {
         ("F", "25:30"_t)
         ("G", "26:00"_t);
 
+    // Only local pass midnight vj
     b.vj("line:1", "000100")
         .uri("vj:1:2")
         ("C", "00:00"_t)
