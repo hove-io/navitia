@@ -840,6 +840,8 @@ static uint32_t get_local_time(const nt::StopTime* st, const uint32_t time) {
     if (time != flag && st->vehicle_journey != nullptr) {
         // getting the positive offset to be safe about integer overflow
         const int32_t day = DateTimeUtils::SECONDS_PER_DAY;
+        // That's `offset mod day`. `offset % day` can be negative, thus we
+        // trick a bit to always have the good solution.
         offset = (st->vehicle_journey->utc_to_local_offset() % day + day) % day;
     }
     return time + offset;
