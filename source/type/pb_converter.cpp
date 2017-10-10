@@ -834,27 +834,35 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPointConnection* c, pbnavit
     }
 }
 
-static uint32_t get_st_utc_offset(const nt::StopTime* st, const uint32_t time) {
+static uint32_t get_local_time(const nt::StopTime* st, const uint32_t time) {
     static const auto flag = std::numeric_limits<uint32_t>::max();
-    return time == flag || st->vehicle_journey == nullptr ? 0 : st->vehicle_journey->utc_to_local_offset();
+    uint32_t offset = 0;
+    if (time != flag && st->vehicle_journey != nullptr) {
+        // getting the positive offset to be safe about integer overflow
+        const int32_t day = DateTimeUtils::SECONDS_PER_DAY;
+        // That's `offset mod day`. `offset % day` can be negative, thus we
+        // trick a bit to always have the good solution.
+        offset = (st->vehicle_journey->utc_to_local_offset() % day + day) % day;
+    }
+    return time + offset;
 }
 
 void PbCreator::Filler::fill_pb_object(const nd::StopTimeUpdate* stu, pbnavitia::StopTime* stop_time) {
     const auto* st = &stu->stop_time;
     // we don't want to output amended departure/arrival for deleted departure/arrival
     if (stu->arrival_status != nd::StopTimeUpdate::Status::DELETED) {
-        stop_time->set_arrival_time(st->arrival_time + get_st_utc_offset(st, st->arrival_time));
+        stop_time->set_arrival_time(get_local_time(st, st->arrival_time));
     }
     if (stu->departure_status != nd::StopTimeUpdate::Status::DELETED) {
-        stop_time->set_departure_time(st->departure_time + get_st_utc_offset(st, st->departure_time));
+        stop_time->set_departure_time(get_local_time(st, st->departure_time));
     }
 }
 
 
 void PbCreator::Filler::fill_pb_object(const nt::StopTime* st, pbnavitia::StopTime* stop_time) {
     // arrival/departure in protobuff are as seconds from midnight in local time
-    stop_time->set_arrival_time(st->arrival_time + get_st_utc_offset(st, st->arrival_time));
-    stop_time->set_departure_time(st->departure_time + get_st_utc_offset(st, st->departure_time));
+    stop_time->set_arrival_time(get_local_time(st, st->arrival_time));
+    stop_time->set_departure_time(get_local_time(st, st->departure_time));
     stop_time->set_headsign(pb_creator.data->pt_data->headsign_handler.get_headsign(*st));
 
     stop_time->set_pickup_allowed(st->pick_up_allowed());
