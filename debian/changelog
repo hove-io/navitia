@@ -1,3 +1,9 @@
+navitia2 (2.42.1) unstable; urgency=low
+
+  * PbConverter: fix output of StopTime  <https://github.com/CanalTP/navitia/pull/2220>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Tue, 10 Oct 2017 15:10:24 +0100
+
 navitia2 (2.42.0) unstable; urgency=low
 
   * All: add more reatime information in the response  <https://github.com/CanalTP/navitia/pull/2211>
