@@ -40,7 +40,7 @@ from jormungandr.interfaces.v1.fields import stop_point, route, pagination, PbFi
     enum_type, SplitDateTime, MultiLineString, PbEnum, feed_publisher, DateTime
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri, complete_links
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
-from jormungandr.interfaces.v1.serializer import api
+from jormungandr.interfaces.v1.serializer import api, pt
 from datetime import datetime, timedelta
 from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_type, depth_argument, \
@@ -49,7 +49,7 @@ from jormungandr.interfaces.v1.errors import ManageError
 from flask_restful.inputs import natural
 from jormungandr.interfaces.v1.fields import disruption_marshaller, NonNullList, NonNullNested
 from jormungandr.resources_utils import ResourceUtc
-from jormungandr.interfaces.v1.make_links import create_external_link
+from jormungandr.interfaces.v1.make_links import create_external_link, create_internal_link
 from functools import wraps
 from copy import deepcopy
 from navitiacommon import response_pb2
@@ -195,12 +195,20 @@ class Schedules(ResourceUri, ResourceUtc):
         return i_manager.dispatch(args, self.endpoint,
                                   instance_name=self.region)
 
+class date_time_links(fields.Raw):
+
+    def output(self, key, obj):
+        disruption_links = [create_internal_link(_type="disruption", rel="disruptions", id=uri)
+                            for uri in obj.impact_uris]
+        properties_links = pt.make_properties_links(obj.properties)
+        return properties_links + disruption_links
+
 
 date_time = {
     "date_time": SplitDateTime(date='date', time='time'),
     "base_date_time": DateTime(),
     "additional_informations": additional_informations(),
-    "links": stop_time_properties_links(),
+    "links": date_time_links(),
     'data_freshness': enum_type(attribute='realtime_level'),
 }
 

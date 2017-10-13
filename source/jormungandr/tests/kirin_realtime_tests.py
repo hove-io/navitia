@@ -552,7 +552,8 @@ class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
 
         # it's in stop_schedules
         response = self.query_region("stop_points/stop_point:stopB/lines/A/stop_schedules?_current_datetime=20120614T080000&data_freshness=realtime")
-        #assert has_the_disruption(response) # stop_schedules doesn't output vj disruptions
+        assert has_the_disruption(response)
+        assert response['stop_schedules'][0]['date_times'][0]['links'][1]['type'] == 'disruption'
         assert response['stop_schedules'][0]['date_times'][0]['date_time'] == '20120614T080101'
         assert response['stop_schedules'][0]['date_times'][0]['base_date_time'] == '20120614T080100'
         assert response['stop_schedules'][0]['date_times'][0]['data_freshness'] == 'realtime'

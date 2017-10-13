@@ -145,6 +145,8 @@ class Siri(RealtimeProxy):
 
 
     def _make_request(self, dt, count, monitoring_ref):
+        #we don't want to ask 1000 next departure to SIRI :)
+        count = min(count or 5, 5)# if no value defined we ask for 5 passages
         message_identifier='IDontCare'
         request = """<?xml version="1.0" encoding="UTF-8"?>
         <x:Envelope xmlns:x="http://schemas.xmlsoap.org/soap/envelope/"

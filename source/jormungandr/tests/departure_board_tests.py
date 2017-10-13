@@ -105,8 +105,11 @@ def is_valid_route_schedule(schedule, only_time=False):
         for dt_obj in get_not_null(row, 'date_times'):
             assert "additional_informations" in dt_obj
             assert "links" in dt_obj
-            dt = get_not_null(dt_obj, "date_time")
-            if only_time:
+            assert isinstance(dt_obj["links"], list)
+            dt = dt_obj["date_time"]
+            if dt == "":
+                pass # hole in the schedule
+            elif only_time:
                 get_valid_time(dt)
             else:
                 get_valid_datetime(dt)
@@ -447,6 +450,18 @@ class TestDepartureBoard(AbstractTestFixture):
         schedule = schedules[0]
         # the route_schedule with calendar should not have with date (only time)
         is_valid_route_schedule(schedule, only_time=True)
+
+    def test_route_schedules_with_holes(self):
+        """
+        route_schedule on the line R, which is a Y line with holes in the route schedule
+        """
+        response = self.query_region("routes/R:5/route_schedules?from_datetime=20120615T000000")
+        is_valid_notes(response["notes"])
+        schedules = get_not_null(response, 'route_schedules')
+        assert len(schedules) == 1, "there should be only one elt"
+        schedule = schedules[0]
+        is_valid_route_schedule(schedule)
+        assert schedule["table"]["rows"][2]["date_times"][0]["date_time"] == ""
 
     def test_with_wrong_type(self):
         """

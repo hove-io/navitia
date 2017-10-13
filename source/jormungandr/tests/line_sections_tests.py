@@ -33,11 +33,24 @@ from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
 
 
-def impacted_ids(disrupts):
-    # for the impacted obj, either get the id, or the headsign (for the display_information field)
-    return set(o.impacted_object.get('id',
-                                     o.impacted_object.get('headsign'))
-               for o in disrupts['line_section_on_line_1'])
+# Looking for (identifiable) objects impacted by 'disruptions' inputed
+def impacted_ids(disruptions):
+    # for the impacted object returns:
+    #  * id
+    #  * or the headsign (for the display_information field)
+    #  * or the id of the vehicle_journey for stop_schedule.date_time
+    def get_id(obj):
+        id = obj.impacted_object.get('id')
+        if id is None:
+            # display_information case
+            id = obj.impacted_object.get('headsign')
+        if id is None:
+            # stop_schedule.date_time case
+            assert obj.impacted_object['links'][0]['type'] == 'vehicle_journey'
+            id = obj.impacted_object['links'][0]['id']
+        return id
+
+    return set(get_id(o) for o in disruptions['line_section_on_line_1'])
 
 
 @dataset({"line_sections_test": {}})
@@ -296,17 +309,17 @@ class TestLineSections(AbstractTestFixture):
         r = self.query_region('stop_areas/C/stop_schedules?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['stop_schedules'], r)
         assert 'line_section_on_line_1' in d
-        assert impacted_ids(d) == {'C_1'}  # the impact is linked in the response only to the stop point
+        assert impacted_ids(d) == {'C_1', 'vj:1:1'}  # the impact is linked in the response only to the stop point and the stop_schedule.datetime
 
         r = self.query_region('stop_areas/D/stop_schedules?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['stop_schedules'], r)
         assert 'line_section_on_line_1' in d
-        assert impacted_ids(d) == {'D_1', 'D_3'}
+        assert impacted_ids(d) == {'D_1', 'D_3', 'vj:1:1'}
 
         r = self.query_region('stop_areas/E/stop_schedules?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['stop_schedules'], r)
         assert 'line_section_on_line_1' in d
-        assert impacted_ids(d) == {'E_1'}
+        assert impacted_ids(d) == {'E_1', 'vj:1:1'}
 
         r = self.query_region('stop_areas/F/stop_schedules?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['stop_schedules'], r)

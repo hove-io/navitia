@@ -64,8 +64,14 @@ class DateTimeTypeSerializer(PbNestedSerializer):
     date_time = jsonschema.MethodField(schema_type=TimeOrDateTimeType, display_none=True)
     base_date_time = DateTimeField()
     additional_informations = pt.AdditionalInformation(attr='additional_informations', display_none=True)
-    links = pt.PropertiesLinksSerializer(attr="properties")
+    links = jsonschema.MethodField(schema_type=LinkSchema(many=True), display_none=True)
     data_freshness = EnumField(attr="realtime_level", display_none=True)
+
+    def get_links(self, obj):
+        disruption_links = [create_internal_link(_type="disruption", rel="disruptions", id=uri)
+                            for uri in obj.impact_uris]
+        properties_links = pt.make_properties_links(obj.properties)
+        return properties_links + disruption_links
 
     def get_date_time(self, obj):
         __date_time_null_value__ = 2**64 - 1
