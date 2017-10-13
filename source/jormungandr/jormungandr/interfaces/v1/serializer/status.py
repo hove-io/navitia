@@ -98,6 +98,7 @@ class StatusSerializer(serpy.DictSerializer):
     publication_date = Field(schema_type=str)
     realtime_contributors = MethodField(schema_type=str, many=True, display_none=True)
     realtime_proxies = StringListField(display_none=True)
+    autocomplete = Field(display_none=True)
     start_production_date = Field(schema_type=str)
     status = Field(schema_type=str)
     traveler_profiles = TravelerProfilesSerializer(many=True)

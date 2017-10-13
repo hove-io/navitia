@@ -416,3 +416,6 @@ class GeocodeJson(AbstractAutocomplete):
 
         raw_response = self.call_bragi(url, requests.get, timeout=self.timeout, params=params)
         return self.response_marshaler(raw_response, uri)
+
+    def status(self):
+        return {'class': self.__class__.__name__, 'timeout': self.timeout}
