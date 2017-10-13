@@ -80,6 +80,28 @@ class TravelerProfilesSerializer(serpy.Serializer):
     walking_speed = Field(schema_type=float)
     wheelchair = Field(schema_type=bool)
 
+class AutocompleteSerializer(serpy.DictSerializer):
+    class_ = Field(schema_type=str, label='class', attr='class')
+
+class CircuitBreakerSerializer(serpy.DictSerializer):
+    current_state = Field(schema_type=str, display_none=True)
+    fail_counter = Field(schema_type=int, display_none=True)
+    reset_timeout = Field(schema_type=int, display_none=True)
+
+class StreetNetworkSerializer(serpy.DictSerializer):
+    class_ = Field(schema_type=str, label='class', attr='class')
+    id = Field(schema_type=str)
+    modes = StringListField(display_none=True)
+    timeout = MethodField(schema_type=float, display_none=False)
+    circuit_breaker = MethodField(schema_type=float, display_none=False)
+
+    def get_timeout(self, obj):
+        return obj.get('timeout', None)
+
+    def get_circuit_breaker(self, obj):
+        o = obj.get('circuit_breaker', None)
+        return CircuitBreakerSerializer(o, display_none=False).data if o else None
+
 
 class StatusSerializer(serpy.DictSerializer):
     data_version = Field(schema_type=int)
@@ -98,7 +120,8 @@ class StatusSerializer(serpy.DictSerializer):
     publication_date = Field(schema_type=str)
     realtime_contributors = MethodField(schema_type=str, many=True, display_none=True)
     realtime_proxies = StringListField(display_none=True)
-    autocomplete = Field(display_none=True)
+    autocomplete = AutocompleteSerializer(display_none=True)
+    street_networks = StreetNetworkSerializer(many=True, display_none=True)
     start_production_date = Field(schema_type=str)
     status = Field(schema_type=str)
     traveler_profiles = TravelerProfilesSerializer(many=True)

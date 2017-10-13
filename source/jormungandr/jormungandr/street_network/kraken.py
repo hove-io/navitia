@@ -45,6 +45,12 @@ class Kraken(AbstractStreetNetworkService):
         self.modes = modes
         self.sn_system_id = id
 
+    def status(self):
+        return {'id': self.sn_system_id,
+                'class': self.__class__.__name__,
+                'modes': self.modes,
+            }
+
     def _reverse_journeys(self, response):
         if not getattr(response, "journeys"):
             return response

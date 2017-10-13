@@ -834,6 +834,8 @@ instance_status = {
     "is_realtime_loaded": fields.Boolean(),
     "realtime_proxies": fields.Raw(),
     "dataset_created_at": fields.String(),
+    "autocomplete": fields.Raw(),
+    "street_networks": fields.Raw(),
 }
 
 instance_parameters = {
