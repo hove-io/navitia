@@ -169,9 +169,10 @@ then
       # there is a bug in the liblog4cplus-dev in ubuntu 16, 
       # https://bugs.launchpad.net/ubuntu/+source/log4cplus/+bug/1578970
       # we grab another version
-      wget -P /tmp/ http://fr.archive.ubuntu.com/ubuntu/pool/universe/l/log4cplus/liblog4cplus-dev_1.0.4-1ubuntu1_amd64.deb
-      wget -P /tmp/ http://fr.archive.ubuntu.com/ubuntu/pool/universe/l/log4cplus/liblog4cplus-1.0-4_1.0.4-1ubuntu1_amd64.deb 
-      sudo dpkg -i /tmp/liblog4cplus-1.0-4_1.0.4-1ubuntu1_amd64.deb  /tmp/liblog4cplus-dev_1.0.4-1ubuntu1_amd64.deb
+
+      wget -P /tmp/ http://fr.archive.ubuntu.com/ubuntu/pool/universe/l/log4cplus/liblog4cplus-1.1-9_1.1.2-3.2_amd64.deb
+      wget -P /tmp/ http://fr.archive.ubuntu.com/ubuntu/pool/universe/l/log4cplus/liblog4cplus-dev_1.1.2-3.2_amd64.deb
+      sudo dpkg -i /tmp/liblog4cplus-1.1-9_1.1.2-3.2_amd64.deb  /tmp/liblog4cplus-dev_1.1.2-3.2_amd64.deb
 
       pqxx_package='libpqxx-dev'
     fi
