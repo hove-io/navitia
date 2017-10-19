@@ -135,6 +135,9 @@ class Instance(object):
             g.instances_model[self.name] = self._get_models()
         return g.instances_model[self.name]
 
+    def __repr__(self):
+        return 'instance.{}'.format(self.name)
+
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PARAMS', 300))
     def _get_models(self):
         if app.config['DISABLE_DATABASE']:
