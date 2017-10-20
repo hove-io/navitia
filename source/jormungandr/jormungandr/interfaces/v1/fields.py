@@ -137,8 +137,9 @@ class Links(fields.Raw):
             if len(e.values) > 1:
                 args[e.key] = [v for v in e.values]
             else:
-                 args[e.key] = e.values[0]
-
+                args[e.key] = e.values[0]
+        if "templated" in args:
+            del args["templated"]
         return create_external_link('v1.{}'.format(value.ressource_name),
                                     rel=value.rel,
                                     _type=value.type,

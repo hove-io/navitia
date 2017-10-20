@@ -108,6 +108,8 @@ class generate_links(object):
 
         if "uri" in kwargs:
             del kwargs["uri"]
+        if "templated" in kwargs:
+            del kwargs["templated"]
         return kwargs
 
 
@@ -225,9 +227,11 @@ class add_collection_links(generate_links):
             if isinstance(data, dict) or isinstance(data, OrderedDict):
                 data = self.prepare_objetcs(objects, True)
                 kwargs = self.prepare_kwargs(kwargs, data)
+                if "templated" in kwargs:
+                    del kwargs["kwargs"]
                 for collection in self.collections:
                     data["links"].append(create_external_link("v1.{c}.collection".format(c=collection),
-                                                     rel=collection, templated=True, **kwargs))
+                                                              rel=collection, templated=True, **kwargs))
             if isinstance(objects, tuple):
                 return data, code, header
             else:
@@ -270,7 +274,7 @@ class add_id_links(generate_links):
                     endpoint = "v1." + kwargs["collection"] + ".id"
 
                     collection = kwargs["collection"]
-                    to_pass = {k: v for k, v in kwargs.items() if k != "collection"}
+                    to_pass = {k: v for k, v in kwargs.items() if k != "collection" and k != "templated"}
                     data["links"].append(create_external_link(url=endpoint, rel=collection,
                                                               _type=obj, templated=True,
                                                               **to_pass))

@@ -212,6 +212,8 @@ class JourneysCommon(PbNestedSerializer):
                 else:
                      args[e.key] = e.values[0]
 
+            if "templated" in args:
+                    del args["kwargs"]
             response.append(create_external_link('v1.{}'.format(value.ressource_name),
                                                  rel=value.rel,
                                                  _type=value.type,

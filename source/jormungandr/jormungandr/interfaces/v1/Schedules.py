@@ -342,6 +342,8 @@ class add_passages_links:
             delta = timedelta(seconds=1)
             dt = datetime.strptime(min_dt, "%Y%m%dT%H%M%S")
             if g.stat_interpreted_parameters.get('data_freshness') != 'realtime':
+                if "templated" in kwargs_links:
+                    del kwargs_links["kwargs"]
                 kwargs_links['until_datetime'] = (dt - delta).strftime("%Y%m%dT%H%M%S")
                 response["links"].append(create_external_link("v1."+api, rel="prev", _type=api, **kwargs_links))
                 kwargs_links.pop('until_datetime')
