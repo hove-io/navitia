@@ -97,7 +97,7 @@ class StreetNetworkSerializer(serpy.DictSerializer):
     id = Field(schema_type=str)
     modes = StringListField(display_none=True)
     timeout = MethodField(schema_type=float, display_none=False)
-    circuit_breaker = MethodField(schema_type=float, display_none=False)
+    circuit_breaker = MethodField(schema_type=CircuitBreakerSerializer, display_none=False)
 
     def get_timeout(self, obj):
         return obj.get('timeout', None)
