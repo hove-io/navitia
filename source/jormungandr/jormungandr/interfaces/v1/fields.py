@@ -138,14 +138,11 @@ class Links(fields.Raw):
                 args[e.key] = [v for v in e.values]
             else:
                 args[e.key] = e.values[0]
-        if "templated" in args:
-            del args["templated"]
-        return create_external_link('v1.{}'.format(value.ressource_name),
-                                    rel=value.rel,
-                                    _type=value.type,
-                                    templated=value.is_templated,
-                                    description=value.description,
-                                    **args)
+        args["_type"] = value.type
+        args["templated"] = value.is_templated
+        args["description"] = value.description
+
+        return create_external_link('v1.{}'.format(value.ressource_name), rel=value.rel, **args)
 
 
 # a time null value is represented by the max value (since 0 is a perfectly valid value)
