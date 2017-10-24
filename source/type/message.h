@@ -78,7 +78,9 @@ enum class ChannelType {
     notification,
     twitter,
     facebook,
-    unknown_type
+    unknown_type,
+    title,
+    beacon
 };
 
 inline std::string to_string(Effect effect) {
@@ -120,6 +122,8 @@ inline std::string to_string(ChannelType ct) {
     case ChannelType::twitter: return "twitter";
     case ChannelType::facebook: return "facebook";
     case ChannelType::unknown_type: return "unknown_type";
+    case ChannelType::title: return "title";
+    case ChannelType::beacon: return "beacon";
     default:
         throw navitia::exception("unhandled channeltype case");
     }

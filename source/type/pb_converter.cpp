@@ -1064,6 +1064,12 @@ void PbCreator::Filler::fill_pb_object(const nd::Impact* impact, pbnavitia::Impa
             case nd::ChannelType::unknown_type:
                 pb_channel->add_channel_types(pbnavitia::Channel::unknown_type);
                 break;
+            case nd::ChannelType::title:
+                pb_channel->add_channel_types(pbnavitia::Channel::title);
+                break;
+            case nd::ChannelType::beacon:
+                pb_channel->add_channel_types(pbnavitia::Channel::beacon);
+                break;
             }
         }
     }
