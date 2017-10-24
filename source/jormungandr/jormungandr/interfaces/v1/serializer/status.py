@@ -82,6 +82,10 @@ class TravelerProfilesSerializer(serpy.Serializer):
 
 class AutocompleteSerializer(serpy.DictSerializer):
     class_ = Field(schema_type=str, label='class', attr='class')
+    timeout = MethodField(schema_type=float, display_none=False)
+
+    def get_timeout(self, obj):
+        return obj.get('timeout', None)
 
 class CircuitBreakerSerializer(serpy.DictSerializer):
     current_state = Field(schema_type=str, display_none=True)
