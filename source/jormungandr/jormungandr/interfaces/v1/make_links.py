@@ -36,7 +36,7 @@ from jormungandr.interfaces.v1.converters_collection_type import resource_type_t
 from flask.ext.restful.utils import unpack
 
 
-def create_external_link(url, rel=None, _type=None, templated=False, description=None, **kwargs):
+def create_external_link(url, rel, _type=None, templated=False, description=None, **kwargs):
     """
     :param url: url forwarded to flask's url_for
     :param rel: relation of the link to the current object
