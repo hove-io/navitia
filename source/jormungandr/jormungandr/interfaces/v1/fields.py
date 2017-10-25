@@ -141,8 +141,9 @@ class Links(fields.Raw):
         args["_type"] = value.type
         args["templated"] = value.is_templated
         args["description"] = value.description
+        args["rel"] = value.rel
 
-        return create_external_link('v1.{}'.format(value.ressource_name), rel=value.rel, **args)
+        return create_external_link('v1.{}'.format(value.ressource_name), **args)
 
 
 # a time null value is represented by the max value (since 0 is a perfectly valid value)

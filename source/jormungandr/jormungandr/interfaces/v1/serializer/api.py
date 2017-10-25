@@ -215,7 +215,8 @@ class JourneysCommon(PbNestedSerializer):
             args["_type"] = value.type
             args["templated"] = value.is_templated
             args["description"] = value.description
-            response.append(create_external_link('v1.{}'.format(value.ressource_name), rel=value.rel, **args))
+            args["rel"] = value.rel
+            response.append(create_external_link('v1.{}'.format(value.ressource_name), **args))
         return response
 
 

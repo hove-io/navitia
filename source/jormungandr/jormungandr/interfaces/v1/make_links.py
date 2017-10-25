@@ -36,7 +36,7 @@ from jormungandr.interfaces.v1.converters_collection_type import resource_type_t
 from flask.ext.restful.utils import unpack
 
 
-def create_external_link(url, rel, _type=None, templated=False, description=None, **kwargs):
+def create_external_link(url, rel=None, _type=None, templated=False, description=None, **kwargs):
     """
     :param url: url forwarded to flask's url_for
     :param rel: relation of the link to the current object
@@ -199,8 +199,8 @@ class add_coverage_link(generate_links):
                 kwargs = self.prepare_kwargs(kwargs, data)
                 kwargs["templated"] = True
                 for link in self.links:
-                    data["links"].append(
-                        create_external_link("v1.{}".format(link), rel=link, **kwargs))
+                    kwargs["rel"] = link
+                    data["links"].append(create_external_link("v1.{}".format(link), **kwargs))
             if isinstance(objects, tuple):
                 return data, code, header
             else:
@@ -228,8 +228,8 @@ class add_collection_links(generate_links):
                 kwargs = self.prepare_kwargs(kwargs, data)
                 kwargs["templated"] = True
                 for collection in self.collections:
-                    data["links"].append(create_external_link("v1.{c}.collection".format(c=collection),
-                                                              rel=collection, **kwargs))
+                    kwargs["rel"] = collection
+                    data["links"].append(create_external_link("v1.{c}.collection".format(c=collection), **kwargs))
             if isinstance(objects, tuple):
                 return data, code, header
             else:
@@ -274,7 +274,8 @@ class add_id_links(generate_links):
                     to_pass = {k: v for k, v in kwargs.items() if k != "collection"}
                     to_pass["_type"] = obj
                     to_pass["templated"] = True
-                    data["links"].append(create_external_link(url=endpoint, rel=collection, **to_pass))
+                    to_pass["rel"] = collection
+                    data["links"].append(create_external_link(url=endpoint, **to_pass))
             if isinstance(objects, tuple):
                 return data, code, header
             else:
