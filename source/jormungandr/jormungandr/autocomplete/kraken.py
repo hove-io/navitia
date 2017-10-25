@@ -111,3 +111,6 @@ class Kraken(AbstractAutocomplete):
         if current_datetime:
             req._current_datetime = date_to_timestamp(current_datetime)
         return instance.send_and_receive(req)
+
+    def status(self):
+        return {'class': self.__class__.__name__}
