@@ -344,11 +344,13 @@ class add_passages_links:
             if g.stat_interpreted_parameters.get('data_freshness') != 'realtime':
                 kwargs_links["_type"] = api
                 kwargs_links["templated"] = False
+                kwargs_links["rel"] = "prev"
                 kwargs_links['until_datetime'] = (dt - delta).strftime("%Y%m%dT%H%M%S")
-                response["links"].append(create_external_link("v1."+api, rel="prev", **kwargs_links))
+                response["links"].append(create_external_link("v1."+api, **kwargs_links))
                 kwargs_links.pop('until_datetime')
                 kwargs_links['from_datetime'] = (datetime.strptime(max_dt, "%Y%m%dT%H%M%S") + delta).strftime("%Y%m%dT%H%M%S")
-                response["links"].append(create_external_link("v1."+api, rel="next", **kwargs_links))
+                kwargs_links["rel"] = "next"
+                response["links"].append(create_external_link("v1."+api, **kwargs_links))
             return response, status, other
         return wrapper
 
