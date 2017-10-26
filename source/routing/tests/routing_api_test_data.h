@@ -640,7 +640,9 @@ struct routing_api_data {
                 .on(nt::Type_e::Route, "A:0")
                 .on(nt::Type_e::Line, "A")
                 .msg("no luck", nt::disruption::ChannelType::sms)
-                .msg("try again", nt::disruption::ChannelType::sms);
+                .msg("try again", nt::disruption::ChannelType::sms)
+                .msg({"beacon in channel", "beacon", "beacon channel", "content type", default_date, default_date,
+                      {ChannelType::web, ChannelType::title, ChannelType::beacon}});
 
         disruption_maker.impact()
                 .uri("too_bad_line_B")

@@ -411,7 +411,7 @@ class TestDisruptions(AbstractTestFixture):
 
         #Verify message and channel without any channel type
         message = get_not_null(lines_disrupt[0], 'messages')
-        assert len(message) == 2
+        assert len(message) == 3
         assert message[0]['text'] == 'no luck'
         channel = get_not_null(message[0], 'channel')
         assert channel['id'] == 'sms'
@@ -423,6 +423,12 @@ class TestDisruptions(AbstractTestFixture):
         assert channel['id'] == 'sms'
         assert channel['name'] == 'sms channel'
         assert len(channel['types']) == 1
+
+        assert message[2]['text'] == 'beacon in channel'
+        channel = get_not_null(message[2], 'channel')
+        assert channel['id'] == 'beacon'
+        assert channel['name'] == 'beacon channel'
+        assert len(channel['types']) == 3
 
     def test_disruption_date_filtering(self):
         """

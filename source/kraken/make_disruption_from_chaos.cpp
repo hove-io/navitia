@@ -251,8 +251,16 @@ static std::set<nt::disruption::ChannelType> create_channel_types(const chaos::C
         case chaos::Channel_Type_unkown_type:
             res.insert(nt::disruption::ChannelType::unknown_type);
             break;
+        case chaos::Channel_Type_title:
+            res.insert(nt::disruption::ChannelType::title);
+            break;
+        case chaos::Channel_Type_beacon:
+            res.insert(nt::disruption::ChannelType::beacon);
+            break;
         default:
-            throw navitia::exception("Unhandled ChannelType value in Chaos.Proto");
+            res.insert(nt::disruption::ChannelType::unknown_type);
+            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
+                            "Unhandled ChannelType value in Chaos.Proto: unknown_type used");
         }
     }
     return res;
