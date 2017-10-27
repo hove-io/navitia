@@ -12,10 +12,10 @@ class RabbitMqHandler(object):
             self._producer = Producer(self._connection)
             self._task_exchange = Exchange(name=exchange_name, type=type, durable=durable)
         except Exception:
-            self._logger.info('badly formated token %s', auth).exception('Unable to activate the producer')
+            self._logger.exception('Impossible to establish the connection')
             raise
 
-    def errback(exc, interval):
+    def errback(self, exc, interval):
         self._logger.info('Error: %r', exc, exc_info=1)
         self._logger.info('Retry in %s seconds.', interval)
 
