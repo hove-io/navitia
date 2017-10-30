@@ -20,9 +20,12 @@ class RabbitMqHandler(object):
         self._logger.info('Retry in %s seconds.', interval)
 
     def publish(self, payload, routing_key=None, serializer=None):
-        publish = self._connection.ensure(self._producer, self._producer.publish, errback = self.errback, max_retries=3)
-        publish(payload,
-                serializer=serializer,
-                exchange=self._task_exchange,
-                declare=[self._task_exchange],
-                routing_key=routing_key)
+        try:
+            publish = self._connection.ensure(self._producer, self._producer.publish, errback = self.errback, max_retries=3)
+            publish(payload,
+                    serializer=serializer,
+                    exchange=self._task_exchange,
+                    declare=[self._task_exchange],
+                    routing_key=routing_key)
+        except Exception as exc:
+            self._logger.exception('Error occurred when publishing: %r', exc)
