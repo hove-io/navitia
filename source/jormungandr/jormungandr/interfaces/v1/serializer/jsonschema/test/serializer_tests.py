@@ -200,6 +200,7 @@ def param_test():
     assert(swagger_arg.description == 'kind of bob')
     assert(swagger_arg.default == ['bob', 'bobette'])
     assert(swagger_arg.format is None)  # no additional format provided
+    assert(swagger_arg.collection_format is None)
 
 
 def param_list_test():
@@ -213,3 +214,4 @@ def param_list_test():
     assert(swagger_arg.type == 'array')
     assert(swagger_arg.items is not None)
     assert(swagger_arg.items.type == 'string')
+    assert(swagger_arg.collection_format == 'multi')
