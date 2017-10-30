@@ -197,9 +197,10 @@ class add_coverage_link(generate_links):
             if isinstance(data, dict) or isinstance(data, OrderedDict):
                 data = self.prepare_objetcs(data)
                 kwargs = self.prepare_kwargs(kwargs, data)
+                kwargs["templated"] = True
                 for link in self.links:
-                    data["links"].append(
-                        create_external_link("v1.{}".format(link), rel=link, templated=True, **kwargs))
+                    kwargs["rel"] = link
+                    data["links"].append(create_external_link("v1.{}".format(link), **kwargs))
             if isinstance(objects, tuple):
                 return data, code, header
             else:
@@ -225,9 +226,10 @@ class add_collection_links(generate_links):
             if isinstance(data, dict) or isinstance(data, OrderedDict):
                 data = self.prepare_objetcs(objects, True)
                 kwargs = self.prepare_kwargs(kwargs, data)
+                kwargs["templated"] = True
                 for collection in self.collections:
-                    data["links"].append(create_external_link("v1.{c}.collection".format(c=collection),
-                                                     rel=collection, templated=True, **kwargs))
+                    kwargs["rel"] = collection
+                    data["links"].append(create_external_link("v1.{c}.collection".format(c=collection), **kwargs))
             if isinstance(objects, tuple):
                 return data, code, header
             else:
@@ -268,12 +270,12 @@ class add_id_links(generate_links):
                         kwargs["id"] = "{" + obj + ".id}"
 
                     endpoint = "v1." + kwargs["collection"] + ".id"
-
                     collection = kwargs["collection"]
                     to_pass = {k: v for k, v in kwargs.items() if k != "collection"}
-                    data["links"].append(create_external_link(url=endpoint, rel=collection,
-                                                              _type=obj, templated=True,
-                                                              **to_pass))
+                    to_pass["_type"] = obj
+                    to_pass["templated"] = True
+                    to_pass["rel"] = collection
+                    data["links"].append(create_external_link(url=endpoint, **to_pass))
             if isinstance(objects, tuple):
                 return data, code, header
             else:

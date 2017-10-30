@@ -137,14 +137,13 @@ class Links(fields.Raw):
             if len(e.values) > 1:
                 args[e.key] = [v for v in e.values]
             else:
-                 args[e.key] = e.values[0]
+                args[e.key] = e.values[0]
+        args["_type"] = value.type
+        args["templated"] = value.is_templated
+        args["description"] = value.description
+        args["rel"] = value.rel
 
-        return create_external_link('v1.{}'.format(value.ressource_name),
-                                    rel=value.rel,
-                                    _type=value.type,
-                                    templated=value.is_templated,
-                                    description=value.description,
-                                    **args)
+        return create_external_link('v1.{}'.format(value.ressource_name), **args)
 
 
 # a time null value is represented by the max value (since 0 is a perfectly valid value)
@@ -834,6 +833,8 @@ instance_status = {
     "is_realtime_loaded": fields.Boolean(),
     "realtime_proxies": fields.Raw(),
     "dataset_created_at": fields.String(),
+    "autocomplete": fields.Raw(),
+    "street_networks": fields.Raw(),
 }
 
 instance_parameters = {

@@ -74,6 +74,16 @@ class Valhalla(AbstractStreetNetworkService):
         # since valhalla does not handle such a time, we rig valhalla's result to add it
         self.mode_park_cost = kwargs.get('mode_park_cost', {})  # a dict giving the park time (in s) by mode
 
+    def status(self):
+        return {'id': self.sn_system_id,
+                'class': self.__class__.__name__,
+                'modes': self.modes,
+                'timeout': self.timeout,
+                'circuit_breaker': {'current_state': self.breaker.current_state,
+                                    'fail_counter': self.breaker.fail_counter,
+                                    'reset_timeout': self.breaker.reset_timeout},
+            }
+
     def _call_valhalla(self, url, method=requests.post, data=None):
         logging.getLogger(__name__).debug('Valhalla routing service , call url : {}'.format(url))
         logging.getLogger(__name__).debug('data : {}'.format(data))

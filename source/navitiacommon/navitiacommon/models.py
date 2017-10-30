@@ -29,9 +29,10 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import
 import uuid
 import re
-from flask_sqlalchemy import SQLAlchemy
+from navitiacommon.sqlalchemy import SQLAlchemy
 from geoalchemy2.types import Geography
 from flask import current_app
 from sqlalchemy.orm import load_only, backref, aliased

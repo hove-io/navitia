@@ -308,7 +308,8 @@ class add_journey_href(object):
                         args['to'] = journey['to']['id']
                     if 'from' not in args:
                         args['from'] = journey['from']['id']
-                    journey['links'] = [create_external_link('v1.journeys', rel='journeys', **args)]
+                    args['rel'] = 'journeys'
+                    journey['links'] = [create_external_link('v1.journeys', **args)]
                 elif allowed_ids and 'public_transport' in (s['type'] for s in journey['sections']):
                     # exactly one first_section_mode
                     if any(s['type'].startswith('bss') for s in journey['sections'][:2]):
@@ -328,9 +329,9 @@ class add_journey_href(object):
                     args['is_journey_schedules'] = True
                     allowed_ids.update(args.get('allowed_id[]', []))
                     args['allowed_id[]'] = list(allowed_ids)
-                    journey['links'] = [
-                        create_external_link('v1.journeys', rel='same_journey_schedules', _type='journeys', **args)
-                    ]
+                    args['_type'] = 'journeys'
+                    args['rel'] = 'same_journey_schedules'
+                    journey['links'] = [create_external_link('v1.journeys', **args)]
             return objects
         return wrapper
 

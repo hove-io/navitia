@@ -156,3 +156,7 @@ GREENLET_POOL_SIZE = int(os.getenv('JORMUNGANDR_GEVENT_POOL_SIZE', 10))
 USE_SERPY = boolean(os.getenv('JORMUNGANDR_USE_SERPY', False))
 
 PARSER_MAX_COUNT = int(os.getenv('JORMUNGANDR_PARSER_MAX_COUNT', 1000))
+
+if boolean(os.getenv('JORMUNGANDR_DISABLE_SQLPOOLING', False)):
+    from sqlalchemy.pool import NullPool
+    SQLALCHEMY_POOLCLASS = NullPool

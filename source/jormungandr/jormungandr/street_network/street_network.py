@@ -56,6 +56,10 @@ class AbstractStreetNetworkService(ABC):
         pass
 
     @abc.abstractmethod
+    def status(self):
+        pass
+
+    @abc.abstractmethod
     def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
         '''
         :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)

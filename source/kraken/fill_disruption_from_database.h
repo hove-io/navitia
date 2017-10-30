@@ -327,6 +327,10 @@ namespace navitia {
                 channel->add_types(chaos::Channel_Type_twitter);
             } else if (type_ == "facebook") {
                 channel->add_types(chaos::Channel_Type_facebook);
+            } else if (type_ == "title") {
+                channel->add_types(chaos::Channel_Type_title);
+            } else if (type_ == "beacon") {
+                channel->add_types(chaos::Channel_Type_beacon);
             } else {
                 channel->add_types(chaos::Channel_Type_unkown_type);
             }

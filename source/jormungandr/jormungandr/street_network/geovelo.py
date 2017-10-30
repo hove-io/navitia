@@ -53,6 +53,16 @@ class Geovelo(AbstractStreetNetworkService):
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_GEOVELO_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_GEOVELO_TIMEOUT_S'])
 
+    def status(self):
+        return {'id': self.sn_system_id,
+                'class': self.__class__.__name__,
+                'modes': self.modes,
+                'timeout': self.timeout,
+                'circuit_breaker': {'current_state': self.breaker.current_state,
+                                    'fail_counter': self.breaker.fail_counter,
+                                    'reset_timeout': self.breaker.reset_timeout},
+            }
+
     @classmethod
     def _pt_object_summary_isochrone(cls, pt_object):
         coord = get_pt_object_coord(pt_object)

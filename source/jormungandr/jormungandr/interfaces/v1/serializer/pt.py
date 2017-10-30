@@ -286,7 +286,7 @@ class PoiSerializer(GenericSerializer):
     label = jsonschema.Field(schema_type=str)
     administrative_regions = AdminSerializer(many=True, display_none=False)
     poi_type = PoiTypeSerializer(display_none=False)
-    properties = jsonschema.MethodField(schema_metadata={'additionalProperties':'string'})
+    properties = jsonschema.MethodField(schema_metadata={'type': 'object','additionalProperties': {'type': 'string'}})
     address = AddressSerializer()
     stands = LiteralField(None, schema_type=StandsSerializer, display_none=False)
 

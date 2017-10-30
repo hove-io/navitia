@@ -55,6 +55,13 @@ class AbstractAutocomplete(six.with_metaclass(ABCMeta, object)):
         pass
 
     @abstractmethod
+    def status(self):
+        """
+        return a status for the API
+        """
+        pass
+
+    @abstractmethod
     def geo_status(self, instance):
         pass
 

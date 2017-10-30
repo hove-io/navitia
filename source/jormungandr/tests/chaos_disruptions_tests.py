@@ -89,7 +89,7 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
 
         #here we test messages in disruption: message, channel and types
         messages = get_not_null(disruptions[0], 'messages')
-        assert len(messages) == 2
+        assert len(messages) == 3
         assert messages[0]['text'] == 'default_message'
         channel = get_not_null(messages[0], 'channel')
         assert channel['id'] == 'sms'
@@ -106,6 +106,17 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         assert len(channel['types']) == 2
         assert channel['types'][0] == 'web'
         assert channel['types'][1] == 'email'
+
+        assert messages[2]['text'] == 'default_message'
+        channel = get_not_null(messages[2], 'channel')
+        assert channel['id'] == 'beacon'
+        assert channel['name'] == 'beacon'
+        assert channel['content_type'] == 'text'
+        assert len(channel['types']) == 4
+        assert channel['types'][0] == 'web'
+        assert channel['types'][1] == 'mobile'
+        assert channel['types'][2] == 'title'
+        assert channel['types'][3] == 'beacon'
 
     def test_current_datetime_out_of_bounds(self):
         """
@@ -851,5 +862,17 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start
     message.channel.content_type = "html"
     message.channel.types.append(chaos_pb2.Channel.web)
     message.channel.types.append(chaos_pb2.Channel.email)
+
+    #message with one channel and four channel types: web, mobile, title and beacon
+    message = impact.messages.add()
+    message.text = message_text
+    message.channel.name = "beacon"
+    message.channel.id = "beacon"
+    message.channel.max_size = 60
+    message.channel.content_type = "text"
+    message.channel.types.append(chaos_pb2.Channel.web)
+    message.channel.types.append(chaos_pb2.Channel.mobile)
+    message.channel.types.append(chaos_pb2.Channel.title)
+    message.channel.types.append(chaos_pb2.Channel.beacon)
 
     return feed_message.SerializeToString()

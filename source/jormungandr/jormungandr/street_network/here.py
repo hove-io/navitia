@@ -86,6 +86,17 @@ class Here(AbstractStreetNetworkService):
 
         self.log = logging.LoggerAdapter(logging.getLogger(__name__), extra={'streetnetwork_id': id})
 
+    def status(self):
+        return {'id': self.sn_system_id,
+                'class': self.__class__.__name__,
+                'modes': self.modes,
+                'timeout': self.timeout,
+                'max_points': self.max_points,
+                'circuit_breaker': {'current_state': self.breaker.current_state,
+                                    'fail_counter': self.breaker.fail_counter,
+                                    'reset_timeout': self.breaker.reset_timeout},
+            }
+
     def _call_here(self, url, params):
         self.log.debug('Here routing service, url: {}'.format(url))
         try:
