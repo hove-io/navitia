@@ -1036,7 +1036,7 @@ std::vector<nm::StopTime*> StopTimeGtfsHandler::handle_line(Data& data, const cs
         nm::StopTime* stop_time = new nm::StopTime();
 
         //we need to convert the stop times in UTC
-        int utc_offset = data.tz_wrapper.tz_handler.get_first_utc_offset(*vj_it->second->validity_pattern);
+        int utc_offset = data.tz_wrapper.tz_handler.get_utc_offset(*vj_it->second->validity_pattern);
 
         stop_time->arrival_time = to_utc(row[arrival_c], utc_offset);
         stop_time->departure_time = to_utc(row[departure_c], utc_offset);
@@ -1091,7 +1091,7 @@ void FrequenciesGtfsHandler::handle_line(Data& data, const csv_row& row, bool) {
         }
 
         //we need to convert the stop times in UTC
-        int utc_offset = data.tz_wrapper.tz_handler.get_first_utc_offset(*vj->validity_pattern);
+        int utc_offset = data.tz_wrapper.tz_handler.get_utc_offset(*vj->validity_pattern);
 
         vj->start_time = to_utc(row[start_time_c], utc_offset);
         vj->end_time = to_utc(row[end_time_c], utc_offset);

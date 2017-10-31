@@ -445,8 +445,8 @@ static void check_gtfs_google_example(const ed::Data& data) {
 
     BOOST_CHECK_EQUAL(data.tz_wrapper.tz_name, "America/Los_Angeles");
     //we check that the shift for vj[0] is -480 minutes and -420 for vj[1]
-    BOOST_CHECK_EQUAL(data.tz_wrapper.tz_handler.get_first_utc_offset(*data.vehicle_journeys[0]->validity_pattern), -480 * 60);
-    BOOST_CHECK_EQUAL(data.tz_wrapper.tz_handler.get_first_utc_offset(*data.vehicle_journeys[1]->validity_pattern), -420 * 60);
+    BOOST_CHECK_EQUAL(data.tz_wrapper.tz_handler.get_utc_offset(*data.vehicle_journeys[0]->validity_pattern), -480 * 60);
+    BOOST_CHECK_EQUAL(data.tz_wrapper.tz_handler.get_utc_offset(*data.vehicle_journeys[1]->validity_pattern), -420 * 60);
 
     //Stop time
     BOOST_REQUIRE_EQUAL(data.stops.size(), 28 * 2);
