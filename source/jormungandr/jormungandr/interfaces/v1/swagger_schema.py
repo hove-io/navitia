@@ -68,7 +68,8 @@ def convert_to_swagger_type(type_):
 
 class SwaggerParam(object):
     def __init__(self, description=None, name=None, required=None, type=None, pattern=None,
-                 default=None, enum=None, minimum=None, maximum=None, format=None, location=None, items=None):
+                 default=None, enum=None, minimum=None, maximum=None, format=None, location=None, items=None,
+                 collection_format=None):
         self.description = description
         self.name = name
         self.required = required
@@ -81,6 +82,7 @@ class SwaggerParam(object):
         self.maximum = maximum
         self.items = items
         self.pattern = pattern
+        self.collection_format = collection_format
 
     @classmethod
     def make_from_flask_arg(cls, argument):
@@ -135,17 +137,20 @@ class SwaggerParam(object):
                 metadata['description'] += desc_meta
 
             items = None
+            collection_format = None
             if argument.action == 'append':
                 items = SwaggerParam(type=swagger_type,
                                      format=metadata.pop('format', None),
                                      enum=metadata.pop('enum', None))
                 swagger_type = 'array'
+                collection_format = 'multi'
 
             args.append(SwaggerParam(name=argument.name,
                                      type=swagger_type,
                                      location=location,
                                      required=argument.required,
                                      items=items,
+                                     collection_format=collection_format,
                                      **metadata))
 
         return args
