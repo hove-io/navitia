@@ -64,8 +64,8 @@ make_cancellation_message(const std::string& vj_uri, const std::string& date) {
     trip->set_trip_id(vj_uri);
     trip->set_start_date(date);
     trip->set_schedule_relationship(transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED);
+    trip->SetExtension(kirin::contributor, "cow.owner");
     trip_update.SetExtension(kirin::trip_message, "cow on the tracks");
-
     return trip_update;
 }
 
@@ -103,6 +103,10 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation) {
     BOOST_REQUIRE_EQUAL(impact->messages.size(), 1);
     BOOST_CHECK_EQUAL(impact->messages.front().text, "cow on the tracks");
     BOOST_CHECK(impact->aux_info.stop_times.empty());
+
+    //here we verify contributor:
+    auto disruption = b.data->pt_data->disruption_holder.get_disruption(impact->uri);
+    BOOST_REQUIRE_EQUAL(disruption->contributor, "cow.owner");
 
     // we add a second time the realtime message, it should not change anything
     navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
