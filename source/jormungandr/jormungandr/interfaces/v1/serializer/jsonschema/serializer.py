@@ -47,6 +47,7 @@ class SwaggerParamSerializer(serpy.Serializer):
     minimum = Field()
     maximum = Field()
     format = Field()
+    collectionFormat = Field(attr='collection_format')
     items = LambdaField(method=lambda _, obj: SwaggerParamSerializer(obj.items).data if obj.items else None,
                         display_none=False)
 
