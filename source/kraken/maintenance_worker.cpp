@@ -172,8 +172,7 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         for(const auto& entity: feed_message.entity()){
             if (!data) {
                 data = data_manager.get_data_clone();
-                data->last_rt_data_loaded = pt::microsec_clock::universal_time();
-                LOG4CPLUS_INFO(logger, "data copied in " << (data->last_rt_data_loaded - begin));
+                LOG4CPLUS_INFO(logger, "data copied in " << (pt::microsec_clock::universal_time() - begin));
             }
             if (entity.is_deleted()) {
                 LOG4CPLUS_DEBUG(logger, "deletion of disruption " << entity.id());
@@ -198,6 +197,7 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         LOG4CPLUS_INFO(logger, "rebuilding data raptor");
         data->build_raptor(conf.raptor_cache_size());
         data_manager.set_data(std::move(data));
+        data->last_rt_data_loaded = pt::microsec_clock::universal_time();
         LOG4CPLUS_INFO(logger, "data updated " << envelopes.size() << " disrutpion applied in "
                                                << pt::microsec_clock::universal_time() - begin);
     }
