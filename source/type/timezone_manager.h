@@ -59,7 +59,7 @@ public:
     TimeZoneHandler() {}
     int32_t get_utc_offset(boost::gregorian::date day) const;
     int32_t get_utc_offset(int day) const;
-    int32_t get_first_utc_offset(const ValidityPattern& vp) const;
+    int32_t get_utc_offset(const ValidityPattern& vp) const;
     dst_periods get_periods_and_shift() const;
 
     template<class Archive> void serialize(Archive& ar, const unsigned int) {
