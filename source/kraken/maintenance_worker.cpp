@@ -171,7 +171,7 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         LOG4CPLUS_TRACE(logger, "received entity: " << feed_message.DebugString());
         for(const auto& entity: feed_message.entity()){
             if (!data) {
-            	pt::ptime copy_begin = pt::microsec_clock::universal_time();
+                pt::ptime copy_begin = pt::microsec_clock::universal_time();
                 data = data_manager.get_data_clone();
                 LOG4CPLUS_INFO(logger, "data copied in " << (pt::microsec_clock::universal_time() - copy_begin));
             }
