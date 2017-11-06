@@ -839,7 +839,6 @@ class JourneyCommon(object):
         assert response['error']['id'] == u'unknown_object'
         assert response['error']['message'] == u'The entry point: vehicle_journey:SNC is not valid'
 
-
 @dataset({"main_routing_test": {}})
 class DirectPath(object):
     def test_journey_direct_path(self):
@@ -1208,3 +1207,50 @@ class JourneysWithPtref():
         self.is_valid_journey_response(response, query)
 
         assert len(response['journeys']) == 1
+
+@dataset({"main_routing_test": {}})
+class JourneyMiniBikeMiniCar(object):
+    def test_activate_deactivate_min_bike_mini_car(self):
+        """
+        journeys from B to D
+        """
+        b_coord = "0.0002694935945864127;8.98311981954709e-05"
+        d_coord = "0.0002694935945864127;0.0"
+        sub_query = 'journeys?from={from_coord}&to={to_coord}&datetime={datetime}'.format(from_coord=b_coord,
+                                                                                          to_coord=d_coord,
+                                                                                          datetime="20120614T080000")
+        # Deactivate mini_bike and mini_car
+        query = '{}&last_section_mode[]=bike&first_section_mode[]=bike'.format(sub_query)
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+        assert len(response['journeys']) == 1
+        assert len(response['journeys'][0]['sections']) == 1
+        assert response['journeys'][0]['sections'][0]['mode'] == 'bike'
+        assert response['journeys'][0]['sections'][0]['duration'] == 10
+
+        query = '{}&last_section_mode[]=car&first_section_mode[]=car'.format(sub_query)
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+        assert len(response['journeys']) == 1
+        assert len(response['journeys'][0]['sections']) == 3
+        assert response['journeys'][0]['sections'][0]['mode'] == 'car'
+        assert response['journeys'][0]['sections'][0]['duration'] == 2
+
+        # Activate mini_bike and min_car
+        query = '{}&last_section_mode[]=car&first_section_mode[]=car&' \
+                'last_section_mode[]=walking&first_section_mode[]=walking'.format(sub_query)
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+        assert len(response['journeys']) == 1
+        assert len(response['journeys'][0]['sections']) == 1
+        assert response['journeys'][0]['sections'][0]['mode'] == 'walking'
+        assert response['journeys'][0]['sections'][0]['duration'] == 37
+
+        query = '{}&last_section_mode[]=bike&last_section_mode[]=walking&' \
+                'first_section_mode[]=bike&first_section_mode[]=walking'.format(sub_query)
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+        assert len(response['journeys']) == 1
+        assert len(response['journeys'][0]['sections']) == 1
+        assert response['journeys'][0]['sections'][0]['mode'] == 'walking'
+        assert response['journeys'][0]['sections'][0]['duration'] == 37

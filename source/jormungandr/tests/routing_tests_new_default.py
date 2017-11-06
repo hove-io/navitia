@@ -40,7 +40,7 @@ unit for scenario new_default
 '''
 
 @config({"scenario": "new_default"})
-class TestJourneysNewDefault(JourneyCommon,  DirectPath, NewDefaultScenarioAbstractTestFixture):
+class TestJourneysNewDefault(JourneyCommon,  DirectPath, JourneyMiniBikeMiniCar, NewDefaultScenarioAbstractTestFixture):
     """
     Test the new default scenario
     All the tests are defined in "TestJourneys" class, we only change the scenario
