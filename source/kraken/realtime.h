@@ -35,18 +35,8 @@ www.navitia.io
 
 namespace navitia {
 
-void handle_realtime(const std::string& contributor,
-                     const std::string& id,
+void handle_realtime(const std::string& id,
                      const boost::posix_time::ptime& timestamp,
                      const transit_realtime::TripUpdate&,
                      const type::Data&);
-
-inline void handle_realtime(const std::string& id,
-                            const boost::posix_time::ptime& timestamp,
-                            const transit_realtime::TripUpdate& trip_update,
-                            const type::Data& data) {
-    return handle_realtime("realtime", id, timestamp, trip_update, data);
-}
-
-
 }

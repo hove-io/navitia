@@ -202,8 +202,7 @@ static nt::disruption::StopTimeUpdate::Status get_status(const transit_realtime:
 }
 
 static const type::disruption::Disruption*
-create_disruption(const std::string& contributor,
-                  const std::string& id,
+create_disruption(const std::string& id,
                   const boost::posix_time::ptime& timestamp,
                   const transit_realtime::TripUpdate& trip_update,
                   const type::Data& data) {
@@ -220,7 +219,9 @@ create_disruption(const std::string& contributor,
     delete_disruption(id, *data.pt_data, *data.meta);
     auto& disruption = holder.make_disruption(id, type::RTLevel::RealTime);
     disruption.reference = disruption.uri;
-    disruption.contributor = contributor;
+    if (trip_update.trip().HasExtension(kirin::contributor)) {
+        disruption.contributor = trip_update.trip().GetExtension(kirin::contributor);
+    }
     disruption.publication_period = data.meta->production_period();
     disruption.created_at = timestamp;
     disruption.updated_at = timestamp;
@@ -365,8 +366,7 @@ create_disruption(const std::string& contributor,
     return &disruption;
 }
 
-void handle_realtime(const std::string& contributor,
-                     const std::string& id,
+void handle_realtime(const std::string& id,
                      const boost::posix_time::ptime& timestamp,
                      const transit_realtime::TripUpdate& trip_update,
                      const type::Data& data) {
@@ -386,7 +386,7 @@ void handle_realtime(const std::string& contributor,
         return;
     }
 
-    const auto* disruption = create_disruption(contributor, id, timestamp, trip_update, data);
+    const auto* disruption = create_disruption(id, timestamp, trip_update, data);
 
     if (! disruption || ! check_disruption(*disruption)) {
         LOG4CPLUS_INFO(log, "disruption " << id << " on " << meta_vj->uri << " not valid, we do not handle it");

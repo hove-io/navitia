@@ -577,6 +577,7 @@ def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], 
     trip = trip_update.trip
     trip.trip_id = vj_id
     trip.start_date = date
+    trip.Extensions[kirin_pb2.contributor] = rt_topic
 
     if status == 'canceled':
         trip.schedule_relationship = gtfs_realtime_pb2.TripDescriptor.CANCELED
