@@ -32,7 +32,6 @@ import navitiacommon.type_pb2 as type_pb2
 import navitiacommon.response_pb2 as response_pb2
 from future.moves.itertools import zip_longest
 import six
-from six.moves import range
 
 places_type = {
     'stop_area': type_pb2.STOP_AREA,
@@ -225,6 +224,7 @@ def get_or_default(request, val, default):
         return val
     return default
 
+
 def updated_common_journey_request_with_default(request, instance):
     if request['max_walking_duration_to_pt'] is None:
         request['max_walking_duration_to_pt'] = instance.max_walking_duration_to_pt
@@ -254,14 +254,19 @@ def updated_common_journey_request_with_default(request, instance):
         request['car_speed'] = instance.car_speed
 
 
+def walking_in_origin_destination_mode(request):
+    return 'walking' in request['origin_mode'] and 'walking' in request['destination_mode']
+
+
 def updated_request_with_default(request, instance):
     updated_common_journey_request_with_default(request, instance)
 
-    if request['_min_car'] is None:
+    if request['_min_car'] is None and walking_in_origin_destination_mode(request):
         request['_min_car'] = instance.min_car
 
-    if request['_min_bike'] is None:
+    if request['_min_bike'] is None and walking_in_origin_destination_mode(request):
         request['_min_bike'] = instance.min_bike
+
 
 def change_ids(new_journeys, journey_count):
     """
