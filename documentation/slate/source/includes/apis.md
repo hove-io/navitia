@@ -166,6 +166,7 @@ Very simple service: you give Navitia some coordinates, it answers you
 | url | Result |
 |----------------------------------------------|-------------------------------------|
 | `coords/{lon;lat}`                           | Detailed address point              |
+| `coverage/{lon;lat}/coords/{lon;lat}`        | Detailed address point              |
 | `coverage/{region_id}/coords/{lon;lat}`      | Detailed address point              |
 
 
