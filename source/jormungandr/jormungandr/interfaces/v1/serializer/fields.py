@@ -47,6 +47,14 @@ point_2D_schema = {
     }
 }
 
+properties_schema = {
+    'type': 'array',
+    'items': {
+        'length': 'integer'
+    }
+}
+
+
 class MultiLineStringField(jsonschema.Field):
     class MultiLineStringSchema(serpy.Serializer):
         """used not as a serializer, but only for the schema"""
@@ -166,6 +174,7 @@ class SectionGeoJsonField(jsonschema.Field):
     class SectionGeoJsonSchema(serpy.Serializer):
         """used not as a serializer, but only for the schema"""
         type = StrField()
+        properties = jsonschema.Field(schema_metadata=properties_schema)
         coordinates = jsonschema.Field(schema_metadata=point_2D_schema)
 
     def __init__(self, **kwargs):
