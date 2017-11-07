@@ -70,12 +70,11 @@ include_directories("${CMAKE_SOURCE_DIR}"
 link_directories(${Boost_LIBRARY_DIRS})
 
 MACRO(ADD_BOOST_TEST EXE_NAME)
-    IF("${Boost_VERSION}" EQUAL "106200")
-        #Boost 1.62 doesn't support "log_sink" parameters, we disable reports with this version
-        ADD_TEST(${EXE_NAME} "${EXECUTABLE_OUTPUT_PATH}/${EXE_NAME}" --log_format=XML --log_level=all --report_level=no)
-    ELSE("${Boost_VERSION}" EQUAL "106200")
+    IF("${Boost_VERSION}" LESS 106200)
         ADD_TEST(${EXE_NAME} "${EXECUTABLE_OUTPUT_PATH}/${EXE_NAME}" --log_format=XML --log_sink=results_${EXE_NAME}.xml --log_level=all --report_level=no)
-    ENDIF("${Boost_VERSION}" EQUAL "106200")
+    ELSE()
+        ADD_TEST(${EXE_NAME} "${EXECUTABLE_OUTPUT_PATH}/${EXE_NAME}" --logger=XML,all,results_${EXE_NAME}.xml --report_level=no)
+    ENDIF()
 ENDMACRO(ADD_BOOST_TEST)
 
 ENABLE_TESTING()
