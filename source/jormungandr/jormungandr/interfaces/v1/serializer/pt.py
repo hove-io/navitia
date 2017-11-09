@@ -208,6 +208,10 @@ class ImpactedStopSerializer(PbNestedSerializer):
 class ImpactedSectionSerializer(PbNestedSerializer):
     f = PtObjectSerializer(label='from', attr='from')
     to = PtObjectSerializer()
+    routes = jsonschema.MethodField(schema_type=lambda: RouteSerializer(Many=True))
+
+    def get_routes(self, obj):
+        return RouteSerializer(obj.routes, display_none=False, many=True).data
 
 
 class ImpactedSerializer(PbNestedSerializer):
