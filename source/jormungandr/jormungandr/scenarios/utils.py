@@ -254,17 +254,13 @@ def updated_common_journey_request_with_default(request, instance):
         request['car_speed'] = instance.car_speed
 
 
-def walking_in_origin_destination_mode(request):
-    return 'walking' in request['origin_mode'] and 'walking' in request['destination_mode']
-
-
 def updated_request_with_default(request, instance):
     updated_common_journey_request_with_default(request, instance)
 
-    if request['_min_car'] is None and walking_in_origin_destination_mode(request):
+    if request['_min_car'] is None:
         request['_min_car'] = instance.min_car
 
-    if request['_min_bike'] is None and walking_in_origin_destination_mode(request):
+    if request['_min_bike'] is None:
         request['_min_bike'] = instance.min_bike
 
 
