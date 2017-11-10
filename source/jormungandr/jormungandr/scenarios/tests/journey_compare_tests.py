@@ -953,7 +953,7 @@ def test_heavy_journey_bss():
     assert 'to_delete' not in journey.tags
 
 
-def test_activate_deactivate_mini_bike():
+def test_activate_deactivate_min_bike():
     """
 
       A                 B                           C            D

@@ -192,7 +192,7 @@ def _filter_similar_journeys(journeys, request, similar_journey_generator):
                           .format(other=j1.internal_id if worst == j2 else j2.internal_id))
 
 
-def check_min_duration(current_section, journey, request,  mini_duration):
+def exceed_min_duration(current_section, journey, request,  mini_duration):
     if current_section == journey.sections[0]:
         return 'origin_mode' in request and 'walking' in request['origin_mode'] \
                and current_section.duration < mini_duration
@@ -220,13 +220,13 @@ def _filter_too_short_heavy_journeys(journeys, request):
                 continue
 
             if s.street_network.mode == response_pb2.Car \
-                    and check_min_duration(s, journey, request, request['_min_car']):
+                    and exceed_min_duration(s, journey, request, request['_min_car']):
                 logger.debug("the journey {} has not enough car, we delete it".format(journey.internal_id))
                 mark_as_dead(journey, "not_enough_car")
                 break
             if not on_bss \
                     and s.street_network.mode == response_pb2.Bike \
-                    and check_min_duration(s, journey, request, request['_min_bike']):
+                    and exceed_min_duration(s, journey, request, request['_min_bike']):
                 logger.debug("the journey {} has not enough bike, we delete it".format(journey.internal_id))
                 mark_as_dead(journey, "not_enough_bike")
                 break
