@@ -1240,6 +1240,7 @@ void PbCreator::Filler::fill_messages(const VjStopTimes* vj_stoptimes,
     // here we add all the impacts on stop_point and stop_area of section.from
     const auto& from_sp = vj_stoptimes->stop_times.front()->stop_point;
     for (const auto& message: from_sp->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
+        if (message->is_only_line_section()) { continue; }
         fill_message(message, pt_display_info);
     }
 

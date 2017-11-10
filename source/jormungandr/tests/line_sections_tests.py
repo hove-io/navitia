@@ -293,6 +293,10 @@ class TestLineSections(AbstractTestFixture):
         assert get_used_vj(r) == [['vj:1:2']]
         assert 'line_section_on_line_1' not in get_all_element_disruptions(r['journeys'], r)
 
+        r = journeys(_from='C', to='A')
+        assert get_used_vj(r) == [['vj:3']]
+        assert 'line_section_on_line_1' not in get_all_display_information_disruptions(r['journeys'], r)
+
     def test_stop_schedule_impacted_by_line_section(self):
         """
         For /stop_schedules we display a line section impact if the stoppoint is part of a line section impact
@@ -342,7 +346,7 @@ class TestLineSections(AbstractTestFixture):
         d = get_all_element_disruptions(r['departures'], r)
         assert 'line_section_on_line_1' in d
         # the impact is linked in the response to the stop point and the vj
-        assert impacted_ids(d) == {'C_1', 'vj:1:1'}
+        assert impacted_ids(d) == {'C_1', 'vj:1:1', 'vj:3'}
 
         r = self.query_region('stop_areas/D/departures?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['departures'], r)

@@ -207,6 +207,16 @@ bool Impact::is_relevant(const std::vector<const StopTime*>& stop_times) const {
     return true;
 }
 
+bool Impact::is_only_line_section() const {
+    if (_informed_entities.empty()) { return false; }
+    for (const auto& entity: informed_entities()) {
+        if (! boost::get<nt::disruption::LineSection>(&entity)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 const type::ValidityPattern Impact::get_impact_vp(const boost::gregorian::date_period& production_date) const {
     type::ValidityPattern impact_vp{production_date.begin()}; // bitset are all initialised to 0
     for (const auto& period: this->application_periods) {
