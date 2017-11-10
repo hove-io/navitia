@@ -1230,14 +1230,14 @@ class JourneyMiniBikeMiniCar(object):
         assert len(response['journeys'][0]['sections']) == 3
         assert response['journeys'][0]['sections'][0]['mode'] == 'walking'
         assert response['journeys'][0]['sections'][0]['duration'] == 17
-        assert response['journeys'][0]['sections'][2]['mode'] == 'bike'
-        assert response['journeys'][0]['sections'][2]['duration'] == 21
+        assert response['journeys'][0]['sections'][-1]['mode'] == 'bike'
+        assert response['journeys'][0]['sections'][-1]['duration'] == 21
 
         assert len(response['journeys'][1]['sections']) == 1
         assert response['journeys'][1]['sections'][0]['mode'] == 'walking'
         assert response['journeys'][1]['sections'][0]['duration'] == 276
 
-    def test_last_section_mode_bake_only(self):
+    def test_last_section_mode_bike_only(self):
         query = '{sub_query}&last_section_mode[]=bike&datetime={datetime}'.format(sub_query=sub_query,
                                                                                   datetime="20120614T080000")
         response = self.query_region(query)
@@ -1246,8 +1246,8 @@ class JourneyMiniBikeMiniCar(object):
         assert len(response['journeys'][0]['sections']) == 3
         assert response['journeys'][0]['sections'][0]['mode'] == 'walking'
         assert response['journeys'][0]['sections'][0]['duration'] == 17
-        assert response['journeys'][0]['sections'][2]['mode'] == 'bike'
-        assert response['journeys'][0]['sections'][2]['duration'] == 21
+        assert response['journeys'][0]['sections'][-1]['mode'] == 'bike'
+        assert response['journeys'][0]['sections'][-1]['duration'] == 21
 
         assert len(response['journeys'][1]['sections']) == 1
         assert response['journeys'][1]['sections'][0]['mode'] == 'walking'
@@ -1273,6 +1273,23 @@ class JourneyMiniBikeMiniCar(object):
         assert response['journeys'][0]['sections'][0]['mode'] == 'bike'
         assert response['journeys'][0]['sections'][0]['duration'] == 62
 
+    def test_first_section_mode_bike_walking_only(self):
+        query = '{sub_query}&first_section_mode[]=walking&first_section_mode[]=bike&' \
+                'datetime={datetime}'.format(sub_query=sub_query, datetime="20120614T080000")
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+        assert len(response['journeys']) == 2
+        assert len(response['journeys'][0]['sections']) == 3
+        assert response['journeys'][0]['sections'][0]['mode'] == 'walking'
+        assert response['journeys'][0]['sections'][0]['duration'] == 17
+
+        assert response['journeys'][0]['sections'][-1]['mode'] == 'walking'
+        assert response['journeys'][0]['sections'][-1]['duration'] == 80
+
+        assert len(response['journeys'][-1]['sections']) == 1
+        assert response['journeys'][-1]['sections'][0]['mode'] == 'walking'
+        assert response['journeys'][-1]['sections'][0]['duration'] == 276
+
     def test_first_section_mode_and_last_section_mode_car(self):
         query = '{sub_query}&last_section_mode[]=car&first_section_mode[]=car&' \
                 'datetime={datetime}'.format(sub_query=sub_query, datetime="20120614T070000")
@@ -1283,8 +1300,8 @@ class JourneyMiniBikeMiniCar(object):
         assert response['journeys'][0]['sections'][0]['mode'] == 'car'
         assert response['journeys'][0]['sections'][0]['duration'] == 16
 
-        assert response['journeys'][0]['sections'][2]['mode'] == 'walking'
-        assert response['journeys'][0]['sections'][2]['duration'] == 106
+        assert response['journeys'][0]['sections'][-1]['mode'] == 'walking'
+        assert response['journeys'][0]['sections'][-1]['duration'] == 106
 
     def test_activate_min_car_bike(self):
         modes = [
@@ -1306,8 +1323,8 @@ class JourneyMiniBikeMiniCar(object):
             assert response['journeys'][0]['sections'][0]['duration'] == 17
             assert response['journeys'][0]['sections'][1]['type'] == 'public_transport'
             assert response['journeys'][0]['sections'][1]['duration'] == 2
-            assert response['journeys'][0]['sections'][2]['mode'] == 'walking'
-            assert response['journeys'][0]['sections'][2]['duration'] == 80
+            assert response['journeys'][0]['sections'][-1]['mode'] == 'walking'
+            assert response['journeys'][0]['sections'][-1]['duration'] == 80
 
             assert len(response['journeys'][1]['sections']) == 1
             assert response['journeys'][1]['sections'][0]['mode'] == 'walking'
