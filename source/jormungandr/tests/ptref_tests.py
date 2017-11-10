@@ -859,7 +859,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         assert 'error' not in response
         arrivals = get_not_null(response, 'arrivals')
         assert len(arrivals) == 2
-        assert arrivals[0]['display_informations']['headsign'] == "vehicle_journey 2"
+        assert arrivals[0]['display_informations']['headsign'] == "vehicle_journey 3"
 
     def test_headsign_display_info_route_schedules(self):
         """test basic print of headsign in display informations for route schedules"""
@@ -914,7 +914,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('trips')
 
         trips = get_not_null(response, 'trips')
-        assert len(trips) == 5
+        assert len(trips) == 6
         for t in trips:
             is_valid_trip(t)
 
