@@ -38,7 +38,7 @@ unit for scenario experimental
 '''
 
 @config({'scenario': 'distributed'})
-class TestJourneysDistributed(JourneyCommon, DirectPath, JourneyMiniBikeMiniCar, NewDefaultScenarioAbstractTestFixture):
+class TestJourneysDistributed(JourneyCommon, DirectPath, JourneyMinBikeMinCar, NewDefaultScenarioAbstractTestFixture):
     """
     Test the experiental scenario
     All the tests are defined in "TestJourneys" class, we only change the scenario

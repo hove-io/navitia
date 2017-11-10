@@ -1210,7 +1210,7 @@ class JourneysWithPtref():
 
 
 @dataset({"main_routing_test": {}})
-class JourneyMiniBikeMiniCar(object):
+class JourneyMinBikeMinCar(object):
     def test_first_section_mode_and_last_section_mode_bike(self):
         query = '{sub_query}&last_section_mode[]=bike&first_section_mode[]=bike&' \
                 'datetime={datetime}'.format(sub_query=sub_query, datetime="20120614T080000")
