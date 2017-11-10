@@ -192,12 +192,12 @@ def _filter_similar_journeys(journeys, request, similar_journey_generator):
                           .format(other=j1.internal_id if worst == j2 else j2.internal_id))
 
 
-def exceed_min_duration(current_section, journey, request,  mini_duration):
+def exceed_min_duration(current_section, journey, request,  min_duration):
     if current_section == journey.sections[0]:
         return 'origin_mode' in request and 'walking' in request['origin_mode'] \
-               and current_section.duration < mini_duration
+               and current_section.duration < min_duration
     return 'destination_mode' in request and 'walking' in request['destination_mode'] \
-           and current_section.duration < mini_duration
+           and current_section.duration < min_duration
 
 
 def _filter_too_short_heavy_journeys(journeys, request):
