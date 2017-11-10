@@ -40,10 +40,12 @@ class ChaosDisruptionsFixture(RabbitMQCnxFixture):
     Mock a chaos disruption message, in order to check the api
     """
     def _make_mock_item(self, disruption_name, impacted_obj, impacted_obj_type, start=None, end=None,
-                              message='default_message', is_deleted=False, blocking=False,
-                         start_period="20100412T165200", end_period="20200412T165200", cause='CauseTest', category=None):
-        return make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end, message, is_deleted,
-                                    blocking, start_period, end_period, cause=cause, category=category)
+                        message='default_message', is_deleted=False, blocking=False,
+                        start_period="20100412T165200", end_period="20200412T165200",
+                        cause='CauseTest', category=None, routes=None):
+        return make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end, message,
+                                    is_deleted, blocking, start_period, end_period, cause=cause,
+                                    category=category, routes=routes)
 
 
 MAIN_ROUTING_TEST_SETTING = {"main_routing_test": {'kraken_args': ['--BROKER.sleeptime=0',
@@ -240,11 +242,63 @@ class TestChaosDisruptionsLineSectionOnOneStop(ChaosDisruptionsFixture):
         section = get_not_null(bobette, 'impacted_objects')[0].get('impacted_section', {})
         assert section.get('from', {}).get('id') == 'stopB'
         assert section.get('to', {}).get('id') == 'stopB'
+        assert 'routes' in section
+        assert len(section['routes']) == 2
 
         # the disruption is linked to the trips of the line and to the stoppoints
         assert not has_dis(ObjGetter('stop_points', 'stop_point:stopA'), 'bobette_the_disruption')
         assert has_dis(ObjGetter('stop_points', 'stop_point:stopB'), 'bobette_the_disruption')
         assert has_dis(ObjGetter('vehicle_journeys', 'vjA'), 'bobette_the_disruption')
+
+@dataset(MAIN_ROUTING_TEST_SETTING)
+class TestChaosDisruptionsLineSectionOnOneStopWithRoute(ChaosDisruptionsFixture):
+    """
+    Note: it is done as a new fixture, to spawn a new kraken, in order to not get the previous disruptions
+    """
+
+    def test_disruption_on_line_section_on_one_stop_with_route(self):
+        """
+        the test blocking a line section
+        the line section is only from B to B, it should block only B
+        """
+        def query_on_date(q, **kwargs):
+            """We do the query on a dt inside the disruption application period"""
+            return self.query_region('{q}?_current_datetime=20120614T120000'.format(q=q), **kwargs)
+
+        def has_dis(obj_get, dis):
+            r = query_on_date('{col}/{uri}'.format(col=obj_get.collection, uri=obj_get.uri))
+            return has_disruption(r, obj_get, dis)
+
+        response = self.query_region('disruptions')
+        assert 'bobette_the_disruption' not in [d['disruption_id'] for d in response['disruptions']]
+        assert not has_dis(ObjGetter('stop_points', 'stop_point:stopA'), 'bobette_the_disruption')
+        assert not has_dis(ObjGetter('stop_points', 'stop_point:stopB'), 'bobette_the_disruption')
+        assert not has_dis(ObjGetter('vehicle_journeys', 'vjA'), 'bobette_the_disruption')
+
+        self.send_mock("bobette_the_disruption_with_route", "A",
+                       "line_section", start="stopB", end="stopB",
+                       start_period="20120614T100000", end_period="20120624T170000",
+                       blocking=True, routes=['A:0'])
+
+        response = self.query_region('disruptions')
+        # and we call again, we must have the disruption now
+        dis_by_name = {d['disruption_id']: d for d in response['disruptions']}
+
+        bobette = dis_by_name.get('bobette_the_disruption_with_route')
+        assert bobette
+        is_valid_line_section_disruption(bobette)
+
+        section = get_not_null(bobette, 'impacted_objects')[0].get('impacted_section', {})
+        assert section.get('from', {}).get('id') == 'stopB'
+        assert section.get('to', {}).get('id') == 'stopB'
+        assert 'routes' in section
+        assert len(section['routes']) == 1
+        assert section['routes'][0].get('id') == 'A:0'
+
+        # the disruption is linked to the trips of the line and to the stoppoints
+        assert not has_dis(ObjGetter('stop_points', 'stop_point:stopA'), 'bobette_the_disruption_with_route')
+        assert has_dis(ObjGetter('stop_points', 'stop_point:stopB'), 'bobette_the_disruption_with_route')
+        assert has_dis(ObjGetter('vehicle_journeys', 'vjA'), 'bobette_the_disruption_with_route')
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
@@ -763,7 +817,7 @@ class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
 def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end,
                          message_text='default_message', is_deleted=False, blocking=False,
                          start_period="20100412T165200", end_period="20200412T165200",
-                         cause='CauseTest', category=None):
+                         cause='CauseTest', category=None, routes=None):
     feed_message = gtfs_realtime_pb2.FeedMessage()
     feed_message.header.gtfs_realtime_version = '1.0'
     feed_message.header.incrementality = gtfs_realtime_pb2.FeedHeader.DIFFERENTIAL
@@ -843,6 +897,10 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start
         pb_end = line_section.end_point
         pb_end.uri = end
         pb_end.pt_object_type = chaos_pb2.PtObject.stop_area
+        for route in routes or []:
+            pb_route = line_section.routes.add()
+            pb_route.pt_object_type = chaos_pb2.PtObject.route
+            pb_route.uri = route
 
     # Message with one channel and one channel type: sms
     message = impact.messages.add()

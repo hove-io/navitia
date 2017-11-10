@@ -897,6 +897,7 @@ instance_status_with_parameters['traveler_profiles'] = fields.List(fields.Nested
 impacted_section = {
     'from': NonNullNested(pt_object),
     'to': NonNullNested(pt_object),
+    'routes': NonNullList(NonNullNested(route)),
 }
 
 impacted_stop = {
