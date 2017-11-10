@@ -27,7 +27,6 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from datetime import timedelta
 from .tests_mechanism import config, NewDefaultScenarioAbstractTestFixture
 from .journey_common_tests import *
 from unittest import skip
@@ -39,7 +38,7 @@ unit for scenario experimental
 '''
 
 @config({'scenario': 'distributed'})
-class TestJourneysDistributed(JourneyCommon, DirectPath, NewDefaultScenarioAbstractTestFixture):
+class TestJourneysDistributed(JourneyCommon, DirectPath, JourneyMinBikeMinCar, NewDefaultScenarioAbstractTestFixture):
     """
     Test the experiental scenario
     All the tests are defined in "TestJourneys" class, we only change the scenario
