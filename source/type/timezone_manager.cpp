@@ -67,18 +67,38 @@ int32_t TimeZoneHandler::get_utc_offset(int day) const {
     throw navitia::recoverable_exception("day " + std::to_string(day) + " not in production period");
 }
 
-int32_t TimeZoneHandler::get_first_utc_offset(const ValidityPattern& vp) const {
-    // by construction a validity pattern should never span accros DST, else all resulting local time
-    // would be meaning less.
-    // so in this method we return the first dst found
+template<size_t N> bool is_subset_of(const std::bitset<N>& lhs, const std::bitset<N>& rhs) {
+    return (lhs & ~rhs).none();
+}
+
+int32_t TimeZoneHandler::get_utc_offset(const ValidityPattern& vp) const {
+    // Most of the time, a validity pattern will not span accros DST.
+    // It can be sometimes when we shift the validity pattern for
+    // the first stop_time to be between 0 and 24.
 
     if (vp.days.none()) {
         return 0; // vp is empty, utc shift is not important
     }
+
     for (const auto& vp_shift: time_changes) {
-        // we check if the vj intersect
-        if ((vp_shift.first.days & vp.days).any()) { return vp_shift.second; }
+        // we check if the vp is included in the time change
+        if (is_subset_of(vp.days, vp_shift.first.days)) { return vp_shift.second; }
     }
+
+    // OK, we didn't find a perfect matching, trying with the best match
+    size_t best_nb_common = 0;
+    int32_t best_offset = 0;
+    for (const auto& vp_shift: time_changes) {
+        const auto nb_common = (vp.days & vp_shift.first.days).count();
+        if (nb_common > best_nb_common) {
+            best_nb_common = nb_common;
+            best_offset = vp_shift.second;
+        }
+    }
+    if (best_nb_common > 0) {
+        return best_offset;
+    }
+
     // by construction, this should not be possible
     // we add a debug log
     std::stringstream ss;

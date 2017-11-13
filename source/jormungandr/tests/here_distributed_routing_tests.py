@@ -273,7 +273,7 @@ def mock_here(_, url, params):
     assert False, 'invalid url'
 
 
-@pytest.yield_fixture(scope="function", autouse=True)
+@pytest.fixture(scope="function", autouse=True)
 def mock_http_here(monkeypatch):
     monkeypatch.setattr('jormungandr.street_network.here.Here._call_here', mock_here)
 

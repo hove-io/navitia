@@ -283,7 +283,7 @@ struct calendar_fixture {
         b.data->pt_data->codes.add(b.get<nt::StopPoint>("StopR4"), "source", "Code-StopR4");
 
         beg = b.data->meta->production_date.begin();
-        end_of_year = beg + boost::gregorian::years(1) + boost::gregorian::days(1);
+        end_of_year = beg + boost::gregorian::years(1);
 
         navitia::type::VehicleJourney* vj = pt_data.vehicle_journeys_map["on_demand_transport"];
         vj->stop_time_list[0].set_odt(true);

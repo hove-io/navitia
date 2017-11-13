@@ -87,8 +87,8 @@ void Data::build_block_id() {
         if(vj1->block_id != vj2->block_id) {
             return vj1->block_id < vj2->block_id;
         } else {
-            auto offset1 = tz_wrapper.tz_handler.get_first_utc_offset(*vj1->validity_pattern);
-            auto offset2 = tz_wrapper.tz_handler.get_first_utc_offset(*vj2->validity_pattern);
+            auto offset1 = tz_wrapper.tz_handler.get_utc_offset(*vj1->validity_pattern);
+            auto offset2 = tz_wrapper.tz_handler.get_utc_offset(*vj2->validity_pattern);
 
             // we don't want to link the splited vjs
             if (offset1 != offset2) {
@@ -119,8 +119,8 @@ void Data::build_block_id() {
                 if (vj->stop_time_list.front()->departure_time >= prev_vj->stop_time_list.back()->arrival_time) {
 
                     //we add another check that the vjs are on the same offset (that they are not the from vj split on different dst)
-                    if (tz_wrapper.tz_handler.get_first_utc_offset(*vj->validity_pattern) ==
-                            tz_wrapper.tz_handler.get_first_utc_offset(*prev_vj->validity_pattern)) {
+                    if (tz_wrapper.tz_handler.get_utc_offset(*vj->validity_pattern) ==
+                            tz_wrapper.tz_handler.get_utc_offset(*prev_vj->validity_pattern)) {
                         prev_vj->next_vj = vj;
                         vj->prev_vj = prev_vj;
                     }

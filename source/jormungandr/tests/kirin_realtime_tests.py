@@ -186,7 +186,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         assert departures['departures'][0]['stop_date_time']['departure_date_time'] == '20120614T080100'
 
         pt_response = self.query_region('vehicle_journeys')
-        assert len(pt_response['vehicle_journeys']) == 5
+        assert len(pt_response['vehicle_journeys']) == 6
 
         # no disruption yet
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
@@ -204,7 +204,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         # A new vj is created
         pt_response = self.query_region('vehicle_journeys')
-        assert len(pt_response['vehicle_journeys']) == 6
+        assert len(pt_response['vehicle_journeys']) == 7
 
         vj_ids = [vj['id'] for vj in pt_response['vehicle_journeys']]
         assert 'vjA:modified:0:vjA_delayed' in vj_ids
@@ -300,7 +300,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         # A new vj is created, but a useless vj has been cleaned, so the number of vj does not change
         pt_response = self.query_region('vehicle_journeys')
-        assert len(pt_response['vehicle_journeys']) == 6
+        assert len(pt_response['vehicle_journeys']) == 7
 
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
         assert len(pt_response['disruptions']) == 1
@@ -344,7 +344,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         # A new vj is created
         vjs = self.query_region('vehicle_journeys?_current_datetime=20120614T1337')
-        assert len(vjs['vehicle_journeys']) == 7
+        assert len(vjs['vehicle_journeys']) == 8
 
         vjA = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
         # we now have 2 disruption on vjA
@@ -397,7 +397,7 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
         assert get_used_vj(response), [['vjA'] == []]
 
         pt_response = self.query_region('vehicle_journeys')
-        assert len(pt_response['vehicle_journeys']) == 5
+        assert len(pt_response['vehicle_journeys']) == 6
 
         # check that we have the next vj
         s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset
@@ -420,7 +420,7 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
 
         # A new vj is created
         pt_response = self.query_region('vehicle_journeys')
-        assert len(pt_response['vehicle_journeys']) == 6
+        assert len(pt_response['vehicle_journeys']) == 7
 
         vj_ids = [vj['id'] for vj in pt_response['vehicle_journeys']]
         assert 'vjA:modified:0:96231_2015-07-28_0' in vj_ids
@@ -577,6 +577,7 @@ def make_mock_kirin_item(vj_id, date, status='canceled', new_stop_time_list=[], 
     trip = trip_update.trip
     trip.trip_id = vj_id
     trip.start_date = date
+    trip.Extensions[kirin_pb2.contributor] = rt_topic
 
     if status == 'canceled':
         trip.schedule_relationship = gtfs_realtime_pb2.TripDescriptor.CANCELED

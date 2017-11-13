@@ -83,6 +83,7 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
 
         filler.copy(0, DumpMessage::No).fill_pb_object(line_section.end_point,
                                                        impacted_section->mutable_to());
+        filler.copy(0, DumpMessage::No).fill(line_section.routes, impacted_section->mutable_routes());
     }
 
     pbnavitia::StopTimeUpdateStatus get_effect(nd::StopTimeUpdate::Status status) const {

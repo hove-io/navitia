@@ -332,7 +332,7 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
 
                 const auto p_deptime = item.departures[i];
                 const auto p_arrtime = item.arrivals[i];
-                pb_creator.action_period = bt::time_period(p_deptime, p_arrtime);
+                pb_creator.action_period = bt::time_period(p_deptime, p_arrtime + bt::seconds(1));
                 pb_creator.fill(item.stop_points[i], stop_time->mutable_stop_point(), 0);
                 pb_creator.fill(item.stop_times[i], stop_time, 1);
 
@@ -351,7 +351,7 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
                 pb_creator.fill(item.stop_points.front(), pb_section->mutable_origin(), 1);
                 pb_creator.fill(item.stop_points.back(), pb_section->mutable_destination(), 1);
             }
-            pb_creator.action_period = bt::time_period(departure_ptime, arrival_ptime);
+            pb_creator.action_period = bt::time_period(departure_ptime, arrival_ptime + bt::seconds(1));
             fill_section(pb_creator, pb_section, vj, item.stop_times);
 
             // setting additional_informations
@@ -405,7 +405,7 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
                 break;
             }
 
-            pb_creator.action_period = bt::time_period(item.departure, item.arrival);
+            pb_creator.action_period = bt::time_period(item.departure, item.arrival + bt::seconds(1));
             const auto origin_sp = item.stop_points.front();
             const auto destination_sp = item.stop_points.back();
             pb_creator.fill(origin_sp, pb_section->mutable_origin(), 1);
@@ -516,7 +516,7 @@ static void add_pathes(PbCreator& pb_creator,
                 type::EntryPoint destination_tmp(type::Type_e::StopPoint, departure_stop_point->uri);
                 destination_tmp.coordinates = departure_stop_point->coord;
                 pb_creator.action_period = bt::time_period (path.items.front().departures.front(),
-                                              path.items.front().departures.front() + bt::minutes(1));
+                                              path.items.front().departures.front() + bt::seconds(1));
                 const time_duration& crow_fly_duration = find_or_default(SpIdx(*departure_stop_point),
                                             worker.departure_path_finder.distance_to_entry_point);
                 auto departure_time = path.items.front().departures.front() - pt::seconds(crow_fly_duration.to_posix().total_seconds());
@@ -542,7 +542,7 @@ static void add_pathes(PbCreator& pb_creator,
                     auto last_section = pb_journey->mutable_sections(pb_journey->sections_size()-1);
                     pb_creator.action_period = bt::time_period(
                                 navitia::from_posix_timestamp(first_section->begin_date_time()),
-                                navitia::from_posix_timestamp(last_section->end_date_time()));
+                                navitia::from_posix_timestamp(last_section->end_date_time() + bt::seconds(1)));
                     // We add coherence with the origin of the request
                     pb_creator.fill(&origin, first_section->mutable_origin(), 2);
                     // We add coherence with the first pt section
@@ -558,7 +558,7 @@ static void add_pathes(PbCreator& pb_creator,
             auto* section = pb_journey->mutable_sections(0);
             section->mutable_origin()->Clear();
             pb_creator.action_period = bt::time_period(navitia::from_posix_timestamp(section->begin_date_time()),
-                                                       bt::minutes(1));
+                                                       bt::seconds(1));
             pb_creator.fill(&origin, section->mutable_origin(), 1);
         }
 
@@ -569,7 +569,7 @@ static void add_pathes(PbCreator& pb_creator,
             section->mutable_destination()->Clear();
             //TODO: the period can probably be better (-1 min shift)
             pb_creator.action_period =  bt::time_period(navitia::from_posix_timestamp(section->end_date_time()),
-                                                        bt::minutes(1));
+                                                        bt::seconds(1));
             pb_creator.fill(&destination, section->mutable_destination(), 1);
         } else if (!path.items.empty() && !path.items.back().stop_points.empty()) {
             const auto arrival_stop_point = path.items.back().stop_points.back();
@@ -581,7 +581,7 @@ static void add_pathes(PbCreator& pb_creator,
                 type::EntryPoint origin_tmp(type::Type_e::StopPoint, arrival_stop_point->uri);
                 auto dt = path.items.back().arrivals.back();
                 origin_tmp.coordinates = arrival_stop_point->coord;
-                pb_creator.action_period = bt::time_period(dt, dt + bt::minutes(1));
+                pb_creator.action_period = bt::time_period(dt, bt::seconds(1));
                 const time_duration& crow_fly_duration = find_or_default(SpIdx(*arrival_stop_point),
                                                 worker.arrival_path_finder.distance_to_entry_point);
                 arrival_time = arrival_time + pt::seconds(crow_fly_duration.to_posix().total_seconds());
@@ -737,7 +737,7 @@ static void add_isochrone_response(RAPTOR& raptor,
             pb_journey->set_duration(duration);
             pb_journey->set_nb_transfers(round - 1);
             pb_creator.action_period = bt::time_period(navitia::to_posix_time(best_lbl-duration, raptor.data),
-                                                       navitia::to_posix_time(best_lbl, raptor.data));
+                                                       navitia::to_posix_time(best_lbl, raptor.data) + bt::seconds(1));
             if(clockwise){
                 *pb_journey->mutable_origin() = pb_origin;
                 pb_creator.fill(sp, pb_journey->mutable_destination(), 0);

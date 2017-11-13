@@ -649,7 +649,7 @@ int32_t VehicleJourney::utc_to_local_offset() const {
         throw navitia::recoverable_exception("vehicle journey " + uri +
                                  " not valid, no validitypattern on " + get_string_from_rt_level(realtime_level));
     }
-    return meta_vj->tz_handler->get_first_utc_offset(*vp);
+    return meta_vj->tz_handler->get_utc_offset(*vp);
 }
 
 const VehicleJourney* VehicleJourney::get_corresponding_base() const {

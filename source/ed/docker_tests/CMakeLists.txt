@@ -51,10 +51,18 @@ SET(BOOST_TEST_SEPARATOR "")
 if(NOT ${Boost_VERSION} LESS 106000) #if boost version newer or equal 1.60, passing cli_params new way
     SET(BOOST_TEST_SEPARATOR "--")
 endif()
-add_custom_command(TARGET run_test
-                   COMMAND ed_integration_test
-                   ARGS --log_format=XML --log_sink=results_ed_integration_test.xml --log_level=all
-                        --report_level=no ${BOOST_TEST_SEPARATOR} ${TEST_CLI_PARAMS})
+
+IF("${Boost_VERSION}" LESS 106200)
+    add_custom_command(TARGET run_test
+                       COMMAND ed_integration_test
+                       ARGS --log_format=XML --log_sink=results_ed_integration_test.xml --log_level=all
+                            --report_level=no ${BOOST_TEST_SEPARATOR} ${TEST_CLI_PARAMS})
+ELSE()
+    add_custom_command(TARGET run_test
+                       COMMAND ed_integration_test
+                       ARGS --logger=XML,all,results_ed_integration_test.xml
+                            --report_level=no ${BOOST_TEST_SEPARATOR} ${TEST_CLI_PARAMS})
+ENDIF()
 
 add_dependencies(ed_integration_test datanav_files)
 add_dependencies(docker_test run_test)

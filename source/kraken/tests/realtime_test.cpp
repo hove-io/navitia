@@ -64,8 +64,8 @@ make_cancellation_message(const std::string& vj_uri, const std::string& date) {
     trip->set_trip_id(vj_uri);
     trip->set_start_date(date);
     trip->set_schedule_relationship(transit_realtime::TripDescriptor_ScheduleRelationship_CANCELED);
+    trip->SetExtension(kirin::contributor, "cow.owner");
     trip_update.SetExtension(kirin::trip_message, "cow on the tracks");
-
     return trip_update;
 }
 
@@ -103,6 +103,10 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation) {
     BOOST_REQUIRE_EQUAL(impact->messages.size(), 1);
     BOOST_CHECK_EQUAL(impact->messages.front().text, "cow on the tracks");
     BOOST_CHECK(impact->aux_info.stop_times.empty());
+
+    //here we verify contributor:
+    auto disruption = b.data->pt_data->disruption_holder.get_disruption(impact->uri);
+    BOOST_REQUIRE_EQUAL(disruption->contributor, "cow.owner");
 
     // we add a second time the realtime message, it should not change anything
     navitia::handle_realtime(feed_id, timestamp, trip_update, *b.data);
@@ -2112,4 +2116,71 @@ BOOST_AUTO_TEST_CASE(train_delayed_3_times_different_id) {
     BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_CHECK_EQUAL(res.journeys_size(), 1);
     BOOST_CHECK_EQUAL(res.impacts_size(), 3);
+}
+
+BOOST_AUTO_TEST_CASE(teleportation_train_2_delays_check_disruptions) {
+    ed::builder b("20171101");
+    b.vj("1").uri("vj:1")
+        ("A", "08:00"_t)
+        ("B", "08:00"_t)
+        ("C", "09:00"_t);
+
+    transit_realtime::TripUpdate trip_update1 = ntest::make_delay_message("vj:1",
+            "20171101",
+            {
+                    DelayedTimeStop("A", "20171101T0801"_pts).delay(1_min),
+                    DelayedTimeStop("B", "20171101T0801"_pts).delay(1_min)
+            });
+    b.data->build_uri();
+
+    navitia::handle_realtime("late-01", timestamp, trip_update1, *b.data);
+
+    transit_realtime::TripUpdate trip_update2 = ntest::make_delay_message("vj:1",
+            "20171102",
+            {
+                    DelayedTimeStop("A", "20171102T0802"_pts).delay(2_min),
+                    DelayedTimeStop("B", "20171102T0802"_pts).delay(2_min)
+            });
+    b.data->build_uri();
+
+    navitia::handle_realtime("late-02", timestamp, trip_update2, *b.data);
+
+    const auto& pt_data = b.data->pt_data;
+    pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+
+    navitia::routing::RAPTOR raptor(*(b.data));
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    auto compute = [&](const char* datetime) {
+        navitia::type::Type_e origin_type = b.data->get_type_of_id("A");
+        navitia::type::Type_e destination_type = b.data->get_type_of_id("B");
+        navitia::type::EntryPoint origin(origin_type, "A");
+        navitia::type::EntryPoint destination(destination_type, "B");
+
+        navitia::PbCreator pb_creator(b.data.get(), "20171101T073000"_dt, null_time_period);
+        make_response(pb_creator, raptor, origin, destination,
+                      {ntest::to_posix_timestamp(datetime)},
+                      true, navitia::type::AccessibiliteParams(), {}, {},
+                      sn_worker, nt::RTLevel::RealTime, 2_min);
+        return  pb_creator.get_response();
+    };
+
+    auto res = compute("20171101T073000");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(res.impacts_size(), 1);
+    BOOST_CHECK_EQUAL(res.impacts(0).uri(), "late-01");
+
+    res = compute("20171102T073000");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_REQUIRE_EQUAL(res.impacts_size(), 1);
+    BOOST_CHECK_EQUAL(res.impacts(0).uri(), "late-02");
+
+    res = compute("20171103T073000");
+    BOOST_CHECK_EQUAL(res.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(res.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(res.impacts_size(), 0);
 }

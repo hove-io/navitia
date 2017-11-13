@@ -419,6 +419,12 @@ struct routing_api_data {
             b.data->pt_data->headsign_handler.affect_headsign_to_stop_time(
                                 b.data->pt_data->vehicle_journeys.at(0)->stop_time_list.at(0), "A00");
 
+            //We need another route on the line A with a vj on it to test line sections disruptions
+            b.vj("A", "000000", "", false, "vjA2").route("route2")
+                ("stop_point:stopB", "22:01"_t)
+                ("stop_point:stopA", "23:01:02"_t)
+                .st_shape({B, I, A});
+
             //add another bus, much later. we'll use that one for disruptions
             b.vj("B", "111111", "", true, "vjB")("stop_point:stopB", "18:01"_t)("stop_point:stopA", "18:01:02"_t)
                 .st_shape({B, I, A});

@@ -1173,7 +1173,7 @@ isochrone_basic_query = "isochrones?from={from_coord}&datetime={datetime}&max_du
     .format(from_coord=s_coord, datetime="20120614T080000", max_duration="3600")
 heat_map_basic_query = "heat_maps?from={from_coord}&datetime={datetime}&max_duration={max_duration}"\
     .format(from_coord=s_coord, datetime="20120614T080000", max_duration="3600")
-
+sub_query = 'journeys?from={from_coord}&to={to_coord}'.format(from_coord=s_coord, to_coord=r_coord)
 
 def get_all_element_disruptions(elem, response):
     """
