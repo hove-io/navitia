@@ -1,3 +1,16 @@
+navitia2 (2.45.0) unstable; urgency=low
+
+  * Jormungandr: Deactivate min_car and min_bike for journeys without walking mode  <https://github.com/CanalTP/navitia/pull/2242>
+  * All: add routes to line section  <https://github.com/CanalTP/navitia/pull/2246>
+  * Doc: Specify collectionFormat in swagger  <https://github.com/CanalTP/navitia/pull/2237>
+  * Kraken: correctly handle disruption output with teleportation vj  <https://github.com/CanalTP/navitia/pull/2245>
+  * Build: sync pip versions between tyr and jormun + boost 1.62  <https://github.com/CanalTP/navitia/pull/2243>
+  * Jormungandr: properties added in SectionGeoJsonSchema  <https://github.com/CanalTP/navitia/pull/2240>
+  * Kraken: contributor of trip.extension used in disruption for gtfs-rt  <https://github.com/CanalTP/navitia/pull/2241>
+  * Kraken: find best UTC offset for a validity pattern  <https://github.com/CanalTP/navitia/pull/2238>
+
+ -- xlqian <patrick.qian@canaltp.fr>  Mon, 13 Nov 2017 09:11:35 +0100
+
 navitia2 (2.43.0) unstable; urgency=low
 
   * Jormungandr: limit to 5 the number of StopMonitoring requested for SIRI  <https://github.com/CanalTP/navitia/pull/2219>
