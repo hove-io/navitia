@@ -28,7 +28,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask.ext.restful import abort, marshal
+from flask.ext.restful import marshal
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.fields import address
@@ -36,9 +36,15 @@ from navitiacommon.type_pb2 import _NAVITIATYPE
 from collections import OrderedDict
 import datetime
 from jormungandr.utils import is_coord, get_lon_lat
+import six
 
 
 class Coord(ResourceUri):
+    def __init__(self, *args, **kwargs):
+        ResourceUri.__init__(self, *args, **kwargs)
+        self.parsers['get'].add_argument("_autocomplete", type=six.text_type, hidden=True,
+                                         help="name of the autocomplete service, used under the hood")
+
     def _get_regions(self, region=None, lon=None, lat=None):
         return [region] if region else i_manager.get_regions("", lon, lat)
 
@@ -59,7 +65,8 @@ class Coord(ResourceUri):
         })
         return args
 
-    def get(self, region=None, lon=None, lat=None, id=None, *args, **kwargs):
+    def get(self, region=None, lon=None, lat=None, id=None):
+        args = self.parsers["get"].parse_args()
 
         if is_coord(id):
             lon, lat = get_lon_lat(id)
@@ -68,7 +75,8 @@ class Coord(ResourceUri):
 
         result = OrderedDict()
 
-        args = self._get_args(id=id, lon=lon, lat=lat)
+        params = self._get_args(id=id, lon=lon, lat=lat)
+        args.update(params)
         self._register_interpreted_parameters(args)
         for r in regions:
             self.region = r
