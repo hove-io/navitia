@@ -346,7 +346,7 @@ class TestLineSections(AbstractTestFixture):
         d = get_all_element_disruptions(r['departures'], r)
         assert 'line_section_on_line_1' in d
         # the impact is linked in the response to the stop point and the vj
-        assert impacted_ids(d) == {'C_1', 'vj:1:1', 'vj:3'}
+        assert impacted_ids(d) == {'C_1', 'vj:1:1'}
 
         r = self.query_region('stop_areas/D/departures?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['departures'], r)

@@ -1261,6 +1261,7 @@ void PbCreator::Filler::fill_messages(const VjStopTimes* vj_stoptimes,
 
     const auto& to_sp = vj_stoptimes->stop_times.back()->stop_point;
     for (const auto& message: to_sp->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
+        if (message->is_only_line_section()) { continue; }
         fill_message(message, pt_display_info);
     }
 }
