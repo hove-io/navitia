@@ -395,6 +395,14 @@ DisruptionCreator& DisruptionCreator::tag(const std::string& t) {
     return *this;
 }
 
+DisruptionCreator& DisruptionCreator::properties(const std::vector<dis::Property>& properties) {
+    for (auto &property : properties) {
+        disruption.properties.insert(property);
+    }
+
+    return *this;
+}
+
 DisruptionCreator builder::disrupt(nt::RTLevel lvl, const std::string& uri) {
     return DisruptionCreator(*this, uri, lvl);
 }

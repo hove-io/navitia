@@ -519,3 +519,90 @@ BOOST_AUTO_TEST_CASE(update_cause_severities_and_tag) {
     BOOST_REQUIRE(nav_dis->get_impacts()[0]->severity);
     BOOST_CHECK_EQUAL(nav_dis->get_impacts()[0]->severity->wording, "very important");
 }
+
+BOOST_AUTO_TEST_CASE(update_properties) {
+    ed::builder b("20171127");
+
+    navitia::type::Data data;
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14),
+                                                                  boost::gregorian::days(7));
+
+    auto create_disruption = [&](const std::vector<std::tuple<std::string, std::string, std::string>>& properties) {
+        chaos::Disruption disruption;
+        disruption.set_id("disruption");
+        auto* pb_cause = disruption.mutable_cause();
+        pb_cause->set_id("cause_id");
+        pb_cause->set_wording("foo");
+        auto* pb_tag = disruption.add_tags();
+        pb_tag->set_id("tag_id");
+        pb_tag->set_name("tag");
+        auto* impact = disruption.add_impacts();
+        impact->set_id("impact");
+        auto* pb_severity = impact->mutable_severity();
+        pb_severity->set_id("severity_id");
+        pb_severity->set_wording("important");
+        pb_severity->set_effect(transit_realtime::Alert_Effect_NO_SERVICE);
+        auto* object = impact->add_informed_entities();
+        object->set_pt_object_type(chaos::PtObject_Type_line);
+        object->set_uri("A");
+        auto* app_period = impact->add_application_periods();
+        app_period->set_start("20120614T153200"_pts);
+        app_period->set_end("20120616T123200"_pts);
+        for (auto const& p : properties) {
+            auto* property = disruption.add_properties();
+            property->set_key(std::get<0>(p));
+            property->set_type(std::get<1>(p));
+            property->set_value(std::get<2>(p));
+        }
+
+        return disruption;
+    };
+
+    const std::tuple<std::string, std::string, std::string> property1("foo", "bar", "42");
+    const std::tuple<std::string, std::string, std::string> property2("f", "oo", "bar42");
+    std::vector<std::tuple<std::string, std::string, std::string>> properties = {property1, property2};
+
+    navitia::make_and_apply_disruption(create_disruption(properties),
+                                       *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
+    const auto* nav_dis = b.data->pt_data->disruption_holder.get_disruption("disruption");
+    BOOST_REQUIRE(nav_dis);
+    BOOST_CHECK_EQUAL(nav_dis->properties.size(), 2);
+    nt::disruption::Property property = *nav_dis->properties.begin();
+
+    BOOST_CHECK_EQUAL(property.key, "f");
+    BOOST_CHECK_EQUAL(property.type, "oo");
+    BOOST_CHECK_EQUAL(property.value, "bar42");
+
+    property = *std::next(nav_dis->properties.begin(), 1);
+
+    BOOST_CHECK_EQUAL(property.key, "foo");
+    BOOST_CHECK_EQUAL(property.type, "bar");
+    BOOST_CHECK_EQUAL(property.value, "42");
+
+    const std::tuple<std::string, std::string, std::string> property3("f", "b", "4");
+    properties = {property3};
+
+    navitia::make_and_apply_disruption(create_disruption(properties),
+                                       *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
+    BOOST_CHECK_EQUAL(nav_dis->properties.size(), 1);
+    property = *nav_dis->properties.begin();
+
+    BOOST_CHECK_EQUAL(property.key, "f");
+    BOOST_CHECK_EQUAL(property.type, "b");
+    BOOST_CHECK_EQUAL(property.value, "4");
+
+    navitia::make_and_apply_disruption(create_disruption({}),
+                                       *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
+    BOOST_CHECK_EQUAL(nav_dis->properties.size(), 0);
+}

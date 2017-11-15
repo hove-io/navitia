@@ -204,6 +204,8 @@ struct DisruptionCreator {
     }
     DisruptionCreator& tag(const std::string& t);
 
+    DisruptionCreator& properties(const std::vector<nt::disruption::Property>& properties);
+
     nt::disruption::Disruption& disruption;
     std::vector<Impacter> impacters;
 };

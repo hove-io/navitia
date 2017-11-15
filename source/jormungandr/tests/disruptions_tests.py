@@ -114,6 +114,16 @@ class TestDisruptions(AbstractTestFixture):
             assert stop_disrupt[0]['disruption_id'] == 'disruption_on_stop_A'
             assert stop_disrupt[0]['uri'] == 'too_bad'
 
+            properties = get_not_null(stop_disrupt[0], 'properties')
+            assert len(properties) == 2
+            assert properties[0]['key'] == 'fo'
+            assert properties[0]['type'] == 'obar'
+            assert properties[0]['value'] == '42'
+
+            assert properties[1]['key'] == 'foo'
+            assert properties[1]['type'] == 'bar'
+            assert properties[1]['value'] == '42'
+
         check_response(global_traffic_report)
 
         # we should also we able to find the disruption with a place_nerby
