@@ -124,7 +124,10 @@ void fill_disruption_from_database(const std::string& connection_string,
                "     ch.content_type as channel_content_type, ch.max_size as channel_max_size,"
                "     extract(epoch from ch.created_at  AT TIME ZONE 'UTC') :: bigint as channel_created_at,"
                "     extract(epoch from ch.updated_at  AT TIME ZONE 'UTC') :: bigint as channel_updated_at,"
-               "     cht.id as channel_type_id, cht.name as channel_type"
+               "     cht.id as channel_type_id, cht.name as channel_type,"
+               // Property & Associate property fields
+               "     adp.value as property_value, pr.key as property_key, pr.type as property_type"
+               // Request
                "     FROM disruption AS d"
                "     JOIN contributor AS co ON d.contributor_id = co.id"
                "     JOIN cause AS c ON (c.id = d.cause_id)"
@@ -147,6 +150,8 @@ void fill_disruption_from_database(const std::string& connection_string,
                "     LEFT JOIN message AS m ON m.impact_id = i.id"
                "     LEFT JOIN channel AS ch ON m.channel_id = ch.id"
                "     LEFT JOIN channel_type as cht on ch.id = cht.channel_id"
+               "     LEFT JOIN associate_disruption_property adp ON adp.disruption_id = d.id"
+               "     LEFT JOIN property pr ON pr.id = adp.property_id"
                "     WHERE "
                "     (NOT (d.start_publication_date >= '%s' OR d.end_publication_date <= '%s')"
                "     OR (d.start_publication_date<='%s' and d.end_publication_date IS NULL))"
