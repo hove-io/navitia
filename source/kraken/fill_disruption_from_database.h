@@ -66,11 +66,13 @@ namespace navitia {
         chaos::Message* message = nullptr;
         chaos::Channel* channel = nullptr;
         chaos::PtObject* pt_object = nullptr;
+        chaos::Property* property = nullptr;
 
         std::string last_period_id = "",
                     last_channel_type_id = "";
 
         std::set<std::string> message_ids;
+        std::set<std::tuple<std::string, std::string, std::string>> properties;
         std::set<std::string> pt_object_ids;
         std::set<std::string> associate_objects_ids;
         type::PT_Data& pt_data;
@@ -85,6 +87,7 @@ namespace navitia {
                 fill_cause(const_it);
                 tag = nullptr;
                 impact = nullptr;
+                properties.clear();
             }
 
             if (disruption && !const_it["tag_id"].is_null() && (!tag ||
@@ -102,6 +105,23 @@ namespace navitia {
                 pt_object = nullptr;
                 pt_object_ids.clear();
                 message_ids.clear();
+            }
+
+            if (disruption
+                    && !const_it["property_key"].is_null()
+                    && !const_it["property_type"].is_null()
+                    && !const_it["property_value"].is_null()
+            ) {
+                std::tuple<std::string,std::string,std::string> property(
+                    const_it["property_key"].template as<std::string>(),
+                    const_it["property_type"].template as<std::string>(),
+                    const_it["property_value"].template as<std::string>()
+                );
+
+                if (!properties.count(property)) {
+                    fill_property(const_it);
+                    properties.insert(property);
+                }
             }
 
             if (impact && (last_period_id != const_it["application_id"].template as<std::string>())) {
@@ -336,5 +356,12 @@ namespace navitia {
             }
         }
 
+        template<typename T>
+        void fill_property(T const_it) {
+            property = disruption->add_properties();
+            FILL_REQUIRED(property, key, std::string)
+            FILL_REQUIRED(property, type, std::string)
+            FILL_REQUIRED(property, value, std::string)
+        }
     };
 }
