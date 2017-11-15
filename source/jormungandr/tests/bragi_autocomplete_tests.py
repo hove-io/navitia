@@ -430,6 +430,32 @@ class TestBragiShape(AbstractTestFixture):
             assert r[0]['address']['name'] == 'Rue Bob'
             assert r[0]['address']['label'] == '20 Rue Bob (Bobtown)'
 
+    def test_global_coords_uri(self):
+        url = 'https://host_of_bragi'
+        kwargs = {
+            'params': {
+                'pt_dataset': 'main_routing_test',
+                'lon': 3.282103,
+                'lat': 49.84758,
+            },
+            'timeout': 10
+        }
+
+        url += "/reverse?{}".format(urlencode(kwargs.get('params'), doseq=True))
+
+        mock_requests = MockRequests({
+            url: (BRAGI_MOCK_RESPONSE, 200)
+        })
+
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query("/v1/coverage/main_routing_test/coords/3.282103;49.84758?_autocomplete=bragi")
+
+            address = response.get('address')
+            assert address
+            assert address['house_number'] == 20
+            assert address['name'] == 'Rue Bob'
+            assert address['label'] == '20 Rue Bob (Bobtown)'
+            assert len(address['administrative_regions']) == 1
 
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF}, global_config={'activate_bragi': True})
 class AbstractAutocompleteAndRouting():
@@ -576,6 +602,33 @@ class AbstractAutocompleteAndRouting():
                 assert response_to['name'] == "20 Rue Bob (Bobtown)"
                 assert response_to['embedded_type'] == "address"
                 assert response_to['address']['label'] == "20 Rue Bob (Bobtown)"
+
+    def test_global_coords_uri(self):
+        url = 'https://host_of_bragi'
+        kwargs = {
+            'params': {
+                'pt_dataset': 'main_routing_test',
+                'lon': 3.282103,
+                'lat': 49.84758,
+            },
+            'timeout': 10
+        }
+
+        url += "/reverse?{}".format(urlencode(kwargs.get('params'), doseq=True))
+
+        mock_requests = MockRequests({
+            url: (BRAGI_MOCK_RESPONSE, 200)
+        })
+
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query("/v1/coverage/main_routing_test/coords/3.282103;49.84758")
+
+            address = response.get('address')
+            assert address
+            assert address['house_number'] == 20
+            assert address['name'] == 'Rue Bob'
+            assert address['label'] == '20 Rue Bob (Bobtown)'
+            assert len(address['administrative_regions']) == 1
 
 @config({'scenario': 'new_default'})
 class TestNewDefaultAutocompleteAndRouting(AbstractAutocompleteAndRouting,
