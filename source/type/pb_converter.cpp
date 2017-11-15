@@ -37,6 +37,7 @@ www.navitia.io
 #include <boost/lexical_cast.hpp>
 #include <boost/date_time/date_defs.hpp>
 #include <boost/geometry/algorithms/length.hpp>
+#include <boost/algorithm/cxx11/none_of.hpp>
 #include "type/geographical_coord.h"
 #include "type/type_utils.h"
 #include <boost/geometry.hpp>
@@ -991,7 +992,10 @@ compute_disruption_status(const nd::Impact& impact,
 template <typename P>
 void PbCreator::Filler::fill_message(const boost::shared_ptr<nd::Impact>& impact,
                                      P pb_object){
-    *pb_object->add_impact_uris() = impact->uri;
+    using boost::algorithm::none_of;
+    if (none_of(pb_object->impact_uris(), [&](const std::string& uri) { return impact->uri == uri; })) {
+        *pb_object->add_impact_uris() = impact->uri;
+    }
     pb_creator.impacts.insert(impact);
 }
 template void navitia::PbCreator::Filler::fill_message<pbnavitia::Network*>(boost::shared_ptr<navitia::type::disruption::Impact> const&, pbnavitia::Network*);
