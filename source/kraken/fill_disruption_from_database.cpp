@@ -169,9 +169,32 @@ void fill_disruption_from_database(const std::string& connection_string,
         offset += result.size();
         LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("sql"), request);
     }while(result.size() > 0);
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("Logger"),"Loading " << offset << " disruptions");
+
+    // counting disruptions & impacts in order to get real numbers
+    pqxx::result count;
+    int impact_count = 0;
+    std::string request = (boost::format(
+                               "SELECT DISTINCT ON (d.id) d.id, count(i)"
+                               "   FROM disruption d"
+                               "   LEFT JOIN impact i ON d.id = i.disruption_id"
+                               "   JOIN contributor AS co ON d.contributor_id = co.id"
+                               "   WHERE"
+                               "     (NOT (d.start_publication_date >= '%s' OR d.end_publication_date <= '%s')"
+                               "     OR (d.start_publication_date<='%s' and d.end_publication_date IS NULL))"
+                               "     AND co.contributor_code = ANY('{%s}')" // it's like a "IN" but won't crash if empty"
+                               "     AND d.status = 'published'"
+                               "     AND i.status = 'published'"
+                               "   GROUP BY d.id"
+                               " ;") %meta.production_date.end() % meta.production_date.begin() %meta.production_date.end()  % contributors_array
+                           ).str();
+    count = work.exec(request);
+    for (auto ct: count) {
+        impact_count += ct[1].as<int>();
+    }
+
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("Logger"), "Loading " << count.size() << " disruption(s) with " << impact_count << " impact(s)");
     reader.finalize();
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("Logger"),offset << " disruptions loaded");
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("Logger"), count.size() << " disruption(s) loaded");
 }
 
 void DisruptionDatabaseReader::finalize() {
