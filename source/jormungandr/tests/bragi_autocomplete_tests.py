@@ -117,17 +117,14 @@ class TestBragiAutocomplete(AbstractTestFixture):
 
     def test_autocomplete_call(self):
         url = 'https://host_of_bragi/autocomplete'
-        kwargs = {
-            'params': {
-                u'q': u'bob',
-                u'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
-                u'limit': 10,
-                u'pt_dataset': 'main_routing_test',
-            },
-            'timeout': 10
+        params = {
+            'q': u'bob',
+            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
+            'limit': 10,
+            'pt_dataset': 'main_routing_test'
         }
 
-        url += "?{}".format(urlencode(kwargs.get('params'), doseq=True))
+        url += "?{}".format(urlencode(params, doseq=True))
         mock_requests = MockRequests({
             url: (BRAGI_MOCK_RESPONSE, 200)
         })
@@ -164,17 +161,14 @@ class TestBragiAutocomplete(AbstractTestFixture):
         test that the _autocomplete param switch the right autocomplete service
         """
         url = 'https://host_of_bragi'
-        kwargs = {
-            'params': {
-                u'q': u'bob',
-                u'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
-                u'limit': 10,
-                u'pt_dataset': 'main_routing_test',
-            },
-            'timeout': 10
+        params = {
+            'q': u'bob',
+            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
+            'limit': 10,
+            'pt_dataset': 'main_routing_test'
         }
 
-        url += "/autocomplete?{}".format(urlencode(kwargs.get('params'), doseq=True))
+        url += "/autocomplete?{}".format(urlencode(params, doseq=True))
 
         mock_requests = MockRequests({
             url: (BRAGI_MOCK_RESPONSE, 200)
@@ -252,14 +246,9 @@ class TestBragiAutocomplete(AbstractTestFixture):
 
     def test_features_call(self):
         url = 'https://host_of_bragi'
-        kwargs = {
-            'params': {
-                u'pt_dataset': 'main_routing_test',
-            },
-            'timeout': 10
-        }
+        params = {'pt_dataset': 'main_routing_test'}
 
-        url += "/features/1234?{}".format(urlencode(kwargs.get('params'), doseq=True))
+        url += "/features/1234?{}".format(urlencode(params, doseq=True))
 
         mock_requests = MockRequests({
             url: (BRAGI_MOCK_RESPONSE, 200)
@@ -277,14 +266,9 @@ class TestBragiAutocomplete(AbstractTestFixture):
 
     def test_features_unknown_uri(self):
         url = 'https://host_of_bragi'
-        kwargs = {
-            'params': {
-                u'pt_dataset': 'main_routing_test',
-            },
-            'timeout': 10
-        }
+        params = {'pt_dataset': 'main_routing_test'}
 
-        url += "/features/AAA?{}".format(urlencode(kwargs.get('params'), doseq=True))
+        url += "/features/AAA?{}".format(urlencode(params, doseq=True))
         mock_requests = MockRequests({
         url:
             (
@@ -432,23 +416,20 @@ class TestBragiShape(AbstractTestFixture):
 
     def test_global_coords_uri(self):
         url = 'https://host_of_bragi'
-        kwargs = {
-            'params': {
-                'pt_dataset': 'main_routing_test',
-                'lon': 3.282103,
-                'lat': 49.84758,
-            },
-            'timeout': 10
+        params = {
+            'pt_dataset': 'main_routing_test',
+            'lon': 3.282103,
+            'lat': 49.84758
         }
-
-        url += "/reverse?{}".format(urlencode(kwargs.get('params'), doseq=True))
+        url += "/reverse?{}".format(urlencode(params, doseq=True))
 
         mock_requests = MockRequests({
             url: (BRAGI_MOCK_RESPONSE, 200)
         })
 
         with mock.patch('requests.get', mock_requests.get):
-            response = self.query("/v1/coverage/main_routing_test/coords/3.282103;49.84758?_autocomplete=bragi")
+            response = self.query("/v1/coverage/{pt_dataset}/coords/{lon};{lat}?_autocomplete=bragi".format(
+                lon=params.get('lon'), lat=params.get('lat'), pt_dataset=params.get('pt_dataset')))
 
             address = response.get('address')
             assert address
@@ -605,23 +586,22 @@ class AbstractAutocompleteAndRouting():
 
     def test_global_coords_uri(self):
         url = 'https://host_of_bragi'
-        kwargs = {
-            'params': {
-                'pt_dataset': 'main_routing_test',
-                'lon': 3.282103,
-                'lat': 49.84758,
-            },
-            'timeout': 10
+        params = {
+            'pt_dataset': 'main_routing_test',
+            'lon': 3.282103,
+            'lat': 49.84758
         }
 
-        url += "/reverse?{}".format(urlencode(kwargs.get('params'), doseq=True))
+        url += "/reverse?{}".format(urlencode(params, doseq=True))
 
         mock_requests = MockRequests({
             url: (BRAGI_MOCK_RESPONSE, 200)
         })
 
         with mock.patch('requests.get', mock_requests.get):
-            response = self.query("/v1/coverage/main_routing_test/coords/3.282103;49.84758")
+            response = self.query("/v1/coverage/{pt_dataset}/coords/{lon};{lat}".
+                                  format(lon=params.get('lon'), lat=params.get('lat'),
+                                         pt_dataset=params.get('pt_dataset')))
 
             address = response.get('address')
             assert address
