@@ -83,12 +83,13 @@ struct LineReport {
         }
     }
 
-    bool has_disruption(const boost::posix_time::ptime& current_time) const {
-        return line->has_publishable_message(current_time)
-            || ! networks.empty()
-            || ! routes.empty()
-            || ! stop_areas.empty()
-            || ! stop_points.empty();
+    bool has_disruption(const boost::posix_time::ptime& current_time,
+                        const boost::posix_time::time_period& active_period) const {
+        return line->has_applicable_message(current_time, active_period)
+                || ! networks.empty()
+                || ! routes.empty()
+                || ! stop_areas.empty()
+                || ! stop_points.empty();
     }
 
     void to_pb(navitia::PbCreator& pb_creator, const size_t depth) const {
@@ -135,7 +136,7 @@ void line_reports(navitia::PbCreator& pb_creator,
     std::vector<LineReport> line_reports;
     for (auto idx: line_indices) {
         auto line_report = LineReport(d.pt_data->lines[idx], filter, forbidden_uris, d, pb_creator.now, pb_creator.action_period);
-        if (line_report.has_disruption(pb_creator.now)) {
+        if (line_report.has_disruption(pb_creator.now, pb_creator.action_period)) {
             line_reports.push_back(line_report);
         }
     }
