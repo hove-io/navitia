@@ -40,6 +40,8 @@ void line_reports(navitia::PbCreator& pb_creator,
                   const size_t depth,
                   size_t count,
                   size_t start_page, const std::string& filter,
-                  const std::vector<std::string>& forbidden_uris);
+                  const std::vector<std::string>& forbidden_uris,
+                  const boost::optional<boost::posix_time::ptime>& since,
+                  const boost::optional<boost::posix_time::ptime>& until);
 }}
 

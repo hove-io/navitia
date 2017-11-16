@@ -156,6 +156,12 @@ class Scenario(object):
             for forbidden_uri in request["forbidden_uris[]"]:
                 req.traffic_reports.forbidden_uris.append(forbidden_uri)
 
+        # change dt to utc
+        if request['since']:
+            req.line_reports.since_datetime = request['since']
+        if request['until']:
+            req.line_reports.until_datetime = request['until']
+
         resp = instance.send_and_receive(req)
         return resp
 

@@ -16,7 +16,7 @@ START_MONITORING_THREAD = boolean(os.getenv('JORMUNGANDR_START_MONITORING_THREAD
 #http://docs.sqlalchemy.org/en/rel_0_9/dialects/postgresql.html#psycopg2
 SQLALCHEMY_DATABASE_URI = os.getenv('JORMUNGANDR_SQLALCHEMY_DATABASE_URI', 'postgresql://navitia:navitia@localhost/jormungandr')
 
-DISABLE_DATABASE = boolean(os.getenv('JORMUNGANDR_DISABLE_DATABASE', False))
+DISABLE_DATABASE = boolean(os.getenv('JORMUNGANDR_DISABLE_DATABASE', True))
 
 # disable authentication
 PUBLIC = boolean(os.getenv('JORMUNGANDR_IS_PUBLIC', True))
