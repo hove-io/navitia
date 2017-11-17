@@ -537,6 +537,34 @@ class TestDisruptions(AbstractTestFixture):
         warnings = get_not_null(response, 'warnings')
         assert len(warnings) == 1
         assert warnings[0]['id'] == 'beta_endpoint'
+        assert len(get_not_null(response, 'disruptions')) == 3
+        line_reports = get_not_null(response, 'line_reports')
+        for line_report in line_reports:
+            is_valid_line_report(line_report)
+        assert len(line_reports) == 4
+        assert line_reports[0]['line']['id'] == 'A'
+        assert len(line_reports[0]['pt_objects']) == 3
+        assert line_reports[0]['pt_objects'][0]['id'] == 'A'
+        assert len(line_reports[0]['pt_objects'][0]['line']['links']) == 2
+        assert line_reports[0]['pt_objects'][0]['line']['links'][0]['id'] == 'too_bad_again'
+        assert line_reports[0]['pt_objects'][0]['line']['links'][1]['id'] == 'later_impact'
+        assert line_reports[0]['pt_objects'][1]['id'] == 'base_network'
+        assert len(line_reports[0]['pt_objects'][1]['network']['links']) == 2
+        assert line_reports[0]['pt_objects'][1]['network']['links'][0]['id'] == 'too_bad_again'
+        assert line_reports[0]['pt_objects'][1]['network']['links'][1]['id'] == 'later_impact'
+        assert line_reports[0]['pt_objects'][2]['id'] == 'stopA'
+
+        for line_report in line_reports[1:]:
+            assert len(line_report['pt_objects']) == 2
+            assert line_report['pt_objects'][0]['id'] == 'base_network'
+            assert line_report['pt_objects'][1]['id'] == 'stopA'
+
+    def test_line_reports_with_since_and_until(self):
+        response = self.query_region("line_reports?_current_datetime=20120801T000000"
+                                     "&since=20120801T000000&until=20120803T000000")
+        warnings = get_not_null(response, 'warnings')
+        assert len(warnings) == 1
+        assert warnings[0]['id'] == 'beta_endpoint'
         assert len(get_not_null(response, 'disruptions')) == 2
         line_reports = get_not_null(response, 'line_reports')
         for line_report in line_reports:
@@ -545,8 +573,17 @@ class TestDisruptions(AbstractTestFixture):
         assert line_reports[0]['line']['id'] == 'A'
         assert len(line_reports[0]['pt_objects']) == 3
         assert line_reports[0]['pt_objects'][0]['id'] == 'A'
+        assert len(line_reports[0]['pt_objects'][0]['line']['links']) == 1
+        assert line_reports[0]['pt_objects'][0]['line']['links'][0]['id'] == 'too_bad_again'
         assert line_reports[0]['pt_objects'][1]['id'] == 'base_network'
+        assert len(line_reports[0]['pt_objects'][1]['network']['links']) == 1
+        assert line_reports[0]['pt_objects'][1]['network']['links'][0]['id'] == 'too_bad_again'
         assert line_reports[0]['pt_objects'][2]['id'] == 'stopA'
+
+        for line_report in line_reports[1:]:
+            assert len(line_report['pt_objects']) == 2
+            assert line_report['pt_objects'][0]['id'] == 'base_network'
+            assert line_report['pt_objects'][1]['id'] == 'stopA'
 
         for line_report in line_reports[1:]:
             assert len(line_report['pt_objects']) == 2
@@ -622,5 +659,6 @@ class TestDisruptionsLineSections(AbstractTestFixture):
             assert pt_object['stop_point']['links'][0]['id'] == 'line_section_on_line_1'
 
     def test_line_reports_with_since_until_outof_application_period(self):
-        response = self.query_region("line_reports?_current_datetime=20170101T120000&since=20170105T130000&until=20170108T000000")
+        response = self.query_region("line_reports?_current_datetime=20170101T120000"
+                                     "&since=20170105T130000&until=20170108T000000")
         assert len(response['disruptions']) == 0
