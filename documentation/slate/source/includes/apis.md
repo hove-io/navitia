@@ -163,14 +163,14 @@ Very simple service: you give Navitia some coordinates, it answers you
 
 ### Accesses
 
-| url | Result |
+| url                                          | Result                                                              |
 |----------------------------------------------|---------------------------------------------------------------------|
 | `places/{lon;lat}`                           | Detailed address point                                              |
 | `/places/{id}`                               | Information about places                                            |
 | `coverage/{lon;lat}/places/{lon;lat}`        | Detailed address point, navitia guesses the region from coordinates |
 | `coverage/{lon;lat}/places/{id}`             | Detailed about places, navitia guesses the region from coordinates  |
 | `coverage/{region_id}/places/{lon;lat}`      | Detailed address point                                              |
-| `coverage/{region_id}/places/{id}`           | Detailed about places                                              |
+| `coverage/{region_id}/places/{id}`           | Detailed places                                                     |
 
 
 You can also combine `/coords` with other filter as :
