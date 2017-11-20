@@ -89,9 +89,9 @@ class LineReports(ResourceUri, ResourceUtc):
         parser_get.add_argument("disable_geojson", type=BooleanType(), default=False,
                                 help="remove geojson from the response")
         parser_get.add_argument("since", type=DateTimeFormat(),
-                                help="filters disruptions valid after this date")
+                                help="use disruptions valid after this date")
         parser_get.add_argument("until", type=DateTimeFormat(),
-                                help="filters disruptions valid before this date")
+                                help="use disruptions valid before this date")
 
         self.collection = 'line_reports'
         self.collections = line_reports
