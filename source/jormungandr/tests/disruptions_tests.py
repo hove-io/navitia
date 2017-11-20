@@ -616,11 +616,16 @@ class TestDisruptionsLineSections(AbstractTestFixture):
 
     def test_line_reports_with_current_datetime_outof_application_period(self):
         #without since/until we use since=_current_datetime and until = production_date.end
+        #application period intersects with active period of the disruption (current date + data production end date)
         response = self.query_region("line_reports?_current_datetime=20170101T120000")
         disruptions = get_not_null(response, 'disruptions')
         assert len(disruptions) == 1
         line_reports = get_not_null(response, 'line_reports')
         assert len(line_reports) == 1
+
+        #Since application period does not intersect with active period of the disruption
+        response = self.query_region("line_reports?_current_datetime=20170105T130000")
+        assert len(response['disruptions']) == 0
 
     def test_line_reports_with_since_until_intersects_application_period(self):
         response = self.query_region("line_reports?_current_datetime=20170101T120000&since=20170104T130000&until=20170106T000000")
