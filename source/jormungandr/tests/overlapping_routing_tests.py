@@ -136,6 +136,15 @@ class TestOverlappingCoverage(AbstractTestFixture):
         is_valid_address(response['address'])
         assert(response['address']['label'] == "42 rue kb (Condom)")
 
+    def test_place_by_coords_id(self):
+        response = self.query("/v1/coverage/0.000001;0.000898311281954/places/0.000001;0.000898311281954")
+        places = get_not_null(response, 'places')
+        assert len(places) == 1
+        assert places[0]['embedded_type'] == 'address'
+        assert places[0]['name'] == '42 rue kb (Condom)'
+        assert places[0]['address']['label'] == "42 rue kb (Condom)"
+        assert places[0]['address']['house_number'] == 42
+
     def test_not_found_coord(self):
         """
         -0.9;-0.9 is in the two regions, but there is no addresses at
