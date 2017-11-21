@@ -593,9 +593,10 @@ class TestDisruptions(AbstractTestFixture):
 
 @dataset({"line_sections_test": {}})
 class TestDisruptionsLineSections(AbstractTestFixture):
-    #b.data->meta->production_date = "20170101T000000", "20170131T000000"
-    #publication_periods:"20170101T000000", "20170110T000000"
-    #application_periods:"20170102T000000", "20170105T000000"
+    #Information about the data in line_section_test
+    #The data is valid from "20170101T000000" to "20170131T000000"
+    #The disruption has publication_period from "20170101T000000" to "20170110T000000"
+    #and one application_period from "20170102T000000" to "20170105T000000"
     def test_line_reports(self):
         response = self.query_region("line_reports?_current_datetime=20170103T120000")
         disruptions = get_not_null(response, 'disruptions')

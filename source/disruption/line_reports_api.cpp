@@ -30,6 +30,7 @@ www.navitia.io
 
 #include "line_reports_api.h"
 #include "type/meta_data.h"
+#include <boost/optional.hpp>
 
 namespace bt = boost::posix_time;
 namespace nt = navitia::type;
@@ -50,7 +51,7 @@ struct LineReport {
                const std::vector<std::string>& forbidden_uris,
                const type::Data& d,
                const boost::posix_time::ptime now,
-               const boost::posix_time::time_period filter_period
+               const boost::posix_time::time_period& filter_period
                ):
         line(line)
     {
@@ -65,7 +66,7 @@ struct LineReport {
                      const std::vector<std::string>& forbidden_uris,
                      const type::Data& d,
                      const boost::posix_time::ptime now,
-                     const boost::posix_time::time_period filter_period,
+                     const boost::posix_time::time_period& filter_period,
                      std::vector<const T*>& objects) {
         std::string new_filter = "line.uri=" + line->uri;
         if (!filter.empty()) { new_filter += " and " + filter; }
@@ -115,8 +116,8 @@ void line_reports(navitia::PbCreator& pb_creator,
                   const std::vector<std::string>& forbidden_uris,
                   const boost::optional<boost::posix_time::ptime>& since,
                   const boost::optional<boost::posix_time::ptime>& until) {
-    auto start = (since ? *since: bt::ptime(d.meta->production_date.begin()));
-    auto end = (until ? *until:  bt::ptime(d.meta->production_date.end()));
+    const auto& start = get_optional_value_or(since, bt::ptime(d.meta->production_date.begin()));
+    const auto& end = get_optional_value_or(until, bt::ptime(d.meta->production_date.end()));
     pb_creator.action_period = bt::time_period(start, end);
 
     if (end < start) {
