@@ -430,7 +430,20 @@ class Durations(fields.Raw):
             return
         return {
             'total': obj.durations.total,
-            'walking': obj.durations.walking
+            'walking': obj.durations.walking,
+            'bike': obj.durations.bike,
+            'car': obj.durations.car
+        }
+
+
+class Distances(fields.Raw):
+    def output(self, key, obj):
+        if not obj.HasField(str("distances")):
+            return
+        return {
+            'walking': obj.distances.walking,
+            'bike': obj.distances.bike,
+            'car': obj.distances.car
         }
 
 

@@ -187,18 +187,57 @@ static void co2_emission_aggregator(pbnavitia::Journey* pb_journey){
 
 static void compute_durations(pbnavitia::Journey* pb_journey) {
     uint32_t total_walking_duration = 0;
+    uint32_t total_car_duration = 0;
+    uint32_t total_bike_duration = 0;
     for (const auto& section: pb_journey->sections()) {
         if ((section.type() == pbnavitia::STREET_NETWORK && section.street_network().mode() == pbnavitia::StreetNetworkMode::Walking) ||
         (section.type() == pbnavitia::TRANSFER && section.transfer_type() == pbnavitia::walking) ||
         (section.type() == pbnavitia::CROW_FLY && section.street_network().mode() == pbnavitia::StreetNetworkMode::Walking)) {
             total_walking_duration += section.duration();
         }
+
+        if (section.type() == pbnavitia::STREET_NETWORK) {
+            if (section.street_network().mode() == pbnavitia::StreetNetworkMode::Car) {
+                total_car_duration += section.duration();
+            } else if ((section.street_network().mode() == pbnavitia::StreetNetworkMode::Bike) ||
+                       (section.street_network().mode() == pbnavitia::StreetNetworkMode::Bss)) {
+                total_bike_duration += section.duration();
+            }
+        }
     }
     const auto ts_departure = pb_journey->sections(0).begin_date_time();
     const auto ts_arrival = pb_journey->sections(pb_journey->sections_size() - 1).end_date_time();
     pbnavitia::Durations* durations = pb_journey->mutable_durations();
     durations->set_walking(total_walking_duration);
+    durations->set_bike(total_bike_duration);
+    durations->set_car(total_car_duration);
     durations->set_total(ts_arrival - ts_departure);
+}
+
+static void compute_distances(pbnavitia::Journey* pb_journey) {
+    uint32_t total_walking_distance = 0;
+    uint32_t total_car_distance = 0;
+    uint32_t total_bike_distance = 0;
+    for (const auto& section: pb_journey->sections()) {
+        if ((section.type() == pbnavitia::STREET_NETWORK && section.street_network().mode() == pbnavitia::StreetNetworkMode::Walking) ||
+        (section.type() == pbnavitia::TRANSFER && section.transfer_type() == pbnavitia::walking) ||
+        (section.type() == pbnavitia::CROW_FLY && section.street_network().mode() == pbnavitia::StreetNetworkMode::Walking)) {
+            total_walking_distance += section.length();
+        }
+
+        if (section.type() == pbnavitia::STREET_NETWORK) {
+            if (section.street_network().mode() == pbnavitia::StreetNetworkMode::Car) {
+                total_car_distance += section.length();
+            } else if ((section.street_network().mode() == pbnavitia::StreetNetworkMode::Bike) ||
+                       (section.street_network().mode() == pbnavitia::StreetNetworkMode::Bss)) {
+                total_bike_distance += section.length();
+            }
+        }
+    }
+    pbnavitia::Distances* distances = pb_journey->mutable_distances();
+    distances->set_walking(total_walking_distance);
+    distances->set_bike(total_bike_distance);
+    distances->set_car(total_car_distance);
 }
 
 static georef::Path get_direct_path(georef::StreetNetwork& worker,
@@ -250,6 +289,7 @@ void add_direct_path(PbCreator& pb_creator,
             pb_creator.fill(&destination, destination_pb, 2);
             co2_emission_aggregator(pb_journey);
             compute_durations(pb_journey);
+            compute_distances(pb_journey);
         }
     }
 }
@@ -628,6 +668,7 @@ static void add_pathes(PbCreator& pb_creator,
         pb_journey->set_duration(arrival - departure);
         co2_emission_aggregator(pb_journey);
         compute_durations(pb_journey);
+        compute_distances(pb_journey);
     }
 
     add_direct_path(pb_creator, direct_path, origin, destination, datetimes, clockwise);
@@ -675,6 +716,7 @@ static void add_pt_pathes(PbCreator& pb_creator,
 
         co2_emission_aggregator(pb_journey);
         compute_durations(pb_journey);
+        compute_distances(pb_journey);
     }
 }
 
