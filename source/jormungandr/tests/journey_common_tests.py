@@ -538,18 +538,6 @@ class JourneyCommon(object):
         assert response['journeys'][1]['distances']['car'] == 186
         assert response['journeys'][1]['distances']['walking'] == 119
 
-        assert response['journeys'][2]['durations']['walking'] == 97
-        assert response['journeys'][2]['durations']['total'] == 99
-        assert response['journeys'][2]['distances']['walking'] == 108
-        assert response['journeys'][2]['distances']['car'] == 0
-
-        assert response['journeys'][3]['durations']['walking'] == 114
-        assert response['journeys'][3]['durations']['bike'] == 53
-        assert response['journeys'][3]['durations']['total'] == 237
-        assert response['journeys'][3]['distances']['walking'] == 128
-        assert response['journeys'][3]['distances']['bike'] == 218
-        assert response['journeys'][3]['distances']['car'] == 0
-
         query += "&max_duration_to_pt=0"
         response, status = self.query_no_assert(query)
         # pas de solution
@@ -796,17 +784,10 @@ class JourneyCommon(object):
         print(response['journeys'][3]['tags'])
         assert len(response['journeys'][0]['sections']) == 3
         assert response['journeys'][0]['sections'][0]['mode'] == 'bike'
-        assert response['journeys'][0]['durations']['bike'] == 13
-        assert response['journeys'][0]['durations']['walking'] == 80
-        assert response['journeys'][0]['durations']['total'] == 95
         assert len(response['journeys'][1]['sections']) == 3
         assert response['journeys'][1]['sections'][0]['mode'] == 'walking'
-        assert response['journeys'][1]['durations']['walking'] == 97
-        assert response['journeys'][1]['durations']['total'] == 99
         assert len(response['journeys'][2]['sections']) == 1
         assert response['journeys'][2]['sections'][0]['mode'] == 'bike'
-        assert response['journeys'][2]['durations']['bike'] == 171
-        assert response['journeys'][2]['durations']['total'] == 171
         assert len(response['journeys'][3]['sections']) == 1
         assert response['journeys'][3]['sections'][0]['mode'] == 'walking'
 
@@ -1285,6 +1266,8 @@ class JourneyMinBikeMinCar(object):
         assert len(response['journeys'][1]['sections']) == 1
         assert response['journeys'][1]['sections'][0]['mode'] == 'walking'
         assert response['journeys'][1]['sections'][0]['duration'] == 276
+
+
 
     def test_first_section_mode_walking_and_last_section_mode_bike(self):
         query = '{sub_query}&last_section_mode[]=walking&first_section_mode[]=bike&' \
