@@ -667,4 +667,4 @@ class TestDisruptionsLineSections(AbstractTestFixture):
         response, code = self.query_region("line_reports?_current_datetime=20170101T120000"
                                            "&since=20170108T130000&until=20170105T000000", check=False)
         assert code == 404
-        assert response['error']['message'] == 'invalid filtering period'
+        assert response['error']['message'] == 'invalid filtering period (since > until)'

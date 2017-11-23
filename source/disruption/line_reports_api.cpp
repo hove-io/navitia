@@ -116,14 +116,14 @@ void line_reports(navitia::PbCreator& pb_creator,
                   const std::vector<std::string>& forbidden_uris,
                   const boost::optional<boost::posix_time::ptime>& since,
                   const boost::optional<boost::posix_time::ptime>& until) {
-    const auto& start = get_optional_value_or(since, bt::ptime(d.meta->production_date.begin()));
-    const auto& end = get_optional_value_or(until, bt::ptime(d.meta->production_date.end()));
+    const auto& start = since ? *since: bt::ptime(d.meta->production_date.begin());
+    const auto& end = until ? *until: bt::ptime(d.meta->production_date.end());
     pb_creator.action_period = bt::time_period(start, end);
 
     if (end < start) {
-        pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse, "invalid filtering period");
+        pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse, "invalid filtering period (since > until)");
         return;
-    }    
+    }
 
     type::Indexes line_indices;
     try {
