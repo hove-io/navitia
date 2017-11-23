@@ -258,7 +258,8 @@ class MixedSchedule(object):
             next_rt_passages = rt_system.next_passage_for_route_point(route_point,
                                                                       request['items_per_schedule'],
                                                                       request['from_datetime'],
-                                                                      request['_current_datetime'])
+                                                                      request['_current_datetime'],
+                                                                      request['duration'])
         except Exception as e:
             log.exception('failure while requesting next passages to external RT system {}'.format(rt_system_code))
             new_relic.record_custom_event('realtime_internal_failure', {'rt_system_id': rt_system_code,

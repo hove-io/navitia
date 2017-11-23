@@ -44,13 +44,13 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
     """
 
     @abstractmethod
-    def _get_next_passage_for_route_point(self, route_point, count, from_dt, current_dt):
+    def _get_next_passage_for_route_point(self, route_point, count, from_dt, current_dt, duration):
         """
         method that actually calls the external service to get the next passage for a given route_point
         """
         pass
 
-    def _filter_passages(self, passages, count, from_dt):
+    def _filter_passages(self, passages, count, from_dt, duration):
         """
         after getting the next passages from the proxy, we might want to filter some
 
@@ -64,7 +64,8 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         if from_dt:
             # we need to convert from_dt (which is a timestamp) to a datetime
             from_dt = timestamp_to_datetime(from_dt)
-            passages = [p for p in passages if p.datetime >= from_dt]
+            to_dt = from_dt + datetime.timedelta(seconds=duration)
+            passages = [p for p in passages if from_dt <= p.datetime <= to_dt]
             if not passages:
                 # if there was some passages and everything was filtered,
                 # we return None to keep the base schedule
@@ -75,7 +76,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
 
         return passages
 
-    def next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None):
+    def next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None, duration=86400):
         """
         Main method for the proxy
 
@@ -83,9 +84,9 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         """
 
         try:
-            next_passages = self._get_next_passage_for_route_point(route_point, count, from_dt, current_dt)
+            next_passages = self._get_next_passage_for_route_point(route_point, count, from_dt, current_dt, duration)
 
-            filtered_passage = self._filter_passages(next_passages, count, from_dt)
+            filtered_passage = self._filter_passages(next_passages, count, from_dt, duration)
 
             self.record_call('ok')
 

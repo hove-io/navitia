@@ -153,7 +153,7 @@ class SiriLite(RealtimeProxy):
 
         return next_passages
 
-    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None):
+    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None, duration=None):
         url = self._make_url(route_point)
         if not url:
             return None
