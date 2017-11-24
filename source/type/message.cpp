@@ -217,6 +217,16 @@ bool Impact::is_only_line_section() const {
     return true;
 }
 
+bool Impact::is_line_section_of(const Line& line) const {
+    for (const auto& entity: informed_entities()) {
+        const auto* line_section = boost::get<nt::disruption::LineSection>(&entity);
+        if (line_section && line_section->line && line_section->line->idx == line.idx) {
+            return true;
+        }
+    }
+    return false;
+}
+
 const type::ValidityPattern Impact::get_impact_vp(const boost::gregorian::date_period& production_date) const {
     type::ValidityPattern impact_vp{production_date.begin()}; // bitset are all initialised to 0
     for (const auto& period: this->application_periods) {

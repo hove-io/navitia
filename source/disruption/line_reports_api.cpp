@@ -78,7 +78,7 @@ struct LineReport {
 
         for (const auto& idx: indices) {
             const auto* obj = d.pt_data->collection<T>()[idx];
-            if (obj->has_applicable_message(now, filter_period)) {
+            if (obj->has_applicable_message(now, filter_period, line)) {
                 objects.push_back(obj);
             }
         }

@@ -118,13 +118,17 @@ std::vector<boost::shared_ptr<disruption::Impact>> HasMessages::get_publishable_
 
 bool HasMessages::has_applicable_message(
         const boost::posix_time::ptime& current_time,
-        const boost::posix_time::time_period& action_period) const {
-    for (auto impact : this->impacts) {
-        auto impact_acquired = impact.lock();
-        if (! impact_acquired) {
+        const boost::posix_time::time_period& action_period,
+        const Line* line) const {
+    for (auto i: this->impacts) {
+        auto impact = i.lock();
+        if (! impact) {
             continue; //pointer might still have become invalid
         }
-        if (impact_acquired->is_valid(current_time, action_period)) {
+        if (line && impact->is_only_line_section() && !impact->is_line_section_of(*line)) {
+            continue;
+        }
+        if (impact->is_valid(current_time, action_period)) {
             return true;
         }
     }
