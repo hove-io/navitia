@@ -94,15 +94,16 @@ struct LineReport {
     }
 
     void to_pb(navitia::PbCreator& pb_creator, const size_t depth) const {
+        const auto with_line_sections = DumpMessageOptions{DumpMessage::Yes, DumpLineSectionMessage::Yes};
         auto* report = pb_creator.add_line_reports();
-        pb_creator.fill(line, report->mutable_line(), depth-1);
+        pb_creator.fill(line, report->mutable_line(), depth-1, with_line_sections);
         if (line->has_applicable_message(pb_creator.now, pb_creator.action_period)) {
             pb_creator.fill(line, report->add_pt_objects(), 0);
         }
         pb_creator.fill(networks, report->mutable_pt_objects(), 0);
         pb_creator.fill(routes, report->mutable_pt_objects(), 0);
         pb_creator.fill(stop_areas, report->mutable_pt_objects(), 0);
-        pb_creator.fill(stop_points, report->mutable_pt_objects(), 0);
+        pb_creator.fill(stop_points, report->mutable_pt_objects(), 0, with_line_sections);
     }
 };
 

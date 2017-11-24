@@ -353,21 +353,16 @@ void PbCreator::Filler::fill(NAV* nav_object, PB* pb_object) {
 template<typename NAV, typename F>
 void PbCreator::Filler::fill_with_creator(NAV* nav_object, F creator) {
     if (nav_object == nullptr) { return; }
-    DumpMessageOptions new_dump_options{dump_message_options};
-    new_dump_options.dump_line_section = DumpLineSectionMessage::No;
-    copy(depth-1, new_dump_options).fill_pb_object(nav_object, creator());
+    copy(depth-1, dump_message_options).fill_pb_object(nav_object, creator());
 }
 
 template<typename T>
 void PbCreator::Filler::fill_pb_object(const T* value, pbnavitia::PtObject* pt_object) {
     if(value == nullptr) { return; }
 
-    DumpMessageOptions new_dump_options{dump_message_options};
-    new_dump_options.dump_line_section = DumpLineSectionMessage::No;
-    copy(depth, new_dump_options).fill_pb_object(value, get_sub_object(value, pt_object));
+    fill_pb_object(value, get_sub_object(value, pt_object));
     pt_object->set_name(get_label(value));
     pt_object->set_uri(value->uri);
-//    add_contributor(value);
     pt_object->set_embedded_type(get_pb_type<T>());
 }
 template void PbCreator::Filler::fill_pb_object<georef::Admin>(const georef::Admin*, pbnavitia::PtObject*);
