@@ -28,15 +28,16 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask.ext.restful import Resource, fields, marshal_with
+from flask.ext.restful import fields
 from jormungandr import i_manager, travelers_profile
 from jormungandr.protobuf_to_dict import protobuf_to_dict
-from jormungandr.interfaces.v1.fields import instance_status_with_parameters
+from jormungandr.interfaces.v1.fields import instance_status_with_parameters, context
 from jormungandr.interfaces.v1.serializer.api import StatusSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.StatedResource import StatedResource
 status = {
-    "status": fields.Nested(instance_status_with_parameters)
+    "status": fields.Nested(instance_status_with_parameters),
+    "context": context
 }
 
 

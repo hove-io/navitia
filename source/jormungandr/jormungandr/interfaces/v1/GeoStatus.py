@@ -28,11 +28,12 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask.ext.restful import Resource, fields, marshal_with
+from flask.ext.restful import fields
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.serializer.api import GeoStatusSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.StatedResource import StatedResource
+from jormungandr.interfaces.v1.fields import context
 
 geo_status = {
         'geo_status': fields.Nested({'street_network_sources': fields.List(fields.String),
@@ -42,7 +43,8 @@ geo_status = {
             'nb_addresses': fields.Raw,
             'nb_pois': fields.Raw,
             'poi_sources': fields.List(fields.String),
-        })
+        }),
+        'context': context
 }
 
 
