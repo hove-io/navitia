@@ -28,7 +28,6 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from functools import partial
 from jormungandr.interfaces.v1.serializer import jsonschema
 import serpy
 import six

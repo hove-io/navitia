@@ -30,10 +30,8 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask.ext.restful import marshal_with, reqparse
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
-from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import default_count_arg_type, DateTimeFormat, depth_argument
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError

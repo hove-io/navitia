@@ -35,7 +35,6 @@ from flask.globals import g
 import pytz
 from jormungandr.interfaces.v1.make_links import create_internal_link, create_external_link
 from jormungandr.interfaces.v1.serializer import pt, base
-from jormungandr.utils import timestamp_to_str
 from jormungandr.utils import timestamp_to_str, get_current_datetime_str, get_timezone_str
 from navitiacommon import response_pb2, type_pb2
 import ujson
@@ -971,3 +970,41 @@ disruption_marshaller = {
     "disruption_uri": fields.String(),
     "contributor": fields.String()
 }
+
+
+common_collection = [
+    ("pagination", PbField(pagination)),
+    ("error", PbField(error)),
+    ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False))),
+    ("context", context),
+    ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts"))
+]
+
+
+def get_collections(collection_name):
+    from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
+    map_collection = {
+        "journey_pattern_points": journey_pattern_point,
+        "commercial_modes": commercial_mode,
+        "journey_patterns": journey_pattern,
+        "vehicle_journeys": vehicle_journey,
+        "trips": trip,
+        "physical_modes": physical_mode,
+        "stop_points": stop_point,
+        "stop_areas": stop_area,
+        "connections": connection,
+        "companies": company,
+        "poi_types": poi_type,
+        "routes": route,
+        "line_groups": line_group,
+        "lines": line,
+        "pois": poi,
+        "networks": network,
+        "disruptions": None,
+        "contributors": contributor,
+        "datasets": dataset,
+    }
+    if map_collection[collection_name]:
+        return [(collection_name,
+                 NonNullList(fields.Nested(map_collection[collection_name], display_null=False)))] + common_collection
+    return common_collection
