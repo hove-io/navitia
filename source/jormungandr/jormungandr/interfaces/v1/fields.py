@@ -36,6 +36,7 @@ import pytz
 from jormungandr.interfaces.v1.make_links import create_internal_link, create_external_link
 from jormungandr.interfaces.v1.serializer import pt, base
 from jormungandr.utils import timestamp_to_str
+from jormungandr.utils import timestamp_to_str, get_current_datetime_str, get_timezone_str
 from navitiacommon import response_pb2, type_pb2
 import ujson
 
@@ -590,6 +591,27 @@ feed_publisher = {
     "name": fields.String(),
     "url": fields.String(),
     "license": fields.String()
+}
+
+
+class CurrentDateTime(fields.Raw):
+    def output(self, key, value):
+        return get_current_datetime_str()
+
+
+class TimeZone(fields.Raw):
+    def output(self, key, value):
+        return get_timezone_str()
+
+context = {
+    'car_direct_path': {
+        'co2_emission': NonNullNested({
+            'value': fields.Raw,
+            'unit': fields.String
+        }, attribute="car_co2_emission")
+    },
+    'current_datetime': CurrentDateTime(),
+    'timezone': TimeZone(),
 }
 
 admin = deepcopy(generic_type)
