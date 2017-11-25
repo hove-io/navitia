@@ -43,6 +43,8 @@ from six.moves.urllib.parse import urlparse
 from jormungandr import new_relic
 from six.moves import range
 from six.moves import zip
+from jormungandr.exceptions import TechnicalError
+from flask import request
 
 
 DATETIME_FORMAT = "%Y%m%dT%H%M%S"
@@ -119,6 +121,16 @@ def date_to_timestamp(date):
     convert a datatime objet to a posix timestamp (number of seconds from 1070/1/1)
     """
     return int(calendar.timegm(date.utctimetuple()))
+
+
+def str_datetime_utc_to_local(dt, timezone):
+    from jormungandr.interfaces.parsers import DateTimeFormat
+    if dt:
+        utc_dt = DateTimeFormat()(dt)
+    else:
+        utc_dt = datetime.utcnow()
+    local = pytz.timezone(timezone)
+    return dt_to_str(utc_dt.replace(tzinfo=pytz.UTC).astimezone(local))
 
 
 def timestamp_to_datetime(timestamp):
@@ -467,3 +479,17 @@ def make_namedtuple(typename, *fields, **fields_with_default):
     T = collections.namedtuple(typename, field_names)
     T.__new__.__defaults__ = tuple(fields_with_default.values())
     return T
+
+
+def get_timezone_str(default='Africa/Abidjan'):
+    try:
+        timezone = get_timezone()
+    except TechnicalError:
+        pass
+    return timezone.zone if timezone else default
+
+
+def get_current_datetime_str():
+    timezone = get_timezone_str()
+    current_datetime = request.args.get('_current_datetime')
+    return str_datetime_utc_to_local(current_datetime, timezone)
