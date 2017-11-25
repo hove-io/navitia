@@ -63,6 +63,8 @@ class JourneyCommon(object):
         assert (feed_publisher["license"] == "ODBL")
         assert (feed_publisher["url"] == "www.canaltp.fr")
 
+        self.check_context(response)
+
     def test_error_on_journeys(self):
         """ if we got an error with kraken, an error should be returned"""
 
