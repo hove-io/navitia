@@ -655,6 +655,10 @@ Differents kind of objects can be returned (sorted as):
     There is no pagination for this api.
 </aside>
 
+<aside class="notice">
+    The returned `quality` field is deprecated and only maintained for backward compatibility.
+    Please consider only navitia's output order.
+</aside>
 ### Access
 
 | url | Result |
