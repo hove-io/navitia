@@ -53,8 +53,8 @@ class Kraken(object):
             p = type_pb2.PtObject()
             p.uri = place
             p.embedded_type = type_pb2.ADDRESS
-            p.address.coord.lon = float(lon)
-            p.address.coord.lat = float(lat)
+            p.address.coord.lon = lon
+            p.address.coord.lat = lat
             p.address.uri = place
             return p
         return None

@@ -384,7 +384,11 @@ void Worker::line_reports(const pbnavitia::LineReportsRequest &request){
                                       request.count(),
                                       request.start_page(),
                                       request.filter(),
-                                      forbidden_uris);
+                                      forbidden_uris,
+                                      boost::make_optional(request.has_since_datetime(),
+                                                           bt::from_time_t(request.since_datetime())),
+                                      boost::make_optional(request.has_until_datetime(),
+                                                           bt::from_time_t(request.until_datetime())));
 }
 
 void Worker::calendars(const pbnavitia::CalendarsRequest &request){

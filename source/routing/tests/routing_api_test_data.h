@@ -247,7 +247,7 @@ struct routing_api_data {
         way->idx = 10;
         way->way_type = "rue";
         way->admin_list.push_back(admin);
-        way->add_house_number(navitia::georef::HouseNumber(10., 100., 42));
+        way->add_house_number(navitia::georef::HouseNumber(HouseNmber42.lon(), HouseNmber42.lat(), 42));
         b.data->geo_ref->ways.push_back(way);
 
         way = new navitia::georef::Way();
@@ -692,6 +692,8 @@ struct routing_api_data {
     navitia::type::GeographicalCoord R = {210, 80, false};
     navitia::type::GeographicalCoord S = {10, 10, false};
     navitia::type::GeographicalCoord D = {0, 30, false};
+
+    navitia::type::GeographicalCoord HouseNmber42 = {10., 100., false};
 
     ed::builder b = {"20120614", "routing api data"};
 

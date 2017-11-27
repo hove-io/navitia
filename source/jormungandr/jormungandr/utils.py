@@ -66,21 +66,22 @@ def get_lon_lat(uri):
     extract lon lat from an uri
     the uri should be formated as: 'lon;lat'
     >>> get_lon_lat('12.3;-5.3')
-    (u'12.3', u'-5.3')
+    (12.3, -5.3)
     >>> get_lon_lat('bob')
     (None, None)
     >>> get_lon_lat('5.3;bob')
     (None, None)
     >>> get_lon_lat('5.0;0.0')
-    (u'5.0', u'0.0')
+    (5.0, 0.0)
     """
+    if not uri:
+        return None, None
+
     if uri.count(';') == 1:
         try:
             lon, lat = uri.split(';')
             # we check that both are float
-            float(lon)
-            float(lat)
-            return lon, lat
+            return float(lon), float(lat)
         except ValueError:
             return None, None
     return None, None

@@ -41,11 +41,14 @@ from jormungandr.interfaces.v1.fields import PbField, line, pt_object, NonNullLi
     pagination, disruption_marshaller, error, ListLit, beta_endpoint
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
+from jormungandr.resources_utils import ResourceUtc
+from jormungandr.utils import date_to_timestamp
 
 from flask.ext.restful import fields, reqparse
 from flask.globals import g
 from datetime import datetime
 import six
+
 
 line_report = {
     "line": PbField(line),
@@ -61,9 +64,10 @@ line_reports = {
 }
 
 
-class LineReports(ResourceUri):
+class LineReports(ResourceUri, ResourceUtc):
     def __init__(self):
         ResourceUri.__init__(self, output_type_serializer=api.LineReportsSerializer)
+        ResourceUtc.__init__(self)
         parser_get = self.parsers["get"]
         parser_get.add_argument("depth", type=int, default=1, help="The depth of your object")
         parser_get.add_argument("count", type=default_count_arg_type, default=25,
@@ -84,6 +88,11 @@ class LineReports(ResourceUri):
                                 schema_metadata={'format': 'pt-object'})
         parser_get.add_argument("disable_geojson", type=BooleanType(), default=False,
                                 help="remove geojson from the response")
+        parser_get.add_argument("since", type=DateTimeFormat(),
+                                help="use disruptions valid after this date")
+        parser_get.add_argument("until", type=DateTimeFormat(),
+                                help="use disruptions valid before this date")
+
         self.collection = 'line_reports'
         self.collections = line_reports
         self.get_decorators.insert(0, ManageError())
@@ -107,6 +116,11 @@ class LineReports(ResourceUri):
             args["filter"] = self.get_filter(uris, args)
         else:
             args["filter"] = ""
+
+        if args['since']:
+            args['since'] = date_to_timestamp(self.convert_to_utc(args['since']))
+        if args['until']:
+            args['until'] = date_to_timestamp(self.convert_to_utc(args['until']))
 
         response = i_manager.dispatch(args, "line_reports", instance_name=self.region)
 

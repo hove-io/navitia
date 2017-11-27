@@ -537,6 +537,34 @@ class TestDisruptions(AbstractTestFixture):
         warnings = get_not_null(response, 'warnings')
         assert len(warnings) == 1
         assert warnings[0]['id'] == 'beta_endpoint'
+        assert len(get_not_null(response, 'disruptions')) == 3
+        line_reports = get_not_null(response, 'line_reports')
+        for line_report in line_reports:
+            is_valid_line_report(line_report)
+        assert len(line_reports) == 4
+        assert line_reports[0]['line']['id'] == 'A'
+        assert len(line_reports[0]['pt_objects']) == 3
+        assert line_reports[0]['pt_objects'][0]['id'] == 'A'
+        assert len(line_reports[0]['pt_objects'][0]['line']['links']) == 2
+        assert line_reports[0]['pt_objects'][0]['line']['links'][0]['id'] == 'too_bad_again'
+        assert line_reports[0]['pt_objects'][0]['line']['links'][1]['id'] == 'later_impact'
+        assert line_reports[0]['pt_objects'][1]['id'] == 'base_network'
+        assert len(line_reports[0]['pt_objects'][1]['network']['links']) == 2
+        assert line_reports[0]['pt_objects'][1]['network']['links'][0]['id'] == 'too_bad_again'
+        assert line_reports[0]['pt_objects'][1]['network']['links'][1]['id'] == 'later_impact'
+        assert line_reports[0]['pt_objects'][2]['id'] == 'stopA'
+
+        for line_report in line_reports[1:]:
+            assert len(line_report['pt_objects']) == 2
+            assert line_report['pt_objects'][0]['id'] == 'base_network'
+            assert line_report['pt_objects'][1]['id'] == 'stopA'
+
+    def test_line_reports_with_since_and_until(self):
+        response = self.query_region("line_reports?_current_datetime=20120801T000000"
+                                     "&since=20120801T000000&until=20120803T000000")
+        warnings = get_not_null(response, 'warnings')
+        assert len(warnings) == 1
+        assert warnings[0]['id'] == 'beta_endpoint'
         assert len(get_not_null(response, 'disruptions')) == 2
         line_reports = get_not_null(response, 'line_reports')
         for line_report in line_reports:
@@ -545,8 +573,17 @@ class TestDisruptions(AbstractTestFixture):
         assert line_reports[0]['line']['id'] == 'A'
         assert len(line_reports[0]['pt_objects']) == 3
         assert line_reports[0]['pt_objects'][0]['id'] == 'A'
+        assert len(line_reports[0]['pt_objects'][0]['line']['links']) == 1
+        assert line_reports[0]['pt_objects'][0]['line']['links'][0]['id'] == 'too_bad_again'
         assert line_reports[0]['pt_objects'][1]['id'] == 'base_network'
+        assert len(line_reports[0]['pt_objects'][1]['network']['links']) == 1
+        assert line_reports[0]['pt_objects'][1]['network']['links'][0]['id'] == 'too_bad_again'
         assert line_reports[0]['pt_objects'][2]['id'] == 'stopA'
+
+        for line_report in line_reports[1:]:
+            assert len(line_report['pt_objects']) == 2
+            assert line_report['pt_objects'][0]['id'] == 'base_network'
+            assert line_report['pt_objects'][1]['id'] == 'stopA'
 
         for line_report in line_reports[1:]:
             assert len(line_report['pt_objects']) == 2
@@ -556,6 +593,10 @@ class TestDisruptions(AbstractTestFixture):
 
 @dataset({"line_sections_test": {}})
 class TestDisruptionsLineSections(AbstractTestFixture):
+    #Information about the data in line_section_test
+    #The data is valid from "20170101T000000" to "20170131T000000"
+    #The disruption has publication_period from "20170101T000000" to "20170110T000000"
+    #and one application_period from "20170102T000000" to "20170105T000000"
     def test_line_reports(self):
         response = self.query_region("line_reports?_current_datetime=20170103T120000")
         disruptions = get_not_null(response, 'disruptions')
@@ -573,3 +614,57 @@ class TestDisruptionsLineSections(AbstractTestFixture):
             assert pt_object['embedded_type'] == 'stop_point'
             assert len(pt_object['stop_point']['links']) == 1
             assert pt_object['stop_point']['links'][0]['id'] == 'line_section_on_line_1'
+
+    def test_line_reports_with_current_datetime_outof_application_period(self):
+        #without since/until we use since=production_date.begin and until = production_date.end
+        #application period intersects with active period of the disruption but not publication period
+        response = self.query_region("line_reports?_current_datetime=20170111T130000")
+        assert len(response['disruptions']) == 0
+
+    def test_line_reports_with_since_until_intersects_application_period(self):
+        response = self.query_region("line_reports?_current_datetime=20170101T120000"
+                                     "&since=20170104T130000&until=20170106T000000")
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) == 1
+        line_reports = get_not_null(response, 'line_reports')
+        assert len(line_reports) == 1
+        is_valid_line_report(line_reports[0])
+        assert line_reports[0]['line']['id'] == 'line:1'
+        assert len(line_reports[0]['pt_objects']) == 4
+        assert line_reports[0]['pt_objects'][0]['id'] == 'C_1'
+        assert line_reports[0]['pt_objects'][1]['id'] == 'D_1'
+        assert line_reports[0]['pt_objects'][2]['id'] == 'D_3'
+        assert line_reports[0]['pt_objects'][3]['id'] == 'E_1'
+        for pt_object in line_reports[0]['pt_objects']:
+            assert pt_object['embedded_type'] == 'stop_point'
+            assert len(pt_object['stop_point']['links']) == 1
+            assert pt_object['stop_point']['links'][0]['id'] == 'line_section_on_line_1'
+
+    def test_line_reports_with_since_intersects_application_period(self):
+        response = self.query_region("line_reports?_current_datetime=20170101T120000&since=20170104T130000")
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) == 1
+        line_reports = get_not_null(response, 'line_reports')
+        assert len(line_reports) == 1
+        is_valid_line_report(line_reports[0])
+        assert line_reports[0]['line']['id'] == 'line:1'
+        assert len(line_reports[0]['pt_objects']) == 4
+        assert line_reports[0]['pt_objects'][0]['id'] == 'C_1'
+        assert line_reports[0]['pt_objects'][1]['id'] == 'D_1'
+        assert line_reports[0]['pt_objects'][2]['id'] == 'D_3'
+        assert line_reports[0]['pt_objects'][3]['id'] == 'E_1'
+        for pt_object in line_reports[0]['pt_objects']:
+            assert pt_object['embedded_type'] == 'stop_point'
+            assert len(pt_object['stop_point']['links']) == 1
+            assert pt_object['stop_point']['links'][0]['id'] == 'line_section_on_line_1'
+
+    def test_line_reports_with_since_until_outof_application_period(self):
+        response = self.query_region("line_reports?_current_datetime=20170101T120000"
+                                     "&since=20170105T130000&until=20170108T000000")
+        assert len(response['disruptions']) == 0
+
+    def test_line_reports_with_since_until_value_not_valid(self):
+        response, code = self.query_region("line_reports?_current_datetime=20170101T120000"
+                                           "&since=20170108T130000&until=20170105T000000", check=False)
+        assert code == 404
+        assert response['error']['message'] == 'invalid filtering period (since > until)'

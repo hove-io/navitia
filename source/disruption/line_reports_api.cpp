@@ -29,6 +29,8 @@ www.navitia.io
 */
 
 #include "line_reports_api.h"
+#include "type/meta_data.h"
+#include <boost/optional.hpp>
 
 namespace bt = boost::posix_time;
 namespace nt = navitia::type;
@@ -48,13 +50,15 @@ struct LineReport {
                const std::string& filter,
                const std::vector<std::string>& forbidden_uris,
                const type::Data& d,
-               const boost::posix_time::ptime now):
+               const boost::posix_time::ptime now,
+               const boost::posix_time::time_period& filter_period
+               ):
         line(line)
     {
-        add_objects(filter, forbidden_uris, d, now, networks);
-        add_objects(filter, forbidden_uris, d, now, routes);
-        add_objects(filter, forbidden_uris, d, now, stop_areas);
-        add_objects(filter, forbidden_uris, d, now, stop_points);
+        add_objects(filter, forbidden_uris, d, now, filter_period, networks);
+        add_objects(filter, forbidden_uris, d, now, filter_period, routes);
+        add_objects(filter, forbidden_uris, d, now, filter_period, stop_areas);
+        add_objects(filter, forbidden_uris, d, now, filter_period, stop_points);
     }
 
     template<typename T>
@@ -62,6 +66,7 @@ struct LineReport {
                      const std::vector<std::string>& forbidden_uris,
                      const type::Data& d,
                      const boost::posix_time::ptime now,
+                     const boost::posix_time::time_period& filter_period,
                      std::vector<const T*>& objects) {
         std::string new_filter = "line.uri=" + line->uri;
         if (!filter.empty()) { new_filter += " and " + filter; }
@@ -73,24 +78,25 @@ struct LineReport {
 
         for (const auto& idx: indices) {
             const auto* obj = d.pt_data->collection<T>()[idx];
-            if (obj->has_publishable_message(now)) {
+            if (obj->has_applicable_message(now, filter_period)) {
                 objects.push_back(obj);
             }
         }
     }
 
-    bool has_disruption(const boost::posix_time::ptime& current_time) const {
-        return line->has_publishable_message(current_time)
-            || ! networks.empty()
-            || ! routes.empty()
-            || ! stop_areas.empty()
-            || ! stop_points.empty();
+    bool has_disruption(const boost::posix_time::ptime& current_time,
+                        const boost::posix_time::time_period& filter_peiod) const {
+        return line->has_applicable_message(current_time, filter_peiod)
+                || ! networks.empty()
+                || ! routes.empty()
+                || ! stop_areas.empty()
+                || ! stop_points.empty();
     }
 
     void to_pb(navitia::PbCreator& pb_creator, const size_t depth) const {
         auto* report = pb_creator.add_line_reports();
         pb_creator.fill(line, report->mutable_line(), depth-1);
-        if (line->has_publishable_message(pb_creator.now)) {
+        if (line->has_applicable_message(pb_creator.now, pb_creator.action_period)) {
             pb_creator.fill(line, report->add_pt_objects(), 0);
         }
         pb_creator.fill(networks, report->mutable_pt_objects(), 0);
@@ -107,8 +113,18 @@ void line_reports(navitia::PbCreator& pb_creator,
                   const size_t depth,
                   size_t count,
                   size_t start_page, const std::string& filter,
-                  const std::vector<std::string>& forbidden_uris) {
-    pb_creator.action_period = bt::time_period(pb_creator.now, bt::seconds(1));
+                  const std::vector<std::string>& forbidden_uris,
+                  const boost::optional<boost::posix_time::ptime>& since,
+                  const boost::optional<boost::posix_time::ptime>& until) {
+    const auto& start = since ? *since: bt::ptime(d.meta->production_date.begin());
+    const auto& end = until ? *until: bt::ptime(d.meta->production_date.end());
+    pb_creator.action_period = bt::time_period(start, end);
+
+    if (end < start) {
+        pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse, "invalid filtering period (since > until)");
+        return;
+    }
+
     type::Indexes line_indices;
     try {
         line_indices = ptref::make_query(type::Type_e::Line, filter, forbidden_uris, d);
@@ -121,8 +137,9 @@ void line_reports(navitia::PbCreator& pb_creator,
     }
     std::vector<LineReport> line_reports;
     for (auto idx: line_indices) {
-        auto line_report = LineReport(d.pt_data->lines[idx], filter, forbidden_uris, d, pb_creator.now);
-        if (line_report.has_disruption(pb_creator.now)) {
+        auto line_report = LineReport(d.pt_data->lines[idx], filter, forbidden_uris, d,
+                                      pb_creator.now, pb_creator.action_period);
+        if (line_report.has_disruption(pb_creator.now, pb_creator.action_period)) {
             line_reports.push_back(line_report);
         }
     }

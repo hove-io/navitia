@@ -48,7 +48,7 @@ class TestPlaces(AbstractTestFixture):
 
         assert(len(response['places']) == 1)
         is_valid_places(response['places'])
-        assert(response['places'][0]['name'] == "rue kb (Condom)")
+        assert(response['places'][0]['name'] == "42 rue kb (Condom)")
 
     def test_label_of_admin(self):
         """ test label of admin "Condom (03430)" """
