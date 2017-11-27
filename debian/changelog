@@ -1,3 +1,10 @@
+navitia2 (2.46.0) unstable; urgency=low
+
+  * Kraken: parameters since and until added in line_reports  <https://github.com/CanalTP/navitia/pull/2249>
+  * Jormungandr: Fix reverse geocoding  <https://github.com/CanalTP/navitia/pull/2248>
+
+ -- Abderrahim Azime <abderrahim.azime@canaltp.fr>  Mon, 27 Nov 2017 16:11:01 +0100
+
 navitia2 (2.45.0) unstable; urgency=low
 
   * Jormungandr: Deactivate min_car and min_bike for journeys without walking mode  <https://github.com/CanalTP/navitia/pull/2242>
