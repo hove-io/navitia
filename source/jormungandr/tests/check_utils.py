@@ -1203,23 +1203,6 @@ def get_all_element_disruptions(elem, response):
     return disruption_by_obj
 
 
-def get_all_display_information_disruptions(elem, response):
-    DisruptAndElt = namedtuple('DisruptAndElt', ['disruption', 'impacted_object'])
-    all_disruptions = {d['id']: d for d in response['disruptions']}
-    disruption_by_obj = defaultdict(list)
-    def getter(name, obj):
-        if name != "display_informations":
-            return
-        real_disruptions = [all_disruptions[d['id']] for d in obj['links'] if d['type'] == 'disruption']
-
-        for d in real_disruptions:
-            disruption_by_obj[d['id']].append(DisruptAndElt(disruption=d, impacted_object=obj))
-
-    from jormungandr import utils
-    utils.walk_dict(elem, getter)
-    return disruption_by_obj
-
-
 def is_valid_stop_date_time(stop_date_time):
     get_not_null(stop_date_time, 'arrival_date_time')
     assert get_valid_datetime(stop_date_time['arrival_date_time'])

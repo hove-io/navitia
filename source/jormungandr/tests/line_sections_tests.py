@@ -295,7 +295,7 @@ class TestLineSections(AbstractTestFixture):
 
         r = journeys(_from='C', to='A')
         assert get_used_vj(r) == [['vj:3']]
-        assert 'line_section_on_line_1' not in get_all_display_information_disruptions(r['journeys'], r)
+        assert 'line_section_on_line_1' not in get_all_element_disruptions(r['journeys'], r)
 
     def test_stop_schedule_impacted_by_line_section(self):
         """
