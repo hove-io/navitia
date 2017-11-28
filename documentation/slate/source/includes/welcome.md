@@ -115,12 +115,11 @@ Getting help
 
 All available functions are documented in [integration part](#interface)
 
-A mailing list is available to ask question: <a href="mailto:navitia@googlegroups.com">navitia@googlegroups.com</a>
+A mailing list is available to ask question or request new data integration: <a href="mailto:navitia@googlegroups.com">navitia@googlegroups.com</a>
 
-In order to report bug and make requests we created a github navitia project
+In order to report bug and make requests please use our github navitia project
 <https://github.com/CanalTP/navitia/issues>.
 
-Stay tuned on twitter @navitia.
+Stay tuned on twitter [@navitia](https://twitter.com/navitia).
 
 At last, we are present on IRC on the network <a href="https://webchat.freenode.net/">Freenode</a>, channel <b>#navitia</b>.
-
