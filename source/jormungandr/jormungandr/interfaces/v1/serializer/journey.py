@@ -101,18 +101,18 @@ class DurationsSerializer(PbNestedSerializer):
     walking = jsonschema.Field(schema_type=int, display_none=True,
                                description='Walking total duration of the journey (seconds)')
     bike = jsonschema.Field(schema_type=int, display_none=True,
-                            description='total duration on bike of the journey (seconds)')
+                            description='Total duration on bike of the journey (seconds)')
     car = jsonschema.Field(schema_type=int, display_none=True,
-                           description='total duration in the car of the journey (seconds)')
+                           description='Total car duration of the journey (meters)')
 
 
 class DistancesSerializer(PbNestedSerializer):
     walking = jsonschema.Field(schema_type=int, display_none=True,
-                               description='Walking total distance of the journey (seconds)')
+                               description='Total walking distance of the journey (meters)')
     bike = jsonschema.Field(schema_type=int, display_none=True,
-                            description='total distance on bike of the journey (seconds)')
+                            description='Total bike distance of the journey (meters)')
     car = jsonschema.Field(schema_type=int, display_none=True,
-                           description='total distance in the car of the journey (seconds)')
+                           description='Total walking distance in the car of the journey (seconds)')
 
 
 class JourneyDebugSerializer(PbNestedSerializer):
