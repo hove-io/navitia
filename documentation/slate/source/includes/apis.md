@@ -1720,10 +1720,10 @@ HTTP/1.1 200 OK
 
 Also known as `/traffic_reports` service.
 
-This service provides the state of public transport traffic. It can be
-called for an overall coverage or for a specific object.
+This service provides the state of public transport traffic, grouped by network.
+It can be called for an overall coverage or for a specific object.
 
-![Traffic reports](/images/traffic_reports.png)
+<img src="./images/traffic_reports.png" alt="Traffic reports" width="300"/>
 
 ### Parameters
 
@@ -1878,22 +1878,9 @@ Traffic_reports is an array of some traffic_report object.
 One traffic_report object is a complex object, made of a network, an array
 of lines and an array of stop_areas.
 
-A typical traffic_report object will contain:
+#### What a **complete** response **means**
 
--   1 network which is the grouping object
-    -   it can contain links to its disruptions. These disruptions are globals and might not be applied on lines or stop_areas.
--   0..n lines
-    -   each line contains at least a link to its disruptions
--   0..n stop_areas
-    -   each stop_area contains at least a link to its disruptions
-
-It means that if a stop_area is used by many networks, it will appear
-many times.
-
-
-This typical response means:
-
--   traffic_reports
+-   multiple traffic_reports
     -   network "bob"
           -   line "1" > internal link to disruption "green"
           -   line "12" > internal link to disruption "pink"
@@ -1902,7 +1889,7 @@ This typical response means:
           -   line "A" > internal link to disruption "green"
           -   line "C" > internal link to disruption "yellow"
           -   stop_area "bobito" > internal link to disruption "red"
--   disruptions (disruption target links)
+-   multiple disruptions (disruption target links)
     -   disruption "green"
     -   disruption "pink"
     -   disruption "red"
@@ -1911,3 +1898,14 @@ This typical response means:
     -   Each disruption contains the messages to show.
 
 Details for disruption objects : [disruptions](#disruptions)
+
+#### What a traffic_report object **contains**
+
+-   1 network which is the grouping object
+    -   it can contain links to its disruptions.  
+    These disruptions are globals and might not be applied on lines or stop_areas.
+-   0..n lines
+    -   each line contains at least a link to its disruptions
+-   0..n stop_areas
+    -   each stop_area contains at least a link to its disruptions  
+    If a stop_area is used by multiple networks, it will appear each time.
