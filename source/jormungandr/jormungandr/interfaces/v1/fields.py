@@ -40,6 +40,10 @@ from navitiacommon import response_pb2, type_pb2
 import ujson
 
 
+class CollectionException(Exception):
+    pass
+
+
 class Lit(fields.Raw):
     def __init__(self, val):
         self.val = val
@@ -1004,7 +1008,11 @@ def get_collections(collection_name):
         "contributors": contributor,
         "datasets": dataset,
     }
+
+    if collection_name not in map_collection:
+        raise CollectionException
+
     if map_collection[collection_name]:
         return [(collection_name,
                  NonNullList(fields.Nested(map_collection[collection_name], display_null=False)))] + common_collection
-    return common_collection
+    return [] + common_collection
