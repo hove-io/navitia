@@ -270,30 +270,31 @@ paginate results.
 
 #### <a name="depth"></a>depth
 
-You are looking for something, but Navitia doesn't output it in your favorite endpoint?
-You want to request more from navitia feed?
-You are receiving feeds that are too important and too slow with low bandwidth?
-You would like it to be GraphQL?
+You are looking for something, but Navitia doesn't output it in your favorite endpoint?  
+You want to request more from navitia feed?  
+You are receiving feeds that are too important and too slow with low bandwidth?  
+You would like Navitia to serve GraphQL but it is still not planned?
 
 Feeds from endpoint might miss informations, but this tiny `depth=` parameter can
 expand Navitia power by making it more wordy. Or lighter if you want it.
+
 Here is some examples around "metro line 1" from the Parisian network:
 
 - Get "line 1" id
-	- <https://api.navitia.io/v1/coverage/sandbox/pt_objects?q=metro%201>
-	- The id is "line:RAT:M1"
+	- <https://api.navitia.io/v1/coverage/sandbox/pt_objects?q=metro%201>  
+	The id is "line:RAT:M1"
 - Get routes for this line
-	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes>
-    - Default depth is `depth=1`
+	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes>  
+	Default depth is `depth=1`
 - Want to get a tiny response? Just add `depth=0`
-	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=0>
-	- The response is lighter (parent lines disappear for example)
+	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=0>  
+	The response is lighter (parent lines disappear for example)
 - Want more informations, just add `depth=2`
-	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=2>
-	- The response is a little more verbose (some geojson can appear in response when using your open data token)
+	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=2>  
+	The response is a little more verbose (some geojson can appear in response when using your open data token)
 - Wanna fat more informations, let's try `depth=3`
-	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=3>
-	- Big response: all stop_points are shown
+	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=3>  
+	Big response: all stop_points are shown
 - Wanna spam the internet bandwidth? Try `depth=42`
 	- No. There is a technical limit with `depth=3`
 
@@ -1186,12 +1187,12 @@ Also known as `/isochrones` service.
 
 
 This service gives you a multi-polygon response which
-represents a same time travel zone at a given moment: https://en.wikipedia.org/wiki/Isochrone_map
+represents a same duration travel zone at a given time: https://en.wikipedia.org/wiki/Isochrone_map
 
 As you can find isochrone tables using `/journeys`, this service is only another representation
 of the same data, map oriented.
 
-It is also really usefull to make filters on geocoded objects in order to find which ones are reachable at a moment within a specific time.
+It is also really usefull to make filters on geocoded objects in order to find which ones are reachable at a given time within a specific duration.
 You just have to verify that the coordinates of the geocoded object are inside the multi-polygon.
 
 ### Accesses
@@ -1252,13 +1253,13 @@ Please remember that isochrones use crowfly at the end so they are less precise 
 
 #### Isochrones without public transport
 
-The main goal of Navitia is to handle public transport, so it's not recommended to avoid them.
+The main goal of Navitia is to handle public transport, so it's not recommended to avoid them.  
 However if your are willing to do that, you can use a little trick and
 pass the parameters `&allowed_id=physical_mode:Bus&forbidden_id=physical_mode:Bus`.
 
 #### Car isochrones
 
-Using car in Navitia isochrones is not recommended.
+Using car in Navitia isochrones is not recommended.  
 It is only handled to give a rough idea but tends to squash every other result.
 
 

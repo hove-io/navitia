@@ -13,7 +13,7 @@ the quickest way to reach your destination.
 
 Isochrone computing exposes information under two formats:
 
--   either [Journeys](#journeys) service which provides a list with all the reachable stops at a moment from a potential destination
+-   either [Journeys](#journeys) service which provides a list with all the reachable stops at a given time from a potential destination
 with their respective arrival times, travel times and number of matches. Here is a fiddle example:
 
 <a
