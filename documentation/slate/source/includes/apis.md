@@ -1256,11 +1256,12 @@ Please remember that isochrones use crowfly at the end so they are less precise 
 The main goal of Navitia is to handle public transport, so it's not recommended to avoid them.  
 However if your are willing to do that, you can use a little trick and
 pass the parameters `&allowed_id=physical_mode:Bus&forbidden_id=physical_mode:Bus`.
+You will only get circles.
 
 #### Car isochrones
 
 Using car in Navitia isochrones is not recommended.  
-It is only handled to give a rough idea but tends to squash every other result.
+It is only handled for compatibility with `/journeys` but tends to squash every other result.
 
 
 <a name="route-schedules"></a>Route Schedules
