@@ -123,7 +123,7 @@ class Timeo(RealtimeProxy):
         req_dt = self._timestamp_to_date(request_dt)
         return now.date() < req_dt.date()
 
-    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None):
+    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None, duration=None):
         if self._is_tomorrow(from_dt, current_dt):
             logging.getLogger(__name__).info('Timeo RT service , Can not call Timeo for tomorrow.',
                                              extra={'rt_system_id': self.rt_system_id})

@@ -64,7 +64,7 @@ class Siri(RealtimeProxy):
         """
         return self.rt_system_id
 
-    def _get_next_passage_for_route_point(self, route_point, count, from_dt, current_dt):
+    def _get_next_passage_for_route_point(self, route_point, count, from_dt, current_dt, duration=None):
         stop = route_point.fetch_stop_id(self.object_id_tag)
         request = self._make_request(monitoring_ref=stop, dt=from_dt, count=count)
         if not request:
