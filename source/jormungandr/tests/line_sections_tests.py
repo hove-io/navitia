@@ -229,32 +229,32 @@ class TestLineSections(AbstractTestFixture):
         r = journeys(_from='A', to='C')
         assert get_used_vj(r) == [['vj:1:1']]
         disrupts = get_all_element_disruptions(r['journeys'], r)
-        assert impacted_ids(disrupts) == {'C_1', 'vj:1:1'}
+        assert impacted_ids(disrupts) == {'vj:1:1'}
 
         # same for B->C
         r = journeys(_from='B', to='C')
         assert get_used_vj(r) == [['vj:1:1']]
         disrupts = get_all_element_disruptions(r['journeys'], r)
         assert 'line_section_on_line_1' in disrupts
-        assert impacted_ids(disrupts) == {'C_1', 'vj:1:1'}
+        assert impacted_ids(disrupts) == {'vj:1:1'}
 
         r = journeys(_from='C', to='D')
         assert get_used_vj(r) == [['vj:1:1']]
         disrupts = get_all_element_disruptions(r['journeys'], r)
         assert 'line_section_on_line_1' in disrupts
-        assert impacted_ids(disrupts) == {'C_1', 'D_1', 'vj:1:1'}
+        assert impacted_ids(disrupts) == {'vj:1:1'}
 
         r = journeys(_from='A', to='F')
         assert get_used_vj(r) == [['vj:1:1']]
         disrupts = get_all_element_disruptions(r['journeys'], r)
         assert 'line_section_on_line_1' in disrupts
-        assert impacted_ids(disrupts) == {'C_1', 'D_1', 'D_3', 'E_1', 'vj:1:1'}
+        assert impacted_ids(disrupts) == {'vj:1:1'}
 
         r = journeys(_from='D', to='F')
         assert get_used_vj(r) == [['vj:1:1']]
         disrupts = get_all_element_disruptions(r['journeys'], r)
         assert 'line_section_on_line_1' in disrupts
-        assert impacted_ids(disrupts) == {'D_3', 'E_1', 'vj:1:1'}
+        assert impacted_ids(disrupts) == {'vj:1:1'}
 
     def test_journeys_use_vj_not_impacted_by_line_section(self):
         """
@@ -293,6 +293,10 @@ class TestLineSections(AbstractTestFixture):
         assert get_used_vj(r) == [['vj:1:2']]
         assert 'line_section_on_line_1' not in get_all_element_disruptions(r['journeys'], r)
 
+        r = journeys(_from='C', to='A')
+        assert get_used_vj(r) == [['vj:3']]
+        assert 'line_section_on_line_1' not in get_all_element_disruptions(r['journeys'], r)
+
     def test_stop_schedule_impacted_by_line_section(self):
         """
         For /stop_schedules we display a line section impact if the stoppoint is part of a line section impact
@@ -309,17 +313,17 @@ class TestLineSections(AbstractTestFixture):
         r = self.query_region('stop_areas/C/stop_schedules?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['stop_schedules'], r)
         assert 'line_section_on_line_1' in d
-        assert impacted_ids(d) == {'C_1', 'vj:1:1'}  # the impact is linked in the response only to the stop point and the stop_schedule.datetime
+        assert impacted_ids(d) == {'vj:1:1'} # the impact is linked in the response only to the stop_schedule.datetime
 
         r = self.query_region('stop_areas/D/stop_schedules?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['stop_schedules'], r)
         assert 'line_section_on_line_1' in d
-        assert impacted_ids(d) == {'D_1', 'D_3', 'vj:1:1'}
+        assert impacted_ids(d) == {'vj:1:1'}
 
         r = self.query_region('stop_areas/E/stop_schedules?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['stop_schedules'], r)
         assert 'line_section_on_line_1' in d
-        assert impacted_ids(d) == {'E_1', 'vj:1:1'}
+        assert impacted_ids(d) == {'vj:1:1'}
 
         r = self.query_region('stop_areas/F/stop_schedules?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['stop_schedules'], r)
@@ -342,17 +346,17 @@ class TestLineSections(AbstractTestFixture):
         d = get_all_element_disruptions(r['departures'], r)
         assert 'line_section_on_line_1' in d
         # the impact is linked in the response to the stop point and the vj
-        assert impacted_ids(d) == {'C_1', 'vj:1:1'}
+        assert impacted_ids(d) == {'vj:1:1'}
 
         r = self.query_region('stop_areas/D/departures?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['departures'], r)
         assert 'line_section_on_line_1' in d
-        assert impacted_ids(d) == {'D_1', 'D_3', 'vj:1:1'}
+        assert impacted_ids(d) == {'vj:1:1'}
 
         r = self.query_region('stop_areas/E/departures?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['departures'], r)
         assert 'line_section_on_line_1' in d
-        assert impacted_ids(d) == {'E_1', 'vj:1:1'}
+        assert impacted_ids(d) == {'vj:1:1'}
 
         r = self.query_region('stop_areas/F/departures?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['departures'], r)
@@ -365,7 +369,7 @@ class TestLineSections(AbstractTestFixture):
         r = self.query_region('lines/line:1/departures?{cur}&{d}&{f}'.format(cur=cur, d=dt, f=fresh))
         d = get_all_element_disruptions(r['departures'], r)
         assert 'line_section_on_line_1' in d
-        assert impacted_ids(d) == {'C_1', 'D_1', 'D_3', 'E_1', 'vj:1:1'}
+        assert impacted_ids(d) == {'vj:1:1'}
 
     def test_line_impacted_by_line_section(self):
         assert self.has_disruption(ObjGetter('lines', 'line:1'), 'line_section_on_line_1')

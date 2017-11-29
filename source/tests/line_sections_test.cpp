@@ -98,6 +98,12 @@ int main(int argc, const char* const argv[]) {
             ("B_1", "11:15"_t)
             ("F_1", "12:30"_t);
 
+    b.vj("line:3")
+            .route("route:line:3:1")
+            .uri("vj:3")
+            ("C_1", "11:00"_t)
+            ("A_1", "12:30"_t);
+
     b.vj_with_network("network:other","line:B","11111111","",true, "")
             ("C_3", "08:10"_t, "08:11"_t)
             ("stop_area:other", "08:20"_t, "08:21"_t);

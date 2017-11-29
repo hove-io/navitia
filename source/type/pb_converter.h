@@ -380,8 +380,9 @@ private:
         void fill_messages(const nt::HasMessages* nav_obj, P* pb_obj){
             if (nav_obj == nullptr) {return ;}
             if (dump_message_options.dump_message == DumpMessage::No) { return; }
-            for (const auto& message : nav_obj->get_applicable_messages(pb_creator.now,
-                                                                        pb_creator.action_period)){
+            const bool dump_line_sections = dump_message_options.dump_line_section == DumpLineSectionMessage::Yes;
+            for (const auto& message: nav_obj->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
+                if (!dump_line_sections && message->is_only_line_section()) { continue; }
                 fill_message(message, pb_obj);
             }
         }

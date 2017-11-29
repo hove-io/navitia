@@ -287,6 +287,8 @@ struct Impact {
 
     bool is_valid(const boost::posix_time::ptime& current_time, const boost::posix_time::time_period& action_period) const;
     bool is_relevant(const std::vector<const StopTime*>& stop_times) const;
+    bool is_only_line_section() const;
+    bool is_line_section_of(const Line&) const;
 
     const type::ValidityPattern get_impact_vp(const boost::gregorian::date_period& production_date) const;
 

@@ -74,6 +74,7 @@ std::ostream& operator<<(std::ostream& os, const Mode_e& mode);
 
 struct PT_Data;
 struct MetaData;
+struct Line;
 
 template<class T> std::string T::* name_getter(){return &T::name;}
 template<class T> int T::* idx_getter(){return &T::idx;}
@@ -91,7 +92,8 @@ public:
 
     bool has_applicable_message(
             const boost::posix_time::ptime& current_time,
-            const boost::posix_time::time_period& action_period) const;
+            const boost::posix_time::time_period& action_period,
+            const Line* line = nullptr) const;
 
     bool has_publishable_message(const boost::posix_time::ptime& current_time) const;
 
