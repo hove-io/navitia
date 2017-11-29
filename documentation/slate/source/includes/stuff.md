@@ -46,6 +46,7 @@ The different journey types are:
 |less_fallback_bike|A journey with less biking|
 |less_fallback_bss|A journey with less bss|
 |fastest|A journey with minimum duration|
+|bike_in_pt|A journey with bike both at the beginning and the end, and where bike is allowed in public transport used|
 |non_pt_walk|A journey without public transport, only walking|
 |non_pt_bike|A journey without public transport, only biking|
 |non_pt_bss|A journey without public transport, only bike sharing|
@@ -133,7 +134,7 @@ The status of the impact depends only of 'now' and is:
   <tbody>
     <tr>
       <td align="center"> </td>
-      <td> </td>
+      <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
@@ -142,7 +143,7 @@ The status of the impact depends only of 'now' and is:
     </tr>
     <tr>
       <td align="center"> </td>
-      <td> </td>
+      <td align="center"> </td>
       <td align="center">date1 </td>
       <td align="center"><strong>Yes</strong> </td>
       <td align="center">- </td>
@@ -150,8 +151,8 @@ The status of the impact depends only of 'now' and is:
       <td align="center">future </td>
     </tr>
     <tr>
-      <td align="center">* </td>
-      <td> </td>
+      <td align="center">T </td>
+      <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
@@ -160,7 +161,7 @@ The status of the impact depends only of 'now' and is:
     </tr>
     <tr>
       <td align="center">| </td>
-      <td> </td>
+      <td align="center"> </td>
       <td align="center">date2 </td>
       <td align="center"><strong>Yes</strong> </td>
       <td align="center"><strong>Yes</strong> </td>
@@ -169,7 +170,7 @@ The status of the impact depends only of 'now' and is:
     </tr>
     <tr>
       <td align="center">| </td>
-      <td>* </td>
+      <td align="center">T </td>
       <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
@@ -178,7 +179,7 @@ The status of the impact depends only of 'now' and is:
     </tr>
     <tr>
       <td align="center">| </td>
-      <td>| </td>
+      <td align="center">| </td>
       <td align="center">date3 </td>
       <td align="center"><strong>Yes</strong> </td>
       <td align="center"><strong>Yes</strong> </td>
@@ -187,16 +188,7 @@ The status of the impact depends only of 'now' and is:
     </tr>
     <tr>
       <td align="center">| </td>
-      <td>| </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
-    </tr>
-    <tr>
-      <td align="center">| </td>
-      <td>* </td>
+      <td align="center">⊥ </td>
       <td align="center"> </td>
       <td align="center"> </td>
       <td align="center"> </td>
@@ -213,16 +205,7 @@ The status of the impact depends only of 'now' and is:
       <td align="center">passed </td>
     </tr>
     <tr>
-      <td align="center">| </td>
-      <td> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
-      <td align="center"> </td>
-    </tr>
-    <tr>
-      <td align="center">* </td>
+      <td align="center">⊥ </td>
       <td> </td>
       <td align="center"> </td>
       <td align="center"> </td>

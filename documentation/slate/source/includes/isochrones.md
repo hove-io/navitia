@@ -5,7 +5,7 @@
 
 
 Whether using a specific set of coordinates or a general location, you can find places within
-your reach and their corresponding travel times, using a variety of transportation options.
+your reach at a given time and their corresponding travel times, using a variety of transportation options.
 You can even specify the maximum amount of time you want to spare on travel and find
 the quickest way to reach your destination.
 
@@ -13,7 +13,7 @@ the quickest way to reach your destination.
 
 Isochrone computing exposes information under two formats:
 
--   either [Journeys](#journeys) service which provides a list with all the reachable stops from a potential destination
+-   either [Journeys](#journeys) service which provides a list with all the reachable stops at a given time from a potential destination
 with their respective arrival times, travel times and number of matches. Here is a fiddle example:
 
 <a
@@ -37,10 +37,7 @@ or to filter geocoded objects inside the polygon. Here is a fiddle example:
 You can use these APIs (click on them for details):
 
 -   some **[Places](#places)** requests: autocomplete on geographical data from an input text to find the isochrone starting point.
-either
--   **[Journeys](#journeys)** : Compute all journeys from a departure point to every reachable point, 
+-   **[Journeys](#journeys)** : Compute all journeys from a departure point at a given time to every reachable point,
 and returns a list of all reachable points, ordered by time to reach.
-or
--   **[isochrones](#isochrones_api)** : Compute all journeys from a departure point to every reachable point, 
+-   **[isochrones](#isochrones_api)** : Compute all journeys from a departure point at a given time to every reachable point,
 and returns multiple geoJson ready to be displayed on map. This service is currently in beta.
-
