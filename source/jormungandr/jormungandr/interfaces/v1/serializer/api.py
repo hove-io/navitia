@@ -80,6 +80,7 @@ class PTReferentialSerializer(serpy.Serializer):
     feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
     notes = DescribedField(schema_type=NoteSerializer(many=True))
+    #ContextSerializer can not be used directly because context does not exist in protobuff
     context = MethodField(schema_type=ContextSerializer(), display_none=False)
 
     def get_context(self, obj):

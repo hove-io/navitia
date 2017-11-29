@@ -975,14 +975,13 @@ disruption_marshaller = {
     "contributor": fields.String()
 }
 
-
-common_collection = [
+common_collection = (
     ("pagination", PbField(pagination)),
     ("error", PbField(error)),
     ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False))),
     ("context", context),
     ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts"))
-]
+)
 
 
 def get_collections(collection_name):
@@ -1009,10 +1008,11 @@ def get_collections(collection_name):
         "datasets": dataset,
     }
 
-    if collection_name not in map_collection:
-        raise CollectionException
+    collection = map_collection.get(collection_name)
+    if collection:
+        return [(collection_name, NonNullList(fields.Nested(collection, display_null=False)))] + list(common_collection)
 
-    if map_collection[collection_name]:
-        return [(collection_name,
-                 NonNullList(fields.Nested(map_collection[collection_name], display_null=False)))] + common_collection
-    return [] + common_collection
+    if collection_name == 'disruptions':
+        return list(common_collection)
+
+    raise CollectionException

@@ -485,8 +485,9 @@ def get_timezone_str(default='Africa/Abidjan'):
     try:
         timezone = get_timezone()
     except TechnicalError:
-        pass
-    return timezone.zone if timezone else default
+        return default
+    else:
+        return timezone.zone if timezone else default
 
 
 def get_current_datetime_str():
