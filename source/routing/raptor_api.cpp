@@ -196,18 +196,21 @@ static void compute_metadata(pbnavitia::Journey* pb_journey) {
 
     for (const auto& section: pb_journey->sections()) {
         if (section.type() == pbnavitia::STREET_NETWORK || section.type() == pbnavitia::CROW_FLY) {
-            if (section.street_network().mode() == pbnavitia::StreetNetworkMode::Walking) {
+            switch(section.street_network().mode()){
+            case pbnavitia::StreetNetworkMode::Walking:
                 total_walking_duration += section.duration();
                 total_walking_distance += section.length();
-            } else if (section.street_network().mode() == pbnavitia::StreetNetworkMode::Car) {
+                break;
+            case pbnavitia::StreetNetworkMode::Car:
                 total_car_duration += section.duration();
                 total_car_distance += section.length();
-            } else if ((section.street_network().mode() == pbnavitia::StreetNetworkMode::Bike) ||
-                       (section.street_network().mode() == pbnavitia::StreetNetworkMode::Bss)) {
+                break;
+            case pbnavitia::StreetNetworkMode::Bike:
+            case pbnavitia::StreetNetworkMode::Bss:
                 total_bike_duration += section.duration();
                 total_bike_distance += section.length();
+                break;
             }
-
         } else if (section.type() == pbnavitia::TRANSFER && section.transfer_type() == pbnavitia::walking) {
             total_walking_duration += section.duration();
         }

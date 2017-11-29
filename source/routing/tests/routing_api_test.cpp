@@ -1040,7 +1040,6 @@ BOOST_FIXTURE_TEST_CASE(biking, streetnetworkmode_fixture<test_speed_provider>) 
     BOOST_CHECK_EQUAL(resp.journeys(1).has_co2_emission(), true);
     BOOST_CHECK_EQUAL(resp.journeys(1).co2_emission().value(), 0.);
     BOOST_CHECK_EQUAL(resp.journeys(1).co2_emission().unit(), "gEC");
-
 }
 
 //biking
@@ -1077,7 +1076,6 @@ BOOST_FIXTURE_TEST_CASE(biking_walking, streetnetworkmode_fixture<test_speed_pro
     BOOST_CHECK_EQUAL(journey.distances().walking(), 0);
     BOOST_CHECK_EQUAL(journey.distances().bike(), 532);
     BOOST_CHECK_EQUAL(journey.distances().car(), 0);
-
 
     auto pathitem = section.street_network().path_items(0);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue bs");

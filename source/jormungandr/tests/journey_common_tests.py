@@ -514,7 +514,6 @@ class JourneyCommon(object):
         assert response['journeys'][1]['durations']['total'] == 276
         assert response['journeys'][1]['durations']['walking'] == 276
 
-
     def test_max_duration_to_pt_equals_to_0(self):
         query = journey_basic_query + \
             "&first_section_mode[]=bss" + \
@@ -531,7 +530,6 @@ class JourneyCommon(object):
         assert response['journeys'][0]['durations']['total'] == 62
         assert response['journeys'][0]['distances']['bike'] == 257
         assert response['journeys'][0]['durations']['walking'] == 0
-
         assert response['journeys'][1]['durations']['car'] == 16
         assert response['journeys'][1]['durations']['walking'] == 106
         assert response['journeys'][1]['durations']['total'] == 123
