@@ -102,10 +102,13 @@ protected:
 //  - from -> nearest(from).second ---> nearest(to).second -> to
 // is returned, ---> being the path between 2 points in the given
 // shape.
+// The returned linestring is simplified via boost::simplify to reduce the size of the result.
+// An additional optional parameter is available to set the level of simplification.
 nt::LineString
 create_shape(const nt::GeographicalCoord& from,
              const nt::GeographicalCoord& to,
-             const nt::LineString& shape);
+             const nt::LineString& shape,
+             const double simplify_tolerance = 0.00003);
 
 /** Structure de donnée temporaire destinée à être remplie par un connecteur
       *
@@ -166,6 +169,7 @@ public:
     size_t count_too_long_connections = 0,
            count_empty_connections = 0;
 
+    double simplify_tolerance = 0.00003;
 
     /**
          * trie les différentes donnée et affecte l'idx
