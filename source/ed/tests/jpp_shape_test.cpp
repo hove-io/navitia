@@ -102,3 +102,36 @@ BOOST_AUTO_TEST_CASE(create_shape) {
     // A->F, a long path
     shape_eq(A, F, LS({A, M, N, O, F}));
 }
+
+/*
+ * Test simplify. The default distance is 0.00003 in coordinate distance (approximately 3m for WGS84).
+ *
+ *            U
+ *            /\
+ *           /  \
+ * S ------ T    V  X ----- Y
+ *                \/
+ *                 W
+ *
+ */
+static const navitia::type::GeographicalCoord S(0, 0);
+static const navitia::type::GeographicalCoord T(0.00005, 0);
+static const navitia::type::GeographicalCoord U(0.00006, 0.00004);
+static const navitia::type::GeographicalCoord V(0.00007, 0);
+static const navitia::type::GeographicalCoord W(0.00008, -0.00001);
+static const navitia::type::GeographicalCoord X(0.00009, 0);
+static const navitia::type::GeographicalCoord Y(0.00012, 0);
+static const navitia::type::LineString curved_shape  = {S, T, U, V, W, X, Y};
+
+BOOST_AUTO_TEST_CASE(simplify_create_shape) {
+    typedef navitia::type::LineString LS;
+
+    // Based on the coordinates we will remove T, V and X from the resulting string
+    BOOST_REQUIRE_EQUAL(ed::create_shape(S, Y, curved_shape), LS({S, U, W, Y}));
+
+    // No simplification
+    BOOST_REQUIRE_EQUAL(ed::create_shape(S, Y, curved_shape, 0), LS({S, T, U, V, W, X, Y}));
+
+    // Bigger simplification (we keep a straight line only)
+    BOOST_REQUIRE_EQUAL(ed::create_shape(S, Y, curved_shape, 0.0001), LS({S, Y}));
+}

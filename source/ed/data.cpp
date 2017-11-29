@@ -488,7 +488,8 @@ get_smallest_range(const LineStringIterPair& p1, const LineStringIterPair& p2) {
 nt::LineString
 create_shape(const nt::GeographicalCoord& from,
              const nt::GeographicalCoord& to,
-             const nt::LineString& shape)
+             const nt::LineString& shape,
+             const double simplify_tolerance)
 {
     const auto nearest_from = get_nearest(from, shape);
     const auto nearest_to = get_nearest(to, shape);
@@ -508,7 +509,7 @@ create_shape(const nt::GeographicalCoord& from,
 
     // simplification at about 3m precision
     nt::LineString simplified;
-    boost::geometry::simplify(res, simplified, 0.00003);
+    boost::geometry::simplify(res, simplified, simplify_tolerance);
 
     return simplified;
 }
@@ -532,7 +533,8 @@ void Data::build_shape_from_prev() {
                                 create_shape(
                                              prev_stop_point->coord,
                                              stop_time->stop_point->coord,
-                                             shape.front()));
+                                             shape.front(),
+                                             simplify_tolerance));
                         this->shapes_from_prev.push_back(s);
                         shape_cache[key] = s;
                     }

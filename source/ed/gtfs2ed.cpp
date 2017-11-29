@@ -51,11 +51,15 @@ int main(int argc, char * argv[])
     auto logger = log4cplus::Logger::getInstance("log");
 
     std::string input, date, connection_string;
+    double simplify_tolerance;
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help,h", "Show this message")
         ("date,d", po::value<std::string>(&date), "Beginning date")
         ("input,i", po::value<std::string>(&input), "Input directory")
+        ("simplify_tolerance,s", po::value<double>(&simplify_tolerance)->default_value(0.00003),
+         "Distance in unit of coordinate used to simplify geometries and reduce memory usage. Default is "
+         "0.00003 (~ 3m). Pass 0 to disable any simplification.")
         ("version,v", "Show version")
         ("config-file", po::value<std::string>(), "Path to a config file")
         ("connection-string", po::value<std::string>(&connection_string)->required(),
@@ -93,6 +97,7 @@ int main(int argc, char * argv[])
     int read, complete, clean, sort, save, main_destination(0);
 
     ed::Data data;
+    data.simplify_tolerance = simplify_tolerance;
 
     start = pt::microsec_clock::local_time();
 
