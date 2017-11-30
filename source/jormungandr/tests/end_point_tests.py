@@ -155,6 +155,7 @@ class TestEndPoint(AbstractTestFixture):
         json_response = self.query("/v1/coverage/main_routing_test/status")
 
         is_valid_region_status(get_not_null(json_response, "status"))
+        self.check_context(json_response)
         assert json_response["status"]["is_open_data"] == False
         assert json_response["status"]["is_open_service"] == False
         assert 'realtime_contributors' in json_response['status']
@@ -162,6 +163,8 @@ class TestEndPoint(AbstractTestFixture):
 
     def test_geo_status(self):
         response = self.query('/v1/coverage/main_routing_test/_geo_status', display=True)
+        self.check_context(response)
+        assert response['context']['timezone'] == 'UTC'
         assert response['geo_status']
         assert response['geo_status']['nb_ways'] > 0
         assert response['geo_status']['nb_pois'] > 0

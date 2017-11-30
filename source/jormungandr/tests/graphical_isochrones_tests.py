@@ -61,6 +61,7 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         assert max_duration == 3600
         assert multi_poly.contains(origin)
         is_valid_graphical_isochrone(response, self.tester, query)
+        self.check_context(response)
 
     def test_to_graphical_isochrone_coord(self):
         query = "v1/coverage/main_routing_test/isochrones?to={}&datetime={}&max_duration={}"
@@ -96,9 +97,20 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         is_valid_graphical_isochrone(response, self.tester, q)
 
     def test_graphical_isochrones_no_datetime(self):
+        current_datetime = '20120614T080000'
         q_no_dt = "v1/coverage/main_routing_test/isochrones?from={}&max_duration={}&_current_datetime={}"
-        q_no_dt = q_no_dt.format(s_coord, '3600', '20120614T080000')
+        q_no_dt = q_no_dt.format(s_coord, '3600', current_datetime)
         response_no_dt = self.query(q_no_dt)
+
+        excepted_context = {
+            'current_datetime': current_datetime,
+            'timezone': 'UTC'
+        }
+        self.check_context(response_no_dt)
+
+        for key, value in excepted_context.items():
+            assert response_no_dt['context'][key] == value
+
         q_dt = "v1/coverage/main_routing_test/isochrones?from={}&datetime={}&max_duration={}"
         q_dt = q_dt.format(s_coord, '20120614T080000', '3600')
         isochrone = self.query(q_dt)

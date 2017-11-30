@@ -43,7 +43,7 @@ from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
 from navitiacommon.parser_args_type import BooleanType
 
-from flask.ext.restful import marshal_with, reqparse, fields
+from flask.ext.restful import fields
 from flask.globals import g
 from datetime import datetime
 import six

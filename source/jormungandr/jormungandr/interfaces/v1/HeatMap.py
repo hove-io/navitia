@@ -29,7 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask.ext.restful import fields, marshal_with, abort
+from flask.ext.restful import fields, abort
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.fields import error,\
     PbField, NonNullList, NonNullNested,\
@@ -40,7 +40,7 @@ from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.utils import date_to_timestamp
 from jormungandr.interfaces.parsers import UnsignedInteger
 from jormungandr.interfaces.v1.journey_common import JourneyCommon
-from jormungandr.interfaces.v1.fields import DateTime
+from jormungandr.interfaces.v1.fields import DateTime, context
 from jormungandr.interfaces.v1.serializer.api import HeatMapSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
 
@@ -58,6 +58,7 @@ heat_maps = {
     "links": fields.List(Links()),
     "warnings": ListLit([fields.Nested(beta_endpoint)]),
     "feed_publishers": fields.List(NonNullNested(feed_publisher)),
+    "context": context
 }
 
 

@@ -60,6 +60,7 @@ class TestHeatMap(AbstractTestFixture):
 
         is_valid_heat_maps(response, self.tester, query)
         assert requested_datetime == '20120614T080000'
+        self.check_context(response)
 
     def test_to_heat_map_coord(self):
         query = "v1/coverage/main_routing_test/heat_maps?to={}&datetime={}&max_duration={}"
@@ -67,6 +68,7 @@ class TestHeatMap(AbstractTestFixture):
         response = self.query(query)
 
         is_valid_heat_maps(response, self.tester, query)
+        self.check_context(response)
 
     def test_heat_maps_from_stop_point(self):
         q = "v1/coverage/main_routing_test/heat_maps?datetime={}&from={}&max_duration={}"
@@ -78,6 +80,7 @@ class TestHeatMap(AbstractTestFixture):
         assert(get_duration(s_coord, response) == 20)# about 18
         assert(get_duration(stopA_coord, response) == 9)# about 2
         assert(get_duration(r_coord, response) == 74)# about 2 + 81
+        self.check_context(response)
 
     def test_heat_maps_to_stop_point(self):
         q = "v1/coverage/main_routing_test/heat_maps?datetime={}&to={}&max_duration={}"
@@ -89,13 +92,23 @@ class TestHeatMap(AbstractTestFixture):
         assert(get_duration(r_coord, response) == 87)# about 81
         assert(get_duration(stopB_coord, response) == 67)# about 60
         assert(get_duration(s_coord, response) == 73)# about 60 + 18
+        self.check_context(response)
 
     def test_heat_maps_no_datetime(self):
+        current_datetime = '20120614T080000'
         q_no_dt = "v1/coverage/main_routing_test/heat_maps?from={}&max_duration={}&_current_datetime={}"
-        q_no_dt = q_no_dt.format(s_coord, '3600', '20120614T080000')
+        q_no_dt = q_no_dt.format(s_coord, '3600', current_datetime)
         response_no_dt = self.query(q_no_dt)
 
         is_valid_heat_maps(response_no_dt, self.tester, q_no_dt)
+        excepted_context = {
+            'current_datetime': current_datetime,
+            'timezone': 'UTC'
+        }
+        self.check_context(response_no_dt)
+
+        for key, value in excepted_context.items():
+            assert response_no_dt['context'][key] == value
 
     def test_heat_maps_no_seconds_in_datetime(self):
         q_no_s = "v1/coverage/main_routing_test/heat_maps?from={}&max_duration={}&datetime={}"
@@ -103,6 +116,7 @@ class TestHeatMap(AbstractTestFixture):
         response_no_s = self.query(q_no_s)
 
         is_valid_heat_maps(response_no_s, self.tester, q_no_s)
+        self.check_context(response_no_s)
 
     def test_heat_maps_no_arguments(self):
         q = "v1/coverage/main_routing_test/heat_maps"
@@ -111,14 +125,12 @@ class TestHeatMap(AbstractTestFixture):
         assert error_code == 400
         assert normal_response['message'] == 'you should provide a \'from\' or a \'to\' argument'
 
-
     def test_heat_maps_no_region(self):
         q = "v1/coverage/heat_maps"
         normal_response, error_code = self.query_no_assert(q)
 
         assert error_code == 404
         assert normal_response['error']['message'] == 'The region heat_maps doesn\'t exists'
-
 
     def test_heat_maps_invalid_duration(self):
         q = "v1/coverage/main_routing_test/heat_maps?datetime={}&from={}&max_duration={}"
@@ -135,7 +147,6 @@ class TestHeatMap(AbstractTestFixture):
         assert error_code == 400
         assert 'Unable to evaluate, invalid literal for int() with base 10: \'toto\'' in normal_response['message']
 
-
     def test_heat_maps_null_speed(self):
         q = "v1/coverage/main_routing_test/heat_maps?datetime={}&from={}&max_duration={}&walking_speed=0"
         q = q.format('20120614T080000', s_coord, '3600')
@@ -143,7 +154,6 @@ class TestHeatMap(AbstractTestFixture):
 
         assert error_code == 400
         assert 'The walking_speed argument has to be > 0, you gave : 0' in normal_response['message']
-
 
     def test_heat_maps_no_duration(self):
         q = "v1/coverage/main_routing_test/heat_maps?datetime={}&from={}"
@@ -153,7 +163,6 @@ class TestHeatMap(AbstractTestFixture):
         assert error_code == 400
         assert normal_response['message'] == "you should provide a 'max_duration' argument"
 
-
     def test_heat_maps_date_out_of_bound(self):
         q = "v1/coverage/main_routing_test/heat_maps?datetime={}&from={}&max_duration={}"
         q = q.format('20050614T080000', s_coord, '3600')
@@ -162,7 +171,6 @@ class TestHeatMap(AbstractTestFixture):
         assert error_code == 404
         assert normal_response['error']['id'] == 'date_out_of_bounds'
         assert normal_response['error']['message'] == 'date is not in data production period'
-
 
     def test_heat_maps_invalid_datetime(self):
         q = "v1/coverage/main_routing_test/heat_maps?datetime={}&from={}&max_duration={}"

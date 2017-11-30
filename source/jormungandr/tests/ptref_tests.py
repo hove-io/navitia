@@ -112,7 +112,7 @@ class TestPtRef(AbstractTestFixture):
         assert (feed_publisher["name"] == "canal tp")
         assert (feed_publisher["license"] == "ODBL")
         assert (feed_publisher["url"] == "www.canaltp.fr")
-
+        self.check_context(response)
 
     def test_vj_depth_0(self):
         """default depth is 1"""
@@ -184,7 +184,8 @@ class TestPtRef(AbstractTestFixture):
         """
         stop_area:stop1 with _current_datetime
         """
-        response = self.query_region("stop_areas/stop_area:stop1?_current_datetime=20140115T235959")
+        current_datetime = '20140115T235959'
+        response = self.query_region("stop_areas/stop_area:stop1?_current_datetime={}".format(current_datetime))
 
         disruptions = get_not_null(response, 'disruptions')
 
@@ -193,6 +194,8 @@ class TestPtRef(AbstractTestFixture):
         messages = get_not_null(disruptions[0], 'messages')
 
         assert(messages[0]['text']) == 'Disruption on StopArea stop_area:stop1'
+        self.check_context(response)
+        assert response['context']['current_datetime'] == current_datetime
 
     def test_contributors(self):
         """test contributor formating"""
@@ -525,6 +528,7 @@ class TestPtRef(AbstractTestFixture):
         pt_objs = get_not_null(response, 'pt_objects')
         assert len(pt_objs) == 1
         assert get_not_null(pt_objs[0], 'name') == 'base_network Car line:A'
+        self.check_context(response)
 
         response = self.query_region('pt_objects?q=line:Ca roule&type[]=line')
         pt_objs = get_not_null(response, 'pt_objects')

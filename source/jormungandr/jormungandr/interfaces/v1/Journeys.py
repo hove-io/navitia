@@ -36,7 +36,7 @@ from jormungandr import i_manager, app
 from jormungandr.interfaces.v1.fields import disruption_marshaller, Links
 from jormungandr.interfaces.v1.fields import display_informations_vj, error, place,\
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
-    SectionGeoJson, PbEnum, feed_publisher, Durations, Distances
+    SectionGeoJson, PbEnum, feed_publisher, Durations, context, Distances
 
 from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.ResourceUri import complete_links
@@ -238,14 +238,6 @@ ticket = {
     "links": TicketLinks(attribute="section_id")
 }
 
-context = {
-    'car_direct_path': {
-        'co2_emission': NonNullNested({
-            'value': fields.Raw,
-            'unit': fields.String
-        }, attribute="car_co2_emission")
-    }
-}
 
 journeys = {
     "journeys": NonNullList(NonNullNested(journey)),

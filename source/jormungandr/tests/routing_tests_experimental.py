@@ -59,6 +59,9 @@ class TestJourneysDistributed(JourneyCommon, DirectPath, JourneyMinBikeMinCar, N
         assert jrnys
         assert jrnys[0]['sections'][0]['mode'] == 'walking'
         assert jrnys[0]['sections'][-1]['mode'] == 'car'
+        context = response['context']
+        assert 'car_direct_path' in context
+        assert 'co2_emission' in context['car_direct_path']
 
     def test_best_filtering(self):
         """

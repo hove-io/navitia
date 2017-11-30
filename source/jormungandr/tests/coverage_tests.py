@@ -52,6 +52,9 @@ class TestNullStatus(AbstractTestFixture):
         assert get_valid_datetime(response['regions'][0]["last_load_at"])
         assert 'name' in response['regions'][0]
         assert response['regions'][0]['name'] == 'routing api data'
+        self.check_context(response)
+        context = response['context']
+        assert context['timezone'] == 'Africa/Abidjan'
 
     def test_null_status(self):
         """
@@ -63,6 +66,9 @@ class TestNullStatus(AbstractTestFixture):
         assert 'regions' in response
         assert len(response['regions']) == 1
         assert response['regions'][0]['id'] == 'null_status_test'
+        self.check_context(response)
+        context = response['context']
+        assert context['timezone'] == 'Africa/Abidjan'
 
     # @raises(AssertionError)
     # def test_couverage_with_headers(self):

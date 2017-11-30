@@ -84,6 +84,9 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, JourneyMinBikeMinCar, N
         assert len(response["journeys"]) == 2
         assert response["journeys"][0]["type"] == "best"
         assert "bss" in response["journeys"][0]["tags"]
+        context = response['context']
+        assert 'car_direct_path' in context
+        assert 'co2_emission' in context['car_direct_path']
 
     def test_first_walking_last_walking_section_mode(self):
         query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\

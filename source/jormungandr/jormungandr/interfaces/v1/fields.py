@@ -35,9 +35,13 @@ from flask.globals import g
 import pytz
 from jormungandr.interfaces.v1.make_links import create_internal_link, create_external_link
 from jormungandr.interfaces.v1.serializer import pt, base
-from jormungandr.utils import timestamp_to_str
+from jormungandr.utils import timestamp_to_str, get_current_datetime_str, get_timezone_str
 from navitiacommon import response_pb2, type_pb2
 import ujson
+
+
+class CollectionException(Exception):
+    pass
 
 
 class Lit(fields.Raw):
@@ -592,6 +596,27 @@ feed_publisher = {
     "license": fields.String()
 }
 
+
+class CurrentDateTime(fields.Raw):
+    def output(self, key, value):
+        return get_current_datetime_str()
+
+
+class TimeZone(fields.Raw):
+    def output(self, key, value):
+        return get_timezone_str()
+
+context = {
+    'car_direct_path': {
+        'co2_emission': NonNullNested({
+            'value': fields.Raw,
+            'unit': fields.String
+        }, attribute="car_co2_emission")
+    },
+    'current_datetime': CurrentDateTime(),
+    'timezone': TimeZone(),
+}
+
 admin = deepcopy(generic_type)
 admin["level"] = fields.Integer
 admin["zip_code"] = fields.String
@@ -949,3 +974,45 @@ disruption_marshaller = {
     "disruption_uri": fields.String(),
     "contributor": fields.String()
 }
+
+common_collection = (
+    ("pagination", PbField(pagination)),
+    ("error", PbField(error)),
+    ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False))),
+    ("context", context),
+    ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts"))
+)
+
+
+def get_collections(collection_name):
+    from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
+    map_collection = {
+        "journey_pattern_points": journey_pattern_point,
+        "commercial_modes": commercial_mode,
+        "journey_patterns": journey_pattern,
+        "vehicle_journeys": vehicle_journey,
+        "trips": trip,
+        "physical_modes": physical_mode,
+        "stop_points": stop_point,
+        "stop_areas": stop_area,
+        "connections": connection,
+        "companies": company,
+        "poi_types": poi_type,
+        "routes": route,
+        "line_groups": line_group,
+        "lines": line,
+        "pois": poi,
+        "networks": network,
+        "disruptions": None,
+        "contributors": contributor,
+        "datasets": dataset,
+    }
+
+    collection = map_collection.get(collection_name)
+    if collection:
+        return [(collection_name, NonNullList(fields.Nested(collection, display_null=False)))] + list(common_collection)
+
+    if collection_name == 'disruptions':
+        return list(common_collection)
+
+    raise CollectionException

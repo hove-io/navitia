@@ -34,15 +34,42 @@ import pytz
 from jormungandr.interfaces.v1.serializer import pt, schedule, report, base, status, geo_status, graphical_isochron, \
     heat_map
 from jormungandr.interfaces.v1.serializer.base import NullableDictSerializer, LambdaField, PbNestedSerializer, \
-    DescribedField
+    DescribedField, AmountSerializer
 from jormungandr.interfaces.v1.serializer.fields import ErrorSerializer, FeedPublisherSerializer, \
         PaginationSerializer, LinkSchema, NoteSerializer, ExceptionSerializer
 from jormungandr.interfaces.v1.make_links import create_external_link
-from jormungandr.interfaces.v1.serializer.journey import TicketSerializer, ContextSerializer, JourneySerializer
+from jormungandr.interfaces.v1.serializer.journey import TicketSerializer, JourneySerializer
 import serpy
 
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, MethodField
 from jormungandr.interfaces.v1.serializer.time import DateTimeDictField
+from jormungandr.utils import get_current_datetime_str, get_timezone_str
+
+
+class CO2Serializer(PbNestedSerializer):
+    co2_emission = AmountSerializer(attr='car_co2_emission', display_none=False)
+
+
+class ContextSerializer(PbNestedSerializer):
+    car_direct_path = MethodField(schema_type=CO2Serializer(), display_none=False)
+    current_datetime = MethodField(schema_type=str,
+                                   display_none=False,
+                                   description='The datetime of the request (considered as "now")')
+    timezone = MethodField(schema_type=str,
+                           display_none=False,
+                           description='timezone of region, default value Africa/Abidjan(UTC)')
+
+    def get_car_direct_path(self, obj):
+        from navitiacommon import response_pb2
+        if isinstance(obj, response_pb2.Response) and obj.HasField(str('car_co2_emission')):
+            return CO2Serializer(obj, display_none=False).data
+        return None
+
+    def get_current_datetime(self, _):
+        return get_current_datetime_str()
+
+    def get_timezone(self, _):
+        return get_timezone_str()
 
 
 class PTReferentialSerializer(serpy.Serializer):
@@ -51,6 +78,11 @@ class PTReferentialSerializer(serpy.Serializer):
     feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
     notes = DescribedField(schema_type=NoteSerializer(many=True))
+    #ContextSerializer can not be used directly because context does not exist in protobuf
+    context = MethodField(schema_type=ContextSerializer(), display_none=False)
+
+    def get_context(self, obj):
+        return ContextSerializer(obj, display_none=False).data
 
 
 class LinesSerializer(PTReferentialSerializer):
@@ -135,6 +167,10 @@ class PlacesSerializer(serpy.Serializer):
     feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
     places = pt.PlaceSerializer(many=True)
+    context = MethodField(schema_type=ContextSerializer(), display_none=False)
+
+    def get_context(self, obj):
+        return ContextSerializer(obj, display_none=False).data
 
 
 class PtObjectsSerializer(serpy.Serializer):
@@ -142,6 +178,10 @@ class PtObjectsSerializer(serpy.Serializer):
     feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
     pt_objects = pt.PtObjectSerializer(many=True, attr='places')
+    context = MethodField(schema_type=ContextSerializer(), display_none=False)
+
+    def get_context(self, obj):
+        return ContextSerializer(obj, display_none=False).data
 
 
 class PlacesNearbySerializer(PTReferentialSerializer):
@@ -193,6 +233,10 @@ class CoverageSerializer(NullableDictSerializer):
 
 class CoveragesSerializer(serpy.DictSerializer):
     regions = CoverageSerializer(many=True)
+    context = MethodField(schema_type=ContextSerializer(), display_none=False)
+
+    def get_context(self, obj):
+        return ContextSerializer(obj, display_none=False).data
 
 
 class JourneysCommon(PbNestedSerializer):
@@ -224,22 +268,12 @@ class JourneysSerializer(JourneysCommon):
     journeys = JourneySerializer(many=True)
     tickets = TicketSerializer(many=True, display_none=True)
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
-    context = MethodField(schema_type=ContextSerializer(), display_none=True)
+    context = MethodField(schema_type=ContextSerializer(), display_none=False)
     notes = DescribedField(schema_type=NoteSerializer(many=True))
     exceptions = DescribedField(schema_type=ExceptionSerializer(many=True))
 
     def get_context(self, obj):
-        if obj.HasField(str('car_co2_emission')):
-            return ContextSerializer(obj, display_none=False).data
-        else:
-            return {
-                'car_direct_path': {
-                    'co2_emission': {
-                        'unit': '',
-                        'value': 0.0
-                    }
-                }
-            }
+        return ContextSerializer(obj, display_none=False).data
 
 
 class DeparturesSerializer(PTReferentialSerializer):
@@ -273,18 +307,33 @@ class CalendarsSerializer(PTReferentialSerializer):
 
 class StatusSerializer(serpy.DictSerializer):
     status = status.StatusSerializer()
+    context = MethodField(schema_type=ContextSerializer(), display_none=False)
+
+    def get_context(self, obj):
+        return ContextSerializer(obj, display_none=False).data
 
 
 class GeoStatusSerializer(serpy.DictSerializer):
     geo_status = geo_status.GeoStatusSerializer()
+    context = MethodField(schema_type=ContextSerializer(), display_none=False)
+
+    def get_context(self, obj):
+        return ContextSerializer(obj, display_none=False).data
 
 
 class GraphicalIsrochoneSerializer(JourneysCommon):
     isochrones = graphical_isochron.GraphicalIsrochoneSerializer(attr='graphical_isochrones', many=True)
     warnings = base.BetaEndpointsSerializer()
+    context = MethodField(schema_type=ContextSerializer(), display_none=False)
+
+    def get_context(self, obj):
+        return ContextSerializer(obj, display_none=False).data
 
 
 class HeatMapSerializer(JourneysCommon):
     heat_maps = heat_map.HeatMapSerializer(many=True)
     warnings = base.BetaEndpointsSerializer()
+    context = MethodField(schema_type=ContextSerializer(), display_none=False)
 
+    def get_context(self, obj):
+        return ContextSerializer(obj, display_none=False).data
