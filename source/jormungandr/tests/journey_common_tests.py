@@ -101,6 +101,8 @@ class JourneyCommon(object):
         assert response['journeys'][0]["type"] == "best"
         assert response['journeys'][0]['durations']['total'] == 99
         assert response['journeys'][0]['durations']['walking'] == 97
+        assert response['journeys'][0]['durations']['bike'] == 0
+        assert response['journeys'][0]['durations']['car'] == 0
 
     def test_other_filtering(self):
         """the basic query return a non pt walk journey and a best journey. we test the filtering of the non pt"""
@@ -512,7 +514,6 @@ class JourneyCommon(object):
         assert response['journeys'][1]['durations']['total'] == 276
         assert response['journeys'][1]['durations']['walking'] == 276
 
-
     def test_max_duration_to_pt_equals_to_0(self):
         query = journey_basic_query + \
             "&first_section_mode[]=bss" + \
@@ -524,6 +525,16 @@ class JourneyCommon(object):
         check_best(response)
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) == 4
+
+        assert response['journeys'][0]['durations']['bike'] == 62
+        assert response['journeys'][0]['durations']['total'] == 62
+        assert response['journeys'][0]['distances']['bike'] == 257
+        assert response['journeys'][0]['durations']['walking'] == 0
+        assert response['journeys'][1]['durations']['car'] == 16
+        assert response['journeys'][1]['durations']['walking'] == 106
+        assert response['journeys'][1]['durations']['total'] == 123
+        assert response['journeys'][1]['distances']['car'] == 186
+        assert response['journeys'][1]['distances']['walking'] == 119
 
         query += "&max_duration_to_pt=0"
         response, status = self.query_no_assert(query)
@@ -777,6 +788,7 @@ class JourneyCommon(object):
         assert response['journeys'][2]['sections'][0]['mode'] == 'bike'
         assert len(response['journeys'][3]['sections']) == 1
         assert response['journeys'][3]['sections'][0]['mode'] == 'walking'
+
 
     def test_call_kraken_boarding_alighting(self):
         '''
@@ -1253,6 +1265,8 @@ class JourneyMinBikeMinCar(object):
         assert response['journeys'][1]['sections'][0]['mode'] == 'walking'
         assert response['journeys'][1]['sections'][0]['duration'] == 276
 
+
+
     def test_first_section_mode_walking_and_last_section_mode_bike(self):
         query = '{sub_query}&last_section_mode[]=walking&first_section_mode[]=bike&' \
                 'datetime={datetime}'.format(sub_query=sub_query, datetime="20120614T080000")
@@ -1302,6 +1316,8 @@ class JourneyMinBikeMinCar(object):
 
         assert response['journeys'][0]['sections'][-1]['mode'] == 'walking'
         assert response['journeys'][0]['sections'][-1]['duration'] == 106
+
+
 
     def test_activate_min_car_bike(self):
         modes = [

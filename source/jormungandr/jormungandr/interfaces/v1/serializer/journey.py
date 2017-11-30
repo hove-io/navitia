@@ -99,7 +99,21 @@ class DurationsSerializer(PbNestedSerializer):
     total = jsonschema.Field(schema_type=int, display_none=True,
                              description='Total duration of the journey (seconds)')
     walking = jsonschema.Field(schema_type=int, display_none=True,
-                               description='Walking total duration of the journey (seconds)')
+                               description='Total walking duration of the journey (seconds)')
+    bike = jsonschema.Field(schema_type=int, display_none=True,
+                            description='Total duration by bike of the journey (seconds)')
+    car = jsonschema.Field(schema_type=int, display_none=True,
+                           description='Total duration by car of the journey (seconds)')
+
+
+class DistancesSerializer(PbNestedSerializer):
+    walking = jsonschema.Field(schema_type=int, display_none=True,
+                               description='Total walking distance of the journey (meters)')
+    bike = jsonschema.Field(schema_type=int, display_none=True,
+                            description='Total distance by bike of the journey (meters)')
+    car = jsonschema.Field(schema_type=int, display_none=True,
+                           description='Total distance by car of the journey (meters)')
+
 
 class JourneyDebugSerializer(PbNestedSerializer):
     streetnetwork_duration = jsonschema.Field(schema_type=int, display_none=True, attr='sn_dur',
@@ -226,6 +240,7 @@ class JourneySerializer(PbNestedSerializer):
     tags = StringListField(display_none=True)
     co2_emission = AmountSerializer(display_none=True)
     durations = DurationsSerializer()
+    distances = DistancesSerializer()
     fare = FareSerializer(display_none=True)
     calendars = CalendarSerializer(many=True, display_none=False)
     sections = SectionSerializer(many=True, display_none=False)

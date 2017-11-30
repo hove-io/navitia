@@ -36,7 +36,7 @@ from jormungandr import i_manager, app
 from jormungandr.interfaces.v1.fields import disruption_marshaller, Links
 from jormungandr.interfaces.v1.fields import display_informations_vj, error, place,\
     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
-    SectionGeoJson, PbEnum, feed_publisher, Durations
+    SectionGeoJson, PbEnum, feed_publisher, Durations, Distances
 
 from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.ResourceUri import complete_links
@@ -225,6 +225,7 @@ journey = {
         'unit': fields.String
         }),
     "durations": Durations(),
+    "distances": Distances(),
     "debug": JourneyDebugInfo()
 }
 
