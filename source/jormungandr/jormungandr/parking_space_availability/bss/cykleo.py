@@ -124,6 +124,8 @@ class CykleoProvider(AbstractParkingPlacesProvider):
     def get_informations(self, poi):
         ref = poi.get('properties', {}).get('ref')
         data = self._call_webservice()
+        if not data:
+            return None
         station = data.get(ref)
         if not station:
             return None
