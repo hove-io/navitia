@@ -58,9 +58,9 @@ class CykleoProvider(AbstractParkingPlacesProvider):
         self.password = password
         self.operators = [o.lower() for o in operators]
         self.timeout = timeout
-        fail_max = kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_CYKLEO_FAIL'])
-        reset_timeout = kwargs.get('circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_CYKLEO_TIMEOUT_S'])
-        self.breaker = pybreaker.CircuitBreaker(fail_max=fail_max, reset_timeout=reset_timeout)
+        self.breaker = pybreaker.CircuitBreaker(
+            fail_max=kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_CYKLEO_FAIL']),
+            reset_timeout=kwargs.get('circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_CYKLEO_TIMEOUT_S']))
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
 
     def service_caller(self, method, url, data=None, headers=None):
