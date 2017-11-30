@@ -46,16 +46,14 @@ DEFAULT_CYKLEO_FEED_PUBLISHER = {
 }
 
 
-class CykleoError(RuntimeError):
-    pass
-
-
 class CykleoProvider(AbstractParkingPlacesProvider):
-    def __init__(self, url, network, service_id, username, password, operators={'cykleo'}, timeout=10,
+    def __init__(self, url, network, username, password, operators={'cykleo'}, certifi_verify=False,
+                 service_id=None, timeout=2,
                  feed_publisher=DEFAULT_CYKLEO_FEED_PUBLISHER, **kwargs):
         self.url = url
         self.network = network.lower()
         self.service_id = service_id
+        self.certifi_verify = certifi_verify
         self.username = username
         self.password = password
         self.operators = [o.lower() for o in operators]
@@ -65,39 +63,19 @@ class CykleoProvider(AbstractParkingPlacesProvider):
         self.breaker = pybreaker.CircuitBreaker(fail_max=fail_max, reset_timeout=reset_timeout)
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
 
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_CYKLEO_JETON', 30))
-    def get_access_token(self):
-        headers = {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        }
-        data = {"username": self.username, "password": self.password, "serviceId": self.service_id}
+    def service_caller(self, method, url, data=None, headers=None):
         try:
-            response = self.breaker.call(requests.post, '{}/pu/auth'.format(self.url),
-                                         timeout=self.timeout, headers=headers, data=json.dumps(data), verify=False)
+            kwargs = {"timeout": self.timeout, "verify": self.certifi_verify}
+            if headers:
+                kwargs.update({"headers": headers})
+            if data:
+                kwargs.update({"data": data})
+            response = self.breaker.call(method, url, **kwargs)
             if not response or response.status_code != 200:
-                raise CykleoError('cykleo, Invalid response')
-            content = response.json()
-            access_token = content.get("access_token")
-            if not access_token:
-                raise CykleoError('cykleo, access_token not exist in response')
-            return access_token
-        except Exception as e:
-            raise CykleoError('{}'.format(str(e)))
-
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_CYKLEO', 30))
-    def _call_webservice(self):
-        try:
-            access_token = self.get_access_token()
-            headers = {'Authorization': '{}'.format(access_token)}
-            data = self.breaker.call(requests.get, '{}/pu/stations/availability'.format(self.url),
-                                     timeout=self.timeout, headers=headers, verify=False)
-            stands = {}
-            for s in data.json():
-                stands[str(s['station']['assetStation']['commercialNumber'])] = s
-            return stands
-        except CykleoError as c:
-            logging.getLogger(__name__).error('cykleo error: {}'.format(c))
+                logging.getLogger(__name__).error('cykleo, Invalid response, status_code: {}'.format(
+                    response.status_code))
+                return None
+            return response
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('cykleo service dead (error: {})'.format(e))
         except requests.Timeout as t:
@@ -105,6 +83,40 @@ class CykleoProvider(AbstractParkingPlacesProvider):
         except Exception as e:
             logging.getLogger(__name__).exception('cykleo error : {}'.format(str(e)))
         return None
+
+    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_CYKLEO_JETON', 10*60))
+    def get_access_token(self):
+        headers = {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+        }
+        data = {"username": self.username, "password": self.password}
+        if self.service_id:
+            data.update({"serviceId": self.service_id})
+
+        response = self.service_caller(method=requests.post, url='{}/pu/auth'.format(self.url),
+                                       headers=headers, data=json.dumps(data))
+        if not response:
+            return None
+        content = response.json()
+        access_token = content.get("access_token")
+        if not access_token:
+            logging.getLogger(__name__).error('cykleo, access_token not exist in response')
+            return None
+        return access_token
+
+    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_CYKLEO', 30))
+    def _call_webservice(self):
+        access_token = self.get_access_token()
+        headers = {'Authorization': '{}'.format(access_token)}
+        data = self.service_caller(method=requests.get, url='{}/pu/stations/availability'.format(self.url),
+                                   headers=headers)
+        stands = {}
+        if not data:
+            return stands
+        for s in data.json():
+            stands[str(s['station']['assetStation']['commercialNumber'])] = s
+        return stands
 
     def support_poi(self, poi):
         properties = poi.get('properties', {})
@@ -133,3 +145,4 @@ class CykleoProvider(AbstractParkingPlacesProvider):
                 and ('availableClassicBikeCount' in station or 'availableElectricBikeCount' in station):
             return Stands(station.get('availableDockCount'),
                           station.get('availableClassicBikeCount', 0) + station.get('availableElectricBikeCount', 0))
+        return None
