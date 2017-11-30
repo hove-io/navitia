@@ -54,12 +54,10 @@ class ContextSerializer(PbNestedSerializer):
     car_direct_path = MethodField(schema_type=CO2Serializer(), display_none=False)
     current_datetime = MethodField(schema_type=str,
                                    display_none=False,
-                                   description='The datetime considered as "now". Used for debug, default is '
-                                               'the moment of the request. It will mainly change the output '
-                                               'of the disruptions.')
+                                   description='The datetime of the request (considered as "now")')
     timezone = MethodField(schema_type=str,
                            display_none=False,
-                           description='timezone of region, default value Africa/Abidjan')
+                           description='timezone of region, default value Africa/Abidjan(UTC)')
 
     def get_car_direct_path(self, obj):
         from navitiacommon import response_pb2
@@ -80,7 +78,7 @@ class PTReferentialSerializer(serpy.Serializer):
     feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
     notes = DescribedField(schema_type=NoteSerializer(many=True))
-    #ContextSerializer can not be used directly because context does not exist in protobuff
+    #ContextSerializer can not be used directly because context does not exist in protobuf
     context = MethodField(schema_type=ContextSerializer(), display_none=False)
 
     def get_context(self, obj):
