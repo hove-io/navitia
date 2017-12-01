@@ -33,9 +33,10 @@ from jormungandr.parking_space_availability.bss.cykleo import CykleoProvider
 from jormungandr.parking_space_availability.bss.stands import Stands
 from mock import MagicMock
 
+network = u'DiviaVélodi'
 poi = {
     'properties': {
-        'network': u'DiviaVélodi',
+        'network': network,
         'operator': 'CYKLEO',
         'ref': '2'
     },
@@ -50,7 +51,7 @@ def parking_space_availability_cykleo_support_poi_test():
     """
     CykleoProvider bss provider support
     """
-    provider = CykleoProvider('http://bob', u'DiviaVélodi', 'big', 'big', {'CYKLEO'})
+    provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
     assert provider.support_poi(poi)
     poi['properties']['operator'] = 'Bad_operator'
     assert not provider.support_poi(poi)
@@ -84,7 +85,7 @@ def parking_space_availability_cykleo_get_informations_test():
         "availableElectricBikeCount": 1,
         "availableDockCount": 2
     }}
-    provider = CykleoProvider('http://bob', u'DiviaVélodi', 'big', 'big', {'CYKLEO'})
+    provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
     assert provider.get_informations(poi) == Stands(2, 4)
     provider._call_webservice = MagicMock(return_value=None)
@@ -110,7 +111,7 @@ def available_classic_bike_count_only_test():
         "availableClassicBikeCount": 1,
         "availableDockCount": 2
     }}
-    provider = CykleoProvider('http://bob', u'DiviaVélodi', 'big', 'big', {'CYKLEO'})
+    provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
     assert provider.get_informations(poi) == Stands(2, 1)
 
@@ -132,7 +133,7 @@ def available_electric_bike_count_only_test():
         "availableElectricBikeCount": 1,
         "availableDockCount": 2
     }}
-    provider = CykleoProvider('http://bob', u'DiviaVélodi', 'big', 'big', {'CYKLEO'})
+    provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
     assert provider.get_informations(poi) == Stands(2, 1)
 
@@ -153,6 +154,6 @@ def witout_available_dock_count_test():
         "id": 1,
         "availableElectricBikeCount": 1,
     }}
-    provider = CykleoProvider('http://bob', u'DiviaVélodi', 'big', 'big', {'CYKLEO'})
+    provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
     assert not provider.get_informations(poi)

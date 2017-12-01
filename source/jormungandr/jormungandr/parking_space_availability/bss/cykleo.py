@@ -91,7 +91,7 @@ class CykleoProvider(AbstractParkingPlacesProvider):
             "Accept": "application/json"
         }
         data = {"username": self.username, "password": self.password}
-        if self.service_id:
+        if self.service_id is None:
             data.update({"serviceId": self.service_id})
 
         response = self.service_caller(method=requests.post, url='{}/pu/auth'.format(self.url),
@@ -108,7 +108,7 @@ class CykleoProvider(AbstractParkingPlacesProvider):
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_CYKLEO', 30))
     def _call_webservice(self):
         access_token = self.get_access_token()
-        headers = {'Authorization': '{}'.format(access_token)}
+        headers = {'Authorization': 'Bearer {}'.format(access_token)}
         data = self.service_caller(method=requests.get, url='{}/pu/stations/availability'.format(self.url),
                                    headers=headers)
         stands = {}
@@ -130,7 +130,7 @@ class CykleoProvider(AbstractParkingPlacesProvider):
         return self._feed_publisher
 
     def __repr__(self):
-        return 'cykleo-{}'.format(self.network)
+        return ('cykleo-{}'.format(self.network)).encode('UTF-8')
 
     def get_informations(self, poi):
         ref = poi.get('properties', {}).get('ref')
