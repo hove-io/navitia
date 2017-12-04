@@ -490,7 +490,9 @@ def get_timezone_str(default='Africa/Abidjan'):
         return timezone.zone if timezone else default
 
 
-def get_current_datetime_str():
+def get_current_datetime_str(is_utc=False):
     timezone = get_timezone_str()
+    if is_utc:
+        timezone = 'Africa/Abidjan'
     current_datetime = request.args.get('_current_datetime')
     return str_datetime_utc_to_local(current_datetime, timezone)

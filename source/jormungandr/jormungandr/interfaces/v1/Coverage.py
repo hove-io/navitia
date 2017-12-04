@@ -40,7 +40,7 @@ from jormungandr.interfaces.v1.fields import NonNullNested, FieldDateTime
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.serializer.api import CoveragesSerializer
 from navitiacommon.parser_args_type import BooleanType
-from jormungandr.interfaces.v1.fields import context
+from jormungandr.interfaces.v1.fields import context_utc
 
 collections = list(collections_to_resource_type.keys())
 
@@ -59,7 +59,7 @@ coverage_marshall_fields = [
         }),
         "dataset_created_at": fields.String(),
     }))),
-    ('context', context)
+    ('context', context_utc)
 ]
 
 class Coverage(StatedResource):
