@@ -1333,7 +1333,7 @@ void PbCreator::Filler::fill_pb_object(const nt::VehicleJourney* vj,
     }
 }
 
-void PbCreator::Filler::fill_pb_object(const StopTimeCalandar* stop_time_calendar,
+void PbCreator::Filler::fill_pb_object(const StopTimeCalendar* stop_time_calendar,
                                        pbnavitia::ScheduleStopTime* rs_date_time){
     if (stop_time_calendar->stop_time == nullptr) {
         //we need to represent a 'null' value (for not found datetime)
