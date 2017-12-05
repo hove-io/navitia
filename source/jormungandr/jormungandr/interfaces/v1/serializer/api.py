@@ -61,7 +61,7 @@ class ContextSerializer(PbNestedSerializer):
                                    description='The datetime of the request (considered as "now")')
     timezone = MethodField(schema_type=str,
                            display_none=False,
-                           description='Timezone of any datetimes in the response, '
+                           description='Timezone of any datetime in the response, '
                                        'default value Africa/Abidjan (UTC)')
 
     def get_car_direct_path(self, obj):
@@ -74,9 +74,7 @@ class ContextSerializer(PbNestedSerializer):
         return get_current_datetime_str(is_utc=self.is_utc)
 
     def get_timezone(self, _):
-        if self.is_utc:
-            return 'Africa/Abidjan'
-        return get_timezone_str()
+        return 'Africa/Abidjan' if self.is_utc else get_timezone_str()
 
 
 class PTReferentialSerializerNoContext(serpy.Serializer):
