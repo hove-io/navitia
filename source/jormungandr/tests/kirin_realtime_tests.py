@@ -509,7 +509,7 @@ class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
         assert response['stop_schedules'][0]['date_times'][0]['date_time'] == '20120614T080100'
 
         # it's not in route_schedules
-        response = self.query_region("stop_points/stop_point:stopB/lines/A/route_schedules?_current_datetime=20120614T080100&data_freshness=realtime")
+        response = self.query_region("stop_points/stop_point:stopB/lines/A/route_schedules?_current_datetime=20120614T080000&data_freshness=realtime")
         assert not has_the_disruption(response)
         #no realtime flags on route_schedules yet
 
@@ -559,7 +559,7 @@ class TestKirinOnVJOnTime(MockKirinDisruptionsFixture):
         assert response['stop_schedules'][0]['date_times'][0]['data_freshness'] == 'realtime'
 
         # it's in route_schedules
-        response = self.query_region("stop_points/stop_point:stopB/lines/A/route_schedules?_current_datetime=20120614T080100&data_freshness=realtime")
+        response = self.query_region("stop_points/stop_point:stopB/lines/A/route_schedules?_current_datetime=20120614T080000&data_freshness=realtime")
         assert has_the_disruption(response)
         #no realtime flags on route_schedules yet
 

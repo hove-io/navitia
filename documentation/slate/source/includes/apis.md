@@ -914,6 +914,8 @@ Here is the structure of a standard journey request:
 
 <https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={date_time_to_leave}> .
 
+[Context](#context) object provides the `current_datetime`, useful to compute waiting time when requesting Navitia without a `datetime`.
+
 <a
     href="https://jsfiddle.net/kisiodigital/0oj74vnz/"
     target="_blank"
@@ -1501,6 +1503,7 @@ point as:
 
 The response is made of an array of [stop_schedule](#stop-schedule), and another
 one of [note](#note).
+[Context](#context) object provides the `current_datetime`, useful to compute waiting time when requesting Navitia without a `from_datetime`.
 You can access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>
 
 ### Accesses
@@ -1597,6 +1600,7 @@ Also known as `/departures` service.
 
 This endpoint retrieves a list of departures from a specific datetime of a selected
 object.
+[Context](#context) object provides the `current_datetime`, useful to compute waiting time when requesting Navitia without a `from_datetime`.
 Departures are ordered chronologically in ascending order as:
 ![departures](https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Display_at_bus_stop_sign_in_Karlovo_n%C3%A1m%C4%9Bst%C3%AD%2C_T%C5%99eb%C3%AD%C4%8D%2C_T%C5%99eb%C3%AD%C4%8D_District.JPG/640px-Display_at_bus_stop_sign_in_Karlovo_n%C3%A1m%C4%9Bst%C3%AD%2C_T%C5%99eb%C3%AD%C4%8D%2C_T%C5%99eb%C3%AD%C4%8D_District.JPG)
 
@@ -1752,11 +1756,12 @@ see the [inner-reference](#inner-references) section to use them.
 #links between objects in a traffic_reports response
 {
 "traffic_reports": [
+    {
     "network": {"name": "bob", "links": [], "id": "network:bob"},
     "lines": [
         {
         "code": "1",
-         ... ,
+        ... ,
         "links": [ {
             "internal": true,
             "type": "disruption",
@@ -1767,7 +1772,7 @@ see the [inner-reference](#inner-references) section to use them.
         },
         {
         "code": "12",
-         ... ,
+        ... ,
         "links": [ {
             "internal": true,
             "type": "disruption",
@@ -1780,7 +1785,7 @@ see the [inner-reference](#inner-references) section to use them.
     "stop_areas": [
         {
         "name": "bobito",
-         ... ,
+        ... ,
         "links": [ {
             "internal": true,
             "type": "disruption",
@@ -1788,10 +1793,9 @@ see the [inner-reference](#inner-references) section to use them.
             "rel": "disruptions",
             "templated": false
             }]
-        },
-    ],
- ],
- [
+        }
+    ]
+    },{
     "network": {
         "name": "bobette",
         "id": "network:bobette",
@@ -1802,11 +1806,11 @@ see the [inner-reference](#inner-references) section to use them.
             "rel": "disruptions",
             "templated": false
             }]
-        },
+    },
     "lines": [
         {
         "code": "A",
-         ... ,
+        ... ,
         "links": [ {
             "internal": true,
             "type": "disruption",
@@ -1817,7 +1821,7 @@ see the [inner-reference](#inner-references) section to use them.
         },
         {
         "code": "C",
-         ... ,
+        ... ,
         "links": [ {
             "internal": true,
             "type": "disruption",
@@ -1825,11 +1829,12 @@ see the [inner-reference](#inner-references) section to use them.
             "rel": "disruptions",
             "templated": false
             }]
-        },
+        }
+    ],
     "stop_areas": [
         {
         "name": "bobito",
-         ... ,
+        ... ,
         "links": [ {
             "internal": true,
             "type": "disruption",
@@ -1837,9 +1842,9 @@ see the [inner-reference](#inner-references) section to use them.
             "rel": "disruptions",
             "templated": false
             }]
-        },
-    ],
-
+        }
+    ]
+    }
 ],
 "disruptions": [
     {

@@ -601,7 +601,6 @@ class CurrentDateTime(fields.Raw):
     def output(self, key, value):
         return get_current_datetime_str()
 
-
 class TimeZone(fields.Raw):
     def output(self, key, value):
         return get_timezone_str()
@@ -615,6 +614,20 @@ context = {
     },
     'current_datetime': CurrentDateTime(),
     'timezone': TimeZone(),
+}
+
+
+class CurrentDateTimeUTC(fields.Raw):
+    def output(self, key, value):
+        return get_current_datetime_str(is_utc=True)
+
+class TimeZoneUTC(fields.Raw):
+    def output(self, key, value):
+        return 'Africa/Abidjan'
+
+context_utc = {
+    'current_datetime': CurrentDateTimeUTC(),
+    'timezone': TimeZoneUTC(),
 }
 
 admin = deepcopy(generic_type)

@@ -416,9 +416,9 @@ void route_schedule(PbCreator& pb_creator, const std::string& filter,
                 }
 
                 auto pb_dt = row->add_date_times();
-                const auto& st_calandar =  navitia::StopTimeCalandar(dt_stop_time.second,
-                                                                          dt_stop_time.first, calendar_id);
-                pb_creator.fill(&st_calandar, pb_dt, max_depth);
+                const auto& st_calendar =  navitia::StopTimeCalendar(dt_stop_time.second,
+                                                                     dt_stop_time.first, calendar_id);
+                pb_creator.fill(&st_calendar, pb_dt, max_depth);
             }
         }
         pb_creator.fill(&route->shape, schedule->mutable_geojson(), 0);

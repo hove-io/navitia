@@ -166,7 +166,7 @@ void passages(PbCreator& pb_creator,
         }
 
         // We need one second before because else, on terminus, we may
-        // miss something as period exclude the end.
+        // miss something as period exclude the end (disruption period in particular).
         pb_creator.action_period = pt::time_period(base_ptime - pt::seconds(1), pt::seconds(2));
 
         auto departure_dt = get_date_time(vis.stop_event(), dt_stop_time.second, dt_stop_time.second,

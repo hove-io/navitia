@@ -22,6 +22,9 @@ Navitia
 -   can be requested using UTC relative times via ISO 8601 as "YYYYMMDDThhmmss+HHMM" or "YYYY-MM-DDThh:mm:ss+HH:MM"
 -   can be requested using UTC times via ISO 8601 as "YYYYMMDDThhmmssZ" or "YYYY-MM-DDThh:mm:ssZ"
 
+[Context](#context) object provides the Timezone, useful to interpret datetimes of the response.
+
+
 For example:
 
 - <https://api.navitia.io/v1/journeys?from=bob&to=bobette&datetime=20140425T1337>
@@ -609,6 +612,34 @@ Cities are mainly on the 8 level, dependant on the country
 
 Other objects
 -------------
+
+### <a name="context"></a>context
+
+``` shell
+#links between objects in a traffic_reports response
+{
+    "context": {
+        "timezone": "Europe\/Paris",
+        "current_datetime": "20171201T120114",
+        "car_direct_path": {
+            "co2_emission": {
+                "value": 857.951371579,
+                "unit": "gEC"
+            }
+        }
+    },
+    "journeys": [ ... ]
+}
+```
+
+context object is a complex object provided in any endpoint's response.
+It serves several goals:
+
+-   `timezone` provides timezone of any datetime in the response.
+-   `current_datetime` provides the time the call was made.  
+    It is precious to compute the waiting time until next passages (journeys, departures, etc.),
+    as when no datetime is provided at call, Navitia uses that "current_datetime" as reference time.
+-   `car_direct_path` can also be provided in journeys to help compare ecological footprint of transport.
 
 ### pt-date-time
 

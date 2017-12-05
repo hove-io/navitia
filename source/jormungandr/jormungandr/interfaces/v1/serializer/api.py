@@ -51,13 +51,18 @@ class CO2Serializer(PbNestedSerializer):
 
 
 class ContextSerializer(PbNestedSerializer):
+    def __init__(self, obj=None, is_utc=False, *args, **kwargs):
+        super(ContextSerializer, self).__init__(obj, *args, **kwargs)
+        self.is_utc = is_utc
+
     car_direct_path = MethodField(schema_type=CO2Serializer(), display_none=False)
     current_datetime = MethodField(schema_type=str,
                                    display_none=False,
                                    description='The datetime of the request (considered as "now")')
     timezone = MethodField(schema_type=str,
                            display_none=False,
-                           description='timezone of region, default value Africa/Abidjan(UTC)')
+                           description='Timezone of any datetime in the response, '
+                                       'default value Africa/Abidjan (UTC)')
 
     def get_car_direct_path(self, obj):
         from navitiacommon import response_pb2
@@ -66,18 +71,21 @@ class ContextSerializer(PbNestedSerializer):
         return None
 
     def get_current_datetime(self, _):
-        return get_current_datetime_str()
+        return get_current_datetime_str(is_utc=self.is_utc)
 
     def get_timezone(self, _):
-        return get_timezone_str()
+        return 'Africa/Abidjan' if self.is_utc else get_timezone_str()
 
 
-class PTReferentialSerializer(serpy.Serializer):
+class PTReferentialSerializerNoContext(serpy.Serializer):
     pagination = PaginationSerializer(attr='pagination', display_none=True)
     error = ErrorSerializer(display_none=False)
     feed_publishers = FeedPublisherSerializer(many=True, display_none=True)
     disruptions = pt.DisruptionSerializer(attr='impacts', many=True, display_none=True)
     notes = DescribedField(schema_type=NoteSerializer(many=True))
+
+
+class PTReferentialSerializer(PTReferentialSerializerNoContext):
     #ContextSerializer can not be used directly because context does not exist in protobuf
     context = MethodField(schema_type=ContextSerializer(), display_none=False)
 
@@ -158,8 +166,12 @@ class ContributorsSerializer(PTReferentialSerializer):
     contributors = pt.ContributorSerializer(many=True)
 
 
-class DatasetsSerializer(PTReferentialSerializer):
+class DatasetsSerializer(PTReferentialSerializerNoContext):
     datasets = pt.DatasetSerializer(many=True)
+    context = MethodField(schema_type=ContextSerializer(), display_none=False)
+
+    def get_context(self, obj):
+        return ContextSerializer(obj, is_utc=True, display_none=False).data
 
 
 class PlacesSerializer(serpy.Serializer):
@@ -181,7 +193,7 @@ class PtObjectsSerializer(serpy.Serializer):
     context = MethodField(schema_type=ContextSerializer(), display_none=False)
 
     def get_context(self, obj):
-        return ContextSerializer(obj, display_none=False).data
+        return ContextSerializer(obj, False, display_none=False).data
 
 
 class PlacesNearbySerializer(PTReferentialSerializer):
@@ -236,7 +248,7 @@ class CoveragesSerializer(serpy.DictSerializer):
     context = MethodField(schema_type=ContextSerializer(), display_none=False)
 
     def get_context(self, obj):
-        return ContextSerializer(obj, display_none=False).data
+        return ContextSerializer(obj, is_utc=True, display_none=False).data
 
 
 class JourneysCommon(PbNestedSerializer):
@@ -310,7 +322,7 @@ class StatusSerializer(serpy.DictSerializer):
     context = MethodField(schema_type=ContextSerializer(), display_none=False)
 
     def get_context(self, obj):
-        return ContextSerializer(obj, display_none=False).data
+        return ContextSerializer(obj, is_utc=True, display_none=False).data
 
 
 class GeoStatusSerializer(serpy.DictSerializer):
@@ -318,7 +330,7 @@ class GeoStatusSerializer(serpy.DictSerializer):
     context = MethodField(schema_type=ContextSerializer(), display_none=False)
 
     def get_context(self, obj):
-        return ContextSerializer(obj, display_none=False).data
+        return ContextSerializer(obj, is_utc=True, display_none=False).data
 
 
 class GraphicalIsrochoneSerializer(JourneysCommon):

@@ -109,11 +109,11 @@ struct VjStopTimes{
         stop_times(st){}
 };
 
-struct StopTimeCalandar{
+struct StopTimeCalendar{
     const nt::StopTime* stop_time;
     const navitia::DateTime& date_time;
     boost::optional<const std::string> calendar_id;
-    StopTimeCalandar(const nt::StopTime* stop_time, const navitia::DateTime& date_time,
+    StopTimeCalendar(const nt::StopTime* stop_time, const navitia::DateTime& date_time,
                      boost::optional<const std::string> calendar_id):
         stop_time(stop_time), date_time(date_time), calendar_id(calendar_id){}
 };
@@ -463,7 +463,7 @@ private:
         void fill_pb_object(const VjOrigDest*, pbnavitia::hasEquipments*);
         void fill_pb_object(const VjStopTimes*, pbnavitia::PtDisplayInfo*);
         void fill_pb_object(const nt::VehicleJourney*, pbnavitia::hasEquipments*);
-        void fill_pb_object(const StopTimeCalandar*, pbnavitia::ScheduleStopTime*);
+        void fill_pb_object(const StopTimeCalendar*, pbnavitia::ScheduleStopTime*);
         void fill_pb_object(const nt::EntryPoint*, pbnavitia::PtObject*);
         void fill_pb_object(const WayCoord*, pbnavitia::PtObject*);
         void fill_pb_object(const WayCoord*, pbnavitia::Address*);

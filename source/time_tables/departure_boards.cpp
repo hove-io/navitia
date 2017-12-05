@@ -94,7 +94,7 @@ render(PbCreator& pb_creator,
 
         //Now we fill the date_times
         for(auto dt_st : id_vec.second) {
-            const auto& st_calendar = navitia::StopTimeCalandar(dt_st.second, dt_st.first, calendar_id);
+            const auto& st_calendar = navitia::StopTimeCalendar(dt_st.second, dt_st.first, calendar_id);
             // terminus or partial terminus
             if (is_last_stoptime(st_calendar.stop_time, stp)) {
                 continue;
