@@ -44,6 +44,8 @@ import serpy
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, MethodField
 from jormungandr.interfaces.v1.serializer.time import DateTimeDictField
 from jormungandr.utils import get_current_datetime_str, get_timezone_str
+from jormungandr.interfaces.v1.serializer.pt import AddressSerializer
+from jormungandr.interfaces.v1.serializer import jsonschema
 
 
 class CO2Serializer(PbNestedSerializer):
@@ -349,3 +351,19 @@ class HeatMapSerializer(JourneysCommon):
 
     def get_context(self, obj):
         return ContextSerializer(obj, display_none=False).data
+
+
+class DictAddressesSerializer(serpy.DictSerializer):
+    address = MethodField(schema_type=AddressSerializer(many=False, display_none=False))
+    context = MethodField(schema_type=ContextSerializer(), display_none=False)
+    regions = jsonschema.Field(schema_type=str, display_none=True, many=True)
+    message = MethodField(schema_type=str)
+
+    def get_context(self, obj):
+        return ContextSerializer(obj, display_none=False).data
+
+    def get_address(self, obj):
+        return obj.get('address', None)
+
+    def get_message(self, obj):
+        return obj.get('message')
