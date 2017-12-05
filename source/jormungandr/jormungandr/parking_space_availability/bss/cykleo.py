@@ -47,13 +47,13 @@ DEFAULT_CYKLEO_FEED_PUBLISHER = {
 
 
 class CykleoProvider(AbstractParkingPlacesProvider):
-    def __init__(self, url, network, username, password, operators={'cykleo'}, certifi_verify=False,
+    def __init__(self, url, network, username, password, operators={'cykleo'}, verify_certificate=False,
                  service_id=None, timeout=2,
                  feed_publisher=DEFAULT_CYKLEO_FEED_PUBLISHER, **kwargs):
         self.url = url
         self.network = network.lower()
         self.service_id = service_id
-        self.certifi_verify = certifi_verify
+        self.verify_certificate = verify_certificate
         self.username = username
         self.password = password
         self.operators = [o.lower() for o in operators]
@@ -63,11 +63,9 @@ class CykleoProvider(AbstractParkingPlacesProvider):
             reset_timeout=kwargs.get('circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_CYKLEO_TIMEOUT_S']))
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
 
-    def service_caller(self, method, url, data=None, headers=None):
+    def service_caller(self, method, url, headers, data=None):
         try:
-            kwargs = {"timeout": self.timeout, "verify": self.certifi_verify}
-            if headers:
-                kwargs.update({"headers": headers})
+            kwargs = {"timeout": self.timeout, "verify": self.verify_certificate, "headers": headers}
             if data:
                 kwargs.update({"data": data})
             response = self.breaker.call(method, url, **kwargs)
@@ -91,7 +89,7 @@ class CykleoProvider(AbstractParkingPlacesProvider):
             "Accept": "application/json"
         }
         data = {"username": self.username, "password": self.password}
-        if self.service_id is None:
+        if self.service_id is not None:
             data.update({"serviceId": self.service_id})
 
         response = self.service_caller(method=requests.post, url='{}/pu/auth'.format(self.url),
@@ -101,7 +99,7 @@ class CykleoProvider(AbstractParkingPlacesProvider):
         content = response.json()
         access_token = content.get("access_token")
         if not access_token:
-            logging.getLogger(__name__).error('cykleo, access_token not exist in response')
+            logging.getLogger(__name__).error('cykleo, no access_token in response')
             return None
         return access_token
 
