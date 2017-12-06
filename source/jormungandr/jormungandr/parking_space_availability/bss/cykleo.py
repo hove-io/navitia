@@ -48,11 +48,12 @@ DEFAULT_CYKLEO_FEED_PUBLISHER = {
 
 class CykleoProvider(AbstractParkingPlacesProvider):
     def __init__(self, url, network, username, password, operators={'cykleo'}, verify_certificate=False,
-                 service_id=None, timeout=2,
+                 service_id=None, organization_id=None, timeout=2,
                  feed_publisher=DEFAULT_CYKLEO_FEED_PUBLISHER, **kwargs):
         self.url = url
         self.network = network.lower()
         self.service_id = service_id
+        self.organization_id = organization_id
         self.verify_certificate = verify_certificate
         self.username = username
         self.password = password
@@ -92,7 +93,7 @@ class CykleoProvider(AbstractParkingPlacesProvider):
         if self.service_id is not None:
             data.update({"serviceId": self.service_id})
 
-        response = self.service_caller(method=requests.post, url='{}/pu/auth'.format(self.url),
+        response = self.service_caller(method=requests.post, url='{}/bo/auth'.format(self.url),
                                        headers=headers, data=json.dumps(data))
         if not response:
             return None
@@ -107,8 +108,10 @@ class CykleoProvider(AbstractParkingPlacesProvider):
     def _call_webservice(self):
         access_token = self.get_access_token()
         headers = {'Authorization': 'Bearer {}'.format(access_token)}
-        data = self.service_caller(method=requests.get, url='{}/pu/stations/availability'.format(self.url),
-                                   headers=headers)
+        url = '{}/bo/stations/availability'.format(self.url) if self.organization_id is None \
+            else '{}/bo/stations/availability?organization_id={}'.format(self.url, self.organization_id)
+
+        data = self.service_caller(method=requests.get, url=url, headers=headers)
         stands = {}
         if not data:
             return stands
