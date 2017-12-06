@@ -36,14 +36,14 @@ namespace bt = boost::posix_time;
 
 namespace navitia {
 
-static void update_property(nt::disruption::Property& property, const chaos::Property& chaos_property) {
+static void update_property(nt::disruption::Property& property, const chaos::DisruptionProperty& chaos_property) {
     property.key = chaos_property.key();
     property.type = chaos_property.type();
     property.value = chaos_property.value();
 }
 
 static nt::disruption::Property
-make_property(const chaos::Property& chaos_property) {
+make_property(const chaos::DisruptionProperty& chaos_property) {
     nt::disruption::Property property;
     update_property(property, chaos_property);
 

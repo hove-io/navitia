@@ -66,7 +66,7 @@ namespace navitia {
         chaos::Message* message = nullptr;
         chaos::Channel* channel = nullptr;
         chaos::PtObject* pt_object = nullptr;
-        chaos::Property* property = nullptr;
+        chaos::DisruptionProperty* property = nullptr;
 
         std::string last_period_id = "",
                     last_channel_type_id = "";
