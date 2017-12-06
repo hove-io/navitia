@@ -969,6 +969,12 @@ impacted_object = {
     'impacted_section': NonNullProtobufNested(impacted_section)
 }
 
+disruption_property = {
+    'key': fields.String(),
+    'type': fields.String(),
+    'value': fields.String()
+}
+
 disruption_marshaller = {
     "id": fields.String(attribute="uri"),
     "disruption_id": fields.String(attribute="disruption_uri"),
@@ -983,6 +989,7 @@ disruption_marshaller = {
     "severity": NonNullNested(disruption_severity),
     "messages": NonNullList(NonNullNested(disruption_message)),
     "impacted_objects": NonNullList(NonNullNested(impacted_object)),
+    "properties": NonNullList(NonNullNested(disruption_property)),
     "uri": fields.String(),
     "disruption_uri": fields.String(),
     "contributor": fields.String()

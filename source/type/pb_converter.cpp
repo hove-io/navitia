@@ -1025,6 +1025,14 @@ void PbCreator::Filler::fill_pb_object(const nd::Impact* impact, pbnavitia::Impa
     for (const auto& t: impact->disruption->tags) {
         pb_impact->add_tags(t->name);
     }
+
+    for (const auto& p: impact->disruption->properties) {
+        auto pb_p = pb_impact->add_properties();
+        pb_p->set_key(p.key);
+        pb_p->set_type(p.type);
+        pb_p->set_value(p.value);
+    }
+
     if (impact->disruption->cause) {
         pb_impact->set_cause(impact->disruption->cause->wording);
         if (!impact->disruption->cause->category.empty()) {

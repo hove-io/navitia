@@ -36,6 +36,20 @@ namespace bt = boost::posix_time;
 
 namespace navitia {
 
+static void update_property(nt::disruption::Property& property, const chaos::DisruptionProperty& chaos_property) {
+    property.key = chaos_property.key();
+    property.type = chaos_property.type();
+    property.value = chaos_property.value();
+}
+
+static nt::disruption::Property
+make_property(const chaos::DisruptionProperty& chaos_property) {
+    nt::disruption::Property property;
+    update_property(property, chaos_property);
+
+    return property;
+}
+
 static void update_tag(nt::disruption::Tag& tag, const chaos::Tag& chaos_tag) {
     auto from_posix = navitia::from_posix_timestamp;
 
@@ -332,6 +346,9 @@ make_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_data,
     disruption.localization = make_pt_objects(chaos_disruption.localization(), pt_data);
     for (const auto& chaos_tag: chaos_disruption.tags()) {
         disruption.tags.push_back(make_tag(chaos_tag, holder));
+    }
+    for (const auto& chaos_property : chaos_disruption.properties()) {
+        disruption.properties.insert(make_property(chaos_property));
     }
     disruption.note = chaos_disruption.note();
 

@@ -45,6 +45,7 @@ using navitia::type::disruption::Impact;
 using navitia::type::disruption::Tag;
 using navitia::type::disruption::Severity;
 using navitia::type::disruption::ChannelType;
+using navitia::type::disruption::Property;
 
 struct test_speed_provider {
     const navitia::flat_enum_map<nt::Mode_e, float> get_default_speed() const { return test_default_speed; }
@@ -552,10 +553,31 @@ struct routing_api_data {
         foo_severity->priority = 50;
         holder.severities[foo_severity->uri] = foo_severity;
 
+        std::vector<Property> properties;
+
+        Property property1;
+        property1.key = "foo";
+        property1.type = "bar";
+        property1.value = "42";
+        properties.push_back(property1);
+
+        Property property2;
+        property2.key = "foo";
+        property2.type = "bar";
+        property2.value = "42";
+        properties.push_back(property2);
+
+        Property property3;
+        property3.key = "fo";
+        property3.type = "obar";
+        property3.value = "42";
+        properties.push_back(property3);
+
         //we create one disruption on stop A
         b.disrupt(nt::RTLevel::Adapted, "disruption_on_stop_A")
                 .publication_period(default_period)
                 .tag("tag")
+                .properties(properties)
                 .impact()
                     .uri("too_bad")
                     .application_periods(default_period)

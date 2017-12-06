@@ -84,6 +84,12 @@ class SeveritySerializer(PbNestedSerializer):
     priority = jsonschema.Field(schema_type=int)
 
 
+class DisruptionPropertySerializer(PbNestedSerializer):
+    key = jsonschema.Field(schema_type=str)
+    _type = jsonschema.Field(attr='type', label='type', schema_type=str)
+    value = jsonschema.Field(schema_type=str)
+
+
 class PtObjectSerializer(GenericSerializer):
     quality = jsonschema.Field(schema_type=int, required=False, display_none=True, deprecated=True)
     stop_area = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer())
@@ -258,6 +264,7 @@ class DisruptionSerializer(PbNestedSerializer):
     uri = jsonschema.Field(schema_type=str, attr='uri')
     disruption_uri = jsonschema.Field(schema_type=str)
     contributor = jsonschema.Field(schema_type=str, display_none=True)
+    properties = DisruptionPropertySerializer(many=True, display_none=False)
 
 
 class PoiTypeSerializer(GenericSerializer):
