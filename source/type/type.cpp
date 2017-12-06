@@ -794,9 +794,7 @@ void Calendar::build_validity_pattern(boost::gregorian::date_period production_p
 }
 
 bool VehicleJourney::operator<(const VehicleJourney& other) const {
-    if (this->route->uri != other.route->uri) {
-        return this->route->uri < other.route->uri;
-    }
+    if (this->route != other.route) { return *this->route < *other.route; }
     return this->uri < other.uri;
 }
 
@@ -819,6 +817,12 @@ Indexes Calendar::get(Type_e type, const PT_Data & data) const{
     }
     return result;
 }
+
+bool StopArea::operator<(const StopArea & other) const {
+    if (name != other.name) { return name < other.name; }
+    return uri < other.uri;
+}
+
 Indexes StopArea::get(Type_e type, const PT_Data & data) const {
     Indexes result;
     switch(type) {
@@ -828,6 +832,12 @@ Indexes StopArea::get(Type_e type, const PT_Data & data) const {
     default: break;
     }
     return result;
+}
+
+bool Network::operator<(const Network & other) const {
+    if (this->sort != other.sort) { return this->sort < other.sort; }
+    if (this->name != other.name) { return this->name < other.name; }
+    return this->uri < other.uri;
 }
 
 Indexes Network::get(Type_e type, const PT_Data& data) const {
@@ -894,6 +904,14 @@ Indexes Line::get(Type_e type, const PT_Data& data) const {
     return result;
 }
 
+bool Line::operator<(const Line & other) const {
+    if (this->network != other.network) { return *this->network < *other.network; }
+    if (this->sort != other.sort) { return this->sort < other.sort; }
+    if (this->code != other.code) { return navitia::pseudo_natural_sort()(this->code, other.code); }
+    if (this->name != other.name) { return this->name < other.name; }
+    return this->uri < other.uri;
+}
+
 type::hasOdtProperties Line::get_odt_properties() const{
     type::hasOdtProperties result;
     if (!this->route_list.empty()){
@@ -924,11 +942,10 @@ std::string Line::get_label() const {
     return s.str();
 }
 
-bool Route::operator<(const Route & other) const{
-    if(this->uri != other.uri){
-        return this->uri < other.uri;
-    }
-    return this < &other;
+bool Route::operator<(const Route& other) const {
+    if (this->line != other.line) { return *this->line < *other.line; }
+    if (this->name != other.name) { return this->name < other.name; }
+    return this->uri < other.uri;
 }
 
 std::string Route::get_label() const {
@@ -1017,10 +1034,9 @@ FrequencyVehicleJourney::~FrequencyVehicleJourney() {}
 DiscreteVehicleJourney::~DiscreteVehicleJourney() {}
 
 bool StopPoint::operator<(const StopPoint & other) const{
-    if(this->uri != other.uri){
-        return this->uri < other.uri;
-    }
-    return this < &other;
+    if (this->stop_area != other.stop_area) { return *this->stop_area < *other.stop_area; }
+    if (this->name != other.name) { return this->name < other.name; }
+    return this->uri < other.uri;
 }
 
 Indexes StopPoint::get(Type_e type, const PT_Data& data) const {
@@ -1050,7 +1066,10 @@ Indexes StopPointConnection::get(Type_e type, const PT_Data & ) const {
     }
     return result;
 }
-bool StopPointConnection::operator<(const StopPointConnection& other) const { return this < &other; }
+bool StopPointConnection::operator<(const StopPointConnection& other) const {
+    if (this->departure != other.departure) { return *this->departure < *other.departure; }
+    return *this->destination < *other.destination;
+}
 
 Indexes Dataset::get(Type_e type, const PT_Data&) const {
     Indexes result;
