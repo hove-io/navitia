@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 from git import *
 from datetime import datetime
@@ -26,17 +27,32 @@ class ReleaseManager:
         #we fetch latest version from remote
         self.remote_name = remote_name
 
-        print "fetching from {}".format(remote_name)
+        print "fetching from {}...".format(remote_name)
         self.repo.remote(remote_name).fetch("--tags")
 
         #and we update dev and release branches
-        print "rebase dev and release"
+        print "rebasing dev and release..."
 
         #TODO quit on error
         self.git.rebase(remote_name + "/dev", "dev")
+        try:
+            self.git.checkout("release")
+        except:
+            self.git.checkout("-b", "release", remote_name + "/release")
         self.git.rebase(remote_name + "/release", "release")
 
-        print "current branch {}".format(self.repo.active_branch)
+        print "checking that release was merged into dev..."
+        unmerged = self.git.branch("--no-merged", "dev")
+        is_release_unmerged = re.search("  release(\n|$)", unmerged)
+        if is_release_unmerged:
+            print is_release_unmerged.group(0)
+            print "ABORTING: {rem}/release branch was not merged in {rem}/dev".format(rem=remote_name)
+            print "  This is required before releasing. You may use (be careful):"
+            print "    git checkout dev; git submodule update"
+            print "    git merge release"
+            exit(1)
+
+        print "current branch: {}".format(self.repo.active_branch)
 
         self.version = None
         self.str_version = ""

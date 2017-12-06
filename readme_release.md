@@ -5,16 +5,6 @@ You should first have a proper python env:
 pip install -r requirements_release.txt -U
 ```
 
-Before releasing, please make sure that you have a release branch set on distant one:
-```
-git fetch <canaltp_distant_repo_name>
-git checkout -b release <canaltp_distant_repo_name>/release
-```
-Also check that distant release is merged into (should return `<canaltp_distant_repo_name>/release`)
-```
-git branch -r --merged <canaltp_distant_repo_name>/dev | egrep "<canaltp_distant_repo_name>/release$"
-```
-
 Then for a "Normal" release (minor):
 ```
 cd <path/to/repo/navitia>
@@ -46,3 +36,4 @@ Then the process is less automated (but still, instructions are given):
 
 # Troubleshooting
 If you run into github's daily limitation, you can easily provide your login/token into the script.
+Search for "rate limit exceeded" in script.
