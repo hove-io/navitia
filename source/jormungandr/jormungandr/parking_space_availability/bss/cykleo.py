@@ -64,11 +64,13 @@ class CykleoProvider(AbstractParkingPlacesProvider):
             reset_timeout=kwargs.get('circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_CYKLEO_TIMEOUT_S']))
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
 
-    def service_caller(self, method, url, headers, data=None):
+    def service_caller(self, method, url, headers, data=None, params=None):
         try:
             kwargs = {"timeout": self.timeout, "verify": self.verify_certificate, "headers": headers}
             if data:
                 kwargs.update({"data": data})
+            if params:
+                kwargs.update({'params': params})
             response = self.breaker.call(method, url, **kwargs)
             if not response or response.status_code != 200:
                 logging.getLogger(__name__).error('cykleo, Invalid response, status_code: {}'.format(
@@ -108,10 +110,11 @@ class CykleoProvider(AbstractParkingPlacesProvider):
     def _call_webservice(self):
         access_token = self.get_access_token()
         headers = {'Authorization': 'Bearer {}'.format(access_token)}
-        url = '{}/bo/stations/availability'.format(self.url) if self.organization_id is None \
-            else '{}/bo/stations/availability?organization_id={}'.format(self.url, self.organization_id)
-
-        data = self.service_caller(method=requests.get, url=url, headers=headers)
+        params = None if self.organization_id is None else {'organization_id': self.organization_id}
+        data = self.service_caller(method=requests.get,
+                                   url='{}/bo/stations/availability'.format(self.url),
+                                   headers=headers,
+                                   params=params)
         stands = {}
         if not data:
             return stands
