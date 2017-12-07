@@ -46,6 +46,7 @@ from jormungandr.interfaces.v1.serializer.time import DateTimeDictField
 from jormungandr.utils import get_current_datetime_str, get_timezone_str
 from jormungandr.interfaces.v1.serializer.pt import AddressSerializer
 from jormungandr.interfaces.v1.serializer import jsonschema
+from jormungandr.interfaces.v1.serializer.status import CoverageErrorSerializer
 
 
 class CO2Serializer(PbNestedSerializer):
@@ -200,11 +201,6 @@ class PtObjectsSerializer(serpy.Serializer):
 
 class PlacesNearbySerializer(PTReferentialSerializer):
     places_nearby = pt.PlaceNearbySerializer(many=True)
-
-
-class CoverageErrorSerializer(NullableDictSerializer):
-    code = Field(schema_type=str)
-    value = Field(schema_type=str)
 
 
 class CoverageDateTimeField(DateTimeDictField):
@@ -367,3 +363,13 @@ class DictAddressesSerializer(serpy.DictSerializer):
 
     def get_message(self, obj):
         return obj.get('message')
+
+
+class TechnicalStatusListSerializer(serpy.DictSerializer):
+    regions = status.CommonStatusSerializer(many=True, display_none=False)
+    jormungandr_version = Field(schema_type=str, display_none=True)
+    bss_providers = status.BssProviderSerializer(many=True, display_none=False)
+    context = MethodField(schema_type=ContextSerializer(), display_none=False)
+
+    def get_context(self, obj):
+        return ContextSerializer(obj, is_utc=True, display_none=False).data

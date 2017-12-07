@@ -30,7 +30,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-
+from jormungandr.resources_utils import DocumentedResource
 from flask_restful import Resource
 
 
@@ -54,9 +54,9 @@ class ModuleResourcesManager(object):
         self.resources.append(resource)
 
 
-class ModuleResource(Resource):
-    def __init__(self):
-        Resource.__init__(self)
+class ModuleResource(DocumentedResource):
+    def __init__(self, quota=True, *args, **kwargs):
+        DocumentedResource.__init__(self, *args, **kwargs)
         self.method_decorators = []
         self.module_name = ''
 

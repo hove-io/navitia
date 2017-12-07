@@ -31,6 +31,8 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr.interfaces.v1.serializer.jsonschema import Field, MethodField
 from jormungandr.interfaces.v1.serializer.pt import StringListField
 import serpy
+from jormungandr.interfaces.v1.serializer import jsonschema
+from jormungandr.interfaces.v1.serializer.base import NullableDictSerializer
 
 
 class ParametersSerializer(serpy.Serializer):
@@ -80,6 +82,7 @@ class TravelerProfilesSerializer(serpy.Serializer):
     walking_speed = Field(schema_type=float)
     wheelchair = Field(schema_type=bool)
 
+
 class AutocompleteSerializer(serpy.DictSerializer):
     class_ = Field(schema_type=str, label='class', attr='class')
     timeout = MethodField(schema_type=float, display_none=False)
@@ -87,10 +90,12 @@ class AutocompleteSerializer(serpy.DictSerializer):
     def get_timeout(self, obj):
         return obj.get('timeout', None)
 
+
 class CircuitBreakerSerializer(serpy.DictSerializer):
     current_state = Field(schema_type=str, display_none=True)
     fail_counter = Field(schema_type=int, display_none=True)
     reset_timeout = Field(schema_type=int, display_none=True)
+
 
 class StreetNetworkSerializer(serpy.DictSerializer):
     class_ = Field(schema_type=str, label='class', attr='class')
@@ -107,27 +112,44 @@ class StreetNetworkSerializer(serpy.DictSerializer):
         return CircuitBreakerSerializer(o, display_none=False).data if o else None
 
 
-class StatusSerializer(serpy.DictSerializer):
-    data_version = Field(schema_type=int)
-    dataset_created_at = Field(schema_type=str)
-    end_production_date = Field(schema_type=str)
-    is_connected_to_rabbitmq = Field(schema_type=bool)
-    is_open_data = Field(schema_type=bool)
-    is_open_service = Field(schema_type=bool)
-    is_realtime_loaded = Field(schema_type=bool)
-    kraken_version = Field(schema_type=str, attr=str("navitia_version"))
-    last_load_at = Field(schema_type=str)
-    last_load_status = Field(schema_type=bool)
-    last_rt_data_loaded = Field(schema_type=str)
-    nb_threads = Field(schema_type=int)
-    parameters = ParametersSerializer()
-    publication_date = Field(schema_type=str)
-    realtime_contributors = MethodField(schema_type=str, many=True, display_none=True)
+class CoverageErrorSerializer(NullableDictSerializer):
+    code = Field(schema_type=str)
+    value = Field(schema_type=str)
+
+
+class CommonStatusSerializer(NullableDictSerializer):
+    status = Field(schema_type=str, display_none=False)
+    dataset_created_at = Field(schema_type=str, display_none=False)
+    is_realtime_loaded = Field(schema_type=bool, display_none=False)
+    data_version = Field(schema_type=int, display_none=False)
+    nb_threads = Field(schema_type=int, display_none=False)
+    is_open_service = Field(schema_type=bool, display_none=False)
+    is_connected_to_rabbitmq = Field(schema_type=bool, display_none=False)
+    autocomplete = AutocompleteSerializer(display_none=False)
+    end_production_date = Field(schema_type=str, display_none=False)
     realtime_proxies = StringListField(display_none=True)
-    autocomplete = AutocompleteSerializer(display_none=True)
-    street_networks = StreetNetworkSerializer(many=True, display_none=True)
-    start_production_date = Field(schema_type=str)
-    status = Field(schema_type=str)
+    last_load_at = Field(schema_type=str, display_none=False)
+    publication_date = Field(schema_type=str, display_none=False)
+    street_networks = StreetNetworkSerializer(many=True, display_none=False)
+    start_production_date = Field(schema_type=str, display_none=False)
+    last_load_status = Field(schema_type=bool, display_none=False)
+    is_open_data = Field(schema_type=bool, display_none=False)
+    last_rt_data_loaded = Field(schema_type=str, display_none=False)
+    kraken_version = MethodField(schema_type=str, display_none=False)
+    region_id = Field(schema_type=str, display_none=False, description='Identifier of the coverage')
+    error = CoverageErrorSerializer(display_none=False)
+
+    def get_kraken_version(self, obj):
+        if "navitia_version" in obj:
+            return obj["navitia_version"]
+        if "kraken_version" in obj:
+            return obj["kraken_version"]
+        return None
+
+
+class StatusSerializer(CommonStatusSerializer):
+    parameters = ParametersSerializer()
+    realtime_contributors = MethodField(schema_type=str, many=True, display_none=True)
     traveler_profiles = TravelerProfilesSerializer(many=True)
 
     def get_realtime_contributors(self, obj):
@@ -135,3 +157,7 @@ class StatusSerializer(serpy.DictSerializer):
         # this has to be done manually
         return obj.get('rt_contributors', [])
 
+
+class BssProviderSerializer(serpy.DictSerializer):
+    network = Field(schema_type=str, display_none=True)
+    operators = jsonschema.Field(schema_type=str, display_none=True, many=True)

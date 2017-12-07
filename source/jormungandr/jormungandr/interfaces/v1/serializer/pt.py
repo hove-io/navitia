@@ -247,6 +247,7 @@ class DisruptionSerializer(PbNestedSerializer):
     tags = StringListField(display_none=False)
     cause = jsonschema.Field(schema_type=str, display_none=True)
     category = jsonschema.MethodField(schema_type=str, display_none=False)
+
     def get_category(self, obj):
         if obj.HasField(str("category")) and obj.category:
             return obj.category
