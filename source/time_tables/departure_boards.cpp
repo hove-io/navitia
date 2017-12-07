@@ -44,7 +44,7 @@ namespace pt = boost::posix_time;
 
 namespace navitia { namespace timetables {
 
-typedef std::pair<routing::RouteIdx, routing::SpIdx> RoutePointIdx;
+using RoutePointIdx = std::pair<routing::RouteIdx, routing::SpIdx>;
 
 static bool is_last_stoptime(const nt::StopTime* stop_time, const nt::StopPoint* stp){
     return stop_time->vehicle_journey

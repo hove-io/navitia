@@ -38,6 +38,7 @@ www.navitia.io
 #include <boost/assign.hpp>
 #include <boost/algorithm/string.hpp>
 #include "utils/functions.h"
+#include "utils/coord_parser.h"
 #include "utils/logger.h"
 
 //they need to be included for the BOOST_CLASS_EXPORT_GUID macro
@@ -1101,11 +1102,6 @@ std::string to_string(ExceptionDate::ExceptionType t) {
     }
 }
 
-
-// the new way to represent a coord is : "lon;lat"
-const std::string match_double = "[-+]?[0-9]*\\.?[0-9]*[eE]?[-+]?[0-9]*";
-const auto coord_regex = boost::regex("^(" + match_double + ");(" + match_double + ")$");
-
 EntryPoint::EntryPoint(const Type_e type, const std::string &uri, int access_duration) : type(type), uri(uri), access_duration(access_duration) {
     if (type == Type_e::Address) {
         auto vect = split_string(uri, ":");
@@ -1115,39 +1111,22 @@ EntryPoint::EntryPoint(const Type_e type, const std::string &uri, int access_dur
         }
     }
     if (type == Type_e::Coord) {
-        auto set_coord = [&](const std::string& lon, const std::string& lat) {
-            try {
-                this->coordinates.set_lon(boost::lexical_cast<double>(lon));
-                this->coordinates.set_lat(boost::lexical_cast<double>(lat));
-            } catch(boost::bad_lexical_cast) {
-                this->coordinates.set_lon(0);
-                this->coordinates.set_lat(0);
-            }
-        };
-
-        if (uri.size() > 6 && uri.substr(0, 6) == "coord:") {
-            // old style to represent coord.
-            // done for retrocompatibility
-            size_t pos2 = uri.find(":", 6);
-            if (pos2 != std::string::npos) {
-                set_coord(uri.substr(6, pos2 - 6), uri.substr(pos2+1));
-            }
-            return;
-        }
-        boost::smatch matches;
-        bool res = boost::regex_match(uri, matches, coord_regex);
-        if (res && matches.size() == 3) {
-            set_coord(matches[1], matches[2]);
-        } else {
+        try {
+            const auto coord = navitia::parse_coordinate(uri);
+            this->coordinates.set_lon(coord.first);
+            this->coordinates.set_lat(coord.second);
+        } catch (const navitia::wrong_coordinate&) {
             LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"), 
-                    "uri " << uri << " partialy match coordinate, cannot work");
+                           "uri " << uri << " partialy match coordinate, cannot work");
+            this->coordinates.set_lon(0);
+            this->coordinates.set_lat(0);
         }
     }
 }
 
 bool EntryPoint::is_coord(const std::string& uri) {
     return (uri.size() > 6 && uri.substr(0, 6) == "coord:")
-        || (boost::regex_match(uri, coord_regex) && uri != ";");
+        || (boost::regex_match(uri, navitia::coord_regex) && uri != ";");
 }
 
 EntryPoint::EntryPoint(const Type_e type, const std::string &uri) : EntryPoint(type, uri, 0) { }
