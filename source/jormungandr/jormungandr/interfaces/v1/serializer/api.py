@@ -365,7 +365,7 @@ class DictAddressesSerializer(serpy.DictSerializer):
         return obj.get('message')
 
 
-class TechnicalStatusListSerializer(serpy.DictSerializer):
+class TechnicalStatusSerializer(serpy.DictSerializer):
     regions = status.CommonStatusSerializer(many=True, display_none=False)
     jormungandr_version = Field(schema_type=str, display_none=True)
     bss_providers = status.BssProviderSerializer(many=True, display_none=False)

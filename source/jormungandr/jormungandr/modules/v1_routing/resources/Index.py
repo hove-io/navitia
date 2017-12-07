@@ -42,7 +42,7 @@ from jormungandr.interfaces.v1 import fields
 from flask.ext.restful.fields import Raw
 from jormungandr import bss_provider_manager
 from jormungandr.interfaces.v1.decorators import get_serializer
-from jormungandr.interfaces.v1.serializer.api import TechnicalStatusListSerializer
+from jormungandr.interfaces.v1.serializer.api import TechnicalStatusSerializer
 from jormungandr.interfaces.v1.serializer.status import CommonStatusSerializer
 
 
@@ -85,10 +85,10 @@ class TechnicalStatus(ModuleResource):
     """
     def __init__(self, quota=True, *args, **kwargs):
         super(TechnicalStatus, self).__init__(quota=quota,
-                                              output_type_serializer=TechnicalStatusListSerializer,
+                                              output_type_serializer=TechnicalStatusSerializer,
                                               *args, **kwargs)
 
-    @get_serializer(serpy=TechnicalStatusListSerializer, marshall=technical_status)
+    @get_serializer(serpy=TechnicalStatusSerializer, marshall=technical_status)
     def get(self):
         response = {
             "jormungandr_version": __version__,
