@@ -48,11 +48,12 @@ DEFAULT_CYKLEO_FEED_PUBLISHER = {
 
 class CykleoProvider(AbstractParkingPlacesProvider):
     def __init__(self, url, network, username, password, operators={'cykleo'}, verify_certificate=False,
-                 service_id=None, timeout=2,
+                 service_id=None, organization_id=None, timeout=2,
                  feed_publisher=DEFAULT_CYKLEO_FEED_PUBLISHER, **kwargs):
         self.url = url
         self.network = network.lower()
         self.service_id = service_id
+        self.organization_id = organization_id
         self.verify_certificate = verify_certificate
         self.username = username
         self.password = password
@@ -63,11 +64,13 @@ class CykleoProvider(AbstractParkingPlacesProvider):
             reset_timeout=kwargs.get('circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_CYKLEO_TIMEOUT_S']))
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
 
-    def service_caller(self, method, url, headers, data=None):
+    def service_caller(self, method, url, headers, data=None, params=None):
         try:
             kwargs = {"timeout": self.timeout, "verify": self.verify_certificate, "headers": headers}
             if data:
                 kwargs.update({"data": data})
+            if params:
+                kwargs.update({'params': params})
             response = self.breaker.call(method, url, **kwargs)
             if not response or response.status_code != 200:
                 logging.getLogger(__name__).error('cykleo, Invalid response, status_code: {}'.format(
@@ -92,7 +95,7 @@ class CykleoProvider(AbstractParkingPlacesProvider):
         if self.service_id is not None:
             data.update({"serviceId": self.service_id})
 
-        response = self.service_caller(method=requests.post, url='{}/pu/auth'.format(self.url),
+        response = self.service_caller(method=requests.post, url='{}/bo/auth'.format(self.url),
                                        headers=headers, data=json.dumps(data))
         if not response:
             return None
@@ -107,8 +110,11 @@ class CykleoProvider(AbstractParkingPlacesProvider):
     def _call_webservice(self):
         access_token = self.get_access_token()
         headers = {'Authorization': 'Bearer {}'.format(access_token)}
-        data = self.service_caller(method=requests.get, url='{}/pu/stations/availability'.format(self.url),
-                                   headers=headers)
+        params = None if self.organization_id is None else {'organization_id': self.organization_id}
+        data = self.service_caller(method=requests.get,
+                                   url='{}/bo/stations/availability'.format(self.url),
+                                   headers=headers,
+                                   params=params)
         stands = {}
         if not data:
             return stands
