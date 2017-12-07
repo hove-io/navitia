@@ -1,15 +1,19 @@
+
 # -*- coding: utf-8 -*-
+import os
+os.environ['LC_ALL'] = 'en_US'
+os.environ['GIT_PYTHON_TRACE'] = '1' #can be 0 (no trace), 1 (git commands) or full (git commands + git output)
+
 from git import *
 from datetime import datetime
 import subprocess
 import re
 from sys import exit, argv
 from shutil import copyfile
-import os
 from os import remove, stat
 import codecs
 import requests
-
+import logging
 
 def get_tag_name(version):
         return "v{maj}.{min}.{hf}".format(maj=version[0], min=version[1], hf=version[2])
@@ -26,17 +30,33 @@ class ReleaseManager:
         #we fetch latest version from remote
         self.remote_name = remote_name
 
-        print "fetching from {}".format(remote_name)
+        print "fetching from {}...".format(remote_name)
         self.repo.remote(remote_name).fetch("--tags")
 
         #and we update dev and release branches
-        print "rebase dev and release"
+        print "rebasing dev and release..."
 
         #TODO quit on error
         self.git.rebase(remote_name + "/dev", "dev")
+        try:
+            self.git.checkout("release")
+        except Exception as e:
+            print "Cannot checkout 'release':{}, creating from distant branch".format(str(e))
+            self.git.checkout("-b", "release", remote_name + "/release")
         self.git.rebase(remote_name + "/release", "release")
 
-        print "current branch {}".format(self.repo.active_branch)
+        print "checking that release was merged into dev..."
+        unmerged = self.git.branch("--no-merged", "dev")
+        is_release_unmerged = re.search("  release(\n|$)", unmerged)
+        if is_release_unmerged:
+            print is_release_unmerged.group(0)
+            print "ABORTING: {rem}/release branch was not merged in {rem}/dev".format(rem=remote_name)
+            print "  This is required before releasing. You may use (be careful):"
+            print "    git checkout dev; git submodule update"
+            print "    git merge release"
+            exit(1)
+
+        print "current branch: {}".format(self.repo.active_branch)
 
         self.version = None
         self.str_version = ""
@@ -313,7 +333,8 @@ if __name__ == '__main__':
         exit(5)
 
     #the git lib used bug when not in english
-    os.environ['LC_ALL'] = 'en_US'
+
+    logging.basicConfig(level=logging.INFO)
 
     r_type = argv[1]
     remote = argv[2] if len(argv) >= 3 else "CanalTP"
