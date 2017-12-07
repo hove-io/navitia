@@ -36,7 +36,6 @@ www.navitia.io
 
 namespace navitia { namespace timetables {
 typedef std::vector<DateTime> vector_datetime;
-typedef std::pair<routing::SpIdx, routing::RouteIdx> stop_point_route;
 typedef std::vector<routing::datetime_stop_time> vector_dt_st;
 
 void departure_board(PbCreator& pb_creator, const std::string &filter,
