@@ -1,16 +1,19 @@
 
 # -*- coding: utf-8 -*-
+import os
+os.environ['LC_ALL'] = 'en_US'
+os.environ['GIT_PYTHON_TRACE'] = '1' #can be 0 (no trace), 1 (git commands) or full (git commands + git output)
+
 from git import *
 from datetime import datetime
 import subprocess
 import re
 from sys import exit, argv
 from shutil import copyfile
-import os
 from os import remove, stat
 import codecs
 import requests
-
+import logging
 
 def get_tag_name(version):
         return "v{maj}.{min}.{hf}".format(maj=version[0], min=version[1], hf=version[2])
@@ -37,7 +40,8 @@ class ReleaseManager:
         self.git.rebase(remote_name + "/dev", "dev")
         try:
             self.git.checkout("release")
-        except:
+        except Exception as e:
+            print "Cannot checkout 'release':{}, creating from distant branch".format(str(e))
             self.git.checkout("-b", "release", remote_name + "/release")
         self.git.rebase(remote_name + "/release", "release")
 
@@ -329,7 +333,8 @@ if __name__ == '__main__':
         exit(5)
 
     #the git lib used bug when not in english
-    os.environ['LC_ALL'] = 'en_US'
+
+    logging.basicConfig(level=logging.INFO)
 
     r_type = argv[1]
     remote = argv[2] if len(argv) >= 3 else "CanalTP"
