@@ -109,11 +109,11 @@ struct VjStopTimes{
         stop_times(st){}
 };
 
-struct StopTimeCalandar{
+struct StopTimeCalendar{
     const nt::StopTime* stop_time;
     const navitia::DateTime& date_time;
     boost::optional<const std::string> calendar_id;
-    StopTimeCalandar(const nt::StopTime* stop_time, const navitia::DateTime& date_time,
+    StopTimeCalendar(const nt::StopTime* stop_time, const navitia::DateTime& date_time,
                      boost::optional<const std::string> calendar_id):
         stop_time(stop_time), date_time(date_time), calendar_id(calendar_id){}
 };
@@ -380,8 +380,9 @@ private:
         void fill_messages(const nt::HasMessages* nav_obj, P* pb_obj){
             if (nav_obj == nullptr) {return ;}
             if (dump_message_options.dump_message == DumpMessage::No) { return; }
-            for (const auto& message : nav_obj->get_applicable_messages(pb_creator.now,
-                                                                        pb_creator.action_period)){
+            const bool dump_line_sections = dump_message_options.dump_line_section == DumpLineSectionMessage::Yes;
+            for (const auto& message: nav_obj->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
+                if (!dump_line_sections && message->is_only_line_section()) { continue; }
                 fill_message(message, pb_obj);
             }
         }
@@ -462,7 +463,7 @@ private:
         void fill_pb_object(const VjOrigDest*, pbnavitia::hasEquipments*);
         void fill_pb_object(const VjStopTimes*, pbnavitia::PtDisplayInfo*);
         void fill_pb_object(const nt::VehicleJourney*, pbnavitia::hasEquipments*);
-        void fill_pb_object(const StopTimeCalandar*, pbnavitia::ScheduleStopTime*);
+        void fill_pb_object(const StopTimeCalendar*, pbnavitia::ScheduleStopTime*);
         void fill_pb_object(const nt::EntryPoint*, pbnavitia::PtObject*);
         void fill_pb_object(const WayCoord*, pbnavitia::PtObject*);
         void fill_pb_object(const WayCoord*, pbnavitia::Address*);

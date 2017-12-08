@@ -37,6 +37,7 @@ www.navitia.io
 #include <boost/lexical_cast.hpp>
 #include <boost/date_time/date_defs.hpp>
 #include <boost/geometry/algorithms/length.hpp>
+#include <boost/algorithm/cxx11/none_of.hpp>
 #include "type/geographical_coord.h"
 #include "type/type_utils.h"
 #include <boost/geometry.hpp>
@@ -352,21 +353,16 @@ void PbCreator::Filler::fill(NAV* nav_object, PB* pb_object) {
 template<typename NAV, typename F>
 void PbCreator::Filler::fill_with_creator(NAV* nav_object, F creator) {
     if (nav_object == nullptr) { return; }
-    DumpMessageOptions new_dump_options{dump_message_options};
-    new_dump_options.dump_line_section = DumpLineSectionMessage::No;
-    copy(depth-1, new_dump_options).fill_pb_object(nav_object, creator());
+    copy(depth-1, dump_message_options).fill_pb_object(nav_object, creator());
 }
 
 template<typename T>
 void PbCreator::Filler::fill_pb_object(const T* value, pbnavitia::PtObject* pt_object) {
     if(value == nullptr) { return; }
 
-    DumpMessageOptions new_dump_options{dump_message_options};
-    new_dump_options.dump_line_section = DumpLineSectionMessage::No;
-    copy(depth, new_dump_options).fill_pb_object(value, get_sub_object(value, pt_object));
+    fill_pb_object(value, get_sub_object(value, pt_object));
     pt_object->set_name(get_label(value));
     pt_object->set_uri(value->uri);
-//    add_contributor(value);
     pt_object->set_embedded_type(get_pb_type<T>());
 }
 template void PbCreator::Filler::fill_pb_object<georef::Admin>(const georef::Admin*, pbnavitia::PtObject*);
@@ -991,7 +987,11 @@ compute_disruption_status(const nd::Impact& impact,
 template <typename P>
 void PbCreator::Filler::fill_message(const boost::shared_ptr<nd::Impact>& impact,
                                      P pb_object){
-    *pb_object->add_impact_uris() = impact->uri;
+    using boost::algorithm::none_of;
+    // Adding the uri only if not already present
+    if (none_of(pb_object->impact_uris(), [&](const std::string& uri) { return impact->uri == uri; })) {
+        *pb_object->add_impact_uris() = impact->uri;
+    }
     pb_creator.impacts.insert(impact);
 }
 template void navitia::PbCreator::Filler::fill_message<pbnavitia::Network*>(boost::shared_ptr<navitia::type::disruption::Impact> const&, pbnavitia::Network*);
@@ -1025,6 +1025,14 @@ void PbCreator::Filler::fill_pb_object(const nd::Impact* impact, pbnavitia::Impa
     for (const auto& t: impact->disruption->tags) {
         pb_impact->add_tags(t->name);
     }
+
+    for (const auto& p: impact->disruption->properties) {
+        auto pb_p = pb_impact->add_properties();
+        pb_p->set_key(p.key);
+        pb_p->set_type(p.type);
+        pb_p->set_value(p.value);
+    }
+
     if (impact->disruption->cause) {
         pb_impact->set_cause(impact->disruption->cause->wording);
         if (!impact->disruption->cause->category.empty()) {
@@ -1240,6 +1248,7 @@ void PbCreator::Filler::fill_messages(const VjStopTimes* vj_stoptimes,
     // here we add all the impacts on stop_point and stop_area of section.from
     const auto& from_sp = vj_stoptimes->stop_times.front()->stop_point;
     for (const auto& message: from_sp->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
+        if (message->is_only_line_section()) { continue; }
         fill_message(message, pt_display_info);
     }
 
@@ -1256,6 +1265,7 @@ void PbCreator::Filler::fill_messages(const VjStopTimes* vj_stoptimes,
 
     const auto& to_sp = vj_stoptimes->stop_times.back()->stop_point;
     for (const auto& message: to_sp->get_applicable_messages(pb_creator.now, pb_creator.action_period)) {
+        if (message->is_only_line_section()) { continue; }
         fill_message(message, pt_display_info);
     }
 }
@@ -1331,7 +1341,7 @@ void PbCreator::Filler::fill_pb_object(const nt::VehicleJourney* vj,
     }
 }
 
-void PbCreator::Filler::fill_pb_object(const StopTimeCalandar* stop_time_calendar,
+void PbCreator::Filler::fill_pb_object(const StopTimeCalendar* stop_time_calendar,
                                        pbnavitia::ScheduleStopTime* rs_date_time){
     if (stop_time_calendar->stop_time == nullptr) {
         //we need to represent a 'null' value (for not found datetime)

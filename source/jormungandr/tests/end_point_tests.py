@@ -112,6 +112,7 @@ class TestEndPoint(AbstractTestFixture):
 
         check_links(json_response, self.tester)
 
+        assert json_response['context']['timezone'] == 'Africa/Abidjan'
         regions = get_not_null(json_response, 'regions')
 
         assert len(regions) == 2, "with 2 kraken loaded, we should have 2 regions"
@@ -130,12 +131,13 @@ class TestEndPoint(AbstractTestFixture):
 
             assert region_id in ['main_routing_test', 'main_ptref_test']
 
-    def test_all_status(self):
+    def test_technical_status(self):
         json_response = self.query("/v1/status")
 
         jormun_version = get_not_null(json_response, 'jormungandr_version')
 
         assert is_valid_navitia_version_number(jormun_version)
+        assert json_response['context']['timezone'] == 'Africa/Abidjan'
 
         #we also must have an empty regions list
         all_status = get_not_null(json_response, 'regions')
@@ -155,6 +157,8 @@ class TestEndPoint(AbstractTestFixture):
         json_response = self.query("/v1/coverage/main_routing_test/status")
 
         is_valid_region_status(get_not_null(json_response, "status"))
+        self.check_context(json_response)
+        assert json_response['context']['timezone'] == 'Africa/Abidjan'
         assert json_response["status"]["is_open_data"] == False
         assert json_response["status"]["is_open_service"] == False
         assert 'realtime_contributors' in json_response['status']
@@ -162,6 +166,8 @@ class TestEndPoint(AbstractTestFixture):
 
     def test_geo_status(self):
         response = self.query('/v1/coverage/main_routing_test/_geo_status', display=True)
+        self.check_context(response)
+        assert response['context']['timezone'] == 'Africa/Abidjan'
         assert response['geo_status']
         assert response['geo_status']['nb_ways'] > 0
         assert response['geo_status']['nb_pois'] > 0
@@ -170,3 +176,8 @@ class TestEndPoint(AbstractTestFixture):
         assert response['geo_status']['nb_admins_from_cities'] == 0
         assert response['geo_status']['street_network_sources'] == []
         assert response['geo_status']['poi_sources'] == []
+
+    def test_lines_context(self):
+        response = self.query('/v1/coverage/main_routing_test/lines', display=True)
+        self.check_context(response)
+        assert response['context']['timezone'] == 'UTC'

@@ -131,7 +131,7 @@ class AdministrativeRegionSerializer(serpy.DictSerializer):
 class GeocodeAdminSerializer(serpy.DictSerializer):
     id = NestedPropertyField(attr='properties.geocoding.id', display_none=True)
     name = NestedPropertyField(attr='properties.geocoding.name', display_none=True)
-    quality = LiteralField(0)
+    quality = LiteralField(0, deprecated=True)
     embedded_type = LiteralField("administrative_region", display_none=True)
     administrative_region = jsonschema.MethodField()
 
@@ -159,7 +159,7 @@ class PoiSerializer(serpy.DictSerializer):
 
 class GeocodePoiSerializer(serpy.DictSerializer):
     embedded_type = LiteralField("poi", display_none=True)
-    quality = LiteralField(0)
+    quality = LiteralField(0, deprecated=True)
     id = NestedPropertyField(attr='properties.geocoding.id', display_none=True)
     name = NestedPropertyField(attr='properties.geocoding.label', display_none=True)
     poi = jsonschema.MethodField()
@@ -188,7 +188,7 @@ class AddressSerializer(serpy.DictSerializer):
 
 class GeocodeAddressSerializer(serpy.DictSerializer):
     embedded_type = LiteralField("address", display_none=True)
-    quality = LiteralField(0)
+    quality = LiteralField(0, deprecated=True)
     id = CoordId(display_none=True)
     name = NestedPropertyField(attr='properties.geocoding.label', display_none=True)
     address = jsonschema.MethodField()
@@ -208,7 +208,7 @@ class StopAreaSerializer(serpy.DictSerializer):
 
 class GeocodeStopAreaSerializer(serpy.DictSerializer):
     embedded_type = LiteralField("stop_area", display_none=True)
-    quality = LiteralField(0)
+    quality = LiteralField(0, deprecated=True)
     id = NestedPropertyField(attr='properties.geocoding.id', display_none=True)
     name = NestedPropertyField(attr='properties.geocoding.label', display_none=True)
     stop_area = jsonschema.MethodField()

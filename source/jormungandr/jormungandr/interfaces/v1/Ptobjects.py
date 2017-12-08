@@ -31,17 +31,15 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from flask.ext.restful import fields, marshal_with, reqparse, abort
+from flask.ext.restful import fields, abort
 from flask.globals import g
 
 from jormungandr import i_manager, timezone
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
-from jormungandr.interfaces.v1.errors import ManageError
-from jormungandr.interfaces.v1.fields import disruption_marshaller
-from jormungandr.interfaces.v1.fields import NonNullList, NonNullNested, PbField, error, pt_object, feed_publisher
+from jormungandr.interfaces.v1.fields import NonNullList, NonNullNested, PbField, error, pt_object, feed_publisher, \
+    context, disruption_marshaller
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
-from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type, DateTimeFormat
 from navitiacommon.parser_args_type import BooleanType, OptionValue
 
@@ -53,7 +51,8 @@ pt_objects = {
     "pt_objects": NonNullList(NonNullNested(pt_object), attribute='places'),
     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
     "error": PbField(error, attribute='error'),
-    "feed_publishers": fields.List(NonNullNested(feed_publisher))
+    "feed_publishers": fields.List(NonNullNested(feed_publisher)),
+    "context": context
 }
 
 pt_object_type_values = ["network", "commercial_mode", "line", "line_group", "route", "stop_area"]

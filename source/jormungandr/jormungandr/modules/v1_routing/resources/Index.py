@@ -31,7 +31,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from jormungandr.interfaces.v1.make_links import create_external_link
-from flask_restful import marshal
+from flask_restful import marshal, marshal_with
 from jormungandr._version import __version__
 from jormungandr.exceptions import DeadSocketException
 from jormungandr.module_resource import ModuleResource
@@ -39,6 +39,7 @@ from navitiacommon import type_pb2, request_pb2
 from jormungandr import i_manager
 from jormungandr.protobuf_to_dict import protobuf_to_dict
 from jormungandr.interfaces.v1 import fields
+from flask.ext.restful.fields import Raw
 from jormungandr import bss_provider_manager
 
 
@@ -65,6 +66,13 @@ class Index(ModuleResource):
         return response, 200
 
 
+technical_status = {
+    "bss_providers": Raw,
+    "regions": Raw,
+    "jormungandr_version": Raw,
+    "context": fields.context_utc
+}
+
 class TechnicalStatus(ModuleResource):
     """
     Status is mainly used for supervision
@@ -72,11 +80,12 @@ class TechnicalStatus(ModuleResource):
     return status for all instances
     """
 
+    @marshal_with(technical_status, display_null=False)
     def get(self):
         response = {
             "jormungandr_version": __version__,
             "regions": [],
-            "bss_providers": [provider.status() for provider in bss_provider_manager.bss_providers]
+            "bss_providers": [provider.status() for provider in bss_provider_manager.bss_providers],
         }
         regions = i_manager.get_regions()
         for key_region in regions:

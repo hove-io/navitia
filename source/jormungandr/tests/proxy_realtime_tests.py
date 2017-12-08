@@ -65,7 +65,7 @@ class MockedTestProxy(realtime_proxy.RealtimeProxy):
             next_passages.append(next_passage)
         return next_passages
 
-    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None):
+    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None, duration=None):
         if route_point.fetch_stop_id(self.object_id_tag) == "KisioDigital_C:S1":
             return []
 
@@ -274,7 +274,7 @@ class MockedTestProxyWithTimezone(MockedTestProxy):
     def __init__(self, id, object_id_tag, instance):
         super(MockedTestProxyWithTimezone, self).__init__(id, object_id_tag, instance)
 
-    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None):
+    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None, duration=None):
 
         if route_point.fetch_stop_id(self.object_id_tag) == "KisioDigital_C:S0":
             return self._create_next_passages([("00:03:00", "l'infini"), ("00:04:00", "l'au dela")],
@@ -295,3 +295,131 @@ class TestDeparturesWithTimeZone(AbstractTestFixture):
         stop_schedules = response['stop_schedules'][0]['date_times']
         next_passage_dts = [dt["date_time"] for dt in stop_schedules]
         assert next_passage_dts
+
+
+MOCKED_PROXY_WITH_CUSTOM_MERGING_CONF = [
+    {
+        "id": "KisioDigital",
+        "class": "tests.proxy_realtime_tests.MockedTestProxyWithCustomMerging",
+        "args": {}
+    }
+]
+
+class MockedTestProxyWithCustomMerging(MockedTestProxy):
+    def __init__(self, id, object_id_tag, instance):
+        super(MockedTestProxyWithCustomMerging, self).__init__(id, object_id_tag, instance)
+
+    def _get_proxy_time_bounds(self):
+        start = datetime.datetime.strptime('20160103T040000', '%Y%m%dT%H%M%S')
+        end = datetime.datetime.strptime('20160104T040000', '%Y%m%dT%H%M%S')
+        return start, end
+
+    # Make proxy active between 20160103T040000 and 20160104T040000
+    # Keep everything outside this time bounds
+    def _filter_base_stop_schedule(self, date_time):
+        start, end = self._get_proxy_time_bounds()
+        return start <= datetime.datetime.fromtimestamp(date_time.date + date_time.time) <= end
+
+    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None, duration=86400):
+        return self._create_next_passages(
+            [("06:00:00", "l'infini"), ("10:00:00", "l'au dela")], year=2016, month=1, day=3
+        )
+
+@dataset({"basic_schedule_test": {'instance_config': {'realtime_proxies': MOCKED_PROXY_WITH_CUSTOM_MERGING_CONF}}})
+class TestPassagesWithMerging(AbstractTestFixture):
+
+    def test_stop_schedule_with_merging(self):
+        query_template = 'stop_points/{sp}/stop_schedules?from_datetime={dt}&duration={d}&data_freshness={data_freshness}'
+        # data from the proxy in the middle of the time frame
+        query = query_template.format(sp='C:S0', dt='20160102T113000', d=3600 * 24 * 3, data_freshness='realtime')
+        response = self.query_region(query)
+        stop_schedules = response['stop_schedules'][0]['date_times']
+
+        next_passages = [(dt["date_time"], dt["data_freshness"]) for dt in stop_schedules]
+        expected_passages = [
+            ('20160102T113000', 'base_schedule'),
+            ('20160103T060000', 'realtime'),
+            ('20160103T100000', 'realtime'),
+            ('20160104T113000', 'base_schedule'),
+            ('20160105T113000', 'base_schedule')
+        ]
+
+        assert next_passages == expected_passages
+
+        # Outside of proxy scopes, should keep all base_schedule datas
+        query = query_template.format(sp='C:S0', dt='20160104T113000', d=3600 * 24, data_freshness='realtime')
+        response = self.query_region(query)
+        stop_schedules = response['stop_schedules'][0]['date_times']
+
+        next_passages = [(dt["date_time"], dt["data_freshness"]) for dt in stop_schedules]
+        expected_passages = [
+            ('20160104T113000', 'base_schedule'),
+            ('20160105T113000', 'base_schedule')
+        ]
+
+        assert next_passages == expected_passages
+
+        # Time frame ends in the proxy time frame
+        query = query_template.format(sp='C:S0', dt='20160102T080000', d=3600 * 24, data_freshness='realtime')
+        response = self.query_region(query)
+        stop_schedules = response['stop_schedules'][0]['date_times']
+
+        next_passages = [(dt["date_time"], dt["data_freshness"]) for dt in stop_schedules]
+        expected_passages = [
+            ('20160102T113000', 'base_schedule'),
+            ('20160103T060000', 'realtime')
+        ]
+
+        assert next_passages == expected_passages
+
+        # Time frame starts in the proxy time frame
+        query = query_template.format(sp='C:S0', dt='20160103T080000', d=3600 * 24 * 2, data_freshness='realtime')
+        response = self.query_region(query)
+        stop_schedules = response['stop_schedules'][0]['date_times']
+
+        next_passages = [(dt["date_time"], dt["data_freshness"]) for dt in stop_schedules]
+        expected_passages = [
+            ('20160103T100000', 'realtime'),
+            ('20160104T113000', 'base_schedule')
+        ]
+
+        assert next_passages == expected_passages
+
+    # The departures filtering has not been overloaded
+    def test_departures_without_merging(self):
+        query_template = 'stop_points/{sp}/departures?from_datetime={dt}&duration={d}&data_freshness={data_freshness}'
+
+        # Check that we have indeed 4 departures
+        query = query_template.format(sp='C:S0', dt='20160102T113000', d=3600 * 24 * 3, data_freshness='base_schedule')
+        response = self.query_region(query)
+
+        assert "departures" in response
+        assert len(response["departures"]) == 4
+
+        departures = response['departures']
+        next_passages = [(d['stop_date_time']['departure_date_time'], d['stop_date_time']['data_freshness']) for d in departures]
+        expected_passages = [
+            ('20160102T113000', 'base_schedule'),
+            ('20160103T113000', 'base_schedule'),
+            ('20160104T113000', 'base_schedule'),
+            ('20160105T113000', 'base_schedule')
+        ]
+
+        assert next_passages == expected_passages
+
+        # data from the proxy in the middle of the time frame
+        # since there is no merging we have only realtime datas
+        query = query_template.format(sp='C:S0', dt='20160102T113000', d=3600 * 24 * 3, data_freshness='realtime')
+        response = self.query_region(query)
+
+        assert "departures" in response
+        assert len(response["departures"]) == 2
+
+        departures = response['departures']
+        next_passages = [(d['stop_date_time']['departure_date_time'], d['stop_date_time']['data_freshness']) for d in departures]
+        expected_passages = [
+            ('20160103T060000', 'realtime'),
+            ('20160103T100000', 'realtime'),
+        ]
+
+        assert next_passages == expected_passages

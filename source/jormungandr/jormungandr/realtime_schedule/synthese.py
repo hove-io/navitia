@@ -121,7 +121,7 @@ class Synthese(RealtimeProxy):
             logging.getLogger(__name__).exception('Synthese RT error, using base schedule')
             raise RealtimeProxyError(str(e))
 
-    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None):
+    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None, duration=None):
         url = self._make_url(route_point, count, from_dt)
         if not url:
             return None

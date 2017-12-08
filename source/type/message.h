@@ -129,6 +129,23 @@ inline std::string to_string(ChannelType ct) {
     }
 }
 
+struct Property {
+    std::string key;
+    std::string type;
+    std::string value;
+
+    bool operator< (const Property &right) const {
+        if (key != right.key) { return key < right.key; }
+        if (type != right.type) { return type < right.type; }
+        return value < right.value;
+    }
+
+    template<class Archive>
+    void serialize(Archive& ar, const unsigned int) {
+        ar & key & type & value;
+    }
+};
+
 struct Cause {
     std::string uri;
     std::string wording;
@@ -287,6 +304,8 @@ struct Impact {
 
     bool is_valid(const boost::posix_time::ptime& current_time, const boost::posix_time::time_period& action_period) const;
     bool is_relevant(const std::vector<const StopTime*>& stop_times) const;
+    bool is_only_line_section() const;
+    bool is_line_section_of(const Line&) const;
 
     const type::ValidityPattern get_impact_vp(const boost::gregorian::date_period& production_date) const;
 
@@ -341,12 +360,15 @@ struct Disruption {
     //additional informations on the disruption
     std::vector<boost::shared_ptr<Tag>> tags;
 
+    //properties linked to the disruption
+    std::set<Property> properties;
+
     std::string note;
 
     template<class Archive>
     void serialize(Archive& ar, const unsigned int) {
         ar & uri & reference & rt_level & publication_period
-           & created_at & updated_at & cause & impacts & localization & tags & note & contributor;
+           & created_at & updated_at & cause & impacts & localization & tags & note & contributor & properties;
     }
 
     void add_impact(const boost::shared_ptr<Impact>& impact, DisruptionHolder& holder);

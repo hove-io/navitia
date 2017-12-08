@@ -17,6 +17,12 @@ but we try to use something that makes sense and has a reasonnable amount of dat
 
 The only arguments are the ones of [paging](#paging).
 
+<aside class="notice">
+    Most of the time you can avoid providing a region and let Navitia guess the right one for you.
+    This can be done by providing coordinates in place of the region name:
+    `/coverage/{lon;lat}/endpoint?parameter=value`
+</aside>
+
 ### Accesses
 
 | url                                      | Result                                                                           |
@@ -260,35 +266,43 @@ paginate results.
 -   [vehicle_journeys](#vehicle-journey)
 -   [disruptions](#disruption)
 
-### Parameters
+### Shared parameters
 
 #### <a name="depth"></a>depth
 
-This tiny parameter can expand Navitia power by making it more wordy.
+You are looking for something, but Navitia doesn't output it in your favorite endpoint?  
+You want to request more from navitia feed?  
+You are receiving feeds that are too important and too slow with low bandwidth?  
+You would like Navitia to serve GraphQL but it is still not planned?
+
+Feeds from endpoint might miss informations, but this tiny `depth=` parameter can
+expand Navitia power by making it more wordy. Or lighter if you want it.
+
 Here is some examples around "metro line 1" from the Parisian network:
 
 - Get "line 1" id
-	- <https://api.navitia.io/v1/coverage/sandbox/pt_objects?q=metro%201>
-	- The id is "line:RAT:M1"
+	- <https://api.navitia.io/v1/coverage/sandbox/pt_objects?q=metro%201>  
+	The id is "line:RAT:M1"
 - Get routes for this line
-	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes>
-- Want to get a tiny response? Just add "depth=0"
-	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=0>
-	- The response is lighter (parent lines disappear for example)
-- Want more informations, just add "depth=2"
-	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=2>
-	- The response is a little more verbose (some geojson can appear in response when using your open data token)
-- Wanna fat more informations, let's try "depth=3"
-	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=3>
-	- Big response: all stop_points are shown
-- Wanna spam the internet bandwidth? Try "depth=42"
-	- No. There is a technical limit with "depth=3"
+	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes>  
+	Default depth is `depth=1`
+- Want to get a tiny response? Just add `depth=0`
+	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=0>  
+	The response is lighter (parent lines disappear for example)
+- Want more informations, just add `depth=2`
+	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=2>  
+	The response is a little more verbose (some geojson can appear in response when using your open data token)
+- Wanna fat more informations, let's try `depth=3`
+	- <https://api.navitia.io/v1/coverage/sandbox/lines/line:RAT:M1/routes?depth=3>  
+	Big response: all stop_points are shown
+- Wanna spam the internet bandwidth? Try `depth=42`
+	- No. There is a technical limit with `depth=3`
 
 #### odt level
 
 -   Type: String
 -   Default value: all
--   Warning: works ONLY with */[line](#line)s* collection...
+-   Warning: works ONLY with */[lines](#line)* collection...
 
 It allows you to request navitia for specific pickup lines. It refers to
 the [odt](#odt) section. "odt_level" can take one of these values:
@@ -648,11 +662,15 @@ Differents kind of objects can be returned (sorted as):
 -   stop_area
 -   poi
 -   address
--   stop_point (appears only if specified, using "&type[]=stop_point"
-    filter)
+-   stop_point (appears only if specified, using `&type[]=stop_point` filter)
 
 <aside class="warning">
     There is no pagination for this api.
+</aside>
+
+<aside class="notice">
+    The returned `quality` field is deprecated and only maintained for backward compatibility.
+    Please consider only navitia's output order.
 </aside>
 
 ### Access
@@ -735,7 +753,7 @@ coordinates, returning a [places](#place) collection.
   nop      | disable_geojson | boolean     | Remove geojson from the response  | False
   nop      | count       | int             | Elements per page                 | 10
   nop      | start_page  | int             | The page number (cf the [paging section](#paging)) | 0
-  nop      | add_poi_infos  | boolean      | Activate the output of additional infomations about the poi. For example, parking availability(BSS, car parking etc.) in the bicycle_rental, car parking pois of response. Pass `add_poi_infos[]=&` (empty string) to deactivate all.   | [`bss_stands`, `car_park`]
+  nop      | add_poi_infos[] | boolean     | Activate the output of additional infomations about the poi. For example, parking availability (BSS, car parking etc.) in the pois of response. Pass `add_poi_infos[]=&` (empty string) to deactivate all.   | [`bss_stands`, `car_park`]
 
 Filters can be added:
 
@@ -896,6 +914,8 @@ Here is the structure of a standard journey request:
 
 <https://api.navitia.io/v1/journeys?from={resource_id_1}&to={resource_id_2}&datetime={date_time_to_leave}> .
 
+[Context](#context) object provides the `current_datetime`, useful to compute waiting time when requesting Navitia without a `datetime`.
+
 <a
     href="https://jsfiddle.net/kisiodigital/0oj74vnz/"
     target="_blank"
@@ -964,7 +984,7 @@ The [isochrones](#isochrones) service exposes another response structure, which 
 | nop     | disruption_active    | boolean | For compatibility use only.<br>If true the algorithm take the disruptions into account, and thus avoid disrupted public transport.<br>Rq: `disruption_active=true` = `data_freshness=realtime` <br>Use `data_freshness` parameter instead       |  False     |
 | nop     | wheelchair           | boolean | If true the traveler is considered to be using a wheelchair, thus only accessible public transport are used<br>be warned: many data are currently too faint to provide acceptable answers with this parameter on       | False       |
 | nop     | direct_path          | enum    | Specify if direct paths should be suggested.<br>possible values: <ul><li>indifferent</li><li>none</li><li>only</li></ul>      | indifferent |
-| nop      | add_poi_infos  | boolean      | Activate the output of additional infomations about the poi. For example, parking availability(BSS, car parking etc.) in the bicycle_rental, car parking pois of response. Pass `add_poi_infos[]=&` (empty string) to deactivate all.    | []
+| nop     | add_poi_infos[]      | boolean | Activate the output of additional infomations about the poi. For example, parking availability(BSS, car parking etc.) in the pois of response. Possible values are `bss_stands`, `car_park`    | []
 | nop     | debug                | boolean | Debug mode<br>No journeys are filtered in this mode     | False       |
 
 ### Precisions on `forbidden_uris[]` and `allowed_id[]`
@@ -1169,12 +1189,12 @@ Also known as `/isochrones` service.
 
 
 This service gives you a multi-polygon response which
-represent a same time travel zone: https://en.wikipedia.org/wiki/Isochrone_map
+represents a same duration travel zone at a given time: https://en.wikipedia.org/wiki/Isochrone_map
 
 As you can find isochrone tables using `/journeys`, this service is only another representation
 of the same data, map oriented.
 
-It is also really usefull to make filters on geocoded objects in order to find which ones are reachable within a specific time.
+It is also really usefull to make filters on geocoded objects in order to find which ones are reachable at a given time within a specific duration.
 You just have to verify that the coordinates of the geocoded object are inside the multi-polygon.
 
 ### Accesses
@@ -1188,10 +1208,15 @@ You just have to verify that the coordinates of the geocoded object are inside t
 
 <aside class="success">
     'from' and 'to' parameters works as exclusive parameters:
-    <li>When 'from' is provided, 'to' is ignore and Navitia computes a "departure after" isochrone.
+    <li>When 'from' is provided, 'to' is ignored and Navitia computes a "departure after" isochrone.
     <li>When 'from' is not provided, 'to' is required and Navitia computes a "arrival after" isochrone.
 </aside>
 
+<aside class="notice">
+    Isochrones are time dependant. The duration boundary is actually an arrival time boundary.
+    'datetime' parameter is therefore important: The result is not the same when computing
+    an isochrone at 3am (few transports) or at 6pm (rush hour).
+</aside>
 
 
 | Required  | Name                    | Type          | Description                                                                               | Default value |
@@ -1208,8 +1233,37 @@ You just have to verify that the coordinates of the geocoded object are inside t
 
 | Required  | Name                 | Type  | Description                                                  | Default value |
 |-----------|----------------------|-------|--------------------------------------------------------------|---------------|
-| nop       | min_duration         | int   | Minimum duration delineating the reachable area (in seconds) |      |
-| nop       | max_duration         | int   | Maximum duration delineating the reachable area (in seconds) |      |
+| nop       | min_duration         | int   | Minimum duration delineating the reachable area (in seconds) |               |
+| nop       | max_duration         | int   | Maximum duration delineating the reachable area (in seconds) |               |
+
+
+### Tips
+
+#### Understand the resulting isochrone
+
+The principle of isochrones is to work like journeys.
+So if one doesn't understand why a place is inside or outside an isochrone,
+please compute a journey from the "center" of isochrone to that precise place.
+
+To do that, just 3 changes are needed:
+
+- provide a starting `datetime=` to compare arrival time evenly
+- change endpoint: `/isochrones` to `/journeys`
+- provide a destination using `&to=<my_place>`
+
+Please remember that isochrones use crowfly at the end so they are less precise than journeys.
+
+#### Isochrones without public transport
+
+The main goal of Navitia is to handle public transport, so it's not recommended to avoid them.  
+However if your are willing to do that, you can use a little trick and
+pass the parameters `&allowed_id=physical_mode:Bus&forbidden_id=physical_mode:Bus`.
+You will only get circles.
+
+#### Car isochrones
+
+Using car in Navitia isochrones is not recommended.  
+It is only handled for compatibility with `/journeys` but tends to squash every other result.
 
 
 <a name="route-schedules"></a>Route Schedules
@@ -1449,6 +1503,7 @@ point as:
 
 The response is made of an array of [stop_schedule](#stop-schedule), and another
 one of [note](#note).
+[Context](#context) object provides the `current_datetime`, useful to compute waiting time when requesting Navitia without a `from_datetime`.
 You can access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource}/stop_schedules>
 
 ### Accesses
@@ -1545,6 +1600,7 @@ Also known as `/departures` service.
 
 This endpoint retrieves a list of departures from a specific datetime of a selected
 object.
+[Context](#context) object provides the `current_datetime`, useful to compute waiting time when requesting Navitia without a `from_datetime`.
 Departures are ordered chronologically in ascending order as:
 ![departures](https://upload.wikimedia.org/wikipedia/commons/thumb/c/c7/Display_at_bus_stop_sign_in_Karlovo_n%C3%A1m%C4%9Bst%C3%AD%2C_T%C5%99eb%C3%AD%C4%8D%2C_T%C5%99eb%C3%AD%C4%8D_District.JPG/640px-Display_at_bus_stop_sign_in_Karlovo_n%C3%A1m%C4%9Bst%C3%AD%2C_T%C5%99eb%C3%AD%C4%8D%2C_T%C5%99eb%C3%AD%C4%8D_District.JPG)
 
@@ -1669,10 +1725,10 @@ HTTP/1.1 200 OK
 
 Also known as `/traffic_reports` service.
 
-This service provides the state of public transport traffic. It can be
-called for an overall coverage or for a specific object.
+This service provides the state of public transport traffic, grouped by network.
+It can be called for an overall coverage or for a specific object.
 
-![Traffic reports](/images/traffic_reports.png)
+<img src="./images/traffic_reports.png" alt="Traffic reports" width="300"/>
 
 ### Parameters
 
@@ -1700,11 +1756,12 @@ see the [inner-reference](#inner-references) section to use them.
 #links between objects in a traffic_reports response
 {
 "traffic_reports": [
+    {
     "network": {"name": "bob", "links": [], "id": "network:bob"},
     "lines": [
         {
         "code": "1",
-         ... ,
+        ... ,
         "links": [ {
             "internal": true,
             "type": "disruption",
@@ -1715,7 +1772,7 @@ see the [inner-reference](#inner-references) section to use them.
         },
         {
         "code": "12",
-         ... ,
+        ... ,
         "links": [ {
             "internal": true,
             "type": "disruption",
@@ -1728,7 +1785,7 @@ see the [inner-reference](#inner-references) section to use them.
     "stop_areas": [
         {
         "name": "bobito",
-         ... ,
+        ... ,
         "links": [ {
             "internal": true,
             "type": "disruption",
@@ -1736,10 +1793,9 @@ see the [inner-reference](#inner-references) section to use them.
             "rel": "disruptions",
             "templated": false
             }]
-        },
-    ],
- ],
- [
+        }
+    ]
+    },{
     "network": {
         "name": "bobette",
         "id": "network:bobette",
@@ -1750,11 +1806,11 @@ see the [inner-reference](#inner-references) section to use them.
             "rel": "disruptions",
             "templated": false
             }]
-        },
+    },
     "lines": [
         {
         "code": "A",
-         ... ,
+        ... ,
         "links": [ {
             "internal": true,
             "type": "disruption",
@@ -1765,7 +1821,7 @@ see the [inner-reference](#inner-references) section to use them.
         },
         {
         "code": "C",
-         ... ,
+        ... ,
         "links": [ {
             "internal": true,
             "type": "disruption",
@@ -1773,11 +1829,12 @@ see the [inner-reference](#inner-references) section to use them.
             "rel": "disruptions",
             "templated": false
             }]
-        },
+        }
+    ],
     "stop_areas": [
         {
         "name": "bobito",
-         ... ,
+        ... ,
         "links": [ {
             "internal": true,
             "type": "disruption",
@@ -1785,9 +1842,9 @@ see the [inner-reference](#inner-references) section to use them.
             "rel": "disruptions",
             "templated": false
             }]
-        },
-    ],
-
+        }
+    ]
+    }
 ],
 "disruptions": [
     {
@@ -1827,22 +1884,9 @@ Traffic_reports is an array of some traffic_report object.
 One traffic_report object is a complex object, made of a network, an array
 of lines and an array of stop_areas.
 
-A typical traffic_report object will contain:
+#### What a **complete** response **means**
 
--   1 network which is the grouping object
-    -   it can contain links to its disruptions. These disruptions are globals and might not be applied on lines or stop_areas.
--   0..n lines
-    -   each line contains at least a link to its disruptions
--   0..n stop_areas
-    -   each stop_area contains at least a link to its disruptions
-
-It means that if a stop_area is used by many networks, it will appear
-many times.
-
-
-This typical response means:
-
--   traffic_reports
+-   multiple traffic_reports
     -   network "bob"
           -   line "1" > internal link to disruption "green"
           -   line "12" > internal link to disruption "pink"
@@ -1851,7 +1895,7 @@ This typical response means:
           -   line "A" > internal link to disruption "green"
           -   line "C" > internal link to disruption "yellow"
           -   stop_area "bobito" > internal link to disruption "red"
--   disruptions (disruption target links)
+-   multiple disruptions (disruption target links)
     -   disruption "green"
     -   disruption "pink"
     -   disruption "red"
@@ -1861,4 +1905,13 @@ This typical response means:
 
 Details for disruption objects : [disruptions](#disruptions)
 
+#### What a traffic_report object **contains**
 
+-   1 network which is the grouping object
+    -   it can contain links to its disruptions.  
+    These disruptions are globals and might not be applied on lines or stop_areas.
+-   0..n lines
+    -   each line contains at least a link to its disruptions
+-   0..n stop_areas
+    -   each stop_area contains at least a link to its disruptions  
+    If a stop_area is used by multiple networks, it will appear each time.

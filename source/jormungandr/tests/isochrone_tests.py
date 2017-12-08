@@ -66,6 +66,7 @@ class TestIsochrone(AbstractTestFixture):
         assert response["journeys"][1]["duration"] == 25200
         assert response["journeys"][1]["to"]["stop_point"]["id"] == "D"
         assert response["journeys"][1]["from"]["id"] == "A"
+        self.check_context(response)
 
         assert len(response['disruptions']) == 0
 

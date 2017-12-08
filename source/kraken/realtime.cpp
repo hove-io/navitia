@@ -58,7 +58,11 @@ static bool is_handleable(const transit_realtime::TripUpdate& trip_update){
     // enum in gtfs-rt proto to express this idea
     if (trip_update.trip().schedule_relationship() == transit_realtime::TripDescriptor_ScheduleRelationship_SCHEDULED
             && trip_update.stop_time_update_size()) {
+
+        // WARNING: here trip.start_date is considered UTC, not local
+        //(this date differs if vj starts during the period between midnight UTC and local midnight)
         auto start_date = boost::gregorian::from_undelimited_string(trip_update.trip().start_date());
+
         auto start_first_day_of_impact = bpt::ptime(start_date, bpt::time_duration(0, 0, 0, 0));
         for (const auto& st: trip_update.stop_time_update()) {
             auto ptime_arrival = bpt::from_time_t(st.arrival().time());
@@ -212,7 +216,11 @@ create_disruption(const std::string& id,
     LOG4CPLUS_DEBUG(log, "Creating disruption");
 
     nt::disruption::DisruptionHolder& holder = data.pt_data->disruption_holder;
+
+    // WARNING: here trip.start_date is considered UTC, not local
+    //(this date differs if vj starts during the period between midnight UTC and local midnight)
     auto circulation_date = boost::gregorian::from_undelimited_string(trip_update.trip().start_date());
+
     auto start_first_day_of_impact = bpt::ptime(circulation_date, bpt::time_duration(0, 0, 0, 0));
     const auto& mvj = *data.pt_data->meta_vjs.get_mut(trip_update.trip().trip_id());
 

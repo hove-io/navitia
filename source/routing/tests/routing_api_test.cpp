@@ -1069,6 +1069,13 @@ BOOST_FIXTURE_TEST_CASE(biking_walking, streetnetworkmode_fixture<test_speed_pro
     BOOST_CHECK_EQUAL(section.street_network().mode(), pbnavitia::StreetNetworkMode::Bike);
     BOOST_CHECK_EQUAL(section.street_network().duration(), 130); //it's the biking distance / biking speed (but there can be rounding pb)
     BOOST_REQUIRE_EQUAL(section.street_network().path_items_size(), 7);
+    BOOST_CHECK_EQUAL(journey.durations().walking(), 0);
+    BOOST_CHECK_EQUAL(journey.durations().bike(), 130);
+    BOOST_CHECK_EQUAL(journey.durations().car(), 0);
+    BOOST_CHECK_EQUAL(journey.durations().total(), 130);
+    BOOST_CHECK_EQUAL(journey.distances().walking(), 0);
+    BOOST_CHECK_EQUAL(journey.distances().bike(), 532);
+    BOOST_CHECK_EQUAL(journey.distances().car(), 0);
 
     auto pathitem = section.street_network().path_items(0);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue bs");
@@ -1216,6 +1223,15 @@ BOOST_FIXTURE_TEST_CASE(car_direct, streetnetworkmode_fixture<test_speed_provide
     BOOST_CHECK_EQUAL(resp.journeys(0).has_co2_emission(), true);
     BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().value(), 12.144 + 0.58 + 32.568);
     BOOST_CHECK_EQUAL(resp.journeys(0).co2_emission().unit(), "gEC");
+
+    BOOST_CHECK_EQUAL(resp.journeys(0).durations().walking(), 30);
+    BOOST_CHECK_EQUAL(resp.journeys(0).durations().bike(), 0);
+    BOOST_CHECK_EQUAL(resp.journeys(0).durations().car(), 22);
+    BOOST_CHECK_EQUAL(resp.journeys(0).durations().total(), 57);
+    BOOST_CHECK_EQUAL(resp.journeys(0).distances().walking(), 33);
+    BOOST_CHECK_EQUAL(resp.journeys(0).distances().bike(), 0);
+    BOOST_CHECK_EQUAL(resp.journeys(0).distances().car(), 243);
+
 }
 
 // car + bus using parking
@@ -1451,6 +1467,14 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
     BOOST_CHECK(!pathitem.name().empty());// projection should works, but where is irrelevant
     BOOST_CHECK_EQUAL(pathitem.duration(), b.data->geo_ref->default_time_bss_pickup.total_seconds());
     BOOST_CHECK_EQUAL(pathitem.length(), 0);
+
+    BOOST_CHECK_EQUAL(journey->durations().walking(), 129);
+    BOOST_CHECK_EQUAL(journey->durations().bike(), 110);
+    BOOST_CHECK_EQUAL(journey->durations().car(), 0);
+    BOOST_CHECK_EQUAL(journey->durations().total(), 309);
+    BOOST_CHECK_EQUAL(journey->distances().walking(), 144);
+    BOOST_CHECK_EQUAL(journey->distances().bike(), 450);
+    BOOST_CHECK_EQUAL(journey->distances().car(), 0);
 
     //bike
     prev_section = section;

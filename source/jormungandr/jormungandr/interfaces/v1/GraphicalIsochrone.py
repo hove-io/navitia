@@ -29,12 +29,12 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask.ext.restful import fields, marshal_with, abort
+from flask.ext.restful import fields, abort
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.fields import error,\
     PbField, NonNullList, NonNullNested,\
     feed_publisher, Links, JsonString, place, \
-    ListLit, beta_endpoint
+    ListLit, beta_endpoint, context
 from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.utils import date_to_timestamp
@@ -62,6 +62,7 @@ graphical_isochrones = {
     "feed_publishers": fields.List(NonNullNested(feed_publisher)),
     "links": fields.List(Links()),
     "warnings": ListLit([fields.Nested(beta_endpoint)]),
+    'context': context
 }
 
 

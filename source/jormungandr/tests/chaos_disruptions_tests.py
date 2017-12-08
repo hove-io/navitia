@@ -42,10 +42,10 @@ class ChaosDisruptionsFixture(RabbitMQCnxFixture):
     def _make_mock_item(self, disruption_name, impacted_obj, impacted_obj_type, start=None, end=None,
                         message='default_message', is_deleted=False, blocking=False,
                         start_period="20100412T165200", end_period="20200412T165200",
-                        cause='CauseTest', category=None, routes=None):
+                        cause='CauseTest', category=None, routes=None, properties=None):
         return make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end, message,
                                     is_deleted, blocking, start_period, end_period, cause=cause,
-                                    category=category, routes=routes)
+                                    category=category, routes=routes, properties=properties)
 
 
 MAIN_ROUTING_TEST_SETTING = {"main_routing_test": {'kraken_args': ['--BROKER.sleeptime=0',
@@ -72,7 +72,8 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         #at first no disruption
         assert 'disruptions' not in stop
 
-        self.send_mock("bob_the_disruption", "stopB", "stop_area")
+        properties = [{'key': 'foo', 'type': 'bar', 'value': '42'}]
+        self.send_mock("bob_the_disruption", "stopB", "stop_area", properties=properties)
 
         #and we call again, we must have the disruption now
         response = self.query_region('stop_areas/stopB?_current_datetime=20160314T104600')
@@ -119,6 +120,12 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         assert channel['types'][1] == 'mobile'
         assert channel['types'][2] == 'title'
         assert channel['types'][3] == 'beacon'
+
+        properties = get_not_null(disruptions[0], 'properties')
+        assert len(properties) == 1
+        assert properties[0]['key'] == 'foo'
+        assert properties[0]['type'] == 'bar'
+        assert properties[0]['value'] == '42'
 
     def test_current_datetime_out_of_bounds(self):
         """
@@ -817,7 +824,7 @@ class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
 def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end,
                          message_text='default_message', is_deleted=False, blocking=False,
                          start_period="20100412T165200", end_period="20200412T165200",
-                         cause='CauseTest', category=None, routes=None):
+                         cause='CauseTest', category=None, routes=None, properties=None):
     feed_message = gtfs_realtime_pb2.FeedMessage()
     feed_message.header.gtfs_realtime_version = '1.0'
     feed_message.header.incrementality = gtfs_realtime_pb2.FeedHeader.DIFFERENTIAL
@@ -932,5 +939,12 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start
     message.channel.types.append(chaos_pb2.Channel.mobile)
     message.channel.types.append(chaos_pb2.Channel.title)
     message.channel.types.append(chaos_pb2.Channel.beacon)
+
+    # properties linked to the disruption
+    for p in properties or []:
+        prop = disruption.properties.add()
+        prop.key = p['key']
+        prop.type = p['type']
+        prop.value = p['value']
 
     return feed_message.SerializeToString()

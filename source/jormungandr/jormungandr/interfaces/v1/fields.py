@@ -35,9 +35,13 @@ from flask.globals import g
 import pytz
 from jormungandr.interfaces.v1.make_links import create_internal_link, create_external_link
 from jormungandr.interfaces.v1.serializer import pt, base
-from jormungandr.utils import timestamp_to_str
+from jormungandr.utils import timestamp_to_str, get_current_datetime_str, get_timezone_str
 from navitiacommon import response_pb2, type_pb2
 import ujson
+
+
+class CollectionException(Exception):
+    pass
 
 
 class Lit(fields.Raw):
@@ -430,7 +434,20 @@ class Durations(fields.Raw):
             return
         return {
             'total': obj.durations.total,
-            'walking': obj.durations.walking
+            'walking': obj.durations.walking,
+            'bike': obj.durations.bike,
+            'car': obj.durations.car
+        }
+
+
+class Distances(fields.Raw):
+    def output(self, key, obj):
+        if not obj.HasField(str("distances")):
+            return
+        return {
+            'walking': obj.distances.walking,
+            'bike': obj.distances.bike,
+            'car': obj.distances.car
         }
 
 
@@ -577,6 +594,40 @@ feed_publisher = {
     "name": fields.String(),
     "url": fields.String(),
     "license": fields.String()
+}
+
+
+class CurrentDateTime(fields.Raw):
+    def output(self, key, value):
+        return get_current_datetime_str()
+
+class TimeZone(fields.Raw):
+    def output(self, key, value):
+        return get_timezone_str()
+
+context = {
+    'car_direct_path': {
+        'co2_emission': NonNullNested({
+            'value': fields.Raw,
+            'unit': fields.String
+        }, attribute="car_co2_emission")
+    },
+    'current_datetime': CurrentDateTime(),
+    'timezone': TimeZone(),
+}
+
+
+class CurrentDateTimeUTC(fields.Raw):
+    def output(self, key, value):
+        return get_current_datetime_str(is_utc=True)
+
+class TimeZoneUTC(fields.Raw):
+    def output(self, key, value):
+        return 'Africa/Abidjan'
+
+context_utc = {
+    'current_datetime': CurrentDateTimeUTC(),
+    'timezone': TimeZoneUTC(),
 }
 
 admin = deepcopy(generic_type)
@@ -918,6 +969,12 @@ impacted_object = {
     'impacted_section': NonNullProtobufNested(impacted_section)
 }
 
+disruption_property = {
+    'key': fields.String(),
+    'type': fields.String(),
+    'value': fields.String()
+}
+
 disruption_marshaller = {
     "id": fields.String(attribute="uri"),
     "disruption_id": fields.String(attribute="disruption_uri"),
@@ -932,7 +989,50 @@ disruption_marshaller = {
     "severity": NonNullNested(disruption_severity),
     "messages": NonNullList(NonNullNested(disruption_message)),
     "impacted_objects": NonNullList(NonNullNested(impacted_object)),
+    "properties": NonNullList(NonNullNested(disruption_property)),
     "uri": fields.String(),
     "disruption_uri": fields.String(),
     "contributor": fields.String()
 }
+
+common_collection = (
+    ("pagination", PbField(pagination)),
+    ("error", PbField(error)),
+    ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False))),
+    ("context", context),
+    ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts"))
+)
+
+
+def get_collections(collection_name):
+    from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
+    map_collection = {
+        "journey_pattern_points": journey_pattern_point,
+        "commercial_modes": commercial_mode,
+        "journey_patterns": journey_pattern,
+        "vehicle_journeys": vehicle_journey,
+        "trips": trip,
+        "physical_modes": physical_mode,
+        "stop_points": stop_point,
+        "stop_areas": stop_area,
+        "connections": connection,
+        "companies": company,
+        "poi_types": poi_type,
+        "routes": route,
+        "line_groups": line_group,
+        "lines": line,
+        "pois": poi,
+        "networks": network,
+        "disruptions": None,
+        "contributors": contributor,
+        "datasets": dataset,
+    }
+
+    collection = map_collection.get(collection_name)
+    if collection:
+        return [(collection_name, NonNullList(fields.Nested(collection, display_null=False)))] + list(common_collection)
+
+    if collection_name == 'disruptions':
+        return list(common_collection)
+
+    raise CollectionException

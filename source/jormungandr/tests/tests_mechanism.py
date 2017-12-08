@@ -384,6 +384,12 @@ class AbstractTestFixture(unittest.TestCase):
         else:
             assert 'debug' not in response
 
+    def check_context(self, response):
+        assert 'context' in response
+        context = response['context']
+        assert 'current_datetime' in context
+        assert 'timezone' in context
+
     @staticmethod
     def check_next_datetime_link(dt, response, clockwise):
         if not response.get('journeys'):

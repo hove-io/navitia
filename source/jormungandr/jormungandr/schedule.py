@@ -30,15 +30,11 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-import hashlib
 
 import logging
-import pytz
 from jormungandr import utils
 
 from navitiacommon import type_pb2, request_pb2, response_pb2
-from jormungandr.utils import date_to_timestamp, pb_del_if
-import datetime
 from copy import deepcopy
 from jormungandr import new_relic
 
@@ -68,45 +64,6 @@ class RealTimePassage(object):
         self.is_real_time = is_real_time
 
 
-def _update_stop_schedule(stop_schedule, next_realtime_passages):
-    """
-    Update the stopschedule response with the new realtime passages
-
-    for the moment we remove all base schedule data and replace them with the realtime
-
-    If next_realtime_passages is None (and not if it's []) it means that the proxy failed,
-    so we use the base schedule
-    """
-    if next_realtime_passages is None:
-        return
-
-    logging.getLogger(__name__).debug('next passages: : {}'
-                                     .format(["dt: {}".format(d.datetime) for d in next_realtime_passages]))
-
-    # we clean up the old schedule
-    del stop_schedule.date_times[:]
-    for passage in next_realtime_passages:
-        new_dt = stop_schedule.date_times.add()
-        # the midnight is calculated from passage.datetime and it keeps the same timezone as passage.datetime
-        midnight = passage.datetime.replace(hour=0, minute=0, second=0, microsecond=0)
-        time = (passage.datetime - midnight).total_seconds()
-        new_dt.time = int(time)
-        new_dt.date = date_to_timestamp(midnight)
-
-        if passage.is_real_time:
-            new_dt.realtime_level = type_pb2.REALTIME
-        else:
-            new_dt.realtime_level = type_pb2.BASE_SCHEDULE
-
-        # we also add the direction in the note
-        if passage.direction:
-            note = type_pb2.Note()
-            note.note = passage.direction
-            note_uri = hashlib.md5(note.note.encode('utf-8')).hexdigest()
-            note.uri = 'note:{md5}'.format(md5=note_uri)  # the id is a md5 of the direction to factorize them
-            new_dt.properties.notes.extend([note])
-
-
 def _create_template_from_passage(passage):
     template = deepcopy(passage)
     template.pt_display_informations.ClearField(str("headsign"))
@@ -134,35 +91,6 @@ def _create_template_from_pb_route_point(pb_route_point):
     template.route.CopyFrom(pb_route_point.route)
     template.stop_point.CopyFrom(pb_route_point.stop_point)
     return _create_template_from_passage(template)
-
-
-def _update_passages(passages, route_point, template, next_realtime_passages):
-    if next_realtime_passages is None:
-        return
-
-    # filter passages with entries of the asked route_point
-    pb_del_if(passages, lambda p: RoutePoint(p.route, p.stop_point) == route_point)
-
-    # append the realtime passages
-    for rt_passage in next_realtime_passages:
-        new_passage = deepcopy(template)
-        new_passage.stop_date_time.arrival_date_time = date_to_timestamp(rt_passage.datetime)
-        new_passage.stop_date_time.departure_date_time = date_to_timestamp(rt_passage.datetime)
-
-        if rt_passage.is_real_time:
-            new_passage.stop_date_time.data_freshness = type_pb2.REALTIME
-        else:
-            new_passage.stop_date_time.data_freshness = type_pb2.BASE_SCHEDULE
-
-        # we also add the direction in the note
-        if rt_passage.direction:
-            new_passage.pt_display_informations.direction = rt_passage.direction
-
-        # we add physical mode from route
-        if len(route_point.pb_route.physical_modes) > 0:
-            new_passage.pt_display_informations.physical_mode = route_point.pb_route.physical_modes[0].name
-
-        passages.extend([new_passage])
 
 
 class RoutePoint(object):
@@ -236,9 +164,8 @@ class MixedSchedule(object):
     def __init__(self, instance):
         self.instance = instance
 
-    def _get_next_realtime_passages(self, route_point, request):
+    def _get_realtime_proxy(self, route_point):
         log = logging.getLogger(__name__)
-
         if not route_point:
             return None
 
@@ -252,16 +179,21 @@ class MixedSchedule(object):
             new_relic.record_custom_event('realtime_internal_failure', {'rt_system_id': rt_system_code,
                                                                         'message': 'no handler found'})
             return None
+        return rt_system
+
+    def _get_next_realtime_passages(self, rt_system, route_point, request):
+        log = logging.getLogger(__name__)
 
         next_rt_passages = None
         try:
             next_rt_passages = rt_system.next_passage_for_route_point(route_point,
                                                                       request['items_per_schedule'],
                                                                       request['from_datetime'],
-                                                                      request['_current_datetime'])
+                                                                      request['_current_datetime'],
+                                                                      request['duration'])
         except Exception as e:
-            log.exception('failure while requesting next passages to external RT system {}'.format(rt_system_code))
-            new_relic.record_custom_event('realtime_internal_failure', {'rt_system_id': rt_system_code,
+            log.exception('failure while requesting next passages to external RT system {}'.format(rt_system.rt_system_id))
+            new_relic.record_custom_event('realtime_internal_failure', {'rt_system_id': rt_system.rt_system_id,
                                                                         'message': str(e)})
 
         if next_rt_passages is None:
@@ -273,7 +205,7 @@ class MixedSchedule(object):
     def __stop_times(self, request, api, departure_filter="", arrival_filter=""):
         req = request_pb2.Request()
         req.requested_api = api
-        req._current_datetime = date_to_timestamp(request['_current_datetime'])
+        req._current_datetime = utils.date_to_timestamp(request['_current_datetime'])
         st = req.next_stop_times
         st.disable_geojson = request["disable_geojson"]
         st.departure_filter = departure_filter
@@ -324,8 +256,10 @@ class MixedSchedule(object):
                             for rp in resp.route_points)
 
         for route_point, template in route_points.items():
-            next_rt_passages = self._get_next_realtime_passages(route_point, request)
-            _update_passages(resp.next_departures, route_point, template, next_rt_passages)
+            rt_proxy = self._get_realtime_proxy(route_point)
+            if rt_proxy:
+                next_rt_passages = self._get_next_realtime_passages(rt_proxy, route_point, request)
+                rt_proxy._update_passages(resp.next_departures, route_point, template, next_rt_passages)
 
         # sort
         def comparator(p1, p2):
@@ -347,6 +281,8 @@ class MixedSchedule(object):
 
         for stop_schedule in resp.stop_schedules:
             route_point = _get_route_point_from_stop_schedule(stop_schedule)
-            next_rt_passages = self._get_next_realtime_passages(route_point, request)
-            _update_stop_schedule(stop_schedule, next_rt_passages)
+            rt_proxy = self._get_realtime_proxy(route_point)
+            if rt_proxy:
+                next_rt_passages = self._get_next_realtime_passages(rt_proxy, route_point, request)
+                rt_proxy._update_stop_schedule(stop_schedule, next_rt_passages)
         return resp
