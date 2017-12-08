@@ -1146,3 +1146,68 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_order_check) {
     BOOST_CHECK_EQUAL(stop_schedule.date_times(0).time(), "08:00"_t);
     BOOST_CHECK_EQUAL(stop_schedule.date_times(1).time(), "08:05"_t);
 }
+
+BOOST_AUTO_TEST_CASE(stop_schedules_order_by_line_route_stop_point) {
+    ed::builder b("20170101");
+
+    b.sa("Rubens", 42, 42, false)("RubensLR")("RubensRL");
+    b.sa("Jenner", 42, 42, false)("JennerLR")("JennerRL");
+
+    b.vj("line:13").route("route:13lr")
+        ("RubensLR", "9:00"_t)
+        ("JennerLR", "10:00"_t);
+
+    b.vj("line:5").route("route:5lr")
+        ("RubensLR", "9:05"_t)
+        ("JennerLR", "10:05"_t);
+
+    b.vj("line:13").route("route:13rl")
+        ("JennerRL", "10:00"_t)
+        ("RubensRL", "11:00"_t);
+
+    b.vj("line:5").route("route:5rl")
+        ("JennerRL", "10:05"_t)
+        ("RubensRL", "11:05"_t);
+
+    b.finish();
+    b.data->pt_data->build_uri();
+
+    auto* line13 = b.data->pt_data->lines_map["line:13"];
+    line13->code = "13";
+    line13->name = "Alice";
+    auto* route13rl = b.data->pt_data->routes_map["route:13rl"];
+    route13rl->name = "Right - Left";
+    auto* route13lr = b.data->pt_data->routes_map["route:13lr"];
+    route13lr->name = "Left - Right";
+
+    auto* line5 = b.data->pt_data->lines_map["line:13"];
+    line5->code = "5";
+    line5->name = "Zoe";
+    auto* route5rl = b.data->pt_data->routes_map["route:5rl"];
+    route5rl->name = "Right - Left";
+    auto* route5lr = b.data->pt_data->routes_map["route:5lr"];
+    route5lr->name = "Left - Right";
+
+    b.data->pt_data->sort();
+    b.data->build_raptor();
+    auto * data_ptr = b.data.get();
+
+    navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
+    departure_board(pb_creator, "network.uri=base_network", {}, {}, d("20170103T070000"), 86400, 3,
+                    20, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+    auto resp = pb_creator.get_response();
+    BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 8);
+
+    auto test = [&](int stop_schedule, const char* route, const char* stop_point) {
+        BOOST_CHECK_EQUAL(resp.stop_schedules(stop_schedule).route().uri(), route);
+        BOOST_CHECK_EQUAL(resp.stop_schedules(stop_schedule).stop_point().uri(), stop_point);
+    };
+    test(0, "route:5lr", "JennerLR");
+    test(1, "route:5lr", "RubensLR");
+    test(2, "route:5rl", "JennerRL");
+    test(3, "route:5rl", "RubensRL");
+    test(4, "route:13lr", "JennerLR");
+    test(5, "route:13lr", "RubensLR");
+    test(6, "route:13rl", "JennerRL");
+    test(7, "route:13rl", "RubensRL");
+}

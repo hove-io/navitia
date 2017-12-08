@@ -265,7 +265,7 @@ struct StopArea : public Header, Nameable, hasProperties, HasMessages {
 
     std::vector<StopPoint*> stop_point_list;
     Indexes get(Type_e type, const PT_Data & data) const;
-    bool operator<(const StopArea & other) const { return this < &other; }
+    bool operator<(const StopArea & other) const;
 };
 
 struct Network : public Header, HasMessages {
@@ -289,16 +289,7 @@ struct Network : public Header, HasMessages {
     }
 
     Indexes get(Type_e type, const PT_Data & data) const;
-    bool operator<(const Network & other) const {
-        if(this->sort != other.sort) {
-            return this->sort < other.sort;
-        }
-        if(this->name != other.name) {
-             return this->name < other.name;
-        }
-        return this < &other;
-    }
-
+    bool operator<(const Network & other) const;
 };
 
 struct Contributor : public Header, Nameable{
@@ -311,7 +302,7 @@ struct Contributor : public Header, Nameable{
         ar & idx & name & uri & website & license & dataset_list;
     }
     Indexes get(Type_e type, const PT_Data & data) const;
-    bool operator<(const Contributor & other) const { return this->idx < other.idx; }
+    bool operator<(const Contributor & other) const { return this->uri < other.uri; }
 };
 
 struct Dataset : public Header, Nameable{
@@ -327,7 +318,7 @@ struct Dataset : public Header, Nameable{
         ar & idx & uri & contributor & realtime_level & validation_period & desc & system;
     }
     Indexes get(Type_e type, const PT_Data & data) const;
-    bool operator<(const Dataset & other) const { return this < &other; }
+    bool operator<(const Dataset & other) const { return this->uri < other.uri; }
 };
 
 struct Company : public Header, Nameable {
@@ -347,7 +338,7 @@ struct Company : public Header, Nameable {
         address_type_name & phone_number & mail & website & fax & line_list;
     }
     Indexes get(Type_e type, const PT_Data & data) const;
-    bool operator<(const Company & other) const { return this < &other; }
+    bool operator<(const Company & other) const { return this->uri < other.uri; }
 };
 
 struct CommercialMode : public Header, Nameable{
@@ -357,7 +348,7 @@ struct CommercialMode : public Header, Nameable{
         ar & idx & name & uri & line_list;
     }
     Indexes get(Type_e type, const PT_Data & data) const;
-    bool operator<(const CommercialMode & other) const { return this < &other; }
+    bool operator<(const CommercialMode & other) const { return this->uri < other.uri; }
 
 };
 
@@ -372,7 +363,7 @@ struct PhysicalMode : public Header, Nameable{
     Indexes get(Type_e type, const PT_Data & data) const;
 
     PhysicalMode() {}
-    bool operator<(const PhysicalMode & other) const { return this < &other; }
+    bool operator<(const PhysicalMode & other) const { return this->uri < other.uri; }
 
 };
 
@@ -442,24 +433,8 @@ struct Line : public Header, Nameable, HasMessages {
                 & opening_time & properties & line_group_list;
     }
     Indexes get(Type_e type, const PT_Data & data) const;
-
-    bool operator<(const Line & other) const {
-        if(this->network != other.network){
-            return this->network < other.network;
-        }
-        if(this->sort != other.sort) {
-            return this->sort < other.sort;
-        }
-        if(this->code != other.code) {
-            return navitia::pseudo_natural_sort()(this->code, other.code);
-        }
-        if(this->name != other.name) {
-            return this->name < other.name;
-        }
-        return this < &other;
-    }
+    bool operator<(const Line & other) const;
     type::hasOdtProperties get_odt_properties() const;
-
     std::string get_label() const;
 };
 
