@@ -1,3 +1,20 @@
+navitia2 (2.47.0) unstable; urgency=low
+
+  * Ed & Kraken: collections and stop_schedules ordering  <https://github.com/CanalTP/navitia/pull/2265>
+  * Doc: auto-check before releasing  <https://github.com/CanalTP/navitia/pull/2264>
+  * Jormun: fix cykleo  <https://github.com/CanalTP/navitia/pull/2263>
+  * Jormun: Manage cykleo  <https://github.com/CanalTP/navitia/pull/2259>
+  * All: Disruptions properties from chaos to jormungandr  <https://github.com/CanalTP/navitia/pull/2257>
+  * Doc: context  <https://github.com/CanalTP/navitia/pull/2260>
+  * Jormun: Context for all apis  <https://github.com/CanalTP/navitia/pull/2255>
+  * All: More info in /journeys on distance and durations  <https://github.com/CanalTP/navitia/pull/2251>
+  * Jormungandr: ability for the proxy to merge kraken / realtime proxy datas  <https://github.com/CanalTP/navitia/pull/2253>
+  * Ed: add parameter to fusio and gtfs2ed to define simplify tolerance  <https://github.com/CanalTP/navitia/pull/2258>
+  * Kraken: fix output of unrelated line sections in display_informations  <https://github.com/CanalTP/navitia/pull/2247>
+  * Doc: updates  <https://github.com/CanalTP/navitia/pull/2256>
+
+ -- kadhikari <krishna.adhikari@canaltp.fr>  Fri, 08 Dec 2017 11:12:34 +0100
+
 navitia2 (2.46.0) unstable; urgency=low
 
   * Kraken: parameters since and until added in line_reports  <https://github.com/CanalTP/navitia/pull/2249>
