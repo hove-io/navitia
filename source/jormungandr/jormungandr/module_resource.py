@@ -54,9 +54,9 @@ class ModuleResourcesManager(object):
         self.resources.append(resource)
 
 
-class ModuleResource(DocumentedResource):
-    def __init__(self, quota=True, *args, **kwargs):
-        DocumentedResource.__init__(self, *args, **kwargs)
+class ModuleResource(Resource):
+    def __init__(self):
+        Resource.__init__(self)
         self.method_decorators = []
         self.module_name = ''
 

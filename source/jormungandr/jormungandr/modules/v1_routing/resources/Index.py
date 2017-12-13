@@ -38,12 +38,13 @@ from jormungandr.module_resource import ModuleResource
 from navitiacommon import type_pb2, request_pb2
 from jormungandr import i_manager, USE_SERPY
 from jormungandr.protobuf_to_dict import protobuf_to_dict
-from jormungandr.interfaces.v1 import fields
 from flask.ext.restful.fields import Raw
 from jormungandr import bss_provider_manager
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer.api import TechnicalStatusSerializer
 from jormungandr.interfaces.v1.serializer.status import CommonStatusSerializer
+from jormungandr.interfaces.v1.fields import ListLit, beta_endpoint, context_utc, instance_status, add_common_status
+from flask.ext.restful import fields
 
 
 class Index(ModuleResource):
@@ -68,12 +69,12 @@ class Index(ModuleResource):
         }
         return response, 200
 
-
 technical_status = {
     "bss_providers": Raw,
     "regions": Raw,
     "jormungandr_version": Raw,
-    "context": fields.context_utc
+    "context": context_utc,
+    "warnings": ListLit([fields.Nested(beta_endpoint)])
 }
 
 
@@ -83,10 +84,6 @@ class TechnicalStatus(ModuleResource):
 
     return status for all instances
     """
-    def __init__(self, quota=True, *args, **kwargs):
-        super(TechnicalStatus, self).__init__(quota=quota,
-                                              output_type_serializer=TechnicalStatusSerializer,
-                                              *args, **kwargs)
 
     @get_serializer(serpy=TechnicalStatusSerializer, marshall=technical_status)
     def get(self):
@@ -104,20 +101,12 @@ class TechnicalStatus(ModuleResource):
                 resp = instance.send_and_receive(req, timeout=1000)
 
                 raw_resp_dict = protobuf_to_dict(resp, use_enum_labels=True)
-                raw_resp_dict['status']["is_open_service"] = instance.is_free
-                raw_resp_dict['status']["is_open_data"] = instance.is_open_data
-                raw_resp_dict['status']['realtime_proxies'] = []
-                for realtime_proxy in instance.realtime_proxy_manager.realtime_proxies.values():
-                    raw_resp_dict['status']['realtime_proxies'].append(realtime_proxy.status())
-                raw_resp_dict['status']['street_networks'] = []
-                for sn in instance.street_network_services:
-                    raw_resp_dict['status']['street_networks'].append(sn.status())
+                add_common_status(raw_resp_dict, instance)
 
-                raw_resp_dict['status']['autocomplete'] = instance.autocomplete.status()
                 if USE_SERPY:
                     resp_dict = CommonStatusSerializer(raw_resp_dict['status']).data
                 else:
-                    resp_dict = marshal(raw_resp_dict['status'], fields.instance_status)
+                    resp_dict = marshal(raw_resp_dict['status'], instance_status)
             except DeadSocketException:
                 resp_dict = {
                     "status": "dead",
@@ -131,6 +120,3 @@ class TechnicalStatus(ModuleResource):
             response['regions'].append(resp_dict)
 
         return response
-
-    def options(self, **kwargs):
-        return self.api_description(**kwargs)

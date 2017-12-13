@@ -1030,3 +1030,17 @@ def get_collections(collection_name):
         return list(common_collection)
 
     raise CollectionException
+
+
+def add_common_status(response, instance):
+    response['status']["is_open_data"] = instance.is_open_data
+    response['status']["is_open_service"] = instance.is_free
+    response['status']['realtime_proxies'] = []
+    for realtime_proxy in instance.realtime_proxy_manager.realtime_proxies.values():
+        response['status']['realtime_proxies'].append(realtime_proxy.status())
+
+    response['status']['street_networks'] = []
+    for sn in instance.street_network_services:
+        response['status']['street_networks'].append(sn.status())
+
+    response['status']['autocomplete'] = instance.autocomplete.status()

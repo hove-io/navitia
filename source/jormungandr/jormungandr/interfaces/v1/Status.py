@@ -31,39 +31,28 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from flask.ext.restful import fields
 from jormungandr import i_manager, travelers_profile
 from jormungandr.protobuf_to_dict import protobuf_to_dict
-from jormungandr.interfaces.v1.fields import instance_status_with_parameters, context_utc
+from jormungandr.interfaces.v1.fields import instance_status_with_parameters, context_utc, ListLit, beta_endpoint, \
+    add_common_status
 from jormungandr.interfaces.v1.serializer.api import StatusSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.StatedResource import StatedResource
+
 status = {
     "status": fields.Nested(instance_status_with_parameters),
-    "context": context_utc
+    "context": context_utc,
+    "warnings": ListLit([fields.Nested(beta_endpoint)])
 }
 
 
 class Status(StatedResource):
     def __init__(self, *args, **kwargs):
-        super(Status, self).__init__(output_type_serializer=StatusSerializer,
-                                     *args, **kwargs)
+        Status.__init__(self, *args, **kwargs)
 
     @get_serializer(serpy=StatusSerializer, marshall=status)
     def get(self, region):
         response = protobuf_to_dict(i_manager.dispatch({}, "status", instance_name=region), use_enum_labels=True)
         instance = i_manager.instances[region]
-        response['status']["is_open_data"] = instance.is_open_data
-        response['status']["is_open_service"] = instance.is_free
+        add_common_status(response, instance)
         response['status']['parameters'] = instance
         response['status']['traveler_profiles'] = travelers_profile.TravelerProfile.get_profiles_by_coverage(region)
-        response['status']['realtime_proxies'] = []
-        for realtime_proxy in instance.realtime_proxy_manager.realtime_proxies.values():
-            response['status']['realtime_proxies'].append(realtime_proxy.status())
-
-        response['status']['street_networks'] = []
-        for sn in instance.street_network_services:
-            response['status']['street_networks'].append(sn.status())
-
-        response['status']['autocomplete'] = instance.autocomplete.status()
         return response, 200
-
-    def options(self, **kwargs):
-        return self.api_description(**kwargs)

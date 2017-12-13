@@ -318,6 +318,7 @@ class CalendarsSerializer(PTReferentialSerializer):
 class StatusSerializer(serpy.DictSerializer):
     status = status.StatusSerializer()
     context = MethodField(schema_type=ContextSerializer(), display_none=False)
+    warnings = base.BetaEndpointsSerializer()
 
     def get_context(self, obj):
         return ContextSerializer(obj, is_utc=True, display_none=False).data
@@ -370,6 +371,7 @@ class TechnicalStatusSerializer(serpy.DictSerializer):
     jormungandr_version = Field(schema_type=str, display_none=True)
     bss_providers = status.BssProviderSerializer(many=True, display_none=False)
     context = MethodField(schema_type=ContextSerializer(), display_none=False)
+    warnings = base.BetaEndpointsSerializer()
 
     def get_context(self, obj):
         return ContextSerializer(obj, is_utc=True, display_none=False).data
