@@ -175,9 +175,11 @@ class add_computed_resources(object):
 
 
 class complete_links(object):
+    # This list should not change
+    EXPECTED_ITEMS = set(['category', 'id', 'internal', 'rel', 'type'])
+
     def __init__(self, resource):
         self.resource = resource
-        self.excepted_keys = set(['category', 'id', 'internal', 'rel', 'type'])
 
     def make_and_get_link(self, elem, collect):
         if collect == "notes":
@@ -199,7 +201,8 @@ class complete_links(object):
                     link = self.make_and_get_link(elem, collect)
                     if link.get('id') not in [l.get('id') for l in result[collect]]:
                         result[collect].append(link)
-                    del_keys = set(elem.keys()).difference(self.excepted_keys)
+                    # Delete all items from link not in expected_keys
+                    del_keys = set(elem.keys()).difference(self.EXPECTED_ITEMS)
                     if len(del_keys):
                         list(map(elem.pop, del_keys))
                 else:
