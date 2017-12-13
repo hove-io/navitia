@@ -46,7 +46,7 @@ status = {
 
 class Status(StatedResource):
     def __init__(self, *args, **kwargs):
-        Status.__init__(self, *args, **kwargs)
+        StatedResource.__init__(self, *args, **kwargs)
 
     @get_serializer(serpy=StatusSerializer, marshall=status)
     def get(self, region):
