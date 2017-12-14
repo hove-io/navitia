@@ -31,16 +31,20 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from jormungandr.interfaces.v1.make_links import create_external_link
-from flask_restful import marshal, marshal_with
+from flask_restful import marshal
 from jormungandr._version import __version__
 from jormungandr.exceptions import DeadSocketException
 from jormungandr.module_resource import ModuleResource
 from navitiacommon import type_pb2, request_pb2
-from jormungandr import i_manager
+from jormungandr import i_manager, USE_SERPY
 from jormungandr.protobuf_to_dict import protobuf_to_dict
-from jormungandr.interfaces.v1 import fields
 from flask.ext.restful.fields import Raw
 from jormungandr import bss_provider_manager
+from jormungandr.interfaces.v1.decorators import get_serializer
+from jormungandr.interfaces.v1.serializer.api import TechnicalStatusSerializer
+from jormungandr.interfaces.v1.serializer.status import CommonStatusSerializer
+from jormungandr.interfaces.v1.fields import ListLit, beta_endpoint, context_utc, instance_status, add_common_status
+from flask.ext.restful import fields
 
 
 class Index(ModuleResource):
@@ -65,13 +69,14 @@ class Index(ModuleResource):
         }
         return response, 200
 
-
 technical_status = {
     "bss_providers": Raw,
     "regions": Raw,
     "jormungandr_version": Raw,
-    "context": fields.context_utc
+    "context": context_utc,
+    "warnings": ListLit([fields.Nested(beta_endpoint)])
 }
+
 
 class TechnicalStatus(ModuleResource):
     """
@@ -80,7 +85,7 @@ class TechnicalStatus(ModuleResource):
     return status for all instances
     """
 
-    @marshal_with(technical_status, display_null=False)
+    @get_serializer(serpy=TechnicalStatusSerializer, marshall=technical_status)
     def get(self):
         response = {
             "jormungandr_version": __version__,
@@ -90,24 +95,22 @@ class TechnicalStatus(ModuleResource):
         regions = i_manager.get_regions()
         for key_region in regions:
             req = request_pb2.Request()
-
+            instance = i_manager.instances[key_region]
             req.requested_api = type_pb2.STATUS
             try:
-                resp = i_manager.instances[key_region].send_and_receive(req,
-                                                                        timeout=1000)
+                resp = instance.send_and_receive(req, timeout=1000)
 
                 raw_resp_dict = protobuf_to_dict(resp, use_enum_labels=True)
-                raw_resp_dict['status']["is_open_service"] = i_manager.instances[key_region].is_free
-                raw_resp_dict['status']["is_open_data"] = i_manager.instances[key_region].is_open_data
-                raw_resp_dict['status']['realtime_proxies'] = []
-                for realtime_proxy in i_manager.instances[key_region].realtime_proxy_manager.realtime_proxies.values():
-                    raw_resp_dict['status']['realtime_proxies'].append(realtime_proxy.status())
+                add_common_status(raw_resp_dict, instance)
 
-                resp_dict = marshal(raw_resp_dict['status'],
-                                    fields.instance_status)
+                if USE_SERPY:
+                    resp_dict = CommonStatusSerializer(raw_resp_dict['status']).data
+                else:
+                    resp_dict = marshal(raw_resp_dict['status'], instance_status)
             except DeadSocketException:
                 resp_dict = {
                     "status": "dead",
+                    "realtime_proxies": [],
                     "error": {
                         "code": "dead_socket",
                         "value": "The region {} is dead".format(key_region)

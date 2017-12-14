@@ -37,7 +37,6 @@ from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
 from jormungandr.utils import get_lon_lat as get_lon_lat_from_id
 import requests
 from jormungandr.exceptions import TechnicalError, UnknownObject
-from flask import current_app
 from flask.ext.restful import marshal
 from jormungandr.interfaces.v1.fields import Lit, ListLit, beta_endpoint, feed_publisher_bano, feed_publisher_osm
 from flask.ext.restful import fields

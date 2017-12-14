@@ -27,10 +27,6 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-
-from flask_restful import Resource
-from flask import request
-
 from jormungandr.resources_utils import DocumentedResource
 from jormungandr.stat_manager import manage_stat_caller
 from jormungandr import stat_manager

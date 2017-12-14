@@ -153,6 +153,10 @@ class TestEndPoint(AbstractTestFixture):
         get_not_null(main_status, 'is_open_service') == False
         assert get_not_null(main_status, 'status') == 'running'
 
+        assert 'warnings' in json_response
+        assert len(json_response['warnings']) == 1
+        json_response['warnings'][0]['id'] == 'beta_endpoint'
+
     def test_one_status(self):
         json_response = self.query("/v1/coverage/main_routing_test/status")
 
@@ -163,6 +167,10 @@ class TestEndPoint(AbstractTestFixture):
         assert json_response["status"]["is_open_service"] == False
         assert 'realtime_contributors' in json_response['status']
         assert 'realtime_proxies' in json_response['status']
+
+        assert 'warnings' in json_response
+        assert len(json_response['warnings']) == 1
+        json_response['warnings'][0]['id'] == 'beta_endpoint'
 
     def test_geo_status(self):
         response = self.query('/v1/coverage/main_routing_test/_geo_status', display=True)
