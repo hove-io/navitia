@@ -2255,3 +2255,28 @@ BOOST_AUTO_TEST_CASE(test_indexes_after_applying_disruption) {
     BOOST_REQUIRE_EQUAL(resp.vehicle_journeys(5).uri(), "vj:2:Adapted:1:Disruption_C:Disruption_D");
 
 }
+
+BOOST_AUTO_TEST_CASE(significant_delay_on_stop_point_dont_remove_it) {
+    ed::builder b("20170101");
+    b.vj("l1")
+        ("A", "08:10"_t)
+        ("B", "08:20"_t);
+
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "B_delayed")
+                              .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
+                              .on(nt::Type_e::StopPoint, "B")
+                              .application_periods(btp("20170101T000000"_dt, "20170120T1120000"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+    b.data->build_raptor();
+
+    auto res = compute(*b.data, nt::RTLevel::Adapted, "A", "B", "08:00"_t, 0);
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    BOOST_CHECK_EQUAL(res[0].items[0].stop_times.size(), 2);
+}

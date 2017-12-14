@@ -295,6 +295,13 @@ struct add_impacts_visitor : public apply_impacts_visitor {
     void operator()(nt::StopPoint* stop_point) {
         log_start_action(stop_point->uri);
 
+        if (impact->severity->effect != nt::disruption::Effect::NO_SERVICE
+            && impact->severity->effect != nt::disruption::Effect::DETOUR) {
+            LOG4CPLUS_DEBUG(log, "Unhandled action on " << stop_point->uri << " for stop point");
+            this->log_end_action(stop_point->uri);
+            return;
+        }
+
         using namespace boost::posix_time;
         using namespace boost::gregorian;
 
