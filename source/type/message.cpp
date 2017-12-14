@@ -34,7 +34,7 @@ www.navitia.io
 
 #include <boost/format.hpp>
 #include <boost/algorithm/cxx11/all_of.hpp>
-#include <boost/algorithm/cxx11/one_of.hpp>
+#include <boost/algorithm/cxx11/any_of.hpp>
 
 namespace pt = boost::posix_time;
 namespace bg = boost::gregorian;
@@ -217,7 +217,7 @@ bool Impact::is_only_line_section() const {
 }
 
 bool Impact::is_line_section_of(const Line& line) const {
-    return boost::algorithm::one_of(informed_entities(), [&](const PtObj& entity) {
+    return boost::algorithm::any_of(informed_entities(), [&](const PtObj& entity) {
         const auto* line_section = boost::get<nt::disruption::LineSection>(&entity);
         return line_section && line_section->line && line_section->line->idx == line.idx;
     });

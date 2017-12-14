@@ -620,18 +620,10 @@ void PbCreator::Filler::fill_pb_object(const nt::Line* l, pbnavitia::Line* line)
          * We could have link the LineSection impact with the line, but that would change the code and
          * the behavior too much.
          * */
-        std::set<boost::shared_ptr<nt::disruption::Impact>> added_impact;
         auto fill_line_section_message = [&](const nt::VehicleJourney& vj) {
-            for(const auto& impact: vj.meta_vj->impacted_by) {
-                auto impact_ptr = impact.lock();
-                if (! impact_ptr)
-                    continue;
-                for (const auto& entity: impact_ptr->informed_entities()) {
-                    if (boost::get<nt::disruption::LineSection>(&entity) &&
-                            added_impact.insert(impact_ptr).second ) {
-                        fill_messages(vj.meta_vj, line);
-                        return true;
-                    }
+            for(const auto& impact_ptr: vj.meta_vj->get_publishable_messages(pb_creator.now)) {
+                if (impact_ptr->is_line_section_of(*vj.route->line)) {
+                    fill_message(impact_ptr, line);
                 }
             }
             return true;
