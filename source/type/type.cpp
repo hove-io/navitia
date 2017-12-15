@@ -687,16 +687,16 @@ Indexes MetaVehicleJourney::get(Type_e type, const PT_Data& data) const {
     return result;
 }
 
-bool MetaVehicleJourney::is_already_impacted_by(const boost::shared_ptr<disruption::Impact>& impact) {
-    return std::any_of(std::begin(impacted_by), std::end(impacted_by),
+bool MetaVehicleJourney::is_already_modified_by(const boost::shared_ptr<disruption::Impact>& impact) {
+    return std::any_of(std::begin(modified_by), std::end(modified_by),
             [&](const boost::weak_ptr<nt::disruption::Impact>& i) {
                 return i.lock() == impact;});
 }
 
 
 void MetaVehicleJourney::push_unique_impact(const boost::shared_ptr<disruption::Impact>& impact) {
-    if (! is_already_impacted_by(impact)) {
-        impacted_by.push_back(impact);
+    if (! is_already_modified_by(impact)) {
+        modified_by.push_back(impact);
     }
 }
 
