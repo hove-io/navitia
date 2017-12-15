@@ -1170,25 +1170,25 @@ BOOST_AUTO_TEST_CASE(stop_point_deletion_test) {
 
     const auto* mvj_A = b.data->pt_data->meta_vjs["VjA"];
     const auto* mvj_B = b.data->pt_data->meta_vjs["VjB"];
-    BOOST_CHECK_EQUAL(mvj_A->impacted_by.size(), 3);
-    BOOST_CHECK_EQUAL(mvj_B->impacted_by.size(), 5);
+    BOOST_CHECK_EQUAL(mvj_A->modified_by.size(), 3);
+    BOOST_CHECK_EQUAL(mvj_B->modified_by.size(), 5);
 
     navitia::delete_disruption("disruption_does't_exist", *b.data->pt_data, *b.data->meta);
-    BOOST_CHECK_EQUAL(mvj_A->impacted_by.size(), 3);
-    BOOST_CHECK_EQUAL(mvj_B->impacted_by.size(), 5);
+    BOOST_CHECK_EQUAL(mvj_A->modified_by.size(), 3);
+    BOOST_CHECK_EQUAL(mvj_B->modified_by.size(), 5);
 
 
     navitia::delete_disruption("stop_area_closed_1", *b.data->pt_data, *b.data->meta);
-    BOOST_CHECK_EQUAL(mvj_A->impacted_by.size(), 2);
-    BOOST_CHECK_EQUAL(mvj_B->impacted_by.size(), 4);
+    BOOST_CHECK_EQUAL(mvj_A->modified_by.size(), 2);
+    BOOST_CHECK_EQUAL(mvj_B->modified_by.size(), 4);
 
     navitia::delete_disruption("stop_area_closed_2", *b.data->pt_data, *b.data->meta);
-    BOOST_CHECK_EQUAL(mvj_A->impacted_by.size(), 1);
-    BOOST_CHECK_EQUAL(mvj_B->impacted_by.size(), 3);
+    BOOST_CHECK_EQUAL(mvj_A->modified_by.size(), 1);
+    BOOST_CHECK_EQUAL(mvj_B->modified_by.size(), 3);
 
     navitia::delete_disruption("stop_area_closed_3", *b.data->pt_data, *b.data->meta);
-    BOOST_CHECK_EQUAL(mvj_A->impacted_by.size(), 0);
-    BOOST_CHECK_EQUAL(mvj_B->impacted_by.size(), 2);
+    BOOST_CHECK_EQUAL(mvj_A->modified_by.size(), 0);
+    BOOST_CHECK_EQUAL(mvj_B->modified_by.size(), 2);
 
     test_vjs_indexes(b.data->pt_data->vehicle_journeys);
 

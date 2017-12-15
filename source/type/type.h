@@ -809,7 +809,7 @@ struct MetaVehicleJourney: public Header, HasMessages {
 
     // impacts not directly on this vj, by example an impact on a line will impact the vj, so we add the impact here
     // because it's not really on the vj
-    std::vector<boost::weak_ptr<disruption::Impact>> impacted_by;
+    std::vector<boost::weak_ptr<disruption::Impact>> modified_by;
 
     /// map of the calendars that nearly match union of the validity pattern
     /// of the theoric vj, key is the calendar name
@@ -818,7 +818,7 @@ struct MetaVehicleJourney: public Header, HasMessages {
     template<class Archive> void serialize(Archive & ar, const unsigned int) {
         ar & idx & uri & rtlevel_to_vjs_map
            & associated_calendars & impacts
-           & impacted_by & tz_handler;
+           & modified_by & tz_handler;
     }
 
     FrequencyVehicleJourney*
@@ -874,7 +874,7 @@ struct MetaVehicleJourney: public Header, HasMessages {
 
     void push_unique_impact(const boost::shared_ptr<disruption::Impact>& impact);
 
-    bool is_already_impacted_by(const boost::shared_ptr<disruption::Impact>& impact);
+    bool is_already_modified_by(const boost::shared_ptr<disruption::Impact>& impact);
 
 private:
     template<typename VJ>
