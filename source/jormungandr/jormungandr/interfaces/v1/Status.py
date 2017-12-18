@@ -49,10 +49,11 @@ class Status(StatedResource):
         super(Status, self).__init__(self, *args, **kwargs)
 
     @get_serializer(serpy=StatusSerializer, marshall=status)
-    def get(self, region):
-        response = protobuf_to_dict(i_manager.dispatch({}, "status", instance_name=region), use_enum_labels=True)
-        instance = i_manager.instances[region]
+    def get(self, region=None, lon=None, lat=None):
+        region_str = i_manager.get_region(region, lon, lat)
+        response = protobuf_to_dict(i_manager.dispatch({}, "status", instance_name=region_str), use_enum_labels=True)
+        instance = i_manager.instances[region_str]
         add_common_status(response, instance)
         response['status']['parameters'] = instance
-        response['status']['traveler_profiles'] = travelers_profile.TravelerProfile.get_profiles_by_coverage(region)
+        response['status']['traveler_profiles'] = travelers_profile.TravelerProfile.get_profiles_by_coverage(region_str)
         return response, 200

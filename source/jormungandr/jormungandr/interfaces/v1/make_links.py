@@ -190,7 +190,7 @@ class add_coverage_link(generate_links):
                           "departures": "stop_areas/{stop_areas.id}",
                           "arrivals": "stop_areas/{stop_areas.id}",
                           "stop_schedules": "stop_areas/{stop_areas.id}",
-                          "route_schedules": "stop_areas/{stop_areas.id}"}
+                          "route_schedules": "lines/{lines.id}"}
 
     def __call__(self, f):
         @wraps(f)

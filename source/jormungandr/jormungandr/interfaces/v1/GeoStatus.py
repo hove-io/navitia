@@ -53,8 +53,9 @@ class GeoStatus(StatedResource):
         super(GeoStatus, self).__init__(output_type_serializer=GeoStatusSerializer, *args, **kwargs)
 
     @get_serializer(serpy=GeoStatusSerializer, marshall=geo_status)
-    def get(self, region):
-        instance = i_manager.get_instances(region)[0]
+    def get(self, region=None, lon=None, lat=None):
+        region_str = i_manager.get_region(region, lon, lat)
+        instance = i_manager.instances[region_str]
         return {'geo_status': instance.autocomplete.geo_status(instance)}, 200
 
     def options(self, **kwargs):
