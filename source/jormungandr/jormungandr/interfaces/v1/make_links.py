@@ -182,7 +182,15 @@ class add_pagination_links(object):
 
 class add_coverage_link(generate_links):
     def __init__(self):
-        self.links = ["places", "journeys", "coverage"]
+        self.links = ["coverage",
+                      "places", "pt_objects",
+                      "journeys", "isochrones",
+                      "traffic_reports", "line_reports"]
+        self.links_uri = {"places_nearby": "coord/{lon;lat}",
+                          "departures": "stop_areas/{stop_areas.id}",
+                          "arrivals": "stop_areas/{stop_areas.id}",
+                          "stop_schedules": "stop_areas/{stop_areas.id}",
+                          "route_schedules": "lines/{lines.id}"}
 
     def __call__(self, f):
         @wraps(f)
@@ -200,6 +208,11 @@ class add_coverage_link(generate_links):
                 kwargs["templated"] = True
                 for link in self.links:
                     kwargs["rel"] = link
+                    data["links"].append(create_external_link("v1.{}".format(link), **kwargs))
+                for link, uri in self.links_uri.items():
+                    kwargs["rel"] = link
+                    if uri is not None:
+                        kwargs["uri"] = uri
                     data["links"].append(create_external_link("v1.{}".format(link), **kwargs))
             if isinstance(objects, tuple):
                 return data, code, header
