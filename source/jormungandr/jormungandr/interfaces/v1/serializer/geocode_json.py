@@ -151,10 +151,14 @@ class PoiSerializer(serpy.DictSerializer):
     name = NestedPropertyField(attr='properties.geocoding.name', display_none=True)
     administrative_regions = AdministrativeRegionsSerializer()
     poi_type = jsonschema.MethodField(display_none=False)
+    properties = jsonschema.MethodField(display_none=False)
 
     def get_poi_type(self, obj):
         poi_types = obj.get('properties', {}).get('geocoding', {}).get('poi_types', [])
         return PoiTypeSerializer(poi_types[0]).data if isinstance(poi_types, list) and poi_types else None
+
+    def get_properties(self, obj):
+        return obj.get('properties', {}).get('geocoding', {}).get('properties', {})
 
 
 class GeocodePoiSerializer(serpy.DictSerializer):

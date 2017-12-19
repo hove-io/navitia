@@ -196,6 +196,7 @@ class PoiField(fields.Raw):
             "name": geocoding.get('name'),
             "administrative_regions":
                 create_administrative_regions_field(geocoding) or create_admin_field(geocoding),
+            "properties": geocoding.get("properties")
         }
         if isinstance(poi_types, list) and poi_types:
             res['poi_type'] = poi_types[0]
