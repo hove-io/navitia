@@ -477,11 +477,11 @@ class AbstractAutocompleteAndRouting():
                             "postcode": "02100",
                             "type": "poi",
                             "citycode": "02000",
-                            "properties": {
-                              "amenity": "bicycle_rental",
-                              "capacity": "20",
-                              "ref": "12"
-                            },
+                            "properties": [
+                                {"key": "amenity", "value": "bicycle_rental"},
+                                {"key": "capacity", "value": "20"},
+                                {"key": "ref", "value": "12"}
+                            ],
                             "administrative_regions": [
                                 {
                                     "id": "admin:fr:02000",
