@@ -334,9 +334,9 @@ equipment_id | chaine | Optionnel | Identifiant de la propriété accessibilité
 contributor_id | chaine | Optionnel | Identifiant du contributeur. Cette valeur est renseignée sur les objets de plus bas niveau (points d'arrêts et zone géographique de location_type 0 et 2) et est ignorée sur les autres. 
 
     (1) Type de l'arrêt ou de la zone :
-        0 ou non spécifié - Arrêt physique
-        1 - Zone d'arrêt
-        2 - Zone géographique (pour le TAD zonal de type "adressse à adresse")
+        0 ou non spécifié - Arrêt physique (objet stop_point)
+        1 - Zone d'arrêt (objet stop_area)
+        2 - Zone géographique (pour le TAD zonal de type "adressse à adresse", objet stop_zone)
         3 - Commune
 
 ### stop_times.txt (requis)
@@ -459,7 +459,7 @@ object_system | chaine | Requis | Nom du système d'identification de l'objet  (
 object_code | chaine | Requis | Code d'identification de l'objet dans le système considéré.
 
 Kisio Digital fournit dans ce fichier :
-* les identifiants des objets dans l'ancien système Navitia pour les objets "network", "line", "route", "trip", "stop" avec pour object_system la chaine **"navitia1"**.
+* les identifiants des objets dans l'ancien système Navitia pour les objets "network", "line", "route", "trip", "stop_point" et "stop_area" avec pour object_system la chaine **"navitia1"**.
 * les identifiants des objets déclarés dans la source d'alimentation (NTFS ou GTFS par exemple) avec pour object_system la chaine **"source"**.
 
 ### admin_stations.txt (optionnel)
