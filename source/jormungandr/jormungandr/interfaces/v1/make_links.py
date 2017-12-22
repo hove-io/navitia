@@ -34,6 +34,7 @@ from functools import wraps
 from jormungandr.interfaces.v1.converters_collection_type import resource_type_to_collection,\
     collections_to_resource_type
 from flask.ext.restful.utils import unpack
+from jormungandr import app
 
 
 def create_external_link(url, rel, _type=None, templated=False, description=None, **kwargs):
@@ -184,8 +185,11 @@ class add_coverage_link(generate_links):
     def __init__(self):
         self.links = ["coverage",
                       "places", "pt_objects",
-                      "journeys", "isochrones",
-                      "traffic_reports", "line_reports"]
+                      "journeys", "traffic_reports", "line_reports"]
+
+        if app.config['GRAPHICAL_ISOCHRONE']:
+            self.links.append("isochrones")
+
         self.links_uri = {"places_nearby": "coord/{lon;lat}",
                           "departures": "stop_areas/{stop_areas.id}",
                           "arrivals": "stop_areas/{stop_areas.id}",
