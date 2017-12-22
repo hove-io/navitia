@@ -158,8 +158,8 @@ class PoiSerializer(serpy.DictSerializer):
         return PoiTypeSerializer(poi_types[0]).data if isinstance(poi_types, list) and poi_types else None
 
     def get_properties(self, obj):
-        prepoerties = obj.get('properties', {}).get('geocoding', {}).get('properties', [])
-        return {p.get("key"): p.get("value") for p in prepoerties}
+        return {p.get("key"): p.get("value") 
+                for p in obj.get('properties', {}).get('geocoding', {}).get('properties', [])}
 
 
 class GeocodePoiSerializer(serpy.DictSerializer):
