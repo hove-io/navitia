@@ -37,9 +37,8 @@ from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
 from jormungandr.utils import get_lon_lat as get_lon_lat_from_id
 import requests
 from jormungandr.exceptions import TechnicalError, UnknownObject
-from flask.ext.restful import marshal
+from flask.ext.restful import marshal, fields
 from jormungandr.interfaces.v1.fields import Lit, ListLit, beta_endpoint, feed_publisher_bano, feed_publisher_osm
-from flask.ext.restful import fields
 import re
 
 
@@ -196,6 +195,7 @@ class PoiField(fields.Raw):
             "name": geocoding.get('name'),
             "administrative_regions":
                 create_administrative_regions_field(geocoding) or create_admin_field(geocoding),
+            "properties": {p.get('key'): p.get('value') for p in geocoding.get("properties", [])}
         }
         if isinstance(poi_types, list) and poi_types:
             res['poi_type'] = poi_types[0]
