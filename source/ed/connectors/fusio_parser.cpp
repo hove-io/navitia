@@ -1742,7 +1742,7 @@ ed::types::PhysicalMode* GtfsData::get_or_create_default_physical_mode(Data & da
 
 void FusioParser::parse_files(Data& data, const std::string& beginning_date) {
 
-    parse<FeedInfoFusioHandler>(data, "feed_infos.txt");
+    parse<FeedInfoFusioHandler>(data, "feed_infos.txt", true);
 
     manage_production_date(data, beginning_date);
 
