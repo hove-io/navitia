@@ -485,7 +485,7 @@ Colonne | Type | Contrainte | Commentaire
 line_group_id | chaine | Requis | Identifiant du groupe de ligne
 line_id | chaine | Requis | Identifiant de la ligne faisant partie du groupe de lignes (lien vers le fichier lines.txt). Attention, une ligne peut faire partie de plusieurs groupes de lignes.
 
-### feed_infos.txt (optionnel)
+### feed_infos.txt (requis)
 Ce fichier contient des informations sur le jeu de données et le système amont qui l'a généré. Pour faciliter son utiilisation, la structure du fichier est générique, et la liste des informations est listée ci-dessous.
 
 #### Description du format du fichier
