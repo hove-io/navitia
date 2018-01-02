@@ -40,7 +40,7 @@ datasets.txt | Optionnel | Ce fichier contient les sources de données d'un cont
 ## Fichiers de base
 Fichier | Contrainte | Commentaire
 --- | --- | ---
-feed_infos.txt | Requis | Ce fichier contient des informations complémentaires sur la plage de validité des données, le fournisseur ou toute autre information complémentaires.
+feed_infos.txt | Optionnel | Ce fichier contient des informations complémentaires sur la plage de validité des données, le fournisseur ou toute autre information complémentaires. **ATTENTION! CE FICHIER SERA OBLIGATOIRE DANS LES PROCHAINES VERSIONS DU NTFS**
 networks.txt | Requis | Ce fichier contient la description des différents réseaux.
 commercial_modes.txt | Requis | Ce fichier contient les modes commerciaux (Mode NAViTiA 1)
 companies.txt | Requis | Ce fichier contient les compagnies
@@ -331,7 +331,7 @@ geometry_id | géometrie | Optionnel | Ce champ est un lien vers le fichier geom
 parent_station | chaine | Optionnel | Identifiant de la zone d'arrêt, utilisé que sur des arrêts de type 0 (point d'arrêt)
 stop_timezone | timezones | Optionnel | Fuseau horaire, se référer à http://en.wikipedia.org/wiki/List_of_tz_zones
 equipment_id | chaine | Optionnel | Identifiant de la propriété accessibilité
-contributor_id | chaine | Optionnel | Identifiant du contributeur. Cette valeur est renseignée sur les objets de plus bas niveau (points d'arrêts et zone géographique de location_type 0 et 2) et est ignorée sur les autres. 
+contributor_id | chaine | Optionnel | Identifiant du contributeur. Cette valeur est renseignée sur les objets de plus bas niveau (points d'arrêts et zone géographique de location_type 0 et 2) et est ignorée sur les autres.
 
     (1) Type de l'arrêt ou de la zone :
         0 ou non spécifié - Arrêt physique (objet stop_point)
@@ -351,9 +351,9 @@ alighting_duration | entier | Optionnel | Durée nécessaire au débarquement en
 stop_id | chaine | Requis | Identifiant de l'arrêt physique de passage (cas général). Ce champ peut également référencer une "zone géographique" (stop de type 2) ou une commune (stop de type 3) dans le cas de TAD zonal.
 stop_sequence | entier | Requis | Ordre de passage de desserte dans la circulation
 stop_headsign | chaine | Optionnel |
-pickup_type | entier | Optionnel | Indication sur l'horaire (issues du gtfs)
+pickup_type | entier (1) | Optionnel | Indication sur l'horaire (issues du gtfs)
 drop_off_type | entier (1) | Optionnel | Indication sur l'horaire (issues du gtfs)
-local_zone_id  | entier (1) | Optionnel | identifiant de la zone d'ITL de l'horaire
+local_zone_id  | entier | Optionnel | identifiant de la zone d'ITL de l'horaire
 date_time_estimated | entier (2) | Optionnel | Précise si l'heure de passage est fiable ou si elle est donnée à titre indicative
 
     (1) Indication sur l'horaire (issues du gtfs) :
@@ -485,7 +485,9 @@ Colonne | Type | Contrainte | Commentaire
 line_group_id | chaine | Requis | Identifiant du groupe de ligne
 line_id | chaine | Requis | Identifiant de la ligne faisant partie du groupe de lignes (lien vers le fichier lines.txt). Attention, une ligne peut faire partie de plusieurs groupes de lignes.
 
-### feed_infos.txt (requis)
+### feed_infos.txt (optionnel)
+**ATTENTION! CE FICHIER SERA OBLIGATOIRE DANS LES PROCHAINES VERSIONS DU NTFS**
+
 Ce fichier contient des informations sur le jeu de données et le système amont qui l'a généré. Pour faciliter son utiilisation, la structure du fichier est générique, et la liste des informations est listée ci-dessous.
 
 #### Description du format du fichier
