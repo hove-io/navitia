@@ -7,7 +7,7 @@ Ce document vient compléter les spécififcations [ntfs_fr](./ntfs_fr.md) pour y
 Attention, le formatage de ces fichiers est différent.
 
 Bien qu'actuellement utilisée, cette extension est dépréciée :
-la gestion des tarifs sera réintégrée au format NTFS "standard".
+une future version du format NTFS inclura une gestion des tarifs différente de celle-ci.
 
 # Format des données de tarification
 
