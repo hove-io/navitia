@@ -45,3 +45,8 @@
     * ajout du champ dataset_extrapolation dans le fichier datasets.txt
 * Version 0.6.4 du 31/03/2017
     * ajout du mode physique RailShuttle pour les VAL
+* Version 0.6.5 du 02/01/2018
+    * precision sur les arrival/departure times
+    * feed_infos.txt est optionnel en 0.6
+* Version 0.7.0 du 03/01/2017
+    * feed_infos.txt est obligatoire

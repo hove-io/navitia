@@ -1,10 +1,13 @@
-NTFS version 0.6 - Extension tarifaire
+NTFS - Extension tarifaire
 ======================================
 
 # Introduction
 
-Ce document vient compléter les spécififcations [ntfs_0.6](./ntfs_0.6.md) pour y ajouter la gestion des tarifs.
+Ce document vient compléter les spécififcations [ntfs_fr](./ntfs_fr.md) pour y ajouter la gestion des tarifs.
 Attention, le formatage de ces fichiers est différent.
+
+Bien qu'actuellement utilisée, cette extension est dépréciée :
+une future version du format NTFS inclura une gestion des tarifs différente de celle-ci.
 
 # Format des données de tarification
 
@@ -26,7 +29,7 @@ od_fares.csv | Optionnel | Liste des tickets dont le tarif est définit par une 
 
 ## prices.csv
 Ce fichier contient le prix (plein tarif uniquement) de chaque ticket. Les conditions d'utilisation de ce ticket sont
-précisées soit dans le fichier **fares.csv** soit dans le fichier **od_fares.csv**.  
+précisées soit dans le fichier **fares.csv** soit dans le fichier **od_fares.csv**.
 Il est possible de préciser plusieurs tarifs pour un même billet avec des dates de validité différentes (pour gérer un changement de tarif).
 
 > **Attention : Ce fichier est _SANS_ ligne d'entête.**
@@ -58,10 +61,10 @@ Destination mode | chaine | Requis | Type d'objet de destination pour ce ticket 
 ticket_id | chaine | Requis | Identifiant du ticket dont le prix est référencé dans le fichier price.csv
 
 **(1) Fonctionnement de la description de l'origine (règle identique pour la destination) :**
-* Si le champ **Origin mode** contient la valeur **zone** : le champ **Origin ID** contient une zone tarifaire telle que décrite dans le fichier **stops.txt** dans le champ *fare_zone_id*.  
+* Si le champ **Origin mode** contient la valeur **zone** : le champ **Origin ID** contient une zone tarifaire telle que décrite dans le fichier **stops.txt** dans le champ *fare_zone_id*.
 Par exemple : pour définir que le tarif par OD fonctionne sur toutes les gares de Paris (qui est en zone 1), il suffit d'indiquer 1 dans la colonne Origin_ID.
-* Si le champ **Origin mode** contient la valeur **stop** : le champ **Origin ID** contient une URI de zone d'arrêt (champ **stop_id** de la zone d'arrêt avec le préfixe _"stop_area:"_)  
-* Si le champ **Origin mode** contient la valeur **mode** : le champ **Origin ID** contient une URI de mode physique (champ **physical_mode_id** du mode physique avec le préfixe _"physical_mode:"_)  
+* Si le champ **Origin mode** contient la valeur **stop** : le champ **Origin ID** contient une URI de zone d'arrêt (champ **stop_id** de la zone d'arrêt avec le préfixe _"stop_area:"_)
+* Si le champ **Origin mode** contient la valeur **mode** : le champ **Origin ID** contient une URI de mode physique (champ **physical_mode_id** du mode physique avec le préfixe _"physical_mode:"_)
 Par exemple : si le tarif par OD permet de partir de n'importe quelle station de métro, indiquer "physical_mode:metro" dans la colonne Origin_ID
 
 ## fares.csv (optionnel)
@@ -78,18 +81,18 @@ Colonne | Type | Contrainte | Commentaire
 "condition globale" | chaine | Requis | Condition globale d'utilisation du ticket (vide, "nothing", "exclusive", "with_changes" ou "symetric")
 "clef ticket" | chaine | Requis | ID tarif (lien avec prices.csv)
 
-**État avant et aprés changement :**  
+**État avant et aprés changement :**
 Un état avant un changement (ou après un changement) est décrit par un objet TC, selon l'une des possibilités suivantes :
-* Description par un mode physique : Indiquer une URI de mode physique (champ **physical_mode_id** du mode physique avec le préfixe _"physical_mode:"_)  
+* Description par un mode physique : Indiquer une URI de mode physique (champ **physical_mode_id** du mode physique avec le préfixe _"physical_mode:"_)
 Par exemple : indiquer "mode=physical_mode:metro" pour indiquer que le voyageur se trouve dans le métro avant le changement.
-* Description par un réseau : Indiquer une URI de réseau (champ **network_id** du réseau avec le préfixe _"network:"_)  
+* Description par un réseau : Indiquer une URI de réseau (champ **network_id** du réseau avec le préfixe _"network:"_)
 Par exemple, indiquer "network=network:Filbleu" pour indiquer que le voyageur se trouve sur le réseau Filbleu avant le changement
-* Description par une ligne : Indiquer une URI de ligne (champ **line_id** de la ligne avec le préfixe _"line:"_)  
+* Description par une ligne : Indiquer une URI de ligne (champ **line_id** de la ligne avec le préfixe _"line:"_)
 * Indiquer **"\*"** pour ne pas fournir de contrainte particulière
 
-**Conditions de début et fin de trajet :**  
+**Conditions de début et fin de trajet :**
 Ces deux champs permettent d'ajouter des conditions au départ (ou à l'arrivée) du trajet :
-* Restriction à une zone tarifaire : préciser dans le champ la valeur _"zone=[fare_zone_id]"_  
+* Restriction à une zone tarifaire : préciser dans le champ la valeur _"zone=[fare_zone_id]"_
 Par exemple : si le voyageur est sur la commune de Paris, on peut indiquer _"zone=1"_ afin de créer une règle applicable uniquement depuis Paris.
 * Restriction à une zone d'arrêt : préciser dans le champ la valeur _"stoparea=[stop_area_id]"_
 (champ **stop_id** de l'arrêt ayant pour **location_type** la valeur **1** avec le préfixe _"stoparea:"_)
@@ -98,17 +101,17 @@ afin de créer une règle applicable uniquement depuis Orsay.
 On a donc une autre modélisation des OD, qui permet de combiner avec d'autres choses :
 Par exemple : `*;network=network:SNCF;stoparea=stop_area:SNC:Troyes;stoparea=stop_area:SNC:Reims;;1`
 appliquera le ticket "1" uniquement pour les sections qui font Troyes-Reims sur le réseau SNCF.
-* Restriction à une durée de voyage : préciser dans le champ la valeur _"duration<[nombre de minutes]"_.  
+* Restriction à une durée de voyage : préciser dans le champ la valeur _"duration<[nombre de minutes]"_.
 Par exemple : indiquer _"duration<60"_ pour préciser que le ticket n'est encore valable que si le voyageur l'utilise depuis moins de 60 minutes.
-* Restriction à un nombre de correspondances : préciser dans le champ la valeur _"nb_changes<[nombre de correspondances]"_.  
+* Restriction à un nombre de correspondances : préciser dans le champ la valeur _"nb_changes<[nombre de correspondances]"_.
 Par exemple : indiquer _"nb_changes<2"_ pour préciser que le ticket n'est utilisable que pour une correspondance.
 
-**Condition globale :**  
+**Condition globale :**
 Ce champ précise la condition globale d'utilisation du ticket :
 * vide ou "nothing" : ce ticket n'a aucune condition spécifique
 * "exclusive": correspond à un ticket à tarification spéciale sans correspondance (Noctilien, navettes aéroport…)
 * "with_changes": correspond à un billet de type Origine-Destination permettant tous les changements.
-Par exemple: 
+Par exemple:
 ```
 *;network=network:SNCF;;;with_changes;
 network=network:SNCF;network=network:SNCF;;;with_changes;
