@@ -29,6 +29,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+from copy import deepcopy
 from jormungandr.parking_space_availability.bss.cykleo import CykleoProvider
 from jormungandr.parking_space_availability.bss.stands import Stands
 from mock import MagicMock
@@ -63,24 +64,26 @@ def parking_space_availability_cykleo_support_poi_test():
     CykleoProvider bss provider support
     """
     provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
-    assert provider.support_poi(poi)
-    poi['properties']['operator'] = 'Bad_operator'
-    assert not provider.support_poi(poi)
-    poi['properties']['operator'] = 'JCDecaux'
-    poi['properties']['network'] = 'Bad_network'
-    assert not provider.support_poi(poi)
-    poi['properties']['operator'] = 'Bad_operator'
-    assert not provider.support_poi(poi)
+    poi_copy = deepcopy(poi)
+    assert provider.support_poi(poi_copy)
+    poi_copy['properties']['operator'] = 'Bad_operator'
+    assert not provider.support_poi(poi_copy)
+    poi_copy['properties']['operator'] = 'JCDecaux'
+    poi_copy['properties']['network'] = 'Bad_network'
+    assert not provider.support_poi(poi_copy)
+    poi_copy['properties']['operator'] = 'Bad_operator'
+    assert not provider.support_poi(poi_copy)
 
     # same test with "02" in id, not "2"
-    assert provider.support_poi(poi_with_0)
-    poi_with_0['properties']['operator'] = 'Bad_operator'
-    assert not provider.support_poi(poi_with_0)
-    poi_with_0['properties']['operator'] = 'JCDecaux'
-    poi_with_0['properties']['network'] = 'Bad_network'
-    assert not provider.support_poi(poi_with_0)
-    poi['properties']['operator'] = 'Bad_operator'
-    assert not provider.support_poi(poi_with_0)
+    poi_with_0_copy = deepcopy(poi_with_0)
+    assert provider.support_poi(poi_with_0_copy)
+    poi_with_0_copy['properties']['operator'] = 'Bad_operator'
+    assert not provider.support_poi(poi_with_0_copy)
+    poi_with_0_copy['properties']['operator'] = 'JCDecaux'
+    poi_with_0_copy['properties']['network'] = 'Bad_network'
+    assert not provider.support_poi(poi_with_0_copy)
+    poi_with_0_copy['properties']['operator'] = 'Bad_operator'
+    assert not provider.support_poi(poi_with_0_copy)
 
     invalid_poi = {}
     assert not provider.support_poi(invalid_poi)
