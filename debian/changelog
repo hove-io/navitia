@@ -1,3 +1,21 @@
+navitia2 (2.48.0) unstable; urgency=low
+
+  * Jormun: manage Cykleo station with id starting by "0"  <https://github.com/CanalTP/navitia/pull/2280>
+  * Doc: feed_infos.txt is now required  <https://github.com/CanalTP/navitia/pull/2278>
+  * Doc: feed_infos.txt should be optional in ntfs v0.6  <https://github.com/CanalTP/navitia/pull/2275>
+  * Doc: update ntfs about empty departure/arrival times  <https://github.com/CanalTP/navitia/pull/2277>
+  * Jormungandr: don't try to create isochrone links if it's disabled  <https://github.com/CanalTP/navitia/pull/2274>
+  * Doc: fix ambiguous definition of stop codes  <https://github.com/CanalTP/navitia/pull/2273>
+  * Jormun: Properties poi object from bragi  <https://github.com/CanalTP/navitia/pull/2272>
+  * Jormun: little hateoas improvments and debian 7 compiling  <https://github.com/CanalTP/navitia/pull/2271>
+  * kraken: Disruption fixes  <https://github.com/CanalTP/navitia/pull/2270>
+  * Jormun: Migration /coord serpy  <https://github.com/CanalTP/navitia/pull/2262>
+  * Jormun: refactoring links on notes and exceptions  <https://github.com/CanalTP/navitia/pull/2267>
+  * Doc: Little update + debian7 compile  <https://github.com/CanalTP/navitia/pull/2269>
+  * Test: Fix docker tests + update utils  <https://github.com/CanalTP/navitia/pull/2268>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Fri, 05 Jan 2018 15:01:11 +0100
+
 navitia2 (2.47.0) unstable; urgency=low
 
   * Ed & Kraken: collections and stop_schedules ordering  <https://github.com/CanalTP/navitia/pull/2265>

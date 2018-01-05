@@ -73,19 +73,23 @@ struct ArgsFixture {
 };
 
 // check headsign value for stop times on given vjs
-static void check_headsigns(const nt::Data& data, const std::string& headsign,
-                     size_t first_it_vj, size_t last_it_vj,
-                     size_t first_it_st = 0, size_t last_it_st = std::numeric_limits<size_t>::max()) {
+static void check_headsigns(const nt::Data& data, const std::string& headsign, const std::string& trip_id,
+                            size_t first_it_st = 0, size_t last_it_st = std::numeric_limits<size_t>::max()) {
     const nt::HeadsignHandler& headsigns = data.pt_data->headsign_handler;
-    auto& vj_vec = data.pt_data->vehicle_journeys;
-    for (size_t it_vj = first_it_vj; it_vj <= last_it_vj; ++it_vj) {
-        size_t real_last_it_st = vj_vec[it_vj]->stop_time_list.size() - 1;
+    const auto vj_from_headsign = headsigns.get_vj_from_headsign(headsign);
+    BOOST_REQUIRE_EQUAL(vj_from_headsign.size(), 2);
+
+    for (const auto dst: {"_dst_1", "_dst_2"}) {
+        const auto vj_id = "vehicle_journey:" + trip_id + dst;
+        const auto* vj = data.pt_data->vehicle_journeys_map.at(vj_id);
+        size_t real_last_it_st = vj->stop_time_list.size() - 1;
         if (real_last_it_st > last_it_st) {
             real_last_it_st = last_it_st;
         }
         for (size_t it_st = first_it_st; it_st <= real_last_it_st; ++it_st) {
-            BOOST_CHECK_EQUAL(headsigns.get_headsign(vj_vec[it_vj]->stop_time_list[it_st]), headsign);
+            BOOST_CHECK_EQUAL(headsigns.get_headsign(vj->stop_time_list[it_st]), headsign);
         }
+        BOOST_CHECK(navitia::contains(vj_from_headsign, vj));
     }
 }
 
@@ -117,35 +121,14 @@ static void check_ntfs(const nt::Data& data) {
     BOOST_CHECK_EQUAL(data.pt_data->networks[0]->uri, "network:ligneflexible");
 
     // check stop_time headsigns
-    const nt::HeadsignHandler& headsigns = data.pt_data->headsign_handler;
-    auto& vj_vec = data.pt_data->vehicle_journeys;
-    BOOST_REQUIRE_EQUAL(vj_vec.size(), 10);
     // check that vj 0 & 1 have headsign N1 from first 3 stop_time, then N2
-    check_headsigns(data, "N1", 0, 1, 0, 2);
-    check_headsigns(data, "N2", 0, 1, 3, 4);
+    check_headsigns(data, "N1", "trip_1", 0, 2);
+    check_headsigns(data, "N2", "trip_1", 3, 4);
     // vj 2 & 3 are named vehiclejourney2 with no headsign overload, 4-5 are named vehiclejourney3
-    check_headsigns(data, "vehiclejourney2", 2, 3);
-    check_headsigns(data, "vehiclejourney3", 4, 5);
-    check_headsigns(data, "HS", 6, 7, 0, 3);
-    check_headsigns(data, "NULL", 6, 7, 4, 5);
-    // check vj from headsign
-    BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("vehiclejourney1").size(), 2);
-    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney1"), vj_vec[0]));
-    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney1"), vj_vec[1]));
-    BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("N1").size(), 2);
-    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("N1"), vj_vec[0]));
-    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("N1"), vj_vec[1]));
-    BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("N2").size(), 2);
-    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("N2"), vj_vec[0]));
-    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("N2"), vj_vec[1]));
-    BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("vehiclejourney2").size(), 2);
-    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney2"), vj_vec[2]));
-    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney2"), vj_vec[3]));
-    BOOST_CHECK_EQUAL(headsigns.get_vj_from_headsign("vehiclejourney3").size(), 2);
-    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney3"), vj_vec[4]));
-    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("vehiclejourney3"), vj_vec[5]));
-    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("NULL"), vj_vec[6]));
-    BOOST_CHECK(navitia::contains(headsigns.get_vj_from_headsign("NULL"), vj_vec[7]));
+    check_headsigns(data, "vehiclejourney2", "trip_2");
+    check_headsigns(data, "vehiclejourney3", "trip_3");
+    check_headsigns(data, "HS", "trip_4", 0, 3);
+    check_headsigns(data, "NULL", "trip_4", 4, 5);
 
     BOOST_CHECK_EQUAL(data.pt_data->meta_vjs.size(), 5);
     for (auto& mvj : data.pt_data->meta_vjs) {

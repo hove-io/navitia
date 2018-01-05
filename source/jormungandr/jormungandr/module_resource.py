@@ -30,7 +30,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-
+from jormungandr.resources_utils import DocumentedResource
 from flask_restful import Resource
 
 

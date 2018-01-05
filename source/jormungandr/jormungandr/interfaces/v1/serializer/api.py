@@ -44,6 +44,9 @@ import serpy
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, MethodField
 from jormungandr.interfaces.v1.serializer.time import DateTimeDictField
 from jormungandr.utils import get_current_datetime_str, get_timezone_str
+from jormungandr.interfaces.v1.serializer.pt import AddressSerializer
+from jormungandr.interfaces.v1.serializer import jsonschema
+from jormungandr.interfaces.v1.serializer.status import CoverageErrorSerializer
 
 
 class CO2Serializer(PbNestedSerializer):
@@ -200,11 +203,6 @@ class PlacesNearbySerializer(PTReferentialSerializer):
     places_nearby = pt.PlaceNearbySerializer(many=True)
 
 
-class CoverageErrorSerializer(NullableDictSerializer):
-    code = Field(schema_type=str)
-    value = Field(schema_type=str)
-
-
 class CoverageDateTimeField(DateTimeDictField):
     """
     custom date time field for coverage, uses the coverage's timezone to format the date
@@ -320,6 +318,7 @@ class CalendarsSerializer(PTReferentialSerializer):
 class StatusSerializer(serpy.DictSerializer):
     status = status.StatusSerializer()
     context = MethodField(schema_type=ContextSerializer(), display_none=False)
+    warnings = base.BetaEndpointsSerializer()
 
     def get_context(self, obj):
         return ContextSerializer(obj, is_utc=True, display_none=False).data
@@ -349,3 +348,30 @@ class HeatMapSerializer(JourneysCommon):
 
     def get_context(self, obj):
         return ContextSerializer(obj, display_none=False).data
+
+
+class DictAddressesSerializer(serpy.DictSerializer):
+    address = MethodField(schema_type=AddressSerializer(many=False, display_none=False))
+    context = MethodField(schema_type=ContextSerializer(), display_none=False)
+    regions = jsonschema.Field(schema_type=str, display_none=True, many=True)
+    message = MethodField(schema_type=str)
+
+    def get_context(self, obj):
+        return ContextSerializer(obj, display_none=False).data
+
+    def get_address(self, obj):
+        return obj.get('address', None)
+
+    def get_message(self, obj):
+        return obj.get('message')
+
+
+class TechnicalStatusSerializer(serpy.DictSerializer):
+    regions = status.CommonStatusSerializer(many=True, display_none=False)
+    jormungandr_version = Field(schema_type=str, display_none=True)
+    bss_providers = status.BssProviderSerializer(many=True, display_none=False)
+    context = MethodField(schema_type=ContextSerializer(), display_none=False)
+    warnings = base.BetaEndpointsSerializer()
+
+    def get_context(self, obj):
+        return ContextSerializer(obj, is_utc=True, display_none=False).data

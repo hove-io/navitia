@@ -477,6 +477,11 @@ class AbstractAutocompleteAndRouting():
                             "postcode": "02100",
                             "type": "poi",
                             "citycode": "02000",
+                            "properties": [
+                                {"key": "amenity", "value": "bicycle_rental"},
+                                {"key": "capacity", "value": "20"},
+                                {"key": "ref", "value": "12"}
+                            ],
                             "administrative_regions": [
                                 {
                                     "id": "admin:fr:02000",
@@ -577,6 +582,9 @@ class AbstractAutocompleteAndRouting():
                 assert response_from['name'] == "bobette's label"
                 assert response_from['embedded_type'] == "poi"
                 assert response_from['poi']['label'] == "bobette's label"
+                assert response_from['poi']['properties']["amenity"] == "bicycle_rental"
+                assert response_from['poi']['properties']["capacity"] == "20"
+                assert response_from['poi']['properties']["ref"] == "12"
 
                 response_to = j['sections'][-1]['to']
                 assert response_to['id'] == journeys_to

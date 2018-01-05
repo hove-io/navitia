@@ -173,31 +173,38 @@ class add_computed_resources(object):
                 return data
         return wrapper
 
+
 class complete_links(object):
+    # This list should not change
+    EXPECTED_ITEMS = set(['category', 'id', 'internal', 'rel', 'type'])
+
     def __init__(self, resource):
         self.resource = resource
-    def complete(self, data, collect):
+
+    def make_and_get_link(self, elem, collect):
+        if collect == "notes":
+            return {"id": elem['id'], "category": elem['category'], "value": elem['value'], "type": collect}
+        type_ = "Add" if elem['except_type'] == 0 else "Remove"
+        return {"id": elem['id'], "date": elem['date'], "type": type_}
+
+    def get_links(self, data):
         queue = deque()
-        result = deque()
+        result = {"notes": [], "exceptions": []}
         queue.extend(list(data.values()))
-        collect_type = collect["type"]
-        del_types = collect["del"]
         while queue:
             elem = queue.pop()
             if isinstance(elem, (list, tuple)):
                 queue.extend(elem)
             elif hasattr(elem, 'keys'):
-                if elem.get('type') == collect_type:
-                    if collect_type == "notes":
-                        result.append({"id": elem['id'],
-                                       "category": elem['category'],
-                                       "value": elem['value'],
-                                       "type": collect_type})
-                    elif collect_type == "exceptions":
-                        type_ = "Add" if elem['except_type'] == 0 else "Remove"
-                        result.append({"id": elem['id'], "date": elem['date'], "type": type_})
-
-                    list(map(elem.pop, del_types))
+                collect = elem.get('type')
+                if collect in result:
+                    link = self.make_and_get_link(elem, collect)
+                    if link.get('id') not in [l.get('id') for l in result[collect]]:
+                        result[collect].append(link)
+                    # Delete all items from link not in expected_keys
+                    del_keys = set(elem.keys()).difference(self.EXPECTED_ITEMS)
+                    if len(del_keys):
+                        list(map(elem.pop, del_keys))
                 else:
                     queue.extend(list(elem.values()))
         return result
@@ -212,21 +219,8 @@ class complete_links(object):
                 data = objects
 
             if self.resource.region:
-                collection = {
-                    "notes" : {"type" : "notes",
-                              "del":["value"]},
-                    "exceptions" : {"type" : "exceptions",
-                              "del":["date","except_type"]}
-                }
-                # Add notes exceptions
-                for col in collection:
-                    if not col in data or not isinstance(data[col], list):
-                        data[col] = []
-                        res = []
-                        note = self.complete(data, collection[col])
-                        [res.append(item) for item in note if not item in res]
-                        data[col].extend(res)
-
+                # Add notes and exceptions
+                data.update(self.get_links(data))
             if isinstance(objects, tuple):
                 return data, code, header
             else:

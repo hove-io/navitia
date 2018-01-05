@@ -128,9 +128,9 @@ class TestLineSections(AbstractTestFixture):
         assert not has_dis('networks/network:other/traffic_reports')
         r = self.default_query('traffic_reports')
         assert len(r['traffic_reports']) == 1 # only one network (base_network) is disrupted
-        assert len(r['traffic_reports'][0]['stop_areas']) == 3
+        assert len(r['traffic_reports'][0]['stop_areas']) == 4
         for sa in r['traffic_reports'][0]['stop_areas']:
-            assert len(sa['links']) == 1 # sa is disrupted only one time (D disrupted on multiple sp)
+            assert len(sa['links']) == (2 if sa['id'] == 'E' else 1)
 
     def test_traffic_reports_on_lines(self):
         """
@@ -373,3 +373,4 @@ class TestLineSections(AbstractTestFixture):
 
     def test_line_impacted_by_line_section(self):
         assert self.has_disruption(ObjGetter('lines', 'line:1'), 'line_section_on_line_1')
+        assert self.has_disruption(ObjGetter('lines', 'line:1'), 'line_section_on_line_1_other_effect')

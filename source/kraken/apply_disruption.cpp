@@ -129,7 +129,7 @@ static type::ValidityPattern compute_base_disrupted_vp(
 
 static std::string concatenate_impact_uris(const nt::MetaVehicleJourney& mvj) {
     std::stringstream impacts_uris;
-    for (auto& mvj_impacts : mvj.impacted_by) {
+    for (auto& mvj_impacts : mvj.modified_by) {
         if (auto i = mvj_impacts.lock()) {
             if (impacts_uris.str().find(i->disruption->uri) == std::string::npos) {
                 impacts_uris << ":" << i->disruption->uri;
@@ -294,6 +294,13 @@ struct add_impacts_visitor : public apply_impacts_visitor {
 
     void operator()(nt::StopPoint* stop_point) {
         log_start_action(stop_point->uri);
+
+        if (impact->severity->effect != nt::disruption::Effect::NO_SERVICE
+            && impact->severity->effect != nt::disruption::Effect::DETOUR) {
+            LOG4CPLUS_DEBUG(log, "Unhandled action on " << stop_point->uri << " for stop point");
+            this->log_end_action(stop_point->uri);
+            return;
+        }
 
         using namespace boost::posix_time;
         using namespace boost::gregorian;
@@ -536,18 +543,18 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
         boost::for_each(mvj->get_rt_vj(), set_empty_vp);
 
         const auto& impact = this->impact;
-        boost::range::remove_erase_if(mvj->impacted_by,
+        boost::range::remove_erase_if(mvj->modified_by,
             [&impact](const boost::weak_ptr<nt::disruption::Impact>& i) {
                 auto spt = i.lock();
                 return (spt) ? spt == impact : true;
         });
 
-        // add_impacts_visitor populate mvj->impacted_by, thus we swap
+        // add_impacts_visitor populate mvj->modified_by, thus we swap
         // it with an empty vector.
-        decltype(mvj->impacted_by) impacted_by_moved;
-        boost::swap(impacted_by_moved, mvj->impacted_by);
+        decltype(mvj->modified_by) modified_by_moved;
+        boost::swap(modified_by_moved, mvj->modified_by);
         
-        for(const auto& wptr: impacted_by_moved) {
+        for(const auto& wptr: modified_by_moved) {
             if (auto share_ptr = wptr.lock()){
                 disruptions_collection.insert(share_ptr);
             }
@@ -565,7 +572,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
             return false;
         };
         for (auto& mvj: pt_data.meta_vjs) {
-            if (std::any_of(std::begin(mvj->impacted_by), std::end(mvj->impacted_by), find_impact)) {
+            if (std::any_of(std::begin(mvj->modified_by), std::end(mvj->modified_by), find_impact)) {
                 (*this)(mvj.get());
             };
         }
@@ -601,7 +608,7 @@ struct delete_impacts_visitor : public apply_impacts_visitor {
             return false;
         };
         for (auto& mvj: pt_data.meta_vjs) {
-            if (std::any_of(std::begin(mvj->impacted_by), std::end(mvj->impacted_by), find_impact)) {
+            if (std::any_of(std::begin(mvj->modified_by), std::end(mvj->modified_by), find_impact)) {
                 (*this)(mvj.get());
             };
         }

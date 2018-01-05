@@ -31,22 +31,53 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from flask.ext.restful import marshal
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
-from jormungandr.interfaces.v1.fields import address
+from jormungandr.interfaces.v1.fields import address, context
 from navitiacommon.type_pb2 import _NAVITIATYPE
-from collections import OrderedDict
 import datetime
 from jormungandr.utils import is_coord, get_lon_lat
 import six
+from jormungandr.interfaces.v1.decorators import get_serializer
+from jormungandr.interfaces.v1.serializer import api
+import jormungandr
+from flask.ext.restful.fields import Raw
+
+
+
+address_marshall_fields = {
+    "regions": Raw,
+    "address": Raw,
+    "message": Raw,
+    "context": context
+}
 
 
 class Coord(ResourceUri):
     def __init__(self, *args, **kwargs):
-        ResourceUri.__init__(self, *args, **kwargs)
+        ResourceUri.__init__(self, output_type_serializer=api.DictAddressesSerializer, *args, **kwargs)
         self.parsers['get'].add_argument("_autocomplete", type=six.text_type, hidden=True,
                                          help="name of the autocomplete service, used under the hood")
 
     def _get_regions(self, region=None, lon=None, lat=None):
         return [region] if region else i_manager.get_regions("", lon, lat)
+
+    def _response_from_place_uri(self, instance_name, args):
+        response = i_manager.dispatch(args, "place_uri", instance_name=instance_name)
+        if response.get('places', []):
+            return {"address": response['places'][0]['address']}
+        return None
+
+    def _response_from_places_nearby(self, instance_name, args):
+        response = i_manager.dispatch(args, "places_nearby", instance_name=instance_name)
+        if len(response.places_nearby) > 0:
+            e_type = response.places_nearby[0].embedded_type
+            if _NAVITIATYPE.values_by_name["ADDRESS"].number == e_type:
+                if jormungandr.USE_SERPY:
+                    from jormungandr.interfaces.v1.serializer.api import PlacesNearbySerializer
+                    new_address = PlacesNearbySerializer(response).data
+                    return {"address": new_address["places_nearby"][0]["address"]}
+                else:
+                    return {"address": marshal(response.places_nearby[0].address, address)}
+        return None
 
     def _get_args(self, lon=None, lat=None, id=None):
         args = {
@@ -61,10 +92,12 @@ class Coord(ResourceUri):
             "type[]": ["address"],
             "depth": 1,
             "start_page": 0,
-            "filter": ""
+            "filter": "",
+            "count": 1
         })
         return args
 
+    @get_serializer(serpy=api.DictAddressesSerializer, marshall=address_marshall_fields)
     def get(self, region=None, lon=None, lat=None, id=None):
         args = self.parsers["get"].parse_args()
 
@@ -73,27 +106,23 @@ class Coord(ResourceUri):
 
         regions = self._get_regions(region=region, lon=lon, lat=lat)
 
-        result = OrderedDict()
-
         params = self._get_args(id=id, lon=lon, lat=lat)
         args.update(params)
         self._register_interpreted_parameters(args)
         for r in regions:
-            self.region = r
-            result.update(regions=[r])
             if all([lon, lat, is_coord(id)]):
-                response = i_manager.dispatch(args, "place_uri", instance_name=r)
-                if response.get('places', []):
-                    result.update({"regions": [r], "address": response['places'][0]['address']})
-                    return result, 200
+                response = self._response_from_place_uri(r, args)
+                if response:
+                    response.update({"regions": [r]})
+                    break
             else:
-                response = i_manager.dispatch(args, "places_nearby", instance_name=r)
-                if len(response.places_nearby) > 0:
-                    e_type = response.places_nearby[0].embedded_type
-                    if _NAVITIATYPE.values_by_name["ADDRESS"].number == e_type:
-                        new_address = marshal(response.places_nearby[0].address,
-                                              address)
-                        result.update(address=new_address)
-                        return result, 200
-        result.update({"regions": regions, "message": "No address for these coords"})
-        return result, 404
+                response = self._response_from_places_nearby(r, args)
+                if response:
+                    response.update({"regions": [r]})
+                    break
+        if response:
+            return response, 200
+        return {"regions": regions, "message": "No address for these coords"}, 404
+
+    def options(self, **kwargs):
+        return self.api_description(**kwargs)

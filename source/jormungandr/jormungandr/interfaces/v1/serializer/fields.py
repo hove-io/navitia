@@ -103,7 +103,6 @@ class CoordSerializer(serpy.Serializer):
     lon = DoubleToStringField()
     lat = DoubleToStringField()
 
-
 class CodeSerializer(serpy.Serializer):
     type = jsonschema.Field(schema_type=str)
     value = jsonschema.Field(schema_type=str)

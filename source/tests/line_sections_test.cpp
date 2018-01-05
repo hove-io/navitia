@@ -124,6 +124,15 @@ int main(int argc, const char* const argv[]) {
                               .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_section_on_line_1_other_effect")
+                              .severity(nt::disruption::Effect::OTHER_EFFECT)
+                              .application_periods(btp("20170101T000000"_dt, "20170105T000000"_dt))
+                              .publish(btp("20170101T000000"_dt, "20170110T000000"_dt))
+                              .on_line_section("line:1", "E", "F", {"route:line:1:1", "route:line:1:3"})
+                              .on_line_section("line:1", "F", "E", {"route:line:1:1", "route:line:1:3"})
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
     mock_kraken kraken(b, "line_sections_test", argc, argv);
 
     return 0;

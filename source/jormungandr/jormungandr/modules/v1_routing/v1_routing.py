@@ -188,11 +188,13 @@ class V1Routing(AModule):
         if app.config['GRAPHICAL_ISOCHRONE']:
             self.add_resource(GraphicalIsochrone.GraphicalIsochrone,
                             region + 'isochrones',
+                            coord + 'isochrones',
                             endpoint='isochrones')
 
         if app.config.get('HEAT_MAP'):
             self.add_resource(HeatMap.HeatMap,
                               region + 'heat_maps',
+                              coord + 'heat_maps',
                               endpoint='heat_maps')
 
         self.add_resource(Schedules.RouteSchedules,
@@ -223,25 +225,34 @@ class V1Routing(AModule):
 
         self.add_resource(Disruptions.TrafficReport,
                           region + 'traffic_reports',
+                          coord + 'traffic_reports',
                           region + '<uri:uri>/traffic_reports',
+                          coord + '<uri:uri>/traffic_reports',
                           endpoint='traffic_reports')
 
         self.add_resource(LineReports.LineReports,
                           region + 'line_reports',
+                          coord + 'line_reports',
                           region + '<uri:uri>/line_reports',
+                          coord + '<uri:uri>/line_reports',
                           endpoint='line_reports')
 
         self.add_resource(Status.Status,
                           region + 'status',
+                          coord + 'status',
                           endpoint='status')
         self.add_resource(GeoStatus.GeoStatus,
                           region + '_geo_status',
+                          coord + '_geo_status',
                           endpoint='geo_status')
 
         self.add_resource(Calendars.Calendars,
                           region + 'calendars',
+                          coord + 'calendars',
                           region + '<uri:uri>/calendars',
+                          coord + '<uri:uri>/calendars',
                           region + "calendars/<id:id>",
+                          coord + "calendars/<id:id>",
                           endpoint="calendars")
 
         self.add_resource(JSONSchema.Schema,

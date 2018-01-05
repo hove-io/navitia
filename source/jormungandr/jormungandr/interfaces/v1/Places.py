@@ -156,8 +156,8 @@ class Places(ResourceUri):
 
 class PlaceUri(ResourceUri):
 
-    def __init__(self, **kwargs):
-        ResourceUri.__init__(self, authentication=False, **kwargs)
+    def __init__(self, *args, **kwargs):
+        ResourceUri.__init__(self, authentication=False, output_type_serializer=PlacesSerializer, *args, **kwargs)
         self.parsers["get"].add_argument("bss_stands", type=BooleanType(), default=True,
                                          help="Show bss stands availability")
         self.parsers["get"].add_argument("add_poi_infos[]", type=OptionValue(add_poi_infos_types),
@@ -196,6 +196,9 @@ class PlaceUri(ResourceUri):
             response = autocomplete.get_by_uri(args["uri"], instances=available_instances)
 
         return response, 200
+
+    def options(self, **kwargs):
+        return self.api_description(**kwargs)
 
 place_nearby = deepcopy(place)
 place_nearby["distance"] = fields.String()

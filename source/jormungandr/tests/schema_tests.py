@@ -278,10 +278,6 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
             assert pattern.match(k)
             assert e == "Got value `None` of type `null`. Value must be of type(s): `(u'integer',)`"
 
-    def test_status(self):
-         query = "/v1/coverage/main_routing_test/status"
-         self._check_schema(query)
-
     def test_geo_status(self):
         query = '/v1/coverage/main_routing_test/_geo_status'
         self._check_schema(query)

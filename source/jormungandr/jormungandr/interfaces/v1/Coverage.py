@@ -62,6 +62,7 @@ coverage_marshall_fields = [
     ('context', context_utc)
 ]
 
+
 class Coverage(StatedResource):
     def __init__(self, quota=True, *args, **kwargs):
         super(Coverage, self).__init__(quota=quota,

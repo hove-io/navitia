@@ -76,10 +76,10 @@ class GraphicalIsochrone(JourneyCommon):
 
     @get_serializer(serpy=GraphicalIsrochoneSerializer, marshall=graphical_isochrones)
     @ManageError()
-    def get(self, region=None, uri=None):
+    def get(self, region=None, lon=None, lat=None, uri=None):
 
         args = self.parsers['get'].parse_args()
-        self.region = i_manager.get_region(region)
+        self.region = i_manager.get_region(region, lon, lat)
         args.update(self.parse_args(region, uri))
 
         if not (args['destination'] or args['origin']):
