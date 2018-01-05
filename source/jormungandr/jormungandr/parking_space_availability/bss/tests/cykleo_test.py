@@ -29,6 +29,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+from copy import deepcopy
 from jormungandr.parking_space_availability.bss.cykleo import CykleoProvider
 from jormungandr.parking_space_availability.bss.stands import Stands
 from mock import MagicMock
@@ -45,6 +46,17 @@ poi = {
         'id': 'poi_type:amenity:bicycle_rental'
     }
 }
+poi_with_0 = {
+    'properties': {
+        'network': network,
+        'operator': 'Cykleo',
+        'ref': '02'
+    },
+    'poi_type': {
+        'name': 'station vls',
+        'id': 'poi_type:amenity:bicycle_rental'
+    }
+}
 
 
 def parking_space_availability_cykleo_support_poi_test():
@@ -52,14 +64,26 @@ def parking_space_availability_cykleo_support_poi_test():
     CykleoProvider bss provider support
     """
     provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
-    assert provider.support_poi(poi)
-    poi['properties']['operator'] = 'Bad_operator'
-    assert not provider.support_poi(poi)
-    poi['properties']['operator'] = 'JCDecaux'
-    poi['properties']['network'] = 'Bad_network'
-    assert not provider.support_poi(poi)
-    poi['properties']['operator'] = 'Bad_operator'
-    assert not provider.support_poi(poi)
+    poi_copy = deepcopy(poi)
+    assert provider.support_poi(poi_copy)
+    poi_copy['properties']['operator'] = 'Bad_operator'
+    assert not provider.support_poi(poi_copy)
+    poi_copy['properties']['operator'] = 'JCDecaux'
+    poi_copy['properties']['network'] = 'Bad_network'
+    assert not provider.support_poi(poi_copy)
+    poi_copy['properties']['operator'] = 'Bad_operator'
+    assert not provider.support_poi(poi_copy)
+
+    # same test with "02" in id, not "2"
+    poi_with_0_copy = deepcopy(poi_with_0)
+    assert provider.support_poi(poi_with_0_copy)
+    poi_with_0_copy['properties']['operator'] = 'Bad_operator'
+    assert not provider.support_poi(poi_with_0_copy)
+    poi_with_0_copy['properties']['operator'] = 'JCDecaux'
+    poi_with_0_copy['properties']['network'] = 'Bad_network'
+    assert not provider.support_poi(poi_with_0_copy)
+    poi_with_0_copy['properties']['operator'] = 'Bad_operator'
+    assert not provider.support_poi(poi_with_0_copy)
 
     invalid_poi = {}
     assert not provider.support_poi(invalid_poi)
@@ -88,8 +112,11 @@ def parking_space_availability_cykleo_get_informations_test():
     provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
     assert provider.get_informations(poi) == Stands(2, 4)
+    assert provider.get_informations(poi_with_0) == Stands(2, 4)
     provider._call_webservice = MagicMock(return_value=None)
     assert provider.get_informations(poi) is None
+    assert provider.get_informations(poi_with_0) is None
+
     invalid_poi = {}
     assert provider.get_informations(invalid_poi) is None
 
@@ -114,6 +141,7 @@ def available_classic_bike_count_only_test():
     provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
     assert provider.get_informations(poi) == Stands(2, 1)
+    assert provider.get_informations(poi_with_0) == Stands(2, 1)
 
 
 def available_electric_bike_count_only_test():
@@ -136,6 +164,7 @@ def available_electric_bike_count_only_test():
     provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
     assert provider.get_informations(poi) == Stands(2, 1)
+    assert provider.get_informations(poi_with_0) == Stands(2, 1)
 
 
 def witout_available_dock_count_test():
@@ -157,3 +186,4 @@ def witout_available_dock_count_test():
     provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
     assert not provider.get_informations(poi)
+    assert not provider.get_informations(poi_with_0)
