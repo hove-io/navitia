@@ -89,6 +89,7 @@ network_url | chaine | Optionnel | Lien vers le site institutionnel
 network_timezone | chaine | Optionnel |
 network_lang | chaine | Optionnel |
 network_phone | chaine | Optionnel | Numéro de téléphone de contact
+network_address | chaine | Optionnel | Adresse du réseau. 
 network_sort_order | entier | Optionnel | Ordre de trie des réseaux, les plus petit sont en premier.
 
 ### calendar.txt (requis)
@@ -165,13 +166,10 @@ Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
 company_id | chaine | Requis | Identifiant de la compagnie
 company_name | chaine | Requis | Nom de la compagnie
-company_address_name | chaine | Optionnel | Nom de la voie de l'adresse
-company_address_number | chaine | Optionnel | Numéro d'adresse
-company_address_type | chaine | Optionnel | Type de voie (rue, avenue, etc.)
+company_address | chaine | Optionnel | Adresse complète de société.
 company_url | chaine | Optionnel | Url du site institutionnel de la société. A ne pas confondre avec le lien vers le site du réseau.
 company_mail | chaine | Optionnel | Adresse mail de contact de la société
 company_phone | chaine | Optionnel | Numéro de téléphone de contact
-company_fax | chaine | Optionnel | Numéro de fax
 
 ### contributors.txt (réservé)
 Ce fichier permet d'identifier la ou les sources fournissant les données du présent jeu de données.
@@ -331,7 +329,6 @@ geometry_id | géometrie | Optionnel | Ce champ est un lien vers le fichier geom
 parent_station | chaine | Optionnel | Identifiant de la zone d'arrêt, utilisé que sur des arrêts de type 0 (point d'arrêt)
 stop_timezone | timezones | Optionnel | Fuseau horaire, se référer à http://en.wikipedia.org/wiki/List_of_tz_zones
 equipment_id | chaine | Optionnel | Identifiant de la propriété accessibilité
-contributor_id | chaine | Optionnel | Identifiant du contributeur. Cette valeur est renseignée sur les objets de plus bas niveau (points d'arrêts et zone géographique de location_type 0 et 2) et est ignorée sur les autres.
 
     (1) Type de l'arrêt ou de la zone :
         0 ou non spécifié - Arrêt physique (objet stop_point)
@@ -411,7 +408,6 @@ block_id | chaine | Optionnel | Identifiant du prolongement de service
 company_id | chaine | Requis | Identifiant de la compagnie (lien vers le fichier company)
 physical_mode_id | chaine | Requis | Identifiant du mode physique (lien vers le fichier physical_modes)
 trip_property_id | chaine | Optionnel | Identifiant de la propriété accessibilité (lien vers le fichier trip_properties)
-contributor_id | chaine | Optionnel | Identifiant du contributeur (lien vers le fichier contributors). Ce champ est ignoré si le champ dataset_id est renseigné avec un identifiant valide.
 dataset_id | chaine | Optionnel | Identifiant du jeu de données ayant fourni la circulation (lien vers le fichier datasets).
 base_trip_id | chaine | Optionnel | Identifiant de la circulation théorique associée à la circulation courante (en cas de données de grève par exemple)
 geometry_id | chaine | Optionnel | Identifiant du tracé représentant la circulation (lien vers le fichier geometries)

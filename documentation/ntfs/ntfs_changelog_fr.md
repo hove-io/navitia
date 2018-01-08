@@ -50,3 +50,7 @@
     * feed_infos.txt est optionnel en 0.6
 * Version 0.7.0 du 03/01/2017
     * feed_infos.txt est obligatoire
+    * le lien entre "stop" et "contributor" est supprimé (liaison possible via "vehicle_journey")
+    * le lien entre "vehicle_journey" et "contributor" est supprimé, et se fait via "dataset"
+    * le champ "company_fax" est supprimé et les champs adresses sont fusionnés en un seul champ en texte libre
+    * ajout d'un champ "network_address" afin de pouvoir renseigner l'adresse du réseau.
