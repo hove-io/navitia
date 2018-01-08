@@ -87,6 +87,7 @@ bool RAPTOR::apply_vj_extension(const Visitor& v,
             auto sp = st.stop_point;
             const auto sp_idx = SpIdx(*sp);
 
+            if (! valid_stop_points[sp_idx.val]) { continue; }
             if (! v.comp(workingDt, best_labels_pts[sp_idx])) { continue; }
 
             working_labels.mut_dt_pt(sp_idx) = workingDt;
