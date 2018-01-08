@@ -89,6 +89,7 @@ network_url | chaine | Optionnel | Lien vers le site institutionnel
 network_timezone | chaine | Optionnel |
 network_lang | chaine | Optionnel |
 network_phone | chaine | Optionnel | Numéro de téléphone de contact
+network_address | chaine | Optionnel | Adresse du réseau. 
 network_sort_order | entier | Optionnel | Ordre de trie des réseaux, les plus petit sont en premier.
 
 ### calendar.txt (requis)
@@ -165,13 +166,10 @@ Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
 company_id | chaine | Requis | Identifiant de la compagnie
 company_name | chaine | Requis | Nom de la compagnie
-company_address_name | chaine | Optionnel | Nom de la voie de l'adresse
-company_address_number | chaine | Optionnel | Numéro d'adresse
-company_address_type | chaine | Optionnel | Type de voie (rue, avenue, etc.)
+company_address | chaine | Optionnel | Adresse complète de société.
 company_url | chaine | Optionnel | Url du site institutionnel de la société. A ne pas confondre avec le lien vers le site du réseau.
 company_mail | chaine | Optionnel | Adresse mail de contact de la société
 company_phone | chaine | Optionnel | Numéro de téléphone de contact
-company_fax | chaine | Optionnel | Numéro de fax
 
 ### contributors.txt (réservé)
 Ce fichier permet d'identifier la ou les sources fournissant les données du présent jeu de données.

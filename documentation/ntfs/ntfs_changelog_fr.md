@@ -52,3 +52,5 @@
     * feed_infos.txt est obligatoire
     * le lien entre "stop" et "contributor" est supprimé (liaison possible via "vehicle_journey")
     * le lien entre "vehicle_journey" et "contributor" est supprimé, et se fait via "dataset"
+    * le champ "company_fax" est supprimé et les champs adresses sont fusionnés en un seul champ en texte libre
+    * ajout d'un champ "network_address" afin de pouvoir renseigner l'adresse du réseau.
