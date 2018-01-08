@@ -51,4 +51,4 @@
 * Version 0.7.0 du 03/01/2017
     * feed_infos.txt est obligatoire
     * le lien entre "stop" et "contributor" est supprimé (liaison possible via "vehicle_journey")
-    * le lien entre "vehicle_journey" et "contributor" est supprimée, et se fait via "dataset"
+    * le lien entre "vehicle_journey" et "contributor" est supprimé, et se fait via "dataset"
