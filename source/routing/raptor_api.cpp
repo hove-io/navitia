@@ -674,6 +674,11 @@ static void make_pathes(PbCreator& pb_creator,
     pb_creator.set_response_type(pbnavitia::ITINERARY_FOUND);
     add_pathes(pb_creator, paths, worker, direct_path,
                origin, destination, datetimes, clockwise);
+    if (pb_creator.empty_journeys()) {
+        pb_creator.fill_pb_error(pbnavitia::Error::no_solution,
+                                 pbnavitia::NO_SOLUTION,
+                                 "no solution found for this journey");
+    }
 }
 
 
@@ -705,6 +710,11 @@ static void make_pt_pathes(PbCreator& pb_creator,
 
     pb_creator.set_response_type(pbnavitia::ITINERARY_FOUND);
     add_pt_pathes(pb_creator, paths);
+    if (pb_creator.empty_journeys()) {
+        pb_creator.fill_pb_error(pbnavitia::Error::no_solution,
+                                 pbnavitia::NO_SOLUTION,
+                                 "no solution found for this journey");
+    }
 }
 
 static void add_isochrone_response(RAPTOR& raptor,
