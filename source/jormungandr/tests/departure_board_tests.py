@@ -1088,3 +1088,11 @@ class TestSchedules(AbstractTestFixture):
         assert departures[2]["stop_date_time"]["departure_date_time"] == '20160103T191000'
         assert departures[2]["stop_date_time"]["base_departure_date_time"] == '20160103T191000'
         assert departures[2]["stop_date_time"]["data_freshness"] == 'base_schedule'
+
+    def test_routes_schedule_with_invalid_forbidden_uri(self):
+        """
+        there is no reason to have forbidden_uri in route_scheduel, but it shouldn't crash...
+        """
+        _, code = self.query_region("routes/line:A:0/route_schedules?"
+                                     "from_datetime=20120615T080000&forbidden_uris[]=toto", check=False)
+        assert code == 404
