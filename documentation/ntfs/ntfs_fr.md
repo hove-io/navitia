@@ -89,7 +89,7 @@ network_url | chaine | Optionnel | Lien vers le site institutionnel
 network_timezone | chaine | Optionnel |
 network_lang | chaine | Optionnel |
 network_phone | chaine | Optionnel | Numéro de téléphone de contact
-network_address | chaine | Optionnel | Adresse du réseau. 
+network_address | chaine | Optionnel | Adresse du réseau.
 network_sort_order | entier | Optionnel | Ordre de trie des réseaux, les plus petit sont en premier.
 
 ### calendar.txt (requis)
@@ -320,7 +320,6 @@ Colonne | Type | Contrainte | Commentaire
 stop_id | chaine | Requis | Identifiant de l'arrêt
 visible | entier | Optionnel | Visible dans auto complétion ?
 stop_name | chaine | Requis | Nom de l'arrêt
-city_code | chaine | Optionnel | Identifiant de la commune (code INSEE). Si ce champ n'est pas renseigné, les coordonnées géographiques sont utilisées pour faire l'association.
 stop_lat | décimal | Requis | Latitude. Ce champ est obligatoire pour les arrêts physiques (location_type = 0) même si le champ geometry_id est renseigné afin de faciliter sa lecture. Il est conseillé pour les zones d'arrêts (location_type = 1), et inutile pour les autres cas.
 stop_lon | décimal | Requis | Longitude. Ce champ est obligatoire pour les arrêts physiques (location_type = 0) même si le champ geometry_id est renseigné afin de faciliter sa lecture. Il est conseillé pour les zones d'arrêts (location_type = 1), et inutile pour les autres cas.
 fare_zone_id | chaine | Optionnel | Zone tarifaire de l'arrêt
@@ -409,7 +408,6 @@ company_id | chaine | Requis | Identifiant de la compagnie (lien vers le fichier
 physical_mode_id | chaine | Requis | Identifiant du mode physique (lien vers le fichier physical_modes)
 trip_property_id | chaine | Optionnel | Identifiant de la propriété accessibilité (lien vers le fichier trip_properties)
 dataset_id | chaine | Optionnel | Identifiant du jeu de données ayant fourni la circulation (lien vers le fichier datasets).
-base_trip_id | chaine | Optionnel | Identifiant de la circulation théorique associée à la circulation courante (en cas de données de grève par exemple)
 geometry_id | chaine | Optionnel | Identifiant du tracé représentant la circulation (lien vers le fichier geometries)
 
     Pour préciser si la circulation est sur réservation (tout ou partie), il faut :
@@ -507,7 +505,6 @@ feed_start_date | date | Optionnel | Date de début de validité du jeu de donn�
 feed_end_date | date | Optionnel | Date de fin de validité du jeu de données
 feed_creation_date |  date |  Optionnel | Date de génération du jeu de données
 feed_creation_time | heure | Optionnel | Heure de génération du jeu de données
-revised_networks | chaine | Optionnel | Liste des réseaux dont les données de grève sont fournis dans le jeu de données courant
 
 Le tableau ci-dessous indique les paramètres libres renseignés par Kisio Digital.
 
@@ -560,16 +557,18 @@ grid_calendar_id | chaine | Requis | Identifiant du calendrier de grille horaire
 line_id | chaine | Requis | Identifiant de la ligne associée à ce calendrier (lien vers le fichier lines). Ce champ peut être vide si le champ line_external_code est renseigné.
 line_external_code | chaine | Requis | cette colonne contient le code externe NAViTiA 1 de la ligne (lien vers le fichier lines). Ce champ peut être vide si le champ line_id et renseigné
 
-# Gestion des données perturbées / de grèves
-Afin de limiter la complexité du format, la gestion des données de grève est effectuée par plusieurs exports :
+# Évolutions possibles du format
+Ce chapitre liste des évolutions du format qui peuvent être intéressantes si elles sont utiles concrètement.
+## Gestion des données perturbées / de grèves
+Afin de limiter la complexité du format, la gestion des données de grève sera effectuée par plusieurs exports :
 
-1. un export contenant toutes les données théoriques du référentiel. L'export NTFS est un export classique, et dont la clé "revised_networks" du fichier "feed_infos.txt" est vide.
+1. un export contenant toutes les données théoriques du référentiel. L'export NTFS est un export classique, et dont la clé "revised_networks" du fichier "feed_infos.txt" est vide ou non renseignée.
 2. un ou plusieurs exports NTFS de grèves, dont chaque export fournit toutes les données (impactées par la grève ou non) :
     * de un ou plusieurs réseaux spécifiés par la clé **revised_networks** du fichier **feed_infos.txt**
     * pour des données valides entre les dates spécifiées par **feed_start_date** et **feed_end_date**
 
-# Évolutions possibles du format
-Ce chapitre liste des évolutions du format qui peuvent être intéressantes si elles sont utiles concrètement.
+Un champ complémentaire et optionnel "base_trip_id" est à prévoir dans le fichier "trips.txt" afin de permettre d'associer la circualtion théorique et la circulation adaptée (en cas de données de grève par exemple).
+
 ## Gestion avancée des géométries (tracés des lignes, parcours et circulations)
 Afin de ne pas complexifier inutilement le format NTFS et les outils qui vont le manipuler, le fichier "geometries.txt" indique un tracé complet pour une géométrie, comme une ligne en fourche ou une ligne à tiroir.  Afin de pouvoir afficher le tracé réel des bus dans la feuille de route (ie. n'avoir que la portion utilisée de la ligne), un découpage de cette géométrie est réalisé dans Navitia de manière automatique.
 Si le besoin d'affiner cette gestion est validé, une évolution du format du fichier "geometries.txt" peut être envisagé de la manière suivante (à confirmer) :
