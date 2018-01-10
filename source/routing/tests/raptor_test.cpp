@@ -3691,12 +3691,12 @@ BOOST_AUTO_TEST_CASE(allowed_id_line) {
  *  But because of the quicker transfer from Stalingrad to Stalingrad_1 and the O sec stay_in, raptor gives us:
  *      Stade ---> Stalingrad ---> Stalingrad_1 ---> Stalingrad_2 ---> LaJacquotte ( This is not a bug!!)
  *
- *  In practice, we prefer the first solution and we forbid to get off at Stalingrad_1 with forbidden_uri, and
+ *  In practice, we prefer the first solution and we forbid to get in at Stalingrad_1 with forbidden_uri, and
  *  there were no solutions with the bug
  * */
 
 BOOST_AUTO_TEST_CASE(forbidden_uri_in_stay_in) {
-    ed::builder b("20170101");
+    ed::builder b("20180101");
 
     b.sa("Stalingrad", 0, 0, false)
             ("Stalingrad_A", 0, 0, false, true)
@@ -3738,7 +3738,7 @@ BOOST_AUTO_TEST_CASE(forbidden_uri_in_stay_in) {
 
     BOOST_REQUIRE_EQUAL(j.items.size(), 5);
 
-    // we should do the cnx on Stalingrade_1
+    // we should do the cnx on Stalingrad_1
     BOOST_CHECK_EQUAL(j.items[1].stop_points.back()->uri, "Stalingrad_1");
     BOOST_CHECK_EQUAL(j.items[2].stop_points.front()->uri, "Stalingrad_1");
 
@@ -3760,7 +3760,7 @@ BOOST_AUTO_TEST_CASE(forbidden_uri_in_stay_in) {
     BOOST_CHECK_EQUAL(j.items.front().departure, time_from_string("2017-01-01 09:37:00"));
     BOOST_CHECK_EQUAL(j.items.back().arrival, time_from_string("2017-01-01 10:17:00"));
 
-    // we should do the cnx on Stalingrade_2
+    // we should do the cnx on Stalingrad_2
     BOOST_CHECK_EQUAL(j.items[1].stop_points.back()->uri, "Stalingrad_2");
     BOOST_CHECK_EQUAL(j.items[2].stop_points.front()->uri, "Stalingrad_2");
 
