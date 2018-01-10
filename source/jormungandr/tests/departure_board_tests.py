@@ -1091,7 +1091,7 @@ class TestSchedules(AbstractTestFixture):
 
     def test_routes_schedule_with_invalid_forbidden_uri(self):
         """
-        there is no reason to have forbidden_uri in route_scheduel, but it shouldn't crash...
+        there is no reason to have forbidden_uri in route_schedules, but it shouldn't crash...
         """
         _, code = self.query_region("routes/line:A:0/route_schedules?"
                                      "from_datetime=20120615T080000&forbidden_uris[]=toto", check=False)
