@@ -1,0 +1,683 @@
+{
+    "tickets": [
+        {
+            "comment": "Ridesharing price 1",
+            "cost": {
+                "value": "12.40",
+                "currency": "EUR"
+            },
+            "found": false,
+            "id": "ridesharing_price_1",
+            "links": [
+                {
+                    "id": "section_6_1_1",
+                    "internal": true,
+                    "rel": "sections",
+                    "templated": false,
+                    "type": "section"
+                }
+            ],
+            "name": "ridesharing_price_01"
+        }
+    ],
+    "links": [
+        {
+            "href": "https://api.navitia.io/v1/coverage/rennes/journeys?first_section_mode%5B%5D=car&last_section_mode%5B%5D=car&max_duration_to_pt=86400&datetime=20180110T122118&to=admin%3Afr%3A59350&datetime_represents=departure&car_speed=20&debug=false&from=admin%3Afr%3A12145",
+            "type": "next",
+            "rel": "next",
+            "templated": false
+        },
+        {
+            "href": "https://api.navitia.io/v1/coverage/rennes/journeys?first_section_mode%5B%5D=car&last_section_mode%5B%5D=car&max_duration_to_pt=86400&datetime=20180110T191759&to=admin%3Afr%3A59350&datetime_represents=arrival&car_speed=20&debug=false&from=admin%3Afr%3A12145",
+            "type": "prev",
+            "rel": "prev",
+            "templated": false
+        },
+        {
+            "href": "https://api.navitia.io/v1/coverage/rennes/journeys?first_section_mode%5B%5D=car&last_section_mode%5B%5D=car&max_duration_to_pt=86400&datetime=20180110T000000&to=admin%3Afr%3A59350&datetime_represents=departure&car_speed=20&debug=false&from=admin%3Afr%3A12145",
+            "type": "first",
+            "rel": "first",
+            "templated": false
+        },
+        {
+            "href": "https://api.navitia.io/v1/coverage/rennes/journeys?first_section_mode%5B%5D=car&last_section_mode%5B%5D=car&max_duration_to_pt=86400&datetime=20180110T235959&to=admin%3Afr%3A59350&datetime_represents=arrival&car_speed=20&debug=false&from=admin%3Afr%3A12145",
+            "type": "last",
+            "rel": "last",
+            "templated": false
+        },
+        {
+            "href": "https://api.navitia.io/v1/coverage/rennes/stop_points/{stop_point.id}",
+            "type": "stop_point",
+            "rel": "stop_points",
+            "templated": true
+        },
+        {
+            "href": "https://api.navitia.io/v1/coverage/rennes/stop_areas/{stop_area.id}",
+            "type": "stop_area",
+            "rel": "stop_areas",
+            "templated": true
+        },
+        {
+            "href": "https://api.navitia.io/v1/coverage/rennes/vehicle_journeys/{vehicle_journey.id}",
+            "type": "vehicle_journey",
+            "rel": "vehicle_journeys",
+            "templated": true
+        },
+        {
+            "href": "https://api.navitia.io/v1/coverage/rennes/routes/{route.id}",
+            "type": "route",
+            "rel": "routes",
+            "templated": true
+        },
+        {
+            "href": "https://api.navitia.io/v1/coverage/rennes/commercial_modes/{commercial_mode.id}",
+            "type": "commercial_mode",
+            "rel": "commercial_modes",
+            "templated": true
+        },
+        {
+            "href": "https://api.navitia.io/v1/coverage/rennes/lines/{line.id}",
+            "type": "line",
+            "rel": "lines",
+            "templated": true
+        },
+        {
+            "href": "https://api.navitia.io/v1/coverage/rennes/physical_modes/{physical_mode.id}",
+            "type": "physical_mode",
+            "rel": "physical_modes",
+            "templated": true
+        },
+        {
+            "href": "https://api.navitia.io/v1/coverage/rennes/networks/{network.id}",
+            "type": "network",
+            "rel": "networks",
+            "templated": true
+        }
+    ],
+    "journeys": [
+        {
+            "status": "",
+            "distances": {
+                "ridesharing": 138097,
+                "car": 0,
+                "walking": 0,
+                "bike": 0
+            },
+            "links": [
+                {
+                    "href": "https://api.navitia.io/v1/coverage/rennes/journeys?allowed_id%5B%5D=stop_point%3AOCE%3ASP%3ATGV-87318964&allowed_id%5B%5D=stop_point%3AOCE%3ASP%3ATGV-87286005&from=admin%3Afr%3A12145&last_section_mode%5B%5D=car&max_duration_to_pt=86400&is_journey_schedules=True&direct_path=none&to=admin%3Afr%3A59350&min_nb_journeys=5&car_speed=20&min_nb_transfers=0&debug=false&first_section_mode%5B%5D=car",
+                    "type": "journeys",
+                    "rel": "same_journey_schedules",
+                    "templated": false
+                }
+            ],
+            "tags": [
+                "ridesharing",
+                "ecologic"
+            ],
+            "nb_transfers": 0,
+            "durations": {
+                "ridesharing": 9763,
+                "car": 0,
+                "walking": 0,
+                "total": 27343,
+                "bike": 0
+            },
+            "arrival_date_time": "20180110T194400",
+            "calendars": [
+                {
+                    "exceptions": [
+                        {
+                            "type": "add",
+                            "datetime": "20180108"
+                        },
+                        {
+                            "type": "add",
+                            "datetime": "20180115"
+                        }
+                    ],
+                    "active_periods": [
+                        {
+                            "begin": "20171219",
+                            "end": "20180121"
+                        }
+                    ],
+                    "week_pattern": {
+                        "monday": false,
+                        "tuesday": true,
+                        "friday": true,
+                        "wednesday": true,
+                        "thursday": true,
+                        "sunday": false,
+                        "saturday": true
+                    },
+                    "id": null
+                }
+            ],
+            "departure_date_time": "20180110T120817",
+            "requested_date_time": "20180110T113634",
+            "fare": {
+                "found": false,
+                "total": {
+                    "value": "0.0"
+                },
+                "links": []
+            },
+            "co2_emission": {
+                "value": 2732.4202,
+                "unit": "gEC"
+            },
+            "type": "rapid",
+            "duration": 27343,
+            "sections": [
+                {
+                    "from": {
+                        "embedded_type": "administrative_region",
+                        "quality": 0,
+                        "administrative_region": {
+                            "insee": "12145",
+                            "name": "Millau",
+                            "level": 8,
+                            "coord": {
+                                "lat": "44.10067",
+                                "lon": "3.077759"
+                            },
+                            "label": "Millau (12100)",
+                            "id": "admin:fr:12145",
+                            "zip_code": "12100"
+                        },
+                        "name": "Millau (12100)",
+                        "id": "admin:fr:12145"
+                    },
+                    "links": [],
+                    "arrival_date_time": "20180110T145100",
+                    "departure_date_time": "20180110T120817",
+                    "to": {
+                        "embedded_type": "stop_point",
+                        "stop_point": {
+                            "name": "Avignon-TGV",
+                            "links": [],
+                            "coord": {
+                                "lat": "43.921963",
+                                "lon": "4.78616"
+                            },
+                            "label": "Avignon-TGV (Avignon)",
+                            "equipments": [],
+                            "administrative_regions": [
+                                {
+                                    "insee": "84007",
+                                    "name": "Avignon",
+                                    "level": 8,
+                                    "coord": {
+                                        "lat": "43.949314",
+                                        "lon": "4.806032"
+                                    },
+                                    "label": "Avignon (84000)",
+                                    "id": "admin:fr:84007",
+                                    "zip_code": "84000"
+                                }
+                            ],
+                            "id": "stop_point:OCE:SP:TGV-87318964",
+                            "stop_area": {
+                                "codes": [
+                                    {
+                                        "type": "CR-CI-CH",
+                                        "value": "0087-318964-BV"
+                                    }
+                                ],
+                                "name": "Avignon-TGV",
+                                "links": [],
+                                "coord": {
+                                    "lat": "43.921963",
+                                    "lon": "4.78616"
+                                },
+                                "label": "Avignon-TGV (Avignon)",
+                                "timezone": "Europe/Paris",
+                                "id": "stop_area:OCE:SA:87318964"
+                            }
+                        },
+                        "quality": 0,
+                        "name": "Avignon-TGV (Avignon)",
+                        "id": "stop_point:OCE:SP:TGV-87318964"
+                    },
+                    "co2_emission": {
+                        "value": 0,
+                        "unit": ""
+                    },
+                    "geojson": {
+                        "type": "LineString",
+                        "properties": [
+                            {
+                                "length": 138097
+                            }
+                        ],
+                        "coordinates": [
+                            [
+                                3.077759,
+                                44.10067
+                            ],
+                            [
+                                4.78616,
+                                43.921963
+                            ]
+                        ]
+                    },
+                    "duration": 9763,
+                    "type": "crow_fly",
+                    "id": "section_6_0",
+                    "mode": "ridesharing",
+                    "ridesharing_journeys": [
+                        {
+                            "fare": {
+                                "found": false,
+                                "links": [
+                                    {
+                                        "id": "ticket_1",
+                                        "internal": true,
+                                        "rel": "tickets",
+                                        "templated": false,
+                                        "type": "ticket"
+                                    }
+                                ],
+                                "total": {
+                                    "value": "12.40",
+                                    "currency": "EUR"
+                                }
+                            },
+                            "sections": [
+                                {
+                                    "from": {
+                                        "name": "Millau (12100)",
+                                        "id": "admin:fr:12145"
+                                    },
+                                    "to": {
+                                        "name": "Pickup RideSharing",
+                                        "id": "start_ridesharing"
+                                    },
+                                    "departure_date_time": "20180110T115000",
+                                    "arrival_date_time": "20180110T115000",
+                                    "co2_emission": {
+                                        "value": 0,
+                                        "unit": ""
+                                    },
+                                    "geojson": {
+                                        "type": "LineString",
+                                        "properties": [
+                                            {
+                                                "length": 1000
+                                            }
+                                        ],
+                                        "coordinates": [
+                                            [
+                                                3.077759,
+                                                44.10067
+                                            ],
+                                            [
+                                                4.78616,
+                                                43.921963
+                                            ]
+                                        ]
+                                    },
+                                    "duration": 0,
+                                    "type": "crow_fly",
+                                    "id": "section_6_1_0",
+                                    "mode": "walking"
+                                },
+                                {
+                                    "from": {
+                                        "name": "Pickup RideSharing",
+                                        "id": "start_ridesharing"
+                                    },
+                                    "to": {
+                                        "name": "Dropoff RideSharing",
+                                        "id": "end_ridesharing"
+                                    },
+                                    "departure_date_time": "20180110T115000",
+                                    "arrival_date_time": "20180110T151000",
+                                    "additional_informations": [
+                                        "date_time_estimated"
+                                    ],
+                                    "display_informations": {
+                                        "ridesharing": {
+                                            "operator": "Instant System",
+                                            "platform": "Boogi Rennes",
+                                            "driver": {
+                                                "alias": "Johnny_75",
+                                                "image": "https://dummyimage.com/128x128/C8E6C9/000.png&text=J7",
+                                                "gender": "male",
+                                                "rating": {
+                                                    "scale_min": 0,
+                                                    "scale_max": 5,
+                                                    "value": 3.5,
+                                                    "count": 18
+                                                }
+                                            },
+                                            "available_seats": 2
+                                        },
+                                        "links": [
+                                            {
+                                                "href": "https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&",
+                                                "rel": "ridesharing_ad",
+                                                "templated": false,
+                                                "type": "ridesharing_ad"
+                                            }
+                                        ]
+                                    },
+                                    "co2_emission": {
+                                        "value": 0,
+                                        "unit": ""
+                                    },
+                                    "geojson": {
+                                        "type": "LineString",
+                                        "properties": [
+                                            {
+                                                "length": 90000
+                                            }
+                                        ],
+                                        "coordinates": [
+                                            [
+                                                3.077759,
+                                                44.10067
+                                            ],
+                                            [
+                                                4.78616,
+                                                43.921963
+                                            ],
+                                            [
+                                                4.78616,
+                                                43.921963
+                                            ],
+                                            [
+                                                4.78616,
+                                                43.921963
+                                            ],
+                                            [
+                                                4.78616,
+                                                43.921963
+                                            ]
+                                        ]
+                                    },
+                                    "duration": 12000,
+                                    "type": "ridesharing",
+                                    "id": "section_6_1_1",
+                                    "mode": "ridesharing",
+                                    "links": [
+                                        {
+                                            "id": "ridesharing_price_1",
+                                            "internal": true,
+                                            "rel": "tickets",
+                                            "templated": false,
+                                            "type": "ticket"
+                                        }
+                                    ]
+                                },
+                                {
+                                    "from": {
+                                        "name": "Dropoff RideSharing",
+                                        "id": "end_ridesharing"
+                                    },
+                                    "to": {
+                                        "name": "Avignon-TGV (Avignon)",
+                                        "id": "stop_point:OCE:SP:TGV-87318964"
+                                    },
+                                    "departure_date_time": "20180110T151000",
+                                    "arrival_date_time": "20180110T151000",
+                                    "co2_emission": {
+                                        "value": 0,
+                                        "unit": ""
+                                    },
+                                    "geojson": {
+                                        "type": "LineString",
+                                        "properties": [
+                                            {
+                                                "length": 1000
+                                            }
+                                        ],
+                                        "coordinates": [
+                                            [
+                                                3.077759,
+                                                44.10067
+                                            ],
+                                            [
+                                                4.78616,
+                                                43.921963
+                                            ]
+                                        ]
+                                    },
+                                    "duration": 0,
+                                    "type": "crow_fly",
+                                    "id": "section_6_1_2",
+                                    "mode": "walking"
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "from": {
+                        "embedded_type": "stop_point",
+                        "stop_point": {
+                            "name": "Avignon-TGV",
+                            "links": [],
+                            "coord": {
+                                "lat": "43.921963",
+                                "lon": "4.78616"
+                            },
+                            "label": "Avignon-TGV (Avignon)",
+                            "equipments": [],
+                            "administrative_regions": [
+                                {
+                                    "insee": "84007",
+                                    "name": "Avignon",
+                                    "level": 8,
+                                    "coord": {
+                                        "lat": "43.949314",
+                                        "lon": "4.806032"
+                                    },
+                                    "label": "Avignon (84000)",
+                                    "id": "admin:fr:84007",
+                                    "zip_code": "84000"
+                                }
+                            ],
+                            "id": "stop_point:OCE:SP:TGV-87318964",
+                            "stop_area": {
+                                "codes": [
+                                    {
+                                        "type": "CR-CI-CH",
+                                        "value": "0087-318964-BV"
+                                    }
+                                ],
+                                "name": "Avignon-TGV",
+                                "links": [],
+                                "coord": {
+                                    "lat": "43.921963",
+                                    "lon": "4.78616"
+                                },
+                                "label": "Avignon-TGV (Avignon)",
+                                "timezone": "Europe/Paris",
+                                "id": "stop_area:OCE:SA:87318964"
+                            }
+                        },
+                        "quality": 0,
+                        "name": "Avignon-TGV (Avignon)",
+                        "id": "stop_point:OCE:SP:TGV-87318964"
+                    },
+                    "links": [
+                        {
+                            "type": "vehicle_journey",
+                            "id": "vehicle_journey:OCE:SN005192F03033"
+                        },
+                        {
+                            "type": "line",
+                            "id": "line:OCE:SN-87286005-87751008"
+                        },
+                        {
+                            "type": "route",
+                            "id": "route:OCE:SN-TGV-87751008-87286005"
+                        },
+                        {
+                            "type": "commercial_mode",
+                            "id": "commercial_mode:tgv"
+                        },
+                        {
+                            "type": "physical_mode",
+                            "id": "physical_mode:LongDistanceTrain"
+                        },
+                        {
+                            "type": "network",
+                            "id": "network:sncf"
+                        }
+                    ],
+                    "arrival_date_time": "20180110T194400",
+                    "additional_informations": [
+                        "regular"
+                    ],
+                    "departure_date_time": "20180110T145100",
+                    "display_informations": {
+                        "direction": "Lille Flandres (Lille)",
+                        "code": "",
+                        "network": "SNCF",
+                        "links": [],
+                        "color": "000000",
+                        "name": "Lille Flandres - Marseille-St-Charles",
+                        "physical_mode": "Train grande vitesse",
+                        "headsign": "5192",
+                        "label": "Lille Flandres - Marseille-St-Charles",
+                        "equipments": [],
+                        "text_color": "",
+                        "commercial_mode": "TGV",
+                        "description": ""
+                    },
+                    "to": {
+                        "embedded_type": "stop_point",
+                        "stop_point": {
+                            "name": "Lille Flandres",
+                            "links": [],
+                            "coord": {
+                                "lat": "50.636215",
+                                "lon": "3.071052"
+                            },
+                            "label": "Lille Flandres (Lille)",
+                            "equipments": [],
+                            "administrative_regions": [
+                                {
+                                    "insee": "59350",
+                                    "name": "Lille",
+                                    "level": 8,
+                                    "coord": {
+                                        "lat": "50.630508",
+                                        "lon": "3.070641"
+                                    },
+                                    "label": "Lille (59000-59160)",
+                                    "id": "admin:fr:59350",
+                                    "zip_code": "59000;59160"
+                                }
+                            ],
+                            "id": "stop_point:OCE:SP:TGV-87286005",
+                            "stop_area": {
+                                "codes": [
+                                    {
+                                        "type": "CR-CI-CH",
+                                        "value": "0087-286005-BV"
+                                    }
+                                ],
+                                "name": "Lille Flandres",
+                                "links": [],
+                                "coord": {
+                                    "lat": "50.636215",
+                                    "lon": "3.071052"
+                                },
+                                "label": "Lille Flandres (Lille)",
+                                "timezone": "Europe/Paris",
+                                "id": "stop_area:OCE:SA:87286005"
+                            }
+                        },
+                        "quality": 0,
+                        "name": "Lille Flandres (Lille)",
+                        "id": "stop_point:OCE:SP:TGV-87286005"
+                    },
+                    "co2_emission": {
+                        "value": 2732.4202,
+                        "unit": "gEC"
+                    },
+                    "geojson": {
+                        "type": "LineString",
+                        "properties": [
+                            {
+                                "length": 803653
+                            }
+                        ],
+                        "coordinates": [
+                            [
+                                4.78616,
+                                43.921963
+                            ],
+                            [
+                                3.071052,
+                                50.636215
+                            ]
+                        ]
+                    },
+                    "duration": 17580,
+                    "type": "public_transport",
+                    "id": "section_7_0",
+                    "data_freshness": "base_schedule",
+                    "stop_date_times": [
+                        {
+                            "stop_point": {
+                                "name": "Avignon-TGV",
+                                "links": [],
+                                "coord": {
+                                    "lat": "43.921963",
+                                    "lon": "4.78616"
+                                },
+                                "label": "Avignon-TGV (Avignon)",
+                                "equipments": [],
+                                "id": "stop_point:OCE:SP:TGV-87318964"
+                            },
+                            "links": [],
+                            "arrival_date_time": "20180110T144800",
+                            "additional_informations": [],
+                            "departure_date_time": "20180110T145100",
+                            "base_arrival_date_time": "20180110T144800",
+                            "base_departure_date_time": "20180110T145100"
+                        },
+                        {
+                            "stop_point": {
+                                "name": "Lille Flandres",
+                                "links": [],
+                                "coord": {
+                                    "lat": "50.636215",
+                                    "lon": "3.071052"
+                                },
+                                "label": "Lille Flandres (Lille)",
+                                "equipments": [],
+                                "id": "stop_point:OCE:SP:TGV-87286005"
+                            },
+                            "links": [],
+                            "arrival_date_time": "20180110T194400",
+                            "additional_informations": [],
+                            "departure_date_time": "20180110T194400",
+                            "base_arrival_date_time": "20180110T194400",
+                            "base_departure_date_time": "20180110T194400"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "disruptions": [],
+    "notes": [],
+    "feed_publishers": [],
+    "context": {
+        "timezone": "Europe/Paris",
+        "current_datetime": "20180110T113634",
+        "car_direct_path": {
+            "co2_emission": {
+                "value": 180410.4140170483,
+                "unit": "gEC"
+            }
+        }
+    },
+    "exceptions": []
+}
