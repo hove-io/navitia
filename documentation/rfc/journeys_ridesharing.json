@@ -20,80 +20,7 @@
             "name": "ridesharing_price_01"
         }
     ],
-    "links": [
-        {
-            "href": "https://api.navitia.io/v1/coverage/rennes/journeys?first_section_mode%5B%5D=car&last_section_mode%5B%5D=car&max_duration_to_pt=86400&datetime=20180110T122118&to=admin%3Afr%3A59350&datetime_represents=departure&car_speed=20&debug=false&from=admin%3Afr%3A12145",
-            "type": "next",
-            "rel": "next",
-            "templated": false
-        },
-        {
-            "href": "https://api.navitia.io/v1/coverage/rennes/journeys?first_section_mode%5B%5D=car&last_section_mode%5B%5D=car&max_duration_to_pt=86400&datetime=20180110T191759&to=admin%3Afr%3A59350&datetime_represents=arrival&car_speed=20&debug=false&from=admin%3Afr%3A12145",
-            "type": "prev",
-            "rel": "prev",
-            "templated": false
-        },
-        {
-            "href": "https://api.navitia.io/v1/coverage/rennes/journeys?first_section_mode%5B%5D=car&last_section_mode%5B%5D=car&max_duration_to_pt=86400&datetime=20180110T000000&to=admin%3Afr%3A59350&datetime_represents=departure&car_speed=20&debug=false&from=admin%3Afr%3A12145",
-            "type": "first",
-            "rel": "first",
-            "templated": false
-        },
-        {
-            "href": "https://api.navitia.io/v1/coverage/rennes/journeys?first_section_mode%5B%5D=car&last_section_mode%5B%5D=car&max_duration_to_pt=86400&datetime=20180110T235959&to=admin%3Afr%3A59350&datetime_represents=arrival&car_speed=20&debug=false&from=admin%3Afr%3A12145",
-            "type": "last",
-            "rel": "last",
-            "templated": false
-        },
-        {
-            "href": "https://api.navitia.io/v1/coverage/rennes/stop_points/{stop_point.id}",
-            "type": "stop_point",
-            "rel": "stop_points",
-            "templated": true
-        },
-        {
-            "href": "https://api.navitia.io/v1/coverage/rennes/stop_areas/{stop_area.id}",
-            "type": "stop_area",
-            "rel": "stop_areas",
-            "templated": true
-        },
-        {
-            "href": "https://api.navitia.io/v1/coverage/rennes/vehicle_journeys/{vehicle_journey.id}",
-            "type": "vehicle_journey",
-            "rel": "vehicle_journeys",
-            "templated": true
-        },
-        {
-            "href": "https://api.navitia.io/v1/coverage/rennes/routes/{route.id}",
-            "type": "route",
-            "rel": "routes",
-            "templated": true
-        },
-        {
-            "href": "https://api.navitia.io/v1/coverage/rennes/commercial_modes/{commercial_mode.id}",
-            "type": "commercial_mode",
-            "rel": "commercial_modes",
-            "templated": true
-        },
-        {
-            "href": "https://api.navitia.io/v1/coverage/rennes/lines/{line.id}",
-            "type": "line",
-            "rel": "lines",
-            "templated": true
-        },
-        {
-            "href": "https://api.navitia.io/v1/coverage/rennes/physical_modes/{physical_mode.id}",
-            "type": "physical_mode",
-            "rel": "physical_modes",
-            "templated": true
-        },
-        {
-            "href": "https://api.navitia.io/v1/coverage/rennes/networks/{network.id}",
-            "type": "network",
-            "rel": "networks",
-            "templated": true
-        }
-    ],
+    "links": [],
     "journeys": [
         {
             "status": "",
@@ -124,36 +51,7 @@
                 "bike": 0
             },
             "arrival_date_time": "20180110T194400",
-            "calendars": [
-                {
-                    "exceptions": [
-                        {
-                            "type": "add",
-                            "datetime": "20180108"
-                        },
-                        {
-                            "type": "add",
-                            "datetime": "20180115"
-                        }
-                    ],
-                    "active_periods": [
-                        {
-                            "begin": "20171219",
-                            "end": "20180121"
-                        }
-                    ],
-                    "week_pattern": {
-                        "monday": false,
-                        "tuesday": true,
-                        "friday": true,
-                        "wednesday": true,
-                        "thursday": true,
-                        "sunday": false,
-                        "saturday": true
-                    },
-                    "id": null
-                }
-            ],
+            "calendars": [],
             "departure_date_time": "20180110T120817",
             "requested_date_time": "20180110T113634",
             "fare": {
@@ -502,32 +400,7 @@
                         "name": "Avignon-TGV (Avignon)",
                         "id": "stop_point:OCE:SP:TGV-87318964"
                     },
-                    "links": [
-                        {
-                            "type": "vehicle_journey",
-                            "id": "vehicle_journey:OCE:SN005192F03033"
-                        },
-                        {
-                            "type": "line",
-                            "id": "line:OCE:SN-87286005-87751008"
-                        },
-                        {
-                            "type": "route",
-                            "id": "route:OCE:SN-TGV-87751008-87286005"
-                        },
-                        {
-                            "type": "commercial_mode",
-                            "id": "commercial_mode:tgv"
-                        },
-                        {
-                            "type": "physical_mode",
-                            "id": "physical_mode:LongDistanceTrain"
-                        },
-                        {
-                            "type": "network",
-                            "id": "network:sncf"
-                        }
-                    ],
+                    "links": [],
                     "arrival_date_time": "20180110T194400",
                     "additional_informations": [
                         "regular"
