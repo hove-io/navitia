@@ -1,3 +1,9 @@
+navitia2 (2.48.1) unstable; urgency=low
+
+  * Jormun: sphere=VLS in header for Cykleo <https://github.com/CanalTP/navitia/pull/2283>
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Wed, 10 Jan 2018 18:01:10 +0100
+
 navitia2 (2.48.0) unstable; urgency=low
 
   * Jormun: manage Cykleo station with id starting by "0"  <https://github.com/CanalTP/navitia/pull/2280>
