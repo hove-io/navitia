@@ -91,7 +91,7 @@ class CykleoProvider(AbstractParkingPlacesProvider):
             "Content-Type": "application/json",
             "Accept": "application/json"
         }
-        data = {"username": self.username, "password": self.password}
+        data = {"username": self.username, "password": self.password, "sphere": "VLS"}
         if self.service_id is not None:
             data.update({"serviceId": self.service_id})
 
