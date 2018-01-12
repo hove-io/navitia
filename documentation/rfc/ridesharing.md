@@ -102,10 +102,14 @@ to output the proper name of the ridesharing provider, as well as any logo and c
 
 ### Undecided fields
 
+In any case, a decision as to consider RDEX format to avoid providing too much informations not handled by most of ridesharing services.
+
 The `display_informations` field is not filled so far, we could however add informations to make it usable "blindly" as any `display_informations`.
 
-A `passengers` object-list could appear to describe other passengers on the ridesharing-ad.
+A `passengers` object-list could appear to describe other passengers on the ridesharing-ad. How about personal informations in Navitia?
 
-A `car_model` object could appear (in driver or in ridesharing_informations) to describe and offer a picture of the driver's car.
+A `vehicle_informations` object could appear (in driver or in ridesharing_informations) to describe and offer a picture of the driver's car.
 
 Only `"type": "ridesharing"` is provided in the ridesharing-journey's section, not `"mode": "ridesharing"`. We could probably add it if necessary.
+
+We could add a link to the journey after ridesharing if the datetimes doesn't match.
