@@ -275,31 +275,24 @@
                                     "additional_informations": [
                                         "date_time_estimated"
                                     ],
-                                    "display_informations": {
-                                        "ridesharing": {
-                                            "operator": "Instant System",
-                                            "platform": "Boogi Rennes",
-                                            "driver": {
-                                                "alias": "Johnny_75",
-                                                "image": "https://dummyimage.com/128x128/C8E6C9/000.png&text=J7",
-                                                "gender": "male",
-                                                "rating": {
-                                                    "scale_min": 0,
-                                                    "scale_max": 5,
-                                                    "value": 3.5,
-                                                    "count": 18
-                                                }
-                                            },
-                                            "available_seats": 2
-                                        },
-                                        "links": [
-                                            {
-                                                "href": "https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&",
-                                                "rel": "ridesharing_ad",
-                                                "templated": false,
-                                                "type": "ridesharing_ad"
+                                    "ridesharing_informations": {
+                                        "operator": "Instant System",
+                                        "network": "LE covoit’STAR",
+                                        "driver": {
+                                            "alias": "Johnny_75",
+                                            "image": "https://dummyimage.com/128x128/C8E6C9/000.png&text=J7",
+                                            "gender": "male",
+                                            "rating": {
+                                                "scale_min": 0,
+                                                "scale_max": 5,
+                                                "value": 3.5,
+                                                "count": 18
                                             }
-                                        ]
+                                        },
+                                        "seats": {
+                                            "available": 2,
+                                            "total": 3
+                                        }
                                     },
                                     "co2_emission": {
                                         "value": 0,
@@ -338,8 +331,13 @@
                                     "duration": 12000,
                                     "type": "ridesharing",
                                     "id": "section_6_1_1",
-                                    "mode": "ridesharing",
                                     "links": [
+                                        {
+                                            "href": "https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&",
+                                            "rel": "ridesharing_ad",
+                                            "templated": false,
+                                            "type": "ridesharing_ad"
+                                        },
                                         {
                                             "id": "ridesharing_price_1",
                                             "internal": true,

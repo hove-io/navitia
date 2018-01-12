@@ -41,8 +41,7 @@ Simplified output:
                                     "to": "A2",
                                     "departure_date_time": "20180101T063000",
                                     "arrival_date_time": "20180101T093000",
-                                    "type": "ridesharing",
-                                    "mode": "ridesharing"
+                                    "type": "ridesharing"
                                 },
                                 {
                                     "from": "A2",
@@ -78,17 +77,35 @@ Simplified output:
 The main principle is to show a `crowfly` section with `ridesharing` as mode in the journey.  
 This allows Navitia to have a succession of sections that:  
 * is consistent in both time and space _(A @7:00 -> B @9:00 -> C @10:00)_
-* respects constraints provided in parameters _(journey starting after 7:00)_.
+* respects constraints provided in parameters _(journey starting after 7:00)_
 
 Inside that ridesharing-crowfly section we find the `ridesharing_journeys`.  
 They are showing multiple possible journeys using ridesharing and covering that crowfly section.  
 * Each journey will have a starting and ending crowfly to manage succession of sections in space (even with top-level sections).  
 * Time-consistency is respected in that sub-journey _(A @6:30 -> A1 @6:30 -> A2 @9:30 -> B @9:30)_,
 * However time-consistency is not respected if an integrator chooses to substitute those sub-journey's sections to the top ridesharing-crowfly section
-_(example starts before provided parameter, and ends after the start of public-transport section that follows)_.
+_(example starts before provided parameter, and ends after the start of public-transport section that follows)_.  
+No "waiting" section is provided as it could be Back to the Future _(cf. example)_.
 
 
 ### Fare and CO2 emissions
 
 In that case, the fare and CO2 emissions of the journey containing a ridesharing-crowfly are not impacted
 by the ridesharing ads that are presented (we don't know which one would actually be selected by the passenger).
+
+
+### Miscellaneous comments
+
+`network` field of `ridesharing_informations` will probably be used as an id when integrating the response,
+to output the proper name of the ridesharing provider, as well as any logo and colors that would be associated to it to customise output.
+
+
+### Undecided fields
+
+The `display_informations` field is not filled so far, we could however add informations to make it usable "blindly" as any `display_informations`.
+
+A `passengers` object-list could appear to describe other passengers on the ridesharing-ad.
+
+A `car_model` object could appear (in driver or in ridesharing_informations) to describe and offer a picture of the driver's car.
+
+Only `"type": "ridesharing"` is provided in the ridesharing-journey's section, not `"mode": "ridesharing"`. We could probably add it if necessary.
