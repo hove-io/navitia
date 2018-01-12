@@ -97,7 +97,7 @@ Ce fichier décrit les périodes de circulation associés aux trips.
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
-calendar_id | chaine | Requis | Identifiant du calendrier de circulation
+service_id | chaine | Requis | Identifiant du calendrier de circulation
 monday | entier | Requis | (1)
 tuesday | entier | Requis | (1)
 wednesday | entier | Requis | (1)
@@ -118,7 +118,7 @@ Ce fichier décrit des exceptions aux calendriers définit dans le fichier calen
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
-calendar_id | chaine | Requis | Identifiant du calendrier de circulation
+service_id | chaine | Requis | Identifiant du calendrier de circulation
 date | date | Requis | Date de l'exception
 exception_type | entier | Requis | (1)
 
@@ -559,6 +559,10 @@ line_external_code | chaine | Requis | cette colonne contient le code externe NA
 
 # Évolutions possibles du format
 Ce chapitre liste des évolutions du format qui peuvent être intéressantes si elles sont utiles concrètement.
+## Modification du champ service_id et du nom du fichier calendar.txt
+L'identifiant d'un calendrier ne suit pas la même convention que les autres identifiants (même s'il est cohérent avec le GTFS). Une évolution possible serait de changer le libellé du champ pour indiquer "calendar_id".
+De plus, le nom du fichier pourra être changé en "calendars.txt" pour améliorer la cohérence.
+
 ## Gestion des données perturbées / de grèves
 Afin de limiter la complexité du format, la gestion des données de grève sera effectuée par plusieurs exports :
 
