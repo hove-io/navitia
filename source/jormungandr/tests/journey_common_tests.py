@@ -864,7 +864,7 @@ class AddErrorFieldInJormun(object):
             with "no_solution" id and "no solution found for this journey"
             message.
             """
-            query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default" \
+            query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}" \
                 "&datetime_represents=arrival&_max_successive_physical_mode=3&_max_additional_connections=10"\
             .format(from_sp="stopP", to_sp="stopT", datetime="20140614T193000")
 
