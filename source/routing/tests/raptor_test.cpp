@@ -3733,8 +3733,8 @@ BOOST_AUTO_TEST_CASE(forbidden_uri_in_stay_in) {
     using boost::posix_time::time_from_string;
 
     auto j = res[0];
-    BOOST_CHECK_EQUAL(j.items.front().departure, time_from_string("2017-01-01 09:42:00"));
-    BOOST_CHECK_EQUAL(j.items.back().arrival, time_from_string("2017-01-01 10:17:00"));
+    BOOST_CHECK_EQUAL(j.items.front().departure, time_from_string("2018-01-01 09:42:00"));
+    BOOST_CHECK_EQUAL(j.items.back().arrival, time_from_string("2018-01-01 10:17:00"));
 
     BOOST_REQUIRE_EQUAL(j.items.size(), 5);
 
@@ -3757,8 +3757,8 @@ BOOST_AUTO_TEST_CASE(forbidden_uri_in_stay_in) {
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     j = res[0];
 
-    BOOST_CHECK_EQUAL(j.items.front().departure, time_from_string("2017-01-01 09:37:00"));
-    BOOST_CHECK_EQUAL(j.items.back().arrival, time_from_string("2017-01-01 10:17:00"));
+    BOOST_CHECK_EQUAL(j.items.front().departure, time_from_string("2018-01-01 09:37:00"));
+    BOOST_CHECK_EQUAL(j.items.back().arrival, time_from_string("2018-01-01 10:17:00"));
 
     // we should do the cnx on Stalingrad_2
     BOOST_CHECK_EQUAL(j.items[1].stop_points.back()->uri, "Stalingrad_2");
