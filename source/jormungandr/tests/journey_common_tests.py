@@ -853,6 +853,30 @@ class JourneyCommon(object):
         assert response['error']['id'] == u'unknown_object'
         assert response['error']['message'] == u'The entry point: vehicle_journey:SNC is not valid'
 
+@dataset({"main_stif_test": {}})
+class AddErrorFieldInJormun(object):
+    def test_add_error_field(self):
+            """
+            The goal of this test is to put forward the addition of the error
+            in the Jormungandr part.
+            Kraken send journeys but after the Jormungandr filtering, there is
+            no more journeys field. So Jormungandr have to add an error field
+            with "no_solution" id and "no solution found for this journey"
+            message.
+            """
+            query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default" \
+                "&datetime_represents=arrival&_max_successive_physical_mode=3&_max_additional_connections=10"\
+            .format(from_sp="stopP", to_sp="stopT", datetime="20140614T193000")
+
+            response, status = self.query_region(query + "&max_duration=1&max_duration_to_pt=100", check=False)
+
+            assert status == 200
+            check_best(response)
+            assert response['error']['id'] == "no_solution"
+            assert response['error']['message'] == "no solution found for this journey"
+            #and no journey is to be provided
+            assert 'journeys' not in response or len(response['journeys']) == 0
+
 @dataset({"main_routing_test": {}})
 class DirectPath(object):
     def test_journey_direct_path(self):
