@@ -182,15 +182,39 @@
                                     "currency": "EUR"
                                 }
                             },
+                            "departure_date_time": "20180110T115000",
+                            "arrival_date_time": "20180110T151000",
                             "sections": [
                                 {
                                     "from": {
+                                        "embedded_type": "administrative_region",
+                                        "quality": 0,
+                                        "administrative_region": {
+                                            "insee": "12145",
+                                            "name": "Millau",
+                                            "level": 8,
+                                            "coord": {
+                                                "lat": "44.10067",
+                                                "lon": "3.077759"
+                                            },
+                                            "label": "Millau (12100)",
+                                            "id": "admin:fr:12145",
+                                            "zip_code": "12100"
+                                        },
                                         "name": "Millau (12100)",
                                         "id": "admin:fr:12145"
                                     },
                                     "to": {
                                         "name": "Pickup RideSharing",
-                                        "id": "start_ridesharing"
+                                        "id": "start_ridesharing",
+                                        "embedded_type": "address",
+                                        "address": {
+                                            "label": "À l'hotel de ville (Millau)",
+                                            "coord": {
+                                                "lon": "3.077759",
+                                                "lat": "44.10067"
+                                            }
+                                        }
                                     },
                                     "departure_date_time": "20180110T115000",
                                     "arrival_date_time": "20180110T115000",
@@ -211,8 +235,8 @@
                                                 44.10067
                                             ],
                                             [
-                                                4.78616,
-                                                43.921963
+                                                3.077759,
+                                                44.10067
                                             ]
                                         ]
                                     },
@@ -224,11 +248,27 @@
                                 {
                                     "from": {
                                         "name": "Pickup RideSharing",
-                                        "id": "start_ridesharing"
+                                        "id": "start_ridesharing",
+                                        "embedded_type": "address",
+                                        "address": {
+                                            "label": "À l'hotel de ville (Millau)",
+                                            "coord": {
+                                                "lon": "3.077759",
+                                                "lat": "44.10067"
+                                            }
+                                        }
                                     },
                                     "to": {
                                         "name": "Dropoff RideSharing",
-                                        "id": "end_ridesharing"
+                                        "id": "end_ridesharing",
+                                        "embedded_type": "address",
+                                        "address": {
+                                            "label": "À la gare (Avignon)",
+                                            "coord": {
+                                                "lon": "4.78616",
+                                                "lat": "43.921963"
+                                            }
+                                        }
                                     },
                                     "departure_date_time": "20180110T115000",
                                     "arrival_date_time": "20180110T151000",
@@ -312,11 +352,63 @@
                                 {
                                     "from": {
                                         "name": "Dropoff RideSharing",
-                                        "id": "end_ridesharing"
+                                        "id": "end_ridesharing",
+                                        "embedded_type": "address",
+                                        "address": {
+                                            "label": "À la gare (Avignon)",
+                                            "coord": {
+                                                "lon": "4.78616",
+                                                "lat": "43.921963"
+                                            }
+                                        }
                                     },
                                     "to": {
-                                        "name": "Avignon-TGV (Avignon)",
-                                        "id": "stop_point:OCE:SP:TGV-87318964"
+                                        "embedded_type": "stop_point",
+                                        "stop_point": {
+                                            "name": "Avignon-TGV",
+                                            "links": [],
+                                            "coord": {
+                                                "lat": "43.921963",
+                                                "lon": "4.78616"
+                                            },
+                                            "label": "Avignon-TGV (Avignon)",
+                                            "equipments": [],
+                                            "administrative_regions": [
+                                                {
+                                                    "insee": "84007",
+                                                    "name": "Avignon",
+                                                    "level": 8,
+                                                    "coord": {
+                                                        "lat": "43.949314",
+                                                        "lon": "4.806032"
+                                                    },
+                                                    "label": "Avignon (84000)",
+                                                    "id": "admin:fr:84007",
+                                                    "zip_code": "84000"
+                                                }
+                                            ],
+                                            "id": "stop_point:OCE:SP:TGV-87318964",
+                                            "stop_area": {
+                                                "codes": [
+                                                    {
+                                                        "type": "CR-CI-CH",
+                                                        "value": "0087-318964-BV"
+                                                    }
+                                                ],
+                                                "name": "Avignon-TGV",
+                                                "links": [],
+                                                "coord": {
+                                                    "lat": "43.921963",
+                                                    "lon": "4.78616"
+                                                },
+                                                "label": "Avignon-TGV (Avignon)",
+                                                "timezone": "Europe/Paris",
+                                                "id": "stop_area:OCE:SA:87318964"
+                                            }
+                                        },
+                                        "label": "Avignon-TGV (Avignon)",
+                                        "timezone": "Europe/Paris",
+                                        "id": "stop_area:OCE:SA:87318964"
                                     },
                                     "departure_date_time": "20180110T151000",
                                     "arrival_date_time": "20180110T151000",
@@ -333,8 +425,8 @@
                                         ],
                                         "coordinates": [
                                             [
-                                                3.077759,
-                                                44.10067
+                                                4.78616,
+                                                43.921963
                                             ],
                                             [
                                                 4.78616,
