@@ -273,10 +273,10 @@ class Instance(db.Model):
     # ============================================================
     # params for jormungandr
     # ============================================================
-    #the scenario used by jormungandr, by default we use the new default scenario (and not the default one...)
+    # the scenario used by jormungandr, by default we use the new default scenario (and not the default one...)
     scenario = db.Column(db.Text, nullable=False, default='new_default')
 
-    #order of the journey, this order is for clockwise request, else it is reversed
+    # order of the journey, this order is for clockwise request, else it is reversed
     journey_order = db.Column(db.Enum('arrival_time', 'departure_time', name='journey_order'),
                               default=default_values.journey_order, nullable=False)
 
@@ -401,6 +401,15 @@ class Instance(db.Model):
         else:
             raise Exception({'error': 'instance is required'}, 400)
 
+    def delete_dataset(self):
+        # db.session.query(Job).filter(Job.instance_id == self.id).delete()
+
+        jobs = db.session.query(Job).filter(Job.instance_id == self.id).all()
+        for j in jobs:
+            db.session.query(Metric).filter(Metric.job_id == j.id).delete()
+            db.session.query(DataSet).filter(DataSet.job_id == j.id).delete()
+            db.session.commit()
+
     def __repr__(self):
         return '<Instance %r>' % self.name
 
@@ -498,7 +507,7 @@ class Job(db.Model, TimestampMixin):
                             db.ForeignKey('instance.id'))
     autocomplete_params_id = db.Column(db.Integer,
                                        db.ForeignKey('autocomplete_parameter.id'))
-    #name is used for the ENUM name in postgreSQL
+    # name is used for the ENUM name in postgreSQL
     state = db.Column(db.Enum('pending', 'running', 'done', 'failed',
                               name='job_state'))
 
@@ -542,7 +551,7 @@ class DataSet(db.Model):
 
     uid = db.Column(UUID, unique=True)
 
-    job_id = db.Column(db.Integer, db.ForeignKey('job.id'))
+    job_id = db.Column(db.Integer, db.ForeignKey('job.id', ondelete='CASCADE'))
 
     def __init__(self):
         self.uid = str(uuid.uuid4())
@@ -550,7 +559,7 @@ class DataSet(db.Model):
     @classmethod
     def find_by_uid(cls, uid):
         if not uid:
-            #old dataset don't have uid, we don't want to get one of them
+            # old dataset don't have uid, we don't want to get one of them
             return None
         return cls.query.filter_by(uid=uid).first()
 

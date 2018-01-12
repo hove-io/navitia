@@ -78,6 +78,8 @@ api.add_resource(resources.AutocompleteDataset,
 api.add_resource(resources.AutocompleteUpdateData,
                  '/v0/autocomplete_parameters/<ac_instance_name>/update_data')
 
+api.add_resource(resources.MigrateFromPoiToOsm, '/v0/instances/<string:instance_name>/:actions/migrate_from_poi_to_osm')
+
 @app.errorhandler(Exception)
 def error_handler(exception):
     """

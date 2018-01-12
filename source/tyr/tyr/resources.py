@@ -1081,3 +1081,10 @@ class AutocompleteUpdateData(flask_restful.Resource):
         _, job = import_autocomplete([filename], instance)
         job = models.db.session.merge(job) #reatache the object
         return marshal({'job': job}, one_job_fields), 200
+
+
+class MigrateFromPoiToOsm(flask_restful.Resource):
+    def delete(self, instance_name):
+        models.Instance.get_by_name(instance_name).delete_dataset()
+        return_msg = "All datasets deleted for instance "+instance_name
+        return {'action': return_msg}, 200
