@@ -402,12 +402,9 @@ class Instance(db.Model):
             raise Exception({'error': 'instance is required'}, 400)
 
     def delete_dataset(self):
-        # db.session.query(Job).filter(Job.instance_id == self.id).delete()
-
         jobs = db.session.query(Job).filter(Job.instance_id == self.id).all()
         for j in jobs:
-            db.session.query(Metric).filter(Metric.job_id == j.id).delete()
-            db.session.query(DataSet).filter(DataSet.job_id == j.id).delete()
+            db.session.delete(j)
             db.session.commit()
 
     def __repr__(self):

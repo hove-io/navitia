@@ -1085,6 +1085,14 @@ class AutocompleteUpdateData(flask_restful.Resource):
 
 class MigrateFromPoiToOsm(flask_restful.Resource):
     def delete(self, instance_name):
-        models.Instance.get_by_name(instance_name).delete_dataset()
-        return_msg = "All datasets deleted for instance "+instance_name
-        return {'action': return_msg}, 200
+
+        instance = models.Instance.get_by_name(instance_name)
+        if instance:
+            instance.delete_dataset()
+            return_msg = "All datasets deleted for instance "+instance_name
+            return_status = 200
+        else:
+            return_msg = "No instance found for : "+instance_name
+            return_status = 404
+
+        return {'action': return_msg}, return_status
