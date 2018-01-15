@@ -691,8 +691,8 @@ def merge_responses(responses):
 
         # Only one errors field
         if len(errors) == 1:
-            merged_response.error.id = errors.values()[0].id
-            merged_response.error.message = errors.values()[0].message
+            merged_response.error.id = list(errors.values())[0].id
+            merged_response.error.message = list(errors.values())[0].message
         # we need to merge the errors
         elif len(errors) > 1:
             merged_response.error.id = response_pb2.Error.no_solution
