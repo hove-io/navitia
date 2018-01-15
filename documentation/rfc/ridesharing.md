@@ -120,6 +120,8 @@ to output the proper name of the ridesharing provider, as well as any logo and c
 
 In any case, a decision as to consider RDEX format to avoid providing too much informations not handled by most of ridesharing services.
 
+A `ridesharing_speed` param may appear to manage the speed of ridesharing crowfly.
+
 The `display_informations` field is not filled so far, we could however add informations to make it usable "blindly" as any `display_informations`.
 
 A `passengers` object-list could appear to describe other passengers on the ridesharing-ad. How about personal informations in Navitia?
