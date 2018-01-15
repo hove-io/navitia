@@ -536,6 +536,7 @@ class Journeys(JourneyCommon):
                                                  " insert error field in response ".format(r))
                 response.error.id = response_pb2.Error.no_solution
                 response.error.message = "no solution found for this journey"
+                response.response_type = response_pb2.ResponseType.NO_SOLUTION
 
             if response.HasField(str('error')) \
                     and len(possible_regions) != 1:
