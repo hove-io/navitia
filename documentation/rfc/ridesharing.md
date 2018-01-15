@@ -7,6 +7,17 @@ The simplest way of dealing with ridesharing is to make a crowfly,
 then call an external system to "cover" that crowfly section.
 
 
+### Parameters
+
+A new value possible `ridesharing` will be added to the parameters
+`first_section_mode` and `last_section_mode` (not activated by default).
+
+If one only wants direct ridesharing, `max_ridesharing_duration_to_pt` will be added
+and can be passed to 0 to deactivate fallback.
+
+In Tyr db, we should also add `max_ridesharing_duration_to_pt` to `instance` and `instance_traveler_types`.
+
+
 ### Output description
 
 The output of a `/journeys` call would follow [this json example](./journeys_ridesharing.json).
@@ -92,6 +103,11 @@ No "waiting" section is provided as it could be Back to the Future _(cf. example
 
 In that case, the fare and CO2 emissions of the journey containing a ridesharing-crowfly are not impacted
 by the ridesharing ads that are presented (we don't know which one would actually be selected by the passenger).
+
+
+### Configuration and access
+
+The ridesharing will be activated by coverage (and on everyone who has access to that coverage).
 
 
 ### Miscellaneous comments
