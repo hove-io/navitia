@@ -27,8 +27,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 import math
+import six
 from jormungandr.scenarios.helper_classes.helper_utils import crowfly_distance_between
-from jormungandr.utils import get_pt_object_coord
+from jormungandr.utils import get_pt_object_coord, generate_id
 from navitiacommon import response_pb2
 
 
@@ -38,6 +39,7 @@ def build_ridesharing_crowfly_journey(instance, origin, destination, period_extr
     # TODO: using _create_crowfly from helper_utils.py might be nicer
     # manage section
     ridesharing_section = ridesharing_journey.sections.add()
+    ridesharing_section.id = six.text_type(generate_id())
     ridesharing_section.type = response_pb2.CROW_FLY
     ridesharing_section.street_network.mode = response_pb2.Ridesharing
     ridesharing_section.origin.CopyFrom(instance.georef.place(origin))
