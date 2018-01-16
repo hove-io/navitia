@@ -34,6 +34,7 @@ import logging
 from flask.ext.restful import abort
 from flask import g
 from jormungandr.scenarios import simple, journey_filter, helpers
+from jormungandr.scenarios.ridesharing.ridesharing_helper import build_ridesharing_crowfly_journey
 from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, \
     get_or_default, fill_uris, gen_all_combin, get_pseudo_duration, mode_weight
 from navitiacommon import type_pb2, response_pb2, request_pb2
@@ -42,7 +43,7 @@ from jormungandr.scenarios.qualifier import min_from_criteria, arrival_crit, dep
     has_no_bike, has_bike, has_no_bss, has_bss, non_pt_journey, has_walk, and_filters
 import numpy as np
 import collections
-from jormungandr.utils import date_to_timestamp
+from jormungandr.utils import date_to_timestamp, PeriodExtremity
 from jormungandr.scenarios.simple import get_pb_data_freshness
 import gevent, gevent.pool
 import flask
@@ -753,6 +754,11 @@ class Scenario(simple.Scenario):
         min_asked_journeys = get_or_default(request, 'min_nb_journeys', 1)
         min_journeys_calls = get_or_default(request, '_min_journeys_calls', 1)
 
+        # building ridesharing request from "original" request
+        period_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
+        ridesharing_journey = build_ridesharing_crowfly_journey(instance, request['origin'],
+                                                                request['destination'], period_extremity)
+
         responses = []
         nb_try = 0
         while request is not None and \
@@ -781,6 +787,8 @@ class Scenario(simple.Scenario):
 
         journey_filter.final_filter_journeys(responses, instance, api_request)
         pb_resp = merge_responses(responses)
+
+        pb_resp.journeys.extend([ridesharing_journey])
 
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])
         compute_car_co2_emission(pb_resp, api_request, instance)
