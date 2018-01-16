@@ -1,4 +1,4 @@
-# Copyright (c) 2001-2016, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2018, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -27,27 +27,3 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-
-class RideSharingJourney(object):
-    # https://stackoverflow.com/a/28059785/1614576
-    __slots__ = ('duration',
-                 'distance',
-                 'shape',
-                 'offer_url',
-                 'pickup_addr',
-                 'pickup_lat',
-                 'pickup_lon',
-                 'dropoff_addr',
-                 'dropoff_lat',
-                 'dropoff_lon',
-                 'pickup_date_time',
-                 'dropoff_date_time',
-                 'driver_name',
-                 'driver_gender',
-                 'dirve_image_url',
-                 'driver_rate',
-                 'driver_rate_count',
-                 'price',
-                 'currency',
-                 'total_seats',
-                 'available_seats')
