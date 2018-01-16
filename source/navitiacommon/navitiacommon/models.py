@@ -408,7 +408,7 @@ class Instance(db.Model):
                 if dataset.type == 'poi':
                     db.session.query(Metric).filter(Metric.dataset_id == dataset.id).delete()
                     db.session.delete(dataset)
-                    db.session.commit()
+            db.session.commit()
             # if no more datasets related to job, delete it
             if not j.data_sets.all():
                 db.session.delete(j)
