@@ -164,7 +164,7 @@ import re
 regex = re.compile(r'\\(?![/u"])')
 fixed = regex.sub(r"\\\\", fake_response)
 
-mock_get = mock.MagicMock(return_value=utils_test.MockResponse(json.loads(fixed, strict=False, encoding='utf8'), 200, '{}'))
+mock_get = mock.MagicMock(return_value=utils_test.MockResponse(json.loads(fixed), 200, '{}'))
 
 
 def instant_system_test():
