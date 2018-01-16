@@ -54,3 +54,4 @@
     * le lien entre "vehicle_journey" et "contributor" est supprimé, et se fait via "dataset"
     * le champ "company_fax" est supprimé et les champs adresses sont fusionnés en un seul champ en texte libre
     * ajout d'un champ "network_address" afin de pouvoir renseigner l'adresse du réseau.
+    * les données adaptées (intégrées dans la version 0.6) sont déplacées dans la section "évolutions possibles"
