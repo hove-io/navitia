@@ -752,6 +752,9 @@ std::string static_data::captionByType(Type_e type){
 }
 
 Mode_e static_data::modeByCaption(const std::string & mode_str) {
+    if (mode_str == "ridesharing") {
+        throw navitia::recoverable_exception("ridesharing is not managed by kraken");
+    }
     return instance->modes_string.right.at(mode_str);
 }
 
