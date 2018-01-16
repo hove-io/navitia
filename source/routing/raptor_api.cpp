@@ -190,9 +190,11 @@ static void compute_metadata(pbnavitia::Journey* pb_journey) {
     uint32_t total_walking_duration = 0;
     uint32_t total_car_duration = 0;
     uint32_t total_bike_duration = 0;
+    uint32_t total_ridesharing_duration = 0;
     uint32_t total_walking_distance = 0;
     uint32_t total_car_distance = 0;
     uint32_t total_bike_distance = 0;
+    uint32_t total_ridesharing_distance = 0;
 
     for (const auto& section: pb_journey->sections()) {
         if (section.type() == pbnavitia::STREET_NETWORK || section.type() == pbnavitia::CROW_FLY) {
@@ -210,6 +212,10 @@ static void compute_metadata(pbnavitia::Journey* pb_journey) {
                 total_bike_duration += section.duration();
                 total_bike_distance += section.length();
                 break;
+            case pbnavitia::StreetNetworkMode::Ridesharing:
+                total_ridesharing_duration += section.duration();
+                total_ridesharing_distance += section.length();
+                break;
             }
         } else if (section.type() == pbnavitia::TRANSFER && section.transfer_type() == pbnavitia::walking) {
             total_walking_duration += section.duration();
@@ -222,12 +228,14 @@ static void compute_metadata(pbnavitia::Journey* pb_journey) {
     durations->set_walking(total_walking_duration);
     durations->set_bike(total_bike_duration);
     durations->set_car(total_car_duration);
+    durations->set_ridesharing(total_ridesharing_duration);
     durations->set_total(ts_arrival - ts_departure);
 
     pbnavitia::Distances* distances = pb_journey->mutable_distances();
     distances->set_walking(total_walking_distance);
     distances->set_bike(total_bike_distance);
     distances->set_car(total_car_distance);
+    distances->set_ridesharing(total_ridesharing_distance);
 }
 
 static georef::Path get_direct_path(georef::StreetNetwork& worker,
