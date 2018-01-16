@@ -404,8 +404,15 @@ class Instance(db.Model):
     def delete_dataset(self):
         jobs = db.session.query(Job).filter(Job.instance_id == self.id).all()
         for j in jobs:
-            db.session.delete(j)
-            db.session.commit()
+            for dataset in j.data_sets.all():
+                if dataset.type == 'poi':
+                    db.session.query(Metric).filter(Metric.dataset_id == dataset.id).delete()
+                    db.session.delete(dataset)
+                    db.session.commit()
+            # if no more datasets related to job, delete it
+            if not j.data_sets.all():
+                db.session.delete(j)
+                db.session.commit()
 
     def __repr__(self):
         return '<Instance %r>' % self.name
@@ -548,7 +555,7 @@ class DataSet(db.Model):
 
     uid = db.Column(UUID, unique=True)
 
-    job_id = db.Column(db.Integer, db.ForeignKey('job.id', ondelete='CASCADE'))
+    job_id = db.Column(db.Integer, db.ForeignKey('job.id'))
 
     def __init__(self):
         self.uid = str(uuid.uuid4())

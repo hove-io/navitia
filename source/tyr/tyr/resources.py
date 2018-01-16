@@ -1089,10 +1089,10 @@ class MigrateFromPoiToOsm(flask_restful.Resource):
         instance = models.Instance.get_by_name(instance_name)
         if instance:
             instance.delete_dataset()
-            return_msg = "All datasets deleted for instance "+instance_name
+            return_msg = 'All POI datasets deleted for instance {}'.format(instance_name)
             return_status = 200
         else:
-            return_msg = "No instance found for : "+instance_name
+            return_msg = "No instance found for : {}".format(instance_name)
             return_status = 404
 
         return {'action': return_msg}, return_status
