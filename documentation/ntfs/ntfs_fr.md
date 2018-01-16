@@ -571,7 +571,7 @@ Afin de limiter la complexité du format, la gestion des données de grève sera
     * de un ou plusieurs réseaux spécifiés par la clé **revised_networks** du fichier **feed_infos.txt**
     * pour des données valides entre les dates spécifiées par **feed_start_date** et **feed_end_date**
 
-Un champ complémentaire et optionnel "base_trip_id" est à prévoir dans le fichier "trips.txt" afin de permettre d'associer la circualtion théorique et la circulation adaptée (en cas de données de grève par exemple).
+Un champ complémentaire et optionnel "base_trip_id" est à prévoir dans le fichier "trips.txt" afin de permettre d'associer la circulation théorique et la circulation adaptée (en cas de données de grève par exemple).
 
 ## Gestion avancée des géométries (tracés des lignes, parcours et circulations)
 Afin de ne pas complexifier inutilement le format NTFS et les outils qui vont le manipuler, le fichier "geometries.txt" indique un tracé complet pour une géométrie, comme une ligne en fourche ou une ligne à tiroir.  Afin de pouvoir afficher le tracé réel des bus dans la feuille de route (ie. n'avoir que la portion utilisée de la ligne), un découpage de cette géométrie est réalisé dans Navitia de manière automatique.
