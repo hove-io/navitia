@@ -436,7 +436,8 @@ class Durations(fields.Raw):
             'total': obj.durations.total,
             'walking': obj.durations.walking,
             'bike': obj.durations.bike,
-            'car': obj.durations.car
+            'car': obj.durations.car,
+            'ridesharing' : obj.durations.ridesharing
         }
 
 
@@ -447,7 +448,8 @@ class Distances(fields.Raw):
         return {
             'walking': obj.distances.walking,
             'bike': obj.distances.bike,
-            'car': obj.distances.car
+            'car': obj.distances.car,
+            'ridesharing' : obj.distances.ridesharing
         }
 
 
