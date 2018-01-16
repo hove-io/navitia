@@ -35,6 +35,7 @@ from navitiacommon import response_pb2
 def build_ridesharing_crowfly_journey(instance, origin, destination, period_extremity):
     ridesharing_journey = response_pb2.Journey()
 
+    # TODO: using _create_crowfly from helper_utils.py might be nicer
     # manage section
     ridesharing_section = ridesharing_journey.sections.add()
     ridesharing_section.type = response_pb2.CROW_FLY
@@ -53,7 +54,7 @@ def build_ridesharing_crowfly_journey(instance, origin, destination, period_extr
 
     distance = crowfly_distance_between(orig_coord, dest_coord)
     ridesharing_section.length = int(distance)
-    # manhattan + 15min
+    # manhattan + 15min # TODO: change, using params and conf
     ridesharing_section.duration = int(distance / (instance.car_speed / math.sqrt(2))) + 15*60
     if period_extremity.represents_start:
         ridesharing_section.begin_date_time = period_extremity.datetime

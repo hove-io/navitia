@@ -723,7 +723,7 @@ class TravelerProfile(flask_restful.Resource):
     """
     def __init__(self):
         # fallback modes
-        fb_modes = ['walking', 'car', 'bss', 'bike']
+        fb_modes = ['walking', 'car', 'bss', 'bike', 'ridesharing']
 
         parser = reqparse.RequestParser()
         parser.add_argument('walking_speed', type=PositiveFloat(), required=False,

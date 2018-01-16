@@ -124,7 +124,7 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
         ResourceUri.__init__(self, authentication=False, output_type_serializer=output_type_serializer)
         ResourceUtc.__init__(self)
 
-        modes = ["walking", "car", "bike", "bss"]
+        modes = ["walking", "car", "bike", "bss", "ridesharing"]
         types = {
             "all": "All types",
             "best": "The best journey",
