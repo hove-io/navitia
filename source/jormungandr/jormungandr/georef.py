@@ -78,7 +78,7 @@ class Kraken(object):
 
     def get_crow_fly(self, origin, streetnetwork_mode, max_duration, max_nb_crowfly, **kwargs):
 
-        # Getting stop_ponits or stop_areas using crow fly
+        # Getting stop_points or stop_areas using crow fly
         # the distance of crow fly is defined by the mode speed and max_duration
         req = request_pb2.Request()
         req.requested_api = type_pb2.places_nearby
