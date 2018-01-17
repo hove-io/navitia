@@ -59,13 +59,13 @@ class InstantSystem(object):
         try:
             return self.breaker.call(requests.get, url=self.api_url, headers=headers, params=params, timeout=1000)
         except pybreaker.CircuitBreakerError as e:
-            self.logger.error('Ride sharing service dead (error: {})'.format(e))
+            self.logger.error('Instant System service dead (error: {})'.format(e))
             raise
         except requests.Timeout as t:
-            self.logger.error('Ride sharing service dead (error: {})'.format(t))
+            self.logger.error('Instant System service dead (error: {})'.format(t))
             raise
         except Exception as e:
-            self.logger.exception('Ride sharing service dead')
+            self.logger.exception('Instant System service dead')
             raise
 
     @staticmethod
@@ -138,23 +138,24 @@ class InstantSystem(object):
 
         return ridesharing_journeys
 
-    def request_instant_system(self, from_coord, to_coord, request_datetime, datetime_represent, limit=None):
+    def request_instant_system(self, from_coord, to_coord, period_extremity, limit=None):
         """
 
         :param from_coord: lat,lon ex: '48.109377,-1.682103'
         :param to_coord: lat,lon ex: '48.020335,-1.743929'
-        :param request_datetime: a timestamp (utc)
-        :param datetime_represent: bool
+        :param period_extremity: a tuple of [timestamp(utc), clockwise]
         :param limit: optional
         :return:
         """
         # TODO: url and apiKey should be read from config
         # format of datetime: 2017-12-25T07:00:00Z
-        datetime_str = datetime.datetime.fromtimestamp(request_datetime).strftime('%Y-%m-%dT%H:%M:%SZ')
+        datetime_str = datetime.datetime.fromtimestamp(period_extremity.datetime)\
+            .strftime('%Y-%m-%dT%H:%M:%SZ')
+
 
         params = {'from': from_coord,
                   'to': to_coord,
-                  ('arrivalDate', 'departureDate')[datetime_represent]: datetime_str}
+                  ('arrivalDate', 'departureDate')[bool(period_extremity.represents_start)]: datetime_str}
 
         if limit is not None:
             params.update({'limit', limit})
