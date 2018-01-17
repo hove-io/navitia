@@ -494,3 +494,23 @@ def get_current_datetime_str(is_utc=False):
     timezone = 'Africa/Abidjan' if is_utc else get_timezone_str()
     current_datetime = request.args.get('_current_datetime')
     return str_datetime_utc_to_local(current_datetime, timezone)
+
+
+def make_timestamp_from_str(strftime):
+    """
+
+    :param strftime:
+    :return: double
+
+    >>> make_timestamp_from_str("2017-12-25T08:07:59 +01:00")
+    1514185679
+    >>> make_timestamp_from_str("20171225T080759+01:00")
+    1514185679
+    >>> make_timestamp_from_str("2017-12-25 08:07:59 +01:00")
+    1514185679
+    >>> make_timestamp_from_str("20171225T080759Z")
+    1514189279
+    """
+    from dateutil import parser
+    import calendar
+    return calendar.timegm(parser.parse(strftime).utctimetuple())
