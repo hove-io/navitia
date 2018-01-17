@@ -184,10 +184,10 @@ def instant_system_test():
         assert len(ridesharing_journeys) == 2
         assert ridesharing_journeys[0].pickup_place.addr == "9 Allée Rochester, Rennes"
         assert ridesharing_journeys[0].dropoff_place.addr == "2 Avenue Alphonse Legault, Bruz"
-        assert ridesharing_journeys[0].pickup_date_time == utils.make_timestamp_from_str("2017-12-25 07:07:59 +00:00")
-        assert ridesharing_journeys[0].dropoff_date_time == utils.make_timestamp_from_str("2017-12-25 07:25:36 +00:00")
+        assert ridesharing_journeys[0].pickup_date_time == utils.str_to_time_stamp("20171225T060759")
+        assert ridesharing_journeys[0].dropoff_date_time == utils.str_to_time_stamp("20171225T062536")
 
         assert ridesharing_journeys[1].pickup_place.addr == "1 Boulevard Volney, Rennes"
         assert ridesharing_journeys[1].dropoff_place.addr == "9012 Rue du 8 Mai 1944, Bruz"
-        assert ridesharing_journeys[1].pickup_date_time == utils.make_timestamp_from_str("2017-12-25 07:35:42 +00:00")
-        assert ridesharing_journeys[1].dropoff_date_time == utils.make_timestamp_from_str("2017-12-25 07:53:09 +00:00")
+        assert ridesharing_journeys[1].pickup_date_time == utils.str_to_time_stamp("20171225T063542")
+        assert ridesharing_journeys[1].dropoff_date_time == utils.str_to_time_stamp("20171225T065309")
