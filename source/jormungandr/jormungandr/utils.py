@@ -502,15 +502,15 @@ def make_timestamp_from_str(strftime):
     :param strftime:
     :return: double
 
-    >>> make_timestamp_from_str("2017-12-25T08:07:59+01:00")
-    1514182079.0
-    >>> make_timestamp_from_str("20171225T080759+01:00")
-    1514182079.0
-    >>> make_timestamp_from_str("2017-12-25 08:07:59 +01:00")
-    1514182079.0
-    >>> make_timestamp_from_str("20171225T080759Z")
+    >>> make_timestamp_from_str("2017-12-25T08:07:59 +01:00")
     1514185679.0
+    >>> make_timestamp_from_str("20171225T080759+01:00")
+    1514185679.0
+    >>> make_timestamp_from_str("2017-12-25 08:07:59 +01:00")
+    1514185679.0
+    >>> make_timestamp_from_str("20171225T080759Z")
+    1514189279.0
     """
     from dateutil import parser
-    import time
-    return time.mktime(parser.parse(strftime).utctimetuple())
+    import calendar
+    return calendar.timegm(parser.parse(strftime).utctimetuple())
