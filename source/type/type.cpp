@@ -744,7 +744,11 @@ static_data * static_data::get() {
 }
 
 Type_e static_data::typeByCaption(const std::string & type_str) {
-    return instance->types_string.right.at(type_str);
+    const auto it_type = instance->types_string.right.find(type_str);
+    if (it_type == instance->types_string.right.end()) {
+        throw navitia::recoverable_exception("The type " + type_str + " is not managed by kraken");
+    }
+    return it_type->second;
 }
 
 std::string static_data::captionByType(Type_e type){
@@ -752,10 +756,11 @@ std::string static_data::captionByType(Type_e type){
 }
 
 Mode_e static_data::modeByCaption(const std::string & mode_str) {
-    if (mode_str == "ridesharing") {
-        throw navitia::recoverable_exception("ridesharing is not managed by kraken");
+    const auto it_mode = instance->modes_string.right.find(mode_str);
+    if (it_mode == instance->modes_string.right.end()) {
+        throw navitia::recoverable_exception("The mode " + mode_str + " is not managed by kraken");
     }
-    return instance->modes_string.right.at(mode_str);
+    return it_mode->second;
 }
 
 template<typename T> Indexes indexes(const std::vector<T*>& elements){
