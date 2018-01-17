@@ -529,10 +529,17 @@ class Journeys(JourneyCommon):
 
             response = i_manager.dispatch(args, api, instance_name=self.region)
 
+            # If journeys list is empty and error field not exist, we create
+            # the error message field
+            if not response.journeys and not response.HasField(str('error')):
+                logging.getLogger(__name__).debug("impossible to find journeys for the region {},"
+                                                 " insert error field in response ".format(r))
+                response.error.id = response_pb2.Error.no_solution
+                response.error.message = "no solution found for this journey"
+                response.response_type = response_pb2.NO_SOLUTION
+
             if response.HasField(str('error')) \
                     and len(possible_regions) != 1:
-                logging.getLogger(__name__).debug("impossible to find journeys for the region {},"
-                                                 " we'll try the next possible region ".format(r))
 
                 if args['debug']:
                     # In debug we store all errors
@@ -540,6 +547,8 @@ class Journeys(JourneyCommon):
                         g.errors_by_region = {}
                     g.errors_by_region[r] = response.error
 
+                logging.getLogger(__name__).debug("impossible to find journeys for the region {},"
+                                                 " we'll try the next possible region ".format(r))
                 responses[r] = response
                 continue
 

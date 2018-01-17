@@ -246,6 +246,9 @@ class TestNewDefaultJourneysWithPtref(JourneysWithPtref, NewDefaultScenarioAbstr
 class TestNewDefaultJourneysNoRegion(JourneysNoRegion, NewDefaultScenarioAbstractTestFixture):
     pass
 
+@config({"scenario": "new_default"})
+class TestErrorFieldInJormun(AddErrorFieldInJormun, NewDefaultScenarioAbstractTestFixture):
+    pass
 
 
 @config({"scenario": "new_default"})

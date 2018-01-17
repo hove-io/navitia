@@ -687,13 +687,14 @@ def merge_responses(responses):
 
     if not merged_response.journeys:
         # we aggregate the errors found
-
         errors = {r.error.id: r.error for r in responses if r.HasField(str('error'))}
+
+        # Only one errors field
         if len(errors) == 1:
             merged_response.error.id = list(errors.values())[0].id
             merged_response.error.message = list(errors.values())[0].message
-        else:
-            # we need to merge the errors
+        # we need to merge the errors
+        elif len(errors) > 1:
             merged_response.error.id = response_pb2.Error.no_solution
             merged_response.error.message = "several errors occured: \n * {}"\
                 .format("\n * ".join([m.message for m in errors.values()]))
