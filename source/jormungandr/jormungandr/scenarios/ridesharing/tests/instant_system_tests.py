@@ -177,9 +177,8 @@ def instant_system_test():
 
         period_extremity = utils.PeriodExtremity(datetime=1514181600,
                                                 represents_start=True)
-        ridesharing_journeys = instant_system.request_instant_system(from_coord=from_coord,
-                                                                     to_coord=to_coord,
-                                                                     period_extremity=period_extremity)
+        ridesharing_journeys = instant_system.request_journeys(from_coord=from_coord, to_coord=to_coord,
+                                                               period_extremity=period_extremity)
 
         assert len(ridesharing_journeys) == 2
         assert ridesharing_journeys[0].pickup_place.addr == "9 Allée Rochester, Rennes"
