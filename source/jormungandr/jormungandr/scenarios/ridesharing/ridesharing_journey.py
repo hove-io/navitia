@@ -56,7 +56,7 @@ class Place(object):
         self.lon = lon
 
 
-class RideSharingJourney(object):
+class RidesharingJourney(object):
     __slots__ = ('duration',
                  'distance',
                  'shape',

@@ -34,6 +34,7 @@ import logging
 from flask.ext.restful import abort
 from flask import g
 from jormungandr.scenarios import simple, journey_filter, helpers
+from jormungandr.scenarios.ridesharing.ridesharing_helper import build_ridesharing_crowfly_journey
 from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, \
     get_or_default, fill_uris, gen_all_combin, get_pseudo_duration, mode_weight
 from navitiacommon import type_pb2, response_pb2, request_pb2
@@ -42,7 +43,7 @@ from jormungandr.scenarios.qualifier import min_from_criteria, arrival_crit, dep
     has_no_bike, has_bike, has_no_bss, has_bss, non_pt_journey, has_walk, and_filters
 import numpy as np
 import collections
-from jormungandr.utils import date_to_timestamp
+from jormungandr.utils import date_to_timestamp, PeriodExtremity
 from jormungandr.scenarios.simple import get_pb_data_freshness
 import gevent, gevent.pool
 import flask
@@ -82,7 +83,12 @@ def get_kraken_calls(request):
                            ('car', 'walking'),
                            ('bike', 'bss'),
                            ('car', 'bss'),
-                           ('bike', 'bike')]
+                           ('bike', 'bike'),
+                           ('ridesharing', 'ridesharing'),
+                           ('ridesharing', 'walking'),
+                           ('walking', 'ridesharing'),
+                           ('ridesharing', 'bss'),
+                           ('bss', 'ridesharing')]
 
     res = [c for c in allowed_combination if c in itertools.product(dep_modes, arr_modes)]
 
@@ -737,8 +743,6 @@ class Scenario(simple.Scenario):
 
     def fill_journeys(self, request_type, api_request, instance):
 
-        krakens_call = get_kraken_calls(api_request)
-
         # sometimes we need to change the entrypoint id (eg if the id is from another autocomplete system)
         origin_detail = self.get_entrypoint_detail(api_request.get('origin'), instance)
         destination_detail = self.get_entrypoint_detail(api_request.get('destination'), instance)
@@ -748,6 +752,19 @@ class Scenario(simple.Scenario):
 
         api_request['origin'] = get_kraken_id(origin_detail) or api_request.get('origin')
         api_request['destination'] = get_kraken_id(destination_detail) or api_request.get('destination')
+
+        # building ridesharing request from "original" request
+        ridesharing_req = deepcopy(api_request)
+
+        # removing ridesharing from request # TODO avoid kraken crash if ridesharing passed
+        api_request['origin_mode'] = [p for p in api_request['origin_mode'] if p != 'ridesharing']
+        api_request['destination_mode'] = [p for p in api_request['destination_mode'] if p != 'ridesharing']
+        if not api_request['origin_mode']:
+            api_request['origin_mode'] = ['walking']
+        if not api_request['destination_mode']:
+            api_request['destination_mode'] = ['walking']
+
+        krakens_call = get_kraken_calls(api_request)
 
         request = deepcopy(api_request)
         min_asked_journeys = get_or_default(request, 'min_nb_journeys', 1)
@@ -781,6 +798,16 @@ class Scenario(simple.Scenario):
 
         journey_filter.final_filter_journeys(responses, instance, api_request)
         pb_resp = merge_responses(responses)
+
+        if 'ridesharing' in ridesharing_req['origin_mode']:
+            period_extremity = PeriodExtremity(ridesharing_req['datetime'], ridesharing_req['clockwise'])
+            ridesharing_journey = build_ridesharing_crowfly_journey(instance,
+                                                                    ridesharing_req['origin'],
+                                                                    ridesharing_req['destination'],
+                                                                    period_extremity)
+            pb_resp.journeys.extend([ridesharing_journey])
+            if pb_resp.HasField(str('error')):
+                pb_resp.ClearField(str('error'))
 
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])
         compute_car_co2_emission(pb_resp, api_request, instance)

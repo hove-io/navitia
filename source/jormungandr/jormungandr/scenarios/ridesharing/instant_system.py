@@ -36,7 +36,7 @@ import requests as requests
 
 from jormungandr import utils
 from jormungandr import app
-import jormungandr.scenarios.ridesharing.ride_sharing_journey as rsj
+import jormungandr.scenarios.ridesharing.ridesharing_journey as rsj
 
 
 class InstantSystem(object):
@@ -96,7 +96,7 @@ class InstantSystem(object):
                 if p.get('mode') != 'RIDESHARINGAD':
                     continue
 
-                res = rsj.RideSharingJourney()
+                res = rsj.RidesharingJourney()
 
                 res.duration = j.get('duration')
                 res.distance = j.get('distance')
@@ -138,7 +138,7 @@ class InstantSystem(object):
 
         return ridesharing_journeys
 
-    def request_instant_system(self, from_coord, to_coord, period_extremity, limit=None):
+    def request_journeys(self, from_coord, to_coord, period_extremity, limit=None):
         """
 
         :param from_coord: lat,lon ex: '48.109377,-1.682103'
