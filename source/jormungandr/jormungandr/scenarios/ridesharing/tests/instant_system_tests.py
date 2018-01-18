@@ -212,8 +212,8 @@ def instant_system_test():
         from_coord = '48.109377,-1.682103'
         to_coord = '48.020335,-1.743929'
 
-        period_extremity = utils.PeriodExtremity(datetime=1514181600,
-                                                represents_start=True)
+        period_extremity = utils.PeriodExtremity(datetime=utils.str_to_time_stamp("20171225T060000"),
+                                                 represents_start=True)
         ridesharing_journeys = instant_system.request_journeys(from_coord=from_coord, to_coord=to_coord,
                                                                period_extremity=period_extremity)
 

@@ -104,7 +104,6 @@ class InstantSystem(AbstractRidesharingService):
                 res.metadata = rsj.MetaData(system_id=self.system_id,
                                             network=self.network)
 
-                res.duration = j.get('duration')
                 res.distance = j.get('distance')
                 res.shape = j.get('shape')
                 res.ridesharing_ad = j.get('url')

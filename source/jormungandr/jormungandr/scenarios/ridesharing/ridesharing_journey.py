@@ -67,7 +67,6 @@ class MetaData(object):
 
 class RidesharingJourney(object):
     __slots__ = ('metadata',
-                 'duration',
                  'distance',
                  'shape',
                  'ridesharing_ad',
