@@ -152,6 +152,7 @@ class PoiSerializer(serpy.DictSerializer):
     administrative_regions = AdministrativeRegionsSerializer()
     poi_type = jsonschema.MethodField(display_none=False)
     properties = jsonschema.MethodField(display_none=False)
+    address = jsonschema.MethodField(display_none=False)
 
     def get_poi_type(self, obj):
         poi_types = obj.get('properties', {}).get('geocoding', {}).get('poi_types', [])
@@ -160,6 +161,29 @@ class PoiSerializer(serpy.DictSerializer):
     def get_properties(self, obj):
         return {p.get("key"): p.get("value") 
                 for p in obj.get('properties', {}).get('geocoding', {}).get('properties', [])}
+
+    def get_address(self, obj):
+        address = obj.get('properties', {}).get('geocoding', {}).get('address', None)
+        if not address:
+            return None
+
+        def make_house_number(housenumber):
+            hn = 0
+            import re
+            numbers = re.findall(r'^\d+', housenumber or "0")
+            if len(numbers) > 0:
+                hn = numbers[0]
+            return int(hn)
+        return {
+            "id": address.get('id'),
+            "name": address.get('name'),
+            "coord": {
+                'lon': str(address['coord']['lon']),
+                'lat': str(address['coord']['lat']),
+            },
+            "label": address.get('label'),
+            "house_number": make_house_number(address.get('housenumber'))
+        }
 
 
 class GeocodePoiSerializer(serpy.DictSerializer):

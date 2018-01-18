@@ -482,6 +482,23 @@ class AbstractAutocompleteAndRouting():
                                 {"key": "capacity", "value": "20"},
                                 {"key": "ref", "value": "12"}
                             ],
+                            "address": {
+                                "type": "street",
+                                "id": "179077655",
+                                "name": "Speloncato-Monticello",
+                                "label": "Speloncato-Monticello (Speloncato)",
+                                "postcode": "20226",
+                                "city": "Speloncato",
+                                "citycode": "2B290",
+                                "weight": 0.00847457627118644,
+                                "coord": {
+                                    "lat": 42.561667,
+                                    "lon": 8.9809147
+                                },
+                                "zip_codes": [
+                                    "20226"
+                                ]
+                            },
                             "administrative_regions": [
                                 {
                                     "id": "admin:fr:02000",
@@ -585,6 +602,10 @@ class AbstractAutocompleteAndRouting():
                 assert response_from['poi']['properties']["amenity"] == "bicycle_rental"
                 assert response_from['poi']['properties']["capacity"] == "20"
                 assert response_from['poi']['properties']["ref"] == "12"
+                assert response_from['poi']['address']['id'] == "179077655"
+                assert response_from['poi']['address']['name'] == "Speloncato-Monticello"
+                assert response_from['poi']['address']['label'] == "Speloncato-Monticello (Speloncato)"
+                assert response_from['poi']['address']['house_number'] == 0
 
                 response_to = j['sections'][-1]['to']
                 assert response_to['id'] == journeys_to

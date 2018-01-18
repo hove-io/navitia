@@ -42,6 +42,14 @@ from jormungandr.interfaces.v1.fields import Lit, ListLit, beta_endpoint, feed_p
 import re
 
 
+def get_number(housenumber):
+    hn = 0
+    numbers = re.findall(r'^\d+', housenumber or "0")
+    if len(numbers) > 0:
+        hn = numbers[0]
+    return int(hn)
+
+
 def create_admin_field(geocoding):
     """
     This field is needed to respect the geocodejson-spec
@@ -121,6 +129,25 @@ def get_lon_lat(obj):
     return lon, lat
 
 
+def create_address_field(geocoding):
+    if not geocoding:
+        return None
+    coord = geocoding.get('coord', {})
+    lat = str(coord.get('lat')) if coord and coord.get('lat') else None
+    lon = str(coord.get('lon')) if coord and coord.get('lon') else None
+
+    return {
+        "id": geocoding.get('id'),
+        "label": geocoding.get('label'),
+        "name": geocoding.get('name'),
+        "coord": {
+            "lat": lat,
+            "lon": lon
+        },
+        "house_number": get_number(geocoding.get('housenumber'))
+    }
+
+
 class AdministrativeRegionField(fields.Raw):
     """
     This field is needed to respect Navitia's spec for the sake of compatibility
@@ -195,7 +222,8 @@ class PoiField(fields.Raw):
             "name": geocoding.get('name'),
             "administrative_regions":
                 create_administrative_regions_field(geocoding) or create_admin_field(geocoding),
-            "properties": {p.get('key'): p.get('value') for p in geocoding.get("properties", [])}
+            "properties": {p.get('key'): p.get('value') for p in geocoding.get("properties", [])},
+            "address": create_address_field(geocoding.get("address"))
         }
         if isinstance(poi_types, list) and poi_types:
             res['poi_type'] = poi_types[0]
