@@ -29,18 +29,28 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
+
+class Gender(object):
+    """
+    Used as an enum
+    """
+    __slots__ = ('UNKNOWN', 'MALE', 'FEMALE')
+    UNKNOWN = 0
+    MALE = 1
+    FEMALE = 2
+
 class Individual(object):
     # https://stackoverflow.com/a/28059785/1614576
-    __slots__ = ('name',
+    __slots__ = ('alias',
                  'gender',
-                 'image_url',
+                 'image',
                  'rate',
                  'rate_count',)
 
-    def __init__(self, name, gender, image_url, rate, rate_count):
-        self.name = name
+    def __init__(self, alias, gender, image, rate, rate_count):
+        self.alias = alias
         self.gender = gender
-        self.image_url = image_url
+        self.image = image
         self.rate = rate
         self.rate_count = rate_count
 
@@ -56,8 +66,21 @@ class Place(object):
         self.lon = lon
 
 
+class MetaData(object):
+    __slots__ = ('system_id',
+                 'network',
+                 'rating_scale_min',
+                 'rating_scale_max')
+
+    def __init__(self, system_id, network, rating_scale_min, rating_scale_max):
+        self.system_id = system_id
+        self.network = network
+        self.rating_scale_min = rating_scale_min
+        self.rating_scale_max = rating_scale_max
+
+
 class RidesharingJourney(object):
-    __slots__ = ('duration',
+    __slots__ = ('metadata',
                  'distance',
                  'shape',
                  'ridesharing_ad',

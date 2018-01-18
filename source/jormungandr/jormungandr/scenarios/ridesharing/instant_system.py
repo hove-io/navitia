@@ -37,15 +37,25 @@ import requests as requests
 from jormungandr import utils
 from jormungandr import app
 import jormungandr.scenarios.ridesharing.ridesharing_journey as rsj
+from jormungandr.scenarios.ridesharing.ridesharing_service import AbstractRidesharingService
 
 
-class InstantSystem(object):
+class InstantSystem(AbstractRidesharingService):
 
-    def __init__(self, api_url, api_key):
-        self.api_url = api_url
+    def __init__(self, instance, service_url, api_key, network, rating_scale_min=None, rating_scale_max=None):
+        self.instance = instance
+        self.service_url = service_url
         self.api_key = api_key
-
+        self.network = network
+        self.rating_scale_min = rating_scale_min
+        self.rating_scale_max = rating_scale_max
         self.system_id = 'Instant System'
+
+        self.journey_metadata = rsj.MetaData(system_id=self.system_id,
+                                             network=self.network,
+                                             rating_scale_min=self.rating_scale_min,
+                                             rating_scale_max=self.rating_scale_max)
+
         self.logger = logging.getLogger("{} {}".format(__name__,
                                                        self.system_id))
 
@@ -57,7 +67,7 @@ class InstantSystem(object):
 
         headers = {'Authorization': 'apiKey {}'.format(self.api_key)}
         try:
-            return self.breaker.call(requests.get, url=self.api_url, headers=headers, params=params, timeout=1000)
+            return self.breaker.call(requests.get, url=self.service_url, headers=headers, params=params, timeout=1000)
         except pybreaker.CircuitBreakerError as e:
             self.logger.error('Instant System service dead (error: {})'.format(e))
             raise
@@ -98,9 +108,10 @@ class InstantSystem(object):
 
                 res = rsj.RidesharingJourney()
 
-                res.duration = j.get('duration')
+                res.metadata = self.journey_metadata
+
                 res.distance = j.get('distance')
-                res.shape = j.get('shape')
+                res.shape = p.get('shape')
                 res.ridesharing_ad = j.get('url')
 
                 ridesharing_ad = p['rideSharingAd']
@@ -121,11 +132,15 @@ class InstantSystem(object):
 
                 user = ridesharing_ad['user']
 
-                res.driver = rsj.Individual(name=user.get('alias'),
-                                            gender=user.get('gender'),
-                                            image_url=user.get('imageUrl'),
-                                            rate=user.get('rate'),
-                                            rate_count=user.get('count'))
+                gender = user.get('gender')
+                gender_map = {'MALE': rsj.Gender.MALE,
+                              'FEMALE': rsj.Gender.FEMALE}
+
+                res.driver = rsj.Individual(alias=user.get('alias'),
+                                            gender=gender_map.get(gender, rsj.Gender.UNKNOWN),
+                                            image=user.get('imageUrl'),
+                                            rate=user.get('rating', {}).get('rate'),
+                                            rate_count=user.get('rating', {}).get('count'))
 
                 price = ridesharing_ad['price']
                 res.price = price.get('amount')
@@ -151,7 +166,6 @@ class InstantSystem(object):
         # format of datetime: 2017-12-25T07:00:00Z
         datetime_str = datetime.datetime.fromtimestamp(period_extremity.datetime)\
             .strftime('%Y-%m-%dT%H:%M:%SZ')
-
 
         params = {'from': from_coord,
                   'to': to_coord,

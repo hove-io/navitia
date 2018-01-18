@@ -52,6 +52,7 @@ from flask import g
 import flask
 import pybreaker
 from jormungandr import georef, planner, schedule, realtime_schedule, ptref, street_network
+from jormungandr.scenarios.ridesharing import ridesharing_service
 import itertools
 import six
 
@@ -96,6 +97,7 @@ class Instance(object):
                  name,
                  zmq_socket,
                  street_network_configurations,
+                 ridesharing_configurations,
                  realtime_proxies_configuration,
                  zmq_socket_type,
                  autocomplete_type):
@@ -118,6 +120,11 @@ class Instance(object):
         street_network_configurations = _set_default_street_network_config(street_network_configurations)
         self.street_network_services = street_network.StreetNetwork.get_street_network_services(self,
                                                                                                 street_network_configurations)
+        self.ridesharing_services = []
+        if ridesharing_configurations is not None:
+            self.ridesharing_services = ridesharing_service.Ridesharing.\
+                get_ridesharing_services(self, ridesharing_configurations)
+
         self.ptref = ptref.PtRef(self)
 
         self.schedule = schedule.MixedSchedule(self)
@@ -543,3 +550,9 @@ class Instance(object):
         if not autocomplete:
             raise TechnicalError('autocomplete {} not available'.format(requested_autocomplete))
         return autocomplete
+
+    def get_ridesharing_journeys(self, from_coord, to_coord, period_extremity, limit=None):
+        res = []
+        for service in self.ridesharing_services:
+            res.extend(service.request_journeys(from_coord, to_coord, period_extremity, limit))
+        return res

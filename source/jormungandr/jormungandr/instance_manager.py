@@ -95,6 +95,7 @@ class InstanceManager(object):
         name = config['key']
         instance = Instance(self.context, name, config['zmq_socket'],
                             config.get('street_network'),
+                            config.get('ridesharing'),
                             config.get('realtime_proxies', []),
                             config.get('zmq_socket_type', 'persistent'),
                             config.get('default_autocomplete', 'kraken'))
