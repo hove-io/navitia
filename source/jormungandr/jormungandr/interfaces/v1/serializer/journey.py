@@ -246,7 +246,7 @@ class SectionSerializer(PbNestedSerializer):
     def get_ridesharing_journeys(self, obj):
         if not hasattr(obj, 'ridesharing_journeys') or not obj.ridesharing_journeys:
             return None
-        return JourneySerializer(attr=obj.ridesharing_journeys, display_none=False, many=True).data
+        return JourneySerializer(obj.ridesharing_journeys, display_none=False, many=True).data
 
 
 class JourneySerializer(PbNestedSerializer):

@@ -386,6 +386,17 @@ class add_fare_links(object):
                         s['links'].append(create_internal_link(_type="ticket",
                                                                rel="tickets",
                                                                id=ticket_needed))
+                    if "ridesharing_journeys" not in s:
+                        continue
+                    for rsj in s['ridesharing_journeys']:
+                        if "sections" not in rsj:
+                            continue
+                        for rss in rsj['sections']:
+                            #them we add the link to the different ridesharing-tickets needed
+                            for rs_ticket_needed in ticket_by_section[rss["id"]]:
+                                rss['links'].append(create_internal_link(_type="ticket",
+                                                                         rel="tickets",
+                                                                         id=rs_ticket_needed))
 
             return objects
         return wrapper
