@@ -168,6 +168,10 @@ fixed = regex.sub(r"\\\\", fake_response)
 mock_get = mock.MagicMock(return_value=utils_test.MockResponse(json.loads(fixed), 200, '{}'))
 
 
+# A hack class
+class DummyInstance:
+    name = ''
+
 def get_ridesharing_service_test():
     from jormungandr.scenarios.ridesharing.ridesharing_service import Ridesharing
     configs = [
@@ -189,10 +193,6 @@ def get_ridesharing_service_test():
         }
     ]
 
-    # A hack class
-    class DummyInstance:
-        name = ''
-
     services = Ridesharing.get_ridesharing_services(DummyInstance(), configs)
     assert len(services) == 2
 
@@ -208,7 +208,7 @@ def get_ridesharing_service_test():
 def instant_system_test():
     with mock.patch('requests.get', mock_get):
 
-        instant_system = InstantSystem('dummyInstance', 'dummyUrl', 'dummyApiKey', 'dummyNetwork')
+        instant_system = InstantSystem(DummyInstance(), 'dummyUrl', 'dummyApiKey', 'dummyNetwork')
         from_coord = '48.109377,-1.682103'
         to_coord = '48.020335,-1.743929'
 
