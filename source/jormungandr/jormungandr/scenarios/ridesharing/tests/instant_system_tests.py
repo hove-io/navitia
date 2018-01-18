@@ -175,6 +175,7 @@ def get_ridesharing_service_test():
             "args": {
             "service_url": "toto",
             "api_key": "toto key",
+            "network": "N",
             }
         },
         {
@@ -182,6 +183,7 @@ def get_ridesharing_service_test():
             "args": {
             "service_url": "tata",
             "api_key": "tata key",
+            "network": "M",
             }
         }
     ]
@@ -195,14 +197,17 @@ def get_ridesharing_service_test():
 
     assert services[0].service_url == 'toto'
     assert services[0].api_key == 'toto key'
+    assert services[0].network == 'N'
+
     assert services[1].service_url == 'tata'
-    assert services[1].api_key == 'tata key'
+    assert services[0].api_key == 'tata key'
+    assert services[1].network == 'M'
 
 
 def instant_system_test():
     with mock.patch('requests.get', mock_get):
 
-        instant_system = InstantSystem('dummyInstance', 'dummyUrl', 'dummyApiKey')
+        instant_system = InstantSystem('dummyInstance', 'dummyUrl', 'dummyApiKey', 'dummyNetwork')
         from_coord = '48.109377,-1.682103'
         to_coord = '48.020335,-1.743929'
 
@@ -216,8 +221,12 @@ def instant_system_test():
         assert ridesharing_journeys[0].dropoff_place.addr == "2 Avenue Alphonse Legault, Bruz"
         assert ridesharing_journeys[0].pickup_date_time == utils.str_to_time_stamp("20171225T070759")
         assert ridesharing_journeys[0].dropoff_date_time == utils.str_to_time_stamp("20171225T072536")
+        assert ridesharing_journeys[0].metadata.network == 'dummyNetwork'
+        assert ridesharing_journeys[0].metadata.system_id == 'Instant System'
 
         assert ridesharing_journeys[1].pickup_place.addr == "1 Boulevard Volney, Rennes"
         assert ridesharing_journeys[1].dropoff_place.addr == "9012 Rue du 8 Mai 1944, Bruz"
         assert ridesharing_journeys[1].pickup_date_time == utils.str_to_time_stamp("20171225T073542")
         assert ridesharing_journeys[1].dropoff_date_time == utils.str_to_time_stamp("20171225T075309")
+        assert ridesharing_journeys[1].metadata.network == 'dummyNetwork'
+        assert ridesharing_journeys[1].metadata.system_id == 'Instant System'

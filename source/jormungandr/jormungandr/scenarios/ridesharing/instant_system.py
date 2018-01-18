@@ -42,10 +42,11 @@ from jormungandr.scenarios.ridesharing.ridesharing_service import AbstractRidesh
 
 class InstantSystem(AbstractRidesharingService):
 
-    def __init__(self, instance, service_url, api_key):
+    def __init__(self, instance, service_url, api_key, network):
         self.instance = instance
         self.service_url = service_url
         self.api_key = api_key
+        self.network = network
 
         self.system_id = 'Instant System'
         self.logger = logging.getLogger("{} {}".format(__name__,
@@ -99,6 +100,9 @@ class InstantSystem(AbstractRidesharingService):
                     continue
 
                 res = rsj.RidesharingJourney()
+
+                res.metadata = rsj.MetaData(system_id=self.system_id,
+                                            network=self.network)
 
                 res.duration = j.get('duration')
                 res.distance = j.get('distance')

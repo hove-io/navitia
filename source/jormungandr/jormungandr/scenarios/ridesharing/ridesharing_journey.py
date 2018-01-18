@@ -56,8 +56,18 @@ class Place(object):
         self.lon = lon
 
 
+class MetaData(object):
+    __slots__ = ('system_id',
+                 'network')
+
+    def __init__(self, system_id, network):
+        self.system_id = system_id
+        self.network = network
+
+
 class RidesharingJourney(object):
-    __slots__ = ('duration',
+    __slots__ = ('metadata',
+                 'duration',
                  'distance',
                  'shape',
                  'ridesharing_ad',
