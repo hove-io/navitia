@@ -37,7 +37,7 @@ from jormungandr import utils
 @six.add_metaclass(abc.ABCMeta)
 class AbstractRidesharingService(object):
     @abc.abstractmethod
-    def request_journey(self, from_coord, to_coord, period_extremity, limit=None):
+    def request_journeys(self, from_coord, to_coord, period_extremity, limit=None):
         pass
 
 

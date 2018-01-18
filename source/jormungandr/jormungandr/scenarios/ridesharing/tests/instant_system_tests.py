@@ -167,6 +167,7 @@ fixed = regex.sub(r"\\\\", fake_response)
 
 mock_get = mock.MagicMock(return_value=utils_test.MockResponse(json.loads(fixed), 200, '{}'))
 
+
 def get_ridesharing_service_test():
     from jormungandr.scenarios.ridesharing.ridesharing_service import Ridesharing
     configs = [
@@ -200,7 +201,7 @@ def get_ridesharing_service_test():
     assert services[0].network == 'N'
 
     assert services[1].service_url == 'tata'
-    assert services[0].api_key == 'tata key'
+    assert services[1].api_key == 'tata key'
     assert services[1].network == 'M'
 
 
