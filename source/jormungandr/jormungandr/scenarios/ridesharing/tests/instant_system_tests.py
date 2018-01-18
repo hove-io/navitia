@@ -32,6 +32,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from jormungandr.scenarios.ridesharing.instant_system import InstantSystem
+from jormungandr.scenarios.ridesharing.ridesharing_journey import Gender
 import mock
 from jormungandr.tests import utils_test
 from jormungandr import utils
@@ -178,17 +179,21 @@ def get_ridesharing_service_test():
         {
             "class": "jormungandr.scenarios.ridesharing.instant_system.InstantSystem",
             "args": {
-            "service_url": "toto",
-            "api_key": "toto key",
-            "network": "N",
+                "service_url": "toto",
+                "api_key": "toto key",
+                "network": "N",
+                "rating_scale_min": 0,
+                "rating_scale_max": 10
             }
         },
         {
             "class": "jormungandr.scenarios.ridesharing.instant_system.InstantSystem",
             "args": {
-            "service_url": "tata",
-            "api_key": "tata key",
-            "network": "M",
+                "service_url": "tata",
+                "api_key": "tata key",
+                "network": "M",
+                "rating_scale_min": 1,
+                "rating_scale_max": 5
             }
         }
     ]
@@ -199,16 +204,22 @@ def get_ridesharing_service_test():
     assert services[0].service_url == 'toto'
     assert services[0].api_key == 'toto key'
     assert services[0].network == 'N'
+    assert services[0].system_id == 'Instant System'
+    assert services[0].rating_scale_min == 0
+    assert services[0].rating_scale_max == 10
 
     assert services[1].service_url == 'tata'
     assert services[1].api_key == 'tata key'
     assert services[1].network == 'M'
+    assert services[1].system_id == 'Instant System'
+    assert services[1].rating_scale_min == 1
+    assert services[1].rating_scale_max == 5
 
 
 def instant_system_test():
     with mock.patch('requests.get', mock_get):
 
-        instant_system = InstantSystem(DummyInstance(), 'dummyUrl', 'dummyApiKey', 'dummyNetwork')
+        instant_system = InstantSystem(DummyInstance(), 'dummyUrl', 'dummyApiKey', 'dummyNetwork', 0, 10)
         from_coord = '48.109377,-1.682103'
         to_coord = '48.020335,-1.743929'
 
@@ -218,16 +229,62 @@ def instant_system_test():
                                                                period_extremity=period_extremity)
 
         assert len(ridesharing_journeys) == 2
-        assert ridesharing_journeys[0].pickup_place.addr == "9 Allée Rochester, Rennes"
-        assert ridesharing_journeys[0].dropoff_place.addr == "2 Avenue Alphonse Legault, Bruz"
-        assert ridesharing_journeys[0].pickup_date_time == utils.str_to_time_stamp("20171225T070759")
-        assert ridesharing_journeys[0].dropoff_date_time == utils.str_to_time_stamp("20171225T072536")
         assert ridesharing_journeys[0].metadata.network == 'dummyNetwork'
         assert ridesharing_journeys[0].metadata.system_id == 'Instant System'
+        assert ridesharing_journeys[0].metadata.rating_scale_min == 0
+        assert ridesharing_journeys[0].metadata.rating_scale_max == 10
+        assert ridesharing_journeys[0].shape is not None
+        assert ridesharing_journeys[0].ridesharing_ad == 'https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&ibi=&isi=&utm_campaign=KISIO&link=https%3A%2F%2Fwww.star.fr%2Fsearch%2F%3FfeatureName%3DsearchResultDetail%26networkId%3D33%26journeyId%3D4bcd0b9d-2c9d-42a2-8ffb-4508c952f4fb'
 
-        assert ridesharing_journeys[1].pickup_place.addr == "1 Boulevard Volney, Rennes"
-        assert ridesharing_journeys[1].dropoff_place.addr == "9012 Rue du 8 Mai 1944, Bruz"
-        assert ridesharing_journeys[1].pickup_date_time == utils.str_to_time_stamp("20171225T073542")
-        assert ridesharing_journeys[1].dropoff_date_time == utils.str_to_time_stamp("20171225T075309")
+        assert ridesharing_journeys[0].pickup_place.addr == "9 Allée Rochester, Rennes"
+        assert ridesharing_journeys[0].pickup_place.lat == 48.127905
+        assert ridesharing_journeys[0].pickup_place.lon == -1.652393
+
+        assert ridesharing_journeys[0].dropoff_place.addr == "2 Avenue Alphonse Legault, Bruz"
+        assert ridesharing_journeys[0].dropoff_place.lat == 48.024714
+        assert ridesharing_journeys[0].dropoff_place.lon == -1.746711
+
+        assert ridesharing_journeys[0].pickup_date_time == utils.str_to_time_stamp("20171225T070759")
+        assert ridesharing_journeys[0].dropoff_date_time == utils.str_to_time_stamp("20171225T072536")
+
+        assert ridesharing_journeys[0].driver.alias == 'Jean P.'
+        assert ridesharing_journeys[0].driver.gender == Gender.MALE
+        assert ridesharing_journeys[0].driver.image == 'https://dummyimage.com/128x128/C8E6C9/000.png&text=JP'
+        assert ridesharing_journeys[0].driver.rate == 0
+        assert ridesharing_journeys[0].driver.rate_count == 0
+
+        assert ridesharing_journeys[0].price == 170
+        assert ridesharing_journeys[0].currency == 'EUR'
+
+        assert ridesharing_journeys[0].total_seats == 4
+        assert ridesharing_journeys[0].available_seats == 4
+
         assert ridesharing_journeys[1].metadata.network == 'dummyNetwork'
         assert ridesharing_journeys[1].metadata.system_id == 'Instant System'
+        assert ridesharing_journeys[1].metadata.rating_scale_min == 0
+        assert ridesharing_journeys[1].metadata.rating_scale_max == 10
+        assert ridesharing_journeys[1].shape is not None
+        assert ridesharing_journeys[1].ridesharing_ad == "https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&ibi=&isi=&utm_campaign=KISIO&link=https%3A%2F%2Fwww.star.fr%2Fsearch%2F%3FfeatureName%3DsearchResultDetail%26networkId%3D33%26journeyId%3D05223c04-834d-4710-905f-aa3796da5837"
+
+        assert ridesharing_journeys[1].pickup_place.addr == "1 Boulevard Volney, Rennes"
+        assert ridesharing_journeys[1].pickup_place.lat == 48.1247
+        assert ridesharing_journeys[1].pickup_place.lon == -1.666796
+
+        assert ridesharing_journeys[1].dropoff_place.addr == "9012 Rue du 8 Mai 1944, Bruz"
+        assert ridesharing_journeys[1].dropoff_place.lat == 48.031951
+        assert ridesharing_journeys[1].dropoff_place.lon == -1.74641
+
+        assert ridesharing_journeys[1].pickup_date_time == utils.str_to_time_stamp("20171225T073542")
+        assert ridesharing_journeys[1].dropoff_date_time == utils.str_to_time_stamp("20171225T075309")
+
+        assert ridesharing_journeys[1].driver.alias == 'Alice M.'
+        assert ridesharing_journeys[1].driver.gender == Gender.FEMALE
+        assert ridesharing_journeys[1].driver.image == 'https://dummyimage.com/128x128/B2EBF2/000.png&text=AM'
+        assert ridesharing_journeys[1].driver.rate == 0
+        assert ridesharing_journeys[1].driver.rate_count == 0
+
+        assert ridesharing_journeys[1].price == 0
+        assert ridesharing_journeys[1].currency == 'EUR'
+
+        assert ridesharing_journeys[1].total_seats == 4
+        assert ridesharing_journeys[1].available_seats == 4

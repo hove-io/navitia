@@ -42,13 +42,20 @@ from jormungandr.scenarios.ridesharing.ridesharing_service import AbstractRidesh
 
 class InstantSystem(AbstractRidesharingService):
 
-    def __init__(self, instance, service_url, api_key, network):
+    def __init__(self, instance, service_url, api_key, network, rating_scale_min, rating_scale_max):
         self.instance = instance
         self.service_url = service_url
         self.api_key = api_key
         self.network = network
-
+        self.rating_scale_min = rating_scale_min
+        self.rating_scale_max = rating_scale_max
         self.system_id = 'Instant System'
+
+        self.journey_metadata = rsj.MetaData(system_id=self.system_id,
+                                             network=self.network,
+                                             rating_scale_min=self.rating_scale_min,
+                                             rating_scale_max=self.rating_scale_max)
+
         self.logger = logging.getLogger("{} {}".format(__name__,
                                                        self.system_id))
 
@@ -101,11 +108,10 @@ class InstantSystem(AbstractRidesharingService):
 
                 res = rsj.RidesharingJourney()
 
-                res.metadata = rsj.MetaData(system_id=self.system_id,
-                                            network=self.network)
+                res.metadata = self.journey_metadata
 
                 res.distance = j.get('distance')
-                res.shape = j.get('shape')
+                res.shape = p.get('shape')
                 res.ridesharing_ad = j.get('url')
 
                 ridesharing_ad = p['rideSharingAd']
@@ -126,11 +132,15 @@ class InstantSystem(AbstractRidesharingService):
 
                 user = ridesharing_ad['user']
 
-                res.driver = rsj.Individual(name=user.get('alias'),
-                                            gender=user.get('gender'),
-                                            image_url=user.get('imageUrl'),
-                                            rate=user.get('rate'),
-                                            rate_count=user.get('count'))
+                gender = user.get('gender')
+                gender_map = {'MALE': rsj.Gender.MALE,
+                              'FEMALE': rsj.Gender.FEMALE}
+
+                res.driver = rsj.Individual(alias=user.get('alias'),
+                                            gender=gender_map.get(gender, rsj.Gender.UNKNOWN),
+                                            image=user.get('imageUrl'),
+                                            rate=user.get('rating', {}).get('rate'),
+                                            rate_count=user.get('rating', {}).get('count'))
 
                 price = ridesharing_ad['price']
                 res.price = price.get('amount')
