@@ -37,12 +37,14 @@ import requests as requests
 from jormungandr import utils
 from jormungandr import app
 import jormungandr.scenarios.ridesharing.ridesharing_journey as rsj
+from jormungandr.scenarios.ridesharing.ridesharing_service import AbstractRidesharingService
 
 
-class InstantSystem(object):
+class InstantSystem(AbstractRidesharingService):
 
-    def __init__(self, api_url, api_key):
-        self.api_url = api_url
+    def __init__(self, instance, service_url, api_key):
+        self.instance = instance
+        self.service_url = service_url
         self.api_key = api_key
 
         self.system_id = 'Instant System'
@@ -57,7 +59,7 @@ class InstantSystem(object):
 
         headers = {'Authorization': 'apiKey {}'.format(self.api_key)}
         try:
-            return self.breaker.call(requests.get, url=self.api_url, headers=headers, params=params, timeout=1000)
+            return self.breaker.call(requests.get, url=self.service_url, headers=headers, params=params, timeout=1000)
         except pybreaker.CircuitBreakerError as e:
             self.logger.error('Instant System service dead (error: {})'.format(e))
             raise
@@ -151,7 +153,6 @@ class InstantSystem(object):
         # format of datetime: 2017-12-25T07:00:00Z
         datetime_str = datetime.datetime.fromtimestamp(period_extremity.datetime)\
             .strftime('%Y-%m-%dT%H:%M:%SZ')
-
 
         params = {'from': from_coord,
                   'to': to_coord,
