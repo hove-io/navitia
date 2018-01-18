@@ -402,17 +402,20 @@ class Instance(db.Model):
             raise Exception({'error': 'instance is required'}, 400)
 
     def delete_dataset(self):
-        jobs = db.session.query(Job).filter(Job.instance_id == self.id).all()
-        for j in jobs:
-            for dataset in j.data_sets.all():
-                if dataset.type == 'poi':
-                    db.session.query(Metric).filter(Metric.dataset_id == dataset.id).delete()
-                    db.session.delete(dataset)
-            db.session.commit()
-            # if no more datasets related to job, delete it
-            if not j.data_sets.all():
-                db.session.delete(j)
-                db.session.commit()
+        result = db.session.query(DataSet, Job) \
+            .join(Job) \
+            .join(Instance) \
+            .filter(DataSet.type == 'poi', Job.instance_id == self.id)\
+            .all()
+
+        for dataset, job in result:
+            # Cascade Delete not working so delete Metric associated manually
+            db.session.query(Metric).filter(Metric.dataset_id == dataset.id).delete()
+            db.session.delete(dataset)
+            if not (len(job.data_sets.all()) - 1):
+                db.session.delete(job)
+
+        db.session.commit()
 
     def __repr__(self):
         return '<Instance %r>' % self.name
