@@ -120,7 +120,7 @@ class Instance(object):
         street_network_configurations = _set_default_street_network_config(street_network_configurations)
         self.street_network_services = street_network.StreetNetwork.get_street_network_services(self,
                                                                                                 street_network_configurations)
-
+        self.ridesharing_services = []
         if ridesharing_configurations is not None:
             self.ridesharing_services = ridesharing_service.Ridesharing.\
                 get_ridesharing_services(self, ridesharing_configurations)

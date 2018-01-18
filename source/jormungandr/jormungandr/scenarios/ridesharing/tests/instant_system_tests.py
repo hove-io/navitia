@@ -233,7 +233,8 @@ def instant_system_test():
         assert ridesharing_journeys[0].metadata.system_id == 'Instant System'
         assert ridesharing_journeys[0].metadata.rating_scale_min == 0
         assert ridesharing_journeys[0].metadata.rating_scale_max == 10
-        assert ridesharing_journeys[0].shape is not None
+        # the shape should not be none, but we don't test the whole string
+        assert ridesharing_journeys[0].shape
         assert ridesharing_journeys[0].ridesharing_ad == 'https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&ibi=&isi=&utm_campaign=KISIO&link=https%3A%2F%2Fwww.star.fr%2Fsearch%2F%3FfeatureName%3DsearchResultDetail%26networkId%3D33%26journeyId%3D4bcd0b9d-2c9d-42a2-8ffb-4508c952f4fb'
 
         assert ridesharing_journeys[0].pickup_place.addr == "9 Allée Rochester, Rennes"
@@ -263,7 +264,8 @@ def instant_system_test():
         assert ridesharing_journeys[1].metadata.system_id == 'Instant System'
         assert ridesharing_journeys[1].metadata.rating_scale_min == 0
         assert ridesharing_journeys[1].metadata.rating_scale_max == 10
-        assert ridesharing_journeys[1].shape is not None
+        # the shape should not be none, but we don't test the whole string
+        assert ridesharing_journeys[1].shape
         assert ridesharing_journeys[1].ridesharing_ad == "https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&ibi=&isi=&utm_campaign=KISIO&link=https%3A%2F%2Fwww.star.fr%2Fsearch%2F%3FfeatureName%3DsearchResultDetail%26networkId%3D33%26journeyId%3D05223c04-834d-4710-905f-aa3796da5837"
 
         assert ridesharing_journeys[1].pickup_place.addr == "1 Boulevard Volney, Rennes"

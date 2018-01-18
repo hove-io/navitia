@@ -42,7 +42,7 @@ from jormungandr.scenarios.ridesharing.ridesharing_service import AbstractRidesh
 
 class InstantSystem(AbstractRidesharingService):
 
-    def __init__(self, instance, service_url, api_key, network, rating_scale_min, rating_scale_max):
+    def __init__(self, instance, service_url, api_key, network, rating_scale_min=None, rating_scale_max=None):
         self.instance = instance
         self.service_url = service_url
         self.api_key = api_key
