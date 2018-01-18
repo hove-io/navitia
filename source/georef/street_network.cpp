@@ -311,6 +311,7 @@ std::vector<std::pair<type::idx_t, type::GeographicalCoord>>
 PathFinder::crow_fly_find_nearest_stop_points(const navitia::time_duration& radius,
                                               const proximitylist::ProximityList<type::idx_t>& pl) {
     // Searching for all the elements that are less than radius meters awyway in crow fly
+    
     float crow_fly_dist = radius.total_seconds() * speed_factor * georef::default_speed[mode];
     return pl.find_within(start_coord, crow_fly_dist);
 }
@@ -397,7 +398,7 @@ PathFinder::find_nearest_stop_points(const navitia::time_duration& radius,
 
     routing::map_stop_point_duration result;
     if (! starting_edge.found){
-        LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("Logger"), "starting_edge not found!");
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("Logger"), "starting_edge not found!");
         // if no street network, return stop_points that are within
         // radius distance (with sqrt(2) security factor)
         // if we are not dealing with 0,0 coordinates (incorrect data), allow crow fly

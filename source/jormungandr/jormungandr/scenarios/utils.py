@@ -53,7 +53,7 @@ pt_object_type = {
 
 PSEUDO_DURATION_FACTORS = ((1, -1, 'departure_date_time'), (-1, 1, 'arrival_date_time'))
 
-mode_weight = {'car': 4, 'bike': 3, 'bss': 2, 'walking': 1}
+mode_weight = {'ridesharing': 5, 'car': 4, 'bike': 3, 'bss': 2, 'walking': 1}
 
 def compare(obj1, obj2, compare_generator):
     """
@@ -238,6 +238,9 @@ def updated_common_journey_request_with_default(request, instance):
     if request['max_car_duration_to_pt'] is None:
         request['max_car_duration_to_pt'] = instance.max_car_duration_to_pt
 
+    if request['max_car_no_park_duration_to_pt'] is None:
+        request['max_car_no_park_duration_to_pt'] = instance.max_car_no_park_duration_to_pt
+
     if request['max_transfers'] is None:
         request['max_transfers'] = instance.max_nb_transfers
 
@@ -252,6 +255,9 @@ def updated_common_journey_request_with_default(request, instance):
 
     if request['car_speed'] is None:
         request['car_speed'] = instance.car_speed
+
+    if request['car_no_park_speed'] is None:
+        request['car_no_park_speed'] = instance.car_no_park_speed
 
 
 def updated_request_with_default(request, instance):

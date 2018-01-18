@@ -288,6 +288,8 @@ class Instance(db.Model):
 
     max_car_duration_to_pt = db.Column(db.Integer, default=default_values.max_car_duration_to_pt, nullable=False)
 
+    max_car_no_park_duration_to_pt = db.Column(db.Integer, default=default_values.max_car_no_park_duration_to_pt, nullable=False)
+
     walking_speed = db.Column(db.Float, default=default_values.walking_speed, nullable=False)
 
     bike_speed = db.Column(db.Float, default=default_values.bike_speed, nullable=False)
@@ -295,6 +297,8 @@ class Instance(db.Model):
     bss_speed = db.Column(db.Float, default=default_values.bss_speed, nullable=False)
 
     car_speed = db.Column(db.Float, default=default_values.car_speed, nullable=False)
+
+    car_no_park_speed = db.Column(db.Float, default=default_values.car_no_park_speed, nullable=False)
 
     max_nb_transfers = db.Column(db.Integer, default=default_values.max_nb_transfers, nullable=False)
 

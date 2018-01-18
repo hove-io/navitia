@@ -736,7 +736,9 @@ static_data * static_data::get() {
                 (Mode_e::Walking, "walking")
                 (Mode_e::Bike, "bike")
                 (Mode_e::Car, "car")
-                (Mode_e::Bss, "bss");
+                (Mode_e::Bss, "bss")
+                (Mode_e::CarNoPark, "ridesharing");
+                (Mode_e::CarNoPark, "car_no_park");
         instance = temp;
 
     }

@@ -204,6 +204,7 @@ static void compute_metadata(pbnavitia::Journey* pb_journey) {
                 total_walking_distance += section.length();
                 break;
             case pbnavitia::StreetNetworkMode::Car:
+            case pbnavitia::StreetNetworkMode::CarNoPark:
                 total_car_duration += section.duration();
                 total_car_distance += section.length();
                 break;
@@ -252,7 +253,7 @@ void add_direct_path(PbCreator& pb_creator,
                      const type::EntryPoint& origin,
                      const type::EntryPoint& destination,
                      const std::vector<bt::ptime>& datetimes,
-                     const bool clockwise) {
+                     const bool clockwise){
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     if (! path.path_items.empty()) {
