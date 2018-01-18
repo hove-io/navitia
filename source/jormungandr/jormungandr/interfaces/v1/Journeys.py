@@ -164,6 +164,31 @@ class JourneyDebugInfo(fields.Raw):
 
         return debug
 
+seats_description = {
+    "total": Integer(),
+    "available": Integer(),
+}
+
+individual_rating = {
+    "value": fields.Raw,
+    "count": Integer(),
+    "scale_min": fields.Raw,
+    "scale_max": fields.Raw,
+}
+
+individual_information = {
+    "alias": fields.String(),
+    "image": fields.String(),
+    "gender": enum_type(attribute="gender"),
+    "rating": PbField(individual_rating, attribute="rating"),
+}
+
+ridesharing_information = {
+    "operator": fields.String(),
+    "network": fields.String(),
+    "driver": PbField(individual_information, attribute="driver"),
+    "seats": PbField(seats_description, attribute="seats"),
+}
 
 section = {
     "type": section_type(),
@@ -193,6 +218,7 @@ section = {
         'value': fields.Raw,
         'unit': fields.String
         }),
+    "ridesharing_informations": PbField(ridesharing_information, attribute="ridesharing_information"),
 }
 
 cost = {
@@ -228,6 +254,7 @@ journey = {
     "distances": Distances(),
     "debug": JourneyDebugInfo()
 }
+section["ridesharing_journeys"] = NonNullList(NonNullNested(journey))
 
 ticket = {
     "id": fields.String(),

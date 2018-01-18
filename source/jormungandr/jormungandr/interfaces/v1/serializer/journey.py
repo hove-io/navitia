@@ -161,6 +161,32 @@ class SectionTypeEnum(EnumField):
         return getter
 
 
+class SeatsDescriptionSerializer(PbNestedSerializer):
+    total = jsonschema.Field(schema_type=int, display_none=False)
+    available = jsonschema.Field(schema_type=int, display_none=False)
+
+
+class IndividualRatingSerializer(PbNestedSerializer):
+    value = jsonschema.Field(schema_type=float, display_none=True)
+    count = jsonschema.Field(schema_type=int, display_none=False)
+    scale_min = jsonschema.Field(schema_type=float, display_none=False)
+    scale_max = jsonschema.Field(schema_type=float, display_none=False)
+
+
+class IndividualInformationSerializer(PbNestedSerializer):
+    alias = jsonschema.Field(schema_type=str, display_none=True)
+    image = jsonschema.Field(schema_type=str, display_none=False)
+    gender = EnumField()
+    rating = IndividualRatingSerializer(display_none=False)
+
+
+class RidesharingInformationSerializer(PbNestedSerializer):
+    operator = jsonschema.Field(schema_type=str, display_none=True)
+    network = jsonschema.Field(schema_type=str, display_none=True)
+    driver = IndividualInformationSerializer(display_none=False)
+    seats = SeatsDescriptionSerializer(display_none=False)
+
+
 class SectionSerializer(PbNestedSerializer):
     id = jsonschema.Field(schema_type=str, display_none=True)
     duration = jsonschema.Field(schema_type=int, display_none=True,
@@ -214,6 +240,13 @@ class SectionSerializer(PbNestedSerializer):
 
     stop_date_times = StopDateTimeSerializer(many=True)
     path = PathSerializer(attr="street_network.path_items", many=True, display_none=False)
+    ridesharing_informations = RidesharingInformationSerializer(attr='ridesharing_information', display_none=False)
+    ridesharing_journeys = jsonschema.MethodField(schema_type=lambda: JourneySerializer(display_none=False, many=True))
+
+    def get_ridesharing_journeys(self, obj):
+        if not hasattr(obj, 'ridesharing_journeys') or not obj.ridesharing_journeys:
+            return None
+        return JourneySerializer(attr=obj.ridesharing_journeys, display_none=False, many=True).data
 
 
 class JourneySerializer(PbNestedSerializer):
