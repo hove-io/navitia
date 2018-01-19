@@ -79,7 +79,7 @@ def build_ridesharing_crowfly_journey(instance, origin, destination, period_extr
                                          period_extremity=period_extremity,
                                          instance=instance)
     if not pb_rsjs:
-        journey_filter.mark_as_dead(ridesharing_journey, ['no_matching_ridesharing_found'])
+        journey_filter.mark_as_dead(ridesharing_journey, 'no_matching_ridesharing_found')
 
     ridesharing_section.ridesharing_journeys.extend(pb_rsjs)
     return ridesharing_journey, pb_tickets
@@ -90,7 +90,10 @@ def build_ridesharing_journeys(from_pt_obj, to_pt_obj, period_extremity, instanc
     to_coord = get_pt_object_coord(to_pt_obj)
     from_str="{},{}".format(from_coord.lat, from_coord.lon)
     to_str="{},{}".format(to_coord.lat, to_coord.lon)
-    rsjs = instance.get_ridesharing_journeys(from_str, to_str, period_extremity)
+    try:
+        rsjs = instance.get_ridesharing_journeys(from_str, to_str, period_extremity)
+    except: # TODO handle it smarter
+        rsjs = []
 
     pb_rsjs = []
     pb_tickets = []
