@@ -34,6 +34,7 @@ import logging
 from flask.ext.restful import abort
 from flask import g
 from jormungandr.scenarios import simple, journey_filter, helpers
+from jormungandr.scenarios.journey_filter import to_be_deleted
 from jormungandr.scenarios.ridesharing.ridesharing_helper import build_ridesharing_crowfly_journey
 from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, \
     get_or_default, fill_uris, gen_all_combin, get_pseudo_duration, mode_weight
@@ -811,7 +812,7 @@ class Scenario(simple.Scenario):
                     pb_resp.journeys.extend([rs_journey])
                     if rs_tickets:
                         pb_resp.tickets.extend(rs_tickets)
-                    if pb_resp.HasField(str('error')):
+                    if pb_resp.HasField(str('error')) and not to_be_deleted(rs_journey):
                         pb_resp.ClearField(str('error'))
             except:
                 logger.exception('Error while retrieving ridesharing ads')

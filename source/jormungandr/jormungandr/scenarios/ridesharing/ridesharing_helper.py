@@ -30,9 +30,8 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 import math
 import six
-import logging
+from jormungandr.scenarios import journey_filter
 from jormungandr.scenarios.helper_classes.helper_utils import crowfly_distance_between
-from jormungandr.scenarios.ridesharing.instant_system import InstantSystem
 from jormungandr.scenarios.ridesharing.ridesharing_journey import Gender
 from jormungandr.utils import get_pt_object_coord, generate_id
 from navitiacommon import response_pb2
@@ -80,15 +79,13 @@ def build_ridesharing_crowfly_journey(instance, origin, destination, period_extr
                                          period_extremity=period_extremity,
                                          instance=instance)
     if not pb_rsjs:
-        return None
+        journey_filter.mark_as_dead(ridesharing_journey, ['no_matching_ridesharing_found'])
 
     ridesharing_section.ridesharing_journeys.extend(pb_rsjs)
     return ridesharing_journey, pb_tickets
 
 
 def build_ridesharing_journeys(from_pt_obj, to_pt_obj, period_extremity, instance):
-    logger = logging.getLogger(__name__)
-
     from_coord = get_pt_object_coord(from_pt_obj)
     to_coord = get_pt_object_coord(to_pt_obj)
     from_str="{},{}".format(from_coord.lat, from_coord.lon)
