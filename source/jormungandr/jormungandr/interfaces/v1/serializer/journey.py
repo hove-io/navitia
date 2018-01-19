@@ -236,6 +236,13 @@ class SectionSerializer(PbNestedSerializer):
                 response.append({"type": type_.name, "id": value})
         if obj.HasField(str('pt_display_informations')):
             response.extend(base.make_notes(obj.pt_display_informations.notes))
+        if obj.HasField(str('ridesharing_information')):
+            response.extend([{"type": "ridesharing_ad",
+                              "rel": l.key,
+                              "href": l.href,
+                              "internal": False}
+                             for l in obj.ridesharing_information.links])
+
         return response
 
     stop_date_times = StopDateTimeSerializer(many=True)

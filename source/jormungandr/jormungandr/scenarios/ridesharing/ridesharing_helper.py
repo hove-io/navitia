@@ -155,6 +155,10 @@ def build_ridesharing_journeys(from_pt_obj, to_pt_obj, period_extremity, instanc
             rs_section.ridesharing_information.driver.rating.scale_min = rsj.metadata.rating_scale_min
             rs_section.ridesharing_information.driver.rating.scale_max = rsj.metadata.rating_scale_max
 
+        if rsj.ridesharing_ad:
+            l = rs_section.ridesharing_information.links.add()
+            l.key = "ridesharing_ad"
+            l.href = rsj.ridesharing_ad
 
         # TODO CO2 = length * coeffCar / (totalSeats  + 1)
         rs_section.length = rsj.distance
