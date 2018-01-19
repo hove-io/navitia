@@ -3674,3 +3674,95 @@ BOOST_AUTO_TEST_CASE(allowed_id_line) {
     BOOST_CHECK_EQUAL(res.at(0).items.front().departure, time_from_string("2015-01-03 09:00:00"));
     BOOST_CHECK_EQUAL(res.at(0).items.back().arrival, time_from_string("2015-01-03 13:00:00"));
 }
+
+/*
+ *          Stade   --->  Stalingrad
+ *                           / \
+ *          (5 min transfer)/   \ (6 min transfer)
+ *                         /     \
+ *                        /       \
+ *                       /         \
+ *          Stalingrad_1    --->    Stalingrad_2  --->  LaJacquotte
+ *                     (0 sec stay_in)
+ *
+ *  From "Stade" to "LaJacquotte", it's apparent that a normal journey can be found as follows:
+ *      Stade ---> Stalingrad ---> Stalingrad_2 ---> LaJacuotte
+ *
+ *  But because of the quicker transfer from Stalingrad to Stalingrad_1 and the O sec stay_in, raptor gives us:
+ *      Stade ---> Stalingrad ---> Stalingrad_1 ---> Stalingrad_2 ---> LaJacquotte ( This is not a bug!!)
+ *
+ *  In practice, we prefer the first solution and we forbid to get off at Stalingrad_1 with forbidden_uri, and
+ *  there were no solutions with the bug
+ * */
+
+BOOST_AUTO_TEST_CASE(forbidden_uri_in_stay_in) {
+    ed::builder b("20170101");
+
+    b.sa("Stalingrad", 0, 0, false)
+            ("Stalingrad_A", 0, 0, false, true)
+            ("Stalingrad_1", 0, 0, false, true)
+            ("Stalingrad_2", 0, 0, false, true);
+
+    b.vj("A_1")("Stade", "09:42:00"_t)("Stalingrad_A", "10:00:00"_t);
+    b.vj("A_2")("Stade", "09:37:00"_t)("Stalingrad_A", "09:55:00"_t);
+
+    b.vj("38_1", "1111111", "block1", true)("Stalingrad_1", "10:05:00"_t);
+    b.vj("38_2", "1111111", "block1", true)("Stalingrad_2", "10:05:00"_t)("LaJacquotte", "10:17:00"_t);
+
+    b.connection("Stalingrad_A", "Stalingrad_1", "00:05:00"_t);
+    b.connection("Stalingrad_A", "Stalingrad_2", "00:06:00"_t);
+
+
+    b.data->pt_data->index();
+    b.finish();
+    b.data->build_raptor();
+    b.data->build_uri();
+    RAPTOR raptor(*(b.data));
+    const type::PT_Data& d = *b.data->pt_data;
+
+    auto res = raptor.compute(d.stop_areas_map.at("Stade"),
+            d.stop_areas_map.at("LaJacquotte"),
+            "09:30:00"_t,
+            0,
+            DateTimeUtils::inf,
+            type::RTLevel::Base,
+            2_min,
+            true);
+
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    using boost::posix_time::time_from_string;
+
+    auto j = res[0];
+    BOOST_CHECK_EQUAL(j.items.front().departure, time_from_string("2017-01-01 09:42:00"));
+    BOOST_CHECK_EQUAL(j.items.back().arrival, time_from_string("2017-01-01 10:17:00"));
+
+    BOOST_REQUIRE_EQUAL(j.items.size(), 5);
+
+    // we should do the cnx on Stalingrade_1
+    BOOST_CHECK_EQUAL(j.items[1].stop_points.back()->uri, "Stalingrad_1");
+    BOOST_CHECK_EQUAL(j.items[2].stop_points.front()->uri, "Stalingrad_1");
+
+    res = raptor.compute(d.stop_areas_map.at("Stade"),
+            d.stop_areas_map.at("LaJacquotte"),
+            "09:30:00"_t,
+            0,
+            DateTimeUtils::inf,
+            type::RTLevel::Base,
+            2_min,
+            true,
+            {},
+            10,
+            {"Stalingrad_1"}); // <== We don't want to transfer at Stalingrad_1 because it's a terminal
+
+    BOOST_REQUIRE_EQUAL(res.size(), 1);
+    j = res[0];
+
+    BOOST_CHECK_EQUAL(j.items.front().departure, time_from_string("2017-01-01 09:37:00"));
+    BOOST_CHECK_EQUAL(j.items.back().arrival, time_from_string("2017-01-01 10:17:00"));
+
+    // we should do the cnx on Stalingrade_2
+    BOOST_CHECK_EQUAL(j.items[1].stop_points.back()->uri, "Stalingrad_2");
+    BOOST_CHECK_EQUAL(j.items[2].stop_points.front()->uri, "Stalingrad_2");
+
+
+}

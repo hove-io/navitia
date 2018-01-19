@@ -190,9 +190,11 @@ static void compute_metadata(pbnavitia::Journey* pb_journey) {
     uint32_t total_walking_duration = 0;
     uint32_t total_car_duration = 0;
     uint32_t total_bike_duration = 0;
+    uint32_t total_ridesharing_duration = 0;
     uint32_t total_walking_distance = 0;
     uint32_t total_car_distance = 0;
     uint32_t total_bike_distance = 0;
+    uint32_t total_ridesharing_distance = 0;
 
     for (const auto& section: pb_journey->sections()) {
         if (section.type() == pbnavitia::STREET_NETWORK || section.type() == pbnavitia::CROW_FLY) {
@@ -210,6 +212,10 @@ static void compute_metadata(pbnavitia::Journey* pb_journey) {
                 total_bike_duration += section.duration();
                 total_bike_distance += section.length();
                 break;
+            case pbnavitia::StreetNetworkMode::Ridesharing:
+                total_ridesharing_duration += section.duration();
+                total_ridesharing_distance += section.length();
+                break;
             }
         } else if (section.type() == pbnavitia::TRANSFER && section.transfer_type() == pbnavitia::walking) {
             total_walking_duration += section.duration();
@@ -222,12 +228,14 @@ static void compute_metadata(pbnavitia::Journey* pb_journey) {
     durations->set_walking(total_walking_duration);
     durations->set_bike(total_bike_duration);
     durations->set_car(total_car_duration);
+    durations->set_ridesharing(total_ridesharing_duration);
     durations->set_total(ts_arrival - ts_departure);
 
     pbnavitia::Distances* distances = pb_journey->mutable_distances();
     distances->set_walking(total_walking_distance);
     distances->set_bike(total_bike_distance);
     distances->set_car(total_car_distance);
+    distances->set_ridesharing(total_ridesharing_distance);
 }
 
 static georef::Path get_direct_path(georef::StreetNetwork& worker,
@@ -662,25 +670,18 @@ static void add_pathes(PbCreator& pb_creator,
     add_direct_path(pb_creator, direct_path, origin, destination, datetimes, clockwise);
 }
 
-static void
-make_pathes(PbCreator& pb_creator,
-            const std::vector<navitia::routing::Path>& paths,
-            georef::StreetNetwork& worker,
-            const georef::Path& direct_path,
-            const type::EntryPoint& origin,
-            const type::EntryPoint& destination,
-            const std::vector<bt::ptime>& datetimes,
-            const bool clockwise) {
+static void make_pathes(PbCreator& pb_creator,
+                        const std::vector<navitia::routing::Path>& paths,
+                        georef::StreetNetwork& worker,
+                        const georef::Path& direct_path,
+                        const type::EntryPoint& origin,
+                        const type::EntryPoint& destination,
+                        const std::vector<bt::ptime>& datetimes,
+                        const bool clockwise) {
 
     pb_creator.set_response_type(pbnavitia::ITINERARY_FOUND);
     add_pathes(pb_creator, paths, worker, direct_path,
                origin, destination, datetimes, clockwise);
-
-    if (pb_creator.empty_journeys()) {
-        pb_creator.fill_pb_error(pbnavitia::Error::no_solution,
-                                 pbnavitia::NO_SOLUTION,
-                                 "no solution found for this journey");
-    }
 }
 
 
@@ -712,11 +713,6 @@ static void make_pt_pathes(PbCreator& pb_creator,
 
     pb_creator.set_response_type(pbnavitia::ITINERARY_FOUND);
     add_pt_pathes(pb_creator, paths);
-    if (pb_creator.empty_journeys()) {
-        pb_creator.fill_pb_error(pbnavitia::Error::no_solution,
-                                 pbnavitia::NO_SOLUTION,
-                                 "no solution found for this journey");
-    }
 }
 
 static void add_isochrone_response(RAPTOR& raptor,
@@ -1032,6 +1028,11 @@ void make_pt_response(navitia::PbCreator& pb_creator,
         std::reverse(pathes.begin(), pathes.end());
     }
     make_pt_pathes(pb_creator, pathes);
+    if (pb_creator.empty_journeys()) {
+            pb_creator.fill_pb_error(pbnavitia::Error::no_solution,
+                                     pbnavitia::NO_SOLUTION,
+                                     "no solution found for this journey");
+    }
 }
 
 void make_response(navitia::PbCreator& pb_creator,
@@ -1058,97 +1059,131 @@ void make_response(navitia::PbCreator& pb_creator,
     if(pb_creator.has_error() || pb_creator.has_response_type(pbnavitia::DATE_OUT_OF_BOUNDS)) {
         return;
     }
+
+    // Initialize street network
     worker.init(origin, {destination});
+
+    // Get stop points for departure and destination
     auto departures = get_stop_points(origin, raptor.data, worker);
     auto destinations = get_stop_points(destination, raptor.data, worker, true);
+
+    // case 1 : departure no exist
     if (!departures){
         pb_creator.fill_pb_error(pbnavitia::Error::unknown_object,
                                  "The entry point: " + origin.uri + " is not valid");
-        return;
     }
-
-    if (!destinations){
+    // case 2 : destination no exist
+    else if (!destinations){
         pb_creator.fill_pb_error(pbnavitia::Error::unknown_object,
                                  "The entry point: " + destination.uri + " is not valid");
-        return;
     }
-
-    const auto direct_path = get_direct_path(worker, origin, destination);
-
-    if(departures && (departures->size() == 0) && destinations && (destinations->size() == 0)){
-        make_pathes(pb_creator, pathes, worker, direct_path, origin, destination, datetimes, clockwise);
-        if (pb_creator.has_response_type(pbnavitia::NO_SOLUTION)) {
+    // case 3 : departure and destination is emtpy
+    else if (departures && (departures->size() == 0) && destinations && (destinations->size() == 0)){
+        make_pathes(pb_creator,
+                    pathes,
+                    worker,
+                    get_direct_path(worker, origin, destination),
+                    origin,
+                    destination,
+                    datetimes,
+                    clockwise);
+        if (pb_creator.empty_journeys()) {
             pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
                                      pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
                                      "no origin point nor destination point");
         }
-        return;
     }
-
-    if(departures && departures->size() == 0){
-        make_pathes(pb_creator, pathes, worker, direct_path, origin, destination, datetimes, clockwise);
-        if (pb_creator.has_response_type(pbnavitia::NO_SOLUTION)) {
+    // case 4 : only departure is emtpy
+    else if (departures && departures->size() == 0){
+        make_pathes(pb_creator,
+                    pathes,
+                    worker,
+                    get_direct_path(worker, origin, destination),
+                    origin,
+                    destination,
+                    datetimes,
+                    clockwise);
+        if (pb_creator.empty_journeys()) {
             pb_creator.fill_pb_error(pbnavitia::Error::no_origin,
                                      pbnavitia::NO_ORIGIN_POINT, "no origin point");
         }
-        return;
     }
-
-    if(destinations && destinations->size() == 0){
-        make_pathes(pb_creator, pathes, worker, direct_path, origin, destination, datetimes, clockwise);
-        if (pb_creator.has_response_type(pbnavitia::NO_SOLUTION)) {
+    // case 5 : only destination is emtpy
+    else if (destinations && destinations->size() == 0){
+        make_pathes(pb_creator,
+                    pathes,
+                    worker,
+                    get_direct_path(worker, origin, destination),
+                    origin,
+                    destination,
+                    datetimes,
+                    clockwise);
+        if (pb_creator.empty_journeys()) {
             pb_creator.fill_pb_error(pbnavitia::Error::no_destination,
                                      pbnavitia::NO_DESTINATION_POINT,
                                      "no destination point");
         }
-        return;
     }
+    // classical case : We have departures and destinations
+    else {
 
+        DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
+        typedef boost::optional<navitia::time_duration> OptTimeDur;
+        const auto direct_path = get_direct_path(worker, origin, destination);
+        const OptTimeDur direct_path_dur = direct_path.path_items.empty() ?
+            OptTimeDur() :
+            OptTimeDur(direct_path.duration / origin.streetnetwork_params.speed_factor);
 
+        for(bt::ptime datetime : datetimes) {
+            int day = (datetime.date() - raptor.data.meta->production_date.begin()).days();
+            int time = datetime.time_of_day().total_seconds();
+            DateTime init_dt = DateTimeUtils::set(day, time);
 
-    DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
-    typedef boost::optional<navitia::time_duration> OptTimeDur;
-    const OptTimeDur direct_path_dur = direct_path.path_items.empty() ?
-        OptTimeDur() :
-        OptTimeDur(direct_path.duration / origin.streetnetwork_params.speed_factor);
-
-    for(bt::ptime datetime : datetimes) {
-        int day = (datetime.date() - raptor.data.meta->production_date.begin()).days();
-        int time = datetime.time_of_day().total_seconds();
-        DateTime init_dt = DateTimeUtils::set(day, time);
-
-        if(max_duration != std::numeric_limits<uint32_t>::max()) {
-            if (clockwise) {
-                bound = init_dt + max_duration;
-            } else {
-                bound = init_dt > max_duration ? init_dt - max_duration : 0;
+            if(max_duration != std::numeric_limits<uint32_t>::max()) {
+                if (clockwise) {
+                    bound = init_dt + max_duration;
+                } else {
+                    bound = init_dt > max_duration ? init_dt - max_duration : 0;
+                }
             }
+            std::vector<Path> tmp = raptor.compute_all(
+                *departures, *destinations, init_dt, rt_level, transfer_penalty, bound, max_transfers,
+                accessibilite_params, forbidden, allowed, clockwise, direct_path_dur,
+                max_extra_second_pass);
+            LOG4CPLUS_DEBUG(logger, "raptor found " << tmp.size() << " solutions");
+
+
+            // Lorsqu'on demande qu'un seul horaire, on garde tous les résultas
+            if(datetimes.size() == 1) {
+                pathes = tmp;
+                for(auto & path : pathes) {
+                    path.request_time = datetime;
+                }
+            } else if(!tmp.empty()) {
+                // Lorsqu'on demande plusieurs horaires, on garde que l'arrivée au plus tôt / départ au plus tard
+                tmp.back().request_time = datetime;
+                pathes.push_back(tmp.back());
+                bound = to_datetime(tmp.back().items.back().arrival, raptor.data);
+            } else // Lorsqu'on demande plusieurs horaires, et qu'il n'y a pas de résultat, on retourne un itinéraire vide
+                pathes.push_back(Path());
         }
-        std::vector<Path> tmp = raptor.compute_all(
-            *departures, *destinations, init_dt, rt_level, transfer_penalty, bound, max_transfers,
-            accessibilite_params, forbidden, allowed, clockwise, direct_path_dur,
-            max_extra_second_pass);
-        LOG4CPLUS_DEBUG(logger, "raptor found " << tmp.size() << " solutions");
+        if(clockwise)
+            std::reverse(pathes.begin(), pathes.end());
 
-
-        // Lorsqu'on demande qu'un seul horaire, on garde tous les résultas
-        if(datetimes.size() == 1) {
-            pathes = tmp;
-            for(auto & path : pathes) {
-                path.request_time = datetime;
-            }
-        } else if(!tmp.empty()) {
-            // Lorsqu'on demande plusieurs horaires, on garde que l'arrivée au plus tôt / départ au plus tard
-            tmp.back().request_time = datetime;
-            pathes.push_back(tmp.back());
-            bound = to_datetime(tmp.back().items.back().arrival, raptor.data);
-        } else // Lorsqu'on demande plusieurs horaires, et qu'il n'y a pas de résultat, on retourne un itinéraire vide
-            pathes.push_back(Path());
+        make_pathes(pb_creator,
+                    pathes,
+                    worker,
+                    direct_path,
+                    origin,
+                    destination,
+                    datetimes,
+                    clockwise);
+        if (pb_creator.empty_journeys()) {
+            pb_creator.fill_pb_error(pbnavitia::Error::no_solution,
+                                     pbnavitia::NO_SOLUTION,
+                                     "no solution found for this journey");
+        }
     }
-    if(clockwise)
-        std::reverse(pathes.begin(), pathes.end());
-
-    make_pathes(pb_creator, pathes, worker, direct_path, origin, destination, datetimes, clockwise);
 }
 
 

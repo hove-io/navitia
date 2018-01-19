@@ -436,7 +436,7 @@ class TravelerProfile(db.Model):
 
     max_car_duration_to_pt = db.Column(db.Integer, default=default_values.max_car_duration_to_pt, nullable=False)
 
-    fallback_mode = db.Enum('walking', 'car', 'bss', 'bike', name='fallback_mode')
+    fallback_mode = db.Enum('walking', 'car', 'bss', 'bike', 'ridesharing', name='fallback_mode') # TODO alembic migration
 
     first_section_mode = db.Column(ArrayOfEnum(fallback_mode), nullable=False)
 

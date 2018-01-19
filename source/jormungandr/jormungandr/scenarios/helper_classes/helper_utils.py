@@ -27,6 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import
+import math
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.utils import PeriodExtremity, SectionSorter
 from navitiacommon import response_pb2
@@ -39,7 +40,8 @@ import six
 MODE_TO_PB_MODE = {'walking': response_pb2.Walking,
                   'bike': response_pb2.Bike,
                   'bss': response_pb2.Bss,
-                  'car': response_pb2.Car}
+                  'car': response_pb2.Car,
+                  'ridesharing': response_pb2.Ridesharing}
 
 def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end, mode):
     section = response_pb2.Section()
@@ -322,3 +324,17 @@ def check_final_results_or_raise(final_results, orig_fallback_durations_pool, de
         raise EntryPointException("no origin point", response_pb2.Error.no_origin)
     if dest_fallback_durations_is_empty:
         raise EntryPointException("no destination point", response_pb2.Error.no_destination)
+
+
+N_DEG_TO_RAD = 0.01745329238
+EARTH_RADIUS_IN_METERS = 6372797.560856
+
+def crowfly_distance_between(start_coord, end_coord):
+    lon_arc = (start_coord.lon - end_coord.lon) * N_DEG_TO_RAD
+    lon_h = math.sin(lon_arc * 0.5)
+    lon_h *= lon_h
+    lat_arc = (start_coord.lat - end_coord.lat) * N_DEG_TO_RAD
+    lat_h = math.sin(lat_arc * 0.5)
+    lat_h *= lat_h
+    tmp = math.cos(start_coord.lat * N_DEG_TO_RAD) * math.cos(end_coord.lat * N_DEG_TO_RAD)
+    return EARTH_RADIUS_IN_METERS * 2.0 * math.asin(math.sqrt(lat_h + tmp * lon_h))

@@ -358,7 +358,16 @@ void route_schedule(PbCreator& pb_creator, const std::string& filter,
     pb_creator.action_period = pt::time_period(pt_datetime, pt_max_datetime);
 
     Thermometer thermometer;
-    auto routes_idx = ptref::make_query(type::Type_e::Route, filter, forbidden_uris, *pb_creator.data);
+    type::Indexes routes_idx;
+    try {
+        routes_idx = ptref::make_query(type::Type_e::Route, filter, forbidden_uris, *pb_creator.data);
+    } catch(const ptref::parsing_error& parse_error) {
+        pb_creator.fill_pb_error(pbnavitia::Error::unable_to_parse, "Unable to parse filter" + parse_error.more);
+        return;
+    } catch(const ptref::ptref_error& ptref_error) {
+        pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "ptref : "  + ptref_error.more);
+        return;
+    }
     size_t total_result = routes_idx.size();
     routes_idx = paginate(routes_idx, count, start_page);
     for (const auto& route_idx: routes_idx) {

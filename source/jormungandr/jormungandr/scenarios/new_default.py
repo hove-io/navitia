@@ -34,6 +34,8 @@ import logging
 from flask.ext.restful import abort
 from flask import g
 from jormungandr.scenarios import simple, journey_filter, helpers
+from jormungandr.scenarios.journey_filter import to_be_deleted
+from jormungandr.scenarios.ridesharing.ridesharing_helper import build_ridesharing_crowfly_journey
 from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, \
     get_or_default, fill_uris, gen_all_combin, get_pseudo_duration, mode_weight
 from navitiacommon import type_pb2, response_pb2, request_pb2
@@ -42,7 +44,7 @@ from jormungandr.scenarios.qualifier import min_from_criteria, arrival_crit, dep
     has_no_bike, has_bike, has_no_bss, has_bss, non_pt_journey, has_walk, and_filters
 import numpy as np
 import collections
-from jormungandr.utils import date_to_timestamp
+from jormungandr.utils import date_to_timestamp, PeriodExtremity
 from jormungandr.scenarios.simple import get_pb_data_freshness
 import gevent, gevent.pool
 import flask
@@ -82,7 +84,12 @@ def get_kraken_calls(request):
                            ('car', 'walking'),
                            ('bike', 'bss'),
                            ('car', 'bss'),
-                           ('bike', 'bike')]
+                           ('bike', 'bike'),
+                           ('ridesharing', 'ridesharing'),
+                           ('ridesharing', 'walking'),
+                           ('walking', 'ridesharing'),
+                           ('ridesharing', 'bss'),
+                           ('bss', 'ridesharing')]
 
     res = [c for c in allowed_combination if c in itertools.product(dep_modes, arr_modes)]
 
@@ -687,13 +694,14 @@ def merge_responses(responses):
 
     if not merged_response.journeys:
         # we aggregate the errors found
-
         errors = {r.error.id: r.error for r in responses if r.HasField(str('error'))}
+
+        # Only one errors field
         if len(errors) == 1:
             merged_response.error.id = list(errors.values())[0].id
             merged_response.error.message = list(errors.values())[0].message
-        else:
-            # we need to merge the errors
+        # we need to merge the errors
+        elif len(errors) > 1:
             merged_response.error.id = response_pb2.Error.no_solution
             merged_response.error.message = "several errors occured: \n * {}"\
                 .format("\n * ".join([m.message for m in errors.values()]))
@@ -735,8 +743,7 @@ class Scenario(simple.Scenario):
         self.nb_kraken_calls = 0
 
     def fill_journeys(self, request_type, api_request, instance):
-
-        krakens_call = get_kraken_calls(api_request)
+        logger = logging.getLogger(__name__)
 
         # sometimes we need to change the entrypoint id (eg if the id is from another autocomplete system)
         origin_detail = self.get_entrypoint_detail(api_request.get('origin'), instance)
@@ -747,6 +754,19 @@ class Scenario(simple.Scenario):
 
         api_request['origin'] = get_kraken_id(origin_detail) or api_request.get('origin')
         api_request['destination'] = get_kraken_id(destination_detail) or api_request.get('destination')
+
+        # building ridesharing request from "original" request
+        ridesharing_req = deepcopy(api_request)
+
+        # removing ridesharing from request # TODO avoid kraken crash if ridesharing passed
+        api_request['origin_mode'] = [p for p in api_request['origin_mode'] if p != 'ridesharing']
+        api_request['destination_mode'] = [p for p in api_request['destination_mode'] if p != 'ridesharing']
+        if not api_request['origin_mode']:
+            api_request['origin_mode'] = ['walking']
+        if not api_request['destination_mode']:
+            api_request['destination_mode'] = ['walking']
+
+        krakens_call = get_kraken_calls(api_request)
 
         request = deepcopy(api_request)
         min_asked_journeys = get_or_default(request, 'min_nb_journeys', 1)
@@ -780,6 +800,22 @@ class Scenario(simple.Scenario):
 
         journey_filter.final_filter_journeys(responses, instance, api_request)
         pb_resp = merge_responses(responses)
+
+        if 'ridesharing' in ridesharing_req['origin_mode'] and instance.ridesharing_services:
+            period_extremity = PeriodExtremity(ridesharing_req['datetime'], ridesharing_req['clockwise'])
+            try:
+                rs_journey, rs_tickets = build_ridesharing_crowfly_journey(instance,
+                                                                       ridesharing_req['origin'],
+                                                                       ridesharing_req['destination'],
+                                                                       period_extremity)
+                if rs_journey:
+                    pb_resp.journeys.extend([rs_journey])
+                    if rs_tickets:
+                        pb_resp.tickets.extend(rs_tickets)
+                    if pb_resp.HasField(str('error')) and not to_be_deleted(rs_journey):
+                        pb_resp.ClearField(str('error'))
+            except:
+                logger.exception('Error while retrieving ridesharing ads')
 
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])
         compute_car_co2_emission(pb_resp, api_request, instance)
