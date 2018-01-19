@@ -990,6 +990,8 @@ def is_valid_vehicle_journey(vj, depth_check=1):
         for st in stoptimes:
             get_valid_time(get_not_null(st, 'arrival_time'))
             get_valid_time(get_not_null(st, 'departure_time'))
+            get_valid_time(get_not_null(st, 'utc_arrival_time'))
+            get_valid_time(get_not_null(st, 'utc_departure_time'))
             is_valid_stop_point(get_not_null(st, 'stop_point'), depth_check=depth_check-1)
 
             # the JPP are kept only for backward compatibility

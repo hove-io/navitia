@@ -174,7 +174,7 @@ class CalendarExceptionSerializer(PbNestedSerializer):
 
 
 class CalendarSerializer(PbNestedSerializer):
-    id = jsonschema.MethodField(schema_type=str, display_none=True, description='Identifier of the object')
+    id = jsonschema.MethodField(schema_type=str, display_none=False, description='Identifier of the object')
     def get_id(self, obj):
         if obj.HasField(str('uri')) and obj.uri:
             return obj.uri
@@ -440,7 +440,9 @@ class JourneyPatternSerializer(GenericSerializer):
 
 class StopTimeSerializer(PbNestedSerializer):
     arrival_time = LocalTimeField()
+    utc_arrival_time = LocalTimeField()
     departure_time = LocalTimeField()
+    utc_departure_time = LocalTimeField()
     headsign = jsonschema.Field(schema_type=str)
     journey_pattern_point = JourneyPatternPointSerializer()
     stop_point = StopPointSerializer()
@@ -451,7 +453,7 @@ class VehicleJourneySerializer(GenericSerializer):
     stop_times = StopTimeSerializer(many=True)
     comments = CommentSerializer(many=True, display_none=False)
     comment = FirstCommentField(attr='comments', display_none=False)
-    codes = CodeSerializer(many=True)
+    codes = CodeSerializer(many=True, required=False)
     validity_pattern = ValidityPatternSerializer()
     calendars = CalendarSerializer(many=True)
     trip = TripSerializer()

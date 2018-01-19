@@ -841,9 +841,11 @@ void PbCreator::Filler::fill_pb_object(const nd::StopTimeUpdate* stu, pbnavitia:
     // we don't want to output amended departure/arrival for deleted departure/arrival
     if (stu->arrival_status != nd::StopTimeUpdate::Status::DELETED) {
         stop_time->set_arrival_time(get_local_time(st, st->arrival_time));
+        stop_time->set_utc_arrival_time(st->arrival_time);
     }
     if (stu->departure_status != nd::StopTimeUpdate::Status::DELETED) {
         stop_time->set_departure_time(get_local_time(st, st->departure_time));
+        stop_time->set_utc_departure_time(st->departure_time);
     }
 }
 
@@ -851,7 +853,9 @@ void PbCreator::Filler::fill_pb_object(const nd::StopTimeUpdate* stu, pbnavitia:
 void PbCreator::Filler::fill_pb_object(const nt::StopTime* st, pbnavitia::StopTime* stop_time) {
     // arrival/departure in protobuff are as seconds from midnight in local time
     stop_time->set_arrival_time(get_local_time(st, st->arrival_time));
+    stop_time->set_utc_arrival_time(st->arrival_time);
     stop_time->set_departure_time(get_local_time(st, st->departure_time));
+    stop_time->set_utc_departure_time(st->departure_time);
     stop_time->set_headsign(pb_creator.data->pt_data->headsign_handler.get_headsign(*st));
 
     stop_time->set_pickup_allowed(st->pick_up_allowed());
