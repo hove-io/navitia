@@ -98,113 +98,108 @@ def build_ridesharing_journeys(from_pt_obj, to_pt_obj, period_extremity, instanc
     pb_rsjs = []
     pb_tickets = []
     for rsj in rsjs:
-        try:
-            pb_rsj = response_pb2.Journey()
-            pb_rsj_pickup = instance.georef.place("{};{}".format(rsj.pickup_place.lon, rsj.pickup_place.lat))
-            pb_rsj_dropoff = instance.georef.place("{};{}".format(rsj.dropoff_place.lon, rsj.dropoff_place.lat))
-            pickup_coord = get_pt_object_coord(pb_rsj_pickup)
-            dropoff_coord = get_pt_object_coord(pb_rsj_dropoff)
+        pb_rsj = response_pb2.Journey()
+        pb_rsj_pickup = instance.georef.place("{};{}".format(rsj.pickup_place.lon, rsj.pickup_place.lat))
+        pb_rsj_dropoff = instance.georef.place("{};{}".format(rsj.dropoff_place.lon, rsj.dropoff_place.lat))
+        pickup_coord = get_pt_object_coord(pb_rsj_pickup)
+        dropoff_coord = get_pt_object_coord(pb_rsj_dropoff)
 
-            pb_rsj.requested_date_time = period_extremity.datetime
-            pb_rsj.departure_date_time = rsj.pickup_date_time
-            pb_rsj.arrival_date_time = rsj.dropoff_date_time
-            pb_rsj.tags.append('ridesharing')
+        pb_rsj.requested_date_time = period_extremity.datetime
+        pb_rsj.departure_date_time = rsj.pickup_date_time
+        pb_rsj.arrival_date_time = rsj.dropoff_date_time
+        pb_rsj.tags.append('ridesharing')
 
-            # start teleport section
-            start_teleport_section = pb_rsj.sections.add()
-            start_teleport_section.id = "section_{}".format(six.text_type(generate_id()))
-            start_teleport_section.type = response_pb2.CROW_FLY
-            start_teleport_section.street_network.mode = response_pb2.Walking
-            start_teleport_section.origin.CopyFrom(from_pt_obj)
-            start_teleport_section.destination.CopyFrom(pb_rsj_pickup)
-            start_teleport_section.length = int(crowfly_distance_between(from_coord, pickup_coord))
-            start_teleport_section.duration = 0
-            start_teleport_section.shape.extend([from_coord, pickup_coord])
-            start_teleport_section.begin_date_time = rsj.pickup_date_time
-            start_teleport_section.end_date_time = rsj.pickup_date_time
-            # report value to journey
-            pb_rsj.distances.walking += start_teleport_section.length
+        # start teleport section
+        start_teleport_section = pb_rsj.sections.add()
+        start_teleport_section.id = "section_{}".format(six.text_type(generate_id()))
+        start_teleport_section.type = response_pb2.CROW_FLY
+        start_teleport_section.street_network.mode = response_pb2.Walking
+        start_teleport_section.origin.CopyFrom(from_pt_obj)
+        start_teleport_section.destination.CopyFrom(pb_rsj_pickup)
+        start_teleport_section.length = int(crowfly_distance_between(from_coord, pickup_coord))
+        start_teleport_section.duration = 0
+        start_teleport_section.shape.extend([from_coord, pickup_coord])
+        start_teleport_section.begin_date_time = rsj.pickup_date_time
+        start_teleport_section.end_date_time = rsj.pickup_date_time
+        # report value to journey
+        pb_rsj.distances.walking += start_teleport_section.length
 
-            # real ridesharing section
-            rs_section = pb_rsj.sections.add()
-            rs_section.id = "section_{}".format(six.text_type(generate_id()))
-            rs_section.type = response_pb2.RIDESHARING
-            rs_section.origin.CopyFrom(pb_rsj_pickup)
-            rs_section.destination.CopyFrom(pb_rsj_dropoff)
-            rs_section.additional_informations.append(response_pb2.HAS_DATETIME_ESTIMATED)
+        # real ridesharing section
+        rs_section = pb_rsj.sections.add()
+        rs_section.id = "section_{}".format(six.text_type(generate_id()))
+        rs_section.type = response_pb2.RIDESHARING
+        rs_section.origin.CopyFrom(pb_rsj_pickup)
+        rs_section.destination.CopyFrom(pb_rsj_dropoff)
+        rs_section.additional_informations.append(response_pb2.HAS_DATETIME_ESTIMATED)
 
-            rs_section.ridesharing_information.operator = rsj.metadata.system_id
-            rs_section.ridesharing_information.network = rsj.metadata.network
-            if rsj.available_seats is not None:
-                rs_section.ridesharing_information.seats.available = rsj.available_seats
-            if rsj.total_seats is not None:
-                rs_section.ridesharing_information.seats.total = rsj.total_seats
-            if rsj.driver.alias:
-                rs_section.ridesharing_information.driver.alias = rsj.driver.alias
-            if rsj.driver.image:
-                rs_section.ridesharing_information.driver.image = rsj.driver.image
-            if rsj.driver.gender is not None:
-                if rsj.driver.gender == Gender.MALE:
-                    rs_section.ridesharing_information.driver.gender = response_pb2.MALE
-                elif rsj.driver.gender == Gender.FEMALE:
-                    rs_section.ridesharing_information.driver.gender = response_pb2.FEMALE
-            if rsj.driver.rate is not None and rsj.driver.rate_count:
-                rs_section.ridesharing_information.driver.rating.value = rsj.driver.rate
-            if rsj.driver.rate_count:
-                rs_section.ridesharing_information.driver.rating.count = rsj.driver.rate_count
-            if rsj.metadata.rating_scale_min is not None and rsj.metadata.rating_scale_max is not None:
-                rs_section.ridesharing_information.driver.rating.scale_min = rsj.metadata.rating_scale_min
-                rs_section.ridesharing_information.driver.rating.scale_max = rsj.metadata.rating_scale_max
+        rs_section.ridesharing_information.operator = rsj.metadata.system_id
+        rs_section.ridesharing_information.network = rsj.metadata.network
+        if rsj.available_seats is not None:
+            rs_section.ridesharing_information.seats.available = rsj.available_seats
+        if rsj.total_seats is not None:
+            rs_section.ridesharing_information.seats.total = rsj.total_seats
+        if rsj.driver.alias:
+            rs_section.ridesharing_information.driver.alias = rsj.driver.alias
+        if rsj.driver.image:
+            rs_section.ridesharing_information.driver.image = rsj.driver.image
+        if rsj.driver.gender is not None:
+            if rsj.driver.gender == Gender.MALE:
+                rs_section.ridesharing_information.driver.gender = response_pb2.MALE
+            elif rsj.driver.gender == Gender.FEMALE:
+                rs_section.ridesharing_information.driver.gender = response_pb2.FEMALE
+        if rsj.driver.rate is not None and rsj.driver.rate_count:
+            rs_section.ridesharing_information.driver.rating.value = rsj.driver.rate
+        if rsj.driver.rate_count:
+            rs_section.ridesharing_information.driver.rating.count = rsj.driver.rate_count
+        if rsj.metadata.rating_scale_min is not None and rsj.metadata.rating_scale_max is not None:
+            rs_section.ridesharing_information.driver.rating.scale_min = rsj.metadata.rating_scale_min
+            rs_section.ridesharing_information.driver.rating.scale_max = rsj.metadata.rating_scale_max
 
-            # TODO links
 
-            # TODO CO2 = length * coeffCar / (totalSeats  + 1)
-            rs_section.length = rsj.distance
-            rs_section.shape.extend([pickup_coord, dropoff_coord]) # TODO real shape
-            rs_section.duration = rsj.dropoff_date_time - rsj.pickup_date_time
-            rs_section.begin_date_time = rsj.pickup_date_time
-            rs_section.end_date_time = rsj.dropoff_date_time
-            # report values to journey
-            pb_rsj.distances.ridesharing += rs_section.length
-            pb_rsj.duration += rs_section.duration
-            pb_rsj.durations.total += rs_section.duration
-            pb_rsj.durations.ridesharing += rs_section.duration
+        # TODO CO2 = length * coeffCar / (totalSeats  + 1)
+        rs_section.length = rsj.distance
+        rs_section.shape.extend([pickup_coord, dropoff_coord]) # TODO real shape
+        rs_section.duration = rsj.dropoff_date_time - rsj.pickup_date_time
+        rs_section.begin_date_time = rsj.pickup_date_time
+        rs_section.end_date_time = rsj.dropoff_date_time
+        # report values to journey
+        pb_rsj.distances.ridesharing += rs_section.length
+        pb_rsj.duration += rs_section.duration
+        pb_rsj.durations.total += rs_section.duration
+        pb_rsj.durations.ridesharing += rs_section.duration
 
-            # end teleport section
-            end_teleport_section = pb_rsj.sections.add()
-            end_teleport_section.id = "section_{}".format(six.text_type(generate_id()))
-            end_teleport_section.type = response_pb2.CROW_FLY
-            end_teleport_section.street_network.mode = response_pb2.Walking
-            end_teleport_section.origin.CopyFrom(pb_rsj_dropoff)
-            end_teleport_section.destination.CopyFrom(to_pt_obj)
-            end_teleport_section.length = int(crowfly_distance_between(dropoff_coord, to_coord))
-            end_teleport_section.duration = 0
-            end_teleport_section.shape.extend([dropoff_coord, to_coord])
-            end_teleport_section.begin_date_time = rsj.dropoff_date_time
-            end_teleport_section.end_date_time = rsj.dropoff_date_time
-            # report value to journey
-            pb_rsj.distances.walking += end_teleport_section.length
+        # end teleport section
+        end_teleport_section = pb_rsj.sections.add()
+        end_teleport_section.id = "section_{}".format(six.text_type(generate_id()))
+        end_teleport_section.type = response_pb2.CROW_FLY
+        end_teleport_section.street_network.mode = response_pb2.Walking
+        end_teleport_section.origin.CopyFrom(pb_rsj_dropoff)
+        end_teleport_section.destination.CopyFrom(to_pt_obj)
+        end_teleport_section.length = int(crowfly_distance_between(dropoff_coord, to_coord))
+        end_teleport_section.duration = 0
+        end_teleport_section.shape.extend([dropoff_coord, to_coord])
+        end_teleport_section.begin_date_time = rsj.dropoff_date_time
+        end_teleport_section.end_date_time = rsj.dropoff_date_time
+        # report value to journey
+        pb_rsj.distances.walking += end_teleport_section.length
 
-            # create ticket associated
-            ticket = response_pb2.Ticket()
-            ticket.id = "ticket_{}".format(six.text_type(generate_id()))
-            ticket.name = "ridesharing_price_{}".format(ticket.id)
-            ticket.found = True
-            ticket.comment = "Ridesharing price for section {}".format(rs_section.id)
-            ticket.section_id.extend([rs_section.id])
-            # also add fare to journey
-            ticket.cost.value = rsj.price
-            pb_rsj.fare.total.value = ticket.cost.value
-            if rsj.currency == "EUR":
-                ticket.cost.currency = "centime"
-                pb_rsj.fare.total.currency = ticket.cost.currency
-            pb_rsj.fare.found = True
-            pb_rsj.fare.ticket_id.extend([ticket.id])
+        # create ticket associated
+        ticket = response_pb2.Ticket()
+        ticket.id = "ticket_{}".format(six.text_type(generate_id()))
+        ticket.name = "ridesharing_price_{}".format(ticket.id)
+        ticket.found = True
+        ticket.comment = "Ridesharing price for section {}".format(rs_section.id)
+        ticket.section_id.extend([rs_section.id])
+        # also add fare to journey
+        ticket.cost.value = rsj.price
+        pb_rsj.fare.total.value = ticket.cost.value
+        if rsj.currency == "EUR":
+            ticket.cost.currency = "centime"
+            pb_rsj.fare.total.currency = ticket.cost.currency
+        pb_rsj.fare.found = True
+        pb_rsj.fare.ticket_id.extend([ticket.id])
 
-            pb_tickets.append(ticket)
-            pb_rsjs.append(pb_rsj)
-
-        except Exception as e:
-            logger.error('Error while retrieving ridesharing ads: {}'.format(e))
+        pb_tickets.append(ticket)
+        pb_rsjs.append(pb_rsj)
 
     return pb_rsjs, pb_tickets

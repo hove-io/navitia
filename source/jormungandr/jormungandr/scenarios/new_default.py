@@ -813,8 +813,8 @@ class Scenario(simple.Scenario):
                         pb_resp.tickets.extend(rs_tickets)
                     if pb_resp.HasField(str('error')):
                         pb_resp.ClearField(str('error'))
-            except Exception as e:
-                logger.error('Error while retrieving ridesharing ads: {}'.format(e))
+            except:
+                logger.exception('Error while retrieving ridesharing ads')
 
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])
         compute_car_co2_emission(pb_resp, api_request, instance)
