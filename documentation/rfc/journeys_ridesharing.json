@@ -3,8 +3,8 @@
         {
             "comment": "Ridesharing price 1",
             "cost": {
-                "value": "12.40",
-                "currency": "EUR"
+                "value": "1240.0",
+                "currency": "centime"
             },
             "found": false,
             "id": "ridesharing_price_1",
@@ -178,8 +178,8 @@
                                     }
                                 ],
                                 "total": {
-                                    "value": "12.40",
-                                    "currency": "EUR"
+                                    "value": "1240.0",
+                                    "currency": "centime"
                                 }
                             },
                             "departure_date_time": "20180110T115000",
