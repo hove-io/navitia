@@ -408,11 +408,18 @@ class Instance(db.Model):
             .filter(DataSet.type == 'poi', Job.instance_id == self.id)\
             .all()
 
+        job_list = {}
         for dataset, job in result:
             # Cascade Delete not working so delete Metric associated manually
             db.session.query(Metric).filter(Metric.dataset_id == dataset.id).delete()
             db.session.delete(dataset)
-            if not (len(job.data_sets.all()) - 1):
+
+            if job.id not in job_list:
+                job_list[job.id] = 1
+            else:
+                job_list[job.id] += 1
+
+            if not (len(job.data_sets.all()) - job_list[job.id]):
                 db.session.delete(job)
 
         db.session.commit()

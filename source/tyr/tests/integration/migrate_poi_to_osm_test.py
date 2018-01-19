@@ -29,6 +29,10 @@ def create_job_with_poi_only():
     job.metrics.append(metric)
     job.state = 'done'
 
+    dataset, metric = create_dataset('poi')
+    job.data_sets.append(dataset)
+    job.metrics.append(metric)
+
     models.db.session.add(job)
 
     return job
