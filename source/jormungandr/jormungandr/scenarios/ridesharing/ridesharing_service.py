@@ -38,7 +38,10 @@ from jormungandr import utils
 class AbstractRidesharingService(object):
     @abc.abstractmethod
     def request_journeys(self, from_coord, to_coord, period_extremity, limit=None):
-        pass
+        '''
+        implementations must always return a list
+        '''
+        return []
 
 
 # read the configurations and return the wanted service instance

@@ -177,4 +177,4 @@ class InstantSystem(AbstractRidesharingService):
         resp = self._call_service(params=params)
         if resp:
             return self._make_response(resp.json())
-        return None
+        return []

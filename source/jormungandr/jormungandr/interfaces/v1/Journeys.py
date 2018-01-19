@@ -75,6 +75,13 @@ class SectionLinks(fields.Raw):
 
         if obj.HasField(str('pt_display_informations')):
             response.extend(base.make_notes(obj.pt_display_informations.notes))
+
+        if obj.HasField(str('ridesharing_information')):
+            response.extend([{"type": "ridesharing_ad",
+                              "rel": l.key,
+                              "href": l.href,
+                              "internal": False}
+                             for l in obj.ridesharing_information.links])
         return response
 
 
@@ -164,6 +171,31 @@ class JourneyDebugInfo(fields.Raw):
 
         return debug
 
+seats_description = {
+    "total": Integer(),
+    "available": Integer(),
+}
+
+individual_rating = {
+    "value": fields.Raw,
+    "count": Integer(),
+    "scale_min": fields.Raw,
+    "scale_max": fields.Raw,
+}
+
+individual_information = {
+    "alias": fields.String(),
+    "image": fields.String(),
+    "gender": enum_type(attribute="gender"),
+    "rating": PbField(individual_rating, attribute="rating"),
+}
+
+ridesharing_information = {
+    "operator": fields.String(),
+    "network": fields.String(),
+    "driver": PbField(individual_information, attribute="driver"),
+    "seats": PbField(seats_description, attribute="seats"),
+}
 
 section = {
     "type": section_type(),
@@ -193,6 +225,7 @@ section = {
         'value': fields.Raw,
         'unit': fields.String
         }),
+    "ridesharing_informations": PbField(ridesharing_information, attribute="ridesharing_information"),
 }
 
 cost = {
@@ -228,6 +261,7 @@ journey = {
     "distances": Distances(),
     "debug": JourneyDebugInfo()
 }
+section["ridesharing_journeys"] = NonNullList(NonNullNested(journey))
 
 ticket = {
     "id": fields.String(),
@@ -359,6 +393,17 @@ class add_fare_links(object):
                         s['links'].append(create_internal_link(_type="ticket",
                                                                rel="tickets",
                                                                id=ticket_needed))
+                    if "ridesharing_journeys" not in s:
+                        continue
+                    for rsj in s['ridesharing_journeys']:
+                        if "sections" not in rsj:
+                            continue
+                        for rss in rsj['sections']:
+                            #them we add the link to the different ridesharing-tickets needed
+                            for rs_ticket_needed in ticket_by_section[rss["id"]]:
+                                rss['links'].append(create_internal_link(_type="ticket",
+                                                                         rel="tickets",
+                                                                         id=rs_ticket_needed))
 
             return objects
         return wrapper
