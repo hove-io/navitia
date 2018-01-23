@@ -889,6 +889,7 @@ instance_status = {
     "dataset_created_at": fields.String(),
     "autocomplete": fields.Raw(),
     "street_networks": fields.Raw(),
+    "ridesharing_services": fields.Raw()
 }
 
 instance_parameters = {
@@ -1051,5 +1052,8 @@ def add_common_status(response, instance):
     response['status']['street_networks'] = []
     for sn in instance.street_network_services:
         response['status']['street_networks'].append(sn.status())
+
+    for rs in instance.ridesharing_services:
+        response['status']['ridesharing_services'].append(rs.status())
 
     response['status']['autocomplete'] = instance.autocomplete.status()

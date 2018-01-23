@@ -36,11 +36,19 @@ from jormungandr import utils
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractRidesharingService(object):
+
+    @abc.abstractmethod
+    def status(self):
+        """
+        :return: a dict contains the status of the service
+        """
+        pass
+
     @abc.abstractmethod
     def request_journeys(self, from_coord, to_coord, period_extremity, limit=None):
-        '''
+        """
         implementations must always return a list
-        '''
+        """
         return []
 
 

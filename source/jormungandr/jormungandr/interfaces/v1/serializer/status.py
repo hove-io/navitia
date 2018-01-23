@@ -97,19 +97,26 @@ class CircuitBreakerSerializer(serpy.DictSerializer):
     reset_timeout = Field(schema_type=int, display_none=True)
 
 
-class StreetNetworkSerializer(serpy.DictSerializer):
+class OutsideServiceCommon(serpy.DictSerializer):
     class_ = Field(schema_type=str, label='class', attr='class')
     id = Field(schema_type=str)
-    modes = StringListField(display_none=True)
-    timeout = MethodField(schema_type=float, display_none=False)
     circuit_breaker = MethodField(schema_type=CircuitBreakerSerializer, display_none=False)
-
-    def get_timeout(self, obj):
-        return obj.get('timeout', None)
 
     def get_circuit_breaker(self, obj):
         o = obj.get('circuit_breaker', None)
         return CircuitBreakerSerializer(o, display_none=False).data if o else None
+
+
+class StreetNetworkSerializer(OutsideServiceCommon):
+    modes = StringListField(display_none=True)
+    timeout = MethodField(schema_type=float, display_none=False)
+
+    def get_timeout(self, obj):
+        return obj.get('timeout', None)
+
+
+class RidesharingServicesSerializer(OutsideServiceCommon):
+    service_url = Field(schema_type=str, display_none=False)
 
 
 class CoverageErrorSerializer(NullableDictSerializer):
@@ -131,6 +138,7 @@ class CommonStatusSerializer(NullableDictSerializer):
     last_load_at = Field(schema_type=str, display_none=False)
     publication_date = Field(schema_type=str, display_none=False)
     street_networks = StreetNetworkSerializer(many=True, display_none=False)
+    ridesharing_services = RidesharingServicesSerializer(many=True, display_none=False)
     start_production_date = Field(schema_type=str, display_none=False)
     last_load_status = Field(schema_type=bool, display_none=False)
     is_open_data = Field(schema_type=bool, display_none=False)
