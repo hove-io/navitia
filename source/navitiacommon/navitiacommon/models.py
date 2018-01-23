@@ -404,7 +404,6 @@ class Instance(db.Model):
     def delete_dataset(self):
         result = db.session.query(DataSet, Job) \
             .join(Job) \
-            .join(Instance) \
             .filter(DataSet.type == 'poi', Job.instance_id == self.id)\
             .all()
 
