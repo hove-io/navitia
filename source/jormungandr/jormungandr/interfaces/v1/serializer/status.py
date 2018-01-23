@@ -116,7 +116,7 @@ class StreetNetworkSerializer(OutsideServiceCommon):
 
 
 class RidesharingServicesSerializer(OutsideServiceCommon):
-    service_url = Field(schema_type=str, display_none=False)
+    pass
 
 
 class CoverageErrorSerializer(NullableDictSerializer):
