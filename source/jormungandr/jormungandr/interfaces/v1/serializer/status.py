@@ -99,7 +99,7 @@ class CircuitBreakerSerializer(serpy.DictSerializer):
 
 class OutsideServiceCommon(serpy.DictSerializer):
     class_ = Field(schema_type=str, label='class', attr='class')
-    id = Field(schema_type=str)
+    _id = Field(attr='id', schema_type=str)
     circuit_breaker = MethodField(schema_type=CircuitBreakerSerializer, display_none=False)
 
     def get_circuit_breaker(self, obj):
