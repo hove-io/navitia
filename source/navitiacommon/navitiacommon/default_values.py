@@ -54,7 +54,7 @@ bss_speed = 4.1
 
 car_speed = 11.11
 
-car_no_park_speed = 11.11
+car_no_park_speed = 6.94 #25km/h
 
 max_nb_transfers = 10
 
