@@ -34,20 +34,12 @@ import logging
 
 import jormungandr
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
-from jormungandr.utils import get_lon_lat as get_lon_lat_from_id
+from jormungandr.utils import get_lon_lat as get_lon_lat_from_id, get_house_number
 import requests
 from jormungandr.exceptions import TechnicalError, UnknownObject
 from flask.ext.restful import marshal, fields
 from jormungandr.interfaces.v1.fields import Lit, ListLit, beta_endpoint, feed_publisher_bano, feed_publisher_osm
 import re
-
-
-def get_number(housenumber):
-    hn = 0
-    numbers = re.findall(r'^\d+', housenumber or "0")
-    if len(numbers) > 0:
-        hn = numbers[0]
-    return int(hn)
 
 
 def create_admin_field(geocoding):
@@ -144,7 +136,7 @@ def create_address_field(geocoding):
             "lat": lat,
             "lon": lon
         },
-        "house_number": get_number(geocoding.get('housenumber'))
+        "house_number": get_house_number(geocoding.get('housenumber'))
     }
 
 
@@ -183,10 +175,6 @@ class AddressField(fields.Raw):
 
         lon, lat = get_lon_lat(obj)
         geocoding = obj.get('properties', {}).get('geocoding', {})
-        hn = 0
-        numbers = re.findall(r'^\d+', geocoding.get('housenumber') or "0")
-        if len(numbers) > 0:
-            hn = numbers[0]
 
         return {
             "id": '{};{}'.format(lon, lat),
@@ -194,7 +182,7 @@ class AddressField(fields.Raw):
                 "lon": lon,
                 "lat": lat,
             },
-            "house_number": int(hn),
+            "house_number": get_house_number(geocoding.get('housenumber')),
             "label": geocoding.get('label'),
             "name": geocoding.get('name'),
             "administrative_regions":
