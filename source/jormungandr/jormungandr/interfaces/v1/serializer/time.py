@@ -40,7 +40,7 @@ from jormungandr.utils import timestamp_to_str
 __date_time_null_value__ = 2**64 - 1
 
 
-class LocalTimeField(NestedPbField, TimeType):
+class TimeField(NestedPbField, TimeType):
     """
     This field convert a number of second from midnight to a string with the format: HH:MM:SS
     No conversion from UTC will be done, we expect the time to already be in desired timezone

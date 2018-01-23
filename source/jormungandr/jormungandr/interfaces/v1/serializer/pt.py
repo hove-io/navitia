@@ -33,7 +33,7 @@ from navitiacommon import type_pb2
 
 from jormungandr.interfaces.v1.serializer.base import GenericSerializer, EnumListField, LiteralField
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, DateTimeType, DateType
-from jormungandr.interfaces.v1.serializer.time import LocalTimeField, PeriodSerializer, DateTimeField
+from jormungandr.interfaces.v1.serializer.time import TimeField, PeriodSerializer, DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import *
 from jormungandr.interfaces.v1.serializer import jsonschema, base
 from navitiacommon.type_pb2 import ActiveStatus, Channel, hasEquipments, Properties
@@ -195,10 +195,10 @@ class CalendarSerializer(PbNestedSerializer):
 
 class ImpactedStopSerializer(PbNestedSerializer):
     stop_point = jsonschema.MethodField(schema_type=lambda: StopPointSerializer())
-    base_arrival_time = LocalTimeField(attr='base_stop_time.arrival_time')
-    base_departure_time = LocalTimeField(attr='base_stop_time.departure_time')
-    amended_arrival_time = LocalTimeField(attr='amended_stop_time.arrival_time')
-    amended_departure_time = LocalTimeField(attr='amended_stop_time.departure_time')
+    base_arrival_time = TimeField(attr='base_stop_time.arrival_time')
+    base_departure_time = TimeField(attr='base_stop_time.departure_time')
+    amended_arrival_time = TimeField(attr='amended_stop_time.arrival_time')
+    amended_departure_time = TimeField(attr='amended_stop_time.departure_time')
     cause = jsonschema.Field(schema_type=str, display_none=True)
     stop_time_effect = EnumField(attr='effect')
     departure_status = EnumField()
@@ -420,8 +420,8 @@ class LineSerializer(GenericSerializer):
     commercial_mode = CommercialModeSerializer(display_none=False)
     routes = RouteSerializer(many=True, display_none=False)
     network = NetworkSerializer(display_none=False)
-    opening_time = LocalTimeField()
-    closing_time = LocalTimeField()
+    opening_time = TimeField()
+    closing_time = TimeField()
     properties = PropertySerializer(many=True, display_none=False)
     geojson = MultiLineStringField(display_none=False)
     links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
@@ -439,10 +439,10 @@ class JourneyPatternSerializer(GenericSerializer):
 
 
 class StopTimeSerializer(PbNestedSerializer):
-    arrival_time = LocalTimeField()
-    utc_arrival_time = LocalTimeField()
-    departure_time = LocalTimeField()
-    utc_departure_time = LocalTimeField()
+    arrival_time = TimeField()
+    utc_arrival_time = TimeField()
+    departure_time = TimeField()
+    utc_departure_time = TimeField()
     headsign = jsonschema.Field(schema_type=str)
     journey_pattern_point = JourneyPatternPointSerializer()
     stop_point = StopPointSerializer()
