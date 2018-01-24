@@ -100,8 +100,9 @@ class ErrorSerializer(PbNestedSerializer):
 
 
 class CoordSerializer(serpy.Serializer):
-    lon = DoubleToStringField()
-    lat = DoubleToStringField()
+    lon = DoubleToStringField(display_none=True)
+    lat = DoubleToStringField(display_none=True)
+
 
 class CodeSerializer(serpy.Serializer):
     type = jsonschema.Field(schema_type=str)
@@ -148,6 +149,7 @@ class LinkSchema(serpy.Serializer):
     templated = BoolField()
     internal = BoolField()
     type = StrField()
+    href = StrField()
 
 
 class DisruptionLinkSerializer(jsonschema.Field):
