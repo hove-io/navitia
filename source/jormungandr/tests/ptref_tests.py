@@ -86,10 +86,19 @@ class TestPtRef(AbstractTestFixture):
         assert vj['id'] == 'vj1'
 
         assert len(vj['stop_times']) == 2
+
+        # Local Time
         assert vj['stop_times'][0]['arrival_time'] == '101500'
         assert vj['stop_times'][0]['departure_time'] == '101500'
         assert vj['stop_times'][1]['arrival_time'] == '111000'
         assert vj['stop_times'][1]['departure_time'] == '111000'
+
+        # UTC Time
+        # In this case, Local time = UTC Time
+        assert vj['stop_times'][0]['utc_arrival_time'] == '101500'
+        assert vj['stop_times'][0]['utc_departure_time'] == '101500'
+        assert vj['stop_times'][1]['utc_arrival_time'] == '111000'
+        assert vj['stop_times'][1]['utc_departure_time'] == '111000'
 
         #we added some comments on the vj, we should have them
         com = get_not_null(vj, 'comments')
