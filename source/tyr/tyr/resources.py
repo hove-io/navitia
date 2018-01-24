@@ -217,6 +217,9 @@ class Instance(flask_restful.Resource):
         parser.add_argument('max_car_duration_to_pt', type=int,
                 help='the maximum duration of car in fallback section', location=('json', 'values'),
                 default=instance.max_car_duration_to_pt)
+        parser.add_argument('max_car_no_park_duration_to_pt', type=int,
+                help='the maximum duration of car in fallback section when parking aren\'t used',
+                location=('json', 'values'), default=instance.max_car_no_park_duration_to_pt)
         parser.add_argument('max_nb_transfers', type=int,
                 help='the maximum number of transfers in a journey', location=('json', 'values'),
                 default=instance.max_nb_transfers)
@@ -228,6 +231,9 @@ class Instance(flask_restful.Resource):
                 help='the speed of bss', location=('json', 'values'), default=instance.bss_speed)
         parser.add_argument('car_speed', type=float,
                 help='the speed of car', location=('json', 'values'), default=instance.car_speed)
+        parser.add_argument('car_no_park_speed', type=float,
+                help='the speed of car when parking aren\'t used', location=('json', 'values'),
+                default=instance.car_no_park_speed)
         parser.add_argument('min_tc_with_car', type=int,
                 help='minimum duration of tc when a car fallback is used', location=('json', 'values'),
                 default=instance.min_tc_with_car)
@@ -301,11 +307,13 @@ class Instance(flask_restful.Resource):
                                        'max_bike_duration_to_pt',
                                        'max_bss_duration_to_pt',
                                        'max_car_duration_to_pt',
+                                       'max_car_no_park_duration_to_pt',
                                        'max_nb_transfers',
                                        'walking_speed',
                                        'bike_speed',
                                        'bss_speed',
                                        'car_speed',
+                                       'car_no_park_speed',
                                        'min_tc_with_car',
                                        'min_tc_with_bike',
                                        'min_tc_with_bss',
