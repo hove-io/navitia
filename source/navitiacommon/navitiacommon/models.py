@@ -273,10 +273,10 @@ class Instance(db.Model):
     # ============================================================
     # params for jormungandr
     # ============================================================
-    #the scenario used by jormungandr, by default we use the new default scenario (and not the default one...)
+    # the scenario used by jormungandr, by default we use the new default scenario (and not the default one...)
     scenario = db.Column(db.Text, nullable=False, default='new_default')
 
-    #order of the journey, this order is for clockwise request, else it is reversed
+    # order of the journey, this order is for clockwise request, else it is reversed
     journey_order = db.Column(db.Enum('arrival_time', 'departure_time', name='journey_order'),
                               default=default_values.journey_order, nullable=False)
 
@@ -401,6 +401,28 @@ class Instance(db.Model):
         else:
             raise Exception({'error': 'instance is required'}, 400)
 
+    def delete_dataset(self):
+        result = db.session.query(DataSet, Job) \
+            .join(Job) \
+            .filter(DataSet.type == 'poi', Job.instance_id == self.id)\
+            .all()
+
+        job_list = {}
+        for dataset, job in result:
+            # Cascade Delete not working so delete Metric associated manually
+            db.session.query(Metric).filter(Metric.dataset_id == dataset.id).delete()
+            db.session.delete(dataset)
+
+            if job.id not in job_list:
+                job_list[job.id] = 1
+            else:
+                job_list[job.id] += 1
+
+            if not (len(job.data_sets.all()) - job_list[job.id]):
+                db.session.delete(job)
+
+        db.session.commit()
+
     def __repr__(self):
         return '<Instance %r>' % self.name
 
@@ -498,7 +520,7 @@ class Job(db.Model, TimestampMixin):
                             db.ForeignKey('instance.id'))
     autocomplete_params_id = db.Column(db.Integer,
                                        db.ForeignKey('autocomplete_parameter.id'))
-    #name is used for the ENUM name in postgreSQL
+    # name is used for the ENUM name in postgreSQL
     state = db.Column(db.Enum('pending', 'running', 'done', 'failed',
                               name='job_state'))
 
@@ -550,7 +572,7 @@ class DataSet(db.Model):
     @classmethod
     def find_by_uid(cls, uid):
         if not uid:
-            #old dataset don't have uid, we don't want to get one of them
+            # old dataset don't have uid, we don't want to get one of them
             return None
         return cls.query.filter_by(uid=uid).first()
 
