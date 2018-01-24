@@ -267,9 +267,12 @@ class MixedSchedule(object):
                        p2.stop_date_time.departure_date_time)
         resp.next_departures.sort(comparator)
 
-        # handle pagination
-        del resp.next_departures[resp.pagination.itemsPerPage:]
-        resp.pagination.itemsOnPage = len(resp.next_departures)
+        # handle pagination :
+        # If real time information exist, we have to change
+        # pagination score.
+        if rt_proxy:
+            resp.pagination.totalResult = len(resp.next_departures)
+            resp.pagination.itemsOnPage = len(resp.next_departures)
 
         return resp
 

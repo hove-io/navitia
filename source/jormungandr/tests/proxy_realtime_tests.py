@@ -214,6 +214,62 @@ class TestDepartures(AbstractTestFixture):
         get_not_null(d, "headsign")
         get_not_null(d, "name")
 
+    def test_departures_pagination(self):
+        """
+        We create a set of 1 base_schedule departure and
+        2 realtime departures to highlight pagination's counters.
+        """
+
+        # 1. Test with realtime and base_schedule
+        # expected output, 2 realtime ->
+        # "pagination" { "items_on_page": 2, "items_per_page": 100,
+        #                "start_page": 0,"total_result": 2}
+        query = 'stop_areas/S42/lines/J/departures?' \
+                'from_datetime=20160102T1000&show_codes=true&count=100'
+        response = self.query_region(query)
+        assert "departures" in response
+        assert len(response["departures"]) == 2
+        for departures in response["departures"]:
+            assert departures["stop_date_time"]["data_freshness"] == "realtime"
+        assert response["pagination"]["items_on_page"] == 2
+        assert response["pagination"]["items_per_page"] == 100
+        assert response["pagination"]["start_page"] == 0
+        assert response["pagination"]["total_result"] == 2
+
+        # 2. Test with realtime
+        # expected output, 2 realtime ->
+        # "pagination" { "items_on_page": 2, "items_per_page": 100,
+        #                "start_page": 0,"total_result": 2}
+        query = 'stop_areas/S42/lines/J/departures?' \
+                'from_datetime=20160102T1000&show_codes=true&count=100' \
+                '&data_freshness=realtime'
+        response = self.query_region(query)
+        assert "departures" in response
+        assert len(response["departures"]) == 2
+        for departures in response["departures"]:
+            assert departures["stop_date_time"]["data_freshness"] == "realtime"
+        assert response["pagination"]["items_on_page"] == 2
+        assert response["pagination"]["items_per_page"] == 100
+        assert response["pagination"]["start_page"] == 0
+        assert response["pagination"]["total_result"] == 2
+
+        # 3. Test with base_schedule
+        # expected output, 1 base_schedule ->
+        # "pagination" { "items_on_page": 1, "items_per_page": 100,
+        #                "start_page": 0,"total_result": 1}
+        query = 'stop_areas/S42/lines/J/departures?' \
+                'from_datetime=20160102T1000&show_codes=true&count=100' \
+                '&data_freshness=base_schedule'
+        response = self.query_region(query)
+        assert "departures" in response
+        assert len(response["departures"]) == 1
+        for departures in response["departures"]:
+            assert departures["stop_date_time"]["data_freshness"] == "base_schedule"
+        assert response["pagination"]["items_on_page"] == 1
+        assert response["pagination"]["items_per_page"] == 100
+        assert response["pagination"]["start_page"] == 0
+        assert response["pagination"]["total_result"] == 1
+
     def test_stop_schedule_limit_per_items(self):
         """
         test the limit of item per stop_schedule with a realtime proxy
