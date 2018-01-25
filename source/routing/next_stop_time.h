@@ -163,10 +163,10 @@ struct NextStopTime {
                    const boost::optional<DateTime>& bound = boost::none) const {
         if (clockwise) {
             return earliest_stop_time(stop_event, jpp_idx, dt, rt_level, vehicle_props,
-                                      check_freq, bound ? *bound : DateTimeUtils::inf);
+                                      check_freq, bound);
         } else {
             return tardiest_stop_time(stop_event, jpp_idx, dt, rt_level, vehicle_props,
-                                      check_freq, bound ? *bound : DateTimeUtils::min);
+                                      check_freq, bound);
         }
     }
 
@@ -181,7 +181,7 @@ struct NextStopTime {
                        const type::RTLevel rt_level,
                        const type::VehicleProperties& vehicle_props,
                        const bool check_freq = true,
-                       const DateTime bound = DateTimeUtils::inf) const;
+                       const boost::optional<DateTime>& bound = boost::none) const;
 
     /// Next backward stop time for a given datetime (dt).  Look for
     /// the first stop_time arriving before dt on the journey pattern
@@ -194,7 +194,7 @@ struct NextStopTime {
                        const type::RTLevel rt_level,
                        const type::VehicleProperties& vehicle_props,
                        const bool check_freq = true,
-                       const DateTime bound = DateTimeUtils::min) const;
+                       const boost::optional<DateTime>& bound = boost::none) const;
 
 private:
     const type::Data& data;
