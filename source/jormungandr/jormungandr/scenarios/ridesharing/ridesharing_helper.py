@@ -35,54 +35,28 @@ from jormungandr.scenarios.helper_classes.helper_utils import crowfly_distance_b
 from jormungandr.scenarios.ridesharing.ridesharing_journey import Gender
 from jormungandr.utils import get_pt_object_coord, generate_id
 from navitiacommon import response_pb2
+from jormungandr.utils import date_to_timestamp, PeriodExtremity, timestamp_to_datetime
+import logging
+from jormungandr.scenarios.journey_filter import to_be_deleted
 
 
-def build_ridesharing_crowfly_journey(instance, origin, destination, period_extremity):
-    ridesharing_journey = response_pb2.Journey()
-    ridesharing_journey.tags.append('ridesharing')
-    ridesharing_journey.requested_date_time = period_extremity.datetime
+def decorate_journeys(response, instance):
+    tickets = []
+    #TODO: disable same journey schedule link for ridesharing journey?
+    for journey in response.journeys:
+        if 'ridesharing' not in journey.tags or to_be_deleted(journey):
+            continue
+        for section in journey.sections:
+            if section.street_network.mode == response_pb2.Ridesharing:
+                period_extremity = PeriodExtremity(section.begin_date_time, True) #todo choose correct values :( put thing into the correct tz...
+                pb_rsjs, pb_tickets = build_ridesharing_journeys(section.origin, section.destination, period_extremity, instance)
+                if not pb_rsjs:
+                    journey_filter.mark_as_dead(journey, 'no_matching_ridesharing_found')
+                else:
+                    section.ridesharing_journeys.extend(pb_rsjs)
+                    response.tickets.extend(pb_tickets)
 
-    # TODO: using _create_crowfly from helper_utils.py might be nicer
-    # manage section
-    ridesharing_section = ridesharing_journey.sections.add()
-    ridesharing_section.id = "section_{}".format(six.text_type(generate_id()))
-    ridesharing_section.type = response_pb2.CROW_FLY
-    ridesharing_section.street_network.mode = response_pb2.Ridesharing
-    ridesharing_section.origin.CopyFrom(instance.georef.place(origin))
-    ridesharing_section.destination.CopyFrom(instance.georef.place(destination))
 
-    orig_coord = get_pt_object_coord(ridesharing_section.origin)
-    dest_coord = get_pt_object_coord(ridesharing_section.destination)
-    ridesharing_section.shape.extend([orig_coord, dest_coord])
-
-    distance = crowfly_distance_between(orig_coord, dest_coord)
-    ridesharing_section.length = int(distance)
-    # manhattan + 15min # TODO: change, using params and conf
-    ridesharing_section.duration = int(distance / (instance.car_speed / math.sqrt(2))) + 15*60
-    if period_extremity.represents_start:
-        ridesharing_section.begin_date_time = period_extremity.datetime
-        ridesharing_section.end_date_time = period_extremity.datetime + ridesharing_section.duration
-    else:
-        ridesharing_section.begin_date_time = period_extremity.datetime - ridesharing_section.duration
-        ridesharing_section.end_date_time = period_extremity.datetime
-
-    # report section values into journey
-    ridesharing_journey.distances.ridesharing = ridesharing_section.length
-    ridesharing_journey.durations.ridesharing = ridesharing_section.duration
-    ridesharing_journey.duration = ridesharing_section.duration
-    ridesharing_journey.durations.total = ridesharing_section.duration
-    ridesharing_journey.departure_date_time = ridesharing_section.begin_date_time
-    ridesharing_journey.arrival_date_time = ridesharing_section.end_date_time
-
-    pb_rsjs, pb_tickets = build_ridesharing_journeys(from_pt_obj=ridesharing_section.origin,
-                                         to_pt_obj=ridesharing_section.destination,
-                                         period_extremity=period_extremity,
-                                         instance=instance)
-    if not pb_rsjs:
-        journey_filter.mark_as_dead(ridesharing_journey, 'no_matching_ridesharing_found')
-
-    ridesharing_section.ridesharing_journeys.extend(pb_rsjs)
-    return ridesharing_journey, pb_tickets
 
 
 def build_ridesharing_journeys(from_pt_obj, to_pt_obj, period_extremity, instance):
@@ -93,6 +67,7 @@ def build_ridesharing_journeys(from_pt_obj, to_pt_obj, period_extremity, instanc
     try:
         rsjs = instance.get_ridesharing_journeys(from_str, to_str, period_extremity)
     except: # TODO handle it smarter
+        logging.exception('')
         rsjs = []
 
     pb_rsjs = []

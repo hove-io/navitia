@@ -35,7 +35,7 @@ from flask.ext.restful import abort
 from flask import g
 from jormungandr.scenarios import simple, journey_filter, helpers
 from jormungandr.scenarios.journey_filter import to_be_deleted
-from jormungandr.scenarios.ridesharing.ridesharing_helper import build_ridesharing_crowfly_journey
+from jormungandr.scenarios.ridesharing.ridesharing_helper import decorate_journeys
 from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, \
     get_or_default, fill_uris, gen_all_combin, get_pseudo_duration, mode_weight
 from navitiacommon import type_pb2, response_pb2, request_pb2
@@ -552,8 +552,9 @@ def _switch_back_to_ridesharing(response):
             if section.type == response_pb2.STREET_NETWORK \
                     and section.street_network.mode == response_pb2.Car:
                 if (len(journey.sections) > i+1 and journey.sections[i+1].type != response_pb2.PARK) or \
-                        (i-1 > 0 and journey.sections[i-1].type != response_pb2.LEAVE_PARKING) \
+                        (i > 0 and journey.sections[i-1].type != response_pb2.LEAVE_PARKING) \
                         or len(journey.sections) == 1:
+                    #TODO: handle crowfly :(
                     section.street_network.mode = response_pb2.Ridesharing
                     journey.durations.ridesharing += section.duration
                     journey.durations.car -= section.duration
@@ -817,25 +818,17 @@ class Scenario(simple.Scenario):
         journey_filter.final_filter_journeys(responses, instance, api_request)
         pb_resp = merge_responses(responses)
 
-        if 'ridesharing' in ridesharing_req['origin_mode'] and instance.ridesharing_services:
-            period_extremity = PeriodExtremity(ridesharing_req['datetime'], ridesharing_req['clockwise'])
-            try:
-                rs_journey, rs_tickets = build_ridesharing_crowfly_journey(instance,
-                                                                       ridesharing_req['origin'],
-                                                                       ridesharing_req['destination'],
-                                                                       period_extremity)
-                if rs_journey:
-                    pb_resp.journeys.extend([rs_journey])
-                    if rs_tickets:
-                        pb_resp.tickets.extend(rs_tickets)
-                    if pb_resp.HasField(str('error')) and not to_be_deleted(rs_journey):
-                        pb_resp.ClearField(str('error'))
-            except:
-                logger.exception('Error while retrieving ridesharing ads')
-
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])
         compute_car_co2_emission(pb_resp, api_request, instance)
         tag_journeys(pb_resp)
+
+        if 'ridesharing' in ridesharing_req['origin_mode'] and instance.ridesharing_services:
+            logging.getLogger(__name__).debug('trying to add ridesharing journeys')
+            try:
+                decorate_journeys(pb_resp, instance)
+            except:
+                logger.exception('Error while retrieving ridesharing ads')
+
         journey_filter.delete_journeys((pb_resp,), api_request)
         type_journeys(pb_resp, api_request)
         culling_journeys(pb_resp, api_request)
