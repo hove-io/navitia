@@ -1892,13 +1892,11 @@ void PbCreator::fill_crowfly_section(const type::EntryPoint& origin, const type:
         section->mutable_street_network()->set_mode(pbnavitia::Bike);
         break;
     case type::Mode_e::Car:
+    case type::Mode_e::CarNoPark:
         section->mutable_street_network()->set_mode(pbnavitia::Car);
         break;
     case type::Mode_e::Bss:
         section->mutable_street_network()->set_mode(pbnavitia::Bss);
-        break;
-    case type::Mode_e::CarNoPark:
-        section->mutable_street_network()->set_mode(pbnavitia::CarNoPark);//TODO: use ridesharing in pb
         break;
     default:
         throw navitia::exception("Unhandled TransportCaracteristic value in pb_converter");
