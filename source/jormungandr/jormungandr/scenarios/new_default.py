@@ -828,6 +828,10 @@ class Scenario(simple.Scenario):
                 decorate_journeys(pb_resp, instance)
             except:
                 logger.exception('Error while retrieving ridesharing ads')
+        else:
+            for j in pb_resp.journeys:
+                if 'ridesharing' in j.tags:
+                    journey_filter.mark_as_dead(j, 'no_matching_ridesharing_found')
 
         journey_filter.delete_journeys((pb_resp,), api_request)
         type_journeys(pb_resp, api_request)
