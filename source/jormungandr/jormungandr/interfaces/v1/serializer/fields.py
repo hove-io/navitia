@@ -100,8 +100,8 @@ class ErrorSerializer(PbNestedSerializer):
 
 
 class CoordSerializer(serpy.Serializer):
-    lon = DoubleToStringField(display_none=True)
-    lat = DoubleToStringField(display_none=True)
+    lon = DoubleToStringField(display_none=True, required=True)
+    lat = DoubleToStringField(display_none=True, required=True)
 
 
 class CodeSerializer(serpy.Serializer):
