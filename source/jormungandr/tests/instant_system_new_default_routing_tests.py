@@ -62,20 +62,20 @@ INSTANCE_SYSTEM_RESPONSE = {
             "departureDate": "2017-12-25T08:07:59+01:00",
             "arrivalDate": "2017-12-25T08:25:36+01:00",
             "duration": 55,
-            "distance": 300,
+            "distance": 224,
             "url": "https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&ibi=&isi=&utm_campaign=KISIO&link=https%3A%2F%2Fwww.star.fr%2Fsearch%2F%3FfeatureName%3DsearchResultDetail%26networkId%3D33%26journeyId%3D4bcd0b9d-2c9d-42a2-8ffb-4508c952f4fb",
             "paths": [
                 {
                     "mode": "RIDESHARINGAD",
                     "from": {
                         "name": "",
-                        "lat": 52.4999825,
-                        "lon": 13.399965
+                        "lat": 0.0000898312,
+                        "lon": 0.0000898312
                     },
                     "to": {
                         "name": "",
-                        "lat": 52.49879,
-                        "lon": 13.45107
+                        "lat": 0.00071865,
+                        "lon": 0.00188646
                     },
                     "departureDate": "2017-12-25T08:07:59+01:00",
                     "arrivalDate": "2017-12-25T08:25:36+01:00",
@@ -85,13 +85,13 @@ INSTANCE_SYSTEM_RESPONSE = {
                         "type": "DRIVER",
                         "from": {
                             "name": "9 Allee Rochester, Rennes",
-                            "lat": 52.4999525,
-                            "lon": 13.399985
+                            "lat": 0.0000998312,
+                            "lon": 0.0000998312
                         },
                         "to": {
                             "name": "2 Avenue Alphonse Legault, Bruz",
-                            "lat": 52.4988,
-                            "lon": 13.4511
+                            "lat": 0.00081865,
+                            "lon": 0.00198646
                         },
                         "user": {
                             "alias": "Jean P.",
@@ -183,6 +183,10 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
 
         rs_journeys = rs_sections[0].get('ridesharing_journeys')
         assert len(rs_journeys) == 1
+        assert rs_journeys[0].get('distances').get('walking') == 16
+        assert rs_journeys[0].get('distances').get('ridesharing') == 224
+        assert rs_journeys[0].get('durations').get('walking') == 0 #two crow_fly sections have 0 duration
+        assert rs_journeys[0].get('durations').get('ridesharing') == 1057
         assert 'ridesharing' in rs_journeys[0].get('tags')
         rsj_sections = rs_journeys[0].get('sections')
         assert len(rsj_sections) == 3
