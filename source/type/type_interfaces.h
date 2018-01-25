@@ -93,7 +93,8 @@ enum class Mode_e {
     Walking = 0,    // Marche à pied
     Bike = 1,       // Vélo
     Car = 2,        // Voiture
-    Bss = 3         // Vls
+    Bss = 3,        // Vls
+    CarNoPark = 4,    // used for ridesharing typicaly
     //Note: if a new transportation mode is added, don't forget to update the associated enum_size_trait<type::Mode_e>
 };
 
@@ -103,6 +104,7 @@ inline std::ostream& operator<<(std::ostream& os, const Mode_e& mode) {
     case Mode_e::Bike: return os << "bike";
     case Mode_e::Car: return os << "car";
     case Mode_e::Bss: return os << "bss";
+    case Mode_e::CarNoPark: return os << "car_no_park";
     default: return os << "[unknown mode]";
     }
 }

@@ -216,6 +216,11 @@ class Instance(object):
         return get_value_or_default('max_car_duration_to_pt', instance_db, self.name)
 
     @property
+    def max_car_no_park_duration_to_pt(self):
+        instance_db = self.get_models()
+        return get_value_or_default('max_car_no_park_duration_to_pt', instance_db, self.name)
+
+    @property
     def walking_speed(self):
         instance_db = self.get_models()
         return get_value_or_default('walking_speed', instance_db, self.name)
@@ -234,6 +239,11 @@ class Instance(object):
     def car_speed(self):
         instance_db = self.get_models()
         return get_value_or_default('car_speed', instance_db, self.name)
+
+    @property
+    def car_no_park_speed(self):
+        instance_db = self.get_models()
+        return get_value_or_default('car_no_park_speed', instance_db, self.name)
 
     @property
     def max_nb_transfers(self):

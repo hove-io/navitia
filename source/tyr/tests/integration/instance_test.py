@@ -80,7 +80,9 @@ def test_update_instances(create_instance):
               "night_bus_filter_max_factor": 1.5,
               "max_car_duration_to_pt": 800,
               "bss_provider": False,
-              "full_sn_geometries": True}
+              "full_sn_geometries": True,
+              "max_car_no_park_duration_to_pt": 2691,
+              "car_no_park_speed": 2.42}
 
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
     for key, param in params.iteritems():

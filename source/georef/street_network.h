@@ -73,7 +73,8 @@ const auto allowed_transportation_mode = create_from_allowedlist({{{
                                                                 {type::Mode_e::Walking}, //for walking, only walking is allowed
                                                                 {type::Mode_e::Bike}, //for biking, only bike
                                                                 {type::Mode_e::Car, type::Mode_e::Walking}, //for car, only car and walking is allowed
-                                                                {type::Mode_e::Walking, type::Mode_e::Bike} //for vls, walking and bike is allowed
+                                                                {type::Mode_e::Walking, type::Mode_e::Bike}, //for vls, walking and bike is allowed
+                                                                {type::Mode_e::Car} //for CarNoPark, only Car is allowed
                                                           }}});
 
 struct TransportationModeFilter {

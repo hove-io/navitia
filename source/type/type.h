@@ -52,6 +52,7 @@ www.navitia.io
 #include <boost/serialization/export.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/bimap.hpp>
+#include <boost/bimap/multiset_of.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/optional.hpp>
 #include <boost/optional.hpp>
@@ -899,7 +900,7 @@ public:
     static std::string captionByType(Type_e type);
     boost::bimap<Type_e, std::string> types_string;
     static Mode_e modeByCaption(const std::string & mode_str);
-    boost::bimap<Mode_e, std::string> modes_string;
+    boost::bimap<boost::bimaps::multiset_of<Mode_e>, boost::bimaps::set_of<std::string>> modes_string;
 };
 
 /**
@@ -964,6 +965,8 @@ struct EntryPoint {
             streetnetwork_params.mode = Mode_e::Bss;
         } else if (mode == "car") {
             streetnetwork_params.mode = Mode_e::Car;
+        } else if ((mode == "ridesharing") || (mode == "car_no_park")) {
+            streetnetwork_params.mode = Mode_e::CarNoPark;
         } else {
             return false;
         }
@@ -1016,7 +1019,7 @@ template<> inline Type_e get_type_e<StopPoint>() {
 template <>
 struct enum_size_trait<type::Mode_e> {
     static constexpr typename get_enum_type<type::Mode_e>::type size() {
-        return 4;
+        return 5;
     }
 };
 

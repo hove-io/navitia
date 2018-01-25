@@ -1632,7 +1632,8 @@ void PbCreator::add_path_item(pbnavitia::StreetNetwork* sn, const ng::PathItem& 
 }
 
 void PbCreator::fill_street_sections(const type::EntryPoint& ori_dest, const georef::Path& path,
-                                     pbnavitia::Journey* pb_journey, const pt::ptime departure, int max_depth) {
+                                     pbnavitia::Journey* pb_journey, const pt::ptime departure, 
+                                     int max_depth) {
     int depth = std::min(max_depth, 3);
     if (path.path_items.empty())
         return;
@@ -1644,7 +1645,7 @@ void PbCreator::fill_street_sections(const type::EntryPoint& ori_dest, const geo
     georef::PathItem last_item;
 
     //we create 1 section by mean of transport
-    for (auto item : path.path_items) {
+    for (const auto& item : path.path_items) {
         auto transport_carac = item.transportation;
 
         if (last_transportation_carac && transport_carac != *last_transportation_carac) {
@@ -1663,8 +1664,8 @@ void PbCreator::fill_street_sections(const type::EntryPoint& ori_dest, const geo
     }
 
     finalize_section(section, path.path_items.back(), {}, session_departure, depth);
-    //We add consistency between origin/destination places and geojson
 
+    //We add consistency between origin/destination places and geojson
     auto sections = pb_journey->mutable_sections();
     for (auto section = sections->begin(); section != sections->end(); ++section) {
         auto destination_coord = get_coord(section->destination());
@@ -1891,6 +1892,7 @@ void PbCreator::fill_crowfly_section(const type::EntryPoint& origin, const type:
         section->mutable_street_network()->set_mode(pbnavitia::Bike);
         break;
     case type::Mode_e::Car:
+    case type::Mode_e::CarNoPark:
         section->mutable_street_network()->set_mode(pbnavitia::Car);
         break;
     case type::Mode_e::Bss:
