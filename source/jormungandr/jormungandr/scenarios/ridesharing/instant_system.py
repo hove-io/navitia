@@ -62,6 +62,14 @@ class InstantSystem(AbstractRidesharingService):
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_INSTANT_SYSTEM_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_INSTANT_SYSTEM_TIMEOUT_S'])
 
+    def status(self):
+        return {'id': self.system_id,
+                'class': self.__class__.__name__,
+                'circuit_breaker': {'current_state': self.breaker.current_state,
+                                    'fail_counter': self.breaker.fail_counter,
+                                    'reset_timeout': self.breaker.reset_timeout},
+                }
+
     def _call_service(self, params):
         self.logger.debug("requesting instant system")
 
