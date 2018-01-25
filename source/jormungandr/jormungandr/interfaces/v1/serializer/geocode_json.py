@@ -33,6 +33,7 @@ from flask.ext.restful import abort
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.fields import raw_feed_publisher_bano, raw_feed_publisher_osm
 from jormungandr.utils import get_house_number
+from jormungandr.autocomplete.geocodejson import create_address_field
 
 
 class CoordField(jsonschema.Field):
@@ -167,17 +168,7 @@ class PoiSerializer(serpy.DictSerializer):
         address = obj.get('properties', {}).get('geocoding', {}).get('address', None)
         if not address:
             return None
-
-        return {
-            "id": address.get('id'),
-            "name": address.get('name'),
-            "coord": {
-                'lon': str(address['coord']['lon']),
-                'lat': str(address['coord']['lat']),
-            },
-            "label": address.get('label'),
-            "house_number": get_house_number(address.get('housenumber'))
-        }
+        return create_address_field(address)
 
 
 class GeocodePoiSerializer(serpy.DictSerializer):
