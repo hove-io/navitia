@@ -65,7 +65,6 @@ class InstantSystem(AbstractRidesharingService):
     def status(self):
         return {'id': self.system_id,
                 'class': self.__class__.__name__,
-                'service_url': self.service_url,
                 'circuit_breaker': {'current_state': self.breaker.current_state,
                                     'fail_counter': self.breaker.fail_counter,
                                     'reset_timeout': self.breaker.reset_timeout},
