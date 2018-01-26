@@ -147,22 +147,26 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         self.is_valid_journey_response(response, q, check_journey_links=False)
 
         journeys = get_not_null(response, 'journeys')
-        assert len(journeys) == 3
+        assert len(journeys) == 2
         tickets = response.get('tickets')
         assert len(tickets) == 1
         assert tickets[0].get('cost').get('currency') == 'centime'
         assert tickets[0].get('cost').get('value') == '170.0'
         ticket_id = tickets[0].get('id')
 
-        walking_direct = journeys[0]
-        assert 'walking' in walking_direct['tags']
-        assert walking_direct.get('type') == 'best'
+        ridesharing_kraken = journeys[0]
+        assert 'ridesharing' in ridesharing_kraken['tags']
+        assert 'non_pt' in ridesharing_kraken['tags']
+        assert ridesharing_kraken.get('type') == 'best'
+        assert ridesharing_kraken.get('durations').get('ridesharing') == 13
+        assert ridesharing_kraken.get('durations').get('total') == 13
 
-        walking_direct = journeys[1]
-        assert 'walking' in walking_direct['tags']
-        assert walking_direct.get('type') == 'fastest'
+        rs_sections = ridesharing_kraken.get('sections')
+        assert len(rs_sections) == 1
+        assert rs_sections[0].get('mode') == 'ridesharing'
+        assert rs_sections[0].get('type') == 'street_network'
 
-        ridesharing = journeys[2]
+        ridesharing = journeys[1]
         assert 'ridesharing' in ridesharing['tags']
         assert 'ecologic' in ridesharing['tags']
         assert ridesharing.get('type') == 'rapid'
