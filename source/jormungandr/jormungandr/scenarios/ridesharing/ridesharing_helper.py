@@ -48,6 +48,7 @@ def decorate_journeys(response, instance, request):
             continue
         for i, section in enumerate(journey.sections):
             if section.street_network.mode == response_pb2.Ridesharing:
+                section.additional_informations.append(response_pb2.HAS_DATETIME_ESTIMATED)
                 period_extremity = None
                 if len(journey.sections) == 1:#direct path, we use the user input
                      period_extremity = PeriodExtremity(request['datetime'], request['clockwise'])

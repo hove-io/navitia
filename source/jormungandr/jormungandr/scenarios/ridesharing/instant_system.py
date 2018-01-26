@@ -42,7 +42,7 @@ from jormungandr.scenarios.ridesharing.ridesharing_service import AbstractRidesh
 
 class InstantSystem(AbstractRidesharingService):
 
-    def __init__(self, instance, service_url, api_key, network, rating_scale_min=None, rating_scale_max=None):
+    def __init__(self, instance, service_url, api_key, network, rating_scale_min=None, rating_scale_max=None, timeout=2):
         self.instance = instance
         self.service_url = service_url
         self.api_key = api_key
@@ -50,6 +50,7 @@ class InstantSystem(AbstractRidesharingService):
         self.rating_scale_min = rating_scale_min
         self.rating_scale_max = rating_scale_max
         self.system_id = 'Instant System'
+        self.timeout = timeout
 
         self.journey_metadata = rsj.MetaData(system_id=self.system_id,
                                              network=self.network,
@@ -75,7 +76,8 @@ class InstantSystem(AbstractRidesharingService):
 
         headers = {'Authorization': 'apiKey {}'.format(self.api_key)}
         try:
-            return self.breaker.call(requests.get, url=self.service_url, headers=headers, params=params, timeout=1000)
+            return self.breaker.call(requests.get, url=self.service_url, headers=headers,
+                                     params=params, timeout=self.timeout)
         except pybreaker.CircuitBreakerError as e:
             self.logger.error('Instant System service dead (error: {})'.format(e))
             raise
@@ -184,5 +186,8 @@ class InstantSystem(AbstractRidesharingService):
 
         resp = self._call_service(params=params)
         if resp:
-            return self._make_response(resp.json())
+            r = self._make_response(resp.json())
+            self.logger.debug('%s ridehsaring ads found', len(r))
+            return r
+        self.logger.debug('0 ridehsaring ads found')
         return []
