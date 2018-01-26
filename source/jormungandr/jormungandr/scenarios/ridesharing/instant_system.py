@@ -157,7 +157,7 @@ class InstantSystem(AbstractRidesharingService):
                 res.currency = price.get('currency')
 
                 res.available_seats = ridesharing_ad['vehicle']['availableSeats']
-                res.total_seats = res.available_seats
+                res.total_seats = None
 
                 ridesharing_journeys.append(res)
 
