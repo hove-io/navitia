@@ -41,8 +41,13 @@ static boost::gregorian::date_period period(std::string beg, std::string end) {
 
 struct data_set {
 
-    data_set() : b("20140101") {
-        //add calendar
+    data_set(std::string date,
+             std::string publisher_name,
+             std::string timezone_name,
+             navitia::type::TimeZoneHandler::dst_periods timezones)
+        : b(date, publisher_name, timezone_name, timezones) {
+
+        // Add calendar
         navitia::type::Calendar* wednesday_cal {new navitia::type::Calendar(b.data->meta->production_date.begin())};
         wednesday_cal->name = "the wednesday calendar";
         wednesday_cal->uri = "wednesday";
@@ -207,7 +212,15 @@ struct data_set {
 int main(int argc, const char* const argv[]) {
     navitia::init_app();
 
-    data_set data;
+    // Date and Time zone
+    const std::string date = "20140101";
+    const std::string publisher_name = "canal tp";
+    const std::string timezone_name = "Europe/Paris";
+    const auto begin = boost::gregorian::date_from_iso_string(date);
+    const boost::gregorian::date_period production_date = {begin, begin + boost::gregorian::years(1)};
+    navitia::type::TimeZoneHandler::dst_periods timezones = {{+3600, {production_date}}};
+
+    data_set data(date, publisher_name, timezone_name, timezones);
 
     mock_kraken kraken(data.b, "main_ptref_test", argc, argv);
 

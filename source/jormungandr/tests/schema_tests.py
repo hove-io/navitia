@@ -196,6 +196,9 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
                            'to=poi:station_1&'
                            'datetime=20120615T080000')
 
+    def test_vehicle_journeys(self):
+        self._check_schema('/v1/coverage/main_routing_test/vehicle_journeys')
+
     def test_stop_schedule(self):
         """
         test the stop_schedule swagger
