@@ -138,6 +138,38 @@ class TestSiriLite(AbstractTestFixture):
                             "MonitoringRef": {"value": "syn_stoppoint21"},
                             "RecordedAtTime": "2017-07-19T13:01:54.727Z"
                         },
+                        # we add a passage with no departure time
+                        {
+                            "ItemIdentifier": "complex_id_for_syn_stoppoint1",
+                            "MonitoredVehicleJourney": {
+                                "DestinationName": [{"value": "to stop 20"}],
+                                "DestinationRef": {"value": "syn_stoppoint22"},
+                                "LineRef": {"value": "syn_lineC"},
+                                "MonitoredCall": {
+                                    "ExpectedDepartureTime": "",
+                                    "StopPointName": [{"value": "the stop"}],
+                                    "VehicleAtStop": False
+                                }
+                            },
+                            "MonitoringRef": {"value": "syn_stoppoint21"},
+                            "RecordedAtTime": "2017-07-19T13:01:54.727Z"
+                        },
+                        # we add a passage with departure time in the past
+                        {
+                            "ItemIdentifier": "complex_id_for_syn_stoppoint1",
+                            "MonitoredVehicleJourney": {
+                                "DestinationName": [{"value": "to stop 20"}],
+                                "DestinationRef": {"value": "syn_stoppoint22"},
+                                "LineRef": {"value": "syn_lineC"},
+                                "MonitoredCall": {
+                                    "ExpectedDepartureTime": "2016-01-02T02:06:42.000Z",
+                                    "StopPointName": [{"value": "the stop"}],
+                                    "VehicleAtStop": False
+                                }
+                            },
+                            "MonitoringRef": {"value": "syn_stoppoint21"},
+                            "RecordedAtTime": "2017-07-19T13:01:54.727Z"
+                        },
                         # we add a passage on an unknown line (we should not consider it)
                         {
                             "ItemIdentifier": "complex_id_for_syn_stoppoint1",
