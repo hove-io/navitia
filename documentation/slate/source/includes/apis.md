@@ -980,7 +980,7 @@ The [isochrones](#isochrones) service exposes another response structure, which 
 | nop     | count                | int     | Fixed number of different journeys<br>More in multiple_journeys  |             |
 | nop     | max_nb_tranfers      | int     | Maximum number of transfers in each journey  | 10          |
 | nop     | min_nb_transfers     | int     | Minimum number of transfers in each journey  | 0           |
-| nop     | max_duration         | int     | Maximum duration of journeys in secondes. Really useful when computing an isochrone   | 10          |
+| nop     | max_duration         | int     | Maximum duration of journeys in secondes. Really useful when computing an isochrone   | 86400       |
 | nop     | disruption_active    | boolean | For compatibility use only.<br>If true the algorithm take the disruptions into account, and thus avoid disrupted public transport.<br>Rq: `disruption_active=true` = `data_freshness=realtime` <br>Use `data_freshness` parameter instead       |  False     |
 | nop     | wheelchair           | boolean | If true the traveler is considered to be using a wheelchair, thus only accessible public transport are used<br>be warned: many data are currently too faint to provide acceptable answers with this parameter on       | False       |
 | nop     | direct_path          | enum    | Specify if direct paths should be suggested.<br>possible values: <ul><li>indifferent</li><li>none</li><li>only</li></ul>      | indifferent |
