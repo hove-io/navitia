@@ -255,6 +255,7 @@ class MixedSchedule(object):
                              _create_template_from_pb_route_point(rp))
                             for rp in resp.route_points)
 
+        rt_proxy = None
         for route_point, template in route_points.items():
             rt_proxy = self._get_realtime_proxy(route_point)
             if rt_proxy:
