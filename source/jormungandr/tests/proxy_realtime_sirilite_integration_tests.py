@@ -138,7 +138,7 @@ class TestSiriLite(AbstractTestFixture):
                             "MonitoringRef": {"value": "syn_stoppoint21"},
                             "RecordedAtTime": "2017-07-19T13:01:54.727Z"
                         },
-                        # we add a passage with no departure time
+                        # we add a passage with no departure time (we should not consider it)
                         {
                             "ItemIdentifier": "complex_id_for_syn_stoppoint1",
                             "MonitoredVehicleJourney": {
@@ -154,7 +154,7 @@ class TestSiriLite(AbstractTestFixture):
                             "MonitoringRef": {"value": "syn_stoppoint21"},
                             "RecordedAtTime": "2017-07-19T13:01:54.727Z"
                         },
-                        # we add a passage with departure time in the past
+                        # we add a passage with departure time in the past (we should not consider it)
                         {
                             "ItemIdentifier": "complex_id_for_syn_stoppoint1",
                             "MonitoredVehicleJourney": {
