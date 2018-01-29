@@ -1165,7 +1165,7 @@ void PbCreator::Filler::fill_pb_object(const ng::POI* poi, pbnavitia::Address* a
         address->set_house_number(poi->address_number);
         label += std::to_string(poi->address_number) + " ";
     }
-    label += get_label(poi);
+    label += poi->address_name;
     address->set_label(label);
 
     if(poi->coord.is_initialized()) {
