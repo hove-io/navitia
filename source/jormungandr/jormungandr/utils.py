@@ -45,6 +45,8 @@ from six.moves import range
 from six.moves import zip
 from jormungandr.exceptions import TechnicalError
 from flask import request
+import re
+
 
 
 DATETIME_FORMAT = "%Y%m%dT%H%M%S"
@@ -514,3 +516,11 @@ def make_timestamp_from_str(strftime):
     from dateutil import parser
     import calendar
     return calendar.timegm(parser.parse(strftime).utctimetuple())
+
+
+def get_house_number(housenumber):
+    hn = 0
+    numbers = re.findall(r'^\d+', housenumber or "0")
+    if len(numbers) > 0:
+        hn = numbers[0]
+    return int(hn)

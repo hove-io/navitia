@@ -32,6 +32,8 @@ from .base import LiteralField, NestedPropertyField, IntNestedPropertyField, val
 from flask.ext.restful import abort
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.fields import raw_feed_publisher_bano, raw_feed_publisher_osm
+from jormungandr.utils import get_house_number
+from jormungandr.autocomplete.geocodejson import create_address_field
 
 
 class CoordField(jsonschema.Field):
@@ -152,6 +154,7 @@ class PoiSerializer(serpy.DictSerializer):
     administrative_regions = AdministrativeRegionsSerializer()
     poi_type = jsonschema.MethodField(display_none=False)
     properties = jsonschema.MethodField(display_none=False)
+    address = jsonschema.MethodField(display_none=False)
 
     def get_poi_type(self, obj):
         poi_types = obj.get('properties', {}).get('geocoding', {}).get('poi_types', [])
@@ -160,6 +163,12 @@ class PoiSerializer(serpy.DictSerializer):
     def get_properties(self, obj):
         return {p.get("key"): p.get("value") 
                 for p in obj.get('properties', {}).get('geocoding', {}).get('properties', [])}
+
+    def get_address(self, obj):
+        address = obj.get('properties', {}).get('geocoding', {}).get('address', None)
+        if not address:
+            return None
+        return create_address_field(address)
 
 
 class GeocodePoiSerializer(serpy.DictSerializer):
@@ -183,12 +192,7 @@ class AddressSerializer(serpy.DictSerializer):
 
     def get_house_number(self, obj):
         geocoding = obj.get('properties', {}).get('geocoding', {})
-        hn = 0
-        import re
-        numbers = re.findall(r'^\d+', geocoding.get('housenumber') or "0")
-        if len(numbers) > 0:
-            hn = numbers[0]
-        return int(hn)
+        return get_house_number(geocoding.get('housenumber'))
 
 
 class GeocodeAddressSerializer(serpy.DictSerializer):
