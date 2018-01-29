@@ -367,7 +367,6 @@ class PlaceNearbySerializer(PlaceSerializer):
 
 
 class NetworkSerializer(GenericSerializer):
-    lines = jsonschema.MethodField(schema_type=lambda: LineSerializer(), display_none=False)
     links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
     codes = CodeSerializer(many=True, display_none=False)
 
@@ -570,6 +569,6 @@ class StopDateTimeSerializer(PbNestedSerializer):
     base_arrival_date_time = DateTimeField()
     stop_point = StopPointSerializer()
     # additional_informations is a nullable field, add nullable=True when we migrate to swagger 3
-    additional_informations = AdditionalInformation(attr='additional_informations', display_none=True)
+    additional_informations = AdditionalInformation(attr='additional_informations', display_none=True, pb_type=Properties.AdditionalInformation)
     links = PropertiesLinksSerializer(attr="properties")
     data_freshness = EnumField()
