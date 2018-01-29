@@ -102,7 +102,10 @@ class SiriLite(RealtimeProxy):
     def _get_passages(self, route_point, resp):
         self.log.debug('sirilite response: {}'.format(resp))
 
+        # Add STIF line code
         line_code = route_point.fetch_line_id(self.object_id_tag)
+
+        # If STIF line code match with the response, we select it
         stop_deliveries = resp.get('Siri', {}).get('ServiceDelivery', {}).get('StopMonitoringDelivery', [])
         schedules = [vj
                      for d in stop_deliveries
@@ -111,28 +114,41 @@ class SiriLite(RealtimeProxy):
         if not schedules:
             self.record_additional_info('no_departure')
             return []
+
+        # In each matched realtime time reponse,
         next_passages = []
         for next_expected_st in schedules:
             destination = next_expected_st.get('MonitoredVehicleJourney', {})\
                 .get('DestinationRef', {}).get('value')
 
             if not destination:
+                # Check destination
                 self.log.debug('no destination for next st {} for routepoint {}, skipping departure'
                                .format(next_expected_st, route_point))
                 self.record_additional_info('no_destination')
                 continue
 
+            # We find possible routes from our stop point to destination
             possible_routes = self.get_matching_routes(
                 destination=destination,
                 line=route_point.fetch_line_uri(),
                 start=route_point.pb_stop_point.uri
             )
-            if possible_routes and len(possible_routes) > 1:
+
+            if not possible_routes:
+                # Check possible routes
+                self.log.debug('no possible routes for next st {} for routepoint {}, skipping departure'
+                               .format(next_expected_st, route_point))
+                continue
+
+            if len(possible_routes) > 1:
                 self.log.info('multiple possible routes for destination {} and routepoint {}, we add the '
                               'passages on all the routes'.format(destination, route_point))
+
             if route_point.pb_route.uri not in possible_routes:
                 # the next passage does not concern our route point, we can skip it
                 continue
+
             # for the moment we handle only the NextStop and the direction
             expected_dt = next_expected_st.get('MonitoredVehicleJourney', {})\
                                           .get('MonitoredCall', {})\
