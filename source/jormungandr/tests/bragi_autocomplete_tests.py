@@ -112,6 +112,59 @@ BRAGI_MOCK_RESPONSE = {
     ]
 }
 
+
+BRAGI_MOCK_POI_WITHOUT_ADDRESS = {
+    "features": [
+        {
+            "geometry": {
+                "coordinates": [
+                    0.0000898312,
+                    0.0000898312
+                ],
+                "type": "Point"
+            },
+            "properties": {
+                "geocoding": {
+                    "city": "Bobtown",
+                    "id": "bobette",
+                    "label": "bobette's label",
+                    "name": "bobette",
+                    "poi_types": [
+                        {
+                            "id": "poi_type:amenity:bicycle_rental",
+                            "name": "Station VLS"
+                        }
+                    ],
+                    "postcode": "02100",
+                    "type": "poi",
+                    "citycode": "02000",
+                    "properties": [
+                        {"key": "amenity", "value": "bicycle_rental"},
+                        {"key": "capacity", "value": "20"},
+                        {"key": "ref", "value": "12"}
+                    ],
+                    "administrative_regions": [
+                        {
+                            "id": "admin:fr:02000",
+                            "insee": "02000",
+                            "level": 8,
+                            "label": "Bobtown (02000)",
+                            "zip_codes": ["02000"],
+                            "weight": 1,
+                            "coord": {
+                                "lat": 48.8396154,
+                                "lon": 2.3957517
+                            }
+                        }
+                    ],
+                    }
+            },
+            "type": "Feature"
+        }
+    ]
+}
+
+
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF}, global_config={'activate_bragi': True})
 class TestBragiAutocomplete(AbstractTestFixture):
 
@@ -285,6 +338,25 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert response[1] == 404
             assert response[0]["error"]["id"] == 'unknown_object'
             assert response[0]["error"]["message"] == "The object AAA doesn't exist"
+
+    def test_poi_without_address(self):
+        url = 'https://host_of_bragi'
+        params = {'pt_dataset': 'main_routing_test'}
+
+        url += "/features/1234?{}".format(urlencode(params, doseq=True))
+
+        mock_requests = MockRequests({
+            url: (BRAGI_MOCK_POI_WITHOUT_ADDRESS, 200)
+        })
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query_region("places/1234?&pt_dataset=main_routing_test")
+
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['embedded_type'] == 'poi'
+            assert r[0]['poi']['name'] == 'bobette'
+            assert r[0]['poi']['label'] == "bobette's label"
+            assert not r[0]['poi'].get('address')
 
 
 @dataset({"main_routing_test": {}}, global_config={'activate_bragi': True})
