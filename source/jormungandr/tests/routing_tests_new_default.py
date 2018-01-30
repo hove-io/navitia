@@ -249,23 +249,27 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, JourneyMinBikeMinCar, N
         assert "to_delete" in response["journeys"][0]["tags"]
 
     def test_first_ridesharing_section_mode_forbidden_no_config(self):
+        def exec_and_check(query):
+            response, status = self.query_region(query, check=False)
+            check_best(response)
+            assert status == 400
+            assert "message" in response
+            assert "ridesharing" in response['message']
+
         query = "journeys?from=0.0000898312;0.0000898312&datetime=20120614T075500&"\
                 "first_section_mode[]={first}&last_section_mode[]={last}"\
                 .format(first='ridesharing', last='walking')
-        response, status = self.query_region(query, check=False, display=True)
-        check_best(response)
-        assert status == 400
-        assert "message" in response
-        assert "ridesharing" in response["message"]
+        exec_and_check(query)
 
-    #    query = "isochrones?from=0.0000898312;0.0000898312&datetime=20120614T075500&"\
-    #            "first_section_mode[]={first}&last_section_mode[]={last}&max_duration=2"\
-    #            .format(first='ridesharing', last='walking')
-    #    response, status = self.query_region(query, check=False)
-    #    check_best(response)
-    #    assert status == 500
-    #    assert "error" in response
-    #    assert "ridesharing" in response["error"]["message"]
+        query = "isochrones?from=0.0000898312;0.0000898312&datetime=20120614T075500&"\
+                "first_section_mode[]={first}&last_section_mode[]={last}&max_duration=2"\
+                .format(first='ridesharing', last='walking')
+        exec_and_check(query)
+
+        query = "heat_maps?from=0.0000898312;0.0000898312&datetime=20120614T075500&"\
+                "first_section_mode[]={first}&last_section_mode[]={last}&max_duration=2"\
+                .format(first='ridesharing', last='walking')
+        exec_and_check(query)
 
 
 @config({"scenario": "new_default",
@@ -328,36 +332,40 @@ class TestJourneysRidesharingNewDefault(JourneyCommon,  DirectPath, JourneyMinBi
         assert rs_journey["durations"]["total"] == rs_journey["duration"]
         assert 'to_delete' in rs_journey["tags"] # no response provided for ridesharing: to_delete
         rs_section = rs_journey["sections"][0]
-        assert rs_section["departure_date_time"] == "20120614T075500"
-        assert rs_section["arrival_date_time"] == "20120614T075513"
+        assert rs_section["departure_date_time"] == rs_journey["departure_date_time"]
+        assert rs_section["arrival_date_time"] == rs_journey["arrival_date_time"]
         assert rs_section["duration"] == rs_journey["duration"]
         assert rs_section["mode"] == "ridesharing"
         assert rs_section["type"] == "street_network"
         assert rs_section["id"] # check that id is provided
-        assert rs_section["geojson"]["properties"][0]["length"] == 94
+        assert rs_section["geojson"]["properties"][0]["length"] == rs_journey["distances"]["ridesharing"]
         assert (rs_section["geojson"]["coordinates"][0][0] - float(rs_section["from"]["address"]["coord"]["lon"])) < 0.000001
         assert (rs_section["geojson"]["coordinates"][0][1] - float(rs_section["from"]["address"]["coord"]["lat"])) < 0.000001
         assert (rs_section["geojson"]["coordinates"][1][0] - float(rs_section["to"]["address"]["coord"]["lon"])) < 0.000001
         assert (rs_section["geojson"]["coordinates"][1][1] - float(rs_section["to"]["address"]["coord"]["lat"])) < 0.000001
 
     def test_first_ridesharing_section_mode_forbidden(self):
+        def exec_and_check(query):
+            response, status = self.query_region(query, check=False)
+            check_best(response)
+            assert status == 400
+            assert "message" in response
+            assert "ridesharing" in response['message']
+
         query = "journeys?from=0.0000898312;0.0000898312&datetime=20120614T075500&"\
                 "first_section_mode[]={first}&last_section_mode[]={last}"\
                 .format(first='ridesharing', last='walking')
-        response, status = self.query_region(query, check=False)
-        check_best(response)
-        assert status == 400
-        assert "message" in response
-        assert "ridesharing" in response['message']
+        exec_and_check(query)
 
-    #    query = "isochrones?from=0.0000898312;0.0000898312&datetime=20120614T075500&"\
-    #            "first_section_mode[]={first}&last_section_mode[]={last}&max_duration=2"\
-    #            .format(first='ridesharing', last='walking')
-    #    response, status = self.query_region(query, check=False)
-    #    check_best(response)
-    #    assert status == 500
-    #    assert "error" in response
-    #    assert "ridesharing" in response["error"]["message"]
+        query = "isochrones?from=0.0000898312;0.0000898312&datetime=20120614T075500&"\
+                "first_section_mode[]={first}&last_section_mode[]={last}&max_duration=2"\
+                .format(first='ridesharing', last='walking')
+        exec_and_check(query)
+
+        query = "heat_maps?from=0.0000898312;0.0000898312&datetime=20120614T075500&"\
+                "first_section_mode[]={first}&last_section_mode[]={last}&max_duration=2"\
+                .format(first='ridesharing', last='walking')
+        exec_and_check(query)
 
 
 @config({"scenario": "new_default"})

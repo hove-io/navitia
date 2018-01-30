@@ -41,7 +41,6 @@ from jormungandr.scenarios.journey_filter import to_be_deleted
 
 
 def decorate_journeys(response, instance, request):
-    tickets = []
     #TODO: disable same journey schedule link for ridesharing journey?
     for journey in response.journeys:
         if 'ridesharing' not in journey.tags or to_be_deleted(journey):
@@ -51,11 +50,12 @@ def decorate_journeys(response, instance, request):
                 section.additional_informations.append(response_pb2.HAS_DATETIME_ESTIMATED)
                 period_extremity = None
                 if len(journey.sections) == 1:#direct path, we use the user input
-                     period_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
+                    period_extremity = PeriodExtremity(request['datetime'], request['clockwise'])
                 elif i == 0: #ridesharing on first section we want to arrive before the start of the pt
                     period_extremity = PeriodExtremity(section.end_date_time, False)
                 else: #ridesharing at the end, we search for solution starting after the end of the pt sections
                     period_extremity = PeriodExtremity(section.begin_date_time, True)
+
                 pb_rsjs, pb_tickets = build_ridesharing_journeys(section.origin, section.destination, period_extremity, instance)
                 if not pb_rsjs:
                     journey_filter.mark_as_dead(journey, 'no_matching_ridesharing_found')
