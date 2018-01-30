@@ -184,7 +184,7 @@ BOOST_AUTO_TEST_CASE(fill_pb_object_poi_address) {
 	poi_type->name = "VLS";
 
 	navitia::type::Data d;
-	d.geo_ref->poitypes.push_back(poi_type.get());
+	d.geo_ref->poitypes.push_back(poi_type.release());
 
 	auto pb = std::make_unique<pbnavitia::PtObject>();
 	navitia::PbCreator pb_creator(&d, pt::not_a_date_time, null_time_period);
@@ -192,7 +192,6 @@ BOOST_AUTO_TEST_CASE(fill_pb_object_poi_address) {
 
 	BOOST_CHECK_EQUAL(pb->poi().address().label(), std::to_string(poi->address_number) + " " + poi->address_name);
 }
-
 
 BOOST_AUTO_TEST_CASE(name_formater_stop_point) {
     navitia::type::Data d;
