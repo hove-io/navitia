@@ -355,7 +355,6 @@ class TestHere(NewDefaultScenarioAbstractTestFixture):
         assert feeds[0].get('license') == 'Licence Ouverte / Open License'
         assert feeds[0].get('url') == 'route.cit.api.here.com'
 
-        assert len(feeds) == 2
         assert feeds[1].get('id') == 'builder'
         assert feeds[1].get('name') == 'routing api data'
         assert feeds[1].get('license') == 'ODBL'
