@@ -51,6 +51,89 @@ The different journey types are:
 |non_pt_bike|A journey without public transport, only biking|
 |non_pt_bss|A journey without public transport, only bike sharing|
 
+Ridesharing
+-----------
+
+``` shell
+simplified output
+
+{
+    "journeys": [
+        {
+            "requested_date_time": "20180101T070000",
+            "sections": [
+                {
+                    "type": "street_network",
+                    "mode": "ridesharing",
+                    "from": "A",
+                    "to": "B",
+                    "departure_date_time": "20180101T070000",
+                    "arrival_date_time": "20180101T090000",
+                    "ridesharing_journeys": [
+                        {
+                            "sections":[
+                                {
+                                    "from": "A",
+                                    "to": "A1",
+                                    "departure_date_time": "20180101T063000",
+                                    "arrival_date_time": "20180101T063000",
+                                    "type": "crow_fly",
+                                    "mode": "walking"
+                                },
+                                {
+                                    "from": "A1",
+                                    "to": "A2",
+                                    "departure_date_time": "20180101T063000",
+                                    "arrival_date_time": "20180101T093000",
+                                    "type": "ridesharing"
+                                },
+                                {
+                                    "from": "A2",
+                                    "to": "B",
+                                    "departure_date_time": "20180101T093000",
+                                    "arrival_date_time": "20180101T093000",
+                                    "type": "crow_fly",
+                                    "mode": "walking"
+                                }
+                            ]
+                        },
+                        {
+                            ...
+                        }
+                    ]
+                },
+                {
+                    "from": "B",
+                    "to": "C",
+                    "departure_date_time": "20180101T090000",
+                    "arrival_date_time": "20180101T100000",
+                    "type": "public_transport"
+                }
+            ]
+        },
+        {
+            ...
+        }
+    ]
+}
+```
+
+When requesting a journey, it is possible to request for a ridesharing fallback,
+using `first_section_mode` or `last_section_mode`.
+This may also be used to obtain a direct ridesharing journey.
+
+This returns a journey only when one or multiple ridesharing ads are found, matching the request.
+
+<aside class="warning">
+    This feature requires a specific configuration and an agreement from a ridesharing service provider.
+    Therefore this service is available only for few clients.
+</aside>
+
+The journey from Navitia will then contain a section using the ridesharing mode.
+Inside this section an attribute ridesharing_journeys contains one or multiple journeys
+depicting specifically the ridesharing ads that could match the above section
+and that could be proposed to the user.
+
 On demand transportation
 ------------------------
 
