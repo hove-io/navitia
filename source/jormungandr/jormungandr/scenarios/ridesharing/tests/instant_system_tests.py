@@ -257,7 +257,7 @@ def instant_system_test():
         assert ridesharing_journeys[0].price == 170
         assert ridesharing_journeys[0].currency == 'EUR'
 
-        assert ridesharing_journeys[0].total_seats == 4
+        assert ridesharing_journeys[0].total_seats is None
         assert ridesharing_journeys[0].available_seats == 4
 
         assert ridesharing_journeys[1].metadata.network == 'dummyNetwork'
@@ -288,5 +288,5 @@ def instant_system_test():
         assert ridesharing_journeys[1].price == 0
         assert ridesharing_journeys[1].currency == 'EUR'
 
-        assert ridesharing_journeys[1].total_seats == 4
+        assert ridesharing_journeys[1].total_seats is None
         assert ridesharing_journeys[1].available_seats == 4

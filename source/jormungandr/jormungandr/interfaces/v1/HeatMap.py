@@ -83,6 +83,8 @@ class HeatMap(JourneyCommon):
             abort(400, message="you should provide a 'max_duration' argument")
         if args['destination'] and args['origin']:
             abort(400, message="you cannot provide a 'from' and a 'to' argument")
+        if 'ridesharing' in args['origin_mode'] or 'ridesharing' in args['destination_mode']:
+            abort(400, message='ridesharing isn\'t available on heatmaps')
 
         set_request_timezone(self.region)
         original_datetime = args['original_datetime']
