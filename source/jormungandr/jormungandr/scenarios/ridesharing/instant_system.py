@@ -187,7 +187,7 @@ class InstantSystem(AbstractRidesharingService):
         resp = self._call_service(params=params)
         if resp:
             r = self._make_response(resp.json())
-            self.logger.debug('%s ridehsaring ads found', len(r))
+            self.logger.debug('%s ridesharing ads found', len(r))
             return r
-        self.logger.debug('0 ridehsaring ads found')
+        self.logger.debug('0 ridesharing ads found')
         return []

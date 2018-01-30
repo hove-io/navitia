@@ -56,7 +56,8 @@ def decorate_journeys(response, instance, request):
                 else: #ridesharing at the end, we search for solution starting after the end of the pt sections
                     period_extremity = PeriodExtremity(section.begin_date_time, True)
 
-                pb_rsjs, pb_tickets = build_ridesharing_journeys(section.origin, section.destination, period_extremity, instance)
+                pb_rsjs, pb_tickets = build_ridesharing_journeys(section.origin, section.destination,
+                                                                 period_extremity, instance)
                 if not pb_rsjs:
                     journey_filter.mark_as_dead(journey, 'no_matching_ridesharing_found')
                 else:
