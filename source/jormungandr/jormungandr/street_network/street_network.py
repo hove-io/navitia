@@ -79,6 +79,10 @@ class AbstractStreetNetworkService(ABC):
         """
         pass
 
+    @abc.abstractmethod
+    def feed_publisher(self):
+        pass
+
     def record_external_failure(self, message):
         utils.record_external_failure(message, 'streetnetwork', self.sn_system_id)
 
@@ -89,6 +93,15 @@ class AbstractStreetNetworkService(ABC):
         params = {'streetnetwork_id': repr(self.sn_system_id), 'status': status}
         params.update(kwargs)
         new_relic.record_custom_event('streetnetwork', params)
+
+    def _add_feed_publisher(self, feed):
+        sr_feed = self.feed_publisher()
+        if sr_feed:
+            feed = feed.feed_publishers.add()
+            feed.id = sr_feed.id
+            feed.name = sr_feed.name
+            feed.license = sr_feed.license
+            feed.url = sr_feed.url
 
 
 class StreetNetwork(object):

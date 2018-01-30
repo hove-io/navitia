@@ -192,6 +192,8 @@ class TestValhallaDirectPath(AbstractTestFixture):
         assert len(response['journeys'][2]['sections']) == 1
         assert response['journeys'][2]['duration'] == 20
 
+        assert not response.get('feed_publishers')
+
 
 @dataset({
     'main_routing_test': {
