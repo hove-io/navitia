@@ -66,6 +66,12 @@ class PbStrField(PbField):
 
     to_value = staticmethod(six.text_type)
 
+class PbIntField(PbField):
+    def __init__(self, *args, **kwargs):
+        super(PbIntField, self).__init__(schema_type=int, *args, **kwargs)
+
+    to_value = staticmethod(int)
+
 
 class NestedPbField(PbField):
     """
