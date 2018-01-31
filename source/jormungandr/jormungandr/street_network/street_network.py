@@ -60,7 +60,15 @@ class AbstractStreetNetworkService(ABC):
         pass
 
     @abc.abstractmethod
-    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
+    def direct_path_with_fp(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
+        '''
+        :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
+        :param direct_path_type : direct_path need to be treated differently regarding to the used connector
+        '''
+        pass
+
+    @abc.abstractmethod
+    def _direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
         '''
         :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
         :param direct_path_type : direct_path need to be treated differently regarding to the used connector
@@ -94,10 +102,10 @@ class AbstractStreetNetworkService(ABC):
         params.update(kwargs)
         new_relic.record_custom_event('streetnetwork', params)
 
-    def _add_feed_publisher(self, feed):
+    def _add_feed_publisher(self, resp):
         sr_feed = self.feed_publisher()
         if sr_feed:
-            feed = feed.feed_publishers.add()
+            feed = resp.feed_publishers.add()
             feed.id = sr_feed.id
             feed.name = sr_feed.name
             feed.license = sr_feed.license

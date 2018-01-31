@@ -223,7 +223,13 @@ class Here(AbstractStreetNetworkService):
 
         return params
 
-    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
+    def direct_path_with_fp(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
+        resp = self._direct_path(mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type)
+
+        self._add_feed_publisher(resp)
+        return resp
+
+    def _direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
         params = self.get_direct_path_params(pt_object_origin, pt_object_destination, mode,
                                              fallback_extremity)
         r = self._call_here(self.routing_service_url, params=params)
@@ -239,12 +245,8 @@ class Here(AbstractStreetNetworkService):
 
         self.log.debug('here response = {}'.format(json))
 
-        resp = self._read_response(json, pt_object_origin, pt_object_destination, mode,
+        return self._read_response(json, pt_object_origin, pt_object_destination, mode,
                                    fallback_extremity, request)
-
-        self._add_feed_publisher(resp)
-        return resp
-
 
     @classmethod
     def _get_matrix(cls, json_response, origins, destinations):

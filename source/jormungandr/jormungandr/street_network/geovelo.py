@@ -262,7 +262,13 @@ class Geovelo(AbstractStreetNetworkService):
 
         return resp
 
-    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
+    def direct_path_with_fp(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
+        resp = self._direct_path(mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type)
+
+        self._add_feed_publisher(resp)
+        return resp
+
+    def _direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
         if mode != "bike":
             logging.getLogger(__name__).error('Geovelo, mode {} not implemented'.format(mode))
             raise InvalidArguments('Geovelo, mode {} not implemented'.format(mode))
@@ -283,10 +289,7 @@ class Geovelo(AbstractStreetNetworkService):
             logging.getLogger(__name__).error('Geovelo nb response != nb requested')
             raise UnableToParse('Geovelo nb response != nb requested')
 
-        resp = self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, fallback_extremity)
-
-        self._add_feed_publisher(resp)
-        return resp
+        return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, fallback_extremity)
 
     def make_path_key(self, mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity):
         """

@@ -342,12 +342,12 @@ def direct_path_geovelo_test():
     with requests_mock.Mocker() as req:
         req.post('http://bob.com/api/v2/computedroutes?instructions=true&elevations=false&geometry=true'
                  '&single_result=true&bike_stations=false&objects_as_ids=true&', json=resp_json)
-        geovelo_resp = geovelo.direct_path('bike',
-                                           origin,
-                                           destination,
-                                           fallback_extremity,
-                                           None,
-                                           None)
+        geovelo_resp = geovelo.direct_path_with_fp('bike',
+                                                   origin,
+                                                   destination,
+                                                   fallback_extremity,
+                                                   None,
+                                                   None)
         assert geovelo_resp.status_code == 200
         assert geovelo_resp.response_type == response_pb2.ITINERARY_FOUND
         assert len(geovelo_resp.journeys) == 1
@@ -381,12 +381,12 @@ def direct_path_geovelo_zero_test():
     with requests_mock.Mocker() as req:
         req.post('http://bob.com/api/v2/computedroutes?instructions=true&elevations=false&geometry=true'
                  '&single_result=true&bike_stations=false&objects_as_ids=true&', json=resp_json)
-        geovelo_resp = geovelo.direct_path('bike',
-                                           origin,
-                                           destination,
-                                           fallback_extremity,
-                                           None,
-                                           None)
+        geovelo_resp = geovelo.direct_path_with_fp('bike',
+                                                   origin,
+                                                   destination,
+                                                   fallback_extremity,
+                                                   None,
+                                                   None)
         assert geovelo_resp.status_code == 200
         assert geovelo_resp.response_type == response_pb2.ITINERARY_FOUND
         assert len(geovelo_resp.journeys) == 1
