@@ -48,14 +48,17 @@ if rest_api.app.config.get('PATCH_WITH_GEVENT_SOCKET', False):
     logger.info("Attention! You'are patching requests.packages.urllib3.connection.connection.socket with gevent.socket,"
                 "parallel http calling by requests is activated")
     # This line replaces the gevent.monkey.patch_socket()
-    # the reason why we don't use patch_socket() at the very beginning of jormungandr is
-    # that it caused a mysterious performance regression for certain requests, thus we patch
-    # only at places where asynchronisation is needed
     # Note that "monkey_patch" only patches on http request because we want asynchronisation on that,
     # but we don't want that for reddis because it may cause performance regression
     import requests
     import gevent.socket
     requests.packages.urllib3.connection.connection.socket = gevent.socket
+
+if rest_api.app.config.get('PATCH_GEVENT_SSL', False):
+    logger = logging.getLogger('jormungandr.patch_gevent_ssl')
+    logger.info("Attention! You'are patching gevent SSL to use cooperative sockets")
+    from gevent import monkey
+    monkey.patch_ssl()
 
 @rest_api.representation("text/jsonp")
 @rest_api.representation("application/jsonp")
