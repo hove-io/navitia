@@ -51,8 +51,8 @@ The different journey types are:
 |non_pt_bike|A journey without public transport, only biking|
 |non_pt_bss|A journey without public transport, only bike sharing|
 
-Ridesharing
------------
+<a name="ridesharing-stuff"></a>Ridesharing
+-------------------------------------------
 
 ``` shell
 simplified output
