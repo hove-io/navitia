@@ -257,10 +257,24 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         assert pt_section.get('to').get('id') == 'stop_point:stopA'
         assert pt_section.get('duration') == 2
 
-        #tird section is of walking
+        #third section is of walking
         walking_section = sections[2]
         assert walking_section.get('mode') == 'walking'
         assert walking_section.get('type') == 'street_network'
         assert walking_section.get('from').get('id') == 'stop_point:stopA'
         assert walking_section.get('to').get('id') == '0.00188646;0.00071865'
         assert walking_section.get('duration') == 80
+
+        #with the use of &max_ridesharing_duration_to_pt=0 we have only direct ridesharing
+        q = journey_basic_query + \
+            "&last_section_mode[]=walking" + \
+            "&first_section_mode[]=ridesharing" + \
+            "&ridesharing_speed=2.5" + \
+            "&max_car_no_park_duration_to_pt=5" + \
+            "&max_ridesharing_duration_to_pt=0"
+        response = self.query_region(q)
+        self.is_valid_journey_response(response, q, check_journey_links=False)
+        journeys = get_not_null(response, 'journeys')
+        assert len(journeys) == 1
+        assert 'ridesharing' in journeys[0].get('tags')
+        assert journeys[0].get('durations').get('ridesharing') == 37
