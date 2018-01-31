@@ -214,8 +214,7 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         q = journey_basic_query + \
             "&last_section_mode[]=walking" + \
             "&first_section_mode[]=ridesharing" + \
-            "&ridesharing_speed=2.5" + \
-            "&debug=true"
+            "&ridesharing_speed=2.5"
         response = self.query_region(q)
         self.is_valid_journey_response(response, q, check_journey_links=False)
 
