@@ -44,9 +44,9 @@ from jormungandr.authentication import get_user, get_token, get_app_name, get_us
 import six
 
 if rest_api.app.config.get('PATCH_WITH_GEVENT_SOCKET', False):
-    logger = logging.getLogger('jormungandr.patch_gevent_socket')
+    logger = logging.getLogger('jormungandr.patch_gevent')
     logger.info("Attention! You'are patching requests.packages.urllib3.connection.connection.socket with gevent.socket,"
-                "parallel http calling by requests is activated")
+                "parallel http/https calling by requests is activated")
     # This line replaces the gevent.monkey.patch_socket()
     # Note that "monkey_patch" only patches on http request because we want asynchronisation on that,
     # but we don't want that for reddis because it may cause performance regression
@@ -54,9 +54,6 @@ if rest_api.app.config.get('PATCH_WITH_GEVENT_SOCKET', False):
     import gevent.socket
     requests.packages.urllib3.connection.connection.socket = gevent.socket
 
-if rest_api.app.config.get('PATCH_GEVENT_SSL', False):
-    logger = logging.getLogger('jormungandr.patch_gevent_ssl')
-    logger.info("Attention! You'are patching gevent SSL to use cooperative sockets")
     from gevent import monkey
     monkey.patch_ssl()
 
