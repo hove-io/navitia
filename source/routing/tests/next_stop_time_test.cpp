@@ -2233,6 +2233,20 @@ BOOST_AUTO_TEST_CASE(next_stop_time_with_distant_bounds) {
     uint32_t dt;
 
     {
+        // A bound in the past give no results
+        DateTime dt_test = DateTimeUtils::set(0, sp1_departure - 1);
+        std::tie(st, dt) = next_st.earliest_stop_time(StopEvent::pick_up, jpp1, dt_test, nt::RTLevel::Base,
+                                                      nt::VehicleProperties(), false, DateTimeUtils::set(0, 0));
+        BOOST_CHECK_EQUAL(dt, DateTimeUtils::inf);
+        BOOST_REQUIRE(st == nullptr);
+
+        dt_test = DateTimeUtils::set(0, sp2_arrival - 1);
+        std::tie(st, dt) = next_st.earliest_stop_time(StopEvent::drop_off, jpp1, dt_test, nt::RTLevel::Base,
+                                                      nt::VehicleProperties(), false, DateTimeUtils::set(0, 0));
+        BOOST_CHECK_EQUAL(dt, DateTimeUtils::inf);
+        BOOST_REQUIRE(st == nullptr);
+    }
+    {
         // By default we only look for today and tomorrow so no results
         DateTime dt_test = DateTimeUtils::set(0, sp1_departure + 1);
         std::tie(st, dt) = next_st.earliest_stop_time(StopEvent::pick_up, jpp1, dt_test,

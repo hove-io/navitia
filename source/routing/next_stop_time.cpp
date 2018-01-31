@@ -123,20 +123,10 @@ next_valid_discrete(const StopEvent stop_event,
         const type::VehicleProperties& vehicle_props,
         const DateTime bound) {
     auto date = DateTimeUtils::date(dt);
-    for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_after(jpp_idx, dt, stop_event)) {
-        assert(dataRaptor.jp_container.get_jpp(*st) == jpp_idx);
-        const uint32_t hour = (stop_event == StopEvent::pick_up) ? st->boarding_time : st->alighting_time;
-        const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(hour));
-        if (bound < cur_dt) { return {nullptr, DateTimeUtils::inf}; }
-        if (is_valid(st, date, true, rt_level, vehicle_props)) {
-            return {st, cur_dt};
-        }
-    }
+    // On the first iteration we only check the stop_times after dt, we init the range with this
+    auto st_range = dataRaptor.next_stop_time_data.stop_time_range_after(jpp_idx, dt, stop_event);
 
-    const auto st_range = dataRaptor.next_stop_time_data.stop_time_range_forward(jpp_idx, stop_event);
-    //if none was found, we try again until we crossed the bound
-    while(DateTimeUtils::date(bound) > date) {
-        date++;
+    while(DateTimeUtils::date(bound) >= date) {
         for (const auto* st: st_range) {
             assert(dataRaptor.jp_container.get_jpp(*st) == jpp_idx);
             const uint32_t hour = (stop_event == StopEvent::pick_up) ? st->boarding_time : st->alighting_time;
@@ -146,6 +136,11 @@ next_valid_discrete(const StopEvent stop_event,
                 return {st, cur_dt};
             }
         }
+        // If this is the first day (first iteration) change the range to all the stop_times
+        if (date == DateTimeUtils::date(dt)) {
+            st_range = dataRaptor.next_stop_time_data.stop_time_range_forward(jpp_idx, stop_event);
+        }
+        date++;
     }
 
     // if nothing found, return max
@@ -156,7 +151,7 @@ static std::pair<const type::StopTime*, DateTime>
 next_valid_frequency(const StopEvent stop_event,
         const dataRAPTOR& dataRaptor,
         const JppIdx jpp_idx,
-        DateTime dt,
+        const DateTime dt,
         const type::RTLevel rt_level,
         const type::VehicleProperties &vehicle_props,
         const DateTime bound) {
@@ -165,8 +160,9 @@ next_valid_frequency(const StopEvent stop_event,
     const auto& jpp = dataRaptor.jp_container.get(jpp_idx);
     const auto& jp = dataRaptor.jp_container.get(jpp.jp_idx);
     std::pair<const type::StopTime*, DateTime> best = {nullptr, DateTimeUtils::inf};
+    auto base_dt = dt;
 
-    do {
+    while(best.first == nullptr && base_dt <= bound) {
         for (const auto& freq_vj: jp.freq_vjs) {
             const auto& st = freq_vj->stop_time_list[jpp.order];
 
@@ -174,13 +170,13 @@ next_valid_frequency(const StopEvent stop_event,
             if (stop_event == StopEvent::pick_up && ! st.pick_up_allowed()) { continue; }
             if (stop_event == StopEvent::drop_off && ! st.drop_off_allowed()) { continue; }
 
-            const auto next_dt = get_next_stop_time(stop_event, dt, *freq_vj, st, rt_level);
+            const auto next_dt = get_next_stop_time(stop_event, base_dt, *freq_vj, st, rt_level);
             if (next_dt < best.second && next_dt <= bound) {
                 best = {&st, next_dt};
             }
         }
-        dt = DateTimeUtils::set(DateTimeUtils::date(dt) + 1, 0);
-    } while(best.first == nullptr && dt < bound);
+        base_dt = DateTimeUtils::set(DateTimeUtils::date(base_dt) + 1, 0);
+    }
 
     return best;
 }
@@ -189,15 +185,16 @@ static std::pair<const type::StopTime*, DateTime>
 previous_valid_frequency(const StopEvent stop_event,
         const dataRAPTOR& dataRaptor,
         const JppIdx jpp_idx,
-        DateTime dt,
+        const DateTime dt,
         const type::RTLevel rt_level,
         const type::VehicleProperties &vehicle_props,
         const DateTime bound) {
     const auto& jpp = dataRaptor.jp_container.get(jpp_idx);
     const auto& jp = dataRaptor.jp_container.get(jpp.jp_idx);
     std::pair<const type::StopTime*, DateTime> best = {nullptr, DateTimeUtils::not_valid};
+    auto base_dt = dt;
 
-    do {
+    while (best.first == nullptr && base_dt >= bound) {
         for (const auto& freq_vj: jp.freq_vjs) {
             const auto& st = freq_vj->stop_time_list[jpp.order];
 
@@ -205,7 +202,7 @@ previous_valid_frequency(const StopEvent stop_event,
             if (stop_event == StopEvent::pick_up && ! st.pick_up_allowed()) { continue; }
             if (stop_event == StopEvent::drop_off && ! st.drop_off_allowed()) { continue; }
 
-            const auto previous_dt = get_previous_stop_time(stop_event, dt, *freq_vj, st, rt_level);
+            const auto previous_dt = get_previous_stop_time(stop_event, base_dt, *freq_vj, st, rt_level);
 
             if (previous_dt == DateTimeUtils::not_valid || previous_dt < bound) {
                 continue;
@@ -214,12 +211,12 @@ previous_valid_frequency(const StopEvent stop_event,
                 best = {&st, previous_dt};
             }
         }
-        auto date = DateTimeUtils::date(dt);
+        auto date = DateTimeUtils::date(base_dt);
         if (date == 0) {
             return best;
         }
-        dt = DateTimeUtils::set(date - 1, DateTimeUtils::SECONDS_PER_DAY - 1);
-    } while(best.first == nullptr && dt > bound);
+        base_dt = DateTimeUtils::set(date - 1, DateTimeUtils::SECONDS_PER_DAY - 1);
+    }
 
     return best;
 }
@@ -233,24 +230,10 @@ previous_valid_discrete(const StopEvent stop_event,
         const type::VehicleProperties& vehicle_props,
         const DateTime bound) {
     auto date = DateTimeUtils::date(dt);
-    for (const auto* st: dataRaptor.next_stop_time_data.stop_time_range_before(jpp_idx, dt, stop_event)) {
-        assert(dataRaptor.jp_container.get_jpp(*st) == jpp_idx);
-        const uint32_t hour = (stop_event == StopEvent::pick_up) ? st->boarding_time : st->alighting_time;
-        const DateTime cur_dt = DateTimeUtils::set(date, DateTimeUtils::hour(hour));
-        if (bound > cur_dt) { return {nullptr, DateTimeUtils::not_valid}; }
-        if (is_valid(st, date, false, rt_level, vehicle_props)) {
-            return {st, cur_dt};
-        }
-    }
+    // Init the range with stop_times before dt
+    auto st_range = dataRaptor.next_stop_time_data.stop_time_range_before(jpp_idx, dt, stop_event);
 
-    if (date == 0) {
-        return {nullptr, DateTimeUtils::not_valid};
-    }
-
-    const auto st_range = dataRaptor.next_stop_time_data.stop_time_range_backward(jpp_idx, stop_event);
-    //if none was found, we try again until we crossed the bound
-    while(DateTimeUtils::date(bound) < date) {
-        date--;
+    while(DateTimeUtils::date(bound) <= date) {
         for (const auto *st: st_range) {
             assert(dataRaptor.jp_container.get_jpp(*st) == jpp_idx);
             const uint32_t hour = (stop_event == StopEvent::pick_up) ? st->boarding_time : st->alighting_time;
@@ -263,6 +246,11 @@ previous_valid_discrete(const StopEvent stop_event,
         if (date == 0) {
             return {nullptr, DateTimeUtils::not_valid};
         }
+        // If this is the first iteration change the range to all the stop_times
+        if(DateTimeUtils::date(dt) == date) {
+            st_range = dataRaptor.next_stop_time_data.stop_time_range_backward(jpp_idx, stop_event);
+        }
+        date--;
     }
 
     return {nullptr, DateTimeUtils::not_valid};
@@ -277,7 +265,8 @@ NextStopTime::earliest_stop_time(const StopEvent stop_event,
         const bool check_freq,
         const boost::optional<DateTime>& bound) const
 {
-    DateTime next_dep_bound = bound ? *bound : DateTimeUtils::set(DateTimeUtils::date(dt) + 2, 0);
+    // The default bound is the end of next day
+    DateTime next_dep_bound = bound ? *bound : DateTimeUtils::set(DateTimeUtils::date(dt) + 2, 0) - 1;
     // Limit the next bound to the end production date
     next_dep_bound = std::min(next_dep_bound,
                               DateTimeUtils::set(data.meta->production_date.length().days(), 0));
@@ -306,7 +295,8 @@ NextStopTime::tardiest_stop_time(const StopEvent stop_event,
         const boost::optional<DateTime>& bound) const
 {
     auto cur_date = DateTimeUtils::date(dt);
-    const DateTime prev_dep_bound = bound ? *bound : (cur_date < 2 ? 0 : DateTimeUtils::set(cur_date - 2, 0));
+    // Default bound is the previous day at midnight
+    const DateTime prev_dep_bound = bound ? *bound : (cur_date < 2 ? 0 : DateTimeUtils::set(cur_date - 1, 0));
     const auto first_discrete_st_pair = previous_valid_discrete(stop_event, *data.dataRaptor, jpp_idx, dt,
                                                                 rt_level, vehicle_props, prev_dep_bound);
 
@@ -531,7 +521,7 @@ inline static bool within(u_int32_t val, std::pair<u_int32_t, u_int32_t> bound) 
 * Note: If hour in [0, end] we have to check the previous day's validity pattern
 **/
 DateTime get_next_stop_time(const StopEvent stop_event,
-        DateTime dt,
+        const DateTime dt,
         const type::FrequencyVehicleJourney& freq_vj,
         const type::StopTime& st,
         const type::RTLevel rt_level) {
@@ -591,7 +581,7 @@ DateTime get_next_stop_time(const StopEvent stop_event,
 }
 
 DateTime get_previous_stop_time(const StopEvent stop_event,
-        DateTime dt,
+        const DateTime dt,
         const type::FrequencyVehicleJourney& freq_vj,
         const type::StopTime& st,
         const type::RTLevel rt_level) {
