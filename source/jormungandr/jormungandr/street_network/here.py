@@ -223,12 +223,6 @@ class Here(AbstractStreetNetworkService):
 
         return params
 
-    def direct_path_with_fp(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
-        resp = self._direct_path(mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type)
-
-        self._add_feed_publisher(resp)
-        return resp
-
     def _direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
         params = self.get_direct_path_params(pt_object_origin, pt_object_destination, mode,
                                              fallback_extremity)
