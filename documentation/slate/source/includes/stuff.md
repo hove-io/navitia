@@ -120,7 +120,7 @@ simplified output
 
 When requesting a journey, it is possible to request for a ridesharing fallback,
 using `first_section_mode` or `last_section_mode`.
-This may also be used to obtain a direct ridesharing journey.
+This may also be used to obtain a direct ridesharing journey (using `max_ridesharing_duration_to_pt=0`).
 
 This returns a journey only when one or multiple ridesharing ads are found, matching the request.
 
