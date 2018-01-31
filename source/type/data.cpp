@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -91,6 +91,8 @@ bool Data::load(const std::string& filename,
                 const size_t raptor_cache_size) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     loading = true;
+
+    // Load .nav
     try {
         std::ifstream ifs(filename.c_str(), std::ios::in | std::ios::binary);
         ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
@@ -101,12 +103,7 @@ bool Data::load(const std::string& filename,
         LOG4CPLUS_INFO(logger, boost::format("stopTimes : %d nb foot path : %d Nombre de stop points : %d")
                        % pt_data->nb_stop_times()
                        % pt_data->stop_point_connections.size()
-                       % pt_data->stop_points.size()
-            );
-        if (chaos_database) {
-            fill_disruption_from_database(*chaos_database, *pt_data, *meta, contributors);
-        }
-        build_raptor(raptor_cache_size);
+                       % pt_data->stop_points.size());
     } catch(const wrong_version& ex) {
         LOG4CPLUS_ERROR(logger, "Cannot load data: " << ex.what());
         last_load = false;
@@ -117,6 +114,29 @@ bool Data::load(const std::string& filename,
         LOG4CPLUS_ERROR(logger, "Data loading failed");
         last_load = false;
 	}
+
+    // Load Disruption (optionnal)
+    if (chaos_database) {
+        try {
+            fill_disruption_from_database(*chaos_database, *pt_data, *meta, contributors);
+        } catch(const std::exception& ex) {
+            LOG4CPLUS_WARN(logger, "Data disruptions loading failed: " << ex.what());
+        } catch(...) {
+            LOG4CPLUS_WARN(logger, "Data disruptions loading failed");
+        }
+    }
+
+    // Build Raptor Data
+    try {
+        build_raptor(raptor_cache_size);
+    } catch(const std::exception& ex) {
+        LOG4CPLUS_ERROR(logger, "Build data Raptor failed: " << ex.what());
+        last_load = false;
+    } catch(...) {
+        LOG4CPLUS_ERROR(logger, "Build data Raptor failed");
+        last_load = false;
+    }
+
     loading = false;
     return this->last_load;
 }
@@ -311,7 +331,7 @@ void Data::complete(){
 
     build_grid_validity_pattern();
     //build_associated_calendar(); read from database
-    
+
     start = pt::microsec_clock::local_time();
     LOG4CPLUS_INFO(logger, "Building administrative regions");
     build_administrative_regions();
