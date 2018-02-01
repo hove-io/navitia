@@ -143,6 +143,10 @@ add_executable(comments_test tests/comments_test.cpp)
 target_link_libraries(comments_test ed data types georef autocomplete utils ${BOOST_DEV_LIBS} log4cplus pb_lib protobuf)
 ADD_BOOST_TEST(comments_test)
 
+add_executable(data_test tests/data_test.cpp)
+target_link_libraries(data_test ed data types utils ${BOOST_DEV_LIBS} log4cplus)
+ADD_BOOST_TEST(data_test)
+
 add_executable(code_container_test tests/code_container_test.cpp)
 target_link_libraries(code_container_test ${BOOST_DEV_LIBS})
 ADD_BOOST_TEST(code_container_test)
