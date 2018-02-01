@@ -39,6 +39,14 @@ import logging
 from jormungandr.scenarios.journey_filter import to_be_deleted
 
 
+def _make_pb_fp(fp):
+    pb_fp = response_pb2.FeedPublisher()
+    pb_fp.id = fp.id
+    pb_fp.name = fp.name
+    pb_fp.url = fp.url
+    pb_fp.license = fp.license
+    return pb_fp
+
 def decorate_journeys(response, instance, request):
     #TODO: disable same journey schedule link for ridesharing journey?
     for journey in response.journeys:
@@ -55,7 +63,7 @@ def decorate_journeys(response, instance, request):
                 else: #ridesharing at the end, we search for solution starting after the end of the pt sections
                     period_extremity = PeriodExtremity(section.begin_date_time, True)
 
-                pb_rsjs, pb_tickets = build_ridesharing_journeys(section.origin, section.destination,
+                pb_rsjs, pb_tickets, pb_fps = build_ridesharing_journeys(section.origin, section.destination,
                                                                  period_extremity, instance)
                 if not pb_rsjs:
                     journey_filter.mark_as_dead(journey, 'no_matching_ridesharing_found')
@@ -63,6 +71,7 @@ def decorate_journeys(response, instance, request):
                     section.ridesharing_journeys.extend(pb_rsjs)
                     response.tickets.extend(pb_tickets)
 
+                response.feed_publishers.extend((fp for fp in pb_fps if fp not in response.feed_publishers))
 
 
 
@@ -72,13 +81,16 @@ def build_ridesharing_journeys(from_pt_obj, to_pt_obj, period_extremity, instanc
     from_str="{},{}".format(from_coord.lat, from_coord.lon)
     to_str="{},{}".format(to_coord.lat, to_coord.lon)
     try:
-        rsjs = instance.get_ridesharing_journeys(from_str, to_str, period_extremity)
+        rsjs, fps = instance.get_ridesharing_journeys_with_feed_publishers(from_str, to_str, period_extremity)
     except: # TODO handle it smarter
         logging.exception('')
         rsjs = []
+        fps = []
 
     pb_rsjs = []
     pb_tickets = []
+    pb_feed_publihsers = [_make_pb_fp(fp) for fp in fps if fp is not None]
+
     for rsj in rsjs:
         pb_rsj = response_pb2.Journey()
         pb_rsj_pickup = instance.georef.place("{};{}".format(rsj.pickup_place.lon, rsj.pickup_place.lat))
@@ -189,4 +201,4 @@ def build_ridesharing_journeys(from_pt_obj, to_pt_obj, period_extremity, instanc
         pb_tickets.append(ticket)
         pb_rsjs.append(pb_rsj)
 
-    return pb_rsjs, pb_tickets
+    return pb_rsjs, pb_tickets, pb_feed_publihsers

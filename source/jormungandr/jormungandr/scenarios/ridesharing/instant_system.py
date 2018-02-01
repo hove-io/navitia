@@ -37,14 +37,17 @@ import requests as requests
 from jormungandr import utils
 from jormungandr import app
 import jormungandr.scenarios.ridesharing.ridesharing_journey as rsj
-from jormungandr.scenarios.ridesharing.ridesharing_service import AbstractRidesharingService
+from jormungandr.scenarios.ridesharing.ridesharing_service import AbstractRidesharingService, Rs_FeedPublisher
 from jormungandr.utils import decode_polyline
 from navitiacommon import type_pb2
+
+DEFAULT_INSTANT_SYSTEM_FEED_PUBLISHER = None
 
 
 class InstantSystem(AbstractRidesharingService):
 
-    def __init__(self, instance, service_url, api_key, network, rating_scale_min=None, rating_scale_max=None, timeout=2):
+    def __init__(self, instance, service_url, api_key, network, feed_publisher=DEFAULT_INSTANT_SYSTEM_FEED_PUBLISHER,
+                 rating_scale_min=None, rating_scale_max=None, timeout=2):
         self.instance = instance
         self.service_url = service_url
         self.api_key = api_key
@@ -53,6 +56,7 @@ class InstantSystem(AbstractRidesharingService):
         self.rating_scale_max = rating_scale_max
         self.system_id = 'Instant System'
         self.timeout = timeout
+        self.feed_publisher = None if feed_publisher is None else Rs_FeedPublisher(**feed_publisher)
 
         self.journey_metadata = rsj.MetaData(system_id=self.system_id,
                                              network=self.network,
@@ -190,7 +194,7 @@ class InstantSystem(AbstractRidesharingService):
 
         return ridesharing_journeys
 
-    def request_journeys(self, from_coord, to_coord, period_extremity, limit=None):
+    def _request_journeys(self, from_coord, to_coord, period_extremity, limit=None):
         """
 
         :param from_coord: lat,lon ex: '48.109377,-1.682103'
@@ -199,7 +203,6 @@ class InstantSystem(AbstractRidesharingService):
         :param limit: optional
         :return:
         """
-        # TODO: url and apiKey should be read from config
         # format of datetime: 2017-12-25T07:00:00Z
         datetime_str = datetime.datetime.fromtimestamp(period_extremity.datetime)\
             .strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -218,3 +221,6 @@ class InstantSystem(AbstractRidesharingService):
             return r
         self.logger.debug('0 ridesharing ads found')
         return []
+
+    def _get_feed_publisher(self):
+        return self.feed_publisher

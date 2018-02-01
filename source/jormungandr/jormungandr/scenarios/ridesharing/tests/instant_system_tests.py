@@ -33,6 +33,8 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from jormungandr.scenarios.ridesharing.instant_system import InstantSystem
 from jormungandr.scenarios.ridesharing.ridesharing_journey import Gender
+from jormungandr.scenarios.ridesharing.ridesharing_service import Ridesharing, Rs_FeedPublisher
+
 import mock
 from jormungandr.tests import utils_test
 from jormungandr import utils
@@ -168,13 +170,18 @@ fixed = regex.sub(r"\\\\", fake_response)
 
 mock_get = mock.MagicMock(return_value=utils_test.MockResponse(json.loads(fixed), 200, '{}'))
 
+DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER = {
+    'id': '42',
+    'name': '42',
+    'license': 'I dunno',
+    'url': 'http://w.tf'
+}
 
 # A hack class
 class DummyInstance:
     name = ''
 
 def get_ridesharing_service_test():
-    from jormungandr.scenarios.ridesharing.ridesharing_service import Ridesharing
     configs = [
         {
             "class": "jormungandr.scenarios.ridesharing.instant_system.InstantSystem",
@@ -183,7 +190,8 @@ def get_ridesharing_service_test():
                 "api_key": "toto key",
                 "network": "N",
                 "rating_scale_min": 0,
-                "rating_scale_max": 10
+                "rating_scale_max": 10,
+                "feed_publisher": DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER
             }
         },
         {
@@ -207,6 +215,7 @@ def get_ridesharing_service_test():
     assert services[0].system_id == 'Instant System'
     assert services[0].rating_scale_min == 0
     assert services[0].rating_scale_max == 10
+    assert services[0]._get_feed_publisher() == Rs_FeedPublisher(**DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER)
 
     assert services[1].service_url == 'tata'
     assert services[1].api_key == 'tata key'
@@ -214,19 +223,23 @@ def get_ridesharing_service_test():
     assert services[1].system_id == 'Instant System'
     assert services[1].rating_scale_min == 1
     assert services[1].rating_scale_max == 5
+    assert services[1]._get_feed_publisher() == None
 
 
 def instant_system_test():
     with mock.patch('requests.get', mock_get):
 
-        instant_system = InstantSystem(DummyInstance(), 'dummyUrl', 'dummyApiKey', 'dummyNetwork', 0, 10)
+        instant_system = InstantSystem(DummyInstance(), service_url='dummyUrl', api_key='dummyApiKey',
+                                       network='dummyNetwork', feed_publisher=DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER,
+                                       rating_scale_min=0, rating_scale_max=10)
         from_coord = '48.109377,-1.682103'
         to_coord = '48.020335,-1.743929'
 
         period_extremity = utils.PeriodExtremity(datetime=utils.str_to_time_stamp("20171225T060000"),
                                                  represents_start=True)
-        ridesharing_journeys = instant_system.request_journeys(from_coord=from_coord, to_coord=to_coord,
-                                                               period_extremity=period_extremity)
+        ridesharing_journeys, feed_publisher = \
+            instant_system.request_journeys_with_feed_publisher(from_coord=from_coord, to_coord=to_coord,
+                                                                period_extremity=period_extremity)
 
         assert len(ridesharing_journeys) == 2
         assert ridesharing_journeys[0].metadata.network == 'dummyNetwork'
@@ -296,3 +309,5 @@ def instant_system_test():
 
         assert ridesharing_journeys[1].total_seats is None
         assert ridesharing_journeys[1].available_seats == 4
+
+        assert feed_publisher == Rs_FeedPublisher(**DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER)
