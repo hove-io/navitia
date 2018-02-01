@@ -269,7 +269,6 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
             "&last_section_mode[]=walking" + \
             "&first_section_mode[]=ridesharing" + \
             "&ridesharing_speed=2.5" + \
-            "&max_car_no_park_duration_to_pt=5" + \
             "&max_ridesharing_duration_to_pt=0"
         response = self.query_region(q)
         self.is_valid_journey_response(response, q, check_journey_links=False)
