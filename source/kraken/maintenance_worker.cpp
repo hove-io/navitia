@@ -114,7 +114,13 @@ void MaintenanceWorker::load_realtime(){
 void MaintenanceWorker::operator()(){
     LOG4CPLUS_INFO(logger, "Starting background thread");
 
-    // Main working loop
+    try{
+        this->listen_rabbitmq();
+    }catch(const std::runtime_error& ex){
+        LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
+        data_manager.get_data()->is_connected_to_rabbitmq = false;
+        sleep(10);
+    }
     while(true){
         try{
             this->init_rabbitmq();
@@ -326,11 +332,24 @@ MaintenanceWorker::MaintenanceWorker(DataManager<type::Data>& data_manager, krak
         conf(conf),
         next_try_realtime_loading(pt::microsec_clock::universal_time()){
 
+    // Connect Rabbitmq
+    try{
+        this->init_rabbitmq();
+    }catch(const std::runtime_error& ex){
+        LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
+        data_manager.get_data()->is_connected_to_rabbitmq = false;
+    }
+
     // Load Data (.nav, disruption Bdd, build raptor data)
     this->load_data();
 
     // Load Realtime
-    this->load_realtime();
+    try{
+        this->load_realtime();
+    }catch(const std::runtime_error& ex){
+        LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
+        data_manager.get_data()->is_connected_to_rabbitmq = false;
+    }
 }
 
 } // namespace navitia

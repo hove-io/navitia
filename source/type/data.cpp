@@ -91,6 +91,7 @@ bool Data::load(const std::string& filename,
                 const size_t raptor_cache_size) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     loading = true;
+    disruption_is_loaded = false;
 
     // Load .nav
     try {
@@ -107,18 +108,22 @@ bool Data::load(const std::string& filename,
     } catch(const wrong_version& ex) {
         LOG4CPLUS_ERROR(logger, "Cannot load data: " << ex.what());
         last_load = false;
+        return last_load;
     } catch(const std::exception& ex) {
         LOG4CPLUS_ERROR(logger, "Data loading failed: " << ex.what());
         last_load = false;
+        return last_load;
     } catch(...) {
         LOG4CPLUS_ERROR(logger, "Data loading failed");
         last_load = false;
+        return last_load;
 	}
 
     // Load Disruption (optionnal)
     if (chaos_database) {
         try {
             fill_disruption_from_database(*chaos_database, *pt_data, *meta, contributors);
+            disruption_is_loaded = true;
         } catch(const std::exception& ex) {
             LOG4CPLUS_WARN(logger, "Data disruptions loading failed: " << ex.what());
         } catch(...) {
