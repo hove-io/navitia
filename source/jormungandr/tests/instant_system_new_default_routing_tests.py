@@ -179,6 +179,8 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         assert rsj_sections[0].get('mode') == 'walking'
 
         assert rsj_sections[1].get('type') == 'ridesharing'
+        assert rsj_sections[1].get('geojson').get('coordinates')[0] == [0.0000898312, 0.0000898312]
+        assert rsj_sections[1].get('geojson').get('coordinates')[2] == [-1.68635, 48.1101]
         rsj_info = rsj_sections[1].get('ridesharing_informations')
         assert rsj_info.get('driver').get('alias') == 'Jean P.'
         assert rsj_info.get('driver').get('gender') == 'male'
