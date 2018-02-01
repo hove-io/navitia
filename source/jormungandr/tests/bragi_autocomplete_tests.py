@@ -164,6 +164,111 @@ BRAGI_MOCK_POI_WITHOUT_ADDRESS = {
     ]
 }
 
+BRAGI_MOCK_STOP_AREA_WITH_MODES = {
+    "features": [
+        {
+            "geometry": {
+                "coordinates": [
+                    0.0000898312,
+                    0.0000898312
+                ],
+                "type": "Point"
+            },
+            "properties": {
+                "geocoding": {
+                    "city": "Bobtown",
+                    "id": "bobette",
+                    "label": "bobette's label",
+                    "name": "bobette",
+                    "poi_types": [
+                        {
+                            "id": "poi_type:amenity:bicycle_rental",
+                            "name": "Station VLS"
+                        }
+                    ],
+                    "postcode": "02100",
+                    "type": "public_transport:stop_area",
+                    "citycode": "02000",
+                    "properties": [],
+                    "commercial_modes": [
+                        {"id": "cm_id:Bus",
+                         "name": "cm_name:Bus"},
+                        {"id": "cm_id:Car",
+                         "name": "cm_name:Car"}
+                    ],
+                    "physical_modes": [
+                        {"id": "pm_id:Bus",
+                         "name": "pm_name:Bus"},
+                        {"id": "pm_id:Car",
+                         "name": "pm_name:Car"}
+                    ],
+                    "administrative_regions": [
+                        {
+                            "id": "admin:fr:02000",
+                            "insee": "02000",
+                            "level": 8,
+                            "label": "Bobtown (02000)",
+                            "zip_codes": ["02000"],
+                            "weight": 1,
+                            "coord": {
+                                "lat": 48.8396154,
+                                "lon": 2.3957517
+                            }
+                        }
+                    ],
+                    }
+            },
+            "type": "Feature"
+        }
+    ]
+}
+
+BRAGI_MOCK_STOP_AREA_WITHOUT_MODES = {
+    "features": [
+        {
+            "geometry": {
+                "coordinates": [
+                    0.0000898312,
+                    0.0000898312
+                ],
+                "type": "Point"
+            },
+            "properties": {
+                "geocoding": {
+                    "city": "Bobtown",
+                    "id": "bobette",
+                    "label": "bobette's label",
+                    "name": "bobette",
+                    "poi_types": [
+                        {
+                            "id": "poi_type:amenity:bicycle_rental",
+                            "name": "Station VLS"
+                        }
+                    ],
+                    "postcode": "02100",
+                    "type": "public_transport:stop_area",
+                    "citycode": "02000",
+                    "properties": [],
+                    "administrative_regions": [
+                        {
+                            "id": "admin:fr:02000",
+                            "insee": "02000",
+                            "level": 8,
+                            "label": "Bobtown (02000)",
+                            "zip_codes": ["02000"],
+                            "weight": 1,
+                            "coord": {
+                                "lat": 48.8396154,
+                                "lon": 2.3957517
+                            }
+                        }
+                    ],
+                    }
+            },
+            "type": "Feature"
+        }
+    ]
+}
 
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF}, global_config={'activate_bragi': True})
 class TestBragiAutocomplete(AbstractTestFixture):
@@ -357,6 +462,52 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['poi']['name'] == 'bobette'
             assert r[0]['poi']['label'] == "bobette's label"
             assert not r[0]['poi'].get('address')
+
+    def test_stop_area_with_modes(self):
+        url = 'https://host_of_bragi'
+        params = {'pt_dataset': 'main_routing_test'}
+
+        url += "/features/1234?{}".format(urlencode(params, doseq=True))
+
+        mock_requests = MockRequests({
+            url: (BRAGI_MOCK_STOP_AREA_WITH_MODES, 200)
+        })
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query_region("places/1234?&pt_dataset=main_routing_test")
+
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['embedded_type'] == 'stop_area'
+            assert r[0]['stop_area']['name'] == 'bobette'
+            assert len(r[0]['stop_area'].get('commercial_modes')) == 2
+            assert r[0]['stop_area'].get('commercial_modes')[0].get('id') == 'cm_id:Bus'
+            assert r[0]['stop_area'].get('commercial_modes')[0].get('name') == 'cm_name:Bus'
+            assert r[0]['stop_area'].get('commercial_modes')[1].get('id') == 'cm_id:Car'
+            assert r[0]['stop_area'].get('commercial_modes')[1].get('name') == 'cm_name:Car'
+
+            assert len(r[0]['stop_area'].get('physical_modes')) == 2
+            assert r[0]['stop_area'].get('physical_modes')[0].get('id') == 'pm_id:Bus'
+            assert r[0]['stop_area'].get('physical_modes')[0].get('name') == 'pm_name:Bus'
+            assert r[0]['stop_area'].get('physical_modes')[1].get('id') == 'pm_id:Car'
+            assert r[0]['stop_area'].get('physical_modes')[1].get('name') == 'pm_name:Car'
+
+    def test_stop_area_without_modes(self):
+        url = 'https://host_of_bragi'
+        params = {'pt_dataset': 'main_routing_test'}
+
+        url += "/features/1234?{}".format(urlencode(params, doseq=True))
+
+        mock_requests = MockRequests({
+            url: (BRAGI_MOCK_STOP_AREA_WITHOUT_MODES, 200)
+        })
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query_region("places/1234?&pt_dataset=main_routing_test")
+
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['embedded_type'] == 'stop_area'
+            assert len(r[0]['stop_area'].get('commercial_modes')) == 0
+            assert len(r[0]['stop_area'].get('physical_modes')) == 0
 
 
 @dataset({"main_routing_test": {}}, global_config={'activate_bragi': True})

@@ -107,6 +107,18 @@ def create_administrative_regions_field(geocoding):
     return response
 
 
+def create_modes_field(modes):
+    resp = []
+    if not modes:
+        return resp
+    for mode in modes:
+        resp.append({
+            "id": mode.get('id'),
+            "name": mode.get('name')
+        })
+    return resp
+
+
 def get_lon_lat(obj):
     if not obj or not obj.get('geometry') or not obj.get('geometry').get('coordinates'):
         return None, None
@@ -238,6 +250,8 @@ class StopAreaField(fields.Raw):
             "administrative_regions":
                 create_administrative_regions_field(geocoding) or create_admin_field(geocoding),
             "timezone": geocoding.get('timezone'),
+            "commercial_modes": create_modes_field(geocoding.get('commercial_modes')),
+            "physical_modes": create_modes_field(geocoding.get('physical_modes'))
         }
 
 geocode_admin = {

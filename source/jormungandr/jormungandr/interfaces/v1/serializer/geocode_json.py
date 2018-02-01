@@ -146,6 +146,11 @@ class PoiTypeSerializer(serpy.DictSerializer):
     name = serpy.StrField(display_none=True)
 
 
+class GenericSerializer(serpy.DictSerializer):
+    id = serpy.StrField(display_none=True)
+    name = serpy.StrField(display_none=True)
+
+
 class PoiSerializer(serpy.DictSerializer):
     id = NestedPropertyField(attr='properties.geocoding.id', display_none=True)
     coord = CoordField()
@@ -213,6 +218,24 @@ class StopAreaSerializer(serpy.DictSerializer):
     name = NestedPropertyField(attr='properties.geocoding.name', display_none=True)
     administrative_regions = AdministrativeRegionsSerializer()
     timezone = NestedPropertyField(attr='properties.geocoding.timezone')
+    commercial_modes = jsonschema.MethodField(display_none=True)
+    physical_modes = jsonschema.MethodField(display_none=True)
+
+    def fill_modes(self, modes):
+        resp = []
+        if not modes:
+            return resp
+        for mode in modes:
+            resp.append(GenericSerializer(mode).data)
+        return resp
+
+    def get_commercial_modes(self, obj):
+        modes = obj.get('properties', {}).get('geocoding', {}).get('commercial_modes', [])
+        return self.fill_modes(modes)
+
+    def get_physical_modes(self, obj):
+        modes = obj.get('properties', {}).get('geocoding', {}).get('physical_modes', [])
+        return self.fill_modes(modes)
 
 
 class GeocodeStopAreaSerializer(serpy.DictSerializer):
