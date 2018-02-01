@@ -128,7 +128,7 @@ This returns a journey only when one or multiple ridesharing ads are found, matc
 
 <aside class="warning">
     This feature requires a specific configuration and an agreement from a ridesharing service provider.
-    Therefore this service is available only for few clients.
+    Therefore this service is available only for a few clients.
 </aside>
 
 The journey from Navitia will then contain a section using the ridesharing mode.
