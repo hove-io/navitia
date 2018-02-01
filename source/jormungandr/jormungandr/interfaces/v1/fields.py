@@ -396,6 +396,8 @@ class SectionGeoJson(fields.Raw):
             coords = obj.street_network.coordinates
         elif obj.type == response_pb2.CROW_FLY and len(obj.shape) != 0:
             coords = obj.shape
+        elif obj.type == response_pb2.RIDESHARING and len(obj.shape) != 0:
+            coords = obj.shape
         elif obj.type == response_pb2.PUBLIC_TRANSPORT:
             coords = obj.shape
         elif obj.type == response_pb2.TRANSFER:

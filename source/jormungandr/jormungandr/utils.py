@@ -405,14 +405,14 @@ def record_external_failure(message, connector_type, connector_name):
     new_relic.record_custom_event('{}_external_failure'.format(connector_type), params)
 
 
-def decode_polyline(encoded):
+def decode_polyline(encoded, precision=6):
     '''
     Version of : https://developers.google.com/maps/documentation/utilities/polylinealgorithm
     But with improved precision
     See: https://mapzen.com/documentation/mobility/decoding/#python (valhalla)
          http://developers.geovelo.fr/#/documentation/compute (geovelo)
     '''
-    inv = 1.0 / 1e6
+    inv = 10**-precision
     decoded = []
     previous = [0, 0]
     i = 0
