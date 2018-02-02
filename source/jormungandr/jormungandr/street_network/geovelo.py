@@ -43,7 +43,7 @@ DEFAULT_GEOVELO_FEED_PUBLISHER = {
     'id': 'geovelo',
     'name': 'geovelo',
     'license': 'Private',
-    'url': 'route.cit.api.geovelo.com'
+    'url': 'http://about.geovelo.fr/cgu/'
 }
 
 

@@ -48,7 +48,7 @@ DEFAULT_HERE_FEED_PUBLISHER = {
     'id': 'here',
     'name': 'here',
     'license': 'Private',
-    'url': 'route.cit.api.here.com'
+    'url': 'https://developer.here.com/terms-and-conditions'
 }
 
 def _get_coord(pt_object):

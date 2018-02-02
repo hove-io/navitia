@@ -409,7 +409,7 @@ def direct_path_geovelo_zero_test():
         assert geovelo_resp.feed_publishers[0].id == 'geovelo'
         assert geovelo_resp.feed_publishers[0].name == 'geovelo'
         assert geovelo_resp.feed_publishers[0].license == 'Private'
-        assert geovelo_resp.feed_publishers[0].url == 'route.cit.api.geovelo.com'
+        assert geovelo_resp.feed_publishers[0].url == 'http://about.geovelo.fr/cgu/'
 
 
 def isochrone_geovelo_test():
