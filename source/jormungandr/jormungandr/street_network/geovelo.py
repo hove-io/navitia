@@ -42,7 +42,7 @@ from jormungandr.ptref import FeedPublisher
 DEFAULT_GEOVELO_FEED_PUBLISHER = {
     'id': 'geovelo',
     'name': 'geovelo',
-    'license': 'Licence Ouverte / Open License',
+    'license': 'Private',
     'url': 'route.cit.api.geovelo.com'
 }
 

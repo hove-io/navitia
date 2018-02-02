@@ -47,7 +47,7 @@ from jormungandr.ptref import FeedPublisher
 DEFAULT_HERE_FEED_PUBLISHER = {
     'id': 'here',
     'name': 'here',
-    'license': 'Licence Ouverte / Open License',
+    'license': 'Private',
     'url': 'route.cit.api.here.com'
 }
 

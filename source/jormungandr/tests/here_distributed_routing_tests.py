@@ -352,7 +352,7 @@ class TestHere(NewDefaultScenarioAbstractTestFixture):
         assert len(feeds) == 2
         assert feeds[0].get('id') == 'here'
         assert feeds[0].get('name') == 'here'
-        assert feeds[0].get('license') == 'Licence Ouverte / Open License'
+        assert feeds[0].get('license') == 'Private'
         assert feeds[0].get('url') == 'route.cit.api.here.com'
 
         assert feeds[1].get('id') == 'builder'

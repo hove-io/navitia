@@ -408,7 +408,7 @@ def direct_path_geovelo_zero_test():
         assert len(geovelo_resp.feed_publishers) == 1
         assert geovelo_resp.feed_publishers[0].id == 'geovelo'
         assert geovelo_resp.feed_publishers[0].name == 'geovelo'
-        assert geovelo_resp.feed_publishers[0].license == 'Licence Ouverte / Open License'
+        assert geovelo_resp.feed_publishers[0].license == 'Private'
         assert geovelo_resp.feed_publishers[0].url == 'route.cit.api.geovelo.com'
 
 
