@@ -28,14 +28,13 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-import math
 import six
 from jormungandr.scenarios import journey_filter
 from jormungandr.scenarios.helper_classes.helper_utils import crowfly_distance_between
 from jormungandr.scenarios.ridesharing.ridesharing_journey import Gender
 from jormungandr.utils import get_pt_object_coord, generate_id
 from navitiacommon import response_pb2
-from jormungandr.utils import date_to_timestamp, PeriodExtremity, timestamp_to_datetime
+from jormungandr.utils import PeriodExtremity
 import logging
 from jormungandr.scenarios.journey_filter import to_be_deleted
 
@@ -145,7 +144,9 @@ def build_ridesharing_journeys(from_pt_obj, to_pt_obj, period_extremity, instanc
 
         # TODO CO2 = length * coeffCar / (totalSeats  + 1)
         rs_section.length = rsj.distance
-        rs_section.shape.extend([pickup_coord, dropoff_coord]) # TODO real shape
+
+        rs_section.shape.extend(rsj.shape)
+
         rs_section.duration = rsj.dropoff_date_time - rsj.pickup_date_time
         rs_section.begin_date_time = rsj.pickup_date_time
         rs_section.end_date_time = rsj.dropoff_date_time
@@ -180,9 +181,8 @@ def build_ridesharing_journeys(from_pt_obj, to_pt_obj, period_extremity, instanc
         # also add fare to journey
         ticket.cost.value = rsj.price
         pb_rsj.fare.total.value = ticket.cost.value
-        if rsj.currency == "EUR":
-            ticket.cost.currency = "centime"
-            pb_rsj.fare.total.currency = ticket.cost.currency
+        ticket.cost.currency = rsj.currency
+        pb_rsj.fare.total.currency = rsj.currency
         pb_rsj.fare.found = True
         pb_rsj.fare.ticket_id.extend([ticket.id])
 

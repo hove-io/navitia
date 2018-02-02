@@ -196,6 +196,8 @@ class SectionGeoJsonField(jsonschema.Field):
             coords = value.street_network.coordinates
         elif value.type == response_pb2.CROW_FLY and len(value.shape) != 0:
             coords = value.shape
+        elif value.type == response_pb2.RIDESHARING and len(value.shape) != 0:
+            coords = value.shape
         elif value.type == response_pb2.PUBLIC_TRANSPORT:
             coords = value.shape
         elif value.type == response_pb2.TRANSFER:
