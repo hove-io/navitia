@@ -213,25 +213,25 @@ class LiteralField(jsonschema.Field):
         return lambda *args, **kwargs: self.value
 
 
-def flatten(obj):
-    if type(obj) != dict:
-        raise ValueError("Invalid argument")
-    new_obj = {}
-    for key, value in obj.items():
-        if type(value) == dict:
-            tmp = {'.'.join([key, _key]): _value for _key, _value in flatten(value).items()}
-            new_obj.update(tmp)
-        else:
-            new_obj[key] = value
-    return new_obj
-
-
 def value_by_path(obj, path, default=None):
-    new_obj = flatten(obj)
-    if new_obj:
-        return new_obj.get(path, default)
-    else:
-        return default
+    """
+    >>> value_by_path({'a': {'b' : {'c': 42}}}, 'a.b.c')
+    42
+    >>> value_by_path({'a': {'b' : {'c': 42}}}, 'a.b.c.d')
+    None
+    >>> value_by_path({'a': {'b' : {'c': 42}}}, 'a.b.c.d', default=4242)
+    4242
+
+    :param obj: Dict obj or has a __getitem__ implemented
+    :param path: path to the desired obj splitted by '.'
+    :param default: default value if not exist
+    :return:
+    """
+    if not isinstance(obj, dict):
+        raise ValueError("Invalid argument")
+    splited_path = path.split('.')
+    res = reduce(lambda x, y: x.get(y, {}), splited_path, obj)
+    return res or default
 
 
 class NestedPropertyField(jsonschema.Field):
