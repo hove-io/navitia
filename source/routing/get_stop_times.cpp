@@ -59,7 +59,7 @@ std::vector<datetime_stop_time> get_stop_times(const routing::StopEvent stop_eve
         }
         auto st = next_st.next_stop_time(stop_event, jpp_idx,
                                          dt, clockwise, rt_level,
-                                         accessibilite_params.vehicle_properties, true);
+                                         accessibilite_params.vehicle_properties, true, max_dt);
         if (st.first) {
             next_requested_dt.push({jpp_idx, st.first, st.second});
         }
@@ -86,7 +86,7 @@ std::vector<datetime_stop_time> get_stop_times(const routing::StopEvent stop_eve
         auto next_dt = best_jpp_dt.dt + (clockwise ? 1 : -1);
         auto st = next_st.next_stop_time(stop_event, best_jpp_dt.jpp,
                                          next_dt, clockwise, rt_level,
-                                         accessibilite_params.vehicle_properties, true);
+                                         accessibilite_params.vehicle_properties, true, max_dt);
         if (st.first) {
             next_requested_dt.push({best_jpp_dt.jpp, st.first, st.second});
         }

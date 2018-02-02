@@ -891,3 +891,120 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_order_check) {
     BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(1).time(), "8:10"_t);
     BOOST_CHECK_EQUAL(route_schedule.table().rows(2).date_times(1).time(), "8:15"_t);
 }
+
+BOOST_AUTO_TEST_CASE(route_schedule_multiple_days) {
+    ed::builder b("20180101");
+
+    b.vj("L1", "10000001").uri("vj:0")("stop1", "8:00"_t, "8:00"_t)
+                                      ("stop2", "8:05"_t, "8:05"_t);
+
+    b.frequency_vj("L1", "10:00:00"_t, "11:00:00"_t, "00:30:00"_t, "", "10000001").uri("vj:1")
+                    ("stop1", "10:00:00"_t, "10:00:00"_t)
+                    ("stop2", "10:05:00"_t, "10:05:00"_t);
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->pt_data->build_uri();
+
+    auto* data_ptr = b.data.get();
+    auto first_sunday = navitia::to_posix_timestamp("20180101T000000"_dt);
+    auto last_sunday = navitia::to_posix_timestamp("20180108T000000"_dt);
+
+    {
+        navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
+        navitia::timetables::route_schedule(pb_creator, "line.uri=L1", {}, {}, d("20180101T080000"), 86400, 100,
+                                            3, 10, 0, nt::RTLevel::Base);
+        pbnavitia::Response resp = pb_creator.get_response();
+        BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
+        pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
+        print_route_schedule(route_schedule);
+
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vj:0");
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(0).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(0).time(), "8:00"_t);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(0).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(0).time(), "8:05"_t);
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vj:1");
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(1).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(1).time(), "10:00"_t);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(1).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(1).time(), "10:05"_t);
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "vj:1");
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(2).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(2).time(), "10:30"_t);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(2).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(2).time(), "10:35"_t);
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 3), "vj:1");
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(3).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(3).time(), "11:00"_t);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(3).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(3).time(), "11:05"_t);
+    }
+    {
+        // No departure from next sundays yet
+        navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
+        navitia::timetables::route_schedule(pb_creator, "line.uri=L1", {}, {}, d("20180101T080000"),
+                                            86400*7 - 1, 100, 3, 10, 0, nt::RTLevel::Base);
+        pbnavitia::Response resp = pb_creator.get_response();
+        BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
+        pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
+        print_route_schedule(route_schedule);
+
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vj:0");
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(0).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(0).time(), "8:00"_t);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(0).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(0).time(), "8:05"_t);
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vj:1");
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(1).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(1).time(), "10:00"_t);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(1).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(1).time(), "10:05"_t);
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "vj:1");
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(2).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(2).time(), "10:30"_t);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(2).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(2).time(), "10:35"_t);
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 3), "vj:1");
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(3).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(3).time(), "11:00"_t);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(3).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(3).time(), "11:05"_t);
+    }
+    {
+        // No departure from next sundays yet
+        navitia::PbCreator pb_creator(data_ptr, bt::second_clock::universal_time(), null_time_period);
+        navitia::timetables::route_schedule(pb_creator, "line.uri=L1", {}, {}, d("20180101T080000"),
+                                            86400*7, 100, 3, 10, 0, nt::RTLevel::Base);
+        pbnavitia::Response resp = pb_creator.get_response();
+        BOOST_REQUIRE_EQUAL(resp.route_schedules().size(), 1);
+        pbnavitia::RouteSchedule route_schedule = resp.route_schedules(0);
+        print_route_schedule(route_schedule);
+
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 0), "vj:0");
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(0).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(0).time(), "8:00"_t);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(0).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(0).time(), "8:05"_t);
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 1), "vj:1");
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(1).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(1).time(), "10:00"_t);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(1).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(1).time(), "10:05"_t);
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 2), "vj:1");
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(2).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(2).time(), "10:30"_t);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(2).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(2).time(), "10:35"_t);
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 3), "vj:1");
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(3).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(3).time(), "11:00"_t);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(3).date(), first_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(3).time(), "11:05"_t);
+        BOOST_CHECK_EQUAL(get_vj(route_schedule, 4), "vj:0");
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(4).date(), last_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(0).date_times(4).time(), "08:00"_t);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(4).date(), last_sunday);
+        BOOST_CHECK_EQUAL(route_schedule.table().rows(1).date_times(4).time(), "08:05"_t);
+    }
+}

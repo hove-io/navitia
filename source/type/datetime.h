@@ -60,11 +60,11 @@ namespace DateTimeUtils{
         return date * SECONDS_PER_DAY + time_of_day;
     }
 
-    inline uint32_t hour(navitia::DateTime datetime) {
+    inline uint32_t hour(const navitia::DateTime datetime) {
         return datetime%SECONDS_PER_DAY;
     }
 
-    inline uint32_t date(navitia::DateTime datetime) {
+    inline uint32_t date(const navitia::DateTime datetime) {
         return datetime/SECONDS_PER_DAY;
     }
 
