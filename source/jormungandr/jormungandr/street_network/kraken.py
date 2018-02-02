@@ -153,7 +153,3 @@ class Kraken(AbstractStreetNetworkService):
         direct path from A to B remains the same even the departure time are different (no realtime)
         """
         return StreetNetworkPathKey(mode, orig_uri, dest_uri, streetnetwork_path_type, None)
-
-    def feed_publisher(self):
-        return None
-

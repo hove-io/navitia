@@ -59,8 +59,10 @@ class AbstractStreetNetworkService(ABC):
     def status(self):
         pass
 
-    def direct_path_with_fp(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
-        resp = self._direct_path(mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type)
+    def direct_path_with_fp(self, mode, pt_object_origin, pt_object_destination,
+                            fallback_extremity, request, direct_path_type):
+        resp = self._direct_path(mode, pt_object_origin, pt_object_destination,
+                                 fallback_extremity, request, direct_path_type)
 
         self._add_feed_publisher(resp)
         return resp
@@ -86,9 +88,8 @@ class AbstractStreetNetworkService(ABC):
         """
         pass
 
-    @abc.abstractmethod
     def feed_publisher(self):
-        pass
+        return None
 
     def record_external_failure(self, message):
         utils.record_external_failure(message, 'streetnetwork', self.sn_system_id)
@@ -102,13 +103,13 @@ class AbstractStreetNetworkService(ABC):
         new_relic.record_custom_event('streetnetwork', params)
 
     def _add_feed_publisher(self, resp):
-        sr_feed = self.feed_publisher()
-        if sr_feed:
+        sn_feed = self.feed_publisher()
+        if sn_feed:
             feed = resp.feed_publishers.add()
-            feed.id = sr_feed.id
-            feed.name = sr_feed.name
-            feed.license = sr_feed.license
-            feed.url = sr_feed.url
+            feed.id = sn_feed.id
+            feed.name = sn_feed.name
+            feed.license = sn_feed.license
+            feed.url = sn_feed.url
 
 
 class StreetNetwork(object):
