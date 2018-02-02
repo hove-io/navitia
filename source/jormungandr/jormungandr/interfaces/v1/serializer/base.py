@@ -238,8 +238,6 @@ def value_by_path(obj, path, default=None):
     splited_path = path.split('.')
 
     def pred(x, y):
-        if x is None:
-            return None
         return x.get(y) if isinstance(x, dict) else None
     res = functools.reduce(pred, splited_path, obj)
     return res if res is not None else default
