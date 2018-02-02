@@ -221,6 +221,8 @@ def value_by_path(obj, path, default=None):
     4242
     >>> value_by_path({'a': {'b' : {'c': 42}}}, 'a.b.c.d', default=0)
     0
+    >>> value_by_path({'a': {'b' : {'c': 0}}}, 'a.b.c', default=None)
+    0
     >>> value_by_path({'a': {'b' : {'c': 42}}}, 'a.b.c.d')
     >>> value_by_path({'a': {'b' : {'c': 42}}}, 'a.b.e')
     >>> value_by_path({'a': {'b' : {'c': 42}}}, 'a.b.c.d.e')
