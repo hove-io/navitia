@@ -64,7 +64,7 @@ def decorate_journeys(response, instance, request):
                     period_extremity = PeriodExtremity(section.begin_date_time, True)
 
                 pb_rsjs, pb_tickets, pb_fps = build_ridesharing_journeys(section.origin, section.destination,
-                                                                 period_extremity, instance)
+                                                                         period_extremity, instance)
                 if not pb_rsjs:
                     journey_filter.mark_as_dead(journey, 'no_matching_ridesharing_found')
                 else:
@@ -89,7 +89,7 @@ def build_ridesharing_journeys(from_pt_obj, to_pt_obj, period_extremity, instanc
 
     pb_rsjs = []
     pb_tickets = []
-    pb_feed_publihsers = [_make_pb_fp(fp) for fp in fps if fp is not None]
+    pb_feed_publishers = [_make_pb_fp(fp) for fp in fps if fp is not None]
 
     for rsj in rsjs:
         pb_rsj = response_pb2.Journey()
@@ -201,4 +201,4 @@ def build_ridesharing_journeys(from_pt_obj, to_pt_obj, period_extremity, instanc
         pb_tickets.append(ticket)
         pb_rsjs.append(pb_rsj)
 
-    return pb_rsjs, pb_tickets, pb_feed_publihsers
+    return pb_rsjs, pb_tickets, pb_feed_publishers

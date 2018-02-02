@@ -214,13 +214,13 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         assert rsj_sections[2].get('type') == 'crow_fly'
         assert rsj_sections[2].get('mode') == 'walking'
 
-        fbs = response['feed_publishers']
-        assert len(fbs) == 2
+        fps = response['feed_publishers']
+        assert len(fps) == 2
 
-        def equals_to_dummy_fb(fb):
-            return fb == DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER
+        def equals_to_dummy_fp(fp):
+            return fp == DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER
 
-        assert any(equals_to_dummy_fb(fb) for fb in fbs)
+        assert any(equals_to_dummy_fp(fp) for fp in fps)
 
     def test_ride_sharing_with_pt(self):
         """
