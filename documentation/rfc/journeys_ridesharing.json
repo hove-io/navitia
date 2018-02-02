@@ -161,7 +161,7 @@
                         ]
                     },
                     "duration": 9763,
-                    "type": "crow_fly",
+                    "type": "street_network",
                     "id": "section_6_0",
                     "mode": "ridesharing",
                     "ridesharing_journeys": [

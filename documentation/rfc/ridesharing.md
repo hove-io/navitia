@@ -30,7 +30,7 @@ Simplified output:
             "requested_date_time": "20180101T070000",
             "sections": [
                 {
-                    "type": "crow_fly",
+                    "type": "street_network",
                     "mode": "ridesharing",
                     "from": "A",
                     "to": "B",

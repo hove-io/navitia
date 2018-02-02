@@ -13,6 +13,8 @@ return multiple journeys if it cannot know that one is better than the
 other. For example it cannot decide that a one hour journey with no
 connection is better than a 45 minutes journey with one connection
 (it is called the [pareto front](http://en.wikipedia.org/wiki/Pareto_efficiency)).
+The 3 objectives Navitia uses are roughly the arrival datetime, the number of transfers
+and the duration of "walking" (transfers and fallback).
 
 If the user asks for more journeys than the number of journeys given by
 RAPTOR (with the parameter `min_nb_journeys` or `count`), Navitia will
@@ -50,6 +52,89 @@ The different journey types are:
 |non_pt_walk|A journey without public transport, only walking|
 |non_pt_bike|A journey without public transport, only biking|
 |non_pt_bss|A journey without public transport, only bike sharing|
+
+<a name="ridesharing-stuff"></a>Ridesharing
+-------------------------------------------
+
+``` shell
+simplified output
+
+{
+    "journeys": [
+        {
+            "requested_date_time": "20180101T070000",
+            "sections": [
+                {
+                    "type": "street_network",
+                    "mode": "ridesharing",
+                    "from": "A",
+                    "to": "B",
+                    "departure_date_time": "20180101T070000",
+                    "arrival_date_time": "20180101T090000",
+                    "ridesharing_journeys": [
+                        {
+                            "sections":[
+                                {
+                                    "from": "A",
+                                    "to": "A1",
+                                    "departure_date_time": "20180101T063000",
+                                    "arrival_date_time": "20180101T063000",
+                                    "type": "crow_fly",
+                                    "mode": "walking"
+                                },
+                                {
+                                    "from": "A1",
+                                    "to": "A2",
+                                    "departure_date_time": "20180101T063000",
+                                    "arrival_date_time": "20180101T093000",
+                                    "type": "ridesharing"
+                                },
+                                {
+                                    "from": "A2",
+                                    "to": "B",
+                                    "departure_date_time": "20180101T093000",
+                                    "arrival_date_time": "20180101T093000",
+                                    "type": "crow_fly",
+                                    "mode": "walking"
+                                }
+                            ]
+                        },
+                        {
+                            ...
+                        }
+                    ]
+                },
+                {
+                    "from": "B",
+                    "to": "C",
+                    "departure_date_time": "20180101T090000",
+                    "arrival_date_time": "20180101T100000",
+                    "type": "public_transport"
+                }
+            ]
+        },
+        {
+            ...
+        }
+    ]
+}
+```
+
+When requesting a journey, it is possible to request for a ridesharing fallback,
+using `first_section_mode` or `last_section_mode`.
+This may also be used to obtain a direct ridesharing journey (using `max_ridesharing_duration_to_pt=0`).
+
+This returns a journey only when one or multiple ridesharing ads are found, matching the request.
+
+<aside class="warning">
+    This feature requires a specific configuration and an agreement from a ridesharing service provider.
+    Therefore this service is available only for a few clients.
+</aside>
+
+The journey from Navitia will then contain a section using the ridesharing mode.
+Inside this section an attribute ridesharing_journeys contains one or multiple journeys
+depicting specifically the ridesharing ads that could match the above section
+and that could be proposed to the user.
 
 On demand transportation
 ------------------------
