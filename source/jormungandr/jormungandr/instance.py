@@ -546,12 +546,12 @@ class Instance(object):
         service = self.get_street_network(mode, request)
         if not service:
             return None
-        return service.direct_path(mode,
-                                   pt_object_origin,
-                                   pt_object_destination,
-                                   fallback_extremity,
-                                   request,
-                                   direct_path_type)
+        return service.direct_path_with_fp(mode,
+                                           pt_object_origin,
+                                           pt_object_destination,
+                                           fallback_extremity,
+                                           request,
+                                           direct_path_type)
 
     def get_autocomplete(self, requested_autocomplete):
         if not requested_autocomplete:

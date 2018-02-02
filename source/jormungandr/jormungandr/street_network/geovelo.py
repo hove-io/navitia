@@ -37,11 +37,20 @@ from jormungandr import app
 from jormungandr.exceptions import TechnicalError, InvalidArguments, UnableToParse
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathKey
 from jormungandr.utils import get_pt_object_coord, is_url, decode_polyline
+from jormungandr.ptref import FeedPublisher
+
+DEFAULT_GEOVELO_FEED_PUBLISHER = {
+    'id': 'geovelo',
+    'name': 'geovelo',
+    'license': 'Private',
+    'url': 'http://about.geovelo.fr/cgu/'
+}
 
 
 class Geovelo(AbstractStreetNetworkService):
 
-    def __init__(self, instance, service_url, modes=[], id='geovelo', timeout=10, api_key=None, **kwargs):
+    def __init__(self, instance, service_url, modes=[], id='geovelo', timeout=10, api_key=None,
+                 feed_publisher=DEFAULT_GEOVELO_FEED_PUBLISHER, **kwargs):
         self.instance = instance
         self.sn_system_id = id
         if not is_url(service_url):
@@ -52,6 +61,7 @@ class Geovelo(AbstractStreetNetworkService):
         self.modes = modes
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_GEOVELO_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_GEOVELO_TIMEOUT_S'])
+        self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
 
     def status(self):
         return {'id': self.sn_system_id,
@@ -252,7 +262,7 @@ class Geovelo(AbstractStreetNetworkService):
 
         return resp
 
-    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
+    def _direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
         if mode != "bike":
             logging.getLogger(__name__).error('Geovelo, mode {} not implemented'.format(mode))
             raise InvalidArguments('Geovelo, mode {} not implemented'.format(mode))
@@ -287,3 +297,6 @@ class Geovelo(AbstractStreetNetworkService):
         direct path from A to B remains the same even the departure time are different (no realtime)
         """
         return StreetNetworkPathKey(mode, orig_uri, dest_uri, streetnetwork_path_type, None)
+
+    def feed_publisher(self):
+        return self._feed_publisher

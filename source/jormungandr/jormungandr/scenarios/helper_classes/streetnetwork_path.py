@@ -65,9 +65,9 @@ class StreetNetworkPath:
         logger.debug("requesting %s direct path from %s to %s by %s", self._path_type,
                      self._orig_obj.uri, self._dest_obj.uri, self._mode)
 
-        dp = self._instance.direct_path(self._mode, self._orig_obj, self._dest_obj,
-                                        self._fallback_extremity, self._request,
-                                        self._path_type)
+        dp = self._instance.direct_path_with_fp(self._mode, self._orig_obj, self._dest_obj,
+                                                self._fallback_extremity, self._request,
+                                                self._path_type)
         if getattr(dp, "journeys", None):
             dp.journeys[0].internal_id = str(utils.generate_id())
 
