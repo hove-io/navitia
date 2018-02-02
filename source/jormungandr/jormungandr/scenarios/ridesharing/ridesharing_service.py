@@ -35,7 +35,7 @@ import logging
 from jormungandr import utils
 from collections import namedtuple
 
-Rs_FeedPublisher = namedtuple('Rs_FeedPublisher', ['id', 'name', 'license', 'url'])
+RsFeedPublisher = namedtuple('RsFeedPublisher', ['id', 'name', 'license', 'url'])
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractRidesharingService(object):

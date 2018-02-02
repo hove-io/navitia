@@ -565,7 +565,7 @@ class Instance(object):
         res = []
         fps = set()
         for service in self.ridesharing_services:
-            rsjs, fb = service.request_journeys_with_feed_publisher(from_coord, to_coord, period_extremity, limit)
+            rsjs, fp = service.request_journeys_with_feed_publisher(from_coord, to_coord, period_extremity, limit)
             res.extend(rsjs)
-            fps.add(fb)
+            fps.add(fp)
         return res, fps

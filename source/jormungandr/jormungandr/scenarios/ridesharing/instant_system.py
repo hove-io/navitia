@@ -37,11 +37,16 @@ import requests as requests
 from jormungandr import utils
 from jormungandr import app
 import jormungandr.scenarios.ridesharing.ridesharing_journey as rsj
-from jormungandr.scenarios.ridesharing.ridesharing_service import AbstractRidesharingService, Rs_FeedPublisher
+from jormungandr.scenarios.ridesharing.ridesharing_service import AbstractRidesharingService, RsFeedPublisher
 from jormungandr.utils import decode_polyline
 from navitiacommon import type_pb2
 
-DEFAULT_INSTANT_SYSTEM_FEED_PUBLISHER = None
+DEFAULT_INSTANT_SYSTEM_FEED_PUBLISHER = {
+    'id': 'Instant System',
+    'name': 'Instant System',
+    'license': 'Private',
+    'url': 'https://instant-system.com/disclaimers/disclaimer_XX.html'
+}
 
 
 class InstantSystem(AbstractRidesharingService):
@@ -56,7 +61,7 @@ class InstantSystem(AbstractRidesharingService):
         self.rating_scale_max = rating_scale_max
         self.system_id = 'Instant System'
         self.timeout = timeout
-        self.feed_publisher = None if feed_publisher is None else Rs_FeedPublisher(**feed_publisher)
+        self.feed_publisher = None if feed_publisher is None else RsFeedPublisher(**feed_publisher)
 
         self.journey_metadata = rsj.MetaData(system_id=self.system_id,
                                              network=self.network,

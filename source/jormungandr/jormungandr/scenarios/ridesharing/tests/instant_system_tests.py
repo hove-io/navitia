@@ -31,9 +31,9 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from jormungandr.scenarios.ridesharing.instant_system import InstantSystem
+from jormungandr.scenarios.ridesharing.instant_system import InstantSystem, DEFAULT_INSTANT_SYSTEM_FEED_PUBLISHER
 from jormungandr.scenarios.ridesharing.ridesharing_journey import Gender
-from jormungandr.scenarios.ridesharing.ridesharing_service import Ridesharing, Rs_FeedPublisher
+from jormungandr.scenarios.ridesharing.ridesharing_service import Ridesharing, RsFeedPublisher
 
 import mock
 from jormungandr.tests import utils_test
@@ -215,7 +215,7 @@ def get_ridesharing_service_test():
     assert services[0].system_id == 'Instant System'
     assert services[0].rating_scale_min == 0
     assert services[0].rating_scale_max == 10
-    assert services[0]._get_feed_publisher() == Rs_FeedPublisher(**DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER)
+    assert services[0]._get_feed_publisher() == RsFeedPublisher(**DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER)
 
     assert services[1].service_url == 'tata'
     assert services[1].api_key == 'tata key'
@@ -223,7 +223,7 @@ def get_ridesharing_service_test():
     assert services[1].system_id == 'Instant System'
     assert services[1].rating_scale_min == 1
     assert services[1].rating_scale_max == 5
-    assert services[1]._get_feed_publisher() == None
+    assert services[1]._get_feed_publisher() == RsFeedPublisher(**DEFAULT_INSTANT_SYSTEM_FEED_PUBLISHER)
 
 
 def instant_system_test():
@@ -310,4 +310,4 @@ def instant_system_test():
         assert ridesharing_journeys[1].total_seats is None
         assert ridesharing_journeys[1].available_seats == 4
 
-        assert feed_publisher == Rs_FeedPublisher(**DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER)
+        assert feed_publisher == RsFeedPublisher(**DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER)
