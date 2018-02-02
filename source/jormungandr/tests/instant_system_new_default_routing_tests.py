@@ -33,6 +33,13 @@ from jormungandr.tests.utils_test import MockResponse
 from tests.check_utils import get_not_null, s_coord, r_coord, journey_basic_query
 from tests.tests_mechanism import dataset, NewDefaultScenarioAbstractTestFixture
 
+DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER = {
+    'id': '42',
+    'name': '42',
+    'license': 'I dunno',
+    'url': 'http://w.tf'
+}
+
 MOCKED_INSTANCE_CONF = {
     'scenario': 'new_default',
     'instance_config': {
@@ -43,11 +50,9 @@ MOCKED_INSTANCE_CONF = {
                     "api_key": "key",
                     "network": "Super Covoit",
                     "rating_scale_min": 0,
-                    "rating_scale_max": 5
+                    "rating_scale_max": 5,
+                    "feed_publisher": DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER,
                 },
-                "modes": [
-                    "ridesharing"
-                ],
                 "class": "jormungandr.scenarios.ridesharing.instant_system.InstantSystem"
             }
         ]
@@ -208,6 +213,14 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
 
         assert rsj_sections[2].get('type') == 'crow_fly'
         assert rsj_sections[2].get('mode') == 'walking'
+
+        fps = response['feed_publishers']
+        assert len(fps) == 2
+
+        def equals_to_dummy_fp(fp):
+            return fp == DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER
+
+        assert any(equals_to_dummy_fp(fp) for fp in fps)
 
     def test_ride_sharing_with_pt(self):
         """

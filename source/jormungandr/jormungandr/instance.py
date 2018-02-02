@@ -561,8 +561,11 @@ class Instance(object):
             raise TechnicalError('autocomplete {} not available'.format(requested_autocomplete))
         return autocomplete
 
-    def get_ridesharing_journeys(self, from_coord, to_coord, period_extremity, limit=None):
+    def get_ridesharing_journeys_with_feed_publishers(self, from_coord, to_coord, period_extremity, limit=None):
         res = []
+        fps = set()
         for service in self.ridesharing_services:
-            res.extend(service.request_journeys(from_coord, to_coord, period_extremity, limit))
-        return res
+            rsjs, fp = service.request_journeys_with_feed_publisher(from_coord, to_coord, period_extremity, limit)
+            res.extend(rsjs)
+            fps.add(fp)
+        return res, fps

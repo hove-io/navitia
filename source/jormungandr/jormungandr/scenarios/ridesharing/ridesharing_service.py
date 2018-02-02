@@ -33,6 +33,9 @@ import abc
 import six
 import logging
 from jormungandr import utils
+from collections import namedtuple
+
+RsFeedPublisher = namedtuple('RsFeedPublisher', ['id', 'name', 'license', 'url'])
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractRidesharingService(object):
@@ -44,12 +47,30 @@ class AbstractRidesharingService(object):
         """
         pass
 
+    def request_journeys_with_feed_publisher(self, from_coord, to_coord, period_extremity, limit=None):
+        """
+        This function shouldn't be overwritten!
+
+        :return: a list(mandatory) contains solutions and a feed_publisher
+        """
+        journeys = self._request_journeys(from_coord, to_coord, period_extremity, limit)
+        feed_publisher = self._get_feed_publisher()
+        return journeys, feed_publisher
+
     @abc.abstractmethod
-    def request_journeys(self, from_coord, to_coord, period_extremity, limit=None):
+    def _request_journeys(self, from_coord, to_coord, period_extremity, limit=None):
         """
-        implementations must always return a list
+        :return: a list(mandatory) contains solutions
         """
-        return []
+        pass
+
+    @abc.abstractmethod
+    def _get_feed_publisher(self):
+        """
+
+        :return: Rs_FeedPublisher
+        """
+        pass
 
 
 # read the configurations and return the wanted service instance
