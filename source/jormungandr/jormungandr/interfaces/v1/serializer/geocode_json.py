@@ -218,16 +218,13 @@ class StopAreaSerializer(serpy.DictSerializer):
     name = NestedPropertyField(attr='properties.geocoding.name', display_none=True)
     administrative_regions = AdministrativeRegionsSerializer()
     timezone = NestedPropertyField(attr='properties.geocoding.timezone')
-    commercial_modes = jsonschema.MethodField(display_none=True)
-    physical_modes = jsonschema.MethodField(display_none=True)
+    commercial_modes = jsonschema.MethodField()
+    physical_modes = jsonschema.MethodField()
 
     def fill_modes(self, modes):
-        resp = []
         if not modes:
-            return resp
-        for mode in modes:
-            resp.append(GenericSerializer(mode).data)
-        return resp
+            return []
+        return [GenericSerializer(mode).data for mode in modes]
 
     def get_commercial_modes(self, obj):
         modes = obj.get('properties', {}).get('geocoding', {}).get('commercial_modes', [])

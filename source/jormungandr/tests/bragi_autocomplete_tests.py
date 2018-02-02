@@ -506,8 +506,8 @@ class TestBragiAutocomplete(AbstractTestFixture):
             r = response.get('places')
             assert len(r) == 1
             assert r[0]['embedded_type'] == 'stop_area'
-            assert len(r[0]['stop_area'].get('commercial_modes')) == 0
-            assert len(r[0]['stop_area'].get('physical_modes')) == 0
+            assert 'commercial_modes' not in r[0]['stop_area']
+            assert 'physical_modes' not in r[0]['stop_area']
 
 
 @dataset({"main_routing_test": {}}, global_config={'activate_bragi': True})
