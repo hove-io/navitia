@@ -75,6 +75,6 @@ BOOST_AUTO_TEST_CASE(load_disruption_fail) {
   // Load fake data
   bool check_load = data.load(boost::filesystem::canonical(current_path()).string() \
   														+ "/" + fake_data_file, fake_disruption_path);
-  BOOST_CHECK_EQUAL(data.disruption_is_loaded, false);
+  BOOST_CHECK_EQUAL(data.disruption_error, true);
   BOOST_CHECK_EQUAL(check_load, true);
 }

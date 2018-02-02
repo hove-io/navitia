@@ -249,6 +249,7 @@ void Worker::status() {
     status->set_last_rt_data_loaded(pt::to_iso_string(d->last_rt_data_loaded));
     status->set_nb_threads(conf.nb_threads());
     status->set_is_connected_to_rabbitmq(d->is_connected_to_rabbitmq);
+    status->set_disruption_error(d->disruption_error);
     status->set_status(get_string_status(d));
     status->set_is_realtime_loaded(d->is_realtime_loaded);
     for(const auto& contrib: this->conf.rt_topics()){

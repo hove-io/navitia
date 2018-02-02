@@ -85,6 +85,7 @@ def monitor():
         response['last_load_status'] = resp.status.last_load_status
         response['loaded'] = resp.status.loaded
         response['is_connected_to_rabbitmq'] = resp.status.is_connected_to_rabbitmq
+        response['disruption_error'] = resp.status.disruption_error
         response['publication_date'] = resp.status.publication_date
         response['is_realtime_loaded'] = resp.status.is_realtime_loaded
 

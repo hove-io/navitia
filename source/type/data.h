@@ -133,7 +133,7 @@ public:
     unsigned int version = 0; //< Version of loaded data
     std::atomic<bool> loaded; //< have the data been loaded ?
     std::atomic<bool> loading; //< Is the data being loaded
-    bool disruption_is_loaded; // disruption flag
+    bool disruption_error; // disruption error flag
     size_t data_identifier = 0;
 
     std::unique_ptr<MetaData> meta;
