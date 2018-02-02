@@ -30,7 +30,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import pytest
 
 from jormungandr.tests.utils_test import MockResponse
-from tests.check_utils import get_not_null, s_coord, r_coord
+from tests.check_utils import get_not_null, s_coord, r_coord, journey_basic_query
 from tests.tests_mechanism import dataset, NewDefaultScenarioAbstractTestFixture
 
 MOCKED_INSTANCE_CONF = {
@@ -116,6 +116,7 @@ INSTANCE_SYSTEM_RESPONSE = {
     ],
     "url": "https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&ibi=&isi=&utm_campaign=KISIO&link=https%3A%2F%2Fwww.star.fr%2Fsearch%2F%3FfeatureName%3DsearchResults%26networkId%3D33%26from%3D48.109377%252C-1.682103%26to%3D48.020335%252C-1.743929%26multimodal%3Dfalse%26departureDate%3D2017-12-25T08%253A00%253A00%252B01%253A00"
 }
+
 
 def mock_instance_system(_, params):
     return MockResponse(INSTANCE_SYSTEM_RESPONSE, 200)
@@ -205,3 +206,73 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
 
         assert rsj_sections[2].get('type') == 'crow_fly'
         assert rsj_sections[2].get('mode') == 'walking'
+
+    def test_ride_sharing_with_pt(self):
+        """
+        test ridesharing_jouneys details
+        """
+        q = journey_basic_query + \
+            "&last_section_mode[]=walking" + \
+            "&first_section_mode[]=ridesharing" + \
+            "&ridesharing_speed=2.5"
+        response = self.query_region(q)
+        self.is_valid_journey_response(response, q, check_journey_links=False)
+
+        journeys = get_not_null(response, 'journeys')
+        assert len(journeys) == 2
+
+        #The first journey is direct ridesharing
+        assert 'ridesharing' in journeys[0].get('tags')
+        assert 'non_pt' in journeys[0].get('tags')
+        assert journeys[0].get('type') == 'best'
+        sections = journeys[0].get('sections')
+        assert len(sections) == 1
+        assert sections[0].get('mode') == 'ridesharing'
+        assert journeys[0].get('durations').get('ridesharing') == 37
+        assert journeys[0].get('durations').get('total') == 37
+
+        #The second one is of combination of ridesharing + public_transport + walking
+        assert 'ridesharing' in journeys[1].get('tags')
+        assert 'non_pt' not in journeys[1].get('tags')
+        assert journeys[1].get('type') == 'rapid'
+        sections = journeys[1].get('sections')
+        assert len(sections) == 3
+        assert journeys[1].get('durations').get('ridesharing') == 7
+        assert journeys[1].get('durations').get('walking') == 80
+        assert journeys[1].get('durations').get('total') == 89
+
+        #first section is of ridesharing
+        rs_section = sections[0]
+        assert rs_section.get('mode') == 'ridesharing'
+        assert rs_section.get('type') == 'street_network'
+        assert rs_section.get('from').get('id') == '8.98312e-05;8.98312e-05'
+        assert rs_section.get('to').get('id') == 'stop_point:stopB'
+        assert rs_section.get('duration') == 7
+
+        #second section is of public transport
+        pt_section = sections[1]
+        assert pt_section.get('type') == 'public_transport'
+        assert pt_section.get('from').get('id') == 'stop_point:stopB'
+        assert pt_section.get('to').get('id') == 'stop_point:stopA'
+        assert pt_section.get('duration') == 2
+
+        #third section is of walking
+        walking_section = sections[2]
+        assert walking_section.get('mode') == 'walking'
+        assert walking_section.get('type') == 'street_network'
+        assert walking_section.get('from').get('id') == 'stop_point:stopA'
+        assert walking_section.get('to').get('id') == '0.00188646;0.00071865'
+        assert walking_section.get('duration') == 80
+
+        #with the use of &max_ridesharing_duration_to_pt=0 we have only direct ridesharing
+        q = journey_basic_query + \
+            "&last_section_mode[]=walking" + \
+            "&first_section_mode[]=ridesharing" + \
+            "&ridesharing_speed=2.5" + \
+            "&max_ridesharing_duration_to_pt=0"
+        response = self.query_region(q)
+        self.is_valid_journey_response(response, q, check_journey_links=False)
+        journeys = get_not_null(response, 'journeys')
+        assert len(journeys) == 1
+        assert 'ridesharing' in journeys[0].get('tags')
+        assert journeys[0].get('durations').get('ridesharing') == 37
