@@ -739,21 +739,11 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_SA_and_Address_test) {
     b.sa("Napoleon III", 0, 0);
     b.sa("MPT kerfeunteun", 0, 0);
     b.data->pt_data->index();
-    Way* w = new Way;
-    w->idx = 0;
-    w->name = "rue DU TREGOR";
-    w->uri = w->name;
-    b.data->geo_ref->ways.push_back(w);
-    w = new navitia::georef::Way;
-    w->name = "rue VIS";
-    w->uri = w->name;
-    w->idx = 1;
-    b.data->geo_ref->ways.push_back(w);
-    w = new navitia::georef::Way;
-    w->idx = 2;
-    w->name = "quai NEUF";
-    w->uri = w->name;
-    b.data->geo_ref->ways.push_back(w);
+
+
+    b.add_way("rue DU TREGOR", "");
+    b.add_way("rue VIS", "");
+    b.add_way("quai NEUF", "");
 
     Admin* ad = new Admin;
     ad->name = "Quimper";
@@ -1347,12 +1337,8 @@ BOOST_AUTO_TEST_CASE(autocomplete_with_multi_postal_codes_testAA) {
     ad->idx = 0;
     b.data->geo_ref->admins.push_back(ad);
 
-    navitia::georef::Way* w = new navitia::georef::Way();
-    w->idx = 0;
-    w->name = "Sante";
-    w->uri = w->name;
+    auto w = b.add_way("Sante", "");
     w->admin_list.push_back(ad);
-    b.data->geo_ref->ways.push_back(w);
 
     ad = new Admin();
     ad->name = "Tours";
@@ -1364,12 +1350,8 @@ BOOST_AUTO_TEST_CASE(autocomplete_with_multi_postal_codes_testAA) {
     ad->idx = 1;
     b.data->geo_ref->admins.push_back(ad);
 
-    w = new navitia::georef::Way();
-    w->idx = 1;
-    w->name = "Sante";
-    w->uri = w->name;
+    w = b.add_way("Sante", "");
     w->admin_list.push_back(ad);
-    b.data->geo_ref->ways.push_back(w);
 
     b.build_autocomplete();
     type_filter.push_back(navitia::type::Type_e::Address);
@@ -1459,7 +1441,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_with_ghostword_test) {
     std::vector<navitia::type::Type_e> type_filter;
     ed::builder b("20140614");
     autocomplete_map synonyms;
-     std::set<std::string> ghostwords;
+    std::set<std::string> ghostwords;
 
     synonyms["cc"]="centre commercial";
     synonyms["hotel de ville"]="mairie";
@@ -1500,19 +1482,11 @@ BOOST_AUTO_TEST_CASE(autocomplete_with_ghostword_test) {
     ad->idx = 0;
     b.data->geo_ref->admins.push_back(ad);
 
-    navitia::georef::Way* w = new navitia::georef::Way();
-    w->idx = 0;
-    w->name = "place de la Gare";
-    w->uri = w->name;
+    auto w = b.add_way("place de la Gare", "");
     w->admin_list.push_back(ad);
-    b.data->geo_ref->ways.push_back(w);
 
-    w = new navitia::georef::Way();
-    w->idx = 1;
-    w->name = "rue de la Garenne";
-    w->uri = w->name;
+    w = b.add_way("rue de la Garenne", "");
     w->admin_list.push_back(ad);
-    b.data->geo_ref->ways.push_back(w);
 
     //Create a new StopArea
     navitia::type::StopArea* sa = new navitia::type::StopArea();

@@ -407,6 +407,7 @@ void GeoRef::build_autocomplete_list(){
     for (Way* way: ways) {
         ++pos;
         if (way->name.empty()) { continue; }
+        if (way->edges.empty()) { continue; }
         if (auto admin = find_city_admin(way->admin_list)) {
             // @TODO:
             // For each object admin we have one element in the dictionnary of admins.

@@ -38,6 +38,8 @@ www.navitia.io
 #include "type/message.h"
 #include "type/rt_level.h"
 #include <memory>
+#include <boost/optional.hpp>
+
 
 /** Ce connecteur permet de faciliter la construction d'un réseau en code
  *
@@ -224,6 +226,9 @@ struct builder {
     std::unique_ptr<navitia::type::Data> data = std::make_unique<navitia::type::Data>();
     navitia::georef::GeoRef street_network;
 
+    boost::optional<navitia::georef::vertex_t> vertex_a;
+    boost::optional<navitia::georef::vertex_t> vertex_b;
+
     /// 'date' is the beggining date of all the validity patterns
     builder(const std::string & date,
             const std::string& publisher_name = "canal tp",
@@ -302,6 +307,8 @@ struct builder {
     void manage_admin();
     void build_autocomplete();
     void fill_missing_destinations();
+
+    navitia::georef::Way* add_way(const std::string& name, const std::string& way_type);
 };
 
 }
