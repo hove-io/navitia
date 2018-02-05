@@ -67,6 +67,8 @@ wrong_version::~wrong_version() noexcept {}
 const unsigned int Data::data_version = 67; //< *INCREMENT* every time serialized data are modified
 
 Data::Data(size_t data_identifier) :
+    disruption_error(false),
+    disruptions_corruption_detected(false),
     data_identifier(data_identifier),
     meta(std::make_unique<MetaData>()),
     pt_data(std::make_unique<PT_Data>()),
@@ -120,15 +122,23 @@ bool Data::load(const std::string& filename,
 	}
 
     // Load Disruption (optionnal)
-    if (chaos_database) {
+    if ((chaos_database) && (disruptions_corruption_detected == false)){
         try {
             fill_disruption_from_database(*chaos_database, *pt_data, *meta, contributors);
         } catch(const std::exception& ex) {
-            LOG4CPLUS_WARN(logger, "Data disruptions loading failed: " << ex.what());
+            LOG4CPLUS_ERROR(logger, "Data disruptions loading failed: " << ex.what());
             disruption_error = true;
+            if (std::string(ex.what()) != "Unable to connect to chaos database"){
+                LOG4CPLUS_INFO(logger, "Reload Data without disruptions");
+                disruptions_corruption_detected = true;
+                last_load = false;
+                return last_load;
+            }
         } catch(...) {
-            LOG4CPLUS_WARN(logger, "Data disruptions loading failed");
             disruption_error = true;
+            LOG4CPLUS_WARN(logger, "Data disruptions loading failed");
+            last_load = false;
+            return last_load;
         }
     }
 
@@ -145,6 +155,14 @@ bool Data::load(const std::string& filename,
 
     loading = false;
     return this->last_load;
+}
+
+bool Data::load_without_disruptions(const std::string& filename,
+                                        const std::vector<std::string>& contributors,
+                                        const size_t raptor_cache_size) {
+   disruptions_corruption_detected = true;
+   return this->load(filename, {}, contributors, raptor_cache_size);
+   disruptions_corruption_detected = false;
 }
 
 void Data::load(std::istream& ifs) {

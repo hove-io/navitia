@@ -48,33 +48,45 @@ using namespace boost::filesystem;
 static const std::string fake_data_file = "fake_data.nav.lz4";
 static const std::string fake_disruption_path = "fake_disruption_path";
 
+// We create a empty data with lz4 format in current directory
+#define CREATE_FAKE_DATA(fake_file_name) \
+    navitia::type::Data data(0);         \
+    data.save(fake_data_file);           \
+
 BOOST_AUTO_TEST_CASE(load_data) {
-  navitia::type::Data data(0);
 
-  // We create a empty data with lz4 format
-  data.save(fake_data_file);
+    CREATE_FAKE_DATA(fake_data_file)
 
-  // Load fake data
-  bool check_load = data.load(boost::filesystem::canonical(current_path()).string() \
-  														+ "/" + fake_data_file);
-  BOOST_CHECK_EQUAL(check_load, true);
+    // Load fake data
+    bool check_load = data.load(boost::filesystem::canonical(current_path()).string() \
+                                + "/" + fake_data_file);
+    BOOST_CHECK_EQUAL(check_load, true);
 }
 
 BOOST_AUTO_TEST_CASE(load_data_fail) {
-  navitia::type::Data data(0);
-  bool check_load = data.load("wrong_path");
-  BOOST_CHECK_EQUAL(check_load, false);
+    navitia::type::Data data(0);
+    bool check_load = data.load("wrong_path");
+    BOOST_CHECK_EQUAL(check_load, false);
 }
 
-BOOST_AUTO_TEST_CASE(load_disruption_fail) {
-  navitia::type::Data data(0);
+BOOST_AUTO_TEST_CASE(load_disruptions_fail) {
 
-  // We create a empty data with lz4 format
-  data.save(fake_data_file);
+    CREATE_FAKE_DATA(fake_data_file)
 
-  // Load fake data
-  bool check_load = data.load(boost::filesystem::canonical(current_path()).string() \
-  														+ "/" + fake_data_file, fake_disruption_path);
-  BOOST_CHECK_EQUAL(data.disruption_error, true);
-  BOOST_CHECK_EQUAL(check_load, true);
+    // Load fake data
+    bool check_load = data.load(boost::filesystem::canonical(current_path()).string() \
+                                + "/" + fake_data_file, fake_disruption_path);
+    BOOST_CHECK_EQUAL(data.disruption_error, true);
+    BOOST_CHECK_EQUAL(check_load, true);
+}
+
+BOOST_AUTO_TEST_CASE(load_without_disruptions) {
+
+    CREATE_FAKE_DATA(fake_data_file)
+
+    // Load fake data
+    bool check_load = data.load_without_disruptions(boost::filesystem::canonical(current_path()).string() \
+                                                    + "/" + fake_data_file);
+    BOOST_CHECK_EQUAL(data.disruption_error, false);
+    BOOST_CHECK_EQUAL(check_load, true);
 }

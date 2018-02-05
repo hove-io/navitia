@@ -96,6 +96,13 @@ public:
         ++ data_identifier;
         auto data = create_data(data_identifier.load());
         success = data->load(database, chaos_database, contributors, raptor_cache_size);
+
+        // If disruptions corruption is detected, reload data without this
+        if ((!success) && (data->disruptions_corruption_detected)) {
+            data = create_data(data_identifier.load());
+            success = data->load_without_disruptions(database, contributors, raptor_cache_size);
+        }
+
         if (success) {
             set_data(std::move(data));
         }

@@ -133,7 +133,8 @@ public:
     unsigned int version = 0; //< Version of loaded data
     std::atomic<bool> loaded; //< have the data been loaded ?
     std::atomic<bool> loading; //< Is the data being loaded
-    bool disruption_error; // disruption error flag
+    std::atomic<bool> disruption_error; // disruption error flag
+    bool disruptions_corruption_detected;
     size_t data_identifier = 0;
 
     std::unique_ptr<MetaData> meta;
@@ -226,6 +227,11 @@ public:
               const boost::optional<std::string>& chaos_database = {},
               const std::vector<std::string>& contributors = {},
               const size_t raptor_cache_size = 10);
+
+    // Reload Data without disruption data
+    bool load_without_disruptions(const std::string & filename,
+                                 const std::vector<std::string>& contributors = {},
+                                 const size_t raptor_cache_size = 10);
 
     /** Sauvegarde les données */
     void save(const std::string & filename) const;

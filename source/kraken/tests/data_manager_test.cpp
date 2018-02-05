@@ -45,8 +45,14 @@ class Data{
                   const size_t) {
             return load_status;
         }
+        bool load_without_disruptions(const std::string&,
+                                     const std::vector<std::string>&,
+                                     const size_t) {
+            return load_status;
+        }
         mutable std::atomic<bool> is_connected_to_rabbitmq;
         static bool load_status;
+        static bool disruptions_corruption_detected;
         static bool destructor_called;
         size_t data_identifier;
 
@@ -57,6 +63,7 @@ class Data{
         ~Data(){Data::destructor_called = true;}
 };
 bool Data::load_status = true;
+bool Data::disruptions_corruption_detected = false;
 bool Data::destructor_called = false;
 
 struct fixture{
