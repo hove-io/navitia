@@ -841,9 +841,11 @@ void PbCreator::Filler::fill_pb_object(const nd::StopTimeUpdate* stu, pbnavitia:
     // we don't want to output amended departure/arrival for deleted departure/arrival
     if (stu->arrival_status != nd::StopTimeUpdate::Status::DELETED) {
         stop_time->set_arrival_time(get_local_time(st, st->arrival_time));
+        stop_time->set_utc_arrival_time(st->arrival_time);
     }
     if (stu->departure_status != nd::StopTimeUpdate::Status::DELETED) {
         stop_time->set_departure_time(get_local_time(st, st->departure_time));
+        stop_time->set_utc_departure_time(st->departure_time);
     }
 }
 
@@ -851,7 +853,9 @@ void PbCreator::Filler::fill_pb_object(const nd::StopTimeUpdate* stu, pbnavitia:
 void PbCreator::Filler::fill_pb_object(const nt::StopTime* st, pbnavitia::StopTime* stop_time) {
     // arrival/departure in protobuff are as seconds from midnight in local time
     stop_time->set_arrival_time(get_local_time(st, st->arrival_time));
+    stop_time->set_utc_arrival_time(st->arrival_time);
     stop_time->set_departure_time(get_local_time(st, st->departure_time));
+    stop_time->set_utc_departure_time(st->departure_time);
     stop_time->set_headsign(pb_creator.data->pt_data->headsign_handler.get_headsign(*st));
 
     stop_time->set_pickup_allowed(st->pick_up_allowed());
@@ -1161,7 +1165,7 @@ void PbCreator::Filler::fill_pb_object(const ng::POI* poi, pbnavitia::Address* a
         address->set_house_number(poi->address_number);
         label += std::to_string(poi->address_number) + " ";
     }
-    label += get_label(poi);
+    label += poi->address_name;
     address->set_label(label);
 
     if(poi->coord.is_initialized()) {
@@ -1632,7 +1636,8 @@ void PbCreator::add_path_item(pbnavitia::StreetNetwork* sn, const ng::PathItem& 
 }
 
 void PbCreator::fill_street_sections(const type::EntryPoint& ori_dest, const georef::Path& path,
-                                     pbnavitia::Journey* pb_journey, const pt::ptime departure, int max_depth) {
+                                     pbnavitia::Journey* pb_journey, const pt::ptime departure, 
+                                     int max_depth) {
     int depth = std::min(max_depth, 3);
     if (path.path_items.empty())
         return;
@@ -1644,7 +1649,7 @@ void PbCreator::fill_street_sections(const type::EntryPoint& ori_dest, const geo
     georef::PathItem last_item;
 
     //we create 1 section by mean of transport
-    for (auto item : path.path_items) {
+    for (const auto& item : path.path_items) {
         auto transport_carac = item.transportation;
 
         if (last_transportation_carac && transport_carac != *last_transportation_carac) {
@@ -1663,8 +1668,8 @@ void PbCreator::fill_street_sections(const type::EntryPoint& ori_dest, const geo
     }
 
     finalize_section(section, path.path_items.back(), {}, session_departure, depth);
-    //We add consistency between origin/destination places and geojson
 
+    //We add consistency between origin/destination places and geojson
     auto sections = pb_journey->mutable_sections();
     for (auto section = sections->begin(); section != sections->end(); ++section) {
         auto destination_coord = get_coord(section->destination());
@@ -1891,6 +1896,7 @@ void PbCreator::fill_crowfly_section(const type::EntryPoint& origin, const type:
         section->mutable_street_network()->set_mode(pbnavitia::Bike);
         break;
     case type::Mode_e::Car:
+    case type::Mode_e::CarNoPark:
         section->mutable_street_network()->set_mode(pbnavitia::Car);
         break;
     case type::Mode_e::Bss:

@@ -68,7 +68,7 @@ class Kraken(AbstractStreetNetworkService):
             j.sections.sort(utils.SectionSorter())
         return response
 
-    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
+    def _direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
         """
         :param direct_path_type: we need to "invert" a direct path when it's a ending fallback by car if and only if
                                  it's returned by kraken. In other case, it's ignored

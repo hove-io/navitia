@@ -35,7 +35,7 @@ from flask.ext.restful import abort
 from flask import g
 from jormungandr.scenarios import simple, journey_filter, helpers
 from jormungandr.scenarios.journey_filter import to_be_deleted
-from jormungandr.scenarios.ridesharing.ridesharing_helper import build_ridesharing_crowfly_journey
+from jormungandr.scenarios.ridesharing.ridesharing_helper import decorate_journeys
 from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, \
     get_or_default, fill_uris, gen_all_combin, get_pseudo_duration, mode_weight
 from navitiacommon import type_pb2, response_pb2, request_pb2
@@ -57,7 +57,7 @@ from six.moves import zip
 
 SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
 JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
-STREET_NETWORK_MODE_TO_RETAIN = {response_pb2.Car, response_pb2.Bike, response_pb2.Bss}
+STREET_NETWORK_MODE_TO_RETAIN = {response_pb2.Ridesharing, response_pb2.Car, response_pb2.Bike, response_pb2.Bss}
 
 
 def get_kraken_calls(request):
@@ -85,11 +85,11 @@ def get_kraken_calls(request):
                            ('bike', 'bss'),
                            ('car', 'bss'),
                            ('bike', 'bike'),
-                           ('ridesharing', 'ridesharing'),
                            ('ridesharing', 'walking'),
                            ('walking', 'ridesharing'),
                            ('ridesharing', 'bss'),
                            ('bss', 'ridesharing')]
+    # We don't want to do ridesharing - ridesharing journeys
 
     res = [c for c in allowed_combination if c in itertools.product(dep_modes, arr_modes)]
 
@@ -135,10 +135,12 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     sn_params.max_bike_duration_to_pt = request["max_bike_duration_to_pt"]
     sn_params.max_bss_duration_to_pt = request["max_bss_duration_to_pt"]
     sn_params.max_car_duration_to_pt = request["max_car_duration_to_pt"]
+    sn_params.max_car_no_park_duration_to_pt = request["max_car_no_park_duration_to_pt"]
     sn_params.walking_speed = request["walking_speed"]
     sn_params.bike_speed = request["bike_speed"]
     sn_params.car_speed = request["car_speed"]
     sn_params.bss_speed = request["bss_speed"]
+    sn_params.car_no_park_speed = request["car_no_park_speed"]
     sn_params.origin_filter = request.get("origin_filter", "")
     sn_params.destination_filter = request.get("destination_filter", "")
     #we always want direct path, even for car
@@ -529,6 +531,9 @@ def _tag_journey_by_mode(journey):
         elif section.type == response_pb2.STREET_NETWORK \
              and section.street_network.mode == response_pb2.Car:
             cur_mode = 'car'
+        elif section.type == response_pb2.STREET_NETWORK \
+             and section.street_network.mode == response_pb2.Ridesharing:
+            cur_mode = 'ridesharing'
 
         if mode_weight[mode] < mode_weight[cur_mode]:
             mode = cur_mode
@@ -540,6 +545,21 @@ def _tag_by_mode(responses):
     for r in responses:
         for j in r.journeys:
             _tag_journey_by_mode(j)
+
+def _switch_back_to_ridesharing(response):
+    for journey in response.journeys:
+        for i, section in enumerate(journey.sections):
+            if section.type == response_pb2.STREET_NETWORK \
+                    and section.street_network.mode == response_pb2.Car:
+                if (len(journey.sections) > i+1 and journey.sections[i+1].type != response_pb2.PARK) or \
+                        (i > 0 and journey.sections[i-1].type != response_pb2.LEAVE_PARKING) \
+                        or len(journey.sections) == 1:
+                    #TODO: handle crowfly :(
+                    section.street_network.mode = response_pb2.Ridesharing
+                    journey.durations.ridesharing += section.duration
+                    journey.durations.car -= section.duration
+                    journey.distances.ridesharing += section.length
+                    journey.distances.car -= section.length
 
 
 def nb_journeys(responses):
@@ -758,9 +778,6 @@ class Scenario(simple.Scenario):
         # building ridesharing request from "original" request
         ridesharing_req = deepcopy(api_request)
 
-        # removing ridesharing from request # TODO avoid kraken crash if ridesharing passed
-        api_request['origin_mode'] = [p for p in api_request['origin_mode'] if p != 'ridesharing']
-        api_request['destination_mode'] = [p for p in api_request['destination_mode'] if p != 'ridesharing']
         if not api_request['origin_mode']:
             api_request['origin_mode'] = ['walking']
         if not api_request['destination_mode']:
@@ -801,25 +818,21 @@ class Scenario(simple.Scenario):
         journey_filter.final_filter_journeys(responses, instance, api_request)
         pb_resp = merge_responses(responses)
 
-        if 'ridesharing' in ridesharing_req['origin_mode'] and instance.ridesharing_services:
-            period_extremity = PeriodExtremity(ridesharing_req['datetime'], ridesharing_req['clockwise'])
-            try:
-                rs_journey, rs_tickets = build_ridesharing_crowfly_journey(instance,
-                                                                       ridesharing_req['origin'],
-                                                                       ridesharing_req['destination'],
-                                                                       period_extremity)
-                if rs_journey:
-                    pb_resp.journeys.extend([rs_journey])
-                    if rs_tickets:
-                        pb_resp.tickets.extend(rs_tickets)
-                    if pb_resp.HasField(str('error')) and not to_be_deleted(rs_journey):
-                        pb_resp.ClearField(str('error'))
-            except:
-                logger.exception('Error while retrieving ridesharing ads')
-
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])
         compute_car_co2_emission(pb_resp, api_request, instance)
         tag_journeys(pb_resp)
+
+        if 'ridesharing' in ridesharing_req['origin_mode'] and instance.ridesharing_services:
+            logging.getLogger(__name__).debug('trying to add ridesharing journeys')
+            try:
+                decorate_journeys(pb_resp, instance, api_request)
+            except:
+                logger.exception('Error while retrieving ridesharing ads')
+        else:
+            for j in pb_resp.journeys:
+                if 'ridesharing' in j.tags:
+                    journey_filter.mark_as_dead(j, 'no_matching_ridesharing_found')
+
         journey_filter.delete_journeys((pb_resp,), api_request)
         type_journeys(pb_resp, api_request)
         culling_journeys(pb_resp, api_request)
@@ -855,7 +868,8 @@ class Scenario(simple.Scenario):
             self.nb_kraken_calls += 1
             for idx, j in enumerate(local_resp.journeys):
                 j.internal_id = "{resp}-{j}".format(resp=self.nb_kraken_calls, j=idx)
-
+            if 'ridesharing' in dep_mode or 'ridesharing' in arr_mode:
+                _switch_back_to_ridesharing(local_resp)
             fill_uris(local_resp)
             resp.append(local_resp)
             logger.debug("for mode %s|%s we have found %s journeys", dep_mode, arr_mode, len(local_resp.journeys))

@@ -100,8 +100,9 @@ class ErrorSerializer(PbNestedSerializer):
 
 
 class CoordSerializer(serpy.Serializer):
-    lon = DoubleToStringField()
-    lat = DoubleToStringField()
+    lon = DoubleToStringField(display_none=True, required=True)
+    lat = DoubleToStringField(display_none=True, required=True)
+
 
 class CodeSerializer(serpy.Serializer):
     type = jsonschema.Field(schema_type=str)
@@ -148,6 +149,7 @@ class LinkSchema(serpy.Serializer):
     templated = BoolField()
     internal = BoolField()
     type = StrField()
+    href = StrField()
 
 
 class DisruptionLinkSerializer(jsonschema.Field):
@@ -193,6 +195,8 @@ class SectionGeoJsonField(jsonschema.Field):
         if value.type == response_pb2.STREET_NETWORK:
             coords = value.street_network.coordinates
         elif value.type == response_pb2.CROW_FLY and len(value.shape) != 0:
+            coords = value.shape
+        elif value.type == response_pb2.RIDESHARING and len(value.shape) != 0:
             coords = value.shape
         elif value.type == response_pb2.PUBLIC_TRANSPORT:
             coords = value.shape

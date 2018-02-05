@@ -1,3 +1,29 @@
+navitia2 (2.50.0) unstable; urgency=low
+
+  * Tyr: sync at the end of ed2nav  <https://github.com/CanalTP/navitia/pull/2325>
+  * Jormungandr: fix uninitialized list  <https://github.com/CanalTP/navitia/pull/2324>
+  * jormungandr: feed_publisher in distributed for here and geovelo  <https://github.com/CanalTP/navitia/pull/2314>
+  * Jormungandr: add feed_publisher to rs service  <https://github.com/CanalTP/navitia/pull/2321>
+  * Kraken: fix schedules for lines not circulating on two consecutive days or more  <https://github.com/CanalTP/navitia/pull/2309>
+  * Jormungandr: shape for ridesharing  <https://github.com/CanalTP/navitia/pull/2322>
+  * jormungandr: test on ridesharing with a public transport  <https://github.com/CanalTP/navitia/pull/2317>
+  * Doc: ridesharing  <https://github.com/CanalTP/navitia/pull/2316>
+  * Kraken: Fix Address Label in POI  <https://github.com/CanalTP/navitia/pull/2315>
+  * Jormungandr: Put ridesharing ads from instant system on section computed by kraken  <https://github.com/CanalTP/navitia/pull/2308>
+  * Kraken: Add ridesharing into kraken  <https://github.com/CanalTP/navitia/pull/2303>
+  * Jormungandr: [Siri Lite] Add new tests  <https://github.com/CanalTP/navitia/pull/2311>
+  * jormungandr: address added in poi  <https://github.com/CanalTP/navitia/pull/2300>
+  * jormungandr: test on ridesharing_journeys added  <https://github.com/CanalTP/navitia/pull/2307>
+  * Jormungandr: Swagger issues  <https://github.com/CanalTP/navitia/pull/2306>
+  * Jormungandr: correction crash use before define  <https://github.com/CanalTP/navitia/pull/2313>
+  * Kraken and Jormungandr: Add utc arrival/departure time field  <https://github.com/CanalTP/navitia/pull/2302>
+  * Jormungandr: Add status in InstantSystem  <https://github.com/CanalTP/navitia/pull/2305>
+  * Jormungandr: Fix pagination counters with RT  <https://github.com/CanalTP/navitia/pull/2294>
+  * Doc: Ridesharing RFC  <https://github.com/CanalTP/navitia/pull/2288>
+  * Tyr: add API migrate_from_poi_to_osm  <https://github.com/CanalTP/navitia/pull/2291>
+
+ -- Patrick Qian <patrick.qian@canaltp.fr>  Mon, 05 Feb 2018 17:02:16 +0100
+
 navitia2 (2.49.0) unstable; urgency=low
 
   * Jormun: implementation of ridesharing for direct path solution

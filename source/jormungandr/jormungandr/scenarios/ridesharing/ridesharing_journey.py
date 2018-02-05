@@ -82,7 +82,7 @@ class MetaData(object):
 class RidesharingJourney(object):
     __slots__ = ('metadata',
                  'distance',
-                 'shape',
+                 'shape', # a list of type_pb2.GeographicalCoord()
                  'ridesharing_ad',
                  'pickup_place',
                  'dropoff_place',
@@ -91,6 +91,6 @@ class RidesharingJourney(object):
                  # driver will be Individual
                  'driver',
                  'price',
-                 'currency',
+                 'currency', # "centime" (EURO cents) is the preferred currency (price is filled accordingly)
                  'total_seats',
                  'available_seats',)

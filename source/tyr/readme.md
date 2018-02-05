@@ -712,3 +712,15 @@ Finally if you want to delete a poi_type you just have to use the DELETE action:
 
     curl 'http://localhost:5000/v0/instances/fr-bre/poi_types' -X DELETE
 
+#### Migrate from POI to OSM
+
+Remove all POI datasets stored in database.
+
+    DELETE $HOST/v0/instances/$INSTANCE_NAME/actions/migrate_from_poi_to_osm
+
+response:
+```json
+{
+    "action": "All POI datasets deleted for instance $INSTANCE_NAME"
+}
+```

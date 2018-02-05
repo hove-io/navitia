@@ -521,6 +521,8 @@ class Journeys(JourneyCommon):
             # we have custom default values for isochrone because they are very resource expensive
             if args.get('max_duration') is None:
                 args['max_duration'] = app.config['ISOCHRONE_DEFAULT_VALUE']
+            if 'ridesharing' in args['origin_mode'] or 'ridesharing' in args['destination_mode']:
+                abort(400, message='ridesharing isn\'t available on isochrone')
 
         def _set_specific_params(mod):
             if args.get('max_duration') is None:

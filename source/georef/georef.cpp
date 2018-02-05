@@ -372,6 +372,7 @@ void GeoRef::init() {
             boost::add_vertex(graph[v], graph);
         }
     }
+    offsets[nt::Mode_e::CarNoPark] = offsets[nt::Mode_e::Car];
 }
 
 void GeoRef::build_proximity_list(){
@@ -603,7 +604,8 @@ std::pair<GeoRef::ProjectionByMode, bool> GeoRef::project_stop_point(const type:
         nt::Mode_e::Walking, // Walking -> Walking
         nt::Mode_e::Bike, // Bike -> Bike
         nt::Mode_e::Walking, // Car -> Walking
-        nt::Mode_e::Walking // Bss -> Walking
+        nt::Mode_e::Walking, // Bss -> Walking
+        nt::Mode_e::Car // CarNoPark -> Car
     }}};
 
     for (auto const &mode_layer: mode_to_layer) {

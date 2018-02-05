@@ -396,6 +396,8 @@ class SectionGeoJson(fields.Raw):
             coords = obj.street_network.coordinates
         elif obj.type == response_pb2.CROW_FLY and len(obj.shape) != 0:
             coords = obj.shape
+        elif obj.type == response_pb2.RIDESHARING and len(obj.shape) != 0:
+            coords = obj.shape
         elif obj.type == response_pb2.PUBLIC_TRANSPORT:
             coords = obj.shape
         elif obj.type == response_pb2.TRANSFER:
@@ -669,7 +671,9 @@ jpps = NonNullList(NonNullNested(journey_pattern_point))
 journey_pattern["journey_pattern_points"] = jpps
 stop_time = {
     "arrival_time": SplitDateTime(date=None, time='arrival_time'),
+    "utc_arrival_time": SplitDateTime(date=None, time='utc_arrival_time'),
     "departure_time": SplitDateTime(date=None, time='departure_time'),
+    "utc_departure_time": SplitDateTime(date=None, time='utc_departure_time'),
     "headsign": fields.String(attribute="headsign"),
     "journey_pattern_point": NonNullProtobufNested(journey_pattern_point),
     "stop_point": NonNullProtobufNested(stop_point)
@@ -889,6 +893,7 @@ instance_status = {
     "dataset_created_at": fields.String(),
     "autocomplete": fields.Raw(),
     "street_networks": fields.Raw(),
+    "ridesharing_services": fields.Raw()
 }
 
 instance_parameters = {
@@ -898,11 +903,13 @@ instance_parameters = {
     'max_bike_duration_to_pt': fields.Raw,
     'max_bss_duration_to_pt': fields.Raw,
     'max_car_duration_to_pt': fields.Raw,
+    'max_car_no_park_duration_to_pt': fields.Raw,
     'max_nb_transfers': fields.Raw,
     'walking_speed': fields.Raw,
     'bike_speed': fields.Raw,
     'bss_speed': fields.Raw,
     'car_speed': fields.Raw,
+    'car_no_park_speed': fields.Raw,
     'min_bike': fields.Raw,
     'min_car': fields.Raw,
     'min_bss': fields.Raw,
@@ -1051,5 +1058,9 @@ def add_common_status(response, instance):
     response['status']['street_networks'] = []
     for sn in instance.street_network_services:
         response['status']['street_networks'].append(sn.status())
+
+    response['status']['ridesharing_services'] = []
+    for rs in instance.ridesharing_services:
+        response['status']['ridesharing_services'].append(rs.status())
 
     response['status']['autocomplete'] = instance.autocomplete.status()

@@ -37,12 +37,22 @@ import requests as requests
 from jormungandr import utils
 from jormungandr import app
 import jormungandr.scenarios.ridesharing.ridesharing_journey as rsj
-from jormungandr.scenarios.ridesharing.ridesharing_service import AbstractRidesharingService
+from jormungandr.scenarios.ridesharing.ridesharing_service import AbstractRidesharingService, RsFeedPublisher
+from jormungandr.utils import decode_polyline
+from navitiacommon import type_pb2
+
+DEFAULT_INSTANT_SYSTEM_FEED_PUBLISHER = {
+    'id': 'Instant System',
+    'name': 'Instant System',
+    'license': 'Private',
+    'url': 'https://instant-system.com/disclaimers/disclaimer_XX.html'
+}
 
 
 class InstantSystem(AbstractRidesharingService):
 
-    def __init__(self, instance, service_url, api_key, network, rating_scale_min=None, rating_scale_max=None):
+    def __init__(self, instance, service_url, api_key, network, feed_publisher=DEFAULT_INSTANT_SYSTEM_FEED_PUBLISHER,
+                 rating_scale_min=None, rating_scale_max=None, timeout=2):
         self.instance = instance
         self.service_url = service_url
         self.api_key = api_key
@@ -50,6 +60,8 @@ class InstantSystem(AbstractRidesharingService):
         self.rating_scale_min = rating_scale_min
         self.rating_scale_max = rating_scale_max
         self.system_id = 'Instant System'
+        self.timeout = timeout
+        self.feed_publisher = None if feed_publisher is None else RsFeedPublisher(**feed_publisher)
 
         self.journey_metadata = rsj.MetaData(system_id=self.system_id,
                                              network=self.network,
@@ -62,12 +74,21 @@ class InstantSystem(AbstractRidesharingService):
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_INSTANT_SYSTEM_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_INSTANT_SYSTEM_TIMEOUT_S'])
 
+    def status(self):
+        return {'id': self.system_id,
+                'class': self.__class__.__name__,
+                'circuit_breaker': {'current_state': self.breaker.current_state,
+                                    'fail_counter': self.breaker.fail_counter,
+                                    'reset_timeout': self.breaker.reset_timeout},
+                }
+
     def _call_service(self, params):
         self.logger.debug("requesting instant system")
 
         headers = {'Authorization': 'apiKey {}'.format(self.api_key)}
         try:
-            return self.breaker.call(requests.get, url=self.service_url, headers=headers, params=params, timeout=1000)
+            return self.breaker.call(requests.get, url=self.service_url, headers=headers,
+                                     params=params, timeout=self.timeout)
         except pybreaker.CircuitBreakerError as e:
             self.logger.error('Instant System service dead (error: {})'.format(e))
             raise
@@ -111,21 +132,40 @@ class InstantSystem(AbstractRidesharingService):
                 res.metadata = self.journey_metadata
 
                 res.distance = j.get('distance')
-                res.shape = p.get('shape')
+
                 res.ridesharing_ad = j.get('url')
 
                 ridesharing_ad = p['rideSharingAd']
-                from_data = ridesharing_ad['from']
+                from_data = p['from']
 
                 res.pickup_place = rsj.Place(addr=from_data.get('name'),
                                              lat=from_data.get('lat'),
                                              lon=from_data.get('lon'))
 
-                to_data = ridesharing_ad['to']
+                to_data = p['to']
 
                 res.dropoff_place = rsj.Place(addr=to_data.get('name'),
                                               lat=to_data.get('lat'),
                                               lon=to_data.get('lon'))
+
+                # shape is a list of type_pb2.GeographicalCoord()
+                res.shape = []
+                shape = decode_polyline(p.get('shape'), precision=5)
+                if not shape or res.pickup_place.lon != shape[0][0] or res.pickup_place.lat != shape[0][1]:
+                    coord = type_pb2.GeographicalCoord()
+                    coord.lon = res.pickup_place.lon
+                    coord.lat = res.pickup_place.lat
+                    res.shape.append(coord)
+                for c in shape:
+                    coord = type_pb2.GeographicalCoord()
+                    coord.lon = c[0]
+                    coord.lat = c[1]
+                    res.shape.append(coord)
+                if not shape or res.dropoff_place.lon != shape[0][0] or res.dropoff_place.lat != shape[0][1]:
+                    coord = type_pb2.GeographicalCoord()
+                    coord.lon = res.dropoff_place.lon
+                    coord.lat = res.dropoff_place.lat
+                    res.shape.append(coord)
 
                 res.pickup_date_time = utils.make_timestamp_from_str(p['departureDate'])
                 res.dropoff_date_time = utils.make_timestamp_from_str(p['arrivalDate'])
@@ -142,18 +182,24 @@ class InstantSystem(AbstractRidesharingService):
                                             rate=user.get('rating', {}).get('rate'),
                                             rate_count=user.get('rating', {}).get('count'))
 
+                # the usual form of the price for InstantSystem is: "170 EUR"
+                # which means "170 EURO cents" or "1.70 EURO"
+                # In Navitia so far prices are in "centime" so we transform it to: "170 centime"
                 price = ridesharing_ad['price']
                 res.price = price.get('amount')
-                res.currency = price.get('currency')
+                if price.get('currency') == "EUR":
+                    res.currency = "centime"
+                else:
+                    res.currency = price.get('currency')
 
                 res.available_seats = ridesharing_ad['vehicle']['availableSeats']
-                res.total_seats = res.available_seats
+                res.total_seats = None
 
                 ridesharing_journeys.append(res)
 
         return ridesharing_journeys
 
-    def request_journeys(self, from_coord, to_coord, period_extremity, limit=None):
+    def _request_journeys(self, from_coord, to_coord, period_extremity, limit=None):
         """
 
         :param from_coord: lat,lon ex: '48.109377,-1.682103'
@@ -162,7 +208,6 @@ class InstantSystem(AbstractRidesharingService):
         :param limit: optional
         :return:
         """
-        # TODO: url and apiKey should be read from config
         # format of datetime: 2017-12-25T07:00:00Z
         datetime_str = datetime.datetime.fromtimestamp(period_extremity.datetime)\
             .strftime('%Y-%m-%dT%H:%M:%SZ')
@@ -176,5 +221,11 @@ class InstantSystem(AbstractRidesharingService):
 
         resp = self._call_service(params=params)
         if resp:
-            return self._make_response(resp.json())
+            r = self._make_response(resp.json())
+            self.logger.debug('%s ridesharing ads found', len(r))
+            return r
+        self.logger.debug('0 ridesharing ads found')
         return []
+
+    def _get_feed_publisher(self):
+        return self.feed_publisher

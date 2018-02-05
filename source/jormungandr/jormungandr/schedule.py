@@ -255,6 +255,7 @@ class MixedSchedule(object):
                              _create_template_from_pb_route_point(rp))
                             for rp in resp.route_points)
 
+        rt_proxy = None
         for route_point, template in route_points.items():
             rt_proxy = self._get_realtime_proxy(route_point)
             if rt_proxy:
@@ -267,9 +268,12 @@ class MixedSchedule(object):
                        p2.stop_date_time.departure_date_time)
         resp.next_departures.sort(comparator)
 
-        # handle pagination
-        del resp.next_departures[resp.pagination.itemsPerPage:]
-        resp.pagination.itemsOnPage = len(resp.next_departures)
+        # handle pagination :
+        # If real time information exist, we have to change
+        # pagination score.
+        if rt_proxy:
+            resp.pagination.totalResult = len(resp.next_departures)
+            resp.pagination.itemsOnPage = len(resp.next_departures)
 
         return resp
 

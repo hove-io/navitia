@@ -86,10 +86,19 @@ class TestPtRef(AbstractTestFixture):
         assert vj['id'] == 'vj1'
 
         assert len(vj['stop_times']) == 2
-        assert vj['stop_times'][0]['arrival_time'] == '101500'
-        assert vj['stop_times'][0]['departure_time'] == '101500'
-        assert vj['stop_times'][1]['arrival_time'] == '111000'
-        assert vj['stop_times'][1]['departure_time'] == '111000'
+
+        # Local Time
+        assert vj['stop_times'][0]['arrival_time'] == '111500'
+        assert vj['stop_times'][0]['departure_time'] == '111500'
+        assert vj['stop_times'][1]['arrival_time'] == '121000'
+        assert vj['stop_times'][1]['departure_time'] == '121000'
+
+        # UTC Time
+        # In this case, Local time = UTC Time
+        assert vj['stop_times'][0]['utc_arrival_time'] == '101500'
+        assert vj['stop_times'][0]['utc_departure_time'] == '101500'
+        assert vj['stop_times'][1]['utc_arrival_time'] == '111000'
+        assert vj['stop_times'][1]['utc_departure_time'] == '111000'
 
         #we added some comments on the vj, we should have them
         com = get_not_null(vj, 'comments')
@@ -184,8 +193,14 @@ class TestPtRef(AbstractTestFixture):
         """
         stop_area:stop1 with _current_datetime
         """
-        current_datetime = '20140115T235959'
-        response = self.query_region("stop_areas/stop_area:stop1?_current_datetime={}".format(current_datetime))
+
+        # In Europe/Paris timezone, the diff between UTC and
+        # local time is 2 Hours
+        utc_datetime = '20140115T235959'
+        local_date_time = '20140116T005959'
+        timezone = 'Europe/Paris'
+
+        response = self.query_region("stop_areas/stop_area:stop1?_current_datetime={}".format(utc_datetime))
 
         disruptions = get_not_null(response, 'disruptions')
 
@@ -195,7 +210,8 @@ class TestPtRef(AbstractTestFixture):
 
         assert(messages[0]['text']) == 'Disruption on StopArea stop_area:stop1'
         self.check_context(response)
-        assert response['context']['current_datetime'] == current_datetime
+        assert response['context']['timezone'] == timezone
+        assert response['context']['current_datetime'] == local_date_time
 
     def test_contributors(self):
         """test contributor formating"""

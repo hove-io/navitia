@@ -42,7 +42,14 @@ from jormungandr.utils import is_url, kilometers_to_meters, get_pt_object_coord,
 from copy import deepcopy
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathKey, \
     StreetNetworkPathType
+from jormungandr.ptref import FeedPublisher
 
+DEFAULT_HERE_FEED_PUBLISHER = {
+    'id': 'here',
+    'name': 'here',
+    'license': 'Private',
+    'url': 'https://developer.here.com/terms-and-conditions'
+}
 
 def _get_coord(pt_object):
     coord = get_pt_object_coord(pt_object)
@@ -68,7 +75,7 @@ def _str_to_dt(timestamp):
 class Here(AbstractStreetNetworkService):
 
     def __init__(self, instance, service_base_url, modes=[], id='here', timeout=10, api_id=None, api_code=None,
-                 **kwargs):
+                 feed_publisher=DEFAULT_HERE_FEED_PUBLISHER, **kwargs):
         self.instance = instance
         self.sn_system_id = id
         if not service_base_url:
@@ -85,6 +92,7 @@ class Here(AbstractStreetNetworkService):
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_HERE_TIMEOUT_S'])
 
         self.log = logging.LoggerAdapter(logging.getLogger(__name__), extra={'streetnetwork_id': id})
+        self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
 
     def status(self):
         return {'id': self.sn_system_id,
@@ -215,7 +223,7 @@ class Here(AbstractStreetNetworkService):
 
         return params
 
-    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
+    def _direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
         params = self.get_direct_path_params(pt_object_origin, pt_object_destination, mode,
                                              fallback_extremity)
         r = self._call_here(self.routing_service_url, params=params)
@@ -313,3 +321,6 @@ class Here(AbstractStreetNetworkService):
         direct path from A to B change change with the realtime
         """
         return StreetNetworkPathKey(mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity)
+
+    def feed_publisher(self):
+        return self._feed_publisher

@@ -216,6 +216,11 @@ class Instance(object):
         return get_value_or_default('max_car_duration_to_pt', instance_db, self.name)
 
     @property
+    def max_car_no_park_duration_to_pt(self):
+        instance_db = self.get_models()
+        return get_value_or_default('max_car_no_park_duration_to_pt', instance_db, self.name)
+
+    @property
     def walking_speed(self):
         instance_db = self.get_models()
         return get_value_or_default('walking_speed', instance_db, self.name)
@@ -234,6 +239,11 @@ class Instance(object):
     def car_speed(self):
         instance_db = self.get_models()
         return get_value_or_default('car_speed', instance_db, self.name)
+
+    @property
+    def car_no_park_speed(self):
+        instance_db = self.get_models()
+        return get_value_or_default('car_no_park_speed', instance_db, self.name)
 
     @property
     def max_nb_transfers(self):
@@ -536,12 +546,12 @@ class Instance(object):
         service = self.get_street_network(mode, request)
         if not service:
             return None
-        return service.direct_path(mode,
-                                   pt_object_origin,
-                                   pt_object_destination,
-                                   fallback_extremity,
-                                   request,
-                                   direct_path_type)
+        return service.direct_path_with_fp(mode,
+                                           pt_object_origin,
+                                           pt_object_destination,
+                                           fallback_extremity,
+                                           request,
+                                           direct_path_type)
 
     def get_autocomplete(self, requested_autocomplete):
         if not requested_autocomplete:
@@ -551,8 +561,11 @@ class Instance(object):
             raise TechnicalError('autocomplete {} not available'.format(requested_autocomplete))
         return autocomplete
 
-    def get_ridesharing_journeys(self, from_coord, to_coord, period_extremity, limit=None):
+    def get_ridesharing_journeys_with_feed_publishers(self, from_coord, to_coord, period_extremity, limit=None):
         res = []
+        fps = set()
         for service in self.ridesharing_services:
-            res.extend(service.request_journeys(from_coord, to_coord, period_extremity, limit))
-        return res
+            rsjs, fp = service.request_journeys_with_feed_publisher(from_coord, to_coord, period_extremity, limit)
+            res.extend(rsjs)
+            fps.add(fp)
+        return res, fps

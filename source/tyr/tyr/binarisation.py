@@ -471,6 +471,7 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
         res = None
         with collect_metric('ed2nav', job, None):
             res = launch_exec('ed2nav', argv, logger)
+            os.system('sync') #we sync to be safe
         if res != 0:
             raise ValueError('ed2nav failed')
     except:

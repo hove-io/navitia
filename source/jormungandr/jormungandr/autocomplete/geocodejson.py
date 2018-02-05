@@ -34,7 +34,7 @@ import logging
 
 import jormungandr
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
-from jormungandr.utils import get_lon_lat as get_lon_lat_from_id
+from jormungandr.utils import get_lon_lat as get_lon_lat_from_id, get_house_number
 import requests
 from jormungandr.exceptions import TechnicalError, UnknownObject
 from flask.ext.restful import marshal, fields
@@ -121,6 +121,25 @@ def get_lon_lat(obj):
     return lon, lat
 
 
+def create_address_field(geocoding):
+    if not geocoding:
+        return None
+    coord = geocoding.get('coord', {})
+    lat = str(coord.get('lat')) if coord and coord.get('lat') else None
+    lon = str(coord.get('lon')) if coord and coord.get('lon') else None
+
+    return {
+        "id": geocoding.get('id'),
+        "label": geocoding.get('label'),
+        "name": geocoding.get('name'),
+        "coord": {
+            "lat": lat,
+            "lon": lon
+        },
+        "house_number": get_house_number(geocoding.get('housenumber'))
+    }
+
+
 class AdministrativeRegionField(fields.Raw):
     """
     This field is needed to respect Navitia's spec for the sake of compatibility
@@ -156,10 +175,6 @@ class AddressField(fields.Raw):
 
         lon, lat = get_lon_lat(obj)
         geocoding = obj.get('properties', {}).get('geocoding', {})
-        hn = 0
-        numbers = re.findall(r'^\d+', geocoding.get('housenumber') or "0")
-        if len(numbers) > 0:
-            hn = numbers[0]
 
         return {
             "id": '{};{}'.format(lon, lat),
@@ -167,7 +182,7 @@ class AddressField(fields.Raw):
                 "lon": lon,
                 "lat": lat,
             },
-            "house_number": int(hn),
+            "house_number": get_house_number(geocoding.get('housenumber')),
             "label": geocoding.get('label'),
             "name": geocoding.get('name'),
             "administrative_regions":
@@ -195,7 +210,8 @@ class PoiField(fields.Raw):
             "name": geocoding.get('name'),
             "administrative_regions":
                 create_administrative_regions_field(geocoding) or create_admin_field(geocoding),
-            "properties": {p.get('key'): p.get('value') for p in geocoding.get("properties", [])}
+            "properties": {p.get('key'): p.get('value') for p in geocoding.get("properties", [])},
+            "address": create_address_field(geocoding.get("address"))
         }
         if isinstance(poi_types, list) and poi_types:
             res['poi_type'] = poi_types[0]

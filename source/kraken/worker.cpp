@@ -72,6 +72,8 @@ double get_speed(const T& request, const type::Mode_e mode) {
             return request.bike_speed();
         case type::Mode_e::Car:
             return request.car_speed();
+        case type::Mode_e::CarNoPark:
+            return request.car_no_park_speed();
         case type::Mode_e::Bss:
             return request.bss_speed();
         default:
@@ -512,6 +514,11 @@ streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams& reques
             result.speed_factor = request.car_speed() / georef::default_speed[type::Mode_e::Car];
             max_non_pt = request.max_car_duration_to_pt();
             break;
+        case type::Mode_e::CarNoPark:
+            result.offset = data->geo_ref->offsets[type::Mode_e::CarNoPark];
+            result.speed_factor = request.car_no_park_speed() / georef::default_speed[type::Mode_e::CarNoPark];
+            max_non_pt = request.max_car_no_park_duration_to_pt();
+            break;
         case type::Mode_e::Bss:
             result.offset = data->geo_ref->offsets[type::Mode_e::Bss];
             result.speed_factor = request.bss_speed() / georef::default_speed[type::Mode_e::Bss];
@@ -761,7 +768,7 @@ void Worker::pt_ref(const pbnavitia::PTRefRequest &request) {
     std::vector<std::string> forbidden_uri;
     for (int i = 0; i < request.forbidden_uri_size(); ++i) {
         forbidden_uri.push_back(request.forbidden_uri(i));
-    }    
+    }
     navitia::ptref::query_pb(this->pb_creator,
                              get_type(request.requested_type()),
                              request.filter(),
@@ -909,6 +916,7 @@ type::EntryPoint make_sn_entry_point(const std::string& place,
         case type::Mode_e::Bike:
         case type::Mode_e::Car:
         case type::Mode_e::Bss:
+        case type::Mode_e::CarNoPark:
             entry_point.streetnetwork_params.offset = data.geo_ref->offsets[mode_enum];
             entry_point.streetnetwork_params.speed_factor = speed / georef::default_speed[mode_enum];
             break;

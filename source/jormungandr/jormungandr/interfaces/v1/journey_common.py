@@ -204,6 +204,9 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
                                 help="Maximal duration of bss on public transport in second")
         parser_get.add_argument("max_car_duration_to_pt", type=int,
                                 help="Maximal duration of car on public transport in second")
+        parser_get.add_argument("max_ridesharing_duration_to_pt", type=int,
+                                dest="max_car_no_park_duration_to_pt",
+                                help="Maximal duration of ridesharing on public transport in second")
         parser_get.add_argument("walking_speed", type=float_gt_0,
                                 help='Walking speed for the fallback sections.\n'
                                      'Speed unit must be in meter/second')
@@ -216,6 +219,9 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
                                      'Speed unit must be in meter/second')
         parser_get.add_argument("car_speed", type=float_gt_0,
                                 help='Driving speed for the fallback sections.\n'
+                                     'Speed unit must be in meter/second')
+        parser_get.add_argument("ridesharing_speed", type=float_gt_0, dest="car_no_park_speed",
+                                help='ridesharing speed for the fallback sections.\n'
                                      'Speed unit must be in meter/second')
         parser_get.add_argument("forbidden_uris[]", type=six.text_type, action="append",
                                 help='If you want to avoid lines, modes, networks, etc.\n'
@@ -285,6 +291,7 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
             args['max_bike_duration_to_pt'] = args['max_duration_to_pt']
             args['max_bss_duration_to_pt'] = args['max_duration_to_pt']
             args['max_car_duration_to_pt'] = args['max_duration_to_pt']
+            args['max_car_no_park_duration_to_pt'] = args['max_duration_to_pt']
 
         if args['data_freshness'] is None:
             # retrocompatibilty handling
