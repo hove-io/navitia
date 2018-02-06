@@ -73,7 +73,7 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
             for( navitia::georef::Admin* admin : sa->admin_list){
                 if (admin->level ==8){key +=" " + admin->name;}
             }
-            this->stop_area_autocomplete.add_string(sa->name + " " + key, sa->idx, georef.ghostwords, georef.synonyms);
+            this->stop_area_autocomplete.add_string(sa->name + key, sa->idx, georef.ghostwords, georef.synonyms);
         }
     }
     this->stop_area_autocomplete.build();
