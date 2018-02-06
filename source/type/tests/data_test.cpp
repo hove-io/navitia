@@ -38,6 +38,7 @@ www.navitia.io
 // Std
 #include <string>
 #include <fstream>
+#include <clocale>
 
 // Data to test
 #include "type/data.h"
@@ -50,6 +51,10 @@ static const std::string fake_disruption_path = "fake_disruption_path";
 
 // We create a empty data with lz4 format in current directory
 #define CREATE_FAKE_DATA(fake_file_name) \
+    // We have to set LC_ALL=C because you can fall on :
+    // [Exception] - std::runtime_error: locale::facet::_S_create_c_locale name not valid
+    // sources : https://stackoverflow.com/questions/19405272/c-issues-with-boostfilesystem-on-server-localefacet-s-create-c-locale
+    std::setlocale(LC_ALL, "C");         \
     navitia::type::Data data(0);         \
     data.save(fake_data_file);           \
 
@@ -59,9 +64,7 @@ BOOST_AUTO_TEST_CASE(load_data) {
 
     // Load fake data
     bool check_load = data.load(system_complete("fake_data.nav.lz4").string());
-    std::cout << "path : " << system_complete("fake_data.nav.lz4").string() << std::endl;
-    //bool check_load = data.load(boost::filesystem::absolute(current_path()).string() \
-    //                            + "/" + fake_data_file);
+
     BOOST_CHECK_EQUAL(check_load, true);
 }
 
@@ -76,8 +79,6 @@ BOOST_AUTO_TEST_CASE(load_disruptions_fail) {
     CREATE_FAKE_DATA(fake_data_file)
 
     // Load fake data
-    //bool check_load = data.load(boost::filesystem::absolute(current_path()).string() \
-    //                            + "/" + fake_data_file, fake_disruption_path);
     bool check_load = data.load(system_complete("fake_data.nav.lz4").string(),
                                                 fake_disruption_path);
     BOOST_CHECK_EQUAL(data.disruption_error, true);
@@ -90,8 +91,7 @@ BOOST_AUTO_TEST_CASE(load_without_disruptions) {
 
     // Load fake data
     bool check_load = data.load(system_complete("fake_data.nav.lz4").string());
-    //bool check_load = data.load_without_disruptions(boost::filesystem::absolute(current_path()).string() \
-    //                                                + "/" + fake_data_file);
+
     BOOST_CHECK_EQUAL(data.disruption_error, false);
     BOOST_CHECK_EQUAL(check_load, true);
 }
