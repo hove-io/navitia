@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(load_data) {
     CREATE_FAKE_DATA(fake_data_file)
 
     // Load fake data
-    bool check_load = data.load(boost::filesystem::canonical(current_path()).string() \
+    bool check_load = data.load(boost::filesystem::absolute(current_path()).string() \
                                 + "/" + fake_data_file);
     BOOST_CHECK_EQUAL(check_load, true);
 }
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(load_disruptions_fail) {
     CREATE_FAKE_DATA(fake_data_file)
 
     // Load fake data
-    bool check_load = data.load(boost::filesystem::canonical(current_path()).string() \
+    bool check_load = data.load(boost::filesystem::absolute(current_path()).string() \
                                 + "/" + fake_data_file, fake_disruption_path);
     BOOST_CHECK_EQUAL(data.disruption_error, true);
     BOOST_CHECK_EQUAL(check_load, true);
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(load_without_disruptions) {
     CREATE_FAKE_DATA(fake_data_file)
 
     // Load fake data
-    bool check_load = data.load_without_disruptions(boost::filesystem::canonical(current_path()).string() \
+    bool check_load = data.load_without_disruptions(boost::filesystem::absolute(current_path()).string() \
                                                     + "/" + fake_data_file);
     BOOST_CHECK_EQUAL(data.disruption_error, false);
     BOOST_CHECK_EQUAL(check_load, true);
