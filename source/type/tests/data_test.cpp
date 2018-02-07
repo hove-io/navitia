@@ -52,6 +52,7 @@ static const std::string fake_disruption_path = "fake_disruption_path";
 // We create a empty data with lz4 format in current directory.
 // We have to set LC_ALL=C because we can fall on :
 // [Exception] - std::runtime_error: locale::facet::_S_create_c_locale name not valid
+// When you create a absolute path, boost < 1.56 failed. 
 // sources : https://stackoverflow.com/questions/19405272/c-issues-with-boostfilesystem-on-server-localefacet-s-create-c-locale
 #define CREATE_FAKE_DATA(fake_file_name) \
     setenv("LC_ALL", "C", 1);            \
