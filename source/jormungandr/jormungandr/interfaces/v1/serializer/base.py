@@ -213,25 +213,36 @@ class LiteralField(jsonschema.Field):
         return lambda *args, **kwargs: self.value
 
 
-def flatten(obj):
-    if type(obj) != dict:
-        raise ValueError("Invalid argument")
-    new_obj = {}
-    for key, value in obj.items():
-        if type(value) == dict:
-            tmp = {'.'.join([key, _key]): _value for _key, _value in flatten(value).items()}
-            new_obj.update(tmp)
-        else:
-            new_obj[key] = value
-    return new_obj
-
-
 def value_by_path(obj, path, default=None):
-    new_obj = flatten(obj)
-    if new_obj:
-        return new_obj.get(path, default)
-    else:
-        return default
+    """
+    >>> value_by_path({'a': {'b' : {'c': 42}}}, 'a.b.c')
+    42
+    >>> value_by_path({'a': {'b' : {'c': 42}}}, 'a.b.c.d', default=4242)
+    4242
+    >>> value_by_path({'a': {'b' : {'c': 42}}}, 'a.b.c.d', default=0)
+    0
+    >>> value_by_path({'a': {'b' : {'c': 0}}}, 'a.b.c', default=None)
+    0
+    >>> value_by_path({'a': {'b' : {'c': 42}}}, 'a.b.c.d')
+    >>> value_by_path({'a': {'b' : {'c': 42}}}, 'a.b.e')
+    >>> value_by_path({'a': {'b' : {'c': 42}}}, 'a.b.c.d.e')
+
+    :param obj: Dict obj or has a __getitem__ implemented
+    :param path: path to the desired obj splitted by '.'
+    :param default: default value if not exist
+    :return:
+    """
+    # python3 compatibility
+    import functools
+
+    if not isinstance(obj, dict):
+        raise ValueError("Invalid argument")
+    splited_path = path.split('.')
+
+    def pred(x, y):
+        return x.get(y) if isinstance(x, dict) else None
+    res = functools.reduce(pred, splited_path, obj)
+    return res if res is not None else default
 
 
 class NestedPropertyField(jsonschema.Field):
