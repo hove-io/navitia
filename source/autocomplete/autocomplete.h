@@ -331,7 +331,7 @@ struct Autocomplete
         auto global_score = word_quality_list.at(position).score;
 
         const auto& indexed_str = indexed_string.at(position);
-        auto lcs_and_pos = longest_common_substring(str, indexed_str);
+        auto lcs_and_pos = longest_common_substring(strip_accents_and_lower(str), indexed_str);
 
         return std::make_tuple(
             global_score,
