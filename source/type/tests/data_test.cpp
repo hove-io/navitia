@@ -38,7 +38,7 @@ www.navitia.io
 // Std
 #include <string>
 #include <fstream>
-#include <clocale>
+#include <cstdlib>
 
 // Data to test
 #include "type/data.h"
@@ -54,7 +54,7 @@ static const std::string fake_disruption_path = "fake_disruption_path";
 // [Exception] - std::runtime_error: locale::facet::_S_create_c_locale name not valid
 // sources : https://stackoverflow.com/questions/19405272/c-issues-with-boostfilesystem-on-server-localefacet-s-create-c-locale
 #define CREATE_FAKE_DATA(fake_file_name) \
-    std::setlocale(LC_ALL, "C");         \
+    setenv("LC_ALL", "C", 1);            \
     navitia::type::Data data(0);         \
     data.save(fake_data_file);           \
 
