@@ -33,38 +33,42 @@ www.navitia.io
 
 // Boost
 #include <boost/test/unit_test.hpp>
-#include <boost/filesystem.hpp>
 
 // Std
 #include <string>
-#include <fstream>
-#include <cstdlib>
+#include <stdio.h>
+#include <unistd.h>  // getcwd() definition
 
 // Data to test
 #include "type/data.h"
 
 using namespace navitia;
-using namespace boost::filesystem;
 
 static const std::string fake_data_file = "fake_data.nav.lz4";
 static const std::string fake_disruption_path = "fake_disruption_path";
 
 // We create a empty data with lz4 format in current directory.
-// We have to set LC_ALL=C because we can fall on :
-// [Exception] - std::runtime_error: locale::facet::_S_create_c_locale name not valid
-// When you create a absolute path, boost < 1.56 failed. 
-// sources : https://stackoverflow.com/questions/19405272/c-issues-with-boostfilesystem-on-server-localefacet-s-create-c-locale
 #define CREATE_FAKE_DATA(fake_file_name) \
-    setenv("LC_ALL", "C", 1);            \
     navitia::type::Data data(0);         \
     data.save(fake_data_file);           \
+
+// Absolute path
+std::string complete_path(const std::string file_name){
+    char buf[256];
+    if (getcwd(buf, sizeof(buf))) {
+        return std::string(buf) + "/" + file_name;
+    } else {
+        std::perror("getcwd");
+        return "";
+    }
+}
 
 BOOST_AUTO_TEST_CASE(load_data) {
 
     CREATE_FAKE_DATA(fake_data_file)
 
     // Load fake data
-    bool check_load = data.load(system_complete("fake_data.nav.lz4").string());
+    bool check_load = data.load(complete_path(fake_data_file));
 
     BOOST_CHECK_EQUAL(check_load, true);
 }
@@ -80,8 +84,9 @@ BOOST_AUTO_TEST_CASE(load_disruptions_fail) {
     CREATE_FAKE_DATA(fake_data_file)
 
     // Load fake data
-    bool check_load = data.load(system_complete("fake_data.nav.lz4").string(),
-                                                fake_disruption_path);
+    bool check_load = data.load(complete_path(fake_data_file),
+                                fake_disruption_path);
+
     BOOST_CHECK_EQUAL(data.disruption_error, true);
     BOOST_CHECK_EQUAL(check_load, true);
 }
@@ -91,7 +96,7 @@ BOOST_AUTO_TEST_CASE(load_without_disruptions) {
     CREATE_FAKE_DATA(fake_data_file)
 
     // Load fake data
-    bool check_load = data.load(system_complete("fake_data.nav.lz4").string());
+    bool check_load = data.load(complete_path(fake_data_file));
 
     BOOST_CHECK_EQUAL(data.disruption_error, false);
     BOOST_CHECK_EQUAL(check_load, true);
