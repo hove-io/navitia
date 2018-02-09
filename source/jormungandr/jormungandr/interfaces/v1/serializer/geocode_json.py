@@ -32,6 +32,7 @@ from .base import LiteralField, NestedPropertyField, IntNestedPropertyField, val
 from flask.ext.restful import abort
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.fields import raw_feed_publisher_bano, raw_feed_publisher_osm
+from jormungandr.interfaces.v1.serializer.base import DictGenericSerializer
 from jormungandr.utils import get_house_number
 from jormungandr.autocomplete.geocodejson import create_address_field
 
@@ -146,11 +147,6 @@ class PoiTypeSerializer(serpy.DictSerializer):
     name = serpy.StrField(display_none=True)
 
 
-class GenericSerializer(serpy.DictSerializer):
-    id = serpy.StrField(display_none=True)
-    name = serpy.StrField(display_none=True)
-
-
 class PoiSerializer(serpy.DictSerializer):
     id = NestedPropertyField(attr='properties.geocoding.id', display_none=True)
     coord = CoordField()
@@ -224,7 +220,7 @@ class StopAreaSerializer(serpy.DictSerializer):
     def fill_modes(self, modes):
         if not modes:
             return []
-        return [GenericSerializer(mode).data for mode in modes]
+        return [DictGenericSerializer(mode).data for mode in modes]
 
     def get_commercial_modes(self, obj):
         modes = obj.get('properties', {}).get('geocoding', {}).get('commercial_modes', [])
