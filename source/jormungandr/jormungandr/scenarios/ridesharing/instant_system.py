@@ -222,9 +222,9 @@ class InstantSystem(AbstractRidesharingService):
         resp = self._call_service(params=params)
         if resp:
             r = self._make_response(resp.json())
-            self.logger.info('OK Instant system ridesharing offers received : %s', len(r))
+            self.logger.info('Instant System ridesharing offers : %s received', len(r))
             return r
-        self.logger.info('KO Instant system ridesharing offers received')
+        self.logger.info('Instant System ridesharing offers : None')
         return []
 
     def _get_feed_publisher(self):
