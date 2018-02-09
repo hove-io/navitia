@@ -135,7 +135,7 @@ def str_datetime_utc_to_local(dt, timezone):
     return dt_to_str(utc_dt.replace(tzinfo=pytz.UTC).astimezone(local))
 
 
-def timestamp_to_datetime(timestamp):
+def timestamp_to_datetime(timestamp, tz=None):
     """
     Convert a timestamp to datetime
     if timestamp > MAX_INT we return None
@@ -149,7 +149,7 @@ def timestamp_to_datetime(timestamp):
 
     dt = datetime.utcfromtimestamp(timestamp)
 
-    timezone = get_timezone()
+    timezone = tz or get_timezone()
     if timezone:
         dt = pytz.utc.localize(dt)
         return dt.astimezone(timezone)

@@ -38,6 +38,10 @@ from navitiacommon import type_pb2, request_pb2, response_pb2
 from copy import deepcopy
 from jormungandr import new_relic
 
+import gevent, gevent.pool
+from jormungandr import app
+
+
 RT_PROXY_PROPERTY_NAME = 'realtime_system'
 RT_PROXY_DATA_FRESHNESS = 'realtime'
 
@@ -190,7 +194,8 @@ class MixedSchedule(object):
                                                                       request['items_per_schedule'],
                                                                       request['from_datetime'],
                                                                       request['_current_datetime'],
-                                                                      request['duration'])
+                                                                      request['duration'],
+                                                                      request['timezone'])
         except Exception as e:
             log.exception('failure while requesting next passages to external RT system {}'.format(rt_system.rt_system_id))
             new_relic.record_custom_event('realtime_internal_failure', {'rt_system_id': rt_system.rt_system_id,
@@ -256,11 +261,21 @@ class MixedSchedule(object):
                             for rp in resp.route_points)
 
         rt_proxy = None
+
+        futures = []
+        pool = gevent.pool.Pool(app.config.get('GREENLET_RT_POOL_SIZE', 3))
+
+        def worker(rt_proxy, route_point, template, request, resp):
+            return resp, rt_proxy, route_point, template, self._get_next_realtime_passages(rt_proxy, route_point, request)
+
         for route_point, template in route_points.items():
             rt_proxy = self._get_realtime_proxy(route_point)
             if rt_proxy:
-                next_rt_passages = self._get_next_realtime_passages(rt_proxy, route_point, request)
-                rt_proxy._update_passages(resp.next_departures, route_point, template, next_rt_passages)
+                futures.append(pool.spawn(worker, rt_proxy, route_point, template, request, resp))
+
+        for future in gevent.iwait(futures):
+            resp, rt_proxy, route_point, template, next_rt_passages = future.get()
+            rt_proxy._update_passages(resp.next_departures, route_point, template, next_rt_passages)
 
         # sort
         def comparator(p1, p2):
@@ -269,8 +284,7 @@ class MixedSchedule(object):
         resp.next_departures.sort(comparator)
 
         # handle pagination :
-        # If real time information exist, we have to change
-        # pagination score.
+        # If real time information exist, we have to change pagination score.
         if rt_proxy:
             resp.pagination.totalResult = len(resp.next_departures)
             resp.pagination.itemsOnPage = len(resp.next_departures)

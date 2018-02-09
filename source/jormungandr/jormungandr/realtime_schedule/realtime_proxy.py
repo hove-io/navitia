@@ -41,6 +41,7 @@ import hashlib
 import logging
 import six
 
+
 class RealtimeProxyError(RuntimeError):
     pass
 
@@ -57,7 +58,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         """
         pass
 
-    def _filter_passages(self, passages, count, from_dt, duration):
+    def _filter_passages(self, passages, count, from_dt, duration, timezone=None):
         """
         after getting the next passages from the proxy, we might want to filter some
 
@@ -70,7 +71,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
 
         if from_dt:
             # we need to convert from_dt (which is a timestamp) to a datetime
-            from_dt = timestamp_to_datetime(from_dt)
+            from_dt = timestamp_to_datetime(from_dt, timezone)
             to_dt = from_dt + datetime.timedelta(seconds=duration)
             passages = [p for p in passages if from_dt <= p.datetime <= to_dt]
             if not passages:
@@ -83,7 +84,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
 
         return passages
 
-    def next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None, duration=86400):
+    def next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None, duration=86400, timezone=None):
         """
         Main method for the proxy
 
@@ -92,8 +93,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
 
         try:
             next_passages = self._get_next_passage_for_route_point(route_point, count, from_dt, current_dt, duration)
-
-            filtered_passage = self._filter_passages(next_passages, count, from_dt, duration)
+            filtered_passage = self._filter_passages(next_passages, count, from_dt, duration, timezone)
 
             self.record_call('ok')
 
