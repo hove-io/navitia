@@ -1991,4 +1991,32 @@ BOOST_AUTO_TEST_CASE(autocomplete_test_stop_area_longest_substring) {
         BOOST_REQUIRE_EQUAL(resp.places(0).scores(1), search_low.size());
         BOOST_REQUIRE_EQUAL(resp.places(0).scores(2), (search_low.size() - 1) * - 1);
     }
+
+    // we should have the same result on stop_points
+    std::string sp_search("stop_point:Jean Jaurès Toulouse");
+    std::string sp_search_low = data_ptr->pt_data->stop_area_autocomplete.strip_accents_and_lower(sp_search);
+
+    std::vector<navitia::type::Type_e> sp_type_filter;
+    sp_type_filter.push_back(navitia::type::Type_e::StopPoint);
+    {
+        navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+        navitia::autocomplete::autocomplete(pb_creator, sp_search, sp_type_filter , 1, 5, admins, 0, *(b.data));
+        pbnavitia::Response resp = pb_creator.get_response();
+
+        BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
+        BOOST_REQUIRE_EQUAL(resp.places(0).scores_size(), 3);
+        // The search is done on the lower case without accent string so the results are on this length
+        BOOST_REQUIRE_EQUAL(resp.places(0).scores(1), sp_search_low.size());
+        BOOST_REQUIRE_EQUAL(resp.places(0).scores(2), (sp_search_low.size() - 1) * - 1);
+    }
+    {
+        navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+        navitia::autocomplete::autocomplete(pb_creator, sp_search_low, sp_type_filter , 1, 5, admins, 0, *(b.data));
+        pbnavitia::Response resp = pb_creator.get_response();
+
+        BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
+        BOOST_REQUIRE_EQUAL(resp.places(0).scores_size(), 3);
+        BOOST_REQUIRE_EQUAL(resp.places(0).scores(1), sp_search_low.size());
+        BOOST_REQUIRE_EQUAL(resp.places(0).scores(2), (sp_search_low.size() - 1) * - 1);
+    }
 }

@@ -67,7 +67,7 @@ void PT_Data::sort(){
 void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
     this->stop_area_autocomplete.clear();
     for(const StopArea* sa : this->stop_areas){
-        // A ne pas ajouter dans le disctionnaire si pas ne nom
+        // Don't add it to the dictionnary if name is empty
         if ((!sa->name.empty()) && (sa->visible)) {
             std::string key="";
             for( navitia::georef::Admin* admin : sa->admin_list){
@@ -80,13 +80,13 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
 
     this->stop_point_autocomplete.clear();
     for(const StopPoint* sp : this->stop_points){
-        // A ne pas ajouter dans le disctionnaire si pas ne nom
+        // Don't add it to the dictionnary if name is empty
         if ((!sp->name.empty()) && ((sp->stop_area == nullptr) || (sp->stop_area->visible))) {
             std::string key="";
             for(navitia::georef::Admin* admin : sp->admin_list){
                 if (admin->level == 8){key += key + " " + admin->name;}
             }
-            this->stop_point_autocomplete.add_string(sp->name + " " + key, sp->idx, georef.ghostwords, georef.synonyms);
+            this->stop_point_autocomplete.add_string(sp->name + key, sp->idx, georef.ghostwords, georef.synonyms);
         }
     }
     this->stop_point_autocomplete.build();
@@ -95,9 +95,13 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
     for(const Line* line : this->lines){
         if (!line->name.empty()){
             std::string key="";
-            if (line->network){key = line->network->name;}
-            if (line->commercial_mode) {key += " " + line->commercial_mode->name;}
-            key += " " + line->code;
+            if (line->network) {key = line->network->name;}
+            if (line->commercial_mode) {
+                if (! key.empty()) {key += " ";}
+                key += line->commercial_mode->name;
+            }
+            if (! key.empty()) {key += " ";}
+            key += line->code;
             this->line_autocomplete.add_string(key + " " + line->name, line->idx, georef.ghostwords, georef.synonyms);
         }
     }
@@ -124,9 +128,13 @@ void PT_Data::build_autocomplete(const navitia::georef::GeoRef & georef){
         if (!route->name.empty()){
             std::string key="";
             if (route->line){
-                if (route->line->network){key = route->line->network->name;}
-                if (route->line->commercial_mode) {key += " " + route->line->commercial_mode->name;}
-                key += " " + route->line->code;
+                if (route->line->network) {key = route->line->network->name;}
+                if (route->line->commercial_mode) {
+                    if (! key.empty()) {key += " ";}
+                    key += route->line->commercial_mode->name;
+                }
+                if (!key.empty()) {key += " ";}
+                key += route->line->code;
             }
             this->route_autocomplete.add_string(key + " " + route->name, route->idx, georef.ghostwords, georef.synonyms);
         }
