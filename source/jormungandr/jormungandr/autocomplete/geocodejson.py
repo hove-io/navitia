@@ -251,7 +251,7 @@ class StopAreaField(fields.Raw):
             resp['commercial_modes'] = create_modes_field(c_modes)
 
         p_modes = geocoding.get('physical_modes', [])
-        if c_modes:
+        if p_modes:
             resp['physical_modes'] = create_modes_field(p_modes)
         return resp
 
