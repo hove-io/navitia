@@ -230,8 +230,8 @@ public:
 
     // Reload Data without disruption data
     bool load_without_disruptions(const std::string & filename,
-                                 const std::vector<std::string>& contributors = {},
-                                 const size_t raptor_cache_size = 10);
+                                  const std::vector<std::string>& contributors = {},
+                                  const size_t raptor_cache_size = 10);
 
     /** Sauvegarde les données */
     void save(const std::string & filename) const;

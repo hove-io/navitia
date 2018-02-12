@@ -158,8 +158,8 @@ bool Data::load(const std::string& filename,
 }
 
 bool Data::load_without_disruptions(const std::string& filename,
-                                        const std::vector<std::string>& contributors,
-                                        const size_t raptor_cache_size) {
+                                    const std::vector<std::string>& contributors,
+                                    const size_t raptor_cache_size) {
    disruptions_corruption_detected = true;
    return this->load(filename, {}, contributors, raptor_cache_size);
    disruptions_corruption_detected = false;
