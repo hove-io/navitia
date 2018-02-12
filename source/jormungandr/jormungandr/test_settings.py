@@ -34,3 +34,7 @@ ERROR_HANDLER_FILE = 'jormungandr.log'
 ERROR_HANDLER_TYPE = 'rotating'  # can be timedrotating
 ERROR_HANDLER_PARAMS = {'maxBytes': 20000000, 'backupCount': 5}
 LOG_LEVEL = logging.DEBUG
+
+# This parameter is used to apply gevent's monkey patch
+# The Goal is to activate parallel calling valhalla, without the patch, parallel http and https calling may not work
+PATCH_WITH_GEVENT_SOCKET = True
