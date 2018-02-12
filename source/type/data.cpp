@@ -121,7 +121,7 @@ bool Data::load(const std::string& filename,
         return last_load;
 	}
 
-    // Load Disruption (optionnal)
+    // Load Disruption (optional)
     if ((chaos_database) && (disruptions_corruption_detected == false)){
         try {
             fill_disruption_from_database(*chaos_database, *pt_data, *meta, contributors);
