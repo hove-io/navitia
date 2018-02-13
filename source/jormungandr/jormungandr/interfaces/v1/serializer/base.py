@@ -179,7 +179,12 @@ class EnumListField(EnumField):
         return [enum[value].name.lower() for value in getattr(obj, self.attr)]
 
 
-class GenericSerializer(PbNestedSerializer):
+class DictGenericSerializer(serpy.DictSerializer):
+    id = serpy.StrField(display_none=True)
+    name = serpy.StrField(display_none=True)
+
+
+class PbGenericSerializer(PbNestedSerializer):
     id = jsonschema.Field(schema_type=str, display_none=True, attr='uri',
                           description='Identifier of the object')
     name = jsonschema.Field(schema_type=str, display_none=True, description='Name of the object')
