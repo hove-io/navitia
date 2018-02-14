@@ -548,20 +548,17 @@ def _tag_by_mode(responses):
 
 
 def _is_fake_car(i, section, sections):
-    if section.type == response_pb2.STREET_NETWORK \
-            and section.street_network.mode == response_pb2.Car:
-        if (len(sections) > i + 1 and sections[i + 1].type != response_pb2.PARK) or \
-                (i > 0 and sections[i - 1].type != response_pb2.LEAVE_PARKING) \
-                or len(sections) == 1:
-                    return True
-    return False
+    return section.type == response_pb2.STREET_NETWORK \
+            and section.street_network.mode == response_pb2.Car and\
+            ((len(sections) > i + 1 and sections[i + 1].type != response_pb2.PARK) or
+             (i > 0 and sections[i - 1].type != response_pb2.LEAVE_PARKING)
+             or len(sections) == 1)
 
 
 def _is_fake_crowfly(i, section, sections, dep_mode, arr_mode):
-    if (dep_mode == "ridesharing" and i == 0 and section.type == response_pb2.CROW_FLY) or \
-            (arr_mode == "ridesharing" and i == (len(sections) - 1) and section.type == response_pb2.CROW_FLY):
-                return True
-    return False
+    return (dep_mode == "ridesharing" and i == 0 and section.type == response_pb2.CROW_FLY) or \
+            (arr_mode == "ridesharing" and i == (len(sections) - 1) and section.type == response_pb2.CROW_FLY)
+
 
 
 def _switch_back_to_ridesharing(response, dep_mode, arr_mode):
