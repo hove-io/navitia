@@ -547,25 +547,20 @@ def _tag_by_mode(responses):
             _tag_journey_by_mode(j)
 
 
-def _is_fake_car(i, section, sections):
-    return section.type == response_pb2.STREET_NETWORK \
-            and section.street_network.mode == response_pb2.Car and\
-            ((len(sections) > i + 1 and sections[i + 1].type != response_pb2.PARK) or
-             (i > 0 and sections[i - 1].type != response_pb2.LEAVE_PARKING)
-             or len(sections) == 1)
-
-
-def _is_fake_crowfly(i, section, sections, dep_mode, arr_mode):
-    return (dep_mode == "ridesharing" and i == 0 and section.type == response_pb2.CROW_FLY) or \
-            (arr_mode == "ridesharing" and i == (len(sections) - 1) and section.type == response_pb2.CROW_FLY)
-
+def _is_fake_car(i, section, sections, dep_mode, arr_mode):
+    """
+    This function test if the section is a fake car section
+    """
+    return ((dep_mode == "ridesharing" and i == 0) or
+            (arr_mode == "ridesharing" and i == (len(sections)-1))) and \
+           ((section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY) and
+            section.street_network.mode == response_pb2.Car)
 
 
 def _switch_back_to_ridesharing(response, dep_mode, arr_mode):
     for journey in response.journeys:
         for i, section in enumerate(journey.sections):
-            if _is_fake_car(i, section, journey.sections) or \
-                    _is_fake_crowfly(i, section, journey.sections, dep_mode, arr_mode):
+            if _is_fake_car(i, section, journey.sections, dep_mode, arr_mode):
                 section.street_network.mode = response_pb2.Ridesharing
                 journey.durations.ridesharing += section.duration
                 journey.durations.car -= section.duration
