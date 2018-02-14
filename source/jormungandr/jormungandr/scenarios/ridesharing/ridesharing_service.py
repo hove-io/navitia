@@ -32,8 +32,11 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import abc
 import six
 import logging
-from jormungandr import utils
+from jormungandr import utils, new_relic
 from collections import namedtuple
+
+class RidesharingServiceError(RuntimeError):
+    pass
 
 RsFeedPublisher = namedtuple('RsFeedPublisher', ['id', 'name', 'license', 'url'])
 
@@ -53,9 +56,16 @@ class AbstractRidesharingService(object):
 
         :return: a list(mandatory) contains solutions and a feed_publisher
         """
-        journeys = self._request_journeys(from_coord, to_coord, period_extremity, limit)
-        feed_publisher = self._get_feed_publisher()
-        return journeys, feed_publisher
+        try:
+            journeys = self._request_journeys(from_coord, to_coord, period_extremity, limit)
+            feed_publisher = self._get_feed_publisher()
+
+            self.record_call('ok')
+
+            return journeys, feed_publisher
+        except RidesharingServiceError as e:
+            self.record_call('failure', reason=str(e))
+            return [], None
 
     @abc.abstractmethod
     def _request_journeys(self, from_coord, to_coord, period_extremity, limit=None):
@@ -67,10 +77,36 @@ class AbstractRidesharingService(object):
     @abc.abstractmethod
     def _get_feed_publisher(self):
         """
-
         :return: Rs_FeedPublisher
         """
         pass
+
+    def _get_rs_id(self):
+        return '{}_{}'.format(repr(self.system_id), repr(self.network))
+
+    def record_internal_failure(self, message):
+        params = {'ridesharing_service_id': self._get_rs_id(),
+                  'message': message}
+        new_relic.record_custom_event('ridesharing_internal_failure', params)
+
+    def record_call(self, status, **kwargs):
+        """
+        status can be in: ok, failure
+        """
+        params = {'ridesharing_service_id': self._get_rs_id(),
+                  'status': status}
+        params.update(kwargs)
+        new_relic.record_custom_event('ridesharing_status', params)
+
+    def record_additional_info(self, status, **kwargs):
+        """
+        status can be in: ok, failure
+        """
+        params = {'ridesharing_service_id': self._get_rs_id(),
+                  'status': status}
+        params.update(kwargs)
+        new_relic.record_custom_event('ridesharing_proxy_additional_info', params)
+
 
 
 # read the configurations and return the wanted service instance

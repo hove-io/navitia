@@ -37,7 +37,8 @@ import requests as requests
 from jormungandr import utils
 from jormungandr import app
 import jormungandr.scenarios.ridesharing.ridesharing_journey as rsj
-from jormungandr.scenarios.ridesharing.ridesharing_service import AbstractRidesharingService, RsFeedPublisher
+from jormungandr.scenarios.ridesharing.ridesharing_service import AbstractRidesharingService, RsFeedPublisher, \
+    RidesharingServiceError
 from jormungandr.utils import decode_polyline
 from navitiacommon import type_pb2
 
@@ -90,14 +91,17 @@ class InstantSystem(AbstractRidesharingService):
             return self.breaker.call(requests.get, url=self.service_url, headers=headers,
                                      params=params, timeout=self.timeout)
         except pybreaker.CircuitBreakerError as e:
-            self.logger.error('Instant System service dead (error: {})'.format(e))
-            raise
+            logging.getLogger(__name__).error('Instant System service dead (error: {})'.format(e),
+                                              extra={'ridesharing_service_id': self._get_rs_id()})
+            raise RidesharingServiceError('circuit breaker open')
         except requests.Timeout as t:
-            self.logger.error('Instant System service dead (error: {})'.format(t))
-            raise
+            logging.getLogger(__name__).error('Instant System service timeout (error: {})'.format(t),
+                                              extra={'ridesharing_service_id': self._get_rs_id()})
+            raise RidesharingServiceError('timeout')
         except Exception as e:
-            self.logger.exception('Instant System service dead')
-            raise
+            logging.getLogger(__name__).exception('Instant System service error',
+                                                  extra={'ridesharing_service_id': self._get_rs_id()})
+            raise RidesharingServiceError(str(e))
 
     @staticmethod
     def _get_ridesharing_journeys(raw_journeys):
@@ -220,14 +224,25 @@ class InstantSystem(AbstractRidesharingService):
             params.update({'limit', limit})
 
         resp = self._call_service(params=params)
+
+        if resp.status_code != 200:
+            # TODO better error handling, the response might be in 200 but in error
+            logging.getLogger(__name__).error('Instant System service unavailable, impossible to query : {}'.format(resp.url),
+                    extra={'ridesharing_service_id': self._get_rs_id(), 'status_code': resp.status_code})
+            raise RidesharingServiceError('non 200 response')
+
         if resp:
             r = self._make_response(resp.json())
+            self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=len(r))
             logging.getLogger('stat.ridesharing.instant-system').info('Received ridesharing offers : %s',
                               len(r),
-                              extra={'ridesharing-offers': len(r)})
+                              extra={'ridesharing_service_id': self._get_rs_id(),
+                                     'nb_ridesharing_offers': len(r)})
             return r
+        self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=0)
         logging.getLogger('stat.ridesharing.instant-system').info('Received ridesharing offers : 0',
-                          extra={'ridesharing-offers': 0})
+                          extra={'ridesharing_service_id': self._get_rs_id(),
+                                 'nb_ridesharing_offers': 0})
         return []
 
     def _get_feed_publisher(self):
