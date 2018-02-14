@@ -36,23 +36,59 @@ www.navitia.io
 #include "kraken/data_manager.h"
 #include <atomic>
 
+namespace navitia { namespace type {
+
+// Wrong data version
+struct wrong_version : public navitia::exception {
+    wrong_version(const std::string& msg): navitia::exception(msg){}
+    wrong_version(const wrong_version&) = default;
+    wrong_version& operator=(const wrong_version&) = default;
+    virtual ~wrong_version() noexcept;
+};
+
+// Data loading exceptions handler
+struct data_loading_error : public navitia::exception {
+    data_loading_error(const std::string& msg): navitia::exception(msg){}
+    data_loading_error(const data_loading_error&) = default;
+    data_loading_error& operator=(const data_loading_error&) = default;
+    virtual ~data_loading_error() noexcept;
+};
+
+// Disruptions exceptions handler. Broken connection
+struct disruptions_broken_connection : public navitia::exception {
+    disruptions_broken_connection(const std::string& msg): navitia::exception(msg){}
+    disruptions_broken_connection(const disruptions_broken_connection&) = default;
+    disruptions_broken_connection& operator=(const disruptions_broken_connection&) = default;
+    virtual ~disruptions_broken_connection() noexcept;
+};
+
+// Disruptions exceptions handler. Loading error
+struct disruptions_loading_error : public navitia::exception {
+    disruptions_loading_error(const std::string& msg): navitia::exception(msg){}
+    disruptions_loading_error(const disruptions_loading_error&) = default;
+    disruptions_loading_error& operator=(const disruptions_loading_error&) = default;
+    virtual ~disruptions_loading_error() noexcept;
+};
+
+// Raptor building exceptions handler
+struct raptor_building_error : public navitia::exception {
+    raptor_building_error(const std::string& msg): navitia::exception(msg){}
+    raptor_building_error(const raptor_building_error&) = default;
+    raptor_building_error& operator=(const raptor_building_error&) = default;
+    virtual ~raptor_building_error() noexcept;
+};
+
 //mock of navitia::type::Data class
 class Data{
     public:
-        bool load(const std::string&,
-                  const boost::optional<std::string>&,
-                  const std::vector<std::string>&,
-                  const size_t) {
-            return load_status;
-        }
-        bool load_without_disruptions(const std::string&,
-                                     const std::vector<std::string>&,
-                                     const size_t) {
-            return load_status;
-        }
+        void load_nav(const std::string& filename);
+        void load_disruptions(const std::string& database,
+                          const std::vector<std::string>& contributors = {});
+        void build_raptor(size_t cache_size = 10);
+        mutable std::atomic<bool> loading;
         mutable std::atomic<bool> is_connected_to_rabbitmq;
         static bool load_status;
-        static bool disruptions_corruption_detected;
+        static bool last_load;
         static bool destructor_called;
         size_t data_identifier;
 
@@ -63,58 +99,66 @@ class Data{
         ~Data(){Data::destructor_called = true;}
 };
 bool Data::load_status = true;
-bool Data::disruptions_corruption_detected = false;
+bool Data::last_load = true;
 bool Data::destructor_called = false;
+
+}} //namespace navitia::type
 
 struct fixture{
     fixture(){
-        Data::load_status = true;
-        Data::destructor_called = false;
+        navitia::type::Data::load_status = true;
+        navitia::type::Data::destructor_called = false;
     }
 };
 
 BOOST_FIXTURE_TEST_SUITE(s, fixture)
 
-BOOST_AUTO_TEST_CASE(get_data){
-    DataManager<Data> data_manager;
+BOOST_AUTO_TEST_CASE(get_data) {
+    DataManager<navitia::type::Data> data_manager;
     auto data = data_manager.get_data();
     BOOST_REQUIRE(data);
-    BOOST_CHECK_EQUAL(Data::destructor_called, false);
+    BOOST_CHECK_EQUAL(navitia::type::Data::destructor_called, false);
 }
 
-BOOST_AUTO_TEST_CASE(load_success){
-    DataManager<Data> data_manager;
+BOOST_AUTO_TEST_CASE(load_failed) {
+    DataManager<navitia::type::Data> data_manager;
+    BOOST_CHECK(data_manager.get_data());
     auto first_data = data_manager.get_data();
-    BOOST_CHECK_EQUAL(first_data, data_manager.get_data());
-    BOOST_CHECK(data_manager.load(""));
-    auto second_data = data_manager.get_data();
-    BOOST_CHECK_NE(first_data, second_data);
-    BOOST_CHECK_EQUAL(Data::destructor_called, false);
-}
 
-BOOST_AUTO_TEST_CASE(load_fail){
-    DataManager<Data> data_manager;
-    auto first_data = data_manager.get_data();
+    // Same pointer
     BOOST_CHECK_EQUAL(first_data, data_manager.get_data());
-    Data::load_status = false;
-    BOOST_CHECK(! data_manager.load(""));
-    Data::load_status = true;
+
+    // Fake data : Loading failed
+    BOOST_CHECK(!data_manager.load("fake path"));
+
+    // Load failed, so the internal shared pointer no change.
+    // Data has not changed.
     auto second_data = data_manager.get_data();
     BOOST_CHECK_EQUAL(first_data, second_data);
 }
 
-BOOST_AUTO_TEST_CASE(destructor_called){
-    DataManager<Data> data_manager;
+BOOST_AUTO_TEST_CASE(destructor_called) {
+    DataManager<navitia::type::Data> data_manager;
+    {
+        auto first_data = data_manager.get_data();
+        BOOST_CHECK(!data_manager.load("fake path"));
+        BOOST_CHECK_EQUAL(first_data, data_manager.get_data());
+    }
+    // type::Data destructor is called because when load function is called,
+    // new shared pointer is not used.
+    BOOST_CHECK_EQUAL(navitia::type::Data::destructor_called, true);
+    BOOST_CHECK(data_manager.get_data());
+}
+
+BOOST_AUTO_TEST_CASE(destructor_not_called) {
+    DataManager<navitia::type::Data> data_manager;
     {
         auto first_data = data_manager.get_data();
         BOOST_CHECK_EQUAL(first_data, data_manager.get_data());
-        BOOST_CHECK(data_manager.load(""));
-        auto second_data = data_manager.get_data();
-        BOOST_CHECK_NE(first_data, second_data);
-        BOOST_CHECK_EQUAL(Data::destructor_called, false);
-        first_data = boost::shared_ptr<Data>();
     }
-    BOOST_CHECK_EQUAL(Data::destructor_called, true);
+    // type::Data destructor is called because when load function is called,
+    // new shared pointer is not used.
+    BOOST_CHECK_EQUAL(navitia::type::Data::destructor_called, false);
     BOOST_CHECK(data_manager.get_data());
 }
 
