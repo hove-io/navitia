@@ -546,20 +546,34 @@ def _tag_by_mode(responses):
         for j in r.journeys:
             _tag_journey_by_mode(j)
 
-def _switch_back_to_ridesharing(response):
+
+def _is_fake_car(i, section, sections):
+    if section.type == response_pb2.STREET_NETWORK \
+            and section.street_network.mode == response_pb2.Car:
+        if (len(sections) > i + 1 and sections[i + 1].type != response_pb2.PARK) or \
+                (i > 0 and sections[i - 1].type != response_pb2.LEAVE_PARKING) \
+                or len(sections) == 1:
+                    return True
+    return False
+
+
+def _is_fake_crowfly(i, section, sections, dep_mode, arr_mode):
+    if (dep_mode == "ridesharing" and i == 0 and section.type == response_pb2.CROW_FLY) or \
+            (arr_mode == "ridesharing" and i == (len(sections) - 1) and section.type == response_pb2.CROW_FLY):
+                return True
+    return False
+
+
+def _switch_back_to_ridesharing(response, dep_mode, arr_mode):
     for journey in response.journeys:
         for i, section in enumerate(journey.sections):
-            if section.type == response_pb2.STREET_NETWORK \
-                    and section.street_network.mode == response_pb2.Car:
-                if (len(journey.sections) > i+1 and journey.sections[i+1].type != response_pb2.PARK) or \
-                        (i > 0 and journey.sections[i-1].type != response_pb2.LEAVE_PARKING) \
-                        or len(journey.sections) == 1:
-                    #TODO: handle crowfly :(
-                    section.street_network.mode = response_pb2.Ridesharing
-                    journey.durations.ridesharing += section.duration
-                    journey.durations.car -= section.duration
-                    journey.distances.ridesharing += section.length
-                    journey.distances.car -= section.length
+            if _is_fake_car(i, section, journey.sections) or \
+                    _is_fake_crowfly(i, section, journey.sections, dep_mode, arr_mode):
+                section.street_network.mode = response_pb2.Ridesharing
+                journey.durations.ridesharing += section.duration
+                journey.durations.car -= section.duration
+                journey.distances.ridesharing += section.length
+                journey.distances.car -= section.length
 
 
 def nb_journeys(responses):
@@ -871,7 +885,7 @@ class Scenario(simple.Scenario):
             for idx, j in enumerate(local_resp.journeys):
                 j.internal_id = "{resp}-{j}".format(resp=self.nb_kraken_calls, j=idx)
             if 'ridesharing' in dep_mode or 'ridesharing' in arr_mode:
-                _switch_back_to_ridesharing(local_resp)
+                _switch_back_to_ridesharing(local_resp, dep_mode, arr_mode)
             fill_uris(local_resp)
             resp.append(local_resp)
             logger.debug("for mode %s|%s we have found %s journeys", dep_mode, arr_mode, len(local_resp.journeys))
