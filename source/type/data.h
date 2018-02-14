@@ -63,11 +63,44 @@ namespace navitia {
 
 namespace navitia { namespace type {
 
+// Wrong data version
 struct wrong_version : public navitia::exception {
     wrong_version(const std::string& msg): navitia::exception(msg){}
     wrong_version(const wrong_version&) = default;
     wrong_version& operator=(const wrong_version&) = default;
     virtual ~wrong_version() noexcept;
+};
+
+// Data loading exceptions handler
+struct data_loading_error : public navitia::exception {
+    data_loading_error(const std::string& msg): navitia::exception(msg){}
+    data_loading_error(const data_loading_error&) = default;
+    data_loading_error& operator=(const data_loading_error&) = default;
+    virtual ~data_loading_error() noexcept;
+};
+
+// Disruptions exceptions handler. Broken connection
+struct disruptions_broken_connection : public navitia::exception {
+    disruptions_broken_connection(const std::string& msg): navitia::exception(msg){}
+    disruptions_broken_connection(const disruptions_broken_connection&) = default;
+    disruptions_broken_connection& operator=(const disruptions_broken_connection&) = default;
+    virtual ~disruptions_broken_connection() noexcept;
+};
+
+// Disruptions exceptions handler. Loading error
+struct disruptions_loading_error : public navitia::exception {
+    disruptions_loading_error(const std::string& msg): navitia::exception(msg){}
+    disruptions_loading_error(const disruptions_loading_error&) = default;
+    disruptions_loading_error& operator=(const disruptions_loading_error&) = default;
+    virtual ~disruptions_loading_error() noexcept;
+};
+
+// Raptor building exceptions handler
+struct raptor_building_error : public navitia::exception {
+    raptor_building_error(const std::string& msg): navitia::exception(msg){}
+    raptor_building_error(const raptor_building_error&) = default;
+    raptor_building_error& operator=(const raptor_building_error&) = default;
+    virtual ~raptor_building_error() noexcept;
 };
 
 template<typename T>
@@ -134,7 +167,6 @@ public:
     std::atomic<bool> loaded; //< have the data been loaded ?
     std::atomic<bool> loading; //< Is the data being loaded
     std::atomic<bool> disruption_error; // disruption error flag
-    bool disruptions_corruption_detected;
     size_t data_identifier = 0;
 
     std::unique_ptr<MetaData> meta;
@@ -188,7 +220,7 @@ public:
     Indexes get_target_by_one_source(Type_e source, Type_e target, idx_t source_idx) const ;
 
 
-    bool last_load = true;
+    bool last_load;
     // UTC
     boost::posix_time::ptime last_load_at;
 
@@ -222,16 +254,11 @@ public:
     }
     BOOST_SERIALIZATION_SPLIT_MEMBER()
 
-    /** Charge les données et effectue les initialisations nécessaires */
-    bool load(const std::string & filename,
-              const boost::optional<std::string>& chaos_database = {},
-              const std::vector<std::string>& contributors = {},
-              const size_t raptor_cache_size = 10);
-
-    // Reload Data without disruption data
-    bool load_without_disruptions(const std::string & filename,
-                                  const std::vector<std::string>& contributors = {},
-                                  const size_t raptor_cache_size = 10);
+    // Loading methods
+    void load_nav(const std::string& filename);
+    void load_disruptions(const std::string& database,
+                          const std::vector<std::string>& contributors = {});
+    void build_raptor(size_t cache_size = 10);
 
     /** Sauvegarde les données */
     void save(const std::string & filename) const;
@@ -247,8 +274,6 @@ public:
     void build_proximity_list();
     /** Set admins*/
     void build_administrative_regions();
-    /** Construit les données raptor */
-    void build_raptor(size_t cache_size = 10);
 
     void build_associated_calendar();
 

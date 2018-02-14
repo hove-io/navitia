@@ -63,12 +63,15 @@ namespace pt = boost::posix_time;
 namespace navitia { namespace type {
 
 wrong_version::~wrong_version() noexcept {}
+data_loading_error::~data_loading_error() noexcept {}
+disruptions_broken_connection::~disruptions_broken_connection() noexcept {}
+disruptions_loading_error::~disruptions_loading_error() noexcept {}
+raptor_building_error::~raptor_building_error() noexcept {}
 
 const unsigned int Data::data_version = 67; //< *INCREMENT* every time serialized data are modified
 
 Data::Data(size_t data_identifier) :
     disruption_error(false),
-    disruptions_corruption_detected(false),
     data_identifier(data_identifier),
     meta(std::make_unique<MetaData>()),
     pt_data(std::make_unique<PT_Data>()),
@@ -78,7 +81,8 @@ Data::Data(size_t data_identifier) :
     find_admins(
             [&](const GeographicalCoord &c){
             return geo_ref->find_admins(c);
-            })
+            }),
+    last_load(false)
 {
     loaded = false;
     is_connected_to_rabbitmq = false;
@@ -87,82 +91,44 @@ Data::Data(size_t data_identifier) :
 
 Data::~Data(){}
 
-bool Data::load(const std::string& filename,
-                const boost::optional<std::string>& chaos_database,
-                const std::vector<std::string>& contributors,
-                const size_t raptor_cache_size) {
-    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    loading = true;
-    disruption_error = false;
+/**
+ * @brief Load data (in nav.lz4).
+ * 1. Uncompress lz4 file
+ * 2. Read .nav
+ * 3. Load in type::Data structure
+ *
+ * @param filename Lz4 data File name (file.nav.lz4)
+ */
+void Data::load_nav(const std::string& filename) {
 
-    // Load .nav
+    // Add logger
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    LOG4CPLUS_DEBUG(logger, "Start to load nav");
+
+    if (filename.empty()){
+        LOG4CPLUS_ERROR(logger, "Data loading failed: Data path is empty");
+        throw data_loading_error("Data loading failed: Data path is empty");
+    }
+
     try {
         std::ifstream ifs(filename.c_str(), std::ios::in | std::ios::binary);
         ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         this->load(ifs);
+        loaded = true;
         last_load_at = pt::microsec_clock::universal_time();
         last_load = true;
-        loaded = true;
         LOG4CPLUS_INFO(logger, boost::format("stopTimes : %d nb foot path : %d Nombre de stop points : %d")
                        % pt_data->nb_stop_times()
                        % pt_data->stop_point_connections.size()
                        % pt_data->stop_points.size());
-    } catch(const wrong_version& ex) {
-        LOG4CPLUS_ERROR(logger, "Cannot load data: " << ex.what());
-        last_load = false;
-        return last_load;
-    } catch(const std::exception& ex) {
-        LOG4CPLUS_ERROR(logger, "Data loading failed: " << ex.what());
-        last_load = false;
-        return last_load;
-    } catch(...) {
+    } catch (const std::exception& ex) {
+        LOG4CPLUS_ERROR(logger, "Data loading failed: " + std::string(ex.what()));
+        throw data_loading_error("Data loading failed: " + std::string(ex.what()));
+    } catch (...) {
         LOG4CPLUS_ERROR(logger, "Data loading failed");
-        last_load = false;
-        return last_load;
-	}
-
-    // Load Disruption (optional)
-    if ((chaos_database) && (disruptions_corruption_detected == false)){
-        try {
-            fill_disruption_from_database(*chaos_database, *pt_data, *meta, contributors);
-        } catch(const std::exception& ex) {
-            LOG4CPLUS_ERROR(logger, "Data disruptions loading failed: " << ex.what());
-            disruption_error = true;
-            if (std::string(ex.what()) != "Unable to connect to chaos database"){
-                LOG4CPLUS_INFO(logger, "Reload Data without disruptions");
-                disruptions_corruption_detected = true;
-                last_load = false;
-                return last_load;
-            }
-        } catch(...) {
-            disruption_error = true;
-            LOG4CPLUS_WARN(logger, "Data disruptions loading failed");
-            last_load = false;
-            return last_load;
-        }
+        throw data_loading_error("Data loading failed");
     }
-
-    // Build Raptor Data
-    try {
-        build_raptor(raptor_cache_size);
-    } catch(const std::exception& ex) {
-        LOG4CPLUS_ERROR(logger, "Build data Raptor failed: " << ex.what());
-        last_load = false;
-    } catch(...) {
-        LOG4CPLUS_ERROR(logger, "Build data Raptor failed");
-        last_load = false;
-    }
-
-    loading = false;
-    return this->last_load;
-}
-
-bool Data::load_without_disruptions(const std::string& filename,
-                                    const std::vector<std::string>& contributors,
-                                    const size_t raptor_cache_size) {
-   disruptions_corruption_detected = true;
-   return this->load(filename, {}, contributors, raptor_cache_size);
-   disruptions_corruption_detected = false;
+    LOG4CPLUS_DEBUG(logger, "Finished to load nav");
 }
 
 void Data::load(std::istream& ifs) {
@@ -173,6 +139,64 @@ void Data::load(std::istream& ifs) {
     ia >> *this;
 }
 
+/**
+ * @brief Load disruptions from database.
+ * Disruptions are stored in Bdd.
+ *
+ * @param database Database connection string
+ * @param contributors Disruptions contributors name list
+ */
+void Data::load_disruptions(const std::string& database,
+                            const std::vector<std::string>& contributors) {
+    // Add logger
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    LOG4CPLUS_DEBUG(logger, "Start to load disruptions");
+
+    try {
+        fill_disruption_from_database(database, *pt_data, *meta, contributors);
+        disruption_error = false;
+    } catch (const pqxx::broken_connection& ex){
+        LOG4CPLUS_WARN(logger, "Unable to connect to disruptions database: " << std::string(ex.what()));
+        disruption_error = true;
+        throw disruptions_broken_connection("Unable to connect to disruptions database: " + std::string(ex.what()));
+    } catch (const pqxx::pqxx_exception& ex){
+        LOG4CPLUS_ERROR(logger, "Disruptions loading error");
+        throw disruptions_loading_error("Disruptions loading error");
+        disruption_error = true;
+    } catch (const std::exception& ex) {
+        LOG4CPLUS_ERROR(logger, "Disruptions loading error: " << std::string(ex.what()));
+        throw disruptions_loading_error("Disruptions loading error: " + std::string(ex.what()));
+        disruption_error = true;
+    } catch (...) {
+        LOG4CPLUS_ERROR(logger, "Disruptions loading error: ");
+        throw disruptions_loading_error("Disruptions loading error: ");
+        disruption_error = true;
+    }
+    LOG4CPLUS_DEBUG(logger, "Finished to load disruptions");
+}
+
+/**
+ * @brief Build Data Raptor
+ *
+ * @param cache_size Selected LRU size to optimize cache miss
+ */
+void Data::build_raptor(size_t cache_size) {
+
+    // Add logger
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    LOG4CPLUS_DEBUG(logger, "Start to build data Raptor");
+
+    try {
+        dataRaptor->load(*this->pt_data, cache_size);
+    } catch (const std::exception& ex) {
+        LOG4CPLUS_ERROR(logger, "Data Raptor loading error: " << std::string(ex.what()));
+        throw disruptions_loading_error("Data Raptor loading error: " + std::string(ex.what()));
+    } catch(...) {
+        LOG4CPLUS_ERROR(logger, "Data Raptor loading error: ");
+        throw disruptions_loading_error("Data Raptor loading error: ");
+    }
+    LOG4CPLUS_DEBUG(logger, "Finished to build data Raptor");
+}
 
 void Data::save(const std::string& filename) const {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
@@ -291,14 +315,6 @@ void Data::build_autocomplete(){
     pt_data->build_autocomplete(*geo_ref);
     geo_ref->build_autocomplete_list();
     pt_data->compute_score_autocomplete(*geo_ref);
-}
-
-void Data::build_raptor(size_t cache_size) {
-    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
-                    "Start to build dataRaptor");
-    dataRaptor->load(*this->pt_data, cache_size);
-    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
-                    "Finished to build dataRaptor");
 }
 
 ValidityPattern* Data::get_similar_validity_pattern(ValidityPattern* vp) const{
