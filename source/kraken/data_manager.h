@@ -30,6 +30,7 @@ www.navitia.io
 
 #pragma once
 
+#include "utils/logger.h"
 #include "utils/timer.h"
 #include "utils/exception.h"
 #ifndef NO_FORCE_MEMORY_RELEASE
@@ -42,6 +43,17 @@ www.navitia.io
 #include <atomic>
 #include <boost/make_shared.hpp>
 #include <boost/optional.hpp>
+
+//forward declare
+namespace navitia {
+    namespace type {
+        struct wrong_version;
+        struct data_loading_error;
+        struct disruptions_broken_connection;
+        struct disruptions_loading_error;
+        struct raptor_building_error;
+    }
+}
 
 template<typename Data>
 void data_deleter(const Data* data){
@@ -88,24 +100,65 @@ public:
         return std::move(data);
     }
 
-    bool load(const std::string& database,
+    bool load(const std::string& filename,
               const boost::optional<std::string>& chaos_database = boost::none,
               const std::vector<std::string>& contributors = {},
               const size_t raptor_cache_size = 10){
-        bool success;
+        // Add logger
+        log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+
+        // Create new type::Data
         ++ data_identifier;
         auto data = create_data(data_identifier.load());
-        success = data->load(database, chaos_database, contributors, raptor_cache_size);
+        data->loading = true;
 
-        // If disruptions corruption is detected, reload data without this
-        if ((!success) && (data->disruptions_corruption_detected)) {
-            data = create_data(data_identifier.load());
-            success = data->load_without_disruptions(database, contributors, raptor_cache_size);
+        // load .nav.lz4
+        try {
+            data->load_nav(filename);
+        } catch(const navitia::type::data_loading_error& ex) {
+            data->loading = false;
+            if (data->last_load) {
+                LOG4CPLUS_INFO(logger, "Data loading failed, we keep last loaded data");
+            }
+            return false;
         }
 
-        if (success) {
-            set_data(std::move(data));
+        // load disruptions from database
+        if (chaos_database != boost::none) {
+            bool load_disruptions_failed = false;
+            try {
+                data->load_disruptions(chaos_database.value(), contributors);
+            } catch (const navitia::type::disruptions_broken_connection& ex){
+
+            } catch(const navitia::type::disruptions_loading_error& ex) {
+                load_disruptions_failed = true;
+            }
+
+            // Reload data .nav.lz4
+            if (load_disruptions_failed) {
+                LOG4CPLUS_ERROR(logger, "Reload data: " << filename);
+                try {
+                    data = create_data(data_identifier.load());
+                    data->load_nav(filename);
+                } catch(const navitia::type::data_loading_error& ex) {
+                    data->loading = false;
+                    return false;
+                }
+            }
         }
-        return success;
+
+        // Build Raptor Data
+        try {
+            data->build_raptor(raptor_cache_size);
+        } catch(const navitia::type::raptor_building_error& ex) {
+            data->loading = false;
+            return false;
+        }
+        data->loading = false;
+
+        // Set data
+        set_data(std::move(data));
+
+        return true;
     }
 };
