@@ -48,7 +48,8 @@ void fill_disruption_from_database(const std::string& connection_string,
     try{
         conn = std::unique_ptr<pqxx::connection>(new pqxx::connection(connection_string));
     }catch(const pqxx::broken_connection& e){
-        throw navitia::exception(std::string("Unable to connect to chaos database"));
+        throw;
+        return;
     }
 
     try{
@@ -201,8 +202,12 @@ void fill_disruption_from_database(const std::string& connection_string,
         reader.finalize();
         LOG4CPLUS_INFO(log4cplus::Logger::getInstance("Logger"), count.size() << " disruption(s) loaded");
 
-    }catch(const pqxx::pqxx_exception& e){
-        throw navitia::exception(std::string(e.base().what()));
+    } catch(const pqxx::pqxx_exception& e) {
+        throw;
+    } catch(const std::exception& ex) {
+        throw;
+    } catch(...) {
+        throw;
     }
 }
 
