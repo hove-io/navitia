@@ -127,7 +127,7 @@ public:
         if (chaos_database != boost::none) {
             bool load_disruptions_failed = false;
             try {
-                data->load_disruptions(chaos_database.value(), contributors);
+                data->load_disruptions(*chaos_database, contributors);
             } catch (const navitia::type::disruptions_broken_connection& ex){
 
             } catch(const navitia::type::disruptions_loading_error& ex) {
