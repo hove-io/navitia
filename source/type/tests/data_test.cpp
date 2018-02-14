@@ -67,37 +67,47 @@ BOOST_AUTO_TEST_CASE(load_data) {
 
     CREATE_FAKE_DATA(fake_data_file)
 
-    // Load fake data
-    bool check_load = data.load(complete_path(fake_data_file));
-
-    BOOST_CHECK_EQUAL(check_load, true);
+    // load .nav
+    bool failed = false;
+    BOOST_CHECK_EQUAL(data.last_load, false);
+    try {
+        data.load_nav(complete_path(fake_data_file));
+    } catch(const navitia::type::data_loading_error& ex) {
+        failed = true;
+    }
+    BOOST_CHECK_EQUAL(failed, false);
+    BOOST_CHECK_EQUAL(data.last_load, true);
+    try {
+        data.load_nav("wrong_path");
+    } catch(const navitia::type::data_loading_error& ex) {
+        failed = true;
+    }
+    BOOST_CHECK_EQUAL(failed, true);
+    BOOST_CHECK_EQUAL(data.last_load, true);
 }
 
 BOOST_AUTO_TEST_CASE(load_data_fail) {
     navitia::type::Data data(0);
-    bool check_load = data.load("wrong_path");
-    BOOST_CHECK_EQUAL(check_load, false);
+
+    // load .nav
+    bool failed = false;
+    try {
+        data.load_nav("wrong_path");
+    } catch(const navitia::type::data_loading_error& ex) {
+        failed = true;
+    }
+    BOOST_CHECK_EQUAL(failed, true);
 }
 
 BOOST_AUTO_TEST_CASE(load_disruptions_fail) {
+    navitia::type::Data data(0);
 
-    CREATE_FAKE_DATA(fake_data_file)
-
-    // Load fake data
-    bool check_load = data.load(complete_path(fake_data_file),
-                                fake_disruption_path);
-
-    BOOST_CHECK_EQUAL(data.disruption_error, true);
-    BOOST_CHECK_EQUAL(check_load, true);
-}
-
-BOOST_AUTO_TEST_CASE(load_without_disruptions) {
-
-    CREATE_FAKE_DATA(fake_data_file)
-
-    // Load fake data
-    bool check_load = data.load(complete_path(fake_data_file));
-
-    BOOST_CHECK_EQUAL(data.disruption_error, false);
-    BOOST_CHECK_EQUAL(check_load, true);
+    // load disruptions
+    bool failed = false;
+    try {
+        data.load_disruptions(fake_disruption_path);
+    } catch(const navitia::type::disruptions_broken_connection& ex) {
+        failed = true;
+    }
+    BOOST_CHECK_EQUAL(failed, true);
 }
