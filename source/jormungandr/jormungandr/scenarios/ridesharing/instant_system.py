@@ -187,7 +187,7 @@ class InstantSystem(AbstractRidesharingService):
                                             rate_count=user.get('rating', {}).get('count'))
 
                 # the usual form of the price for InstantSystem is: "170 EUR"
-                # which means "170 EURO cents" or "1.70 EURO"
+                # which means "170 EURO cents" also equals "1.70 EURO"
                 # In Navitia so far prices are in "centime" so we transform it to: "170 centime"
                 price = ridesharing_ad['price']
                 res.price = price.get('amount')

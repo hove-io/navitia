@@ -197,7 +197,7 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         assert rsj_info.get('operator') == 'Instant System'
         assert rsj_info.get('seats').get('available') == 4
 
-        #TODO we should hav none but we get 0 with marshall, it works with serpy
+        #TODO we should have none but we get 0 with marshall, it works with serpy
         #assert 'total' not in rsj_info.get('seats')
 
         rsj_links = rsj_sections[1].get('links')
