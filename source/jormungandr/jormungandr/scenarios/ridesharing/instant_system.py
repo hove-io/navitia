@@ -32,6 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import datetime
 import logging
 import pybreaker
+import pytz
 import requests as requests
 
 from jormungandr import utils
@@ -209,7 +210,7 @@ class InstantSystem(AbstractRidesharingService):
         :return:
         """
         # format of datetime: 2017-12-25T07:00:00Z
-        datetime_str = datetime.datetime.fromtimestamp(period_extremity.datetime)\
+        datetime_str = datetime.datetime.fromtimestamp(period_extremity.datetime, pytz.utc)\
             .strftime('%Y-%m-%dT%H:%M:%SZ')
 
         params = {'from': from_coord,
