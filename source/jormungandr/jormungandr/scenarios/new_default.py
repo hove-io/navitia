@@ -555,16 +555,16 @@ def _is_fake_car_section(section):
            section.street_network.mode == response_pb2.Car
 
 
-def _switch_back_to_ridesharing(response, section_index):
-
+def _switch_back_to_ridesharing(response, sections_ind):
     for journey in response.journeys:
-        section = journey.sections[section_index]
-        if _is_fake_car_section(section):
-            section.street_network.mode = response_pb2.Ridesharing
-            journey.durations.ridesharing += section.duration
-            journey.durations.car -= section.duration
-            journey.distances.ridesharing += section.length
-            journey.distances.car -= section.length
+        for i in sections_ind:
+            section = journey.sections[i]
+            if _is_fake_car_section(section):
+                section.street_network.mode = response_pb2.Ridesharing
+                journey.durations.ridesharing += section.duration
+                journey.durations.car -= section.duration
+                journey.distances.ridesharing += section.length
+                journey.distances.car -= section.length
 
 def nb_journeys(responses):
     return sum(1 for r in responses for j in r.journeys if not journey_filter.to_be_deleted(j))
@@ -874,10 +874,14 @@ class Scenario(simple.Scenario):
             self.nb_kraken_calls += 1
             for idx, j in enumerate(local_resp.journeys):
                 j.internal_id = "{resp}-{j}".format(resp=self.nb_kraken_calls, j=idx)
-            if 'ridesharing' in dep_mode or 'ridesharing' in arr_mode:
-                # dep_mode and arr_mode cannot be ridesharing at the same time
-                section_index = 0 if dep_mode == 'ridesharing' else -1
-                _switch_back_to_ridesharing(local_resp, section_index)
+            if 'ridesharing' in (dep_mode, arr_mode):
+                sections_ind = []
+                if dep_mode == 'ridesharing':
+                    sections_ind.append(0)
+                if arr_mode == 'ridesharing':
+                    sections_ind.append(-1)
+
+                _switch_back_to_ridesharing(local_resp, sections_ind)
             fill_uris(local_resp)
             resp.append(local_resp)
             logger.debug("for mode %s|%s we have found %s journeys", dep_mode, arr_mode, len(local_resp.journeys))
