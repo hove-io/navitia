@@ -822,7 +822,8 @@ class Scenario(simple.Scenario):
         compute_car_co2_emission(pb_resp, api_request, instance)
         tag_journeys(pb_resp)
 
-        if 'ridesharing' in ridesharing_req['origin_mode'] and instance.ridesharing_services:
+        if 'ridesharing' in ridesharing_req['origin_mode'] + ridesharing_req['destination_mode'] \
+                and instance.ridesharing_services:
             logging.getLogger(__name__).debug('trying to add ridesharing journeys')
             try:
                 decorate_journeys(pb_resp, instance, api_request)
