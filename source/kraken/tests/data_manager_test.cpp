@@ -30,10 +30,10 @@ www.navitia.io
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE data_manager_test
-#include <boost/test/unit_test.hpp>
-#include <boost/optional.hpp>
 
 #include "kraken/data_manager.h"
+
+#include <boost/test/unit_test.hpp>
 #include <atomic>
 
 namespace navitia { namespace type {
@@ -111,16 +111,14 @@ struct fixture{
     }
 };
 
-BOOST_FIXTURE_TEST_SUITE(s, fixture)
-
-BOOST_AUTO_TEST_CASE(get_data) {
+BOOST_FIXTURE_TEST_CASE(get_data, fixture) {
     DataManager<navitia::type::Data> data_manager;
     auto data = data_manager.get_data();
     BOOST_REQUIRE(data);
     BOOST_CHECK_EQUAL(navitia::type::Data::destructor_called, false);
 }
 
-BOOST_AUTO_TEST_CASE(load_failed) {
+BOOST_FIXTURE_TEST_CASE(load_failed, fixture) {
     DataManager<navitia::type::Data> data_manager;
     BOOST_CHECK(data_manager.get_data());
     auto first_data = data_manager.get_data();
@@ -136,7 +134,7 @@ BOOST_AUTO_TEST_CASE(load_failed) {
     BOOST_CHECK_EQUAL(first_data, data_manager.get_data());
 }
 
-BOOST_AUTO_TEST_CASE(destructor_called) {
+BOOST_FIXTURE_TEST_CASE(destructor_called, fixture) {
     DataManager<navitia::type::Data> data_manager;
     {
         auto first_data = data_manager.get_data();
@@ -149,7 +147,7 @@ BOOST_AUTO_TEST_CASE(destructor_called) {
     BOOST_CHECK(data_manager.get_data());
 }
 
-BOOST_AUTO_TEST_CASE(destructor_not_called) {
+BOOST_FIXTURE_TEST_CASE(destructor_not_called, fixture) {
     DataManager<navitia::type::Data> data_manager;
     {
         auto first_data = data_manager.get_data();
@@ -160,5 +158,3 @@ BOOST_AUTO_TEST_CASE(destructor_not_called) {
     BOOST_CHECK_EQUAL(navitia::type::Data::destructor_called, false);
     BOOST_CHECK(data_manager.get_data());
 }
-
-BOOST_AUTO_TEST_SUITE_END()
