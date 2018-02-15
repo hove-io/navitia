@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -38,7 +38,7 @@ www.navitia.io
 #include "type/type.h"
 #include "utils/serialization_unique_ptr.h"
 #include "utils/serialization_atomic.h"
-#include "utils/exception.h"
+#include "data_exceptions.h"
 #include "utils/obj_factory.h"
 
 //forward declare
@@ -63,46 +63,6 @@ namespace navitia {
 
 namespace navitia { namespace type {
 
-// Wrong data version
-struct wrong_version : public navitia::exception {
-    wrong_version(const std::string& msg): navitia::exception(msg){}
-    wrong_version(const wrong_version&) = default;
-    wrong_version& operator=(const wrong_version&) = default;
-    virtual ~wrong_version() noexcept;
-};
-
-// Data loading exceptions handler
-struct data_loading_error : public navitia::exception {
-    data_loading_error(const std::string& msg): navitia::exception(msg){}
-    data_loading_error(const data_loading_error&) = default;
-    data_loading_error& operator=(const data_loading_error&) = default;
-    virtual ~data_loading_error() noexcept;
-};
-
-// Disruptions exceptions handler. Broken connection
-struct disruptions_broken_connection : public navitia::exception {
-    disruptions_broken_connection(const std::string& msg): navitia::exception(msg){}
-    disruptions_broken_connection(const disruptions_broken_connection&) = default;
-    disruptions_broken_connection& operator=(const disruptions_broken_connection&) = default;
-    virtual ~disruptions_broken_connection() noexcept;
-};
-
-// Disruptions exceptions handler. Loading error
-struct disruptions_loading_error : public navitia::exception {
-    disruptions_loading_error(const std::string& msg): navitia::exception(msg){}
-    disruptions_loading_error(const disruptions_loading_error&) = default;
-    disruptions_loading_error& operator=(const disruptions_loading_error&) = default;
-    virtual ~disruptions_loading_error() noexcept;
-};
-
-// Raptor building exceptions handler
-struct raptor_building_error : public navitia::exception {
-    raptor_building_error(const std::string& msg): navitia::exception(msg){}
-    raptor_building_error(const raptor_building_error&) = default;
-    raptor_building_error& operator=(const raptor_building_error&) = default;
-    virtual ~raptor_building_error() noexcept;
-};
-
 template<typename T>
 struct ContainerTrait {
     typedef std::vector<T*> vect_type;
@@ -110,7 +70,7 @@ struct ContainerTrait {
 };
 
 // specialization for impact
-// Instead of pure pointer, we can only get a weak_ptr when requesting impacts 
+// Instead of pure pointer, we can only get a weak_ptr when requesting impacts
 template<>
 struct ContainerTrait<type::disruption::Impact> {
     typedef std::vector<boost::weak_ptr<type::disruption::Impact>> vect_type;
@@ -247,7 +207,7 @@ public:
         if(this->version != data_version){
             unsigned int v = data_version;//sinon ca link pas...
             auto msg = boost::format("Warning data version don't match with the data version of kraken %u (current version: %d)") % version % v;
-            throw wrong_version(msg.str());
+            throw navitia::data::wrong_version(msg.str());
         }
         ar & pt_data & geo_ref & meta & fare & last_load_at & loaded & last_load & is_connected_to_rabbitmq
            & is_realtime_loaded;

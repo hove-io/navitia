@@ -32,7 +32,7 @@ www.navitia.io
 
 #include "utils/logger.h"
 #include "utils/timer.h"
-#include "utils/exception.h"
+#include "type/data_exceptions.h"
 #ifndef NO_FORCE_MEMORY_RELEASE
 //by default we force the release of the memory after the reload of the data
 #include "gperftools/malloc_extension.h"
@@ -43,17 +43,6 @@ www.navitia.io
 #include <atomic>
 #include <boost/make_shared.hpp>
 #include <boost/optional.hpp>
-
-//forward declare
-namespace navitia {
-    namespace type {
-        struct wrong_version;
-        struct data_loading_error;
-        struct disruptions_broken_connection;
-        struct disruptions_loading_error;
-        struct raptor_building_error;
-    }
-}
 
 template<typename Data>
 void data_deleter(const Data* data){
@@ -115,7 +104,7 @@ public:
         // load .nav.lz4
         try {
             data->load_nav(filename);
-        } catch(const navitia::type::data_loading_error& ex) {
+        } catch(const navitia::data::data_loading_error& ex) {
             data->loading = false;
             if (data->last_load) {
                 LOG4CPLUS_INFO(logger, "Data loading failed, we keep last loaded data");
@@ -128,9 +117,9 @@ public:
             bool load_disruptions_failed = false;
             try {
                 data->load_disruptions(*chaos_database, contributors);
-            } catch (const navitia::type::disruptions_broken_connection& ex){
+            } catch (const navitia::data::disruptions_broken_connection& ex){
 
-            } catch(const navitia::type::disruptions_loading_error& ex) {
+            } catch(const navitia::data::disruptions_loading_error& ex) {
                 load_disruptions_failed = true;
             }
 
@@ -139,8 +128,8 @@ public:
                 LOG4CPLUS_ERROR(logger, "Reload data: " << filename);
                 try {
                     data = create_data(data_identifier.load());
-                    data->load_nav(filename);
-                } catch(const navitia::type::data_loading_error& ex) {
+                    //data->load_nav(filename);
+                } catch(const navitia::data::data_loading_error& ex) {
                     data->loading = false;
                     return false;
                 }
@@ -150,7 +139,7 @@ public:
         // Build Raptor Data
         try {
             data->build_raptor(raptor_cache_size);
-        } catch(const navitia::type::raptor_building_error& ex) {
+        } catch(const navitia::data::raptor_building_error& ex) {
             data->loading = false;
             return false;
         }

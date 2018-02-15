@@ -48,7 +48,6 @@ www.navitia.io
 #include "third_party/eos_portable_archive/portable_oarchive.hpp"
 #include "lz4_filter/filter.h"
 #include "utils/functions.h"
-#include "utils/exception.h"
 #include "utils/threadbuf.h"
 
 #include "pt_data.h"
@@ -61,12 +60,6 @@ www.navitia.io
 namespace pt = boost::posix_time;
 
 namespace navitia { namespace type {
-
-wrong_version::~wrong_version() noexcept {}
-data_loading_error::~data_loading_error() noexcept {}
-disruptions_broken_connection::~disruptions_broken_connection() noexcept {}
-disruptions_loading_error::~disruptions_loading_error() noexcept {}
-raptor_building_error::~raptor_building_error() noexcept {}
 
 const unsigned int Data::data_version = 67; //< *INCREMENT* every time serialized data are modified
 
@@ -107,7 +100,7 @@ void Data::load_nav(const std::string& filename) {
 
     if (filename.empty()){
         LOG4CPLUS_ERROR(logger, "Data loading failed: Data path is empty");
-        throw data_loading_error("Data loading failed: Data path is empty");
+        throw navitia::data::data_loading_error("Data loading failed: Data path is empty");
     }
 
     try {
@@ -123,10 +116,10 @@ void Data::load_nav(const std::string& filename) {
                        % pt_data->stop_points.size());
     } catch (const std::exception& ex) {
         LOG4CPLUS_ERROR(logger, "Data loading failed: " + std::string(ex.what()));
-        throw data_loading_error("Data loading failed: " + std::string(ex.what()));
+        throw navitia::data::data_loading_error("Data loading failed: " + std::string(ex.what()));
     } catch (...) {
         LOG4CPLUS_ERROR(logger, "Data loading failed");
-        throw data_loading_error("Data loading failed");
+        throw navitia::data::data_loading_error("Data loading failed");
     }
     LOG4CPLUS_DEBUG(logger, "Finished to load nav");
 }
@@ -158,18 +151,18 @@ void Data::load_disruptions(const std::string& database,
     } catch (const pqxx::broken_connection& ex){
         LOG4CPLUS_WARN(logger, "Unable to connect to disruptions database: " << std::string(ex.what()));
         disruption_error = true;
-        throw disruptions_broken_connection("Unable to connect to disruptions database: " + std::string(ex.what()));
+        throw navitia::data::disruptions_broken_connection("Unable to connect to disruptions database: " + std::string(ex.what()));
     } catch (const pqxx::pqxx_exception& ex){
         LOG4CPLUS_ERROR(logger, "Disruptions loading error");
-        throw disruptions_loading_error("Disruptions loading error");
+        throw navitia::data::disruptions_loading_error("Disruptions loading error");
         disruption_error = true;
     } catch (const std::exception& ex) {
         LOG4CPLUS_ERROR(logger, "Disruptions loading error: " << std::string(ex.what()));
-        throw disruptions_loading_error("Disruptions loading error: " + std::string(ex.what()));
+        throw navitia::data::disruptions_loading_error("Disruptions loading error: " + std::string(ex.what()));
         disruption_error = true;
     } catch (...) {
         LOG4CPLUS_ERROR(logger, "Disruptions loading error: ");
-        throw disruptions_loading_error("Disruptions loading error: ");
+        throw navitia::data::disruptions_loading_error("Disruptions loading error: ");
         disruption_error = true;
     }
     LOG4CPLUS_DEBUG(logger, "Finished to load disruptions");
@@ -190,10 +183,10 @@ void Data::build_raptor(size_t cache_size) {
         dataRaptor->load(*this->pt_data, cache_size);
     } catch (const std::exception& ex) {
         LOG4CPLUS_ERROR(logger, "Data Raptor loading error: " << std::string(ex.what()));
-        throw disruptions_loading_error("Data Raptor loading error: " + std::string(ex.what()));
+        throw navitia::data::raptor_building_error("Data Raptor loading error: " + std::string(ex.what()));
     } catch(...) {
         LOG4CPLUS_ERROR(logger, "Data Raptor loading error: ");
-        throw disruptions_loading_error("Data Raptor loading error: ");
+        throw navitia::data::raptor_building_error("Data Raptor loading error: ");
     }
     LOG4CPLUS_DEBUG(logger, "Finished to build data Raptor");
 }
