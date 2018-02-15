@@ -826,7 +826,7 @@ class Scenario(simple.Scenario):
             logging.getLogger(__name__).debug('trying to add ridesharing journeys')
             try:
                 decorate_journeys(pb_resp, instance, api_request)
-            except:
+            except Exception:
                 logger.exception('Error while retrieving ridesharing ads')
         else:
             for j in pb_resp.journeys:

@@ -84,15 +84,9 @@ def build_ridesharing_journeys(from_pt_obj, to_pt_obj, period_extremity, instanc
     try:
         rsjs, fps = instance.get_ridesharing_journeys_with_feed_publishers(from_str, to_str, period_extremity)
     except Exception as e:
-        logging.exception('Error while retrieving ridesharing ads and feed_publishers from {} to {}: {}'
-                          .format(from_str, to_str, str(e)))
+        logging.exception('Error while retrieving ridesharing ads and feed_publishers from %s to %s: {}',
+                          from_str, to_str)
         new_relic.record_custom_event('ridesharing_internal_failure', {'message': str(e)})
-        rsjs = []
-        fps = []
-    except:
-        logging.exception('Error while retrieving ridesharing ads and feed_publishers from {} to {} (No exception)'
-                          .format(from_str, to_str))
-        new_relic.record_custom_event('ridesharing_internal_failure')
         rsjs = []
         fps = []
 

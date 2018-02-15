@@ -91,11 +91,11 @@ class InstantSystem(AbstractRidesharingService):
             return self.breaker.call(requests.get, url=self.service_url, headers=headers,
                                      params=params, timeout=self.timeout)
         except pybreaker.CircuitBreakerError as e:
-            logging.getLogger(__name__).error('Instant System service dead (error: {})'.format(e),
+            logging.getLogger(__name__).error('Instant System service dead (error: %s)', e,
                                               extra={'ridesharing_service_id': self._get_rs_id()})
             raise RidesharingServiceError('circuit breaker open')
         except requests.Timeout as t:
-            logging.getLogger(__name__).error('Instant System service timeout (error: {})'.format(t),
+            logging.getLogger(__name__).error('Instant System service timeout (error: %s)', t,
                                               extra={'ridesharing_service_id': self._get_rs_id()})
             raise RidesharingServiceError('timeout')
         except Exception as e:
@@ -227,7 +227,7 @@ class InstantSystem(AbstractRidesharingService):
 
         if resp.status_code != 200:
             # TODO better error handling, the response might be in 200 but in error
-            logging.getLogger(__name__).error('Instant System service unavailable, impossible to query : {}'.format(resp.url),
+            logging.getLogger(__name__).error('Instant System service unavailable, impossible to query : %s', resp.url,
                     extra={'ridesharing_service_id': self._get_rs_id(), 'status_code': resp.status_code})
             raise RidesharingServiceError('non 200 response')
 
