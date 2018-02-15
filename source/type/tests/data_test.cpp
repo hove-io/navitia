@@ -72,14 +72,14 @@ BOOST_AUTO_TEST_CASE(load_data) {
     BOOST_CHECK_EQUAL(data.last_load, false);
     try {
         data.load_nav(complete_path(fake_data_file));
-    } catch(const navitia::type::data_loading_error& ex) {
+    } catch(const navitia::data::data_loading_error& ex) {
         failed = true;
     }
     BOOST_CHECK_EQUAL(failed, false);
     BOOST_CHECK_EQUAL(data.last_load, true);
     try {
         data.load_nav("wrong_path");
-    } catch(const navitia::type::data_loading_error& ex) {
+    } catch(const navitia::data::data_loading_error& ex) {
         failed = true;
     }
     BOOST_CHECK_EQUAL(failed, true);
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(load_data_fail) {
     bool failed = false;
     try {
         data.load_nav("wrong_path");
-    } catch(const navitia::type::data_loading_error& ex) {
+    } catch(const navitia::data::data_loading_error& ex) {
         failed = true;
     }
     BOOST_CHECK_EQUAL(failed, true);
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(load_disruptions_fail) {
     bool failed = false;
     try {
         data.load_disruptions(fake_disruption_path);
-    } catch(const navitia::type::disruptions_broken_connection& ex) {
+    } catch(const navitia::data::disruptions_broken_connection& ex) {
         failed = true;
     }
     BOOST_CHECK_EQUAL(failed, true);

@@ -90,6 +90,7 @@ add_dependencies(types protobuf_files)
 
 SET(DATA_SRC
     data.cpp
+    data_exceptions.cpp
     "${CMAKE_SOURCE_DIR}/third_party/lz4/lz4.c"
     pt_data.cpp
     headsign_handler.cpp
