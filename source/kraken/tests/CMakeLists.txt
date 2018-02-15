@@ -1,11 +1,11 @@
 #We use the BOOST_LIBS define is the parent
 SET(BOOST_LIBS ${BOOST_LIBS} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 add_executable(data_manager_test data_manager_test.cpp)
-target_link_libraries(data_manager_test workers utils make_disruption_from_chaos log4cplus tcmalloc ${Boost_LIBRARIES})
+target_link_libraries(data_manager_test types utils log4cplus tcmalloc ${Boost_LIBRARIES})
 ADD_BOOST_TEST(data_manager_test)
 
 add_executable(data_manager_with_type_data_test data_manager_with_type_data_test.cpp)
-target_link_libraries(data_manager_with_type_data_test workers utils make_disruption_from_chaos log4cplus tcmalloc ${Boost_LIBRARIES})
+target_link_libraries(data_manager_with_type_data_test make_disruption_from_chaos workers log4cplus tcmalloc ${Boost_LIBRARIES})
 ADD_BOOST_TEST(data_manager_with_type_data_test)
 
 add_executable(disruption_reader_test disruption_reader_test.cpp)
