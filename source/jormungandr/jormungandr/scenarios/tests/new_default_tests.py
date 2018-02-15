@@ -466,16 +466,7 @@ def crowfly_in_ridesharing_test():
     section.type = response_pb2.STREET_NETWORK
     section.street_network.mode = response_pb2.Walking
 
-    # nothing should be changed
-    new_default._switch_back_to_ridesharing(response, "car", "walking")
-
-    assert section_crowfly.street_network.mode == response_pb2.Car
-    assert journey.durations.ridesharing == 0
-    assert journey.durations.car == 42
-    assert journey.distances.ridesharing == 0
-    assert journey.distances.car == 43
-
-    new_default._switch_back_to_ridesharing(response, "ridesharing", "walking")
+    new_default._switch_back_to_ridesharing(response, 0)
 
     assert section_crowfly.street_network.mode == response_pb2.Ridesharing
     assert journey.durations.ridesharing == 42
