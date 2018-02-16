@@ -556,7 +556,16 @@ def _is_fake_car_section(section):
 
 
 def _switch_back_to_ridesharing(response, is_first_section):
+    """
+    
+    :param response: a pb_response returned by kraken
+    :param is_first_section: a bool indicates that if the first_section or last_section is a ridesharing section
+                             True if the first_section is, False if the last_section is
+    :return: 
+    """
     for journey in response.journeys:
+        if len(journey.sections) == 0:
+            continue
         section_idx = 0 if is_first_section else -1
         section = journey.sections[section_idx]
         if _is_fake_car_section(section):
