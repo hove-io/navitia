@@ -161,8 +161,8 @@ void Data::load_disruptions(const std::string& database,
         throw navitia::data::disruptions_loading_error("Disruptions loading error: " + std::string(ex.what()));
         disruption_error = true;
     } catch (...) {
-        LOG4CPLUS_ERROR(logger, "Disruptions loading error: ");
-        throw navitia::data::disruptions_loading_error("Disruptions loading error: ");
+        LOG4CPLUS_ERROR(logger, "Disruptions loading error");
+        throw navitia::data::disruptions_loading_error("Disruptions loading error");
         disruption_error = true;
     }
     LOG4CPLUS_DEBUG(logger, "Finished to load disruptions");
