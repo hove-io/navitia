@@ -546,21 +546,34 @@ def _tag_by_mode(responses):
         for j in r.journeys:
             _tag_journey_by_mode(j)
 
-def _switch_back_to_ridesharing(response):
-    for journey in response.journeys:
-        for i, section in enumerate(journey.sections):
-            if section.type == response_pb2.STREET_NETWORK \
-                    and section.street_network.mode == response_pb2.Car:
-                if (len(journey.sections) > i+1 and journey.sections[i+1].type != response_pb2.PARK) or \
-                        (i > 0 and journey.sections[i-1].type != response_pb2.LEAVE_PARKING) \
-                        or len(journey.sections) == 1:
-                    #TODO: handle crowfly :(
-                    section.street_network.mode = response_pb2.Ridesharing
-                    journey.durations.ridesharing += section.duration
-                    journey.durations.car -= section.duration
-                    journey.distances.ridesharing += section.length
-                    journey.distances.car -= section.length
 
+def _is_fake_car_section(section):
+    """
+    This function test if the section is a fake car section
+    """
+    return (section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY) and \
+            section.street_network.mode == response_pb2.Car
+
+
+def _switch_back_to_ridesharing(response, is_first_section):
+    """
+    
+    :param response: a pb_response returned by kraken
+    :param is_first_section: a bool indicates that if the first_section or last_section is a ridesharing section
+                             True if the first_section is, False if the last_section is
+    :return: 
+    """
+    for journey in response.journeys:
+        if len(journey.sections) == 0:
+            continue
+        section_idx = 0 if is_first_section else -1
+        section = journey.sections[section_idx]
+        if _is_fake_car_section(section):
+            section.street_network.mode = response_pb2.Ridesharing
+            journey.durations.ridesharing += section.duration
+            journey.durations.car -= section.duration
+            journey.distances.ridesharing += section.length
+            journey.distances.car -= section.length
 
 def nb_journeys(responses):
     return sum(1 for r in responses for j in r.journeys if not journey_filter.to_be_deleted(j))
@@ -870,8 +883,12 @@ class Scenario(simple.Scenario):
             self.nb_kraken_calls += 1
             for idx, j in enumerate(local_resp.journeys):
                 j.internal_id = "{resp}-{j}".format(resp=self.nb_kraken_calls, j=idx)
-            if 'ridesharing' in dep_mode or 'ridesharing' in arr_mode:
-                _switch_back_to_ridesharing(local_resp)
+
+            if dep_mode == 'ridesharing':
+                _switch_back_to_ridesharing(local_resp, True)
+            if arr_mode == 'ridesharing':
+                _switch_back_to_ridesharing(local_resp, False)
+
             fill_uris(local_resp)
             resp.append(local_resp)
             logger.debug("for mode %s|%s we have found %s journeys", dep_mode, arr_mode, len(local_resp.journeys))
