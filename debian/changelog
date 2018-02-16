@@ -1,3 +1,18 @@
+navitia2 (2.51.0) unstable; urgency=low
+
+  * Jormun: handle crowfly in ridesharing  <https://github.com/CanalTP/navitia/pull/2331>
+  * Jormun: calling Instant System with UTC datetime  <https://github.com/CanalTP/navitia/pull/2334>
+  * Jormun: managing errors and using newrelic for ridesharing  <https://github.com/CanalTP/navitia/pull/2332>
+  * Jormun: fix bug when requesting ridesharing only on last section   <https://github.com/CanalTP/navitia/pull/2333>
+  * kraken autocomplete: longest common substring for stop_point  <https://github.com/CanalTP/navitia/pull/2327>
+  * Jormungandr : Use gevent patch ssl  <https://github.com/CanalTP/navitia/pull/2318>
+  * Jormungandr : Stat Instant System ridesharing  <https://github.com/CanalTP/navitia/pull/2328>
+  * Jormun: serializer perf improvment  <https://github.com/CanalTP/navitia/pull/2323>
+  * jormungandr: commercial_modes and physical_modes in stop_area  <https://github.com/CanalTP/navitia/pull/2320>
+  * autocomplete: bug on longest common substring  <https://github.com/CanalTP/navitia/pull/2326>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Fri, 16 Feb 2018 16:02:34 +0100
+
 navitia2 (2.50.0) unstable; urgency=low
 
   * Tyr: sync at the end of ed2nav  <https://github.com/CanalTP/navitia/pull/2325>
