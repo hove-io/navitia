@@ -222,13 +222,13 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
 
         assert any(equals_to_dummy_fp(fp) for fp in fps)
 
-    def test_ride_sharing_with_pt(self):
+    def test_start_ridesharing_with_pt(self):
         """
         test ridesharing_jouneys details
         """
         q = journey_basic_query + \
-            "&last_section_mode[]=walking" + \
             "&first_section_mode[]=ridesharing" + \
+            "&last_section_mode[]=walking" + \
             "&ridesharing_speed=2.5"
         response = self.query_region(q)
         self.is_valid_journey_response(response, q, check_journey_links=False)
@@ -281,8 +281,8 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
 
         #with the use of &max_ridesharing_duration_to_pt=0 we have only direct ridesharing
         q = journey_basic_query + \
-            "&last_section_mode[]=walking" + \
             "&first_section_mode[]=ridesharing" + \
+            "&last_section_mode[]=walking" + \
             "&ridesharing_speed=2.5" + \
             "&max_ridesharing_duration_to_pt=0"
         response = self.query_region(q)
@@ -291,3 +291,64 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         assert len(journeys) == 1
         assert 'ridesharing' in journeys[0].get('tags')
         assert journeys[0].get('durations').get('ridesharing') == 37
+
+    def test_end_ridesharing_with_pt(self):
+        """
+        test that we get a ridesharing_jouney when requesting with no ridesharing in first_section_mode[],
+        only in last_section_mode[]
+
+        Nota: response provided by InstantSystem mock won't be consistent (same as the other way),
+        but the goal is to check it's correctly called, not that InstantSystem returns a consistent response.
+        """
+        q = "journeys?from=0.00188646;0.00071865&to=0.0000898312;0.0000898312&datetime=20120614T080000&"\
+            "ridesharing_speed=2.5&first_section_mode[]={first}&last_section_mode[]={last}"\
+            .format(first='walking', last='ridesharing')
+        response = self.query_region(q)
+        self.is_valid_journey_response(response, q, check_journey_links=False)
+
+        journeys = get_not_null(response, 'journeys')
+        assert len(journeys) == 2
+
+        #The first journey is direct walking
+        assert 'walking' in journeys[0].get('tags')
+        assert 'ridesharing' not in journeys[0].get('tags')
+        assert 'non_pt' in journeys[0].get('tags')
+        assert journeys[0].get('type') == 'best'
+        sections = journeys[0].get('sections')
+        assert len(sections) == 1
+        assert sections[0].get('mode') == 'walking'
+        assert journeys[0].get('durations').get('walking') == 276
+        assert journeys[0].get('durations').get('total') == 276
+
+        #The second one is of combination of walking + public_transport + ridesharing
+        assert 'ridesharing' in journeys[1].get('tags')
+        assert 'non_pt' not in journeys[1].get('tags')
+        assert journeys[1].get('type') == 'rapid'
+        sections = journeys[1].get('sections')
+        assert len(sections) == 5 # we get also boarding and alighting sections (doesn't matter)
+        assert journeys[1].get('durations').get('ridesharing') == 7
+        assert journeys[1].get('durations').get('walking') == 80
+        assert journeys[1].get('durations').get('total') == 3867
+
+        #first section is of walking
+        walking_section = sections[0]
+        assert walking_section.get('mode') == 'walking'
+        assert walking_section.get('type') == 'street_network'
+        assert walking_section.get('from').get('id') == '0.00188646;0.00071865'
+        assert walking_section.get('to').get('id') == 'stop_point:stopA'
+        assert walking_section.get('duration') == 80
+
+        #third section is of public transport
+        pt_section = sections[2]
+        assert pt_section.get('type') == 'public_transport'
+        assert pt_section.get('from').get('id') == 'stop_point:stopA'
+        assert pt_section.get('to').get('id') == 'stop_point:stopB'
+        assert pt_section.get('duration') == 180
+
+        #last section is of ridesharing
+        rs_section = sections[4]
+        assert rs_section.get('mode') == 'ridesharing'
+        assert rs_section.get('type') == 'street_network'
+        assert rs_section.get('from').get('id') == 'stop_point:stopB'
+        assert rs_section.get('to').get('id') == '8.98312e-05;8.98312e-05'
+        assert rs_section.get('duration') == 7
