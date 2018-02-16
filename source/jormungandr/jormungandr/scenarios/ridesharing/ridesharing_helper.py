@@ -29,6 +29,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 import six
+from jormungandr import new_relic
 from jormungandr.scenarios import journey_filter
 from jormungandr.scenarios.helper_classes.helper_utils import crowfly_distance_between
 from jormungandr.scenarios.ridesharing.ridesharing_journey import Gender
@@ -82,8 +83,10 @@ def build_ridesharing_journeys(from_pt_obj, to_pt_obj, period_extremity, instanc
     to_str="{},{}".format(to_coord.lat, to_coord.lon)
     try:
         rsjs, fps = instance.get_ridesharing_journeys_with_feed_publishers(from_str, to_str, period_extremity)
-    except: # TODO handle it smarter
-        logging.exception('')
+    except Exception as e:
+        logging.exception('Error while retrieving ridesharing ads and feed_publishers from %s to %s: {}',
+                          from_str, to_str)
+        new_relic.record_custom_event('ridesharing_internal_failure', {'message': str(e)})
         rsjs = []
         fps = []
 

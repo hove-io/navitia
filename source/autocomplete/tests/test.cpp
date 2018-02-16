@@ -1941,3 +1941,82 @@ BOOST_AUTO_TEST_CASE(longuest_substring_test_2) {
     BOOST_CHECK_EQUAL(res.first, std::string("ligne").size());
     BOOST_CHECK_EQUAL(res.second, 10); // position of the end of 'ligne' in str2
 }
+
+// The second scores should be of the length of the string
+// Check that there is no extra space and case is not taken into account
+BOOST_AUTO_TEST_CASE(autocomplete_test_stop_area_longest_substring) {
+    std::vector<std::string> admins;
+    std::vector<navitia::type::Type_e> type_filter;
+    ed::builder b("20180201");
+    b.sa("Jean Jaurès", 0, 0);
+
+    b.data->pt_data->index();
+    Admin* ad = new Admin;
+    ad->name = "Toulouse";
+    ad->uri = "admin:fr:31555";
+    ad->level = 8;
+    ad->postal_codes.push_back("31000");
+    ad->idx = 0;
+    b.data->geo_ref->admins.push_back(ad);
+    b.manage_admin();
+    b.build_autocomplete();
+
+    type_filter.push_back(navitia::type::Type_e::StopArea);
+    auto * data_ptr = b.data.get();
+
+    std::string search("Jean Jaurès Toulouse");
+    std::string search_low = data_ptr->pt_data->stop_area_autocomplete.strip_accents_and_lower(search);
+
+    // No accents, one less byte
+    BOOST_REQUIRE_EQUAL(search.size(), search_low.size() + 1);
+
+    {
+        navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+        navitia::autocomplete::autocomplete(pb_creator, search, type_filter , 1, 5, admins, 0, *(b.data));
+        pbnavitia::Response resp = pb_creator.get_response();
+
+        BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
+        BOOST_REQUIRE_EQUAL(resp.places(0).scores_size(), 3);
+        // The search is done on the lower case without accent string so the results are on this length
+        BOOST_REQUIRE_EQUAL(resp.places(0).scores(1), search_low.size());
+        BOOST_REQUIRE_EQUAL(resp.places(0).scores(2), (search_low.size() - 1) * - 1);
+    }
+    {
+        navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+        navitia::autocomplete::autocomplete(pb_creator, search_low, type_filter , 1, 5, admins, 0, *(b.data));
+        pbnavitia::Response resp = pb_creator.get_response();
+
+        BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
+        BOOST_REQUIRE_EQUAL(resp.places(0).scores_size(), 3);
+        BOOST_REQUIRE_EQUAL(resp.places(0).scores(1), search_low.size());
+        BOOST_REQUIRE_EQUAL(resp.places(0).scores(2), (search_low.size() - 1) * - 1);
+    }
+
+    // we should have the same result on stop_points
+    std::string sp_search("stop_point:Jean Jaurès Toulouse");
+    std::string sp_search_low = data_ptr->pt_data->stop_area_autocomplete.strip_accents_and_lower(sp_search);
+
+    std::vector<navitia::type::Type_e> sp_type_filter;
+    sp_type_filter.push_back(navitia::type::Type_e::StopPoint);
+    {
+        navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+        navitia::autocomplete::autocomplete(pb_creator, sp_search, sp_type_filter , 1, 5, admins, 0, *(b.data));
+        pbnavitia::Response resp = pb_creator.get_response();
+
+        BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
+        BOOST_REQUIRE_EQUAL(resp.places(0).scores_size(), 3);
+        // The search is done on the lower case without accent string so the results are on this length
+        BOOST_REQUIRE_EQUAL(resp.places(0).scores(1), sp_search_low.size());
+        BOOST_REQUIRE_EQUAL(resp.places(0).scores(2), (sp_search_low.size() - 1) * - 1);
+    }
+    {
+        navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+        navitia::autocomplete::autocomplete(pb_creator, sp_search_low, sp_type_filter , 1, 5, admins, 0, *(b.data));
+        pbnavitia::Response resp = pb_creator.get_response();
+
+        BOOST_REQUIRE_EQUAL(resp.places_size(), 1);
+        BOOST_REQUIRE_EQUAL(resp.places(0).scores_size(), 3);
+        BOOST_REQUIRE_EQUAL(resp.places(0).scores(1), sp_search_low.size());
+        BOOST_REQUIRE_EQUAL(resp.places(0).scores(2), (sp_search_low.size() - 1) * - 1);
+    }
+}

@@ -107,6 +107,12 @@ def create_administrative_regions_field(geocoding):
     return response
 
 
+def create_modes_field(modes):
+    if not modes:
+        return []
+    return [{"id": mode.get('id'), "name": mode.get('name')} for mode in modes]
+
+
 def get_lon_lat(obj):
     if not obj or not obj.get('geometry') or not obj.get('geometry').get('coordinates'):
         return None, None
@@ -227,7 +233,7 @@ class StopAreaField(fields.Raw):
         geocoding = obj.get('properties', {}).get('geocoding', {})
 
         # TODO add codes
-        return {
+        resp = {
             "id": geocoding.get('id'),
             "coord": {
                 "lon": lon,
@@ -237,8 +243,17 @@ class StopAreaField(fields.Raw):
             "name": geocoding.get('name'),
             "administrative_regions":
                 create_administrative_regions_field(geocoding) or create_admin_field(geocoding),
-            "timezone": geocoding.get('timezone'),
+            "timezone": geocoding.get('timezone')
         }
+
+        c_modes = geocoding.get('commercial_modes', [])
+        if c_modes:
+            resp['commercial_modes'] = create_modes_field(c_modes)
+
+        p_modes = geocoding.get('physical_modes', [])
+        if p_modes:
+            resp['physical_modes'] = create_modes_field(p_modes)
+        return resp
 
 geocode_admin = {
     "embedded_type": Lit("administrative_region"),

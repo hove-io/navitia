@@ -31,7 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import serpy
 from navitiacommon import type_pb2
 
-from jormungandr.interfaces.v1.serializer.base import GenericSerializer, EnumListField, LiteralField
+from jormungandr.interfaces.v1.serializer.base import PbGenericSerializer, EnumListField, LiteralField
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, DateTimeType, DateType
 from jormungandr.interfaces.v1.serializer.time import TimeField, PeriodSerializer, DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import *
@@ -90,7 +90,7 @@ class DisruptionPropertySerializer(PbNestedSerializer):
     value = jsonschema.Field(schema_type=str)
 
 
-class PtObjectSerializer(GenericSerializer):
+class PtObjectSerializer(PbGenericSerializer):
     quality = jsonschema.Field(schema_type=int, required=False, display_none=True, deprecated=True)
     stop_area = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer())
     stop_point = jsonschema.MethodField(schema_type=lambda: StopPointSerializer())
@@ -144,7 +144,7 @@ class PtObjectSerializer(GenericSerializer):
             return None
 
 
-class TripSerializer(GenericSerializer):
+class TripSerializer(PbGenericSerializer):
     pass
 
 
@@ -268,7 +268,7 @@ class DisruptionSerializer(PbNestedSerializer):
     properties = DisruptionPropertySerializer(many=True, display_none=False)
 
 
-class PoiTypeSerializer(GenericSerializer):
+class PoiTypeSerializer(PbGenericSerializer):
     pass
 
 
@@ -278,7 +278,7 @@ class StandsSerializer(PbNestedSerializer):
     total_stands = jsonschema.IntField()
 
 
-class AdminSerializer(GenericSerializer):
+class AdminSerializer(PbGenericSerializer):
     level = jsonschema.Field(schema_type=int)
     zip_code = jsonschema.Field(schema_type=str, display_none=True)
     label = jsonschema.Field(schema_type=str)
@@ -286,14 +286,14 @@ class AdminSerializer(GenericSerializer):
     coord = CoordSerializer(required=False)
 
 
-class AddressSerializer(GenericSerializer):
+class AddressSerializer(PbGenericSerializer):
     house_number = jsonschema.Field(schema_type=int, display_none=True)
     coord = CoordSerializer(required=False)
     label = jsonschema.Field(schema_type=str, display_none=False)
     administrative_regions = AdminSerializer(many=True, display_none=False)
 
 
-class PoiSerializer(GenericSerializer):
+class PoiSerializer(PbGenericSerializer):
     coord = CoordSerializer(required=False)
     label = jsonschema.Field(schema_type=str)
     administrative_regions = AdminSerializer(many=True, display_none=False)
@@ -306,15 +306,15 @@ class PoiSerializer(GenericSerializer):
         return {p.type: p.value for p in obj.properties}
 
 
-class PhysicalModeSerializer(GenericSerializer):
+class PhysicalModeSerializer(PbGenericSerializer):
     pass
 
 
-class CommercialModeSerializer(GenericSerializer):
+class CommercialModeSerializer(PbGenericSerializer):
     pass
 
 
-class StopPointSerializer(GenericSerializer):
+class StopPointSerializer(PbGenericSerializer):
     comments = CommentSerializer(many=True, display_none=False)
     comment = FirstCommentField(attr='comments', display_none=False)
     codes = CodeSerializer(many=True, display_none=False)
@@ -335,7 +335,7 @@ class StopPointSerializer(GenericSerializer):
             return None
 
 
-class StopAreaSerializer(GenericSerializer):
+class StopAreaSerializer(PbGenericSerializer):
     comments = CommentSerializer(many=True, display_none=False)
     comment = FirstCommentField(attr='comments', display_none=False, deprecated=True)
     codes = CodeSerializer(many=True, display_none=False)
@@ -352,7 +352,7 @@ class StopAreaSerializer(GenericSerializer):
                                       description='Stop points contained in this stop area')
 
 
-class PlaceSerializer(GenericSerializer):
+class PlaceSerializer(PbGenericSerializer):
     quality = jsonschema.Field(schema_type=int, display_none=True, required=False, deprecated=True)
     stop_area = StopAreaSerializer(display_none=False)
     stop_point = StopPointSerializer(display_none=False)
@@ -366,7 +366,7 @@ class PlaceNearbySerializer(PlaceSerializer):
     distance = jsonschema.StrField(display_none=True)
 
 
-class NetworkSerializer(GenericSerializer):
+class NetworkSerializer(PbGenericSerializer):
     links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
     codes = CodeSerializer(many=True, display_none=False)
 
@@ -374,7 +374,7 @@ class NetworkSerializer(GenericSerializer):
         return LineSerializer(obj.lines, many=True, display_none=False).data
 
 
-class RouteSerializer(GenericSerializer):
+class RouteSerializer(PbGenericSerializer):
     is_frequence = StrField()
     direction_type = jsonschema.Field(schema_type=str, display_none=True)
     physical_modes = PhysicalModeSerializer(many=True, display_none=False)
@@ -393,7 +393,7 @@ class RouteSerializer(GenericSerializer):
             return None
 
 
-class LineGroupSerializer(GenericSerializer):
+class LineGroupSerializer(PbGenericSerializer):
     lines = jsonschema.MethodField(schema_type=lambda: LineSerializer(many=True), display_none=False)
     main_line = jsonschema.MethodField(schema_type=lambda: LineSerializer(), display_none=False)
     comments = CommentSerializer(many=True)
@@ -408,7 +408,7 @@ class LineGroupSerializer(GenericSerializer):
             return None
 
 
-class LineSerializer(GenericSerializer):
+class LineSerializer(PbGenericSerializer):
     code = jsonschema.Field(schema_type=str, display_none=True)
     color = jsonschema.Field(schema_type=str)
     text_color = jsonschema.Field(schema_type=str)
@@ -432,7 +432,7 @@ class JourneyPatternPointSerializer(PbNestedSerializer):
     stop_point = StopPointSerializer(display_none=False)
 
 
-class JourneyPatternSerializer(GenericSerializer):
+class JourneyPatternSerializer(PbGenericSerializer):
     journey_pattern_points = JourneyPatternPointSerializer(many=True)
     route = RouteSerializer(display_none=False)
 
@@ -447,7 +447,7 @@ class StopTimeSerializer(PbNestedSerializer):
     stop_point = StopPointSerializer()
 
 
-class VehicleJourneySerializer(GenericSerializer):
+class VehicleJourneySerializer(PbGenericSerializer):
     journey_pattern = JourneyPatternSerializer(display_none=False)
     stop_times = StopTimeSerializer(many=True)
     comments = CommentSerializer(many=True, display_none=False)
@@ -473,11 +473,11 @@ class ConnectionSerializer(PbNestedSerializer):
                                                 'for a traveler to stay at a connection (seconds)')
 
 
-class CompanieSerializer(GenericSerializer):
+class CompanieSerializer(PbGenericSerializer):
     codes = CodeSerializer(many=True)
 
 
-class ContributorSerializer(GenericSerializer):
+class ContributorSerializer(PbGenericSerializer):
     website = jsonschema.Field(schema_type=str)
     license = jsonschema.Field(schema_type=str)
 

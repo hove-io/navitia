@@ -446,3 +446,30 @@ def tag_direct_path_test():
     assert 'non_pt_bike' in response.journeys[1].tags
     assert 'non_pt' in response.journeys[1].tags
     assert not response.journeys[2].tags
+
+
+def crowfly_in_ridesharing_test():
+    response = response_pb2.Response()
+    journey = response.journeys.add()
+
+    section_crowfly = journey.sections.add()
+    section_crowfly.type = response_pb2.CROW_FLY
+    section_crowfly.street_network.mode = response_pb2.Car
+    section_crowfly.duration = 42
+    section_crowfly.length = 43
+
+    journey.distances.car = 43
+    journey.durations.car = 42
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+
+    new_default._switch_back_to_ridesharing(response, True)
+
+    assert section_crowfly.street_network.mode == response_pb2.Ridesharing
+    assert journey.durations.ridesharing == 42
+    assert journey.durations.car == 0
+    assert journey.distances.ridesharing == 43
+    assert journey.distances.car == 0

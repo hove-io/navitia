@@ -32,6 +32,7 @@ from .base import LiteralField, NestedPropertyField, IntNestedPropertyField, val
 from flask.ext.restful import abort
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.fields import raw_feed_publisher_bano, raw_feed_publisher_osm
+from jormungandr.interfaces.v1.serializer.base import DictGenericSerializer
 from jormungandr.utils import get_house_number
 from jormungandr.autocomplete.geocodejson import create_address_field
 
@@ -213,6 +214,21 @@ class StopAreaSerializer(serpy.DictSerializer):
     name = NestedPropertyField(attr='properties.geocoding.name', display_none=True)
     administrative_regions = AdministrativeRegionsSerializer()
     timezone = NestedPropertyField(attr='properties.geocoding.timezone')
+    commercial_modes = jsonschema.MethodField()
+    physical_modes = jsonschema.MethodField()
+
+    def fill_modes(self, modes):
+        if not modes:
+            return []
+        return [DictGenericSerializer(mode).data for mode in modes]
+
+    def get_commercial_modes(self, obj):
+        modes = obj.get('properties', {}).get('geocoding', {}).get('commercial_modes', [])
+        return self.fill_modes(modes)
+
+    def get_physical_modes(self, obj):
+        modes = obj.get('properties', {}).get('geocoding', {}).get('physical_modes', [])
+        return self.fill_modes(modes)
 
 
 class GeocodeStopAreaSerializer(serpy.DictSerializer):

@@ -808,6 +808,10 @@ void builder::finish() {
             sa->admin_list.clear();
             sa->admin_list.push_back(admin);
         }
+        for(navitia::type::StopPoint* sp : data->pt_data->stop_points){
+            sp->admin_list.clear();
+            sp->admin_list.push_back(admin);
+        }
 
         for(navitia::georef::Way * way : data->geo_ref->ways) {
             way->admin_list.clear();
