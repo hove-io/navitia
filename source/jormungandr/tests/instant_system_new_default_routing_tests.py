@@ -292,6 +292,33 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         assert 'ridesharing' in journeys[0].get('tags')
         assert journeys[0].get('durations').get('ridesharing') == 37
 
+        q = journey_basic_query + \
+            ("&first_section_mode[]=ridesharing"
+             "&first_section_mode[]=car"
+             "&last_section_mode[]=walking"
+             "&ridesharing_speed=2.5")
+        response = self.query_region(q)
+        self.is_valid_journey_response(response, q, check_journey_links=False)
+        journeys = get_not_null(response, 'journeys')
+        assert len(journeys) == 3
+
+        assert 'ridesharing' in journeys[0].get('tags')
+        assert 'non_pt' in journeys[0].get('tags')
+        assert 'car' in journeys[1].get('tags')
+        assert 'non_pt' in journeys[1].get('tags')
+
+        assert 'ridesharing' in journeys[2].get('tags')
+
+        assert journeys[0].get('durations').get('ridesharing') == 37
+        assert journeys[1].get('durations').get('ridesharing') == 0
+        assert journeys[2].get('durations').get('ridesharing') == 7
+
+        rs_section = journeys[0]['sections'][0]
+        assert rs_section.get('mode') == 'ridesharing'
+
+        rs_section = journeys[2]['sections'][0]
+        assert rs_section.get('mode') == 'ridesharing'
+
     def test_end_ridesharing_with_pt(self):
         """
         test that we get a ridesharing_jouney when requesting with no ridesharing in first_section_mode[],
