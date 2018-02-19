@@ -90,7 +90,6 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
 
         returns the next realtime passages
         """
-
         try:
             next_passages = self._get_next_passage_for_route_point(route_point, count, from_dt, current_dt, duration)
             filtered_passage = self._filter_passages(next_passages, count, from_dt, duration, timezone)

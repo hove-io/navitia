@@ -361,6 +361,11 @@ class Instance(object):
         instance_db = self.get_models()
         return get_value_or_default('night_bus_filter_base_factor', instance_db, self.name)
 
+    @property
+    def realtime_pool_size(self):
+        instance_db = self.get_models()
+        return get_value_or_default('realtime_pool_size', instance_db, self.name)
+
     @contextmanager
     def socket(self, context):
         socket = None
@@ -398,13 +403,8 @@ class Instance(object):
                          timeout=app.config.get('INSTANCE_TIMEOUT', 10000),
                          quiet=False,
                          **kwargs):
+
         with self.socket(self.context) as socket:
-            try:
-                request.request_id = flask.request.id
-            except RuntimeError:
-                #we aren't in a flask context, so there is no request
-                if 'request_id' in kwargs:
-                    request.request_id = kwargs['request_id']
             socket.send(request.SerializeToString())
             if socket.poll(timeout=timeout) > 0:
                 pb = socket.recv()

@@ -39,8 +39,6 @@ from copy import deepcopy
 from jormungandr import new_relic
 
 import gevent, gevent.pool
-from jormungandr import app
-
 
 RT_PROXY_PROPERTY_NAME = 'realtime_system'
 RT_PROXY_DATA_FRESHNESS = 'realtime'
@@ -187,7 +185,6 @@ class MixedSchedule(object):
 
     def _get_next_realtime_passages(self, rt_system, route_point, request):
         log = logging.getLogger(__name__)
-
         next_rt_passages = None
         try:
             next_rt_passages = rt_system.next_passage_for_route_point(route_point,
@@ -263,7 +260,7 @@ class MixedSchedule(object):
         rt_proxy = None
 
         futures = []
-        pool = gevent.pool.Pool(app.config.get('GREENLET_RT_POOL_SIZE', 3))
+        pool = gevent.pool.Pool(self.instance.realtime_pool_size)
 
         def worker(rt_proxy, route_point, template, request, resp):
             return resp, rt_proxy, route_point, template, self._get_next_realtime_passages(rt_proxy, route_point, request)
