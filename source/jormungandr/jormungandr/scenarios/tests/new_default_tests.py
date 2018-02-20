@@ -424,6 +424,12 @@ def tag_by_mode_test():
     bb = helpers_tests.get_bike_bike_journey()
     _tag_journey_by_mode(bb)
     assert 'bike' in bb.tags
+    rs_car = helpers_tests.get_ridesharing_with_car_journey()
+    _tag_journey_by_mode(rs_car)
+    assert 'ridesharing' in rs_car.tags
+    rs_crowfly = helpers_tests.get_ridesharing_with_crowfly_journey()
+    _tag_journey_by_mode(rs_crowfly)
+    assert 'ridesharing' in rs_crowfly.tags
 
 def tag_direct_path_test():
     response = response_pb2.Response()

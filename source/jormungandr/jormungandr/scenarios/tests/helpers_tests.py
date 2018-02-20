@@ -434,6 +434,37 @@ def get_bss_car_journey():
 
     return journey
 
+def get_ridesharing_with_crowfly_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.CROW_FLY
+    section.street_network.mode = response_pb2.Ridesharing
+    section.duration = 25
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section.duration = 120
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 35
+    return journey
+
+def get_ridesharing_with_car_journey():
+    journey = response_pb2.Journey()
+
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Ridesharing
+    section.duration = 25
+    section = journey.sections.add()
+    section.type = response_pb2.PUBLIC_TRANSPORT
+    section.duration = 120
+    section = journey.sections.add()
+    section.type = response_pb2.STREET_NETWORK
+    section.street_network.mode = response_pb2.Walking
+    section.duration = 35
+    return journey
 
 #==============================================================================
 # has_bss_first_and_walking_last test
