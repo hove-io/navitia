@@ -40,9 +40,10 @@ static const std::string fake_data_file = "fake_data.nav.lz4";
 static const std::string fake_disruption_path = "fake_disruption_path";
 
 // We create a empty data with lz4 format in current directory.
-#define CREATE_FAKE_DATA(fake_file_name) \
-    navitia::type::Data data(0);         \
-    data.save(fake_data_file);           \
+static void create_fake_data(const std::string& fake_file_name){
+    navitia::type::Data data(0);
+    data.save(fake_file_name);
+}
 
 // Absolute path
 static std::string complete_path(const std::string file_name){
@@ -61,7 +62,7 @@ static std::string complete_path(const std::string file_name){
 // 3. reload wrong data
 BOOST_AUTO_TEST_CASE(load_success) {
 
-    CREATE_FAKE_DATA(fake_data_file)
+    create_fake_data(fake_data_file);
 
     DataManager<navitia::type::Data> data_manager;
     BOOST_CHECK(data_manager.get_data());
@@ -107,7 +108,7 @@ BOOST_AUTO_TEST_CASE(load_success) {
 
 BOOST_AUTO_TEST_CASE(load_failed) {
 
-    CREATE_FAKE_DATA(fake_data_file)
+    create_fake_data(fake_data_file);
 
     DataManager<navitia::type::Data> data_manager;
     BOOST_CHECK(data_manager.get_data());
