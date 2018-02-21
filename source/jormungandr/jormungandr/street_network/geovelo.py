@@ -64,7 +64,7 @@ class Geovelo(AbstractStreetNetworkService):
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
 
     def status(self):
-        return {'id': self.sn_system_id,
+        return {'id': unicode(self.sn_system_id),
                 'class': self.__class__.__name__,
                 'modes': self.modes,
                 'timeout': self.timeout,

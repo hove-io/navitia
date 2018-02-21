@@ -35,13 +35,9 @@ import logging
 import pybreaker
 import requests as requests
 from jormungandr import app
-import json
-from jormungandr.exceptions import TechnicalError, InvalidArguments, ApiNotFound
-from jormungandr.utils import is_url, kilometers_to_meters, get_pt_object_coord, decode_polyline, \
-    timestamp_to_datetime
-from copy import deepcopy
-from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathKey, \
-    StreetNetworkPathType
+from jormungandr.exceptions import TechnicalError
+from jormungandr.utils import get_pt_object_coord
+from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathKey
 from jormungandr.ptref import FeedPublisher
 
 DEFAULT_HERE_FEED_PUBLISHER = {
@@ -91,11 +87,11 @@ class Here(AbstractStreetNetworkService):
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_HERE_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_HERE_TIMEOUT_S'])
 
-        self.log = logging.LoggerAdapter(logging.getLogger(__name__), extra={'streetnetwork_id': id})
+        self.log = logging.LoggerAdapter(logging.getLogger(__name__), extra={'streetnetwork_id': unicode(id)})
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
 
     def status(self):
-        return {'id': self.sn_system_id,
+        return {'id': unicode(self.sn_system_id),
                 'class': self.__class__.__name__,
                 'modes': self.modes,
                 'timeout': self.timeout,

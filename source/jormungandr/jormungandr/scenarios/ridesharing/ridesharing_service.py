@@ -82,7 +82,7 @@ class AbstractRidesharingService(object):
         pass
 
     def _get_rs_id(self):
-        return '{}_{}'.format(repr(self.system_id), repr(self.network))
+        return '{}_{}'.format(unicode(self.system_id), unicode(self.network))
 
     def record_internal_failure(self, message):
         params = {'ridesharing_service_id': self._get_rs_id(),

@@ -46,7 +46,7 @@ class Kraken(AbstractStreetNetworkService):
         self.sn_system_id = id
 
     def status(self):
-        return {'id': self.sn_system_id,
+        return {'id': unicode(self.sn_system_id),
                 'class': self.__class__.__name__,
                 'modes': self.modes,
             }

@@ -28,7 +28,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy
 from flask import logging
 import pybreaker
@@ -145,7 +145,7 @@ class Cleverage(RealtimeProxy):
         return self._get_passages(route_point, r.json())
 
     def status(self):
-        return {'id': self.rt_system_id,
+        return {'id': unicode(self.rt_system_id),
                 'timeout': self.timeout,
                 'circuit_breaker': {'current_state': self.breaker.current_state,
                                     'fail_counter': self.breaker.fail_counter,

@@ -169,7 +169,7 @@ class MixedSchedule(object):
         if not route_point:
             return None
 
-        rt_system_code = get_realtime_system_code(route_point)
+        rt_system_code = unicode(get_realtime_system_code(route_point))
         if not rt_system_code:
             return None
 
@@ -193,7 +193,7 @@ class MixedSchedule(object):
                                                                       request['duration'])
         except Exception as e:
             log.exception('failure while requesting next passages to external RT system {}'.format(rt_system.rt_system_id))
-            new_relic.record_custom_event('realtime_internal_failure', {'rt_system_id': rt_system.rt_system_id,
+            new_relic.record_custom_event('realtime_internal_failure', {'rt_system_id': unicode(rt_system.rt_system_id),
                                                                         'message': str(e)})
 
         if next_rt_passages is None:

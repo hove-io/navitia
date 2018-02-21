@@ -75,7 +75,7 @@ class Valhalla(AbstractStreetNetworkService):
         self.mode_park_cost = kwargs.get('mode_park_cost', {})  # a dict giving the park time (in s) by mode
 
     def status(self):
-        return {'id': self.sn_system_id,
+        return {'id': unicode(self.sn_system_id),
                 'class': self.__class__.__name__,
                 'modes': self.modes,
                 'timeout': self.timeout,

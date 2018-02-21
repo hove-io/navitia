@@ -187,17 +187,17 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         pass
 
     def record_external_failure(self, message):
-        record_external_failure(message, 'realtime', self.rt_system_id)
+        record_external_failure(message, 'realtime', unicode(self.rt_system_id))
 
     def record_internal_failure(self, message):
-        params = {'realtime_system_id': repr(self.rt_system_id), 'message': message}
+        params = {'realtime_system_id': unicode(self.rt_system_id), 'message': message}
         new_relic.record_custom_event('realtime_internal_failure', params)
 
     def record_call(self, status, **kwargs):
         """
         status can be in: ok, failure
         """
-        params = {'realtime_system_id': repr(self.rt_system_id), 'status': status}
+        params = {'realtime_system_id': unicode(self.rt_system_id), 'status': status}
         params.update(kwargs)
         new_relic.record_custom_event('realtime_status', params)
 
@@ -205,6 +205,6 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         """
         status can be in: ok, failure
         """
-        params = {'realtime_system_id': repr(self.rt_system_id), 'status': status}
+        params = {'realtime_system_id': unicode(self.rt_system_id), 'status': status}
         params.update(kwargs)
         new_relic.record_custom_event('realtime_proxy_additional_info', params)
