@@ -31,6 +31,7 @@ www.navitia.io
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE data_manager_test
 #include <boost/test/unit_test.hpp>
+#include <boost/filesystem.hpp>
 
 #include "kraken/data_manager.h"
 #include "type/data.h"
@@ -44,7 +45,7 @@ static const std::string fake_disruption_path = "fake_disruption_path";
     data.save(fake_data_file);           \
 
 // Absolute path
-std::string complete_path(const std::string file_name){
+static std::string complete_path(const std::string file_name){
     char buf[256];
     if (getcwd(buf, sizeof(buf))) {
         return std::string(buf) + "/" + file_name;
@@ -70,9 +71,10 @@ BOOST_AUTO_TEST_CASE(load_success) {
     BOOST_CHECK_EQUAL(first_data, data_manager.get_data());
 
     // real data : Loading successed
-    BOOST_CHECK(data_manager.load(complete_path(fake_data_file)));
+    std::string fake_data_path = complete_path(fake_data_file);
+    BOOST_CHECK(data_manager.load(fake_data_path));
 
-    // Load success, so the internal shared pointer change.
+    // Load success, so the internal shared pointer changes.
     auto second_data = data_manager.get_data();
     BOOST_CHECK_NE(first_data, second_data);
 
@@ -81,9 +83,9 @@ BOOST_AUTO_TEST_CASE(load_success) {
 
     // When we reload a new data.
     // real data : Loading successed
-    BOOST_CHECK(data_manager.load(complete_path(fake_data_file)));
+    BOOST_CHECK(data_manager.load(fake_data_path));
 
-    // Load success, so the internal shared pointer change.
+    // Load success, so the internal shared pointer changes.
     auto third_data = data_manager.get_data();
     BOOST_CHECK_NE(second_data, third_data);
 
@@ -94,10 +96,13 @@ BOOST_AUTO_TEST_CASE(load_success) {
     // Fake data : Loading failed
     BOOST_CHECK(!data_manager.load("wrong path"));
 
-    // Load failed, so the internal shared pointer no change.
+    // Load failed, so the internal shared pointer no changes.
     // Data has not changed.
     auto fourth_data = data_manager.get_data();
     BOOST_CHECK_EQUAL(third_data, fourth_data);
+
+    // Clean fake file
+    boost::filesystem::remove(fake_data_path);
 }
 
 BOOST_AUTO_TEST_CASE(load_failed) {
@@ -114,8 +119,7 @@ BOOST_AUTO_TEST_CASE(load_failed) {
     // Fake data : Loading failed
     BOOST_CHECK(!data_manager.load("wrong path"));
 
-    // Load failed, so the internal shared pointer no change.
+    // Load failed, so the internal shared pointer no changes.
     // Data has not changed.
-    auto second_data = data_manager.get_data();
-    BOOST_CHECK_EQUAL(first_data, second_data);
+    BOOST_CHECK_EQUAL(first_data, data_manager.get_data());
 }
