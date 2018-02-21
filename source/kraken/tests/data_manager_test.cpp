@@ -42,14 +42,14 @@ namespace test {
 class Data {
     public:
 
-        void load_nav(const std::string& filename){}
-        void load_disruptions(const std::string& database,
-                              const std::vector<std::string>& contributors = {}){}
-        void build_raptor(size_t cache_size = 10){}
+        void load_nav(const std::string&){}
+        void load_disruptions(const std::string&,
+                              const std::vector<std::string>& = {}){}
+        void build_raptor(size_t){}
         mutable std::atomic<bool> loading;
         mutable std::atomic<bool> is_connected_to_rabbitmq;
         static bool load_status;
-        static bool last_load;
+        static bool last_load_succeeded;
         static bool destructor_called;
         size_t data_identifier;
 
@@ -60,7 +60,7 @@ class Data {
         ~Data(){Data::destructor_called = true;}
 };
 bool Data::load_status = true;
-bool Data::last_load = true;
+bool Data::last_load_succeeded = true;
 bool Data::destructor_called = false;
 
 } // namespace test
@@ -90,7 +90,7 @@ BOOST_FIXTURE_TEST_CASE(load, fixture) {
     // True because fake data don't failed
     BOOST_CHECK(data_manager.load("fake path"));
 
-    // Load OK, so the internal shared pointer change.
+    // Load OK, so the internal shared pointer changes.
     // Data has changed.
     BOOST_CHECK_NE(first_data, data_manager.get_data());
 }
@@ -101,7 +101,7 @@ BOOST_FIXTURE_TEST_CASE(destructor_called, fixture) {
         auto first_data = data_manager.get_data();
         // True because fake data don't failed
         BOOST_CHECK(data_manager.load("fake path"));
-        // Load OK, so the internal shared pointer change.
+        // Load OK, so the internal shared pointer changes.
         // Data has changed.
         BOOST_CHECK_NE(first_data, data_manager.get_data());
     }
