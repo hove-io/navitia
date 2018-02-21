@@ -47,13 +47,8 @@ using namespace navitia;
 static const std::string fake_data_file = "fake_data.nav.lz4";
 static const std::string fake_disruption_path = "fake_disruption_path";
 
-// We create a empty data with lz4 format in current directory.
-#define CREATE_FAKE_DATA(fake_file_name) \
-    navitia::type::Data data(0);         \
-    data.save(fake_data_file);           \
-
 // Absolute path
-std::string complete_path(const std::string file_name){
+static std::string complete_path(const std::string file_name){
     char buf[256];
     if (getcwd(buf, sizeof(buf))) {
         return std::string(buf) + "/" + file_name;
@@ -65,38 +60,26 @@ std::string complete_path(const std::string file_name){
 
 BOOST_AUTO_TEST_CASE(load_data) {
 
-    CREATE_FAKE_DATA(fake_data_file)
+    navitia::type::Data data(0);
+    data.save(fake_data_file);
 
     // load .nav
     bool failed = false;
-    BOOST_CHECK_EQUAL(data.last_load, false);
+    BOOST_CHECK_EQUAL(data.last_load_succeeded, false);
     try {
         data.load_nav(complete_path(fake_data_file));
-    } catch(const navitia::data::data_loading_error& ex) {
+    } catch(const navitia::data::data_loading_error&) {
         failed = true;
     }
     BOOST_CHECK_EQUAL(failed, false);
-    BOOST_CHECK_EQUAL(data.last_load, true);
+    BOOST_CHECK_EQUAL(data.last_load_succeeded, true);
     try {
         data.load_nav("wrong_path");
-    } catch(const navitia::data::data_loading_error& ex) {
+    } catch(const navitia::data::data_loading_error&) {
         failed = true;
     }
     BOOST_CHECK_EQUAL(failed, true);
-    BOOST_CHECK_EQUAL(data.last_load, true);
-}
-
-BOOST_AUTO_TEST_CASE(load_data_fail) {
-    navitia::type::Data data(0);
-
-    // load .nav
-    bool failed = false;
-    try {
-        data.load_nav("wrong_path");
-    } catch(const navitia::data::data_loading_error& ex) {
-        failed = true;
-    }
-    BOOST_CHECK_EQUAL(failed, true);
+    BOOST_CHECK_EQUAL(data.last_load_succeeded, true);
 }
 
 BOOST_AUTO_TEST_CASE(load_disruptions_fail) {
@@ -106,7 +89,7 @@ BOOST_AUTO_TEST_CASE(load_disruptions_fail) {
     bool failed = false;
     try {
         data.load_disruptions(fake_disruption_path);
-    } catch(const navitia::data::disruptions_broken_connection& ex) {
+    } catch(const navitia::data::disruptions_broken_connection&) {
         failed = true;
     }
     BOOST_CHECK_EQUAL(failed, true);
