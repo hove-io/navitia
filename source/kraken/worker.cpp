@@ -244,7 +244,7 @@ void Worker::status() {
     status->set_data_version(d->version);
     status->set_navitia_version(config::project_version);
     status->set_loaded(d->loaded);
-    status->set_last_load_status(d->last_load);
+    status->set_last_load_status(d->last_load_succeeded);
     status->set_last_load_at(pt::to_iso_string(d->last_load_at));
     status->set_last_rt_data_loaded(pt::to_iso_string(d->last_rt_data_loaded));
     status->set_nb_threads(conf.nb_threads());
@@ -339,7 +339,7 @@ void Worker::init_worker_data(const navitia::type::Data* data,
         planner = std::make_unique<routing::RAPTOR>(*data);
         street_network_worker = std::make_unique<georef::StreetNetwork>(*data->geo_ref);
         this->last_data_identifier = data->data_identifier;
-        LOG4CPLUS_INFO(logger, "Instanciate planner");        
+        LOG4CPLUS_INFO(logger, "Instanciate planner");
     }
     this->pb_creator.init(data, now, action_period, disable_geojson, disable_feedpublisher);
 }
@@ -544,7 +544,7 @@ void Worker::place_uri(const pbnavitia::PlaceUriRequest &request) {
         auto ep = type::EntryPoint(type::Type_e::Coord, request.uri());
         type::GeographicalCoord coord = ep.coordinates;
 
-        try{ 
+        try{
             auto address = this->pb_creator.data->geo_ref->nearest_addr(coord);
             const auto& way_coord = WayCoord(address.second, coord, address.first);
             pb_creator.fill(&way_coord, pb_creator.add_places(), request.depth());
@@ -560,7 +560,7 @@ void Worker::place_uri(const pbnavitia::PlaceUriRequest &request) {
         pb_creator.fill(it_sa->second, pb_creator.add_places(), request.depth());
     } else {
         auto it_sp = data->pt_data->stop_points_map.find(request.uri());
-        if(it_sp != data->pt_data->stop_points_map.end()) {            
+        if(it_sp != data->pt_data->stop_points_map.end()) {
             pb_creator.fill(it_sp->second, pb_creator.add_places(), request.depth());
         } else {
             auto it_poi = data->geo_ref->poi_map.find(request.uri());
