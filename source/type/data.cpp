@@ -75,7 +75,7 @@ Data::Data(size_t data_identifier) :
             [&](const GeographicalCoord &c){
             return geo_ref->find_admins(c);
             }),
-    last_load(false)
+    last_load_succeeded(false)
 {
     loaded = false;
     is_connected_to_rabbitmq = false;
@@ -109,7 +109,7 @@ void Data::load_nav(const std::string& filename) {
         this->load(ifs);
         loaded = true;
         last_load_at = pt::microsec_clock::universal_time();
-        last_load = true;
+        last_load_succeeded = true;
         LOG4CPLUS_INFO(logger, boost::format("stopTimes : %d nb foot path : %d Nombre de stop points : %d")
                        % pt_data->nb_stop_times()
                        % pt_data->stop_point_connections.size()
@@ -153,8 +153,8 @@ void Data::load_disruptions(const std::string& database,
         disruption_error = true;
         throw navitia::data::disruptions_broken_connection("Unable to connect to disruptions database: " + std::string(ex.what()));
     } catch (const pqxx::pqxx_exception& ex){
-        LOG4CPLUS_ERROR(logger, "Disruptions loading error");
-        throw navitia::data::disruptions_loading_error("Disruptions loading error");
+        LOG4CPLUS_ERROR(logger, "Disruptions loading error: " << std::string(ex.base().what()));
+        throw navitia::data::disruptions_loading_error("Disruptions loading error: " + std::string(ex.base().what()));
         disruption_error = true;
     } catch (const std::exception& ex) {
         LOG4CPLUS_ERROR(logger, "Disruptions loading error: " << std::string(ex.what()));
@@ -178,16 +178,7 @@ void Data::build_raptor(size_t cache_size) {
     // Add logger
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_DEBUG(logger, "Start to build data Raptor");
-
-    try {
-        dataRaptor->load(*this->pt_data, cache_size);
-    } catch (const std::exception& ex) {
-        LOG4CPLUS_ERROR(logger, "Data Raptor loading error: " << std::string(ex.what()));
-        throw navitia::data::raptor_building_error("Data Raptor loading error: " + std::string(ex.what()));
-    } catch(...) {
-        LOG4CPLUS_ERROR(logger, "Data Raptor loading error: ");
-        throw navitia::data::raptor_building_error("Data Raptor loading error: ");
-    }
+    dataRaptor->load(*this->pt_data, cache_size);
     LOG4CPLUS_DEBUG(logger, "Finished to build data Raptor");
 }
 
