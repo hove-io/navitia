@@ -104,7 +104,7 @@ public:
         // load .nav.lz4
         try {
             data->load_nav(filename);
-        } catch(const navitia::data::data_loading_error& ex) {
+        } catch(const navitia::data::data_loading_error&) {
             data->loading = false;
             if (data->last_load_succeeded) {
                 LOG4CPLUS_INFO(logger, "Data loading failed, we keep last loaded data");
@@ -116,16 +116,16 @@ public:
         if (chaos_database != boost::none) {
             try {
                 data->load_disruptions(*chaos_database, contributors);
-            } catch (const navitia::data::disruptions_broken_connection& ex){
+            } catch (const navitia::data::disruptions_broken_connection&){
                 LOG4CPLUS_WARN(logger, "Load data without disruptions");
 
-            } catch(const navitia::data::disruptions_loading_error& ex) {
+            } catch(const navitia::data::disruptions_loading_error&) {
                 // Reload data .nav.lz4
                 LOG4CPLUS_ERROR(logger, "Reload data with disruptions: " << filename);
                 try {
                     data = create_data(data_identifier.load());
                     data->load_nav(filename);
-                } catch(const navitia::data::data_loading_error& ex) {
+                } catch(const navitia::data::data_loading_error&) {
                     data->loading = false;
                     return false;
                 }

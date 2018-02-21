@@ -33,6 +33,7 @@ www.navitia.io
 
 // Boost
 #include <boost/test/unit_test.hpp>
+#include <boost/filesystem.hpp>
 
 // Std
 #include <string>
@@ -64,10 +65,11 @@ BOOST_AUTO_TEST_CASE(load_data) {
     data.save(fake_data_file);
 
     // load .nav
+    std::string fake_data_path = complete_path(fake_data_file);
     bool failed = false;
     BOOST_CHECK_EQUAL(data.last_load_succeeded, false);
     try {
-        data.load_nav(complete_path(fake_data_file));
+        data.load_nav(fake_data_path);
     } catch(const navitia::data::data_loading_error&) {
         failed = true;
     }
@@ -80,6 +82,9 @@ BOOST_AUTO_TEST_CASE(load_data) {
     }
     BOOST_CHECK_EQUAL(failed, true);
     BOOST_CHECK_EQUAL(data.last_load_succeeded, true);
+
+    // Clean fake file
+    boost::filesystem::remove(fake_data_path);
 }
 
 BOOST_AUTO_TEST_CASE(load_disruptions_fail) {
