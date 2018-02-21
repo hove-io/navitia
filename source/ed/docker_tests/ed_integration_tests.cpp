@@ -185,14 +185,10 @@ BOOST_FIXTURE_TEST_CASE(fusio_test, ArgsFixture) {
     bool failed = false;
     try {
         data.load_nav(input_file);
-    } catch(const navitia::data::data_loading_error& ex) {
+    } catch(const navitia::data::data_loading_error&) {
         failed = true;
     }
-    try {
-        data.build_raptor();
-    } catch(const navitia::data::raptor_building_error& ex) {
-        failed = true;
-    }
+    data.build_raptor();
     BOOST_REQUIRE_EQUAL(failed, false);
 
     check_ntfs(data);
@@ -209,14 +205,10 @@ BOOST_FIXTURE_TEST_CASE(gtfs_test, ArgsFixture) {
     bool failed = false;
     try {
         data.load_nav(input_file);
-    } catch(const navitia::data::data_loading_error& ex) {
+    } catch(const navitia::data::data_loading_error&) {
         failed = true;
     }
-    try {
-        data.build_raptor();
-    } catch(const navitia::data::raptor_building_error& ex) {
-        failed = true;
-    }
+    data.build_raptor();
     BOOST_REQUIRE_EQUAL(failed, false);
 
     const auto& pt_data = *data.pt_data;
@@ -367,14 +359,10 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
     bool failed = false;
     try {
         data.load_nav(input_file);
-    } catch(const navitia::data::data_loading_error& ex) {
+    } catch(const navitia::data::data_loading_error&) {
         failed = true;
     }
-    try {
-        data.build_raptor();
-    } catch(const navitia::data::raptor_building_error& ex) {
-        failed = true;
-    }
+    data.build_raptor();
     BOOST_REQUIRE_EQUAL(failed, false);
 
     BOOST_REQUIRE_EQUAL(data.pt_data->lines.size(), 4);
