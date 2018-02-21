@@ -522,17 +522,19 @@ def _tag_journey_by_mode(journey):
     mode = 'walking'
     for i, section in enumerate(journey.sections):
         cur_mode = 'walking'
-        if section.type == response_pb2.BSS_RENT:
+        if ((section.type == response_pb2.BSS_RENT) or
+            (section.type == response_pb2.CROW_FLY and section.street_network.mode == response_pb2.Bss)):
             cur_mode = 'bss'
-        elif section.type == response_pb2.STREET_NETWORK \
-             and section.street_network.mode == response_pb2.Bike \
-             and journey.sections[i - 1].type != response_pb2.BSS_RENT:
+        elif ((section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY)
+              and section.street_network.mode == response_pb2.Bike
+              and journey.sections[i - 1].type != response_pb2.BSS_RENT):
             cur_mode = 'bike'
-        elif section.type == response_pb2.STREET_NETWORK \
-             and section.street_network.mode == response_pb2.Car:
+        elif ((section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY)
+              and section.street_network.mode == response_pb2.Car):
             cur_mode = 'car'
-        elif section.type == response_pb2.STREET_NETWORK \
-             and section.street_network.mode == response_pb2.Ridesharing:
+        elif ((section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY)
+              and section.street_network.mode == response_pb2.Ridesharing):
+            # When the street network data is missing, the section maybe a crow_fly
             cur_mode = 'ridesharing'
 
         if mode_weight[mode] < mode_weight[cur_mode]:
