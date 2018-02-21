@@ -72,14 +72,16 @@ struct fixture{
     }
 };
 
-BOOST_FIXTURE_TEST_CASE(get_data, fixture) {
+BOOST_FIXTURE_TEST_SUITE(s, fixture)
+
+BOOST_AUTO_TEST_CASE(get_data) {
     DataManager<test::Data> data_manager;
     auto data = data_manager.get_data();
     BOOST_REQUIRE(data);
     BOOST_CHECK_EQUAL(test::Data::destructor_called, false);
 }
 
-BOOST_FIXTURE_TEST_CASE(load, fixture) {
+BOOST_AUTO_TEST_CASE(load) {
     DataManager<test::Data> data_manager;
     BOOST_CHECK(data_manager.get_data());
     auto first_data = data_manager.get_data();
@@ -95,7 +97,7 @@ BOOST_FIXTURE_TEST_CASE(load, fixture) {
     BOOST_CHECK_NE(first_data, data_manager.get_data());
 }
 
-BOOST_FIXTURE_TEST_CASE(destructor_called, fixture) {
+BOOST_AUTO_TEST_CASE(destructor_called) {
     DataManager<test::Data> data_manager;
     {
         auto first_data = data_manager.get_data();
@@ -111,7 +113,7 @@ BOOST_FIXTURE_TEST_CASE(destructor_called, fixture) {
     BOOST_CHECK(data_manager.get_data());
 }
 
-BOOST_FIXTURE_TEST_CASE(destructor_not_called, fixture) {
+BOOST_AUTO_TEST_CASE(destructor_not_called) {
     DataManager<test::Data> data_manager;
     {
         auto first_data = data_manager.get_data();
@@ -121,3 +123,5 @@ BOOST_FIXTURE_TEST_CASE(destructor_not_called, fixture) {
     BOOST_CHECK_EQUAL(test::Data::destructor_called, false);
     BOOST_CHECK(data_manager.get_data());
 }
+
+BOOST_AUTO_TEST_SUITE_END()
