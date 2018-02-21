@@ -106,7 +106,7 @@ public:
             data->load_nav(filename);
         } catch(const navitia::data::data_loading_error& ex) {
             data->loading = false;
-            if (data->last_load) {
+            if (data->last_load_succeeded) {
                 LOG4CPLUS_INFO(logger, "Data loading failed, we keep last loaded data");
             }
             return false;
@@ -114,21 +114,17 @@ public:
 
         // load disruptions from database
         if (chaos_database != boost::none) {
-            bool load_disruptions_failed = false;
             try {
                 data->load_disruptions(*chaos_database, contributors);
             } catch (const navitia::data::disruptions_broken_connection& ex){
+                LOG4CPLUS_WARN(logger, "Load data without disruptions");
 
             } catch(const navitia::data::disruptions_loading_error& ex) {
-                load_disruptions_failed = true;
-            }
-
-            // Reload data .nav.lz4
-            if (load_disruptions_failed) {
-                LOG4CPLUS_ERROR(logger, "Reload data: " << filename);
+                // Reload data .nav.lz4
+                LOG4CPLUS_ERROR(logger, "Reload data with disruptions: " << filename);
                 try {
                     data = create_data(data_identifier.load());
-                    //data->load_nav(filename);
+                    data->load_nav(filename);
                 } catch(const navitia::data::data_loading_error& ex) {
                     data->loading = false;
                     return false;
@@ -137,12 +133,7 @@ public:
         }
 
         // Build Raptor Data
-        try {
-            data->build_raptor(raptor_cache_size);
-        } catch(const navitia::data::raptor_building_error& ex) {
-            data->loading = false;
-            return false;
-        }
+        data->build_raptor(raptor_cache_size);
         data->loading = false;
 
         // Set data
