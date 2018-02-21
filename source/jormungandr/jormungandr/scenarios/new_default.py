@@ -46,6 +46,7 @@ import collections
 from jormungandr.utils import date_to_timestamp, PeriodExtremity
 from jormungandr.scenarios.simple import get_pb_data_freshness
 import gevent, gevent.pool
+import flask
 from jormungandr import app
 from jormungandr.autocomplete.geocodejson import GeocodeJson
 from jormungandr import global_autocomplete
@@ -866,13 +867,14 @@ class Scenario(simple.Scenario):
         logger = logging.getLogger(__name__)
         futures = []
 
-        def worker(dep_mode, arr_mode, instance, request):
-            return (dep_mode, arr_mode, instance.send_and_receive(request))
+        def worker(dep_mode, arr_mode, instance, request, flask_request_id):
+            return (dep_mode, arr_mode, instance.send_and_receive(request, flask_request_id=flask_request_id))
 
         pool = gevent.pool.Pool(app.config.get('GREENLET_POOL_SIZE', 3))
         for dep_mode, arr_mode in krakens_call:
             pb_request = create_pb_request(request_type, request, dep_mode, arr_mode)
-            futures.append(pool.spawn(worker, dep_mode, arr_mode, instance, pb_request))
+            # we spawn a new greenlet, it won't have access to our thread local request object so we pass the request_id
+            futures.append(pool.spawn(worker, dep_mode, arr_mode, instance, pb_request, flask_request_id=flask.request.id))
 
         for future in gevent.iwait(futures):
             dep_mode, arr_mode, local_resp = future.get()

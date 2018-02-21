@@ -405,6 +405,12 @@ class Instance(object):
                          **kwargs):
 
         with self.socket(self.context) as socket:
+            try:
+                request.request_id = flask.request.id
+            except RuntimeError:
+                # we aren't in a flask context, so there is no request
+                if 'flask_request_id' in kwargs:
+                    request.request_id = kwargs['flask_request_id']
             socket.send(request.SerializeToString())
             if socket.poll(timeout=timeout) > 0:
                 pb = socket.recv()
