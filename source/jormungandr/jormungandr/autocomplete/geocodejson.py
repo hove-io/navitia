@@ -133,12 +133,12 @@ def get_lon_lat(obj):
     return lon, lat
 
 
-def create_address_field(geocoding):
+def create_address_field(geocoding, poi_lat, poi_lon):
     if not geocoding:
         return None
     coord = geocoding.get('coord', {})
-    lat = str(coord.get('lat')) if coord and coord.get('lat') else None
-    lon = str(coord.get('lon')) if coord and coord.get('lon') else None
+    lat = str(coord.get('lat')) if coord and coord.get('lat') else poi_lon
+    lon = str(coord.get('lon')) if coord and coord.get('lon') else poi_lat
 
     return {
         "id": geocoding.get('id'),
@@ -148,7 +148,8 @@ def create_address_field(geocoding):
             "lat": lat,
             "lon": lon
         },
-        "house_number": get_house_number(geocoding.get('housenumber'))
+        "house_number": get_house_number(geocoding.get('housenumber')),
+        "administrative_regions": create_administrative_regions_field(geocoding) or create_admin_field(geocoding)
     }
 
 
@@ -223,7 +224,7 @@ class PoiField(fields.Raw):
             "administrative_regions":
                 create_administrative_regions_field(geocoding) or create_admin_field(geocoding),
             "properties": {p.get('key'): p.get('value') for p in geocoding.get("properties", [])},
-            "address": create_address_field(geocoding.get("address"))
+            "address": create_address_field(geocoding.get("address"), lat, lon)
         }
         if isinstance(poi_types, list) and poi_types:
             res['poi_type'] = poi_types[0]

@@ -819,20 +819,27 @@ class AbstractAutocompleteAndRouting():
                             ],
                             "address": {
                                 "type": "street",
-                                "id": "179077655",
+                                "id": "addr:8.9809147;42.561667",
                                 "name": "Speloncato-Monticello",
                                 "label": "Speloncato-Monticello (Speloncato)",
                                 "postcode": "20226",
                                 "city": "Speloncato",
                                 "citycode": "2B290",
-                                "weight": 0.00847457627118644,
-                                "coord": {
-                                    "lat": 42.561667,
-                                    "lon": 8.9809147
-                                },
-                                "zip_codes": [
-                                    "20226"
-                                ]
+                                "administrative_regions": [
+                                    {
+                                        "id": "admin:fr:02000",
+                                        "insee": "02000",
+                                        "level": 8,
+                                        "label": "Bobtown (02000)",
+                                        "zip_codes": ["02000"],
+                                        "weight": 1,
+                                        "coord": {
+                                            "lat": 48.8396154,
+                                            "lon": 2.3957517
+                                        }
+                                    }
+                                ],
+                                "weight": 0.00847457627118644
                             },
                             "administrative_regions": [
                                 {
@@ -937,10 +944,16 @@ class AbstractAutocompleteAndRouting():
                 assert response_from['poi']['properties']["amenity"] == "bicycle_rental"
                 assert response_from['poi']['properties']["capacity"] == "20"
                 assert response_from['poi']['properties']["ref"] == "12"
-                assert response_from['poi']['address']['id'] == "179077655"
+                assert response_from['poi']['address']['id'] == "addr:8.9809147;42.561667"
                 assert response_from['poi']['address']['name'] == "Speloncato-Monticello"
                 assert response_from['poi']['address']['label'] == "Speloncato-Monticello (Speloncato)"
                 assert response_from['poi']['address']['house_number'] == 0
+                assert response_from['poi']['address']['coord']['lat'] == '8.98312e-05'
+                assert response_from['poi']['address']['coord']['lon'] == '8.98312e-05'
+                admin_in_address = response_from['poi']['address']['administrative_regions']
+                assert len(admin_in_address) == 1
+                assert admin_in_address[0]['id'] == 'admin:fr:02000'
+                assert admin_in_address[0]['label'] == 'Bobtown (02000)'
 
                 response_to = j['sections'][-1]['to']
                 assert response_to['id'] == journeys_to

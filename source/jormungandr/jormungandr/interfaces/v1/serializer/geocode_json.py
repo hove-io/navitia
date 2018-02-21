@@ -35,7 +35,7 @@ from jormungandr.interfaces.v1.fields import raw_feed_publisher_bano, raw_feed_p
 from jormungandr.interfaces.v1.serializer.base import DictGenericSerializer, DictCodeSerializer, \
     NestedDictGenericField, NestedDictCodeField, NestedPropertiesField
 from jormungandr.utils import get_house_number
-from jormungandr.autocomplete.geocodejson import create_address_field
+from jormungandr.autocomplete.geocodejson import create_address_field, get_lon_lat
 
 
 class CoordField(jsonschema.Field):
@@ -170,7 +170,8 @@ class PoiSerializer(serpy.DictSerializer):
         address = obj.get('properties', {}).get('geocoding', {}).get('address', None)
         if not address:
             return None
-        return create_address_field(address)
+        poi_lon, poi_lat = get_lon_lat(obj)
+        return create_address_field(address, poi_lat, poi_lon)
 
 
 class GeocodePoiSerializer(serpy.DictSerializer):
