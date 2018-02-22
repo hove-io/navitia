@@ -403,12 +403,14 @@ class Instance(object):
                          timeout=app.config.get('INSTANCE_TIMEOUT', 10000),
                          quiet=False,
                          **kwargs):
-
+        logger = logging.getLogger(__name__)
         with self.socket(self.context) as socket:
             try:
                 request.request_id = flask.request.id
             except RuntimeError:
                 # we aren't in a flask context, so there is no request
+                logger.info("we aren't in a flask context, so there is no request")
+
                 if 'flask_request_id' in kwargs:
                     request.request_id = kwargs['flask_request_id']
             socket.send(request.SerializeToString())
@@ -422,7 +424,6 @@ class Instance(object):
                 socket.setsockopt(zmq.LINGER, 0)
                 socket.close()
                 if not quiet:
-                    logger = logging.getLogger(__name__)
                     logger.error('request on %s failed: %s', self.socket_path, six.text_type(request))
                 raise DeadSocketException(self.name, self.socket_path)
 

@@ -41,6 +41,7 @@ from jormungandr import new_relic
 import gevent, gevent.pool
 import flask
 
+
 RT_PROXY_PROPERTY_NAME = 'realtime_system'
 RT_PROXY_DATA_FRESHNESS = 'realtime'
 
@@ -184,16 +185,9 @@ class MixedSchedule(object):
             return None
         return rt_system
 
-    def _get_next_realtime_passages(self, rt_system, route_point, request, **kwargs):
+    def _get_next_realtime_passages(self, rt_system, route_point, request):
         log = logging.getLogger(__name__)
         next_rt_passages = None
-
-        try:
-            request.request_id = flask.request.id
-        except RuntimeError:
-            # we aren't in a flask context, so there is no flask request
-            if 'flask_request_id' in kwargs:
-                request.request_id = kwargs['flask_request_id']
 
         try:
             next_rt_passages = rt_system.next_passage_for_route_point(route_point,
@@ -267,17 +261,21 @@ class MixedSchedule(object):
                             for rp in resp.route_points)
 
         rt_proxy = None
-
         futures = []
         pool = gevent.pool.Pool(self.instance.realtime_pool_size)
 
-        def worker(rt_proxy, route_point, template, request, resp, flask_request_id):
-            return resp, rt_proxy, route_point, template, self._get_next_realtime_passages(rt_proxy, route_point, request, flask_request_id=flask_request_id)
+        # Copy the current request context to be used in greenlet
+        reqctx=utils.copy_flask_request_context()
+
+        def worker(rt_proxy, route_point, template, request, resp):
+            # Use the copied request context in greenlet
+            with utils.copy_context_in_greenlet_stack(reqctx):
+                return resp, rt_proxy, route_point, template, self._get_next_realtime_passages(rt_proxy, route_point, request)
 
         for route_point, template in route_points.items():
             rt_proxy = self._get_realtime_proxy(route_point)
             if rt_proxy:
-                futures.append(pool.spawn(worker, rt_proxy, route_point, template, request, resp, flask_request_id=flask.request.id))
+                futures.append(pool.spawn(worker, rt_proxy, route_point, template, request, resp))
 
         for future in gevent.iwait(futures):
             resp, rt_proxy, route_point, template, next_rt_passages = future.get()
