@@ -68,6 +68,15 @@ private:
     boost::shared_ptr<const Data> create_ptr(const Data* d){
         return boost::shared_ptr<const Data>(d, data_deleter<Data>);
     }
+    bool load_data_nav(boost::shared_ptr<Data>& data, const std::string& filename){
+        try {
+            data->load_nav(filename);
+            return true;
+        } catch(const navitia::data::data_loading_error&) {
+            data->loading = false;
+            return false;
+        }
+    }
 
 public:
 
@@ -102,10 +111,7 @@ public:
         data->loading = true;
 
         // load .nav.lz4
-        try {
-            data->load_nav(filename);
-        } catch(const navitia::data::data_loading_error&) {
-            data->loading = false;
+        if (!load_data_nav(data, filename)){
             if (data->last_load_succeeded) {
                 LOG4CPLUS_INFO(logger, "Data loading failed, we keep last loaded data");
             }
@@ -114,19 +120,19 @@ public:
 
         // load disruptions from database
         if (chaos_database != boost::none) {
+            // If we catch a bdd broken connection, we do nothing (Just a log),
+            // because data is still clean, unlike other cases where we have
+            // to reload the data
             try {
                 data->load_disruptions(*chaos_database, contributors);
-            } catch (const navitia::data::disruptions_broken_connection&){
+            } catch (const navitia::data::disruptions_broken_connection&) {
                 LOG4CPLUS_WARN(logger, "Load data without disruptions");
-
             } catch(const navitia::data::disruptions_loading_error&) {
                 // Reload data .nav.lz4
-                LOG4CPLUS_ERROR(logger, "Reload data with disruptions: " << filename);
-                try {
-                    data = create_data(data_identifier.load());
-                    data->load_nav(filename);
-                } catch(const navitia::data::data_loading_error&) {
-                    data->loading = false;
+                LOG4CPLUS_ERROR(logger, "Reload data without disruptions: " << filename);
+                data = create_data(data_identifier.load());
+                if (!load_data_nav(data, filename)){
+                    LOG4CPLUS_ERROR(logger, "Reload data without disruptions failed...");
                     return false;
                 }
             }

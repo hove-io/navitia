@@ -148,22 +148,22 @@ void Data::load_disruptions(const std::string& database,
     try {
         fill_disruption_from_database(database, *pt_data, *meta, contributors);
         disruption_error = false;
-    } catch (const pqxx::broken_connection& ex){
+    } catch (const pqxx::broken_connection& ex) {
         LOG4CPLUS_WARN(logger, "Unable to connect to disruptions database: " << std::string(ex.what()));
         disruption_error = true;
         throw navitia::data::disruptions_broken_connection("Unable to connect to disruptions database: " + std::string(ex.what()));
-    } catch (const pqxx::pqxx_exception& ex){
+    } catch (const pqxx::pqxx_exception& ex) {
         LOG4CPLUS_ERROR(logger, "Disruptions loading error: " << std::string(ex.base().what()));
-        throw navitia::data::disruptions_loading_error("Disruptions loading error: " + std::string(ex.base().what()));
         disruption_error = true;
+        throw navitia::data::disruptions_loading_error("Disruptions loading error: " + std::string(ex.base().what()));
     } catch (const std::exception& ex) {
         LOG4CPLUS_ERROR(logger, "Disruptions loading error: " << std::string(ex.what()));
-        throw navitia::data::disruptions_loading_error("Disruptions loading error: " + std::string(ex.what()));
         disruption_error = true;
+        throw navitia::data::disruptions_loading_error("Disruptions loading error: " + std::string(ex.what()));
     } catch (...) {
         LOG4CPLUS_ERROR(logger, "Disruptions loading error");
-        throw navitia::data::disruptions_loading_error("Disruptions loading error");
         disruption_error = true;
+        throw navitia::data::disruptions_loading_error("Disruptions loading error");
     }
     LOG4CPLUS_DEBUG(logger, "Finished to load disruptions");
 }
