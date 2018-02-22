@@ -28,7 +28,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, unicode_literals, division
 import mock
 from jormungandr.autocomplete.geocodejson import GeocodeJson
 from jormungandr.interfaces.v1 import Places

@@ -27,6 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function, unicode_literals, division
 from tyr.command.reload_kraken import ReloadKrakenCommand
 from tyr.command.build_data import BuildDataCommand
 from tyr.command.load_data import LoadDataCommand

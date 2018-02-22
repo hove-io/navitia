@@ -33,6 +33,7 @@ This parameters are used on the creation of the instances in the tyr database, t
 This parameters can be used directly by jormungandr if the instance is not known in tyr, typically in development setup
 """
 
+from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 import sys
 

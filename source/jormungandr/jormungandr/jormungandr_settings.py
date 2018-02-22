@@ -1,4 +1,5 @@
 # encoding: utf-8
+from __future__ import absolute_import, print_function, unicode_literals, division
 # emplacement ou charger les fichier de configuration par instances
 INSTANCES_DIR = '/etc/jormungandr.d'
 

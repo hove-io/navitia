@@ -26,7 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, unicode_literals, division
 from dateutil import parser
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import DateTimeType
 from jormungandr import app
