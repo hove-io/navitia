@@ -954,6 +954,7 @@ class AbstractAutocompleteAndRouting():
                 assert len(admin_in_address) == 1
                 assert admin_in_address[0]['id'] == 'admin:fr:02000'
                 assert admin_in_address[0]['label'] == 'Bobtown (02000)'
+                assert admin_in_address[0]['insee'] == '02000'
 
                 response_to = j['sections'][-1]['to']
                 assert response_to['id'] == journeys_to
