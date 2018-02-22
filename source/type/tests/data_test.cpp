@@ -37,8 +37,8 @@ www.navitia.io
 
 // Std
 #include <string>
-#include <stdio.h>
-#include <unistd.h>  // getcwd() definition
+
+#include "utils/functions.h" // absolute_path function
 
 // Data to test
 #include "type/data.h"
@@ -48,24 +48,13 @@ using namespace navitia;
 static const std::string fake_data_file = "fake_data.nav.lz4";
 static const std::string fake_disruption_path = "fake_disruption_path";
 
-// Absolute path
-static std::string complete_path(const std::string file_name){
-    char buf[256];
-    if (getcwd(buf, sizeof(buf))) {
-        return std::string(buf) + "/" + file_name;
-    } else {
-        std::perror("getcwd");
-        return "";
-    }
-}
-
 BOOST_AUTO_TEST_CASE(load_data) {
 
     navitia::type::Data data(0);
     data.save(fake_data_file);
 
     // load .nav
-    std::string fake_data_path = complete_path(fake_data_file);
+    std::string fake_data_path =  navitia::absolute_path() + fake_data_file;
     bool failed = false;
     BOOST_CHECK_EQUAL(data.last_load_succeeded, false);
     try {

@@ -39,6 +39,7 @@ www.navitia.io
 #include "utils/init.h"
 #include "kraken_zmq.h"
 #include "utils/zmq.h"
+#include "utils/functions.h" //navitia::absolute_path function
 
 static void show_usage(const std::string& name)
 {
@@ -55,12 +56,8 @@ int main(int argn, char** argv){
 
     std::string::size_type posSlash = std::string(argv[0]).find_last_of( "\\/" );
     std::string application = std::string(argv[0]).substr(posSlash+1);
-    std::string path;
-    char buf[256];
-    if(getcwd(buf, sizeof(buf))){
-        path = std::string(buf) + "/";
-    }else{
-        perror("getcwd");
+    std::string path = navitia::absolute_path();
+    if (path.empty()) {
         return 1;
     }
     std::string conf_file;

@@ -35,6 +35,7 @@ www.navitia.io
 
 #include "kraken/data_manager.h"
 #include "type/data.h"
+#include "utils/functions.h" // absolute_path function
 
 static const std::string fake_data_file = "fake_data.nav.lz4";
 static const std::string fake_disruption_path = "fake_disruption_path";
@@ -43,17 +44,6 @@ static const std::string fake_disruption_path = "fake_disruption_path";
 static void create_fake_data(const std::string& fake_file_name){
     navitia::type::Data data(0);
     data.save(fake_file_name);
-}
-
-// Absolute path
-static std::string complete_path(const std::string file_name){
-    char buf[256];
-    if (getcwd(buf, sizeof(buf))) {
-        return std::string(buf) + "/" + file_name;
-    } else {
-        std::perror("getcwd");
-        return "";
-    }
 }
 
 // test sequence :
@@ -72,7 +62,7 @@ BOOST_AUTO_TEST_CASE(load_success) {
     BOOST_CHECK_EQUAL(first_data, data_manager.get_data());
 
     // real data : Loading successed
-    std::string fake_data_path = complete_path(fake_data_file);
+    std::string fake_data_path = navitia::absolute_path() + fake_data_file;
     BOOST_CHECK(data_manager.load(fake_data_path));
 
     // Load success, so the internal shared pointer changes.
@@ -97,7 +87,7 @@ BOOST_AUTO_TEST_CASE(load_success) {
     // Fake data : Loading failed
     BOOST_CHECK(!data_manager.load("wrong path"));
 
-    // Load failed, so the internal shared pointer no changes.
+    // Load failed, so the internal shared pointer does not changes.
     // Data has not changed.
     auto fourth_data = data_manager.get_data();
     BOOST_CHECK_EQUAL(third_data, fourth_data);
@@ -107,8 +97,6 @@ BOOST_AUTO_TEST_CASE(load_success) {
 }
 
 BOOST_AUTO_TEST_CASE(load_failed) {
-
-    create_fake_data(fake_data_file);
 
     DataManager<navitia::type::Data> data_manager;
     BOOST_CHECK(data_manager.get_data());
