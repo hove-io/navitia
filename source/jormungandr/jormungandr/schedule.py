@@ -265,7 +265,7 @@ class MixedSchedule(object):
         pool = gevent.pool.Pool(self.instance.realtime_pool_size)
 
         # Copy the current request context to be used in greenlet
-        reqctx=utils.copy_flask_request_context()
+        reqctx = utils.copy_flask_request_context()
 
         def worker(rt_proxy, route_point, template, request, resp):
             # Use the copied request context in greenlet
