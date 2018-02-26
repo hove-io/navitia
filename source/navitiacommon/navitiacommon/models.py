@@ -270,6 +270,8 @@ class Instance(db.Model):
 
     import_stops_in_mimir = db.Column(db.Boolean, default=False, nullable=False)
 
+    import_ntfs_in_mimir = db.Column(db.Boolean, default=False, nullable=False)
+
     # ============================================================
     # params for jormungandr
     # ============================================================
