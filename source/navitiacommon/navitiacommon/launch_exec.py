@@ -77,7 +77,7 @@ def make_async(fd):
 # (those errors mean that there are no data available for the moment)
 def read_async(fd):
     try:
-        return unicode(fd.read())
+        return fd.read().decode('utf-8')
     except IOError, e:
         if e.errno != errno.EAGAIN:
             raise e

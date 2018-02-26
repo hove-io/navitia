@@ -95,7 +95,9 @@ def xml_valid_test():
 
 def xml_date_time_invalid_test():
     builder = Synthese("id_synthese", "http://fake.url/", "Europe/Paris")
-    xml = get_xml_parser().replace(str("2016-Mar-21 12:07:37"), str("2016-Mar-41 12:07:37"), 1)
+    xml = get_xml_parser().replace("2016-Mar-21 12:07:37".encode('utf-8'),
+                                   "2016-Mar-41 12:07:37".encode('utf-8'),
+                                   1)
 
     with pytest.raises(ValueError):
         builder._get_synthese_passages(xml)
@@ -103,6 +105,6 @@ def xml_date_time_invalid_test():
 
 def xml_invalid_test():
     builder = Synthese("id_synthese", "http://fake.url/", "Europe/Paris")
-    xml = get_xml_parser().replace(str("</journey>"), str(""), 1)
+    xml = get_xml_parser().replace("</journey>".encode('utf-8'), "".encode('utf-8'), 1)
     with pytest.raises(et.ParseError):
         builder._get_synthese_passages(xml)
