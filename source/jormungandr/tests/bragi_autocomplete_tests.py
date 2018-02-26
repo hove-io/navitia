@@ -40,6 +40,7 @@ from .tests_mechanism import AbstractTestFixture, dataset
 from jormungandr import app
 from six.moves.urllib.parse import urlencode
 from .tests_mechanism import config
+from copy import deepcopy
 
 
 class FakeUserBragi(FakeUser):
@@ -338,6 +339,125 @@ BRAGI_MOCK_STOP_AREA_WITH_BASIC_ATTRIBUTS = {
     ]
 }
 
+BRAGI_MOCK_BOBETTE = {
+    "features": [
+        {
+            "geometry": {
+                "coordinates": [
+                    0.0000898312,
+                    0.0000898312
+                ],
+                "type": "Point"
+            },
+            "properties": {
+                "geocoding": {
+                    "city": "Bobtown",
+                    "id": "bobette",
+                    "label": "bobette's label",
+                    "name": "bobette",
+                    "poi_types": [
+                        {
+                            "id": "poi_type:amenity:bicycle_rental",
+                            "name": "Station VLS"
+                        }
+                    ],
+                    "postcode": "02100",
+                    "type": "poi",
+                    "citycode": "02000",
+                    "properties": [
+                        {"key": "amenity", "value": "bicycle_rental"},
+                        {"key": "capacity", "value": "20"},
+                        {"key": "ref", "value": "12"}
+                    ],
+                    "address": {
+                        "type": "street",
+                        "id": "addr:8.9809147;42.561667",
+                        "name": "Speloncato-Monticello",
+                        "label": "Speloncato-Monticello (Speloncato)",
+                        "postcode": "20226",
+                        "city": "Speloncato",
+                        "citycode": "2B290",
+                        "administrative_regions": [
+                            {
+                                "id": "admin:fr:02000",
+                                "insee": "02000",
+                                "level": 8,
+                                "label": "Bobtown (02000)",
+                                "zip_codes": ["02000"],
+                                "weight": 1,
+                                "coord": {
+                                    "lat": 48.8396154,
+                                    "lon": 2.3957517
+                                }
+                            }
+                        ],
+                        "weight": 0.00847457627118644
+                    },
+                    "administrative_regions": [
+                        {
+                            "id": "admin:fr:02000",
+                            "insee": "02000",
+                            "level": 8,
+                            "label": "Bobtown (02000)",
+                            "zip_codes": ["02000"],
+                            "weight": 1,
+                            "coord": {
+                                "lat": 48.8396154,
+                                "lon": 2.3957517
+                            }
+                        }
+                    ],
+                }
+            },
+            "type": "Feature"
+        }
+    ]
+}
+BRAGI_MOCK_BOBETTE_DEPTH_2 = deepcopy(BRAGI_MOCK_BOBETTE)
+BRAGI_MOCK_BOBETTE_DEPTH_3 = deepcopy(BRAGI_MOCK_BOBETTE)
+
+BOB_STREET = {
+    "features": [
+        {
+            "geometry": {
+                "coordinates": [
+                    0.00188646,
+                    0.00071865
+                ],
+                "type": "Point"
+            },
+            "properties": {
+                "geocoding": {
+                    "city": "Bobtown",
+                    "housenumber": "20",
+                    "id": "addr:" + check_utils.r_coord, # the adresse is just above 'R'
+                    "label": "20 Rue Bob (Bobtown)",
+                    "name": "Rue Bob",
+                    "postcode": "02100",
+                    "street": "Rue Bob",
+                    "type": "house",
+                    "citycode": "02000",
+                    "administrative_regions": [
+                        {
+                            "id": "admin:fr:02000",
+                            "insee": "02000",
+                            "level": 8,
+                            "label": "Bobtown (02000)",
+                            "zip_codes": ["02000"],
+                            "weight": 1,
+                            "coord": {
+                                "lat": 48.8396154,
+                                "lon": 2.3957517
+                            }
+                        }
+                    ],
+                }
+            },
+            "type": "Feature"
+        }
+    ]
+}
+
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF}, global_config={'activate_bragi': True})
 class TestBragiAutocomplete(AbstractTestFixture):
 
@@ -347,7 +467,8 @@ class TestBragiAutocomplete(AbstractTestFixture):
             'q': u'bob',
             'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
             'limit': 10,
-            'pt_dataset': 'main_routing_test'
+            'pt_dataset': 'main_routing_test',
+            'depth': 1
         }
 
         url += "?{}".format(urlencode(params, doseq=True))
@@ -391,7 +512,8 @@ class TestBragiAutocomplete(AbstractTestFixture):
             'q': u'bob',
             'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
             'limit': 10,
-            'pt_dataset': 'main_routing_test'
+            'pt_dataset': 'main_routing_test',
+            'depth': 1
         }
 
         url += "/autocomplete?{}".format(urlencode(params, doseq=True))
@@ -621,6 +743,149 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['id']== 'admin:fr:59350'
             assert r[0]['administrative_region']['label'] == 'Lille (59000-59800)'
 
+    def test_autocomplete_call_with_depth_1(self):
+        url = 'https://host_of_bragi/autocomplete'
+        params = {
+            'q': u'bobette',
+            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
+            'limit': 10,
+            'pt_dataset': 'main_routing_test',
+            'depth': 1
+        }
+
+        url += "?{}".format(urlencode(params, doseq=True))
+        mock_requests = MockRequests({
+            url: (BRAGI_MOCK_BOBETTE, 200)
+        })
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query_region("places?q=bobette&pt_dataset=main_routing_test&type[]=stop_area"
+                                         "&type[]=address&type[]=poi&type[]=administrative_region&depth=1")
+
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['name'] == "bobette's label"
+            assert r[0]['embedded_type'] == "poi"
+            poi = r[0]['poi']
+            assert poi['label'] == "bobette's label"
+            assert poi['properties']["amenity"] == "bicycle_rental"
+            assert poi['properties']["capacity"] == "20"
+            assert poi['properties']["ref"] == "12"
+            poi_admins = poi['administrative_regions']
+            assert len(poi_admins) == 1
+            assert poi_admins[0]['id'] == "admin:fr:02000"
+            assert poi_admins[0]['insee'] == "02000"
+            assert poi_admins[0]['label'] == "Bobtown (02000)"
+            assert poi_admins[0]['coord']['lat'] == "48.8396154"
+            assert poi_admins[0]['coord']['lon'] == "2.3957517"
+
+            address = poi['address']
+            assert address['coord']['lat'] == '8.98312e-05'
+            assert address['coord']['lon'] == '8.98312e-05'
+            assert address['id'] == "addr:8.9809147;42.561667"
+            assert address['name'] == "Speloncato-Monticello"
+            assert address['house_number'] == 0
+            assert not address.get('administrative_regions')
+
+    def test_autocomplete_call_with_depth_2(self):
+        url = 'https://host_of_bragi/autocomplete'
+        params = {
+            'q': u'bobette',
+            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
+            'limit': 10,
+            'pt_dataset': 'main_routing_test',
+            'depth': 2
+        }
+
+        url += "?{}".format(urlencode(params, doseq=True))
+        mock_requests = MockRequests({
+            url: (BRAGI_MOCK_BOBETTE_DEPTH_2, 200)
+        })
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query_region("places?q=bobette&pt_dataset=main_routing_test&type[]=stop_area"
+                                         "&type[]=address&type[]=poi&type[]=administrative_region&depth=2")
+
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['name'] == "bobette's label"
+            assert r[0]['embedded_type'] == "poi"
+            poi = r[0]['poi']
+            assert poi['label'] == "bobette's label"
+            assert poi['properties']["amenity"] == "bicycle_rental"
+            assert poi['properties']["capacity"] == "20"
+            assert poi['properties']["ref"] == "12"
+            poi_admins = poi['administrative_regions']
+            assert len(poi_admins) == 1
+            assert poi_admins[0]['id'] == "admin:fr:02000"
+            assert poi_admins[0]['insee'] == "02000"
+            assert poi_admins[0]['label'] == "Bobtown (02000)"
+            assert poi_admins[0]['coord']['lat'] == "48.8396154"
+            assert poi_admins[0]['coord']['lon'] == "2.3957517"
+
+            address = poi['address']
+            assert address['coord']['lat'] == '8.98312e-05'
+            assert address['coord']['lon'] == '8.98312e-05'
+            assert address['id'] == "addr:8.9809147;42.561667"
+            assert address['name'] == "Speloncato-Monticello"
+            assert address['house_number'] == 0
+
+            address_admins = address['administrative_regions']
+            assert len(address_admins) == 1
+            assert address_admins[0]['id'] == "admin:fr:02000"
+            assert address_admins[0]['insee'] == "02000"
+            assert address_admins[0]['label'] == "Bobtown (02000)"
+            assert address_admins[0]['coord']['lat'] == "48.8396154"
+            assert address_admins[0]['coord']['lon'] == "2.3957517"
+
+    def test_autocomplete_call_with_depth_3(self):
+        url = 'https://host_of_bragi/autocomplete'
+        params = {
+            'q': u'bobette',
+            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
+            'limit': 10,
+            'pt_dataset': 'main_routing_test',
+            'depth': 3
+        }
+
+        url += "?{}".format(urlencode(params, doseq=True))
+        mock_requests = MockRequests({
+            url: (BRAGI_MOCK_BOBETTE_DEPTH_3, 200)
+        })
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query_region("places?q=bobette&pt_dataset=main_routing_test&type[]=stop_area"
+                                         "&type[]=address&type[]=poi&type[]=administrative_region&depth=3")
+
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['name'] == "bobette's label"
+            assert r[0]['embedded_type'] == "poi"
+            poi = r[0]['poi']
+            assert poi['label'] == "bobette's label"
+            assert poi['properties']["amenity"] == "bicycle_rental"
+            assert poi['properties']["capacity"] == "20"
+            assert poi['properties']["ref"] == "12"
+            poi_admins = poi['administrative_regions']
+            assert len(poi_admins) == 1
+            assert poi_admins[0]['id'] == "admin:fr:02000"
+            assert poi_admins[0]['insee'] == "02000"
+            assert poi_admins[0]['label'] == "Bobtown (02000)"
+            assert poi_admins[0]['coord']['lat'] == "48.8396154"
+            assert poi_admins[0]['coord']['lon'] == "2.3957517"
+
+            address = poi['address']
+            assert address['coord']['lat'] == '8.98312e-05'
+            assert address['coord']['lon'] == '8.98312e-05'
+            assert address['id'] == "addr:8.9809147;42.561667"
+            assert address['name'] == "Speloncato-Monticello"
+            assert address['house_number'] == 0
+
+            address_admins = address['administrative_regions']
+            assert len(address_admins) == 1
+            assert address_admins[0]['id'] == "admin:fr:02000"
+            assert address_admins[0]['insee'] == "02000"
+            assert address_admins[0]['label'] == "Bobtown (02000)"
+            assert address_admins[0]['coord']['lat'] == "48.8396154"
+            assert address_admins[0]['coord']['lon'] == "2.3957517"
+
 
 @dataset({"main_routing_test": {}}, global_config={'activate_bragi': True})
 class TestBragiShape(AbstractTestFixture):
@@ -773,6 +1038,7 @@ class TestBragiShape(AbstractTestFixture):
             assert address['label'] == '20 Rue Bob (Bobtown)'
             assert len(address['administrative_regions']) == 1
 
+
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF}, global_config={'activate_bragi': True})
 class AbstractAutocompleteAndRouting():
     def test_journey_with_external_uri_from_bragi(self):
@@ -786,138 +1052,20 @@ class AbstractAutocompleteAndRouting():
          - the poi 'bobette' 
          - an adresse in bob's street that is not in the dataset
         """
-
-        bragi_bobette = {
-            "features": [
-                {
-                    "geometry": {
-                        "coordinates": [
-                            0.0000898312,
-                            0.0000898312
-                        ],
-                        "type": "Point"
-                    },
-                    "properties": {
-                        "geocoding": {
-                            "city": "Bobtown",
-                            "id": "bobette",
-                            "label": "bobette's label",
-                            "name": "bobette",
-                            "poi_types": [
-                                {
-                                    "id": "poi_type:amenity:bicycle_rental", 
-                                    "name": "Station VLS"
-                                }
-                            ], 
-                            "postcode": "02100",
-                            "type": "poi",
-                            "citycode": "02000",
-                            "properties": [
-                                {"key": "amenity", "value": "bicycle_rental"},
-                                {"key": "capacity", "value": "20"},
-                                {"key": "ref", "value": "12"}
-                            ],
-                            "address": {
-                                "type": "street",
-                                "id": "addr:8.9809147;42.561667",
-                                "name": "Speloncato-Monticello",
-                                "label": "Speloncato-Monticello (Speloncato)",
-                                "postcode": "20226",
-                                "city": "Speloncato",
-                                "citycode": "2B290",
-                                "administrative_regions": [
-                                    {
-                                        "id": "admin:fr:02000",
-                                        "insee": "02000",
-                                        "level": 8,
-                                        "label": "Bobtown (02000)",
-                                        "zip_codes": ["02000"],
-                                        "weight": 1,
-                                        "coord": {
-                                            "lat": 48.8396154,
-                                            "lon": 2.3957517
-                                        }
-                                    }
-                                ],
-                                "weight": 0.00847457627118644
-                            },
-                            "administrative_regions": [
-                                {
-                                    "id": "admin:fr:02000",
-                                    "insee": "02000",
-                                    "level": 8,
-                                    "label": "Bobtown (02000)",
-                                    "zip_codes": ["02000"],
-                                    "weight": 1,
-                                    "coord": {
-                                        "lat": 48.8396154,
-                                        "lon": 2.3957517
-                                    }
-                                }
-                            ],
-                        }
-                    },
-                    "type": "Feature"
-                }
-            ]
-        }
-
-        bob_street = {
-            "features": [
-                {
-                    "geometry": {
-                        "coordinates": [
-                            0.00188646,
-                            0.00071865
-                        ],
-                        "type": "Point"
-                    },
-                    "properties": {
-                        "geocoding": {
-                            "city": "Bobtown",
-                            "housenumber": "20",
-                            "id": "addr:" + check_utils.r_coord, # the adresse is just above 'R'
-                            "label": "20 Rue Bob (Bobtown)",
-                            "name": "Rue Bob",
-                            "postcode": "02100",
-                            "street": "Rue Bob",
-                            "type": "house",
-                            "citycode": "02000",
-                            "administrative_regions": [
-                                {
-                                    "id": "admin:fr:02000",
-                                    "insee": "02000",
-                                    "level": 8,
-                                    "label": "Bobtown (02000)",
-                                    "zip_codes": ["02000"],
-                                    "weight": 1,
-                                    "coord": {
-                                        "lat": 48.8396154,
-                                        "lon": 2.3957517
-                                    }
-                                }
-                            ],
-                        }
-                    },
-                    "type": "Feature"
-                }
-            ]
-        }
-
         args = {
             u'pt_dataset': 'main_routing_test',
             u'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
             u'limit': 10,
+            u'depth': 1,
         }
         params = urlencode(args, doseq=True)
-        
         mock_requests = MockRequests({
-            'https://host_of_bragi/autocomplete?q=bobette&{p}'.format(p=params): (bragi_bobette, 200),
-            'https://host_of_bragi/features/bobette?pt_dataset=main_routing_test': (bragi_bobette, 200),
-            'https://host_of_bragi/autocomplete?q=20+rue+bob&{p}'.format(p=params): (bob_street, 200),
+            'https://host_of_bragi/autocomplete?q=bobette&{p}'.format(p=params): (BRAGI_MOCK_BOBETTE, 200),
+            'https://host_of_bragi/features/bobette?pt_dataset=main_routing_test': (BRAGI_MOCK_BOBETTE, 200),
+            'https://host_of_bragi/autocomplete?q=20+rue+bob&{p}'.format(p=params): (BOB_STREET, 200),
             'https://host_of_bragi/reverse?lat={lat}&lon={lon}&pt_dataset=main_routing_test'
             .format(lon=check_utils.r_coord.split(';')[0], lat=check_utils.r_coord.split(';')[1])
-            : (bob_street, 200)
+            : (BOB_STREET, 200)
         })
 
         def get_autocomplete(query):
@@ -950,12 +1098,7 @@ class AbstractAutocompleteAndRouting():
                 assert response_from['poi']['address']['house_number'] == 0
                 assert response_from['poi']['address']['coord']['lat'] == '8.98312e-05'
                 assert response_from['poi']['address']['coord']['lon'] == '8.98312e-05'
-                admin_in_address = response_from['poi']['address']['administrative_regions']
-                assert len(admin_in_address) == 1
-                assert admin_in_address[0]['id'] == 'admin:fr:02000'
-                assert admin_in_address[0]['label'] == 'Bobtown (02000)'
-                assert admin_in_address[0]['insee'] == '02000'
-
+                assert not response_from['poi']['address'].get('administrative_regions')
                 response_to = j['sections'][-1]['to']
                 assert response_to['id'] == journeys_to
                 assert response_to['name'] == "20 Rue Bob (Bobtown)"
@@ -988,10 +1131,12 @@ class AbstractAutocompleteAndRouting():
             assert address['label'] == '20 Rue Bob (Bobtown)'
             assert len(address['administrative_regions']) == 1
 
+
 @config({'scenario': 'new_default'})
 class TestNewDefaultAutocompleteAndRouting(AbstractAutocompleteAndRouting,
                                            NewDefaultScenarioAbstractTestFixture):
     pass
+
 
 @config({'scenario': 'distributed'})
 class TestDistributedAutocompleteAndRouting(AbstractAutocompleteAndRouting,

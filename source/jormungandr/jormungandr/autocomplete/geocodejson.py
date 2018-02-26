@@ -362,10 +362,47 @@ class GeocodeJson(AbstractAutocomplete):
             raise TechnicalError('error in autocomplete request')
 
     @classmethod
-    def response_marshaler(cls, response_bragi, uri=None):
+    def _clean_response(cls, response, depth=3):
+
+        def _clear_object(obj, dep):
+            if dep == -1:
+                if isinstance(obj, list):
+                    del obj[:]
+                elif isinstance(obj, dict):
+                    obj.clear()
+
+        def _manage_depth(_key, _value, _depth):
+
+            if _depth == -1:
+                _clear_object(_value, _depth)
+            elif _key == 'administrative_regions':
+                _clear_object(_value, _depth)
+            elif isinstance(_value, list):
+                for obj in _value:
+                    for k, v in obj.items():
+                        _manage_depth(k, v, _depth-1)
+            elif isinstance(_value, dict):
+                for k, v in _value.items():
+                    if _depth == -1:
+                        _clear_object(v, _depth)
+                    else:
+                        _manage_depth(k, v, _depth-1)
+
+        features = response.get('features')
+        if features:
+            for feature in features:
+                key = 'geocoding'
+                value = feature.get('properties').get('geocoding')
+                _manage_depth(key, value, depth)
+
+        return response
+
+    @classmethod
+    def response_marshaler(cls, response_bragi, uri=None, depth=3):
         cls._check_response(response_bragi, uri)
         json_response = response_bragi.json()
-
+        #Clean dict objects depending on depth passed in request parameter.
+        json_response = cls._clean_response(json_response, depth)
         if jormungandr.USE_SERPY:
             from jormungandr.interfaces.v1.serializer.geocode_json import GeocodePlacesSerializer
             return GeocodePlacesSerializer(json_response).data
@@ -420,6 +457,8 @@ class GeocodeJson(AbstractAutocomplete):
 
         if request.get("from"):
             params["lon"], params["lat"] = self.get_coords(request["from"])
+        if request.get("depth"):
+            params["depth"] = request["depth"]
         return params
 
     def get(self, request, instances):
@@ -435,8 +474,9 @@ class GeocodeJson(AbstractAutocomplete):
             method = requests.post
 
         raw_response = self.call_bragi(url, method, **kwargs)
+        depth = request.get('depth', 3)
 
-        return self.response_marshaler(raw_response)
+        return self.response_marshaler(raw_response, None, depth)
 
     def geo_status(self, instance):
         raise NotImplementedError
