@@ -40,7 +40,7 @@ from flask import current_app
 import kombu
 
 from tyr.binarisation import gtfs2ed, osm2ed, ed2nav, fusio2ed, geopal2ed, fare2ed, poi2ed, synonym2ed, \
-    shape2ed, load_bounding_shape, bano2mimir, osm2mimir, stops2mimir
+    shape2ed, load_bounding_shape, bano2mimir, osm2mimir, stops2mimir, ntfs2mimir
 from tyr.binarisation import reload_data, move_to_backupdirectory
 from tyr import celery
 from navitiacommon import models, task_pb2, utils
@@ -120,16 +120,22 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
     if actions:
         models.db.session.add(job)
         models.db.session.commit()
+        # We pass the job id to each tasks, but job need to be commited for having an id
         for action in actions:
             action.kwargs['job_id'] = job.id
-        #We pass the job id to each tasks, but job need to be commited for having an id
+        # Create binary file (New .nav.lz4)
         binarisation = [ed2nav.si(instance_config, job.id, custom_output_dir)]
         actions.append(chain(*binarisation))
-        if dataset.family_type == 'pt' and instance.import_stops_in_mimir:
-            # if we are loading pt data we might want to load the stops to autocomplete
-            actions.append(stops2mimir.si(instance_config, filename, job.id, dataset_uid=dataset.uid))
+        # Reload kraken with new data after binarisation (New .nav.lz4)
         if reload:
             actions.append(reload_data.si(instance_config, job.id))
+        # Import ntfs in Mimir
+        if dataset.family_type == 'pt' and instance.import_ntfs_in_mimir:
+            actions.append(ntfs2mimir.si(instance_config, filename, job.id, dataset_uid=dataset.uid))
+        # Import stops in Mimir
+        if dataset.family_type == 'pt' and instance.import_stops_in_mimir and not instance.import_ntfs_in_mimir:
+            # if we are loading pt data we might want to load the stops to autocomplete
+            actions.append(stops2mimir.si(instance_config, filename, job.id, dataset_uid=dataset.uid))
         actions.append(finish_job.si(job.id))
         if async:
             return chain(*actions).delay()
