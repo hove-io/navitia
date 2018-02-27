@@ -46,7 +46,8 @@ from six.moves import zip
 from jormungandr.exceptions import TechnicalError
 from flask import request
 import re
-
+import flask
+from contextlib import contextmanager
 
 
 DATETIME_FORMAT = "%Y%m%dT%H%M%S"
@@ -135,7 +136,7 @@ def str_datetime_utc_to_local(dt, timezone):
     return dt_to_str(utc_dt.replace(tzinfo=pytz.UTC).astimezone(local))
 
 
-def timestamp_to_datetime(timestamp):
+def timestamp_to_datetime(timestamp, tz=None):
     """
     Convert a timestamp to datetime
     if timestamp > MAX_INT we return None
@@ -149,7 +150,7 @@ def timestamp_to_datetime(timestamp):
 
     dt = datetime.utcfromtimestamp(timestamp)
 
-    timezone = get_timezone()
+    timezone = tz or get_timezone()
     if timezone:
         dt = pytz.utc.localize(dt)
         return dt.astimezone(timezone)
@@ -524,3 +525,41 @@ def get_house_number(housenumber):
     if len(numbers) > 0:
         hn = numbers[0]
     return int(hn)
+
+
+# The two following functions allow to use flask request context in greenlet
+# The decorator provided by flask (@copy_current_request_context) will generate an assertion error with multiple greenlets
+
+def copy_flask_request_context():
+    """
+    Make a copy of the 'main' flask request conquest to be used with the context manager below
+    :return: a copy of the current flask request context
+    """
+    # Copy flask request context to be used in greenlet
+    top = flask._request_ctx_stack.top
+    if top is None:
+        raise RuntimeError('This function can only be used at local scopes '
+                            'when a request context is on the stack.  For instance within '
+                            'view functions.')
+    return top.copy()
+
+@contextmanager
+def copy_context_in_greenlet_stack(request_context):
+    """
+    Push a copy of the 'main' flask request context in a global stack created for it.
+    Pop the copied request context to discard it
+
+    ex:
+        request_context = utils.copy_flask_request_context()
+
+        def worker():
+            with utils.copy_context_in_greenlet_stack(request_context):
+                # do some work here with flask request context available
+
+        gevent.spawn(worker) # Multiples times
+
+    :param request_context: a copy of the 'main' flask request context
+    """
+    flask.globals._request_ctx_stack.push(request_context)
+    yield
+    flask.globals._request_ctx_stack.pop()

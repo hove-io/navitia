@@ -111,6 +111,7 @@ instance_fields = {
     'bss_provider': fields.Boolean,
     'full_sn_geometries': fields.Boolean,
     'is_open_data': fields.Boolean,
+    'realtime_pool_size': fields.Raw,
 }
 
 api_fields = {

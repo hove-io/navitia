@@ -34,7 +34,6 @@ import logging
 from flask.ext.restful import abort
 from flask import g
 from jormungandr.scenarios import simple, journey_filter, helpers
-from jormungandr.scenarios.journey_filter import to_be_deleted
 from jormungandr.scenarios.ridesharing.ridesharing_helper import decorate_journeys
 from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, \
     get_or_default, fill_uris, gen_all_combin, get_pseudo_duration, mode_weight
@@ -44,7 +43,7 @@ from jormungandr.scenarios.qualifier import min_from_criteria, arrival_crit, dep
     has_no_bike, has_bike, has_no_bss, has_bss, non_pt_journey, has_walk, and_filters
 import numpy as np
 import collections
-from jormungandr.utils import date_to_timestamp, PeriodExtremity
+from jormungandr.utils import date_to_timestamp, PeriodExtremity, copy_flask_request_context, copy_context_in_greenlet_stack
 from jormungandr.scenarios.simple import get_pb_data_freshness
 import gevent, gevent.pool
 import flask
@@ -869,15 +868,17 @@ class Scenario(simple.Scenario):
         resp = []
         logger = logging.getLogger(__name__)
         futures = []
+        reqctx = copy_flask_request_context()
 
-        def worker(dep_mode, arr_mode, instance, request, request_id):
-            return (dep_mode, arr_mode, instance.send_and_receive(request, request_id=request_id))
+        def worker(dep_mode, arr_mode, instance, request, flask_request_id):
+            with copy_context_in_greenlet_stack(reqctx):
+                return (dep_mode, arr_mode, instance.send_and_receive(request, flask_request_id=flask_request_id))
 
         pool = gevent.pool.Pool(app.config.get('GREENLET_POOL_SIZE', 3))
         for dep_mode, arr_mode in krakens_call:
             pb_request = create_pb_request(request_type, request, dep_mode, arr_mode)
-            #we spawn a new green thread, it won't have access to our thread local request object so we set request_id
-            futures.append(pool.spawn(worker, dep_mode, arr_mode, instance, pb_request, request_id=flask.request.id))
+            # we spawn a new greenlet, it won't have access to our thread local request object so we pass the request_id
+            futures.append(pool.spawn(worker, dep_mode, arr_mode, instance, pb_request, flask_request_id=flask.request.id))
 
         for future in gevent.iwait(futures):
             dep_mode, arr_mode, local_resp = future.get()

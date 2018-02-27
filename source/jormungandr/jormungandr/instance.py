@@ -361,6 +361,11 @@ class Instance(object):
         instance_db = self.get_models()
         return get_value_or_default('night_bus_filter_base_factor', instance_db, self.name)
 
+    @property
+    def realtime_pool_size(self):
+        instance_db = self.get_models()
+        return get_value_or_default('realtime_pool_size', instance_db, self.name)
+
     @contextmanager
     def socket(self, context):
         socket = None
@@ -398,13 +403,16 @@ class Instance(object):
                          timeout=app.config.get('INSTANCE_TIMEOUT', 10000),
                          quiet=False,
                          **kwargs):
+        logger = logging.getLogger(__name__)
         with self.socket(self.context) as socket:
             try:
                 request.request_id = flask.request.id
             except RuntimeError:
-                #we aren't in a flask context, so there is no request
-                if 'request_id' in kwargs:
-                    request.request_id = kwargs['request_id']
+                # we aren't in a flask context, so there is no request
+                logger.info("we aren't in a flask context, so there is no request")
+
+                if 'flask_request_id' in kwargs:
+                    request.request_id = kwargs['flask_request_id']
             socket.send(request.SerializeToString())
             if socket.poll(timeout=timeout) > 0:
                 pb = socket.recv()
@@ -416,7 +424,6 @@ class Instance(object):
                 socket.setsockopt(zmq.LINGER, 0)
                 socket.close()
                 if not quiet:
-                    logger = logging.getLogger(__name__)
                     logger.error('request on %s failed: %s', self.socket_path, six.text_type(request))
                 raise DeadSocketException(self.name, self.socket_path)
 

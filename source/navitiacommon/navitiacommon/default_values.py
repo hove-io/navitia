@@ -113,6 +113,9 @@ max_additional_connections = 2
 #the id of physical_mode, as sent by kraken to jormungandr, used by _max_successive_physical_mode rule
 successive_physical_mode_to_limit_id = 'physical_mode:Bus'
 
+# Number of greenlets simultaneously used for Real-Time proxies calls
+realtime_pool_size = 3
+
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:
         logger = logging.getLogger(__name__)
