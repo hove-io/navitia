@@ -113,6 +113,12 @@ def create_modes_field(modes):
     return [{"id": mode.get('id'), "name": mode.get('name')} for mode in modes]
 
 
+def create_codes_field(codes):
+    if not codes:
+        return []
+    return [{"type": code.get('name'), "value": code.get('value')} for code in codes]
+
+
 def get_lon_lat(obj):
     if not obj or not obj.get('geometry') or not obj.get('geometry').get('coordinates'):
         return None, None
@@ -232,7 +238,6 @@ class StopAreaField(fields.Raw):
         lon, lat = get_lon_lat(obj)
         geocoding = obj.get('properties', {}).get('geocoding', {})
 
-        # TODO add codes
         resp = {
             "id": geocoding.get('id'),
             "coord": {
@@ -243,7 +248,8 @@ class StopAreaField(fields.Raw):
             "name": geocoding.get('name'),
             "administrative_regions":
                 create_administrative_regions_field(geocoding) or create_admin_field(geocoding),
-            "timezone": geocoding.get('timezone')
+            "timezone": geocoding.get('timezone'),
+            "properties": {p.get('key'): p.get('value') for p in geocoding.get('properties', [])}
         }
 
         c_modes = geocoding.get('commercial_modes', [])
@@ -253,6 +259,11 @@ class StopAreaField(fields.Raw):
         p_modes = geocoding.get('physical_modes', [])
         if p_modes:
             resp['physical_modes'] = create_modes_field(p_modes)
+
+        codes = geocoding.get('codes', [])
+        if codes:
+            resp["codes"] = create_codes_field(codes)
+
         return resp
 
 geocode_admin = {

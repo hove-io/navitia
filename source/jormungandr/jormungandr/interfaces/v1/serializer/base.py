@@ -184,6 +184,11 @@ class DictGenericSerializer(serpy.DictSerializer):
     name = serpy.StrField(display_none=True)
 
 
+class DictCodeSerializer(serpy.DictSerializer):
+    type = serpy.StrField(attr='name', display_none=True)
+    value = serpy.StrField(display_none=True)
+
+
 class PbGenericSerializer(PbNestedSerializer):
     id = jsonschema.Field(schema_type=str, display_none=True, attr='uri',
                           description='Identifier of the object')
