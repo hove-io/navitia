@@ -48,10 +48,12 @@
 * Version 0.6.5 du 02/01/2018
     * precision sur les arrival/departure times
     * feed_infos.txt est optionnel en 0.6
-* Version 0.7.0 du 03/01/2017
+* Version 0.7.0 du 03/01/2018
     * feed_infos.txt est obligatoire
     * le lien entre "stop" et "contributor" est supprimé (liaison possible via "vehicle_journey")
     * le lien entre "vehicle_journey" et "contributor" est supprimé, et se fait via "dataset"
     * le champ "company_fax" est supprimé et les champs adresses sont fusionnés en un seul champ en texte libre
     * ajout d'un champ "network_address" afin de pouvoir renseigner l'adresse du réseau.
     * les données adaptées (intégrées dans la version 0.6) sont déplacées dans la section "évolutions possibles"
+* Version 0.7.1 du 27/02/2018
+    * les fichiers contributors.txt et datasets.txt sont obligatoires, ainsi que le lien entre "trip" et "dataset_id"
