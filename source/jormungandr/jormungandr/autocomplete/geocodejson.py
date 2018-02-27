@@ -137,8 +137,8 @@ def create_address_field(geocoding, poi_lat, poi_lon):
     if not geocoding:
         return None
     coord = geocoding.get('coord', {})
-    lat = str(coord.get('lat')) if coord and coord.get('lat') else poi_lon
-    lon = str(coord.get('lon')) if coord and coord.get('lon') else poi_lat
+    lat = str(coord.get('lat')) if coord and coord.get('lat') else poi_lat
+    lon = str(coord.get('lon')) if coord and coord.get('lon') else poi_lon
 
     return {
         "id": geocoding.get('id'),
@@ -224,7 +224,7 @@ class PoiField(fields.Raw):
             "administrative_regions":
                 create_administrative_regions_field(geocoding) or create_admin_field(geocoding),
             "properties": {p.get('key'): p.get('value') for p in geocoding.get("properties", [])},
-            "address": create_address_field(geocoding.get("address"), lat, lon)
+            "address": create_address_field(geocoding.get("address"), poi_lat=lat, poi_lon=lon)
         }
         if isinstance(poi_types, list) and poi_types:
             res['poi_type'] = poi_types[0]
@@ -364,19 +364,19 @@ class GeocodeJson(AbstractAutocomplete):
     @classmethod
     def _clean_response(cls, response, depth=3):
 
-        def _clear_object(obj, dep):
-            if dep == -1:
-                if isinstance(obj, list):
-                    del obj[:]
-                elif isinstance(obj, dict):
-                    obj.clear()
+        def _clear_object(obj):
+            if isinstance(obj, list):
+                del obj[:]
+            elif isinstance(obj, dict):
+                obj.clear()
 
         def _manage_depth(_key, _value, _depth):
-
             if _depth == -1:
-                _clear_object(_value, _depth)
+                _clear_object(_value)
+            #We should not delete any element of admins of parent node
             elif _key == 'administrative_regions':
-                _clear_object(_value, _depth)
+                if depth == -1:
+                    _clear_object(_value)
             elif isinstance(_value, list):
                 for obj in _value:
                     for k, v in obj.items():
@@ -384,7 +384,7 @@ class GeocodeJson(AbstractAutocomplete):
             elif isinstance(_value, dict):
                 for k, v in _value.items():
                     if _depth == -1:
-                        _clear_object(v, _depth)
+                        _clear_object(v)
                     else:
                         _manage_depth(k, v, _depth-1)
 
@@ -392,7 +392,9 @@ class GeocodeJson(AbstractAutocomplete):
         if features:
             for feature in features:
                 key = 'geocoding'
-                value = feature.get('properties').get('geocoding')
+                value = feature.get('properties', {}).get('geocoding')
+                if not value:
+                    continue
                 _manage_depth(key, value, depth)
 
         return response
