@@ -488,7 +488,7 @@ def next_passage_with_theoric_time_response_test(mock_theoric_response):
 
 
 def status_test():
-    cleverage = Cleverage(id='tata-é$~#@*!§èû', timezone='Europe/Paris', service_url='http://bob.com/',
+    cleverage = Cleverage(id='tata-é$~#@"*!\'`§èû', timezone='Europe/Paris', service_url='http://bob.com/',
                           service_args={'a': 'bobette', 'b': '12'})
     status = cleverage.status()
-    assert status['id'] == 'tata-é$~#@*!§èû'
+    assert status['id'] == "tata-é$~#@\"*!'`§èû"

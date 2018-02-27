@@ -148,6 +148,6 @@ def next_passage_for_route_point_failure_test():
         assert passages is None
 
 def status_test():
-    siri = Siri(id='tata-é$~#@*!§èû', service_url='http://bob.com/', requestor_ref='Stibada')
+    siri = Siri(id="tata-é$~#@\"*!'`§èû", service_url='http://bob.com/', requestor_ref='Stibada')
     status = siri.status()
-    assert status['id'] == 'tata-é$~#@*!§èû'
+    assert status['id'] == 'tata-é$~#@"*!\'`§èû'

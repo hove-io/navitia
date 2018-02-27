@@ -171,6 +171,6 @@ def next_passage_for_route_point_failure_test():
         assert passages is None
 
 def status_test():
-    synthese = Synthese(id='tata-é$~#@*!§èû', timezone='UTC', service_url='http://bob.com/')
+    synthese = Synthese(id='tata-é$~#@"*!\'`§èû', timezone='UTC', service_url='http://bob.com/')
     status = synthese.status()
-    assert status['id'] == 'tata-é$~#@*!§èû'
+    assert status['id'] == "tata-é$~#@\"*!'`§èû"
