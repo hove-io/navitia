@@ -972,7 +972,6 @@ int main(int argc, char** argv) {
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
     start = pt::microsec_clock::local_time();
-    po::notify(vm);
 
     if(vm.count("version")){
         std::cout << argv[0] << " " << navitia::config::project_version << " "
@@ -1005,6 +1004,9 @@ int main(int argc, char** argv) {
     if (! vm.count("poi-type")) {
         json_poi_types = ed::connectors::DEFAULT_JSON_POI_TYPES;
     }
+
+    po::notify(vm);
+
     const ed::connectors::PoiTypeParams poi_params(json_poi_types);
 
     ed::EdPersistor persistor(connection_string);
