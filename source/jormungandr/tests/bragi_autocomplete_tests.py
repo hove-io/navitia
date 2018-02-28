@@ -413,8 +413,10 @@ BRAGI_MOCK_BOBETTE = {
         }
     ]
 }
-BRAGI_MOCK_BOBETTE_DEPTH_2 = deepcopy(BRAGI_MOCK_BOBETTE)
-BRAGI_MOCK_BOBETTE_DEPTH_3 = deepcopy(BRAGI_MOCK_BOBETTE)
+BRAGI_MOCK_BOBETTE_DEPTH_ZERO = deepcopy(BRAGI_MOCK_BOBETTE)
+BRAGI_MOCK_BOBETTE_DEPTH_ONE = deepcopy(BRAGI_MOCK_BOBETTE)
+BRAGI_MOCK_BOBETTE_DEPTH_TWO = deepcopy(BRAGI_MOCK_BOBETTE)
+BRAGI_MOCK_BOBETTE_DEPTH_THREE = deepcopy(BRAGI_MOCK_BOBETTE)
 
 BOB_STREET = {
     "features": [
@@ -743,7 +745,39 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['id']== 'admin:fr:59350'
             assert r[0]['administrative_region']['label'] == 'Lille (59000-59800)'
 
-    def test_autocomplete_call_with_depth_1(self):
+    def test_autocomplete_call_with_depth_zero(self):
+        url = 'https://host_of_bragi/autocomplete'
+        params = {
+            'q': u'bobette',
+            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
+            'limit': 10,
+            'pt_dataset': 'main_routing_test',
+            'depth': 0
+        }
+
+        url += "?{}".format(urlencode(params, doseq=True))
+        mock_requests = MockRequests({
+            url: (BRAGI_MOCK_BOBETTE_DEPTH_ZERO, 200)
+        })
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query_region("places?q=bobette&pt_dataset=main_routing_test&type[]=stop_area"
+                                         "&type[]=address&type[]=poi&type[]=administrative_region&depth=0")
+
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['name'] == "bobette's label"
+            assert r[0]['embedded_type'] == "poi"
+            poi = r[0]['poi']
+            assert poi['label'] == "bobette's label"
+            assert poi['properties']["amenity"] == "bicycle_rental"
+            assert poi['properties']["capacity"] == "20"
+            assert poi['properties']["ref"] == "12"
+            #Empty administrative_regions not displayed as in kraken
+            assert not poi.get('administrative_regions')
+            #Address absent as in kraken
+            assert not poi.get('address')
+
+    def test_autocomplete_call_with_depth_one(self):
         url = 'https://host_of_bragi/autocomplete'
         params = {
             'q': u'bobette',
@@ -755,7 +789,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
 
         url += "?{}".format(urlencode(params, doseq=True))
         mock_requests = MockRequests({
-            url: (BRAGI_MOCK_BOBETTE, 200)
+            url: (BRAGI_MOCK_BOBETTE_DEPTH_ONE, 200)
         })
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places?q=bobette&pt_dataset=main_routing_test&type[]=stop_area"
@@ -781,12 +815,13 @@ class TestBragiAutocomplete(AbstractTestFixture):
             address = poi['address']
             assert address['coord']['lat'] == '8.98312e-05'
             assert address['coord']['lon'] == '8.98312e-05'
-            assert address['id'] == "addr:8.9809147;42.561667"
+            assert address['id'] == "8.98312e-05;8.98312e-05"
             assert address['name'] == "Speloncato-Monticello"
             assert address['house_number'] == 0
+            #Empty administrative_regions not displayed as in kraken
             assert not address.get('administrative_regions')
 
-    def test_autocomplete_call_with_depth_2(self):
+    def test_autocomplete_call_with_depth_two(self):
         url = 'https://host_of_bragi/autocomplete'
         params = {
             'q': u'bobette',
@@ -798,7 +833,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
 
         url += "?{}".format(urlencode(params, doseq=True))
         mock_requests = MockRequests({
-            url: (BRAGI_MOCK_BOBETTE_DEPTH_2, 200)
+            url: (BRAGI_MOCK_BOBETTE_DEPTH_TWO, 200)
         })
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places?q=bobette&pt_dataset=main_routing_test&type[]=stop_area"
@@ -824,7 +859,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             address = poi['address']
             assert address['coord']['lat'] == '8.98312e-05'
             assert address['coord']['lon'] == '8.98312e-05'
-            assert address['id'] == "addr:8.9809147;42.561667"
+            assert address['id'] == "8.98312e-05;8.98312e-05"
             assert address['name'] == "Speloncato-Monticello"
             assert address['house_number'] == 0
 
@@ -836,7 +871,8 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert address_admins[0]['coord']['lat'] == "48.8396154"
             assert address_admins[0]['coord']['lon'] == "2.3957517"
 
-    def test_autocomplete_call_with_depth_3(self):
+    #This test is to verify that query with depth = 2 and 3 gives the same result as in kraken
+    def test_autocomplete_call_with_depth_three(self):
         url = 'https://host_of_bragi/autocomplete'
         params = {
             'q': u'bobette',
@@ -848,7 +884,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
 
         url += "?{}".format(urlencode(params, doseq=True))
         mock_requests = MockRequests({
-            url: (BRAGI_MOCK_BOBETTE_DEPTH_3, 200)
+            url: (BRAGI_MOCK_BOBETTE_DEPTH_THREE, 200)
         })
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places?q=bobette&pt_dataset=main_routing_test&type[]=stop_area"
@@ -874,7 +910,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             address = poi['address']
             assert address['coord']['lat'] == '8.98312e-05'
             assert address['coord']['lon'] == '8.98312e-05'
-            assert address['id'] == "addr:8.9809147;42.561667"
+            assert address['id'] == "8.98312e-05;8.98312e-05"
             assert address['name'] == "Speloncato-Monticello"
             assert address['house_number'] == 0
 
@@ -1092,7 +1128,7 @@ class AbstractAutocompleteAndRouting():
                 assert response_from['poi']['properties']["amenity"] == "bicycle_rental"
                 assert response_from['poi']['properties']["capacity"] == "20"
                 assert response_from['poi']['properties']["ref"] == "12"
-                assert response_from['poi']['address']['id'] == "addr:8.9809147;42.561667"
+                assert response_from['poi']['address']['id'] == "8.98312e-05;8.98312e-05"
                 assert response_from['poi']['address']['name'] == "Speloncato-Monticello"
                 assert response_from['poi']['address']['label'] == "Speloncato-Monticello (Speloncato)"
                 assert response_from['poi']['address']['house_number'] == 0

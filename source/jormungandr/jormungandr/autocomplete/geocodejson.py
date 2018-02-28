@@ -133,24 +133,28 @@ def get_lon_lat(obj):
     return lon, lat
 
 
-def create_address_field(geocoding, poi_lat, poi_lon):
+def create_address_field(geocoding, poi_lat=None, poi_lon=None):
     if not geocoding:
         return None
     coord = geocoding.get('coord', {})
     lat = str(coord.get('lat')) if coord and coord.get('lat') else poi_lat
     lon = str(coord.get('lon')) if coord and coord.get('lon') else poi_lon
-
-    return {
-        "id": geocoding.get('id'),
+    address_id = '{lon};{lat}'.format(lon=lon, lat=lat)
+    resp = {
+        "id": address_id,
         "label": geocoding.get('label'),
         "name": geocoding.get('name'),
         "coord": {
             "lat": lat,
             "lon": lon
         },
-        "house_number": get_house_number(geocoding.get('housenumber')),
-        "administrative_regions": create_administrative_regions_field(geocoding) or create_admin_field(geocoding)
+        "house_number": get_house_number(geocoding.get('housenumber'))
     }
+
+    admins = create_administrative_regions_field(geocoding) or create_admin_field(geocoding)
+    if admins:
+        resp['administrative_regions'] = admins
+    return resp
 
 
 class AdministrativeRegionField(fields.Raw):
@@ -212,7 +216,6 @@ class PoiField(fields.Raw):
         geocoding = obj.get('properties', {}).get('geocoding', {})
         poi_types = geocoding.get('poi_types', [])
 
-        # TODO add address, properties attributes
         res = {
             "id": geocoding.get('id'),
             "coord": {
@@ -337,6 +340,8 @@ class GeocodeJson(AbstractAutocomplete):
     TYPE_HOUSE = "house"
     TYPE_STREET = "street"
 
+    TYPE_LIST = [TYPE_STOP_AREA, TYPE_CITY, TYPE_POI, TYPE_HOUSE, TYPE_STREET]
+
     def __init__(self, **kwargs):
         self.host = kwargs.get('host')
         self.timeout = kwargs.get('timeout', 10)
@@ -362,7 +367,18 @@ class GeocodeJson(AbstractAutocomplete):
             raise TechnicalError('error in autocomplete request')
 
     @classmethod
-    def _clean_response(cls, response, depth=3):
+    def _clean_response(cls, response, depth=1):
+
+        def is_deleteable(_key, _value, _depth):
+            if _depth > -1:
+                return False
+            else:
+                if _key == 'administrative_regions':
+                    return True
+                elif isinstance(_value, dict) and _value.get('type') in cls.TYPE_LIST:
+                    return True
+                else:
+                    return False
 
         def _clear_object(obj):
             if isinstance(obj, list):
@@ -371,19 +387,12 @@ class GeocodeJson(AbstractAutocomplete):
                 obj.clear()
 
         def _manage_depth(_key, _value, _depth):
-            if _depth == -1:
+
+            if is_deleteable(_key, _value, _depth):
                 _clear_object(_value)
-            #We should not delete any element of admins of parent node
-            elif _key == 'administrative_regions':
-                if depth == -1:
-                    _clear_object(_value)
-            elif isinstance(_value, list):
-                for obj in _value:
-                    for k, v in obj.items():
-                        _manage_depth(k, v, _depth-1)
             elif isinstance(_value, dict):
                 for k, v in _value.items():
-                    if _depth == -1:
+                    if is_deleteable(k, v, _depth):
                         _clear_object(v)
                     else:
                         _manage_depth(k, v, _depth-1)
@@ -400,7 +409,7 @@ class GeocodeJson(AbstractAutocomplete):
         return response
 
     @classmethod
-    def response_marshaler(cls, response_bragi, uri=None, depth=3):
+    def response_marshaler(cls, response_bragi, uri=None, depth=1):
         cls._check_response(response_bragi, uri)
         json_response = response_bragi.json()
         #Clean dict objects depending on depth passed in request parameter.
@@ -459,7 +468,9 @@ class GeocodeJson(AbstractAutocomplete):
 
         if request.get("from"):
             params["lon"], params["lat"] = self.get_coords(request["from"])
-        if request.get("depth"):
+
+        #valid values of depth 0 to N
+        if 'depth' in request:
             params["depth"] = request["depth"]
         return params
 
@@ -476,7 +487,7 @@ class GeocodeJson(AbstractAutocomplete):
             method = requests.post
 
         raw_response = self.call_bragi(url, method, **kwargs)
-        depth = request.get('depth', 3)
+        depth = request.get('depth', 1)
 
         return self.response_marshaler(raw_response, None, depth)
 
