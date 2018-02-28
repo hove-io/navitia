@@ -171,7 +171,7 @@ class PoiSerializer(serpy.DictSerializer):
         if not address:
             return None
         poi_lon, poi_lat = get_lon_lat(obj)
-        return create_address_field(address, poi_lat, poi_lon)
+        return create_address_field(address, poi_lat=poi_lat, poi_lon=poi_lon)
 
 
 class GeocodePoiSerializer(serpy.DictSerializer):
