@@ -61,7 +61,7 @@ namespace pt = boost::posix_time;
 
 namespace navitia { namespace type {
 
-const unsigned int Data::data_version = 67; //< *INCREMENT* every time serialized data are modified
+const unsigned int Data::data_version = 68; //< *INCREMENT* every time serialized data are modified
 
 Data::Data(size_t data_identifier) :
     disruption_error(false),
