@@ -99,7 +99,7 @@ class Job(flask_restful.Resource):
         shutil.move(full_file_name + ".tmp", full_file_name)
 
         return {'message': 'OK'}, 200
-        
+
 
 class PoiType(flask_restful.Resource):
     def get(self, instance_name):
@@ -295,6 +295,9 @@ class Instance(flask_restful.Resource):
         parser.add_argument('import_stops_in_mimir', type=inputs.boolean,
                             help='import stops in global autocomplete',
                             location=('json', 'values'), default=instance.import_stops_in_mimir)
+        parser.add_argument('import_ntfs_in_mimir', type=inputs.boolean,
+                            help='import ntfs data in global autocomplete',
+                            location=('json', 'values'), default=instance.import_ntfs_in_mimir)
         args = parser.parse_args()
 
         try:
@@ -334,7 +337,8 @@ class Instance(flask_restful.Resource):
                                        'full_sn_geometries',
                                        'is_free',
                                        'is_open_data',
-                                       'import_stops_in_mimir'])
+                                       'import_stops_in_mimir',
+                                       'import_ntfs_in_mimir'])
             db.session.commit()
         except Exception:
             logging.exception("fail")

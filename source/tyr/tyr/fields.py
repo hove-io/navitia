@@ -82,6 +82,7 @@ instance_fields = {
     'discarded': fields.Raw,
     'is_free': fields.Raw,
     'import_stops_in_mimir': fields.Raw,
+    'import_ntfs_in_mimir': fields.Raw,
     'scenario': fields.Raw,
     'journey_order': fields.Raw,
     'max_walking_duration_to_pt': fields.Raw,
