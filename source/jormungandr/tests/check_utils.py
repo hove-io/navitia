@@ -815,7 +815,7 @@ def is_valid_admin(admin, depth_check=1):
     lbl = get_not_null(admin, 'label')
     is_valid_label(lbl)
     zips = sorted(zip_code.split(';'))
-    # so name of the admin and it's min and max zip codes must be in the label
+    # name of the admin and it's min and max zip codes must be in the label
     assert name in lbl and zips[0] in lbl and zips[-1] in lbl
 
     get_not_null(admin, 'id')

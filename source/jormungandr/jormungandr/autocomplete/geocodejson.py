@@ -361,7 +361,7 @@ class GeocodeJson(AbstractAutocomplete):
             from flask.ext.restful import marshal
             m = marshal(json_response, geocodejson)
             # Removing places that are not marshalled (None)
-            if 'places' in m and isinstance(m['places'], list):
+            if isinstance(m.get('places'), list):
                 m['places'] = [p for p in m['places'] if p is not None]
             return m
 
