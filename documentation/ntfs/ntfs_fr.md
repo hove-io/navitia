@@ -30,7 +30,7 @@ Les données sont formatées de la manière suivante :
 # Liste des fichiers du format
 ## Fichiers spéciaux
     Ces fichiers permettent de décrire précisément d'où viennent les données dans le cas d'un référentiel agrégeant plusieurs sources de données. La notion de _contributor_ correspond à une source de données (un exploitant peut nécessiter l'utilisation de plusieurs contributeurs). La notion de _dataset_ correspond à un jeu de données provenant d'un contributeur.
-    Le fichiers _trips.txt_ fait une référence à _dataset_id_ afin de lier une circualtion à sa donnée source.
+    Le fichier _trips.txt_ fait une référence à _dataset_id_ afin de lier une circulation à sa donnée source.
 
 Fichier | Contrainte | Commentaire
 --- | --- | ---
