@@ -947,9 +947,7 @@ void OSMCache::flag_nodes() {
     }
 }
 
-}}
-
-int main(int argc, char** argv) {
+int osm2ed(int argc, const char** argv) {
     navitia::init_app();
     auto logger = log4cplus::Logger::getInstance("log");
     pt::ptime start;
@@ -972,7 +970,7 @@ int main(int argc, char** argv) {
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
     start = pt::microsec_clock::local_time();
-
+   
     if(vm.count("version")){
         std::cout << argv[0] << " " << navitia::config::project_version << " "
                   << navitia::config::navitia_build_type << std::endl;
@@ -1003,10 +1001,9 @@ int main(int argc, char** argv) {
 
     if (! vm.count("poi-type")) {
         json_poi_types = ed::connectors::DEFAULT_JSON_POI_TYPES;
-    }
-
+    } 
+    
     po::notify(vm);
-
     const ed::connectors::PoiTypeParams poi_params(json_poi_types);
 
     ed::EdPersistor persistor(connection_string);
@@ -1044,3 +1041,5 @@ int main(int argc, char** argv) {
     persistor.insert_metadata_georef();
     return 0;
 }
+
+}}

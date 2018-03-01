@@ -424,4 +424,7 @@ struct PoiHouseNumberVisitor {
 inline bool operator<(const ed::connectors::it_way w1, const ed::connectors::it_way w2) {
     return w1->osm_id < w2->osm_id;
 }
+
+int osm2ed(int argc, const char** argv);
+
 }}
