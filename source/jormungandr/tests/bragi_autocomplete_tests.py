@@ -260,7 +260,6 @@ BRAGI_MOCK_STOP_AREA_WITH_BASIC_ATTRIBUTS = {
                     "postcode": "02100",
                     "type": "public_transport:stop_area",
                     "citycode": "02000",
-                    "properties": [],
                     "administrative_regions": [
                         {
                             "id": "admin:fr:02000",

@@ -314,3 +314,18 @@ def make_notes(notes):
              "value": value.note,
              "internal": True}
             for value in notes]
+
+
+class NestedDictGenericField(DictGenericSerializer, NestedPropertyField):
+    pass
+
+
+class NestedDictCodeField(DictCodeSerializer, NestedPropertyField):
+    pass
+
+
+class NestedPropertiesField(NestedPropertyField):
+    def to_value(self, value):
+        if not value:
+            return {}
+        return {p.get('key'): p.get('value') for p in value}

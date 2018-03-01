@@ -32,7 +32,8 @@ from .base import LiteralField, NestedPropertyField, IntNestedPropertyField, val
 from flask.ext.restful import abort
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.fields import raw_feed_publisher_bano, raw_feed_publisher_osm
-from jormungandr.interfaces.v1.serializer.base import DictGenericSerializer, DictCodeSerializer
+from jormungandr.interfaces.v1.serializer.base import DictGenericSerializer, DictCodeSerializer, \
+    NestedDictGenericField, NestedDictCodeField, NestedPropertiesField
 from jormungandr.utils import get_house_number
 from jormungandr.autocomplete.geocodejson import create_address_field
 
@@ -214,36 +215,10 @@ class StopAreaSerializer(serpy.DictSerializer):
     name = NestedPropertyField(attr='properties.geocoding.name', display_none=True)
     administrative_regions = AdministrativeRegionsSerializer()
     timezone = NestedPropertyField(attr='properties.geocoding.timezone')
-    commercial_modes = jsonschema.MethodField()
-    physical_modes = jsonschema.MethodField()
-    codes = jsonschema.MethodField()
-    properties = jsonschema.MethodField()
-
-    def fill_modes(self, modes):
-        if not modes:
-            return []
-        return [DictGenericSerializer(mode).data for mode in modes]
-
-    def fill_codes(self, codes):
-        if not codes:
-            return []
-        return [DictCodeSerializer(code).data for code in codes]
-
-    def get_commercial_modes(self, obj):
-        modes = obj.get('properties', {}).get('geocoding', {}).get('commercial_modes', [])
-        return self.fill_modes(modes)
-
-    def get_physical_modes(self, obj):
-        modes = obj.get('properties', {}).get('geocoding', {}).get('physical_modes', [])
-        return self.fill_modes(modes)
-
-    def get_codes(self, obj):
-        codes = obj.get('properties', {}).get('geocoding', {}).get('codes', [])
-        return self.fill_codes(codes)
-
-    def get_properties(self, obj):
-        return {p.get('key'): p.get('value')
-                for p in obj.get('properties', {}).get('geocoding', {}).get('properties', [])}
+    commercial_modes = NestedDictGenericField(attr='properties.geocoding.commercial_modes', many=True)
+    physical_modes = NestedDictGenericField(attr='properties.geocoding.physical_modes', many=True)
+    codes = NestedDictCodeField(attr='properties.geocoding.codes', many=True)
+    properties = NestedPropertiesField(attr='properties.geocoding.properties', display_none=True)
 
 
 class GeocodeStopAreaSerializer(serpy.DictSerializer):
