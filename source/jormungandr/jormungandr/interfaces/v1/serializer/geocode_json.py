@@ -29,7 +29,7 @@ from __future__ import absolute_import
 import serpy
 from .base import LiteralField, NestedPropertyField, IntNestedPropertyField, value_by_path, \
     BetaEndpointsSerializer
-from flask.ext.restful import abort
+import logging
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.fields import raw_feed_publisher_bano, raw_feed_publisher_osm
 from jormungandr.interfaces.v1.serializer.base import DictGenericSerializer
@@ -260,6 +260,7 @@ class GeocodePlacesSerializer(serpy.DictSerializer):
         for feature in obj.get('features', {}):
             type_ = feature.get('properties', {}).get('geocoding', {}).get('type')
             if not type_ or type_ not in map_serializer:
-                abort(404, message='Unknown places type {}'.format(type_))
+                logging.getLogger(__name__).error('Place not serialized (unknown type): {}'.format(feature))
+                continue
             res.append(map_serializer[type_](feature).data)
         return res
