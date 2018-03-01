@@ -39,6 +39,9 @@ target_link_libraries(osm2ed_test osm2ed_lib transportation_data_import ed conne
   pb_lib utils ${BOOST_LIBS} log4cplus z protobuf)
 ADD_BOOST_TEST(osm2ed_test)
 
+add_executable(fare2ed_test fare2ed_test.cpp)
+target_link_libraries(fare2ed_test fare2ed_lib transportation_data_import connectors ${BOOST_LIBS} log4cplus)
+
 add_executable(route_main_destination_test route_main_destination_test.cpp)
 target_link_libraries(route_main_destination_test ed types utils ${BOOST_LIBS} log4cplus)
 ADD_BOOST_TEST(route_main_destination_test)
