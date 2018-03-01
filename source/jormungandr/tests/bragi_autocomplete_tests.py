@@ -164,7 +164,7 @@ BRAGI_MOCK_POI_WITHOUT_ADDRESS = {
     ]
 }
 
-BRAGI_MOCK_STOP_AREA_WITH_MODES = {
+BRAGI_MOCK_STOP_AREA_WITH_MORE_ATTRIBUTS = {
     "features": [
         {
             "geometry": {
@@ -189,7 +189,12 @@ BRAGI_MOCK_STOP_AREA_WITH_MODES = {
                     "postcode": "02100",
                     "type": "public_transport:stop_area",
                     "citycode": "02000",
-                    "properties": [],
+                    "properties": [
+                        {"key": "name",
+                         "value": "railway station"},
+                        {"key": "code",
+                         "value": "station:01"}
+                    ],
                     "commercial_modes": [
                         {"id": "cm_id:Bus",
                          "name": "cm_name:Bus"},
@@ -202,6 +207,13 @@ BRAGI_MOCK_STOP_AREA_WITH_MODES = {
                         {"id": "pm_id:Car",
                          "name": "pm_name:Car"}
                     ],
+                    "codes": [
+                        {"name": "navitia1",
+                         "value": "424242"},
+                        {"name": "source",
+                         "value": "1161"}
+                    ],
+                    "timezone": "Europe/Paris",
                     "administrative_regions": [
                         {
                             "id": "admin:fr:02000",
@@ -223,7 +235,7 @@ BRAGI_MOCK_STOP_AREA_WITH_MODES = {
     ]
 }
 
-BRAGI_MOCK_STOP_AREA_WITHOUT_MODES = {
+BRAGI_MOCK_STOP_AREA_WITH_BASIC_ATTRIBUTS = {
     "features": [
         {
             "geometry": {
@@ -248,7 +260,6 @@ BRAGI_MOCK_STOP_AREA_WITHOUT_MODES = {
                     "postcode": "02100",
                     "type": "public_transport:stop_area",
                     "citycode": "02000",
-                    "properties": [],
                     "administrative_regions": [
                         {
                             "id": "admin:fr:02000",
@@ -470,7 +481,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         url += "/features/1234?{}".format(urlencode(params, doseq=True))
 
         mock_requests = MockRequests({
-            url: (BRAGI_MOCK_STOP_AREA_WITH_MODES, 200)
+            url: (BRAGI_MOCK_STOP_AREA_WITH_MORE_ATTRIBUTS, 200)
         })
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places/1234?&pt_dataset=main_routing_test")
@@ -491,6 +502,17 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['stop_area'].get('physical_modes')[1].get('id') == 'pm_id:Car'
             assert r[0]['stop_area'].get('physical_modes')[1].get('name') == 'pm_name:Car'
 
+            assert len(r[0]['stop_area'].get('codes')) == 2
+            assert r[0]['stop_area'].get('codes')[0].get('type') == 'navitia1'
+            assert r[0]['stop_area'].get('codes')[0].get('value') == '424242'
+            assert r[0]['stop_area'].get('codes')[1].get('type') == 'source'
+            assert r[0]['stop_area'].get('codes')[1].get('value') == '1161'
+
+            assert r[0]['stop_area'].get('properties').get('name') == 'railway station'
+            assert r[0]['stop_area'].get('properties').get('code') == 'station:01'
+
+            assert r[0]['stop_area'].get('timezone') == 'Europe/Paris'
+
     def test_stop_area_without_modes(self):
         url = 'https://host_of_bragi'
         params = {'pt_dataset': 'main_routing_test'}
@@ -498,7 +520,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         url += "/features/1234?{}".format(urlencode(params, doseq=True))
 
         mock_requests = MockRequests({
-            url: (BRAGI_MOCK_STOP_AREA_WITHOUT_MODES, 200)
+            url: (BRAGI_MOCK_STOP_AREA_WITH_BASIC_ATTRIBUTS, 200)
         })
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places/1234?&pt_dataset=main_routing_test")
@@ -508,6 +530,12 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['embedded_type'] == 'stop_area'
             assert 'commercial_modes' not in r[0]['stop_area']
             assert 'physical_modes' not in r[0]['stop_area']
+            #Empty attribut not displayed
+            assert 'codes' not in r[0]['stop_area']
+            #Attribut displayed but empty
+            assert len(r[0]['stop_area'].get('properties')) == 0
+            #Attribut displayed but None
+            assert not r[0]['stop_area'].get('timezone')
 
 
 @dataset({"main_routing_test": {}}, global_config={'activate_bragi': True})
