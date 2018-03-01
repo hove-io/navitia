@@ -63,6 +63,7 @@ def bragi_house_jaures_feature():
                         "insee": "02000",
                         "level": 8,
                         "label": "Saint-Quentin",
+                        "name": "Saint-Quentin",
                         "zip_code": "02000",
                         "weight": 1,
                         "coord": {
@@ -75,6 +76,7 @@ def bragi_house_jaures_feature():
                         "insee": "248000549",
                         "level": 7,
                         "label": "Haute Picardie",
+                        "name": "Haute Picardie",
                         "zip_code": "80200",
                         "weight": 1,
                         "coord": {
@@ -146,6 +148,7 @@ def bragi_street_feature():
                         "insee": "02000",
                         "level": 8,
                         "label": "Saint-Quentin",
+                        "name": "Saint-Quentin",
                         "zip_code": "02000",
                         "weight": 1,
                         "coord": {
@@ -158,6 +161,7 @@ def bragi_street_feature():
                         "insee": "248000549",
                         "level": 7,
                         "label": "Haute Picardie",
+                        "name": "Haute Picardie",
                         "zip_code": "80200",
                         "weight": 1,
                         "coord": {
@@ -236,6 +240,7 @@ def bragi_admin_feature():
                         "insee": "02000",
                         "level": 8,
                         "label": "Sommeron",
+                        "name": "Sommeron",
                         "zip_code": "02000",
                         "weight": 1,
                         "coord": {
@@ -248,6 +253,7 @@ def bragi_admin_feature():
                         "insee": "248000549",
                         "level": 7,
                         "label": "Haute Picardie",
+                        "name": "Haute Picardie",
                         "zip_code": "80200",
                         "weight": 1,
                         "coord": {
@@ -315,6 +321,7 @@ def bragi_house_lefebvre_feature():
                         "insee": "02000",
                         "level": 8,
                         "label": "Oyonnax",
+                        "name": "Oyonnax",
                         "zip_codes": ["02000"],
                         "weight": 1,
                         "coord": {
@@ -327,6 +334,7 @@ def bragi_house_lefebvre_feature():
                         "insee": "248000549",
                         "level": 7,
                         "label": "Haute Picardie",
+                        "name": "Haute Picardie",
                         "zip_codes": ["80200"],
                         "weight": 1,
                         "coord": {
@@ -466,6 +474,7 @@ def bragi_poi_feature():
                     "insee": "2B231",
                     "level": 8,
                     "label": "Pigna",
+                    "name": "Pigna",
                     "zip_codes": ["20220", "20221", "20222"],
                     "weight": 0,
                     "coord": {
