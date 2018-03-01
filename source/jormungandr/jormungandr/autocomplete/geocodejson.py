@@ -93,7 +93,7 @@ def create_administrative_regions_field(geocoding):
         zip_codes = admin.get('zip_codes', [])
         response.append({
             "insee": admin.get('insee'),
-            "name": admin.get('label'),
+            "name": admin.get('name'),
             "level":
                 int(admin.get('level')) if admin.get('level') else None,
             "coord": {
@@ -224,13 +224,15 @@ class PoiField(fields.Raw):
             },
             "label": geocoding.get('label'),
             "name": geocoding.get('name'),
-            "administrative_regions":
-                create_administrative_regions_field(geocoding) or create_admin_field(geocoding),
             "properties": {p.get('key'): p.get('value') for p in geocoding.get("properties", [])},
             "address": create_address_field(geocoding.get("address"), poi_lat=lat, poi_lon=lon)
         }
         if isinstance(poi_types, list) and poi_types:
             res['poi_type'] = poi_types[0]
+
+        admins = create_administrative_regions_field(geocoding) or create_admin_field(geocoding)
+        if admins:
+            res['administrative_regions'] = admins
         return res
 
 
@@ -469,9 +471,6 @@ class GeocodeJson(AbstractAutocomplete):
         if request.get("from"):
             params["lon"], params["lat"] = self.get_coords(request["from"])
 
-        #valid values of depth 0 to N
-        if 'depth' in request:
-            params["depth"] = request["depth"]
         return params
 
     def get(self, request, instances):

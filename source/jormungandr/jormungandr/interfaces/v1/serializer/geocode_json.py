@@ -89,7 +89,7 @@ class AdministrativeRegionsSerializer(serpy.Field):
                 res = {
                     'id': admin['id'],
                     'insee': admin['insee'],
-                    'name': admin['label'],
+                    'name': admin['name'],
                     'label': admin['label'],
                     'level': admin['level'],
                     'coord': {

@@ -98,6 +98,7 @@ BRAGI_MOCK_RESPONSE = {
                             "insee": "02000",
                             "level": 8,
                             "label": "Bobtown (02000)",
+                            "name": "Bobtown",
                             "zip_codes": ["02000"],
                             "weight": 1,
                             "coord": {
@@ -207,6 +208,7 @@ BRAGI_MOCK_POI_WITHOUT_ADDRESS = {
                             "insee": "02000",
                             "level": 8,
                             "label": "Bobtown (02000)",
+                            "name": "Bobtown",
                             "zip_codes": ["02000"],
                             "weight": 1,
                             "coord": {
@@ -278,6 +280,7 @@ BRAGI_MOCK_STOP_AREA_WITH_MORE_ATTRIBUTS = {
                             "insee": "02000",
                             "level": 8,
                             "label": "Bobtown (02000)",
+                            "name": "Bobtown",
                             "zip_codes": ["02000"],
                             "weight": 1,
                             "coord": {
@@ -298,7 +301,7 @@ BRAGI_MOCK_STOP_AREA_WITH_BASIC_ATTRIBUTS = {
         {
             "geometry": {
                 "coordinates": [
-                    0.0000898312,
+                    0.0000898312,#has to match with kraken mock
                     0.0000898312
                 ],
                 "type": "Point"
@@ -324,6 +327,7 @@ BRAGI_MOCK_STOP_AREA_WITH_BASIC_ATTRIBUTS = {
                             "insee": "02000",
                             "level": 8,
                             "label": "Bobtown (02000)",
+                            "name": "Bobtown",
                             "zip_codes": ["02000"],
                             "weight": 1,
                             "coord": {
@@ -383,6 +387,7 @@ BRAGI_MOCK_BOBETTE = {
                                 "insee": "02000",
                                 "level": 8,
                                 "label": "Bobtown (02000)",
+                                "name": "Bobtown",
                                 "zip_codes": ["02000"],
                                 "weight": 1,
                                 "coord": {
@@ -399,6 +404,7 @@ BRAGI_MOCK_BOBETTE = {
                             "insee": "02000",
                             "level": 8,
                             "label": "Bobtown (02000)",
+                            "name": "Bobtown",
                             "zip_codes": ["02000"],
                             "weight": 1,
                             "coord": {
@@ -413,10 +419,19 @@ BRAGI_MOCK_BOBETTE = {
         }
     ]
 }
+#Original coordinates are used to calculate id. We need different lat and lon for test
 BRAGI_MOCK_BOBETTE_DEPTH_ZERO = deepcopy(BRAGI_MOCK_BOBETTE)
-BRAGI_MOCK_BOBETTE_DEPTH_ONE = deepcopy(BRAGI_MOCK_BOBETTE)
-BRAGI_MOCK_BOBETTE_DEPTH_TWO = deepcopy(BRAGI_MOCK_BOBETTE)
-BRAGI_MOCK_BOBETTE_DEPTH_THREE = deepcopy(BRAGI_MOCK_BOBETTE)
+BRAGI_MOCK_BOBETTE_DEPTH_ZERO["features"][0]["geometry"] = \
+    {
+        "coordinates": [
+            2.3957517,
+            48.8396154
+        ],
+        "type": "Point"
+    }
+BRAGI_MOCK_BOBETTE_DEPTH_ONE = deepcopy(BRAGI_MOCK_BOBETTE_DEPTH_ZERO)
+BRAGI_MOCK_BOBETTE_DEPTH_TWO = deepcopy(BRAGI_MOCK_BOBETTE_DEPTH_ZERO)
+BRAGI_MOCK_BOBETTE_DEPTH_THREE = deepcopy(BRAGI_MOCK_BOBETTE_DEPTH_ZERO)
 
 BOB_STREET = {
     "features": [
@@ -445,6 +460,7 @@ BOB_STREET = {
                             "insee": "02000",
                             "level": 8,
                             "label": "Bobtown (02000)",
+                            "name": "Bobtown",
                             "zip_codes": ["02000"],
                             "weight": 1,
                             "coord": {
@@ -469,8 +485,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             'q': u'bob',
             'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
             'limit': 10,
-            'pt_dataset': 'main_routing_test',
-            'depth': 1
+            'pt_dataset': 'main_routing_test'
         }
 
         url += "?{}".format(urlencode(params, doseq=True))
@@ -514,8 +529,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             'q': u'bob',
             'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
             'limit': 10,
-            'pt_dataset': 'main_routing_test',
-            'depth': 1
+            'pt_dataset': 'main_routing_test'
         }
 
         url += "/autocomplete?{}".format(urlencode(params, doseq=True))
@@ -751,8 +765,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             'q': u'bobette',
             'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
             'limit': 10,
-            'pt_dataset': 'main_routing_test',
-            'depth': 0
+            'pt_dataset': 'main_routing_test'
         }
 
         url += "?{}".format(urlencode(params, doseq=True))
@@ -769,6 +782,8 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['embedded_type'] == "poi"
             poi = r[0]['poi']
             assert poi['label'] == "bobette's label"
+            assert poi['coord']['lat'] == '48.8396154'
+            assert poi['coord']['lon'] == '2.3957517'
             assert poi['properties']["amenity"] == "bicycle_rental"
             assert poi['properties']["capacity"] == "20"
             assert poi['properties']["ref"] == "12"
@@ -783,8 +798,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             'q': u'bobette',
             'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
             'limit': 10,
-            'pt_dataset': 'main_routing_test',
-            'depth': 1
+            'pt_dataset': 'main_routing_test'
         }
 
         url += "?{}".format(urlencode(params, doseq=True))
@@ -809,13 +823,14 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert poi_admins[0]['id'] == "admin:fr:02000"
             assert poi_admins[0]['insee'] == "02000"
             assert poi_admins[0]['label'] == "Bobtown (02000)"
+            assert poi_admins[0]['name'] == "Bobtown"
             assert poi_admins[0]['coord']['lat'] == "48.8396154"
             assert poi_admins[0]['coord']['lon'] == "2.3957517"
 
             address = poi['address']
-            assert address['coord']['lat'] == '8.98312e-05'
-            assert address['coord']['lon'] == '8.98312e-05'
-            assert address['id'] == "8.98312e-05;8.98312e-05"
+            assert address['coord']['lat'] == '48.8396154'
+            assert address['coord']['lon'] == '2.3957517'
+            assert address['id'] == "2.3957517;48.8396154"
             assert address['name'] == "Speloncato-Monticello"
             assert address['house_number'] == 0
             #Empty administrative_regions not displayed as in kraken
@@ -827,8 +842,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             'q': u'bobette',
             'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
             'limit': 10,
-            'pt_dataset': 'main_routing_test',
-            'depth': 2
+            'pt_dataset': 'main_routing_test'
         }
 
         url += "?{}".format(urlencode(params, doseq=True))
@@ -853,13 +867,14 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert poi_admins[0]['id'] == "admin:fr:02000"
             assert poi_admins[0]['insee'] == "02000"
             assert poi_admins[0]['label'] == "Bobtown (02000)"
+            assert poi_admins[0]['name'] == "Bobtown"
             assert poi_admins[0]['coord']['lat'] == "48.8396154"
             assert poi_admins[0]['coord']['lon'] == "2.3957517"
 
             address = poi['address']
-            assert address['coord']['lat'] == '8.98312e-05'
-            assert address['coord']['lon'] == '8.98312e-05'
-            assert address['id'] == "8.98312e-05;8.98312e-05"
+            assert address['coord']['lat'] == '48.8396154'
+            assert address['coord']['lon'] == '2.3957517'
+            assert address['id'] == "2.3957517;48.8396154"
             assert address['name'] == "Speloncato-Monticello"
             assert address['house_number'] == 0
 
@@ -868,6 +883,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert address_admins[0]['id'] == "admin:fr:02000"
             assert address_admins[0]['insee'] == "02000"
             assert address_admins[0]['label'] == "Bobtown (02000)"
+            assert address_admins[0]['name'] == "Bobtown"
             assert address_admins[0]['coord']['lat'] == "48.8396154"
             assert address_admins[0]['coord']['lon'] == "2.3957517"
 
@@ -878,8 +894,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             'q': u'bobette',
             'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
             'limit': 10,
-            'pt_dataset': 'main_routing_test',
-            'depth': 3
+            'pt_dataset': 'main_routing_test'
         }
 
         url += "?{}".format(urlencode(params, doseq=True))
@@ -904,13 +919,14 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert poi_admins[0]['id'] == "admin:fr:02000"
             assert poi_admins[0]['insee'] == "02000"
             assert poi_admins[0]['label'] == "Bobtown (02000)"
+            assert poi_admins[0]['name'] == "Bobtown"
             assert poi_admins[0]['coord']['lat'] == "48.8396154"
             assert poi_admins[0]['coord']['lon'] == "2.3957517"
 
             address = poi['address']
-            assert address['coord']['lat'] == '8.98312e-05'
-            assert address['coord']['lon'] == '8.98312e-05'
-            assert address['id'] == "8.98312e-05;8.98312e-05"
+            assert address['coord']['lat'] == '48.8396154'
+            assert address['coord']['lon'] == '2.3957517'
+            assert address['id'] == "2.3957517;48.8396154"
             assert address['name'] == "Speloncato-Monticello"
             assert address['house_number'] == 0
 
@@ -919,6 +935,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert address_admins[0]['id'] == "admin:fr:02000"
             assert address_admins[0]['insee'] == "02000"
             assert address_admins[0]['label'] == "Bobtown (02000)"
+            assert address_admins[0]['name'] == "Bobtown"
             assert address_admins[0]['coord']['lat'] == "48.8396154"
             assert address_admins[0]['coord']['lon'] == "2.3957517"
 
@@ -1091,8 +1108,7 @@ class AbstractAutocompleteAndRouting():
         args = {
             u'pt_dataset': 'main_routing_test',
             u'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
-            u'limit': 10,
-            u'depth': 1,
+            u'limit': 10
         }
         params = urlencode(args, doseq=True)
         mock_requests = MockRequests({
