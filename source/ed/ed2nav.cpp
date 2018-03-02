@@ -205,7 +205,7 @@ int ed2nav(int argc, const char * argv[])
         }
     }
 
-    if(vm.count("help") || !vm.count("connection_string")) {
+    if(vm.count("help") || !vm.count("connection-string")) {
         std::cout << "Extracts data from a database to a file readable by kraken" << std::endl;
         std::cout << desc <<  std::endl;
         return 1;
