@@ -1,3 +1,4 @@
+# coding=utf-8
 # Copyright (c) 2001-2015, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -25,7 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-import os
+from __future__ import absolute_import, print_function, unicode_literals, division
 
 import docker
 import psycopg2
@@ -45,7 +46,7 @@ def _get_docker_file():
     is reduced by 10s
     """
     from io import BytesIO
-    return BytesIO('FROM ' + POSTGRES_IMAGE)
+    return BytesIO('FROM {}'.format(POSTGRES_IMAGE).encode('utf-8'))
 
 class PostgresDocker(object):
     USER = 'postgres'

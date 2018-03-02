@@ -26,6 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import, print_function, unicode_literals, division
 
 __all__ = ['Uri', 'Coverage', 'Journeys', 'Places', 'ResourceUri',
            'Schedules', 'Disruptions', 'Calendars', 'Ptobjects', 'JSONSchema']

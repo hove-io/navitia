@@ -1,3 +1,4 @@
+# coding: utf-8
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -30,6 +31,7 @@
 """
 Function to launch a bin
 """
+from __future__ import absolute_import, print_function, unicode_literals, division
 import subprocess
 import os
 import select
@@ -75,7 +77,7 @@ def make_async(fd):
 # (those errors mean that there are no data available for the moment)
 def read_async(fd):
     try:
-        return fd.read()
+        return fd.read().decode('utf-8')
     except IOError, e:
         if e.errno != errno.EAGAIN:
             raise e

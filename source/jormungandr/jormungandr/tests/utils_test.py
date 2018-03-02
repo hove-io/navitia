@@ -28,7 +28,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, unicode_literals, division
 from contextlib import contextmanager
 from flask import appcontext_pushed, g
 from jormungandr.utils import timestamp_to_datetime

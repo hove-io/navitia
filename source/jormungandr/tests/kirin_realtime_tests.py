@@ -29,7 +29,7 @@
 
 # Note: the tests_mechanism should be the first
 # import for the conf to be loaded correctly when only this test is ran
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, unicode_literals, division
 from datetime import datetime
 import uuid
 from tests.tests_mechanism import dataset

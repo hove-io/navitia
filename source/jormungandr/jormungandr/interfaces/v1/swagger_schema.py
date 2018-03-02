@@ -26,7 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, unicode_literals, division
 import copy
 import re
 import serpy
@@ -301,7 +301,7 @@ def make_id(name, rule):
     rule is string representing a flask rule (like '/v1/coverage/<region:region>/places')
     name is the http method name (GET)
     >>> make_id('get', '/v1/coverage/<region:region>/places')
-    'get_coverage__region__places'
+    u'get_coverage__region__places'
     """
     # for the moment we do a dump concatenation with a bit of formating, we should see if we need something
     # better

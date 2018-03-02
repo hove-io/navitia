@@ -30,9 +30,8 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from tyr import resources
-
-from tyr import app, api
+from __future__ import absolute_import, print_function, unicode_literals, division
+from tyr import resources, app, api
 import flask_restful
 
 # we always want pretty json
@@ -51,8 +50,10 @@ api.add_resource(resources.Key, '/v0/users/<int:user_id>/keys/',
 api.add_resource(resources.Authorization, '/v0/users/<int:user_id>/authorizations/')
 
 api.add_resource(resources.Index, '/')
-api.add_resource(resources.Job, '/v0/jobs/', '/v0/jobs/<string:instance_name>/', endpoint='jobs')
-api.add_resource(resources.EndPoint, '/v0/end_points/', '/v0/end_points/<int:id>/', endpoint='end_points')
+api.add_resource(resources.Job, '/v0/jobs/', '/v0/jobs/<string:instance_name>/',
+                 endpoint='jobs'.encode('utf-8'))
+api.add_resource(resources.EndPoint, '/v0/end_points/', '/v0/end_points/<int:id>/',
+                 endpoint='end_points'.encode('utf-8'))
 
 api.add_resource(resources.TravelerProfile,
                  '/v0/instances/<string:name>/traveler_profiles/',

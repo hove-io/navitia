@@ -77,7 +77,7 @@ class Siri(RealtimeProxy):
 
     def status(self):
         return {
-            'id': self.rt_system_id,
+            'id': unicode(self.rt_system_id),
             'timeout': self.timeout,
             'circuit_breaker': {
                 'current_state': self.breaker.current_state,

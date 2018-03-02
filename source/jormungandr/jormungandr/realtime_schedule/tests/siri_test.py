@@ -27,16 +27,14 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, unicode_literals, division
 import datetime
-from dateutil.parser import parse
 import mock
 import pytz
 from jormungandr.realtime_schedule.siri import Siri
-import validators
 from jormungandr.realtime_schedule.tests.utils import MockRoutePoint, _timestamp
 import xml.etree.ElementTree as et
-from jormungandr.tests.utils_test import MockResponse, MockRequests
+from jormungandr.tests.utils_test import MockRequests
 
 
 def make_request_test():
@@ -150,6 +148,6 @@ def next_passage_for_route_point_failure_test():
         assert passages is None
 
 def status_test():
-    siri = Siri(id='tata', service_url='http://bob.com/', requestor_ref='Stibada')
+    siri = Siri(id="tata-é$~#@\"*!'`§èû", service_url='http://bob.com/', requestor_ref='Stibada')
     status = siri.status()
-    assert status['id'] == 'tata'
+    assert status['id'] == 'tata-é$~#@"*!\'`§èû'

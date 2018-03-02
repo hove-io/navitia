@@ -1,3 +1,4 @@
+# coding: utf-8
 # Copyright (c) 2001-2015, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -25,6 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+from __future__ import absolute_import, print_function, unicode_literals, division
 import os
 
 from tyr import app
@@ -107,5 +109,5 @@ def _dt(dt_to_parse, year=2015, month=9, day=8):
     >>> _dt("9:15", day=2)
     datetime.datetime(2015, 9, 2, 9, 15)
     """
-    d = parse(dt_to_parse)
+    d = parse(dt_to_parse.encode('utf-8'))
     return d.replace(year=year, month=month, day=day)

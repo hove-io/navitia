@@ -61,20 +61,6 @@ class TestEmptyEndPoint(AbstractTestFixture):
 
         assert current_found, "we must have one current version of the api"
 
-"""
-   TODO make this test OK, bug for the moment
- def test_status(self):
-        json_response = self.query("/v1/status")
-
-        status = get_not_null(json_response, 'jormungandr_version')
-
-        assert is_valid_navitia_version_number(status)
-
-        #we also must have an empty regions list
-        assert 'regions' in json_response
-        assert json_response['regions'] == []"""
-
-
 
 @dataset({})
 class TestHttps(AbstractTestFixture):
