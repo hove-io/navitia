@@ -28,6 +28,8 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
+#include "fare2ed.h"
+
 #include "conf.h"
 #include <iostream>
 

@@ -39,7 +39,7 @@ struct logger_initialized {
     logger_initialized()   { init_logger(); }
 };
 
-BOOST_GLOBAL_FIXTURE( logger_initialized )
+BOOST_GLOBAL_FIXTURE( logger_initialized );
 
 BOOST_AUTO_TEST_CASE(ed2nav_with_no_param_should_start_without_throwing) 
 {

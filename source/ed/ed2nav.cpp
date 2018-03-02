@@ -28,6 +28,8 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
+#include "ed2nav.h"
+
 #include "conf.h"
 
 #include "utils/timer.h"
