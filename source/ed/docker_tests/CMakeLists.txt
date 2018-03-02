@@ -64,5 +64,11 @@ ELSE()
                             --report_level=no ${BOOST_TEST_SEPARATOR} ${TEST_CLI_PARAMS})
 ENDIF()
 
+add_custom_command(TARGET run_test
+                   POST_BUILD
+                   COMMAND cmake -E remove ${FILES_CREATED}
+                   COMMENT "Clear generated nav files to enforce binarisation"
+)
+
 add_dependencies(ed_integration_test datanav_files)
 add_dependencies(docker_test run_test)
