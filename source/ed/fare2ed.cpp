@@ -115,4 +115,3 @@ int fare2ed(int argc, const char * argv[])
 }
 
 } // namespace ed
-
