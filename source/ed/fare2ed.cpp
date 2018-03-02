@@ -28,6 +28,8 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
+#include "fare2ed.h"
+
 #include "conf.h"
 #include <iostream>
 
@@ -43,12 +45,11 @@ www.navitia.io
 #include "fare/fare.h"
 #include "ed/connectors/fare_parser.h"
 
-
-
 namespace po = boost::program_options;
 namespace pt = boost::posix_time;
+namespace ed {
 
-int main(int argc, char * argv[])
+int fare2ed(int argc, const char * argv[])
 {
     navitia::init_app();
     auto logger = log4cplus::Logger::getInstance("log");
@@ -82,7 +83,7 @@ int main(int argc, char * argv[])
         }
     }
 
-    if(vm.count("help")) {
+    if(vm.count("help") || !vm.count("connection-string")) {
         std::cout << "Reads and inserts in ed database fare files" << std::endl;
         std::cout << desc <<  std::endl;
         return 1;
@@ -114,3 +115,5 @@ int main(int argc, char * argv[])
 
     return 0;
 }
+
+} // namespace ed

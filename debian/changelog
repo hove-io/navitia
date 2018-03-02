@@ -1,3 +1,17 @@
+navitia2 (2.52.0) unstable; urgency=low
+
+  * Jormun: Fix address in poi in api global autocomplete   <https://github.com/CanalTP/navitia/pull/2338>
+  * Ed : executables crashe when run with no parameter  <https://github.com/CanalTP/navitia/pull/2344>
+  * Jormun: ignore geocode features with type that are unknown  <https://github.com/CanalTP/navitia/pull/2345>
+  * Doc: datasets.txt and contributors.txt are mandatory in NTFS  <https://github.com/CanalTP/navitia/pull/2341>
+  * jormungandr: codes, properties and timezone added in autocomplete  <https://github.com/CanalTP/navitia/pull/2340>
+  * Tyr : Add ntfs2mimir in Tyr tasks  <https://github.com/CanalTP/navitia/pull/2339>
+  * Jormungandr: Parallel calls to real-time proxies  <https://github.com/CanalTP/navitia/pull/2330>
+  * kraken: ignore envvar not defined for kraken  <https://github.com/CanalTP/navitia/pull/2336>
+  * Jormun: fix tag ridesharing  <https://github.com/CanalTP/navitia/pull/2335>
+
+ -- Guillaume Pinot <texitoi@texitoi.eu>  Fri, 02 Mar 2018 17:03:35 +0100
+
 navitia2 (2.51.0) unstable; urgency=low
 
   * Jormun: handle crowfly in ridesharing  <https://github.com/CanalTP/navitia/pull/2331>

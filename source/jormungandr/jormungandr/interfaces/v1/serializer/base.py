@@ -184,6 +184,11 @@ class DictGenericSerializer(serpy.DictSerializer):
     name = serpy.StrField(display_none=True)
 
 
+class DictCodeSerializer(serpy.DictSerializer):
+    type = serpy.StrField(attr='name', display_none=True)
+    value = serpy.StrField(display_none=True)
+
+
 class PbGenericSerializer(PbNestedSerializer):
     id = jsonschema.Field(schema_type=str, display_none=True, attr='uri',
                           description='Identifier of the object')
@@ -309,3 +314,18 @@ def make_notes(notes):
              "value": value.note,
              "internal": True}
             for value in notes]
+
+
+class NestedDictGenericField(DictGenericSerializer, NestedPropertyField):
+    pass
+
+
+class NestedDictCodeField(DictCodeSerializer, NestedPropertyField):
+    pass
+
+
+class NestedPropertiesField(NestedPropertyField):
+    def to_value(self, value):
+        if not value:
+            return {}
+        return {p.get('key'): p.get('value') for p in value}

@@ -82,6 +82,7 @@ instance_fields = {
     'discarded': fields.Raw,
     'is_free': fields.Raw,
     'import_stops_in_mimir': fields.Raw,
+    'import_ntfs_in_mimir': fields.Raw,
     'scenario': fields.Raw,
     'journey_order': fields.Raw,
     'max_walking_duration_to_pt': fields.Raw,
@@ -111,6 +112,7 @@ instance_fields = {
     'bss_provider': fields.Boolean,
     'full_sn_geometries': fields.Boolean,
     'is_open_data': fields.Boolean,
+    'realtime_pool_size': fields.Raw,
 }
 
 api_fields = {

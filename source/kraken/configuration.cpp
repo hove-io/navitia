@@ -94,6 +94,14 @@ static std::string env_parser(std::string env){
     }
     boost::algorithm::replace_first(env, "KRAKEN_", "");
     boost::algorithm::replace_first(env, "_", ".");
+    if(!boost::algorithm::starts_with(env, "GENERAL")
+            && !boost::algorithm::starts_with(env, "BROKER")
+            && !boost::algorithm::starts_with(env, "CHAOS")){
+        //it doesn't look like one of our var, we ignore it
+        //docker and kubernetes define a lot of env var starting by kraken when deploying kraken
+        //and boost po will abort startup if unknown var are present
+        return "";
+    }
     return env;
 }
 

@@ -62,7 +62,8 @@ def bragi_house_jaures_feature():
                         "id": "admin:fr:02000",
                         "insee": "02000",
                         "level": 8,
-                        "label": "Saint-Quentin",
+                        "label": "Saint-Quentin (02000)",
+                        "name": "Saint-Quentin",
                         "zip_code": "02000",
                         "weight": 1,
                         "coord": {
@@ -74,7 +75,8 @@ def bragi_house_jaures_feature():
                         "id": "admin:fr:248000549",
                         "insee": "248000549",
                         "level": 7,
-                        "label": "Haute Picardie",
+                        "label": "Haute Picardie (80200)",
+                        "name": "Haute Picardie",
                         "zip_code": "80200",
                         "weight": 1,
                         "coord": {
@@ -145,7 +147,8 @@ def bragi_street_feature():
                         "id": "admin:fr:02000",
                         "insee": "02000",
                         "level": 8,
-                        "label": "Saint-Quentin",
+                        "label": "Saint-Quentin (02000)",
+                        "name": "Saint-Quentin",
                         "zip_code": "02000",
                         "weight": 1,
                         "coord": {
@@ -157,7 +160,8 @@ def bragi_street_feature():
                         "id": "admin:fr:248000549",
                         "insee": "248000549",
                         "level": 7,
-                        "label": "Haute Picardie",
+                        "label": "Haute Picardie (80200)",
+                        "name": "Haute Picardie",
                         "zip_code": "80200",
                         "weight": 1,
                         "coord": {
@@ -235,7 +239,8 @@ def bragi_admin_feature():
                         "id": "admin:fr:02000",
                         "insee": "02000",
                         "level": 8,
-                        "label": "Sommeron",
+                        "label": "Sommeron (02000)",
+                        "name": "Sommeron",
                         "zip_code": "02000",
                         "weight": 1,
                         "coord": {
@@ -247,7 +252,8 @@ def bragi_admin_feature():
                         "id": "admin:fr:248000549",
                         "insee": "248000549",
                         "level": 7,
-                        "label": "Haute Picardie",
+                        "label": "Haute Picardie (80200)",
+                        "name": "Haute Picardie",
                         "zip_code": "80200",
                         "weight": 1,
                         "coord": {
@@ -314,7 +320,8 @@ def bragi_house_lefebvre_feature():
                         "id": "admin:fr:02000",
                         "insee": "02000",
                         "level": 8,
-                        "label": "Oyonnax",
+                        "label": "Oyonnax (02000)",
+                        "name": "Oyonnax",
                         "zip_codes": ["02000"],
                         "weight": 1,
                         "coord": {
@@ -326,7 +333,8 @@ def bragi_house_lefebvre_feature():
                         "id": "admin:fr:248000549",
                         "insee": "248000549",
                         "level": 7,
-                        "label": "Haute Picardie",
+                        "label": "Haute Picardie (80200)",
+                        "name": "Haute Picardie",
                         "zip_codes": ["80200"],
                         "weight": 1,
                         "coord": {
@@ -465,7 +473,8 @@ def bragi_poi_feature():
                     "id": "admin:fr:2B231",
                     "insee": "2B231",
                     "level": 8,
-                    "label": "Pigna",
+                    "label": "Pigna (20220)",
+                    "name": "Pigna",
                     "zip_codes": ["20220", "20221", "20222"],
                     "weight": 0,
                     "coord": {
@@ -502,7 +511,7 @@ def bragi_poi_reading_test():
     administrative_region = poi.get('administrative_regions')[0]
     assert administrative_region.get('insee') == '2B231'
     assert administrative_region.get('name') == 'Pigna'
-    assert administrative_region.get('label') == 'Pigna'
+    assert administrative_region.get('label') == 'Pigna (20220)'
     assert administrative_region.get('level') == 8
     assert administrative_region.get('id') == 'admin:fr:2B231'
     assert administrative_region.get('coord').get('lat') == "42.5996043"
@@ -553,8 +562,7 @@ def bragi_stop_area_reading_test():
     assert sa.get('timezone') == 'Europe/Paris'
     assert sa.get('coord').get('lat') == "48.87958"
     assert sa.get('coord').get('lon') == "2.389462"
-    assert len(sa.get('administrative_regions')) == 0
-
+    assert 'administrative_regions' not in sa
 
 
 def geojson():

@@ -191,9 +191,13 @@ class Schedules(ResourceUri, ResourceUtc):
                 and self.endpoint[:4] == "next":
             self.endpoint = "previous" + self.endpoint[4:]
 
+        # Add timezone in request for availability in greenlet
+        args['timezone'] = timezone.get_timezone()
+
         self._register_interpreted_parameters(args)
         return i_manager.dispatch(args, self.endpoint,
                                   instance_name=self.region)
+
 
 class date_time_links(fields.Raw):
 

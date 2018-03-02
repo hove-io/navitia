@@ -270,6 +270,8 @@ class Instance(db.Model):
 
     import_stops_in_mimir = db.Column(db.Boolean, default=False, nullable=False)
 
+    import_ntfs_in_mimir = db.Column(db.Boolean, default=False, nullable=False)
+
     # ============================================================
     # params for jormungandr
     # ============================================================
@@ -354,6 +356,9 @@ class Instance(db.Model):
                                                      server_default=default_values.successive_physical_mode_to_limit_id)
 
     full_sn_geometries = db.Column(db.Boolean, default=False, nullable=False, server_default=false())
+
+    realtime_pool_size = db.Column(db.Integer, default=default_values.realtime_pool_size)
+
 
     def __init__(self, name=None, is_free=False, authorizations=None,
                  jobs=None):
