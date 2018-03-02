@@ -35,7 +35,7 @@ from jormungandr.interfaces.v1.fields import raw_feed_publisher_bano, raw_feed_p
 from jormungandr.interfaces.v1.serializer.base import DictGenericSerializer, DictCodeSerializer, \
     NestedDictGenericField, NestedDictCodeField, NestedPropertiesField
 from jormungandr.utils import get_house_number
-from jormungandr.autocomplete.geocodejson import create_address_field
+from jormungandr.autocomplete.geocodejson import create_address_field, get_lon_lat
 
 
 class CoordField(jsonschema.Field):
@@ -89,7 +89,7 @@ class AdministrativeRegionsSerializer(serpy.Field):
                 res = {
                     'id': admin['id'],
                     'insee': admin['insee'],
-                    'name': admin['label'],
+                    'name': admin['name'],
                     'label': admin['label'],
                     'level': admin['level'],
                     'coord': {
@@ -129,7 +129,7 @@ class AdministrativeRegionSerializer(serpy.DictSerializer):
     coord = CoordField()
     insee = NestedPropertyField(attr='properties.geocoding.citycode')
     level = IntNestedPropertyField(attr='properties.geocoding.level')
-    administrative_regions = AdministrativeRegionsSerializer()
+    administrative_regions = AdministrativeRegionsSerializer(display_none=False)
 
 
 class GeocodeAdminSerializer(serpy.DictSerializer):
@@ -153,7 +153,7 @@ class PoiSerializer(serpy.DictSerializer):
     coord = CoordField()
     label = NestedPropertyField(attr='properties.geocoding.label', display_none=True)
     name = NestedPropertyField(attr='properties.geocoding.name', display_none=True)
-    administrative_regions = AdministrativeRegionsSerializer()
+    administrative_regions = AdministrativeRegionsSerializer(display_none=False)
     poi_type = jsonschema.MethodField(display_none=False)
     properties = jsonschema.MethodField(display_none=False)
     address = jsonschema.MethodField(display_none=False)
@@ -170,7 +170,8 @@ class PoiSerializer(serpy.DictSerializer):
         address = obj.get('properties', {}).get('geocoding', {}).get('address', None)
         if not address:
             return None
-        return create_address_field(address)
+        poi_lon, poi_lat = get_lon_lat(obj)
+        return create_address_field(address, poi_lat=poi_lat, poi_lon=poi_lon)
 
 
 class GeocodePoiSerializer(serpy.DictSerializer):
@@ -190,7 +191,7 @@ class AddressSerializer(serpy.DictSerializer):
     house_number = jsonschema.MethodField(display_none=True)
     label = NestedPropertyField(attr='properties.geocoding.label', display_none=True)
     name = NestedPropertyField(attr='properties.geocoding.name', display_none=True)
-    administrative_regions = AdministrativeRegionsSerializer()
+    administrative_regions = AdministrativeRegionsSerializer(display_none=False)
 
     def get_house_number(self, obj):
         geocoding = obj.get('properties', {}).get('geocoding', {})
@@ -213,7 +214,7 @@ class StopAreaSerializer(serpy.DictSerializer):
     coord = CoordField()
     label = NestedPropertyField(attr='properties.geocoding.label', display_none=True)
     name = NestedPropertyField(attr='properties.geocoding.name', display_none=True)
-    administrative_regions = AdministrativeRegionsSerializer()
+    administrative_regions = AdministrativeRegionsSerializer(display_none=False)
     timezone = NestedPropertyField(attr='properties.geocoding.timezone')
     commercial_modes = NestedDictGenericField(attr='properties.geocoding.commercial_modes', many=True)
     physical_modes = NestedDictGenericField(attr='properties.geocoding.physical_modes', many=True)
