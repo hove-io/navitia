@@ -113,6 +113,63 @@ BRAGI_MOCK_RESPONSE = {
 }
 
 
+BRAGI_MOCK_TYPE_UNKNOWN = {
+    "type": "FeatureCollection",
+    "geocoding": {
+        "version": "0.1.0",
+        "query": ""
+    },
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "coordinates": [
+                    3.1092154,
+                    50.6274528
+                ],
+                "type": "Point"
+            },
+            "properties": {
+                "geocoding": {
+                    "id": "admin:osm:2643160",
+                    "type": "unknown",
+                    "label": "Hellemmes-Lille",
+                    "name": "Hellemmes-Lille",
+                    "postcode": None,
+                    "city": None,
+                    "citycode": "",
+                    "level": 9,
+                    "administrative_regions": []
+                }
+            }
+        },
+        {
+            "type": "Feature",
+            "geometry": {
+                "coordinates": [
+                    3.0706414,
+                    50.6305089
+                ],
+                "type": "Point"
+            },
+            "properties": {
+                "geocoding": {
+                    "id": "admin:fr:59350",
+                    "type": "city",
+                    "label": "Lille (59000-59800)",
+                    "name": "Lille",
+                    "postcode": "59000;59160;59260;59777;59800",
+                    "city": None,
+                    "citycode": "59350",
+                    "level": 8,
+                    "administrative_regions": []
+                }
+            }
+        }
+    ]
+}
+
+
 BRAGI_MOCK_POI_WITHOUT_ADDRESS = {
     "features": [
         {
@@ -536,6 +593,33 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert len(r[0]['stop_area'].get('properties')) == 0
             #Attribut displayed but None
             assert not r[0]['stop_area'].get('timezone')
+
+    def test_feature_unknown_type(self):
+        url = 'https://host_of_bragi'
+
+        params = {
+            'q': u'bob',
+            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
+            'limit': 2,
+            'pt_dataset': 'main_routing_test'
+        }
+
+        url += "/autocomplete?{}".format(urlencode(params, doseq=True))
+
+        mock_requests = MockRequests({
+            url: (BRAGI_MOCK_TYPE_UNKNOWN, 200)
+        })
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query("v1/places?q=bob&count=2")
+
+            is_valid_global_autocomplete(response, depth=1)
+            r = response.get('places')
+            #check that we get only one response, the other one being filtered as type is unknown
+            assert len(r) == 1
+            assert r[0]['name'] == 'Lille'
+            assert r[0]['embedded_type'] == 'administrative_region'
+            assert r[0]['id']== 'admin:fr:59350'
+            assert r[0]['administrative_region']['label'] == 'Lille (59000-59800)'
 
 
 @dataset({"main_routing_test": {}}, global_config={'activate_bragi': True})

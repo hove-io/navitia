@@ -312,7 +312,8 @@ class GeocodejsonFeature(fields.Raw):
         elif type_ == 'public_transport:stop_area':
             return marshal(place, geocode_stop_area)
 
-        return place
+        logging.getLogger(__name__).error('Place not serialized (unknown type): {}'.format(place))
+        return None
 
 geocodejson = {
     "places": fields.List(GeocodejsonFeature, attribute='features'),
@@ -369,7 +370,11 @@ class GeocodeJson(AbstractAutocomplete):
             return GeocodePlacesSerializer(json_response).data
         else:
             from flask.ext.restful import marshal
-            return marshal(json_response, geocodejson)
+            m = marshal(json_response, geocodejson)
+            # Removing places that are not marshalled (None)
+            if isinstance(m.get('places'), list):
+                m['places'] = [p for p in m['places'] if p is not None]
+            return m
 
     def make_url(self, end_point, uri=None):
 
