@@ -476,6 +476,10 @@ BOB_STREET = {
     ]
 }
 
+BRAGI_MOCK_STOP_AREA_WITH_MORE_ATTRIBUTS_DEPTH_ZERO = deepcopy(BRAGI_MOCK_STOP_AREA_WITH_MORE_ATTRIBUTS)
+
+BRAGI_MOCK_RESPONSE_WITH_DEPTH_ZERO = deepcopy(BRAGI_MOCK_RESPONSE)
+
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF}, global_config={'activate_bragi': True})
 class TestBragiAutocomplete(AbstractTestFixture):
 
@@ -505,6 +509,35 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['address']['label'] == '20 Rue Bob (Bobtown)'
             fbs = response['feed_publishers']
             assert {fb['id'] for fb in fbs} >= {u'osm', u'bano'}
+            assert len(r[0]['address'].get('administrative_regions')) == 1
+
+    def test_autocomplete_call_depth_zero(self):
+        url = 'https://host_of_bragi/autocomplete'
+        params = {
+            'q': u'bob',
+            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
+            'limit': 10,
+            'pt_dataset': 'main_routing_test'
+        }
+
+        url += "?{}".format(urlencode(params, doseq=True))
+        mock_requests = MockRequests({
+            url: (BRAGI_MOCK_RESPONSE_WITH_DEPTH_ZERO, 200)
+        })
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
+                                         "&type[]=address&type[]=poi&type[]=administrative_region&depth=0")
+
+            is_valid_global_autocomplete(response, depth=0)
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['name'] == '20 Rue Bob (Bobtown)'
+            assert r[0]['embedded_type'] == 'address'
+            assert r[0]['address']['name'] == 'Rue Bob'
+            assert r[0]['address']['label'] == '20 Rue Bob (Bobtown)'
+            fbs = response['feed_publishers']
+            assert {fb['id'] for fb in fbs} >= {u'osm', u'bano'}
+            assert 'administrative_regions' not in r[0]['address']
 
     def test_autocomplete_call_with_param_from(self):
         """
@@ -707,6 +740,54 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['stop_area'].get('properties').get('code') == 'station:01'
 
             assert r[0]['stop_area'].get('timezone') == 'Europe/Paris'
+            admins = r[0]['stop_area'].get('administrative_regions')
+            assert len(admins) == 1
+
+    def test_stop_area_with_modes_depth_zero(self):
+        url = 'https://host_of_bragi/autocomplete'
+        params = {
+            'q': u'bobette',
+            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
+            'limit': 10,
+            'pt_dataset': 'main_routing_test'
+        }
+
+        url += "?{}".format(urlencode(params, doseq=True))
+        mock_requests = MockRequests({
+            url: (BRAGI_MOCK_STOP_AREA_WITH_MORE_ATTRIBUTS_DEPTH_ZERO, 200)
+        })
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query_region("places?q=bobette&pt_dataset=main_routing_test&type[]=stop_area"
+                                         "&type[]=address&type[]=poi&type[]=administrative_region&depth=0")
+
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['embedded_type'] == 'stop_area'
+            assert r[0]['stop_area']['name'] == 'bobette'
+            assert len(r[0]['stop_area'].get('commercial_modes')) == 2
+            assert r[0]['stop_area'].get('commercial_modes')[0].get('id') == 'cm_id:Bus'
+            assert r[0]['stop_area'].get('commercial_modes')[0].get('name') == 'cm_name:Bus'
+            assert r[0]['stop_area'].get('commercial_modes')[1].get('id') == 'cm_id:Car'
+            assert r[0]['stop_area'].get('commercial_modes')[1].get('name') == 'cm_name:Car'
+
+            assert len(r[0]['stop_area'].get('physical_modes')) == 2
+            assert r[0]['stop_area'].get('physical_modes')[0].get('id') == 'pm_id:Bus'
+            assert r[0]['stop_area'].get('physical_modes')[0].get('name') == 'pm_name:Bus'
+            assert r[0]['stop_area'].get('physical_modes')[1].get('id') == 'pm_id:Car'
+            assert r[0]['stop_area'].get('physical_modes')[1].get('name') == 'pm_name:Car'
+
+            assert len(r[0]['stop_area'].get('codes')) == 2
+            assert r[0]['stop_area'].get('codes')[0].get('type') == 'navitia1'
+            assert r[0]['stop_area'].get('codes')[0].get('value') == '424242'
+            assert r[0]['stop_area'].get('codes')[1].get('type') == 'source'
+            assert r[0]['stop_area'].get('codes')[1].get('value') == '1161'
+
+            assert r[0]['stop_area'].get('properties').get('name') == 'railway station'
+            assert r[0]['stop_area'].get('properties').get('code') == 'station:01'
+
+            assert r[0]['stop_area'].get('timezone') == 'Europe/Paris'
+            # With depth = 0 no administrative_regions
+            assert 'administrative_regions' not in r[0]['stop_area']
 
     def test_stop_area_without_modes(self):
         url = 'https://host_of_bragi'
@@ -789,8 +870,9 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert poi['properties']["ref"] == "12"
             #Empty administrative_regions not displayed as in kraken
             assert not poi.get('administrative_regions')
+            assert 'administrative_regions' not in poi
             #Address absent as in kraken
-            assert not poi.get('address')
+            assert 'address' not in poi
 
     def test_autocomplete_call_with_depth_one(self):
         url = 'https://host_of_bragi/autocomplete'

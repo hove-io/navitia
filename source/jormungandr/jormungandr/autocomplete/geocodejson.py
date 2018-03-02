@@ -193,7 +193,7 @@ class AddressField(fields.Raw):
         lon, lat = get_lon_lat(obj)
         geocoding = obj.get('properties', {}).get('geocoding', {})
 
-        return {
+        res = {
             "id": '{};{}'.format(lon, lat),
             "coord": {
                 "lon": lon,
@@ -201,11 +201,13 @@ class AddressField(fields.Raw):
             },
             "house_number": get_house_number(geocoding.get('housenumber')),
             "label": geocoding.get('label'),
-            "name": geocoding.get('name'),
-            "administrative_regions":
-                create_administrative_regions_field(geocoding) or create_admin_field(geocoding) ,
+            "name": geocoding.get('name')
         }
 
+        admins = create_administrative_regions_field(geocoding) or create_admin_field(geocoding)
+        if admins:
+            res['administrative_regions'] = admins
+        return res
 
 class PoiField(fields.Raw):
     def output(self, key, obj):
@@ -224,12 +226,14 @@ class PoiField(fields.Raw):
             },
             "label": geocoding.get('label'),
             "name": geocoding.get('name'),
-            "properties": {p.get('key'): p.get('value') for p in geocoding.get("properties", [])},
-            "address": create_address_field(geocoding.get("address"), poi_lat=lat, poi_lon=lon)
+            "properties": {p.get('key'): p.get('value') for p in geocoding.get("properties", [])}
         }
         if isinstance(poi_types, list) and poi_types:
             res['poi_type'] = poi_types[0]
 
+        address = create_address_field(geocoding.get("address"), poi_lat=lat, poi_lon=lon)
+        if address:
+            res['address'] = address
         admins = create_administrative_regions_field(geocoding) or create_admin_field(geocoding)
         if admins:
             res['administrative_regions'] = admins
@@ -252,12 +256,9 @@ class StopAreaField(fields.Raw):
             },
             "label": geocoding.get('label'),
             "name": geocoding.get('name'),
-            "administrative_regions":
-                create_administrative_regions_field(geocoding) or create_admin_field(geocoding),
             "timezone": geocoding.get('timezone'),
             "properties": {p.get('key'): p.get('value') for p in geocoding.get('properties', [])}
         }
-
         c_modes = geocoding.get('commercial_modes', [])
         if c_modes:
             resp['commercial_modes'] = create_modes_field(c_modes)
@@ -270,6 +271,9 @@ class StopAreaField(fields.Raw):
         if codes:
             resp["codes"] = create_codes_field(codes)
 
+        admins = create_administrative_regions_field(geocoding) or create_admin_field(geocoding)
+        if admins:
+            resp['administrative_regions'] = admins
         return resp
 
 geocode_admin = {
@@ -394,10 +398,7 @@ class GeocodeJson(AbstractAutocomplete):
                 _clear_object(_value)
             elif isinstance(_value, dict):
                 for k, v in _value.items():
-                    if is_deleteable(k, v, _depth):
-                        _clear_object(v)
-                    else:
-                        _manage_depth(k, v, _depth-1)
+                    _manage_depth(k, v, _depth-1)
 
         features = response.get('features')
         if features:
@@ -479,6 +480,7 @@ class GeocodeJson(AbstractAutocomplete):
         shape = request.get('shape', None)
 
         url = self.make_url('autocomplete')
+
         kwargs = {"params": params, "timeout": self.timeout}
         method = requests.get
         if shape:
