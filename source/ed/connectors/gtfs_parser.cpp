@@ -1230,7 +1230,7 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
     int trip_c = csv.get_pos_col("trip_id");
     while(!csv.eof()) {
         auto row = csv.next();
-        if(!CsvReader::row_is_empty(row))
+        if(!row.empty())
             trips.insert(std::make_pair(row[trip_c], true));
     }
 
@@ -1253,7 +1253,7 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
     std::map<std::string, bool> services;
     while(!csv2.eof()) {
         auto row = csv2.next();
-        if(!CsvReader::row_is_empty(row) && trips.find(row[trip_c]) != trips.end())
+        if(!row.empty() && trips.find(row[trip_c]) != trips.end())
             services.insert(std::make_pair(row[service_c], true));
     }
     boost::gregorian::date start_date(boost::gregorian::max_date_time), end_date(boost::gregorian::min_date_time);
@@ -1278,7 +1278,7 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
 
         while(!csv3.eof()) {
             auto row = csv3.next();
-            if(!CsvReader::row_is_empty(row)) {
+            if(!row.empty()) {
                 if(services.find(row[service_c]) != services.end()) {
                     boost::gregorian::date current_start_date = boost::gregorian::from_undelimited_string(row[start_date_c]);
                     boost::gregorian::date current_end_date = boost::gregorian::from_undelimited_string(row[end_date_c]);
@@ -1312,7 +1312,7 @@ boost::gregorian::date_period GenericGtfsParser::find_production_date(const std:
         service_c = csv4.get_pos_col("service_id");
         while(!csv4.eof()) {
             auto row = csv4.next();
-            if(!CsvReader::row_is_empty(row) && services.find(row[service_c]) != services.end()) {
+            if(!row.empty() && services.find(row[service_c]) != services.end()) {
                 boost::gregorian::date current_date = boost::gregorian::from_undelimited_string(row[date_c]);
                 if(current_date < start_date){
                     start_date = current_date;

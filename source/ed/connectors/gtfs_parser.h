@@ -469,7 +469,7 @@ inline bool FileParser<Handler>::fill(Data& data) {
     bool line_read = true;
     while(!csv.eof()) {
         auto row = csv.next();
-        if (!CsvReader::row_is_empty(row)) {
+        if (!row.empty()) {
             handler.handle_line(data, row, line_read);
             line_read = false;
         }
