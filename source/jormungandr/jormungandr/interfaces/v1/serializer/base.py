@@ -326,7 +326,7 @@ class NestedDictCodeField(DictCodeSerializer, NestedPropertyField):
         if not value:
             return {}
         for code in value:
-            if code['type'] == 'navitia1':
+            if code.get('type') == 'navitia1':
                 code['type'] = 'external_code'
         return value
 
