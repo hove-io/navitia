@@ -1096,7 +1096,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         })
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
-                                         "&type[]=address&type[]=poi&type[]=administrative_region&depth=0")
+                                         "&type[]=address&type[]=poi&type[]=administrative_region&depth=2")
 
             is_valid_global_autocomplete(response, depth=0)
             r = response.get('places')
@@ -1108,6 +1108,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['administrative_region']['insee'] == '21231'
             assert r[0]['administrative_region']['label'] == 'Dijon (21000)'
             assert r[0]['administrative_region']['name'] == 'Dijon'
+            # In our case administrative_regions of the admin is an empty list in the result bragi
             assert 'administrative_regions' not in r[0]['administrative_region']
 
 
