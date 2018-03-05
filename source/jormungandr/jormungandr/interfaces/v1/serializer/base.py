@@ -321,7 +321,14 @@ class NestedDictGenericField(DictGenericSerializer, NestedPropertyField):
 
 
 class NestedDictCodeField(DictCodeSerializer, NestedPropertyField):
-    pass
+    def to_value(self, value):
+        value = super(NestedDictCodeField, self).to_value(value)
+        if not value:
+            return {}
+        for code in value:
+            if code['type'] == 'navitia1':
+                code['type'] = 'external_code'
+        return value
 
 
 class NestedPropertiesField(NestedPropertyField):
