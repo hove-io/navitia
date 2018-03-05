@@ -98,6 +98,17 @@ BOOST_AUTO_TEST_CASE(parse_agencies) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(parse_gtfs_file_with_empty_line_carriage_return) {
+    using file_parser = ed::connectors::FileParser<ed::connectors::CalendarDatesGtfsHandler>;
+    {
+        // in fixtures/ed/gtfs, calendar_dates.txt contains empty lines and carriage return (\r\n)
+        // to test different CSV parser case.
+        ed::Data data;
+        ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path);
+        file_parser(parser.gtfs_data, std::string(navitia::config::fixtures_dir) + gtfs_path + "/calendar_dates.txt").fill(data);
+    }
+}
+
 BOOST_AUTO_TEST_CASE(parse_stops) {
     std::vector<std::string> fields={"stop_id","stop_code", "stop_name", "stop_desc", "stop_lat",
                                      "stop_lon", "zone_id", "stop_url", "location_type", "parent_station",
