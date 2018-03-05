@@ -105,7 +105,8 @@ BOOST_AUTO_TEST_CASE(parse_gtfs_file_with_empty_line_carriage_return) {
         // to test different CSV parser case.
         ed::Data data;
         ed::connectors::GtfsParser parser(std::string(navitia::config::fixtures_dir) + gtfs_path);
-        file_parser(parser.gtfs_data, std::string(navitia::config::fixtures_dir) + gtfs_path + "/calendar_dates.txt").fill(data);
+        file_parser(parser.gtfs_data, std::string(navitia::config::fixtures_dir) + \
+                    gtfs_path + "/calendar_dates.txt").fill(data);
     }
 }
 
