@@ -52,7 +52,7 @@ namespace bg = boost::gregorian;
 namespace navitia {
 
 
-void MaintenanceWorker::load(){
+void MaintenanceWorker::load_data(){
     const std::string database = conf.databases_path();
     auto chaos_database = conf.chaos_database();
     auto contributors = conf.rt_topics();
@@ -62,7 +62,6 @@ void MaintenanceWorker::load(){
         data->is_realtime_loaded = false;
         data->meta->instance_name = conf.instance_name();
     }
-    load_realtime();
 }
 
 
@@ -145,7 +144,8 @@ void MaintenanceWorker::handle_task_in_batch(const std::vector<AmqpClient::Envel
         }
         switch(task.action()){
             case pbnavitia::RELOAD:
-                load();
+                this->load_data();
+                this->load_realtime();
                 // For now, we have only one type of task: reload_kraken. We don't want that this command
                 // is executed several times in stride for nothing.
                 return;
@@ -331,18 +331,25 @@ MaintenanceWorker::MaintenanceWorker(DataManager<type::Data>& data_manager, krak
         logger(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("background"))),
         conf(conf),
         next_try_realtime_loading(pt::microsec_clock::universal_time()){
+
+    // Connect Rabbitmq
     try{
         this->init_rabbitmq();
     }catch(const std::runtime_error& ex){
         LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
         data_manager.get_data()->is_connected_to_rabbitmq = false;
     }
+
+    // Load Data (.nav, disruption Bdd, build raptor data)
+    this->load_data();
+
+    // Load Realtime
     try{
-        load();
+        this->load_realtime();
     }catch(const std::runtime_error& ex){
         LOG4CPLUS_ERROR(logger, "Connection to rabbitmq failed: " << ex.what());
         data_manager.get_data()->is_connected_to_rabbitmq = false;
     }
 }
 
-}
+} // namespace navitia
