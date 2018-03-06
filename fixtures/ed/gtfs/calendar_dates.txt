@@ -1,2 +1,4 @@
 service_id,date,exception_type
+
 FULLW,20110101,2
+
