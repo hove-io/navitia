@@ -39,13 +39,12 @@ You can copy the one from [documentation/examples/config/Jormungandr.json](https
 
 Make sure `key` and `socket` respectively match `instance_name` and `zmq_socket` from your Kraken config file ([kraken.ini](https://github.com/CanalTP/navitia/blob/dev/documentation/examples/config/kraken.ini)).
 
-As an alternative, you can also give the json through an environement variable like:
+As an alternative, you can also give the json through an environment variable like:
 ```sh
 JORMUNGANDR_INSTANCE_FR_IDF='{"key": "fr-idf","zmq_socket": "tcp://localhost:3000"}'
 ```
 
-
-## Environement Variables
+## Environment Variables
 
 Environment variables can be set when the service is started. Referer to [default_settings.py](https://github.com/CanalTP/navitia/blob/dev/source/jormungandr/jormungandr/default_settings.py)
 
