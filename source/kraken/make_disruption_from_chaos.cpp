@@ -141,7 +141,7 @@ make_severity(const chaos::Severity& chaos_severity, nt::disruption::DisruptionH
     return severity;
 }
 
-static boost::optional<nt::disruption::LineSection>
+boost::optional<nt::disruption::LineSection>
 make_line_section(const chaos::PtObject& chaos_section,
                   nt::PT_Data& pt_data) {
     if (!chaos_section.has_pt_line_section()) {
@@ -184,8 +184,12 @@ make_line_section(const chaos::PtObject& chaos_section,
                 LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
                                "fill_disruption_from_chaos: route id "
                                << pb_route.uri() << " in LineSection invalid!");
-                return boost::none;
             }
+        }
+        if(line_section.routes.empty()){
+            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
+                    "fill_disruption_from_chaos: no valid routes. Linesection ignored");
+            return boost::none;
         }
     } else {
         LOG4CPLUS_TRACE(log4cplus::Logger::getInstance("trace"),

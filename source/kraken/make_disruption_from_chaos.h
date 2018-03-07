@@ -52,4 +52,8 @@ void make_and_apply_disruption(const chaos::Disruption& chaos_disruption,
                                type::PT_Data& pt_data,
                                const type::MetaData& meta);
 
+boost::optional<type::disruption::LineSection>
+make_line_section(const chaos::PtObject& chaos_section, nt::PT_Data& pt_data);
+
+
 }
