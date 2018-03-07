@@ -114,7 +114,7 @@ end_date | date | Requis | Fin du calendrier de circulation
 * 1 - Circule ce jour
 
 ### calendar_dates.txt (optionnel)
-Ce fichier décrit des exceptions aux calendriers définit dans le fichier calendar.txt.
+Ce fichier décrit des exceptions aux calendriers définit dans le fichier `calendar.txt`. Pour faciliter la description de calendriers pour des circulations très ponctuelles, il est possible de définir un calendrier en n'utilisant que le fichier `calendar_dates.txt`. De ce fait, le `service_id` ne sera pas présant dans le fichier `calendar.txt`.
 
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
@@ -134,7 +134,7 @@ Colonne | Type | Contrainte | Commentaire
 comment_id | chaine | Requis | Identifiant du commentaire
 comment_type | chaine | Optionnel | (1)
 comment_label | chaine | Optionnel | Caractère de renvoi associé au commentaire. Si celui-ci n'est pas précisé, il sera généré automatiquement.
-comment_value | chaine | Requis | Texte du commentaire
+comment_name | chaine | Requis | Texte du commentaire
 comment_url | chaine | Optionnel | URL associé à la note et permettant d'avoir plus d'info, comme par exemple un lien vers la page de description du service de TAD.
 
 (1) Catégorie de commentaire afin de pouvoir les différentier à l'affichage. Les valeurs possibles sont :
