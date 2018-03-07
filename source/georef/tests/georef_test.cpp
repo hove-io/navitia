@@ -1033,6 +1033,8 @@ BOOST_AUTO_TEST_CASE(coord){
     BOOST_CHECK_EQUAL(result, -1);
 
 }
+
+
 // Test de autocomplete
 BOOST_AUTO_TEST_CASE(build_autocomplete_test){
     ed::builder b = {"20140614"};
@@ -1041,48 +1043,19 @@ BOOST_AUTO_TEST_CASE(build_autocomplete_test){
     int nbmax = 10;
     std::set<std::string> ghostwords;
 
-    auto* way = new navitia::georef::Way;
-    way->idx = 0;
-    way->name = "jeanne d'arc";
-    way->way_type = "rue";
-    b.data->geo_ref->ways.push_back(way);
-
-    way = new navitia::georef::Way;
-    way->idx = 1;
-    way->name = "jean jaures";
-    way->way_type = "place";
-    b.data->geo_ref->ways.push_back(way);
-
-    way = new navitia::georef::Way;
-    way->idx = 2;
-    way->name = "jean paul gaultier paris";
-    way->way_type = "rue";
-    b.data->geo_ref->ways.push_back(way);
-
-    way = new navitia::georef::Way;
-    way->idx = 3;
-    way->name = "jean jaures";
-    way->way_type = "avenue";
-    b.data->geo_ref->ways.push_back(way);
-
-    way = new navitia::georef::Way;
-    way->idx = 4;
-    way->name = "poniatowski";
-    way->way_type = "boulevard";
-    b.data->geo_ref->ways.push_back(way);
-
-    way = new navitia::georef::Way;
-    way->idx = 5;
-    way->name = "pente de Bray";
-    way->way_type = "";
-    b.data->geo_ref->ways.push_back(way);
+    b.add_way("jeanne d'arc", "rue");
+    b.add_way("jean jaures", "place");
+    b.add_way("jean paul gaultier paris", "rue");
+    b.add_way("jean jaures", "avenue");
+    b.add_way("poniatowski", "boulevard");
+    b.add_way("pente de Bray", "");
 
     /*
    (2,4)       (2,4)       (2,18)       (2,54)
      4           4           18           54
    */
 
-    way = new navitia::georef::Way;
+    auto way = new navitia::georef::Way;
     way->idx = 6;
     way->name = "jean jaures";
     way->way_type = "rue";
