@@ -37,7 +37,13 @@ Create a file `jormungandr.json` in a custom directory like:
 
 You can copy the one from [documentation/examples/config/Jormungandr.json](https://github.com/CanalTP/navitia/blob/dev/documentation/examples/config/Jormungandr.json)
 
-Make sure `key` and `socket` respectively match `instance_name` and `zmp_socket` from your Kraken config file ([kraken.ini](https://github.com/CanalTP/navitia/blob/dev/documentation/examples/config/kraken.ini)).
+Make sure `key` and `socket` respectively match `instance_name` and `zmq_socket` from your Kraken config file ([kraken.ini](https://github.com/CanalTP/navitia/blob/dev/documentation/examples/config/kraken.ini)).
+
+As an alternative, you can also give the json through an environement variable like:
+```sh
+JORMUNGANDR_INSTANCE_FR_IDF='{"key": "fr-idf","zmq_socket": "tcp://localhost:3000"}'
+```
+
 
 ## Environement Variables
 
