@@ -18,9 +18,11 @@ pip install -r requirements.txt -r requirements_dev.txt -U
 
 # Configure
 
-Jormungandr uses 2 different config files:
-* `jormungandr.json` : that describes the Kraken's instances and coverage
-* `custom_settings.py` : a python script that overwrites default settings
+Jormungandr uses 2 different levels of config:
+* `jormungandr.json` : that describes Kraken's instances and coverages
+* Jormungandr's core config via :
+	* Environment variables [the prefered option]  
+	* A custom setting file `custom_settings.py` [for advanced usage] - that overwrites default settings
 
 ## jormungandr.json
 
@@ -37,9 +39,25 @@ You can copy the one from [documentation/examples/config/Jormungandr.json](https
 
 Make sure `key` and `socket` respectively match `instance_name` and `zmp_socket` from your Kraken config file ([kraken.ini](https://github.com/CanalTP/navitia/blob/dev/documentation/examples/config/kraken.ini)).
 
-## custom_settings.py [optional]
+## Environement Variables
 
-This helps you overwrite the default settings if needed (from [default_settings.py](https://github.com/CanalTP/navitia/blob/dev/source/jormungandr/jormungandr/default_settings.py)).
+Environment variables can be set when the service is started. Referer to [default_settings.py](https://github.com/CanalTP/navitia/blob/dev/source/jormungandr/jormungandr/default_settings.py)
+
+example for a devlopment environment: 
+
+```sh
+PYTHONPATH=..:../../navitiacommon/ JORMUNGANDR_INSTANCES_DIR=~/jormung_conf/ JORMUNGANDR_START_MONITORING_THREAD=False  JORMUNGANDR_DISABLE_DATABASE=True JORMUNGANDR_IS_PUBLIC=True python manage.py runserver
+```
+
+## custom_settings.py
+
+This helps you overwrite the default settings from a file. Prevent from mixing both custom file settings and environment variables. 
+
+Use `JORMUNGANDR_CONFIG_FILE` to tell where your file is located like:  
+
+```sh
+PYTHONPATH=..:../../navitiacommon/ JORMUNGANDR_INSTANCES_DIR=~/jormung_conf/ JORMUNGANDR_CONFIG_FILE=~/jormung_conf/jormung_settings.py  python manage.py runserver
+```
 
 # Run 
 
@@ -53,8 +71,8 @@ To run the web service, you'll need to:
 
 From `navitia/source/jormungandr/jormungandr` run :
 
-```python
-PYTHONPATH=..:../../navitiacommon/ JORMUNGANDR_INSTANCES_DIR=~/jormung_conf/ JORMUNGANDR_CONFIG_FILE=~/jormung_conf/jormung_settings.py  python manage.py runserver
+```sh
+PYTHONPATH=..:../../navitiacommon/ JORMUNGANDR_INSTANCES_DIR=~/jormung_conf/ python manage.py runserver
 ```
 
 # Troubleshooting
@@ -93,13 +111,4 @@ $ workon jormung
 
 ### sqlalchemy.exc.OperationalError
 
-Jormungandr is trying to access database "jormungandr". You can turn off this default option from your `custom_settings.py` with :
-
-```python
-# encoding: utf-8
-
-import os
-from flask_restful.inputs import boolean
-
-DISABLE_DATABASE = boolean(os.getenv('JORMUNGANDR_DISABLE_DATABASE', True))
-```
+Jormungandr is trying to access a "jormungandr" database. You can disable this default behavior with `JORMUNGANDR_DISABLE_DATABASE=True`.
