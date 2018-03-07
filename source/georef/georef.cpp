@@ -407,6 +407,7 @@ void GeoRef::build_autocomplete_list(){
     for (Way* way: ways) {
         ++pos;
         if (way->name.empty()) { continue; }
+        //skip way without edges as we don't kwow where they are (no coordinate)
         if (way->edges.empty()) { continue; }
         if (auto admin = find_city_admin(way->admin_list)) {
             // @TODO:

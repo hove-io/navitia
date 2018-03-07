@@ -1319,6 +1319,45 @@ BOOST_AUTO_TEST_CASE(autocomplete_without_postal_codes_test) {
     BOOST_REQUIRE_EQUAL(resp.places(0).stop_area().administrative_regions(0).label(), "Nantes");
 }
 
+//this test that we do not return any way that don't have edges in the autocompletion
+//we won't be able to build an id for them since they do not have any coordinate
+BOOST_AUTO_TEST_CASE(autocomplete_way_without_edges) {
+    ed::builder b("20140614");
+
+    b.add_way("rue DU TREGOR", "");
+    b.add_way("rue VIS", "");
+    b.add_way("quai NEUF", "");
+
+    //we add a way without any edges, it must not be in the result
+    auto w = new navitia::georef::Way;
+    w->idx = b.data->geo_ref->ways.size();
+    w->name = "rue DU BAC";
+    w->uri = w->name;
+    b.data->geo_ref->ways.push_back(w);
+
+    Admin* ad = new Admin;
+    ad->name = "Quimper";
+    ad->uri = "Quimper";
+    ad->level = 8;
+    ad->postal_codes.push_back("29000");
+    ad->idx = 0;
+    b.data->geo_ref->admins.push_back(ad);
+    b.manage_admin();
+    b.build_autocomplete();
+
+    std::vector<navitia::type::Type_e> type_filter{navitia::type::Type_e::Address};
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    navitia::autocomplete::autocomplete(pb_creator, "rue", type_filter , 1, 10, {}, 0, *(b.data));
+    pbnavitia::Response resp = pb_creator.get_response();
+
+    BOOST_REQUIRE_EQUAL(resp.places_size(), 2);
+    BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADDRESS);
+    BOOST_REQUIRE_EQUAL(resp.places(0).address().name(), "rue VIS");
+    BOOST_CHECK_EQUAL(resp.places(1).embedded_type() , pbnavitia::ADDRESS);
+    BOOST_REQUIRE_EQUAL(resp.places(1).address().name(), "rue DU TREGOR");
+}
+
 
 BOOST_AUTO_TEST_CASE(autocomplete_with_multi_postal_codes_testAA) {
 

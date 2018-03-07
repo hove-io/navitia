@@ -226,6 +226,7 @@ struct builder {
     std::unique_ptr<navitia::type::Data> data = std::make_unique<navitia::type::Data>();
     navitia::georef::GeoRef street_network;
 
+    //lazy init of vertexes used when creating ways with add_way
     boost::optional<navitia::georef::vertex_t> vertex_a;
     boost::optional<navitia::georef::vertex_t> vertex_b;
 

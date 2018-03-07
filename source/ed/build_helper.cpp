@@ -840,6 +840,7 @@ navitia::georef::Way* builder::add_way(const std::string& name, const std::strin
     w->name = name;
     w->way_type = way_type;
     w->uri = name;
+    //associate the way to an edge to make them "searchable" in the autocomplete
     navitia::georef::Edge e;
     e.way_idx = w->idx;
     boost::add_edge(*this->vertex_a, *this->vertex_b, e, this->data->geo_ref->graph);
