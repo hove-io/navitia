@@ -1079,8 +1079,8 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['administrative_region']['name'] == 'Dijon'
             assert 'administrative_regions' not in r[0]['administrative_region']
 
-    # Since administrative_regions is always empty for an admin even with depth > 0
-    # there is no difference in the result with depth from 0 to 3
+    # Since administrative_regions of the admin is an empty list in the result bragi
+    # there is no difference in the final result with depth from 0 to 3
     def test_autocomplete_for_admin_depth_two(self):
         url = 'https://host_of_bragi/autocomplete'
         params = {
@@ -1096,9 +1096,9 @@ class TestBragiAutocomplete(AbstractTestFixture):
         })
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
-                                         "&type[]=address&type[]=poi&type[]=administrative_region&depth=0")
+                                         "&type[]=address&type[]=poi&type[]=administrative_region&depth=2")
 
-            is_valid_global_autocomplete(response, depth=0)
+            is_valid_global_autocomplete(response, depth=2)
             r = response.get('places')
             assert len(r) == 1
             assert r[0]['name'] == 'Dijon'
@@ -1108,6 +1108,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['administrative_region']['insee'] == '21231'
             assert r[0]['administrative_region']['label'] == 'Dijon (21000)'
             assert r[0]['administrative_region']['name'] == 'Dijon'
+            # In our case administrative_regions of the admin is an empty list in the result bragi
             assert 'administrative_regions' not in r[0]['administrative_region']
 
 
