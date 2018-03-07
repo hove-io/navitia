@@ -27,7 +27,15 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from tyr import app, db
+import os
 import pytest
+import tempfile
+import shutil
+
+try:
+    import ConfigParser
+except:
+    import configparser as ConfigParser
 
 from tests.docker_wrapper import PostgresDocker
 
@@ -39,7 +47,6 @@ def docker():
     """
     with PostgresDocker() as database:
         yield database
-
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -56,3 +63,45 @@ def init_flask_db(docker):
     # re-init the db by overriding the db_url
     app.config['SQLALCHEMY_DATABASE_URI'] = db_url
     db.init_app(app)
+
+
+def create_instance_config_file( instance_dir, backup_dir, name='default'):
+    """
+    Create a config file for an instance with path to the temp dir for the backup
+    :param instance_dir: temp dir to store data for an instance
+    :param backup_dir: dir to store datasets backup
+    :param name: instance name
+    """
+    config = ConfigParser.ConfigParser()
+    config.add_section('instance')
+    config.set('instance', 'name', name)
+    config.set('instance', 'source-directory', '/tmp')
+    config.set('instance', 'backup-directory', backup_dir)
+    config.set('instance', 'tmp-file', '/tmp/ed/tmpdata.nav.lz4')
+    config.set('instance', 'target-file', '/tmp/ed/tmpdata.nav.lz4')
+
+    config.add_section('database')
+    config.set('database', 'host', '127.0.0.1')
+    config.set('database', 'dbname', 'navitia')
+    config.set('database', 'username', 'navitia')
+    config.set('database', 'password', 'navitia')
+
+    with open(os.path.join(instance_dir, '{}.ini'.format(name)), 'w') as configfile:
+        config.write(configfile)
+
+
+@pytest.fixture(scope="function", autouse=False)
+def init_instances_dir():
+    """
+    Create a temp dir of an instance with its config file
+    """
+    instance_dir = tempfile.mkdtemp(prefix='instance_')
+    fr_backup_dir = tempfile.mkdtemp(prefix='backup_fr_', dir=instance_dir)
+    create_instance_config_file(instance_dir=instance_dir,
+                                backup_dir=fr_backup_dir,
+                                name='fr')
+    app.config['INSTANCES_DIR'] = instance_dir
+
+    yield
+
+    shutil.rmtree(instance_dir)

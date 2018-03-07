@@ -36,7 +36,7 @@ from navitiacommon.sqlalchemy import SQLAlchemy
 from geoalchemy2.types import Geography
 from flask import current_app
 from sqlalchemy.orm import load_only, backref, aliased
-from datetime import datetime
+from datetime import datetime, timedelta
 from sqlalchemy import func, and_, UniqueConstraint, cast, true, false
 from sqlalchemy.dialects.postgresql import ARRAY, UUID, INTERVAL
 from navitiacommon.utils import street_source_types, address_source_types, \
@@ -431,6 +431,37 @@ class Instance(db.Model):
                 db.session.delete(job)
 
         db.session.commit()
+
+    def delete_old_jobs(self, time_limit):
+        """
+        Delete jobs created before the date parameter 'time_limit'
+        :param time_limit: date from which jobs will be deleted
+        :return: list of datasets to delete
+        """
+        # Keep the last dataset of each type to be able to reload data
+        dataset_to_keep = self.last_datasets()
+
+        # Keep the jobs associated
+        jobs_to_keep = []
+        for dataset in dataset_to_keep:
+            jobs_to_keep.append(db.session.query(Job).filter(Job.data_sets.contains(dataset)).first())
+
+        # Retrieve all jobs created before the time limit
+        old_jobs = db.session.query(Job).filter(Job.instance_id == self.id, Job.created_at < time_limit).all()
+
+        # Retrieve the dataset associated to delete backups folders
+        old_datasets = []
+        for job in old_jobs:
+            old_datasets.extend(db.session.query(DataSet).filter(DataSet.job_id == job.id).all())
+
+        # List all jobs that can be deleted
+        to_delete = list(set(old_jobs)-set(jobs_to_keep))
+
+        for job_to_delete in to_delete:
+            db.session.delete(job_to_delete)
+
+        db.session.commit()
+        return list(set(old_datasets)-set(dataset_to_keep))
 
     def __repr__(self):
         return '<Instance %r>' % self.name
