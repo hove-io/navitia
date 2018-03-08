@@ -656,19 +656,19 @@ BOOST_AUTO_TEST_CASE(make_line_section_test) {
     //line_section with invalid line
     ls_line->set_uri("B");
     line_section = navitia::make_line_section(object, *b.data->pt_data);
-    BOOST_CHECK(line_section == boost::none);
+    BOOST_CHECK(!line_section);
 
     //line_section with invalid start stop_area
     ls_line->set_uri("A");
     start_stop->set_uri("stop_area:stop10");
     line_section = navitia::make_line_section(object, *b.data->pt_data);
-    BOOST_CHECK(line_section == boost::none);
+    BOOST_CHECK(!line_section);
 
     //line_section with invalid end stop_area
     start_stop->set_uri("stop_area:stop1");
     end_stop->set_uri("stop_area:stop10");
     line_section = navitia::make_line_section(object, *b.data->pt_data);
-    BOOST_CHECK(line_section == boost::none);
+    BOOST_CHECK(!line_section);
 
     //line_section filtered on one route
     end_stop->set_uri("stop_area:stop3");
@@ -676,21 +676,21 @@ BOOST_AUTO_TEST_CASE(make_line_section_test) {
     ls_route->set_pt_object_type(chaos::PtObject_Type_route);
     ls_route->set_uri("backward");
     line_section = navitia::make_line_section(object, *b.data->pt_data);
-    BOOST_REQUIRE(line_section != boost::none);
+    BOOST_REQUIRE(line_section);
     BOOST_REQUIRE_EQUAL(line_section->routes.size(), 1);
     BOOST_CHECK_EQUAL(line_section->routes[0]->uri, "backward");
 
     //line_section filtered on one route that doesn't exist
     ls_route->set_uri("unknown");
     line_section = navitia::make_line_section(object, *b.data->pt_data);
-    BOOST_REQUIRE(line_section == boost::none);
+    BOOST_REQUIRE(!line_section);
 
     //line_section filtered by routes: one exist, the other doesn't
     ls_route = ls->add_routes();
     ls_route->set_pt_object_type(chaos::PtObject_Type_route);
     ls_route->set_uri("forward");
     line_section = navitia::make_line_section(object, *b.data->pt_data);
-    BOOST_REQUIRE(line_section != boost::none);
+    BOOST_REQUIRE(line_section);
     BOOST_REQUIRE_EQUAL(line_section->routes.size(), 1);
     BOOST_CHECK_EQUAL(line_section->routes[0]->uri, "forward");
 
