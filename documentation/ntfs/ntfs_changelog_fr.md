@@ -57,3 +57,4 @@
     * les données adaptées (intégrées dans la version 0.6) sont déplacées dans la section "évolutions possibles"
 * Version 0.7.1 du 27/02/2018
     * les fichiers contributors.txt et datasets.txt sont obligatoires, ainsi que le lien entre "trip" et "dataset_id"
+    * le champ "comment_value" est renommé "comment_name" (conformité avec le code)
