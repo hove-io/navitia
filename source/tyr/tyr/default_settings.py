@@ -132,10 +132,10 @@ CELERYBEAT_SCHEDULE = {
         'schedule': schedules.crontab(hour=2, minute=30),  # Task is executed daily at 2H30
         'options': {'expires': 120}
     },
-    'purge-old-job-every-3-months': {
+    'purge-old-job-every-week': {
         'task': 'tyr.tasks.purge_jobs',
-        'schedule': schedules.crontab(0,0, month_of_year='*/3'),  # Task is executed on the first month of every quarter
-        'options': {'expires': 43800} # Expires after 1 month
+        'schedule': schedules.crontab(1,0, day_of_month='1'), # Task is executed at at 1H00 on the first day of every month
+        'options': {'expires': 40320} # Expires after 28 days
     },
     'heartbeat-kraken': {
         'task': 'tyr.tasks.heartbeat',
