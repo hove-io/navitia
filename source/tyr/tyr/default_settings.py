@@ -134,7 +134,7 @@ CELERYBEAT_SCHEDULE = {
     },
     'purge-old-job-every-week': {
         'task': 'tyr.tasks.purge_jobs',
-        'schedule': schedules.crontab(1,0, day_of_month='1'), # Task is executed at at 1H00 on the first day of every month
+        'schedule': schedules.crontab(hour=1, minute=0, day_of_week='sunday'), # Task is executed at at 1H00 on sunday every week
         'options': {'expires': 40320} # Expires after 28 days
     },
     'heartbeat-kraken': {

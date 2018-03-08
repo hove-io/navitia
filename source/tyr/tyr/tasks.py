@@ -310,10 +310,7 @@ def purge_jobs():
     for instance in instances:
         datasets_to_delete = instance.delete_old_jobs_and_list_datasets(time_limit)
 
-        # instance_config = load_instance_config(instance.name)
-        # backups = set(glob.glob('{}/*'.format(instance_config.backup_directory)))
-
-        backups_to_delete = set(os.path.realpath(dataset.name)
+        backups_to_delete = set(os.path.realpath(os.path.dirname(dataset.name))
                             for dataset in datasets_to_delete)
         logger.info('backups_to_delete are: {}'.format(backups_to_delete))
 

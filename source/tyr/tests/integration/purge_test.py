@@ -48,7 +48,7 @@ def create_dataset(dataset_type, dir):
     dataset.type = dataset_type
     dataset.family_type = '{}_family'.format(dataset_type)
     dataset_backup_dir = tempfile.mkdtemp(dir=dir)
-    dataset.name = dataset_backup_dir
+    dataset.name = '{}/dataset'.format(dataset_backup_dir)
     models.db.session.add(dataset)
 
     metric = models.Metric()
