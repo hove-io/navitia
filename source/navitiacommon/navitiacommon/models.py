@@ -36,7 +36,7 @@ from navitiacommon.sqlalchemy import SQLAlchemy
 from geoalchemy2.types import Geography
 from flask import current_app
 from sqlalchemy.orm import load_only, backref, aliased
-from datetime import datetime, timedelta
+from datetime import datetime
 from sqlalchemy import func, and_, UniqueConstraint, cast, true, false
 from sqlalchemy.dialects.postgresql import ARRAY, UUID, INTERVAL
 from navitiacommon.utils import street_source_types, address_source_types, \
@@ -432,9 +432,9 @@ class Instance(db.Model):
 
         db.session.commit()
 
-    def delete_old_jobs(self, time_limit):
+    def delete_old_jobs_and_list_datasets(self, time_limit):
         """
-        Delete jobs created before the date parameter 'time_limit'
+        Delete jobs created before the date parameter 'time_limit' and return a list of datasets to delete
         :param time_limit: date from which jobs will be deleted
         :return: list of datasets to delete
         """
@@ -449,7 +449,7 @@ class Instance(db.Model):
         # Retrieve all jobs created before the time limit
         old_jobs = db.session.query(Job).filter(Job.instance_id == self.id, Job.created_at < time_limit).all()
 
-        # Retrieve the dataset associated to delete backups folders
+        # Retrieve the datasets associated to delete backups folders
         old_datasets = []
         for job in old_jobs:
             old_datasets.extend(db.session.query(DataSet).filter(DataSet.job_id == job.id).all())

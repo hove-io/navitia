@@ -25,6 +25,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, print_function, unicode_literals, division
 from tyr import app, db
 import os
@@ -65,7 +66,7 @@ def init_flask_db(docker):
     db.init_app(app)
 
 
-def create_instance_config_file( instance_dir, backup_dir, name='default'):
+def create_instance_config_file(instance_dir, backup_dir, name='default'):
     """
     Create a config file for an instance with path to the temp dir for the backup
     :param instance_dir: temp dir to store data for an instance
