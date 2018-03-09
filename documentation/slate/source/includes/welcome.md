@@ -4,18 +4,34 @@ Getting started
 Overview
 --------
 
-*navitia.io* is the open API for building cool stuff with mobility data.
-It provides the following services
+_Navitia_ is the open API for building cool stuff with mobility data.
+
+It provides the following services:
 
 * journeys computation
 * line schedules
 * next departures
-* exploration of public transport data / search places
+* exploration of public transport data
+* search & autocomplete on places
 * and sexy things such as isochrones
 
-navitia is a [HATEOAS](http://en.wikipedia.org/wiki/HATEOAS) API that returns JSON formated results, available at <https://api.navitia.io>
+Have a look at the examples below to learn what services we provide and how to use them.
 
-Have a look at the examples below to learn what services we provide and how to use them. 
+
+### Approach
+
+Navitia is an open-source web API, **initially** built to provide traveler information on urban transportation networks.  
+It's main purpose is to provide day-to-day informations to travelers.  
+Over time Navitia has become doing way more, _sometimes_ for technical and debuging purpose _or_ because other functional needs fit quite well in what Navitia can do _or_ just because it was easy and super cool.
+
+Technically, Navitia is a [HATEOAS](http://en.wikipedia.org/wiki/HATEOAS) API that returns JSON formated results.
+
+
+### Who's who
+
+Navitia is instanciated and exposed publicly through [api.navitia.io](http://api.navitia.io).  
+Developments on Navitia are lead by Kisio Digital (previously CanalTP).  
+Kisio Digital is a subsidiary of Keolis (itself a subsidiary of SNCF, French national railway company).
 
 
 <aside class="notice">
@@ -40,7 +56,7 @@ $ curl 'https://api.navitia.io/v1/'
 Go to the API  <https://api.navitia.io>
 
 The simpliest way is to use a web browser. 
-Our humble opinion is that [firefox browser](http://www.getfirefox.com) and a json viewer extension like [JSONView](https://addons.mozilla.org/fr/firefox/addon/jsonview/) is a good setup.
+Our humble opinion is that [firefox browser](http://www.getfirefox.com) and a json viewer extension like [JSON Lite](https://addons.mozilla.org/fr/firefox/addon/json-lite/) is a good setup.
 
 Third step
 ---------------
