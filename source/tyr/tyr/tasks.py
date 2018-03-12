@@ -315,7 +315,11 @@ def purge_jobs():
         logger.info('backups_to_delete are: {}'.format(backups_to_delete))
 
         for path in backups_to_delete:
-            shutil.rmtree(path)
+            if os.path.exists(path):
+                shutil.rmtree('{}'.format(path))
+            else:
+                logger.warning('Folder {} can\'t be found'.format(path))
+
 
 @celery.task()
 def scan_instances():
