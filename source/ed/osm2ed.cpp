@@ -687,6 +687,17 @@ void PoiHouseNumberVisitor::node_callback(uint64_t osm_id, double lon, double la
     }
 }
 
+std::string construct_poi_id(
+    const OsmObjectType type,
+    const u_int64_t id) 
+{
+    std::string poi_id("poi:osm:");
+    poi_id += to_string(type);
+    poi_id += ":";
+    poi_id += std::to_string(id);
+
+    return poi_id;
+}
 
 /*
  * We read another time ways to insert housenumbers and poi
@@ -893,7 +904,7 @@ void PoiHouseNumberVisitor::fill_poi(const u_int64_t osm_id, const CanalTP::Tags
     if (!parse_pois)
         return;
     //Note: POIs can come from the node or the way and we need that information to have a unique id
-    const auto poi_id = to_string(osm_relation_type) + std::to_string(osm_id);
+    const auto poi_id = construct_poi_id(osm_relation_type, osm_id);
     if (data.pois.find(poi_id) != data.pois.end()) {
         return;
     }

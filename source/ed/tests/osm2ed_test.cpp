@@ -40,8 +40,34 @@ struct logger_initialized {
 
 BOOST_GLOBAL_FIXTURE( logger_initialized );
 
+using namespace ed::connectors;
+
 BOOST_AUTO_TEST_CASE(osm2ed_with_no_param_should_start_without_throwing) 
 {
     const char* argv [] = { "osm2ed_test" };
-    BOOST_CHECK_NO_THROW(ed::connectors::osm2ed(1, argv));
+    BOOST_CHECK_NO_THROW(osm2ed(1, argv));
+}
+
+BOOST_AUTO_TEST_CASE(poi_id_node_should_match_mimirs_one) 
+{
+    BOOST_CHECK(
+        boost::contains(
+            construct_poi_id(OsmObjectType::Node, 123456), 
+            "poi:osm:node:"));
+}
+
+BOOST_AUTO_TEST_CASE(poi_id_way_should_match_mimirs_one) 
+{
+    BOOST_CHECK(
+        boost::contains(
+            construct_poi_id(OsmObjectType::Way, 123456), 
+            "poi:osm:way:"));
+}
+
+BOOST_AUTO_TEST_CASE(poi_id_relation_should_match_mimirs_one) 
+{
+    BOOST_CHECK(
+        boost::contains(
+            construct_poi_id(OsmObjectType::Relation, 123456), 
+            "poi:osm:relation:"));
 }
