@@ -65,6 +65,8 @@ include_directories("${CMAKE_SOURCE_DIR}"
                      "${CMAKE_SOURCE_DIR}/../"
                      "${Boost_INCLUDE_DIRS}"
                      "${CMAKE_SOURCE_DIR}/third_party/SimpleAmqpClient/src/"
+                     "${CMAKE_SOURCE_DIR}/third_party/prometheus-cpp/include/"
+                     "${CMAKE_BINARY_DIR}/third_party/prometheus-cpp/lib/cpp"
                      "${PQXX_INCLUDE_DIR}"
 )
 link_directories(${Boost_LIBRARY_DIRS})
@@ -143,3 +145,4 @@ SET(CMAKE_INSTALL_PREFIX "")
 SET(Rabbitmqc_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/third_party/librabbitmq-c/librabbitmq/")
 add_subdirectory(third_party/librabbitmq-c)
 add_subdirectory(third_party/SimpleAmqpClient)
+add_subdirectory(third_party/prometheus-cpp)
