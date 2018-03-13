@@ -251,11 +251,17 @@ void EdPersistor::insert_pois(const Georef &data) {
         if(itm.second.poi_type != nullptr){
             poi_type = std::to_string(itm.second.poi_type->id);
         }
-        this->lotus.insert({std::to_string(itm.second.id),
-                std::to_string(itm.second.weight),
-                this->to_geographic_point(itm.second.coord),
-                itm.second.name, "poi:" + itm.first, poi_type, std::to_string(itm.second.visible),
-                itm.second.address_number, itm.second.address_name});
+        this->lotus.insert({
+                std::to_string(itm.second.id), // id
+                std::to_string(itm.second.weight), // weight
+                this->to_geographic_point(itm.second.coord), // coord
+                itm.second.name, // name 
+                itm.first, // uri
+                poi_type,  // poi_type_id 
+                std::to_string(itm.second.visible), // visible 
+                itm.second.address_number, // address_number 
+                itm.second.address_name // /address_name
+        });
     }
     lotus.finish_bulk_insert();
 }

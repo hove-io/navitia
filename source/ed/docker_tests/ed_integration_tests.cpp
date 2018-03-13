@@ -388,3 +388,24 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
 
     check_ntfs(data);
 }
+
+BOOST_FIXTURE_TEST_CASE(osm_pois_id_sould_match_mimir_naming, ArgsFixture) 
+{
+    navitia::type::Data data;
+    BOOST_REQUIRE_NO_THROW(data.load_nav(input_file_paths.at("osm_and_gtfs_file")););
+    data.build_raptor();
+
+    const auto & pois = data.geo_ref->pois;
+    BOOST_REQUIRE_GT(pois.size(), 0);
+
+    for(const auto & poi : pois) {
+        BOOST_CHECK(
+            boost::starts_with(poi->uri, "poi:osm:")
+        );
+        BOOST_CHECK(
+            boost::contains(poi->uri, "node") 
+            || boost::contains(poi->uri, "way") 
+            || boost::contains(poi->uri, "relation") 
+        );
+    }
+}
