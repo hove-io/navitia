@@ -606,6 +606,8 @@ def stops2mimir(self, instance_config, input, job_id=None, dataset_uid=None):
             # stops2mimir have to be non-blocking.
             # @TODO : Find a way to raise error without breaking celery tasks chain
             logger.error('stops2mimir failed')
+            if job_id:
+                job.state = 'failed'
     except:
         logger.exception('')
         if job_id:
@@ -640,6 +642,8 @@ def ntfs2mimir(self, instance_config, input, job_id=None, dataset_uid=None):
             # ntfs2mimir have to be non-blocking.
             # @TODO : Find a way to raise error without breaking celery tasks chain
             logger.error('ntfs2mimir failed')
+            if job_id:
+                job.state = 'failed'
     except:
         logger.exception('')
         if job_id:

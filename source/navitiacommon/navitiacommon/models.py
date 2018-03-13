@@ -374,7 +374,7 @@ class Instance(db.Model):
         return the n last dataset of each family type loaded for this instance
         """
         query = db.session.query(func.distinct(DataSet.family_type)) \
-            .filter(Instance.id == self.id)
+            .filter(Instance.id == self.id, DataSet.family_type != 'mimir')
         if family_type:
             query = query.filter(DataSet.family_type == family_type)
 

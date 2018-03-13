@@ -55,7 +55,8 @@ def finish_job(job_id):
     use for mark a job as done after all the required task has been executed
     """
     job = models.Job.query.get(job_id)
-    job.state = 'done'
+    if job.state != 'failed':
+        job.state = 'done'
     models.db.session.commit()
 
 
@@ -130,19 +131,63 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
         # Reload kraken with new data after binarisation (New .nav.lz4)
         if reload:
             actions.append(reload_data.si(instance_config, job.id))
-        # Import ntfs in Mimir
-        if dataset.family_type == 'pt' and instance.import_ntfs_in_mimir:
-            actions.append(ntfs2mimir.si(instance_config, filename, job.id, dataset_uid=dataset.uid))
-        # Import stops in Mimir
-        if dataset.family_type == 'pt' and instance.import_stops_in_mimir and not instance.import_ntfs_in_mimir:
-            # if we are loading pt data we might want to load the stops to autocomplete
-            actions.append(stops2mimir.si(instance_config, filename, job.id, dataset_uid=dataset.uid))
+
+        for dataset in job.data_sets:
+            if dataset.family_type == 'pt':
+                actions.extend(send_to_mimir(instance, dataset.name))
+
         actions.append(finish_job.si(job.id))
         if async:
             return chain(*actions).delay()
         else:
             # all job are run in sequence and import_data will only return when all the jobs are finish
             return chain(*actions).apply()
+
+
+def send_to_mimir(instance, filename):
+    """
+    :param instance: instance to receive the data
+    :param filename: file to inject towards mimir
+
+    - create a job with a data_set
+    - data injection towards mimir(stops2mimir, ntfs2mimir)
+
+    returns action list
+    """
+    actions = []
+    job = models.Job()
+    instance_config = load_instance_config(instance.name)
+    job.instance = instance
+    job.state = 'pending'
+
+    dataset = models.DataSet()
+    dataset.family_type = 'mimir'
+    dataset.type = 'stops2mimir'
+
+    #currently the name of a dataset is the path to it
+    dataset.name = filename
+    models.db.session.add(dataset)
+    job.data_sets.append(dataset)
+
+    models.db.session.add(job)
+    models.db.session.commit()
+
+    # Import ntfs in Mimir
+    if instance.import_ntfs_in_mimir:
+        actions.append(ntfs2mimir.si(instance_config, filename, job.id, dataset_uid=dataset.uid))
+
+    # We pass the job id to each tasks, but job need to be commited for having an id
+    for action in actions:
+        action.kwargs['job_id'] = job.id
+
+    # Import stops in Mimir
+    # if we are loading pt data we might want to load the stops to autocomplete
+    if instance.import_stops_in_mimir and not instance.import_ntfs_in_mimir:
+        actions.append(stops2mimir.si(instance_config, filename, job.id, dataset_uid=dataset.uid))
+
+    actions.append(finish_job.si(job.id))
+
+    return actions
 
 
 @celery.task()
