@@ -39,21 +39,24 @@ www.navitia.io
 namespace navitia {
 
 
-static prometheus::Histogram::BucketBoundaries create_exponential_buckets(double start, double end, double step) {
+static prometheus::Histogram::BucketBoundaries create_exponential_buckets(double start, double factor, int count) {
     //boundaries need to be sorted!
     auto bucket_boundaries = prometheus::Histogram::BucketBoundaries{};
     double v = start;
-    for (auto i = 0; i < end; i++) {
+    for (auto i = 0; i < count; i++) {
         bucket_boundaries.push_back(v);
-        v = v*step;
+        v = v * factor;
     }
     return bucket_boundaries;
 }
 
 
-Metrics::Metrics() :
-        exposer(std::make_unique<prometheus::Exposer>("127.0.0.1:8080")),
-        registry(std::make_shared<prometheus::Registry>()){
+Metrics::Metrics(const boost::optional<std::string>& endpoint){
+    if(endpoint == boost::none){
+        return;
+    }
+    exposer = std::make_unique<prometheus::Exposer>(*endpoint);
+    registry = std::make_shared<prometheus::Registry>();
     exposer->RegisterCollectable(registry);
 
     auto& histogram_family = prometheus::BuildHistogram()
@@ -61,14 +64,18 @@ Metrics::Metrics() :
                              .Help("duration of request in seconds")
                              .Register(*registry);
     auto desc = pbnavitia::API_descriptor();
-    for(int i=0; i<desc->value_count(); ++i){
+    for(int i = 0; i < desc->value_count(); ++i){
         auto value = desc->value(i);
-        this->request_histogram[value->name()] = &histogram_family.Add({{"api", value->name()}}, create_exponential_buckets(0.001, 25, 1.5));
+        auto& histo = histogram_family.Add({{"api", value->name()}}, create_exponential_buckets(0.001, 25, 1.5));
+        this->request_histogram[static_cast<pbnavitia::API>(value->number())] = &histo;
     }
 }
 
 void Metrics::observe_api(pbnavitia::API api, float duration) const{
-    this->request_histogram.at(pbnavitia::API_Name(api))->Observe(duration);
+    if(!registry) {
+        return;
+    }
+    this->request_histogram.at(api)->Observe(duration);
 }
 
 

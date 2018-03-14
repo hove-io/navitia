@@ -19,3 +19,6 @@
 [submodule "source/navitia-proto"]
 	path = source/navitia-proto
 	url = git@github.com:CanalTP/navitia-proto.git
+[submodule "source/third_party/prometheus-cpp"]
+	path = source/third_party/prometheus-cpp
+	url = https://github.com/jupp0r/prometheus-cpp

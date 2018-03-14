@@ -35,6 +35,7 @@ www.navitia.io
 #include <prometheus/exposer.h>
 #include <map>
 #include "type/type.pb.h"
+#include <boost/optional.hpp>
 
 //forward declare
 namespace prometheus{
@@ -48,10 +49,10 @@ class Metrics{
     protected:
         std::unique_ptr<prometheus::Exposer> exposer;
         std::shared_ptr<prometheus::Registry> registry;
-        std::map<std::string, prometheus::Histogram*> request_histogram;
+        std::map<pbnavitia::API, prometheus::Histogram*> request_histogram;
 
     public:
-        Metrics();
+        Metrics(const boost::optional<std::string>& endpoint);
         void observe_api(pbnavitia::API api, float duration) const;
 
 };

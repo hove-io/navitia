@@ -40,6 +40,7 @@ www.navitia.io
 #include "kraken/configuration.h"
 #include <boost/program_options.hpp>
 #include <boost/optional.hpp>
+#include <kraken/metrics.h>
 
 namespace po = boost::program_options;
 
@@ -75,9 +76,9 @@ struct mock_kraken {
             threads.create_thread(navitia::MaintenanceWorker(data_manager, conf));
         }
 
-
+        navitia::Metrics metric(boost::none);
         // Launch only one thread for the tests
-        threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager), conf));
+        threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager), conf, std::ref(metric)));
 
         // Connect work threads to client threads via a queue
         do {
