@@ -108,7 +108,7 @@ INSTANCE_SYSTEM_RESPONSE = {
                             }
                         },
                         "price": {
-                            "amount": 170,
+                            "amount": 170.0,
                             "currency": "EUR"
                         },
                         "vehicle": {
