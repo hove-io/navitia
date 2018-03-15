@@ -37,6 +37,8 @@ www.navitia.io
 #include "type/type.pb.h"
 #include <boost/optional.hpp>
 
+#include <boost/utility.hpp>
+
 //forward declare
 namespace prometheus{
     class Registry;
@@ -45,7 +47,7 @@ namespace prometheus{
 }
 
 namespace navitia {
-class Metrics{
+class Metrics: boost::noncopyable {
     protected:
         std::unique_ptr<prometheus::Exposer> exposer;
         std::shared_ptr<prometheus::Registry> registry;

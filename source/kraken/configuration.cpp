@@ -72,6 +72,8 @@ po::options_description get_options_description(const boost::optional<std::strin
         ("GENERAL.log_level", po::value<std::string>(), "log level of kraken")
         ("GENERAL.log_format", po::value<std::string>()->default_value("[%D{%y-%m-%d %H:%M:%S,%q}] [%p] [%x] - %m %b:%L  %n"), "log format")
 
+        ("GENERAL.metrics_binding", po::value<std::string>(), "IP:PORT to serving metrics in http")
+
         ("BROKER.host", po::value<std::string>()->default_value("localhost"), "host of rabbitmq")
         ("BROKER.port", po::value<int>()->default_value(5672), "port of rabbitmq")
         ("BROKER.username", po::value<std::string>()->default_value("guest"), "username for rabbitmq")
@@ -232,6 +234,14 @@ boost::optional<std::string> Configuration::log_format() const{
     boost::optional<std::string> result;
     if (this->vm.count("GENERAL.log_format") > 0) {
         result = this->vm["GENERAL.log_format"].as<std::string>();
+    }
+    return result;
+}
+
+boost::optional<std::string> Configuration::metrics_binding() const{
+    boost::optional<std::string> result;
+    if (this->vm.count("GENERAL.metrics_binding") > 0) {
+        result = this->vm["GENERAL.metrics_binding"].as<std::string>();
     }
     return result;
 }

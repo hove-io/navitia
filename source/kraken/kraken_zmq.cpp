@@ -101,9 +101,10 @@ int main(int argn, char** argv){
         return 1;
     }
 
+    navitia::Metrics metrics(conf.metrics_binding());
+
     threads.create_thread(navitia::MaintenanceWorker(data_manager, conf));
 
-    navitia::Metrics metrics(boost::make_optional(std::string("127.0.0.1:8080")));
 
     int nb_threads = conf.nb_threads();
     // Launch pool of worker threads
