@@ -90,24 +90,24 @@ class InstanceConfig(object):
 
 def load_instance_config(instance_name):
     confspec = []
-    confspec.append('[instance]')
-    confspec.append('source-directory = string()')
-    confspec.append('backup-directory = string()')
-    confspec.append('target-file = string()')
-    confspec.append('exchange = string(default="navitia")')
-    confspec.append('synonyms_file = string(default="")')
-    confspec.append('aliases_file = string(default="")')
-    confspec.append('name = string()')
-    confspec.append('is-free = boolean(default=False)')
+    confspec.append(b'[instance]')
+    confspec.append(b'source-directory = string()')
+    confspec.append(b'backup-directory = string()')
+    confspec.append(b'target-file = string()')
+    confspec.append(b'exchange = string(default="navitia")')
+    confspec.append(b'synonyms_file = string(default="")')
+    confspec.append(b'aliases_file = string(default="")')
+    confspec.append(b'name = string()')
+    confspec.append(b'is-free = boolean(default=False)')
 
-    confspec.append('[database]')
-    confspec.append('host = string()')
-    confspec.append('dbname = string()')
-    confspec.append('username = string()')
-    confspec.append('password = string()')
-    confspec.append('port = string(default="5432")')
+    confspec.append(b'[database]')
+    confspec.append(b'host = string()')
+    confspec.append(b'dbname = string()')
+    confspec.append(b'username = string()')
+    confspec.append(b'password = string()')
+    confspec.append(b'port = string(default="5432")')
 
-    ini_file = '%s/%s.ini' % \
+    ini_file = b'%s/%s.ini' % \
                (os.path.realpath(current_app.config['INSTANCES_DIR']), instance_name)
     if not os.path.isfile(ini_file):
         raise ValueError("File doesn't exists or is not a file %s" % ini_file)
