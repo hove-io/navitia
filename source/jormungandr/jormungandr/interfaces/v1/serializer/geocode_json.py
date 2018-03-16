@@ -265,8 +265,9 @@ class GeocodePlacesSerializer(serpy.DictSerializer):
     def get_feed_publishers(self, obj):
         fp = []
         for feature in obj.get('features', []):
-            if feature.get('properties', {}).get('geocoding', {}).get('feed_publishers'):
-                [fp.append(x) for x in feature.get('properties', {}).get('geocoding', {}).get('feed_publishers') if x not in fp]
+            feed_pubs = feature.get('properties', {}).get('geocoding', {}).get('feed_publishers')
+            if feed_pubs:
+                [fp.append(x) for x in feed_pubs if x not in fp]
         # By default, keep BANO & OSM as feed publishers
         fp.extend([raw_feed_publisher_bano, raw_feed_publisher_osm])
         return fp
