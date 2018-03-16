@@ -608,6 +608,7 @@ def stops2mimir(self, instance_config, input, job_id=None, dataset_uid=None):
             logger.error('stops2mimir failed')
             if job_id:
                 job.state = 'failed'
+                models.db.session.commit()
     except:
         logger.exception('')
         if job_id:
@@ -644,6 +645,7 @@ def ntfs2mimir(self, instance_config, input, job_id=None, dataset_uid=None):
             logger.error('ntfs2mimir failed')
             if job_id:
                 job.state = 'failed'
+                models.db.session.commit()
     except:
         logger.exception('')
         if job_id:

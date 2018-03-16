@@ -162,7 +162,7 @@ def send_to_mimir(instance, filename):
 
     dataset = models.DataSet()
     dataset.family_type = 'mimir'
-    dataset.type = 'stops2mimir'
+    dataset.type = 'fusio'
 
     #currently the name of a dataset is the path to it
     dataset.name = filename
@@ -172,13 +172,13 @@ def send_to_mimir(instance, filename):
     models.db.session.add(job)
     models.db.session.commit()
 
-    # Import ntfs in Mimir
-    if instance.import_ntfs_in_mimir:
-        actions.append(ntfs2mimir.si(instance_config, filename, job.id, dataset_uid=dataset.uid))
-
     # We pass the job id to each tasks, but job need to be commited for having an id
     for action in actions:
         action.kwargs['job_id'] = job.id
+
+    # Import ntfs in Mimir
+    if instance.import_ntfs_in_mimir:
+        actions.append(ntfs2mimir.si(instance_config, filename, job.id, dataset_uid=dataset.uid))
 
     # Import stops in Mimir
     # if we are loading pt data we might want to load the stops to autocomplete
