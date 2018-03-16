@@ -1,5 +1,4 @@
-
-/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2018, Canal TP and/or its affiliates. All rights reserved.
   
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -54,7 +53,7 @@ class Metrics: boost::noncopyable {
         std::map<pbnavitia::API, prometheus::Histogram*> request_histogram;
 
     public:
-        Metrics(const boost::optional<std::string>& endpoint);
+        Metrics(const boost::optional<std::string>& endpoint, const std::string& coverage);
         void observe_api(pbnavitia::API api, float duration) const;
 
 };

@@ -1,5 +1,4 @@
-
-/* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2018, Canal TP and/or its affiliates. All rights reserved.
   
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -35,6 +34,7 @@ www.navitia.io
 #include <prometheus/exposer.h>
 #include <prometheus/registry.h>
 #include <prometheus/counter.h>
+#include "utils/logger.h"
 
 namespace navitia {
 
@@ -51,22 +51,25 @@ static prometheus::Histogram::BucketBoundaries create_exponential_buckets(double
 }
 
 
-Metrics::Metrics(const boost::optional<std::string>& endpoint){
+Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string& coverage){
     if(endpoint == boost::none){
         return;
     }
+    auto logger = log4cplus::Logger::getInstance("metrics");
+    LOG4CPLUS_INFO(logger, "metrics available at http://"  << *endpoint << "/metrics");
     exposer = std::make_unique<prometheus::Exposer>(*endpoint);
     registry = std::make_shared<prometheus::Registry>();
     exposer->RegisterCollectable(registry);
 
     auto& histogram_family = prometheus::BuildHistogram()
-                             .Name("kraken_request_duration")
+                             .Name("kraken_request_duration_seconds")
                              .Help("duration of request in seconds")
+                             .Labels({{"coverage", coverage}})
                              .Register(*registry);
     auto desc = pbnavitia::API_descriptor();
     for(int i = 0; i < desc->value_count(); ++i){
         auto value = desc->value(i);
-        auto& histo = histogram_family.Add({{"api", value->name()}}, create_exponential_buckets(0.001, 25, 1.5));
+        auto& histo = histogram_family.Add({{"api", value->name()}}, create_exponential_buckets(0.001, 1.5, 25));
         this->request_histogram[static_cast<pbnavitia::API>(value->number())] = &histo;
     }
 }
@@ -75,7 +78,13 @@ void Metrics::observe_api(pbnavitia::API api, float duration) const{
     if(!registry) {
         return;
     }
-    this->request_histogram.at(api)->Observe(duration);
+    auto it = this->request_histogram.find(api);
+    if(it != std::end(this->request_histogram)){
+        it->second->Observe(duration);
+    }else{
+        auto logger = log4cplus::Logger::getInstance("metrics");
+        LOG4CPLUS_WARN(logger, "api " << pbnavitia::API_Name(api) << " not found in metrics");
+    }
 }
 
 

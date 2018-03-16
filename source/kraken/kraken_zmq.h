@@ -90,6 +90,7 @@ inline void doWork(zmq::context_t& context,
             //on gére le cas du sighup durant un recv
             continue;
         }
+
         pbnavitia::Request pb_req;
         pt::ptime start = pt::microsec_clock::universal_time();
         pbnavitia::API api = pbnavitia::UNKNOWN_API;

@@ -76,7 +76,7 @@ struct mock_kraken {
             threads.create_thread(navitia::MaintenanceWorker(data_manager, conf));
         }
 
-        navitia::Metrics metric(boost::none);
+        navitia::Metrics metric(boost::none, "mock");
         // Launch only one thread for the tests
         threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager), conf, std::ref(metric)));
 

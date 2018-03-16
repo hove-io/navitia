@@ -147,5 +147,5 @@ add_subdirectory(third_party/librabbitmq-c)
 add_subdirectory(third_party/SimpleAmqpClient)
 #prometheus-cpp cmake will refuse to build if the CMAKE_INSTALL_PREFIX is empty
 #setting it before will have side effects on how we build packages
-SET(CMAKE_INSTALL_PREFIX "/")
+SET(CMAKE_INSTALL_PREFIX "/usr/local")
 add_subdirectory(third_party/prometheus-cpp)
