@@ -32,8 +32,7 @@ from .base import LiteralField, NestedPropertyField, IntNestedPropertyField, val
 import logging
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.fields import raw_feed_publisher_bano, raw_feed_publisher_osm
-from jormungandr.interfaces.v1.serializer.base import NestedDictGenericField, NestedDictCodeField, \
-    NestedPropertiesField
+from jormungandr.interfaces.v1.serializer.base import NestedDictGenericField, NestedDictCodeField, NestedPropertiesField
 from jormungandr.utils import get_house_number
 from jormungandr.autocomplete.geocodejson import create_address_field, get_lon_lat
 
@@ -209,6 +208,13 @@ class GeocodeAddressSerializer(serpy.DictSerializer):
         return AddressSerializer(obj).data
 
 
+class FeedPublisherSerializer(serpy.DictSerializer, NestedPropertyField):
+    id = serpy.StrField()
+    name = serpy.StrField()
+    url = serpy.StrField()
+    license = serpy.StrField()
+
+
 class StopAreaSerializer(serpy.DictSerializer):
     id = NestedPropertyField(attr='properties.geocoding.id', display_none=True)
     coord = CoordField()
@@ -220,6 +226,7 @@ class StopAreaSerializer(serpy.DictSerializer):
     physical_modes = NestedDictGenericField(attr='properties.geocoding.physical_modes', many=True)
     codes = NestedDictCodeField(attr='properties.geocoding.codes', many=True)
     properties = NestedPropertiesField(attr='properties.geocoding.properties', display_none=False)
+    feed_publishers = FeedPublisherSerializer(attr='properties.geocoding.feed_publishers', many=True)
 
 
 class GeocodeStopAreaSerializer(serpy.DictSerializer):
@@ -236,8 +243,7 @@ class GeocodeStopAreaSerializer(serpy.DictSerializer):
 class GeocodePlacesSerializer(serpy.DictSerializer):
     places = jsonschema.MethodField()
     warnings = BetaEndpointsSerializer()
-    feed_publishers = LiteralField([raw_feed_publisher_bano,
-                                    raw_feed_publisher_osm])
+    feed_publishers = jsonschema.MethodField()
 
     def get_places(self, obj):
         map_serializer = {
@@ -248,10 +254,19 @@ class GeocodePlacesSerializer(serpy.DictSerializer):
             'public_transport:stop_area': GeocodeStopAreaSerializer
         }
         res = []
-        for feature in obj.get('features', {}):
+        for feature in obj.get('features', []):
             type_ = feature.get('properties', {}).get('geocoding', {}).get('type')
             if not type_ or type_ not in map_serializer:
                 logging.getLogger(__name__).error('Place not serialized (unknown type): {}'.format(feature))
                 continue
             res.append(map_serializer[type_](feature).data)
         return res
+
+    def get_feed_publishers(self, obj):
+        fp = []
+        for feature in obj.get('features', []):
+            if feature.get('properties', {}).get('geocoding', {}).get('feed_publishers'):
+                [fp.append(x) for x in feature.get('properties', {}).get('geocoding', {}).get('feed_publishers') if x not in fp]
+        # By default, keep BANO & OSM as feed publishers
+        fp.extend([raw_feed_publisher_bano, raw_feed_publisher_osm])
+        return fp

@@ -426,7 +426,7 @@ class GeocodeJson(AbstractAutocomplete):
     def response_marshaler(cls, response_bragi, uri=None, depth=1):
         cls._check_response(response_bragi, uri)
         json_response = response_bragi.json()
-        #Clean dict objects depending on depth passed in request parameter.
+        # Clean dict objects depending on depth passed in request parameter.
         json_response = cls._clean_response(json_response, depth)
         if jormungandr.USE_SERPY:
             from jormungandr.interfaces.v1.serializer.geocode_json import GeocodePlacesSerializer
