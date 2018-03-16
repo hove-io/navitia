@@ -386,9 +386,19 @@ inline std::string to_string(OsmObjectType t) {
     }
 }
 
-std::string construct_poi_id(
-    const OsmObjectType type,
-    const u_int64_t id);
+class OsmPoi : public ed::types::Poi
+{ 
+public:
+    OsmPoi(
+        const OsmObjectType type,
+        const u_int64_t id) 
+    {
+        uri += "osm:";
+        uri += to_string(type);
+        uri += ":";
+        uri += std::to_string(id);
+    }
+};
 
 struct PoiHouseNumberVisitor {
     const size_t max_inserts_without_bulk = 20000;

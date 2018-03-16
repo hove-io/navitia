@@ -687,18 +687,6 @@ void PoiHouseNumberVisitor::node_callback(uint64_t osm_id, double lon, double la
     }
 }
 
-std::string construct_poi_id(
-    const OsmObjectType type,
-    const u_int64_t id) 
-{
-    std::string poi_id("poi:osm:");
-    poi_id += to_string(type);
-    poi_id += ":";
-    poi_id += std::to_string(id);
-
-    return poi_id;
-}
-
 /*
  * We read another time ways to insert housenumbers and poi
  */
@@ -867,7 +855,7 @@ const OSMWay* PoiHouseNumberVisitor::find_way(const CanalTP::Tags& tags, const d
                 min_distance = distance;
                 candidate_way = &way;
             }
-        }
+        } 
     }
     return candidate_way;
 }
@@ -904,8 +892,8 @@ void PoiHouseNumberVisitor::fill_poi(const u_int64_t osm_id, const CanalTP::Tags
     if (!parse_pois)
         return;
     //Note: POIs can come from the node or the way and we need that information to have a unique id
-    const auto poi_id = construct_poi_id(osm_relation_type, osm_id);
-    if (data.pois.find(poi_id) != data.pois.end()) {
+    OsmPoi poi(osm_relation_type, osm_id);
+    if (data.pois.find(poi.uri) != data.pois.end()) {
         return;
     }
 
@@ -914,8 +902,6 @@ void PoiHouseNumberVisitor::fill_poi(const u_int64_t osm_id, const CanalTP::Tags
         return;
     }
 
-    // we have found a POI and we know it's type
-    ed::types::Poi poi;
     //type
     poi.poi_type = data.poi_types[applicable_rule->poi_type_id];
     //name
@@ -938,7 +924,7 @@ void PoiHouseNumberVisitor::fill_poi(const u_int64_t osm_id, const CanalTP::Tags
     poi.coord.set_lon(lon);
     poi.coord.set_lat(lat);
 
-    data.pois[poi_id] = poi;
+    data.pois[poi.uri] = poi;
 }
 
 void OSMCache::flag_nodes() {

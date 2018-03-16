@@ -32,6 +32,7 @@ www.navitia.io
 #define BOOST_TEST_MODULE osm2ed
 
 #include <boost/test/unit_test.hpp>
+#include "ed/types.h"
 #include "ed/osm2ed.h"
 
 struct logger_initialized {
@@ -48,26 +49,26 @@ BOOST_AUTO_TEST_CASE(osm2ed_with_no_param_should_start_without_throwing)
     BOOST_CHECK_NO_THROW(osm2ed(1, argv));
 }
 
-BOOST_AUTO_TEST_CASE(poi_id_node_should_match_mimirs_one) 
+BOOST_AUTO_TEST_CASE(poi_uri_should_construct_based_on_id) 
 {
-    BOOST_CHECK(
-        boost::contains(
-            construct_poi_id(OsmObjectType::Node, 123456), 
-            "poi:osm:node:"));
+    ed::types::Poi poi("123456");
+    BOOST_CHECK_EQUAL(poi.uri, "poi:123456");
 }
 
-BOOST_AUTO_TEST_CASE(poi_id_way_should_match_mimirs_one) 
+BOOST_AUTO_TEST_CASE(osm_poi_id_node_should_match_mimirs_one) 
 {
-    BOOST_CHECK(
-        boost::contains(
-            construct_poi_id(OsmObjectType::Way, 123456), 
-            "poi:osm:way:"));
+    OsmPoi osm_poi(OsmObjectType::Node, 123456);
+    BOOST_CHECK_EQUAL(osm_poi.uri, "poi:osm:node:123456");
 }
 
-BOOST_AUTO_TEST_CASE(poi_id_relation_should_match_mimirs_one) 
+BOOST_AUTO_TEST_CASE(osm_poi_id_way_should_match_mimirs_one) 
 {
-    BOOST_CHECK(
-        boost::contains(
-            construct_poi_id(OsmObjectType::Relation, 123456), 
-            "poi:osm:relation:"));
+    OsmPoi osm_poi(OsmObjectType::Way, 123456);
+    BOOST_CHECK_EQUAL( osm_poi.uri, "poi:osm:way:123456");
+}
+
+BOOST_AUTO_TEST_CASE(osm_poi_id_relation_should_match_mimirs_one) 
+{
+    OsmPoi osm_poi(OsmObjectType::Relation, 123456);
+    BOOST_CHECK_EQUAL(osm_poi.uri, "poi:osm:relation:123456");
 }

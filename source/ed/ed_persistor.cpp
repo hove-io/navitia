@@ -256,7 +256,7 @@ void EdPersistor::insert_pois(const Georef &data) {
                 std::to_string(itm.second.weight), // weight
                 this->to_geographic_point(itm.second.coord), // coord
                 itm.second.name, // name 
-                itm.first, // uri
+                itm.second.uri, // uri
                 poi_type,  // poi_type_id 
                 std::to_string(itm.second.visible), // visible 
                 itm.second.address_number, // address_number 
