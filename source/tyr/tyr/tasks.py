@@ -293,7 +293,10 @@ def import_in_mimir(_file, instance, async=True):
     """
     current_app.logger.debug("Import pt data to mimir")
     instance_config = load_instance_config(instance.name)
-    action = stops2mimir.si(instance_config, _file)
+    if instance.import_ntfs_in_mimir:
+        action = ntfs2mimir.si(instance_config, _file)
+    if instance.import_stops_in_mimir and not instance.import_ntfs_in_mimir:
+        action = stops2mimir.si(instance_config, _file)
     if async:
         return action.delay()
     else:
