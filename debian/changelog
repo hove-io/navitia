@@ -1,3 +1,21 @@
+navitia2 (2.53.0) unstable; urgency=low
+
+  * Ed: Update libosmpbfreader to fix segfault in osm2ed  <https://github.com/CanalTP/navitia/pull/2365>
+  * Kraken: ignore unknown routes from line_section  <https://github.com/CanalTP/navitia/pull/2355>
+  * Doc: fix comment_name accordingly to source and explicitly allow orphan calendar_dates  <https://github.com/CanalTP/navitia/pull/2356>
+  * Doc: Jormungandr configuration, running and troubleshooting  <https://github.com/CanalTP/navitia/pull/2354>
+  * Kraken: Exclude way without edge from the autocomplete  <https://github.com/CanalTP/navitia/pull/2353>
+  * Jormungandr: Modification of depth value in the test bragi  <https://github.com/CanalTP/navitia/pull/2352>
+  * Ed: Add safety in row check (carriage return case)  <https://github.com/CanalTP/navitia/pull/2343>
+  * Jormungandr: Some corrections on qa's remarks  <https://github.com/CanalTP/navitia/pull/2349>
+  * Monitor: packages must be str for deploy  <https://github.com/CanalTP/navitia/pull/2351>
+  * Ed:  ed2nav & fare2ed - Test for bad connection string & ensure rebinerisation  <https://github.com/CanalTP/navitia/pull/2348>
+  * Tyr: packages must be str for deploy  <https://github.com/CanalTP/navitia/pull/2350>
+  * Kraken: Fill disruption becomes optional on data load  <https://github.com/CanalTP/navitia/pull/2319>
+  * Jormungandr: use unicode instead of repr for better log and status format <https://github.com/CanalTP/navitia/pull/2337> 
+
+ -- Olivier Georget <olivier.georget@kisio.org>  Mon, 19 Mar 2018 12:03:47 +0100
+
 navitia2 (2.52.0) unstable; urgency=low
 
   * Jormun: Fix address in poi in api global autocomplete   <https://github.com/CanalTP/navitia/pull/2338>
