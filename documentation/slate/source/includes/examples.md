@@ -21,10 +21,10 @@ A query to Navitia's API is divided in 4 parts, as highlighted by colors in a [N
 1. **Root url** of the API, the adress of the server.  
 Here `https://api.navitia.io/v1/`
 2. **Path**, used to filter the request and precise what is affected by the query. This filter is an instersection of multiple `key/value` (logical _AND_).  
-Here `/coverage/sandbox/stop_areas/stop_area:RAT:SA:BASTI/lines/line:RAT:M5/` means we are looking for informations on everything that is in the region _"sandbox"_ and that is stricly related to both station _"Bastille"_ and line _"metro 5"_.
+Here `/coverage/sandbox/stop_areas/stop_area:RAT:SA:BASTI/lines/line:RAT:M5/` means we are looking for information on everything that is in the region _"sandbox"_ and that is stricly related to both station _"Bastille"_ and line _"metro 5"_.
 3. **Endpoint**, specifies what type of information is requested, so the _service_. It can be _journeys_, _isochrones_, _places_...  
 Here `/departures?` means we are requesting _"next departures"_.
-4. **Parameters**, used to precise any additional detail linked to the endpoint requested.  
+4. **Parameters**, used to specify any additional detail linked to the endpoint requested.  
 Here `?count=4&depth=2&` means we are requesting the next **_4_** departures and we want the response to be detailed to a depth of **_2_**.
 
 <aside class="success">
