@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import, print_function, unicode_literals, division
 from tests.check_utils import api_get, api_post, api_delete, api_put, _dt
 import json
 import pytest

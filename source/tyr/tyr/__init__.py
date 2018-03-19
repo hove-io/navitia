@@ -29,13 +29,14 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function, unicode_literals, division
 from flask import Flask
 import flask_restful
 from tyr.helper import configure_logger, make_celery
 from redis import Redis
 from celery.signals import setup_logging
 from flask_script import Manager
-from rabbit_mq_handler import RabbitMqHandler
+from tyr.rabbit_mq_handler import RabbitMqHandler
 
 app = Flask(__name__)
 app.config.from_object('tyr.default_settings')

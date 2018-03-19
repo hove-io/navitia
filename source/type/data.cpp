@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -48,7 +48,6 @@ www.navitia.io
 #include "third_party/eos_portable_archive/portable_oarchive.hpp"
 #include "lz4_filter/filter.h"
 #include "utils/functions.h"
-#include "utils/exception.h"
 #include "utils/threadbuf.h"
 
 #include "pt_data.h"
@@ -62,11 +61,10 @@ namespace pt = boost::posix_time;
 
 namespace navitia { namespace type {
 
-wrong_version::~wrong_version() noexcept {}
-
-const unsigned int Data::data_version = 67; //< *INCREMENT* every time serialized data are modified
+const unsigned int Data::data_version = 68; //< *INCREMENT* every time serialized data are modified
 
 Data::Data(size_t data_identifier) :
+    disruption_error(false),
     data_identifier(data_identifier),
     meta(std::make_unique<MetaData>()),
     pt_data(std::make_unique<PT_Data>()),
@@ -76,7 +74,8 @@ Data::Data(size_t data_identifier) :
     find_admins(
             [&](const GeographicalCoord &c){
             return geo_ref->find_admins(c);
-            })
+            }),
+    last_load_succeeded(false)
 {
     loaded = false;
     is_connected_to_rabbitmq = false;
@@ -85,40 +84,44 @@ Data::Data(size_t data_identifier) :
 
 Data::~Data(){}
 
-bool Data::load(const std::string& filename,
-                const boost::optional<std::string>& chaos_database,
-                const std::vector<std::string>& contributors,
-                const size_t raptor_cache_size) {
+/**
+ * @brief Load data (in nav.lz4).
+ * 1. Uncompress lz4 file
+ * 2. Read .nav
+ * 3. Load in type::Data structure
+ *
+ * @param filename Lz4 data File name (file.nav.lz4)
+ */
+void Data::load_nav(const std::string& filename) {
+
+    // Add logger
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    loading = true;
+    LOG4CPLUS_DEBUG(logger, "Start to load nav");
+
+    if (filename.empty()){
+        LOG4CPLUS_ERROR(logger, "Data loading failed: Data path is empty");
+        throw navitia::data::data_loading_error("Data loading failed: Data path is empty");
+    }
+
     try {
         std::ifstream ifs(filename.c_str(), std::ios::in | std::ios::binary);
         ifs.exceptions(std::ifstream::failbit | std::ifstream::badbit);
         this->load(ifs);
-        last_load_at = pt::microsec_clock::universal_time();
-        last_load = true;
         loaded = true;
+        last_load_at = pt::microsec_clock::universal_time();
+        last_load_succeeded = true;
         LOG4CPLUS_INFO(logger, boost::format("stopTimes : %d nb foot path : %d Nombre de stop points : %d")
                        % pt_data->nb_stop_times()
                        % pt_data->stop_point_connections.size()
-                       % pt_data->stop_points.size()
-            );
-        if (chaos_database) {
-            fill_disruption_from_database(*chaos_database, *pt_data, *meta, contributors);
-        }
-        build_raptor(raptor_cache_size);
-    } catch(const wrong_version& ex) {
-        LOG4CPLUS_ERROR(logger, "Cannot load data: " << ex.what());
-        last_load = false;
-    } catch(const std::exception& ex) {
-        LOG4CPLUS_ERROR(logger, "Data loading failed: " << ex.what());
-        last_load = false;
-    } catch(...) {
+                       % pt_data->stop_points.size());
+    } catch (const std::exception& ex) {
+        LOG4CPLUS_ERROR(logger, "Data loading failed: " + std::string(ex.what()));
+        throw navitia::data::data_loading_error("Data loading failed: " + std::string(ex.what()));
+    } catch (...) {
         LOG4CPLUS_ERROR(logger, "Data loading failed");
-        last_load = false;
-	}
-    loading = false;
-    return this->last_load;
+        throw navitia::data::data_loading_error("Data loading failed");
+    }
+    LOG4CPLUS_DEBUG(logger, "Finished to load nav");
 }
 
 void Data::load(std::istream& ifs) {
@@ -129,6 +132,55 @@ void Data::load(std::istream& ifs) {
     ia >> *this;
 }
 
+/**
+ * @brief Load disruptions from database.
+ * Disruptions are stored in Bdd.
+ *
+ * @param database Database connection string
+ * @param contributors Disruptions contributors name list
+ */
+void Data::load_disruptions(const std::string& database,
+                            const std::vector<std::string>& contributors) {
+    // Add logger
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    LOG4CPLUS_DEBUG(logger, "Start to load disruptions");
+
+    try {
+        fill_disruption_from_database(database, *pt_data, *meta, contributors);
+        disruption_error = false;
+    } catch (const pqxx::broken_connection& ex) {
+        LOG4CPLUS_WARN(logger, "Unable to connect to disruptions database: " << std::string(ex.what()));
+        disruption_error = true;
+        throw navitia::data::disruptions_broken_connection("Unable to connect to disruptions database: " + std::string(ex.what()));
+    } catch (const pqxx::pqxx_exception& ex) {
+        LOG4CPLUS_ERROR(logger, "Disruptions loading error: " << std::string(ex.base().what()));
+        disruption_error = true;
+        throw navitia::data::disruptions_loading_error("Disruptions loading error: " + std::string(ex.base().what()));
+    } catch (const std::exception& ex) {
+        LOG4CPLUS_ERROR(logger, "Disruptions loading error: " << std::string(ex.what()));
+        disruption_error = true;
+        throw navitia::data::disruptions_loading_error("Disruptions loading error: " + std::string(ex.what()));
+    } catch (...) {
+        LOG4CPLUS_ERROR(logger, "Disruptions loading error");
+        disruption_error = true;
+        throw navitia::data::disruptions_loading_error("Disruptions loading error");
+    }
+    LOG4CPLUS_DEBUG(logger, "Finished to load disruptions");
+}
+
+/**
+ * @brief Build Data Raptor
+ *
+ * @param cache_size Selected LRU size to optimize cache miss
+ */
+void Data::build_raptor(size_t cache_size) {
+
+    // Add logger
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+    LOG4CPLUS_DEBUG(logger, "Start to build data Raptor");
+    dataRaptor->load(*this->pt_data, cache_size);
+    LOG4CPLUS_DEBUG(logger, "Finished to build data Raptor");
+}
 
 void Data::save(const std::string& filename) const {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
@@ -249,14 +301,6 @@ void Data::build_autocomplete(){
     pt_data->compute_score_autocomplete(*geo_ref);
 }
 
-void Data::build_raptor(size_t cache_size) {
-    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
-                    "Start to build dataRaptor");
-    dataRaptor->load(*this->pt_data, cache_size);
-    LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("log"),
-                    "Finished to build dataRaptor");
-}
-
 ValidityPattern* Data::get_similar_validity_pattern(ValidityPattern* vp) const{
     auto find_vp_predicate = [&](ValidityPattern* vp1) { return ((*vp) == (*vp1));};
     auto it = std::find_if(this->pt_data->validity_patterns.begin(),
@@ -311,7 +355,7 @@ void Data::complete(){
 
     build_grid_validity_pattern();
     //build_associated_calendar(); read from database
-    
+
     start = pt::microsec_clock::local_time();
     LOG4CPLUS_INFO(logger, "Building administrative regions");
     build_administrative_regions();

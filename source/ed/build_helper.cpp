@@ -824,4 +824,34 @@ void builder::finish() {
     data->build_autocomplete();
     data->compute_labels();
 }
+
+static navitia::georef::vertex_t init_vertex(navitia::georef::GeoRef& georef){
+    navitia::georef::Vertex v;
+    v.coord.set_lon(0);
+    v.coord.set_lat(0);
+    return boost::add_vertex(v, georef.graph);
+}
+
+navitia::georef::Way* builder::add_way(const std::string& name, const std::string& way_type){
+    if (vertex_a == boost::none) {
+        vertex_a = init_vertex(*this->data->geo_ref);
+    }
+    if (vertex_b == boost::none) {
+        vertex_b = init_vertex(*this->data->geo_ref);
+    }
+    navitia::georef::Way* w = new navitia::georef::Way;
+    w->idx = this->data->geo_ref->ways.size();
+    w->name = name;
+    w->way_type = way_type;
+    w->uri = name;
+    //associate the way to an edge to make them "searchable" in the autocomplete
+    navitia::georef::Edge e;
+    e.way_idx = w->idx;
+    boost::add_edge(*this->vertex_a, *this->vertex_b, e, this->data->geo_ref->graph);
+    w->edges.push_back(std::make_pair(*this->vertex_a, *this->vertex_b));
+    this->data->geo_ref->ways.push_back(w);
+    return w;
+
+}
+
 }

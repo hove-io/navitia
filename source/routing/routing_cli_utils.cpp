@@ -49,9 +49,9 @@ namespace navitia { namespace cli {
         void compute_options::load(const std::string& file) {
             {
                 Timer t("Loading datafile : " + file);
-                data.load(file);
+                data.load_nav(file);
+                data.build_raptor();
             }
-            data.build_raptor();
             raptor = std::unique_ptr<nr::RAPTOR>(new nr::RAPTOR(data));
         }
 

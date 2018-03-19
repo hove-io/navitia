@@ -26,7 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.street_network.geovelo import Geovelo
 from navitiacommon import type_pb2, response_pb2
 import pybreaker

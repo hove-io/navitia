@@ -476,9 +476,38 @@ BOB_STREET = {
     ]
 }
 
-BRAGI_MOCK_STOP_AREA_WITH_MORE_ATTRIBUTS_DEPTH_ZERO = deepcopy(BRAGI_MOCK_STOP_AREA_WITH_MORE_ATTRIBUTS)
-
-BRAGI_MOCK_RESPONSE_WITH_DEPTH_ZERO = deepcopy(BRAGI_MOCK_RESPONSE)
+BRAGI_MOCK_ADMIN = {
+    "type": "FeatureCollection",
+    "geocoding": {
+        "version": "0.1.0",
+        "query": ""
+    },
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "coordinates": [
+                    5.0414701,
+                    47.3215806
+                ],
+                "type": "Point"
+            },
+            "properties": {
+                "geocoding": {
+                    "id": "admin:fr:21231",
+                    "type": "city",
+                    "label": "Dijon (21000)",
+                    "name": "Dijon",
+                    "postcode": "21000",
+                    "city": None,
+                    "citycode": "21231",
+                    "level": 8,
+                    "administrative_regions": []
+                }
+            }
+        }
+    ]
+}
 
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF}, global_config={'activate_bragi': True})
 class TestBragiAutocomplete(AbstractTestFixture):
@@ -522,7 +551,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
 
         url += "?{}".format(urlencode(params, doseq=True))
         mock_requests = MockRequests({
-            url: (BRAGI_MOCK_RESPONSE_WITH_DEPTH_ZERO, 200)
+            url: (deepcopy(BRAGI_MOCK_RESPONSE), 200)
         })
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
@@ -731,7 +760,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['stop_area'].get('physical_modes')[1].get('name') == 'pm_name:Car'
 
             assert len(r[0]['stop_area'].get('codes')) == 2
-            assert r[0]['stop_area'].get('codes')[0].get('type') == 'navitia1'
+            assert r[0]['stop_area'].get('codes')[0].get('type') == 'external_code'
             assert r[0]['stop_area'].get('codes')[0].get('value') == '424242'
             assert r[0]['stop_area'].get('codes')[1].get('type') == 'source'
             assert r[0]['stop_area'].get('codes')[1].get('value') == '1161'
@@ -754,7 +783,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
 
         url += "?{}".format(urlencode(params, doseq=True))
         mock_requests = MockRequests({
-            url: (BRAGI_MOCK_STOP_AREA_WITH_MORE_ATTRIBUTS_DEPTH_ZERO, 200)
+            url: (deepcopy(BRAGI_MOCK_STOP_AREA_WITH_MORE_ATTRIBUTS), 200)
         })
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places?q=bobette&pt_dataset=main_routing_test&type[]=stop_area"
@@ -777,7 +806,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['stop_area'].get('physical_modes')[1].get('name') == 'pm_name:Car'
 
             assert len(r[0]['stop_area'].get('codes')) == 2
-            assert r[0]['stop_area'].get('codes')[0].get('type') == 'navitia1'
+            assert r[0]['stop_area'].get('codes')[0].get('type') == 'external_code'
             assert r[0]['stop_area'].get('codes')[0].get('value') == '424242'
             assert r[0]['stop_area'].get('codes')[1].get('type') == 'source'
             assert r[0]['stop_area'].get('codes')[1].get('value') == '1161'
@@ -808,8 +837,8 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert 'physical_modes' not in r[0]['stop_area']
             #Empty attribut not displayed
             assert 'codes' not in r[0]['stop_area']
-            #Attribut displayed but empty
-            assert len(r[0]['stop_area'].get('properties')) == 0
+            #Attribut empty not displayed
+            assert 'properties' not in r[0]['stop_area']
             #Attribut displayed but None
             assert not r[0]['stop_area'].get('timezone')
 
@@ -1020,6 +1049,67 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert address_admins[0]['name'] == "Bobtown"
             assert address_admins[0]['coord']['lat'] == "48.8396154"
             assert address_admins[0]['coord']['lon'] == "2.3957517"
+
+    def test_autocomplete_for_admin_depth_zero(self):
+        url = 'https://host_of_bragi/autocomplete'
+        params = {
+            'q': u'bob',
+            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
+            'limit': 10,
+            'pt_dataset': 'main_routing_test'
+        }
+
+        url += "?{}".format(urlencode(params, doseq=True))
+        mock_requests = MockRequests({
+            url: (BRAGI_MOCK_ADMIN, 200)
+        })
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
+                                         "&type[]=address&type[]=poi&type[]=administrative_region&depth=0")
+
+            is_valid_global_autocomplete(response, depth=0)
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['name'] == 'Dijon'
+            assert r[0]['embedded_type'] == 'administrative_region'
+            assert r[0]['id'] == 'admin:fr:21231'
+            assert r[0]['administrative_region']['id'] == 'admin:fr:21231'
+            assert r[0]['administrative_region']['insee'] == '21231'
+            assert r[0]['administrative_region']['label'] == 'Dijon (21000)'
+            assert r[0]['administrative_region']['name'] == 'Dijon'
+            assert 'administrative_regions' not in r[0]['administrative_region']
+
+    # Since administrative_regions of the admin is an empty list in the result bragi
+    # there is no difference in the final result with depth from 0 to 3
+    def test_autocomplete_for_admin_depth_two(self):
+        url = 'https://host_of_bragi/autocomplete'
+        params = {
+            'q': u'bob',
+            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
+            'limit': 10,
+            'pt_dataset': 'main_routing_test'
+        }
+
+        url += "?{}".format(urlencode(params, doseq=True))
+        mock_requests = MockRequests({
+            url: (deepcopy(BRAGI_MOCK_ADMIN), 200)
+        })
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
+                                         "&type[]=address&type[]=poi&type[]=administrative_region&depth=2")
+
+            is_valid_global_autocomplete(response, depth=2)
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['name'] == 'Dijon'
+            assert r[0]['embedded_type'] == 'administrative_region'
+            assert r[0]['id'] == 'admin:fr:21231'
+            assert r[0]['administrative_region']['id'] == 'admin:fr:21231'
+            assert r[0]['administrative_region']['insee'] == '21231'
+            assert r[0]['administrative_region']['label'] == 'Dijon (21000)'
+            assert r[0]['administrative_region']['name'] == 'Dijon'
+            # In our case administrative_regions of the admin is an empty list in the result bragi
+            assert 'administrative_regions' not in r[0]['administrative_region']
 
 
 @dataset({"main_routing_test": {}}, global_config={'activate_bragi': True})

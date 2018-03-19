@@ -46,3 +46,13 @@ BOOST_AUTO_TEST_CASE(ed2nav_with_no_param_should_start_without_throwing)
     const char* argv [] = { "ed2nav_test" };
     BOOST_CHECK_NO_THROW(ed::ed2nav(1, argv));
 }
+
+BOOST_AUTO_TEST_CASE(should_throw_on_bad_connection_string) 
+{
+    const char* argv [] = { 
+    	"ed2nav_test", 
+    	"--connection-string=\"blahblah\"" 
+    };
+    BOOST_CHECK_THROW(ed::ed2nav(2, argv), std::exception);
+}
+

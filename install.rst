@@ -142,3 +142,5 @@ Testing
       ``JORMUNGANDR_CONFIG_FILE=your_config.py python manage.py runserver``
 
    #. Grab a browser and open http://localhost:5000/v1/coverage/default_region
+
+   #. Any trouble running Jormungandr see https://github.com/CanalTP/navitia/blob/dev/source/jormungandr/readme.md

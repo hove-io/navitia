@@ -1,3 +1,4 @@
+from __future__ import absolute_import, print_function, unicode_literals, division
 from tests.check_utils import api_get, api_post, api_delete, api_put, _dt
 import json
 import pytest
@@ -191,7 +192,7 @@ def test_add_user(mock_rabbit, geojson_polygon):
     resp = api_post('/v0/users/', data=data, content_type='application/json')
 
     def check(u):
-        gen = (k for k in user if k is not 'shape')
+        gen = (k for k in user if k != 'shape')
         for k in gen:
             assert u[k] == user[k]
         assert u['end_point']['name'] == 'navitia.io'
@@ -571,7 +572,7 @@ def test_get_user_with_shape(create_user, geojson_polygon):
     We start by creating the user with a shape,
     and we test that the attribute shape={} and has_shape = True
     """
-    print api_get('/v0/users')
+    print(api_get('/v0/users'))
     resp = api_get('/v0/users/{}'.format(create_user))
 
     assert resp['has_shape'] is True
@@ -596,7 +597,7 @@ def test_get_user_without_shape(create_user_without_shape):
     and we test that  shape = None and has_shape = False
     """
     resp = api_get('/v0/users/{}'.format(create_user_without_shape))
-    print resp['shape']
+    print(resp['shape'])
     assert resp['has_shape'] is False
     assert resp['shape'] is None
     assert resp['shape'] is None

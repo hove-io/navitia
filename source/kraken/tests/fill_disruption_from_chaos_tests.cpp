@@ -606,3 +606,93 @@ BOOST_AUTO_TEST_CASE(update_properties) {
     BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
     BOOST_CHECK_EQUAL(nav_dis->properties.size(), 0);
 }
+
+BOOST_AUTO_TEST_CASE(make_line_section_test) {
+    ed::builder b("20171127");
+
+    navitia::type::Data data;
+    b.vj("A", "000111").uri("vj:1").route("forward")
+            ("stop_area:stop1", "08:10"_t, "08:11"_t)
+            ("stop_area:stop2", "08:20"_t, "08:21"_t)
+            ("stop_area:stop3", "08:30"_t, "08:31"_t)
+            ("stop_area:stop4", "08:40"_t, "08:41"_t);
+    b.vj("A", "000111").uri("vj:2").route("backward")
+            ("stop_area:stop1", "09:10"_t, "09:11"_t)
+            ("stop_area:stop2", "09:20"_t, "09:21"_t)
+            ("stop_area:stop3", "09:30"_t, "09:31"_t)
+            ("stop_area:stop4", "09:40"_t, "09:41"_t);
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14),
+                                                                  boost::gregorian::days(7));
+
+    chaos::PtObject object;
+    object.set_pt_object_type(chaos::PtObject_Type_line_section);
+    object.set_uri("ls");
+    auto* ls = object.mutable_pt_line_section();
+
+    auto* ls_line = ls->mutable_line();
+    ls_line->set_pt_object_type(chaos::PtObject_Type_line);
+    ls_line->set_uri("A");
+
+    auto* start_stop = ls->mutable_start_point();
+    start_stop->set_pt_object_type(chaos::PtObject_Type_stop_area);
+    start_stop->set_uri("stop_area:stop1");
+    auto* end_stop = ls->mutable_end_point();
+    end_stop->set_pt_object_type(chaos::PtObject_Type_stop_area);
+    end_stop->set_uri("stop_area:stop3");
+
+    //basic line_section without routes
+    auto line_section = navitia::make_line_section(object, *b.data->pt_data);
+    BOOST_REQUIRE(line_section);
+    BOOST_REQUIRE_EQUAL(line_section->line->uri, "A");
+    BOOST_REQUIRE_EQUAL(line_section->start_point->uri, "stop_area:stop1");
+    BOOST_REQUIRE_EQUAL(line_section->end_point->uri, "stop_area:stop3");
+    BOOST_REQUIRE_EQUAL(line_section->routes.size(), 2);
+
+    //line_section with invalid line
+    ls_line->set_uri("B");
+    line_section = navitia::make_line_section(object, *b.data->pt_data);
+    BOOST_CHECK(!line_section);
+
+    //line_section with invalid start stop_area
+    ls_line->set_uri("A");
+    start_stop->set_uri("stop_area:stop10");
+    line_section = navitia::make_line_section(object, *b.data->pt_data);
+    BOOST_CHECK(!line_section);
+
+    //line_section with invalid end stop_area
+    start_stop->set_uri("stop_area:stop1");
+    end_stop->set_uri("stop_area:stop10");
+    line_section = navitia::make_line_section(object, *b.data->pt_data);
+    BOOST_CHECK(!line_section);
+
+    //line_section filtered on one route
+    end_stop->set_uri("stop_area:stop3");
+    auto ls_route = ls->add_routes();
+    ls_route->set_pt_object_type(chaos::PtObject_Type_route);
+    ls_route->set_uri("backward");
+    line_section = navitia::make_line_section(object, *b.data->pt_data);
+    BOOST_REQUIRE(line_section);
+    BOOST_REQUIRE_EQUAL(line_section->routes.size(), 1);
+    BOOST_CHECK_EQUAL(line_section->routes[0]->uri, "backward");
+
+    //line_section filtered on one route that doesn't exist
+    ls_route->set_uri("unknown");
+    line_section = navitia::make_line_section(object, *b.data->pt_data);
+    BOOST_REQUIRE(!line_section);
+
+    //line_section filtered by routes: one exist, the other doesn't
+    ls_route = ls->add_routes();
+    ls_route->set_pt_object_type(chaos::PtObject_Type_route);
+    ls_route->set_uri("forward");
+    line_section = navitia::make_line_section(object, *b.data->pt_data);
+    BOOST_REQUIRE(line_section);
+    BOOST_REQUIRE_EQUAL(line_section->routes.size(), 1);
+    BOOST_CHECK_EQUAL(line_section->routes[0]->uri, "forward");
+
+
+}

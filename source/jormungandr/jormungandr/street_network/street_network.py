@@ -31,7 +31,6 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 from jormungandr import utils, new_relic
-from jormungandr.exceptions import ConfigException
 import abc
 
 # Using abc.ABCMeta in a way it is compatible both with Python 2.7 and Python 3.x
@@ -92,13 +91,13 @@ class AbstractStreetNetworkService(ABC):
         return None
 
     def record_external_failure(self, message):
-        utils.record_external_failure(message, 'streetnetwork', self.sn_system_id)
+        utils.record_external_failure(message, 'streetnetwork', unicode(self.sn_system_id))
 
     def record_call(self, status, **kwargs):
         """
         status can be in: ok, failure
         """
-        params = {'streetnetwork_id': repr(self.sn_system_id), 'status': status}
+        params = {'streetnetwork_id': unicode(self.sn_system_id), 'status': status}
         params.update(kwargs)
         new_relic.record_custom_event('streetnetwork', params)
 

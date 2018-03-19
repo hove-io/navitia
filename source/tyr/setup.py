@@ -29,6 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
+from __future__ import absolute_import, print_function, unicode_literals, division
 from distutils.core import setup
 import glob
 
@@ -37,7 +38,7 @@ setup(name='tyr',
         author='CanalTP',
         author_email='alexandre.jacquin@canaltp.fr',
         url='www.navitia.io',
-        packages=['tyr', 'tyr.command'],
+        packages=['tyr'.encode('utf-8'), 'tyr.command'.encode('utf-8')],
         requires=['configobj'],
         scripts=['manage_tyr.py'],
         data_files=[

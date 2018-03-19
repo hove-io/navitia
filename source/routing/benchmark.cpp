@@ -104,7 +104,8 @@ int main(int argc, char** argv){
     type::Data data;
     {
         Timer t("Chargement des données : " + file);
-        data.load(file);
+        data.load_nav(file);
+        data.build_raptor();
     }
     std::vector<PathDemand> demands;
 

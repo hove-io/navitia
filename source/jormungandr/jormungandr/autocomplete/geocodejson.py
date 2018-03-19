@@ -116,6 +116,10 @@ def create_modes_field(modes):
 def create_codes_field(codes):
     if not codes:
         return []
+    # The code type value 'navitia1' replaced by 'external_code'
+    for code in codes:
+        if code.get('name') == 'navitia1':
+            code['name'] = 'external_code'
     return [{"type": code.get('name'), "value": code.get('value')} for code in codes]
 
 
@@ -168,7 +172,7 @@ class AdministrativeRegionField(fields.Raw):
         lon, lat = get_lon_lat(obj)
         geocoding = obj.get('properties', {}).get('geocoding', {})
 
-        return {
+        res = {
             "insee": geocoding.get('citycode') or geocoding.get('city_code'),
             "level":
                 int(geocoding.get('level')) if geocoding.get('level') else None,
@@ -179,10 +183,13 @@ class AdministrativeRegionField(fields.Raw):
                 "lat": lat,
                 "lon": lon
             },
-            "zip_code": geocoding.get('postcode'),
-            "administrative_regions":
-                create_administrative_regions_field(geocoding) or create_admin_field(geocoding) ,
+            "zip_code": geocoding.get('postcode')
         }
+
+        admins = create_administrative_regions_field(geocoding) or create_admin_field(geocoding)
+        if admins:
+            res['administrative_regions'] = admins
+        return res
 
 
 class AddressField(fields.Raw):
@@ -256,8 +263,7 @@ class StopAreaField(fields.Raw):
             },
             "label": geocoding.get('label'),
             "name": geocoding.get('name'),
-            "timezone": geocoding.get('timezone'),
-            "properties": {p.get('key'): p.get('value') for p in geocoding.get('properties', [])}
+            "timezone": geocoding.get('timezone')
         }
         c_modes = geocoding.get('commercial_modes', [])
         if c_modes:
@@ -274,6 +280,11 @@ class StopAreaField(fields.Raw):
         admins = create_administrative_regions_field(geocoding) or create_admin_field(geocoding)
         if admins:
             resp['administrative_regions'] = admins
+
+        prop = {p.get('key'): p.get('value') for p in geocoding.get('properties', [])}
+        if prop:
+            resp['properties'] = prop
+
         return resp
 
 geocode_admin = {

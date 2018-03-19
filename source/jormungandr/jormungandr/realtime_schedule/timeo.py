@@ -99,15 +99,15 @@ class Timeo(RealtimeProxy):
             return self.breaker.call(requests.get, url, timeout=self.timeout)
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Timeo RT service dead, using base schedule (error: {}'.format(e),
-                                              extra={'rt_system_id': self.rt_system_id})
+                                              extra={'rt_system_id': unicode(self.rt_system_id)})
             raise RealtimeProxyError('circuit breaker open')
         except requests.Timeout as t:
             logging.getLogger(__name__).error('Timeo RT service timeout, using base schedule (error: {}'.format(t),
-                                              extra={'rt_system_id': self.rt_system_id})
+                                              extra={'rt_system_id': unicode(self.rt_system_id)})
             raise RealtimeProxyError('timeout')
         except Exception as e:
             logging.getLogger(__name__).exception('Timeo RT error, using base schedule',
-                                                  extra={'rt_system_id': self.rt_system_id})
+                                                  extra={'rt_system_id': unicode(self.rt_system_id)})
             raise RealtimeProxyError(str(e))
 
     def _get_dt_local(self, utc_dt):
@@ -126,13 +126,13 @@ class Timeo(RealtimeProxy):
     def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None, duration=None):
         if self._is_tomorrow(from_dt, current_dt):
             logging.getLogger(__name__).info('Timeo RT service , Can not call Timeo for tomorrow.',
-                                             extra={'rt_system_id': self.rt_system_id})
+                                             extra={'rt_system_id': unicode(self.rt_system_id)})
             return None
         url = self._make_url(route_point, count, from_dt)
         if not url:
             return None
         logging.getLogger(__name__).debug('Timeo RT service , call url : {}'.format(url),
-                                          extra={'rt_system_id': self.rt_system_id})
+                                          extra={'rt_system_id': unicode(self.rt_system_id)})
         r = self._call_timeo(url)
         if not r:
             return None
@@ -140,20 +140,20 @@ class Timeo(RealtimeProxy):
         if r.status_code != 200:
             # TODO better error handling, the response might be in 200 but in error
             logging.getLogger(__name__).error('Timeo RT service unavailable, impossible to query : {}'.format(r.url),
-                    extra={'rt_system_id': self.rt_system_id, 'status_code': r.status_code})
+                    extra={'rt_system_id': unicode(self.rt_system_id), 'status_code': r.status_code})
             raise RealtimeProxyError('non 200 response')
 
         return self._get_passages(r.json(), current_dt, route_point.fetch_line_uri())
 
     def _get_passages(self, timeo_resp, current_dt, line_uri=None):
         logging.getLogger(__name__).debug('timeo response: {}'.format(timeo_resp),
-                                          extra={'rt_system_id': self.rt_system_id})
+                                          extra={'rt_system_id': unicode(self.rt_system_id)})
 
         st_responses = timeo_resp.get('StopTimesResponse')
         # by construction there should be only one StopTimesResponse
         if not st_responses or len(st_responses) != 1:
             logging.getLogger(__name__).warning('invalid timeo response: {}'.format(timeo_resp),
-                                                extra={'rt_system_id': self.rt_system_id})
+                                                extra={'rt_system_id': unicode(self.rt_system_id)})
             raise RealtimeProxyError('invalid response')
 
         next_st = st_responses[0]['NextStopTimesMessage']
@@ -196,7 +196,7 @@ class Timeo(RealtimeProxy):
             logging.getLogger(__name__).debug('missing realtime id for {obj}: '
                                               'stop code={s}, line code={l}, route code={r}'.
                                               format(obj=route_point, s=stop, l=line, r=route),
-                                              extra={'rt_system_id': self.rt_system_id})
+                                              extra={'rt_system_id': unicode(self.rt_system_id)})
             self.record_internal_failure('missing id')
             return None
 
@@ -241,7 +241,7 @@ class Timeo(RealtimeProxy):
         return self._get_dt_local(dt)
 
     def status(self):
-        return {'id': self.rt_system_id,
+        return {'id': unicode(self.rt_system_id),
                 'timeout': self.timeout,
                 'circuit_breaker': {'current_state': self.breaker.current_state,
                                     'fail_counter': self.breaker.fail_counter,

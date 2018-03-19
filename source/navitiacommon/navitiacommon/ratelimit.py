@@ -29,6 +29,7 @@ RateLimiter is a Redis backed object used to define one or more rules to rate li
 This module can be run to show an example of a running RateLimiter instance.
 """
 
+from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 import math
 import redis
