@@ -47,8 +47,7 @@ from tyr import celery
 from navitiacommon import models, task_pb2, utils
 from tyr.helper import load_instance_config, get_instance_logger
 from navitiacommon.launch_exec import launch_exec
-
-
+from datetime import datetime, timedelta
 @celery.task()
 def finish_job(job_id):
     """
@@ -151,7 +150,8 @@ def update_data():
         current_app.logger.debug("Update data of : {}".format(instance.name))
         instance_config = load_instance_config(instance.name)
         files = glob.glob(instance_config.source_directory + "/*")
-        import_data(files, instance, backup_file=True)
+        if files:
+            import_data(files, instance, backup_file=True)
 
 
 BANO_REGEXP = re.compile('.*bano.*')
@@ -296,6 +296,29 @@ def purge_instance(instance_id, nb_to_keep):
     logger.info('we remove: %s', to_remove)
     for path in to_remove:
         shutil.rmtree(path)
+
+@celery.task()
+def purge_jobs():
+    """
+    Delete old jobs in database and backup folders associated
+    """
+    instances = models.Instance.query_existing().all()
+    time_limit = datetime.utcnow() - timedelta(days=current_app.config['JOB_MAX_PERIOD_TO_KEEP'])
+    logger = logging.getLogger(__name__)
+    logger.info('Purge old jobs and datasets backup created before {}'.format(time_limit))
+
+    for instance in instances:
+        datasets_to_delete = instance.delete_old_jobs_and_list_datasets(time_limit)
+
+        backups_to_delete = set(os.path.realpath(os.path.dirname(dataset.name))
+                            for dataset in datasets_to_delete)
+        logger.info('backups_to_delete are: {}'.format(backups_to_delete))
+
+        for path in backups_to_delete:
+            if os.path.exists(path):
+                shutil.rmtree('{}'.format(path))
+            else:
+                logger.warning('Folder {} can\'t be found'.format(path))
 
 
 @celery.task()

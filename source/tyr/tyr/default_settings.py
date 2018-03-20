@@ -33,6 +33,10 @@ AUOTOCOMPLETE_MAX_BACKUPS_TO_KEEP = 5
 
 #Max number of dataset to keep per instance and type
 DATASET_MAX_BACKUPS_TO_KEEP = 1
+
+# Period of time to keep job (in days)
+JOB_MAX_PERIOD_TO_KEEP = 60
+
 #Log Level available
 # - DEBUG
 # - INFO
@@ -127,6 +131,11 @@ CELERYBEAT_SCHEDULE = {
         'task': 'tyr.tasks.purge_datasets',
         'schedule': schedules.crontab(hour=2, minute=30),  # Task is executed daily at 2H30
         'options': {'expires': 120}
+    },
+    'purge-old-job-every-week': {
+        'task': 'tyr.tasks.purge_jobs',
+        'schedule': schedules.crontab(hour=1, minute=0, day_of_week='monday'), # Task is executed at at 1H00 on monday every week
+        'options': {'expires': 172800} # Expires after 2 days (in s)
     },
     'heartbeat-kraken': {
         'task': 'tyr.tasks.heartbeat',
