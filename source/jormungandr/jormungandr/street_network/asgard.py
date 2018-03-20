@@ -48,11 +48,12 @@ class Asgard(Valhalla):
         self._sockets = queue.Queue()
 
     def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration, request, **kwargs):
-        if len(origins) > 1:
-            if len(destinations) > 1:
-                logging.getLogger(__name__).error('routing matrix error, no unique center point')
-                raise TechnicalError('routing matrix error, no unique center point')
-
+        speed_switcher = {
+            "walking": request['walking_speed'],
+            "bike": request['bike_speed'],
+            "car": request['car_speed'],
+            "bss": request['bss_speed'],
+        }
         req = request_pb2.Request()
         req.requested_api = type_pb2.street_network_routing_matrix
 
@@ -65,8 +66,9 @@ class Asgard(Valhalla):
             dest.place = 'coord:{c.lon}:{c.lat}'.format(c=get_pt_object_coord(d))
             dest.access_duration = 0
 
-        req.sn_routing_matrix.max_duration = max_duration
         req.sn_routing_matrix.mode = mode
+        req.sn_routing_matrix.speed = speed_switcher.get(mode, kwargs.get("walking"))
+        req.sn_routing_matrix.max_duration = max_duration
 
         res = self._call_asgard(req)
         #TODO handle car park
