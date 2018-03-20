@@ -398,14 +398,6 @@ BOOST_FIXTURE_TEST_CASE(osm_pois_id_sould_match_mimir_naming, ArgsFixture)
     const auto & pois = data.geo_ref->pois;
     BOOST_REQUIRE_GT(pois.size(), 0);
 
-    for(const auto & poi : pois) {
-        BOOST_CHECK(
-            boost::starts_with(poi->uri, "poi:osm:")
-        );
-        BOOST_CHECK(
-            boost::contains(poi->uri, "node") 
-            || boost::contains(poi->uri, "way") 
-            || boost::contains(poi->uri, "relation") 
-        );
-    }
+    BOOST_CHECK_EQUAL(pois[0]->uri, "poi:osm:way:551462554");
+    BOOST_CHECK_EQUAL(pois[19]->uri, "poi:osm:node:5414687331");
 }
