@@ -17,7 +17,6 @@ add_executable(osm_tags_reader_test osm_tags_reader_test.cpp)
 target_link_libraries(osm_tags_reader_test connectors data ed types utils ${BOOST_LIBS} log4cplus)
 ADD_BOOST_TEST(osm_tags_reader_test)
 
-
 add_executable(associated_calendar_test associated_calendar_test.cpp)
 target_link_libraries(associated_calendar_test ed data types routing fare georef autocomplete utils ${BOOST_LIBS} log4cplus pb_lib protobuf)
 ADD_BOOST_TEST(associated_calendar_test)
@@ -38,6 +37,11 @@ add_executable(osm2ed_test osm2ed_test.cpp)
 target_link_libraries(osm2ed_test osm2ed_lib transportation_data_import ed connectors types ${PQXX_LIB} ${OSMPBF}
   pb_lib utils ${BOOST_LIBS} log4cplus z protobuf)
 ADD_BOOST_TEST(osm2ed_test)
+
+add_executable(poi2ed_test poi2ed_test.cpp)
+target_link_libraries(poi2ed_test ed connectors types ${PQXX_LIB} ${OSMPBF}
+  pb_lib utils ${BOOST_LIBS} log4cplus z protobuf)
+ADD_BOOST_TEST(poi2ed_test "${FIXTURES_DIR}/ed/poi")
 
 add_executable(fare2ed_test fare2ed_test.cpp)
 target_link_libraries(fare2ed_test fare2ed_lib transportation_data_import connectors ${BOOST_LIBS} log4cplus)

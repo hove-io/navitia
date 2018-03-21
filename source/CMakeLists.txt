@@ -71,9 +71,15 @@ link_directories(${Boost_LIBRARY_DIRS})
 
 MACRO(ADD_BOOST_TEST EXE_NAME)
     IF("${Boost_VERSION}" LESS 106200)
-        ADD_TEST(${EXE_NAME} "${EXECUTABLE_OUTPUT_PATH}/${EXE_NAME}" --log_format=XML --log_sink=results_${EXE_NAME}.xml --log_level=all --report_level=no)
+        ADD_TEST(
+            NAME ${EXE_NAME} 
+            COMMAND "${EXECUTABLE_OUTPUT_PATH}/${EXE_NAME}" --log_format=XML --log_sink=results_${EXE_NAME}.xml --log_level=all --report_level=no "${ARGN}"
+        )
     ELSE()
-        ADD_TEST(${EXE_NAME} "${EXECUTABLE_OUTPUT_PATH}/${EXE_NAME}" --logger=XML,all,results_${EXE_NAME}.xml --report_level=no)
+        ADD_TEST(
+            NAME ${EXE_NAME} 
+            COMMAND "${EXECUTABLE_OUTPUT_PATH}/${EXE_NAME}" --logger=XML,all,results_${EXE_NAME}.xml --report_level=no "${ARGN}"
+        )
     ENDIF()
 ENDMACRO(ADD_BOOST_TEST)
 

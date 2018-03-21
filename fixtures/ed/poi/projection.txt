@@ -1,0 +1,2 @@
+name;definition
+WGS84 (EPSG: 4326);4326
