@@ -855,7 +855,7 @@ const OSMWay* PoiHouseNumberVisitor::find_way(const CanalTP::Tags& tags, const d
                 min_distance = distance;
                 candidate_way = &way;
             }
-        } 
+        }
     }
     return candidate_way;
 }

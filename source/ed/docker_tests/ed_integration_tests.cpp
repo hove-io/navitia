@@ -389,7 +389,7 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
     check_ntfs(data);
 }
 
-BOOST_FIXTURE_TEST_CASE(osm_pois_id_sould_match_mimir_naming, ArgsFixture) 
+BOOST_FIXTURE_TEST_CASE(osm_pois_id_sohuld_match_mimir_naming, ArgsFixture) 
 {
     navitia::type::Data data;
     BOOST_REQUIRE_NO_THROW(data.load_nav(input_file_paths.at("osm_and_gtfs_file")););
