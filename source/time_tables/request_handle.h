@@ -46,11 +46,11 @@ struct RequestHandle {
 
     RequestHandle(
             PbCreator& pb_creator,
-            const std::string& request,
-            const std::vector<std::string>& forbidden_uris,
             const boost::posix_time::ptime datetime,
             uint32_t duration,
             boost::optional<const std::string> calendar_id, const bool clockwise = true);
+
+    void init_jpp(const std::string& request, const std::vector<std::string>& forbidden_uris);
 };
 }
 
