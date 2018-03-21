@@ -136,8 +136,8 @@ void passages(PbCreator& pb_creator,
               const uint32_t start_page) {
 
     const PassagesVisitor vis{api_pb, *pb_creator.data};
-    RequestHandle handler(pb_creator, request, forbidden_uris,
-                          datetime, duration, {}, true);
+    RequestHandle handler(pb_creator, datetime, duration, {}, true);
+    handler.init_jpp(request, forbidden_uris);
 
     if(pb_creator.has_error()) {
         return;
