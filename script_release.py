@@ -79,10 +79,10 @@ class ReleaseManager:
         is_release_unmerged = re.search("  release(\n|$)", unmerged)
         if is_release_unmerged:
             print(is_release_unmerged.group(0))
-            print("ABORTING: {rem}/release branch was not merged in {rem}/dev\n".format(rem=remote_name))
-            print("This is required before releasing. You may use (be careful):\n")
-            print("git checkout dev; git submodule update\n")
-            print("git merge release\n")
+            print("ABORTING: {rem}/release branch was not merged in {rem}/dev".format(rem=remote_name))
+            print("This is required before releasing. You may use (be careful):")
+            print("git checkout dev; git submodule update")
+            print("git merge release")
 
             exit(1)
 
