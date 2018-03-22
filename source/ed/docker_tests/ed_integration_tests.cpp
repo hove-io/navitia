@@ -401,3 +401,17 @@ BOOST_FIXTURE_TEST_CASE(osm_pois_id_sohuld_match_mimir_naming, ArgsFixture)
     BOOST_CHECK_EQUAL(pois[0]->uri, "poi:osm:way:551462554");
     BOOST_CHECK_EQUAL(pois[19]->uri, "poi:osm:node:5414687331");
 }
+
+BOOST_FIXTURE_TEST_CASE(poi2ed_pois_uri_should_match_mimir_naming, ArgsFixture) 
+{
+    navitia::type::Data data;
+    BOOST_REQUIRE_NO_THROW(data.load_nav(input_file_paths.at("poi_file")););
+    data.build_raptor();
+
+    const auto & pois = data.geo_ref->pois;
+    BOOST_REQUIRE_GT(pois.size(), 0);
+
+    BOOST_CHECK_EQUAL(pois[0]->uri, "poi:ADM44_100");
+    BOOST_CHECK_EQUAL(pois[1]->uri, "poi:CULT44_30021");
+    BOOST_CHECK_EQUAL(pois[2]->uri, "poi:PAIHABIT0000000028850973");
+}
