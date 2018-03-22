@@ -70,8 +70,9 @@ Jointures::Jointures() {
     // From a CommercialMode, we can have its Lines.
     boost::add_edge(vertex_map.at(Type_e::Line), vertex_map.at(Type_e::CommercialMode), g);
 
-    // À partir d'un physical mode on peut avoir les vehicule journeys
+    // PhysicalMode => {VehicleJourney, JourneyPattern}
     boost::add_edge(vertex_map.at(Type_e::VehicleJourney), vertex_map.at(Type_e::PhysicalMode), g);
+    boost::add_edge(vertex_map.at(Type_e::JourneyPattern), vertex_map.at(Type_e::PhysicalMode), Edge(0.9), g);
 
     // À partir d'une ligne on peut avoir ses modes commerciaux, compagnies, réseaux et routes
     boost::add_edge(vertex_map.at(Type_e::CommercialMode), vertex_map.at(Type_e::Line), g);
@@ -84,10 +85,11 @@ Jointures::Jointures() {
     boost::add_edge(vertex_map.at(Type_e::Line), vertex_map.at(Type_e::Route), g);
     boost::add_edge(vertex_map.at(Type_e::VehicleJourney), vertex_map.at(Type_e::Route), g);
 
-    // À partir d'un journey pattern on peut avoir sa route, ses points et son vehicule journey
+    // JourneyPattern => {Route, JourneyPatternPoint, VehicleJourney, PhysicalMode}
     boost::add_edge(vertex_map.at(Type_e::Route), vertex_map.at(Type_e::JourneyPattern), g);
     boost::add_edge(vertex_map.at(Type_e::JourneyPatternPoint), vertex_map.at(Type_e::JourneyPattern), g);
     boost::add_edge(vertex_map.at(Type_e::VehicleJourney), vertex_map.at(Type_e::JourneyPattern), g);
+    boost::add_edge(vertex_map.at(Type_e::PhysicalMode), vertex_map.at(Type_e::JourneyPattern), Edge(0.9), g);
 
     // from a VehicleJourney, we can have the Route, the
     // JourneyPattern, the Company, the PhysicalMode, the

@@ -676,6 +676,11 @@ Data::get_target_by_one_source(Type_e source, Type_e target,
         case Type_e::VehicleJourney:
             result.insert(jp_container.get_jp_from_vj()[routing::VjIdx(source_idx)].val);
             break;
+        case Type_e::PhysicalMode:
+            for (const auto& jpp: jp_container.get_jps_from_phy_mode()[routing::PhyModeIdx(source_idx)]) {
+                result.insert(jpp.val); //TODO use bulk insert ?
+            }
+            break;
         case Type_e::JourneyPatternPoint:
             result.insert(jp_container.get(routing::JppIdx(source_idx)).jp_idx.val);
             break;
@@ -709,6 +714,7 @@ Data::get_target_by_one_source(Type_e source, Type_e target,
             for (const auto& vj: jp.discrete_vjs) { result.insert(vj->idx); } //TODO use bulk insert ?
             for (const auto& vj: jp.freq_vjs) { result.insert(vj->idx); } //TODO use bulk insert ?
             break;
+        case Type_e::PhysicalMode: result.insert(jp.phy_mode_idx.val); break;
         default: break;
         }
         break;
