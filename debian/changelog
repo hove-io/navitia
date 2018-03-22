@@ -1,3 +1,11 @@
+navitia2 (2.52.1) unstable; urgency=medium
+
+  * Kraken: ignore unknown routes from line_section <https://github.com/CanalTP/navitia/pull/2355>
+  * kraken: handle route_schedule with a 2 stop_areas filter <https://github.com/CanalTP/navitia/pull/2370>
+  * ptref: add a link between PhysicalMode and JourneyPattern in the graph <https://github.com/CanalTP/navitia/pull/2371>
+
+ -- Alexandre JACQUIN <alexandre.jacquin@canaltp.fr>  Thu, 22 Mar 2018 15:41:30 +0100
+
 navitia2 (2.52.0) unstable; urgency=low
 
   * Jormun: Fix address in poi in api global autocomplete   <https://github.com/CanalTP/navitia/pull/2338>
