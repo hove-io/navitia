@@ -33,23 +33,23 @@ import logging
 from flask import request, g
 from flask_restful import fields, marshal_with, abort
 from jormungandr import i_manager, app
-from jormungandr.interfaces.v1.fields import disruption_marshaller, Links
-from jormungandr.interfaces.v1.fields import display_informations_vj, error, place,\
-    PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
-    SectionGeoJson, PbEnum, feed_publisher, Durations, context, Distances
+# from jormungandr.interfaces.v1.fields import disruption_marshaller, Links
+# from jormungandr.interfaces.v1.fields import display_informations_vj, error, place,\
+#     PbField, stop_date_time, enum_type, NonNullList, NonNullNested,\
+#     SectionGeoJson, PbEnum, feed_publisher, Durations, context, Distances
 
 from jormungandr.interfaces.parsers import default_count_arg_type
 from jormungandr.interfaces.v1.ResourceUri import complete_links
 from functools import wraps
-from jormungandr.interfaces.v1.fields import DateTime, Integer
+# from jormungandr.interfaces.v1.fields import DateTime, Integer
 from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.make_links import create_external_link, create_internal_link
 from jormungandr.interfaces.v1.errors import ManageError
 from collections import defaultdict
 from navitiacommon import response_pb2
 from jormungandr.utils import date_to_timestamp
-from jormungandr.interfaces.v1.Calendars import calendar
-from jormungandr.interfaces.v1.serializer import api, base
+# from jormungandr.interfaces.v1.Calendars import calendar
+from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.decorators import get_serializer
 from navitiacommon import default_values
 from jormungandr.interfaces.v1.journey_common import JourneyCommon, compute_possible_region
@@ -58,230 +58,231 @@ import six
 from navitiacommon.parser_args_type import BooleanType, OptionValue
 from jormungandr.interfaces.common import add_poi_infos_types
 
-f_datetime = "%Y%m%dT%H%M%S"
-class SectionLinks(fields.Raw):
+# f_datetime = "%Y%m%dT%H%M%S"
 
-    def output(self, key, obj):
-        links = None
-        try:
-            if obj.HasField(str("uris")):
-                links = obj.uris.ListFields()
-        except ValueError:
-            return None
-        response = []
-        if links:
-            for type_, value in links:
-                response.append({"type": type_.name, "id": value})
-
-        if obj.HasField(str('pt_display_informations')):
-            response.extend(base.make_notes(obj.pt_display_informations.notes))
-
-        if obj.HasField(str('ridesharing_information')):
-            response.extend([{"type": "ridesharing_ad",
-                              "rel": l.key,
-                              "href": l.href,
-                              "internal": False}
-                             for l in obj.ridesharing_information.links])
-        return response
-
-
-class FareLinks(fields.Raw):
-
-    def output(self, key, obj):
-        ticket_ids = []
-        try:
-            for t_id in obj.ticket_id:
-                ticket_ids.append(t_id)
-        except ValueError:
-            return None
-        response = []
-        for value in ticket_ids:
-            response.append(create_internal_link(_type="ticket", rel="tickets",
-                                                 id=value))
-        return response
-
-
-class TicketLinks(fields.Raw):
-
-    def output(self, key, obj):
-        section_ids = []
-        try:
-            for s_id in obj.section_id:
-                section_ids.append(s_id)
-        except ValueError:
-            return None
-        response = []
-        for value in section_ids:
-            response.append({"type": "section", "rel": "sections",
-                             "internal": True, "templated": False,
-                             "id": value})
-        return response
+# class SectionLinks(fields.Raw):
+#
+#     def output(self, key, obj):
+#         links = None
+#         try:
+#             if obj.HasField(str("uris")):
+#                 links = obj.uris.ListFields()
+#         except ValueError:
+#             return None
+#         response = []
+#         if links:
+#             for type_, value in links:
+#                 response.append({"type": type_.name, "id": value})
+#
+#         if obj.HasField(str('pt_display_informations')):
+#             response.extend(base.make_notes(obj.pt_display_informations.notes))
+#
+#         if obj.HasField(str('ridesharing_information')):
+#             response.extend([{"type": "ridesharing_ad",
+#                               "rel": l.key,
+#                               "href": l.href,
+#                               "internal": False}
+#                              for l in obj.ridesharing_information.links])
+#         return response
+#
+#
+# class FareLinks(fields.Raw):
+#
+#     def output(self, key, obj):
+#         ticket_ids = []
+#         try:
+#             for t_id in obj.ticket_id:
+#                 ticket_ids.append(t_id)
+#         except ValueError:
+#             return None
+#         response = []
+#         for value in ticket_ids:
+#             response.append(create_internal_link(_type="ticket", rel="tickets",
+#                                                  id=value))
+#         return response
 
 
-class section_type(enum_type):
+# class TicketLinks(fields.Raw):
+#
+#     def output(self, key, obj):
+#         section_ids = []
+#         try:
+#             for s_id in obj.section_id:
+#                 section_ids.append(s_id)
+#         except ValueError:
+#             return None
+#         response = []
+#         for value in section_ids:
+#             response.append({"type": "section", "rel": "sections",
+#                              "internal": True, "templated": False,
+#                              "id": value})
+#         return response
 
-    def if_on_demand_stop_time(self, stop):
-        properties = stop.properties
-        descriptor = properties.DESCRIPTOR
-        enum = descriptor.enum_types_by_name["AdditionalInformation"]
-        for v in properties.additional_informations:
-            if enum.values_by_number[v].name == 'on_demand_transport':
-                return True
-        return False
-
-    def output(self, key, obj):
-        try:
-            if obj.stop_date_times:
-                first_stop = obj.stop_date_times[0]
-                last_stop = obj.stop_date_times[-1]
-                if self.if_on_demand_stop_time(first_stop):
-                    return 'on_demand_transport'
-                elif self.if_on_demand_stop_time(last_stop):
-                    return 'on_demand_transport'
-                return 'public_transport'
-        except ValueError:
-            pass
-        return super(section_type, self).output("type", obj)
-
-
-class section_place(PbField):
-
-    def output(self, key, obj):
-        enum_t = obj.DESCRIPTOR.fields_by_name['type'].enum_type.values_by_name
-        if obj.type == enum_t['WAITING'].number:
-            return None
-        else:
-            return super(PbField, self).output(key, obj)
-
-
-class JourneyDebugInfo(fields.Raw):
-    def output(self, key, obj):
-        if not hasattr(g, 'debug') or not g.debug:
-            return None
-
-        debug = {
-            'streetnetwork_duration': obj.sn_dur,
-            'transfer_duration': obj.transfer_dur,
-            'min_waiting_duration': obj.min_waiting_dur,
-            'nb_vj_extentions': obj.nb_vj_extentions,
-            'nb_sections': obj.nb_sections,
-        }
-        if hasattr(obj, 'internal_id'):
-            debug['internal_id'] = obj.internal_id
-
-        return debug
-
-seats_description = {
-    "total": Integer(),
-    "available": Integer(),
-}
-
-individual_rating = {
-    "value": fields.Raw,
-    "count": Integer(),
-    "scale_min": fields.Raw,
-    "scale_max": fields.Raw,
-}
-
-individual_information = {
-    "alias": fields.String(),
-    "image": fields.String(),
-    "gender": enum_type(attribute="gender"),
-    "rating": PbField(individual_rating, attribute="rating"),
-}
-
-ridesharing_information = {
-    "operator": fields.String(),
-    "network": fields.String(),
-    "driver": PbField(individual_information, attribute="driver"),
-    "seats": PbField(seats_description, attribute="seats"),
-}
-
-section = {
-    "type": section_type(),
-    "id": fields.String(),
-    "mode": enum_type(attribute="street_network.mode"),
-    "duration": Integer(),
-    "from": section_place(place, attribute="origin"),
-    "to": section_place(place, attribute="destination"),
-    "links": SectionLinks(attribute="uris"),
-    "display_informations": PbField(display_informations_vj,
-                                    attribute='pt_display_informations'),
-    "additional_informations": NonNullList(PbEnum(response_pb2.SectionAdditionalInformationType)),
-    "geojson": SectionGeoJson(),
-    "path": NonNullList(NonNullNested({"length": Integer(),
-                                       "name": fields.String(),
-                                       "duration": Integer(),
-                                       "direction": fields.Integer()}),
-                        attribute="street_network.path_items"),
-    "transfer_type": enum_type(),
-    "stop_date_times": NonNullList(NonNullNested(stop_date_time)),
-    "departure_date_time": DateTime(attribute="begin_date_time"),
-    "base_departure_date_time": DateTime(attribute="base_begin_date_time"),
-    "arrival_date_time": DateTime(attribute="end_date_time"),
-    "base_arrival_date_time": DateTime(attribute="base_end_date_time"),
-    'data_freshness': enum_type(attribute='realtime_level'),
-    "co2_emission": NonNullNested({
-        'value': fields.Raw,
-        'unit': fields.String
-        }),
-    "ridesharing_informations": PbField(ridesharing_information, attribute="ridesharing_information"),
-}
-
-cost = {
-    'value': fields.String(),
-    'currency': fields.String(),
-}
-
-fare = {
-    'total': NonNullNested(cost),
-    'found': fields.Boolean(),
-    'links': FareLinks(attribute="ticket_id")
-}
-
-journey = {
-    'duration': fields.Integer(),
-    'nb_transfers': fields.Integer(),
-    'departure_date_time': DateTime(),
-    'arrival_date_time': DateTime(),
-    'requested_date_time': DateTime(),
-    'sections': NonNullList(NonNullNested(section)),
-    'from': PbField(place, attribute='origin'),
-    'to': PbField(place, attribute='destination'),
-    'type': fields.String(),
-    'fare': NonNullNested(fare),
-    'tags': fields.List(fields.String),
-    "status": fields.String(attribute="most_serious_disruption_effect"),
-    "calendars": NonNullList(NonNullNested(calendar)),
-    "co2_emission": NonNullNested({
-        'value': fields.Raw,
-        'unit': fields.String
-        }),
-    "durations": Durations(),
-    "distances": Distances(),
-    "debug": JourneyDebugInfo()
-}
-section["ridesharing_journeys"] = NonNullList(NonNullNested(journey))
-
-ticket = {
-    "id": fields.String(),
-    "name": fields.String(),
-    "comment": fields.String(),
-    "found": fields.Boolean(),
-    "cost": NonNullNested(cost),
-    "links": TicketLinks(attribute="section_id")
-}
+#
+# class section_type(enum_type):
+#
+#     def if_on_demand_stop_time(self, stop):
+#         properties = stop.properties
+#         descriptor = properties.DESCRIPTOR
+#         enum = descriptor.enum_types_by_name["AdditionalInformation"]
+#         for v in properties.additional_informations:
+#             if enum.values_by_number[v].name == 'on_demand_transport':
+#                 return True
+#         return False
+#
+#     def output(self, key, obj):
+#         try:
+#             if obj.stop_date_times:
+#                 first_stop = obj.stop_date_times[0]
+#                 last_stop = obj.stop_date_times[-1]
+#                 if self.if_on_demand_stop_time(first_stop):
+#                     return 'on_demand_transport'
+#                 elif self.if_on_demand_stop_time(last_stop):
+#                     return 'on_demand_transport'
+#                 return 'public_transport'
+#         except ValueError:
+#             pass
+#         return super(section_type, self).output("type", obj)
 
 
-journeys = {
-    "journeys": NonNullList(NonNullNested(journey)),
-    "error": PbField(error, attribute='error'),
-    "tickets": fields.List(NonNullNested(ticket)),
-    "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
-    "feed_publishers": fields.List(NonNullNested(feed_publisher)),
-    "links": fields.List(Links()),
-    "context": context,
-}
+# class section_place(PbField):
+#
+#     def output(self, key, obj):
+#         enum_t = obj.DESCRIPTOR.fields_by_name['type'].enum_type.values_by_name
+#         if obj.type == enum_t['WAITING'].number:
+#             return None
+#         else:
+#             return super(PbField, self).output(key, obj)
+#
+#
+# class JourneyDebugInfo(fields.Raw):
+#     def output(self, key, obj):
+#         if not hasattr(g, 'debug') or not g.debug:
+#             return None
+#
+#         debug = {
+#             'streetnetwork_duration': obj.sn_dur,
+#             'transfer_duration': obj.transfer_dur,
+#             'min_waiting_duration': obj.min_waiting_dur,
+#             'nb_vj_extentions': obj.nb_vj_extentions,
+#             'nb_sections': obj.nb_sections,
+#         }
+#         if hasattr(obj, 'internal_id'):
+#             debug['internal_id'] = obj.internal_id
+#
+#         return debug
+
+# seats_description = {
+#     "total": Integer(),
+#     "available": Integer(),
+# }
+#
+# individual_rating = {
+#     "value": fields.Raw,
+#     "count": Integer(),
+#     "scale_min": fields.Raw,
+#     "scale_max": fields.Raw,
+# }
+#
+# individual_information = {
+#     "alias": fields.String(),
+#     "image": fields.String(),
+#     "gender": enum_type(attribute="gender"),
+#     "rating": PbField(individual_rating, attribute="rating"),
+# }
+#
+# ridesharing_information = {
+#     "operator": fields.String(),
+#     "network": fields.String(),
+#     "driver": PbField(individual_information, attribute="driver"),
+#     "seats": PbField(seats_description, attribute="seats"),
+# }
+#
+# section = {
+#     "type": section_type(),
+#     "id": fields.String(),
+#     "mode": enum_type(attribute="street_network.mode"),
+#     "duration": Integer(),
+#     "from": section_place(place, attribute="origin"),
+#     "to": section_place(place, attribute="destination"),
+#     "links": SectionLinks(attribute="uris"),
+#     "display_informations": PbField(display_informations_vj,
+#                                     attribute='pt_display_informations'),
+#     "additional_informations": NonNullList(PbEnum(response_pb2.SectionAdditionalInformationType)),
+#     "geojson": SectionGeoJson(),
+#     "path": NonNullList(NonNullNested({"length": Integer(),
+#                                        "name": fields.String(),
+#                                        "duration": Integer(),
+#                                        "direction": fields.Integer()}),
+#                         attribute="street_network.path_items"),
+#     "transfer_type": enum_type(),
+#     "stop_date_times": NonNullList(NonNullNested(stop_date_time)),
+#     "departure_date_time": DateTime(attribute="begin_date_time"),
+#     "base_departure_date_time": DateTime(attribute="base_begin_date_time"),
+#     "arrival_date_time": DateTime(attribute="end_date_time"),
+#     "base_arrival_date_time": DateTime(attribute="base_end_date_time"),
+#     'data_freshness': enum_type(attribute='realtime_level'),
+#     "co2_emission": NonNullNested({
+#         'value': fields.Raw,
+#         'unit': fields.String
+#         }),
+#     "ridesharing_informations": PbField(ridesharing_information, attribute="ridesharing_information"),
+# }
+#
+# cost = {
+#     'value': fields.String(),
+#     'currency': fields.String(),
+# }
+#
+# fare = {
+#     'total': NonNullNested(cost),
+#     'found': fields.Boolean(),
+#     'links': FareLinks(attribute="ticket_id")
+# }
+#
+# journey = {
+#     'duration': fields.Integer(),
+#     'nb_transfers': fields.Integer(),
+#     'departure_date_time': DateTime(),
+#     'arrival_date_time': DateTime(),
+#     'requested_date_time': DateTime(),
+#     'sections': NonNullList(NonNullNested(section)),
+#     'from': PbField(place, attribute='origin'),
+#     'to': PbField(place, attribute='destination'),
+#     'type': fields.String(),
+#     'fare': NonNullNested(fare),
+#     'tags': fields.List(fields.String),
+#     "status": fields.String(attribute="most_serious_disruption_effect"),
+#     "calendars": NonNullList(NonNullNested(calendar)),
+#     "co2_emission": NonNullNested({
+#         'value': fields.Raw,
+#         'unit': fields.String
+#         }),
+#     "durations": Durations(),
+#     "distances": Distances(),
+#     "debug": JourneyDebugInfo()
+# }
+# section["ridesharing_journeys"] = NonNullList(NonNullNested(journey))
+#
+# ticket = {
+#     "id": fields.String(),
+#     "name": fields.String(),
+#     "comment": fields.String(),
+#     "found": fields.Boolean(),
+#     "cost": NonNullNested(cost),
+#     "links": TicketLinks(attribute="section_id")
+# }
+
+
+# journeys = {
+#     "journeys": NonNullList(NonNullNested(journey)),
+#     "error": PbField(error, attribute='error'),
+#     "tickets": fields.List(NonNullNested(ticket)),
+#     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
+#     "feed_publishers": fields.List(NonNullNested(feed_publisher)),
+#     "links": fields.List(Links()),
+#     "context": context,
+# }
 
 
 class add_debug_info(object):
@@ -499,7 +500,7 @@ class Journeys(JourneyCommon):
     @add_fare_links()
     @add_journey_href()
     @rig_journey()
-    @get_serializer(serpy=api.JourneysSerializer, marshall=journeys)
+    @get_serializer(serpy=api.JourneysSerializer)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
         args = self.parsers['get'].parse_args()

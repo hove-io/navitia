@@ -43,7 +43,7 @@ from jormungandr import bss_provider_manager
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer.api import TechnicalStatusSerializer
 from jormungandr.interfaces.v1.serializer.status import CommonStatusSerializer
-from jormungandr.interfaces.v1.fields import ListLit, beta_endpoint, context_utc, instance_status, add_common_status
+from jormungandr.interfaces.v1.fields import add_common_status
 from flask.ext.restful import fields
 
 
@@ -69,14 +69,6 @@ class Index(ModuleResource):
         }
         return response, 200
 
-technical_status = {
-    "bss_providers": Raw,
-    "regions": Raw,
-    "jormungandr_version": Raw,
-    "context": context_utc,
-    "warnings": ListLit([fields.Nested(beta_endpoint)])
-}
-
 
 class TechnicalStatus(ModuleResource):
     """
@@ -85,7 +77,7 @@ class TechnicalStatus(ModuleResource):
     return status for all instances
     """
 
-    @get_serializer(serpy=TechnicalStatusSerializer, marshall=technical_status)
+    @get_serializer(serpy=TechnicalStatusSerializer)
     def get(self):
         response = {
             "jormungandr_version": __version__,
@@ -102,11 +94,8 @@ class TechnicalStatus(ModuleResource):
 
                 raw_resp_dict = protobuf_to_dict(resp, use_enum_labels=True)
                 add_common_status(raw_resp_dict, instance)
-
-                if USE_SERPY:
-                    resp_dict = CommonStatusSerializer(raw_resp_dict['status']).data
-                else:
-                    resp_dict = marshal(raw_resp_dict['status'], instance_status)
+                resp_dict = CommonStatusSerializer(raw_resp_dict['status']).data
+             
             except DeadSocketException:
                 resp_dict = {
                     "status": "dead",

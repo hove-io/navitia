@@ -243,7 +243,6 @@ class StringListField(Field):
 
 class DisruptionSerializer(PbNestedSerializer):
     id = jsonschema.Field(schema_type=str, display_none=True, attr='uri')
-
     disruption_id = jsonschema.Field(schema_type=str, attr='disruption_uri')
     impact_id = jsonschema.Field(schema_type=str, attr='uri')
     title = jsonschema.Field(schema_type=str),

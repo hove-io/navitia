@@ -52,7 +52,7 @@ class GeoStatus(StatedResource):
     def __init__(self, *args, **kwargs):
         super(GeoStatus, self).__init__(output_type_serializer=GeoStatusSerializer, *args, **kwargs)
 
-    @get_serializer(serpy=GeoStatusSerializer, marshall=geo_status)
+    @get_serializer(serpy=GeoStatusSerializer)
     def get(self, region=None, lon=None, lat=None):
         region_str = i_manager.get_region(region, lon, lat)
         instance = i_manager.instances[region_str]

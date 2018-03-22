@@ -35,54 +35,9 @@ from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.parsers import default_count_arg_type, DateTimeFormat, depth_argument
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
-from jormungandr.interfaces.v1.fields import fields, enum_type, NonNullList,\
-    NonNullNested, NonNullProtobufNested, PbField, error, pagination, NonNullString, \
-    feed_publisher, disruption_marshaller
 from jormungandr.interfaces.v1.serializer import api
-
 from datetime import datetime
 import six
-
-
-week_pattern = {
-    "monday": fields.Boolean(),
-    "tuesday": fields.Boolean(),
-    "wednesday": fields.Boolean(),
-    "thursday": fields.Boolean(),
-    "friday": fields.Boolean(),
-    "saturday": fields.Boolean(),
-    "sunday": fields.Boolean(),
-}
-
-calendar_period = {
-    "begin": fields.String(),
-    "end": fields.String(),
-}
-
-calendar_exception = {
-    "datetime": fields.String(attribute="date"),
-    "type": enum_type(),
-}
-validity_pattern = {
-    'beginning_date': fields.String(),
-    'days': fields.String(),
-}
-calendar = {
-    "id": NonNullString(attribute="uri"),
-    "name": NonNullString(),
-    "week_pattern": NonNullNested(week_pattern),
-    "active_periods": NonNullList(NonNullNested(calendar_period)),
-    "exceptions": NonNullList(NonNullNested(calendar_exception)),
-    "validity_pattern": NonNullProtobufNested(validity_pattern)
-}
-
-calendars = {
-    "calendars": NonNullList(NonNullNested(calendar)),
-    "error": PbField(error, attribute='error'),
-    "pagination": NonNullNested(pagination),
-    "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
-    "feed_publishers": fields.List(NonNullNested(feed_publisher))
-}
 
 
 class Calendars(ResourceUri):
@@ -119,8 +74,8 @@ class Calendars(ResourceUri):
                                 help='The datetime considered as "now". Used for debug, default is '
                                      'the moment of the request. It will mainly change the output '
                                      'of the disruptions.')
-        self.collection = 'calendars'
-        self.collections = calendars
+        #self.collection = 'calendars'
+        #self.collections = api.CalendarsSerializer
         self.get_decorators.insert(0, ManageError())
         self.get_decorators.insert(1, get_obj_serializer(self))
 

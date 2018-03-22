@@ -31,24 +31,25 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from flask.ext.restful import fields
 from jormungandr import i_manager, travelers_profile
 from jormungandr.protobuf_to_dict import protobuf_to_dict
-from jormungandr.interfaces.v1.fields import instance_status_with_parameters, context_utc, ListLit, beta_endpoint, \
-    add_common_status
+# from jormungandr.interfaces.v1.fields import instance_status_with_parameters, context_utc, ListLit, beta_endpoint, \
+#     add_common_status
+from jormungandr.interfaces.v1.fields import add_common_status
 from jormungandr.interfaces.v1.serializer.api import StatusSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.StatedResource import StatedResource
 
-status = {
-    "status": fields.Nested(instance_status_with_parameters),
-    "context": context_utc,
-    "warnings": ListLit([fields.Nested(beta_endpoint)])
-}
+# status = {
+#     "status": fields.Nested(instance_status_with_parameters),
+#     "context": context_utc,
+#     "warnings": ListLit([fields.Nested(beta_endpoint)])
+# }
 
 
 class Status(StatedResource):
     def __init__(self, *args, **kwargs):
         super(Status, self).__init__(self, *args, **kwargs)
 
-    @get_serializer(serpy=StatusSerializer, marshall=status)
+    @get_serializer(serpy=StatusSerializer)
     def get(self, region=None, lon=None, lat=None):
         region_str = i_manager.get_region(region, lon, lat)
         response = protobuf_to_dict(i_manager.dispatch({}, "status", instance_name=region_str), use_enum_labels=True)

@@ -26,6 +26,8 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
+
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask.ext.restful import fields
 from copy import deepcopy
@@ -34,7 +36,8 @@ import logging
 from flask.globals import g
 import pytz
 from jormungandr.interfaces.v1.make_links import create_internal_link, create_external_link
-from jormungandr.interfaces.v1.serializer import pt, base
+from jormungandr.interfaces.v1.serializer import pt, base, api
+from jormungandr.interfaces.v1.serializer import fields as serpyFields
 from jormungandr.utils import timestamp_to_str, get_current_datetime_str, get_timezone_str
 from navitiacommon import response_pb2, type_pb2
 import ujson
@@ -298,12 +301,6 @@ class equipments(fields.Raw):
                 in equipments.has_equipments]
 
 
-class disruption_status(fields.Raw):
-    def output(self, key, obj):
-        status = obj.status
-        enum = type_pb2._ACTIVESTATUS
-        return enum.values_by_number[status].name.lower()
-
 class channel_types(fields.Raw):
     def output(self, key, obj):
         channel = obj
@@ -502,11 +499,6 @@ validity_pattern = {
     'days': fields.String(),
 }
 
-trip = {
-    'id': fields.String(attribute="uri"),
-    'name': fields.String(),
-}
-
 code = {
     "type": fields.String(),
     "value": fields.String()
@@ -534,12 +526,6 @@ disruption_message = {
     "channel": NonNullNested(channel)
 }
 
-disruption_severity = {
-    "name": fields.String(),
-    "effect": fields.String(),
-    "color": fields.String(),
-    "priority": fields.Integer(),
-}
 
 
 display_informations_route = {
@@ -553,24 +539,6 @@ display_informations_route = {
     "text_color": fields.String(attribute="text_color"),
     "name": fields.String(attribute="name"),
 }
-
-display_informations_vj = {
-    "description": fields.String(attribute="description"),
-    "physical_mode": fields.String(attribute="physical_mode"),
-    "commercial_mode": fields.String(attribute="commercial_mode"),
-    "network": fields.String(attribute="network"),
-    "direction": fields.String(attribute="direction"),
-    "label": get_label(attribute="display_information"),
-    "color": fields.String(attribute="color"),
-    "code": fields.String(attribute="code"),
-    "equipments": equipments(attribute="has_equipments"),
-    "headsign": fields.String(attribute="headsign"),
-    "headsigns": NonNullList(fields.String()),
-    "links": DisruptionLinks(),
-    "text_color": fields.String(attribute="text_color"),
-    "name": fields.String(attribute="name"),
-}
-
 
 class DoubleToStringField(fields.Raw):
     def format(self, value):
@@ -772,62 +740,6 @@ connection = {
     "max_duration": fields.Integer(),
 }
 
-stop_date_time = {
-    "departure_date_time": DateTime(),
-    "base_departure_date_time": DateTime(),
-    "arrival_date_time": DateTime(),
-    "base_arrival_date_time": DateTime(),
-    "stop_point": PbField(stop_point),
-    "additional_informations": additional_informations,
-    "links": stop_time_properties_links,
-    "data_freshness": enum_type()
-}
-
-place = {
-    "stop_point": PbField(stop_point),
-    "stop_area": PbField(stop_area),
-    "address": PbField(address),
-    "poi": PbField(poi),
-    "administrative_region": PbField(admin),
-    "embedded_type": enum_type(),
-    "name": fields.String(),
-    "quality": fields.Integer(),
-    "id": fields.String(attribute='uri')
-}
-
-pt_object = {
-    "network": PbField(network),
-    "commercial_mode": PbField(commercial_mode),
-    "line": PbField(line),
-    "route": PbField(route),
-    "stop_area": PbField(stop_area),
-    "stop_point": PbField(stop_point),
-    "trip": PbField(trip),
-    "embedded_type": enum_type(),
-    "name": fields.String(),
-    "quality": fields.Integer(),
-    "id": fields.String(attribute='uri')
-}
-
-route["direction"] = PbField(place)
-
-pagination = {
-    "total_result": fields.Integer(attribute="totalResult"),
-    "start_page": fields.Integer(attribute="startPage"),
-    "items_per_page": fields.Integer(attribute="itemsPerPage"),
-    "items_on_page": fields.Integer(attribute="itemsOnPage"),
-}
-
-error = {
-    'id': enum_type(),
-    'message': fields.String()
-}
-
-beta_endpoint = {
-    'id': Lit("beta_endpoint"),
-    'message': Lit("This service is under construction. You can help through github.com/CanalTP/navitia"),
-}
-
 raw_feed_publisher_bano = {
     "id": "bano",
     "name": "Base d'Adresses Nationale Ouverte",
@@ -954,74 +866,22 @@ instance_traveler_types = {
 
 instance_status_with_parameters['traveler_profiles'] = fields.List(fields.Nested(instance_traveler_types,
                                                                                  allow_null=True))
-
-impacted_section = {
-    'from': NonNullNested(pt_object),
-    'to': NonNullNested(pt_object),
-    'routes': NonNullList(NonNullNested(route)),
-}
-
-impacted_stop = {
-    "stop_point": NonNullNested(stop_point),
-    "base_arrival_time": SplitDateTime(date=None, time='base_stop_time.arrival_time'),
-    "base_departure_time": SplitDateTime(date=None, time='base_stop_time.departure_time'),
-    "amended_arrival_time": Time(time='amended_stop_time.arrival_time'),
-    "amended_departure_time": Time(time='amended_stop_time.departure_time'),
-    "cause": fields.String(),
-    "stop_time_effect": enum_type(attribute='effect'),
-    "departure_status": enum_type(),
-    "arrival_status": enum_type()
-}
-
-impacted_object = {
-    'pt_object': NonNullNested(pt_object),
-    'impacted_stops': NonNullList(NonNullNested(impacted_stop)),
-    'impacted_section': NonNullProtobufNested(impacted_section)
-}
-
-disruption_property = {
-    'key': fields.String(),
-    'type': fields.String(),
-    'value': fields.String()
-}
-
-disruption_marshaller = {
-    "id": fields.String(attribute="uri"),
-    "disruption_id": fields.String(attribute="disruption_uri"),
-    "impact_id": fields.String(attribute="uri"),
-    "title": fields.String(),
-    "application_periods": NonNullList(NonNullNested(period)),
-    "status": disruption_status,
-    "updated_at": DateTime(),
-    "tags": NonNullList(fields.String()),
-    "cause": fields.String(),
-    "category": NonNullString(),
-    "severity": NonNullNested(disruption_severity),
-    "messages": NonNullList(NonNullNested(disruption_message)),
-    "impacted_objects": NonNullList(NonNullNested(impacted_object)),
-    "properties": NonNullList(NonNullNested(disruption_property)),
-    "uri": fields.String(),
-    "disruption_uri": fields.String(),
-    "contributor": fields.String()
-}
-
 common_collection = (
-    ("pagination", PbField(pagination)),
-    ("error", PbField(error)),
+    ("pagination", PbField(serpyFields.PaginationSerializer)),
+    ("error", PbField(serpyFields.ErrorSerializer)),
     ("feed_publishers", NonNullList(fields.Nested(feed_publisher, display_null=False))),
     ("context", context),
-    ("disruptions", fields.List(NonNullNested(disruption_marshaller), attribute="impacts"))
+    ("disruptions", fields.List(NonNullNested(pt.DisruptionSerializer), attribute="impacts"))
 )
 
 
 def get_collections(collection_name):
-    from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
     map_collection = {
         "journey_pattern_points": journey_pattern_point,
         "commercial_modes": commercial_mode,
         "journey_patterns": journey_pattern,
-        "vehicle_journeys": vehicle_journey,
-        "trips": trip,
+        "vehicle_journeys": api.VehicleJourneysSerializer,
+        "trips": pt.TripSerializer,
         "physical_modes": physical_mode,
         "stop_points": stop_point,
         "stop_areas": stop_area,

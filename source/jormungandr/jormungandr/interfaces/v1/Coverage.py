@@ -74,7 +74,7 @@ class Coverage(StatedResource):
     @clean_links()
     @add_coverage_link()
     @add_collection_links(collections)
-    @get_serializer(serpy=api.CoveragesSerializer, marshall=coverage_marshall_fields)
+    @get_serializer(serpy=api.CoveragesSerializer)
     def get(self, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
 

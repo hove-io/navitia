@@ -26,17 +26,13 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-import jormungandr
-from jormungandr.interfaces.v1.serializer import serialize_with, api
-from flask.ext.restful import marshal_with
-from collections import OrderedDict
+from jormungandr.interfaces.v1.serializer import serialize_with
 
 
-def get_serializer(serpy, marshall):
-    if jormungandr.USE_SERPY:
-        return serialize_with(serpy)
-    else:
-        return marshal_with(OrderedDict(marshall), display_null=False)
+
+def get_serializer(serpy):
+    return serialize_with(serpy)
+
 
 def get_obj_serializer(obj):
-    return get_serializer(serpy=obj.output_type_serializer, marshall=obj.collections)
+    return get_serializer(serpy=obj.output_type_serializer)

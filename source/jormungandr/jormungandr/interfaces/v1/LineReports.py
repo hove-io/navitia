@@ -37,8 +37,8 @@ from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_type
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
-from jormungandr.interfaces.v1.fields import PbField, line, pt_object, NonNullList, NonNullNested,\
-    pagination, disruption_marshaller, error, ListLit, beta_endpoint
+# from jormungandr.interfaces.v1.fields import PbField, line, pt_object, NonNullList, NonNullNested,\
+#     pagination, disruption_marshaller, error, ListLit, beta_endpoint
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.resources_utils import ResourceUtc
@@ -50,18 +50,18 @@ from datetime import datetime
 import six
 
 
-line_report = {
-    "line": PbField(line),
-    "pt_objects": NonNullList(NonNullNested(pt_object)),
-}
-
-line_reports = {
-    "line_reports": NonNullList(NonNullNested(line_report)),
-    "error": PbField(error, attribute='error'),
-    "pagination": NonNullNested(pagination),
-    "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
-    "warnings": ListLit([fields.Nested(beta_endpoint)]),
-}
+# line_report = {
+#     "line": PbField(line),
+#     "pt_objects": NonNullList(NonNullNested(pt_object)),
+# }
+#
+# line_reports = {
+#     "line_reports": NonNullList(NonNullNested(line_report)),
+#     "error": PbField(error, attribute='error'),
+#     "pagination": NonNullNested(pagination),
+#     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
+#     "warnings": ListLit([fields.Nested(beta_endpoint)]),
+# }
 
 
 class LineReports(ResourceUri, ResourceUtc):
@@ -94,7 +94,7 @@ class LineReports(ResourceUri, ResourceUtc):
                                 help="use disruptions valid before this date")
 
         self.collection = 'line_reports'
-        self.collections = line_reports
+        self.collections = api.LineReportsSerializer
         self.get_decorators.insert(0, ManageError())
         self.get_decorators.insert(1, get_obj_serializer(self))
 

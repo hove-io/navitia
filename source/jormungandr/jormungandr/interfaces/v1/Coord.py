@@ -97,7 +97,7 @@ class Coord(ResourceUri):
         })
         return args
 
-    @get_serializer(serpy=api.DictAddressesSerializer, marshall=address_marshall_fields)
+    @get_serializer(serpy=api.DictAddressesSerializer)
     def get(self, region=None, lon=None, lat=None, id=None):
         args = self.parsers["get"].parse_args()
 

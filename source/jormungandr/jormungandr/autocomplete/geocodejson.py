@@ -37,9 +37,7 @@ from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
 from jormungandr.utils import get_lon_lat as get_lon_lat_from_id, get_house_number
 import requests
 from jormungandr.exceptions import TechnicalError, UnknownObject
-from flask.ext.restful import marshal, fields
-from jormungandr.interfaces.v1.fields import Lit, ListLit, beta_endpoint, feed_publisher_bano, feed_publisher_osm
-import re
+from flask.ext.restful import fields
 
 
 def create_admin_field(geocoding):
@@ -287,61 +285,6 @@ class StopAreaField(fields.Raw):
 
         return resp
 
-geocode_admin = {
-    "embedded_type": Lit("administrative_region"),
-    "quality": Lit(0),
-    "id": fields.String(attribute='properties.geocoding.id'),
-    "name": fields.String(attribute='properties.geocoding.name'),
-    "administrative_region": AdministrativeRegionField()
-}
-
-
-geocode_addr = {
-    "embedded_type": Lit("address"),
-    "quality": Lit(0),
-    "id": CoordId,
-    "name": fields.String(attribute='properties.geocoding.label'),
-    "address": AddressField()
-}
-
-geocode_poi = {
-    "embedded_type": Lit("poi"),
-    "quality": Lit(0),
-    "id": fields.String(attribute='properties.geocoding.id'),
-    "name": fields.String(attribute='properties.geocoding.label'),
-    "poi": PoiField()
-}
-
-geocode_stop_area = {
-    "embedded_type": Lit("stop_area"),
-    "quality": Lit(0),
-    "id": fields.String(attribute='properties.geocoding.id'),
-    "name": fields.String(attribute='properties.geocoding.label'),
-    "stop_area": StopAreaField()
-}
-
-class GeocodejsonFeature(fields.Raw):
-    def format(self, place):
-        type_ = place.get('properties', {}).get('geocoding', {}).get('type')
-
-        if type_ == 'city':
-            return marshal(place, geocode_admin)
-        elif type_ in ('street', 'house'):
-            return marshal(place, geocode_addr)
-        elif type_ == 'poi':
-            return marshal(place, geocode_poi)
-        elif type_ == 'public_transport:stop_area':
-            return marshal(place, geocode_stop_area)
-
-        logging.getLogger(__name__).error('Place not serialized (unknown type): {}'.format(place))
-        return None
-
-geocodejson = {
-    "places": fields.List(GeocodejsonFeature, attribute='features'),
-    "warnings": ListLit([fields.Nested(beta_endpoint)]),
-    "feed_publishers": ListLit([fields.Nested(feed_publisher_bano),
-                                fields.Nested(feed_publisher_osm)])
-}
 
 
 class GeocodeJson(AbstractAutocomplete):
@@ -428,16 +371,9 @@ class GeocodeJson(AbstractAutocomplete):
         json_response = response_bragi.json()
         # Clean dict objects depending on depth passed in request parameter.
         json_response = cls._clean_response(json_response, depth)
-        if jormungandr.USE_SERPY:
-            from jormungandr.interfaces.v1.serializer.geocode_json import GeocodePlacesSerializer
-            return GeocodePlacesSerializer(json_response).data
-        else:
-            from flask.ext.restful import marshal
-            m = marshal(json_response, geocodejson)
-            # Removing places that are not marshalled (None)
-            if isinstance(m.get('places'), list):
-                m['places'] = [p for p in m['places'] if p is not None]
-            return m
+
+        from jormungandr.interfaces.v1.serializer.geocode_json import GeocodePlacesSerializer
+        return GeocodePlacesSerializer(json_response).data
 
     def make_url(self, end_point, uri=None):
 

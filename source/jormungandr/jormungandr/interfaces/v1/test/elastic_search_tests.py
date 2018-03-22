@@ -28,13 +28,11 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, print_function, unicode_literals, division
 import mock
 from jormungandr.autocomplete.geocodejson import GeocodeJson
-from jormungandr.interfaces.v1 import Places
 from jormungandr.tests.utils_test import MockRequests
-from flask.ext.restful import marshal_with
-from jormungandr.autocomplete.geocodejson import geocodejson
 from jormungandr.interfaces.v1.serializer.geocode_json import GeocodePlacesSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
 
@@ -91,7 +89,8 @@ def bragi_house_jaures_feature():
     }
     return house_feature
 
-@get_serializer(serpy=GeocodePlacesSerializer, marshall=geocodejson)
+
+@get_serializer(serpy=GeocodePlacesSerializer)
 def get_response(bragi_response):
     return bragi_response
 
