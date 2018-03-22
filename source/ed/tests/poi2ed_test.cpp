@@ -56,7 +56,7 @@ namespace {
             BOOST_REQUIRE_MESSAGE(
                 master.argc > 1, 
                 "Missing parameter - The test needs a path to a directory containing your POI's files");
-            
+
             poi_dir_path = master.argv[1];
         }
 
@@ -73,9 +73,4 @@ BOOST_FIXTURE_TEST_CASE(poi_parser_should_create_well_formed_poi_uri, ArgsFixtur
     BOOST_CHECK_EQUAL(parser.data.pois["ADM44_100"].uri, "poi:ADM44_100");
     BOOST_CHECK_EQUAL(parser.data.pois["CULT44_30021"].uri, "poi:CULT44_30021");
     BOOST_CHECK_EQUAL(parser.data.pois["PAIHABIT0000000028850973"].uri, "poi:PAIHABIT0000000028850973");
-    BOOST_CHECK_EQUAL(parser.data.pois["TRANSP44_294"].uri, "poi:TRANSP44_294");
-    BOOST_CHECK_EQUAL(parser.data.pois["ADM53_172"].uri, "poi:ADM53_172");
-    BOOST_CHECK_EQUAL(parser.data.pois["RELIG44_495"].uri, "poi:RELIG44_495");
-    BOOST_CHECK_EQUAL(parser.data.pois["ADM85_97"].uri, "poi:ADM85_97");
-    BOOST_CHECK_EQUAL(parser.data.pois["ADM44_253"].uri, "poi:ADM44_253");
 }

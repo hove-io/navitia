@@ -41,7 +41,7 @@ ADD_BOOST_TEST(osm2ed_test)
 add_executable(poi2ed_test poi2ed_test.cpp)
 target_link_libraries(poi2ed_test ed connectors types ${PQXX_LIB} ${OSMPBF}
   pb_lib utils ${BOOST_LIBS} log4cplus z protobuf)
-ADD_BOOST_TEST(poi2ed_test "${FIXTURES_DIR}/ed/poi")
+ADD_BOOST_TEST(poi2ed_test "${FIXTURES_DIR}/ed/poi/poi")
 
 add_executable(fare2ed_test fare2ed_test.cpp)
 target_link_libraries(fare2ed_test fare2ed_lib transportation_data_import connectors ${BOOST_LIBS} log4cplus)

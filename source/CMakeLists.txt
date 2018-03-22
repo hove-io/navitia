@@ -69,18 +69,30 @@ include_directories("${CMAKE_SOURCE_DIR}"
 )
 link_directories(${Boost_LIBRARY_DIRS})
 
-MACRO(ADD_BOOST_TEST EXE_NAME)
+SET(TEST_DEBUG_OUTPUT OFF CACHE BOOL "Shoot test output to stdin")
+
+MACRO(BUILD_BOOST_TEST_ARGS EXE_NAME)
     IF("${Boost_VERSION}" LESS 106200)
-        ADD_TEST(
-            NAME ${EXE_NAME} 
-            COMMAND "${EXECUTABLE_OUTPUT_PATH}/${EXE_NAME}" --log_format=XML --log_sink=results_${EXE_NAME}.xml --log_level=all --report_level=no "${ARGN}"
-        )
+        IF(TEST_DEBUG_OUTPUT)
+            SET(BOOST_TEST_ARGS --log_level=all)
+        ELSE()
+            SET(BOOST_TEST_ARGS --log_format=XML --log_sink=results_${EXE_NAME}.xml --log_level=all --report_level=no)
+        ENDIF()
     ELSE()
-        ADD_TEST(
-            NAME ${EXE_NAME} 
-            COMMAND "${EXECUTABLE_OUTPUT_PATH}/${EXE_NAME}" --logger=XML,all,results_${EXE_NAME}.xml --report_level=no "${ARGN}"
-        )
+        IF(TEST_DEBUG_OUTPUT)
+            SET(BOOST_TEST_ARGS --logger=HRF,all )
+        ELSE()
+            SET(BOOST_TEST_ARGS --logger=XML,all,results_${EXE_NAME}.xml --report_level=no)
+        ENDIF()
     ENDIF()
+ENDMACRO(BUILD_BOOST_TEST_ARGS)
+
+MACRO(ADD_BOOST_TEST EXE_NAME)
+    BUILD_BOOST_TEST_ARGS(${EXE_NAME})
+    ADD_TEST(
+        NAME ${EXE_NAME} 
+        COMMAND "${EXECUTABLE_OUTPUT_PATH}/${EXE_NAME}" ${BOOST_TEST_ARGS} "${ARGN}"
+    )
 ENDMACRO(ADD_BOOST_TEST)
 
 ENABLE_TESTING()

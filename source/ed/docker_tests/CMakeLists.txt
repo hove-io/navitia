@@ -22,12 +22,15 @@ macro(generate_nav DATASET_NAME)
     # we fill the TEST_CLI_PARAMS with the name of the dataset and the path of the data.nav.lz4 files
     # since it is a macro it will be available outside of this function
     SET(TEST_CLI_PARAMS ${TEST_CLI_PARAMS} --${DATASET_NAME}_file=${DATA_NAV_TO_CREATE})
+
+    add_custom_target(${DATASET_NAME}_nav DEPENDS ${DATA_NAV_TO_CREATE})
 endmacro()
 
 generate_nav("ntfs")
 generate_nav("gtfs_google_example")
 generate_nav("ntfs_v5")
 generate_nav("osm_and_gtfs")
+generate_nav("poi")
 
 # == create a target with all generated files ==
 # we add dependencies to all data import components used during nav file creation
@@ -53,17 +56,11 @@ if(NOT ${Boost_VERSION} LESS 106000) #if boost version newer or equal 1.60, pass
     SET(BOOST_TEST_SEPARATOR "--")
 endif()
 
-IF("${Boost_VERSION}" LESS 106200)
-    add_custom_command(TARGET run_test
-                       COMMAND ed_integration_test
-                       ARGS --log_format=XML --log_sink=results_ed_integration_test.xml --log_level=all
-                            --report_level=no ${BOOST_TEST_SEPARATOR} ${TEST_CLI_PARAMS})
-ELSE()
-    add_custom_command(TARGET run_test
-                       COMMAND ed_integration_test
-                       ARGS --logger=XML,all,results_ed_integration_test.xml
-                            --report_level=no ${BOOST_TEST_SEPARATOR} ${TEST_CLI_PARAMS})
-ENDIF()
+BUILD_BOOST_TEST_ARGS(ed_integration_test)
+
+add_custom_command(TARGET run_test
+                    COMMAND ed_integration_test
+                    ARGS ${BOOST_TEST_ARGS} ${BOOST_TEST_SEPARATOR} ${TEST_CLI_PARAMS})
 
 add_custom_command(TARGET run_test
                    POST_BUILD
