@@ -345,9 +345,9 @@ void route_schedule(PbCreator& pb_creator, const std::string& filter,
                const pt::ptime datetime,
                uint32_t duration, size_t max_stop_date_times,
                const uint32_t max_depth, int count, int start_page,
-               const type::RTLevel rt_level) {
-
-    RequestHandle handler(pb_creator, filter, forbidden_uris, datetime, duration, calendar_id);
+               const type::RTLevel rt_level)
+{
+    RequestHandle handler(pb_creator, datetime, duration, calendar_id);
 
     if (pb_creator.has_error()) {
         return;
