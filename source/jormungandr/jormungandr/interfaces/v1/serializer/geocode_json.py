@@ -208,13 +208,6 @@ class GeocodeAddressSerializer(serpy.DictSerializer):
         return AddressSerializer(obj).data
 
 
-class FeedPublisherSerializer(serpy.DictSerializer, NestedPropertyField):
-    id = serpy.StrField()
-    name = serpy.StrField()
-    url = serpy.StrField()
-    license = serpy.StrField()
-
-
 class StopAreaSerializer(serpy.DictSerializer):
     id = NestedPropertyField(attr='properties.geocoding.id', display_none=True)
     coord = CoordField()
@@ -226,7 +219,6 @@ class StopAreaSerializer(serpy.DictSerializer):
     physical_modes = NestedDictGenericField(attr='properties.geocoding.physical_modes', many=True)
     codes = NestedDictCodeField(attr='properties.geocoding.codes', many=True)
     properties = NestedPropertiesField(attr='properties.geocoding.properties', display_none=False)
-    feed_publishers = FeedPublisherSerializer(attr='properties.geocoding.feed_publishers', many=True)
 
 
 class GeocodeStopAreaSerializer(serpy.DictSerializer):
