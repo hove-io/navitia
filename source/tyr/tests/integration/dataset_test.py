@@ -9,6 +9,7 @@ def get_instance_from_db(name=None):
     with app.app_context():
         return models.Instance.get_by_name(name=name)
 
+
 @pytest.fixture
 def create_basic_job_with_data_sets():
     with app.app_context():
