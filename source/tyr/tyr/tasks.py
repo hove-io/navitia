@@ -172,10 +172,6 @@ def send_to_mimir(instance, filename):
     models.db.session.add(job)
     models.db.session.commit()
 
-    # We pass the job id to each tasks, but job need to be commited for having an id
-    for action in actions:
-        action.kwargs['job_id'] = job.id
-
     # Import ntfs in Mimir
     if instance.import_ntfs_in_mimir:
         actions.append(ntfs2mimir.si(instance_config, filename, job.id, dataset_uid=dataset.uid))

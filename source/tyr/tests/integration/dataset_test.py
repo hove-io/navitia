@@ -4,6 +4,11 @@ import pytest
 from navitiacommon import models
 from tyr import app
 
+
+def get_instance_from_db(name=None):
+    with app.app_context():
+        return models.Instance.get_by_name(name=name)
+
 @pytest.fixture
 def create_basic_job_with_data_sets():
     with app.app_context():
@@ -31,31 +36,11 @@ def create_basic_job_with_data_sets():
         models.db.session.commit()
 
 
-@pytest.fixture
-def create_jobs_with_three_data_sets():
+#@pytest.fixture
+def add_job_with_data_set_mimir(create_basic_job_with_data_sets):
     with app.app_context():
-        instance = models.Instance('fr')
-        models.db.session.add(instance)
-        models.db.session.commit()
-
-        job = models.Job()
-        job.instance = instance
-
-        # we also create 2 datasets, one for fusio, one for synonym
-        for i, dset_type in enumerate(['fusio', 'synonym']):
-            dataset = models.DataSet()
-            dataset.type = dset_type
-            dataset.family_type = dataset.type
-            if dataset.type == 'fusio':
-                dataset.family_type = 'pt'
-            dataset.name = '/path/to/dataset_{}'.format(i)
-            models.db.session.add(dataset)
-            job.data_sets.append(dataset)
-        job.state = 'done'
-        models.db.session.add(job)
-        models.db.session.commit()
-
         # we also create 1 job with a dataset for mimir
+        instance = get_instance_from_db(name='fr')
         job = models.Job()
         job.instance = instance
         dataset = models.DataSet()
@@ -64,7 +49,6 @@ def create_jobs_with_three_data_sets():
         dataset.name = '/path/to/dataset_3'
         models.db.session.add(dataset)
         job.data_sets.append(dataset)
-
         job.state = 'done'
         models.db.session.add(job)
 
@@ -93,27 +77,10 @@ def test_basic_datasets(create_basic_job_with_data_sets):
     resp = api_get('/v0/jobs/fr')
     assert len(resp['jobs']) == 1
 
+    #Here we add a new job with mimir as data_set
+    add_job_with_data_set_mimir(create_basic_job_with_data_sets)
 
-def test_datasets_with_mimir(create_jobs_with_three_data_sets):
-
-    """
-    we query the loaded datasets of fr
-    we loaded 3 datasets, 1 in a job with two data_sets (pt and synonym)
-    another job with a data_set having family_type 'mimir'
-    In last_datasets we return a data_set per family_type except 'mimir'.
-    """
     resp = api_get('/v0/instances/fr/last_datasets')
-
-    assert len(resp) == 2
-    fusio = next((d for d in resp if d['type'] == 'fusio'), None)
-    assert fusio
-    assert fusio['family_type'] == 'pt'
-    assert fusio['name'] == '/path/to/dataset_0'
-
-    synonym = next((d for d in resp if d['type'] == 'synonym'), None)
-    assert synonym
-    assert synonym['family_type'] == 'synonym'
-    assert synonym['name'] == '/path/to/dataset_1'
 
     #we have two jobs: one with 1 data_set and another with 2 data_sets
     resp = api_get('/v0/jobs/fr')
