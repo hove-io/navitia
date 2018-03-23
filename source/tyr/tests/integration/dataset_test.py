@@ -36,7 +36,6 @@ def create_basic_job_with_data_sets():
         models.db.session.commit()
 
 
-#@pytest.fixture
 def add_job_with_data_set_mimir(create_basic_job_with_data_sets):
     with app.app_context():
         # we also create 1 job with a dataset for mimir
