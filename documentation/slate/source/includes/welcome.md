@@ -8,7 +8,7 @@ _Navitia_ is the open API for building cool stuff with mobility data.
 
 It provides the following services:
 
-* journeys computation
+* multi-modal journeys computation
 * line schedules
 * next departures
 * exploration of public transport data
