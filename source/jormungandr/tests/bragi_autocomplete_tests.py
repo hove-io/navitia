@@ -41,7 +41,7 @@ from jormungandr import app
 from six.moves.urllib.parse import urlencode
 from .tests_mechanism import config
 from copy import deepcopy
-
+import os
 
 class FakeUserBragi(FakeUser):
     @classmethod
@@ -287,6 +287,14 @@ BRAGI_MOCK_STOP_AREA_WITH_MORE_ATTRIBUTS = {
                                 "lat": 48.8396154,
                                 "lon": 2.3957517
                             }
+                        }
+                    ],
+                    "feed_publishers": [
+                        {
+                            "id": "bob_publisher",
+                            "license": "OBobDL",
+                            "name": "Bobenstreetmap",
+                            "url": "https://www.Bobenstreetmap.org/copyright"
                         }
                     ],
                     }
@@ -743,6 +751,12 @@ class TestBragiAutocomplete(AbstractTestFixture):
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places/1234?&pt_dataset=main_routing_test")
 
+            assert response.get('feed_publishers')
+            if os.getenv('JORMUNGANDR_USE_SERPY'):
+                assert len(response.get('feed_publishers')) == 3
+            else:
+                assert len(response.get('feed_publishers')) == 2
+
             r = response.get('places')
             assert len(r) == 1
             assert r[0]['embedded_type'] == 'stop_area'
@@ -789,6 +803,12 @@ class TestBragiAutocomplete(AbstractTestFixture):
             response = self.query_region("places?q=bobette&pt_dataset=main_routing_test&type[]=stop_area"
                                          "&type[]=address&type[]=poi&type[]=administrative_region&depth=0")
 
+            assert response.get('feed_publishers')
+            if os.getenv('JORMUNGANDR_USE_SERPY'):
+                assert len(response.get('feed_publishers')) == 3
+            else:
+                assert len(response.get('feed_publishers')) == 2
+
             r = response.get('places')
             assert len(r) == 1
             assert r[0]['embedded_type'] == 'stop_area'
@@ -830,16 +850,19 @@ class TestBragiAutocomplete(AbstractTestFixture):
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places/1234?&pt_dataset=main_routing_test")
 
+            assert response.get('feed_publishers')
+            assert len(response.get('feed_publishers')) == 2
+
             r = response.get('places')
             assert len(r) == 1
             assert r[0]['embedded_type'] == 'stop_area'
             assert 'commercial_modes' not in r[0]['stop_area']
             assert 'physical_modes' not in r[0]['stop_area']
-            #Empty attribut not displayed
+            # Empty attribute not displayed
             assert 'codes' not in r[0]['stop_area']
-            #Attribut empty not displayed
+            # Attribute empty not displayed
             assert 'properties' not in r[0]['stop_area']
-            #Attribut displayed but None
+            # Attribute displayed but None
             assert not r[0]['stop_area'].get('timezone')
 
     def test_feature_unknown_type(self):
