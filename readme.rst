@@ -27,7 +27,7 @@ Welcome to the Navitia repository. Navitia is a service providing:
 
 
 Approach
-~~~~~~~~
+----------
 
 Navitia is an open-source web API, **initially** built to provide traveler information on urban transportation networks.  
 Its main purpose is to provide day-to-day informations to travelers.  
@@ -37,7 +37,8 @@ Technically, Navitia is a [HATEOAS](http://en.wikipedia.org/wiki/HATEOAS) API th
 
 
 Who's who
-~~~~~~~~~
+----------
+
 
 Navitia is instanciated and exposed publicly through [api.navitia.io](http://api.navitia.io).  
 Developments on Navitia are lead by Kisio Digital (previously CanalTP).  
@@ -45,7 +46,7 @@ Kisio Digital is a subsidiary of Keolis (itself a subsidiary of SNCF, French nat
 
 
 More information
-~~~~~~~~~~~~~~~~
+----------
 
 * documentation http://doc.navitia.io
 * main web site http://www.navitia.io
