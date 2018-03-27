@@ -209,7 +209,7 @@ class Timeo(RealtimeProxy):
             if from_dt else ''
 
         #We want to have StopTimeType as it make parsing of the request way easier
-        #for alternative implementation of timeo since w<e can ignore this params
+        #for alternative implementation of timeo since we can ignore this params
         stop_id_url = ("StopDescription=?"
                        "StopTimeType={data_freshness}"
                        "&LineTimeoCode={line}"
