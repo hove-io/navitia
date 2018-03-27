@@ -725,10 +725,10 @@ void Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API 
         case pbnavitia::ISOCHRONE: {
 
             if (! arg.origins.empty() && ! request.clockwise()) {
-                err_msg_isochron(this->pb_creator, "isochrone works only for clockwise request");
+                err_msg_isochron(this->pb_creator, "isochrone works only for clockwise request (use '&datetime_represents=departure')");
                 return;
             } else if(arg.origins.empty() && request.clockwise()){
-                err_msg_isochron(this->pb_creator, "reverse isochrone works only for anti-clockwise request");
+                err_msg_isochron(this->pb_creator, "reverse isochrone works only for anti-clockwise request (use '&datetime_represents=arrival')");
                 return;
             }
             type::EntryPoint ep = arg.origins.empty() ? arg.destinations[0] : arg.origins[0];
