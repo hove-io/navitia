@@ -310,15 +310,15 @@ def purge_jobs():
     for instance in instances:
         datasets_to_delete = instance.delete_old_jobs_and_list_datasets(time_limit)
 
-        backups_to_delete = set(os.path.realpath(os.path.dirname(dataset.name))
-                            for dataset in datasets_to_delete)
-        logger.info('backups_to_delete are: {}'.format(backups_to_delete))
+        if datasets_to_delete:
+            backups_to_delete = set(os.path.realpath(os.path.dirname(dataset)) for dataset in datasets_to_delete)
+            logger.info('backups_to_delete are: {}'.format(backups_to_delete))
 
-        for path in backups_to_delete:
-            if os.path.exists(path):
-                shutil.rmtree('{}'.format(path))
-            else:
-                logger.warning('Folder {} can\'t be found'.format(path))
+            for path in backups_to_delete:
+                if os.path.exists(path):
+                    shutil.rmtree('{}'.format(path))
+                else:
+                    logger.warning('Folder {} can\'t be found'.format(path))
 
 
 @celery.task()

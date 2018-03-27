@@ -47,8 +47,7 @@ def create_dataset(dataset_type, dir):
     dataset = models.DataSet()
     dataset.type = dataset_type
     dataset.family_type = '{}_family'.format(dataset_type)
-    dataset_backup_dir = tempfile.mkdtemp(dir=dir)
-    dataset.name = '{}/dataset'.format(dataset_backup_dir)
+    dataset.name = '{}/dataset'.format(dir)
     models.db.session.add(dataset)
 
     metric = models.Metric()
@@ -62,13 +61,32 @@ def create_dataset(dataset_type, dir):
 def create_job(creation_date, dataset_type, backup_dir):
     job = models.Job()
     job.state = 'done'
-    dataset, metric = create_dataset(dataset_type, backup_dir)
+    dataset_backup_dir = tempfile.mkdtemp(dir=backup_dir)
+    dataset, metric = create_dataset(dataset_type, dataset_backup_dir)
     job.data_sets.append(dataset)
     job.metrics.append(metric)
     job.created_at = creation_date
     models.db.session.add(job)
 
     return job
+
+
+def create_jobs_with_same_datasets(name, backup_dir):
+    with app.app_context():
+        job_list = []
+
+        dataset_backup_dir = tempfile.mkdtemp(dir=backup_dir)
+        for i in range(3):
+            dataset, metric = create_dataset('poi', dataset_backup_dir)
+            job = models.Job()
+            job.state = 'done'
+            job.data_sets.append(dataset)
+            job.metrics.append(metric)
+            job.created_at = datetime.utcnow()-timedelta(days=i)
+            models.db.session.add(job)
+            job_list.append(job)
+
+        create_instance(name, job_list)
 
 
 def create_instance(name, jobs):
@@ -122,6 +140,10 @@ def test_purge_old_jobs():
     jobs_resp = api_get('/v0/jobs/{}'.format(instances_resp[0]['name']))
     assert len(jobs_resp['jobs']) == 3
 
+    folders = set(glob.glob('{}/*'.format(backup_dir)))
+    assert len(folders) == 3
+    print('Folders = ', folders)
+
     tasks.purge_jobs()
 
     jobs_resp = api_get('/v0/jobs/{}'.format(instances_resp[0]['name']))
@@ -147,6 +169,9 @@ def test_purge_old_jobs_no_delete():
     jobs_resp = api_get('/v0/jobs/{}'.format(instances_resp[0]['name']))
     assert len(jobs_resp['jobs']) == 3
 
+    folders = set(glob.glob('{}/*'.format(backup_dir)))
+    assert len(folders) == 3
+
     tasks.purge_jobs()
 
     jobs_resp = api_get('/v0/jobs/{}'.format(instances_resp[0]['name']))
@@ -154,3 +179,32 @@ def test_purge_old_jobs_no_delete():
 
     folders = set(glob.glob('{}/*'.format(backup_dir)))
     assert len(folders) == 3
+
+
+@pytest.mark.usefixtures("init_instances_dir")
+def test_purge_old_jobs_same_dataset():
+    """
+    An old job to be deleted uses the same dataset as one to keep.
+    So, delete the job in db but the dataset file on disc
+    """
+    app.config['JOB_MAX_PERIOD_TO_KEEP'] = 1
+
+    instance_name, backup_dir = init_test()
+    create_jobs_with_same_datasets(instance_name, backup_dir)
+
+    instances_resp = api_get('/v0/instances')
+    assert len(instances_resp) == 1
+
+    jobs_resp = api_get('/v0/jobs/{}'.format(instances_resp[0]['name']))
+    assert len(jobs_resp['jobs']) == 3
+
+    folders = set(glob.glob('{}/*'.format(backup_dir)))
+    assert len(folders) == 1
+
+    tasks.purge_jobs()
+
+    jobs_resp = api_get('/v0/jobs/{}'.format(instances_resp[0]['name']))
+    assert len(jobs_resp['jobs']) == 1
+
+    folders = set(glob.glob('{}/*'.format(backup_dir)))
+    assert len(folders) == 1

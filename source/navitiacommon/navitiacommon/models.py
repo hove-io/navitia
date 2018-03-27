@@ -440,6 +440,7 @@ class Instance(db.Model):
         """
         # Keep the last dataset of each type to be able to reload data
         dataset_to_keep = self.last_datasets()
+        dataset_file_to_keep = [f.name for f in dataset_to_keep]
 
         # Keep the jobs associated
         jobs_to_keep = []
@@ -459,9 +460,9 @@ class Instance(db.Model):
 
         for job_to_delete in to_delete:
             db.session.delete(job_to_delete)
-
         db.session.commit()
-        return list(set(old_datasets)-set(dataset_to_keep))
+
+        return [dataset.name for dataset in old_datasets if dataset.name not in dataset_file_to_keep]
 
     def __repr__(self):
         return '<Instance %r>' % self.name
