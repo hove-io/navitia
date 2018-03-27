@@ -208,12 +208,14 @@ class Timeo(RealtimeProxy):
             .format(dt=self._timestamp_to_date(from_dt).strftime('%Y-%m-%dT%H:%M:%S')) \
             if from_dt else ''
 
+        #We want to have StopTimeType as it make parsing of the request way easier
+        #for alternative implementation of timeo since w<e can ignore this params
         stop_id_url = ("StopDescription=?"
-                       "StopTimeoCode={stop}"
+                       "StopTimeType={data_freshness}"
                        "&LineTimeoCode={line}"
                        "&Way={route}"
                        "&NextStopTimeNumber={count}"
-                       "&StopTimeType={data_freshness}{dt};").format(stop=stop,
+                       "&StopTimeoCode={stop}{dt};").format(stop=stop,
                                                                  line=line,
                                                                  route=route,
                                                                  count=count,
