@@ -38,12 +38,8 @@ from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer.api import PlacesSerializer, PlacesNearbySerializer
 from navitiacommon import parser_args_type
 from jormungandr import i_manager, timezone, global_autocomplete, authentication
-# from jormungandr.interfaces.v1.fields import disruption_marshaller
-# from jormungandr.interfaces.v1.fields import place, NonNullList, NonNullNested, PbField, pagination, \
-#     error, feed_publisher
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.parsers import depth_argument, default_count_arg_type, DateTimeFormat
-from copy import deepcopy
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.exceptions import TechnicalError, InvalidArguments
 from datetime import datetime
@@ -54,14 +50,6 @@ from navitiacommon.parser_args_type import TypeSchema, CoordFormat, CustomSchema
     OptionValue
 from jormungandr.interfaces.common import add_poi_infos_types
 import six
-
-
-# places = {
-#     "places": NonNullList(NonNullNested(place)),
-#     "error": PbField(error, attribute='error'),
-#     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
-#     "feed_publishers": fields.List(NonNullNested(feed_publisher))
-# }
 
 
 class geojson_argument(CustomSchemaType):
@@ -200,15 +188,6 @@ class PlaceUri(ResourceUri):
     def options(self, **kwargs):
         return self.api_description(**kwargs)
 
-# place_nearby = deepcopy(place)
-# place_nearby["distance"] = fields.String()
-# places_nearby = {
-#     "places_nearby": NonNullList(NonNullNested(place_nearby)),
-#     "error": PbField(error, attribute='error'),
-#     "pagination": PbField(pagination),
-#     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
-#     "feed_publishers": fields.List(NonNullNested(feed_publisher))
-# }
 
 places_types = {'stop_areas', 'stop_points', 'pois',
                 'addresses', 'coords', 'places', 'coord'}  # add admins when possible
@@ -251,7 +230,7 @@ class PlacesNearby(ResourceUri):
         if args["add_poi_infos"] or args["bss_stands"]:
             self.get_decorators.insert(1, ManageParkingPlaces(self, 'places_nearby'))
 
-    @get_serializer(serpy=PlacesNearbySerializer)
+    @get_serializer(PlacesNearbySerializer)
     def get(self, region=None, lon=None, lat=None, uri=None):
         self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)

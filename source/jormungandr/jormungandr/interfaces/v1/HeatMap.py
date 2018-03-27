@@ -31,35 +31,13 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask.ext.restful import fields, abort
 from jormungandr import i_manager
-# from jormungandr.interfaces.v1.fields import error,\
-#     PbField, NonNullList, NonNullNested,\
-#     Links, JsonString, place,\
-#     ListLit, beta_endpoint, feed_publisher
 from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.utils import date_to_timestamp
 from jormungandr.interfaces.parsers import UnsignedInteger
 from jormungandr.interfaces.v1.journey_common import JourneyCommon
-from jormungandr.interfaces.v1.fields import DateTime, context
 from jormungandr.interfaces.v1.serializer.api import HeatMapSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
-
-# heat_map = {
-#     "heat_matrix": JsonString(),
-#     'from': PbField(place, attribute='origin'),
-#     "to": PbField(place, attribute="destination"),
-#     'requested_date_time': DateTime()
-# }
-#
-#
-# heat_maps = {
-#     "heat_maps": NonNullList(NonNullNested(heat_map)),
-#     "error": PbField(error, attribute='error'),
-#     "links": fields.List(Links()),
-#     "warnings": ListLit([fields.Nested(beta_endpoint)]),
-#     "feed_publishers": fields.List(NonNullNested(feed_publisher)),
-#     "context": context
-# }
 
 
 class HeatMap(JourneyCommon):
@@ -69,7 +47,7 @@ class HeatMap(JourneyCommon):
         parser_get = self.parsers["get"]
         parser_get.add_argument("resolution", type=UnsignedInteger(), default=500)
 
-    @get_serializer(serpy=HeatMapSerializer)
+    @get_serializer(HeatMapSerializer)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
 

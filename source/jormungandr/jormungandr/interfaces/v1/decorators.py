@@ -29,10 +29,9 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr.interfaces.v1.serializer import serialize_with
 
 
-
 def get_serializer(serpy):
     return serialize_with(serpy)
 
 
 def get_obj_serializer(obj):
-    return get_serializer(serpy=obj.output_type_serializer)
+    return get_serializer(obj.output_type_serializer)

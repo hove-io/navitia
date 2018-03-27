@@ -32,36 +32,16 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from jormungandr import i_manager, timezone
-from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_type, depth_argument
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
-# from jormungandr.interfaces.v1.fields import PbField, error, network, line,\
-#     NonNullList, NonNullNested, pagination, stop_area, disruption_marshaller, feed_publisher
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
-# from jormungandr.interfaces.v1.VehicleJourney import vehicle_journey
 from navitiacommon.parser_args_type import BooleanType
 
-from flask.ext.restful import fields
 from flask.globals import g
 from datetime import datetime
 import six
-
-# disruption = {
-#     "network": PbField(network, attribute='network'),
-#     "lines": NonNullList(NonNullNested(line)),
-#     "stop_areas": NonNullList(NonNullNested(stop_area)),
-#     "vehicle_journeys": NonNullList(NonNullNested(vehicle_journey))
-# }
-#
-# traffic_reports = {
-#     "traffic_reports": NonNullList(NonNullNested(disruption)),
-#     "error": PbField(error, attribute='error'),
-#     "pagination": NonNullNested(pagination),
-#     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
-#     "feed_publishers": fields.List(NonNullNested(feed_publisher))
-# }
 
 
 class TrafficReport(ResourceUri):
@@ -96,8 +76,8 @@ class TrafficReport(ResourceUri):
                                 help="Distance range of the query. Used only if a coord is in the query")
         parser_get.add_argument("disable_geojson", type=BooleanType(), default=False,
                                 help="remove geojson from the response")
-        self.collection = 'traffic_reports'
-        self.collections = api.TrafficReportsSerializer
+        #self.collection = 'traffic_reports'
+        #self.collections = api.TrafficReportsSerializer
         self.get_decorators.insert(0, ManageError())
         self.get_decorators.insert(1, get_obj_serializer(self))
 

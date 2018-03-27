@@ -36,6 +36,7 @@ from jormungandr.tests.utils_test import MockRequests
 from jormungandr.interfaces.v1.serializer.geocode_json import GeocodePlacesSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
 
+
 def bragi_house_jaures_feature():
     house_feature = {
         "geometry": {
@@ -90,7 +91,7 @@ def bragi_house_jaures_feature():
     return house_feature
 
 
-@get_serializer(serpy=GeocodePlacesSerializer)
+@get_serializer(GeocodePlacesSerializer)
 def get_response(bragi_response):
     return bragi_response
 

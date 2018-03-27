@@ -42,7 +42,7 @@ from jormungandr.utils import date_to_timestamp
 
 class Kraken(AbstractAutocomplete):
 
-    @get_serializer(serpy=api.PlacesSerializer)
+    @get_serializer(api.PlacesSerializer)
     def get(self, request, instances):
         if len(instances) != 1:
             raise InvalidArguments('kraken autocomplete works only for one (and only one) instance')
@@ -90,7 +90,7 @@ class Kraken(AbstractAutocomplete):
             status.poi_sources.append(resp.geo_status.poi_source)
         return status
 
-    @get_serializer(serpy=api.PlacesSerializer)
+    @get_serializer(api.PlacesSerializer)
     def get_by_uri(self, uri, instances=None, current_datetime=None):
         if len(instances) != 1:
             raise InvalidArguments('kraken search by uri works only for one (and only one) instance')

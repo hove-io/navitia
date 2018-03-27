@@ -40,30 +40,8 @@ from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.utils import date_to_timestamp
 from jormungandr.interfaces.parsers import UnsignedInteger
 from jormungandr.interfaces.v1.journey_common import JourneyCommon
-from jormungandr.interfaces.v1.fields import DateTime
 from jormungandr.interfaces.v1.serializer.api import GraphicalIsrochoneSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
-
-# graphical_isochrone = {
-#     "geojson": JsonString(),
-#     "max_duration": fields.Integer(),
-#     "min_duration": fields.Integer(),
-#     'from': PbField(place, attribute='origin'),
-#     "to": PbField(place, attribute="destination"),
-#     'requested_date_time': DateTime(),
-#     'min_date_time': DateTime(),
-#     'max_date_time': DateTime()
-# }
-#
-#
-# graphical_isochrones = {
-#     "isochrones": NonNullList(NonNullNested(graphical_isochrone), attribute="graphical_isochrones"),
-#     "error": PbField(error, attribute='error'),
-#     "feed_publishers": fields.List(NonNullNested(feed_publisher)),
-#     "links": fields.List(Links()),
-#     "warnings": ListLit([fields.Nested(beta_endpoint)]),
-#     'context': context
-# }
 
 
 class GraphicalIsochrone(JourneyCommon):
@@ -74,7 +52,7 @@ class GraphicalIsochrone(JourneyCommon):
         parser_get.add_argument("min_duration", type=UnsignedInteger(), default=0)
         parser_get.add_argument("boundary_duration[]", type=UnsignedInteger(), action="append")
 
-    @get_serializer(serpy=GraphicalIsrochoneSerializer)
+    @get_serializer(GraphicalIsrochoneSerializer)
     @ManageError()
     def get(self, region=None, lon=None, lat=None, uri=None):
 

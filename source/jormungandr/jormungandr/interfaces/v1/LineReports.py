@@ -33,35 +33,17 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from navitiacommon.parser_args_type import BooleanType
 from jormungandr import i_manager, timezone
-from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_type
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
-# from jormungandr.interfaces.v1.fields import PbField, line, pt_object, NonNullList, NonNullNested,\
-#     pagination, disruption_marshaller, error, ListLit, beta_endpoint
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.resources_utils import ResourceUtc
 from jormungandr.utils import date_to_timestamp
 
-from flask.ext.restful import fields, reqparse
 from flask.globals import g
 from datetime import datetime
 import six
-
-
-# line_report = {
-#     "line": PbField(line),
-#     "pt_objects": NonNullList(NonNullNested(pt_object)),
-# }
-#
-# line_reports = {
-#     "line_reports": NonNullList(NonNullNested(line_report)),
-#     "error": PbField(error, attribute='error'),
-#     "pagination": NonNullNested(pagination),
-#     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
-#     "warnings": ListLit([fields.Nested(beta_endpoint)]),
-# }
 
 
 class LineReports(ResourceUri, ResourceUtc):
@@ -93,8 +75,8 @@ class LineReports(ResourceUri, ResourceUtc):
         parser_get.add_argument("until", type=DateTimeFormat(),
                                 help="use disruptions valid before this date")
 
-        self.collection = 'line_reports'
-        self.collections = api.LineReportsSerializer
+        #self.collection = 'line_reports'
+        #self.collections = api.LineReportsSerializer
         self.get_decorators.insert(0, ManageError())
         self.get_decorators.insert(1, get_obj_serializer(self))
 

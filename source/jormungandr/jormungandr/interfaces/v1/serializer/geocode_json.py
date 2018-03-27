@@ -31,7 +31,7 @@ from .base import LiteralField, NestedPropertyField, IntNestedPropertyField, val
     BetaEndpointsSerializer
 import logging
 from jormungandr.interfaces.v1.serializer import jsonschema
-from jormungandr.interfaces.v1.fields import raw_feed_publisher_bano, raw_feed_publisher_osm
+from jormungandr.interfaces.v1.serializer.fields import raw_feed_publisher_bano, raw_feed_publisher_osm
 from jormungandr.interfaces.v1.serializer.base import NestedDictGenericField, NestedDictCodeField, NestedPropertiesField
 from jormungandr.utils import get_house_number
 from jormungandr.autocomplete.geocodejson import create_address_field, get_lon_lat

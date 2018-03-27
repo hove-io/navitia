@@ -34,7 +34,7 @@ from jormungandr.interfaces.v1.serializer.pt import PlaceSerializer, CalendarSer
 from jormungandr.interfaces.v1.serializer.time import DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import LinkSchema, RoundedField, SectionGeoJsonField
 from jormungandr.interfaces.v1.serializer.base import AmountSerializer, PbNestedSerializer,\
-    EnumField, EnumListField, NestedEnumField, PbField, PbStrField, IntNestedPropertyField, PbIntField
+    EnumField, EnumListField, NestedEnumField, PbField, PbStrField, PbIntField
 from flask import g
 from navitiacommon.response_pb2 import SectionAdditionalInformationType
 from jormungandr.interfaces.v1.make_links import create_internal_link

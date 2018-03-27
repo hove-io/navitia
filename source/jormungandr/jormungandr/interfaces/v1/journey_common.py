@@ -32,7 +32,6 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from jormungandr import i_manager
 from jormungandr.interfaces.parsers import DateTimeFormat
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
-from jormungandr.interfaces.argument import ArgumentDoc
 from datetime import datetime
 from jormungandr.resources_utils import ResourceUtc
 from jormungandr.interfaces.v1.transform_id import transform_id

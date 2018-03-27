@@ -28,27 +28,14 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask.ext.restful import marshal
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
-from jormungandr.interfaces.v1.fields import address, context
 from navitiacommon.type_pb2 import _NAVITIATYPE
 import datetime
 from jormungandr.utils import is_coord, get_lon_lat
 import six
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer import api
-import jormungandr
-from flask.ext.restful.fields import Raw
-
-
-
-address_marshall_fields = {
-    "regions": Raw,
-    "address": Raw,
-    "message": Raw,
-    "context": context
-}
 
 
 class Coord(ResourceUri):
@@ -71,12 +58,10 @@ class Coord(ResourceUri):
         if len(response.places_nearby) > 0:
             e_type = response.places_nearby[0].embedded_type
             if _NAVITIATYPE.values_by_name["ADDRESS"].number == e_type:
-                if jormungandr.USE_SERPY:
-                    from jormungandr.interfaces.v1.serializer.api import PlacesNearbySerializer
-                    new_address = PlacesNearbySerializer(response).data
-                    return {"address": new_address["places_nearby"][0]["address"]}
-                else:
-                    return {"address": marshal(response.places_nearby[0].address, address)}
+                from jormungandr.interfaces.v1.serializer.api import PlacesNearbySerializer
+                new_address = PlacesNearbySerializer(response).data
+                return {"address": new_address["places_nearby"][0]["address"]}
+
         return None
 
     def _get_args(self, lon=None, lat=None, id=None):
@@ -97,7 +82,7 @@ class Coord(ResourceUri):
         })
         return args
 
-    @get_serializer(serpy=api.DictAddressesSerializer)
+    @get_serializer(api.DictAddressesSerializer)
     def get(self, region=None, lon=None, lat=None, id=None):
         args = self.parsers["get"].parse_args()
 

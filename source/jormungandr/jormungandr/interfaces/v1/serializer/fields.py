@@ -54,6 +54,20 @@ properties_schema = {
     }
 }
 
+raw_feed_publisher_bano = {
+    "id": "bano",
+    "name": "Base d'Adresses Nationale Ouverte",
+    "license": "ODbL",
+    "url": "http://bano.openstreetmap.fr/data/lisezmoi-bano.txt"
+}
+
+raw_feed_publisher_osm = {
+    "id": "osm",
+    "license": "ODbL",
+    "name": "openstreetmap",
+    "url": "https://www.openstreetmap.org/copyright"
+}
+
 
 class MultiLineStringField(jsonschema.Field):
     class MultiLineStringSchema(serpy.Serializer):

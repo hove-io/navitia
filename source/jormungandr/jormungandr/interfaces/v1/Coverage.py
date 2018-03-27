@@ -30,38 +30,16 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask.ext.restful import fields
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.StatedResource import StatedResource
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.make_links import add_coverage_link, add_collection_links, clean_links
 from jormungandr.interfaces.v1.converters_collection_type import collections_to_resource_type
-from jormungandr.interfaces.v1.fields import NonNullNested, FieldDateTime
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.interfaces.v1.serializer.api import CoveragesSerializer
 from navitiacommon.parser_args_type import BooleanType
-from jormungandr.interfaces.v1.fields import context_utc
 
 collections = list(collections_to_resource_type.keys())
-
-coverage_marshall_fields = [
-    ("regions", fields.List(NonNullNested({
-        "id": fields.String(attribute="region_id"),
-        "start_production_date": fields.String,
-        "end_production_date": fields.String,
-        "last_load_at": FieldDateTime(),
-        "name": fields.String,
-        "status": fields.String,
-        "shape": fields.String,
-        "error": NonNullNested({
-            "code": fields.String,
-            "value": fields.String
-        }),
-        "dataset_created_at": fields.String(),
-    }))),
-    ('context', context_utc)
-]
-
 
 class Coverage(StatedResource):
     def __init__(self, quota=True, *args, **kwargs):
@@ -74,7 +52,7 @@ class Coverage(StatedResource):
     @clean_links()
     @add_coverage_link()
     @add_collection_links(collections)
-    @get_serializer(serpy=api.CoveragesSerializer)
+    @get_serializer(api.CoveragesSerializer)
     def get(self, region=None, lon=None, lat=None):
         args = self.parsers["get"].parse_args()
 

@@ -28,23 +28,21 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from jormungandr.interfaces.v1.make_links import create_external_link
-from flask_restful import marshal
 from jormungandr._version import __version__
 from jormungandr.exceptions import DeadSocketException
 from jormungandr.module_resource import ModuleResource
 from navitiacommon import type_pb2, request_pb2
-from jormungandr import i_manager, USE_SERPY
+from jormungandr import i_manager
 from jormungandr.protobuf_to_dict import protobuf_to_dict
-from flask.ext.restful.fields import Raw
 from jormungandr import bss_provider_manager
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer.api import TechnicalStatusSerializer
 from jormungandr.interfaces.v1.serializer.status import CommonStatusSerializer
 from jormungandr.interfaces.v1.fields import add_common_status
-from flask.ext.restful import fields
 
 
 class Index(ModuleResource):
@@ -77,7 +75,7 @@ class TechnicalStatus(ModuleResource):
     return status for all instances
     """
 
-    @get_serializer(serpy=TechnicalStatusSerializer)
+    @get_serializer(TechnicalStatusSerializer)
     def get(self):
         response = {
             "jormungandr_version": __version__,

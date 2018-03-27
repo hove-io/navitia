@@ -91,7 +91,7 @@ def create_internal_link(rel, _type, id, templated=False, description=None):
 
 class generate_links(object):
 
-    def prepare_objetcs(self, objects, hasCollections=False):
+    def prepare_objects(self, objects):
         if isinstance(objects, tuple):
             objects = objects[0]
         if "links" not in objects:
@@ -207,7 +207,7 @@ class add_coverage_link(generate_links):
             else:
                 data = objects
             if isinstance(data, dict) or isinstance(data, OrderedDict):
-                data = self.prepare_objetcs(data)
+                data = self.prepare_objects(data)
                 kwargs = self.prepare_kwargs(kwargs, data)
                 kwargs["templated"] = True
                 for link in self.links:
@@ -241,7 +241,7 @@ class add_collection_links(generate_links):
             else:
                 data = objects
             if isinstance(data, dict) or isinstance(data, OrderedDict):
-                data = self.prepare_objetcs(objects, True)
+                data = self.prepare_objects(objects)
                 kwargs = self.prepare_kwargs(kwargs, data)
                 kwargs["templated"] = True
                 for collection in self.collections:
@@ -270,7 +270,7 @@ class add_id_links(generate_links):
             else:
                 data = objects
             self.get_objets(data)
-            data = self.prepare_objetcs(objects, True)
+            data = self.prepare_objects(objects)
             kwargs = self.prepare_kwargs(kwargs, data)
 
             if 'region' not in kwargs and 'lon' not in kwargs:

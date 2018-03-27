@@ -150,7 +150,7 @@ class Uri(ResourceUri, ResourceUtc):
 
         self.region = i_manager.get_region(region, lon, lat)
 
-        #we store the region in the 'g' object, which is local to a request
+        # we store the region in the 'g' object, which is local to a request
         set_request_timezone(self.region)
 
         # change dt to utc
@@ -188,12 +188,12 @@ class Uri(ResourceUri, ResourceUtc):
 def journey_pattern_points(is_collection):
     class JourneyPatternPoints(Uri):
 
-        """ Retrieves journey pattern points"""
+        """ Retrieves journey pattern points """
 
         def __init__(self):
             Uri.__init__(self, is_collection, "journey_pattern_points",
                          output_type_serializer=api.JourneyPatternPointsSerializer)
-            self.collections = get_collections(self.collection)
+            #self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
     return JourneyPatternPoints
 
@@ -205,7 +205,7 @@ def commercial_modes(is_collection):
 
         def __init__(self):
             Uri.__init__(self, is_collection, "commercial_modes", output_type_serializer=api.CommercialModesSerializer)
-            self.collections = get_collections(self.collection)
+            #self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
     return CommercialModes
 
@@ -217,7 +217,7 @@ def journey_patterns(is_collection):
 
         def __init__(self):
             Uri.__init__(self, is_collection, "journey_patterns", output_type_serializer=api.JourneyPatternsSerializer)
-            self.collections = get_collections(self.collection)
+            #self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
     return JourneyPatterns
 
@@ -229,7 +229,7 @@ def vehicle_journeys(is_collection):
 
         def __init__(self):
             Uri.__init__(self, is_collection, "vehicle_journeys", output_type_serializer=api.VehicleJourneysSerializer)
-            self.collections = get_collections(self.collection)
+            #self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
     return VehicleJourneys
 
@@ -241,7 +241,7 @@ def trips(is_collection):
 
         def __init__(self):
             Uri.__init__(self, is_collection, "trips", output_type_serializer=api.TripsSerializer)
-            self.collections = get_collections(self.collection)
+            #self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
     return Trips
 
@@ -253,7 +253,7 @@ def physical_modes(is_collection):
 
         def __init__(self):
             Uri.__init__(self, is_collection, "physical_modes", output_type_serializer=api.PhysicalModesSerializer)
-            self.collections = get_collections(self.collection)
+            #self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
     return PhysicalModes
 
@@ -266,7 +266,7 @@ def stop_points(is_collection):
         def __init__(self, *args, **kwargs):
             Uri.__init__(self, is_collection, "stop_points", output_type_serializer=api.StopPointsSerializer,
                          *args, **kwargs)
-            self.collections = get_collections(self.collection)
+            #self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
             self.parsers["get"].add_argument("original_id", type=six.text_type,
                                              help="original uri of the object you want to query")
@@ -280,7 +280,7 @@ def stop_areas(is_collection):
 
         def __init__(self):
             Uri.__init__(self, is_collection, "stop_areas", output_type_serializer=api.StopAreasSerializer)
-            self.collections = get_collections(self.collection)
+            #self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
             self.parsers["get"].add_argument("original_id", type=six.text_type,
                                              help="original uri of the object you want to query")
@@ -294,7 +294,7 @@ def connections(is_collection):
 
         def __init__(self):
             Uri.__init__(self, is_collection, "connections", output_type_serializer=api.ConnectionsSerializer)
-            self.collections = get_collections(self.collection)
+            #self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
     return Connections
 
@@ -306,7 +306,7 @@ def companies(is_collection):
 
         def __init__(self):
             Uri.__init__(self, is_collection, "companies", output_type_serializer=api.CompaniesSerializer)
-            self.collections = get_collections(self.collection)
+            #self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
     return Companies
 
@@ -318,7 +318,7 @@ def poi_types(is_collection):
 
         def __init__(self):
             Uri.__init__(self, is_collection, "poi_types", output_type_serializer=api.PoiTypesSerializer)
-            self.collections = get_collections(self.collection)
+            #self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
     return PoiTypes
 
@@ -330,7 +330,7 @@ def routes(is_collection):
 
         def __init__(self):
             Uri.__init__(self, is_collection, "routes", output_type_serializer=api.RoutesSerializer)
-            self.collections = get_collections(self.collection)
+            #self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
             self.parsers["get"].add_argument("original_id", type=six.text_type,
                                              help="original uri of the object you want to query")
@@ -343,7 +343,7 @@ def line_groups(is_collection):
 
         def __init__(self):
             Uri.__init__(self, is_collection, "line_groups", output_type_serializer=api.LineGroupsSerializer)
-            self.collections = get_collections(self.collection)
+            #self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
             self.parsers["get"].add_argument("original_id", type=six.text_type,
                                              help="original uri of the object you want to query")
@@ -357,7 +357,7 @@ def lines(is_collection):
 
         def __init__(self):
             Uri.__init__(self, is_collection, "lines", output_type_serializer=api.LinesSerializer)
-            self.collections = get_collections(self.collection)
+            #self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
 
             self.parsers["get"].add_argument("original_id", type=six.text_type,
@@ -372,7 +372,7 @@ def pois(is_collection):
 
         def __init__(self):
             Uri.__init__(self, is_collection, "pois", output_type_serializer=api.PoisSerializer)
-            self.collections = get_collections(self.collection)
+            #self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
             self.parsers["get"].add_argument("original_id", type=six.text_type,
                                              help="original uri of the object you want to query")
@@ -399,7 +399,7 @@ def networks(is_collection):
 
         def __init__(self):
             Uri.__init__(self, is_collection, "networks", output_type_serializer=api.NetworksSerializer)
-            self.collections = get_collections(self.collection)
+            #self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
             self.parsers["get"].add_argument("original_id", type=six.text_type,
                                              help="original uri of the object you want to query")
@@ -412,7 +412,7 @@ def disruptions(is_collection):
 
         def __init__(self):
             Uri.__init__(self, is_collection, "disruptions", output_type_serializer=api.DisruptionsSerializer)
-            self.collections = get_collections(self.collection)
+            #self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
             self.parsers["get"].add_argument("original_id", type=six.text_type,
                                              help="original uri of the object you want to query")
@@ -426,7 +426,7 @@ def contributors(is_collection):
 
         def __init__(self):
             Uri.__init__(self, is_collection, "contributors", output_type_serializer=api.ContributorsSerializer)
-            self.collections = get_collections(self.collection)
+            #self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
     return Contributors
 
@@ -438,7 +438,7 @@ def datasets(is_collection):
 
         def __init__(self):
             Uri.__init__(self, is_collection, "datasets", output_type_serializer=api.DatasetsSerializer)
-            self.collections = get_collections(self.collection)
+            #self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
     return Datasets
 

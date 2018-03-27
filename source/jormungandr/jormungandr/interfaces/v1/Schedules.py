@@ -30,14 +30,10 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask_restful import fields, marshal_with, reqparse
+from flask_restful import fields, reqparse
 from flask import request, g
 from jormungandr import i_manager, utils
 from jormungandr import timezone
-# from jormungandr.interfaces.v1.fields import stop_point, route, pagination, PbField, stop_date_time, \
-#     additional_informations, display_informations_vj, \
-#     display_informations_route, UrisToLinks, error, \
-#     enum_type, SplitDateTime, MultiLineString, PbEnum, feed_publisher, DateTime
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri, complete_links
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.serializer import api, pt
@@ -46,13 +42,10 @@ from jormungandr.interfaces.argument import ArgumentDoc
 from jormungandr.interfaces.parsers import DateTimeFormat, default_count_arg_type, depth_argument, \
     UnsignedInteger
 from jormungandr.interfaces.v1.errors import ManageError
-from flask_restful.inputs import natural
-# from jormungandr.interfaces.v1.fields import disruption_marshaller, NonNullList, NonNullNested
 from jormungandr.resources_utils import ResourceUtc
 from jormungandr.interfaces.v1.make_links import create_external_link, create_internal_link
 from functools import wraps
 from copy import deepcopy
-from navitiacommon import response_pb2
 from jormungandr.exceptions import InvalidArguments
 import six
 from navitiacommon.parser_args_type import BooleanType, OptionValue
@@ -208,48 +201,6 @@ class date_time_links(fields.Raw):
         return properties_links + disruption_links
 
 
-# date_time = {
-#     "date_time": SplitDateTime(date='date', time='time'),
-#     "base_date_time": DateTime(),
-#     "additional_informations": additional_informations(),
-#     "links": date_time_links(),
-#     'data_freshness': enum_type(attribute='realtime_level'),
-# }
-#
-# row = {
-#     "stop_point": PbField(stop_point),
-#     "date_times": fields.List(fields.Nested(date_time))
-# }
-#
-# header = {
-#     "display_informations": PbField(display_informations_vj,
-#                                     attribute='pt_display_informations'),
-#     "additional_informations": NonNullList(PbEnum(response_pb2.SectionAdditionalInformationType)),
-#     "links": UrisToLinks()
-# }
-# table_field = {
-#     "rows": fields.List(fields.Nested(row)),
-#     "headers": fields.List(fields.Nested(header))
-# }
-
-# route_schedule_fields = {
-#     "table": PbField(table_field),
-#     "display_informations": PbField(display_informations_route,
-#                                     attribute='pt_display_informations'),
-#     "links": UrisToLinks(),
-#     "geojson": MultiLineString(),
-#     "additional_informations": enum_type(attribute="response_status")
-# }
-#
-# route_schedules = {
-#     "error": PbField(error, attribute='error'),
-#     "route_schedules": fields.List(fields.Nested(route_schedule_fields)),
-#     "pagination": fields.Nested(pagination),
-#     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
-#     "feed_publishers": fields.List(fields.Nested(feed_publisher))
-# }
-
-
 class RouteSchedules(Schedules):
 
     def __init__(self):
@@ -258,24 +209,6 @@ class RouteSchedules(Schedules):
                                              output_type_serializer=api.RouteSchedulesSerializer)
 
 
-# stop_schedule = {
-#     "stop_point": PbField(stop_point),
-#     "route": PbField(route, attribute="route"),
-#     "additional_informations": enum_type(attribute="response_status"),
-#     "display_informations": PbField(display_informations_route,
-#                                     attribute='pt_display_informations'),
-#     "date_times": fields.List(fields.Nested(date_time)),
-#     "links": UrisToLinks()
-# }
-# stop_schedules = {
-#     "stop_schedules": fields.List(fields.Nested(stop_schedule)),
-#     "pagination": fields.Nested(pagination),
-#     "error": PbField(error, attribute='error'),
-#     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
-#     "feed_publishers": fields.List(fields.Nested(feed_publisher))
-# }
-#
-
 class StopSchedules(Schedules):
 
     def __init__(self):
@@ -283,32 +216,6 @@ class StopSchedules(Schedules):
         super(StopSchedules, self).__init__("departure_boards",
                                             output_type_serializer=api.StopSchedulesSerializer)
 
-#
-# passage = {
-#     "route": PbField(route),
-#     "stop_point": PbField(stop_point),
-#     "stop_date_time": PbField(stop_date_time),
-#     "display_informations": PbField(display_informations_vj,
-#                                     attribute='pt_display_informations'),
-#     "links": UrisToLinks()
-# }
-#
-# departures = {
-#     "departures": fields.List(fields.Nested(passage),
-#                               attribute="next_departures"),
-#     "pagination": fields.Nested(pagination),
-#     "error": PbField(error, attribute='error'),
-#     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
-#     "feed_publishers": fields.List(fields.Nested(feed_publisher))
-# }
-#
-# arrivals = {
-#     "arrivals": fields.List(fields.Nested(passage), attribute="next_arrivals"),
-#     "pagination": fields.Nested(pagination),
-#     "error": PbField(error, attribute='error'),
-#     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
-#     "feed_publishers": fields.List(fields.Nested(feed_publisher))
-# }
 
 class add_passages_links:
     """
@@ -362,7 +269,7 @@ class add_passages_links:
 class NextDepartures(Schedules):
 
     def __init__(self):
-        self.collections = api.DeparturesSerializer
+        # self.collections = api.DeparturesSerializer
         super(NextDepartures, self).__init__("next_departures",
                                              output_type_serializer=api.DeparturesSerializer)
         self.get_decorators.append(add_passages_links())
