@@ -30,6 +30,7 @@ www.navitia.io
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_ed
+#include "ed/data.h"
 #include <boost/test/unit_test.hpp>
 #include "routing/raptor_api.h"
 #include "ed/build_helper.h"
@@ -2299,4 +2300,159 @@ BOOST_AUTO_TEST_CASE(stop_times_with_distinct_arrival_departure) {
     for (int i = 1; i < j.sections_size(); ++i) {
         BOOST_CHECK_EQUAL(j.sections(i - 1).end_date_time(), j.sections(i).begin_date_time());
     }
+}
+
+/*
+ * Test the section geometry without provided shapes contains
+ * only its stop points coordinates.
+ *
+ *     S2    S3
+ *     +-----+
+ *    /
+ *   /
+ *  /
+ * /
+ * +S1
+ */
+BOOST_AUTO_TEST_CASE(section_geometry_without_shapes) {
+    ed::builder b("20180309");
+    b.sa("stop1")("stop_point:stop1", 0, 0, false);
+    b.sa("stop2")("stop_point:stop2", 4, 5, false);
+    b.sa("stop3")("stop_point:stop3", 10, 5, false);
+    b.vj("vj")
+        ("stop_point:stop1", 1000, 1100)
+        ("stop_point:stop2", 1200, 1500)
+        ("stop_point:stop3", 1700, 2000);
+
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2018, 3, 9), boost::gregorian::days(1));
+
+    nr::RAPTOR raptor(*(b.data));
+
+    navitia::type::Type_e origin_type = b.data->get_type_of_id("stop1");
+    navitia::type::Type_e destination_type = b.data->get_type_of_id("stop3");
+    navitia::type::EntryPoint origin(origin_type, "stop1");
+    navitia::type::EntryPoint destination(destination_type, "stop3");
+    std::vector<std::string> forbidden;
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20180309T001500")},
+                  true, navitia::type::AccessibiliteParams(), forbidden, {},
+                  sn_worker, nt::RTLevel::Base, 2_min);
+    pbnavitia::Response resp = pb_creator.get_response();
+
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+    pbnavitia::Journey journey = resp.journeys(0);
+
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    pbnavitia::Section section = journey.sections(0);
+
+    BOOST_REQUIRE_EQUAL(journey.sections(0).stop_date_times().size(), 0);
+    BOOST_REQUIRE_EQUAL(journey.sections(1).stop_date_times().size(), 3);
+    BOOST_REQUIRE_EQUAL(journey.sections(2).stop_date_times().size(), 0);
+
+    BOOST_CHECK_EQUAL(journey.sections(1).shape().size(), 3);
+
+    BOOST_CHECK_EQUAL(journey.sections(1).shape(0).lon(), 0);
+    BOOST_CHECK_EQUAL(journey.sections(1).shape(0).lat(), 0);
+
+    BOOST_CHECK_EQUAL(journey.sections(1).shape(1).lon(), 4);
+    BOOST_CHECK_EQUAL(journey.sections(1).shape(1).lat(), 5);
+
+    BOOST_CHECK_EQUAL(journey.sections(1).shape(2).lon(), 10);
+    BOOST_CHECK_EQUAL(journey.sections(1).shape(2).lat(), 5);
+}
+
+/*
+ * Test the section geometry with provided shapes has
+ * something different from the initial stop points
+ * coordinates (as the shape is made of coordinates
+ * which do no match exactly with the stop points).
+ *
+ * B    S2 C S3
+ * +----+--+-+
+ * |   /
+ * |  /
+ * | /
+ * |/
+ * +
+ * AS1
+ */
+BOOST_AUTO_TEST_CASE(section_geometry_with_shapes) {
+    ed::builder b("20180309");
+    b.sa("stop1")("stop_point:stop1", 0, 0, false);
+    b.sa("stop2")("stop_point:stop2", 5, 5, false);
+    b.sa("stop3")("stop_point:stop3", 10, 5, false);
+
+    static const navitia::type::GeographicalCoord S1(0, 0);
+    static const navitia::type::GeographicalCoord S2(4, 5);
+    static const navitia::type::GeographicalCoord S3(10, 5);
+
+    static const navitia::type::GeographicalCoord A(0, 0);
+    static const navitia::type::GeographicalCoord B(0, 5);
+    static const navitia::type::GeographicalCoord C(8, 5);
+
+    navitia::type::LineString shape = {A, B};
+    static const navitia::type::LineString shape_S2 = ed::create_shape(S1, S2, shape);
+    shape = {B, C};
+    static const navitia::type::LineString shape_S3 = ed::create_shape(S2, S3, shape);
+
+    b.vj("vj")
+        ("stop_point:stop1", 1000, 1100)
+        ("stop_point:stop2", 1200, 1500).st_shape(shape_S2)
+        ("stop_point:stop3", 1700, 2000).st_shape(shape_S3);
+
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2018, 3, 9), boost::gregorian::days(1));
+
+    nr::RAPTOR raptor(*(b.data));
+
+    navitia::type::Type_e origin_type = b.data->get_type_of_id("stop1");
+    navitia::type::Type_e destination_type = b.data->get_type_of_id("stop3");
+    navitia::type::EntryPoint origin(origin_type, "stop1");
+    navitia::type::EntryPoint destination(destination_type, "stop3");
+    std::vector<std::string> forbidden;
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, boost::gregorian::not_a_date_time, null_time_period);
+    make_response(pb_creator, raptor, origin, destination, {ntest::to_posix_timestamp("20180309T001500")},
+                  true, navitia::type::AccessibiliteParams(), forbidden, {},
+                  sn_worker, nt::RTLevel::Base, 2_min);
+    pbnavitia::Response resp = pb_creator.get_response();
+
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+    pbnavitia::Journey journey = resp.journeys(0);
+
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    pbnavitia::Section section = journey.sections(0);
+
+    BOOST_REQUIRE_EQUAL(journey.sections(0).stop_date_times().size(), 0);
+    BOOST_REQUIRE_EQUAL(journey.sections(1).stop_date_times().size(), 3);
+    BOOST_REQUIRE_EQUAL(journey.sections(2).stop_date_times().size(), 0);
+
+    BOOST_CHECK_EQUAL(journey.sections(1).shape().size(), 5);
+
+    BOOST_CHECK_EQUAL(journey.sections(1).shape(0).lon(), 0);
+    BOOST_CHECK_EQUAL(journey.sections(1).shape(0).lat(), 0);
+
+    BOOST_CHECK_EQUAL(journey.sections(1).shape(1).lon(), 0);
+    BOOST_CHECK_EQUAL(journey.sections(1).shape(1).lat(), 5);
+
+    BOOST_CHECK_EQUAL(journey.sections(1).shape(2).lon(), 4);
+    BOOST_CHECK_EQUAL(journey.sections(1).shape(2).lat(), 5);
+
+    BOOST_CHECK_EQUAL(journey.sections(1).shape(3).lon(), 8);
+    BOOST_CHECK_EQUAL(journey.sections(1).shape(3).lat(), 5);
+
+    BOOST_CHECK_EQUAL(journey.sections(1).shape(4).lon(), 10);
+    BOOST_CHECK_EQUAL(journey.sections(1).shape(4).lat(), 5);
 }
