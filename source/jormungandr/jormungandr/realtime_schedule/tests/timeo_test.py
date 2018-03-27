@@ -226,8 +226,8 @@ def next_passage_for_route_point_test():
                   service_args={'a': 'bobette', 'b': '12'})
 
     mock_requests = MockRequests({
-        'http://bob.com/tata?a=bobette&b=12&StopDescription=?StopTimeoCode=stop_tutu&LineTimeoCode'
-        '=line_toto&Way=route_tata&NextStopTimeNumber=5&StopTimeType=TR;':
+        'http://bob.com/tata?a=bobette&b=12&StopDescription=?StopTimeType=TR&LineTimeoCode'
+        '=line_toto&Way=route_tata&NextStopTimeNumber=5&StopTimeoCode=stop_tutu;':
         (mock_good_timeo_response(), 200)
     })
 
