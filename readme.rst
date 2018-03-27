@@ -42,11 +42,10 @@ Who's who
 ----------
 
 Navitia is instanciated and exposed publicly through api.navitia.io_.
-
-.. _api.navitia.io: http://api.navitia.io
-
 Developments on Navitia are lead by Kisio Digital (previously CanalTP).  
 Kisio Digital is a subsidiary of Keolis (itself a subsidiary of SNCF, French national railway company).
+
+.. _api.navitia.io: http://api.navitia.io
 
 
 More information
