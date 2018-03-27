@@ -41,7 +41,7 @@ Technically, Navitia is a HATEOAS_ API that returns JSON formated results.
 Who's who
 ----------
 
-Navitia is instanciated and exposed publicly through api.navitia.io_..  
+Navitia is instanciated and exposed publicly through api.navitia.io_.
 
 .. _api.navitia.io: http://api.navitia.io
 
