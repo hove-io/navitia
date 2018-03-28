@@ -112,6 +112,11 @@ def create_modes_field(modes):
         return []
     return [{"id": mode.get('id'), "name": mode.get('name')} for mode in modes]
 
+def create_comments_field(modes):
+    if not modes:
+        return []
+    # To be compatible, type = 'standard'
+    return [{"type": 'standard', "value": mode.get('name')} for mode in modes]
 
 def create_codes_field(codes):
     if not codes:
@@ -272,6 +277,14 @@ class StopAreaField(fields.Raw):
         p_modes = geocoding.get('physical_modes', [])
         if p_modes:
             resp['physical_modes'] = create_modes_field(p_modes)
+
+        comments = geocoding.get('comments', [])
+        if comments:
+            resp['comments'] = create_comments_field(comments)
+            # To be compatible with old version, we create the "comment" field in addition.
+            # This field is a simple string, so we take only one comment (In our case, the first
+            # element of the list).
+            resp['comment'] = next(iter(comments or []), None).get('name')
 
         codes = geocoding.get('codes')
         if codes:
