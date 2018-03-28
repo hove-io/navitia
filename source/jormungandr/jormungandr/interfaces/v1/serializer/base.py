@@ -223,6 +223,12 @@ class LiteralField(jsonschema.Field):
         return lambda *args, **kwargs: self.value
 
 
+class DictCommentSerializer(serpy.DictSerializer):
+    # To be compatible, type = 'standard'
+    type = LiteralField('standard', display_none=True)
+    value = serpy.StrField(attr='name', display_none=True)
+
+
 def value_by_path(obj, path, default=None):
     """
     >>> value_by_path({'a': {'b' : {'c': 42}}}, 'a.b.c')
@@ -319,6 +325,8 @@ def make_notes(notes):
 class NestedDictGenericField(DictGenericSerializer, NestedPropertyField):
     pass
 
+class NestedDictCommentField(DictCommentSerializer, NestedPropertyField):
+    pass
 
 class NestedDictCodeField(DictCodeSerializer, NestedPropertyField):
     def to_value(self, value):
