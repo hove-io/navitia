@@ -140,7 +140,7 @@ comment_url | chaine | Optionnel | URL associé à la note et permettant d'avoir
 (1) Catégorie de commentaire afin de pouvoir les différentier à l'affichage. Les valeurs possibles sont :
 
 * information (ou non renseigné) : indique une note d'information générale
-* on_demand_transport : indique qu'il s'agit d'une note d'information sur le Transport à la demande. Ce type de notes doit préciser de manière succinte les conditions et le numéro de téléphone de réservation
+* on_demand_transport : indique qu'il s'agit d'une note d'information sur le Transport à la demande. Ce type de note doit préciser de manière succinte les conditions et le numéro de téléphone de réservation
 
 ### comment_links.txt (optionnel)
 Ce fichier fait le lien entre un objet du référentiel (ligne, arrêt, horaire, etc.) et un commentaire afin de permettre d'associer plusieurs notes à un objet. et plusieurs objets à une note.
