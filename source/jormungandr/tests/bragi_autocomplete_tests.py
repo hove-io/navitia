@@ -517,6 +517,48 @@ BRAGI_MOCK_ADMIN = {
     ]
 }
 
+BRAGI_MOCK_RESPONSE_WITH_COMMENTS = {
+    "type": "FeatureCollection",
+    "geocoding": {
+        "version": "0.1.0",
+        "query": ""
+    },
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "coordinates": [
+                    3.282103,
+                    49.847586
+                ],
+                "type": "Point"
+            },
+            "properties": {
+                "geocoding": {
+                    "city": "Bobtown",
+                    "housenumber": "20",
+                    "id": "stop_area_id",
+                    "label": "20 Rue Bob (Bobtown)",
+                    "name": "Rue Bob",
+                    "postcode": "02100",
+                    "street": "Rue Bob",
+                    "type": "public_transport:stop_area",
+                    "citycode": "02000",
+                    "administrative_regions": [],
+                    "comments": [
+                        {
+                            "name": "comment1",
+                        },
+                        {
+                            "name": "comment2",
+                        }
+                    ],
+                }
+            },
+        }
+    ]
+}
+
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF}, global_config={'activate_bragi': True})
 class TestBragiAutocomplete(AbstractTestFixture):
 
@@ -1134,6 +1176,35 @@ class TestBragiAutocomplete(AbstractTestFixture):
             # In our case administrative_regions of the admin is an empty list in the result bragi
             assert 'administrative_regions' not in r[0]['administrative_region']
 
+    def test_autocomplete_call_with_comments_on_stop_area(self):
+        url = 'https://host_of_bragi/autocomplete'
+        params = {
+            'q': u'bob',
+            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
+            'limit': 10,
+            'pt_dataset': 'main_routing_test'
+        }
+
+        url += "?{}".format(urlencode(params, doseq=True))
+        mock_requests = MockRequests({
+            url: (BRAGI_MOCK_RESPONSE_WITH_COMMENTS, 200)
+        })
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
+                                         "&type[]=address&type[]=poi&type[]=administrative_region")
+            is_valid_global_autocomplete(response, depth=1)
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['name'] == '20 Rue Bob (Bobtown)'
+            assert r[0]['embedded_type'] == 'stop_area'
+            assert r[0]['id'] == 'stop_area_id'
+            assert r[0]['quality'] == 0 # field for kraken compatibility (default = 0)
+            stop_area = r[0]['stop_area']
+            # For retrocompatibility, when we have multi-comments, we keep 'comment' field with
+            # the first comment element.
+            assert stop_area['comment'] == 'comment1'
+            comments = stop_area['comments']
+            assert {comment['value'] for comment in comments} >= {u'comment1', u'comment2'}
 
 @dataset({"main_routing_test": {}}, global_config={'activate_bragi': True})
 class TestBragiShape(AbstractTestFixture):
