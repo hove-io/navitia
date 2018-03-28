@@ -40,7 +40,7 @@ We hope you got the source code from git.
 
 #. Get the submodules: at the root of project :
 
-   ``git submodule update --init``
+   ``git submodule update --init --recursive``
 
 #. With CMake you can build in a repository different than the source directory.
 

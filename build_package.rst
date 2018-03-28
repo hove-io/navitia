@@ -13,7 +13,7 @@ Build instructions
 ====================
 
 1. Be sure you have runned the following command at the root of your tree :
- ``git submodule update --init``
+ ``git submodule update --init --recursive``
 
 2. Commit or stash all your changes
 3. Tag the new release version
