@@ -40,6 +40,7 @@ www.navitia.io
 #include "kraken_zmq.h"
 #include "utils/zmq.h"
 #include "utils/functions.h" //navitia::absolute_path function
+#include "metrics.h"
 
 static void show_usage(const std::string& name)
 {
@@ -100,13 +101,19 @@ int main(int argn, char** argv){
         return 1;
     }
 
+    const navitia::Metrics metrics(conf.metrics_binding(), conf.instance_name());
+
     threads.create_thread(navitia::MaintenanceWorker(data_manager, conf));
 
     int nb_threads = conf.nb_threads();
     // Launch pool of worker threads
     LOG4CPLUS_INFO(logger, "starting workers threads");
     for(int thread_nbr = 0; thread_nbr < nb_threads; ++thread_nbr) {
-        threads.create_thread(std::bind(&doWork, std::ref(context), std::ref(data_manager), conf));
+        threads.create_thread(std::bind(&doWork,
+                                        std::ref(context),
+                                        std::ref(data_manager),
+                                        conf,
+                                        std::ref(metrics)));
     }
 
     // Connect worker threads to client threads via a queue

@@ -122,7 +122,7 @@ url = https://github.com/CanalTP/navitia-proto.git
 Update submodules:
 ```sh
 cd navitia
-git submodule update --init
+git submodule update --init --recursive
 ```
 
 
@@ -352,7 +352,7 @@ pip install -r requirements.txt
 
 # ! change .gitmodules url if using http instead of ssh !
 
-git submodule update --init
+git submodule update --init --recursive
 ./setup.py build_pbf
 ```
 

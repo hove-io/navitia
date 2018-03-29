@@ -38,6 +38,8 @@ www.navitia.io
 #include "kraken/configuration.h"
 #include "type/meta_data.h"
 #include <log4cplus/ndc.h>
+#include "metrics.h"
+#include "prometheus/counter.h"
 
 
 static void respond(zmq::socket_t& socket,
@@ -63,7 +65,8 @@ static void respond(zmq::socket_t& socket,
 namespace pt = boost::posix_time;
 inline void doWork(zmq::context_t& context,
                    DataManager<navitia::type::Data>& data_manager,
-                   navitia::kraken::Configuration conf) {
+                   navitia::kraken::Configuration conf,
+                   const navitia::Metrics& metrics) {
     auto logger = log4cplus::Logger::getInstance("worker");
 
     zmq::socket_t socket (context, ZMQ_REQ);
@@ -125,6 +128,7 @@ inline void doWork(zmq::context_t& context,
         }
         respond(socket, address, w.pb_creator.get_response());
         auto duration = pt::microsec_clock::universal_time() - start;
+        metrics.observe_api(api, duration.total_milliseconds()/1000.0);
         if(duration >= slow_request_duration){
             LOG4CPLUS_WARN(logger, "slow request! duration: " << duration.total_milliseconds()
                                 << "ms request: " << pb_req.DebugString());

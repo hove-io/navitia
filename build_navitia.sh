@@ -138,7 +138,7 @@ mkdir -p "$run_dir"
 sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
 
 #we need to get the submodules
-git submodule update --init
+git submodule update --init --recursive
 
 #========
 #Building

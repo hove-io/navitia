@@ -81,7 +81,7 @@ class ReleaseManager:
             print(is_release_unmerged.group(0))
             print("ABORTING: {rem}/release branch was not merged in {rem}/dev".format(rem=remote_name))
             print("This is required before releasing. You may use (be careful):")
-            print("git checkout dev; git submodule update")
+            print("git checkout dev; git submodule update --recursive")
             print("git merge release")
 
             exit(1)
@@ -142,7 +142,7 @@ class ReleaseManager:
             parent = "release"
 
         self.git.checkout(parent)
-        self.git.submodule('update')
+        self.git.submodule('update', '--recursive')
 
         print("current branch {}".format(self.repo.active_branch))
 
@@ -293,7 +293,7 @@ class ReleaseManager:
 
     def publish_release(self, temp_branch):
         self.git.checkout("release")
-        self.git.submodule('update')
+        self.git.submodule('update', '--recursive')
         #merge with the release branch
         self.git.merge(temp_branch, "release", '--no-ff')
 
@@ -315,7 +315,7 @@ class ReleaseManager:
         print("publishing the release")
 
         print("Check the release, you will probably want to merge release in dev:")
-        print("  git checkout dev; git submodule update")
+        print("  git checkout dev; git submodule update --recursive")
         print("  git merge release")
         print("And when you're happy do:")
         print("  git push {} release dev --tags".format(self.remote_name))

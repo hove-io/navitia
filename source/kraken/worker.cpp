@@ -552,7 +552,7 @@ void Worker::place_uri(const pbnavitia::PlaceUriRequest &request) {
             pb_creator.fill_pb_error(pbnavitia::Error::unknown_object,
                                      "Unable to find place: " + request.uri());
         }
-		return;
+        return;
     }
 
     auto it_sa = data->pt_data->stop_areas_map.find(request.uri());
