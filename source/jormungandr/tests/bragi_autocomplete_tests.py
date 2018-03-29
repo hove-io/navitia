@@ -517,7 +517,7 @@ BRAGI_MOCK_ADMIN = {
     ]
 }
 
-BRAGI_MOCK_RESPONSE_WITH_COMMENTS_IN_STOP_AERA = {
+BRAGI_MOCK_RESPONSE_STOP_AREA_WITH_COMMENTS = {
     "type": "FeatureCollection",
     "geocoding": {
         "version": "0.1.0",
@@ -536,15 +536,25 @@ BRAGI_MOCK_RESPONSE_WITH_COMMENTS_IN_STOP_AERA = {
             "properties": {
                 "geocoding": {
                     "city": "Bobtown",
-                    "housenumber": "20",
                     "id": "stop_area_id",
-                    "label": "20 Rue Bob (Bobtown)",
-                    "name": "Rue Bob",
+                    "label": "stop 1",
+                    "name": "stop 1",
                     "postcode": "02100",
-                    "street": "Rue Bob",
                     "type": "public_transport:stop_area",
                     "citycode": "02000",
                     "administrative_regions": [],
+                    "commercial_modes": [
+                        {
+                            "id": "commercial_mode:Bus",
+                            "name": "Bus"
+                        },
+                    ],
+                    "physical_modes": [
+                        {
+                            "id": "commercial_mode:Bus",
+                            "name": "Bus"
+                        },
+                    ],
                     "comments": [
                         {
                             "name": "comment1",
@@ -553,13 +563,32 @@ BRAGI_MOCK_RESPONSE_WITH_COMMENTS_IN_STOP_AERA = {
                             "name": "comment2",
                         }
                     ],
+                    "timezone": "Europe/Paris",
+                    "codes": [
+                        {
+                            "name": "code_name1",
+                            "value": "1"
+                        },
+                        {
+                            "name": "coce_name2",
+                            "value": "2"
+                        }
+                    ],
+                    "feed_publishers": [
+                        {
+                            "id": "feed_p_id",
+                            "license": "feed_p_license",
+                            "name": "feed_p_name",
+                            "url": "feed_p_url"
+                        }
+                    ]
                 }
             },
         }
     ]
 }
 
-BRAGI_MOCK_RESPONSE_WITHOUT_COMMENTS_IN_STOP_AREA = {
+BRAGI_MOCK_RESPONSE_STOP_AREA_WITHOUT_COMMENTS = {
     "type": "FeatureCollection",
     "geocoding": {
         "version": "0.1.0",
@@ -578,15 +607,44 @@ BRAGI_MOCK_RESPONSE_WITHOUT_COMMENTS_IN_STOP_AREA = {
             "properties": {
                 "geocoding": {
                     "city": "Bobtown",
-                    "housenumber": "20",
                     "id": "stop_area_id",
-                    "label": "20 Rue Bob (Bobtown)",
-                    "name": "Rue Bob",
+                    "label": "stop 1",
+                    "name": "stop 1",
                     "postcode": "02100",
-                    "street": "Rue Bob",
                     "type": "public_transport:stop_area",
                     "citycode": "02000",
                     "administrative_regions": [],
+                    "commercial_modes": [
+                        {
+                            "id": "commercial_mode:Bus",
+                            "name": "Bus"
+                        },
+                    ],
+                    "physical_modes": [
+                        {
+                            "id": "commercial_mode:Bus",
+                            "name": "Bus"
+                        },
+                    ],
+                    "timezone": "Europe/Paris",
+                    "codes": [
+                        {
+                            "name": "code_name1",
+                            "value": "1"
+                        },
+                        {
+                            "name": "coce_name2",
+                            "value": "2"
+                        }
+                    ],
+                    "feed_publishers": [
+                        {
+                            "id": "feed_p_id",
+                            "license": "feed_p_license",
+                            "name": "feed_p_name",
+                            "url": "feed_p_url"
+                        }
+                    ]
                 }
             },
         }
@@ -1221,7 +1279,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
 
         url += "?{}".format(urlencode(params, doseq=True))
         mock_requests = MockRequests({
-            url: (BRAGI_MOCK_RESPONSE_WITH_COMMENTS_IN_STOP_AERA, 200)
+            url: (BRAGI_MOCK_RESPONSE_STOP_AREA_WITH_COMMENTS, 200)
         })
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
@@ -1229,7 +1287,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             is_valid_global_autocomplete(response, depth=1)
             r = response.get('places')
             assert len(r) == 1
-            assert r[0]['name'] == '20 Rue Bob (Bobtown)'
+            assert r[0]['name'] == 'stop 1'
             assert r[0]['embedded_type'] == 'stop_area'
             assert r[0]['id'] == 'stop_area_id'
             assert r[0]['quality'] == 0 # field for kraken compatibility (default = 0)
@@ -1251,7 +1309,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
 
         url += "?{}".format(urlencode(params, doseq=True))
         mock_requests = MockRequests({
-            url: (BRAGI_MOCK_RESPONSE_WITHOUT_COMMENTS_IN_STOP_AREA, 200)
+            url: (BRAGI_MOCK_RESPONSE_STOP_AREA_WITHOUT_COMMENTS, 200)
         })
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
@@ -1259,7 +1317,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             is_valid_global_autocomplete(response, depth=1)
             r = response.get('places')
             assert len(r) == 1
-            assert r[0]['name'] == '20 Rue Bob (Bobtown)'
+            assert r[0]['name'] == 'stop 1'
             assert r[0]['embedded_type'] == 'stop_area'
             assert r[0]['id'] == 'stop_area_id'
             assert r[0]['quality'] == 0 # field for kraken compatibility (default = 0)
