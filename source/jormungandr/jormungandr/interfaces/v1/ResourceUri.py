@@ -86,8 +86,9 @@ class ResourceUri(StatedResource):
                     if len(splitted_coord) == 2:
                         lon, lat = splitted_coord
                         object_type = "stop_point"
-                        if self.collection == "pois":
-                            object_type = "poi"
+                        # TODO : [NAVP-805] Check why collection is used here
+                        # if self.collection == "pois":
+                        #     object_type = "poi"
                         filter_ = '{obj}.coord DWITHIN({lon},{lat},{distance})'.format(
                             obj=object_type, lon=lon, lat=lat, distance=args.get('distance', 200))
                         filter_list.append(filter_)

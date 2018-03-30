@@ -30,6 +30,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import pytest
 from jormungandr.interfaces.v1.fields import get_collections, CollectionException
 
+# TODO : [NAVP-805] File to delete once collections usefulness is clarified
 
 def test_invalid_collection_name():
     with pytest.raises(CollectionException):

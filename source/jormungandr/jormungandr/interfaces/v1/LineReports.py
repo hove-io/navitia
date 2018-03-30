@@ -74,9 +74,9 @@ class LineReports(ResourceUri, ResourceUtc):
                                 help="use disruptions valid after this date")
         parser_get.add_argument("until", type=DateTimeFormat(),
                                 help="use disruptions valid before this date")
-
-        #self.collection = 'line_reports'
-        #self.collections = api.LineReportsSerializer
+        # TODO : [NAVP-805] Collection(s) : useful or useless ?
+        # self.collection = 'line_reports'
+        # self.collections = api.LineReportsSerializer
         self.get_decorators.insert(0, ManageError())
         self.get_decorators.insert(1, get_obj_serializer(self))
 

@@ -56,7 +56,7 @@ common_collection = (
     ("disruptions", fields.List(NonNullNested(api.DisruptionsSerializer), attribute="impacts"))
 )
 
-
+# TODO : [NAVP-805] Delete function if we're sure that collections are useless with SERPY
 def get_collections(collection_name):
     map_collection = {
         "journey_pattern_points": api.JourneyPatternPointsSerializer,

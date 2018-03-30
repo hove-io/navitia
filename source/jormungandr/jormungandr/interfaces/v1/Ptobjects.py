@@ -74,8 +74,9 @@ class Ptobjects(ResourceUri):
                                               'of the disruptions.')
         self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
                                          help="remove geojson from the response")
-        #self.collection = 'pt_objects'
-        #self.collections = api.PtObjectsSerializer
+        # TODO : [NAVP-805] Collection(s) : useful or useless ?
+        # self.collection = 'pt_objects'
+        # self.collections = api.PtObjectsSerializer
         self.get_decorators.insert(0, get_obj_serializer(self))
 
     def options(self, **kwargs):

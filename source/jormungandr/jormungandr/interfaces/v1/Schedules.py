@@ -50,6 +50,7 @@ from jormungandr.exceptions import InvalidArguments
 import six
 from navitiacommon.parser_args_type import BooleanType, OptionValue
 
+# TODO : [NAVP-805] Collection(s) : useful or useless ?
 
 class Schedules(ResourceUri, ResourceUtc):
 
@@ -144,7 +145,7 @@ class Schedules(ResourceUri, ResourceUtc):
             else:
                 self.region = i_manager.get_region(object_id=parts[1].strip())
         else:
-            self.collection = 'schedules'
+            # self.collection = 'schedules'
             args["filter"] = self.get_filter(uri.split("/"), args)
             self.region = i_manager.get_region(region, lon, lat)
         timezone.set_request_timezone(self.region)
@@ -158,7 +159,7 @@ class Schedules(ResourceUri, ResourceUtc):
             if not args['data_freshness']:
                 args['data_freshness'] = 'realtime'
         elif not args.get('calendar'):
-            #if a calendar is given all times will be given in local (because the calendar might span over dst)
+            # if a calendar is given all times will be given in local (because the calendar might span over dst)
             if args['from_datetime']:
                 args['from_datetime'] = self.convert_to_utc(args['from_datetime'])
             if args['until_datetime']:
@@ -204,7 +205,7 @@ class date_time_links(fields.Raw):
 class RouteSchedules(Schedules):
 
     def __init__(self):
-        # self.collections = route_schedules
+        # self.collections = api.RouteSchedulesSerializer
         super(RouteSchedules, self).__init__("route_schedules",
                                              output_type_serializer=api.RouteSchedulesSerializer)
 
@@ -212,7 +213,7 @@ class RouteSchedules(Schedules):
 class StopSchedules(Schedules):
 
     def __init__(self):
-        # self.collections = stop_schedules
+        # self.collections = api.StopSchedulesSerializer
         super(StopSchedules, self).__init__("departure_boards",
                                             output_type_serializer=api.StopSchedulesSerializer)
 
@@ -278,7 +279,7 @@ class NextDepartures(Schedules):
 class NextArrivals(Schedules):
 
     def __init__(self):
-        self.collections = api.ArrivalsSerializer
+        # self.collections = api.ArrivalsSerializer
         super(NextArrivals, self).__init__("next_arrivals",
                                            output_type_serializer=api.ArrivalsSerializer)
         self.get_decorators.append(add_passages_links())
