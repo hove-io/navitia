@@ -752,10 +752,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             response = self.query_region("places/1234?&pt_dataset=main_routing_test")
 
             assert response.get('feed_publishers')
-            if os.getenv('JORMUNGANDR_USE_SERPY'):
-                assert len(response.get('feed_publishers')) == 3
-            else:
-                assert len(response.get('feed_publishers')) == 2
+            assert len(response.get('feed_publishers')) == 3
 
             r = response.get('places')
             assert len(r) == 1
@@ -804,10 +801,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
                                          "&type[]=address&type[]=poi&type[]=administrative_region&depth=0")
 
             assert response.get('feed_publishers')
-            if os.getenv('JORMUNGANDR_USE_SERPY'):
-                assert len(response.get('feed_publishers')) == 3
-            else:
-                assert len(response.get('feed_publishers')) == 2
+            assert len(response.get('feed_publishers')) == 3
 
             r = response.get('places')
             assert len(r) == 1
