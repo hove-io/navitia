@@ -132,11 +132,11 @@ CELERYBEAT_SCHEDULE = {
         'schedule': schedules.crontab(hour=2, minute=30),  # Task is executed daily at 2H30
         'options': {'expires': 120}
     },
-    'purge-old-job-every-week': {
-        'task': 'tyr.tasks.purge_jobs',
-        'schedule': schedules.crontab(hour=1, minute=0, day_of_week='monday'), # Task is executed at at 1H00 on monday every week
-        'options': {'expires': 172800} # Expires after 2 days (in s)
-    },
+    # 'purge-old-job-every-week': {
+    #     'task': 'tyr.tasks.purge_jobs',
+    #     'schedule': schedules.crontab(hour=1, minute=0, day_of_week='monday'), # Task is executed at at 1H00 on monday every week
+    #     'options': {'expires': 172800} # Expires after 2 days (in s)
+    # },
     'heartbeat-kraken': {
         'task': 'tyr.tasks.heartbeat',
         'schedule': timedelta(minutes=30),
