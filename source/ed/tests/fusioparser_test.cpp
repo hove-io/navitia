@@ -74,12 +74,13 @@ BOOST_AUTO_TEST_CASE(parse_small_ntfs_dataset) {
     BOOST_REQUIRE_EQUAL(data.contributors[0]->license, "LICENSE");
 
     // Check datasets
-    BOOST_REQUIRE_EQUAL(data.datasets.size(), 1);
-    BOOST_REQUIRE_EQUAL(data.datasets[0]->uri, "default_dataset:" + data.contributors[0]->uri);
-    BOOST_REQUIRE_EQUAL(data.datasets[0]->desc, "default dataset: " + data.contributors[0]->name);
-    BOOST_REQUIRE_EQUAL(data.datasets[0]->contributor->uri, data.contributors[0]->uri);
-    BOOST_REQUIRE_EQUAL(data.datasets[0]->validation_period, data.meta.production_date);
-
+    BOOST_REQUIRE_EQUAL(data.datasets.size(), 5);
+    BOOST_CHECK_EQUAL(data.datasets[0]->desc, "dataset_desc1");
+    BOOST_CHECK_EQUAL(data.datasets[0]->uri, "dataset_id1");
+    BOOST_CHECK_EQUAL(data.datasets[0]->validation_period, boost::gregorian::date_period("20180312"_d, "20180401"_d));
+    BOOST_CHECK_EQUAL(data.datasets[0]->realtime_level == nt::RTLevel::Base, true);
+    BOOST_CHECK_EQUAL(data.datasets[0]->system, "dataset_system1");
+    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->dataset->uri, "dataset_id1");
 
     //timzeone check
     //no timezone is given for the stop area in this dataset, to the agency time zone (the default one) is taken
@@ -423,7 +424,7 @@ BOOST_AUTO_TEST_CASE(sync_ntfs) {
     BOOST_CHECK_EQUAL(data.datasets[0]->validation_period, boost::gregorian::date_period("20150826"_d, "20150926"_d));
     BOOST_CHECK_EQUAL(data.datasets[0]->realtime_level == nt::RTLevel::Base, true);
     BOOST_CHECK_EQUAL(data.datasets[0]->system, "obiti");
-    BOOST_CHECK_EQUAL(data.vehicle_journeys[0]->dataset->uri, "d1");
+    BOOST_CHECK(data.vehicle_journeys[0]->dataset == nullptr);
 
     const ed::types::VehicleJourney* vj = data.vehicle_journeys.front();
     navitia::type::hasVehicleProperties has_vehicle_properties;
