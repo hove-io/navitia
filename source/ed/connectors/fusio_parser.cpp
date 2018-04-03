@@ -72,32 +72,15 @@ static void default_datasets(GtfsData& gdata, Data& data){
     }
 }
 
-static ed::types::Dataset* get_first_dataset_by_contributor(const Data& data,
-                                                  const std::string& contributor_id){
-    for(auto* dataset : data.datasets){
-        if(dataset->contributor->uri == contributor_id){
-            return dataset;
+static ed::types::Dataset* get_dataset( GtfsData& gdata,
+                                        const std::string& dataset_id) {
+    if (!dataset_id.empty()) {
+        auto it_dataset = gdata.dataset_map.find(dataset_id);
+        if (it_dataset != gdata.dataset_map.end()) {
+            return it_dataset->second;
         }
     }
     return nullptr;
-}
-
-static ed::types::Dataset* get_dataset(GtfsData& gdata, Data& data,
-                                   const std::string& contributor_id,
-                                   const std::string& dataset_id = ""){
-
-    ed::types::Dataset* to_return = nullptr;
-    if(!dataset_id.empty()){
-        auto it_dataset = gdata.dataset_map.find(dataset_id);
-        if (it_dataset != gdata.dataset_map.end()) {
-            to_return = it_dataset->second;
-        }
-    }
-    if (to_return == nullptr){
-        to_return = get_first_dataset_by_contributor(data, contributor_id);
-    }
-
-    return to_return;
 }
 
 void FeedInfoFusioHandler::init(Data&) {
@@ -599,12 +582,9 @@ void TripsFusioHandler::handle_line(Data& data, const csv_row& row, bool is_firs
     }
 
     ed::types::Dataset* dataset = nullptr;
-    if (is_valid(contributor_id_c, row)){
-        if (is_valid(dataset_id_c, row)){
-            dataset = get_dataset(gtfs_data, data, row[contributor_id_c], row[dataset_id_c]);
-        }else{
-            dataset = get_dataset(gtfs_data, data, row[contributor_id_c]);
-        }
+    // with NTFS >= 0.7 dataset_id is required
+    if (is_valid(dataset_id_c, row)) {
+        dataset = get_dataset(gtfs_data, row[dataset_id_c]);
     }
 
     //the vj might have been split over the dst,thus we loop over all split vj
