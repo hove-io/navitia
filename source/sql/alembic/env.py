@@ -1,4 +1,4 @@
-from __future__ import with_statement
+from __future__ import with_statement, print_function
 from alembic import context
 from sqlalchemy import engine_from_config, pool, MetaData, create_engine
 from geoalchemy2 import Geography
@@ -9,7 +9,7 @@ fileConfig(config.config_file_name)
 try:
     from models import metadata as target_metadata
 except ImportError:
-    print 'cannot import metadata, skipping'
+    print('cannot import metadata, skipping')
     target_metadata = None
 
 def include_object(object_, name, type_, reflected, compare_to):
@@ -71,7 +71,7 @@ def run_migrations_online():
         connection.close()
 
 if context.is_offline_mode():
-    print "we don't handle offline mode"
+    print("we don't handle offline mode")
 else:
     run_migrations_online()
 
