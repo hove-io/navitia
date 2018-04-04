@@ -109,5 +109,5 @@ def _dt(dt_to_parse, year=2015, month=9, day=8):
     >>> _dt("9:15", day=2)
     datetime.datetime(2015, 9, 2, 9, 15)
     """
-    d = parse(dt_to_parse.encode('utf-8'))
+    d = parse(str(dt_to_parse))
     return d.replace(year=year, month=month, day=day)

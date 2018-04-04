@@ -1,4 +1,3 @@
-# coding=utf-8
 # Copyright (c) 2001-2015, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -46,7 +45,7 @@ def _get_docker_file():
     is reduced by 10s
     """
     from io import BytesIO
-    return BytesIO('FROM {}'.format(POSTGRES_IMAGE).encode('utf-8'))
+    return BytesIO(str('FROM {}'.format(POSTGRES_IMAGE)))
 
 class PostgresDocker(object):
     USER = 'postgres'
