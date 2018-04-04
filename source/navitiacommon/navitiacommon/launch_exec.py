@@ -30,7 +30,6 @@
 """
 Function to launch a bin
 """
-from __future__ import absolute_import, print_function, unicode_literals, division
 import subprocess
 import os
 import select

@@ -30,8 +30,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import, print_function, unicode_literals, division
-from tyr import resources, app, api
+from tyr import resources
+
+from tyr import app, api
 import flask_restful
 
 # we always want pretty json

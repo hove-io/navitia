@@ -26,7 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import, print_function, unicode_literals, division
+from __future__ import absolute_import
 from .places_free_access import PlacesFreeAccess
 from .streetnetwork_path import StreetNetworkPathPool
 from .fallback_durations import FallbackDurationsPool

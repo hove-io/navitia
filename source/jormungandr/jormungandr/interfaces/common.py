@@ -27,7 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import, print_function, unicode_literals, division
+from __future__ import absolute_import
 import navitiacommon.type_pb2 as type_pb2
 
 odt_levels = {"scheduled","with_stops", "zonal", "all"}

@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-from __future__ import absolute_import, print_function, unicode_literals, division
+from __future__ import absolute_import
 import logging
 
 # emplacement ou charger les fichier de configuration par instances
