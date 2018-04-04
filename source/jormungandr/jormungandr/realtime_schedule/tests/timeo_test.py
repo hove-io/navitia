@@ -307,6 +307,6 @@ def timeo_circuit_breaker_test():
         assert m.timeo_call == 4
 
 def status_test():
-    timeo = Timeo(id="tata-é$~#@\"*!'`§èû", timezone='UTC', service_url='http://bob.com/', service_args={'a': 'bobette', 'b': '12'})
+    timeo = Timeo(id='tata-é$~#@*!§èû', timezone='UTC', service_url='http://bob.com/', service_args={'a': 'bobette', 'b': '12'})
     status = timeo.status()
-    assert status['id'] == 'tata-é$~#@"*!\'`§èû'
+    assert status['id'] == 'tata-é$~#@*!§èû'
