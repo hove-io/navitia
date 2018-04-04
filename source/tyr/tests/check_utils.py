@@ -1,4 +1,3 @@
-# coding: utf-8
 # Copyright (c) 2001-2015, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -109,5 +108,5 @@ def _dt(dt_to_parse, year=2015, month=9, day=8):
     >>> _dt("9:15", day=2)
     datetime.datetime(2015, 9, 2, 9, 15)
     """
-    d = parse(str(dt_to_parse))
+    d = parse(dt_to_parse)
     return d.replace(year=year, month=month, day=day)

@@ -26,6 +26,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
+import os
 
 import docker
 import psycopg2
@@ -45,7 +46,7 @@ def _get_docker_file():
     is reduced by 10s
     """
     from io import BytesIO
-    return BytesIO(str('FROM {}'.format(POSTGRES_IMAGE)))
+    return BytesIO('FROM ' + POSTGRES_IMAGE)
 
 class PostgresDocker(object):
     USER = 'postgres'

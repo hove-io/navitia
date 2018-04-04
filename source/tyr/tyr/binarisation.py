@@ -48,8 +48,9 @@ import sqlalchemy
 from navitiacommon.launch_exec import launch_exec
 import navitiacommon.task_pb2
 from tyr import celery, redis
-from tyr.rabbit_mq_handler import RabbitMqHandler
+from rabbit_mq_handler import RabbitMqHandler
 from navitiacommon import models, utils
+from navitiacommon import models
 from tyr.helper import get_instance_logger, get_named_arg, get_autocomplete_instance_logger, get_task_logger
 from contextlib import contextmanager
 import glob

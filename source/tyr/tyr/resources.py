@@ -37,22 +37,23 @@ from flask_restful import marshal_with, marshal, reqparse, inputs, abort
 import sqlalchemy
 from validate_email import validate_email
 from datetime import datetime
-from tyr.tyr_user_event import TyrUserEvent
-from tyr.tyr_end_point_event import EndPointEventMessage, TyrEventsRabbitMq
+from tyr_user_event import TyrUserEvent
+from tyr_end_point_event import EndPointEventMessage, TyrEventsRabbitMq
 from tyr.helper import load_instance_config
 import logging
 import os
 import shutil
 import json
 from jsonschema import validate, ValidationError
-from tyr.formats import poi_type_conf_format, parse_error
+from formats import poi_type_conf_format, parse_error
 from navitiacommon.default_traveler_profile_params import default_traveler_profile_params, acceptable_traveler_types
 from navitiacommon import models, utils
 from navitiacommon.models import db
 from navitiacommon.parser_args_type import CoordFormat, PositiveFloat, BooleanType, OptionValue, geojson_argument
 from functools import wraps
-from tyr.validations import datetime_format
-from tyr.tasks import create_autocomplete_depot, remove_autocomplete_depot, import_autocomplete
+from validations import datetime_format
+from tasks import create_autocomplete_depot, remove_autocomplete_depot
+from tyr.tasks import import_autocomplete
 from tyr.helper import get_instance_logger, save_in_tmp
 from tyr.fields import *
 

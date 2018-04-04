@@ -35,7 +35,7 @@ from tyr.helper import configure_logger, make_celery
 from redis import Redis
 from celery.signals import setup_logging
 from flask_script import Manager
-from tyr.rabbit_mq_handler import RabbitMqHandler
+from rabbit_mq_handler import RabbitMqHandler
 
 app = Flask(__name__)
 app.config.from_object('tyr.default_settings')

@@ -1,4 +1,3 @@
-# coding: utf-8
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -77,7 +76,7 @@ def make_async(fd):
 # (those errors mean that there are no data available for the moment)
 def read_async(fd):
     try:
-        return unicode(fd.read())
+        return fd.read()
     except IOError, e:
         if e.errno != errno.EAGAIN:
             raise e
