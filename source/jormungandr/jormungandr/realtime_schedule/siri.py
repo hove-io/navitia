@@ -62,7 +62,10 @@ class Siri(RealtimeProxy):
         """
          used as the cache key. we use the rt_system_id to share the cache between servers in production
         """
-        return self.rt_system_id
+        try:
+            return self.rt_system_id.encode('utf-8', 'backslashreplace')
+        except:
+            return self.rt_system_id
 
     def _get_next_passage_for_route_point(self, route_point, count, from_dt, current_dt, duration=None):
         stop = route_point.fetch_stop_id(self.object_id_tag)

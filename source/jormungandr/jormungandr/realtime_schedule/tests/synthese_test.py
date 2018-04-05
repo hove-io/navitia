@@ -27,7 +27,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, division
 import datetime
 from dateutil.parser import parse
 import mock
@@ -172,6 +172,6 @@ def next_passage_for_route_point_failure_test():
         assert passages is None
 
 def status_test():
-    synthese = Synthese(id='tata', timezone='UTC', service_url='http://bob.com/')
+    synthese = Synthese(id=u'tata-é$~#@"*!\'`§èû', timezone='UTC', service_url='http://bob.com/')
     status = synthese.status()
-    assert status['id'] == 'tata'
+    assert status['id'] == u"tata-é$~#@\"*!'`§èû"

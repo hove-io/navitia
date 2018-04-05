@@ -27,7 +27,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import
+from __future__ import absolute_import, print_function, division
 import datetime
 from dateutil.parser import parse
 import mock
@@ -150,6 +150,6 @@ def next_passage_for_route_point_failure_test():
         assert passages is None
 
 def status_test():
-    siri = Siri(id='tata', service_url='http://bob.com/', requestor_ref='Stibada')
+    siri = Siri(id=u"tata-é$~#@\"*!'`§èû", service_url='http://bob.com/', requestor_ref='Stibada')
     status = siri.status()
-    assert status['id'] == 'tata'
+    assert status['id'] == u'tata-é$~#@"*!\'`§èû'

@@ -95,7 +95,10 @@ class Synthese(RealtimeProxy):
         """
          used as the cache key. we use the rt_system_id to share the cache between servers in production
         """
-        return self.rt_system_id
+        try:
+            return self.rt_system_id.encode('utf-8', 'backslashreplace')
+        except:
+            return self.rt_system_id
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_SYNTHESE', 30))
     def _call_synthese(self, url):
