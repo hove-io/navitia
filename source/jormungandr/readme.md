@@ -83,13 +83,13 @@ PYTHONPATH=..:../../navitiacommon/ JORMUNGANDR_INSTANCES_DIR=~/jormung_conf/ pyt
 # Option
 ## Autocomplete
 
-Setup Jormung for using either `Bragi` or `Kraken` for autocompletion
+Setup Jormungandr for using either `Bragi` or `Kraken` for autocompletion
 
 ```sh
 JORMUNGANDR_AUTOCOMPLETE_SYSTEMS='{"kraken": { "class": "jormungandr.autocomplete.kraken.Kraken" }, "bragi": {"class": "jormungandr.autocomplete.geocodejson.GeocodeJson", "args": {"host": "http://127.0.0.1:4000", "timeout": 2}}}'
 ```
 
-You can select your autocomplete engine based on the `_autocomplete` parameter when querying Jormung:
+You can select your autocomplete engine based on the `_autocomplete` parameter when querying Jormungandr:
 
 ```sh
 http://localhost:5000/v1/coverage/default/places?q=rennes&_autocomplete='<kraken|bragi>'
