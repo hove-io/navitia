@@ -141,7 +141,7 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
             if passage.direction:
                 note = type_pb2.Note()
                 note.note = passage.direction
-                note_uri = hashlib.md5(note.note.encode('utf-8')).hexdigest()
+                note_uri = hashlib.md5(note.note.encode('utf-8', 'backslashreplace')).hexdigest()
                 note.uri = 'note:{md5}'.format(md5=note_uri)  # the id is a md5 of the direction to factorize them
                 new_dt.properties.notes.extend([note])
         stop_schedule.date_times.sort(key=lambda dt: dt.date + dt.time)
