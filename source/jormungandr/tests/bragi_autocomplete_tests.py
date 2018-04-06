@@ -717,22 +717,27 @@ BRAGI_MOCK_RESPONSE_STOP_AREA_WITHOUT_COMMENTS = {
     ]
 }
 
+def mock_bragi_autocomplete_call(bragi_response, limite=10, http_response_code=200):
+    url = 'https://host_of_bragi/autocomplete'
+    params = {
+        'q': u'bob',
+        'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
+        'limit': limite,
+        'pt_dataset': 'main_routing_test'
+    }
+
+    url += "?{}".format(urlencode(params, doseq=True))
+    mock_requests = MockRequests({
+        url: (bragi_response, http_response_code)
+    })
+
+    return mock_requests
+
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF}, global_config={'activate_bragi': True})
 class TestBragiAutocomplete(AbstractTestFixture):
 
     def test_autocomplete_call(self):
-        url = 'https://host_of_bragi/autocomplete'
-        params = {
-            'q': u'bob',
-            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
-            'limit': 10,
-            'pt_dataset': 'main_routing_test'
-        }
-
-        url += "?{}".format(urlencode(params, doseq=True))
-        mock_requests = MockRequests({
-            url: (BRAGI_MOCK_RESPONSE, 200)
-        })
+        mock_requests = mock_bragi_autocomplete_call(BRAGI_MOCK_RESPONSE)
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
                                          "&type[]=address&type[]=poi&type[]=administrative_region")
@@ -749,18 +754,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert len(r[0]['address'].get('administrative_regions')) == 1
 
     def test_autocomplete_call_depth_zero(self):
-        url = 'https://host_of_bragi/autocomplete'
-        params = {
-            'q': u'bob',
-            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
-            'limit': 10,
-            'pt_dataset': 'main_routing_test'
-        }
-
-        url += "?{}".format(urlencode(params, doseq=True))
-        mock_requests = MockRequests({
-            url: (deepcopy(BRAGI_MOCK_RESPONSE), 200)
-        })
+        mock_requests = mock_bragi_autocomplete_call(deepcopy(BRAGI_MOCK_RESPONSE))
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
                                          "&type[]=address&type[]=poi&type[]=administrative_region&depth=0")
@@ -794,19 +788,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         """"
         test that the _autocomplete param switch the right autocomplete service
         """
-        url = 'https://host_of_bragi'
-        params = {
-            'q': u'bob',
-            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
-            'limit': 10,
-            'pt_dataset': 'main_routing_test'
-        }
-
-        url += "/autocomplete?{}".format(urlencode(params, doseq=True))
-
-        mock_requests = MockRequests({
-            url: (BRAGI_MOCK_RESPONSE, 200)
-        })
+        mock_requests = mock_bragi_autocomplete_call(BRAGI_MOCK_RESPONSE)
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places?q=bob&type[]=stop_area&type[]=address&type[]=poi"
                                          "&type[]=administrative_region")
@@ -987,20 +969,9 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert len(admins) == 1
 
     def test_stop_area_with_modes_depth_zero(self):
-        url = 'https://host_of_bragi/autocomplete'
-        params = {
-            'q': u'bobette',
-            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
-            'limit': 10,
-            'pt_dataset': 'main_routing_test'
-        }
-
-        url += "?{}".format(urlencode(params, doseq=True))
-        mock_requests = MockRequests({
-            url: (deepcopy(BRAGI_MOCK_STOP_AREA_WITH_MORE_ATTRIBUTS), 200)
-        })
+        mock_requests = mock_bragi_autocomplete_call(deepcopy(BRAGI_MOCK_STOP_AREA_WITH_MORE_ATTRIBUTS))
         with mock.patch('requests.get', mock_requests.get):
-            response = self.query_region("places?q=bobette&pt_dataset=main_routing_test&type[]=stop_area"
+            response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
                                          "&type[]=address&type[]=poi&type[]=administrative_region&depth=0")
 
             assert response.get('feed_publishers')
@@ -1066,20 +1037,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert not r[0]['stop_area'].get('timezone')
 
     def test_feature_unknown_type(self):
-        url = 'https://host_of_bragi'
-
-        params = {
-            'q': u'bob',
-            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
-            'limit': 2,
-            'pt_dataset': 'main_routing_test'
-        }
-
-        url += "/autocomplete?{}".format(urlencode(params, doseq=True))
-
-        mock_requests = MockRequests({
-            url: (BRAGI_MOCK_TYPE_UNKNOWN, 200)
-        })
+        mock_requests = mock_bragi_autocomplete_call(BRAGI_MOCK_TYPE_UNKNOWN, limite=2)
         with mock.patch('requests.get', mock_requests.get):
             response = self.query("v1/places?q=bob&count=2")
 
@@ -1093,20 +1051,9 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['administrative_region']['label'] == 'Lille (59000-59800)'
 
     def test_autocomplete_call_with_depth_zero(self):
-        url = 'https://host_of_bragi/autocomplete'
-        params = {
-            'q': u'bobette',
-            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
-            'limit': 10,
-            'pt_dataset': 'main_routing_test'
-        }
-
-        url += "?{}".format(urlencode(params, doseq=True))
-        mock_requests = MockRequests({
-            url: (BRAGI_MOCK_BOBETTE_DEPTH_ZERO, 200)
-        })
+        mock_requests = mock_bragi_autocomplete_call(BRAGI_MOCK_BOBETTE_DEPTH_ZERO)
         with mock.patch('requests.get', mock_requests.get):
-            response = self.query_region("places?q=bobette&pt_dataset=main_routing_test&type[]=stop_area"
+            response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
                                          "&type[]=address&type[]=poi&type[]=administrative_region&depth=0")
 
             r = response.get('places')
@@ -1127,20 +1074,9 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert 'address' not in poi
 
     def test_autocomplete_call_with_depth_one(self):
-        url = 'https://host_of_bragi/autocomplete'
-        params = {
-            'q': u'bobette',
-            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
-            'limit': 10,
-            'pt_dataset': 'main_routing_test'
-        }
-
-        url += "?{}".format(urlencode(params, doseq=True))
-        mock_requests = MockRequests({
-            url: (BRAGI_MOCK_BOBETTE_DEPTH_ONE, 200)
-        })
+        mock_requests = mock_bragi_autocomplete_call(BRAGI_MOCK_BOBETTE_DEPTH_ONE)
         with mock.patch('requests.get', mock_requests.get):
-            response = self.query_region("places?q=bobette&pt_dataset=main_routing_test&type[]=stop_area"
+            response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
                                          "&type[]=address&type[]=poi&type[]=administrative_region&depth=1")
 
             r = response.get('places')
@@ -1171,20 +1107,9 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert not address.get('administrative_regions')
 
     def test_autocomplete_call_with_depth_two(self):
-        url = 'https://host_of_bragi/autocomplete'
-        params = {
-            'q': u'bobette',
-            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
-            'limit': 10,
-            'pt_dataset': 'main_routing_test'
-        }
-
-        url += "?{}".format(urlencode(params, doseq=True))
-        mock_requests = MockRequests({
-            url: (BRAGI_MOCK_BOBETTE_DEPTH_TWO, 200)
-        })
+        mock_requests = mock_bragi_autocomplete_call(BRAGI_MOCK_BOBETTE_DEPTH_TWO)
         with mock.patch('requests.get', mock_requests.get):
-            response = self.query_region("places?q=bobette&pt_dataset=main_routing_test&type[]=stop_area"
+            response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
                                          "&type[]=address&type[]=poi&type[]=administrative_region&depth=2")
 
             r = response.get('places')
@@ -1223,20 +1148,9 @@ class TestBragiAutocomplete(AbstractTestFixture):
 
     #This test is to verify that query with depth = 2 and 3 gives the same result as in kraken
     def test_autocomplete_call_with_depth_three(self):
-        url = 'https://host_of_bragi/autocomplete'
-        params = {
-            'q': u'bobette',
-            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
-            'limit': 10,
-            'pt_dataset': 'main_routing_test'
-        }
-
-        url += "?{}".format(urlencode(params, doseq=True))
-        mock_requests = MockRequests({
-            url: (BRAGI_MOCK_BOBETTE_DEPTH_THREE, 200)
-        })
+        mock_requests = mock_bragi_autocomplete_call(BRAGI_MOCK_BOBETTE_DEPTH_THREE)
         with mock.patch('requests.get', mock_requests.get):
-            response = self.query_region("places?q=bobette&pt_dataset=main_routing_test&type[]=stop_area"
+            response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
                                          "&type[]=address&type[]=poi&type[]=administrative_region&depth=3")
 
             r = response.get('places')
@@ -1274,18 +1188,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert address_admins[0]['coord']['lon'] == "2.3957517"
 
     def test_autocomplete_for_admin_depth_zero(self):
-        url = 'https://host_of_bragi/autocomplete'
-        params = {
-            'q': u'bob',
-            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
-            'limit': 10,
-            'pt_dataset': 'main_routing_test'
-        }
-
-        url += "?{}".format(urlencode(params, doseq=True))
-        mock_requests = MockRequests({
-            url: (BRAGI_MOCK_ADMIN, 200)
-        })
+        mock_requests = mock_bragi_autocomplete_call(BRAGI_MOCK_ADMIN)
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
                                          "&type[]=address&type[]=poi&type[]=administrative_region&depth=0")
@@ -1303,18 +1206,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert 'administrative_regions' not in r[0]['administrative_region']
 
     def test_autocomplete_for_administrative_region(self):
-        url = 'https://host_of_bragi/autocomplete'
-        params = {
-            'q': u'bob',
-            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
-            'limit': 10,
-            'pt_dataset': 'main_routing_test'
-        }
-
-        url += "?{}".format(urlencode(params, doseq=True))
-        mock_requests = MockRequests({
-            url: (BRAGI_MOCK_ADMINISTRATIVE_REGION, 200)
-        })
+        mock_requests = mock_bragi_autocomplete_call(BRAGI_MOCK_ADMINISTRATIVE_REGION)
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places?q=bob")
             r = response.get('places')
@@ -1329,18 +1221,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['administrative_region']['zip_code'] == '94000'
 
     def test_autocomplete_for_administrative_region_with_wrong_type(self):
-        url = 'https://host_of_bragi/autocomplete'
-        params = {
-            'q': u'bob',
-            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
-            'limit': 10,
-            'pt_dataset': 'main_routing_test'
-        }
-
-        url += "?{}".format(urlencode(params, doseq=True))
-        mock_requests = MockRequests({
-            url: (BRAGI_MOCK_ADMINISTRATIVE_REGION_WITH_WRONG_TYPE, 200)
-        })
+        mock_requests = mock_bragi_autocomplete_call(BRAGI_MOCK_ADMINISTRATIVE_REGION_WITH_WRONG_TYPE)
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places?q=bob")
             r = response.get('places')
@@ -1350,18 +1231,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
     # Since administrative_regions of the admin is an empty list in the result bragi
     # there is no difference in the final result with depth from 0 to 3
     def test_autocomplete_for_admin_depth_two(self):
-        url = 'https://host_of_bragi/autocomplete'
-        params = {
-            'q': u'bob',
-            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
-            'limit': 10,
-            'pt_dataset': 'main_routing_test'
-        }
-
-        url += "?{}".format(urlencode(params, doseq=True))
-        mock_requests = MockRequests({
-            url: (deepcopy(BRAGI_MOCK_ADMIN), 200)
-        })
+        mock_requests = mock_bragi_autocomplete_call(deepcopy(BRAGI_MOCK_ADMIN))
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
                                          "&type[]=address&type[]=poi&type[]=administrative_region&depth=2")
@@ -1380,18 +1250,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert 'administrative_regions' not in r[0]['administrative_region']
 
     def test_autocomplete_call_with_comments_on_stop_area(self):
-        url = 'https://host_of_bragi/autocomplete'
-        params = {
-            'q': u'bob',
-            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
-            'limit': 10,
-            'pt_dataset': 'main_routing_test'
-        }
-
-        url += "?{}".format(urlencode(params, doseq=True))
-        mock_requests = MockRequests({
-            url: (BRAGI_MOCK_RESPONSE_STOP_AREA_WITH_COMMENTS, 200)
-        })
+        mock_requests = mock_bragi_autocomplete_call(BRAGI_MOCK_RESPONSE_STOP_AREA_WITH_COMMENTS)
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
                                          "&type[]=address&type[]=poi&type[]=administrative_region")
@@ -1410,18 +1269,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert {comment['value'] for comment in comments} >= {u'comment1', u'comment2'}
 
     def test_autocomplete_call_without_comments_on_stop_area(self):
-        url = 'https://host_of_bragi/autocomplete'
-        params = {
-            'q': u'bob',
-            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
-            'limit': 10,
-            'pt_dataset': 'main_routing_test'
-        }
-
-        url += "?{}".format(urlencode(params, doseq=True))
-        mock_requests = MockRequests({
-            url: (BRAGI_MOCK_RESPONSE_STOP_AREA_WITHOUT_COMMENTS, 200)
-        })
+        mock_requests = mock_bragi_autocomplete_call(BRAGI_MOCK_RESPONSE_STOP_AREA_WITHOUT_COMMENTS)
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
                                          "&type[]=address&type[]=poi&type[]=administrative_region")
