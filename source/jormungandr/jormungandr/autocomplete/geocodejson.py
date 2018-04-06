@@ -333,21 +333,24 @@ geocode_stop_area = {
     "stop_area": StopAreaField()
 }
 
+geocode_feature_func_mapping = { 
+    'city' : geocode_admin,
+    'administrative_region': geocode_admin,
+    'street': geocode_addr,
+    'house': geocode_addr,
+    'poi': geocode_poi,
+    'public_transport:stop_area': geocode_stop_area
+}
+
 class GeocodejsonFeature(fields.Raw):
     def format(self, place):
         type_ = place.get('properties', {}).get('geocoding', {}).get('type')
 
-        if type_ == 'city':
-            return marshal(place, geocode_admin)
-        elif type_ in ('street', 'house'):
-            return marshal(place, geocode_addr)
-        elif type_ == 'poi':
-            return marshal(place, geocode_poi)
-        elif type_ == 'public_transport:stop_area':
-            return marshal(place, geocode_stop_area)
+        if type_ not in geocode_feature_func_mapping:
+            logging.getLogger(__name__).error('Place not serialized (unknown type): {}'.format(place))
+            return None
 
-        logging.getLogger(__name__).error('Place not serialized (unknown type): {}'.format(place))
-        return None
+        return marshal(place, geocode_feature_func_mapping[type_])
 
 geocodejson = {
     "places": fields.List(GeocodejsonFeature, attribute='features'),
