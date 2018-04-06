@@ -38,8 +38,8 @@ from .tests_mechanism import AbstractTestFixture, dataset
 
 MOCKED_PROXY_CONF = [
     {
-        "object_id_tag": "KisioDigital",
-        "id": "KisioDigital",
+        "object_id_tag": "KisioDigitalisé",
+        "id": "KisioDigitalisé",
         "class": "jormungandr.realtime_schedule.synthese.Synthese",
         "args": {
             "timezone": "UTC",

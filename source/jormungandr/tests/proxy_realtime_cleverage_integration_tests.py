@@ -38,11 +38,11 @@ from .tests_mechanism import AbstractTestFixture, dataset
 
 MOCKED_PROXY_CONF = [
     {
-        "object_id_tag": "KisioDigital",
-        "id": "KisioDigital",
+        "object_id_tag": "KisioDigitalisé",
+        "id": "KisioDigitalisé",
         "class": "jormungandr.realtime_schedule.cleverage.Cleverage",
         "args": {
-            "destination_id_tag": "KisioDigital",
+            "destination_id_tag": "KisioDigitalisé",
             "timezone": "UTC",
             "service_url": "http://XXXX",
             "timeout": 15,
@@ -90,7 +90,7 @@ class TestCleverageSchedules(AbstractTestFixture):
                 ([
                  {
                      "name": "Lianes 5",
-                     "code": "KisioDigital A",
+                     "code": "KisioDigitalisé A",
                      "type": "Bus",
                      "schedules": [
                          {
@@ -167,7 +167,7 @@ class TestCleverageSchedules(AbstractTestFixture):
                 ([
                  {
                      "name": "Lianes 5",
-                     "code": "KisioDigital A",
+                     "code": "KisioDigitalisé A",
                      "type": "Bus",
                      "schedules": [
                          {

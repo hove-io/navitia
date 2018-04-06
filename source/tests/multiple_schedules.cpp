@@ -66,25 +66,25 @@ int main(int argc, const char* const argv[]) {
     b.get<nt::Line>("B")->code = "code B";
     b.get<nt::Line>("C")->code = "code C";
 
-    b.get<nt::Line>("A")->properties["realtime_system"] = "KisioDigital";
-    b.get<nt::Line>("B")->properties["realtime_system"] = "KisioDigital";
-    b.get<nt::Line>("C")->properties["realtime_system"] = "KisioDigital";
+    b.get<nt::Line>("A")->properties["realtime_system"] = "KisioDigitalisé";
+    b.get<nt::Line>("B")->properties["realtime_system"] = "KisioDigitalisé";
+    b.get<nt::Line>("C")->properties["realtime_system"] = "KisioDigitalisé";
 
-    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_1"), "KisioDigital", "syn_stoppoint1");
-    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_11"), "KisioDigital", "syn_stoppoint11");
-    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_20"), "KisioDigital", "syn_stoppoint20");
-    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_21"), "KisioDigital", "syn_stoppoint21");
-    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_22"), "KisioDigital", "syn_stoppoint22");
-    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_31"), "KisioDigital", "syn_stoppoint31");
-    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_41"), "KisioDigital", "syn_stoppoint41");
+    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_1"), "KisioDigitalisé", "syn_stoppoint1");
+    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_11"), "KisioDigitalisé", "syn_stoppoint11");
+    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_20"), "KisioDigitalisé", "syn_stoppoint20");
+    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_21"), "KisioDigitalisé", "syn_stoppoint21");
+    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_22"), "KisioDigitalisé", "syn_stoppoint22");
+    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_31"), "KisioDigitalisé", "syn_stoppoint31");
+    b.data->pt_data->codes.add(b.get<nt::StopPoint>("SP_41"), "KisioDigitalisé", "syn_stoppoint41");
 
     auto r1 = b.get<nt::Route>("A1");
-    b.data->pt_data->codes.add(r1, "KisioDigital", "syn_routeA1");
-    b.data->pt_data->codes.add(r1, "KisioDigital", "syn_cute_routeA1");
+    b.data->pt_data->codes.add(r1, "KisioDigitalisé", "syn_routeA1");
+    b.data->pt_data->codes.add(r1, "KisioDigitalisé", "syn_cute_routeA1");
 
-    b.data->pt_data->codes.add(b.get<nt::Line>("A"), "KisioDigital", "KisioDigital A");
-    b.data->pt_data->codes.add(b.get<nt::Line>("B"), "KisioDigital", "syn_lineB");
-    b.data->pt_data->codes.add(b.get<nt::Line>("C"), "KisioDigital", "syn_lineC");
+    b.data->pt_data->codes.add(b.get<nt::Line>("A"), "KisioDigitalisé", "KisioDigitalisé A");
+    b.data->pt_data->codes.add(b.get<nt::Line>("B"), "KisioDigitalisé", "syn_lineB");
+    b.data->pt_data->codes.add(b.get<nt::Line>("C"), "KisioDigitalisé", "syn_lineC");
 
     mock_kraken kraken(b, "multiple_schedules", argc, argv);
 

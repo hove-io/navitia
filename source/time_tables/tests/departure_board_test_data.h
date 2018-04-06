@@ -46,23 +46,23 @@ struct departure_board_fixture {
         b.vj("B").uri("B:vj1")("B:s", "10:30"_t)("S1", "11:30"_t)("B:e", "12:30"_t);
 
         b.vj("C").uri("C:vj1")("C:S0", "11:30"_t)("C:S1", "12:30"_t)("C:S2", "13:30"_t);
-        b.lines.find("C")->second->properties["realtime_system"] = "KisioDigital";
+        b.lines.find("C")->second->properties["realtime_system"] = "KisioDigitalisé";
 
         // J is late
         b.vj("J")("S40", "11:00"_t)("S42", "12:00"_t)("S43", "13:00"_t);
-        b.lines.find("J")->second->properties["realtime_system"] = "KisioDigital";
+        b.lines.find("J")->second->properties["realtime_system"] = "KisioDigitalisé";
 
         b.vj("K")("S41", "08:59"_t)("S42", "09:59"_t)("S43", "10:59"_t);
         b.vj("K")("S41", "09:03"_t)("S42", "10:03"_t)("S43", "11:03"_t);
         b.vj("K")("S41", "09:06"_t)("S42", "10:06"_t)("S43", "11:06"_t);
         b.vj("K")("S41", "09:09"_t)("S42", "10:09"_t)("S43", "11:09"_t);
         b.vj("K")("S41", "09:19"_t)("S42", "10:19"_t)("S43", "11:19"_t);
-        b.lines.find("K")->second->properties["realtime_system"] = "KisioDigital";
+        b.lines.find("K")->second->properties["realtime_system"] = "KisioDigitalisé";
 
         b.vj("L")("S39", "09:02"_t)("S42", "10:02"_t)("S43", "11:02"_t);
         b.vj("L")("S39", "09:07"_t)("S42", "10:07"_t)("S43", "11:07"_t);
         b.vj("L")("S39", "09:11"_t)("S42", "10:11"_t)("S43", "11:11"_t);
-        b.lines.find("L")->second->properties["realtime_system"] = "KisioDigital";
+        b.lines.find("L")->second->properties["realtime_system"] = "KisioDigitalisé";
 
         b.vj("M","1111111")("M:s", "10:30"_t)("S11", "11:30"_t, "11:35"_t)("M:e", "12:30"_t);
         b.vj("P", "11111").uri("vjP:1")("stopP1", "23:40"_t)("stopP2", "24:04"_t, "24:06"_t)("stopP3", "24:13"_t);
@@ -95,13 +95,13 @@ struct departure_board_fixture {
         b.data->meta->production_date = bg::date_period(bg::date(2016,1,1), bg::days(5));
 
         sp_ptr = b.data->pt_data->stop_points_map["C:S0"];
-        b.data->pt_data->codes.add(sp_ptr, "KisioDigital", "KisioDigital_C:S0");
+        b.data->pt_data->codes.add(sp_ptr, "KisioDigitalisé", "KisioDigitalisé_C:S0");
         sp_ptr = b.data->pt_data->stop_points_map["C:S1"];
-        b.data->pt_data->codes.add(sp_ptr, "KisioDigital", "KisioDigital_C:S1");
+        b.data->pt_data->codes.add(sp_ptr, "KisioDigitalisé", "KisioDigitalisé_C:S1");
         b.data->pt_data->codes.add(sp_ptr, "AnotherSource", "AnotherSource_C:S1");
 
         sp_ptr = b.data->pt_data->stop_points_map["S43"];
-        b.data->pt_data->codes.add(sp_ptr, "KisioDigital", "KisioDigital_C:S43");
+        b.data->pt_data->codes.add(sp_ptr, "KisioDigitalisé", "KisioDigitalisé_C:S43");
 
         using ntest::DelayedTimeStop;
         // we delay all A's vjs by 7mn (to be able to test whether it's base schedule or realtime data)
