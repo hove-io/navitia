@@ -89,7 +89,7 @@ Setup Jormungandr for using either `Bragi` or `Kraken` for autocompletion
 JORMUNGANDR_AUTOCOMPLETE_SYSTEMS='{"kraken": { "class": "jormungandr.autocomplete.kraken.Kraken" }, "bragi": {"class": "jormungandr.autocomplete.geocodejson.GeocodeJson", "args": {"host": "http://127.0.0.1:4000", "timeout": 2}}}'
 ```
 
-You can select your autocomplete engine based on the `_autocomplete` parameter when querying Jormungandr:
+You can select your autocomplete engine based on the hidden and debug-only `_autocomplete` parameter when querying Jormungandr:
 
 ```sh
 http://localhost:5000/v1/coverage/default/places?q=rennes&_autocomplete='<kraken|bragi>'
