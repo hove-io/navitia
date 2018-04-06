@@ -825,8 +825,12 @@ std::vector<georef::Admin*> find_admins(const type::EntryPoint& ep, const type::
 }
 
 boost::optional<routing::map_stop_point_duration>
-get_stop_points( const type::EntryPoint &ep, const type::Data& data,
-        georef::StreetNetwork & worker, bool use_second){
+get_stop_points(const type::EntryPoint &ep,
+                const type::Data& data,
+                georef::StreetNetwork & worker,
+                const uint32_t free_radius,
+                bool use_second) {
+
     routing::map_stop_point_duration result;
     georef::PathFinder& concerned_path_finder = use_second ? worker.arrival_path_finder :
                                                             worker.departure_path_finder;
@@ -887,7 +891,8 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         auto tmp_sn = worker.find_nearest_stop_points(
                     ep.streetnetwork_params.max_duration,
                     data.pt_data->stop_point_proximity_list,
-                    use_second);
+                    use_second,
+                    free_radius);
         LOG4CPLUS_TRACE(logger, "find " << tmp_sn.size() << " stop_points");
         for(auto idx_duration : tmp_sn) {
             const SpIdx sp_idx{idx_duration.first};
@@ -930,7 +935,8 @@ get_stop_points( const type::EntryPoint &ep, const type::Data& data,
         auto nearest = worker.find_nearest_stop_points(
                     ep.streetnetwork_params.max_duration,
                     data.pt_data->stop_point_proximity_list,
-                    use_second);
+                    use_second,
+                    free_radius);
         for (const auto& elt: nearest) {
             const SpIdx sp_idx{elt.first};
             if(result.find(sp_idx) == result.end()) {
@@ -1061,7 +1067,9 @@ void make_response(navitia::PbCreator& pb_creator,
                    const navitia::time_duration& transfer_penalty,
                    uint32_t max_duration,
                    uint32_t max_transfers,
-                   uint32_t max_extra_second_pass) {
+                   uint32_t max_extra_second_pass,
+                   uint32_t free_radius_from,
+                   uint32_t free_radius_to ) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     std::vector<Path> pathes;
@@ -1076,8 +1084,8 @@ void make_response(navitia::PbCreator& pb_creator,
     worker.init(origin, {destination});
 
     // Get stop points for departure and destination
-    auto departures = get_stop_points(origin, raptor.data, worker);
-    auto destinations = get_stop_points(destination, raptor.data, worker, true);
+    auto departures = get_stop_points(origin, raptor.data, worker, free_radius_from);
+    auto destinations = get_stop_points(destination, raptor.data, worker, free_radius_to, true);
 
     // case 1 : departure no exist
     if (!departures){

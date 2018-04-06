@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -75,7 +75,9 @@ void make_response(navitia::PbCreator& pb_creator,
                    const navitia::time_duration& transfer_penalty,
                    uint32_t max_duration=std::numeric_limits<uint32_t>::max(),
                    uint32_t max_transfers=std::numeric_limits<uint32_t>::max(),
-                   uint32_t max_extra_second_pass = 0);
+                   uint32_t max_extra_second_pass = 0,
+                   uint32_t free_radius_from = 0,
+                   uint32_t free_radius_to = 0 );
 
 void make_isochrone(navitia::PbCreator& pb_creator,
                     RAPTOR &raptor,
@@ -106,8 +108,11 @@ void make_pt_response(navitia::PbCreator& pb_creator,
                       const boost::optional<navitia::time_duration>& direct_path_duration = boost::none);
 
 boost::optional<routing::map_stop_point_duration>
-get_stop_points( const type::EntryPoint &ep, const type::Data& data,
-        georef::StreetNetwork & worker, bool use_second = false);
+get_stop_points(const type::EntryPoint &ep,
+                const type::Data& data,
+                georef::StreetNetwork & worker,
+                const uint32_t free_radius = 0,
+                bool use_second = false);
 
 void make_graphical_isochrone(navitia::PbCreator& pb_creator,
                               RAPTOR &raptor_max,

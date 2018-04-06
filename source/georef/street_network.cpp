@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -127,10 +127,11 @@ bool StreetNetwork::arrival_launched() const {return arrival_path_finder.computa
 routing::map_stop_point_duration
 StreetNetwork::find_nearest_stop_points(const navitia::time_duration& radius,
                                         const proximitylist::ProximityList<type::idx_t>& pl,
-                                        bool use_second) {
+                                        bool use_second,
+                                        const uint32_t free_radius) {
     // delegate to the arrival or departure pathfinder
     // results are store to build the routing path after the transportation routing computation
-    return (use_second ? arrival_path_finder : departure_path_finder).find_nearest_stop_points(radius, pl);
+    return (use_second ? arrival_path_finder : departure_path_finder).find_nearest_stop_points(radius, pl, free_radius);
 }
 
 navitia::time_duration StreetNetwork::get_distance(type::idx_t target_idx, bool use_second) {
@@ -311,7 +312,7 @@ std::vector<std::pair<type::idx_t, type::GeographicalCoord>>
 PathFinder::crow_fly_find_nearest_stop_points(const navitia::time_duration& radius,
                                               const proximitylist::ProximityList<type::idx_t>& pl) {
     // Searching for all the elements that are less than radius meters awyway in crow fly
-    
+
     float crow_fly_dist = radius.total_seconds() * speed_factor * georef::default_speed[mode];
     return pl.find_within(start_coord, crow_fly_dist);
 }
@@ -389,16 +390,53 @@ PathFinder::start_dijkstra_and_fill_duration_map(const navitia::time_duration& r
     return result;
 }
 
+navitia::time_duration
+PathFinder::exclude_sp_with_free_radius_filter(const type::GeographicalCoord& sp,
+                                               const std::vector< std::pair<idx_t, type::GeographicalCoord> >& excluded_sp_list,
+                                               const  navitia::time_duration& duration) const {
+    auto it = std::find_if(excluded_sp_list.begin(), excluded_sp_list.end(),
+                           [&sp](const std::pair<idx_t, type::GeographicalCoord>& input)
+                           {return input.second == sp;} );
+    // if it matches, sp duration = 0
+    if (it != excluded_sp_list.end()) {
+        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger")),
+                        "free radius, sp idx : " << it->first
+                        << " - lon : " << it->second.lon()
+                        << " - lat : " << it->second.lat()
+                        << " , duration is set to 0");
+        return navitia::time_duration();
+    }
+    // we keep duration
+    else {
+       return duration;
+    }
+}
+
 routing::map_stop_point_duration
 PathFinder::find_nearest_stop_points(const navitia::time_duration& radius,
-                                     const proximitylist::ProximityList<type::idx_t>& pl) {
+                                     const proximitylist::ProximityList<type::idx_t>& pl,
+                                     const uint32_t free_radius) {
     if (radius == navitia::seconds(0)) { return {}; }
 
     auto elements = crow_fly_find_nearest_stop_points(radius, pl);
+    if (elements.empty()) {
+        return {};
+    }
+
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+
+    // Find stop point list with a free radius constraint (optional)
+    std::vector< std::pair<idx_t, type::GeographicalCoord> > excluded_elements;
+    if (free_radius > 0) {
+        LOG4CPLUS_TRACE(logger, "filtering with free radius (" << free_radius << " meters)");
+        excluded_elements = pl.find_within(start_coord, free_radius);
+        LOG4CPLUS_TRACE(logger, "find " << excluded_elements.size() << " stop points in free radius");
+    }
 
     routing::map_stop_point_duration result;
-    if (! starting_edge.found){
-        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance("Logger"), "starting_edge not found!");
+    // case 1 : start coord is not an edge (crow fly)
+    if (! starting_edge.found) {
+        LOG4CPLUS_DEBUG(logger, "starting_edge not found!");
         // if no street network, return stop_points that are within
         // radius distance (with sqrt(2) security factor)
         // if we are not dealing with 0,0 coordinates (incorrect data), allow crow fly
@@ -412,28 +450,49 @@ PathFinder::find_nearest_stop_points(const navitia::time_duration& radius,
                 // if the radius is still ok with sqrt(2) factor
                 auto sp_idx = routing::SpIdx(element.first);
                 if (duration < radius && distance_to_entry_point.count(sp_idx) == 0) {
-                    result[sp_idx] = duration;
-                    distance_to_entry_point[sp_idx] = duration;
+
+                    // free radius exclusion (optional)
+                    if (free_radius > 0 && !excluded_elements.empty()) {
+                        result[sp_idx] = exclude_sp_with_free_radius_filter(element.second,
+                                                                            excluded_elements,
+                                                                            duration);
+                        distance_to_entry_point[sp_idx] = result[sp_idx];
+                    }
+                    else {
+                        result[sp_idx] = duration;
+                        distance_to_entry_point[sp_idx] = duration;
+                    }
                 }
             }
         }
         return result;
     }
-
-    if (elements.empty()) {
-        return result;
-    }
-    std::vector<routing::SpIdx> dest_sp_idx;
-    for (const auto& e: elements) {
-        dest_sp_idx.push_back(routing::SpIdx{e.first});
-    }
-    ProjectionGetterByCache projection_getter{mode, geo_ref.projected_stop_points};
-    auto resp = start_dijkstra_and_fill_duration_map<routing::SpIdx,
-            routing::SpIdx,ProjectionGetterByCache>(
-            radius, dest_sp_idx, projection_getter);
-    for (const auto& r : resp) {
-        if (r.second.routing_status == RoutingStatus_e::reached) {
-            result[r.first] = r.second.time_duration;
+    // case 2 : start coord is an edge (dijkstra)
+    else {
+        std::vector<routing::SpIdx> dest_sp_idx;
+        for (const auto& e: elements) {
+            dest_sp_idx.push_back(routing::SpIdx{e.first});
+        }
+        ProjectionGetterByCache projection_getter{mode, geo_ref.projected_stop_points};
+        auto resp = start_dijkstra_and_fill_duration_map<routing::SpIdx,
+                routing::SpIdx,ProjectionGetterByCache>(
+                radius, dest_sp_idx, projection_getter);
+        for (const auto& r : resp) {
+            if (r.second.routing_status == RoutingStatus_e::reached) {
+                // free radius exclusion (optional)
+                if (free_radius > 0 && !excluded_elements.empty()) {
+                    auto elem = *std::find_if(elements.begin(),
+                                              elements.end(),
+                                              [&r](const std::pair<idx_t, type::GeographicalCoord>& input)
+                                              {return r.first.val == input.first;});
+                    result[r.first] = exclude_sp_with_free_radius_filter(elem.second,
+                                                                         excluded_elements,
+                                                                         r.second.time_duration);
+                }
+                else {
+                    result[r.first] = r.second.time_duration;
+                }
+            }
         }
     }
     return result;

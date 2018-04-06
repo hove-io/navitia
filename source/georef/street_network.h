@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -153,7 +153,8 @@ struct PathFinder {
     /// compute the reachable stop points within the radius
     routing::map_stop_point_duration
     find_nearest_stop_points(const navitia::time_duration& radius,
-                             const proximitylist::ProximityList<type::idx_t>& pl);
+                             const proximitylist::ProximityList<type::idx_t>& pl,
+                             const uint32_t free_radius = 0);
     using coord_uri = std::string;
     boost::container::flat_map<coord_uri, georef::RoutingElement>
     get_duration_with_dijkstra(const navitia::time_duration& radius,
@@ -223,6 +224,21 @@ private:
     ///return the time the travel the distance at the current speed (used for projections)
     navitia::time_duration crow_fly_duration(const double val) const;
 
+    /**
+     * @brief Filtering with free radius constraint
+     * If SP are inside, we set the SP time duration to 0.
+     * It is very useful to bring the starting points back to the same station.
+
+    * @param sp The current stop point to filter
+    * @param excluded_sp_list The excluded stop points list
+    * @param duration The calculated duration between start point and the current stop point
+    * @return The time duration between start point and the current stop point with free radius filter
+    */
+    navitia::time_duration
+    exclude_sp_with_free_radius_filter(const type::GeographicalCoord& sp,
+                                       const std::vector< std::pair<idx_t, type::GeographicalCoord> >& excluded_sp_list,
+                                       const  navitia::time_duration& duration) const;
+
     void add_custom_projections_to_path(Path& p, bool append_to_begin, const ProjectionData& projection, ProjectionData::Direction d) const;
 
     /// Build a path with a destination and the predecessors list
@@ -255,7 +271,8 @@ struct StreetNetwork {
 
     routing::map_stop_point_duration
     find_nearest_stop_points(const navitia::time_duration& radius,
-                             const proximitylist::ProximityList<type::idx_t>& pl, bool use_second);
+                             const proximitylist::ProximityList<type::idx_t>& pl, bool use_second,
+                             const uint32_t free_radius = 0);
 
     navitia::time_duration get_distance(type::idx_t target_idx, bool use_second = false);
 
