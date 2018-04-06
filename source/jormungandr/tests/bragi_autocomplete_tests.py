@@ -41,7 +41,7 @@ from jormungandr import app
 from six.moves.urllib.parse import urlencode
 from .tests_mechanism import config
 from copy import deepcopy
-
+import os
 
 class FakeUserBragi(FakeUser):
     @classmethod
@@ -289,6 +289,14 @@ BRAGI_MOCK_STOP_AREA_WITH_MORE_ATTRIBUTS = {
                             }
                         }
                     ],
+                    "feed_publishers": [
+                        {
+                            "id": "bob_publisher",
+                            "license": "OBobDL",
+                            "name": "Bobenstreetmap",
+                            "url": "https://www.Bobenstreetmap.org/copyright"
+                        }
+                    ],
                     }
             },
             "type": "Feature"
@@ -505,6 +513,140 @@ BRAGI_MOCK_ADMIN = {
                     "administrative_regions": []
                 }
             }
+        }
+    ]
+}
+
+BRAGI_MOCK_RESPONSE_STOP_AREA_WITH_COMMENTS = {
+    "type": "FeatureCollection",
+    "geocoding": {
+        "version": "0.1.0",
+        "query": ""
+    },
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "coordinates": [
+                    3.282103,
+                    49.847586
+                ],
+                "type": "Point"
+            },
+            "properties": {
+                "geocoding": {
+                    "city": "Bobtown",
+                    "id": "stop_area_id",
+                    "label": "stop 1",
+                    "name": "stop 1",
+                    "postcode": "02100",
+                    "type": "public_transport:stop_area",
+                    "citycode": "02000",
+                    "administrative_regions": [],
+                    "commercial_modes": [
+                        {
+                            "id": "commercial_mode:Bus",
+                            "name": "Bus"
+                        },
+                    ],
+                    "physical_modes": [
+                        {
+                            "id": "commercial_mode:Bus",
+                            "name": "Bus"
+                        },
+                    ],
+                    "comments": [
+                        {
+                            "name": "comment1",
+                        },
+                        {
+                            "name": "comment2",
+                        }
+                    ],
+                    "timezone": "Europe/Paris",
+                    "codes": [
+                        {
+                            "name": "code_name1",
+                            "value": "1"
+                        },
+                        {
+                            "name": "coce_name2",
+                            "value": "2"
+                        }
+                    ],
+                    "feed_publishers": [
+                        {
+                            "id": "feed_p_id",
+                            "license": "feed_p_license",
+                            "name": "feed_p_name",
+                            "url": "feed_p_url"
+                        }
+                    ]
+                }
+            },
+        }
+    ]
+}
+
+BRAGI_MOCK_RESPONSE_STOP_AREA_WITHOUT_COMMENTS = {
+    "type": "FeatureCollection",
+    "geocoding": {
+        "version": "0.1.0",
+        "query": ""
+    },
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "coordinates": [
+                    3.282103,
+                    49.847586
+                ],
+                "type": "Point"
+            },
+            "properties": {
+                "geocoding": {
+                    "city": "Bobtown",
+                    "id": "stop_area_id",
+                    "label": "stop 1",
+                    "name": "stop 1",
+                    "postcode": "02100",
+                    "type": "public_transport:stop_area",
+                    "citycode": "02000",
+                    "administrative_regions": [],
+                    "commercial_modes": [
+                        {
+                            "id": "commercial_mode:Bus",
+                            "name": "Bus"
+                        },
+                    ],
+                    "physical_modes": [
+                        {
+                            "id": "commercial_mode:Bus",
+                            "name": "Bus"
+                        },
+                    ],
+                    "timezone": "Europe/Paris",
+                    "codes": [
+                        {
+                            "name": "code_name1",
+                            "value": "1"
+                        },
+                        {
+                            "name": "coce_name2",
+                            "value": "2"
+                        }
+                    ],
+                    "feed_publishers": [
+                        {
+                            "id": "feed_p_id",
+                            "license": "feed_p_license",
+                            "name": "feed_p_name",
+                            "url": "feed_p_url"
+                        }
+                    ]
+                }
+            },
         }
     ]
 }
@@ -743,6 +885,12 @@ class TestBragiAutocomplete(AbstractTestFixture):
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places/1234?&pt_dataset=main_routing_test")
 
+            assert response.get('feed_publishers')
+            if os.getenv('JORMUNGANDR_USE_SERPY'):
+                assert len(response.get('feed_publishers')) == 3
+            else:
+                assert len(response.get('feed_publishers')) == 2
+
             r = response.get('places')
             assert len(r) == 1
             assert r[0]['embedded_type'] == 'stop_area'
@@ -789,6 +937,12 @@ class TestBragiAutocomplete(AbstractTestFixture):
             response = self.query_region("places?q=bobette&pt_dataset=main_routing_test&type[]=stop_area"
                                          "&type[]=address&type[]=poi&type[]=administrative_region&depth=0")
 
+            assert response.get('feed_publishers')
+            if os.getenv('JORMUNGANDR_USE_SERPY'):
+                assert len(response.get('feed_publishers')) == 3
+            else:
+                assert len(response.get('feed_publishers')) == 2
+
             r = response.get('places')
             assert len(r) == 1
             assert r[0]['embedded_type'] == 'stop_area'
@@ -830,16 +984,19 @@ class TestBragiAutocomplete(AbstractTestFixture):
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places/1234?&pt_dataset=main_routing_test")
 
+            assert response.get('feed_publishers')
+            assert len(response.get('feed_publishers')) == 2
+
             r = response.get('places')
             assert len(r) == 1
             assert r[0]['embedded_type'] == 'stop_area'
             assert 'commercial_modes' not in r[0]['stop_area']
             assert 'physical_modes' not in r[0]['stop_area']
-            #Empty attribut not displayed
+            # Empty attribute not displayed
             assert 'codes' not in r[0]['stop_area']
-            #Attribut empty not displayed
+            # Attribute empty not displayed
             assert 'properties' not in r[0]['stop_area']
-            #Attribut displayed but None
+            # Attribute displayed but None
             assert not r[0]['stop_area'].get('timezone')
 
     def test_feature_unknown_type(self):
@@ -1110,6 +1267,64 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['administrative_region']['name'] == 'Dijon'
             # In our case administrative_regions of the admin is an empty list in the result bragi
             assert 'administrative_regions' not in r[0]['administrative_region']
+
+    def test_autocomplete_call_with_comments_on_stop_area(self):
+        url = 'https://host_of_bragi/autocomplete'
+        params = {
+            'q': u'bob',
+            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
+            'limit': 10,
+            'pt_dataset': 'main_routing_test'
+        }
+
+        url += "?{}".format(urlencode(params, doseq=True))
+        mock_requests = MockRequests({
+            url: (BRAGI_MOCK_RESPONSE_STOP_AREA_WITH_COMMENTS, 200)
+        })
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
+                                         "&type[]=address&type[]=poi&type[]=administrative_region")
+            is_valid_global_autocomplete(response, depth=1)
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['name'] == 'stop 1'
+            assert r[0]['embedded_type'] == 'stop_area'
+            assert r[0]['id'] == 'stop_area_id'
+            assert r[0]['quality'] == 0 # field for kraken compatibility (default = 0)
+            stop_area = r[0]['stop_area']
+            # For retrocompatibility, when we have multi-comments, we keep 'comment' field with
+            # the first comment element.
+            assert stop_area['comment'] == 'comment1'
+            comments = stop_area['comments']
+            assert {comment['value'] for comment in comments} >= {u'comment1', u'comment2'}
+
+    def test_autocomplete_call_without_comments_on_stop_area(self):
+        url = 'https://host_of_bragi/autocomplete'
+        params = {
+            'q': u'bob',
+            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
+            'limit': 10,
+            'pt_dataset': 'main_routing_test'
+        }
+
+        url += "?{}".format(urlencode(params, doseq=True))
+        mock_requests = MockRequests({
+            url: (BRAGI_MOCK_RESPONSE_STOP_AREA_WITHOUT_COMMENTS, 200)
+        })
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query_region("places?q=bob&pt_dataset=main_routing_test&type[]=stop_area"
+                                         "&type[]=address&type[]=poi&type[]=administrative_region")
+            is_valid_global_autocomplete(response, depth=1)
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['name'] == 'stop 1'
+            assert r[0]['embedded_type'] == 'stop_area'
+            assert r[0]['id'] == 'stop_area_id'
+            assert r[0]['quality'] == 0 # field for kraken compatibility (default = 0)
+            stop_area = r[0]['stop_area']
+            # When no comments exist in Bragi, the API mask the "comment" and "comments" field.
+            assert not stop_area.get('comment')
+            assert not stop_area.get('comments')
 
 
 @dataset({"main_routing_test": {}}, global_config={'activate_bragi': True})

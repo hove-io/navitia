@@ -27,8 +27,10 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import, print_function, unicode_literals, division
+from __future__ import absolute_import, print_function, division
+import datetime
 import mock
+from time import sleep
 from jormungandr.realtime_schedule.timeo import Timeo
 from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxyError
 import validators
@@ -226,8 +228,8 @@ def next_passage_for_route_point_test():
                   service_args={'a': 'bobette', 'b': '12'})
 
     mock_requests = MockRequests({
-        'http://bob.com/tata?a=bobette&b=12&StopDescription=?StopTimeoCode=stop_tutu&LineTimeoCode'
-        '=line_toto&Way=route_tata&NextStopTimeNumber=5&StopTimeType=TR;':
+        'http://bob.com/tata?a=bobette&b=12&StopDescription=?StopTimeType=TR&LineTimeoCode'
+        '=line_toto&Way=route_tata&NextStopTimeNumber=5&StopTimeoCode=stop_tutu;':
         (mock_good_timeo_response(), 200)
     })
 
@@ -307,6 +309,6 @@ def timeo_circuit_breaker_test():
         assert m.timeo_call == 4
 
 def status_test():
-    timeo = Timeo(id="tata-é$~#@\"*!'`§èû", timezone='UTC', service_url='http://bob.com/', service_args={'a': 'bobette', 'b': '12'})
+    timeo = Timeo(id=u"tata-é$~#@\"*!'`§èû", timezone='UTC', service_url='http://bob.com/', service_args={'a': 'bobette', 'b': '12'})
     status = timeo.status()
-    assert status['id'] == 'tata-é$~#@"*!\'`§èû'
+    assert status['id'] == u'tata-é$~#@"*!\'`§èû'

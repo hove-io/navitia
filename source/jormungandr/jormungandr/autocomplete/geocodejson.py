@@ -112,6 +112,11 @@ def create_modes_field(modes):
         return []
     return [{"id": mode.get('id'), "name": mode.get('name')} for mode in modes]
 
+def create_comments_field(modes):
+    if not modes:
+        return []
+    # To be compatible, type = 'standard'
+    return [{"type": 'standard', "value": mode.get('name')} for mode in modes]
 
 def create_codes_field(codes):
     if not codes:
@@ -273,6 +278,14 @@ class StopAreaField(fields.Raw):
         if p_modes:
             resp['physical_modes'] = create_modes_field(p_modes)
 
+        comments = geocoding.get('comments', [])
+        if comments:
+            resp['comments'] = create_comments_field(comments)
+            # To be compatible with old version, we create the "comment" field in addition.
+            # This field is a simple string, so we take only one comment (In our case, the first
+            # element of the list).
+            resp['comment'] = next(iter(comments or []), None).get('name')
+
         codes = geocoding.get('codes')
         if codes:
             resp["codes"] = create_codes_field(codes)
@@ -426,7 +439,7 @@ class GeocodeJson(AbstractAutocomplete):
     def response_marshaler(cls, response_bragi, uri=None, depth=1):
         cls._check_response(response_bragi, uri)
         json_response = response_bragi.json()
-        #Clean dict objects depending on depth passed in request parameter.
+        # Clean dict objects depending on depth passed in request parameter.
         json_response = cls._clean_response(json_response, depth)
         if jormungandr.USE_SERPY:
             from jormungandr.interfaces.v1.serializer.geocode_json import GeocodePlacesSerializer

@@ -26,7 +26,6 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import, print_function, unicode_literals, division
 
 def parse_error(error):
     res = None
@@ -34,7 +33,7 @@ def parse_error(error):
         res = error.message
     except AttributeError:
         res = str(error).replace("\n", " ")
-    return res.decode('utf-8')
+    return res.decode('utf-8', 'backslashreplace')
 
 poi_type_format = {
     'type': 'object',

@@ -1,0 +1,9 @@
+poi_id;poi_name;poi_weight;poi_visible;poi_lat;poi_lon;poi_type_id;poi_address_number;poi_address_name
+TRANSP44_294;"Aire de covoiturage d?Abbaretz";0;1;47.553955;-1.532282;aire_covoiturage;;"Salle Polyvalente"
+CULT44_30021;"base de loisirs de Abbaretz";0;1;47.557695;-1.541674;sorties_loisirs;;""
+ADM44_253;"centre de secours d'abbaretz";0;1;47.556279;-1.531766;administration;;"4 r de bellevue"
+PAIHABIT0000000028850973;"Centre-ville";0;1;47.55379;-1.531668;centreville;;""
+RELIG44_495;"Chapelle";0;1;47.574046;-1.510892;lieu_de_culte;;""
+ADM85_97;"centre d'incendie et de secours de saint-florent-des-bois";0;1;46.59536;-1.31902;administration;;"rue georges clémenceau"
+ADM53_172;"mairie de la gravelle";0;1;48.07301;-1.013191;administration;;"1 rue madame-de-sévigné"
+ADM44_100;"centre de secours de guenrouet";0;1;47.518841;-1.965974;administration;;"17 r du moulin de la justice"

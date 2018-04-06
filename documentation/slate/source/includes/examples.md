@@ -8,6 +8,34 @@ You will have to use your own token with the examples below.
 </aside>
 
 
+Basics on the API request
+-------------------------
+``` shell
+# Web is too shiny: JSON, urlencode and curl forever!
+$ curl 'https://api.navitia.io/v1/coverage/sandbox/stop_areas/stop_area%3ARAT%3ASA%3ABASTI/lines/line%3ARAT%3AM5/departures?count=4&depth=2&' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+```
+
+A query to Navitia's API is divided in 4 parts, as highlighted by colors in a [Navitia Playground example](http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253ABASTI%2Flines%2Fline%253ARAT%253AM5%2Fdepartures%3Fcount%3D4%26depth%3D2%26&token=3b036afe-0110-4202-b9ed-99718476c2e0):  
+![Navitia basic request](/images/navitia_basic.png)
+
+1. **Root url** of the API, the adress of the server.  
+Here `https://api.navitia.io/v1/`
+2. **Path**, used to filter the request and precise what is affected by the query. This filter is an intersection of multiple `key/value` (logical _AND_).  
+Here `/coverage/sandbox/stop_areas/stop_area:RAT:SA:BASTI/lines/line:RAT:M5/` means we are looking for information on everything that is in the region _"sandbox"_ and that is stricly related to both station _"Bastille"_ and line _"metro 5"_.
+3. **Endpoint**, specifies what type of information is requested, so the _feature_. It can be a service, like _journeys_, _isochrones_, _places_ or a collection of objects, like _lines_, _stop\_areas_, etc.  
+Here `/departures?` means we are requesting _"next departures"_.
+4. **Parameters**, used to specify any additional detail linked to the endpoint requested.  
+Here `?count=4&depth=2&` means we are requesting the next **_4_** departures and we want the response to be detailed to a depth of **_2_**.
+
+<aside class="success">
+    Tadaaa!
+    </br>
+    <a href="http://canaltp.github.io/navitia-playground/play.html?request=https%3A%2F%2Fapi.navitia.io%2Fv1%2Fcoverage%2Fsandbox%2Fstop_areas%2Fstop_area%253ARAT%253ASA%253ABASTI%2Flines%2Fline%253ARAT%253AM5%2Fdepartures%3Fcount%3D4%26depth%3D2%26&token=3b036afe-0110-4202-b9ed-99718476c2e0">https://api.navitia.io/v1/coverage/sandbox/stop_areas/stop_area:RAT:SA:BASTI/lines/line:RAT:M5/departures?count=4&depth=2</a>
+    </br>
+    We get the next 4 departures for the metro 5 at Bastille in the great "sandbox" region, and with a middle level of details.
+</aside>
+
+
 A quick exploration
 -------------------
 ``` shell

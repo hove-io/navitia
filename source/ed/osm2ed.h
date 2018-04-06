@@ -372,17 +372,33 @@ struct Rect{
 
 enum class OsmObjectType {
     Node,
-    Way
+    Way,
+    Relation,
 };
 
 inline std::string to_string(OsmObjectType t) {
     switch (t) {
-    case OsmObjectType::Node: return "n";
-    case OsmObjectType::Way: return "w";
+    case OsmObjectType::Node : return "node";
+    case OsmObjectType::Way : return "way";
+    case OsmObjectType::Relation : return "relation";
     default:
         throw navitia::exception("not implemented");
     }
 }
+
+class OsmPoi : public ed::types::Poi
+{ 
+public:
+    OsmPoi(
+        const OsmObjectType type,
+        const u_int64_t id) 
+    {
+        uri += "osm:";
+        uri += to_string(type);
+        uri += ":";
+        uri += std::to_string(id);
+    }
+};
 
 struct PoiHouseNumberVisitor {
     const size_t max_inserts_without_bulk = 20000;

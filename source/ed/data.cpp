@@ -469,6 +469,22 @@ get_nearest(const nt::GeographicalCoord& coord, const nt::LineString& line) {
     return nearest;
 }
 
+// Returns nearest projected point in a path
+static nt::GeographicalCoord
+get_nearest_projection(const nt::GeographicalCoord& coord, const nt::LineString& line) {
+    if (line.empty()) return coord;
+    nt::GeographicalCoord projected_point = *line.begin();
+    auto nearest_dist = coord.distance_to(projected_point);
+    for (auto it1 = line.begin(), it2 = it1 + 1; it2 != line.end(); ++it1, ++it2) {
+        auto projection = coord.project(*it1, *it2);
+        if (nearest_dist <= projection.second) continue;
+
+        nearest_dist = projection.second;
+        projected_point = projection.first;
+    }
+    return projected_point;
+}
+
 static size_t abs_distance(LineStringIterPair pair) {
     return pair.first < pair.second
                         ? pair.second - pair.first
@@ -493,11 +509,15 @@ create_shape(const nt::GeographicalCoord& from,
 {
     const auto nearest_from = get_nearest(from, shape);
     const auto nearest_to = get_nearest(to, shape);
+    const auto p_from = get_nearest_projection(from, shape);
+    const auto p_to = get_nearest_projection(to, shape);
+
     if (nearest_from == nearest_to) { return {from, to}; }
 
     nt::LineString res;
     const auto range = get_smallest_range(nearest_from, nearest_to);
-    res.push_back(from);
+
+    res.push_back(p_from);
     if (range.first < range.second) {
         for (auto it = range.first; it <= range.second; ++it)
             res.push_back(*it);
@@ -505,9 +525,9 @@ create_shape(const nt::GeographicalCoord& from,
         for (auto it = range.first; it >= range.second; --it)
             res.push_back(*it);
     }
-    res.push_back(to);
+    res.push_back(p_to);
 
-    // simplification at about 3m precision
+    // simplification
     nt::LineString simplified;
     boost::geometry::simplify(res, simplified, simplify_tolerance);
 
@@ -527,6 +547,7 @@ void Data::build_shape_from_prev() {
                             % prev_stop_point->uri
                             % stop_time->stop_point->uri)
                         .str();
+
                     // we keep in cache the resulting geometry, so we don't have to re compute it later
                     if(shape_cache.find(key) == shape_cache.end()){
                         auto s = std::make_shared<types::Shape>(

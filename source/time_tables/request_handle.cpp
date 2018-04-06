@@ -35,13 +35,13 @@ www.navitia.io
 namespace navitia { namespace timetables {
 
 RequestHandle::RequestHandle(PbCreator& pb_creator,
-                             const std::string &request,
-                             const std::vector<std::string>& forbidden_uris,
                              const pt::ptime datetime, uint32_t duration,
                              boost::optional<const std::string> calendar_id,
                              const bool clockwise) :
     pb_creator(pb_creator),
-    date_time(DateTimeUtils::inf), max_datetime(DateTimeUtils::inf){    
+    date_time(DateTimeUtils::inf),
+    max_datetime(DateTimeUtils::inf)
+{
     if (! calendar_id) {
         //we only have to check the production period if we do not have a calendar,
         // since if we have one we are only interested in the time, not the date
@@ -61,17 +61,20 @@ RequestHandle::RequestHandle(PbCreator& pb_creator,
             // in !clockwise make sure we don't substract duration to dt if it's bigger since they are unsigned
             max_datetime = duration > date_time ? 0 : date_time - duration;
         }
-        const auto jpp_t = type::Type_e::JourneyPatternPoint;
-
-        try {
-            const auto& jpps = ptref::make_query(jpp_t, request, forbidden_uris, *pb_creator.data);
-            for (const auto idx: jpps) { journey_pattern_points.push_back(routing::JppIdx(idx)); }
-            total_result = journey_pattern_points.size();
-        } catch(const ptref::ptref_error &ptref_error){
-            pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "ptref : "  + ptref_error.more);
-        }
     }
+}
 
+void RequestHandle::init_jpp(const std::string& request,
+                             const std::vector<std::string>& forbidden_uris) {
+    const auto jpp_t = type::Type_e::JourneyPatternPoint;
+
+    try {
+        const auto& jpps = ptref::make_query(jpp_t, request, forbidden_uris, *pb_creator.data);
+        for (const auto idx: jpps) { journey_pattern_points.push_back(routing::JppIdx(idx)); }
+        total_result = journey_pattern_points.size();
+    } catch(const ptref::ptref_error &ptref_error){
+        pb_creator.fill_pb_error(pbnavitia::Error::bad_filter, "ptref : "  + ptref_error.more);
+    }
 }
 
 }}

@@ -437,8 +437,13 @@ struct Poi {
     std::map<std::string, std::string> properties;
     std::string address_number = "";
     std::string address_name = "";
+    std::string uri = "poi:";
 
-    Poi() {}
+    Poi() = default;
+    Poi(const std::string& uri_id) 
+    {
+        uri += uri_id;   
+    }
 };
 
 /**

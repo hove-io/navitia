@@ -56,6 +56,7 @@ static std::ostream& operator<<(std::ostream& os, const navitia::type::LineStrin
 //             |
 //             |   + F
 //           P +
+//               + G
 // 0.001 ~= 100m
 static const navitia::type::GeographicalCoord M(0.010,0.020);
 static const navitia::type::GeographicalCoord N(0.010,0.015);
@@ -63,10 +64,13 @@ static const navitia::type::GeographicalCoord O(0.015,0.015);
 static const navitia::type::GeographicalCoord P(0.015,0.010);
 static const navitia::type::GeographicalCoord A(0.011,0.021);
 static const navitia::type::GeographicalCoord B(0.012,0.016);
+static const navitia::type::GeographicalCoord Bproj(0.012,0.015);
 static const navitia::type::GeographicalCoord C(0.013,0.016);
 static const navitia::type::GeographicalCoord D(0.016,0.017);
 static const navitia::type::GeographicalCoord E(0.017,0.016);
 static const navitia::type::GeographicalCoord F(0.017,0.011);
+static const navitia::type::GeographicalCoord Fproj(0.015,0.011);
+static const navitia::type::GeographicalCoord G(0.016,0.009);
 static const navitia::type::LineString shape = {M, N, O, P};
 static const navitia::type::LineString rshape = {P, O, N, M};
 
@@ -94,13 +98,19 @@ BOOST_AUTO_TEST_CASE(create_shape) {
     shape_eq(D, E, LS({D, E}));
 
     // nearest segment and point on segment: using the common point
-    shape_eq(B, D, LS({B, O, D}));
+    // Dproj == O
+    shape_eq(B, D, LS({Bproj, O}));
 
     // 2 nearest segments are adjacent: using the common point
-    shape_eq(B, F, LS({B, O, F}));
+    shape_eq(B, F, LS({Bproj, O, Fproj}));
 
     // A->F, a long path
-    shape_eq(A, F, LS({A, M, N, O, F}));
+    // Aproj == M
+    shape_eq(A, F, LS({M, N, O, Fproj}));
+
+    // A->G, whole path
+    // Aproj == M
+    shape_eq(A, G, LS({M, N, O, P}));
 }
 
 /*

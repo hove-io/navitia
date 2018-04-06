@@ -186,7 +186,8 @@ void departure_board(PbCreator& pb_creator, const std::string& request,
                 uint32_t duration, uint32_t depth,
                 int count, int start_page, const type::RTLevel rt_level, const size_t items_per_route_point) {
 
-    RequestHandle handler(pb_creator, request, forbidden_uris, date, duration, calendar_id);
+    RequestHandle handler(pb_creator, date, duration, calendar_id);
+    handler.init_jpp(request, forbidden_uris);
 
     if (pb_creator.has_error() || (handler.journey_pattern_points.size() == 0)) {
         return;

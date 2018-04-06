@@ -463,6 +463,14 @@ class TestDepartureBoard(AbstractTestFixture):
         is_valid_route_schedule(schedule)
         assert schedule["table"]["rows"][2]["date_times"][0]["date_time"] == ""
 
+    def test_route_schedules_two_sa(self):
+        """
+        route_schedule from 2 stop areas
+        """
+        response = self.query_region("stop_areas/stop1/stop_areas/stop2/route_schedules?from_datetime=20120615T000000")
+        schedules = get_not_null(response, 'route_schedules')
+        assert len(schedules) == 1
+
     def test_with_wrong_type(self):
         """
         we search for stop_areasS, this type doesn't exist

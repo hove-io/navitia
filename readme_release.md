@@ -14,7 +14,7 @@ python ./script_release.py minor <canaltp_distant_repo_name>
 ```
 Then follow the instructions given by the script, and also:
 * pay attention to the changelog, remove useless PR (small doc) and check that every important PR is there
-* don't forget to make `git submodule update` when necessary
+* don't forget to make `git submodule update --recursive` when necessary
 * check that `release` branch COMPILES and TESTS (unit, docker and tyr) before pushing it!
 
 ## Other releases

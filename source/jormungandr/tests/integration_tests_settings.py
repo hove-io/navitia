@@ -1,10 +1,9 @@
 # encoding: utf-8
-# Copyright (c) 2001-2017, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2018, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
 #
-# Hope you'll enjoy and contribute to this project,
 #     powered by Canal TP (www.canaltp.fr).
 # Help us simplify mobility and open public transport:
 #     a non ending quest to the responsive locomotion way of traveling!
@@ -27,7 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import, print_function, unicode_literals, division
+from __future__ import absolute_import
 import os
 
 START_MONITORING_THREAD = False

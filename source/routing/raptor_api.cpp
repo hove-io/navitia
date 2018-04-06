@@ -59,8 +59,10 @@ static void fill_shape(pbnavitia::Section* pb_section,
 {
     if (stop_times.empty()) { return; }
 
+    // Adding the coordinates of the first stop point
     type::GeographicalCoord prev_coord = stop_times.front()->stop_point->coord;
     add_coord(prev_coord, pb_section);
+
     auto prev_order = stop_times.front()->order();
     for (auto it = stop_times.begin() + 1; it != stop_times.end(); ++it) {
         const auto* st = *it;
@@ -69,21 +71,30 @@ static void fill_shape(pbnavitia::Section* pb_section,
         // As every stop times may not be present (because they can be
         // filtered because of estimated datetime), we can only print
         // the shape if the 2 stop times are consecutive
-        if (prev_order + 1 == cur_order && st-> shape_from_prev != nullptr) {
-            for (const auto& cur_coord: *st->shape_from_prev) {
-                if (cur_coord == prev_coord) { continue; }
-                add_coord(cur_coord, pb_section);
-                prev_coord = cur_coord;
+        if (prev_order + 1 == cur_order) {
+            // If the shapes exist, we use them to generate the geometry
+            if (st->shape_from_prev != nullptr) {
+                for (const auto& cur_coord: *st->shape_from_prev) {
+                    if (cur_coord == prev_coord) { continue; }
+                    add_coord(cur_coord, pb_section);
+                    prev_coord = cur_coord;
+                }
+            // otherwise, we use the stop points coordinates to draw a line
+            } else {
+                const auto& sp_coord = st->stop_point->coord;
+                if (sp_coord != prev_coord) {
+                    add_coord(sp_coord, pb_section);
+                    prev_coord = sp_coord;
+                }
             }
         }
-        // Add the coordinates of the stop point if not already added
-        // by the shape.
-        const auto& sp_coord = st->stop_point->coord;
-        if (sp_coord != prev_coord) {
-            add_coord(sp_coord, pb_section);
-            prev_coord = sp_coord;
-        }
         prev_order = cur_order;
+    }
+
+    // Adding the coordinates of the last stop point
+    const type::GeographicalCoord& last_coord = stop_times.back()->stop_point->coord;
+    if (last_coord != prev_coord) {
+        add_coord(last_coord, pb_section);
     }
 }
 

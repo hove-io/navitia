@@ -62,7 +62,10 @@ class Siri(RealtimeProxy):
         """
          used as the cache key. we use the rt_system_id to share the cache between servers in production
         """
-        return self.rt_system_id
+        try:
+            return self.rt_system_id.encode('utf-8', 'backslashreplace')
+        except:
+            return self.rt_system_id
 
     def _get_next_passage_for_route_point(self, route_point, count, from_dt, current_dt, duration=None):
         stop = route_point.fetch_stop_id(self.object_id_tag)
@@ -117,7 +120,7 @@ class Siri(RealtimeProxy):
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_SIRI', 60))
     def _call_siri(self, request):
-        encoded_request = request.encode('UTF-8')
+        encoded_request = request.encode('utf-8', 'backslashreplace')
         headers = {
             "Content-Type": "text/xml; charset=UTF-8",
             "Content-Length": len(encoded_request)

@@ -1,3 +1,4 @@
+# coding: utf-8
 # Copyright (c) 2001-2018, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -26,7 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import, print_function, unicode_literals, division
+
 from tests.check_utils import api_get, api_delete
 import pytest
 from navitiacommon import models

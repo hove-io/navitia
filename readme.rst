@@ -19,20 +19,45 @@ Welcome to the Navitia repository. Navitia is a service providing:
 
 #. next departures
 
-#. explore public transport data
+#. exploration of public transport data
+
+#. search & autocomplete on places
 
 #. sexy things such as isochrones
 
-The API can be found at http://api.navitia.io/
 
-For more information see
+Approach
+----------
+
+Navitia is an open-source web API, **initially** built to provide traveler information on urban transportation networks.  
+Its main purpose is to provide day-to-day informations to travelers.  
+Over time, Navitia has been able to do way more, *sometimes* for technical and debuging purpose *or* because other functional needs fit quite well in what Navitia can do *or* just because it was quite easy and super cool.
+
+Technically, Navitia is a HATEOAS_ API that returns JSON formated results.
+
+.. _HATEOAS: http://en.wikipedia.org/wiki/HATEOAS
+
+
+Who's who
+----------
+
+Navitia is instanciated and exposed publicly through api.navitia.io_.
+Developments on Navitia are lead by Kisio Digital (previously CanalTP).  
+Kisio Digital is a subsidiary of Keolis (itself a subsidiary of SNCF, French national railway company).
+
+.. _api.navitia.io: http://api.navitia.io
+
+
+More information
+----------
 
 * documentation http://doc.navitia.io
 * main web site http://www.navitia.io
 * playground http://canaltp.github.io/navitia-playground/
 * twitter @navitia https://twitter.com/navitia
 * google groups navitia https://groups.google.com/d/forum/navitia
-* channel #navitia on irc.freenode.net
+* channel `#navitia` on irc.freenode.net
+
 
 Getting started
 ===============

@@ -244,8 +244,6 @@ nt::VehicleJourney* VJ::make() {
 VJ& VJ::st_shape(const navitia::type::LineString& shape) {
     assert(shape.size() >= 2);
     assert(stop_times.size() >= 2);
-    assert(stop_times.back().st.stop_point->coord == shape.back());
-    assert(stop_times.at(stop_times.size() - 2).st.stop_point->coord == shape.front());
     auto s = boost::make_shared<navitia::type::LineString>(shape);
     stop_times.back().st.shape_from_prev = s;
     return *this;

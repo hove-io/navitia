@@ -1,3 +1,23 @@
+navitia2 (2.54.0) unstable; urgency=low
+
+  * Jormungandr: Revert unicode literals  <https://github.com/CanalTP/navitia/pull/2385>
+  * Jormun : Add stop_area comments with bragi  <https://github.com/CanalTP/navitia/pull/2378>
+  * Tyr: Create a new job to manage data injection towards mimir  <https://github.com/CanalTP/navitia/pull/2361>
+  * Tyr : Comment 'purge old jobs' task  <https://github.com/CanalTP/navitia/pull/2379>
+  * kraken: Prometheus integration  <https://github.com/CanalTP/navitia/pull/2363>
+  * Doc: Changing comment_type of NTFS  <https://github.com/CanalTP/navitia/pull/2377>
+  * Ed: Remove stop point coordinates from journey geometry  <https://github.com/CanalTP/navitia/pull/2312>
+  * Doc: Update and clearer basics for main doc <https://github.com/CanalTP/navitia/pull/2358>
+  * Jormungandr : Feedpublisher for stop areas from mimir  <https://github.com/CanalTP/navitia/pull/2366>
+  * Jormungandr: Add speed in asgard  <https://github.com/CanalTP/navitia/pull/2368>
+  * Ed: Poi2ed integration test  <https://github.com/CanalTP/navitia/pull/2372>
+  * Ed: Poi id in Kraken as in Mimir  <https://github.com/CanalTP/navitia/pull/2362>
+  * kraken: ptref, Add a link between PhysicalMode and JourneyPattern in the graph  <https://github.com/CanalTP/navitia/pull/2371>
+  * kraken: Handle route_schedule with a 2 stop_areas filter  <https://github.com/CanalTP/navitia/pull/2370>
+  * Tyr : Task to delete old jobs in db  <https://github.com/CanalTP/navitia/pull/2357>
+
+ -- Benoit BRISSET <benoit.brisset@gmail.com>  Fri, 06 Apr 2018 14:04:33 +0100
+
 navitia2 (2.53.0) unstable; urgency=low
 
   * Ed: Update libosmpbfreader to fix segfault in osm2ed  <https://github.com/CanalTP/navitia/pull/2365>

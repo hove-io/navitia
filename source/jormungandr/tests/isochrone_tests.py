@@ -124,14 +124,14 @@ class TestIsochrone(AbstractTestFixture):
         normal_response, error_code = self.query_no_assert(q)
 
         assert error_code == 404
-        assert normal_response['error']['message'] == 'reverse isochrone works only for anti-clockwise request'
+        assert 'reverse isochrone works only for anti-clockwise request' in normal_response['error']['message']
 
     def test_isochrone_non_clockwise(self):
         q = "v1/coverage/basic_routing_test/journeys?datetime=20120614T080000&from=A&datetime_represents=arrival"
         normal_response, error_code = self.query_no_assert(q)
 
         assert error_code == 404
-        assert normal_response['error']['message'] == 'isochrone works only for clockwise request'
+        assert 'isochrone works only for clockwise request' in normal_response['error']['message']
 
     def test_isochrone_count(self):
         query = "v1/coverage/basic_routing_test/stop_points/A/journeys?max_duration=25500&datetime=20120614T080000"

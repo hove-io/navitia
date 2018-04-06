@@ -30,7 +30,7 @@
 """
 Functions to launch the binaratisations
 """
-from __future__ import absolute_import, print_function, unicode_literals, division
+from __future__ import absolute_import, print_function, division
 import logging
 import os
 import zipfile
@@ -50,6 +50,7 @@ import navitiacommon.task_pb2
 from tyr import celery, redis
 from tyr.rabbit_mq_handler import RabbitMqHandler
 from navitiacommon import models, utils
+from navitiacommon import models
 from tyr.helper import get_instance_logger, get_named_arg, get_autocomplete_instance_logger, get_task_logger
 from contextlib import contextmanager
 import glob
@@ -606,6 +607,9 @@ def stops2mimir(self, instance_config, input, job_id=None, dataset_uid=None):
             # stops2mimir have to be non-blocking.
             # @TODO : Find a way to raise error without breaking celery tasks chain
             logger.error('stops2mimir failed')
+            if job_id:
+                job.state = 'failed'
+                models.db.session.commit()
     except:
         logger.exception('')
         if job_id:
@@ -640,6 +644,9 @@ def ntfs2mimir(self, instance_config, input, job_id=None, dataset_uid=None):
             # ntfs2mimir have to be non-blocking.
             # @TODO : Find a way to raise error without breaking celery tasks chain
             logger.error('ntfs2mimir failed')
+            if job_id:
+                job.state = 'failed'
+                models.db.session.commit()
     except:
         logger.exception('')
         if job_id:

@@ -98,7 +98,7 @@ void PoiParser::fill_poi(){
             if(itm == this->data.pois.end()){
                 const auto& poi_type = this->data.poi_types.find(row[type_id_c]);
                 if(poi_type != this->data.poi_types.end()){
-                    ed::types::Poi poi;
+                    ed::types::Poi poi(row[id_c]);
                     poi.id = this->data.pois.size() + 1;
                     poi.name = row[name_c];
                     try{

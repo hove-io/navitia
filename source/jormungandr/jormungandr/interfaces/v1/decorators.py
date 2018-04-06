@@ -25,7 +25,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import, print_function, unicode_literals, division
+from __future__ import absolute_import
 import jormungandr
 from jormungandr.interfaces.v1.serializer import serialize_with, api
 from flask.ext.restful import marshal_with
