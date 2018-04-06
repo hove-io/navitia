@@ -517,6 +517,72 @@ BRAGI_MOCK_ADMIN = {
     ]
 }
 
+BRAGI_MOCK_ADMINISTRATIVE_REGION = {
+    "type": "FeatureCollection",
+    "geocoding": {
+        "version": "0.1.0",
+        "query": ""
+    },
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "coordinates": [
+                    2.4518371,
+                    48.7830727
+                ],
+                "type": "Point"
+            },
+            "properties": {
+                "geocoding": {
+                    "id": "admin:fr:941",
+                    "type": "administrative_region",
+                    "label": "Créteil (94000)",
+                    "name": "Créteil",
+                    "postcode": "94000",
+                    "city": None,
+                    "citycode": None,
+                    "level": 7,
+                    "administrative_regions": []
+                }
+            }
+        }
+    ]
+}
+
+BRAGI_MOCK_ADMINISTRATIVE_REGION_WITH_WRONG_TYPE = {
+    "type": "FeatureCollection",
+    "geocoding": {
+        "version": "0.1.0",
+        "query": ""
+    },
+    "features": [
+        {
+            "type": "Feature",
+            "geometry": {
+                "coordinates": [
+                    2.4518371,
+                    48.7830727
+                ],
+                "type": "Point"
+            },
+            "properties": {
+                "geocoding": {
+                    "id": "myId",
+                    "type": "THIS_IS_NOT_A_WORKING_TYPE",
+                    "label": "myLabel",
+                    "name": "myName",
+                    "postcode": "123456",
+                    "city": None,
+                    "citycode": None,
+                    "level": 7,
+                    "administrative_regions": []
+                }
+            }
+        }
+    ]
+}
+
 BRAGI_MOCK_RESPONSE_STOP_AREA_WITH_COMMENTS = {
     "type": "FeatureCollection",
     "geocoding": {
@@ -1235,6 +1301,51 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['administrative_region']['label'] == 'Dijon (21000)'
             assert r[0]['administrative_region']['name'] == 'Dijon'
             assert 'administrative_regions' not in r[0]['administrative_region']
+
+    def test_autocomplete_for_administrative_region(self):
+        url = 'https://host_of_bragi/autocomplete'
+        params = {
+            'q': u'bob',
+            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
+            'limit': 10,
+            'pt_dataset': 'main_routing_test'
+        }
+
+        url += "?{}".format(urlencode(params, doseq=True))
+        mock_requests = MockRequests({
+            url: (BRAGI_MOCK_ADMINISTRATIVE_REGION, 200)
+        })
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query_region("places?q=bob")
+            r = response.get('places')
+            assert len(r) == 1
+            assert r[0]['name'] == 'Créteil'
+            assert r[0]['id'] == 'admin:fr:941'
+            assert r[0]['embedded_type'] == 'administrative_region'
+            assert r[0]['administrative_region']['name'] == 'Créteil'
+            assert r[0]['administrative_region']['level'] == 7
+            assert r[0]['administrative_region']['label'] == 'Créteil (94000)'
+            assert r[0]['administrative_region']['id'] == 'admin:fr:941'
+            assert r[0]['administrative_region']['zip_code'] == '94000'
+
+    def test_autocomplete_for_administrative_region_with_wrong_type(self):
+        url = 'https://host_of_bragi/autocomplete'
+        params = {
+            'q': u'bob',
+            'type[]': [u'public_transport:stop_area', u'street', u'house', u'poi', u'city'],
+            'limit': 10,
+            'pt_dataset': 'main_routing_test'
+        }
+
+        url += "?{}".format(urlencode(params, doseq=True))
+        mock_requests = MockRequests({
+            url: (BRAGI_MOCK_ADMINISTRATIVE_REGION_WITH_WRONG_TYPE, 200)
+        })
+        with mock.patch('requests.get', mock_requests.get):
+            response = self.query_region("places?q=bob")
+            r = response.get('places')
+            assert len(r) == 0
+            
 
     # Since administrative_regions of the admin is an empty list in the result bragi
     # there is no difference in the final result with depth from 0 to 3
