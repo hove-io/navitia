@@ -45,7 +45,7 @@ def _get_docker_file():
     is reduced by 10s
     """
     from io import BytesIO
-    return BytesIO('FROM {}'.format(POSTGRES_IMAGE))
+    return BytesIO(str('FROM {}'.format(POSTGRES_IMAGE)))
 
 class PostgresDocker(object):
     USER = 'postgres'

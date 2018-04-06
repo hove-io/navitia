@@ -221,7 +221,7 @@ def test_add_user(mock_rabbit, geojson_polygon):
     resp = api_post('/v0/users/', data=data, content_type='application/json')
 
     def check(u):
-        gen = (k for k in user if k is not 'shape')
+        gen = (k for k in user if k != 'shape')
         for k in gen:
             assert u[k] == user[k]
         assert u['end_point']['name'] == 'navitia.io'

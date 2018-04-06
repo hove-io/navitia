@@ -30,9 +30,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from tyr import resources
-
-from tyr import app, api
+from tyr import resources, app, api
 import flask_restful
 
 # we always want pretty json
