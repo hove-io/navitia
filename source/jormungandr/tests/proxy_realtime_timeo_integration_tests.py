@@ -106,13 +106,13 @@ class MockTimeo(Timeo):
                                 {
                                     "NextStop": "10:00:52",
                                     "Destination": "DIRECTION AA",
-                                    "Terminus": u"KisioDigitalisé_C:S43"
+                                    "Terminus": "KisioDigitalisé_C:S43"
 
                                 },
                                 {
                                     "NextStop": "10:13:52",
                                     "Destination": "DIRECTION AA",
-                                    "Terminus": u"KisioDigitalisé_C:S43"
+                                    "Terminus": "KisioDigitalisé_C:S43"
                                 }
                             ]
                         }
