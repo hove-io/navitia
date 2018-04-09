@@ -250,6 +250,7 @@ class GeocodePlacesSerializer(serpy.DictSerializer):
     def get_places(self, obj):
         map_serializer = {
             'city': GeocodeAdminSerializer,
+            'administrative_region': GeocodeAdminSerializer,
             'street': GeocodeAddressSerializer,
             'house': GeocodeAddressSerializer,
             'poi': GeocodePoiSerializer,
