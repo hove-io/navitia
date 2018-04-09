@@ -479,19 +479,7 @@ PathFinder::find_nearest_stop_points(const navitia::time_duration& radius,
                 radius, dest_sp_idx, projection_getter);
         for (const auto& r : resp) {
             if (r.second.routing_status == RoutingStatus_e::reached) {
-                // free radius exclusion (optional)
-                if (free_radius > 0 && !excluded_elements.empty()) {
-                    auto elem = *std::find_if(elements.begin(),
-                                              elements.end(),
-                                              [&r](const std::pair<idx_t, type::GeographicalCoord>& input)
-                                              {return r.first.val == input.first;});
-                    result[r.first] = exclude_sp_with_free_radius_filter(elem.second,
-                                                                         excluded_elements,
-                                                                         r.second.time_duration);
-                }
-                else {
-                    result[r.first] = r.second.time_duration;
-                }
+                result[r.first] = r.second.time_duration;
             }
         }
     }
