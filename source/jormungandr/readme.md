@@ -80,6 +80,21 @@ From `navitia/source/jormungandr/jormungandr` run :
 PYTHONPATH=..:../../navitiacommon/ JORMUNGANDR_INSTANCES_DIR=~/jormung_conf/ python manage.py runserver
 ```
 
+# Option
+## Autocomplete
+
+Setup Jormungandr for using either `Bragi` or `Kraken` for autocompletion
+
+```sh
+JORMUNGANDR_AUTOCOMPLETE_SYSTEMS='{"kraken": { "class": "jormungandr.autocomplete.kraken.Kraken" }, "bragi": {"class": "jormungandr.autocomplete.geocodejson.GeocodeJson", "args": {"host": "http://127.0.0.1:4000", "timeout": 2}}}'
+```
+
+You can select your autocomplete engine based on the hidden and debug-only `_autocomplete` parameter when querying Jormungandr:
+
+```sh
+http://localhost:5000/v1/coverage/default/places?q=rennes&_autocomplete='<kraken|bragi>'
+```
+
 # Troubleshooting
 
 ### Python error : `No module named jormungandr`
