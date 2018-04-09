@@ -346,10 +346,10 @@ def purge_jobs(days_to_keep=None):
     Delete old jobs in database and backup folders associated
     :param days_to_keep: Period of time to keep jobs (in days). The default value is 'JOB_MAX_PERIOD_TO_KEEP'
     """
-    if not days_to_keep:
-        days_to_keep = current_app.config['JOB_MAX_PERIOD_TO_KEEP']
+    if days_to_keep is None:
+        days_to_keep = current_app.config.get('JOB_MAX_PERIOD_TO_KEEP', 60)
 
-    time_limit = datetime.utcnow() - timedelta(days=days_to_keep)
+    time_limit = datetime.utcnow() - timedelta(days=int(days_to_keep))
     instances = models.Instance.query_existing().all()
 
     logger = logging.getLogger(__name__)
