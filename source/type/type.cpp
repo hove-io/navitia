@@ -566,16 +566,16 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
 
     // Desactivating the other vjs. The last creation has priority on
     // all the already existing vjs.
-    // We don't modify validity pattern active only once and shift other than 0
+    // We don't modify validity pattern for BaseLevel
     const auto mask = ~canceled_vp.days;
     for_all_vjs([&] (VehicleJourney& vj) {
-        if (!(vj.validity_patterns[0]->days.count() == 1) && (vj.shift != 0)) {
-            for (const auto l: enum_range_from(level)) {
+        for (const auto l: enum_range_from(level)) {
+            if (l != RTLevel::Base){
                 auto new_vp = *vj.validity_patterns[l];
                 new_vp.days &= (mask << vj.shift);
                 vj.validity_patterns[l] = pt_data.get_or_create_validity_pattern(new_vp);
-             }
-        }
+            }
+         }
     });
 
     // we clean up all the now useless vehicle journeys
