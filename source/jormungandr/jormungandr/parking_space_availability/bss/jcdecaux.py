@@ -98,4 +98,4 @@ class JcdecauxProvider(AbstractParkingPlacesProvider):
 
     def __repr__(self):
         #TODO: make this shit python 3 compatible
-        return ('jcdecaux-{}-{}'.format(self.network, self.contract)).encode('utf-8')
+        return ('jcdecaux-{}-{}'.format(self.network, self.contract)).encode('utf-8', 'backslashreplace')

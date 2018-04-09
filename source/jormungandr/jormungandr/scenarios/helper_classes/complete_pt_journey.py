@@ -26,7 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import, print_function, unicode_literals, division
+from __future__ import absolute_import
 from . import helper_future
 from .helper_utils import complete_pt_journey, compute_fallback
 

@@ -134,7 +134,7 @@ class CykleoProvider(AbstractParkingPlacesProvider):
         return self._feed_publisher
 
     def __repr__(self):
-        return ('cykleo-{}'.format(self.network)).encode('UTF-8')
+        return ('cykleo-{}'.format(self.network)).encode('utf-8', 'backslashreplace')
 
     def get_informations(self, poi):
         ref = poi.get('properties', {}).get('ref')

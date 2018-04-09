@@ -28,7 +28,6 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 import logging.config
 import uuid
@@ -222,7 +221,7 @@ def save_in_tmp(file_storage):
     """
     Save stream file in temp directory
     :param file_storage: stream file
-    :return: fileneme
+    :return: filename
     """
     tmp_file = os.path.join(tempfile.gettempdir(), file_storage.filename)
     file_storage.save(tmp_file)
