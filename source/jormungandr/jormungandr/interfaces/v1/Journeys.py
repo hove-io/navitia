@@ -490,6 +490,10 @@ class Journeys(JourneyCommon):
                                 dest="add_poi_infos", action="append",
                                 help="Show more information about the poi if it's available, for instance, show "
                                      "BSS/car park availability in the pois(BSS/car park) of response")
+
+        parser_get.add_argument("free_radius_from", type=int, hidden=True)
+        parser_get.add_argument("free_radius_to", type=int, hidden=True)
+
         self.get_decorators.append(complete_links(self))
 
         if parser_get.parse_args().get("add_poi_infos") or parser_get.parse_args().get("bss_stands"):
@@ -506,8 +510,7 @@ class Journeys(JourneyCommon):
         possible_regions = compute_possible_region(region, args)
         args.update(self.parse_args(region, uri))
 
-
-        #count override min_nb_journey or max_nb_journey
+        # count override min_nb_journey or max_nb_journey
         if 'count' in args and args['count']:
             args['min_nb_journeys'] = args['count']
             args['max_nb_journeys'] = args['count']
