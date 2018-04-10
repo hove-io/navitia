@@ -442,8 +442,8 @@ class Instance(db.Model):
         dataset_to_keep = self.last_datasets()
         dataset_file_to_keep = [f.name for f in dataset_to_keep]
 
-	# Keep the jobs associated        
-	jobs_to_keep = set()
+        # Keep the jobs associated
+        jobs_to_keep = set()
         for dataset in dataset_to_keep:
             job_associated = db.session.query(Job).filter(Job.data_sets.contains(dataset)).first()
             jobs_to_keep.add(job_associated)
