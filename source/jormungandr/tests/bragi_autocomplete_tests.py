@@ -1225,7 +1225,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
         with mock.patch('requests.get', mock_requests.get):
             response = self.query_region("places?q=bob")
             r = response.get('places')
-            assert (r is None) or len(r) == 0
+            assert len(r) == 0
             
     # Since administrative_regions of the admin is an empty list in the result bragi
     # there is no difference in the final result with depth from 0 to 3

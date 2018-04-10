@@ -243,7 +243,7 @@ class GeocodeStopAreaSerializer(serpy.DictSerializer):
 
 
 class GeocodePlacesSerializer(serpy.DictSerializer):
-    places = jsonschema.MethodField()
+    places = jsonschema.MethodField(display_none=True)
     warnings = BetaEndpointsSerializer()
     feed_publishers = jsonschema.MethodField()
 
