@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -2346,6 +2346,121 @@ BOOST_AUTO_TEST_CASE(section_geometry_without_shapes) {
                   sn_worker, nt::RTLevel::Base, 2_min);
     pbnavitia::Response resp = pb_creator.get_response();
 
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+    pbnavitia::Journey journey = resp.journeys(0);
+
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    pbnavitia::Section section = journey.sections(0);
+
+    BOOST_REQUIRE_EQUAL(journey.sections(0).stop_date_times().size(), 0);
+    BOOST_REQUIRE_EQUAL(journey.sections(1).stop_date_times().size(), 3);
+    BOOST_REQUIRE_EQUAL(journey.sections(2).stop_date_times().size(), 0);
+
+    BOOST_CHECK_EQUAL(journey.sections(1).shape().size(), 3);
+
+    BOOST_CHECK_EQUAL(journey.sections(1).shape(0).lon(), 0);
+    BOOST_CHECK_EQUAL(journey.sections(1).shape(0).lat(), 0);
+
+    BOOST_CHECK_EQUAL(journey.sections(1).shape(1).lon(), 4);
+    BOOST_CHECK_EQUAL(journey.sections(1).shape(1).lat(), 5);
+
+    BOOST_CHECK_EQUAL(journey.sections(1).shape(2).lon(), 10);
+    BOOST_CHECK_EQUAL(journey.sections(1).shape(2).lat(), 5);
+}
+
+/*
+ * Test the free radius filter with classic journeys
+ *
+ *
+ *            SA1                                     SA2
+ * |-------------------------|           |---------------------------|
+ * |                         |           |                           |
+ * |                         |           |                           |
+ * | S1                S2    |           |      S1              S2   |
+ * |                         |           |                           |
+ * |                         | From      |                           |
+ * |-------------------------|  x        |---------------------------|
+ *
+ *
+ *
+ *
+ *                             SA3
+ *                |---------------------------|
+ *                |                           |
+ *                |   to                      |
+ *                |    x                      |
+ *                |            S1             |
+ *                |                           |
+ *                |---------------------------|
+ *
+ */
+BOOST_AUTO_TEST_CASE(journeys_with_free_radius_filter) {
+
+    // free radius to test
+    uint32_t free_radius_from = 0;
+    uint32_t free_radius_to = 0;
+
+    // Create Builder
+    ed::builder b("20180309");
+
+    // Create Area
+    b.sa("stop_area:sa1")("stop_point:sa1:s1", 2.39501, 48.84828, false)("stop_point:sa1:s2", 2.39576, 48.84835, false);
+    b.sa("stop_area:sa2")("stop_point:sa2:s1", 2.39633, 48.84850, false)("stop_point:sa2:s2", 2.39683, 48.84844, false);
+    b.sa("stop_area:sa3")("stop_point:sa3:s1", 2.36471, 48.86702, false);
+    b.vj("vj1")("stop_point:sa1:s1", "8:00"_t, "8:01"_t)("stop_point:sa3:s1", "8:10"_t, "8:11"_t);
+    b.vj("vj2")("stop_point:sa1:s2", "8:00"_t, "8:01"_t)("stop_point:sa3:s1", "8:10"_t, "8:11"_t);
+    b.vj("vj3")("stop_point:sa2:s1", "8:00"_t, "8:01"_t)("stop_point:sa3:s1", "8:10"_t, "8:11"_t);
+    b.vj("vj4")("stop_point:sa2:s2", "8:00"_t, "8:01"_t)("stop_point:sa3:s1", "8:10"_t, "8:11"_t);
+
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->build_proximity_list();
+    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2018, 3, 9), boost::gregorian::days(1));
+
+    // create Raptor
+    nr::RAPTOR raptor(*(b.data));
+
+    // from (nation)
+    // navitia::type::Type_e origin_type = b.data->get_type_of_id("sa1:s1");
+    navitia::type::EntryPoint origin(navitia::type::Type_e::StopPoint, "stop_point:sa1:s1");
+    origin.streetnetwork_params.max_duration = navitia::time_duration(boost::date_time::pos_infin);
+    origin.coordinates.set_lon(2.39592);
+    origin.coordinates.set_lat(48.84839);
+
+    // to (republique)
+    // navitia::type::Type_e destination_type = b.data->get_type_of_id("sa3:s1");
+    navitia::type::EntryPoint destination(navitia::type::Type_e::StopPoint, "stop_point:sa3:s1");
+    destination.streetnetwork_params.max_duration = navitia::time_duration(boost::date_time::pos_infin);
+    destination.coordinates.set_lon(2.36381);
+    destination.coordinates.set_lat(48.86750);
+
+    std::vector<std::string> forbidden;
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    // send request
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, "20180309T080000"_dt, null_time_period);
+    make_response(pb_creator,
+                  raptor,
+                  origin,
+                  destination,
+                  {ntest::to_posix_timestamp("20180309T080000")},
+                  true,
+                  navitia::type::AccessibiliteParams(),
+                  forbidden,
+                  {},
+                  sn_worker,
+                  nt::RTLevel::Base,
+                  2_min,
+                  free_radius_from,
+                  free_radius_to);
+
+    // get the response
+    pbnavitia::Response resp = pb_creator.get_response();
+
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
     pbnavitia::Journey journey = resp.journeys(0);
 
