@@ -282,6 +282,9 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
                                 default='indifferent',
                                 help="Specify if direct path should be suggested")
 
+        parser_get.add_argument("free_radius_from", type=int)
+        parser_get.add_argument("free_radius_to", type=int)
+
     def parse_args(self, region=None, uri=None):
         args = self.parsers['get'].parse_args()
 

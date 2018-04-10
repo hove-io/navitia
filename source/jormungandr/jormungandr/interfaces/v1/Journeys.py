@@ -491,9 +491,6 @@ class Journeys(JourneyCommon):
                                 help="Show more information about the poi if it's available, for instance, show "
                                      "BSS/car park availability in the pois(BSS/car park) of response")
 
-        parser_get.add_argument("free_radius_from", type=int, hidden=True)
-        parser_get.add_argument("free_radius_to", type=int, hidden=True)
-
         self.get_decorators.append(complete_links(self))
 
         if parser_get.parse_args().get("add_poi_infos") or parser_get.parse_args().get("bss_stands"):
