@@ -168,9 +168,9 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
 
     req.journeys.bike_in_pt = (dep_mode == 'bike') and (arr_mode == 'bike')
 
-    if request["free_radius_from"] is not None:
+    if request["free_radius_from"]:
         req.journeys.free_radius_from = request["free_radius_from"]
-    if request["free_radius_to"] is not None:
+    if request["free_radius_to"]:
         req.journeys.free_radius_to = request["free_radius_to"]
 
     return req

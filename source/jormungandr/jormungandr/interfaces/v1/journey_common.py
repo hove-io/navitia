@@ -282,8 +282,12 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
                                 default='indifferent',
                                 help="Specify if direct path should be suggested")
 
-        parser_get.add_argument("free_radius_from", type=int)
-        parser_get.add_argument("free_radius_to", type=int)
+        parser_get.add_argument("free_radius_from", type=int, default=0,
+                                help="Radius length (in meters) around the coordinates of departure "
+                                     "in which the stop points are considered free to go (crowfly=0)")
+        parser_get.add_argument("free_radius_to", type=int, default=0,
+                                help="Radius length (in meters) around the coordinates of arrival "
+                                     "in which the stop points are considered free to go (crowfly=0)")
 
     def parse_args(self, region=None, uri=None):
         args = self.parsers['get'].parse_args()

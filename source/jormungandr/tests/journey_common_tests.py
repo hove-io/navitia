@@ -853,6 +853,20 @@ class JourneyCommon(object):
         assert response['error']['id'] == u'unknown_object'
         assert response['error']['message'] == u'The entry point: vehicle_journey:SNC is not valid'
 
+    def test_free_radius(self):
+
+        # Query journeys without free radius
+        r = self.query('/v1/coverage/main_routing_test/journeys?from=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&to=stopA&datetime=20120614080000')
+
+        assert(r['journeys'][0]['sections'][0]['type'] == 'street_network')
+        assert (r['journeys'][0]['sections'][0]['duration'] != 0)
+
+        # Query journeys with free radius
+        r = self.query('/v1/coverage/main_routing_test/journeys?from=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&to=stopA&datetime=20120614080000&free_radius_from=200')
+
+        assert(r['journeys'][0]['sections'][0]['type'] == 'crow_fly')
+        assert (r['journeys'][0]['sections'][0]['duration'] == 0)
+
 @dataset({"main_stif_test": {}})
 class AddErrorFieldInJormun(object):
     def test_add_error_field(self):

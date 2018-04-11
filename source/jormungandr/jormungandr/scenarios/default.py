@@ -137,9 +137,9 @@ class Scenario(simple.Scenario):
         if not "type" in request:
             request["type"] = "all" # why ?
 
-        if request["free_radius_from"] is not None:
+        if request["free_radius_from"]:
             req.journeys.free_radius_from = request["free_radius_from"]
-        if request["free_radius_to"] is not None:
+        if request["free_radius_to"]:
             req.journeys.free_radius_to = request["free_radius_to"]
 
         #for the default scenario, we filter the walking if we have walking + bss
