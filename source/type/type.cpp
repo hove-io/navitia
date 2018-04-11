@@ -566,7 +566,12 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
 
     // Desactivating the other vjs. The last creation has priority on
     // all the already existing vjs.
-    // We don't modify validity pattern for BaseLevel
+    // Patch: we protect the BaseLevel as we should never have to modify VPs of this level.
+    // Context: Sometimes we could have two vehiclejourney active the same day while splitting
+    // a vehiclejourney with a period divided by DST and stop_times between 01:00 and 02:00.
+    // we don't manage properly this and eliminate the older vehicle journey by the new one.
+    // This elimination provokes some error.
+    // TODO: We could also have the same bug for other two levels and hence to be checked.
     const auto mask = ~canceled_vp.days;
     for_all_vjs([&] (VehicleJourney& vj) {
         for (const auto l: enum_range_from(level)) {

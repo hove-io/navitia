@@ -426,3 +426,41 @@ BOOST_FIXTURE_TEST_CASE(poi2ed_pois_uri_should_match_mimir_naming, ArgsFixture)
             pois, [&](const navitia::georef::POI* p) {return p->uri == "poi:PAIHABIT0000000028850973";}
     ));
 }
+
+BOOST_FIXTURE_TEST_CASE(ntfs_dst_test, ArgsFixture) {
+    const auto input_file = input_file_paths.at("ntfs_dst_file");
+    nt::Data data;
+
+    bool failed = false;
+    try {
+        data.load_nav(input_file);
+    } catch(const navitia::data::data_loading_error&) {
+        failed = true;
+    }
+    data.build_raptor();
+    BOOST_REQUIRE_EQUAL(failed, false);
+
+    BOOST_REQUIRE_EQUAL(data.pt_data->lines.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.pt_data->routes.size(), 1);
+
+    BOOST_REQUIRE_EQUAL(data.pt_data->datasets.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.pt_data->contributors.size(), 1);
+    BOOST_REQUIRE_EQUAL(data.pt_data->contributors[0], data.pt_data->datasets[0]->contributor);
+    BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->desc, "centre-sncf");
+    BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->uri, "SCF:23");
+    BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->validation_period,
+            boost::gregorian::date_period("20180319"_d, "20180617"_d));
+    BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->realtime_level == nt::RTLevel::Base, true);
+    BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->system, "ChouetteV2");
+    BOOST_CHECK_EQUAL(data.pt_data->vehicle_journeys[0]->dataset->uri, "SCF:23");
+
+    const auto* vj_dst1 = data.pt_data->vehicle_journeys_map.at("vehicle_journey:SCF:OCESN010410R01001-1_dst_1");
+    BOOST_CHECK_EQUAL(vj_dst1->uri, "vehicle_journey:SCF:OCESN010410R01001-1_dst_1");
+
+    BOOST_REQUIRE_EQUAL(vj_dst1->stop_time_list.size(), 12);
+
+    // we also check the other AB1 split for the summer DST
+    const auto* vj_dst2 = data.pt_data->vehicle_journeys_map.at("vehicle_journey:SCF:OCESN010410R01001-1_dst_2");
+    // they should have the same meta vj
+    BOOST_CHECK_EQUAL(vj_dst2->meta_vj, vj_dst1->meta_vj);
+}

@@ -1,0 +1,4 @@
+equipment_id,wheelchair_boarding,sheltered,elevator,escalator,bike_accepted,bike_depot,visual_announcement,audible_announcement,appropriate_escort,appropriate_signage
+0,0,0,0,0,0,0,0,0,0,0
+2,1,0,0,0,0,0,0,0,0,0
+256,0,0,0,0,0,0,0,0,1,0
