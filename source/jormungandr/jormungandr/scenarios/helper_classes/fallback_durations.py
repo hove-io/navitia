@@ -105,7 +105,7 @@ class FallbackDurations:
         elif self._direct_path_type == StreetNetworkPathType.ENDING_FALLBACK:
             free_radius_distance = self._request.free_radius_to
 
-        if free_radius_distance:
+        if free_radius_distance is not None:
             for p in proximities_by_crowfly:
                 if p.distance < free_radius_distance:
                     free_access.free_radius.add(p.uri)
