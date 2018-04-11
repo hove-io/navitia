@@ -828,6 +828,7 @@ boost::optional<routing::map_stop_point_duration>
 get_stop_points(const type::EntryPoint &ep,
                 const type::Data& data,
                 georef::StreetNetwork & worker,
+                const uint32_t free_radius,
                 bool use_second) {
 
     routing::map_stop_point_duration result;
@@ -929,6 +930,9 @@ get_stop_points(const type::EntryPoint &ep,
             }
         }
     }
+
+    // Filtering with free radius
+    free_radius_filter(result, ep, data, free_radius);
 
     //we add the center of the admin, and look for the stop points around
     auto nearest = worker.find_nearest_stop_points(
@@ -1110,12 +1114,8 @@ void make_response(navitia::PbCreator& pb_creator,
     worker.init(origin, {destination});
 
     // Get stop points for departure and destination
-    auto departures = get_stop_points(origin, raptor.data, worker);
-    auto destinations = get_stop_points(destination, raptor.data, worker, true);
-
-    // Filtering with free radius
-    //free_radius_filter(*departures, origin, raptor.data, free_radius_from);
-    //free_radius_filter(*destinations, destination, raptor.data, free_radius_to);
+    auto departures = get_stop_points(origin, raptor.data, worker, free_radius_from);
+    auto destinations = get_stop_points(destination, raptor.data, worker, free_radius_to, true);
 
     // case 1 : departure no exist
     if (!departures){

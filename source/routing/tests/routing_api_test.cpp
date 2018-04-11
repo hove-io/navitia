@@ -42,7 +42,7 @@ www.navitia.io
 #include "type/rt_level.h"
 #include <boost/range/algorithm/count.hpp>
 #include "type/pb_converter.h"
-
+#include "google/protobuf/text_format.h"
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
 };
@@ -2372,26 +2372,33 @@ BOOST_AUTO_TEST_CASE(section_geometry_without_shapes) {
  * Test the free radius filter with classic journeys
  *
  *
- *            SA1                                     SA2
- * |-------------------------|           |---------------------------|
- * |                         |           |                           |
- * |                         |           |                           |
- * | S1                S2    |           |      S1              S2   |
- * |                         |           |                           |
- * |                         | From      |                           |
- * |-------------------------|  x        |---------------------------|
+ *                       SA1                          SA2
+ *             |-------------------------|---------------------------|
+ *             |                         |                           |
+ *             |                         |                           |
+ * x from      | S1             S2       |       S1             S2   |
+ *   ------------  -------------  --------------- --------------     |
+ *       10 m             10 m            10 m           10 m        |
+ *             |                         |                           |
+ *             |                         |                           |
+ *             |                         |                           |
+ *             |-------------------------|---------------------------|
  *
  *
  *
  *
- *                             SA3
- *                |---------------------------|
- *                |                           |
- *                |   to                      |
- *                |    x                      |
- *                |            S1             |
- *                |                           |
- *                |---------------------------|
+ *                                    SA3
+ *             |--------------------------------------------------|
+ *             |                                                  |
+ *             |                                                  |
+ *             |                                                  |
+ * x to        |  S1          S2           S3          S4         |
+ *   -------------  ----------  -----------  -----------          |
+ *        100 m        100 m       100 m       100 m              |
+ *             |                                                  |
+ *             |                                                  |
+ *             |                                                  |
+ *             |--------------------------------------------------|
  *
  */
 BOOST_AUTO_TEST_CASE(journeys_with_free_radius_filter) {
@@ -2404,13 +2411,14 @@ BOOST_AUTO_TEST_CASE(journeys_with_free_radius_filter) {
     ed::builder b("20180309");
 
     // Create Area
-    b.sa("stop_area:sa1")("stop_point:sa1:s1", 2.39501, 48.84828, false)("stop_point:sa1:s2", 2.39576, 48.84835, false);
-    b.sa("stop_area:sa2")("stop_point:sa2:s1", 2.39633, 48.84850, false)("stop_point:sa2:s2", 2.39683, 48.84844, false);
-    b.sa("stop_area:sa3")("stop_point:sa3:s1", 2.36471, 48.86702, false);
-    b.vj("vj1")("stop_point:sa1:s1", "8:00"_t, "8:01"_t)("stop_point:sa3:s1", "8:10"_t, "8:11"_t);
-    b.vj("vj2")("stop_point:sa1:s2", "8:00"_t, "8:01"_t)("stop_point:sa3:s1", "8:10"_t, "8:11"_t);
-    b.vj("vj3")("stop_point:sa2:s1", "8:00"_t, "8:01"_t)("stop_point:sa3:s1", "8:10"_t, "8:11"_t);
-    b.vj("vj4")("stop_point:sa2:s2", "8:00"_t, "8:01"_t)("stop_point:sa3:s1", "8:10"_t, "8:11"_t);
+    b.sa("stop_area:sa1")("stop_point:sa1:s1", 2.39592, 48.84848, false)("stop_point:sa1:s2", 2.39592, 48.84858, false);
+    b.sa("stop_area:sa2")("stop_point:sa2:s1", 2.39592, 48.84868, false)("stop_point:sa2:s2", 2.39592, 48.84878, false);
+    b.sa("stop_area:sa3")("stop_point:sa3:s1", 2.36381, 48.86650, false)("stop_point:sa3:s2", 2.36381, 48.86550, false)
+    ("stop_point:sa3:s3", 2.36381, 48.86450, false)("stop_point:sa3:s4", 2.36381, 48.86350, false);
+    b.vj("vj1")("stop_point:sa1:s1", "8:00"_t, "8:01"_t)("stop_point:sa3:s1", "8:20"_t, "8:11"_t);
+    b.vj("vj2")("stop_point:sa1:s2", "8:00"_t, "8:01"_t)("stop_point:sa3:s2", "8:15"_t, "8:11"_t);
+    b.vj("vj3")("stop_point:sa2:s1", "8:00"_t, "8:01"_t)("stop_point:sa3:s3", "8:10"_t, "8:11"_t);
+    b.vj("vj4")("stop_point:sa2:s2", "8:00"_t, "8:01"_t)("stop_point:sa3:s4", "8:05"_t, "8:11"_t);
 
     b.finish();
     b.data->pt_data->index();
@@ -2423,15 +2431,13 @@ BOOST_AUTO_TEST_CASE(journeys_with_free_radius_filter) {
     nr::RAPTOR raptor(*(b.data));
 
     // from (nation)
-    // navitia::type::Type_e origin_type = b.data->get_type_of_id("sa1:s1");
-    navitia::type::EntryPoint origin(navitia::type::Type_e::StopPoint, "stop_point:sa1:s1");
+    navitia::type::EntryPoint origin(navitia::type::Type_e::Coord, "from_coord");
     origin.streetnetwork_params.max_duration = navitia::time_duration(boost::date_time::pos_infin);
     origin.coordinates.set_lon(2.39592);
-    origin.coordinates.set_lat(48.84839);
+    origin.coordinates.set_lat(48.84838);
 
     // to (republique)
-    // navitia::type::Type_e destination_type = b.data->get_type_of_id("sa3:s1");
-    navitia::type::EntryPoint destination(navitia::type::Type_e::StopPoint, "stop_point:sa3:s1");
+    navitia::type::EntryPoint destination(navitia::type::Type_e::Coord, "to_coord");
     destination.streetnetwork_params.max_duration = navitia::time_duration(boost::date_time::pos_infin);
     destination.coordinates.set_lon(2.36381);
     destination.coordinates.set_lat(48.86750);
@@ -2441,7 +2447,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_free_radius_filter) {
 
     // send request
     auto * data_ptr = b.data.get();
-    navitia::PbCreator pb_creator(data_ptr, "20180309T080000"_dt, null_time_period);
+    navitia::PbCreator pb_creator(data_ptr, "20180309T080100"_dt, null_time_period);
     make_response(pb_creator,
                   raptor,
                   origin,
@@ -2454,7 +2460,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_free_radius_filter) {
                   sn_worker,
                   nt::RTLevel::Base,
                   2_min,
-                  86400,
+                  8640,
                   10,
                   0,
                   free_radius_from,
@@ -2462,28 +2468,15 @@ BOOST_AUTO_TEST_CASE(journeys_with_free_radius_filter) {
 
     // get the response
     pbnavitia::Response resp = pb_creator.get_response();
+    std::cout << resp.DebugString()  << std::endl;
 
-    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_CHECK_EQUAL(resp.journeys_size(), 4);
+
     pbnavitia::Journey journey = resp.journeys(0);
+    BOOST_CHECK_EQUAL(journey.sections_size(), 3);
 
-   /*  BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
     pbnavitia::Section section = journey.sections(0);
-
-    BOOST_REQUIRE_EQUAL(journey.sections(0).stop_date_times().size(), 0);
-    BOOST_REQUIRE_EQUAL(journey.sections(1).stop_date_times().size(), 3);
-    BOOST_REQUIRE_EQUAL(journey.sections(2).stop_date_times().size(), 0);
-
-    BOOST_CHECK_EQUAL(journey.sections(1).shape().size(), 3);
-
-    BOOST_CHECK_EQUAL(journey.sections(1).shape(0).lon(), 0);
-    BOOST_CHECK_EQUAL(journey.sections(1).shape(0).lat(), 0);
-
-    BOOST_CHECK_EQUAL(journey.sections(1).shape(1).lon(), 4);
-    BOOST_CHECK_EQUAL(journey.sections(1).shape(1).lat(), 5);
-
-    BOOST_CHECK_EQUAL(journey.sections(1).shape(2).lon(), 10);
-    BOOST_CHECK_EQUAL(journey.sections(1).shape(2).lat(), 5); */
 }
 
 /*

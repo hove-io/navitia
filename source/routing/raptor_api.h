@@ -111,6 +111,7 @@ boost::optional<routing::map_stop_point_duration>
 get_stop_points(const type::EntryPoint &ep,
                 const type::Data& data,
                 georef::StreetNetwork & worker,
+                const uint32_t free_radius = 0,
                 bool use_second = false);
 
 /**
