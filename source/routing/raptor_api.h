@@ -111,8 +111,22 @@ boost::optional<routing::map_stop_point_duration>
 get_stop_points(const type::EntryPoint &ep,
                 const type::Data& data,
                 georef::StreetNetwork & worker,
-                const uint32_t free_radius = 0,
                 bool use_second = false);
+
+/**
+ * @brief Filtering with free radius constraint
+ * If SP are inside, we set the SP time duration to 0.
+ * It is very useful to bring the starting points back to the same station.
+ *
+ * @param sp_list The current stop point list to filter
+ * @param ep The starting point (center of the radius)
+ * @param data The data struct that contains circle filter method
+ * @param free_radius The radius for filtering with circle
+ */
+void free_radius_filter(routing::map_stop_point_duration& sp_list,
+                        const type::EntryPoint& ep,
+                        const type::Data& data,
+                        const  uint32_t free_radius);
 
 void make_graphical_isochrone(navitia::PbCreator& pb_creator,
                               RAPTOR &raptor_max,
@@ -125,7 +139,7 @@ void make_graphical_isochrone(navitia::PbCreator& pb_creator,
                               bool clockwise,
                               const nt::RTLevel rt_level,
                               georef::StreetNetwork & worker,
-                              const double& speed) ;
+                              const double& speed);
 
 void make_heat_map(navitia::PbCreator& pb_creator,
                    RAPTOR &raptor,

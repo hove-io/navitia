@@ -127,11 +127,10 @@ bool StreetNetwork::arrival_launched() const {return arrival_path_finder.computa
 routing::map_stop_point_duration
 StreetNetwork::find_nearest_stop_points(const navitia::time_duration& radius,
                                         const proximitylist::ProximityList<type::idx_t>& pl,
-                                        bool use_second,
-                                        const uint32_t free_radius) {
+                                        bool use_second) {
     // delegate to the arrival or departure pathfinder
     // results are store to build the routing path after the transportation routing computation
-    return (use_second ? arrival_path_finder : departure_path_finder).find_nearest_stop_points(radius, pl, free_radius);
+    return (use_second ? arrival_path_finder : departure_path_finder).find_nearest_stop_points(radius, pl);
 }
 
 navitia::time_duration StreetNetwork::get_distance(type::idx_t target_idx, bool use_second) {
@@ -390,32 +389,9 @@ PathFinder::start_dijkstra_and_fill_duration_map(const navitia::time_duration& r
     return result;
 }
 
-navitia::time_duration
-PathFinder::exclude_sp_with_free_radius_filter(const type::GeographicalCoord& sp,
-                                               const std::vector< std::pair<idx_t, type::GeographicalCoord> >& excluded_sp_list,
-                                               const  navitia::time_duration& duration) const {
-    auto it = std::find_if(excluded_sp_list.begin(), excluded_sp_list.end(),
-                           [&sp](const std::pair<idx_t, type::GeographicalCoord>& input)
-                           {return input.second == sp;} );
-    // if it matches, sp duration = 0
-    if (it != excluded_sp_list.end()) {
-        LOG4CPLUS_DEBUG(log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger")),
-                        "free radius, sp idx : " << it->first
-                        << " - lon : " << it->second.lon()
-                        << " - lat : " << it->second.lat()
-                        << " , duration is set to 0");
-        return navitia::time_duration();
-    }
-    // we keep duration
-    else {
-       return duration;
-    }
-}
-
 routing::map_stop_point_duration
 PathFinder::find_nearest_stop_points(const navitia::time_duration& radius,
-                                     const proximitylist::ProximityList<type::idx_t>& pl,
-                                     const uint32_t free_radius) {
+                                     const proximitylist::ProximityList<type::idx_t>& pl) {
     if (radius == navitia::seconds(0)) { return {}; }
 
     auto elements = crow_fly_find_nearest_stop_points(radius, pl);
@@ -424,14 +400,6 @@ PathFinder::find_nearest_stop_points(const navitia::time_duration& radius,
     }
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-
-    // Find stop point list with a free radius constraint (optional)
-    std::vector< std::pair<idx_t, type::GeographicalCoord> > excluded_elements;
-    if (free_radius > 0) {
-        LOG4CPLUS_TRACE(logger, "filtering with free radius (" << free_radius << " meters)");
-        excluded_elements = pl.find_within(start_coord, free_radius);
-        LOG4CPLUS_TRACE(logger, "find " << excluded_elements.size() << " stop points in free radius");
-    }
 
     routing::map_stop_point_duration result;
     // case 1 : start coord is not an edge (crow fly)
@@ -450,22 +418,11 @@ PathFinder::find_nearest_stop_points(const navitia::time_duration& radius,
                 // if the radius is still ok with sqrt(2) factor
                 auto sp_idx = routing::SpIdx(element.first);
                 if (duration < radius && distance_to_entry_point.count(sp_idx) == 0) {
-
-                    // free radius exclusion (optional)
-                    if (free_radius > 0 && !excluded_elements.empty()) {
-                        result[sp_idx] = exclude_sp_with_free_radius_filter(element.second,
-                                                                            excluded_elements,
-                                                                            duration);
-                        distance_to_entry_point[sp_idx] = result[sp_idx];
-                    }
-                    else {
-                        result[sp_idx] = duration;
-                        distance_to_entry_point[sp_idx] = duration;
-                    }
+                    result[sp_idx] = duration;
+                    distance_to_entry_point[sp_idx] = duration;
                 }
             }
         }
-        return result;
     }
     // case 2 : start coord is an edge (dijkstra)
     else {
