@@ -187,7 +187,7 @@ class TestBasicAuthentication(AbstractTestAuthentication):
 
     def test_auth_required(self):
         """
-        if no token is given we are asked to log in (code 401) and a chalenge is sent (header WWW-Authenticate)
+        if no token is given we are asked to log in (code 401) and a challenge is sent (header WWW-Authenticate)
         """
         response_obj = self.app.get('/v1/coverage')
         assert response_obj.status_code == 401
@@ -195,7 +195,7 @@ class TestBasicAuthentication(AbstractTestAuthentication):
 
     def test_status_code(self):
         """
-        We query the api with user 1 who have access to the main routintg test and not to the departure board
+        We query the api with user 1 who have access to the main routing test and not to the departure board
         """
         requests_status_codes = [
             ('/v1/coverage/main_routing_test', 200),

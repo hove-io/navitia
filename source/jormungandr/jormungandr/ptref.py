@@ -62,10 +62,10 @@ class PtRef(object):
         req.ptref.count = 1
         req.ptref.start_page = 0
         req.ptref.depth = 1
-        req.ptref.filter = "stop_point.has_code({code_key}, {code_value})".\
+        req.ptref.filter = 'stop_point.has_code("{code_key}", "{code_value}")'.\
             format(code_key=code_key, code_value=code_value)
         if line_uri:
-            req.ptref.filter = req.ptref.filter + ' and line.uri={}'.format(line_uri)
+            req.ptref.filter = req.ptref.filter + ' and line.uri="{}"'.format(line_uri)
 
         result = self.instance.send_and_receive(req)
         if len(result.stop_points) == 0:

@@ -37,11 +37,11 @@ from .tests_mechanism import AbstractTestFixture, dataset
 
 MOCKED_PROXY_CONF = [
     {
-        "object_id_tag": "KisioDigital",
-        "id": "KisioDigital",
+        "object_id_tag": "Kisio数字",
+        "id": "Kisio数字",
         "class": "jormungandr.realtime_schedule.siri_lite.SiriLite",
         "args": {
-            "destination_id_tag": "KisioDigital",
+            "destination_id_tag": "Kisio数字",
             "timezone": "Europe/Paris",
             "service_url": "http://siri.com?apikey=bob",
             "timeout": 15
