@@ -42,7 +42,7 @@ from .check_utils import is_valid_stop_date_time, get_not_null
 
 MOCKED_PROXY_CONF = [
     {
-        "id": "KisioDigitalisé",
+        "id": "Kisio数字",
         "class": "tests.proxy_realtime_tests.MockedTestProxy",
         "args": {}
     }
@@ -68,13 +68,13 @@ class MockedTestProxy(realtime_proxy.RealtimeProxy):
         return next_passages
 
     def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None, duration=None):
-        if route_point.fetch_stop_id(self.object_id_tag) == "KisioDigitalisé_C:S1":
+        if route_point.fetch_stop_id(self.object_id_tag) == "Kisio数字_C:S1":
             return []
 
         if route_point.fetch_stop_id(self.object_id_tag) == "AnotherSource_C:S1":
             return self._create_next_passages([("10:42:42", "l'infini"), ("11:42:42", "l'au dela")])
 
-        if route_point.fetch_stop_id(self.object_id_tag) == "KisioDigitalisé_C:S0":
+        if route_point.fetch_stop_id(self.object_id_tag) == "Kisio数字_C:S0":
             return self._create_next_passages([("11:32:42", "l'infini"), ("11:42:42", "l'au dela")])
 
         if route_point.pb_stop_point.uri == "S42":
@@ -296,7 +296,7 @@ class TestDepartures(AbstractTestFixture):
 
 MOCKED_PROXY_CONF = [
     {
-        "id": "KisioDigitalisé",
+        "id": "Kisio数字",
         "object_id_tag": "AnotherSource",
         "class": "tests.proxy_realtime_tests.MockedTestProxy",
         "args": {}
@@ -321,7 +321,7 @@ class TestDeparturesWithAnotherSource(AbstractTestFixture):
 
 MOCKED_PROXY_WITH_TIMEZONE_CONF = [
     {
-        "id": "KisioDigitalisé",
+        "id": "Kisio数字",
         "class": "tests.proxy_realtime_tests.MockedTestProxyWithTimezone",
         "args": {}
     }
@@ -334,7 +334,7 @@ class MockedTestProxyWithTimezone(MockedTestProxy):
 
     def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None, duration=None):
 
-        if route_point.fetch_stop_id(self.object_id_tag) == "KisioDigitalisé_C:S0":
+        if route_point.fetch_stop_id(self.object_id_tag) == "Kisio数字_C:S0":
             return self._create_next_passages([("00:03:00", "l'infini"), ("00:04:00", "l'au dela")],
                                               year=2016, month=1, day=3,
                                               tzinfo=pytz.timezone("Europe/Paris"))
@@ -357,7 +357,7 @@ class TestDeparturesWithTimeZone(AbstractTestFixture):
 
 MOCKED_PROXY_WITH_CUSTOM_MERGING_CONF = [
     {
-        "id": "KisioDigitalisé",
+        "id": "Kisio数字",
         "class": "tests.proxy_realtime_tests.MockedTestProxyWithCustomMerging",
         "args": {}
     }
