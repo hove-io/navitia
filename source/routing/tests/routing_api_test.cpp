@@ -2371,6 +2371,47 @@ BOOST_AUTO_TEST_CASE(section_geometry_without_shapes) {
 /*
  * Test the free radius filter with classic journeys
  *
+ * We create 4 VJ to test this option (free radius filtering).
+ *
+ * Case 1 :
+ * - Type : No filter radius
+ * - Result : We have 4 journeys with 3 sections each
+ *            for each journeys
+ *            section 1 -> crow fly with real duration
+ *            section 2 -> public transport
+ *            section 3 -> crow fly with real duration
+ *
+ * Case 2 :
+ * - Type : With a big from filter radius
+ * - Result : We have 4 journeys with 3 sections each
+ *            for each journeys
+ *            section 1 -> crow fly with 0 duration
+ *            section 2 -> public transport
+ *            section 3 -> crow fly with real duration
+ *
+  * Case 3 :
+ * - Type : With a half from filter radius
+ * - Result : We have 4 journeys with 3 sections each
+ *            * jouneys 1
+ *            section 1 -> crow fly with 0 duration
+ *            section 2 -> public transport
+ *            section 3 -> crow fly with real duration
+  *           * jouneys 2
+ *            section 1 -> crow fly with 0 duration
+ *            section 2 -> public transport
+ *            section 3 -> crow fly with real duration
+  *           * jouneys 3
+ *            section 1 -> crow fly with real duration
+ *            section 2 -> public transport
+ *            section 3 -> crow fly with real duration
+ *            * jouneys 4
+ *            section 1 -> crow fly with real duration
+ *            section 2 -> public transport
+ *            section 3 -> crow fly with real duration
+
+
+ *
+ *
  *
  *                       SA1                          SA2
  *             |-------------------------|---------------------------|
@@ -2402,10 +2443,6 @@ BOOST_AUTO_TEST_CASE(section_geometry_without_shapes) {
  *
  */
 BOOST_AUTO_TEST_CASE(journeys_with_free_radius_filter) {
-
-    // free radius to test
-    uint32_t free_radius_from = 0;
-    uint32_t free_radius_to = 0;
 
     // Create Builder
     ed::builder b("20180309");
@@ -2445,10 +2482,18 @@ BOOST_AUTO_TEST_CASE(journeys_with_free_radius_filter) {
     std::vector<std::string> forbidden;
     ng::StreetNetwork sn_worker(*b.data->geo_ref);
 
+
+    //-----------------------------------
+    // Case 1 : No filter radius
+
+    // free radius to test
+    uint32_t free_radius_from = 0;
+    uint32_t free_radius_to = 0;
+
     // send request
     auto * data_ptr = b.data.get();
-    navitia::PbCreator pb_creator(data_ptr, "20180309T080100"_dt, null_time_period);
-    make_response(pb_creator,
+    navitia::PbCreator pb_creator1(data_ptr, "20180309T080100"_dt, null_time_period);
+    make_response(pb_creator1,
                   raptor,
                   origin,
                   destination,
@@ -2467,16 +2512,145 @@ BOOST_AUTO_TEST_CASE(journeys_with_free_radius_filter) {
                   free_radius_to);
 
     // get the response
-    pbnavitia::Response resp = pb_creator.get_response();
-    std::cout << resp.DebugString()  << std::endl;
+    pbnavitia::Response resp = pb_creator1.get_response();
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
 
-    BOOST_CHECK_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_CHECK_EQUAL(resp.journeys_size(), 4);
-
+    // Journey 1
     pbnavitia::Journey journey = resp.journeys(0);
-    BOOST_CHECK_EQUAL(journey.sections_size(), 3);
-
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
     pbnavitia::Section section = journey.sections(0);
+    BOOST_CHECK(section.duration() > 0);
+
+    // Journey 2
+    journey = resp.journeys(1);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    BOOST_CHECK(section.duration() > 0);
+
+    // Journey 3
+    journey = resp.journeys(2);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    BOOST_CHECK(section.duration() > 0);
+
+    // Journey 4
+    journey = resp.journeys(3);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    BOOST_CHECK(section.duration() > 0);
+
+    //-----------------------------------
+    // Case 2 : With a big "from filter radius"
+
+    // free radius to test
+    free_radius_from = 200; // 2 km
+    free_radius_to = 0;
+
+    // send request
+    navitia::PbCreator pb_creator2(data_ptr, "20180309T080100"_dt, null_time_period);
+    make_response(pb_creator2,
+                  raptor,
+                  origin,
+                  destination,
+                  {ntest::to_posix_timestamp("20180309T080000")},
+                  true,
+                  navitia::type::AccessibiliteParams(),
+                  forbidden,
+                  {},
+                  sn_worker,
+                  nt::RTLevel::Base,
+                  2_min,
+                  8640,
+                  10,
+                  0,
+                  free_radius_from,
+                  free_radius_to);
+
+    // get the response
+    resp = pb_creator2.get_response();
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
+
+    // Journey 1
+    journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    BOOST_CHECK_EQUAL(section.duration(), 0);
+
+    // Journey 2
+    journey = resp.journeys(1);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    BOOST_CHECK_EQUAL(section.duration(), 0);
+
+    // Journey 3
+    journey = resp.journeys(2);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    BOOST_CHECK_EQUAL(section.duration(), 0);
+
+    // Journey 4
+    journey = resp.journeys(3);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    BOOST_CHECK_EQUAL(section.duration(), 0);
+
+    //-----------------------------------
+    // Case 3 : With a half "from filter radius"
+
+    // free radius to test
+    free_radius_from = 30; // 30 meters just to catch sa1:s1 and sa1:s2
+    free_radius_to = 0;
+
+    // send request
+    navitia::PbCreator pb_creator3(data_ptr, "20180309T080100"_dt, null_time_period);
+    make_response(pb_creator3,
+                  raptor,
+                  origin,
+                  destination,
+                  {ntest::to_posix_timestamp("20180309T080000")},
+                  true,
+                  navitia::type::AccessibiliteParams(),
+                  forbidden,
+                  {},
+                  sn_worker,
+                  nt::RTLevel::Base,
+                  2_min,
+                  8640,
+                  10,
+                  0,
+                  free_radius_from,
+                  free_radius_to);
+
+    // get the response
+    resp = pb_creator3.get_response();
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
+
+    // Journey 1
+    journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    BOOST_CHECK_EQUAL(section.duration(), 0);
+
+    // Journey 2
+    journey = resp.journeys(1);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    BOOST_CHECK_EQUAL(section.duration(), 0);
+
+    // Journey 3
+    journey = resp.journeys(2);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    BOOST_CHECK(section.duration() > 0);
+
+    // Journey 4
+    journey = resp.journeys(3);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    BOOST_CHECK(section.duration() > 0);
 }
 
 /*
