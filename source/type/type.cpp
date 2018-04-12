@@ -566,13 +566,23 @@ VJ* MetaVehicleJourney::impl_create_vj(const std::string& uri,
 
     // Desactivating the other vjs. The last creation has priority on
     // all the already existing vjs.
+    // Patch: we protect the BaseLevel as we should never have to modify VPs of this level.
+    // Context: Sometimes from a unique trip we can have two vehiclejourney active the same day while
+    // splitting a vehiclejourney with a period divided by DST and stop_times between 01:00 and 02:00.
+    // We must keep the base VP as-is, as it's legitimate, but we used to remove duplicate days from VP.
+    // After the VP cleanup, it can be empty, thus we eliminate the vehicle journey.
+    // This elimination provokes some memory error if it's a BaseLevel VJ.
+    // TODO: We could also have the same bug for other two levels and hence it has to be checked.
+    // We must allow (todo) two VJ from the same trip on the same UTC day.
     const auto mask = ~canceled_vp.days;
     for_all_vjs([&] (VehicleJourney& vj) {
-            for (const auto l: enum_range_from(level)) {
+        for (const auto l: enum_range_from(level)) {
+            if (l != RTLevel::Base){
                 auto new_vp = *vj.validity_patterns[l];
                 new_vp.days &= (mask << vj.shift);
                 vj.validity_patterns[l] = pt_data.get_or_create_validity_pattern(new_vp);
-             }
+            }
+         }
     });
 
     // we clean up all the now useless vehicle journeys

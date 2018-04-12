@@ -31,6 +31,7 @@ generate_nav("gtfs_google_example")
 generate_nav("ntfs_v5")
 generate_nav("osm_and_gtfs")
 generate_nav("poi")
+generate_nav("ntfs_dst")
 
 # == create a target with all generated files ==
 # we add dependencies to all data import components used during nav file creation
