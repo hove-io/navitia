@@ -1010,8 +1010,8 @@ Examples:
 
 ### Precisions on `free_radius_from/free_radius_to`
 
-These parameters allow to find the nearest stop point (within free_radius distance) to the given coordinates.
-This allows to skip walking sections between the point of departure/arrival and the stop point.
+These parameters find the nearest stop point (within free_radius distance) to the given coordinates.
+Then, it allows skipping walking sections between the point of departure/arrival and those nearest stop points.
 
 Example:
 
