@@ -378,7 +378,9 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
             boost::gregorian::date_period("20150826"_d, "20150926"_d));
     BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->realtime_level == nt::RTLevel::Base, true);
     BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->system, "obiti");
-    BOOST_CHECK_EQUAL(data.pt_data->vehicle_journeys[0]->dataset->uri, "d1");
+    
+    // accepted side-effect (no link) as ntfs_v5 fixture does not contain datasets.txt, which is now required
+    BOOST_CHECK(data.pt_data->vehicle_journeys[0]->dataset == nullptr); 
 
     BOOST_REQUIRE_EQUAL(data.pt_data->networks.size(), 1);
     BOOST_CHECK_EQUAL(data.pt_data->codes.get_codes(data.pt_data->networks[0]),
