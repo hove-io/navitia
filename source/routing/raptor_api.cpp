@@ -833,7 +833,7 @@ get_stop_points(const type::EntryPoint &ep,
 
     routing::map_stop_point_duration result;
     georef::PathFinder& concerned_path_finder = use_second ? worker.arrival_path_finder :
-                                                            worker.departure_path_finder;
+                                                             worker.departure_path_finder;
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_TRACE(logger, "Searching nearest stop_point's from entry point : [" << ep.coordinates.lat()
               << "," << ep.coordinates.lon() << "]");
@@ -940,7 +940,7 @@ get_stop_points(const type::EntryPoint &ep,
 
     // Filtering with free radius (free_radius in meters)
     // We set the SP time duration to 0, if SP are inside
-    free_radius_filter(result, ep, data, free_radius);
+    free_radius_filter(result, concerned_path_finder, ep, data, free_radius);
 
     // We add the center of the admin, and look for the stop points around
     auto nearest = worker.find_nearest_stop_points(
@@ -959,30 +959,26 @@ get_stop_points(const type::EntryPoint &ep,
 }
 
 void free_radius_filter(routing::map_stop_point_duration& sp_list,
+                        georef::PathFinder& path_finder,
                         const type::EntryPoint& ep,
                         const type::Data& data,
                         const  uint32_t free_radius)
 {
-    if ((free_radius > 0) && (!sp_list.empty())) {
+    if (free_radius > 0) {
 
         auto logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
         // Find stop point list with a free radius constraint
-        std::vector< std::pair<idx_t, type::GeographicalCoord> > excluded_elements;
         LOG4CPLUS_DEBUG(logger, "filtering with free radius (" << free_radius << " meters)");
-        excluded_elements = data.pt_data->stop_point_proximity_list.find_within(ep.coordinates, free_radius);
+        auto excluded_elements = data.pt_data->stop_point_proximity_list.find_within(ep.coordinates, free_radius);
         LOG4CPLUS_DEBUG(logger, "find " << excluded_elements.size() << " stop points in free radius");
 
         // For each excluded stop point
         for (const auto& excluded_sp: excluded_elements) {
             const SpIdx sp_idx{excluded_sp.first};
-            if(sp_list.find(sp_idx) == sp_list.end()) {
-                sp_list[sp_idx] = navitia::time_duration();
-                LOG4CPLUS_TRACE(logger,
-                                "free radius, sp idx : " << sp_idx
-                                << " , duration is set to 0");
-            }
-
+            sp_list[sp_idx] = navitia::time_duration();
+            path_finder.distance_to_entry_point[sp_idx] = {};
+            LOG4CPLUS_TRACE(logger, "free radius, sp idx : " << sp_idx << " , duration is set to 0");
         }
     }
 }

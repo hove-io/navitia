@@ -120,11 +120,13 @@ get_stop_points(const type::EntryPoint &ep,
  * It is very useful to bring the starting points back to the same station.
  *
  * @param sp_list The current stop point list to filter
+ * @param path_finder The current path finder (arrival or departure)
  * @param ep The starting point (center of the radius)
  * @param data The data struct that contains circle filter method
  * @param free_radius The radius for filtering with circle (meters)
  */
 void free_radius_filter(routing::map_stop_point_duration& sp_list,
+                        georef::PathFinder& path_finder,
                         const type::EntryPoint& ep,
                         const type::Data& data,
                         const  uint32_t free_radius);
