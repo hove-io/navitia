@@ -424,6 +424,8 @@ BOOST_AUTO_TEST_CASE(sync_ntfs) {
     BOOST_CHECK_EQUAL(data.datasets[0]->validation_period, boost::gregorian::date_period("20150826"_d, "20150926"_d));
     BOOST_CHECK_EQUAL(data.datasets[0]->realtime_level == nt::RTLevel::Base, true);
     BOOST_CHECK_EQUAL(data.datasets[0]->system, "obiti");
+    
+    // accepted side-effect (no link) as ntfs_v5 fixture does not contain datasets.txt, which is now required
     BOOST_CHECK(data.vehicle_journeys[0]->dataset == nullptr);
 
     const ed::types::VehicleJourney* vj = data.vehicle_journeys.front();
