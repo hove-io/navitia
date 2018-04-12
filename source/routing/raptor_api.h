@@ -122,7 +122,7 @@ get_stop_points(const type::EntryPoint &ep,
  * @param sp_list The current stop point list to filter
  * @param ep The starting point (center of the radius)
  * @param data The data struct that contains circle filter method
- * @param free_radius The radius for filtering with circle
+ * @param free_radius The radius for filtering with circle (meters)
  */
 void free_radius_filter(routing::map_stop_point_duration& sp_list,
                         const type::EntryPoint& ep,

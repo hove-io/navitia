@@ -838,6 +838,16 @@ get_stop_points(const type::EntryPoint &ep,
     LOG4CPLUS_TRACE(logger, "Searching nearest stop_point's from entry point : [" << ep.coordinates.lat()
               << "," << ep.coordinates.lon() << "]");
 
+    // if excluded type, return none
+    if (!(ep.type == type::Type_e::Address   ||
+          ep.type == type::Type_e::Coord     ||
+          ep.type == type::Type_e::StopArea  ||
+          ep.type == type::Type_e::StopPoint ||
+          ep.type == type::Type_e::POI       ||
+          ep.type == type::Type_e::Admin )) {
+            return boost:: none;
+    }
+
     switch(ep.type) {
 
         case type::Type_e::StopArea : {
@@ -866,7 +876,8 @@ get_stop_points(const type::EntryPoint &ep,
         }
 
         case type::Type_e::Admin : {
-            //for an admin, we want to leave from it's main stop areas if we have some, else we'll leave from the center of the admin
+            // For an admin, we want to leave from it's main stop areas if we have some,
+            // else we'll leave from the center of the admin
             auto it_admin = data.geo_ref->admin_map.find(ep.uri);
             if (it_admin == data.geo_ref->admin_map.end()) {
                 LOG4CPLUS_WARN(logger, "impossible to find admin " << ep.uri);
@@ -901,13 +912,9 @@ get_stop_points(const type::EntryPoint &ep,
             break;
     }
 
-    if (ep.type == type::Type_e::Address   ||
-        ep.type == type::Type_e::Coord     ||
-        ep.type == type::Type_e::StopArea  ||
-        ep.type == type::Type_e::StopPoint ||
-        ep.type == type::Type_e::POI) {
+    if (ep.type != type::Type_e::Admin){
 
-         // checking for zonal stop points
+        // checking for zonal stop points
         const auto& zonal_sps = data.pt_data->stop_points_by_area.find(ep.coordinates);
         for (const auto* sp: zonal_sps) {
             const SpIdx sp_idx{*sp};
@@ -931,14 +938,15 @@ get_stop_points(const type::EntryPoint &ep,
         }
     }
 
-    // Filtering with free radius
+    // Filtering with free radius (free_radius in meters)
+    // We set the SP time duration to 0, if SP are inside
     free_radius_filter(result, ep, data, free_radius);
 
-    //we add the center of the admin, and look for the stop points around
+    // We add the center of the admin, and look for the stop points around
     auto nearest = worker.find_nearest_stop_points(
-                ep.streetnetwork_params.max_duration,
-                data.pt_data->stop_point_proximity_list,
-                use_second);
+                   ep.streetnetwork_params.max_duration,
+                   data.pt_data->stop_point_proximity_list,
+                   use_second);
     for (const auto& elt: nearest) {
         const SpIdx sp_idx{elt.first};
         if(result.find(sp_idx) == result.end()) {
@@ -965,18 +973,16 @@ void free_radius_filter(routing::map_stop_point_duration& sp_list,
         excluded_elements = data.pt_data->stop_point_proximity_list.find_within(ep.coordinates, free_radius);
         LOG4CPLUS_DEBUG(logger, "find " << excluded_elements.size() << " stop points in free radius");
 
-        // for each stop point
+        // For each excluded stop point
         for (const auto& excluded_sp: excluded_elements) {
-            auto it = std::find_if(sp_list.begin(), sp_list.end(),
-                                   [&excluded_sp](const std::pair<SpIdx, navitia::time_duration>& input)
-                                   {return input.first.val == excluded_sp.first;} );
-            // if it matches, sp duration = 0
-            if (it != sp_list.end()) {
+            const SpIdx sp_idx{excluded_sp.first};
+            if(sp_list.find(sp_idx) == sp_list.end()) {
+                sp_list[sp_idx] = navitia::time_duration();
                 LOG4CPLUS_TRACE(logger,
-                                "free radius, sp idx : " << it->first
+                                "free radius, sp idx : " << sp_idx
                                 << " , duration is set to 0");
-                it->second = navitia::time_duration();
             }
+
         }
     }
 }

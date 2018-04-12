@@ -308,11 +308,10 @@ void PathFinder::start_distance_or_target_dijkstra(const navitia::time_duration&
 }
 
 std::vector<std::pair<type::idx_t, type::GeographicalCoord>>
-PathFinder::crow_fly_find_nearest_stop_points(const navitia::time_duration& radius,
+PathFinder::crow_fly_find_nearest_stop_points(const navitia::time_duration& max_duration,
                                               const proximitylist::ProximityList<type::idx_t>& pl) {
     // Searching for all the elements that are less than radius meters awyway in crow fly
-
-    float crow_fly_dist = radius.total_seconds() * speed_factor * georef::default_speed[mode];
+    float crow_fly_dist = max_duration.total_seconds() * speed_factor * georef::default_speed[mode];
     return pl.find_within(start_coord, crow_fly_dist);
 }
 
@@ -390,11 +389,11 @@ PathFinder::start_dijkstra_and_fill_duration_map(const navitia::time_duration& r
 }
 
 routing::map_stop_point_duration
-PathFinder::find_nearest_stop_points(const navitia::time_duration& radius,
+PathFinder::find_nearest_stop_points(const navitia::time_duration& max_duration,
                                      const proximitylist::ProximityList<type::idx_t>& pl) {
-    if (radius == navitia::seconds(0)) { return {}; }
+    if (max_duration == navitia::seconds(0)) { return {}; }
 
-    auto elements = crow_fly_find_nearest_stop_points(radius, pl);
+    auto elements = crow_fly_find_nearest_stop_points(max_duration, pl);
     if (elements.empty()) {
         return {};
     }
@@ -417,7 +416,7 @@ PathFinder::find_nearest_stop_points(const navitia::time_duration& radius,
                         crow_fly_duration(start_coord.distance_to(element.second)) * sqrt(2);
                 // if the radius is still ok with sqrt(2) factor
                 auto sp_idx = routing::SpIdx(element.first);
-                if (duration < radius && distance_to_entry_point.count(sp_idx) == 0) {
+                if (duration < max_duration && distance_to_entry_point.count(sp_idx) == 0) {
                     result[sp_idx] = duration;
                     distance_to_entry_point[sp_idx] = duration;
                 }
@@ -433,7 +432,7 @@ PathFinder::find_nearest_stop_points(const navitia::time_duration& radius,
         ProjectionGetterByCache projection_getter{mode, geo_ref.projected_stop_points};
         auto resp = start_dijkstra_and_fill_duration_map<routing::SpIdx,
                 routing::SpIdx,ProjectionGetterByCache>(
-                radius, dest_sp_idx, projection_getter);
+                max_duration, dest_sp_idx, projection_getter);
         for (const auto& r : resp) {
             if (r.second.routing_status == RoutingStatus_e::reached) {
                 result[r.first] = r.second.time_duration;
