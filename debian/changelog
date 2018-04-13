@@ -1,3 +1,13 @@
+navitia2 (2.55.0) unstable; urgency=low
+
+  * Ed: Correction for a pattern with dst  <https://github.com/CanalTP/navitia/pull/2384>
+  * Ed: dataset_id is now required in trips.txt  <https://github.com/CanalTP/navitia/pull/2382>
+  * Kraken: Unicode parse bugfix  <https://github.com/CanalTP/navitia/pull/2387>
+  * Jormung: Admin type not city as admin region  <https://github.com/CanalTP/navitia/pull/2388>
+  * Tyr: Create command 'purge_old_jobs' + optim  <https://github.com/CanalTP/navitia/pull/2383>
+
+ -- mbounabi <Mehdi.Bounabi@Kisio.org>  Fri, 13 Apr 2018 16:04:54 +0100
+
 navitia2 (2.54.0) unstable; urgency=low
 
   * Jormungandr: Revert unicode literals  <https://github.com/CanalTP/navitia/pull/2385>
