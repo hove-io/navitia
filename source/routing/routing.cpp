@@ -71,13 +71,24 @@ bool is_same_stop_point(const type::EntryPoint& point, const type::StopPoint& st
 }
 
 bool use_crow_fly(const type::EntryPoint& point, const type::StopPoint& stop_point,
-                  const georef::Path& street_network_path, const type::Data& data) {
+                  const georef::Path& street_network_path, const type::Data& data,
+                  const uint32_t free_radius,
+                  boost::optional<time_duration> distance_to_stop_point) {
     if (is_same_stop_point(point, stop_point)) {
         return false;
     }
+
+    if(free_radius > 0 && 
+       distance_to_stop_point &&  
+       distance_to_stop_point->ticks() == 0) 
+    {
+        return true;
+    }
+     
     if (street_network_path.path_items.empty()) {
         return true;
     }
+
     if(point.type == type::Type_e::StopArea){
         //if we have a stop area in the request,
         //we only do a crowfly section if the used stop point belongs to this stop area

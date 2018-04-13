@@ -50,7 +50,8 @@ namespace navitia{
     struct PbCreator;
 }
 
-namespace navitia { namespace routing {
+namespace navitia { 
+namespace routing {
 
 struct RAPTOR;
 
@@ -160,4 +161,16 @@ void make_heat_map(navitia::PbCreator& pb_creator,
                    const navitia::type::Mode_e mode,
                    const uint32_t resolution);
 
-}}
+void make_pathes(PbCreator& pb_creator,
+                const std::vector<navitia::routing::Path>& paths,
+                georef::StreetNetwork& worker,
+                const georef::Path& direct_path,
+                const type::EntryPoint& origin,
+                const type::EntryPoint& destination,
+                const std::vector<bt::ptime>& datetimes,
+                const bool clockwise,
+                const uint32_t free_radius_from = 0,
+                const uint32_t free_radius_to = 0);
+
+} // namespace routing
+} // namespace navitia
