@@ -42,7 +42,7 @@ www.navitia.io
 #include "type/rt_level.h"
 #include <boost/range/algorithm/count.hpp>
 #include "type/pb_converter.h"
-#include "google/protobuf/text_format.h"
+
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
 };
@@ -2389,18 +2389,18 @@ BOOST_AUTO_TEST_CASE(section_geometry_without_shapes) {
  *            section 2 -> public transport
  *            section 3 -> crow fly with real duration
  *
-  * Case 3 :
+ * Case 3 :
  * - Type : With a half from filter radius
  * - Result : We have 4 journeys with 3 sections each
  *            * jouneys 1
  *            section 1 -> crow fly with 0 duration
  *            section 2 -> public transport
  *            section 3 -> crow fly with real duration
-  *           * jouneys 2
+ *           * jouneys 2
  *            section 1 -> crow fly with 0 duration
  *            section 2 -> public transport
  *            section 3 -> crow fly with real duration
-  *           * jouneys 3
+ *           * jouneys 3
  *            section 1 -> crow fly with real duration
  *            section 2 -> public transport
  *            section 3 -> crow fly with real duration
@@ -2408,8 +2408,6 @@ BOOST_AUTO_TEST_CASE(section_geometry_without_shapes) {
  *            section 1 -> crow fly with real duration
  *            section 2 -> public transport
  *            section 3 -> crow fly with real duration
-
-
  *
  *
  *
