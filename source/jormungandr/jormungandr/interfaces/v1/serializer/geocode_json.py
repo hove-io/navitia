@@ -243,13 +243,14 @@ class GeocodeStopAreaSerializer(serpy.DictSerializer):
 
 
 class GeocodePlacesSerializer(serpy.DictSerializer):
-    places = jsonschema.MethodField()
+    places = jsonschema.MethodField(display_none=True)
     warnings = BetaEndpointsSerializer()
     feed_publishers = jsonschema.MethodField()
 
     def get_places(self, obj):
         map_serializer = {
             'city': GeocodeAdminSerializer,
+            'administrative_region': GeocodeAdminSerializer,
             'street': GeocodeAddressSerializer,
             'house': GeocodeAddressSerializer,
             'poi': GeocodePoiSerializer,

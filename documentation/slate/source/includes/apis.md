@@ -729,7 +729,7 @@ HTTP/1.1 200 OK
 
 Also known as `/places_nearby` service.
 
-This endpoint allowe you to search for public transport objects that are near another object, or nearby
+This endpoint allows you to search for public transport objects that are near another object, or nearby
 coordinates, returning a [places](#place) collection.
 
 ### Accesses

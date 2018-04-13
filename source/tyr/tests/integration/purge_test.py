@@ -142,7 +142,6 @@ def test_purge_old_jobs():
 
     folders = set(glob.glob('{}/*'.format(backup_dir)))
     assert len(folders) == 3
-    print('Folders = ', folders)
 
     tasks.purge_jobs()
 

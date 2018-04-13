@@ -1,0 +1,11 @@
+feed_info_param,feed_info_value
+ntfs_version,0.3
+feed_start_date,20180324
+feed_end_date,20180706
+feed_creation_date,20180321
+feed_creation_time,09:34:13
+feed_publisher_name,"Centre - JVMalin"
+fusio_url,http://vip-fusio-ihm.CENTRE.prod.canaltp.fr/
+fusio_version,1.10.89.212
+feed_license,Privée
+feed_publisher_url,http://www.jvmalin.fr

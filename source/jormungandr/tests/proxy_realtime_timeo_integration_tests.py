@@ -106,13 +106,13 @@ class MockTimeo(Timeo):
                                 {
                                     "NextStop": "10:00:52",
                                     "Destination": "DIRECTION AA",
-                                    "Terminus": "KisioDigital_C:S43"
+                                    "Terminus": "Kisio数字_C:S43"
 
                                 },
                                 {
                                     "NextStop": "10:13:52",
                                     "Destination": "DIRECTION AA",
-                                    "Terminus": "KisioDigital_C:S43"
+                                    "Terminus": "Kisio数字_C:S43"
                                 }
                             ]
                         }
@@ -127,11 +127,11 @@ class MockTimeo(Timeo):
 
 MOCKED_PROXY_CONF = [
     {
-        "object_id_tag": "KisioDigital",
-        "id": "KisioDigital",
+        "object_id_tag": "Kisio数字",
+        "id": "Kisio数字",
         "class": "tests.proxy_realtime_timeo_integration_tests.MockTimeo",
         "args": {
-            "destination_id_tag": "KisioDigital",
+            "destination_id_tag": "Kisio数字",
             "timezone": "Europe/Paris",
             "service_url": "http://XXXX",
             "timeout": 15,

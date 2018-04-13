@@ -1,0 +1,2 @@
+line_id,line_code,line_name,forward_line_name,forward_direction,backward_line_name,backward_direction,line_color,line_text_color,line_sort,network_id,commercial_mode_id,contributor_id,geometry_id,line_opening_time,line_closing_time
+SCF:OCESN8799415287591180,"","Aéroport-CDG-T3 - Gare-de-L'Est-Noctilien","Gare-de-L'Est-Noctilien - Aéroport-CDG-T3",SCF:SA:SAOCE87994152,"Aéroport-CDG-T3 - Gare-de-L'Est-Noctilien",SCF:SA:SAOCE87591180,000000,FFFFFF,1,SNCF,Bus,SCF,,00:02:00,05:08:00

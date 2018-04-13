@@ -443,23 +443,23 @@ class Instance(db.Model):
         dataset_file_to_keep = [f.name for f in dataset_to_keep]
 
         # Keep the jobs associated
-        jobs_to_keep = []
+        jobs_to_keep = set()
         for dataset in dataset_to_keep:
-            jobs_to_keep.append(db.session.query(Job).filter(Job.data_sets.contains(dataset)).first())
+            job_associated = db.session.query(Job).filter(Job.data_sets.contains(dataset)).first()
+            jobs_to_keep.add(job_associated)
 
         # Retrieve all jobs created before the time limit
         old_jobs = db.session.query(Job).filter(Job.instance_id == self.id, Job.created_at < time_limit).all()
 
-        # Retrieve the datasets associated to delete backups folders
-        old_datasets = []
-        for job in old_jobs:
-            old_datasets.extend(db.session.query(DataSet).filter(DataSet.job_id == job.id).all())
-
         # List all jobs that can be deleted
-        to_delete = list(set(old_jobs)-set(jobs_to_keep))
+        to_delete = list(set(old_jobs) - jobs_to_keep)
 
+        # Retrieve the datasets associated to old jobs in order to delete backups folders
+        old_datasets = []
         for job_to_delete in to_delete:
+            old_datasets.extend(db.session.query(DataSet).filter(DataSet.job_id == job_to_delete.id).all())
             db.session.delete(job_to_delete)
+
         db.session.commit()
 
         return [dataset.name for dataset in old_datasets if dataset.name not in dataset_file_to_keep]
