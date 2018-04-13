@@ -34,6 +34,8 @@ www.navitia.io
 #include "type/pt_data.h"
 #include "type/datetime.h"
 
+#include <boost/optional.hpp>
+
 namespace navitia { namespace routing {
     using type::idx_t;
 
@@ -152,9 +154,10 @@ bool is_same_stop_point(const type::EntryPoint&, const type::StopPoint&);
  * @param data: reference datas of the instance
  */
 bool use_crow_fly(const type::EntryPoint& point, const type::StopPoint& stop_point,
-                  const georef::Path& street_network_path, const type::Data& data);
-
-
+                  const georef::Path& street_network_path, 
+                  const type::Data& data,
+                  const uint32_t free_radius = 0,
+                  boost::optional<time_duration> distance_to_stop_point = boost::none);
 }}
 
 

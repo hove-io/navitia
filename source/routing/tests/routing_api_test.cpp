@@ -2577,6 +2577,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_free_radius_filter) {
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
     section = journey.sections(0);
     BOOST_CHECK_EQUAL(section.duration(), 0);
+    BOOST_CHECK_EQUAL( section.type(), pbnavitia::CROW_FLY);
 
     // Journey 2
     journey = resp.journeys(1);
