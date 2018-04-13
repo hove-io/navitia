@@ -70,14 +70,18 @@ bool is_same_stop_point(const type::EntryPoint& point, const type::StopPoint& st
     return point.type == type::Type_e::StopPoint && point.uri == stop_point.uri;
 }
 
-bool use_crow_fly(const type::EntryPoint& point, const type::StopPoint& stop_point,
-                  const georef::Path& street_network_path, const type::Data& data,
+bool use_crow_fly(const type::EntryPoint& point, 
+                  const type::StopPoint& stop_point,
+                  const georef::Path& street_network_path, 
+                  const type::Data& data,
                   const uint32_t free_radius,
                   boost::optional<time_duration> distance_to_stop_point) {
     if (is_same_stop_point(point, stop_point)) {
         return false;
     }
 
+    // We have a crow fly if the stop point has its distance zeroed when filtered 
+    // by the free radius earlier in navitia::routing::free_radius_filter() 
     if(free_radius > 0 && 
        distance_to_stop_point &&  
        distance_to_stop_point->ticks() == 0) 

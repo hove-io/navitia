@@ -36,8 +36,10 @@ www.navitia.io
 
 #include <boost/optional.hpp>
 
-namespace navitia { namespace routing {
-    using type::idx_t;
+namespace navitia { 
+namespace routing {
+
+using type::idx_t;
 
 struct NotFound{};
 
@@ -152,12 +154,16 @@ bool is_same_stop_point(const type::EntryPoint&, const type::StopPoint&);
  *                    or for the last section the stop point from where we come
  * @param street_network_path: the street network path between point and stop_point
  * @param data: reference datas of the instance
+ * @param free_radius: distance to which stop points become free to crowfly to from the entry point.
+ * @param distance_to_stop_point: duration from the entry point to the stop point.
  */
-bool use_crow_fly(const type::EntryPoint& point, const type::StopPoint& stop_point,
+bool use_crow_fly(const type::EntryPoint& point, 
+                  const type::StopPoint& stop_point,
                   const georef::Path& street_network_path, 
                   const type::Data& data,
                   const uint32_t free_radius = 0,
                   boost::optional<time_duration> distance_to_stop_point = boost::none);
-}}
+} // namespace routing
+} // namespace navitia
 
 
