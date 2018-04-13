@@ -570,9 +570,9 @@ void make_pathes(PbCreator& pb_creator,
 
             if (is_same_stop_point(origin, *departure_stop_point)) {
                 // nothing in this case
-            } else if (use_crow_fly(origin, 
-                                    *departure_stop_point, 
-                                    sn_departure_path, 
+            } else if (use_crow_fly(origin,
+                                    *departure_stop_point,
+                                    sn_departure_path,
                                     *pb_creator.data,
                                     free_radius_from,
                                     make_optional(distance_duration_to_departure)))
@@ -582,7 +582,7 @@ void make_pathes(PbCreator& pb_creator,
                 pb_creator.action_period = bt::time_period (path.items.front().departures.front(),
                                               path.items.front().departures.front() + bt::seconds(1));
                 auto departure_time = path.items.front().departures.front() - pt::seconds(distance_duration_to_departure.to_posix().total_seconds());
-                pb_creator.fill_crowfly_section(origin, destination_tmp, 
+                pb_creator.fill_crowfly_section(origin, destination_tmp,
                                                 distance_duration_to_departure,
                                                 worker.departure_path_finder.mode,
                                                 departure_time,
@@ -645,18 +645,18 @@ void make_pathes(PbCreator& pb_creator,
 
             if (is_same_stop_point(destination, *arrival_stop_point)) {
                 // nothing in this case
-            } else if (use_crow_fly(destination, 
-                                    *arrival_stop_point, 
-                                    sn_arrival_path,  
+            } else if (use_crow_fly(destination,
+                                    *arrival_stop_point,
+                                    sn_arrival_path,
                                     *pb_creator.data,
                                     free_radius_to,
                                     boost::make_optional(distance_duration_to_arrival))) {
-                
+
                 type::EntryPoint origin_tmp(type::Type_e::StopPoint, arrival_stop_point->uri);
                 auto dt = path.items.back().arrivals.back();
                 origin_tmp.coordinates = arrival_stop_point->coord;
                 pb_creator.action_period = bt::time_period(dt, bt::seconds(1));
-                
+
                 arrival_time = arrival_time + pt::seconds(distance_duration_to_arrival.to_posix().total_seconds());
                 pb_creator.fill_crowfly_section(origin_tmp, destination, distance_duration_to_arrival,
                                                 worker.arrival_path_finder.mode,
@@ -848,16 +848,6 @@ get_stop_points(const type::EntryPoint &ep,
     LOG4CPLUS_TRACE(logger, "Searching nearest stop_point's from entry point : [" << ep.coordinates.lat()
               << "," << ep.coordinates.lon() << "]");
 
-    // if excluded type, return none
-    if (!(ep.type == type::Type_e::Address   ||
-          ep.type == type::Type_e::Coord     ||
-          ep.type == type::Type_e::StopArea  ||
-          ep.type == type::Type_e::StopPoint ||
-          ep.type == type::Type_e::POI       ||
-          ep.type == type::Type_e::Admin )) {
-            return boost:: none;
-    }
-
     switch(ep.type) {
 
         case type::Type_e::StopArea : {
@@ -873,7 +863,6 @@ get_stop_points(const type::EntryPoint &ep,
             }
             break;
         }
-
         case type::Type_e::StopPoint : {
             auto it = data.pt_data->stop_points_map.find(ep.uri);
             if (it != data.pt_data->stop_points_map.end()){
@@ -884,7 +873,6 @@ get_stop_points(const type::EntryPoint &ep,
 
             break;
         }
-
         case type::Type_e::Admin : {
             // For an admin, we want to leave from it's main stop areas if we have some,
             // else we'll leave from the center of the admin
@@ -895,56 +883,45 @@ get_stop_points(const type::EntryPoint &ep,
             }
             const auto admin = data.geo_ref->admins[it_admin->second];
 
-            // checking for zonal stop points
-            const auto& zonal_sps = data.pt_data->stop_points_by_area.find(ep.coordinates);
-            for (const auto* sp: zonal_sps) {
-                const SpIdx sp_idx{*sp};
-                if (result.find(sp_idx) == result.end()) {
-                    concerned_path_finder.distance_to_entry_point[sp_idx] = {};
-                    result[sp_idx] = {};
-                }
-            }
-
-            if (! admin->main_stop_areas.empty()) {
-                for (auto stop_area: admin->main_stop_areas) {
-                    for(auto sp : stop_area->stop_point_list) {
-                        const SpIdx sp_idx{*sp};
-                        if (result.find(sp_idx) == result.end()) {
-                            result[sp_idx] = {};
-                            concerned_path_finder.distance_to_entry_point[sp_idx] = {};
-                        }
+            for (auto stop_area: admin->main_stop_areas) {
+                for(auto sp : stop_area->stop_point_list) {
+                    const SpIdx sp_idx{*sp};
+                    if (result.find(sp_idx) == result.end()) {
+                        result[sp_idx] = {};
+                        concerned_path_finder.distance_to_entry_point[sp_idx] = {};
                     }
                 }
             }
             break;
         }
-        default :
+        case type::Type_e::Address :
+        case type::Type_e::Coord :
+        case type::Type_e::POI :
             break;
+        default :
+            return boost:: none;
     }
 
-    if (ep.type != type::Type_e::Admin){
-
-        // checking for zonal stop points
-        const auto& zonal_sps = data.pt_data->stop_points_by_area.find(ep.coordinates);
-        for (const auto* sp: zonal_sps) {
-            const SpIdx sp_idx{*sp};
+    // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
+    //we need to check if the admin has zone odt
+    const auto& admins = find_admins(ep, data);
+    for (const auto* admin: admins) {
+        for (const auto* odt_admin_stop_point: admin->odt_stop_points) {
+            const SpIdx sp_idx{*odt_admin_stop_point};
             if (result.find(sp_idx) == result.end()) {
                 concerned_path_finder.distance_to_entry_point[sp_idx] = {};
                 result[sp_idx] = {};
             }
         }
+    }
 
-        // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
-        //we need to check if the admin has zone odt
-        const auto& admins = find_admins(ep, data);
-        for (const auto* admin: admins) {
-            for (const auto* odt_admin_stop_point: admin->odt_stop_points) {
-                const SpIdx sp_idx{*odt_admin_stop_point};
-                if (result.find(sp_idx) == result.end()) {
-                    concerned_path_finder.distance_to_entry_point[sp_idx] = {};
-                    result[sp_idx] = {};
-                }
-            }
+    // checking for zonal stop points
+    const auto& zonal_sps = data.pt_data->stop_points_by_area.find(ep.coordinates);
+    for (const auto* sp: zonal_sps) {
+        const SpIdx sp_idx{*sp};
+        if (result.find(sp_idx) == result.end()) {
+            concerned_path_finder.distance_to_entry_point[sp_idx] = {};
+            result[sp_idx] = {};
         }
     }
 
