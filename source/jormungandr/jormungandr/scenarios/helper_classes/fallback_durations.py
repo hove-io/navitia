@@ -106,9 +106,7 @@ class FallbackDurations:
             free_radius_distance = self._request.free_radius_to
 
         if free_radius_distance is not None:
-            for p in proximities_by_crowfly:
-                if p.distance < free_radius_distance:
-                    free_access.free_radius.add(p.uri)
+            free_access.free_radius.update(p.uri for p in proximities_by_crowfly if p.distance < free_radius_distance)
 
         all_free_access = free_access.crowfly | free_access.odt | free_access.free_radius
 
