@@ -1,5 +1,5 @@
 Flask==0.10.1
-git+https://github.com/CanalTP/flask-restful.git@76346f65ca12a8edb9b32688cdc192ad391fa686#egg=Flask_RESTful-master
+git+https://github.com/CanalTP/flask-restful.git@76346f65ca12a8edb9b32688cdc192ad391fa686#egg=Flask_RESTful
 Flask-SQLAlchemy==1.0
 Flask-Script==0.6.7
 Flask-Cors==1.9.0
