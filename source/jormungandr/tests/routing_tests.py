@@ -90,7 +90,13 @@ class TestJourneysDefault(JourneyCommon, AbstractTestFixture):
         """
         pass
 
-    def test_free_radius(self):
+    def test_free_radius_from(self):
+        """
+        TO DO : Enable when NAVP-819 is available
+        """
+        pass
+
+    def test_free_radius_to(self):
         """
         TO DO : Enable when NAVP-819 is available
         """
