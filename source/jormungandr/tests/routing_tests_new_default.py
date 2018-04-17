@@ -271,6 +271,17 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, JourneyMinBikeMinCar, N
                 .format(first='ridesharing', last='walking')
         exec_and_check(query)
 
+    def test_free_radius_from(self):
+        """
+        TO DO : Enable when NAVP-819 is available
+        """
+        pass
+
+    def test_free_radius_to(self):
+        """
+        TO DO : Enable when NAVP-819 is available
+        """
+        pass
 
 @config({"scenario": "new_default",
          'instance_config': {
@@ -366,6 +377,18 @@ class TestJourneysRidesharingNewDefault(JourneyCommon,  DirectPath, JourneyMinBi
                 "first_section_mode[]={first}&last_section_mode[]={last}&max_duration=2"\
                 .format(first='ridesharing', last='walking')
         exec_and_check(query)
+
+    def test_free_radius_from(self):
+        """
+        This feature is not supported for this scenario
+        """
+        pass
+
+    def test_free_radius_to(self):
+        """
+        This feature is not supported for this scenario
+        """
+        pass
 
 
 @config({"scenario": "new_default"})

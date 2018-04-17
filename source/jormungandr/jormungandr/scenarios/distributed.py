@@ -85,7 +85,7 @@ class Scenario(new_default.Scenario):
                                                          streetnetwork_path_type=StreetNetworkPathType.DIRECT)
                     for mode in requested_dep_modes]
 
-        # We'd like to get the know the duration a direct path to do some optimizations in ProximitiesByCrowflyPool and
+        # We'd like to get the duration of a direct path to do some optimizations in ProximitiesByCrowflyPool and
         # FallbackDurationsPool.
         # Note :direct_paths_by_mode is a dict of mode vs future of a direct paths, this line is not blocking
         direct_paths_by_mode = streetnetwork_path_pool.get_all_direct_paths()
