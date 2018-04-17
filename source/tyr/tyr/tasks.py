@@ -130,9 +130,11 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
         if reload:
             actions.append(reload_data.si(instance_config, job.id))
 
-        for dataset in job.data_sets:
-            if dataset.family_type == 'pt':
-                actions.extend(send_to_mimir(instance, dataset.name))
+        # Test parameters for instance for send_to_mimir
+        if instance.import_ntfs_in_mimir or instance.import_stops_in_mimir:
+            for dataset in job.data_sets:
+                if dataset.family_type == 'pt':
+                    actions.extend(send_to_mimir(instance, dataset.name))
 
         actions.append(finish_job.si(job.id))
         if async:
