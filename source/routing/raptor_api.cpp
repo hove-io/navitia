@@ -510,6 +510,22 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
     return arrival_time;
 }
 
+static boost::optional<time_duration>
+get_duration_to_stop_point(const navitia::type::StopPoint* stop_point,
+                           const navitia::georef::PathFinder & path_finder)
+{
+    const auto & dist_to_ep = path_finder.distance_to_entry_point;
+    boost::optional<time_duration> duration_to_entry_pt;
+
+    const auto sp_idx = SpIdx(*stop_point);
+    auto it = dist_to_ep.find(sp_idx);
+    if( it != dist_to_ep.end() ) {
+        duration_to_entry_pt = boost::make_optional(it->second);
+    }
+
+    return duration_to_entry_pt;
+}
+
 void make_pathes(PbCreator& pb_creator,
                         const std::vector<navitia::routing::Path>& paths,
                         georef::StreetNetwork& worker,
@@ -563,10 +579,8 @@ void make_pathes(PbCreator& pb_creator,
             const auto& departure_stop_point = path.items.front().stop_points.front();
             georef::Path sn_departure_path = worker.get_path(departure_stop_point->idx);
 
-            const auto sp_id = SpIdx(*departure_stop_point);
-            const time_duration& distance_duration_to_departure = find_or_default(
-                            sp_id,
-                            worker.departure_path_finder.distance_to_entry_point);
+            auto duration_to_departure = get_duration_to_stop_point(
+                                            departure_stop_point, worker.departure_path_finder);
 
             if (is_same_stop_point(origin, *departure_stop_point)) {
                 // nothing in this case
@@ -575,15 +589,15 @@ void make_pathes(PbCreator& pb_creator,
                                     sn_departure_path,
                                     *pb_creator.data,
                                     free_radius_from,
-                                    make_optional(distance_duration_to_departure)))
+                                    duration_to_departure))
             {
                 type::EntryPoint destination_tmp(type::Type_e::StopPoint, departure_stop_point->uri);
                 destination_tmp.coordinates = departure_stop_point->coord;
                 pb_creator.action_period = bt::time_period (path.items.front().departures.front(),
                                               path.items.front().departures.front() + bt::seconds(1));
-                auto departure_time = path.items.front().departures.front() - pt::seconds(distance_duration_to_departure.to_posix().total_seconds());
+                auto departure_time = path.items.front().departures.front() - pt::seconds(duration_to_departure->to_posix().total_seconds());
                 pb_creator.fill_crowfly_section(origin, destination_tmp,
-                                                distance_duration_to_departure,
+                                                *duration_to_departure,
                                                 worker.departure_path_finder.mode,
                                                 departure_time,
                                                 pb_journey);
@@ -638,10 +652,8 @@ void make_pathes(PbCreator& pb_creator,
             const auto arrival_stop_point = path.items.back().stop_points.back();
             georef::Path sn_arrival_path = worker.get_path(arrival_stop_point->idx, true);
 
-            const auto sp_id = SpIdx(*arrival_stop_point);
-            const time_duration& distance_duration_to_arrival = find_or_default(
-                                                sp_id,
-                                                worker.arrival_path_finder.distance_to_entry_point);
+            auto duration_to_arrival = get_duration_to_stop_point(
+                                            arrival_stop_point, worker.arrival_path_finder);
 
             if (is_same_stop_point(destination, *arrival_stop_point)) {
                 // nothing in this case
@@ -650,17 +662,19 @@ void make_pathes(PbCreator& pb_creator,
                                     sn_arrival_path,
                                     *pb_creator.data,
                                     free_radius_to,
-                                    boost::make_optional(distance_duration_to_arrival))) {
+                                    duration_to_arrival)) {
 
                 type::EntryPoint origin_tmp(type::Type_e::StopPoint, arrival_stop_point->uri);
                 auto dt = path.items.back().arrivals.back();
                 origin_tmp.coordinates = arrival_stop_point->coord;
                 pb_creator.action_period = bt::time_period(dt, bt::seconds(1));
 
-                arrival_time = arrival_time + pt::seconds(distance_duration_to_arrival.to_posix().total_seconds());
-                pb_creator.fill_crowfly_section(origin_tmp, destination, distance_duration_to_arrival,
+                arrival_time = arrival_time + pt::seconds(duration_to_arrival->to_posix().total_seconds());
+                pb_creator.fill_crowfly_section(origin_tmp, destination,
+                                                *duration_to_arrival,
                                                 worker.arrival_path_finder.mode,
-                                                dt, pb_journey);
+                                                dt,
+                                                pb_journey);
             }
             // for stop areas, we don't want to display the fallback section if start
             // from one of the stop area's stop point
