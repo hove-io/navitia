@@ -2328,7 +2328,9 @@ BOOST_AUTO_TEST_CASE(section_geometry_without_shapes) {
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
-    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2018, 3, 9), boost::gregorian::days(1));
+    auto prod_date = boost::gregorian::date(2018, 3, 9);
+    auto prod_len = boost::gregorian::days(1);
+    b.data->meta->production_date = boost::gregorian::date_period(prod_date, prod_len);
 
     nr::RAPTOR raptor(*(b.data));
 
@@ -2460,7 +2462,9 @@ BOOST_AUTO_TEST_CASE(journeys_with_free_radius_filter) {
     b.data->build_raptor();
     b.data->build_uri();
     b.data->build_proximity_list();
-    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2018, 3, 9), boost::gregorian::days(1));
+    auto prod_date = boost::gregorian::date(2018, 3, 9);
+    auto prod_len = boost::gregorian::days(1);
+    b.data->meta->production_date = boost::gregorian::date_period(prod_date, prod_len);
 
     // create Raptor
     nr::RAPTOR raptor(*(b.data));
@@ -2542,7 +2546,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_free_radius_filter) {
     // Case 2 : With a big "from filter radius"
 
     // free radius to test
-    free_radius_from = 200; // 2 km
+    free_radius_from = 200; // 200 meters
     free_radius_to = 0;
 
     // send request
@@ -2575,7 +2579,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_free_radius_filter) {
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
     section = journey.sections(0);
     BOOST_CHECK_EQUAL(section.duration(), 0);
-    BOOST_CHECK_EQUAL( section.type(), pbnavitia::CROW_FLY);
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::CROW_FLY);
 
     // Journey 2
     journey = resp.journeys(1);

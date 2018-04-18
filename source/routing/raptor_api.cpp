@@ -527,15 +527,15 @@ get_duration_to_stop_point(const navitia::type::StopPoint* stop_point,
 }
 
 void make_pathes(PbCreator& pb_creator,
-                        const std::vector<navitia::routing::Path>& paths,
-                        georef::StreetNetwork& worker,
-                        const georef::Path& direct_path,
-                        const type::EntryPoint& origin,
-                        const type::EntryPoint& destination,
-                        const std::vector<bt::ptime>& datetimes,
-                        const bool clockwise,
-                        const uint32_t free_radius_from,
-                        const uint32_t free_radius_to) {
+                 const std::vector<navitia::routing::Path>& paths,
+                 georef::StreetNetwork& worker,
+                 const georef::Path& direct_path,
+                 const type::EntryPoint& origin,
+                 const type::EntryPoint& destination,
+                 const std::vector<bt::ptime>& datetimes,
+                 const bool clockwise,
+                 const uint32_t free_radius_from,
+                 const uint32_t free_radius_to) {
 
     pb_creator.set_response_type(pbnavitia::ITINERARY_FOUND);
 
@@ -595,8 +595,10 @@ void make_pathes(PbCreator& pb_creator,
                 destination_tmp.coordinates = departure_stop_point->coord;
                 pb_creator.action_period = bt::time_period (path.items.front().departures.front(),
                                               path.items.front().departures.front() + bt::seconds(1));
-                auto departure_time = path.items.front().departures.front() - pt::seconds(duration_to_departure->to_posix().total_seconds());
-                pb_creator.fill_crowfly_section(origin, destination_tmp,
+                auto seconds_to_departure = pt::seconds(duration_to_departure->to_posix().total_seconds());
+                auto departure_time = path.items.front().departures.front() - seconds_to_departure;
+                pb_creator.fill_crowfly_section(origin,
+                                                destination_tmp,
                                                 *duration_to_departure,
                                                 worker.departure_path_finder.mode,
                                                 departure_time,
@@ -670,7 +672,8 @@ void make_pathes(PbCreator& pb_creator,
                 pb_creator.action_period = bt::time_period(dt, bt::seconds(1));
 
                 arrival_time = arrival_time + pt::seconds(duration_to_arrival->to_posix().total_seconds());
-                pb_creator.fill_crowfly_section(origin_tmp, destination,
+                pb_creator.fill_crowfly_section(origin_tmp,
+                                                destination,
                                                 *duration_to_arrival,
                                                 worker.arrival_path_finder.mode,
                                                 dt,
