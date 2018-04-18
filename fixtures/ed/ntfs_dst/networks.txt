@@ -1,0 +1,22 @@
+network_id,network_name,network_url,network_timezone,network_lang,network_phone,network_sort
+Agglobus,"Agglobus - Bourges",http://centre2.prod.navitia.com,Europe/Paris,fr,,1
+Ailebleue,"Rémi dans l'Indre",http://centre2.prod.navitia.com,Europe/Paris,fr,,14
+Amelys,"Amelys - Montargis",http://centre2.prod.navitia.com,Europe/Paris,fr,,2
+Filbleu,"Filbleu - Tours",http://centre2.prod.navitia.com,Europe/Paris,fr,,4
+Filibus,"Filibus - Chartres",http://centre2.prod.navitia.com,Europe/Paris,fr,,5
+Filvert,"Rémi en Indre et Loire",http://centre2.prod.navitia.com,Europe/Paris,fr,,16
+HORIZON,"HORIZON - Chateauroux",http://centre2.prod.navitia.com,Europe/Paris,fr,,8
+ISS,"Transport Issoudun",http://www.issoudun.fr/vie-pratique/transport.html,Europe/Paris,fr,,22
+Lignes18,"Rémi dans le Cher",http://centre2.prod.navitia.com,Europe/Paris,fr,,10
+Linead,"Linead - Dreux",http://centre2.prod.navitia.com,Europe/Paris,fr,,7
+Nobus,"Nobus - Nogent",http://centre2.prod.navitia.com,Europe/Paris,fr,,8
+RATP,"RATP",http://centre2.prod.navitia.com,Europe/Paris,fr,,9
+route_41,"Rémi en Loir et Cher",http://centre2.prod.navitia.com,Europe/Paris,fr,,18
+Semtao,"TAO - Orléans",http://www.reseau-tao.fr/,Europe/Paris,fr,,20
+SNCF,"SNCF",http://centre2.prod.navitia.com,Europe/Paris,fr,,19
+TAXI TER,"TAXI TER",http://centre2.prod.navitia.com,Europe/Paris,fr,,21
+Transbeauce,"Rémi en Eure et Loir",http://centre2.prod.navitia.com,Europe/Paris,fr,,15
+Tub,"Azalys - Blois",http://centre2.prod.navitia.com,Europe/Paris,fr,,3
+Ulys,"Rémi dans le Loiret",http://centre2.prod.navitia.com,Europe/Paris,fr,,12
+Vbus,"Vbus - Vendôme",http://centre2.prod.navitia.com,Europe/Paris,fr,,23
+Vib,"Vib - Vierzon",http://centre2.prod.navitia.com,Europe/Paris,fr,,24

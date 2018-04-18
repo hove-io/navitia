@@ -103,3 +103,15 @@ class TestJourneysDestineo(AbstractTestFixture):
         assert response['journeys'][1]['type'] == 'non_pt_bss'
         assert response['journeys'][2]['type'] == 'non_pt_walk'
         assert response['journeys'][3]['type'] == 'non_pt_bike'
+
+    def test_free_radius_from(self):
+        """
+        This feature is not supported for this scenario
+        """
+        pass
+
+    def test_free_radius_to(self):
+        """
+        This feature is not supported for this scenario
+        """
+        pass

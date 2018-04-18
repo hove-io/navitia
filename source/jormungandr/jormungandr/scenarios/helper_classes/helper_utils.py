@@ -26,7 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import, print_function, unicode_literals, division
+from __future__ import absolute_import
 import math
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.utils import PeriodExtremity, SectionSorter
@@ -237,9 +237,9 @@ def compute_fallback(from_obj,
             continue
 
         places_free_access = orig_places_free_access.wait_and_get()
-        orig_all_free_access = places_free_access.odt | places_free_access.crowfly
+        orig_all_free_access = places_free_access.odt | places_free_access.crowfly | places_free_access.free_radius
         places_free_access = dest_places_free_access.wait_and_get()
-        dest_all_free_access = places_free_access.odt | places_free_access.crowfly
+        dest_all_free_access = places_free_access.odt | places_free_access.crowfly | places_free_access.free_radius
 
         for journey in pt_journeys.journeys:
             # from

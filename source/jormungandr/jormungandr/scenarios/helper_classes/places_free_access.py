@@ -26,14 +26,14 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import, print_function, unicode_literals, division
+from __future__ import absolute_import
 from . import helper_future
 from navitiacommon import type_pb2
 from jormungandr import utils
 from collections import namedtuple
 import logging
 
-PlaceFreeAccessResult = namedtuple('PlaceFreeAccessResult', ['crowfly', 'odt'])
+PlaceFreeAccessResult = namedtuple('PlaceFreeAccessResult', ['crowfly', 'odt', 'free_radius'])
 
 
 class PlacesFreeAccess:
@@ -79,7 +79,10 @@ class PlacesFreeAccess:
 
         logger.debug("finish places with free access from %s", self._requested_place_obj.uri)
 
-        return PlaceFreeAccessResult(crowfly, odt)
+        # free_radius is empty until the proximities by crowfly are available
+        free_radius = set()
+
+        return PlaceFreeAccessResult(crowfly, odt, free_radius)
 
     def _async_request(self):
         self._value = self._future_manager.create_future(self._do_request)

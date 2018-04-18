@@ -26,7 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import, print_function, unicode_literals, division
+from __future__ import absolute_import
 from . import helper_future
 from jormungandr import utils
 from jormungandr.street_network.street_network import StreetNetworkPathType
@@ -87,7 +87,7 @@ class StreetNetworkPath:
 class StreetNetworkPathPool:
     """
     A direct path pool is a set of pure street network journeys which are computed by the given street network service.
-    According to its usage, a StreetNetworkPath can be direct, begnning_fallback and ending_fallback
+    According to its usage, a StreetNetworkPath can be direct, beginning_fallback and ending_fallback
     """
     def __init__(self, future_manager, instance):
         self._future_manager = future_manager

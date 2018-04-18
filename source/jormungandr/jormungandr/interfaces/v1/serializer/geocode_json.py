@@ -25,7 +25,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import, print_function, unicode_literals, division
+from __future__ import absolute_import
 import serpy
 from .base import LiteralField, NestedPropertyField, IntNestedPropertyField, value_by_path, \
     BetaEndpointsSerializer
@@ -243,13 +243,14 @@ class GeocodeStopAreaSerializer(serpy.DictSerializer):
 
 
 class GeocodePlacesSerializer(serpy.DictSerializer):
-    places = jsonschema.MethodField()
+    places = jsonschema.MethodField(display_none=True)
     warnings = BetaEndpointsSerializer()
     feed_publishers = jsonschema.MethodField()
 
     def get_places(self, obj):
         map_serializer = {
             'city': GeocodeAdminSerializer,
+            'administrative_region': GeocodeAdminSerializer,
             'street': GeocodeAddressSerializer,
             'house': GeocodeAddressSerializer,
             'poi': GeocodePoiSerializer,

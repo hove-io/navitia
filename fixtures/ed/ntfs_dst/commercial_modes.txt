@@ -1,0 +1,12 @@
+commercial_mode_id,commercial_mode_name
+boarding_landing,Boarding - Landing
+Bus,"Bus"
+Coach,"Autocar"
+LocalTrain,"TER"
+LongDistanceTrain,"TGV"
+Metro,"Metro"
+RapidTransit,"RER"
+Shuttle,"Navette"
+Taxi,"Taxi"
+Train,"Train"
+Tramway,"Tramway"

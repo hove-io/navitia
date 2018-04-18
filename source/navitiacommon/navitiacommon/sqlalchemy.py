@@ -27,7 +27,6 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import, print_function, unicode_literals, division
 import flask_sqlalchemy
 
 class SQLAlchemy(flask_sqlalchemy.SQLAlchemy):

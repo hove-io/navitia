@@ -27,7 +27,6 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 
-from __future__ import absolute_import, print_function, unicode_literals, division
 from navitiacommon import models
 from tyr import tasks
 from tyr import manager
@@ -57,3 +56,14 @@ def purge_instances(nb_to_keep, background=False):
             tasks.purge_instance.delay(instance.id, nb_to_keep)
         else:
             tasks.purge_instance(instance.id, nb_to_keep)
+
+
+@manager.command
+def purge_old_jobs(days_to_keep=None, background=False):
+    """
+    Delete old jobs in database and backup folders associated
+    """
+    if background:
+        tasks.purge_jobs.delay(days_to_keep)
+    else:
+        tasks.purge_jobs(days_to_keep)
