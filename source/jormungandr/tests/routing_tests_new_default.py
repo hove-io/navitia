@@ -271,18 +271,6 @@ class TestJourneysNewDefault(JourneyCommon,  DirectPath, JourneyMinBikeMinCar, N
                 .format(first='ridesharing', last='walking')
         exec_and_check(query)
 
-    def test_free_radius_from(self):
-        """
-        TO DO : Enable when NAVP-819 is available
-        """
-        pass
-
-    def test_free_radius_to(self):
-        """
-        TO DO : Enable when NAVP-819 is available
-        """
-        pass
-
 @config({"scenario": "new_default",
          'instance_config': {
              "ridesharing": [
