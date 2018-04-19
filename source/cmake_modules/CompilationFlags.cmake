@@ -3,7 +3,7 @@ if("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "^(x86_|amd)64$")
     message("-- Arch detected: ${CMAKE_SYSTEM_PROCESSOR}")
 # Plateforme différente de la plateforme cible
 else("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "^(x86_|amd)64$")
-    message(WARNING "-- ${CMAKE_SYSTEM_PROCESSOR} arch is not supported")
+    message(WARNING "-- ${CMAKE_SYSTEM_PROCESSOR} arch is no maintained for navitia project")
 endif("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "^(x86_|amd)64$")
 
 # Release by default

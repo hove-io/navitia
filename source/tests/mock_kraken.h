@@ -41,10 +41,6 @@ www.navitia.io
 #include <boost/program_options.hpp>
 #include <boost/optional.hpp>
 
-#if PROMETHEUS_IS_ACTIVED
-    #include <kraken/metrics.h>
-#endif
-
 namespace po = boost::program_options;
 
 
@@ -79,20 +75,14 @@ struct mock_kraken {
             threads.create_thread(navitia::MaintenanceWorker(data_manager, conf));
         }
 
-#if PROMETHEUS_IS_ACTIVED
         navitia::Metrics metric(boost::none, "mock");
-#endif
+
         // Launch only one thread for the tests
         threads.create_thread(std::bind(&doWork,
                               std::ref(context),
                               std::ref(data_manager),
-#if PROMETHEUS_IS_ACTIVED
                               conf,
                               std::ref(metric)));
-#else
-                              conf));
-#endif
-
 
         // Connect work threads to client threads via a queue
         do {

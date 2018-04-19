@@ -36,29 +36,37 @@ www.navitia.io
 #include <boost/optional.hpp>
 #include <boost/utility.hpp>
 
+#include "type/type.pb.h"
+
+#if PROMETHEUS_IS_ACTIVED
 #include <prometheus/exposer.h>
 #include <prometheus/counter.h>
 
-#include "type/type.pb.h"
-
 //forward declare
 namespace prometheus{
-    class Registry;
-    class Counter;
-    class Histogram;
+class Registry;
+class Counter;
+class Histogram;
 }
+#endif
 
 namespace navitia {
 class Metrics: boost::noncopyable {
+
+// This stub is for retro compatibility
+#if PROMETHEUS_IS_ACTIVED
     protected:
         std::unique_ptr<prometheus::Exposer> exposer;
         std::shared_ptr<prometheus::Registry> registry;
         std::map<pbnavitia::API, prometheus::Histogram*> request_histogram;
-
     public:
         Metrics(const boost::optional<std::string>& endpoint, const std::string& coverage);
         void observe_api(pbnavitia::API api, float duration) const;
-
+#else
+    public:
+        Metrics(const boost::optional<std::string>& endpoint, const std::string& coverage) {}
+        void observe_api(pbnavitia::API api, float duration) const {}
+#endif
 };
 
 }
