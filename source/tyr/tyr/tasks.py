@@ -130,7 +130,6 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
         if reload:
             actions.append(reload_data.si(instance_config, job.id))
 
-        # Test parameters for instance for send_to_mimir
         for dataset in job.data_sets:
             if dataset.family_type == 'pt':
                 action = send_to_mimir(instance, dataset.name)
@@ -185,7 +184,6 @@ def send_to_mimir(instance, filename):
             actions.append(stops2mimir.si(instance_config, filename, job.id, dataset_uid=dataset.uid))
 
         actions.append(finish_job.si(job.id))
-
         return actions
     return None
 
