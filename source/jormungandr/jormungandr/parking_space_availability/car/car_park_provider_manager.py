@@ -26,10 +26,11 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.parking_space_availability.abstract_provider_manager import AbstractProviderManager
 
-POI_TYPE_ID = 'poi_type:amenity:parking'
+POI_TYPE_IDS = ('poi_type:amenity:parking', 'poi_type:Airesdestationnement')
 
 
 class CarParkingProviderManager(AbstractProviderManager):
@@ -42,7 +43,7 @@ class CarParkingProviderManager(AbstractProviderManager):
             self.car_park_providers.append(self._init_class(configuration['class'], arguments))
 
     def _handle_poi(self, item):
-        if 'poi_type' in item and item['poi_type']['id'] == POI_TYPE_ID:
+        if 'poi_type' in item and item['poi_type']['id'] in POI_TYPE_IDS:
             provider = self._find_provider(item)
             if provider:
                 item['car_park'] = provider.get_informations(item)

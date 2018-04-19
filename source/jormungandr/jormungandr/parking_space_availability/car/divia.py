@@ -1,5 +1,5 @@
 # encoding: utf-8
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2018, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -36,34 +36,32 @@ from jormungandr.parking_space_availability.car.parking_places import ParkingPla
 from jormungandr.ptref import FeedPublisher
 from jormungandr import app
 
-DEFAULT_STAR_FEED_PUBLISHER = None
+DEFAULT_DIVIA_FEED_PUBLISHER = None
 
 
-class StarProvider(CommonCarParkProvider):
+class DiviaProvider(CommonCarParkProvider):
 
-    def __init__(self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_STAR_FEED_PUBLISHER, **kwargs):
+    def __init__(self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_DIVIA_FEED_PUBLISHER, **kwargs):
 
-        self.ws_service_template = url + '/?dataset={}&refine.idparc={}'
+        self.ws_service_template = url + '?dataset={}'
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
-        self.provider_name = 'STAR'
-        self.fail_max = kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_STAR_FAIL'])
-        self.reset_timeout = kwargs.get('circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_STAR_TIMEOUT_S'])
+        self.provider_name = 'DIVIA'
+        self.fail_max = kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_DIVIA_FAIL'])
+        self.reset_timeout = kwargs.get('circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_DIVIA_TIMEOUT_S'])
 
-        super(StarProvider, self).__init__(operators, dataset, timeout)
+        super(DiviaProvider, self).__init__(operators, dataset, timeout)
+
+        if kwargs.get('api_key'):
+            self.api_key = kwargs.get('api_key')
 
     def _get_information(self, poi):
-        ref = poi.get('properties', {}).get('ref')
-        if not ref:
-            return
+        data = self._call_webservice(self.ws_service_template.format(self.dataset))
 
-        data = self._call_webservice(self.ws_service_template.format(self.dataset, ref))
         if not data:
             return
 
-        available = jmespath.search('records[0].fields.nombreplacesdisponibles', data)
-        occupied = jmespath.search('records[0].fields.nombreplacesoccupees', data)
-        # Person with reduced mobility
-        available_PRM = jmespath.search('records[0].fields.nombreplacesdisponiblespmr', data)
-        occupied_PRM = jmespath.search('records[0].fields.nombreplacesoccupeespmr', data)
-
-        return ParkingPlaces(available, occupied, available_PRM, occupied_PRM)
+        park = jmespath.search('records[?fields.numero_parking==\'{}\']|[0]'.format(poi['properties']['ref'].zfill(2)), data)
+        if park:
+            available = park['fields']['nombre_places_libres']
+            occupied = park['fields']['nombre_places'] - available
+            return ParkingPlaces(available, occupied, None, None)
