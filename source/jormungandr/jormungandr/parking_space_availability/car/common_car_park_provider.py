@@ -59,7 +59,6 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
         properties = poi.get('properties', {})
         return properties.get('operator', '').lower() in self.operators
 
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_CAR_PARK', 30))
     def _call_webservice(self, request_url):
         try:
             if self.api_key:

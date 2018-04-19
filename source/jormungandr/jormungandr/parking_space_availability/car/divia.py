@@ -34,7 +34,7 @@ import jmespath
 from jormungandr.parking_space_availability.car.common_car_park_provider import CommonCarParkProvider
 from jormungandr.parking_space_availability.car.parking_places import ParkingPlaces
 from jormungandr.ptref import FeedPublisher
-from jormungandr import app
+from jormungandr import app, cache
 
 DEFAULT_DIVIA_FEED_PUBLISHER = None
 
@@ -65,3 +65,8 @@ class DiviaProvider(CommonCarParkProvider):
             available = park['fields']['nombre_places_libres']
             occupied = park['fields']['nombre_places'] - available
             return ParkingPlaces(available, occupied, None, None)
+
+    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_CAR_PARK_DIVIA', 30))
+    def _call_webservice(self, request_url):
+        return super(DiviaProvider, self)._call_webservice(request_url)
+

@@ -34,7 +34,7 @@ import jmespath
 from jormungandr.parking_space_availability.car.common_car_park_provider import CommonCarParkProvider
 from jormungandr.parking_space_availability.car.parking_places import ParkingPlaces
 from jormungandr.ptref import FeedPublisher
-from jormungandr import app
+from jormungandr import app, cache
 
 DEFAULT_STAR_FEED_PUBLISHER = None
 
@@ -67,3 +67,7 @@ class StarProvider(CommonCarParkProvider):
         occupied_PRM = jmespath.search('records[0].fields.nombreplacesoccupeespmr', data)
 
         return ParkingPlaces(available, occupied, available_PRM, occupied_PRM)
+
+    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_CAR_PARK_STAR', 30))
+    def _call_webservice(self, request_url):
+        return super(StarProvider, self)._call_webservice(request_url)
