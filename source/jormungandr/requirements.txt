@@ -1,5 +1,5 @@
 Flask==0.10.1
-git+https://github.com/CanalTP/flask-restful.git@76346f65ca12a8edb9b32688cdc192ad391fa686#egg=Flask_RESTful-master
+git+https://github.com/CanalTP/flask-restful.git@76346f65ca12a8edb9b32688cdc192ad391fa686
 Flask-SQLAlchemy==1.0
 Flask-Script==0.6.7
 Flask-Cors==1.9.0
@@ -35,6 +35,6 @@ zeep==1.1.0
 --no-binary=gevent,greenlet #the wheel is built against python 2.7.4 and debian is on 2.7.3 :(
 gevent==1.1.2
 Flask-Cache==0.13.1
-git+https://github.com/canaltp/serpy.git@ctp#egg=serpy
+git+https://github.com/canaltp/serpy.git@ctp
 python-json-logger==0.1.7
 jmespath==0.9.3
