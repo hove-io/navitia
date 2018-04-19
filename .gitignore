@@ -30,3 +30,4 @@ debian/*.substvars
 debian/*.debhelper
 source/jormungandr/jormungandr/_version.py
 .cache
+.vscode
