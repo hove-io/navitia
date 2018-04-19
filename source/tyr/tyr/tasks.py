@@ -132,9 +132,7 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
 
         for dataset in job.data_sets:
             if dataset.family_type == 'pt':
-                action = send_to_mimir(instance, dataset.name)
-                if action:
-                    actions.extend(action)
+                actions.extend(send_to_mimir(instance, dataset.name))
 
         actions.append(finish_job.si(job.id))
         if async:
@@ -185,7 +183,7 @@ def send_to_mimir(instance, filename):
 
         actions.append(finish_job.si(job.id))
         return actions
-    return None
+    return []
 
 
 @celery.task()
