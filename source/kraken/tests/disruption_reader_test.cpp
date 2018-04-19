@@ -732,7 +732,8 @@ BOOST_AUTO_TEST_CASE(two_properties) {
     BOOST_CHECK_EQUAL(property.value(), "31");
 }
 
-BOOST_AUTO_TEST_CASE(message) {
+// This test is a simple test on messsage with channel and channel_types
+BOOST_AUTO_TEST_CASE(message_with_channel) {
     navitia::type::PT_Data pt_data;
     navitia::type::MetaData meta;
     navitia::DisruptionDatabaseReader reader(pt_data, meta);
@@ -792,7 +793,10 @@ BOOST_AUTO_TEST_CASE(message) {
     BOOST_REQUIRE_EQUAL(channel->types_size(), 1);
 }
 
-/* a badly sorted disruption record example
+/* It is difficult to test "loading disruption data from chaos DB". This test explains
+ * how the columns in the query result should be sorted to charge properly in kraken.
+
+ * badly sorted: d.id, c.id, t.id, i.id, a.id, p.id, m.id, ch.id, cht.id
  * Disruption record sorted in this way does not work for channel_type but works well for application_periods
  * ..., message_1 , channel_1, channel_type_1, application_period_1 ...
  * ..., message_2 , channel_2, channel_type_2, application_period_2 ...
@@ -800,99 +804,8 @@ BOOST_AUTO_TEST_CASE(message) {
  * ..., message_1 , channel_1, channel_type_1, application_period_1 ...
  * ..., message_2 , channel_2, channel_type_2, application_period_2 ...
  * ..., message_3 , channel_3, channel_type_3, ...
- */
-BOOST_AUTO_TEST_CASE(disruption_badly_sorted_informations) {
-    navitia::type::PT_Data pt_data;
-    navitia::type::MetaData meta;
-    navitia::DisruptionDatabaseReader reader(pt_data, meta);
 
-    Const_it const_it;
-    const_it.set_disruption("1", "22", "33", "44", "55", "note", "reference");
-    const_it.set_cause("1", "wording", "11", "22");
-    const_it.set_tag("1", "name", "11", "22");
-    const_it.set_impact("1", "11", "22");
-    const_it.set_severity("2", "wording", "22", "33", "blocking", "color", "2");
-    const_it.set_application_period("0", "1", "2");
-    const_it.set_ptobject("id_1", "uri_1", "line", "1", "2");
-    reader(const_it);
-
-    // Combination of message, channel and channel_type
-    const_it.set_message("m_id_1", "message_text_web", "1", "2");
-    const_it.set_channel("channel_id", "channel_name_web", "type","400" ,"1", "2");
-    const_it.set_channel_type("id_1", "web");
-    reader(const_it);
-    const_it.set_application_period("1", "2", "3");
-    const_it.set_ptobject("id_2", "uri_2", "line", "1", "2");
-    const_it.set_message("m_id_2", "message_text_mobile", "1", "2");
-    const_it.set_channel("channel_id_2", "channel_name_mobile", "type","400" ,"1", "2");
-    const_it.set_channel_type("id_2", "mobile");
-    reader(const_it);
-
-    const_it.set_message("m_id_3", "message_text_notification", "1", "2");
-    const_it.set_channel("channel_id_3", "channel_name_notification", "type","400" ,"1", "2");
-    const_it.set_channel_type("id_3", "notification");
-    reader(const_it);
-
-    // Duplicate combination of message, channel and channel_type
-    const_it.set_application_period("0", "1", "2");
-    const_it.set_ptobject("id_1", "uri_1", "line", "1", "2");
-    const_it.set_message("m_id_1", "message_text_web", "1", "2");
-    const_it.set_channel("channel_id", "channel_name_web", "type","400" ,"1", "2");
-    const_it.set_channel_type("id_1", "web");
-    reader(const_it);
-    const_it.set_application_period("1", "2", "3");
-    const_it.set_ptobject("id_2", "uri_2", "line", "1", "2");
-    const_it.set_message("m_id_2", "message_text_mobile", "1", "2");
-    const_it.set_channel("channel_id_2", "channel_name_mobile", "type","400" ,"1", "2");
-    const_it.set_channel_type("id_2", "mobile");
-    reader(const_it);
-    const_it.set_message("m_id_3", "message_text_notification", "1", "2");
-    const_it.set_channel("channel_id_3", "channel_name_notification", "type","400" ,"1", "2");
-    const_it.set_channel_type("id_3", "notification");
-    reader(const_it);
-
-    const auto& disruption = reader.disruption;
-    BOOST_CHECK_EQUAL(disruption->id(), "1");
-    auto cause = disruption->cause();
-    BOOST_CHECK_EQUAL(cause.id(), "1");
-    BOOST_CHECK_EQUAL(disruption->tags_size(), 1);
-    BOOST_REQUIRE_EQUAL(disruption->impacts_size(), 1);
-    auto impact = disruption->impacts(0);
-    BOOST_CHECK_EQUAL(impact.id(), "1");
-    auto severity = impact.severity();
-    BOOST_CHECK_EQUAL(severity.id(), "2");
-    BOOST_CHECK_EQUAL(impact.application_periods_size(), 2);
-    BOOST_CHECK_EQUAL(impact.informed_entities_size(), 2);
-    BOOST_REQUIRE_EQUAL(impact.messages_size(), 3);
-    // Message web
-    auto message = impact.messages(0);
-    BOOST_CHECK_EQUAL(message.text(), "message_text_web");
-    auto channel = message.channel();
-    BOOST_CHECK_EQUAL(channel.name(), "channel_name_web");
-    BOOST_REQUIRE_EQUAL(channel.types_size(), 1);
-    auto channel_type = channel.types(0);
-    BOOST_CHECK_EQUAL(channel_type, chaos::Channel_Type_web);
-    // Message mobile
-    message = impact.messages(1);
-    BOOST_CHECK_EQUAL(message.text(), "message_text_mobile");
-    channel = message.channel();
-    BOOST_CHECK_EQUAL(channel.name(), "channel_name_mobile");
-    BOOST_REQUIRE_EQUAL(channel.types_size(), 1);
-    channel_type = channel.types(0);
-    BOOST_CHECK_EQUAL(channel_type, chaos::Channel_Type_mobile);
-
-    // Message notification
-    message = impact.messages(2);
-    BOOST_CHECK_EQUAL(message.text(), "message_text_notification");
-    channel = message.channel();
-    BOOST_CHECK_EQUAL(channel.name(), "channel_name_notification");
-    // Here we have 4 channel_types instead of 1. This is an error
-    BOOST_REQUIRE_EQUAL(channel.types_size(), 4);
-    channel_type = channel.types(0);
-    BOOST_CHECK_EQUAL(channel_type, chaos::Channel_Type_notification);
-}
-
-/* a well sorted disruption record example
+ * well sorted: d.id, c.id, t.id, i.id, m.id, ch.id, cht.id
  * Disruption record sorted in this way works for channel_type as well as for application_periods
  * ..., message_1 , channel_1, channel_type_1, application_period_1 ...
  * ..., message_1 , channel_1, channel_type_1, application_period_1 ...

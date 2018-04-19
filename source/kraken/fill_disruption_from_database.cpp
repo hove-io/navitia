@@ -154,8 +154,8 @@ void fill_disruption_from_database(const std::string& connection_string,
                "     AND co.contributor_code = ANY('{%s}')" // it's like a "IN" but won't crash if empty"
                "     AND d.status = 'published'"
                "     AND i.status = 'published'"
-               // Attension: we should not change order from "d.id" to "cht.id"
-               "     ORDER BY d.id, c.id, t.id, i.id, m.id, ch.id, cht.id, a.id, p.id"
+               // Warning : Any change in this order may produce error while charging in fill_disruption_from_database.h/DisruptionDatabaseReader"
+               "     ORDER BY d.id, c.id, t.id, i.id, m.id, ch.id, cht.id"
                "     LIMIT %i OFFSET %i"
                " ;") %meta.production_date.end() % meta.production_date.begin() %meta.production_date.end()  % contributors_array % items_per_request % offset).str();
         result = work.exec(request);
