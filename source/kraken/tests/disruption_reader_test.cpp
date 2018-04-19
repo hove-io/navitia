@@ -743,15 +743,14 @@ BOOST_AUTO_TEST_CASE(message_with_channel) {
     Const_it const_it;
     const_it.set_message("m_id_1", "message_text_web", "1", "2");
     reader.impact = new chaos::Impact();
-    // Add a message with channel web
+
+    // Add a message for web with channel and chanel_type
     auto* message = reader.impact->add_messages();
     reader.fill_message(const_it, message);
     BOOST_REQUIRE_EQUAL(reader.impact->messages_size(), 1);
     BOOST_CHECK_EQUAL(message->text(), "message_text_web");
     BOOST_CHECK_EQUAL(message->created_at(), 1);
     BOOST_CHECK_EQUAL(message->updated_at(), 2);
-
-    //Add a channel with a channel_type web
     const_it.set_channel("channel_id", "channel_name_web", "type","400" ,"1", "2");
     auto* channel = message->mutable_channel();
     reader.fill_channel(const_it, channel);
