@@ -40,7 +40,6 @@ www.navitia.io
 #include "kraken_zmq.h"
 #include "utils/zmq.h"
 #include "utils/functions.h" //navitia::absolute_path function
-#include "metrics.h"
 
 static void show_usage(const std::string& name)
 {
@@ -101,7 +100,9 @@ int main(int argn, char** argv){
         return 1;
     }
 
+#if PROMETHEUS_IS_ACTIVED
     const navitia::Metrics metrics(conf.metrics_binding(), conf.instance_name());
+#endif
 
     threads.create_thread(navitia::MaintenanceWorker(data_manager, conf));
 
@@ -112,8 +113,14 @@ int main(int argn, char** argv){
         threads.create_thread(std::bind(&doWork,
                                         std::ref(context),
                                         std::ref(data_manager),
+
+#if PROMETHEUS_IS_ACTIVED
                                         conf,
                                         std::ref(metrics)));
+#else
+                                        conf));
+#endif
+
     }
 
     // Connect worker threads to client threads via a queue
