@@ -31,7 +31,7 @@ www.navitia.io
 #pragma once
 
 #include "geographical_coord.h"
-#include "third_party/RTree/RTree.h"
+#include <RTree/RTree.h>
 #include <boost/geometry.hpp>
 #include <boost/serialization/deque.hpp>
 

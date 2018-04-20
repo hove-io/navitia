@@ -30,7 +30,7 @@ www.navitia.io
 
 #include <bitset>
 #include <map>
-#include "third_party/osmpbfreader/osmpbfreader.h"
+#include <osmpbfreader/osmpbfreader.h>
 #include "ed/types.h"
 
 namespace ed { namespace connectors {
