@@ -1,7 +1,6 @@
 # Arch
 if("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "^(x86_|amd)64$")
     message("-- Arch detected: ${CMAKE_SYSTEM_PROCESSOR}")
-# Plateforme différente de la plateforme cible
 else("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "^(x86_|amd)64$")
     message(WARNING "-- ${CMAKE_SYSTEM_PROCESSOR} arch is no maintained for navitia project")
 endif("${CMAKE_SYSTEM_PROCESSOR}" MATCHES "^(x86_|amd)64$")
@@ -19,7 +18,7 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
     SET(CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS} --coverage")
 ENDIF(CMAKE_COMPILER_IS_GNUCXX)
 
-# CLang Release flagsS
+# Clang Release flags
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     SET(CMAKE_CXX_FLAGS "-std=c++11 -stdlib=libstdc++  -ferror-limit=10 -pthread -ftemplate-depth=1024 -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-documentation -Wno-shadow -Wno-covered-switch-default -Wno-switch-enum -Wno-missing-noreturn -Wno-disabled-macro-expansion")
     # it could be great to remove these warnings, but there is so much!

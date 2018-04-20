@@ -1,5 +1,8 @@
 # Third party
 
+# Third party warnings have to be silent
+
+
 #
 # SimpleAmqpClient
 # librabbimq-c
@@ -50,6 +53,8 @@ else  ( ((CMAKE_OS_NAME MATCHES "Debian") AND
     message(DEPRECATION " ${CMAKE_OS_NAME} ${CMAKE_OS_VERSION} is no longer maintained for navitia project")
 
     set(PROMETHEUS_IS_ACTIVED OFF)
+    # Flag activation for code define (deactivate)
+    add_definitions(-DPROMETHEUS_IS_ACTIVED=0)
 
 endif ( ((CMAKE_OS_NAME MATCHES "Debian") AND
         (CMAKE_OS_VERSION VERSION_GREATER "8.0"))

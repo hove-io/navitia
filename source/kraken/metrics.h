@@ -64,8 +64,8 @@ class Metrics: boost::noncopyable {
         void observe_api(pbnavitia::API api, float duration) const;
 #else
     public:
-        Metrics(const boost::optional<std::string>& endpoint, const std::string& coverage) {}
-        void observe_api(pbnavitia::API api, float duration) const {}
+        Metrics(const boost::optional<std::string>&, const std::string&) {}
+        void observe_api(pbnavitia::API, float) const {}
 #endif
 };
 

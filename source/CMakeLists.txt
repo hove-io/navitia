@@ -22,7 +22,7 @@ cmake_minimum_required(VERSION 2.8)
 #             `      '-;         (-'
 project(Kraken)
 
-# Load cmake modules
+# List of directories to search for CMake modules
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake_modules")
 
 # project version,
@@ -32,9 +32,6 @@ git_describe(GIT_REVISION)
 
 # Compilation flags (Debug and Release)
 include(CompilationFlags)
-
-# Os detection
-include(DetectOS)
 
 # Finds and loads settings
 set(LOG4CPLUS_FIND_REQUIRED true)
@@ -47,7 +44,7 @@ include(UseBoost)
 include(UsePqxx)
 include(ThirdParty)
 
-# tests environment
+# Tests environment
 include(TestsEnv)
 
 # Add current compilation dir to include path to handle config.h

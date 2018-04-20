@@ -19,6 +19,11 @@ add_library(workers worker.cpp maintenance_worker.cpp configuration.cpp ${PROMET
 target_link_libraries(workers apply_disruption make_disruption_from_chaos rt_handling ${PQXX_LIB}
   SimpleAmqpClient disruption_api calendar_api ptreferential autocomplete georef
   routing time_tables tcmalloc)
+
+if (PROMETHEUS_IS_ACTIVED)
+  target_link_libraries(workers prometheus-cpp)
+endif (PROMETHEUS_IS_ACTIVED)
+
 add_library(fill_disruption_from_database fill_disruption_from_database.cpp)
 target_link_libraries(fill_disruption_from_database make_disruption_from_chaos data types pb_lib
   ${PQXX_LIB} ${Boost_SERIALIZATION_LIBRARY} ${Boost_FORMAT_LIBRARY} protobuf)
@@ -30,10 +35,6 @@ target_link_libraries(kraken workers types proximitylist
     ${Boost_DATE_TIME_LIBRARY} ${Boost_SERIALIZATION_LIBRARY}
     ${Boost_REGEX_LIBRARY} ${Boost_CHRONO_LIBRARY}
     ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} protobuf)
-
-if (PROMETHEUS_IS_ACTIVED)
-    target_link_libraries(kraken prometheus-cpp)
-endif (PROMETHEUS_IS_ACTIVED)
 
 INSTALL_TARGETS(/usr/bin/ kraken)
 add_subdirectory(tests)
