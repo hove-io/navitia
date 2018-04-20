@@ -108,3 +108,17 @@ def car_park_space_get_information_test():
     """
     provider._call_webservice = MagicMock(return_value=json.loads(divia_response))
     assert provider.get_informations(poi) is None
+
+    divia_response = """
+    {
+        "records":[
+            {
+                "fields": {
+                    "numero_parking": "42"
+                }
+            }
+        ]
+    }
+    """
+    provider._call_webservice = MagicMock(return_value=json.loads(divia_response))
+    assert provider.get_informations(poi) is None
