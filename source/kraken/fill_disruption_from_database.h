@@ -81,7 +81,7 @@ namespace navitia {
         // This function and all others below are templated so they can be tested
         template<typename T>
         void operator() (T const_it) {
-            // This code is strongly related to the database query (and it's order): fill_disruption_from_database.
+            // This code is strongly related to the database query (and it's order): fill_disruption_from_database.cpp
             if (!disruption || disruption->id() !=
                     const_it["disruption_id"].template as<std::string>()) {
                 fill_disruption(const_it);
