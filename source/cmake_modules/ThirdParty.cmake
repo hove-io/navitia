@@ -1,7 +1,14 @@
 # Third party
 
-# Third party warnings have to be silent
+# Third party warnings have to be silent, we skip warnings
+set(TMP_FLAG ${CMAKE_CXX_FLAGS})
+if(CMAKE_COMPILER_IS_GNUCXX)
+    set(CMAKE_CXX_FLAGS ${CMAKE_GNUCXX_COMMON_FLAGS})
+endif(CMAKE_COMPILER_IS_GNUCXX)
 
+if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+    set(CMAKE_CXX_FLAGS ${CMAKE_CLANG_COMMON_FLAGS})
+endif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
 
 #
 # SimpleAmqpClient
@@ -22,13 +29,8 @@ add_subdirectory(third_party/SimpleAmqpClient)
 #
 # prometheus-cpp
 #
-# We want to deactivate prometheus lib for debian < 8.0 and ubuntu < 16.00
-if  ( ((CMAKE_OS_NAME MATCHES "Debian") AND
-      (CMAKE_OS_VERSION VERSION_GREATER "8.0"))
-    OR
-     ((CMAKE_OS_NAME MATCHES "Ubuntu") AND
-     (CMAKE_OS_VERSION VERSION_GREATER "16.00"))
-    )
+# We want to deactivate prometheus lib if CMake version < 2.8.12.2
+if(("${CMAKE_VERSION}" VERSION_GREATER 2.8.12.2) OR ("${CMAKE_VERSION}" VERSION_EQUAL 2.8.12.2))
 
     include_directories("${CMAKE_SOURCE_DIR}/third_party/prometheus-cpp/include/"
                         "${CMAKE_BINARY_DIR}/third_party/prometheus-cpp/lib/cpp")
@@ -39,26 +41,19 @@ if  ( ((CMAKE_OS_NAME MATCHES "Debian") AND
 
     message("-- Add prometheus in third party")
 
-    set(PROMETHEUS_IS_ACTIVED ON)
+    set(ENABLE_PROMETHEUS ON)
     # Flag activation for code define
-    add_definitions(-DPROMETHEUS_IS_ACTIVED)
+    add_definitions(-DENABLE_PROMETHEUS)
 
-else  ( ((CMAKE_OS_NAME MATCHES "Debian") AND
-        (CMAKE_OS_VERSION VERSION_GREATER "8.0"))
-      OR
-        ((CMAKE_OS_NAME MATCHES "Ubuntu") AND
-        (CMAKE_OS_VERSION VERSION_GREATER "16.00"))
-      )
-    message("-- Skip prometheus in third party")
+else(("${CMAKE_VERSION}" VERSION_GREATER 2.8.12.2) OR ("${CMAKE_VERSION}" VERSION_EQUAL 2.8.12.2))
+    message("-- CMake version < 2.8.12.2, Skip prometheus in third party")
     message(DEPRECATION " ${CMAKE_OS_NAME} ${CMAKE_OS_VERSION} is no longer maintained for navitia project")
 
-    set(PROMETHEUS_IS_ACTIVED OFF)
-    # Flag activation for code define (deactivate)
-    add_definitions(-DPROMETHEUS_IS_ACTIVED=0)
+    set(ENABLE_PROMETHEUS OFF)
+    # Flag activation for code define (=0)
+    add_definitions(-DENABLE_PROMETHEUS=0)
 
-endif ( ((CMAKE_OS_NAME MATCHES "Debian") AND
-        (CMAKE_OS_VERSION VERSION_GREATER "8.0"))
-      OR
-        ((CMAKE_OS_NAME MATCHES "Ubuntu") AND
-        (CMAKE_OS_VERSION VERSION_GREATER "16.00"))
-      )
+endif(("${CMAKE_VERSION}" VERSION_GREATER 2.8.12.2) OR ("${CMAKE_VERSION}" VERSION_EQUAL 2.8.12.2))
+
+# Reactivate warnings flags
+set(CMAKE_CXX_FLAGS ${TMP_FLAG})

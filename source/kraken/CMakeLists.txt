@@ -8,21 +8,21 @@ add_library(rt_handling realtime.cpp)
 target_link_libraries(rt_handling data pb_lib protobuf)
 
 # Add Prometheus
-if (PROMETHEUS_IS_ACTIVED)
+if(ENABLE_PROMETHEUS)
   set(PROMETHEUS_SOURCES metrics.cpp)
   message("-- Add Prometheus sources in kraken")
-else (PROMETHEUS_IS_ACTIVED)
+else(ENABLE_PROMETHEUS)
   message("-- Skip Prometheus sources in kraken")
-endif (PROMETHEUS_IS_ACTIVED)
+endif(ENABLE_PROMETHEUS)
 
 add_library(workers worker.cpp maintenance_worker.cpp configuration.cpp ${PROMETHEUS_SOURCES})
 target_link_libraries(workers apply_disruption make_disruption_from_chaos rt_handling ${PQXX_LIB}
   SimpleAmqpClient disruption_api calendar_api ptreferential autocomplete georef
   routing time_tables tcmalloc)
 
-if (PROMETHEUS_IS_ACTIVED)
+if(ENABLE_PROMETHEUS)
   target_link_libraries(workers prometheus-cpp)
-endif (PROMETHEUS_IS_ACTIVED)
+endif(ENABLE_PROMETHEUS)
 
 add_library(fill_disruption_from_database fill_disruption_from_database.cpp)
 target_link_libraries(fill_disruption_from_database make_disruption_from_chaos data types pb_lib

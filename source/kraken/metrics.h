@@ -38,7 +38,7 @@ www.navitia.io
 
 #include "type/type.pb.h"
 
-#if PROMETHEUS_IS_ACTIVED
+#if ENABLE_PROMETHEUS
 #include <prometheus/exposer.h>
 #include <prometheus/counter.h>
 
@@ -54,7 +54,7 @@ namespace navitia {
 class Metrics: boost::noncopyable {
 
 // This stub is for retro compatibility
-#if PROMETHEUS_IS_ACTIVED
+#if ENABLE_PROMETHEUS
     protected:
         std::unique_ptr<prometheus::Exposer> exposer;
         std::shared_ptr<prometheus::Registry> registry;
