@@ -595,11 +595,12 @@ void make_pathes(PbCreator& pb_creator,
                 destination_tmp.coordinates = departure_stop_point->coord;
                 pb_creator.action_period = bt::time_period (path.items.front().departures.front(),
                                               path.items.front().departures.front() + bt::seconds(1));
-                auto seconds_to_departure = pt::seconds(duration_to_departure->to_posix().total_seconds());
+                time_duration crow_fly_duration = duration_to_departure ? *duration_to_departure : time_duration() ;
+                auto seconds_to_departure = pt::seconds(crow_fly_duration.to_posix().total_seconds());
                 auto departure_time = path.items.front().departures.front() - seconds_to_departure;
                 pb_creator.fill_crowfly_section(origin,
                                                 destination_tmp,
-                                                *duration_to_departure,
+                                                crow_fly_duration,
                                                 worker.departure_path_finder.mode,
                                                 departure_time,
                                                 pb_journey);
@@ -670,11 +671,11 @@ void make_pathes(PbCreator& pb_creator,
                 auto dt = path.items.back().arrivals.back();
                 origin_tmp.coordinates = arrival_stop_point->coord;
                 pb_creator.action_period = bt::time_period(dt, bt::seconds(1));
-
-                arrival_time = arrival_time + pt::seconds(duration_to_arrival->to_posix().total_seconds());
+                time_duration crow_fly_duration = duration_to_arrival ? *duration_to_arrival : time_duration();
+                arrival_time = arrival_time + pt::seconds(crow_fly_duration.to_posix().total_seconds());
                 pb_creator.fill_crowfly_section(origin_tmp,
                                                 destination,
-                                                *duration_to_arrival,
+                                                crow_fly_duration,
                                                 worker.arrival_path_finder.mode,
                                                 dt,
                                                 pb_journey);
