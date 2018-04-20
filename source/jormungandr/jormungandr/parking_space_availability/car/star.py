@@ -43,7 +43,7 @@ class StarProvider(CommonCarParkProvider):
 
     def __init__(self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_STAR_FEED_PUBLISHER, **kwargs):
 
-        self.ws_service_template = url + '/?dataset={}&refine.idparc={}'
+        self.ws_service_template = url + '/?dataset={}'
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
         self.provider_name = 'STAR'
         self.fail_max = kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_STAR_FAIL'])
@@ -52,21 +52,19 @@ class StarProvider(CommonCarParkProvider):
         super(StarProvider, self).__init__(operators, dataset, timeout)
 
     def _get_information(self, poi):
-        ref = poi.get('properties', {}).get('ref')
-        if not ref:
+        data = self._call_webservice(self.ws_service_template.format(self.dataset))
+
+        if not data or not poi.get('properties', {}).get('ref'):
             return
 
-        data = self._call_webservice(self.ws_service_template.format(self.dataset, ref))
-        if not data:
-            return
-
-        available = jmespath.search('records[0].fields.nombreplacesdisponibles', data)
-        occupied = jmespath.search('records[0].fields.nombreplacesoccupees', data)
-        # Person with reduced mobility
-        available_PRM = jmespath.search('records[0].fields.nombreplacesdisponiblespmr', data)
-        occupied_PRM = jmespath.search('records[0].fields.nombreplacesoccupeespmr', data)
-
-        return ParkingPlaces(available, occupied, available_PRM, occupied_PRM)
+        park = jmespath.search('records[?fields.idparc==\'{}\']|[0]'.format(poi['properties']['ref']), data)
+        if park:
+            available = jmespath.search('fields.nombreplacesdisponibles', park)
+            occupied = jmespath.search('fields.nombreplacesoccupees', park)
+            # Person with reduced mobility
+            available_PRM = jmespath.search('fields.nombreplacesdisponiblespmr', park)
+            occupied_PRM = jmespath.search('fields.nombreplacesoccupeespmr', park)
+            return ParkingPlaces(available, occupied, available_PRM, occupied_PRM)
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_CAR_PARK_STAR', 30))
     def _call_webservice(self, request_url):

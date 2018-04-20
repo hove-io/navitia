@@ -30,7 +30,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.parking_space_availability.abstract_provider_manager import AbstractProviderManager
 
-POI_TYPE_IDS = ('poi_type:amenity:parking', 'poi_type:Airesdestationnement')
+POI_TYPE_IDS = ('poi_type:amenity:parking', 'poi_type:public_parking')
 
 
 class CarParkingProviderManager(AbstractProviderManager):

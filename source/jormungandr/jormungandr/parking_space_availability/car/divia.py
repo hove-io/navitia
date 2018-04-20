@@ -57,17 +57,16 @@ class DiviaProvider(CommonCarParkProvider):
     def _get_information(self, poi):
         data = self._call_webservice(self.ws_service_template.format(self.dataset))
 
-        if not data:
+        if not data or not poi.get('properties', {}).get('ref'):
             return
 
         park = jmespath.search('records[?fields.numero_parking==\'{}\']|[0]'.format(poi['properties']['ref'].zfill(2)), data)
         if park:
-            try:
-                available = park['fields']['nombre_places_libres']
-                occupied = park['fields']['nombre_places'] - available
-                return ParkingPlaces(available, occupied, None, None)
-            except KeyError:
-                return
+            available = jmespath.search('fields.nombre_places_libres', park)
+            nb_places = jmespath.search('fields.nombre_places', park)
+            occupied = None if not nb_places else (nb_places - available)
+            return ParkingPlaces(available, occupied, None, None)
+
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_CAR_PARK_DIVIA', 30))
     def _call_webservice(self, request_url):

@@ -43,7 +43,7 @@ poi = {
     },
     'poi_type': {
         'name': 'Parking',
-        'id': 'poi_type:Airesdestationnement'
+        'id': 'poi_type:public_parking'
     }
 }
 
@@ -120,5 +120,9 @@ def car_park_space_get_information_test():
         ]
     }
     """
+    empty_parking = ParkingPlaces(available=None,
+                                  occupied=None,
+                                  available_PRM=None,
+                                  occupied_PRM=None)
     provider._call_webservice = MagicMock(return_value=json.loads(divia_response))
-    assert provider.get_informations(poi) is None
+    assert provider.get_informations(poi) == empty_parking
