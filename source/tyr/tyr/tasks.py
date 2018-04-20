@@ -153,37 +153,38 @@ def send_to_mimir(instance, filename):
     returns action list
     """
     # This test is to avoid creating a new job if there is no action on mimir.
-    if instance.import_ntfs_in_mimir or instance.import_stops_in_mimir:
-        actions = []
-        job = models.Job()
-        instance_config = load_instance_config(instance.name)
-        job.instance = instance
-        job.state = 'pending'
+    if not (instance.import_ntfs_in_mimir or instance.import_stops_in_mimir):
+        return []
 
-        dataset = models.DataSet()
-        dataset.family_type = 'mimir'
-        dataset.type = 'fusio'
+    actions = []
+    job = models.Job()
+    instance_config = load_instance_config(instance.name)
+    job.instance = instance
+    job.state = 'pending'
 
-        #currently the name of a dataset is the path to it
-        dataset.name = filename
-        models.db.session.add(dataset)
-        job.data_sets.append(dataset)
+    dataset = models.DataSet()
+    dataset.family_type = 'mimir'
+    dataset.type = 'fusio'
 
-        models.db.session.add(job)
-        models.db.session.commit()
+    #currently the name of a dataset is the path to it
+    dataset.name = filename
+    models.db.session.add(dataset)
+    job.data_sets.append(dataset)
 
-        # Import ntfs in Mimir
-        if instance.import_ntfs_in_mimir:
-            actions.append(ntfs2mimir.si(instance_config, filename, job.id, dataset_uid=dataset.uid))
+    models.db.session.add(job)
+    models.db.session.commit()
 
-        # Import stops in Mimir
-        # if we are loading pt data we might want to load the stops to autocomplete
-        if instance.import_stops_in_mimir and not instance.import_ntfs_in_mimir:
-            actions.append(stops2mimir.si(instance_config, filename, job.id, dataset_uid=dataset.uid))
+    # Import ntfs in Mimir
+    if instance.import_ntfs_in_mimir:
+        actions.append(ntfs2mimir.si(instance_config, filename, job.id, dataset_uid=dataset.uid))
 
-        actions.append(finish_job.si(job.id))
-        return actions
-    return []
+    # Import stops in Mimir
+    # if we are loading pt data we might want to load the stops to autocomplete
+    if instance.import_stops_in_mimir and not instance.import_ntfs_in_mimir:
+        actions.append(stops2mimir.si(instance_config, filename, job.id, dataset_uid=dataset.uid))
+
+    actions.append(finish_job.si(job.id))
+    return actions
 
 
 @celery.task()
