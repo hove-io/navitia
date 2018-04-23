@@ -38,6 +38,7 @@ www.navitia.io
 #include "fare/fare.h"
 #include "isochrone.h"
 #include "heat_map.h"
+#include "utils/map_find.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/range/algorithm/count.hpp>
@@ -514,14 +515,13 @@ static boost::optional<time_duration>
 get_duration_to_stop_point(const navitia::type::StopPoint* stop_point,
                            const navitia::georef::PathFinder & path_finder)
 {
-    const auto & dist_to_ep = path_finder.distance_to_entry_point;
     boost::optional<time_duration> duration_to_entry_pt;
-
     const auto sp_idx = SpIdx(*stop_point);
-    auto it = dist_to_ep.find(sp_idx);
-    if( it != dist_to_ep.end() ) {
-        duration_to_entry_pt = boost::make_optional(it->second);
-    }
+
+    utils::make_map_find(path_finder.distance_to_entry_point, sp_idx)
+        .if_found([&](const time_duration& duration){
+            duration_to_entry_pt = boost::make_optional(duration);
+        });
 
     return duration_to_entry_pt;
 }
@@ -852,6 +852,18 @@ std::vector<georef::Admin*> find_admins(const type::EntryPoint& ep, const type::
     return data.geo_ref->find_admins(ep.coordinates);
 }
 
+static void add_free_stop_point(const type::StopPoint* stop_point,
+                                georef::PathFinder& pf,
+                                routing::map_stop_point_duration& results)
+{
+    const SpIdx sp_idx{*stop_point};
+    utils::make_map_find(results, sp_idx)
+        .if_not_found([&](){
+            pf.distance_to_entry_point[sp_idx] = {};
+            results[sp_idx] = {};
+        });
+}
+
 boost::optional<routing::map_stop_point_duration>
 get_stop_points(const type::EntryPoint &ep,
                 const type::Data& data,
@@ -867,28 +879,20 @@ get_stop_points(const type::EntryPoint &ep,
               << "," << ep.coordinates.lon() << "]");
 
     switch(ep.type) {
-
         case type::Type_e::StopArea : {
-            auto it = data.pt_data->stop_areas_map.find(ep.uri);
-            if (it!= data.pt_data->stop_areas_map.end()) {
-                for (auto stop_point : it->second->stop_point_list) {
-                    const SpIdx sp_idx{*stop_point};
-                    if (result.find(sp_idx) == result.end()) {
-                        concerned_path_finder.distance_to_entry_point[sp_idx] = {};
-                        result[sp_idx] = {};
+            utils::make_map_find(data.pt_data->stop_areas_map, ep.uri)
+                .if_found([&](const type::StopArea* sa){
+                    for (auto stop_point : sa->stop_point_list) {
+                        add_free_stop_point(stop_point, concerned_path_finder, result);
                     }
-                }
-            }
+                });
             break;
         }
         case type::Type_e::StopPoint : {
-            auto it = data.pt_data->stop_points_map.find(ep.uri);
-            if (it != data.pt_data->stop_points_map.end()){
-                const SpIdx sp_idx{*it->second};
-                concerned_path_finder.distance_to_entry_point[sp_idx] = {};
-                result[sp_idx] = {};
-            }
-
+            utils::make_map_find(data.pt_data->stop_points_map, ep.uri)
+                .if_found([&](const type::StopPoint* stop_point) {
+                    add_free_stop_point(stop_point, concerned_path_finder, result);
+                });
             break;
         }
         case type::Type_e::Admin : {
@@ -902,12 +906,8 @@ get_stop_points(const type::EntryPoint &ep,
             const auto admin = data.geo_ref->admins[it_admin->second];
 
             for (auto stop_area: admin->main_stop_areas) {
-                for(auto sp : stop_area->stop_point_list) {
-                    const SpIdx sp_idx{*sp};
-                    if (result.find(sp_idx) == result.end()) {
-                        result[sp_idx] = {};
-                        concerned_path_finder.distance_to_entry_point[sp_idx] = {};
-                    }
+                for(auto stop_point : stop_area->stop_point_list) {
+                    add_free_stop_point(stop_point, concerned_path_finder, result);
                 }
             }
             break;
@@ -925,22 +925,14 @@ get_stop_points(const type::EntryPoint &ep,
     const auto& admins = find_admins(ep, data);
     for (const auto* admin: admins) {
         for (const auto* odt_admin_stop_point: admin->odt_stop_points) {
-            const SpIdx sp_idx{*odt_admin_stop_point};
-            if (result.find(sp_idx) == result.end()) {
-                concerned_path_finder.distance_to_entry_point[sp_idx] = {};
-                result[sp_idx] = {};
-            }
+            add_free_stop_point(odt_admin_stop_point, concerned_path_finder, result);
         }
     }
 
     // checking for zonal stop points
     const auto& zonal_sps = data.pt_data->stop_points_by_area.find(ep.coordinates);
-    for (const auto* sp: zonal_sps) {
-        const SpIdx sp_idx{*sp};
-        if (result.find(sp_idx) == result.end()) {
-            concerned_path_finder.distance_to_entry_point[sp_idx] = {};
-            result[sp_idx] = {};
-        }
+    for (const auto* stop_point: zonal_sps) {
+        add_free_stop_point(stop_point, concerned_path_finder, result);
     }
 
     // Filtering with free radius (free_radius in meters)
