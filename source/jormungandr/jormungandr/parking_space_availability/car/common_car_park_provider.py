@@ -41,24 +41,37 @@ from abc import abstractmethod
 
 class CommonCarParkProvider(AbstractParkingPlacesProvider):
 
-    def __init__(self, operators, dataset, timeout):
+    def __init__(self, url, operators, dataset, timeout, **kwargs):
+
+        self.ws_service_template = url + '?dataset={}'
         self.operators = [o.lower() for o in operators]
         self.timeout = timeout
         self.dataset = dataset
+        self.fail_max = kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_CAR_PARK_FAIL'])
+        self.reset_timeout = kwargs.get('circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_CAR_PARK_TIMEOUT_S'])
         self.breaker = pybreaker.CircuitBreaker(fail_max=self.fail_max, reset_timeout=self.reset_timeout)
         self.log = logging.LoggerAdapter(logging.getLogger(__name__), extra={'dataset': self.dataset})
 
+        if kwargs.get('api_key'):
+            self.api_key = kwargs.get('api_key')
+
     @abstractmethod
-    def _get_information(self, poi):
+    def process_data(self, data, poi):
         pass
 
     def get_informations(self, poi):
-        return self._get_information(poi)
+        data = self._call_webservice(self.ws_service_template.format(self.dataset))
+
+        if not data or not poi.get('properties', {}).get('ref'):
+            return
+
+        return self.process_data(data, poi)
 
     def support_poi(self, poi):
         properties = poi.get('properties', {})
         return properties.get('operator', '').lower() in self.operators
 
+    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_CAR_PARK', 30))
     def _call_webservice(self, request_url):
         try:
             if self.api_key:

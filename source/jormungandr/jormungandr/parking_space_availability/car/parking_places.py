@@ -41,7 +41,7 @@ class ParkingPlaces(object):
         if occupied_PRM is not None:
             self.occupied_PRM = occupied_PRM
 
-        if any(True for n in [available, occupied, available_PRM, occupied_PRM] if n is not None):
+        if any(n is not None for n in [available, occupied, available_PRM, occupied_PRM]):
             self.total_places = (available or 0) + (occupied or 0) + (available_PRM or 0) + (occupied_PRM or 0)
 
     def __eq__(self, other):

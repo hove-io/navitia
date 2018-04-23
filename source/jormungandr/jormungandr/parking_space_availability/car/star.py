@@ -34,7 +34,6 @@ import jmespath
 from jormungandr.parking_space_availability.car.common_car_park_provider import CommonCarParkProvider
 from jormungandr.parking_space_availability.car.parking_places import ParkingPlaces
 from jormungandr.ptref import FeedPublisher
-from jormungandr import app, cache
 
 DEFAULT_STAR_FEED_PUBLISHER = None
 
@@ -43,20 +42,12 @@ class StarProvider(CommonCarParkProvider):
 
     def __init__(self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_STAR_FEED_PUBLISHER, **kwargs):
 
-        self.ws_service_template = url + '/?dataset={}'
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
         self.provider_name = 'STAR'
-        self.fail_max = kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_STAR_FAIL'])
-        self.reset_timeout = kwargs.get('circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_STAR_TIMEOUT_S'])
 
-        super(StarProvider, self).__init__(operators, dataset, timeout)
+        super(StarProvider, self).__init__(url, operators, dataset, timeout, **kwargs)
 
-    def _get_information(self, poi):
-        data = self._call_webservice(self.ws_service_template.format(self.dataset))
-
-        if not data or not poi.get('properties', {}).get('ref'):
-            return
-
+    def process_data(self, data, poi):
         park = jmespath.search('records[?fields.idparc==\'{}\']|[0]'.format(poi['properties']['ref']), data)
         if park:
             available = jmespath.search('fields.nombreplacesdisponibles', park)
@@ -65,7 +56,3 @@ class StarProvider(CommonCarParkProvider):
             available_PRM = jmespath.search('fields.nombreplacesdisponiblespmr', park)
             occupied_PRM = jmespath.search('fields.nombreplacesoccupeespmr', park)
             return ParkingPlaces(available, occupied, available_PRM, occupied_PRM)
-
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_CAR_PARK_STAR', 30))
-    def _call_webservice(self, request_url):
-        return super(StarProvider, self)._call_webservice(request_url)

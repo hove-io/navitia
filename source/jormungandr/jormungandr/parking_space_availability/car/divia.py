@@ -34,7 +34,6 @@ import jmespath
 from jormungandr.parking_space_availability.car.common_car_park_provider import CommonCarParkProvider
 from jormungandr.parking_space_availability.car.parking_places import ParkingPlaces
 from jormungandr.ptref import FeedPublisher
-from jormungandr import app, cache
 
 DEFAULT_DIVIA_FEED_PUBLISHER = None
 
@@ -43,32 +42,18 @@ class DiviaProvider(CommonCarParkProvider):
 
     def __init__(self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_DIVIA_FEED_PUBLISHER, **kwargs):
 
-        self.ws_service_template = url + '?dataset={}'
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
         self.provider_name = 'DIVIA'
-        self.fail_max = kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_DIVIA_FAIL'])
-        self.reset_timeout = kwargs.get('circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_DIVIA_TIMEOUT_S'])
 
-        super(DiviaProvider, self).__init__(operators, dataset, timeout)
+        super(DiviaProvider, self).__init__(url, operators, dataset, timeout, **kwargs)
 
-        if kwargs.get('api_key'):
-            self.api_key = kwargs.get('api_key')
-
-    def _get_information(self, poi):
-        data = self._call_webservice(self.ws_service_template.format(self.dataset))
-
-        if not data or not poi.get('properties', {}).get('ref'):
-            return
-
+    def process_data(self, data, poi):
         park = jmespath.search('records[?fields.numero_parking==\'{}\']|[0]'.format(poi['properties']['ref'].zfill(2)), data)
         if park:
             available = jmespath.search('fields.nombre_places_libres', park)
             nb_places = jmespath.search('fields.nombre_places', park)
-            occupied = None if not nb_places else (nb_places - available)
+            if available is not None and nb_places and nb_places > available:
+                occupied = nb_places - available
+            else:
+                occupied = None
             return ParkingPlaces(available, occupied, None, None)
-
-
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_CAR_PARK_DIVIA', 30))
-    def _call_webservice(self, request_url):
-        return super(DiviaProvider, self)._call_webservice(request_url)
-
