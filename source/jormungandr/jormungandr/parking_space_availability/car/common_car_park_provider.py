@@ -60,12 +60,13 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
         pass
 
     def get_informations(self, poi):
-        data = self._call_webservice(self.ws_service_template.format(self.dataset))
-
-        if not data or not poi.get('properties', {}).get('ref'):
+        if not poi.get('properties', {}).get('ref'):
             return
 
-        return self.process_data(data, poi)
+        data = self._call_webservice(self.ws_service_template.format(self.dataset))
+
+        if data:
+            return self.process_data(data, poi)
 
     def support_poi(self, poi):
         properties = poi.get('properties', {})

@@ -52,7 +52,7 @@ class DiviaProvider(CommonCarParkProvider):
         if park:
             available = jmespath.search('fields.nombre_places_libres', park)
             nb_places = jmespath.search('fields.nombre_places', park)
-            if available is not None and nb_places and nb_places > available:
+            if available is not None and nb_places is not None and nb_places >= available:
                 occupied = nb_places - available
             else:
                 occupied = None
