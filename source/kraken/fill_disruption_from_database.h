@@ -68,12 +68,12 @@ namespace navitia {
         chaos::PtObject* pt_object = nullptr;
         chaos::DisruptionProperty* property = nullptr;
 
-        std::string last_period_id = "",
-                    last_channel_type_id = "";
+        std::string last_channel_type_id = "";
 
         std::set<std::string> message_ids;
         std::set<std::tuple<std::string, std::string, std::string>> properties;
         std::set<std::string> pt_object_ids;
+        std::set<std::string> appplication_periods_ids;
         std::set<std::string> associate_objects_ids;
         type::PT_Data& pt_data;
         const type::MetaData& meta;
@@ -81,6 +81,7 @@ namespace navitia {
         // This function and all others below are templated so they can be tested
         template<typename T>
         void operator() (T const_it) {
+            // This code is strongly related to the database query (and it's order): fill_disruption_from_database.cpp
             if (!disruption || disruption->id() !=
                     const_it["disruption_id"].template as<std::string>()) {
                 fill_disruption(const_it);
@@ -98,13 +99,13 @@ namespace navitia {
             if (disruption && (!impact ||
                     impact->id() != const_it["impact_id"].template as<std::string>())) {
                 fill_impact(const_it);
-                last_period_id = "";
                 last_channel_type_id = "";
                 message = nullptr;
                 channel = nullptr;
                 pt_object = nullptr;
                 pt_object_ids.clear();
                 message_ids.clear();
+                appplication_periods_ids.clear();
             }
 
             if (disruption
@@ -124,8 +125,10 @@ namespace navitia {
                 }
             }
 
-            if (impact && (last_period_id != const_it["application_id"].template as<std::string>())) {
+            if (impact && !const_it["application_id"].is_null() &&
+                    (!appplication_periods_ids.count(const_it["application_id"].template as<std::string>()))) {
                 fill_application_period(const_it);
+                appplication_periods_ids.insert(const_it["application_id"].template as<std::string>());
             }
             if (impact && (!pt_object_ids.count(const_it["ptobject_id"].template as<std::string>()))) {
                 pt_object = impact->add_informed_entities();
@@ -253,7 +256,6 @@ namespace navitia {
             if (!const_it["application_end_date"].is_null()) {
                 period->set_end(const_it["application_end_date"].template as<uint64_t>());
             }
-            last_period_id = const_it["application_id"].template as<std::string>();
         }
 
         template<typename T>
