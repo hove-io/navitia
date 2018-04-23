@@ -308,7 +308,7 @@ def realtime_level_to_pbf(level):
 #we can't use reverse(enumerate(list)) without creating a temporary
 #list, so we define our own reverse enumerate
 def reverse_enumerate(l):
-    return list(zip(list(range(len(l)-1, -1, -1)), reversed(l)))
+    return zip(xrange(len(l)-1, -1, -1), reversed(l))
 
 
 def pb_del_if(l, pred):

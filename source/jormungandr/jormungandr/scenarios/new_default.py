@@ -447,7 +447,7 @@ def culling_journeys(resp, request):
 
         # Here we mark all journeys as dead that are not must-have
         for jrny in _inverse_selection(candidates_pool, idx_of_jrnys_must_keep):
-             journey_filter.mark_as_dead(jrny, 'Filtered by max_nb_journeys')
+             journey_filter.mark_as_dead(jrny, request, 'Filtered by max_nb_journeys')
 
         if request["max_nb_journeys"] == nb_journeys_must_have:
             logger.debug('max_nb_journeys equals to nb_journeys_must_have')
@@ -468,7 +468,7 @@ def culling_journeys(resp, request):
             sorted_by_type_journeys.extend(list_dict.get(t, []))
 
         for jrny in sorted_by_type_journeys[request["max_nb_journeys"]:]:
-            journey_filter.mark_as_dead(jrny, 'Filtered by max_nb_journeys')
+            journey_filter.mark_as_dead(jrny, request, 'Filtered by max_nb_journeys')
 
         journey_filter.delete_journeys((resp,), request)
         return
@@ -517,7 +517,7 @@ def culling_journeys(resp, request):
 
     logger.debug('Removing non selected journeys')
     for jrny in candidates_pool[np.where(selection_matrix[the_best_index, :] == 0)]:
-        journey_filter.mark_as_dead(jrny, 'Filtered by max_nb_journeys')
+        journey_filter.mark_as_dead(jrny, request, 'Filtered by max_nb_journeys')
 
     journey_filter.delete_journeys((resp,), request)
 
@@ -718,12 +718,12 @@ def merge_responses(responses):
         # we have to add the additional fares too
         # if at least one journey has the ticket we add it
         tickets_to_add = set(t for j in r.journeys for t in j.fare.ticket_id)
-        merged_response.tickets.extend([t for t in r.tickets if t.id in tickets_to_add])
+        merged_response.tickets.extend((t for t in r.tickets if t.id in tickets_to_add))
 
         initial_feed_publishers = {}
         for fp in merged_response.feed_publishers:
             initial_feed_publishers[fp.id] = fp
-        merged_response.feed_publishers.extend([fp for fp in r.feed_publishers if fp.id not in initial_feed_publishers])
+        merged_response.feed_publishers.extend((fp for fp in r.feed_publishers if fp.id not in initial_feed_publishers))
 
         # handle impacts
         for i in r.impacts:
@@ -810,8 +810,11 @@ class Scenario(simple.Scenario):
 
         responses = []
         nb_try = 0
+        nb_valid_journeys = nb_journeys(responses)
+        journeys_ok = iter(())
+
         while request is not None and \
-                ((nb_journeys(responses) < min_asked_journeys and nb_try < min_asked_journeys)
+                ((nb_valid_journeys < min_asked_journeys and nb_try < min_asked_journeys)
                  or nb_try < min_journeys_calls):
             nb_try = nb_try + 1
 
@@ -820,18 +823,37 @@ class Scenario(simple.Scenario):
             _tag_direct_path(tmp_resp)
             _tag_bike_in_pt(tmp_resp)
             journey_filter._filter_too_long_journeys(tmp_resp, request)
-            responses.extend(tmp_resp)  # we keep the error for building the response
             if nb_journeys(tmp_resp) == 0:
                 # no new journeys found, we stop
+                responses.extend(tmp_resp)
                 break
 
             request = self.create_next_kraken_request(request, tmp_resp)
 
             # we filter unwanted journeys by side effects
-            journey_filter.filter_journeys(responses, instance, api_request)
+            from itertools import chain
+            candidats = (j for r in tmp_resp for j in r.journeys if 'to_delete' not in j.tags)
+            filtered_candidats = journey_filter.filter_journeys(candidats, instance, api_request)
 
+            import itertools
+            tmp1, tmp2 = itertools.tee(filtered_candidats)
+            journeys_ok, tmp3 = itertools.tee(journeys_ok)
+
+            journeys_pool = itertools.chain(
+                itertools.combinations(tmp1, 2),
+                itertools.product(tmp2, tmp3),
+            )
+
+            journey_filter._filter_similar_vj_journeys(journeys_pool, api_request)
+
+            responses.extend(tmp_resp)  # we keep the error for building the response
+            journeys_ok = itertools.chain(journeys_ok,
+                                          (j for r in tmp_resp for j in r.journeys if 'to_delete' not in j.tags)
+                                          )
+
+            nb_valid_journeys = nb_journeys(responses)
             #We allow one more call to kraken if there is no valid journey.
-            if nb_journeys(responses) == 0:
+            if nb_valid_journeys == 0:
                 min_journeys_calls = max(min_journeys_calls, 2)
 
         journey_filter.final_filter_journeys(responses, instance, api_request)
@@ -852,14 +874,13 @@ class Scenario(simple.Scenario):
         else:
             for j in pb_resp.journeys:
                 if 'ridesharing' in j.tags:
-                    journey_filter.mark_as_dead(j, 'no_matching_ridesharing_found')
+                    journey_filter.mark_as_dead(j, api_request, 'no_matching_ridesharing_found')
 
         journey_filter.delete_journeys((pb_resp,), api_request)
         type_journeys(pb_resp, api_request)
         culling_journeys(pb_resp, api_request)
 
         self._compute_pagination_links(pb_resp, instance, api_request['clockwise'])
-
         return pb_resp
 
     def call_kraken(self, request_type, request, instance, krakens_call):
@@ -945,7 +966,7 @@ class Scenario(simple.Scenario):
 
     @staticmethod
     def __get_best_for_criteria(journeys, criteria):
-        return min_from_criteria(list(filter(has_pt, journeys)),
+        return min_from_criteria(filter(has_pt, journeys),
                                  [criteria, duration_crit, transfers_crit, nonTC_crit])
 
     def get_best(self, journeys, clockwise):

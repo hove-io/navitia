@@ -66,8 +66,8 @@ def compare(obj1, obj2, compare_generator):
     from any values returned by the other generator
     """
     return all(a == b for a, b in zip_longest(compare_generator(obj1),
-                                                         compare_generator(obj2),
-                                                         fillvalue=object()))
+                                              compare_generator(obj2),
+                                              fillvalue=object()))
 
 
 def are_equals(journey1, journey2):

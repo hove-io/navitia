@@ -47,7 +47,7 @@ def delete_journeys(responses, request):
         logging.getLogger(__name__).info('filtering {} journeys'.format(nb_deleted))
 
 
-def filter_journeys(response_list, instance, request):
+def filter_journeys(journeys, instance, request):
     """
     Filter by side effect the list of pb responses's journeys
 
@@ -55,25 +55,22 @@ def filter_journeys(response_list, instance, request):
     """
 
     # for clarity purpose we build a temporary list
-    journeys = [j for r in response_list for j in r.journeys]
 
+    tmp1, tmp2 = itertools.tee(journeys)
     #DEBUG
-    for j in journeys:
-        _debug_journey(j)
+    if request['debug']:
+        [_debug_journey(j) for j in tmp1]
 
-    _filter_too_short_heavy_journeys(journeys, request)
-
-    _filter_similar_vj_journeys(journeys, request)
-
-    _filter_too_long_waiting(journeys, request)
-
-    _filter_max_successive_physical_mode(journeys, instance, request)
-
-    _filter_min_transfers(journeys, instance, request)
-
-    _filter_direct_path(journeys, instance, request)
-
-    return response_list
+    return _filter_direct_path(
+        _filter_min_transfers(
+            _filter_max_successive_physical_mode(
+                _filter_too_long_waiting(
+                    _filter_too_short_heavy_journeys(tmp2,
+                                                     request),
+                    request)
+                , instance, request),
+            instance, request),
+        instance, request)
 
 
 def final_filter_journeys(response_list, instance, request):
@@ -83,15 +80,17 @@ def final_filter_journeys(response_list, instance, request):
     """
 
     # for clarity purpose we build a temporary list
-    journeys = [j for r in response_list for j in r.journeys]
 
     final_line_filter = get_or_default(request, '_final_line_filter', False)
     if final_line_filter:
-        _filter_similar_line_journeys(journeys, request)
+        journeys = (j for r in response_list for j in r.journeys if not to_be_deleted(j))
+        import itertools
+        journeys_pool = itertools.combinations(journeys, 2)
+        _filter_similar_line_journeys(journeys_pool, request)
 
+    journeys = (j for r in response_list for j in r.journeys if not to_be_deleted(j))
     _filter_too_much_connections(journeys, instance, request)
 
-    return response_list
 
 
 
@@ -155,10 +154,10 @@ def to_be_deleted(journey):
     return 'to_delete' in journey.tags
 
 
-def mark_as_dead(journey, *reasons):
+def mark_as_dead(journey, request={}, *reasons):
     journey.tags.append('to_delete')
-    for reason in reasons:
-        journey.tags.append('deleted_because_' + reason)
+    if request.get('debug'):
+        journey.tags.extend(('deleted_because_' + reason for reason in reasons))
 
 
 def _filter_similar_vj_journeys(journeys, request):
@@ -169,7 +168,7 @@ def _filter_similar_line_journeys(journeys, request):
     _filter_similar_journeys(journeys, request, similar_journeys_line_generator)
 
 
-def _filter_similar_journeys(journeys, request, similar_journey_generator):
+def _filter_similar_journeys(journeys_pool, request, similar_journey_generator):
     """
     we filter similar journeys
     The given generator tells which part of journeys are compared
@@ -178,7 +177,7 @@ def _filter_similar_journeys(journeys, request, similar_journey_generator):
     """
 
     logger = logging.getLogger(__name__)
-    for j1, j2 in itertools.combinations(journeys, 2):
+    for j1, j2 in journeys_pool:
         if to_be_deleted(j1) or to_be_deleted(j2):
             continue
         if compare(j1, j2, similar_journey_generator):
@@ -188,8 +187,9 @@ def _filter_similar_journeys(journeys, request, similar_journey_generator):
                                                                                 j2.internal_id,
                                                                                 worst.internal_id))
 
-            mark_as_dead(worst, 'duplicate_journey', 'similar_to_{other}'
+            mark_as_dead(worst, request, 'duplicate_journey', 'similar_to_{other}'
                           .format(other=j1.internal_id if worst == j2 else j2.internal_id))
+
 
 
 def exceed_min_duration(current_section, journey, request,  min_duration):
@@ -207,10 +207,10 @@ def _filter_too_short_heavy_journeys(journeys, request):
     Typically you don't take your car for only 2 minutes
     """
     logger = logging.getLogger(__name__)
+
     for journey in journeys:
-        if to_be_deleted(journey):
-            continue
         on_bss = False
+        is_dead = False
         for s in journey.sections:
             if s.type == response_pb2.BSS_RENT:
                 on_bss = True
@@ -222,33 +222,42 @@ def _filter_too_short_heavy_journeys(journeys, request):
             if s.street_network.mode == response_pb2.Car \
                     and exceed_min_duration(s, journey, request, request['_min_car']):
                 logger.debug("the journey {} has not enough car, we delete it".format(journey.internal_id))
-                mark_as_dead(journey, "not_enough_car")
+                mark_as_dead(journey, request, "not_enough_car")
+                is_dead = True
                 break
             if not on_bss \
                     and s.street_network.mode == response_pb2.Bike \
                     and exceed_min_duration(s, journey, request, request['_min_bike']):
                 logger.debug("the journey {} has not enough bike, we delete it".format(journey.internal_id))
-                mark_as_dead(journey, "not_enough_bike")
+                mark_as_dead(journey, request, "not_enough_bike")
+                is_dead = True
                 break
-
+        if request.get('debug'):
+            yield journey
+        elif not is_dead:
+            yield journey
 
 def _filter_too_long_waiting(journeys, request):
     """
     filter journeys with a too long section of type waiting
     """
     logger = logging.getLogger(__name__)
+
     for j in journeys:
-        if to_be_deleted(j):
-            continue
+        is_dead = False
         for s in j.sections:
             if s.type != response_pb2.WAITING:
                 continue
             if s.duration < 4 * 60 * 60:
                 continue
             logger.debug("the journey {} has a too long waiting, we delete it".format(j.internal_id))
-            mark_as_dead(j, "too_long_waiting")
+            mark_as_dead(j, request, "too_long_waiting")
+            is_dead = True
             break
-
+        if request.get('debug'):
+            yield j
+        elif not is_dead:
+            yield j
 
 def _filter_max_successive_physical_mode(journeys, instance, request):
     """
@@ -257,12 +266,13 @@ def _filter_max_successive_physical_mode(journeys, instance, request):
     """
     logger = logging.getLogger(__name__)
     max_successive_physical_mode = get_or_default(request, '_max_successive_physical_mode', 0)
+
     if max_successive_physical_mode == 0:
+        for j in journeys:
+            yield j
         return
     for j in journeys:
-        if to_be_deleted(j):
-            continue
-
+        is_dead = False
         bus_count = 0
         for s in j.sections:
             if s.type != response_pb2.PUBLIC_TRANSPORT:
@@ -276,8 +286,12 @@ def _filter_max_successive_physical_mode(journeys, instance, request):
         if bus_count > max_successive_physical_mode:
             logger.debug("the journey {} has a too much successive {}, we delete it".
                 format(j.internal_id, instance.successive_physical_mode_to_limit_id))
-            mark_as_dead(j, "too_much_successive_physical_mode")
-
+            mark_as_dead(j, request, "too_much_successive_physical_mode")
+            is_dead = True
+        if request.get('debug'):
+            yield j
+        elif not is_dead:
+            yield j
 
 def _filter_too_much_connections(journeys, instance, request):
     """
@@ -286,18 +300,16 @@ def _filter_too_much_connections(journeys, instance, request):
     """
     logger = logging.getLogger(__name__)
     max_additional_connections = get_or_default(request, '_max_additional_connections',
-                                            instance.max_additional_connections)
-
-    min_connections = get_min_connections(journeys)
+                                                instance.max_additional_connections)
+    import itertools
+    it1, it2 = itertools.tee(journeys, 2)
+    min_connections = get_min_connections(it1)
     if min_connections is not None:
         max_connections_allowed = max_additional_connections + min_connections
-        for j in journeys:
-            if to_be_deleted(j):
-                continue
-
+        for j in it2:
             if get_nb_connections(j) > max_connections_allowed:
                 logger.debug("the journey {} has a too much connections, we delete it".format(j.internal_id))
-                mark_as_dead(j, "too_much_connections")
+                mark_as_dead(j, request, "too_much_connections")
 
 
 def _filter_min_transfers(journeys, instance, request):
@@ -308,35 +320,43 @@ def _filter_min_transfers(journeys, instance, request):
     min_nb_transfers = get_or_default(request, 'min_nb_transfers', 0)
 
     for j in journeys:
-        if to_be_deleted(j):
-            continue
+        is_dead = False
         if get_nb_connections(j) < min_nb_transfers:
             logger.debug("the journey {} has not enough connections, we delete it".format(j.internal_id))
-            mark_as_dead(j, "not_enough_connections")
-
+            mark_as_dead(j, request, "not_enough_connections")
+            is_dead = True
+        if request.get('debug'):
+            yield j
+        elif not is_dead:
+            yield j
 
 def _filter_direct_path(journeys, instance, request):
     """
     eliminates journeys that are not matching direct path parameter (none, only or indifferent)
     """
     logger = logging.getLogger(__name__)
-    dp = get_or_default(request, 'direct_path', 'indifferent')
+    dp = request.get('direct_path') or 'indifferent'
 
     if dp == 'indifferent':
+        for j in journeys:
+            yield j
         return
-
     for j in journeys:
-        if to_be_deleted(j):
-            continue
+        is_dead = False
         if dp == 'none' and 'non_pt' in j.tags:
             logger.debug("the journey {} is direct, we delete it as param direct_path=none"
                          .format(j.internal_id))
-            mark_as_dead(j, "direct_path_none")
-        if dp == 'only' and 'non_pt' not in j.tags:
+            mark_as_dead(j, request, "direct_path_none")
+            is_dead = True
+        elif dp == 'only' and 'non_pt' not in j.tags:
             logger.debug("the journey {} uses pt, we delete it as param direct_path=only"
                          .format(j.internal_id))
-            mark_as_dead(j, "direct_path_only")
-
+            mark_as_dead(j, request, "direct_path_only")
+            is_dead = True
+        if request.get('debug'):
+            yield j
+        elif not is_dead:
+            yield j
 
 def get_min_connections(journeys):
     """
@@ -346,7 +366,7 @@ def get_min_connections(journeys):
     if not journeys:
         return None
 
-    return min([get_nb_connections(j) for j in journeys if not to_be_deleted(j)] or [0])
+    return min((get_nb_connections(j) for j in journeys if not to_be_deleted(j)), 0)
 
 
 def get_nb_connections(journey):
@@ -366,7 +386,7 @@ def get_min_waiting(journey):
     """
     Returns min waiting time in a journey
     """
-    return min([s.duration for s in journey.sections if s.type == response_pb2.WAITING] or [0])
+    return min((s.duration for s in journey.sections if s.type == response_pb2.WAITING), 0)
 
 
 def way_later(request, journey1, journey2):
@@ -414,27 +434,26 @@ def _filter_too_long_journeys(responses, request):
     The aim is to keep that as simple as possible
     """
     # for clarity purpose we build a temporary list
-    journeys = [j for r in responses for j in r.journeys if 'non_pt' not in j.tags]
+    journeys = (j for r in responses for j in r.journeys if 'non_pt' not in j.tags
+                and not to_be_deleted(j))
 
     logger = logging.getLogger(__name__)
     for (j1, j2) in itertools.permutations(journeys, 2):
         if to_be_deleted(j1) or to_be_deleted(j2):
             continue
-
         if way_later(request, j1, j2):
             logger.debug("the journey {} is too long compared to {}, we delete it"
                          .format(j1.internal_id, j2.internal_id))
-            mark_as_dead(j1, 'too_long', 'too_long_compared_to_{}'.format(j2.internal_id))
-
+            mark_as_dead(j1, request, 'too_long', 'too_long_compared_to_{}'.format(j2.internal_id))
 
 def is_walk_after_parking(journey, idx_section):
     '''
     True if section at given index is a walking after/before parking car/bss, False otherwise
     '''
-    is_park_section = lambda section: section.type in (response_pb2.PARK,
+    is_park_section = lambda section: section.type in {response_pb2.PARK,
                                                        response_pb2.LEAVE_PARKING,
                                                        response_pb2.BSS_PUT_BACK,
-                                                       response_pb2.BSS_RENT)
+                                                       response_pb2.BSS_RENT}
 
     s = journey.sections[idx_section]
     if s.type == response_pb2.STREET_NETWORK and s.street_network.mode == response_pb2.Walking and \
@@ -452,9 +471,9 @@ def similar_journeys_vj_generator(journey):
             continue
 
         if s.type == response_pb2.PUBLIC_TRANSPORT:
-            yield "pt:" + s.pt_display_informations.uris.vehicle_journey
+            yield "pt:{}".format(s.pt_display_informations.uris.vehicle_journey)
         elif s.type == response_pb2.STREET_NETWORK:
-            yield "sn:" + str(s.street_network.mode)
+            yield "sn:{}".format(s.street_network.mode)
 
 
 def similar_journeys_line_generator(journey):
@@ -465,9 +484,9 @@ def similar_journeys_line_generator(journey):
             continue
 
         if s.type == response_pb2.PUBLIC_TRANSPORT:
-            yield "pt:" + s.pt_display_informations.uris.line
+            yield "pt:{}".format(s.pt_display_informations.uris.line)
         elif s.type == response_pb2.STREET_NETWORK:
-            yield "sn:" + str(s.street_network.mode)
+            yield "sn:{}".format(s.street_network.mode)
 
 
 def fallback_duration(journey):
