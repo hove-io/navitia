@@ -35,7 +35,7 @@ include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/third_party/")
 # prometheus-cpp
 #
 # We want to deactivate prometheus lib if CMake version < 2.8.12.2
-if(("${CMAKE_VERSION}" VERSION_GREATER 2.8.12.2) OR ("${CMAKE_VERSION}" VERSION_EQUAL 2.8.12.2))
+if("${CMAKE_VERSION}" VERSION_GREATER 2.8.12.1)
 
     include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/third_party/prometheus-cpp/include/"
                         "${CMAKE_BINARY_DIR}/third_party/prometheus-cpp/lib/cpp")
@@ -48,9 +48,9 @@ if(("${CMAKE_VERSION}" VERSION_GREATER 2.8.12.2) OR ("${CMAKE_VERSION}" VERSION_
 
     set(ENABLE_PROMETHEUS ON)
     # Flag activation for code define
-    add_definitions(-DENABLE_PROMETHEUS)
+    add_definitions(-DENABLE_PROMETHEUS=1)
 
-else(("${CMAKE_VERSION}" VERSION_GREATER 2.8.12.2) OR ("${CMAKE_VERSION}" VERSION_EQUAL 2.8.12.2))
+else()
     message("-- CMake version < 2.8.12.2, Skip prometheus in third party")
     message(DEPRECATION " ${CMAKE_OS_NAME} ${CMAKE_OS_VERSION} is no longer maintained for navitia project")
 
@@ -58,7 +58,7 @@ else(("${CMAKE_VERSION}" VERSION_GREATER 2.8.12.2) OR ("${CMAKE_VERSION}" VERSIO
     # Flag activation for code define (=0)
     add_definitions(-DENABLE_PROMETHEUS=0)
 
-endif(("${CMAKE_VERSION}" VERSION_GREATER 2.8.12.2) OR ("${CMAKE_VERSION}" VERSION_EQUAL 2.8.12.2))
+endif()
 
 # Reactivate warnings flags
 set(CMAKE_CXX_FLAGS ${TMP_FLAG})
