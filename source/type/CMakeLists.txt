@@ -80,6 +80,16 @@ add_custom_target(protobuf_files ALL DEPENDS ${PROTO_HDRS} ${PROTO_SRCS}
                   ${NAVITIACOMMON_PROTO_PY} ${MONITOR_KRAKEN_PROTO_PY} ${JORMUNGANDR_TEST_PY})
 set_source_files_properties(${PROTO_HDRS} ${PROTO_SRCS} PROPERTIES GENERATED TRUE)
 
+#
+# disable warnings for protobuf generated cpp files
+#
+if(CMAKE_COMPILER_IS_GNUCXX)
+    set(PROTO_CMAKE_CXX_FLAGS "${CMAKE_GNUCXX_COMMON_FLAGS} -w")
+endif(CMAKE_COMPILER_IS_GNUCXX)
+if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+    set(PROTO_CMAKE_CXX_FLAGS "${CMAKE_CLANG_COMMON_FLAGS} -Wno-everything")
+endif("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
+SET_SOURCE_FILES_PROPERTIES(${PROTO_SRCS} PROPERTIES COMPILE_FLAGS ${PROTO_CMAKE_CXX_FLAGS})
 
 add_library(pb_lib ${PROTO_SRCS} pb_converter.cpp)
 target_link_libraries(pb_lib thermometer vptranslator pthread ${PROTOBUF_LIBRARY} tcmalloc)

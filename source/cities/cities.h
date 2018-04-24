@@ -31,7 +31,7 @@ www.navitia.io
 #pragma once
 #include <set>
 #include "type/type.h"
-#include "third_party/osmpbfreader/osmpbfreader.h"
+#include <osmpbfreader/osmpbfreader.h>
 #include "utils/lotus.h"
 #include "utils/logger.h"
 #include <unordered_map>
@@ -39,7 +39,7 @@ www.navitia.io
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/polygon.hpp>
 #include <boost/geometry/multi/geometries/multi_polygon.hpp>
-#include "third_party/RTree/RTree.h"
+#include <RTree/RTree.h>
 #include <boost/algorithm/string.hpp>
 
 namespace bg = boost::geometry;

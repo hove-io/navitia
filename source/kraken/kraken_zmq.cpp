@@ -40,7 +40,6 @@ www.navitia.io
 #include "kraken_zmq.h"
 #include "utils/zmq.h"
 #include "utils/functions.h" //navitia::absolute_path function
-#include "metrics.h"
 
 static void show_usage(const std::string& name)
 {
