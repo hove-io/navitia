@@ -26,10 +26,11 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, print_function, unicode_literals, division
 from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
-
+import jmespath
 
 def get_impacts(response):
     return {d['id']: d for d in response['disruptions']}
@@ -189,48 +190,116 @@ class TestDisruptions(AbstractTestFixture):
         assert len(disruptions) == 1
         is_valid_disruption(disruptions[0])
 
+    def is_in_disprution_time(self, stop_time, disruption_time):
+        """
+        :param stop_time: dict of departure/arrival stop_date_time
+        :param disruption_time: dict of disruption application_periods
+        :return: True if stop_time is within disruption time, else None
+        """
+        if disruption_time['begin'] < stop_time['arrival_date_time'] < disruption_time['end'] or \
+                disruption_time['begin'] < stop_time['departure_date_time'] < disruption_time['end']:
+            return True
+
     def test_disruption_with_departures(self):
         """
-        on a departure call on stopB, we should get its disruptions
+        on a '/departure' call on stopB, we should get its disruptions
         """
-
-        response = self.query_region('stop_points/stop_point:stopB/departures?from_datetime=20120614T080000&_current_datetime=20120614T080000')
+        response = self.query_region('stop_points/stop_point:stopB/departures?'
+                                     'from_datetime=20120614T080000&_current_datetime=20120614T080000')
 
         departures = get_not_null(response, 'departures')
-        assert len(departures) == 2
+        assert len(departures) >= 2
 
-        departure = departures[0]
-        disruptions = get_all_element_disruptions(departure, response)
+        disruptions = get_not_null(response, 'disruptions')
         assert disruptions
-        assert len(disruptions) == 1
-        assert 'too_bad_all_lines' in disruptions
-        is_valid_disruption(disruptions['too_bad_all_lines'][0].disruption)
+        assert len(disruptions) >= 1
+        for d in disruptions:
+            is_valid_disruption(d)
 
-        departure = departures[1]
-        disruptions = get_all_element_disruptions(departure, response)
-        assert not disruptions
+        # Every lines impacted by the disruption
+        disruption_lines = jmespath.search('impacted_objects[].pt_object.line.name', disruptions[0])
+        # Every lines departing from the stop point
+        departures_lines = jmespath.search('[].route.line.name', departures)
+
+        # Line not impacted shouldn't return a disruption
+        not_impacted_lines = set(departures_lines)-set(disruption_lines)
+        for line in not_impacted_lines:
+            not_impacted_departure = jmespath.search("[?route.line.name=='{}']".format(line), departures)
+            departure_disruptions = get_all_element_disruptions(not_impacted_departure[0], response)
+            assert not departure_disruptions
+
+        impacted_lines = set(departures_lines) - set(not_impacted_lines)
+        for l in impacted_lines:
+            departure = jmespath.search("[?route.line.name=='{}']".format(l), departures)
+            departure_disruptions = get_all_element_disruptions(departure, response)
+            if self.is_in_disprution_time(departure[0]['stop_date_time'], disruptions[0]['application_periods'][0]):
+                assert departure_disruptions
+                assert len(departure_disruptions) == 1
+                assert 'too_bad_all_lines' in departure_disruptions
+                is_valid_disruption(departure_disruptions['too_bad_all_lines'][0].disruption)
+            else:
+                assert not departure_disruptions
 
     def test_disruption_with_arrival(self):
         """
-        on a arrivals call on stopA, we should get its disruptions
+        on a '/arrivals' call on stopA, we should get its disruptions
         """
-
         response = self.query_region('stop_points/stop_point:stopA/arrivals?'
                                      'from_datetime=20120614T070000&_current_datetime=20120614T080000')
 
         arrivals = get_not_null(response, 'arrivals')
-        assert len(arrivals) == 2
+        assert len(arrivals) >= 2
 
-        arrival = arrivals[0]
-        disruptions = get_all_element_disruptions(arrival, response)
+        disruptions = get_not_null(response, 'disruptions')
         assert disruptions
-        assert len(disruptions) == 1
-        assert 'too_bad_all_lines' in disruptions
-        is_valid_disruption(disruptions['too_bad_all_lines'][0].disruption)
+        assert len(disruptions) >= 1
+        for d in disruptions:
+            is_valid_disruption(d)
 
-        arrival = arrivals[1]
-        disruptions = get_all_element_disruptions(arrival, response)
-        assert not disruptions
+        # Every lines impacted by the disruption
+        disruption_lines = jmespath.search('impacted_objects[].pt_object.line.name', disruptions[0])
+        # Every lines arriving to the stop point
+        arrivals_lines = jmespath.search('[].route.line.name', arrivals)
+
+        # Line not impacted shouldn't return a disruption
+        not_impacted_lines = set(arrivals_lines) - set(disruption_lines)
+        for line in not_impacted_lines:
+            not_impacted_departure = jmespath.search("[?route.line.name=='{}']".format(line), arrivals)
+            departure_disruptions = get_all_element_disruptions(not_impacted_departure[0], response)
+            assert not departure_disruptions
+
+        impacted_lines = set(arrivals_lines) - set(not_impacted_lines)
+        for l in impacted_lines:
+            departure = jmespath.search("[?route.line.name=='{}']".format(l), arrivals)
+            departure_disruptions = get_all_element_disruptions(departure, response)
+            if self.is_in_disprution_time(departure[0]['stop_date_time'], disruptions[0]['application_periods'][0]):
+                assert departure_disruptions
+                assert len(departure_disruptions) == 1
+                assert 'too_bad_all_lines' in departure_disruptions
+                is_valid_disruption(departure_disruptions['too_bad_all_lines'][0].disruption)
+            else:
+                assert not departure_disruptions
+
+
+
+
+        # arrival = arrivals[0]
+        # disruptions = get_all_element_disruptions(arrival, response)
+        # assert disruptions
+        # assert len(disruptions) == 1
+        # assert 'too_bad_all_lines' in disruptions
+        # is_valid_disruption(disruptions['too_bad_all_lines'][0].disruption)
+        #
+        # # This line isn't in the impacted_objects list
+        # arrival = arrivals[1]
+        # disruptions = get_all_element_disruptions(arrival, response)
+        # assert not disruptions
+        #
+        # # This line is in the impacted_objects list but arrival is after the time of disruption
+        # arrival = arrivals[2]
+        # disruptions = get_all_element_disruptions(arrival, response)
+        # assert not disruptions
+
 
     def test_direct_disruption_call(self):
         """
