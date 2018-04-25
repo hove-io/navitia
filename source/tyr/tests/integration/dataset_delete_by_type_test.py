@@ -110,14 +110,14 @@ def create_tyr_update_jobs():
         return instance.name
 
 
-def test_migrate_poi_to_osm_wrong_instance(create_instance):
+def test_delete_for_wrong_instance(create_instance):
 
-    resp, status_code = api_delete('/v0/instances/wrong_instance/actions/migrate_from_poi_to_osm', check=False)
+    resp, status_code = api_delete('/v0/instances/wrong_instance/actions/delete_dataset/toto', check=False)
     assert resp['action'] == 'No instance found for : wrong_instance'
     assert status_code == 404
 
 
-def test_migrate_poi_to_osm_one_instance(create_tyr_update_jobs):
+def test_delete_poi_type_for_one_instance(create_tyr_update_jobs):
 
     resp = api_get('/v0/instances')
     assert len(resp) == 1
@@ -125,8 +125,9 @@ def test_migrate_poi_to_osm_one_instance(create_tyr_update_jobs):
     resp = api_get('/v0/jobs/{}'.format(create_tyr_update_jobs))
     assert len(resp.values()[0]) == 2
 
-    resp = api_delete('/v0/instances/{}/actions/migrate_from_poi_to_osm'.format(create_tyr_update_jobs))
-    assert resp['action'] == 'All POI datasets deleted for instance {}'.format(create_tyr_update_jobs)
+    # Here a job having two poi data_sets is deleted
+    resp = api_delete('/v0/instances/{}/actions/delete_dataset/poi'.format(create_tyr_update_jobs))
+    assert resp['action'] == 'All poi datasets deleted for instance {}'.format(create_tyr_update_jobs)
 
     resp = api_get('/v0/jobs/{}'.format(create_tyr_update_jobs))
     assert len(resp.values()[0]) == 1
@@ -134,7 +135,29 @@ def test_migrate_poi_to_osm_one_instance(create_tyr_update_jobs):
         assert dataset['type'] != 'poi'
 
 
-def test_migrate_poi_to_osm_two_instances(create_instance, create_tyr_update_jobs):
+# job_1 -> data_sets ['fusio','osm','poi']
+# job_2 -> data_sets ['poi','poi']
+def test_delete_fusio_type_for_one_instance(create_tyr_update_jobs):
+
+    resp = api_get('/v0/instances')
+    assert len(resp) == 1
+
+    resp = api_get('/v0/jobs/{}'.format(create_tyr_update_jobs))
+    assert len(resp.values()[0]) == 2
+
+    # Here no empty job is deleted
+    resp = api_delete('/v0/instances/{}/actions/delete_dataset/fusio'.format(create_tyr_update_jobs))
+    assert resp['action'] == 'All fusio datasets deleted for instance {}'.format(create_tyr_update_jobs)
+
+    resp = api_get('/v0/jobs/{}'.format(create_tyr_update_jobs))
+    assert len(resp.values()[0]) == 2
+    for dataset in resp.values()[0][0]['data_sets']:
+        assert dataset['type'] != 'fusio'
+    for dataset in resp.values()[0][0]['data_sets']:
+        assert dataset['type'] == 'poi'
+
+
+def test_delete_poi_type_for_two_instances(create_instance, create_tyr_update_jobs):
 
     resp = api_get('/v0/instances')
     assert len(resp) == 2
@@ -146,8 +169,8 @@ def test_migrate_poi_to_osm_two_instances(create_instance, create_tyr_update_job
     resp = api_get('/v0/jobs/{}'.format(create_tyr_update_jobs))
     assert len(resp.values()[0]) == 2
 
-    resp = api_delete('/v0/instances/{}/actions/migrate_from_poi_to_osm'.format(create_tyr_update_jobs))
-    assert resp['action'] == 'All POI datasets deleted for instance {}'.format(create_tyr_update_jobs)
+    resp = api_delete('/v0/instances/{}/actions/delete_dataset/poi'.format(create_tyr_update_jobs))
+    assert resp['action'] == 'All poi datasets deleted for instance {}'.format(create_tyr_update_jobs)
 
     resp = api_get('/v0/jobs/{}'.format(create_tyr_update_jobs))
     assert len(resp.values()[0]) == 1

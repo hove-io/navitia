@@ -410,10 +410,10 @@ class Instance(db.Model):
         else:
             raise Exception({'error': 'instance is required'}, 400)
 
-    def delete_dataset(self):
+    def delete_dataset(self, _type):
         result = db.session.query(DataSet, Job) \
             .join(Job) \
-            .filter(DataSet.type == 'poi', Job.instance_id == self.id)\
+            .filter(DataSet.type == _type, Job.instance_id == self.id)\
             .all()
 
         job_list = {}
@@ -422,6 +422,7 @@ class Instance(db.Model):
             db.session.query(Metric).filter(Metric.dataset_id == dataset.id).delete()
             db.session.delete(dataset)
 
+            # Delete a job without any dataset
             if job.id not in job_list:
                 job_list[job.id] = 1
             else:
