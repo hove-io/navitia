@@ -173,6 +173,9 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     if request["free_radius_to"]:
         req.journeys.free_radius_to = request["free_radius_to"]
 
+    if request["min_nb_journeys"]:
+        req.journeys.min_nb_journeys = request["min_nb_journeys"]
+
     return req
 
 

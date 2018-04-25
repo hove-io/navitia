@@ -1098,7 +1098,8 @@ void make_response(navitia::PbCreator& pb_creator,
                    uint32_t max_transfers,
                    uint32_t max_extra_second_pass,
                    uint32_t free_radius_from,
-                   uint32_t free_radius_to ) {
+                   uint32_t free_radius_to,
+                   uint32_t min_nb_journeys) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     std::vector<Path> pathes;
