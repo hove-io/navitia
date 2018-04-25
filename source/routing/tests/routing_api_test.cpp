@@ -2744,3 +2744,110 @@ BOOST_AUTO_TEST_CASE(section_geometry_with_shapes) {
     BOOST_CHECK_EQUAL(journey.sections(1).shape(4).lon(), 10);
     BOOST_CHECK_EQUAL(journey.sections(1).shape(4).lat(), 5);
 }
+
+/**
+ * @brief This test aims to highlight the min_nb_journeys option on a journey request.
+ *
+ * min_nb_journeys allows to ask differents same journeys.
+ * Kraken do several loops to compute the min number of journeys. for each loop, kraken compute
+ * with a departure time + 1 second to catch next departure for the sane journeys.
+ *
+ * The data for testing :
+ *
+ * start : sp1
+ * stop  : sp2
+ *
+ * Vehicle journey with multiple stops times
+ * date : 2018 03 09
+ *
+ *           sp1                   sp2
+ *            x---------------------x
+ *         - 8:01                - 8:10
+ *         - 8:03                - 8:12
+ *         - 8:05                - 8:14
+ *         - 8:07                - 8:16
+ *
+ * We create several requests :
+ *
+ * Case 1 : Simple request without min_nb_journeys
+ *          We must have only one journeys
+ * Case 2 : Request with min_nb_journeys = 4
+ *          We must have all journeys
+ */
+BOOST_AUTO_TEST_CASE(journeys_with_min_nb_journeys) {
+    // Create Builder
+    ed::builder b("20180309");
+
+    // Create Area
+    b.sa("stop_area:sa1")("stop_point:sa1:sp1", 2.39592, 48.84848, false);
+    b.sa("stop_area:sa2")("stop_point:sa2:sp2", 2.36381, 48.86650, false);
+    b.vj("vj1")
+    // for sp1
+    ("stop_point:sa1:sp1", "8:00"_t, "8:01"_t)
+    ("stop_point:sa1:sp1", "8:02"_t, "8:03"_t)
+    ("stop_point:sa1:sp1", "8:04"_t, "8:05"_t)
+    ("stop_point:sa1:sp1", "8:06"_t, "8:07"_t)
+    // for sp2
+    ("stop_point:sa2:sp2", "8:10"_t, "8:11"_t)
+    ("stop_point:sa2:sp2", "8:12"_t, "8:13"_t)
+    ("stop_point:sa2:sp2", "8:14"_t, "8:15"_t)
+    ("stop_point:sa2:sp2", "8:16"_t, "8:17"_t);
+
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->build_proximity_list();
+    auto prod_date = boost::gregorian::date(2018, 3, 9);
+    auto prod_len = boost::gregorian::days(1);
+    b.data->meta->production_date = boost::gregorian::date_period(prod_date, prod_len);
+
+    // create Raptor
+    nr::RAPTOR raptor(*(b.data));
+
+    // from (nation)
+    navitia::type::EntryPoint origin(navitia::type::Type_e::StopPoint, "stop_point:sa1:sp1");
+
+    // to (republique)
+    navitia::type::EntryPoint destination(navitia::type::Type_e::StopPoint, "stop_point:sa2:sp2");
+
+    std::vector<std::string> forbidden;
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    //-----------------------------------
+    // Case 1 : Simple request without multi journeys
+
+    // send request
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator1(data_ptr, "20180309T080000"_dt, null_time_period);
+    make_response(pb_creator1,
+                  raptor,
+                  origin,
+                  destination,
+                  {ntest::to_posix_timestamp("20180309T080000")},
+                  true,
+                  navitia::type::AccessibiliteParams(),
+                  forbidden,
+                  {},
+                  sn_worker,
+                  nt::RTLevel::Base,
+                  2_min,
+                  8640,
+                  10,
+                  0);
+
+    // get the response
+    pbnavitia::Response resp = pb_creator1.get_response();
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+
+    // Journey
+    pbnavitia::Journey journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
+    pbnavitia::Section section = journey.sections(0);
+
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
+    BOOST_CHECK_EQUAL(section.origin().stop_point().name(), "stop_point:sa1:sp1");
+    BOOST_CHECK_EQUAL(section.destination().stop_point().name(), "stop_point:sa2:sp2");
+
+}
