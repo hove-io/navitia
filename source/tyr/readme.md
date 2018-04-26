@@ -714,13 +714,27 @@ Finally if you want to delete a poi_type you just have to use the DELETE action:
 
 #### Migrate from POI to OSM
 
-Remove all POI datasets stored in database.
+Load POI from OSM.
 
-    DELETE $HOST/v0/instances/$INSTANCE_NAME/actions/migrate_from_poi_to_osm
+    PUT $HOST/v0/instances/$INSTANCE_NAME/actions/migrate_from_poi_to_osm
 
 response:
 ```json
 {
-    "action": "All POI datasets deleted for instance $INSTANCE_NAME"
+    "action": "Parameter parse_pois_from_osm activated"
+}
+```
+
+
+#### Delete data_sets by type
+
+Delete all the data_sets by type stored in database.
+
+    DELETE $HOST/v0/instances/$INSTANCE_NAME/actions/delete_dataset/$TYPE
+
+response:
+```json
+{
+    "action": "All $TYPE datasets deleted for instance $INSTANCE_NAME"
 }
 ```
