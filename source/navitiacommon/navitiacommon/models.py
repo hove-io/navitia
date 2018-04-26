@@ -397,6 +397,10 @@ class Instance(db.Model):
         return cls.query.filter_by(discarded=False)
 
     @classmethod
+    def query_all(cls):
+        return cls.query
+
+    @classmethod
     def get_by_name(cls, name):
         res = cls.query_existing().filter_by(name=name).first()
         return res
