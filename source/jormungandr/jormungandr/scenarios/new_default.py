@@ -947,7 +947,7 @@ class Scenario(simple.Scenario):
 
         to do that we find ask the next (resp previous) query datetime
         """
-        vjs = [j for r in responses for j in r.journeys if not journey_filter.to_be_deleted(j)]
+        vjs = journey_filter.get_qualified_journeys(responses)
         if request["clockwise"]:
             request['datetime'] = self.next_journey_datetime(vjs, request["clockwise"])
         else:
