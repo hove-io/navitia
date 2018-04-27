@@ -145,7 +145,7 @@ void free_radius_filter(routing::map_stop_point_duration& sp_list,
  * @param clockwise Active the clockwise option
  * @return uint32_t The departure time or the max bound time
  */
-DateTime prepare_next_call_for_raptor(const std::list<Journey> & journeys, const bool clockwise = false);
+std::pair<DateTime, DateTime> prepare_next_call_for_raptor(const std::list<Journey> & journeys);
 
 void make_graphical_isochrone(navitia::PbCreator& pb_creator,
                               RAPTOR &raptor_max,

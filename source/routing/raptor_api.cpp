@@ -979,44 +979,17 @@ void free_radius_filter(routing::map_stop_point_duration& sp_list,
     }
 }
 
-DateTime prepare_next_call_for_raptor(const std::list<Journey> & journeys, const bool clockwise)
+std::pair<DateTime, DateTime> prepare_next_call_for_raptor(const std::list<Journey> & journeys)
 {
-    boost::posix_time::ptime tmp;
+    DateTime lastest_arrival    = DateTimeUtils::min;
+    DateTime earliest_departure = DateTimeUtils::inf; // clockwise
 
-    // // This function don't have a empty path list
-    // if (pathes.size() >= 1) {
+    for (const auto & journey : journeys) {
+            lastest_arrival = std::max( lastest_arrival, journey.arrival_dt);
+            earliest_departure = std::min( earliest_departure, journey.departure_dt); // clokwise
+    }
 
-    //     // Init for the fisrt date time
-    //     if (!pathes[0].items.empty()) {
-    //         // Start the lastest
-    //         if (clockwise) {
-    //             tmp = pathes[0].items[0].departure;
-    //         }
-    //         // Arrive the earliest
-    //         else {
-    //             tmp = pathes[0].items[pathes[0].items.size()].arrival;
-    //         }
-    //     }
-
-    //     // Find the lastest or the earliest (depends of clockwise) without the first element
-    //     for (size_t i = 1; i < pathes.size(); ++i) {
-
-    //         if (!pathes[i].items.empty()) {
-    //             // Start the lastest
-    //             if (clockwise && (tmp > pathes[i].items[0].departure)) {
-    //                 tmp = pathes[i].items[0].departure;
-    //             }
-    //             // Arrive the earliest
-    //             if (!clockwise && (tmp < pathes[i].items[pathes[i].items.size()].arrival)) {
-    //                 tmp = pathes[i].items[pathes[i].items.size()].arrival;
-    //             }
-    //         }
-    //     }
-    // }
-    // // convert ptime in seconds
-    // DateTime time = tmp.time_of_day().total_seconds();
-    // return time;
-    return 10;
+    return std::make_pair(earliest_departure, lastest_arrival);
 }
 
 static std::vector<bt::ptime>
@@ -1257,17 +1230,17 @@ void make_response(navitia::PbCreator& pb_creator,
                     *departures, *destinations, request_date_secs, rt_level, transfer_penalty, bound, max_transfers,
                     accessibilite_params, forbidden, allowed, clockwise, direct_path_dur,
                     max_extra_second_pass);
-LOG4CPLUS_DEBUG(logger, "raptor found " << raptor_journeys.size() << " solutions");
 
-                // else {
-                //     if (clockwise) {
-                //         request_date_secs = prepare_next_call_for_raptor(raptor_journeys, clockwise);
-                //         request_date_secs++; // we exclude path by adding a second
-                //     } else {
-                //         bound = prepare_next_call_for_raptor(raptor_journeys, clockwise);
-                //         bound--; // we exclude path by subtracting a second
-                //     }
-                // }
+                    LOG4CPLUS_DEBUG(logger, "raptor found " << raptor_journeys.size() << " solutions");
+
+
+                auto next_call_bound = prepare_next_call_for_raptor(raptor_journeys);
+                if (clockwise) {
+                    request_date_secs = next_call_bound.first + 1;
+                }
+                else {
+                    request_date_secs = next_call_bound.second - 1;
+                }
 
                 // filter the similar journeys
 
@@ -1301,9 +1274,6 @@ LOG4CPLUS_DEBUG(logger, "raptor found " << raptor_journeys.size() << " solutions
                 pathes.push_back(Path());
             }
         }
-
-        if(clockwise)
-            std::reverse(pathes.begin(), pathes.end());
 
         make_pathes(pb_creator,
                     pathes,
