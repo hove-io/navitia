@@ -35,6 +35,7 @@ www.navitia.io
 #include "utils/flat_enum_map.h"
 #include "type/rt_level.h"
 #include <limits>
+#include "raptor.h"
 #include "routing/routing.h"
 
 namespace navitia{
@@ -132,6 +133,19 @@ void free_radius_filter(routing::map_stop_point_duration& sp_list,
                         const type::EntryPoint& ep,
                         const type::Data& data,
                         const  uint32_t free_radius);
+
+/**
+ * @brief Prepare next call for raptor with min_nb_journeys options
+ * clockwise = false (The criteria is "arrive the earliest") :
+ * Return a new departure time by adding 1 second.
+ * clockwise = true (The criteria is "start the lastest"):
+ * Return the new max bound time by subtracting 1 second..
+ *
+ * @param paths The path list to compute
+ * @param clockwise Active the clockwise option
+ * @return uint32_t The departure time or the max bound time
+ */
+DateTime prepare_next_call_for_raptor(const std::list<Journey> & journeys, const bool clockwise = false);
 
 void make_graphical_isochrone(navitia::PbCreator& pb_creator,
                               RAPTOR &raptor_max,

@@ -29,7 +29,6 @@ www.navitia.io
 */
 
 #include "raptor_api.h"
-#include "raptor.h"
 #include "georef/street_network.h"
 #include "type/type_utils.h"
 #include "type/pb_converter.h"
@@ -980,6 +979,46 @@ void free_radius_filter(routing::map_stop_point_duration& sp_list,
     }
 }
 
+DateTime prepare_next_call_for_raptor(const std::list<Journey> & journeys, const bool clockwise)
+{
+    boost::posix_time::ptime tmp;
+
+    // // This function don't have a empty path list
+    // if (pathes.size() >= 1) {
+
+    //     // Init for the fisrt date time
+    //     if (!pathes[0].items.empty()) {
+    //         // Start the lastest
+    //         if (clockwise) {
+    //             tmp = pathes[0].items[0].departure;
+    //         }
+    //         // Arrive the earliest
+    //         else {
+    //             tmp = pathes[0].items[pathes[0].items.size()].arrival;
+    //         }
+    //     }
+
+    //     // Find the lastest or the earliest (depends of clockwise) without the first element
+    //     for (size_t i = 1; i < pathes.size(); ++i) {
+
+    //         if (!pathes[i].items.empty()) {
+    //             // Start the lastest
+    //             if (clockwise && (tmp > pathes[i].items[0].departure)) {
+    //                 tmp = pathes[i].items[0].departure;
+    //             }
+    //             // Arrive the earliest
+    //             if (!clockwise && (tmp < pathes[i].items[pathes[i].items.size()].arrival)) {
+    //                 tmp = pathes[i].items[pathes[i].items.size()].arrival;
+    //             }
+    //         }
+    //     }
+    // }
+    // // convert ptime in seconds
+    // DateTime time = tmp.time_of_day().total_seconds();
+    // return time;
+    return 10;
+}
+
 static std::vector<bt::ptime>
 parse_datetimes(RAPTOR& raptor,
                 const std::vector<uint64_t>& timestamps,
@@ -1177,46 +1216,92 @@ void make_response(navitia::PbCreator& pb_creator,
     // classical case : We have departures and destinations
     else {
 
-        DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
+
+        // Compute direct path
         typedef boost::optional<navitia::time_duration> OptTimeDur;
         const auto direct_path = get_direct_path(worker, origin, destination);
         const OptTimeDur direct_path_dur = direct_path.path_items.empty() ?
             OptTimeDur() :
             OptTimeDur(direct_path.duration / origin.streetnetwork_params.speed_factor);
 
+        // For each date time
+        DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
         for(bt::ptime datetime : datetimes) {
-            int day = (datetime.date() - raptor.data.meta->production_date.begin()).days();
-            int time = datetime.time_of_day().total_seconds();
-            DateTime init_dt = DateTimeUtils::set(day, time);
 
-            if(max_duration != std::numeric_limits<uint32_t>::max()) {
+            // Compute start time and Bound
+            DateTime day = (datetime.date() - raptor.data.meta->production_date.begin()).days();
+            DateTime time = datetime.time_of_day().total_seconds();
+            DateTime request_date_secs = DateTimeUtils::set(day, time);
+            if(max_duration != DateTimeUtils::inf) {
                 if (clockwise) {
-                    bound = init_dt + max_duration;
+                    bound = request_date_secs + max_duration;
                 } else {
-                    bound = init_dt > max_duration ? init_dt - max_duration : 0;
+                    bound = request_date_secs > max_duration ? request_date_secs - max_duration : 0;
                 }
             }
-            std::vector<Path> tmp = raptor.compute_all(
-                *departures, *destinations, init_dt, rt_level, transfer_penalty, bound, max_transfers,
-                accessibilite_params, forbidden, allowed, clockwise, direct_path_dur,
-                max_extra_second_pass);
-            LOG4CPLUS_DEBUG(logger, "raptor found " << tmp.size() << " solutions");
+
+            // Call raptor
+            // note : Loop is for min_nb_journeys options
+            //
+            // min_nb_journeys options :
+            // Compute several loop until the number of journeys >= min_nb_journeys
+            // For each step, we fing best pathes,
+            // start the lastest or arrive the earliest with clockwise.
+            // After finding it, we add 1 second for excluding this path for the next call.
+            // If Raptor does not return anything, we stop.
+            // If the number of Path finds is greater or equal than min_nb_journeys, we stop.
+            std::vector<Path> tmp_pathes;
+            do {
+
+                std::list<Journey> raptor_journeys = raptor.compute_all_journeys(
+                    *departures, *destinations, request_date_secs, rt_level, transfer_penalty, bound, max_transfers,
+                    accessibilite_params, forbidden, allowed, clockwise, direct_path_dur,
+                    max_extra_second_pass);
+LOG4CPLUS_DEBUG(logger, "raptor found " << raptor_journeys.size() << " solutions");
+
+                // else {
+                //     if (clockwise) {
+                //         request_date_secs = prepare_next_call_for_raptor(raptor_journeys, clockwise);
+                //         request_date_secs++; // we exclude path by adding a second
+                //     } else {
+                //         bound = prepare_next_call_for_raptor(raptor_journeys, clockwise);
+                //         bound--; // we exclude path by subtracting a second
+                //     }
+                // }
+
+                // filter the similar journeys
+
+                const auto raptor_pathes = raptor.from_pathes_to_journeys(raptor_journeys);
+                if ( raptor_pathes.empty() ) {
+                    break;
+                }
+                tmp_pathes.insert( tmp_pathes.end(), raptor_pathes.begin(), raptor_pathes.end() );
+                LOG4CPLUS_DEBUG(logger, "rap " << tmp_pathes.size() << " solutions");
+            } while ( tmp_pathes.size() < min_nb_journeys);
 
 
-            // Lorsqu'on demande qu'un seul horaire, on garde tous les résultas
+            // For one date time
             if(datetimes.size() == 1) {
-                pathes = tmp;
+                pathes = tmp_pathes;
                 for(auto & path : pathes) {
                     path.request_time = datetime;
                 }
-            } else if(!tmp.empty()) {
-                // Lorsqu'on demande plusieurs horaires, on garde que l'arrivée au plus tôt / départ au plus tard
-                tmp.back().request_time = datetime;
-                pathes.push_back(tmp.back());
-                bound = to_datetime(tmp.back().items.back().arrival, raptor.data);
-            } else // Lorsqu'on demande plusieurs horaires, et qu'il n'y a pas de résultat, on retourne un itinéraire vide
+            }
+            // when we have several date time,
+            // we keep that arrival at the earliest / departure at the latest
+            else if (!tmp_pathes.empty()) {
+
+                tmp_pathes.back().request_time = datetime;
+                pathes.push_back(tmp_pathes.back());
+                bound = to_datetime(tmp_pathes.back().items.back().arrival, raptor.data);
+            }
+            // when we have several date time and we have no result,
+            // we return an empty path
+            else {
                 pathes.push_back(Path());
+            }
         }
+
         if(clockwise)
             std::reverse(pathes.begin(), pathes.end());
 
