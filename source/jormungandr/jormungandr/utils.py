@@ -48,7 +48,7 @@ from flask import request
 import re
 import flask
 from contextlib import contextmanager
-
+import functools
 
 DATETIME_FORMAT = "%Y%m%dT%H%M%S"
 
@@ -563,3 +563,36 @@ def copy_context_in_greenlet_stack(request_context):
     flask.globals._request_ctx_stack.push(request_context)
     yield
     flask.globals._request_ctx_stack.pop()
+
+
+def compose(*funs):
+    """
+    compose functions and return a callable object
+
+    example 1:
+    f(x) = x + 1
+    g(x) = 2*x
+
+    compose(f,g) = g(f(x)) = 2 * (x + 1 )
+
+    example 2:
+    f(a list of integer): returns multiples of 3
+    g(a list of integer): returns multiples of 5
+
+    compose(f,g): returns multiples of 3 AND 5
+
+    :param funs:
+    :return: a lambda
+
+    >>> c = compose(lambda x: x+1, lambda x: 2*x)
+    >>> c(42)
+    86
+
+    >>> f = lambda l: (x for x in l if x%3 == 0)
+    >>> g = lambda l: (x for x in l if x%5 == 0)
+    >>> c = compose(f, g)
+    >>> list(c(range(45)))
+    [0, 15, 30]
+    """
+    return lambda obj: functools.reduce(lambda prev, f: f(prev), funs, obj)
+

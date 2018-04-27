@@ -811,50 +811,45 @@ class Scenario(simple.Scenario):
         responses = []
         nb_try = 0
         nb_valid_journeys = nb_journeys(responses)
-        journeys_ok = iter(())
 
         while request is not None and \
                 ((nb_valid_journeys < min_asked_journeys and nb_try < min_asked_journeys)
                  or nb_try < min_journeys_calls):
             nb_try = nb_try + 1
 
-            tmp_resp = self.call_kraken(request_type, request, instance, krakens_call)
-            _tag_by_mode(tmp_resp)
-            _tag_direct_path(tmp_resp)
-            _tag_bike_in_pt(tmp_resp)
-            journey_filter._filter_too_long_journeys(tmp_resp, request)
-            if nb_journeys(tmp_resp) == 0:
+            new_resp = self.call_kraken(request_type, request, instance, krakens_call)
+            _tag_by_mode(new_resp)
+            _tag_direct_path(new_resp)
+            _tag_bike_in_pt(new_resp)
+            journey_filter._filter_too_long_journeys(new_resp, request)
+            if nb_journeys(new_resp) == 0:
                 # no new journeys found, we stop
-                responses.extend(tmp_resp)
+                responses.extend(new_resp)
                 break
 
-            request = self.create_next_kraken_request(request, tmp_resp)
+            request = self.create_next_kraken_request(request, new_resp)
 
             # we filter unwanted journeys by side effects
-            from itertools import chain
-            candidats = (j for r in tmp_resp for j in r.journeys if 'to_delete' not in j.tags)
-            filtered_candidats = journey_filter.filter_journeys(candidats, instance, api_request)
+            filtered_new_resp = journey_filter.filter_journeys(new_resp, instance, api_request)
 
-            import itertools
-            tmp1, tmp2 = itertools.tee(filtered_candidats)
-            journeys_ok, tmp3 = itertools.tee(journeys_ok)
+            #duplicate the iterator
+            tmp1, tmp2 = itertools.tee(filtered_new_resp)
+            qualified_journeys = journey_filter.get_qualified_journeys(responses)
 
             journeys_pool = itertools.chain(
                 itertools.combinations(tmp1, 2),
-                itertools.product(tmp2, tmp3),
+                itertools.product(tmp2, qualified_journeys),
             )
+            journey_filter.filter_similar_vj_journeys(journeys_pool, api_request)
 
-            journey_filter._filter_similar_vj_journeys(journeys_pool, api_request)
-
-            responses.extend(tmp_resp)  # we keep the error for building the response
-            journeys_ok = itertools.chain(journeys_ok,
-                                          (j for r in tmp_resp for j in r.journeys if 'to_delete' not in j.tags)
-                                          )
+            responses.extend(new_resp)  # we keep the error for building the response
 
             nb_valid_journeys = nb_journeys(responses)
             #We allow one more call to kraken if there is no valid journey.
             if nb_valid_journeys == 0:
                 min_journeys_calls = max(min_journeys_calls, 2)
+
+        logger.debug('nb of call kraken: %i', nb_try)
 
         journey_filter.final_filter_journeys(responses, instance, api_request)
         pb_resp = merge_responses(responses)
@@ -866,7 +861,7 @@ class Scenario(simple.Scenario):
         if instance.ridesharing_services and \
                 ('ridesharing' in ridesharing_req['origin_mode']
                  or 'ridesharing' in ridesharing_req['destination_mode']):
-            logging.getLogger(__name__).debug('trying to add ridesharing journeys')
+            logger.debug('trying to add ridesharing journeys')
             try:
                 decorate_journeys(pb_resp, instance, api_request)
             except Exception:

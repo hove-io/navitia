@@ -29,10 +29,12 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 import itertools
+import functools
 import datetime
 from jormungandr.scenarios.utils import compare, get_pseudo_duration, get_or_default, mode_weight
 from navitiacommon import response_pb2
-from jormungandr.utils import pb_del_if
+from jormungandr.utils import pb_del_if, compose
+
 
 def delete_journeys(responses, request):
 
@@ -47,31 +49,22 @@ def delete_journeys(responses, request):
         logging.getLogger(__name__).info('filtering {} journeys'.format(nb_deleted))
 
 
-def filter_journeys(journeys, instance, request):
+def filter_journeys(responses, instance, request):
     """
     Filter by side effect the list of pb responses's journeys
 
     first draft, we only remove the journeys with the same vjs
     """
-
-    # for clarity purpose we build a temporary list
-
-    tmp1, tmp2 = itertools.tee(journeys)
     #DEBUG
     if request['debug']:
-        [_debug_journey(j) for j in tmp1]
+        [_debug_journey(j) for j in get_qualified_journeys(responses)]
 
-    return _filter_direct_path(
-        _filter_min_transfers(
-            _filter_max_successive_physical_mode(
-                _filter_too_long_waiting(
-                    _filter_too_short_heavy_journeys(tmp2,
-                                                     request),
-                    request)
-                , instance, request),
-            instance, request),
-        instance, request)
-
+    return compose(functools.partial(_filter_too_short_heavy_journeys, request=request),
+                   functools.partial(_filter_too_long_waiting, request=request),
+                   functools.partial(_filter_max_successive_physical_mode, instance=instance, request=request),
+                   functools.partial(_filter_min_transfers, instance=instance, request=request),
+                   functools.partial(_filter_direct_path, instance=instance, request=request),
+                   )(get_qualified_journeys(responses))
 
 def final_filter_journeys(response_list, instance, request):
     """
@@ -83,12 +76,11 @@ def final_filter_journeys(response_list, instance, request):
 
     final_line_filter = get_or_default(request, '_final_line_filter', False)
     if final_line_filter:
-        journeys = (j for r in response_list for j in r.journeys if not to_be_deleted(j))
-        import itertools
+        journeys = get_qualified_journeys(response_list)
         journeys_pool = itertools.combinations(journeys, 2)
         _filter_similar_line_journeys(journeys_pool, request)
 
-    journeys = (j for r in response_list for j in r.journeys if not to_be_deleted(j))
+    journeys = get_qualified_journeys(response_list)
     _filter_too_much_connections(journeys, instance, request)
 
 
@@ -154,13 +146,13 @@ def to_be_deleted(journey):
     return 'to_delete' in journey.tags
 
 
-def mark_as_dead(journey, request={}, *reasons):
+def mark_as_dead(journey, request, *reasons):
     journey.tags.append('to_delete')
     if request.get('debug'):
         journey.tags.extend(('deleted_because_' + reason for reason in reasons))
 
 
-def _filter_similar_vj_journeys(journeys, request):
+def filter_similar_vj_journeys(journeys, request):
     _filter_similar_journeys(journeys, request, similar_journeys_vj_generator)
 
 
@@ -232,9 +224,9 @@ def _filter_too_short_heavy_journeys(journeys, request):
                 mark_as_dead(journey, request, "not_enough_bike")
                 is_dead = True
                 break
-        if request.get('debug'):
+        if not is_dead:
             yield journey
-        elif not is_dead:
+        elif request.get('debug'):
             yield journey
 
 def _filter_too_long_waiting(journeys, request):
@@ -254,9 +246,9 @@ def _filter_too_long_waiting(journeys, request):
             mark_as_dead(j, request, "too_long_waiting")
             is_dead = True
             break
-        if request.get('debug'):
+        if not is_dead:
             yield j
-        elif not is_dead:
+        elif request.get('debug'):
             yield j
 
 def _filter_max_successive_physical_mode(journeys, instance, request):
@@ -288,9 +280,9 @@ def _filter_max_successive_physical_mode(journeys, instance, request):
                 format(j.internal_id, instance.successive_physical_mode_to_limit_id))
             mark_as_dead(j, request, "too_much_successive_physical_mode")
             is_dead = True
-        if request.get('debug'):
+        if not is_dead:
             yield j
-        elif not is_dead:
+        elif request.get('debug'):
             yield j
 
 def _filter_too_much_connections(journeys, instance, request):
@@ -325,9 +317,9 @@ def _filter_min_transfers(journeys, instance, request):
             logger.debug("the journey {} has not enough connections, we delete it".format(j.internal_id))
             mark_as_dead(j, request, "not_enough_connections")
             is_dead = True
-        if request.get('debug'):
+        if not is_dead:
             yield j
-        elif not is_dead:
+        elif request.get('debug'):
             yield j
 
 def _filter_direct_path(journeys, instance, request):
@@ -353,9 +345,9 @@ def _filter_direct_path(journeys, instance, request):
                          .format(j.internal_id))
             mark_as_dead(j, request, "direct_path_only")
             is_dead = True
-        if request.get('debug'):
+        if not is_dead:
             yield j
-        elif not is_dead:
+        elif request.get('debug'):
             yield j
 
 def get_min_connections(journeys):
@@ -433,7 +425,7 @@ def _filter_too_long_journeys(responses, request):
 
     The aim is to keep that as simple as possible
     """
-    # for clarity purpose we build a temporary list
+    # for clarity purpose we build a temporary iterator
     journeys = (j for r in responses for j in r.journeys if 'non_pt' not in j.tags
                 and not to_be_deleted(j))
 
@@ -541,3 +533,13 @@ def _debug_journey(journey):
         duration=datetime.timedelta(seconds=journey.duration),
         fallback=datetime.timedelta(seconds=fallback_duration(journey)),
         sec=" - ".join(sections)))
+
+
+def get_qualified_journeys(responses):
+    """
+
+    :param responses: protobuf
+    :return: iterator of journeys
+    """
+    return (j for r in responses for j in r.journeys if not to_be_deleted(j))
+
