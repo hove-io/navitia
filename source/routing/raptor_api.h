@@ -135,17 +135,19 @@ void free_radius_filter(routing::map_stop_point_duration& sp_list,
                         const  uint32_t free_radius);
 
 /**
- * @brief Prepare next call for raptor with min_nb_journeys options
- * clockwise = false (The criteria is "arrive the earliest") :
- * Return a new departure time by adding 1 second.
- * clockwise = true (The criteria is "start the lastest"):
- * Return the new max bound time by subtracting 1 second..
+ * @brief Prepare next call for raptor with min_nb_journeys option
  *
- * @param paths The path list to compute
- * @param clockwise Active the clockwise option
- * @return uint32_t The departure time or the max bound time
+ * Find the earliest departure (clockwise case) and add +1 to use like the
+ * request date time. we exclude the first journey.
+ *
+ * Find the lastest arrival (anti clockwise case) and add -1 to use like the
+ * request date time. we exclude the last journey.
+ *
+ * @param journeys The journey list
+ * @param clokwise Active clockwise or not
+ * @return A pair that contains the earliest departure and the lastest arrival
  */
-std::pair<DateTime, DateTime> prepare_next_call_for_raptor(const std::list<Journey> & journeys);
+DateTime prepare_next_call_for_raptor(const std::list<Journey> & journeys, const bool clockwise);
 
 void make_graphical_isochrone(navitia::PbCreator& pb_creator,
                               RAPTOR &raptor_max,

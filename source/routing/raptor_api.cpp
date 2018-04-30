@@ -979,17 +979,26 @@ void free_radius_filter(routing::map_stop_point_duration& sp_list,
     }
 }
 
-std::pair<DateTime, DateTime> prepare_next_call_for_raptor(const std::list<Journey> & journeys)
+DateTime prepare_next_call_for_raptor(const std::list<Journey>& journeys, const bool clockwise)
 {
     DateTime lastest_arrival    = DateTimeUtils::min;
     DateTime earliest_departure = DateTimeUtils::inf; // clockwise
 
     for (const auto & journey : journeys) {
+        if (clockwise) {
+            earliest_departure = std::min( earliest_departure, journey.departure_dt);
+        }
+        else {
             lastest_arrival = std::max( lastest_arrival, journey.arrival_dt);
-            earliest_departure = std::min( earliest_departure, journey.departure_dt); // clokwise
+        }
     }
 
-    return std::make_pair(earliest_departure, lastest_arrival);
+    if (clockwise) {
+        return earliest_departure + 1;
+    }
+    else {
+        return lastest_arrival - 1;
+    }
 }
 
 static std::vector<bt::ptime>
@@ -1219,8 +1228,7 @@ void make_response(navitia::PbCreator& pb_creator,
             // min_nb_journeys options :
             // Compute several loop until the number of journeys >= min_nb_journeys
             // For each step, we fing best pathes,
-            // start the lastest or arrive the earliest with clockwise.
-            // After finding it, we add 1 second for excluding this path for the next call.
+            // start to the lastest departure + 1(clockwise) or the lastest arrival - 1.
             // If Raptor does not return anything, we stop.
             // If the number of Path finds is greater or equal than min_nb_journeys, we stop.
             std::vector<Path> tmp_pathes;
@@ -1233,21 +1241,14 @@ void make_response(navitia::PbCreator& pb_creator,
 
                     LOG4CPLUS_DEBUG(logger, "raptor found " << raptor_journeys.size() << " solutions");
 
-
-                auto next_call_bound = prepare_next_call_for_raptor(raptor_journeys);
-                if (clockwise) {
-                    request_date_secs = next_call_bound.first + 1;
-                }
-                else {
-                    request_date_secs = next_call_bound.second - 1;
-                }
+                // Prepare next call for raptor with min_nb_journeys option
+                request_date_secs = prepare_next_call_for_raptor(raptor_journeys, clockwise);
 
                 // filter the similar journeys
 
                 const auto raptor_pathes = raptor.from_pathes_to_journeys(raptor_journeys);
-                if ( raptor_pathes.empty() ) {
-                    break;
-                }
+                if (raptor_pathes.empty()) break;
+
                 tmp_pathes.insert( tmp_pathes.end(), raptor_pathes.begin(), raptor_pathes.end() );
                 LOG4CPLUS_DEBUG(logger, "rap " << tmp_pathes.size() << " solutions");
             } while ( tmp_pathes.size() < min_nb_journeys);
