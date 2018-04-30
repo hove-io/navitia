@@ -145,7 +145,7 @@ void free_radius_filter(routing::map_stop_point_duration& sp_list,
  *
  * @param journeys The journey list
  * @param clokwise Active clockwise or not
- * @return A pair that contains the earliest departure and the lastest arrival
+ * @return The earliest departure (clokcwise = true) or the lastest arrival (clokcwise = false)
  */
 DateTime prepare_next_call_for_raptor(const std::list<Journey> & journeys, const bool clockwise);
 

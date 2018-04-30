@@ -2749,9 +2749,6 @@ BOOST_AUTO_TEST_CASE(section_geometry_with_shapes) {
  * @brief This test aims to highlight the min_nb_journeys option on a journey request.
  *
  * min_nb_journeys allows to ask differents same journeys.
- * Kraken do several loops to compute the min number of journeys. for each loop, kraken compute
- * with a departure time + 1 second to catch next departure for the sane journeys.
- *
  * The data for testing :
  *
  * start : sp1
@@ -2771,8 +2768,10 @@ BOOST_AUTO_TEST_CASE(section_geometry_with_shapes) {
  *
  * Case 1 : Simple request without min_nb_journeys
  *          We must have only one journeys
- * Case 2 : Request with min_nb_journeys = 4
+ * Case 2 : Request with min_nb_journeys = 4 and clockwise = true
  *          We must have all journeys
+ * Case 3 : Request with min_nb_journeys = 4 and clockwise = false
+ *          We must have all journeys (reverse)
  */
 BOOST_AUTO_TEST_CASE(journeys_with_min_nb_journeys) {
     // Create Builder
@@ -2846,7 +2845,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_min_nb_journeys) {
 
 
     //-----------------------------------
-    // Case 2 : Request with min_nb_journeys = 4
+    // Case 2 : Request with min_nb_journeys = 4, with clockwise = true
 
     uint32_t min_nb_journeys = 4;
 
@@ -2918,7 +2917,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_min_nb_journeys) {
 
 
     //-----------------------------------
-    // Case 2 : Request with min_nb_journeys = 4
+    // Case 3 : Request with min_nb_journeys = 4, with clockwise = false
 
     min_nb_journeys = 4;
 
@@ -2987,5 +2986,249 @@ BOOST_AUTO_TEST_CASE(journeys_with_min_nb_journeys) {
     BOOST_CHECK_EQUAL(section.destination().stop_point().name(), "stop_point:sa2:sp2");
     BOOST_CHECK_EQUAL(journey.departure_date_time(), "20180309T080700"_pts);
     BOOST_CHECK_EQUAL(journey.arrival_date_time(), "20180309T081600"_pts);
+
+}
+
+/**
+ * @brief This test aims to highlight the min_nb_journeys option on a journey request
+ * with similar journeys filtering
+ *
+ * min_nb_journeys allows to ask differents same journeys.
+ *
+ * The data for testing :
+ *
+ * Vehicle journey with multiple stops times
+ * date : 2018 03 09
+ *
+ *                   sp1                   sp2
+ *            /-------x---------------------x--------\
+ *           /      - 8:01                - 8:20      \
+ *          /       - 8:02                - 8:21       \
+ *   Start x        - 8:03                - 8:22        x Stop
+ *         |        - 8:04                - 8:23        |
+ *         |                                            |
+ *         |          We add an other way to test       |
+ *         \         similar journeys filtering         /
+ *          \        (Faster but with more walking)    /
+ *           \       sp1                   sp2        /
+ *            \-------x---------------------x--------/
+ *                 - 8:05                - 8:15
+ *
+ *
+ * We create several requests :
+ *
+ * Case 1 : Request with min_nb_journeys = 4 and clockwise = true
+ *          We must have all journeys
+ * Case 2 : Request with min_nb_journeys = 4 and clockwise = false
+ *          We must have all journeys (reverse)
+ */
+BOOST_AUTO_TEST_CASE(journeys_with_min_nb_journeys_with_similar_journeys_filtering) {
+    // Create Builder
+    ed::builder b("20180309");
+
+    // Create Area
+    b.sa("stop_area:sa1")("stop_point:sa1:s1", 2.39592, 48.84848, false)("stop_point:sa1:s2", 2.39592, 48.84858, false);
+    b.sa("stop_area:sa3")("stop_point:sa3:s1", 2.36381, 48.86650, false)("stop_point:sa3:s2", 2.36381, 48.86550, false);
+
+    // jouney 1
+    b.vj("vj1")("stop_point:sa1:s1", "8:00"_t, "8:01"_t)("stop_point:sa3:s1", "8:20"_t, "8:21"_t);
+    b.vj("vj2")("stop_point:sa1:s1", "8:00"_t, "8:02"_t)("stop_point:sa3:s1", "8:21"_t, "8:22"_t);
+    b.vj("vj3")("stop_point:sa1:s1", "8:00"_t, "8:03"_t)("stop_point:sa3:s1", "8:22"_t, "8:23"_t);
+    b.vj("vj4")("stop_point:sa1:s1", "8:00"_t, "8:04"_t)("stop_point:sa3:s1", "8:23"_t, "8:24"_t);
+
+    // journey 2
+    b.vj("vj5")("stop_point:sa1:s2", "8:00"_t, "8:05"_t)("stop_point:sa3:s2", "8:15"_t, "8:16"_t);
+
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->build_proximity_list();
+    auto prod_date = boost::gregorian::date(2018, 3, 9);
+    auto prod_len = boost::gregorian::days(1);
+    b.data->meta->production_date = boost::gregorian::date_period(prod_date, prod_len);
+
+    // create Raptor
+    nr::RAPTOR raptor(*(b.data));
+
+     // from (nation)
+    navitia::type::EntryPoint origin(navitia::type::Type_e::Coord, "from_coord");
+    origin.streetnetwork_params.max_duration = navitia::time_duration(boost::date_time::pos_infin);
+    origin.coordinates.set_lon(2.39592);
+    origin.coordinates.set_lat(48.84838);
+
+    // to (republique)
+    navitia::type::EntryPoint destination(navitia::type::Type_e::Coord, "to_coord");
+    destination.streetnetwork_params.max_duration = navitia::time_duration(boost::date_time::pos_infin);
+    destination.coordinates.set_lon(2.36381);
+    destination.coordinates.set_lat(48.86750);
+
+    std::vector<std::string> forbidden;
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+    //-----------------------------------
+    // Case 1 : Request with min_nb_journeys = 4, with clockwise = true
+
+    uint32_t min_nb_journeys = 4;
+    bool clockwise = true;
+
+    // send request
+    navitia::PbCreator pb_creator2(data_ptr, "20180309T080000"_dt, null_time_period);
+    make_response(pb_creator2,
+                  raptor,
+                  origin,
+                  destination,
+                  {ntest::to_posix_timestamp("20180309T080000")},
+                  clockwise,
+                  navitia::type::AccessibiliteParams(),
+                  forbidden,
+                  {},
+                  sn_worker,
+                  nt::RTLevel::Base,
+                  2_min,
+                  8640,
+                  10,
+                  0,
+                  0,
+                  0,
+                  min_nb_journeys);
+
+    // get the response
+    resp = pb_creator2.get_response();
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
+
+    // Journey 1
+    journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(1);
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
+    BOOST_CHECK_EQUAL(section.origin().stop_point().name(), "stop_point:sa1:s2");
+    BOOST_CHECK_EQUAL(section.destination().stop_point().name(), "stop_point:sa3:s2");
+    BOOST_CHECK_EQUAL(section.begin_date_time(), "20180309T080100"_pts);
+    BOOST_CHECK_EQUAL(section.end_date_time(), "20180309T081500"_pts);
+
+    // Journey 2
+    journey = resp.journeys(1);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(1);
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
+    BOOST_CHECK_EQUAL(section.origin().stop_point().name(), "stop_point:sa1:s1");
+    BOOST_CHECK_EQUAL(section.destination().stop_point().name(), "stop_point:sa3:s1");
+    BOOST_CHECK_EQUAL(section.begin_date_time(), "20180309T080100"_pts);
+    BOOST_CHECK_EQUAL(section.end_date_time(), "20180309T082000"_pts);
+
+    // Journey 3
+    journey = resp.journeys(2);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(1);
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
+    BOOST_CHECK_EQUAL(section.origin().stop_point().name(), "stop_point:sa1:s1");
+    BOOST_CHECK_EQUAL(section.destination().stop_point().name(), "stop_point:sa3:s1");
+    BOOST_CHECK_EQUAL(section.begin_date_time(), "20180309T080200"_pts);
+    BOOST_CHECK_EQUAL(section.end_date_time(), "20180309T082100"_pts);
+
+    // Journey 4
+    journey = resp.journeys(3);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(1);
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
+    BOOST_CHECK_EQUAL(section.origin().stop_point().name(), "stop_point:sa1:s1");
+    BOOST_CHECK_EQUAL(section.destination().stop_point().name(), "stop_point:sa3:s1");
+    BOOST_CHECK_EQUAL(section.begin_date_time(), "20180309T080300"_pts);
+    BOOST_CHECK_EQUAL(section.end_date_time(), "20180309T082200"_pts);
+
+    // Journey 5
+    journey = resp.journeys(4);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(1);
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
+    BOOST_CHECK_EQUAL(section.origin().stop_point().name(), "stop_point:sa1:s1");
+    BOOST_CHECK_EQUAL(section.destination().stop_point().name(), "stop_point:sa3:s1");
+    BOOST_CHECK_EQUAL(section.begin_date_time(), "20180309T080400"_pts);
+    BOOST_CHECK_EQUAL(section.end_date_time(), "20180309T082300"_pts);
+
+
+    //-----------------------------------
+    // Case 2 : Request with min_nb_journeys = 4, with clockwise = false
+
+    min_nb_journeys = 4;
+    clockwise = false;
+
+    // send request
+    navitia::PbCreator pb_creator3(data_ptr, "20180309T083000"_dt, null_time_period);
+    make_response(pb_creator3,
+                  raptor,
+                  origin,
+                  destination,
+                  {ntest::to_posix_timestamp("20180309T083000")},
+                  clockwise,
+                  navitia::type::AccessibiliteParams(),
+                  forbidden,
+                  {},
+                  sn_worker,
+                  nt::RTLevel::Base,
+                  2_min,
+                  8640,
+                  10,
+                  0,
+                  0,
+                  0,
+                  min_nb_journeys);
+
+    // get the response
+    resp = pb_creator3.get_response();
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
+
+    // Journey 1
+    journey = resp.journeys(4);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(1);
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
+    BOOST_CHECK_EQUAL(section.origin().stop_point().name(), "stop_point:sa1:s2");
+    BOOST_CHECK_EQUAL(section.destination().stop_point().name(), "stop_point:sa3:s2");
+    BOOST_CHECK_EQUAL(section.begin_date_time(), "20180309T080100"_pts);
+    BOOST_CHECK_EQUAL(section.end_date_time(), "20180309T081500"_pts);
+
+    // Journey 2
+    journey = resp.journeys(3);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(1);
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
+    BOOST_CHECK_EQUAL(section.origin().stop_point().name(), "stop_point:sa1:s1");
+    BOOST_CHECK_EQUAL(section.destination().stop_point().name(), "stop_point:sa3:s1");
+    BOOST_CHECK_EQUAL(section.begin_date_time(), "20180309T080100"_pts);
+    BOOST_CHECK_EQUAL(section.end_date_time(), "20180309T082000"_pts);
+
+    // Journey 3
+    journey = resp.journeys(2);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(1);
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
+    BOOST_CHECK_EQUAL(section.origin().stop_point().name(), "stop_point:sa1:s1");
+    BOOST_CHECK_EQUAL(section.destination().stop_point().name(), "stop_point:sa3:s1");
+    BOOST_CHECK_EQUAL(section.begin_date_time(), "20180309T080200"_pts);
+    BOOST_CHECK_EQUAL(section.end_date_time(), "20180309T082100"_pts);
+
+    // Journey 4
+    journey = resp.journeys(1);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(1);
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
+    BOOST_CHECK_EQUAL(section.origin().stop_point().name(), "stop_point:sa1:s1");
+    BOOST_CHECK_EQUAL(section.destination().stop_point().name(), "stop_point:sa3:s1");
+    BOOST_CHECK_EQUAL(section.begin_date_time(), "20180309T080300"_pts);
+    BOOST_CHECK_EQUAL(section.end_date_time(), "20180309T082200"_pts);
+
+    // Journey 5
+    journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(1);
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
+    BOOST_CHECK_EQUAL(section.origin().stop_point().name(), "stop_point:sa1:s1");
+    BOOST_CHECK_EQUAL(section.destination().stop_point().name(), "stop_point:sa3:s1");
+    BOOST_CHECK_EQUAL(section.begin_date_time(), "20180309T080400"_pts);
+    BOOST_CHECK_EQUAL(section.end_date_time(), "20180309T082300"_pts);
 
 }

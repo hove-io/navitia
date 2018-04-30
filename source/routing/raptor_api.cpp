@@ -1228,7 +1228,7 @@ void make_response(navitia::PbCreator& pb_creator,
             // min_nb_journeys options :
             // Compute several loop until the number of journeys >= min_nb_journeys
             // For each step, we fing best pathes,
-            // start to the lastest departure + 1(clockwise) or the lastest arrival - 1.
+            // start to the lastest departure + 1 (clockwise) or the lastest arrival - 1.
             // If Raptor does not return anything, we stop.
             // If the number of Path finds is greater or equal than min_nb_journeys, we stop.
             std::vector<Path> tmp_pathes;
