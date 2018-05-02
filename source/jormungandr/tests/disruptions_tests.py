@@ -620,7 +620,7 @@ class TestDisruptions(AbstractTestFixture):
         line_reports = get_not_null(response, 'line_reports')
         for line_report in line_reports:
             is_valid_line_report(line_report)
-        assert len(line_reports) == 4
+        assert len(line_reports) == 5
         assert line_reports[0]['line']['id'] == 'A'
         assert len(line_reports[0]['pt_objects']) == 3
         assert line_reports[0]['pt_objects'][0]['id'] == 'A'
@@ -648,7 +648,7 @@ class TestDisruptions(AbstractTestFixture):
         line_reports = get_not_null(response, 'line_reports')
         for line_report in line_reports:
             is_valid_line_report(line_report)
-        assert len(line_reports) == 4
+        assert len(line_reports) == 5
         assert line_reports[0]['line']['id'] == 'A'
         assert len(line_reports[0]['pt_objects']) == 3
         assert line_reports[0]['pt_objects'][0]['id'] == 'A'
