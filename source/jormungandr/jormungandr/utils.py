@@ -49,6 +49,9 @@ import re
 import flask
 from contextlib import contextmanager
 import functools
+import sys
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
 
 DATETIME_FORMAT = "%Y%m%dT%H%M%S"
 
@@ -596,3 +599,27 @@ def compose(*funs):
     """
     return lambda obj: functools.reduce(lambda prev, f: f(prev), funs, obj)
 
+
+def portable_min(*args, **kwargs):
+    """
+    a portable min() for python2 which takes a default value when
+    the iterable is empty
+
+    >>> portable_min([1], default=42)
+    1
+    >>> portable_min([], default=42)
+    42
+    >>> portable_min(iter(()), default=43) # empty iterable
+    43
+
+    """
+    if PY2:
+        default = kwargs.pop('default', None)
+        try:
+            return min(*args, **kwargs)
+        except ValueError:
+            return default
+        except Exception:
+            raise
+    if PY3:
+        return min(*args, **kwargs)

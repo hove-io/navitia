@@ -33,7 +33,7 @@ import functools
 import datetime
 from jormungandr.scenarios.utils import compare, get_pseudo_duration, get_or_default, mode_weight
 from navitiacommon import response_pb2
-from jormungandr.utils import pb_del_if, compose
+from jormungandr.utils import pb_del_if, compose, portable_min
 
 
 def delete_journeys(responses, request):
@@ -358,7 +358,7 @@ def get_min_connections(journeys):
     if not journeys:
         return None
 
-    return min((get_nb_connections(j) for j in journeys if not to_be_deleted(j)), 0)
+    return portable_min((get_nb_connections(j) for j in journeys if not to_be_deleted(j)), default=0)
 
 
 def get_nb_connections(journey):
@@ -378,7 +378,7 @@ def get_min_waiting(journey):
     """
     Returns min waiting time in a journey
     """
-    return min((s.duration for s in journey.sections if s.type == response_pb2.WAITING), 0)
+    return portable_min((s.duration for s in journey.sections if s.type == response_pb2.WAITING), default=0)
 
 
 def way_later(request, journey1, journey2):
@@ -437,6 +437,7 @@ def _filter_too_long_journeys(responses, request):
             logger.debug("the journey {} is too long compared to {}, we delete it"
                          .format(j1.internal_id, j2.internal_id))
             mark_as_dead(j1, request, 'too_long', 'too_long_compared_to_{}'.format(j2.internal_id))
+
 
 def is_walk_after_parking(journey, idx_section):
     '''

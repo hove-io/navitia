@@ -810,10 +810,10 @@ class Scenario(simple.Scenario):
 
         responses = []
         nb_try = 0
-        nb_valid_journeys = nb_journeys(responses)
+        nb_qualified_journeys = nb_journeys(responses)
 
         while request is not None and \
-                ((nb_valid_journeys < min_asked_journeys and nb_try < min_asked_journeys)
+                ((nb_qualified_journeys < min_asked_journeys and nb_try < min_asked_journeys)
                  or nb_try < min_journeys_calls):
             nb_try = nb_try + 1
 
@@ -844,9 +844,9 @@ class Scenario(simple.Scenario):
 
             responses.extend(new_resp)  # we keep the error for building the response
 
-            nb_valid_journeys = nb_journeys(responses)
+            nb_qualified_journeys = nb_journeys(responses)
             #We allow one more call to kraken if there is no valid journey.
-            if nb_valid_journeys == 0:
+            if nb_qualified_journeys == 0:
                 min_journeys_calls = max(min_journeys_calls, 2)
 
         logger.debug('nb of call kraken: %i', nb_try)
