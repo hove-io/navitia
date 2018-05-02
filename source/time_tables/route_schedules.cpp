@@ -430,7 +430,9 @@ void route_schedule(PbCreator& pb_creator, const std::string& filter,
                 pb_creator.fill(&st_calendar, pb_dt, max_depth);
             }
         }
-        pb_creator.fill(&route->shape, schedule->mutable_geojson(), 0);
+        if(!pb_creator.disable_geojson) {
+            pb_creator.fill(&route->shape, schedule->mutable_geojson(), 0);
+        }
 
         //Add additiona_informations in each route:
         if (stop_times.empty() && (rt_level != type::RTLevel::Base)) {
