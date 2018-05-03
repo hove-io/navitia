@@ -36,7 +36,7 @@ from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, DateTi
 from jormungandr.interfaces.v1.serializer.time import TimeField, PeriodSerializer, DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import *
 from jormungandr.interfaces.v1.serializer import jsonschema, base
-from navitiacommon.type_pb2 import ActiveStatus, Channel, hasEquipments, Properties
+from navitiacommon.type_pb2 import ActiveStatus, Channel, hasEquipments, Properties, NavitiaType
 from navitiacommon.response_pb2 import SectionAdditionalInformationType
 
 
@@ -99,7 +99,7 @@ class PtObjectSerializer(PbGenericSerializer):
     route = jsonschema.MethodField(schema_type=lambda: RouteSerializer())
     commercial_mode = jsonschema.MethodField(schema_type=lambda: CommercialModeSerializer())
     trip = jsonschema.MethodField(schema_type=lambda: TripSerializer())
-    embedded_type = EnumField(attr='embedded_type', display_none=True)
+    embedded_type = EnumField(attr='embedded_type', pb_type=NavitiaType, display_none=True)
 
     def get_trip(self, obj):
         if obj.HasField(str('trip')):
@@ -357,7 +357,7 @@ class PlaceSerializer(PbGenericSerializer):
     stop_area = StopAreaSerializer(display_none=False)
     stop_point = StopPointSerializer(display_none=False)
     administrative_region = AdminSerializer(display_none=False)
-    embedded_type = EnumField(attr='embedded_type', display_none=True)
+    embedded_type = EnumField(attr='embedded_type', pb_type=NavitiaType, display_none=True)
     address = AddressSerializer(display_none=False)
     poi = PoiSerializer(display_none=False)
 
@@ -375,7 +375,7 @@ class NetworkSerializer(PbGenericSerializer):
 
 
 class RouteSerializer(PbGenericSerializer):
-    is_frequence = StrField()
+    is_frequence = BoolField()
     direction_type = jsonschema.Field(schema_type=str, display_none=True)
     physical_modes = PhysicalModeSerializer(many=True, display_none=False)
     comments = CommentSerializer(many=True, display_none=False)
