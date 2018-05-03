@@ -416,6 +416,8 @@ class Instance(db.Model):
             .filter(DataSet.type == _type, Job.instance_id == self.id)\
             .all()
 
+        if not result:
+            return None
         job_list = {}
         for dataset, job in result:
             # Cascade Delete not working so delete Metric associated manually
@@ -432,6 +434,7 @@ class Instance(db.Model):
                 db.session.delete(job)
 
         db.session.commit()
+        return len(result)
 
     def delete_old_jobs_and_list_datasets(self, time_limit):
         """

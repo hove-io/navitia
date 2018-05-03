@@ -1101,8 +1101,11 @@ class DeleteDataset(flask_restful.Resource):
 
         instance = models.Instance.get_by_name(instance_name)
         if instance:
-            instance.delete_dataset(_type=type)
-            return_msg = 'All {} datasets deleted for instance {}'.format(type, instance_name)
+            res = instance.delete_dataset(_type=type)
+            if res:
+                return_msg = 'All {} datasets deleted for instance {}'.format(type, instance_name)
+            else:
+                return_msg = 'No {} dataset to be deleted for instance {}'.format(type, instance_name)
             return_status = 200
         else:
             return_msg = "No instance found for : {}".format(instance_name)

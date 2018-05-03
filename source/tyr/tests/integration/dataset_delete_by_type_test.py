@@ -112,9 +112,16 @@ def create_tyr_update_jobs():
 
 def test_delete_for_wrong_instance(create_instance):
 
-    resp, status_code = api_delete('/v0/instances/wrong_instance/actions/delete_dataset/toto', check=False)
+    resp, status_code = api_delete('/v0/instances/wrong_instance/actions/delete_dataset/poi', check=False)
     assert resp['action'] == 'No instance found for : wrong_instance'
     assert status_code == 404
+
+
+def test_delete_for_wrong_data_set_type(create_instance):
+
+    resp, status_code = api_delete('/v0/instances/fr_instance/actions/delete_dataset/toto', check=False)
+    assert resp['action'] == 'No toto dataset to be deleted for instance fr_instance'
+    assert status_code == 200
 
 
 def test_delete_poi_type_for_one_instance(create_tyr_update_jobs):
