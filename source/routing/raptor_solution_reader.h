@@ -30,10 +30,16 @@ www.navitia.io
 
 #pragma once
 
-#include "raptor.h"
+#include "journey.h"
+#include "raptor_utils.h"
 #include "utils/multi_obj_pool.h"
+#include "routing.h"
 
-namespace navitia { namespace routing {
+namespace navitia {
+namespace routing {
+
+struct RAPTOR;
+struct StartingPointSndPhase;
 
 // this structure compare 2 solutions.  It chooses which solutions
 // will be kept at the end (only non dominated solutions will be kept

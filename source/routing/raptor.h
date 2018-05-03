@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #pragma once
+
 #include <unordered_map>
 #include <queue>
 #include <limits>
@@ -36,7 +37,9 @@ www.navitia.io
 #include "type/data.h"
 #include "type/datetime.h"
 #include "type/rt_level.h"
+#include "raptor_solution_reader.h"
 #include "routing.h"
+#include "routing/journey.h"
 #include "utils/timer.h"
 #include "boost/dynamic_bitset.hpp"
 #include "dataraptor.h"
@@ -53,35 +56,6 @@ struct StartingPointSndPhase {
     DateTime end_dt;
     unsigned fallback_dur;
     bool has_priority;
-};
-
-struct Journey {
-    struct Section {
-        Section() = default;
-        Section(const type::StopTime& in,
-                const DateTime in_dt,
-                const type::StopTime& out,
-                const DateTime out_dt):
-            get_in_st(&in), get_in_dt(in_dt), get_out_st(&out), get_out_dt(out_dt)
-        {}
-        const type::StopTime* get_in_st = nullptr;
-        DateTime get_in_dt = 0;
-        const type::StopTime* get_out_st = nullptr;
-        DateTime get_out_dt = 0;
-    };
-
-    bool better_on_dt(const Journey& that, bool request_clockwise) const;
-    bool better_on_transfer(const Journey& that, bool) const;
-    bool better_on_sn(const Journey& that, bool) const;
-    friend std::ostream& operator<<(std::ostream& os, const Journey& j);
-
-    std::vector<Section> sections;// the pt sections, with transfer between them
-    navitia::time_duration sn_dur = 0_s;// street network duration
-    navitia::time_duration transfer_dur = 0_s;// walking duration during transfer
-    navitia::time_duration min_waiting_dur = 0_s;// minimal waiting duration on every transfers
-    DateTime departure_dt = 0;// the departure dt of the journey, including sn
-    DateTime arrival_dt = 0;// the arrival dt of the journey, including sn
-    uint8_t nb_vj_extentions = 0;// number of vehicle journey extentions (I love useless comments!)
 };
 
 /** Worker Raptor : une instance par thread, les données sont modifiées par le calcul */
@@ -151,8 +125,6 @@ struct RAPTOR
             const std::vector<std::string>& forbidden_uris = {},
             const boost::optional<navitia::time_duration>& direct_path_dur = boost::none);
 
-    std::vector<Path> from_pathes_to_journeys(const std::list<Journey> & journeys);
-
     /** Calcul d'itinéraires multiples dans le sens horaire à partir de plusieurs
     * stop points de départs, vers plusieurs stoppoints d'arrivée,
     * à une heure donnée.
@@ -188,6 +160,18 @@ struct RAPTOR
                          const boost::optional<navitia::time_duration>& direct_path_dur = boost::none,
                          const size_t max_extra_second_pass = 0);
 
+    template<class T>
+    std::vector<Path> from_journeys_to_path(const T& journeys) const
+    {
+        std::vector<Path> result;
+        for (const auto& journey: journeys) {
+            if (journey.sections.empty()) {
+                continue;
+            }
+            result.push_back(make_path(journey, data));
+        }
+        return result;
+    }
 
     /** Calcul l'isochrone à partir de tous les points contenus dans departs,
      *  vers tous les autres points.

@@ -29,12 +29,12 @@ www.navitia.io
 */
 
 #include "raptor.h"
-#include "raptor_solution_reader.h"
 #include "raptor_visitors.h"
 #include <boost/range/algorithm_ext/push_back.hpp>
 #include <boost/range/adaptor/filtered.hpp>
 #include <boost/range/algorithm/find_if.hpp>
 #include <boost/range/algorithm/fill.hpp>
+#include <boost/functional/hash.hpp>
 #include <chrono>
 
 namespace bt = boost::posix_time;
@@ -375,17 +375,6 @@ static void init_best_pts_snd_pass(const routing::map_stop_point_duration& depar
     }
 }
 
-std::vector<Path> RAPTOR::from_pathes_to_journeys(const std::list<Journey> & journeys)
-{
-    // Convert journeys list into Path vector
-    std::vector<Path> result;
-    for (const auto& journey: journeys) {
-        if (journey.sections.empty()) { continue; }
-        result.push_back(make_path(journey, data));
-    }
-    return result;
-}
-
 std::vector<Path>
 RAPTOR::compute_all(const map_stop_point_duration& departures,
                     const map_stop_point_duration& destinations,
@@ -414,7 +403,7 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
                                          clockwise,
                                          direct_path_dur,
                                          max_extra_second_pass);
-    return from_pathes_to_journeys(journeys);
+    return from_journeys_to_path(journeys);
 }
 
 std::list<Journey>
