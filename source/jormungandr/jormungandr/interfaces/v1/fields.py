@@ -126,7 +126,8 @@ class DateTime(fields.Raw):
         return self.format(value)
 
     def format(self, value):
-        return timestamp_to_str(value)
+        from flask import request
+        return timestamp_to_str(value, request.id)
 
 
 class Links(fields.Raw):
