@@ -950,12 +950,14 @@ class Scenario(simple.Scenario):
         to do that we find ask the next (resp previous) query datetime
         """
         vjs = [j for r in responses for j in r.journeys if not journey_filter.to_be_deleted(j)]
-        if request["clockwise"]:
-            request['datetime'] = self.next_journey_datetime(vjs, request["clockwise"])
-        else:
-            request['datetime'] = self.previous_journey_datetime(vjs, request["clockwise"])
 
-        if request['datetime'] is None:
+        # If Kraken send a new request date time, we use it
+        # for the next call to skip current Journeys
+        if responses["next_request_date_time"]:
+            request['datetime'] = responses["next_request_date_time"]
+        else:
+            logger = logging.getLogger(__name__)
+            logger.error("In response next_request_date_time does not exist")
             return None
 
         #TODO forbid ODTs
