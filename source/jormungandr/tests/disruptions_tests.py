@@ -280,27 +280,6 @@ class TestDisruptions(AbstractTestFixture):
             else:
                 assert not departure_disruptions
 
-
-
-
-        # arrival = arrivals[0]
-        # disruptions = get_all_element_disruptions(arrival, response)
-        # assert disruptions
-        # assert len(disruptions) == 1
-        # assert 'too_bad_all_lines' in disruptions
-        # is_valid_disruption(disruptions['too_bad_all_lines'][0].disruption)
-        #
-        # # This line isn't in the impacted_objects list
-        # arrival = arrivals[1]
-        # disruptions = get_all_element_disruptions(arrival, response)
-        # assert not disruptions
-        #
-        # # This line is in the impacted_objects list but arrival is after the time of disruption
-        # arrival = arrivals[2]
-        # disruptions = get_all_element_disruptions(arrival, response)
-        # assert not disruptions
-
-
     def test_direct_disruption_call(self):
         """
         when calling the disruptions on the pt object stopB,
