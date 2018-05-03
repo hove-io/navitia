@@ -207,44 +207,6 @@ def exceed_min_duration(current_section, journey, request,  min_duration):
            and current_section.duration < min_duration
 
 
-def _filter_too_short_heavy_journeys(journeys, request):
-    """
-    we filter the journeys with use an "heavy" fallback mode if it's use only for a few minutes
-    Heavy fallback mode are Bike and Car, bss is not considered as one.
-    Typically you don't take your car for only 2 minutes
-    """
-    logger = logging.getLogger(__name__)
-
-    for journey in journeys:
-        on_bss = False
-        is_dead = False
-        for s in journey.sections:
-            if s.type == response_pb2.BSS_RENT:
-                on_bss = True
-            elif s.type == response_pb2.BSS_PUT_BACK:
-                on_bss = False
-            elif s.type != response_pb2.STREET_NETWORK:
-                continue
-
-            if s.street_network.mode == response_pb2.Car \
-                    and exceed_min_duration(s, journey, request, request['_min_car']):
-                logger.debug("the journey {} has not enough car, we delete it".format(journey.internal_id))
-                mark_as_dead(journey, request, "not_enough_car")
-                is_dead = True
-                break
-            if not on_bss \
-                    and s.street_network.mode == response_pb2.Bike \
-                    and exceed_min_duration(s, journey, request, request['_min_bike']):
-                logger.debug("the journey {} has not enough bike, we delete it".format(journey.internal_id))
-                mark_as_dead(journey, request, "not_enough_bike")
-                is_dead = True
-                break
-        if not is_dead:
-            yield journey
-        elif request.get('debug'):
-            yield journey
-
-
 def filter_too_short_heavy_journeys(journey, request):
     """
     we filter the journeys with use an "heavy" fallback mode if it's use only for a few minutes
@@ -276,28 +238,6 @@ def filter_too_short_heavy_journeys(journey, request):
             return False or is_debug
     return True
 
-def _filter_too_long_waiting(journeys, request):
-    """
-    filter journeys with a too long section of type waiting
-    """
-    logger = logging.getLogger(__name__)
-
-    for j in journeys:
-        is_dead = False
-        for s in j.sections:
-            if s.type != response_pb2.WAITING:
-                continue
-            if s.duration < 4 * 60 * 60:
-                continue
-            logger.debug("the journey {} has a too long waiting, we delete it".format(j.internal_id))
-            mark_as_dead(j, request, "too_long_waiting")
-            is_dead = True
-            break
-        if not is_dead:
-            yield j
-        elif request.get('debug'):
-            yield j
-
 
 def filter_too_long_waiting(journey, is_debug):
     """
@@ -314,41 +254,6 @@ def filter_too_long_waiting(journey, is_debug):
         mark_as_dead(journey, is_debug, "too_long_waiting")
         return False or is_debug
     return True
-
-
-def _filter_max_successive_physical_mode(journeys, instance, request):
-    """
-    eliminates journeys with specified public_transport.physical_mode more than
-    _max_successive_physical_mode (used for STIF buses)
-    """
-    logger = logging.getLogger(__name__)
-    max_successive_physical_mode = get_or_default(request, '_max_successive_physical_mode', 0)
-
-    if max_successive_physical_mode == 0:
-        for j in journeys:
-            yield j
-        return
-    for j in journeys:
-        is_dead = False
-        bus_count = 0
-        for s in j.sections:
-            if s.type != response_pb2.PUBLIC_TRANSPORT:
-                continue
-            if s.pt_display_informations.uris.physical_mode == instance.successive_physical_mode_to_limit_id:
-                bus_count += 1
-            else:
-                if bus_count <= max_successive_physical_mode:
-                    bus_count = 0
-
-        if bus_count > max_successive_physical_mode:
-            logger.debug("the journey {} has a too much successive {}, we delete it".
-                format(j.internal_id, instance.successive_physical_mode_to_limit_id))
-            mark_as_dead(j, request, "too_much_successive_physical_mode")
-            is_dead = True
-        if not is_dead:
-            yield j
-        elif request.get('debug'):
-            yield j
 
 
 def filter_max_successive_physical_mode(journey,
@@ -398,25 +303,6 @@ def _filter_too_much_connections(journeys, instance, request):
                 mark_as_dead(j, request, "too_much_connections")
 
 
-def _filter_min_transfers(journeys, request):
-    """
-    eliminates journeys with number of connections less then min_nb_transfers among journeys
-    """
-    logger = logging.getLogger(__name__)
-    min_nb_transfers = get_or_default(request, 'min_nb_transfers', 0)
-
-    for j in journeys:
-        is_dead = False
-        if get_nb_connections(j) < min_nb_transfers:
-            logger.debug("the journey {} has not enough connections, we delete it".format(j.internal_id))
-            mark_as_dead(j, request, "not_enough_connections")
-            is_dead = True
-        if not is_dead:
-            yield j
-        elif request.get('debug'):
-            yield j
-
-
 def filter_min_transfers(journey, is_debug, min_nb_transfers):
     """
     eliminates journeys with number of connections less then min_nb_transfers among journeys
@@ -428,33 +314,6 @@ def filter_min_transfers(journey, is_debug, min_nb_transfers):
         return False or is_debug
     return True
 
-def _filter_direct_path(journeys, request):
-    """
-    eliminates journeys that are not matching direct path parameter (none, only or indifferent)
-    """
-    logger = logging.getLogger(__name__)
-    dp = get_or_default(request, 'direct_path', 'indifferent')
-
-    if dp == 'indifferent':
-        for j in journeys:
-            yield j
-        return
-    for j in journeys:
-        is_dead = False
-        if dp == 'none' and 'non_pt' in j.tags:
-            logger.debug("the journey {} is direct, we delete it as param direct_path=none"
-                         .format(j.internal_id))
-            mark_as_dead(j, request, "direct_path_none")
-            is_dead = True
-        elif dp == 'only' and 'non_pt' not in j.tags:
-            logger.debug("the journey {} uses pt, we delete it as param direct_path=only"
-                         .format(j.internal_id))
-            mark_as_dead(j, request, "direct_path_only")
-            is_dead = True
-        if not is_dead:
-            yield j
-        elif request.get('debug'):
-            yield j
 
 def filter_direct_path(journey, is_debug, dp):
     """
