@@ -56,7 +56,8 @@ class DateTimeField(PbField, DateTimeType):
     custom date format from timestamp
     """
     def to_value(self, value):
-        return timestamp_to_str(value)
+        from flask import request
+        return timestamp_to_str(value, request.id)
 
 
 class DateTimeDictField(Field, DateTimeType):

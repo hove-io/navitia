@@ -126,7 +126,7 @@ if rest_api.app.config.get('ACTIVATE_PROFILING'):
     rest_api.app.logger.warning('=======================================================')
     from werkzeug.contrib.profiler import ProfilerMiddleware
     rest_api.app.config['PROFILE'] = True
-    f = open('/tmp/profiler.log', 'a')
-    rest_api.app.wsgi_app = ProfilerMiddleware(rest_api.app.wsgi_app, f, restrictions=[80], profile_dir='/tmp/profile')
+    f = open('/home/xiaolong/profiler/profiler.log', 'a')
+    rest_api.app.wsgi_app = ProfilerMiddleware(rest_api.app.wsgi_app, f, restrictions=[80], profile_dir='/home/xiaolong/profiler/')
 
 index(rest_api)

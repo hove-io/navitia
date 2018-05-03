@@ -78,7 +78,8 @@ class DateTimeTypeSerializer(PbNestedSerializer):
         if obj.time == __date_time_null_value__:
             return ""
         if obj.HasField('date'):
-            return timestamp_to_str(obj.date + obj.time)
+            from flask import request
+            return timestamp_to_str(obj.date + obj.time, request.id)
         return datetime.utcfromtimestamp(obj.time).strftime('%H%M%S')
 
 

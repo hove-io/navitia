@@ -31,7 +31,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 import pytz
-from flask import g
+from flask import g, request
 from jormungandr.exceptions import TechnicalError, RegionNotFound
 
 def set_request_timezone(region):
@@ -50,7 +50,7 @@ def set_request_instance_timezone(instance):
     if not instance.timezone:
         logger.warn("region {} has no timezone".format(instance.name))
         try:
-            g.timezone = None
+            request.timezone = None
         except RuntimeError:
             pass#working outside application context...
         return
@@ -61,20 +61,24 @@ def set_request_instance_timezone(instance):
         logger.warn("impossible to find timezone: '{}' for region {}".format(instance.timezone, instance.name))
 
     try:
-        g.timezone = tz
+        request.timezone = tz
+
     except RuntimeError:
         pass#working outside of an application context...
 
+import functools32
 
-def get_timezone():
+
+@functools32.lru_cache(1)
+def get_timezone(req_id):
     """
     return the time zone associated with the query
 
     Note: for the moment ONLY ONE time zone is used for a region (a kraken instances)
     It is this default timezone that is returned in this method
     """
-    if not hasattr(g, 'timezone'):
+    if not hasattr(request, 'timezone'):
         raise TechnicalError("No timezone set for this API")  # the set_request_timezone has to be called at init
-    return g.timezone
+    return request.timezone
 
 

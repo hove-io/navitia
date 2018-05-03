@@ -136,10 +136,13 @@ def str_datetime_utc_to_local(dt, timezone):
     else:
         utc_dt = datetime.utcnow()
     local = pytz.timezone(timezone)
-    return dt_to_str(utc_dt.replace(tzinfo=pytz.UTC).astimezone(local))
+    from flask import request
+    return dt_to_str(utc_dt.replace(tzinfo=pytz.UTC).astimezone(local), request.id)
 
+import functools32
 
-def timestamp_to_datetime(timestamp, tz=None):
+@functools32.lru_cache(2048)
+def timestamp_to_datetime(timestamp, req_id, tz=None):
     """
     Convert a timestamp to datetime
     if timestamp > MAX_INT we return None
@@ -153,21 +156,23 @@ def timestamp_to_datetime(timestamp, tz=None):
 
     dt = datetime.utcfromtimestamp(timestamp)
 
-    timezone = tz or get_timezone()
+    timezone = tz or get_timezone(req_id or request.id)
     if timezone:
         dt = pytz.utc.localize(dt)
         return dt.astimezone(timezone)
     return None
 
+import functools32
 
-def dt_to_str(dt):
+@functools32.lru_cache(2048)
+def dt_to_str(dt, req_id):
     return dt.strftime(DATETIME_FORMAT)
 
-
-def timestamp_to_str(timestamp):
-    dt = timestamp_to_datetime(timestamp)
+@functools32.lru_cache(2048)
+def timestamp_to_str(timestamp, req_id):
+    dt = timestamp_to_datetime(timestamp, req_id)
     if dt:
-        return dt_to_str(dt)
+        return dt_to_str(dt, req_id)
     return None
 
 
@@ -489,7 +494,7 @@ def make_namedtuple(typename, *fields, **fields_with_default):
 
 def get_timezone_str(default='Africa/Abidjan'):
     try:
-        timezone = get_timezone()
+        timezone = get_timezone(request.id)
     except TechnicalError:
         return default
     else:
