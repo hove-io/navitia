@@ -71,14 +71,6 @@ def create_job(creation_date, dataset_type, backup_dir):
     return job
 
 
-def add_data_set(job, creation_date, dataset_type, backup_dir):
-    dataset_backup_dir = tempfile.mkdtemp(dir=backup_dir)
-    dataset, metric = create_dataset(dataset_type, dataset_backup_dir)
-    job.data_sets.append(dataset)
-    job.metrics.append(metric)
-    return job
-
-
 def create_jobs_with_same_datasets(name, backup_dir):
     with app.app_context():
         job_list = []
