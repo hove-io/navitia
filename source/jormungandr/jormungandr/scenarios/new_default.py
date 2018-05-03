@@ -393,7 +393,7 @@ def _get_sorted_solutions_indexes(selected_sections_matrix, nb_journeys_to_find,
 def culling_journeys(resp, request):
     """
     Remove some journeys if there are too many of them to have max_nb_journeys journeys.
-    
+
     resp.journeys should be sorted before this function is called
 
     The goal is to choose a bunch of journeys(max_nv_journeys) that covers as many as possible sections
@@ -566,11 +566,11 @@ def _is_fake_car_section(section):
 
 def _switch_back_to_ridesharing(response, is_first_section):
     """
-    
+
     :param response: a pb_response returned by kraken
     :param is_first_section: a bool indicates that if the first_section or last_section is a ridesharing section
                              True if the first_section is, False if the last_section is
-    :return: 
+    :return:
     """
     for journey in response.journeys:
         if len(journey.sections) == 0:
@@ -805,16 +805,31 @@ class Scenario(simple.Scenario):
         if not api_request['destination_mode']:
             api_request['destination_mode'] = ['walking']
 
+        # Return the possible couples combinations (origin_mode and destination_mode)
         krakens_call = get_kraken_calls(api_request)
 
+        # min_nb_journeys option
+        # we take into account the option only if we have one
+        # origin_mode and destination_mode couple.
+        if api_request['min_nb_journeys']:
+            min_nb_journeys = api_request['min_nb_journeys']
+            if min_nb_journeys > 1 and len(krakens_call) > 1:
+                api_request['min_nb_journeys'] = '1'
+                min_nb_journeys = 1
+        else:
+            api_request['min_nb_journeys'] = '1'
+            min_nb_journeys = 1
+
+        # We need the original request (api_request) for filtering, but request
+        # is modified by create_next_kraken_request function.
         request = deepcopy(api_request)
-        min_asked_journeys = get_or_default(request, 'min_nb_journeys', 1)
+
         min_journeys_calls = get_or_default(request, '_min_journeys_calls', 1)
 
         responses = []
         nb_try = 0
         while request is not None and \
-                ((nb_journeys(responses) < min_asked_journeys and nb_try < min_asked_journeys)
+                ((nb_journeys(responses) < min_nb_journeys and nb_try < min_nb_journeys)
                  or nb_try < min_journeys_calls):
             nb_try = nb_try + 1
 
