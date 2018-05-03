@@ -824,15 +824,17 @@ class Scenario(simple.Scenario):
             journey_filter._filter_too_long_journeys(new_resp, request)
             if nb_journeys(new_resp) == 0:
                 # no new journeys found, we stop
+                # we still append the new_resp because there are journeys that a tagged as dead probably
                 responses.extend(new_resp)
                 break
 
             request = self.create_next_kraken_request(request, new_resp)
 
-            # we filter unwanted journeys by side effects
+            # we filter unwanted journeys
+            # note that filter_journeys returns a generator which will be evaluated later
             filtered_new_resp = journey_filter.filter_journeys(new_resp, instance, api_request)
 
-            #duplicate the iterator
+            # duplicate the generator
             tmp1, tmp2 = itertools.tee(filtered_new_resp)
             qualified_journeys = journey_filter.get_qualified_journeys(responses)
 
@@ -845,7 +847,8 @@ class Scenario(simple.Scenario):
             responses.extend(new_resp)  # we keep the error for building the response
 
             nb_qualified_journeys = nb_journeys(responses)
-            #We allow one more call to kraken if there is no valid journey.
+
+            # We allow one more call to kraken if there is no valid journey.
             if nb_qualified_journeys == 0:
                 min_journeys_calls = max(min_journeys_calls, 2)
 

@@ -599,6 +599,31 @@ def compose(*funs):
     """
     return lambda obj: functools.reduce(lambda prev, f: f(prev), funs, obj)
 
+class ComposedFilter(object):
+    """
+    Compose several filters with convenient interfaces
+    All filters are evaluated lazily
+
+    >>> F = ComposedFilter()
+    >>> f = F.add_filter(lambda x: x % 2 == 0).add_filter(lambda x: x % 5 == 0).compile()
+    >>> list(f(range(40)))
+    [0, 10, 20, 30]
+    >>> list(f(range(20))) # we can reuse the composed filter
+    [0, 10]
+    >>> f = F.add_filter(lambda x: x % 3 == 0).compile() # we can continue on adding new filter
+    >>> list(f(range(40)))
+    [0, 30]
+    """
+    def __init__(self):
+        self.filters = []
+
+    def add_filter(self, pred):
+        self.filters.append(lambda iterable: (i for i in iterable if pred(i)))
+        return self
+
+    def compile(self):
+        return compose(*self.filters)
+
 
 def portable_min(*args, **kwargs):
     """
