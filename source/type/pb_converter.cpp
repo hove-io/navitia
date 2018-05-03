@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -50,8 +50,7 @@ www.navitia.io
 namespace gd = boost::gregorian;
 namespace nd = navitia::type::disruption;
 
-namespace navitia{
-
+namespace navitia {
 
 struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
     const nd::Impact& impact;
@@ -705,7 +704,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Calendar* cal, pbnavitia::Calen
         auto pb_period = pb_cal->add_active_periods();
         pb_period->set_begin(gd::to_iso_string(p.begin()));
         pb_period->set_end(gd::to_iso_string(p.end()));
-    }    
+    }
     fill(cal->exceptions, pb_cal->mutable_exceptions());
 }
 
@@ -1636,7 +1635,7 @@ void PbCreator::add_path_item(pbnavitia::StreetNetwork* sn, const ng::PathItem& 
 }
 
 void PbCreator::fill_street_sections(const type::EntryPoint& ori_dest, const georef::Path& path,
-                                     pbnavitia::Journey* pb_journey, const pt::ptime departure, 
+                                     pbnavitia::Journey* pb_journey, const pt::ptime departure,
                                      int max_depth) {
     int depth = std::min(max_depth, 3);
     if (path.path_items.empty())
@@ -2112,4 +2111,8 @@ void PbCreator::set_publication_date(pt::ptime ptime){
     response.set_publication_date(navitia::to_posix_timestamp(ptime));
 }
 
+void PbCreator::set_next_request_date_time(uint32_t next_request_date_time){
+    response.set_next_request_date_time(next_request_date_time);
 }
+
+} // namespace navitia

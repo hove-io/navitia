@@ -1231,6 +1231,9 @@ void make_response(navitia::PbCreator& pb_creator,
 
             LOG4CPLUS_DEBUG(logger, "raptor found " << raptor_journeys.size() << " solutions");
 
+            if (raptor_journeys.empty())
+                break;
+
             // Prepare next call for raptor with min_nb_journeys option
             request_date_secs = prepare_next_call_for_raptor(raptor_journeys, clockwise);
 
@@ -1239,10 +1242,9 @@ void make_response(navitia::PbCreator& pb_creator,
                 journeys.insert(journey);
             }
 
-            if (raptor_journeys.empty())
-                break;
-
         } while ( journeys.size() < min_nb_journeys);
+
+        pb_creator.set_next_request_date_time(request_date_secs);
 
         auto tmp_pathes = raptor.from_journeys_to_path(journeys);
         LOG4CPLUS_DEBUG(logger, "raptor made " << tmp_pathes.size() << " Path(es)");
