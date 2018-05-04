@@ -185,6 +185,7 @@ def _filter_similar_journeys(journeys_pool, request, similar_journey_generator):
     """
 
     logger = logging.getLogger(__name__)
+    is_debug = request.get('debug')
     for j1, j2 in journeys_pool:
         if to_be_deleted(j1) or to_be_deleted(j2):
             continue
@@ -195,7 +196,7 @@ def _filter_similar_journeys(journeys_pool, request, similar_journey_generator):
                                                                                 j2.internal_id,
                                                                                 worst.internal_id))
 
-            mark_as_dead(worst, request, 'duplicate_journey', 'similar_to_{other}'
+            mark_as_dead(worst, is_debug, 'duplicate_journey', 'similar_to_{other}'
                           .format(other=j1.internal_id if worst == j2 else j2.internal_id))
 
 
@@ -295,12 +296,13 @@ def _filter_too_much_connections(journeys, instance, request):
     import itertools
     it1, it2 = itertools.tee(journeys, 2)
     min_connections = get_min_connections(it1)
+    is_debug = request.get('debug')
     if min_connections is not None:
         max_connections_allowed = max_additional_connections + min_connections
         for j in it2:
             if get_nb_connections(j) > max_connections_allowed:
                 logger.debug("the journey {} has a too much connections, we delete it".format(j.internal_id))
-                mark_as_dead(j, request, "too_much_connections")
+                mark_as_dead(j, is_debug, "too_much_connections")
 
 
 def filter_min_transfers(journey, is_debug, min_nb_transfers):
@@ -415,13 +417,14 @@ def _filter_too_long_journeys(responses, request):
                 and not to_be_deleted(j))
 
     logger = logging.getLogger(__name__)
+    is_debug = request.get('debug')
     for (j1, j2) in itertools.permutations(journeys, 2):
         if to_be_deleted(j1) or to_be_deleted(j2):
             continue
         if way_later(request, j1, j2):
             logger.debug("the journey {} is too long compared to {}, we delete it"
                          .format(j1.internal_id, j2.internal_id))
-            mark_as_dead(j1, request, 'too_long', 'too_long_compared_to_{}'.format(j2.internal_id))
+            mark_as_dead(j1, is_debug, 'too_long', 'too_long_compared_to_{}'.format(j2.internal_id))
 
 
 def is_walk_after_parking(journey, idx_section):

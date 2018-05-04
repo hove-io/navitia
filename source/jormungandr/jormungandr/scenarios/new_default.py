@@ -438,6 +438,7 @@ def culling_journeys(resp, request):
 
     nb_journeys_must_have = len(idx_of_jrnys_must_keep)
     logger.debug("There are {0} journeys we must keep".format(nb_journeys_must_have))
+    is_debug = request.get('debug')
     if (request["max_nb_journeys"] - nb_journeys_must_have) <= 0:
         # At this point, max_nb_journeys is smaller than nb_journeys_must_have, we have to make choices
 
@@ -447,7 +448,7 @@ def culling_journeys(resp, request):
 
         # Here we mark all journeys as dead that are not must-have
         for jrny in _inverse_selection(candidates_pool, idx_of_jrnys_must_keep):
-             journey_filter.mark_as_dead(jrny, request, 'Filtered by max_nb_journeys')
+             journey_filter.mark_as_dead(jrny, is_debug, 'Filtered by max_nb_journeys')
 
         if request["max_nb_journeys"] == nb_journeys_must_have:
             logger.debug('max_nb_journeys equals to nb_journeys_must_have')
@@ -468,7 +469,7 @@ def culling_journeys(resp, request):
             sorted_by_type_journeys.extend(list_dict.get(t, []))
 
         for jrny in sorted_by_type_journeys[request["max_nb_journeys"]:]:
-            journey_filter.mark_as_dead(jrny, request, 'Filtered by max_nb_journeys')
+            journey_filter.mark_as_dead(jrny, is_debug, 'Filtered by max_nb_journeys')
 
         journey_filter.delete_journeys((resp,), request)
         return
@@ -517,7 +518,7 @@ def culling_journeys(resp, request):
 
     logger.debug('Removing non selected journeys')
     for jrny in candidates_pool[np.where(selection_matrix[the_best_index, :] == 0)]:
-        journey_filter.mark_as_dead(jrny, request, 'Filtered by max_nb_journeys')
+        journey_filter.mark_as_dead(jrny, is_debug, 'Filtered by max_nb_journeys')
 
     journey_filter.delete_journeys((resp,), request)
 
@@ -872,7 +873,7 @@ class Scenario(simple.Scenario):
         else:
             for j in pb_resp.journeys:
                 if 'ridesharing' in j.tags:
-                    journey_filter.mark_as_dead(j, api_request, 'no_matching_ridesharing_found')
+                    journey_filter.mark_as_dead(j, api_request.get('debug'), 'no_matching_ridesharing_found')
 
         journey_filter.delete_journeys((pb_resp,), api_request)
         type_journeys(pb_resp, api_request)
