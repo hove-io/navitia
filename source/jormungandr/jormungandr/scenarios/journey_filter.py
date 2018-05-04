@@ -29,7 +29,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 import itertools
-import functools
+from functools import partial
 import datetime
 from jormungandr.scenarios.utils import compare, get_pseudo_duration, get_or_default, mode_weight
 from navitiacommon import response_pb2
@@ -61,23 +61,29 @@ def filter_journeys(responses, instance, request):
 
     min_nb_transfers = get_or_default(request, 'min_nb_transfers', 0)
 
-    # Note that we use the lambda trick to capture 'request' and other arguments, instead of using functools.partial
-    composed_filter = ComposedFilter().add_filter(lambda j: filter_too_short_heavy_journeys(j, request))\
-                                      .add_filter(lambda j: filter_too_long_waiting(j, is_debug))\
-                                      .add_filter(lambda j: filter_min_transfers(j, is_debug, min_nb_transfers))
+    # Note that we use the functools.partial to capture the arguments
+    composed_filter = ComposedFilter().add_filter(partial(filter_too_short_heavy_journeys,
+                                                          request=request))\
+                                      .add_filter(partial(filter_too_long_waiting,
+                                                          is_debug=is_debug))\
+                                      .add_filter(partial(filter_min_transfers,
+                                                          is_debug=is_debug,
+                                                          min_nb_transfers=min_nb_transfers))
 
     # we add more filters in some special cases:
     max_successive = get_or_default(request, '_max_successive_physical_mode', 0)
     if max_successive != 0:
         limit_id = instance.successive_physical_mode_to_limit_id
-        composed_filter.add_filter(lambda j: filter_max_successive_physical_mode(j,
-                                                                                 is_debug,
-                                                                                 limit_id,
-                                                                                 max_successive))
+        composed_filter.add_filter(partial(filter_max_successive_physical_mode,
+                                           is_debug=is_debug,
+                                           successive_physical_mode_to_limit_id=limit_id,
+                                           max_successive_physical_mode=max_successive))
 
     dp = get_or_default(request, 'direct_path', 'indifferent')
     if dp != 'indifferent':
-        composed_filter.add_filter(lambda j: filter_direct_path(j, is_debug, dp))
+        composed_filter.add_filter(partial(filter_direct_path,
+                                           is_debug=is_debug,
+                                           dp=dp))
 
     return composed_filter.compile()(get_qualified_journeys(responses))
 
@@ -406,7 +412,7 @@ def way_later(request, journey1, journey2):
     return pseudo_j1_duration > max_value
 
 
-def _filter_too_long_journeys(responses, request):
+def _filter_too_late_journeys(responses, request):
     """
     Filter not coherent journeys
 

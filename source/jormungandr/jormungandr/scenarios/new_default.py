@@ -822,7 +822,7 @@ class Scenario(simple.Scenario):
             _tag_by_mode(new_resp)
             _tag_direct_path(new_resp)
             _tag_bike_in_pt(new_resp)
-            journey_filter._filter_too_long_journeys(new_resp, request)
+            journey_filter._filter_too_late_journeys(new_resp, request)
             if nb_journeys(new_resp) == 0:
                 # no new journeys found, we stop
                 # we still append the new_resp because there are journeys that a tagged as dead probably
@@ -831,7 +831,7 @@ class Scenario(simple.Scenario):
 
             request = self.create_next_kraken_request(request, new_resp)
 
-            # we filter unwanted journeys
+            # we filter unwanted journeys in the new response
             # note that filter_journeys returns a generator which will be evaluated later
             filtered_new_resp = journey_filter.filter_journeys(new_resp, instance, api_request)
 
@@ -839,8 +839,22 @@ class Scenario(simple.Scenario):
             tmp1, tmp2 = itertools.tee(filtered_new_resp)
             qualified_journeys = journey_filter.get_qualified_journeys(responses)
 
+            # now we want to filter similar journeys in the new response which is done in 2 steps
+            # In the first step, we compare journeys from the new response only , 2 by 2
+            # hopefully, it may lead to some early return for the second step to improve the perf a little
+            # In the second step, we compare the journeys from the new response with those that have been qualified
+            # already in the former iterations
+            # note that the journeys_pool is a list of 2-element tuple of journeys
             journeys_pool = itertools.chain(
+                # First step: compare journeys from the new response only
                 itertools.combinations(tmp1, 2),
+                # Second step:
+                # we use the itertools.product to create combinations between qualified journeys and new journeys
+                # Ex:
+                # new_journeys = [n_1, n_2]
+                # qualified_journeys = [q_1, q_2, q_3]
+                # itertools.product(new_journeys, qualified_journeys) gives combinations as follows:
+                # (n_1, q_1), (n_1, q_2),(n_1, q_3),(n_2, q_1),(n_2, q_2),(n_2, q_3)
                 itertools.product(tmp2, qualified_journeys),
             )
             journey_filter.filter_similar_vj_journeys(journeys_pool, api_request)
