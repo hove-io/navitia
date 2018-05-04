@@ -219,7 +219,8 @@ def get_or_default(request, val, default):
     so here is a simple helper to get the default value is the key
     is not in the dict or if the value is None
     """
-    return request.get(val, default) or default
+    val = request.get(val, default)
+    return val if val is not None else default
 
 
 def updated_common_journey_request_with_default(request, instance):
