@@ -1120,7 +1120,9 @@ void make_response(navitia::PbCreator& pb_creator,
                    uint32_t max_extra_second_pass,
                    uint32_t free_radius_from,
                    uint32_t free_radius_to,
-                   uint32_t min_nb_journeys) {
+                   uint32_t min_nb_journeys,
+                   double night_bus_filter_max_factor,
+                   int32_t night_bus_filter_base_factor) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     std::vector<Path> pathes;
@@ -1224,12 +1226,15 @@ void make_response(navitia::PbCreator& pb_creator,
         // If the number of Path finds is greater or equal than min_nb_journeys, we stop.
         JourneySet journeys;
         do {
-            const auto & raptor_journeys = raptor.compute_all_journeys(
+            auto raptor_journeys = raptor.compute_all_journeys(
                 *departures, *destinations, request_date_secs, rt_level, transfer_penalty, bound, max_transfers,
                 accessibilite_params, forbidden, allowed, clockwise, direct_path_dur,
                 max_extra_second_pass);
 
             LOG4CPLUS_DEBUG(logger, "raptor found " << raptor_journeys.size() << " solutions");
+
+            // filter joureys that are too late.....with the magic formula...
+            // <- HERE ->
 
             if (raptor_journeys.empty())
                 break;

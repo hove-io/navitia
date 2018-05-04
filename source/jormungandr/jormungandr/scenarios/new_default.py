@@ -176,6 +176,9 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     if request["min_nb_journeys"]:
         req.journeys.min_nb_journeys = request["min_nb_journeys"]
 
+    req.journeys.night_bus_filter_max_factor = request['_night_bus_filter_max_factor']
+    req.journeys.night_bus_filter_base_factor = request['_night_bus_filter_base_factor']
+
     return req
 
 

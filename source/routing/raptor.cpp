@@ -390,7 +390,7 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
                     const boost::optional<navitia::time_duration>& direct_path_dur,
                     const size_t max_extra_second_pass) {
 
-    auto journeys = compute_all_journeys(departures,
+    const auto & journeys = compute_all_journeys(departures,
                                          destinations,
                                          departure_datetime,
                                          rt_level,

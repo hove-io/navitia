@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #include "journey.h"
+#include "type/type.h"
 
 using namespace navitia::routing;
 

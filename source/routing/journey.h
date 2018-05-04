@@ -31,9 +31,15 @@ www.navitia.io
 #pragma once
 
 #include "type/time_duration.h"
+#include "type/datetime.h"
 #include <unordered_set>
 
 namespace navitia {
+
+namespace type {
+    struct StopTime;
+}
+
 namespace routing {
 
 struct Journey {

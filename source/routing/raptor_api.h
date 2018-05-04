@@ -80,7 +80,9 @@ void make_response(navitia::PbCreator& pb_creator,
                    uint32_t max_extra_second_pass = 0,
                    uint32_t free_radius_from = 0,
                    uint32_t free_radius_to = 0,
-                   uint32_t min_nb_journeys = 0);
+                   uint32_t min_nb_journeys = 0,
+                   double night_bus_filter_max_factor = 3,
+                   int32_t night_bus_filter_base_factor = 3600 /*seconds*/ );
 
 void make_isochrone(navitia::PbCreator& pb_creator,
                     RAPTOR &raptor,
