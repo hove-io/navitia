@@ -375,7 +375,7 @@ class NetworkSerializer(PbGenericSerializer):
 
 
 class RouteSerializer(PbGenericSerializer):
-    is_frequence = StrField()
+    is_frequence = BoolField()
     direction_type = jsonschema.Field(schema_type=str, display_none=True)
     physical_modes = PhysicalModeSerializer(many=True, display_none=False)
     comments = CommentSerializer(many=True, display_none=False)
