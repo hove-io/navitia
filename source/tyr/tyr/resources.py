@@ -1097,7 +1097,7 @@ class AutocompleteUpdateData(flask_restful.Resource):
 
 class DeleteDataset(flask_restful.Resource):
 
-    def delete(self, instance_name, type='poi'):
+    def delete(self, instance_name, type):
 
         instance = models.Instance.get_by_name(instance_name)
         if instance:
@@ -1125,7 +1125,6 @@ class MigrateFromPoiToOsm(flask_restful.Resource):
                         h=instance_conf.pg_host, db=instance_conf.pg_dbname, port=instance_conf.pg_port)
             engine = sqlalchemy.create_engine(connection_string)
 
-            # update the line, simplified to approx 100m
             engine.execute("""UPDATE navitia.parameters SET parse_pois_from_osm = TRUE""").close()
 
             return_msg = 'Parameter parse_pois_from_osm activated'

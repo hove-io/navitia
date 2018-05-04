@@ -417,7 +417,7 @@ class Instance(db.Model):
             .all()
 
         if not result:
-            return None
+            return 0
         job_list = {}
         for dataset, job in result:
             # Cascade Delete not working so delete Metric associated manually
