@@ -30,7 +30,7 @@ www.navitia.io
 
 #pragma once
 
-#include "type/type.h"
+#include "type/time_duration.h"
 #include <unordered_set>
 
 namespace navitia {
