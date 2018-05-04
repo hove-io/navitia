@@ -605,12 +605,12 @@ class ComposedFilter(object):
     All filters are evaluated lazily
 
     >>> F = ComposedFilter()
-    >>> f = F.add_filter(lambda x: x % 2 == 0).add_filter(lambda x: x % 5 == 0).compile()
+    >>> f = F.add_filter(lambda x: x % 2 == 0).add_filter(lambda x: x % 5 == 0).compose_filters()
     >>> list(f(range(40)))
     [0, 10, 20, 30]
     >>> list(f(range(20))) # we can reuse the composed filter
     [0, 10]
-    >>> f = F.add_filter(lambda x: x % 3 == 0).compile() # we can continue on adding new filter
+    >>> f = F.add_filter(lambda x: x % 3 == 0).compose_filters() # we can continue on adding new filter
     >>> list(f(range(40)))
     [0, 30]
     """
@@ -621,7 +621,7 @@ class ComposedFilter(object):
         self.filters.append(lambda iterable: (i for i in iterable if pred(i)))
         return self
 
-    def compile(self):
+    def compose_filters(self):
         return compose(*self.filters)
 
 

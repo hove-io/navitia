@@ -62,30 +62,29 @@ def filter_journeys(responses, instance, request):
     min_nb_transfers = get_or_default(request, 'min_nb_transfers', 0)
 
     # Note that we use the functools.partial to capture the arguments
-    composed_filter = ComposedFilter().add_filter(partial(filter_too_short_heavy_journeys,
-                                                          request=request))\
-                                      .add_filter(partial(filter_too_long_waiting,
-                                                          is_debug=is_debug))\
-                                      .add_filter(partial(filter_min_transfers,
-                                                          is_debug=is_debug,
-                                                          min_nb_transfers=min_nb_transfers))
+    filters = [partial(filter_too_short_heavy_journeys, request=request),
+               partial(filter_too_long_waiting, is_debug=is_debug),
+               partial(filter_min_transfers, is_debug=is_debug, min_nb_transfers=min_nb_transfers)]
 
     # we add more filters in some special cases:
     max_successive = get_or_default(request, '_max_successive_physical_mode', 0)
     if max_successive != 0:
         limit_id = instance.successive_physical_mode_to_limit_id
-        composed_filter.add_filter(partial(filter_max_successive_physical_mode,
-                                           is_debug=is_debug,
-                                           successive_physical_mode_to_limit_id=limit_id,
-                                           max_successive_physical_mode=max_successive))
+        filters.append(partial(filter_max_successive_physical_mode,
+                               is_debug=is_debug,
+                               successive_physical_mode_to_limit_id=limit_id,
+                               max_successive_physical_mode=max_successive))
 
     dp = get_or_default(request, 'direct_path', 'indifferent')
     if dp != 'indifferent':
-        composed_filter.add_filter(partial(filter_direct_path,
-                                           is_debug=is_debug,
-                                           dp=dp))
+        filters.append(partial(filter_direct_path,
+                               is_debug=is_debug,
+                               dp=dp))
 
-    return composed_filter.compile()(get_qualified_journeys(responses))
+    composed_filter = ComposedFilter()
+    [composed_filter.add_filter(f) for f in filters]
+
+    return composed_filter.compose_filters()(get_qualified_journeys(responses))
 
 
 def final_filter_journeys(response_list, instance, request):
@@ -208,9 +207,9 @@ def _filter_similar_journeys(journeys_pool, request, similar_journey_generator):
 
 def exceed_min_duration(current_section, journey, request,  min_duration):
     if current_section == journey.sections[0]:
-        return 'origin_mode' in request and 'walking' in request['origin_mode'] \
+        return 'walking' in request.get('origin_mode', []) \
                and current_section.duration < min_duration
-    return 'destination_mode' in request and 'walking' in request['destination_mode'] \
+    return 'walking' in request.get('destination_mode', []) \
            and current_section.duration < min_duration
 
 
@@ -222,8 +221,13 @@ def filter_too_short_heavy_journeys(journey, request):
     """
     logger = logging.getLogger(__name__)
 
-    on_bss = False
+    # early return
+    if journey.durations.bike == journey.durations.car == 0:
+        return True
+
     is_debug = request.get('debug', False)
+
+    on_bss = False
     for s in journey.sections:
         if s.type == response_pb2.BSS_RENT:
             on_bss = True
@@ -250,12 +254,23 @@ def filter_too_long_waiting(journey, is_debug):
     """
     filter journeys with a too long section of type waiting
     """
+    # early return
+
+    # if there is no transfers it won't have any waiting sections
+    if journey.nb_transfers == 0:
+        return True
+
+    # if the total duration is smaller that the max_waiting, no need to check
+    max_waiting = 4 * 60 * 60
+    if journey.duration < max_waiting:
+        return True
+
     logger = logging.getLogger(__name__)
 
     for s in journey.sections:
         if s.type != response_pb2.WAITING:
             continue
-        if s.duration < 4 * 60 * 60:
+        if s.duration < max_waiting:
             continue
         logger.debug("the journey {} has a too long waiting, we delete it".format(journey.internal_id))
         mark_as_dead(journey, is_debug, "too_long_waiting")
@@ -418,7 +433,7 @@ def _filter_too_late_journeys(responses, request):
 
     The aim is to keep that as simple as possible
     """
-    # for clarity purpose we build a temporary iterator
+    # for clarity purpose we build a temporary generator
     journeys = (j for r in responses for j in r.journeys if 'non_pt' not in j.tags
                 and not to_be_deleted(j))
 
@@ -534,7 +549,7 @@ def get_qualified_journeys(responses):
     """
 
     :param responses: protobuf
-    :return: iterator of journeys
+    :return: generator of journeys
     """
     return (j for r in responses for j in r.journeys if not to_be_deleted(j))
 
