@@ -184,12 +184,9 @@ def choose_standard(journeys, best_criteria):
 
 #comparison of 2 fields. 0=>equality, 1=>1 better than 2
 def compare_minus(field_1, field_2):
-    if field_1 == field_2:
-        return 0
-    elif field_1 < field_2:
-        return 1
-    else:
-        return -1
+    # ordering-comparisons
+    # https://docs.python.org/3.4/whatsnew/3.0.html#ordering-comparisons
+    return (field_2 > field_1) - (field_2 < field_1)
 
 
 def compare_field(obj1, obj2, func):
