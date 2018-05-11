@@ -836,7 +836,7 @@ class Scenario(simple.Scenario):
 
         while request is not None and \
                 (nb_qualified_journeys < min_nb_journeys and nb_try < min_nb_journeys) \
-                 or nb_try < min_journeys_calls):
+                or (nb_try < min_journeys_calls):
             nb_try = nb_try + 1
 
             new_resp = self.call_kraken(request_type, request, instance, krakens_call)

@@ -406,7 +406,7 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
     return from_journeys_to_path(journeys);
 }
 
-std::list<Journey>
+RAPTOR::Journeys
 RAPTOR::compute_all_journeys(const map_stop_point_duration& departures,
                              const map_stop_point_duration& destinations,
                              const DateTime& departure_datetime,

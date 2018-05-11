@@ -1103,6 +1103,35 @@ void make_pt_response(navitia::PbCreator& pb_creator,
     }
 }
 
+/**
+    Check if a journey is way later than another journey
+
+    Then, we check for each journey the difference between the
+    requested datetime and the arrival datetime (the other way around
+    for non clockwise)
+
+    requested dt
+    *
+                   |=============>
+                          journey2
+
+                                           |=============>
+                                                 journey1
+
+    -------------------------------
+             journey2 pseudo duration
+
+    ------------------------------------------------------
+                       journey1 pseudo duration
+ */
+bool way_later(const Journey & j1, const Journey & j2) {
+    return false;
+}
+
+void filter_journeys_too_late(RAPTOR::Journeys & journeys) {
+
+}
+
 void make_response(navitia::PbCreator& pb_creator,
                    RAPTOR &raptor,
                    const type::EntryPoint& origin,

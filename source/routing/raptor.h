@@ -145,7 +145,9 @@ struct RAPTOR
                 const size_t max_extra_second_pass = 0);
 
 
-    std::list<Journey>
+    typedef std::list<Journey> Journeys;
+
+    Journeys
     compute_all_journeys(const map_stop_point_duration& departs,
                          const map_stop_point_duration& destinations,
                          const DateTime& departure_datetime,
