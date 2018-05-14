@@ -194,11 +194,10 @@ class TestDisruptions(AbstractTestFixture):
         """
         :param stop_time: dict of departure/arrival stop_date_time
         :param disruption_time: dict of disruption application_periods
-        :return: True if stop_time is within disruption time, else None
+        :return: True if stop_time is within disruption time, else False
         """
-        if disruption_time['begin'] < stop_time['arrival_date_time'] < disruption_time['end'] or \
-                disruption_time['begin'] < stop_time['departure_date_time'] < disruption_time['end']:
-            return True
+        return disruption_time['begin'] < stop_time['arrival_date_time'] < disruption_time['end'] or \
+                disruption_time['begin'] < stop_time['departure_date_time'] < disruption_time['end']
 
     def test_disruption_with_departures(self):
         """
