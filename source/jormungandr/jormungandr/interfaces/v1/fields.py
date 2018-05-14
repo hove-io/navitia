@@ -32,6 +32,7 @@ from copy import deepcopy
 import datetime
 import logging
 from flask.globals import g
+from flask import request
 import pytz
 from jormungandr.interfaces.v1.make_links import create_internal_link, create_external_link
 from jormungandr.interfaces.v1.serializer import pt, base
@@ -126,7 +127,6 @@ class DateTime(fields.Raw):
         return self.format(value)
 
     def format(self, value):
-        from flask import request
         return timestamp_to_str(value, request.id)
 
 

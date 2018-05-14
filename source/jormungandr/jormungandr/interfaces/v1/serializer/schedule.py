@@ -28,6 +28,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from datetime import datetime
+from flask import request
 from jormungandr.interfaces.v1.serializer.base import PbNestedSerializer, EnumField, EnumListField
 from jormungandr.interfaces.v1.serializer import pt, jsonschema, base
 from jormungandr.interfaces.v1.serializer.fields import LinkSchema, MultiLineStringField
@@ -78,7 +79,6 @@ class DateTimeTypeSerializer(PbNestedSerializer):
         if obj.time == __date_time_null_value__:
             return ""
         if obj.HasField('date'):
-            from flask import request
             return timestamp_to_str(obj.date + obj.time, request.id)
         return datetime.utcfromtimestamp(obj.time).strftime('%H%M%S')
 

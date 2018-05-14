@@ -49,6 +49,7 @@ import re
 import flask
 from contextlib import contextmanager
 import functools
+import functools32
 import sys
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
@@ -136,10 +137,8 @@ def str_datetime_utc_to_local(dt, timezone):
     else:
         utc_dt = datetime.utcnow()
     local = pytz.timezone(timezone)
-    from flask import request
     return dt_to_str(utc_dt.replace(tzinfo=pytz.UTC).astimezone(local), request.id)
 
-import functools32
 
 @functools32.lru_cache(2048)
 def timestamp_to_datetime(timestamp, req_id, tz=None):
@@ -162,7 +161,6 @@ def timestamp_to_datetime(timestamp, req_id, tz=None):
         return dt.astimezone(timezone)
     return None
 
-import functools32
 
 @functools32.lru_cache(2048)
 def dt_to_str(dt, req_id):

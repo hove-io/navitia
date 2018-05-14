@@ -32,6 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import logging
 import pytz
 from flask import g, request
+import functools32
 from jormungandr.exceptions import TechnicalError, RegionNotFound
 
 def set_request_timezone(region):
@@ -65,8 +66,6 @@ def set_request_instance_timezone(instance):
 
     except RuntimeError:
         pass#working outside of an application context...
-
-import functools32
 
 
 @functools32.lru_cache(1)
