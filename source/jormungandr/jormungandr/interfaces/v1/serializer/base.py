@@ -131,7 +131,7 @@ class EnumField(jsonschema.Field):
 
     @staticmethod
     def _get_all_possible_values(pb_type):
-        return [v.name for v in pb_type.DESCRIPTOR.values]
+        return [v.name.lower() for v in pb_type.DESCRIPTOR.values]
 
 
 class NestedEnumField(EnumField):
