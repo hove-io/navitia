@@ -38,6 +38,7 @@ www.navitia.io
 #include "isochrone.h"
 #include "heat_map.h"
 #include "utils/map_find.h"
+#include "utils/pairs_generator.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/range/algorithm/count.hpp>
@@ -1128,8 +1129,27 @@ bool way_later(const Journey & j1, const Journey & j2) {
     return false;
 }
 
-void filter_journeys_too_late(RAPTOR::Journeys & journeys) {
+void filter_late_journeys(RAPTOR::Journeys & journeys)
+{
+    auto journeys_pairs_gen = utils::make_pairs_generator(journeys);
+    std::vector<RAPTOR::Journeys::const_iterator> late_journeys;
 
+    for(auto journey_pair : journeys_pairs_gen)
+    {
+        auto& j1 = *journey_pair.first;
+        auto& j2 = *journey_pair.second;
+
+        if(way_later(j1, j2)) {
+            late_journeys.push_back(journey_pair.first);
+        }
+        else if(way_later(j2, j1)) {
+            late_journeys.push_back(journey_pair.second);
+        }
+    }
+
+    for(auto& late_journey : late_journeys) {
+        journeys.erase(late_journey);
+    }
 }
 
 void make_response(navitia::PbCreator& pb_creator,

@@ -136,6 +136,19 @@ void free_radius_filter(routing::map_stop_point_duration& sp_list,
                         const type::Data& data,
                         const  uint32_t free_radius);
 
+
+
+/**
+* @brief Check if a journey is way later than another journey
+*/
+bool way_later(const Journey & j1, const Journey & j2);
+
+/**
+* @brief Compare the journeys 2 by 2 and remove the ones
+* that arrives way later from the list.
+*/
+void filter_late_journeys(RAPTOR::Journeys & journeys);
+
 /**
  * @brief Prepare next call for raptor with min_nb_journeys option
  *
