@@ -1037,11 +1037,11 @@ void PbCreator::Filler::fill_pb_object(const nd::Impact* impact, pbnavitia::Impa
     case nd::Effect::OTHER_EFFECT:
         pb_severity->set_effect(pbnavitia::Severity_Effect::Severity_Effect_OTHER_EFFECT);
         break;
-    case nd::Effect::UNKNOWN_EFFECT:
-        pb_severity->set_effect(pbnavitia::Severity_Effect::Severity_Effect_UNKNOWN_EFFECT);
-        break;
     case nd::Effect::STOP_MOVED:
         pb_severity->set_effect(pbnavitia::Severity_Effect::Severity_Effect_STOP_MOVED);
+        break;
+    case nd::Effect::UNKNOWN_EFFECT:
+        pb_severity->set_effect(pbnavitia::Severity_Effect::Severity_Effect_UNKNOWN_EFFECT);
         break;
     }
     pb_severity->set_priority(impact->severity->priority);
