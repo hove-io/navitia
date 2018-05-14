@@ -1015,7 +1015,35 @@ void PbCreator::Filler::fill_pb_object(const nd::Impact* impact, pbnavitia::Impa
     auto pb_severity = pb_impact->mutable_severity();
     pb_severity->set_name(impact->severity->wording);
     pb_severity->set_color(impact->severity->color);
-    pb_severity->set_effect(to_string(impact->severity->effect));
+    switch (impact->severity->effect) {
+    case nd::Effect::NO_SERVICE:
+        pb_severity->set_effect(pbnavitia::Severity_Effect::Severity_Effect_NO_SERVICE);
+        break;
+    case nd::Effect::REDUCED_SERVICE:
+        pb_severity->set_effect(pbnavitia::Severity_Effect::Severity_Effect_REDUCED_SERVICE);
+        break;
+    case nd::Effect::SIGNIFICANT_DELAYS:
+        pb_severity->set_effect(pbnavitia::Severity_Effect::Severity_Effect_SIGNIFICANT_DELAYS);
+        break;
+    case nd::Effect::DETOUR:
+        pb_severity->set_effect(pbnavitia::Severity_Effect::Severity_Effect_DETOUR);
+        break;
+    case nd::Effect::ADDITIONAL_SERVICE:
+        pb_severity->set_effect(pbnavitia::Severity_Effect::Severity_Effect_ADDITIONAL_SERVICE);
+        break;
+    case nd::Effect::MODIFIED_SERVICE:
+        pb_severity->set_effect(pbnavitia::Severity_Effect::Severity_Effect_MODIFIED_SERVICE);
+        break;
+    case nd::Effect::OTHER_EFFECT:
+        pb_severity->set_effect(pbnavitia::Severity_Effect::Severity_Effect_OTHER_EFFECT);
+        break;
+    case nd::Effect::UNKNOWN_EFFECT:
+        pb_severity->set_effect(pbnavitia::Severity_Effect::Severity_Effect_UNKNOWN_EFFECT);
+        break;
+    case nd::Effect::STOP_MOVED:
+        pb_severity->set_effect(pbnavitia::Severity_Effect::Severity_Effect_STOP_MOVED);
+        break;
+    }
     pb_severity->set_priority(impact->severity->priority);
 
     for (const auto& t: impact->disruption->tags) {

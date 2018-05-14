@@ -536,7 +536,7 @@ disruption_message = {
 
 disruption_severity = {
     "name": fields.String(),
-    "effect": fields.String(),
+    "effect": enum_type(),
     "color": fields.String(),
     "priority": fields.Integer(),
 }

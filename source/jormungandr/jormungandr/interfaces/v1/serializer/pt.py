@@ -36,7 +36,7 @@ from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, DateTi
 from jormungandr.interfaces.v1.serializer.time import TimeField, PeriodSerializer, DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import *
 from jormungandr.interfaces.v1.serializer import jsonschema, base
-from navitiacommon.type_pb2 import ActiveStatus, Channel, hasEquipments, Properties, NavitiaType
+from navitiacommon.type_pb2 import ActiveStatus, Channel, hasEquipments, Properties, NavitiaType, Severity
 from navitiacommon.response_pb2 import SectionAdditionalInformationType
 
 
