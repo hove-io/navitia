@@ -136,8 +136,6 @@ void free_radius_filter(routing::map_stop_point_duration& sp_list,
                         const type::Data& data,
                         const  uint32_t free_radius);
 
-
-
 /**
 * @brief Check if a journey is way later than another journey
 */
