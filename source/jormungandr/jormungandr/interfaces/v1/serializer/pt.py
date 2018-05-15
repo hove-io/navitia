@@ -79,7 +79,7 @@ class MessageSerializer(PbNestedSerializer):
 
 class SeveritySerializer(PbNestedSerializer):
     name = jsonschema.Field(schema_type=str)
-    effect = jsonschema.Field(schema_type=str)
+    effect = EnumField(attr='effect', pb_type=Severity.Effect)
     color = jsonschema.Field(schema_type=str)
     priority = jsonschema.Field(schema_type=int)
 
@@ -200,7 +200,7 @@ class ImpactedStopSerializer(PbNestedSerializer):
     amended_arrival_time = TimeField(attr='amended_stop_time.arrival_time')
     amended_departure_time = TimeField(attr='amended_stop_time.departure_time')
     cause = jsonschema.Field(schema_type=str, display_none=True)
-    stop_time_effect = EnumField(attr='effect')
+    stop_time_effect = EnumField(attr='effect', pb_type=Severity.Effect)
     departure_status = EnumField()
     arrival_status = EnumField()
 
