@@ -87,7 +87,7 @@ class StreetNetworkPath:
 class StreetNetworkPathPool:
     """
     A direct path pool is a set of pure street network journeys which are computed by the given street network service.
-    According to its usage, a StreetNetworkPath can be direct, begnning_fallback and ending_fallback
+    According to its usage, a StreetNetworkPath can be direct, beginning_fallback and ending_fallback
     """
     def __init__(self, future_manager, instance):
         self._future_manager = future_manager

@@ -90,7 +90,6 @@ class TestJourneysDefault(JourneyCommon, AbstractTestFixture):
         """
         pass
 
-
 @config()
 class TestJourneysNoRegionDefault(JourneysNoRegion, AbstractTestFixture):
     pass

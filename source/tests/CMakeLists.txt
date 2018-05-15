@@ -1,6 +1,6 @@
-SET(ALL_LIBS workers ed disruption_api calendar_api time_tables types autocomplete proximitylist
+set(ALL_LIBS workers ed disruption_api calendar_api time_tables types autocomplete proximitylist
     ptreferential time_tables data routing fare types georef utils SimpleAmqpClient
-    rabbitmq-static log4cplus tcmalloc ${Boost_LIBRARIES} protobuf prometheus-cpp)
+    rabbitmq-static log4cplus tcmalloc ${Boost_LIBRARIES} protobuf)
 
 # every tests will produce an executable used in jormungandr integration tests
 

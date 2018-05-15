@@ -42,8 +42,8 @@ www.navitia.io
 #include "utils/logger.h"
 
 //they need to be included for the BOOST_CLASS_EXPORT_GUID macro
-#include "third_party/eos_portable_archive/portable_iarchive.hpp"
-#include "third_party/eos_portable_archive/portable_oarchive.hpp"
+#include <eos_portable_archive/portable_iarchive.hpp>
+#include <eos_portable_archive/portable_oarchive.hpp>
 #include <boost/archive/binary_oarchive.hpp>
 #include <boost/archive/binary_iarchive.hpp>
 #include <boost/range/algorithm/find.hpp>

@@ -1,3 +1,20 @@
+navitia2 (2.56.0) unstable; urgency=low
+
+  * Kraken: Fix MapFind for Debian 7  <https://github.com/CanalTP/navitia/pull/2401>
+  * fix problem caused by pip 10.0.0  <https://github.com/CanalTP/navitia/pull/2394>
+  * tyr: Modify migrate_from_poi_to_osm to delete_dataset  <https://github.com/CanalTP/navitia/pull/2402>
+  * jomungandr: Fix attributs in swagger  <https://github.com/CanalTP/navitia/pull/2408>
+  * Kraken: Free radius filtering for stop points  <https://github.com/CanalTP/navitia/pull/2386>
+  * Kraken & Cmake : Refactoring and add retro compatibility  <https://github.com/CanalTP/navitia/pull/2396>
+  * tyr: delete old jobs of discarded instance  <https://github.com/CanalTP/navitia/pull/2403>
+  * kraken: use disable_geojson in route_schedules  <https://github.com/CanalTP/navitia/pull/2406>
+  * kraken: correction on disruption reader from database for channel type  <https://github.com/CanalTP/navitia/pull/2393>
+  * Kraken: Refactor raptor_api with MapFind  <https://github.com/CanalTP/navitia/pull/2400>
+  * tyr: no job to be created if no action for mimir on dataset  <https://github.com/CanalTP/navitia/pull/2395>
+  * Jormungandr: Add free_radius parameters  <https://github.com/CanalTP/navitia/pull/2391>
+
+ -- Pierre-Etienne Bougue <pierre-etienne.bougue@canaltp.fr>  Tue, 15 May 2018 12:05:38 +0100
+
 navitia2 (2.55.0) unstable; urgency=low
 
   * Ed: Correction for a pattern with dst  <https://github.com/CanalTP/navitia/pull/2384>

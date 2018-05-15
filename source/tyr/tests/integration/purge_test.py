@@ -36,7 +36,7 @@ from datetime import datetime, timedelta
 
 from tyr import app, tasks
 from navitiacommon import models
-from tests.check_utils import api_get
+from tests.check_utils import api_get, api_delete
 try:
     import ConfigParser
 except:
@@ -154,8 +154,9 @@ def test_purge_old_jobs():
 @pytest.mark.usefixtures("init_instances_dir")
 def test_purge_old_jobs_no_delete():
     """
-    The jobs related to the instance are the only ones of their type.
-    So, even if they are older than the time limit, they won't be deleted
+    The jobs related to the instance are the only ones of their type(having one data_set par job).
+    So, even if they are older than the time limit, they won't be deleted and hence last_datasets
+    always contains a full set of valid data_sets
     """
     app.config['JOB_MAX_PERIOD_TO_KEEP'] = 1
 
@@ -184,7 +185,7 @@ def test_purge_old_jobs_no_delete():
 def test_purge_old_jobs_same_dataset():
     """
     An old job to be deleted uses the same dataset as one to keep.
-    So, delete the job in db but the dataset file on disc
+    So, delete the job keeping at least one in db but the dataset file on disc
     """
     app.config['JOB_MAX_PERIOD_TO_KEEP'] = 1
 
@@ -207,3 +208,34 @@ def test_purge_old_jobs_same_dataset():
 
     folders = set(glob.glob('{}/*'.format(backup_dir)))
     assert len(folders) == 1
+
+
+@pytest.mark.usefixtures("init_instances_dir")
+def test_purge_old_jobs_of_multi_instance():
+    """
+    We should delete jobs, data_sets as well as metrics of all instances
+    including discarded = True
+    """
+    app.config['JOB_MAX_PERIOD_TO_KEEP'] = 1
+
+    instance_name, backup_dir = init_test()
+    create_jobs_with_same_datasets(instance_name, backup_dir)
+
+    create_jobs_with_same_datasets('fr-discarded', backup_dir)
+
+    instances_resp = api_get('/v0/instances')
+    assert len(instances_resp) == 2
+
+    # Delete the second instance (discarded = True)
+    instances_resp = api_delete('/v0/instances/fr-discarded')
+    assert instances_resp['discarded'] is True
+
+    jobs_resp = api_get('/v0/jobs/fr-discarded')
+    assert len(jobs_resp['jobs']) == 3
+    jobs_resp = api_get('/v0/jobs/fr')
+    assert len(jobs_resp['jobs']) == 3
+    tasks.purge_jobs()
+    jobs_resp = api_get('/v0/jobs/fr-discarded')
+    assert len(jobs_resp['jobs']) == 1
+    jobs_resp = api_get('/v0/jobs/fr')
+    assert len(jobs_resp['jobs']) == 1

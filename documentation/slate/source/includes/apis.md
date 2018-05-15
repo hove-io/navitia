@@ -994,6 +994,8 @@ The [isochrones](#isochrones) service exposes another response structure, which 
 | nop     | direct_path          | enum    | Specify if direct paths should be suggested.<br>possible values: <ul><li>indifferent</li><li>none</li><li>only</li></ul>      | indifferent |
 | nop     | add_poi_infos[]      | boolean | Activate the output of additional infomations about the poi. For example, parking availability(BSS, car parking etc.) in the pois of response. Possible values are `bss_stands`, `car_park`    | []
 | nop     | debug                | boolean | Debug mode<br>No journeys are filtered in this mode     | False       |
+| nop     | free_radius_from     | int     | Radius length (in meters) around the coordinates of departure in which the stop points are considered free to go (crowfly=0) | 0           |
+| nop     | free_radius_to	     | int     | Radius length (in meters) around the coordinates of arrival in which the stop points are considered free to go (crowfly=0)  | 0           |
 
 ### Precisions on `forbidden_uris[]` and `allowed_id[]`
 
@@ -1005,6 +1007,18 @@ Examples:
 
 * A user doesn't like line A metro in hers city. She adds the parameter `forbidden_uris[]=line:A` when calling the API.
 * A user would only like to use Buses and Tramways. She adds the parameter `allowed_id[]=physical_mode:Bus&allowed_id[]=physical_mode:Tramway`.
+
+### Precisions on `free_radius_from/free_radius_to`
+
+These parameters find the nearest stop point (within free_radius distance) to the given coordinates.
+Then, it allows skipping walking sections between the point of departure/arrival and those nearest stop points.
+
+Example:
+
+![image](free_radius.png)
+
+In this example, the stop points within the circle (SP1, SP2 et SP3) can be reached via a crowfly of 0 second. The other stop points, outside the circle, will be reached by walking.
+
 
 #### Technically
 

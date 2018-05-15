@@ -44,8 +44,8 @@ www.navitia.io
 #include <boost/container/container_fwd.hpp>
 #include <thread>
 
-#include "third_party/eos_portable_archive/portable_iarchive.hpp"
-#include "third_party/eos_portable_archive/portable_oarchive.hpp"
+#include <eos_portable_archive/portable_iarchive.hpp>
+#include <eos_portable_archive/portable_oarchive.hpp>
 #include "lz4_filter/filter.h"
 #include "utils/functions.h"
 #include "utils/threadbuf.h"

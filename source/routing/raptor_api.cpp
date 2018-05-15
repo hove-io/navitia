@@ -38,6 +38,7 @@ www.navitia.io
 #include "fare/fare.h"
 #include "isochrone.h"
 #include "heat_map.h"
+#include "utils/map_find.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/range/algorithm/count.hpp>
@@ -510,14 +511,33 @@ static bt::ptime handle_pt_sections(pbnavitia::Journey* pb_journey,
     return arrival_time;
 }
 
-static void add_pathes(PbCreator& pb_creator,
-                       const std::vector<navitia::routing::Path>& paths,
-                       georef::StreetNetwork& worker,
-                       const georef::Path& direct_path,
-                       const type::EntryPoint& origin,
-                       const type::EntryPoint& destination,
-                       const std::vector<bt::ptime>& datetimes,
-                       const bool clockwise) {
+static boost::optional<time_duration>
+get_duration_to_stop_point(const navitia::type::StopPoint* stop_point,
+                           const navitia::georef::PathFinder & path_finder)
+{
+    boost::optional<time_duration> duration_to_entry_pt;
+    const auto sp_idx = SpIdx(*stop_point);
+
+    utils::make_map_find(path_finder.distance_to_entry_point, sp_idx)
+        .if_found([&](const time_duration& duration){
+            duration_to_entry_pt = boost::make_optional(duration);
+        });
+
+    return duration_to_entry_pt;
+}
+
+void make_pathes(PbCreator& pb_creator,
+                 const std::vector<navitia::routing::Path>& paths,
+                 georef::StreetNetwork& worker,
+                 const georef::Path& direct_path,
+                 const type::EntryPoint& origin,
+                 const type::EntryPoint& destination,
+                 const std::vector<bt::ptime>& datetimes,
+                 const bool clockwise,
+                 const uint32_t free_radius_from,
+                 const uint32_t free_radius_to) {
+
+    pb_creator.set_response_type(pbnavitia::ITINERARY_FOUND);
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
@@ -559,17 +579,28 @@ static void add_pathes(PbCreator& pb_creator,
             const auto& departure_stop_point = path.items.front().stop_points.front();
             georef::Path sn_departure_path = worker.get_path(departure_stop_point->idx);
 
+            auto duration_to_departure = get_duration_to_stop_point(
+                                            departure_stop_point, worker.departure_path_finder);
+
             if (is_same_stop_point(origin, *departure_stop_point)) {
                 // nothing in this case
-            } else if (use_crow_fly(origin, *departure_stop_point, sn_departure_path, *pb_creator.data)){
+            } else if (use_crow_fly(origin,
+                                    *departure_stop_point,
+                                    sn_departure_path,
+                                    *pb_creator.data,
+                                    free_radius_from,
+                                    duration_to_departure))
+            {
                 type::EntryPoint destination_tmp(type::Type_e::StopPoint, departure_stop_point->uri);
                 destination_tmp.coordinates = departure_stop_point->coord;
                 pb_creator.action_period = bt::time_period (path.items.front().departures.front(),
                                               path.items.front().departures.front() + bt::seconds(1));
-                const time_duration& crow_fly_duration = find_or_default(SpIdx(*departure_stop_point),
-                                            worker.departure_path_finder.distance_to_entry_point);
-                auto departure_time = path.items.front().departures.front() - pt::seconds(crow_fly_duration.to_posix().total_seconds());
-                pb_creator.fill_crowfly_section(origin, destination_tmp, crow_fly_duration,
+                time_duration crow_fly_duration = duration_to_departure ? *duration_to_departure : time_duration() ;
+                auto seconds_to_departure = pt::seconds(crow_fly_duration.to_posix().total_seconds());
+                auto departure_time = path.items.front().departures.front() - seconds_to_departure;
+                pb_creator.fill_crowfly_section(origin,
+                                                destination_tmp,
+                                                crow_fly_duration,
                                                 worker.departure_path_finder.mode,
                                                 departure_time,
                                                 pb_journey);
@@ -624,19 +655,30 @@ static void add_pathes(PbCreator& pb_creator,
             const auto arrival_stop_point = path.items.back().stop_points.back();
             georef::Path sn_arrival_path = worker.get_path(arrival_stop_point->idx, true);
 
+            auto duration_to_arrival = get_duration_to_stop_point(
+                                            arrival_stop_point, worker.arrival_path_finder);
+
             if (is_same_stop_point(destination, *arrival_stop_point)) {
                 // nothing in this case
-            } else if (use_crow_fly(destination, *arrival_stop_point, sn_arrival_path, *pb_creator.data)) {
+            } else if (use_crow_fly(destination,
+                                    *arrival_stop_point,
+                                    sn_arrival_path,
+                                    *pb_creator.data,
+                                    free_radius_to,
+                                    duration_to_arrival)) {
+
                 type::EntryPoint origin_tmp(type::Type_e::StopPoint, arrival_stop_point->uri);
                 auto dt = path.items.back().arrivals.back();
                 origin_tmp.coordinates = arrival_stop_point->coord;
                 pb_creator.action_period = bt::time_period(dt, bt::seconds(1));
-                const time_duration& crow_fly_duration = find_or_default(SpIdx(*arrival_stop_point),
-                                                worker.arrival_path_finder.distance_to_entry_point);
+                time_duration crow_fly_duration = duration_to_arrival ? *duration_to_arrival : time_duration();
                 arrival_time = arrival_time + pt::seconds(crow_fly_duration.to_posix().total_seconds());
-                pb_creator.fill_crowfly_section(origin_tmp, destination, crow_fly_duration,
+                pb_creator.fill_crowfly_section(origin_tmp,
+                                                destination,
+                                                crow_fly_duration,
                                                 worker.arrival_path_finder.mode,
-                                                dt, pb_journey);
+                                                dt,
+                                                pb_journey);
             }
             // for stop areas, we don't want to display the fallback section if start
             // from one of the stop area's stop point
@@ -680,20 +722,6 @@ static void add_pathes(PbCreator& pb_creator,
     }
 
     add_direct_path(pb_creator, direct_path, origin, destination, datetimes, clockwise);
-}
-
-static void make_pathes(PbCreator& pb_creator,
-                        const std::vector<navitia::routing::Path>& paths,
-                        georef::StreetNetwork& worker,
-                        const georef::Path& direct_path,
-                        const type::EntryPoint& origin,
-                        const type::EntryPoint& destination,
-                        const std::vector<bt::ptime>& datetimes,
-                        const bool clockwise) {
-
-    pb_creator.set_response_type(pbnavitia::ITINERARY_FOUND);
-    add_pathes(pb_creator, paths, worker, direct_path,
-               origin, destination, datetimes, clockwise);
 }
 
 
@@ -824,125 +852,132 @@ std::vector<georef::Admin*> find_admins(const type::EntryPoint& ep, const type::
     return data.geo_ref->find_admins(ep.coordinates);
 }
 
+static void add_free_stop_point(const type::StopPoint* stop_point,
+                                georef::PathFinder& pf,
+                                routing::map_stop_point_duration& results)
+{
+    const SpIdx sp_idx{*stop_point};
+    utils::make_map_find(results, sp_idx)
+        .if_not_found([&](){
+            pf.distance_to_entry_point[sp_idx] = {};
+            results[sp_idx] = {};
+        });
+}
+
 boost::optional<routing::map_stop_point_duration>
-get_stop_points( const type::EntryPoint &ep, const type::Data& data,
-        georef::StreetNetwork & worker, bool use_second){
+get_stop_points(const type::EntryPoint &ep,
+                const type::Data& data,
+                georef::StreetNetwork & worker,
+                const uint32_t free_radius,
+                bool use_second) {
+
     routing::map_stop_point_duration result;
     georef::PathFinder& concerned_path_finder = use_second ? worker.arrival_path_finder :
-                                                            worker.departure_path_finder;
+                                                             worker.departure_path_finder;
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     LOG4CPLUS_TRACE(logger, "Searching nearest stop_point's from entry point : [" << ep.coordinates.lat()
               << "," << ep.coordinates.lon() << "]");
-    if (ep.type == type::Type_e::Address
-                || ep.type == type::Type_e::Coord
-                || ep.type == type::Type_e::StopArea
-                || ep.type == type::Type_e::StopPoint
-                || ep.type == type::Type_e::POI) {
 
-        if (ep.type == type::Type_e::StopArea) {
-            auto it = data.pt_data->stop_areas_map.find(ep.uri);
-            if (it!= data.pt_data->stop_areas_map.end()) {
-                for (auto stop_point : it->second->stop_point_list) {
-                    const SpIdx sp_idx{*stop_point};
-                    if (result.find(sp_idx) == result.end()) {
-                        concerned_path_finder.distance_to_entry_point[sp_idx] = {};
-                        result[sp_idx] = {};
+    switch(ep.type) {
+        case type::Type_e::StopArea : {
+            utils::make_map_find(data.pt_data->stop_areas_map, ep.uri)
+                .if_found([&](const type::StopArea* sa){
+                    for (auto stop_point : sa->stop_point_list) {
+                        add_free_stop_point(stop_point, concerned_path_finder, result);
                     }
-                }
+                });
+            break;
+        }
+        case type::Type_e::StopPoint : {
+            utils::make_map_find(data.pt_data->stop_points_map, ep.uri)
+                .if_found([&](const type::StopPoint* stop_point) {
+                    add_free_stop_point(stop_point, concerned_path_finder, result);
+                });
+            break;
+        }
+        case type::Type_e::Admin : {
+            // For an admin, we want to leave from it's main stop areas if we have some,
+            // else we'll leave from the center of the admin
+            auto it_admin = data.geo_ref->admin_map.find(ep.uri);
+            if (it_admin == data.geo_ref->admin_map.end()) {
+                LOG4CPLUS_WARN(logger, "impossible to find admin " << ep.uri);
+                return result;
             }
-        }
+            const auto admin = data.geo_ref->admins[it_admin->second];
 
-        if (ep.type == type::Type_e::StopPoint) {
-            auto it = data.pt_data->stop_points_map.find(ep.uri);
-            if (it != data.pt_data->stop_points_map.end()){
-                const SpIdx sp_idx{*it->second};
-                concerned_path_finder.distance_to_entry_point[sp_idx] = {};
-                result[sp_idx] = {};
-            }
-        }
-
-        // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
-        //we need to check if the admin has zone odt
-        const auto& admins = find_admins(ep, data);
-        for (const auto* admin: admins) {
-            for (const auto* odt_admin_stop_point: admin->odt_stop_points) {
-                const SpIdx sp_idx{*odt_admin_stop_point};
-                if (result.find(sp_idx) == result.end()) {
-                    concerned_path_finder.distance_to_entry_point[sp_idx] = {};
-                    result[sp_idx] = {};
-                }
-            }
-        }
-
-        // checking for zonal stop points
-        const auto& zonal_sps = data.pt_data->stop_points_by_area.find(ep.coordinates);
-        for (const auto* sp: zonal_sps) {
-            const SpIdx sp_idx{*sp};
-            if (result.find(sp_idx) == result.end()) {
-                concerned_path_finder.distance_to_entry_point[sp_idx] = {};
-                result[sp_idx] = {};
-            }
-        }
-
-        auto tmp_sn = worker.find_nearest_stop_points(
-                    ep.streetnetwork_params.max_duration,
-                    data.pt_data->stop_point_proximity_list,
-                    use_second);
-        LOG4CPLUS_TRACE(logger, "find " << tmp_sn.size() << " stop_points");
-        for(auto idx_duration : tmp_sn) {
-            const SpIdx sp_idx{idx_duration.first};
-            if(result.find(sp_idx) == result.end()) {
-                result[sp_idx] = idx_duration.second;
-            }
-        }
-    } else if(ep.type == type::Type_e::Admin) {
-        //for an admin, we want to leave from it's main stop areas if we have some, else we'll leave from the center of the admin
-        auto it_admin = data.geo_ref->admin_map.find(ep.uri);
-        if (it_admin == data.geo_ref->admin_map.end()) {
-            LOG4CPLUS_WARN(logger, "impossible to find admin " << ep.uri);
-            return result;
-        }
-        const auto admin = data.geo_ref->admins[it_admin->second];
-
-        // checking for zonal stop points
-        const auto& zonal_sps = data.pt_data->stop_points_by_area.find(ep.coordinates);
-        for (const auto* sp: zonal_sps) {
-            const SpIdx sp_idx{*sp};
-            if (result.find(sp_idx) == result.end()) {
-                concerned_path_finder.distance_to_entry_point[sp_idx] = {};
-                result[sp_idx] = {};
-            }
-        }
-
-        if (! admin->main_stop_areas.empty()) {
             for (auto stop_area: admin->main_stop_areas) {
-                for(auto sp : stop_area->stop_point_list) {
-                    const SpIdx sp_idx{*sp};
-                    if (result.find(sp_idx) == result.end()) {
-                        result[sp_idx] = {};
-                        concerned_path_finder.distance_to_entry_point[sp_idx] = {};
-                   }
+                for(auto stop_point : stop_area->stop_point_list) {
+                    add_free_stop_point(stop_point, concerned_path_finder, result);
                 }
             }
+            break;
         }
-
-        //we add the center of the admin, and look for the stop points around
-        auto nearest = worker.find_nearest_stop_points(
-                    ep.streetnetwork_params.max_duration,
-                    data.pt_data->stop_point_proximity_list,
-                    use_second);
-        for (const auto& elt: nearest) {
-            const SpIdx sp_idx{elt.first};
-            if(result.find(sp_idx) == result.end()) {
-                result[sp_idx] = elt.second;
-            }
-        }
-        LOG4CPLUS_DEBUG(logger, result.size() << " sp found for admin");
-    } else {
-        return boost::none;
+        case type::Type_e::Address :
+        case type::Type_e::Coord :
+        case type::Type_e::POI :
+            break;
+        default :
+            return boost:: none;
     }
 
+    // TODO ODT NTFSv0.3: remove that when we stop to support NTFSv0.1
+    //we need to check if the admin has zone odt
+    const auto& admins = find_admins(ep, data);
+    for (const auto* admin: admins) {
+        for (const auto* odt_admin_stop_point: admin->odt_stop_points) {
+            add_free_stop_point(odt_admin_stop_point, concerned_path_finder, result);
+        }
+    }
+
+    // checking for zonal stop points
+    const auto& zonal_sps = data.pt_data->stop_points_by_area.find(ep.coordinates);
+    for (const auto* stop_point: zonal_sps) {
+        add_free_stop_point(stop_point, concerned_path_finder, result);
+    }
+
+    // Filtering with free radius (free_radius in meters)
+    // We set the SP time duration to 0, if SP are inside
+    free_radius_filter(result, concerned_path_finder, ep, data, free_radius);
+
+    // We add the center of the admin, and look for the stop points around
+    auto nearest = worker.find_nearest_stop_points(
+                   ep.streetnetwork_params.max_duration,
+                   data.pt_data->stop_point_proximity_list,
+                   use_second);
+    for (const auto& elt: nearest) {
+        const SpIdx sp_idx{elt.first};
+        if(result.find(sp_idx) == result.end()) {
+            result[sp_idx] = elt.second;
+        }
+    }
+    LOG4CPLUS_DEBUG(logger, result.size() << " sp found for admin");
+
     return result;
+}
+
+void free_radius_filter(routing::map_stop_point_duration& sp_list,
+                        georef::PathFinder& path_finder,
+                        const type::EntryPoint& ep,
+                        const type::Data& data,
+                        const  uint32_t free_radius)
+{
+    if (free_radius > 0) {
+
+        auto logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+
+        // Find stop point list with a free radius constraint
+        LOG4CPLUS_DEBUG(logger, "filtering with free radius (" << free_radius << " meters)");
+        auto excluded_elements = data.pt_data->stop_point_proximity_list.find_within(ep.coordinates, free_radius);
+        LOG4CPLUS_DEBUG(logger, "find " << excluded_elements.size() << " stop points in free radius");
+
+        // For each excluded stop point
+        for (const auto& excluded_sp: excluded_elements) {
+            const SpIdx sp_idx{excluded_sp.first};
+            sp_list[sp_idx] = {};
+            path_finder.distance_to_entry_point[sp_idx] = {};
+            LOG4CPLUS_TRACE(logger, "free radius, sp idx : " << sp_idx << " , duration is set to 0");
+        }
+    }
 }
 
 static std::vector<bt::ptime>
@@ -1061,7 +1096,9 @@ void make_response(navitia::PbCreator& pb_creator,
                    const navitia::time_duration& transfer_penalty,
                    uint32_t max_duration,
                    uint32_t max_transfers,
-                   uint32_t max_extra_second_pass) {
+                   uint32_t max_extra_second_pass,
+                   uint32_t free_radius_from,
+                   uint32_t free_radius_to ) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     std::vector<Path> pathes;
@@ -1076,8 +1113,8 @@ void make_response(navitia::PbCreator& pb_creator,
     worker.init(origin, {destination});
 
     // Get stop points for departure and destination
-    auto departures = get_stop_points(origin, raptor.data, worker);
-    auto destinations = get_stop_points(destination, raptor.data, worker, true);
+    auto departures = get_stop_points(origin, raptor.data, worker, free_radius_from);
+    auto destinations = get_stop_points(destination, raptor.data, worker, free_radius_to, true);
 
     // case 1 : departure no exist
     if (!departures){
@@ -1189,7 +1226,9 @@ void make_response(navitia::PbCreator& pb_creator,
                     origin,
                     destination,
                     datetimes,
-                    clockwise);
+                    clockwise,
+                    free_radius_from,
+                    free_radius_to);
         if (pb_creator.empty_journeys()) {
             pb_creator.fill_pb_error(pbnavitia::Error::no_solution,
                                      pbnavitia::NO_SOLUTION,

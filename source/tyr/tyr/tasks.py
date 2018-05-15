@@ -152,6 +152,10 @@ def send_to_mimir(instance, filename):
 
     returns action list
     """
+    # This test is to avoid creating a new job if there is no action on mimir.
+    if not (instance.import_ntfs_in_mimir or instance.import_stops_in_mimir):
+        return []
+
     actions = []
     job = models.Job()
     instance_config = load_instance_config(instance.name)
@@ -180,7 +184,6 @@ def send_to_mimir(instance, filename):
         actions.append(stops2mimir.si(instance_config, filename, job.id, dataset_uid=dataset.uid))
 
     actions.append(finish_job.si(job.id))
-
     return actions
 
 
@@ -350,7 +353,8 @@ def purge_jobs(days_to_keep=None):
         days_to_keep = current_app.config.get('JOB_MAX_PERIOD_TO_KEEP', 60)
 
     time_limit = datetime.utcnow() - timedelta(days=int(days_to_keep))
-    instances = models.Instance.query_existing().all()
+    # Purge all instances (even discarded = true)
+    instances = models.Instance.query_all().all()
 
     logger = logging.getLogger(__name__)
     logger.info('Purge old jobs and datasets backup created before {}'.format(time_limit))

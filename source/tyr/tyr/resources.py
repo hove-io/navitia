@@ -1095,13 +1095,39 @@ class AutocompleteUpdateData(flask_restful.Resource):
         return marshal({'job': job}, one_job_fields), 200
 
 
-class MigrateFromPoiToOsm(flask_restful.Resource):
-    def delete(self, instance_name):
+class DeleteDataset(flask_restful.Resource):
+
+    def delete(self, instance_name, type):
 
         instance = models.Instance.get_by_name(instance_name)
         if instance:
-            instance.delete_dataset()
-            return_msg = 'All POI datasets deleted for instance {}'.format(instance_name)
+            res = instance.delete_dataset(_type=type)
+            if res:
+                return_msg = 'All {} datasets deleted for instance {}'.format(type, instance_name)
+            else:
+                return_msg = 'No {} dataset to be deleted for instance {}'.format(type, instance_name)
+            return_status = 200
+        else:
+            return_msg = "No instance found for : {}".format(instance_name)
+            return_status = 404
+
+        return {'action': return_msg}, return_status
+
+
+class MigrateFromPoiToOsm(flask_restful.Resource):
+
+    def put(self, instance_name):
+        instance = models.Instance.get_by_name(instance_name)
+        if instance:
+            instance_conf = load_instance_config(instance_name)
+            connection_string = "postgres://{u}:{pw}@{h}:{port}/{db}"\
+                .format(u=instance_conf.pg_username, pw=instance_conf.pg_password,
+                        h=instance_conf.pg_host, db=instance_conf.pg_dbname, port=instance_conf.pg_port)
+            engine = sqlalchemy.create_engine(connection_string)
+
+            engine.execute("""UPDATE navitia.parameters SET parse_pois_from_osm = TRUE""").close()
+
+            return_msg = 'Parameter parse_pois_from_osm activated'
             return_status = 200
         else:
             return_msg = "No instance found for : {}".format(instance_name)

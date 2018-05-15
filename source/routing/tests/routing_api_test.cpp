@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -2328,7 +2328,9 @@ BOOST_AUTO_TEST_CASE(section_geometry_without_shapes) {
     b.data->pt_data->index();
     b.data->build_raptor();
     b.data->build_uri();
-    b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2018, 3, 9), boost::gregorian::days(1));
+    auto prod_date = boost::gregorian::date(2018, 3, 9);
+    auto prod_len = boost::gregorian::days(1);
+    b.data->meta->production_date = boost::gregorian::date_period(prod_date, prod_len);
 
     nr::RAPTOR raptor(*(b.data));
 
@@ -2366,6 +2368,292 @@ BOOST_AUTO_TEST_CASE(section_geometry_without_shapes) {
 
     BOOST_CHECK_EQUAL(journey.sections(1).shape(2).lon(), 10);
     BOOST_CHECK_EQUAL(journey.sections(1).shape(2).lat(), 5);
+}
+
+/*
+ * Test the free radius filter with classic journeys
+ *
+ * We create 4 VJ to test this option (free radius filtering).
+ *
+ * Case 1 :
+ * - Type : No filter radius
+ * - Result : We have 4 journeys with 3 sections each
+ *            for each journeys
+ *            section 1 -> crow fly with real duration
+ *            section 2 -> public transport
+ *            section 3 -> crow fly with real duration
+ *
+ * Case 2 :
+ * - Type : With a big from filter radius
+ * - Result : We have 4 journeys with 3 sections each
+ *            for each journeys
+ *            section 1 -> crow fly with 0 duration
+ *            section 2 -> public transport
+ *            section 3 -> crow fly with real duration
+ *
+ * Case 3 :
+ * - Type : With a half from filter radius
+ * - Result : We have 4 journeys with 3 sections each
+ *            * jouneys 1
+ *            section 1 -> crow fly with 0 duration
+ *            section 2 -> public transport
+ *            section 3 -> crow fly with real duration
+ *           * jouneys 2
+ *            section 1 -> crow fly with 0 duration
+ *            section 2 -> public transport
+ *            section 3 -> crow fly with real duration
+ *           * jouneys 3
+ *            section 1 -> crow fly with real duration
+ *            section 2 -> public transport
+ *            section 3 -> crow fly with real duration
+ *            * jouneys 4
+ *            section 1 -> crow fly with real duration
+ *            section 2 -> public transport
+ *            section 3 -> crow fly with real duration
+ *
+ *
+ *
+ *                       SA1                          SA2
+ *             |-------------------------|---------------------------|
+ *             |                         |                           |
+ *             |                         |                           |
+ * x from      | S1             S2       |       S1             S2   |
+ *   ------------  -------------  --------------- --------------     |
+ *       10 m             10 m            10 m           10 m        |
+ *             |                         |                           |
+ *             |                         |                           |
+ *             |                         |                           |
+ *             |-------------------------|---------------------------|
+ *
+ *
+ *
+ *
+ *                                    SA3
+ *             |--------------------------------------------------|
+ *             |                                                  |
+ *             |                                                  |
+ *             |                                                  |
+ * x to        |  S1          S2           S3          S4         |
+ *   -------------  ----------  -----------  -----------          |
+ *        100 m        100 m       100 m       100 m              |
+ *             |                                                  |
+ *             |                                                  |
+ *             |                                                  |
+ *             |--------------------------------------------------|
+ *
+ */
+BOOST_AUTO_TEST_CASE(journeys_with_free_radius_filter) {
+
+    // Create Builder
+    ed::builder b("20180309");
+
+    // Create Area
+    b.sa("stop_area:sa1")("stop_point:sa1:s1", 2.39592, 48.84848, false)("stop_point:sa1:s2", 2.39592, 48.84858, false);
+    b.sa("stop_area:sa2")("stop_point:sa2:s1", 2.39592, 48.84868, false)("stop_point:sa2:s2", 2.39592, 48.84878, false);
+    b.sa("stop_area:sa3")("stop_point:sa3:s1", 2.36381, 48.86650, false)("stop_point:sa3:s2", 2.36381, 48.86550, false)
+    ("stop_point:sa3:s3", 2.36381, 48.86450, false)("stop_point:sa3:s4", 2.36381, 48.86350, false);
+    b.vj("vj1")("stop_point:sa1:s1", "8:00"_t, "8:01"_t)("stop_point:sa3:s1", "8:20"_t, "8:11"_t);
+    b.vj("vj2")("stop_point:sa1:s2", "8:00"_t, "8:01"_t)("stop_point:sa3:s2", "8:15"_t, "8:11"_t);
+    b.vj("vj3")("stop_point:sa2:s1", "8:00"_t, "8:01"_t)("stop_point:sa3:s3", "8:10"_t, "8:11"_t);
+    b.vj("vj4")("stop_point:sa2:s2", "8:00"_t, "8:01"_t)("stop_point:sa3:s4", "8:05"_t, "8:11"_t);
+
+    b.finish();
+    b.data->pt_data->index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->build_proximity_list();
+    auto prod_date = boost::gregorian::date(2018, 3, 9);
+    auto prod_len = boost::gregorian::days(1);
+    b.data->meta->production_date = boost::gregorian::date_period(prod_date, prod_len);
+
+    // create Raptor
+    nr::RAPTOR raptor(*(b.data));
+
+    // from (nation)
+    navitia::type::EntryPoint origin(navitia::type::Type_e::Coord, "from_coord");
+    origin.streetnetwork_params.max_duration = navitia::time_duration(boost::date_time::pos_infin);
+    origin.coordinates.set_lon(2.39592);
+    origin.coordinates.set_lat(48.84838);
+
+    // to (republique)
+    navitia::type::EntryPoint destination(navitia::type::Type_e::Coord, "to_coord");
+    destination.streetnetwork_params.max_duration = navitia::time_duration(boost::date_time::pos_infin);
+    destination.coordinates.set_lon(2.36381);
+    destination.coordinates.set_lat(48.86750);
+
+    std::vector<std::string> forbidden;
+    ng::StreetNetwork sn_worker(*b.data->geo_ref);
+
+
+    //-----------------------------------
+    // Case 1 : No filter radius
+
+    // free radius to test
+    uint32_t free_radius_from = 0;
+    uint32_t free_radius_to = 0;
+
+    // send request
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator1(data_ptr, "20180309T080100"_dt, null_time_period);
+    make_response(pb_creator1,
+                  raptor,
+                  origin,
+                  destination,
+                  {ntest::to_posix_timestamp("20180309T080000")},
+                  true,
+                  navitia::type::AccessibiliteParams(),
+                  forbidden,
+                  {},
+                  sn_worker,
+                  nt::RTLevel::Base,
+                  2_min,
+                  8640,
+                  10,
+                  0,
+                  free_radius_from,
+                  free_radius_to);
+
+    // get the response
+    pbnavitia::Response resp = pb_creator1.get_response();
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
+
+    // Journey 1
+    pbnavitia::Journey journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    pbnavitia::Section section = journey.sections(0);
+    BOOST_CHECK(section.duration() > 0);
+
+    // Journey 2
+    journey = resp.journeys(1);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    BOOST_CHECK(section.duration() > 0);
+
+    // Journey 3
+    journey = resp.journeys(2);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    BOOST_CHECK(section.duration() > 0);
+
+    // Journey 4
+    journey = resp.journeys(3);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    BOOST_CHECK(section.duration() > 0);
+
+    //-----------------------------------
+    // Case 2 : With a big "from filter radius"
+
+    // free radius to test
+    free_radius_from = 200; // 200 meters
+    free_radius_to = 0;
+
+    // send request
+    navitia::PbCreator pb_creator2(data_ptr, "20180309T080100"_dt, null_time_period);
+    make_response(pb_creator2,
+                  raptor,
+                  origin,
+                  destination,
+                  {ntest::to_posix_timestamp("20180309T080000")},
+                  true,
+                  navitia::type::AccessibiliteParams(),
+                  forbidden,
+                  {},
+                  sn_worker,
+                  nt::RTLevel::Base,
+                  2_min,
+                  8640,
+                  10,
+                  0,
+                  free_radius_from,
+                  free_radius_to);
+
+    // get the response
+    resp = pb_creator2.get_response();
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
+
+    // Journey 1
+    journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    BOOST_CHECK_EQUAL(section.duration(), 0);
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::CROW_FLY);
+
+    // Journey 2
+    journey = resp.journeys(1);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    BOOST_CHECK_EQUAL(section.duration(), 0);
+
+    // Journey 3
+    journey = resp.journeys(2);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    BOOST_CHECK_EQUAL(section.duration(), 0);
+
+    // Journey 4
+    journey = resp.journeys(3);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    BOOST_CHECK_EQUAL(section.duration(), 0);
+
+    //-----------------------------------
+    // Case 3 : With a half "from filter radius"
+
+    // free radius to test
+    free_radius_from = 30; // 30 meters just to catch sa1:s1 and sa1:s2
+    free_radius_to = 0;
+
+    // send request
+    navitia::PbCreator pb_creator3(data_ptr, "20180309T080100"_dt, null_time_period);
+    make_response(pb_creator3,
+                  raptor,
+                  origin,
+                  destination,
+                  {ntest::to_posix_timestamp("20180309T080000")},
+                  true,
+                  navitia::type::AccessibiliteParams(),
+                  forbidden,
+                  {},
+                  sn_worker,
+                  nt::RTLevel::Base,
+                  2_min,
+                  8640,
+                  10,
+                  0,
+                  free_radius_from,
+                  free_radius_to);
+
+    // get the response
+    resp = pb_creator3.get_response();
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 4);
+
+    // Journey 1
+    journey = resp.journeys(0);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    BOOST_CHECK_EQUAL(section.duration(), 0);
+
+    // Journey 2
+    journey = resp.journeys(1);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    BOOST_CHECK_EQUAL(section.duration(), 0);
+
+    // Journey 3
+    journey = resp.journeys(2);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    BOOST_CHECK(section.duration() > 0);
+
+    // Journey 4
+    journey = resp.journeys(3);
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
+    section = journey.sections(0);
+    BOOST_CHECK(section.duration() > 0);
 }
 
 /*
