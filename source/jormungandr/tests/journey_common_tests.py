@@ -911,6 +911,27 @@ class JourneyCommon(object):
         assert(r['journeys'][0]['sections'][-1]['duration'] == 0)
         assert(r['journeys'][0]['sections'][-2]['type'] == 'public_transport')
 
+    def test_shared_section(self):
+        # Query a journey from stopB to stopA
+        r = self.query('/v1/coverage/main_routing_test/journeys?to=stopA&from=stopB&datetime=20120614T080100&')
+        assert r['journeys'][0]['type'] == 'best'
+        assert r['journeys'][0]['sections'][1]['type'] == 'public_transport'
+        first_journey_pt = r['journeys'][0]['sections'][1]['display_informations']['name']
+
+        # Query same journey schedules
+        # A new journey vjM is available
+        r = self.query('v1/coverage/main_routing_test/journeys?allowed_id%5B%5D=stop_point%3AstopA&allowed_id%5B%5D=stop_point%3AstopB&first_section_mode%5B%5D=walking&last_section_mode%5B%5D=walking&is_journey_schedules=True&datetime=20120614T080100&to=stopA&min_nb_journeys=5&min_nb_transfers=0&direct_path=none&from=stopB&')
+        assert r['journeys'][0]['sections'][1]['display_informations']['name'] == first_journey_pt
+        assert r['journeys'][0]['sections'][1]['type'] == 'public_transport'
+        next_journey_pt = r['journeys'][1]['sections'][1]['display_informations']['name']
+        assert next_journey_pt != first_journey_pt
+
+        # Activate 'no_shared_section' parameter and query the same journey scehdules again
+        # The journey vjM isn't available as it is a shared section
+        r = self.query('v1/coverage/main_routing_test/journeys?allowed_id%5B%5D=stop_point%3AstopA&allowed_id%5B%5D=stop_point%3AstopB&first_section_mode%5B%5D=walking&last_section_mode%5B%5D=walking&is_journey_schedules=True&datetime=20120614T080100&to=stopA&min_nb_journeys=5&min_nb_transfers=0&direct_path=none&from=stopB&no_shared_section=True&')
+        assert r['journeys'][0]['sections'][1]['display_informations']['name'] == first_journey_pt
+        assert not r['journeys'][1]
+
 
 @dataset({"main_stif_test": {}})
 class AddErrorFieldInJormun(object):

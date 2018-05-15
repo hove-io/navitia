@@ -173,6 +173,8 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     if request["free_radius_to"]:
         req.journeys.free_radius_to = request["free_radius_to"]
 
+    req.journeys.no_shared_section = request["_no_shared_section"] if "_no_shared_section" in request else False
+
     return req
 
 

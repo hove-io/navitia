@@ -289,6 +289,9 @@ class JourneyCommon(ResourceUri, ResourceUtc) :
                                 help="Radius length (in meters) around the coordinates of arrival "
                                      "in which the stop points are considered free to go (crowfly=0)")
 
+        parser_get.add_argument("_no_shared_section", type=bool, default=False, hidden=True,
+                                help="Shared sections journeys aren't returned as a separate journey")
+
     def parse_args(self, region=None, uri=None):
         args = self.parsers['get'].parse_args()
 
