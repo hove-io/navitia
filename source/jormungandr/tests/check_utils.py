@@ -1117,7 +1117,7 @@ def is_valid_disruption(disruption, chaos_disrup=True):
         is_valid_pt_object(pt_obj, depth_check=0)
 
         # for the vj, if it's not a cancellation we need to have the list of impacted stoptimes
-        if get_not_null(pt_obj, 'embedded_type') == 'trip' and effect != 'NO_SERVICE':
+        if get_not_null(pt_obj, 'embedded_type') == 'trip' and effect != 'no_service':
             impacted_stops = get_not_null(impacted_obj, 'impacted_stops')
 
             assert len(impacted_stops) > 0
