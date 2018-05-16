@@ -81,22 +81,23 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         assert get_arrivals(response) == ['20120614T080222', '20120614T080436']
         assert get_used_vj(response) == [['vjA'], []]
 
-        # no disruption yet
-        pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
+        # Disruption impacting lines A, B, C starts at 06:00 and ends at 11:59:59
+        # Get VJ at 12:00 and disruption doesn't appear
+        pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T120000')
         assert len(pt_response['disruptions']) == 0
 
         is_valid_graphical_isochrone(isochrone, self.tester, isochrone_basic_query + "&data_freshness=realtime")
         geojson = isochrone['isochrones'][0]['geojson']
         multi_poly = asShape(geojson)
 
-        # we have 2 departures and 1 disruption (linked to the first passage)
+        # we have 3 departures and 1 disruption (linked to line A departure)
         departures = self.query_region("stop_points/stop_point:stopB/departures?_current_datetime=20120614T0800")
         assert len(departures['disruptions']) == 1
-        assert len(departures['departures']) == 2
+        assert len(departures['departures']) == 3
 
+        # A new disruption impacting vjA is created between 08:01:00 and 08:01:01
         self.send_mock("vjA", "20120614", 'canceled', disruption_id='disruption_bob')
 
-        # we should see the disruption
         def _check_train_cancel_disruption(dis):
             is_valid_disruption(dis, chaos_disrup=False)
             assert dis['contributor'] == rt_topic
@@ -110,6 +111,7 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
             # for cancellation we do not output the impacted stops
             assert 'impacted_stops' not in dis['impacted_objects'][0]
 
+        # We should see the disruption
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
         assert len(pt_response['disruptions']) == 1
         _check_train_cancel_disruption(pt_response['disruptions'][0])
@@ -127,8 +129,8 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         assert vjs[0]['id'] == 'vjA'
 
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
-        assert get_arrivals(new_response) == ['20120614T080436', '20120614T180222']
-        assert get_used_vj(new_response) == [[], ['vjB']]
+        assert set(get_arrivals(new_response)) == set(['20120614T080436', '20120614T080223'])
+        assert get_used_vj(new_response) == [['vjM'], []]
 
         isochrone_realtime = self.query_region(isochrone_basic_query + "&data_freshness=realtime")
         is_valid_graphical_isochrone(isochrone_realtime, self.tester, isochrone_basic_query + "&data_freshness=realtime")
@@ -142,23 +144,24 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
         assert not multi_poly.difference(multi_poly_realtime).is_empty
         assert multi_poly.equals(multi_poly_base_schedule)
 
-        # we have one less departure and we loose the disruption in
-        # realtime because we don't have the 08:01
+        # We have one less departure (vjA because of disruption)
+        # The disruption doesn't appear because the lines departing aren't impacted during the period
         departures = self.query_region("stop_points/stop_point:stopB/departures?_current_datetime=20120614T0800")
         assert len(departures['disruptions']) == 0
-        assert len(departures['departures']) == 1
+        assert len(departures['departures']) == 2
+
         # We still have 2 passages in base schedule, but we have the new disruption
         departures = self.query_region("stop_points/stop_point:stopB/departures?_current_datetime=20120614T0800&data_freshness=base_schedule")
         assert len(departures['disruptions']) == 2
-        assert len(departures['departures']) == 2
+        assert len(departures['departures']) == 3
 
         # it should not have changed anything for the theoric
         new_base = self.query_region(journey_basic_query + "&data_freshness=base_schedule")
         assert get_arrivals(new_base) == ['20120614T080222', '20120614T080436']
         assert get_used_vj(new_base) == [['vjA'], []]
         # see http://jira.canaltp.fr/browse/NAVP-266,
-        # _current_datetime is needed to make it working
-        #assert len(new_base['disruptions']) == 1
+        # _current_datetime is needed to make it work
+        # assert len(new_base['disruptions']) == 1
 
         # remove links as the calling url is not the same
         for j in new_base['journeys']:
@@ -179,14 +182,15 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         assert get_arrivals(response) == ['20120614T080222', '20120614T080436']
         assert get_used_vj(response) == [['vjA'], []]
 
-        # we have 2 departures and 1 disruption (linked to the first passage)
+        # we have 3 departures and 1 disruption (linked to the first passage)
         departures = self.query_region("stop_points/stop_point:stopB/departures?_current_datetime=20120614T0800")
         assert len(departures['disruptions']) == 1
-        assert len(departures['departures']) == 2
+        assert len(departures['departures']) == 3
         assert departures['departures'][0]['stop_date_time']['departure_date_time'] == '20120614T080100'
 
         pt_response = self.query_region('vehicle_journeys')
-        assert len(pt_response['vehicle_journeys']) == 6
+        initial_nb_vehicle_journeys = len(pt_response['vehicle_journeys'])
+        assert initial_nb_vehicle_journeys == 7
 
         # no disruption yet
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
@@ -202,9 +206,9 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
                             arrival_delay=3 * 60 + 58, departure_delay=3 * 60 + 58)],
            disruption_id='vjA_delayed')
 
-        # A new vj is created
+        # A new vj is created, which the vj with the impact of the disruption
         pt_response = self.query_region('vehicle_journeys')
-        assert len(pt_response['vehicle_journeys']) == 7
+        assert len(pt_response['vehicle_journeys']) == (initial_nb_vehicle_journeys + 1)
 
         vj_ids = [vj['id'] for vj in pt_response['vehicle_journeys']]
         assert 'vjA:modified:0:vjA_delayed' in vj_ids
@@ -246,7 +250,8 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         assert len(pt_response['disruptions']) == 1
         _check_train_delay_disruption(pt_response['disruptions'][0])
 
-        new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
+        # In order to not disturb the test, line M which was added afterwards for shared section tests, is forbidden here
+        new_response = self.query_region(journey_basic_query + "&data_freshness=realtime&forbidden_uris[]=M&")
         assert get_arrivals(new_response) == ['20120614T080436', '20120614T080520']
         assert get_used_vj(new_response) == [[], ['vjA:modified:0:vjA_delayed']]
 
@@ -279,12 +284,13 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         # we have one delayed departure
         departures = self.query_region("stop_points/stop_point:stopB/departures?_current_datetime=20120614T0800")
         assert len(departures['disruptions']) == 2
-        assert len(departures['departures']) == 2
-        assert departures['departures'][0]['stop_date_time']['departure_date_time'] == '20120614T080225'
+        assert len(departures['departures']) == 3
+        assert departures['departures'][1]['stop_date_time']['departure_date_time'] == '20120614T080225'
+
         # Same as realtime except the departure date time
         departures = self.query_region("stop_points/stop_point:stopB/departures?_current_datetime=20120614T0800&data_freshness=base_schedule")
         assert len(departures['disruptions']) == 2
-        assert len(departures['departures']) == 2
+        assert len(departures['departures']) == 3
         assert departures['departures'][0]['stop_date_time']['departure_date_time'] == '20120614T080100'
 
         # We send again the same disruption
@@ -300,14 +306,14 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         # A new vj is created, but a useless vj has been cleaned, so the number of vj does not change
         pt_response = self.query_region('vehicle_journeys')
-        assert len(pt_response['vehicle_journeys']) == 7
+        assert len(pt_response['vehicle_journeys']) == (initial_nb_vehicle_journeys + 1)
 
         pt_response = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
         assert len(pt_response['disruptions']) == 1
         _check_train_delay_disruption(pt_response['disruptions'][0])
 
         # so the first real-time vj created for the first disruption should be deactivated
-        new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
+        new_response = self.query_region(journey_basic_query + "&data_freshness=realtime&forbidden_uris[]=M&")
         assert get_arrivals(new_response) == ['20120614T080436', '20120614T080520']
         assert get_used_vj(new_response), [[] == ['vjA:modified:1:vjA_delayed']]
 
@@ -344,7 +350,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         # A new vj is created
         vjs = self.query_region('vehicle_journeys?_current_datetime=20120614T1337')
-        assert len(vjs['vehicle_journeys']) == 8
+        assert len(vjs['vehicle_journeys']) == (initial_nb_vehicle_journeys + 2)
 
         vjA = self.query_region('vehicle_journeys/vjA?_current_datetime=20120614T1337')
         # we now have 2 disruption on vjA
@@ -397,7 +403,8 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
         assert get_used_vj(response), [['vjA'] == []]
 
         pt_response = self.query_region('vehicle_journeys')
-        assert len(pt_response['vehicle_journeys']) == 6
+        initial_nb_vehicle_journeys = len(pt_response['vehicle_journeys'])
+        assert initial_nb_vehicle_journeys == 7
 
         # check that we have the next vj
         s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset
@@ -420,7 +427,7 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
 
         # A new vj is created
         pt_response = self.query_region('vehicle_journeys')
-        assert len(pt_response['vehicle_journeys']) == 7
+        assert len(pt_response['vehicle_journeys']) == (initial_nb_vehicle_journeys + 1)
 
         vj_ids = [vj['id'] for vj in pt_response['vehicle_journeys']]
         assert 'vjA:modified:0:96231_2015-07-28_0' in vj_ids
@@ -431,7 +438,8 @@ class TestKirinOnVJDelayDayAfter(MockKirinDisruptionsFixture):
         is_valid_disruption(pt_response['disruptions'][0], chaos_disrup=False)
         assert pt_response['disruptions'][0]['disruption_id'] == '96231_2015-07-28_0'
 
-        new_response = self.query_region(journey_basic_query + "&data_freshness=realtime")
+        # In order to not disturb the test, line M which was added afterwards for shared section tests, is forbidden here
+        new_response = self.query_region(journey_basic_query + "&data_freshness=realtime&forbidden_uris[]=M&")
         assert get_arrivals(new_response) == ['20120614T080436', '20120614T180222'] # pt_walk + vj 18:01
         assert get_used_vj(new_response), [[] == ['vjB']]
 

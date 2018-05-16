@@ -50,7 +50,35 @@ def get_duration(coord, response):
 class TestHeatMap(AbstractTestFixture):
     """
     Test the structure of the heat_maps response
-    Only the format of the heat_map is check not the value.
+    Only the format of the heat_map is check not the value. The value returned is an approximation, as explained below.
+
+    Heatmap duration explanation:
+    -----------------------------
+    The heatmap endpoint returns a table of cells, each with a min/max lon and min/max lat
+    The coordinates of the point of departure given are included in one of these cells.
+    (the point longitude is within min/max lon of the cell and the point latitude is within min/max lat of the cell)
+    The duration is then calculated from the coordinates of the center of the cell to the required stop point.
+    Hence the approximation and the comments "about..."
+
+    Ex: if the departure coord are (0.12;0.26), see '*' below, the duration will be calculated from '+' (0.15;0.25)
+
+           \lat |       |       |       |
+        lon \  0.0     0.1     0.2     0.3
+         0.0 ---|-------|-------|-------|
+                |       |       |       |
+                |       |       |       |
+                |       |       |       |
+         0.1 ---|-------|-------|-------|
+                |       |       |    *  |
+                |       |       |   +   |
+                |       |       |       |
+         0.2 ---|-------|-------|-------|
+                |       |       |       |
+                |       |       |       |
+                |       |       |       |
+         0.3 ---|-------|-------|-------|
+                |       |       |       |
+
     """
 
     def test_from_heat_map_coord(self):
@@ -83,7 +111,8 @@ class TestHeatMap(AbstractTestFixture):
         self.check_context(response)
 
     def test_heat_maps_to_stop_point(self):
-        q = "v1/coverage/main_routing_test/heat_maps?datetime={}&to={}&max_duration={}"
+        # In order to not disturb the test, line M which was added afterwards for shared section tests, is forbidden here
+        q = "v1/coverage/main_routing_test/heat_maps?datetime={}&to={}&max_duration={}&forbidden_uris[]=M&"
         q = q.format('20120614T080200', 'stopA', '3600')
         response = self.query(q)
 
