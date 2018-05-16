@@ -1113,23 +1113,39 @@ void make_pt_response(navitia::PbCreator& pb_creator,
 
     requested dt
     *
-                   |=============>
+                    |=============>
                           journey2
 
-                                           |=============>
+                                            |=============>
                                                  journey1
 
-    -------------------------------
-             journey2 pseudo duration
+    |-----------------------------|
+       journey2 pseudo duration
 
-    ------------------------------------------------------
-                       journey1 pseudo duration
+    |------------------------------------------------------|
+            journey1 pseudo duration
  */
-bool way_later(const Journey & j1, const Journey & j2) {
-    return false;
+bool way_later(const Journey & j1, const Journey & j2,
+               const NightBusFilter::Params & params)
+{
+    auto & requested_dt = params.requested_datetime;
+    auto & clockwise = params.clockwise;
+
+    auto get_pseudo_duration = [&](const Journey & j){
+        auto dt = clockwise ? j.arrival_dt : j.departure_dt;
+        return std::abs(dt - requested_dt);
+    };
+
+    auto j1_pseudo_duration = get_pseudo_duration(j1);
+    auto j2_pseudo_duration = get_pseudo_duration(j2);
+
+    auto max_pseudo_duration = j2_pseudo_duration * params.max_factor + params.base_factor;
+
+    return j1_pseudo_duration > max_pseudo_duration;
 }
 
-void filter_late_journeys(RAPTOR::Journeys & journeys)
+void filter_late_journeys(RAPTOR::Journeys & journeys,
+                          const NightBusFilter::Params & params)
 {
     auto journeys_pairs_gen = utils::make_pairs_generator(journeys);
     std::vector<RAPTOR::Journeys::const_iterator> late_journeys;
@@ -1139,10 +1155,10 @@ void filter_late_journeys(RAPTOR::Journeys & journeys)
         auto& j1 = *journey_pair.first;
         auto& j2 = *journey_pair.second;
 
-        if(way_later(j1, j2)) {
+        if(way_later(j1, j2, params)) {
             late_journeys.push_back(journey_pair.first);
         }
-        else if(way_later(j2, j1)) {
+        else if(way_later(j2, j1, params)) {
             late_journeys.push_back(journey_pair.second);
         }
     }
@@ -1282,8 +1298,14 @@ void make_response(navitia::PbCreator& pb_creator,
 
             LOG4CPLUS_DEBUG(logger, "raptor found " << raptor_journeys.size() << " solutions");
 
+            NightBusFilter::Params params {
+                to_datetime(datetime, *pb_creator.data),
+                clockwise,
+                night_bus_filter_max_factor,
+                night_bus_filter_base_factor};
+
             // filter joureys that are too late.....with the magic formula...
-            // <- HERE ->
+            filter_late_journeys(raptor_journeys, params);
 
             if (raptor_journeys.empty())
                 break;
