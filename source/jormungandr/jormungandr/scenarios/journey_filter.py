@@ -26,6 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 import itertools
@@ -105,8 +106,6 @@ def final_filter_journeys(response_list, instance, request):
     _filter_too_much_connections(journeys, instance, request)
 
 
-
-
 def _get_worst_similar(j1, j2, request):
     """
     Decide which is the worst journey between 2 similar journeys.
@@ -181,6 +180,10 @@ def _filter_similar_line_journeys(journeys, request):
     _filter_similar_journeys(journeys, request, similar_journeys_line_generator)
 
 
+def filter_shared_sections_journeys(journeys, request):
+    _filter_similar_journeys(journeys, request, shared_section_generator)
+
+
 def _filter_similar_journeys(journeys_pool, request, similar_journey_generator):
     """
     we filter similar journeys
@@ -195,7 +198,7 @@ def _filter_similar_journeys(journeys_pool, request, similar_journey_generator):
         if to_be_deleted(j1) or to_be_deleted(j2):
             continue
         if compare(j1, j2, similar_journey_generator):
-            #chose the best
+            # choose the best
             worst = _get_worst_similar(j1, j2, request)
             logger.debug("the journeys {}, {} are similar, we delete {}".format(j1.internal_id,
                                                                                 j2.internal_id,
@@ -313,6 +316,7 @@ def filter_max_successive_physical_mode(journey,
 
     return True
 
+
 def _filter_too_much_connections(journeys, instance, request):
     """
     eliminates journeys with number of connections more then minimum connections among journeys
@@ -364,6 +368,7 @@ def filter_direct_path(journey, is_debug, dp):
         return False or is_debug
 
     return True
+
 
 def get_min_connections(journeys):
     """
@@ -496,6 +501,15 @@ def similar_journeys_line_generator(journey):
             yield "pt:{}".format(s.pt_display_informations.uris.line)
         elif s.type == response_pb2.STREET_NETWORK:
             yield "sn:{}".format(s.street_network.mode)
+
+
+def shared_section_generator(journey):
+    yield len(journey.sections)
+    for s in journey.sections:
+        if s.type == response_pb2.PUBLIC_TRANSPORT:
+            yield "mode:{}/origin:{}/dest:{}".format(s.pt_display_informations.physical_mode,
+                                                     s.origin.uri,
+                                                     s.destination.uri)
 
 
 def fallback_duration(journey):

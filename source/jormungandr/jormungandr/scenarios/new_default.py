@@ -173,8 +173,6 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     if request["free_radius_to"]:
         req.journeys.free_radius_to = request["free_radius_to"]
 
-    req.journeys.no_shared_section = request["_no_shared_section"] if "_no_shared_section" in request else False
-
     return req
 
 
@@ -859,7 +857,12 @@ class Scenario(simple.Scenario):
                 # (n_1, q_1), (n_1, q_2),(n_1, q_3),(n_2, q_1),(n_2, q_2),(n_2, q_3)
                 itertools.product(tmp2, qualified_journeys),
             )
-            journey_filter.filter_similar_vj_journeys(journeys_pool, api_request)
+
+            pool1, pool2 = itertools.tee(journeys_pool)
+            journey_filter.filter_similar_vj_journeys(pool1, api_request)
+
+            if api_request['_no_shared_section']:
+                journey_filter.filter_shared_sections_journeys(pool2, api_request)
 
             responses.extend(new_resp)  # we keep the error for building the response
 

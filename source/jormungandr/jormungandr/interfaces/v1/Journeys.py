@@ -490,6 +490,8 @@ class Journeys(JourneyCommon):
                                 dest="add_poi_infos", action="append",
                                 help="Show more information about the poi if it's available, for instance, show "
                                      "BSS/car park availability in the pois(BSS/car park) of response")
+        parser_get.add_argument("_no_shared_section", type=BooleanType(), default=False, hidden=True,
+                                help="Shared section journeys aren't returned as a separate journey")
 
         self.get_decorators.append(complete_links(self))
 
