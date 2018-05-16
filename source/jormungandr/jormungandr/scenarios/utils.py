@@ -66,8 +66,8 @@ def compare(obj1, obj2, compare_generator):
     from any values returned by the other generator
     """
     return all(a == b for a, b in zip_longest(compare_generator(obj1),
-                                                         compare_generator(obj2),
-                                                         fillvalue=object()))
+                                              compare_generator(obj2),
+                                              fillvalue=object()))
 
 
 def are_equals(journey1, journey2):
@@ -220,9 +220,7 @@ def get_or_default(request, val, default):
     is not in the dict or if the value is None
     """
     val = request.get(val, default)
-    if val is not None:
-        return val
-    return default
+    return val if val is not None else default
 
 
 def updated_common_journey_request_with_default(request, instance):
