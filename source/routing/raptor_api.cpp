@@ -1147,6 +1147,9 @@ bool way_later(const Journey & j1, const Journey & j2,
 void filter_late_journeys(RAPTOR::Journeys & journeys,
                           const NightBusFilter::Params & params)
 {
+    if(journeys.size() == 0)
+        return;
+
     auto journeys_pairs_gen = utils::make_pairs_generator(journeys);
     std::vector<RAPTOR::Journeys::const_iterator> late_journeys;
 

@@ -3368,3 +3368,10 @@ BOOST_AUTO_TEST_CASE(should_filter_night_bus_when_too_late) {
         BOOST_CHECK_EQUAL(vj->uri, "vj:vj1:0");
     }
 }
+
+BOOST_AUTO_TEST_CASE(should_filter_late_journeys_with_empty_list) {
+    nr::RAPTOR::Journeys journeys;
+    BOOST_CHECK_NO_THROW(
+        nr::filter_late_journeys(journeys, filter_params)
+    );
+}
