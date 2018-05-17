@@ -366,6 +366,31 @@ class Instance(object):
         instance_db = self.get_models()
         return get_value_or_default('realtime_pool_size', instance_db, self.name)
 
+    @property
+    def min_nb_journeys(self):
+        instance_db = self.get_models()
+        return get_value_or_default('min_nb_journeys', instance_db, self.name)
+
+    @property
+    def min_journeys_calls(self):
+        instance_db = self.get_models()
+        return get_value_or_default('min_journeys_calls', instance_db, self.name)
+
+    @property
+    def max_successive_physical_mode(self):
+        instance_db = self.get_models()
+        return get_value_or_default('max_successive_physical_mode', instance_db, self.name)
+
+    @property
+    def final_line_filter(self):
+        instance_db = self.get_models()
+        return get_value_or_default('final_line_filter', instance_db, self.name)
+
+    @property
+    def max_extra_second_pass(self):
+        instance_db = self.get_models()
+        return get_value_or_default('max_extra_second_pass', instance_db, self.name)
+
     @contextmanager
     def socket(self, context):
         socket = None
