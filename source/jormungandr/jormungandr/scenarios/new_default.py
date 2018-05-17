@@ -980,26 +980,25 @@ class Scenario(simple.Scenario):
 
         return resp
 
-    def create_next_kraken_request(self, request, responses, min_nb_journeys):
+    def create_next_kraken_request(self, request, responses, min_nb_journeys = 0):
         """
         modify the request to call the next (resp previous for non clockwise search) journeys in kraken
 
         to do that we find ask the next (resp previous) query datetime
         """
 
-        if  min_nb_journeys == 1:
+        # If Kraken send a new request date time, we use it
+        # for the next call to skip current Journeys
+        if hasattr(responses, "next_request_date_time"):
+            request['datetime'] = responses["next_request_date_time"]
+        else:
             vjs = journey_filter.get_qualified_journeys(responses)
             if request["clockwise"]:
                 request['datetime'] = self.next_journey_datetime(vjs, request["clockwise"])
             else:
                 request['datetime'] = self.previous_journey_datetime(vjs, request["clockwise"])
 
-        # If Kraken send a new request date time, we use it
-        # for the next call to skip current Journeys
-        elif responses[0].next_request_date_time and min_nb_journeys > 1:
-            request['datetime'] = responses[0].next_request_date_time
-
-        else:
+        if request['datetime'] is None:
             logger = logging.getLogger(__name__)
             logger.error("In response next_request_date_time does not exist")
             return None

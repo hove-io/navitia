@@ -1283,6 +1283,13 @@ void make_response(navitia::PbCreator& pb_creator,
             }
         }
 
+        NightBusFilter::Params params {
+            to_datetime(datetime, *pb_creator.data),
+            clockwise,
+            night_bus_filter_max_factor,
+            night_bus_filter_base_factor
+        };
+
         // Call raptor
         // note : Loop is for min_nb_journeys options
         //
@@ -1300,12 +1307,6 @@ void make_response(navitia::PbCreator& pb_creator,
                 max_extra_second_pass);
 
             LOG4CPLUS_DEBUG(logger, "raptor found " << raptor_journeys.size() << " solutions");
-
-            NightBusFilter::Params params {
-                to_datetime(datetime, *pb_creator.data),
-                clockwise,
-                night_bus_filter_max_factor,
-                night_bus_filter_base_factor};
 
             // filter joureys that are too late.....with the magic formula...
             filter_late_journeys(raptor_journeys, params);

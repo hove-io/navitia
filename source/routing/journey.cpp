@@ -83,7 +83,10 @@ bool Journey::better_on_sn(const Journey& that, bool) const {
 }
 
 bool Journey::operator==(const Journey & rhs) const {
-    return sections == rhs.sections;
+
+    return departure_dt == rhs.departure_dt
+        && arrival_dt == rhs.arrival_dt
+        && sections == rhs.sections;
 }
 
 
