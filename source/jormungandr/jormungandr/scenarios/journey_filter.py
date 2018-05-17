@@ -504,7 +504,15 @@ def similar_journeys_line_generator(journey):
 
 
 def shared_section_generator(journey):
+    """
+    Definition of journeys with a shared section:
+    - same stop point of departure and arrival, same physical mode
+    - same number of sections in the journey
+    """
+
+    # Early return: test if the journeys have the same number of sections
     yield len(journey.sections)
+
     for s in journey.sections:
         if s.type == response_pb2.PUBLIC_TRANSPORT:
             yield "mode:{}/origin:{}/dest:{}".format(s.pt_display_informations.physical_mode,
