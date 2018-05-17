@@ -199,7 +199,6 @@ class Instance(flask_restful.Resource):
                                                                               'keolis',
                                                                               'destineo',
                                                                               'new_default',
-                                                                              'stif',
                                                                               'distributed'],
                 location=('json', 'values'), default=instance.scenario)
         parser.add_argument('journey_order', type=str, case_sensitive=False,
