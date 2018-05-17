@@ -298,6 +298,22 @@ class Instance(flask_restful.Resource):
         parser.add_argument('import_ntfs_in_mimir', type=inputs.boolean,
                             help='import ntfs data in global autocomplete',
                             location=('json', 'values'), default=instance.import_ntfs_in_mimir)
+        parser.add_argument('min_nb_journeys', type=int,
+                            help='minimum number of different suggested journeys', location=('json', 'values'),
+                            default=instance.min_nb_journeys)
+        parser.add_argument('min_journeys_calls', type=int,
+                            help='minimum number of calls to kraken', location=('json', 'values'),
+                            default=instance.min_journeys_calls)
+        parser.add_argument('max_successive_physical_mode', type=int,
+                            help='maximum number of successive physical modes in an itinerary',
+                            location=('json', 'values'), default=instance.max_successive_physical_mode)
+        parser.add_argument('final_line_filter', type=inputs.boolean,
+                            help='filter on vj using same lines and same stops', location=('json', 'values'),
+                            default=instance.final_line_filter)
+        parser.add_argument('max_extra_second_pass', type=int,
+                            help='maximum number of second pass to get more itinararies',
+                            location=('json', 'values'), default=instance.max_extra_second_pass)
+
         args = parser.parse_args()
 
         try:
@@ -338,7 +354,12 @@ class Instance(flask_restful.Resource):
                                        'is_free',
                                        'is_open_data',
                                        'import_stops_in_mimir',
-                                       'import_ntfs_in_mimir'])
+                                       'import_ntfs_in_mimir',
+                                       'min_nb_journeys',
+                                       'min_journeys_calls',
+                                       'max_successive_physical_mode',
+                                       'final_line_filter',
+                                       'max_extra_second_pass'])
             db.session.commit()
         except Exception:
             logging.exception("fail")

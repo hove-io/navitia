@@ -112,7 +112,12 @@ def test_update_instances(create_instance):
               "bss_provider": False,
               "full_sn_geometries": True,
               "max_car_no_park_duration_to_pt": 2691,
-              "car_no_park_speed": 2.42}
+              "car_no_park_speed": 2.42,
+              "min_nb_journeys": 1,
+              "min_journeys_calls": 2,
+              "max_successive_physical_mode": 3,
+              "final_line_filter": True,
+              "max_extra_second_pass": 1}
 
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
     for key, param in params.iteritems():

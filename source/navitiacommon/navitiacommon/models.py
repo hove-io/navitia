@@ -359,6 +359,17 @@ class Instance(db.Model):
 
     realtime_pool_size = db.Column(db.Integer, default=default_values.realtime_pool_size)
 
+    # parameters migrated from scenario STIF
+    min_nb_journeys = db.Column(db.Integer, default=default_values.min_nb_journeys,
+                                nullable=False, server_default='0')
+    min_journeys_calls = db.Column(db.Integer, default=default_values.min_journeys_calls,
+                                   nullable=False, server_default='1')
+    max_successive_physical_mode = db.Column(db.Integer, default=default_values.max_successive_physical_mode,
+                                             nullable=False, server_default='100')
+    final_line_filter = db.Column(db.Boolean, default=default_values.final_line_filter,
+                                  nullable=False, server_default=false())
+    max_extra_second_pass = db.Column(db.Integer, default=default_values.max_extra_second_pass,
+                                      nullable=False, server_default='0')
 
     def __init__(self, name=None, is_free=False, authorizations=None,
                  jobs=None):
