@@ -818,10 +818,10 @@ class Scenario(simple.Scenario):
         if api_request['min_nb_journeys']:
             min_nb_journeys = api_request['min_nb_journeys']
             if min_nb_journeys > 1 and len(krakens_call) > 1:
-                api_request['min_nb_journeys'] = '1'
+                api_request['min_nb_journeys'] = 1
                 min_nb_journeys = 1
         else:
-            api_request['min_nb_journeys'] = '1'
+            api_request['min_nb_journeys'] = 1
             min_nb_journeys = 1
 
         # We need the original request (api_request) for filtering, but request
@@ -850,7 +850,7 @@ class Scenario(simple.Scenario):
                 responses.extend(new_resp)
                 break
 
-            request = self.create_next_kraken_request(request, new_resp)
+            request = self.create_next_kraken_request(request, new_resp, min_nb_journeys)
 
             # we filter unwanted journeys in the new response
             # note that filter_journeys returns a generator which will be evaluated later
@@ -980,17 +980,25 @@ class Scenario(simple.Scenario):
 
         return resp
 
-    def create_next_kraken_request(self, request, responses):
+    def create_next_kraken_request(self, request, responses, min_nb_journeys):
         """
         modify the request to call the next (resp previous for non clockwise search) journeys in kraken
 
         to do that we find ask the next (resp previous) query datetime
         """
 
+        if  min_nb_journeys == 1:
+            vjs = journey_filter.get_qualified_journeys(responses)
+            if request["clockwise"]:
+                request['datetime'] = self.next_journey_datetime(vjs, request["clockwise"])
+            else:
+                request['datetime'] = self.previous_journey_datetime(vjs, request["clockwise"])
+
         # If Kraken send a new request date time, we use it
         # for the next call to skip current Journeys
-        if responses["next_request_date_time"]:
-            request['datetime'] = responses["next_request_date_time"]
+        elif responses[0].next_request_date_time and min_nb_journeys > 1:
+            request['datetime'] = responses[0].next_request_date_time
+
         else:
             logger = logging.getLogger(__name__)
             logger.error("In response next_request_date_time does not exist")
