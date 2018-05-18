@@ -1327,12 +1327,10 @@ void make_response(navitia::PbCreator& pb_creator,
 
             // filter the similar journeys
             for(const auto & journey : raptor_journeys) {
-                LOG4CPLUS_DEBUG(logger, "[journey] departure_dt " << journey.departure_dt << " - arrival_dt " << journey.arrival_dt << " - section size " << journey.sections.size());
-                LOG4CPLUS_DEBUG(logger, "[journey] request_date_secs " << request_date_secs);
                 journeys.insert(journey);
             }
 
-            nb_try++; LOG4CPLUS_DEBUG(logger, "[journey] journey size  " << journeys.size());
+            nb_try++;
 
         } while (( journeys.size() < min_nb_journeys) && (nb_try < MAX_NB_RAPTOR_CALL));
 
