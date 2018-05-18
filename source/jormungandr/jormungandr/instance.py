@@ -372,6 +372,11 @@ class Instance(object):
         return get_value_or_default('min_nb_journeys', instance_db, self.name)
 
     @property
+    def max_nb_journeys(self):
+        instance_db = self.get_models()
+        return get_value_or_default('max_nb_journeys', instance_db, self.name)
+
+    @property
     def min_journeys_calls(self):
         instance_db = self.get_models()
         return get_value_or_default('min_journeys_calls', instance_db, self.name)

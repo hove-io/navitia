@@ -929,6 +929,7 @@ instance_parameters = {
     'successive_physical_mode_to_limit_id': fields.Raw,
     'max_additional_connections': fields.Raw,
     'min_nb_journeys': fields.Raw,
+    'max_nb_journeys': fields.Raw,
     'min_journeys_calls': fields.Raw,
     'max_successive_physical_mode': fields.Raw,
     'final_line_filter': fields.Boolean,

@@ -417,7 +417,7 @@ def culling_journeys(resp, request):
     logger = logging.getLogger(__name__)
 
     if not request["max_nb_journeys"] or request["max_nb_journeys"] >= len(resp.journeys):
-        logger.debug('No need to cull journeys')
+        logger.debug('No need to call journeys')
         return
 
     logger.debug('Trying to culling the journeys')
