@@ -18,10 +18,10 @@ import sqlalchemy as sa
 def upgrade():
     op.add_column('instance', sa.Column('final_line_filter', sa.Boolean(), server_default='false', nullable=False))
     op.add_column('instance', sa.Column('max_extra_second_pass', sa.Integer(), server_default='0', nullable=False))
-    op.add_column('instance', sa.Column('max_successive_physical_mode', sa.Integer(),
-                                        server_default='100', nullable=False))
+    op.add_column('instance', sa.Column('max_successive_physical_mode', sa.Integer(), nullable=True))
     op.add_column('instance', sa.Column('min_journeys_calls', sa.Integer(), server_default='1', nullable=False))
     op.add_column('instance', sa.Column('min_nb_journeys', sa.Integer(), server_default='0', nullable=False))
+    op.add_column('instance', sa.Column('max_nb_journeys', sa.Integer(), nullable=True))
 
 
 def downgrade():
@@ -30,3 +30,4 @@ def downgrade():
     op.drop_column('instance', 'max_successive_physical_mode')
     op.drop_column('instance', 'max_extra_second_pass')
     op.drop_column('instance', 'final_line_filter')
+    op.drop_column('instance', 'max_nb_journeys')

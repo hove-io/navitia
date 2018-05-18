@@ -114,6 +114,7 @@ instance_fields = {
     'is_open_data': fields.Boolean,
     'realtime_pool_size': fields.Raw,
     'min_nb_journeys': fields.Raw,
+    'max_nb_journeys': fields.Raw,
     'min_journeys_calls': fields.Raw,
     'max_successive_physical_mode': fields.Raw,
     'final_line_filter': fields.Boolean,

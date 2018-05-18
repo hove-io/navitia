@@ -119,11 +119,14 @@ realtime_pool_size = 3
 # Minimum number of different suggested journeys
 min_nb_journeys = 0
 
-# Minimum number of calls to kraken
-min_journeys_calls = 1
+# Maximum number of different suggested journeys
+max_nb_journeys = float('inf')
 
 # Maximum number of successive physical modes for an itinerary
-max_successive_physical_mode = 100
+max_successive_physical_mode = float('inf')
+
+# Minimum number of calls to kraken
+min_journeys_calls = 1
 
 # Filter on vj using same lines and same stops
 final_line_filter = False

@@ -300,12 +300,14 @@ class Instance(flask_restful.Resource):
         parser.add_argument('min_nb_journeys', type=int,
                             help='minimum number of different suggested journeys', location=('json', 'values'),
                             default=instance.min_nb_journeys)
+        parser.add_argument('max_nb_journeys', type=int, required=False,
+                            help='maximum number of different suggested journeys', location=('json', 'values'))
         parser.add_argument('min_journeys_calls', type=int,
                             help='minimum number of calls to kraken', location=('json', 'values'),
                             default=instance.min_journeys_calls)
-        parser.add_argument('max_successive_physical_mode', type=int,
+        parser.add_argument('max_successive_physical_mode', type=int, required=False,
                             help='maximum number of successive physical modes in an itinerary',
-                            location=('json', 'values'), default=instance.max_successive_physical_mode)
+                            location=('json', 'values'))
         parser.add_argument('final_line_filter', type=inputs.boolean,
                             help='filter on vj using same lines and same stops', location=('json', 'values'),
                             default=instance.final_line_filter)
@@ -355,6 +357,7 @@ class Instance(flask_restful.Resource):
                                        'import_stops_in_mimir',
                                        'import_ntfs_in_mimir',
                                        'min_nb_journeys',
+                                       'max_nb_journeys',
                                        'min_journeys_calls',
                                        'max_successive_physical_mode',
                                        'final_line_filter',
