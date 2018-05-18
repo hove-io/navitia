@@ -38,6 +38,8 @@ www.navitia.io
 #include "raptor.h"
 #include "routing/routing.h"
 
+#define MAX_NB_RAPTOR_CALL 100
+
 namespace navitia{
     namespace type{
         struct EntryPoint;
@@ -150,6 +152,13 @@ void free_radius_filter(routing::map_stop_point_duration& sp_list,
                         const type::EntryPoint& ep,
                         const type::Data& data,
                         const  uint32_t free_radius);
+
+/**
+ * @brief Remove direct path
+ *
+ * @param journeys Raptor Journeys list
+ */
+void filter_direct_path(RAPTOR::Journeys& journeys);
 
 /**
 * @brief Check if a journey is way later than another journey

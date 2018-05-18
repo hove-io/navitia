@@ -1104,6 +1104,11 @@ void make_pt_response(navitia::PbCreator& pb_creator,
     }
 }
 
+void filter_direct_path(RAPTOR::Journeys& journeys)
+{
+    journeys.remove_if([](const Journey& j){return !j.is_pt();});
+}
+
 /**
     Check if a journey is way later than another journey
 
@@ -1296,33 +1301,40 @@ void make_response(navitia::PbCreator& pb_creator,
         // min_nb_journeys options :
         // Compute several loop until the number of journeys >= min_nb_journeys
         // For each step, we fing best pathes,
-        // start to the lastest departure + 1(clockwise) or the lastest arrival - 1.
+        // start to the latest departure + 1 (clockwise) or the latest arrival - 1.
         // If Raptor does not return anything, we stop.
         // If the number of Path finds is greater or equal than min_nb_journeys, we stop.
         JourneySet journeys;
+        uint32_t nb_try = 0;
         do {
             auto raptor_journeys = raptor.compute_all_journeys(
                 *departures, *destinations, request_date_secs, rt_level, transfer_penalty, bound, max_transfers,
                 accessibilite_params, forbidden, allowed, clockwise, direct_path_dur,
                 max_extra_second_pass);
 
+            // Remove direct path
+            filter_direct_path(raptor_journeys);
             LOG4CPLUS_DEBUG(logger, "raptor found " << raptor_journeys.size() << " solutions");
-
-            // filter joureys that are too late.....with the magic formula...
-            filter_late_journeys(raptor_journeys, params);
 
             if (raptor_journeys.empty())
                 break;
+
+            // filter joureys that are too late.....with the magic formula...
+            filter_late_journeys(raptor_journeys, params);
 
             // Prepare next call for raptor with min_nb_journeys option
             request_date_secs = prepare_next_call_for_raptor(raptor_journeys, clockwise);
 
             // filter the similar journeys
             for(const auto & journey : raptor_journeys) {
+                LOG4CPLUS_DEBUG(logger, "[journey] departure_dt " << journey.departure_dt << " - arrival_dt " << journey.arrival_dt << " - section size " << journey.sections.size());
+                LOG4CPLUS_DEBUG(logger, "[journey] request_date_secs " << request_date_secs);
                 journeys.insert(journey);
             }
 
-        } while ( journeys.size() < min_nb_journeys);
+            nb_try++; LOG4CPLUS_DEBUG(logger, "[journey] journey size  " << journeys.size());
+
+        } while (( journeys.size() < min_nb_journeys) && (nb_try < MAX_NB_RAPTOR_CALL));
 
         pb_creator.set_next_request_date_time(request_date_secs);
 
