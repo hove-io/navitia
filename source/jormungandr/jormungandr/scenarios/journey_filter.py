@@ -515,9 +515,10 @@ def shared_section_generator(journey):
 
     for s in journey.sections:
         if s.type == response_pb2.PUBLIC_TRANSPORT:
-            yield "mode:{}/origin:{}/dest:{}".format(s.pt_display_informations.physical_mode,
-                                                     s.origin.uri,
-                                                     s.destination.uri)
+            yield "mode:{}-{}/origin:{}/dest:{}".format(s.pt_display_informations.physical_mode,
+                                                        s.pt_display_informations.commercial_mode,
+                                                        s.origin.uri,
+                                                        s.destination.uri)
 
 
 def fallback_duration(journey):
