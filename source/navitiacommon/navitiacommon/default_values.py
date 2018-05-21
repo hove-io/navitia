@@ -120,10 +120,10 @@ realtime_pool_size = 3
 min_nb_journeys = 0
 
 # Maximum number of different suggested journeys
-max_nb_journeys = float('inf')
+max_nb_journeys = 99999
 
 # Maximum number of successive physical modes for an itinerary
-max_successive_physical_mode = float('inf')
+max_successive_physical_mode = 99
 
 # Minimum number of calls to kraken
 min_journeys_calls = 1
