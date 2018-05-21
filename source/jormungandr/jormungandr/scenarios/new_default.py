@@ -989,15 +989,14 @@ class Scenario(simple.Scenario):
 
         # If Kraken send a new request date time, we use it
         # for the next call to skip current Journeys
-        if hasattr(responses, "next_request_date_time"):
-            request['datetime'] = responses["next_request_date_time"]
+        if hasattr(responses[0], "next_request_date_time"):
+            request['datetime'] = responses[0].next_request_date_time
         else:
             vjs = journey_filter.get_qualified_journeys(responses)
             if request["clockwise"]:
                 request['datetime'] = self.next_journey_datetime(vjs, request["clockwise"])
             else:
                 request['datetime'] = self.previous_journey_datetime(vjs, request["clockwise"])
-
         if request['datetime'] is None:
             logger = logging.getLogger(__name__)
             logger.error("In response next_request_date_time does not exist")
