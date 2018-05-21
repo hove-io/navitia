@@ -989,7 +989,7 @@ class Scenario(simple.Scenario):
 
         # If Kraken send a new request date time, we use it
         # for the next call to skip current Journeys
-        if hasattr(responses[0], "next_request_date_time"):
+        if len(responses) > 0 and responses[0].HasField('next_request_date_time'):
             request['datetime'] = responses[0].next_request_date_time
         else:
             vjs = journey_filter.get_qualified_journeys(responses)
