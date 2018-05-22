@@ -506,7 +506,8 @@ def similar_journeys_line_generator(journey):
 def shared_section_generator(journey):
     """
     Definition of journeys with a shared section:
-    - same stop point of departure and arrival, same physical mode
+    - same stop point of departure and arrival
+    - same physical and commercial mode
     - same number of sections in the journey
     """
 
