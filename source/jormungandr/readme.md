@@ -137,12 +137,12 @@ Jormungandr is trying to access a "jormungandr" database. You can disable this d
 
 The profiling of Jormungandr is done thanks to Werkzeug profiler, for more details, one can read this interesting [article](https://blog.miguelgrinberg.com/post/the-flask-mega-tutorial-part-xvi-debugging-testing-and-profiling), more specifically, in the Profiling section.
 
-To enable the profiling of Jormungandr, one must set `ACTIVATE_PROFILING` to True in the $JORMUNGANDR_CONFIG_FILE [default_settings.py](https://github.com/CanalTP/navitia/blob/dev/source/jormungandr/jormungandr/default_settings.py).
-Then set the correct path for the output of profiler [profile](https://github.com/CanalTP/navitia/blob/dev/source/jormungandr/jormungandr/api.py#L130).
+To enable the profiling of Jormungandr, one must set `ACTIVATE_PROFILING` to True in the `$JORMUNGANDR_CONFIG_FILE`[default_settings.py](https://github.com/CanalTP/navitia/blob/dev/source/jormungandr/jormungandr/default_settings.py).
+Then set the correct directory(create one if not exists) for the output of profiler [profile](https://github.com/CanalTP/navitia/blob/dev/source/jormungandr/jormungandr/api.py#L130).
 
 The profiling is triggered on every arrival of a request, so a profile file is generated when a request is processed.
 
-Once the profile file is generated, run the following command to visualize the graph `gprof2dot.py -f pstats your_profiling.prof | dot -Tsvg -o callgraph.svg`
+Once the profile file is generated, download `gprof2dot` with `pip install gprof2dot` and run the following command to visualize the graph `gprof2dot.py -f pstats your_profiling.prof | dot -Tsvg -o callgraph.svg`
 
 Note that, in order to profile the real performance, you should activate the cpp implementation of protobuf by adding ` PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION_VERSION=2 PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp`.
 
