@@ -131,7 +131,7 @@ min_journeys_calls = 1
 # Filter on vj using same lines and same stops
 final_line_filter = False
 
-# Maximum number of second pass to get more itinararies
+# Maximum number of second pass to get more itineraries
 max_extra_second_pass = 0
 
 

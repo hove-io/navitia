@@ -312,7 +312,7 @@ class Instance(flask_restful.Resource):
                             help='filter on vj using same lines and same stops', location=('json', 'values'),
                             default=instance.final_line_filter)
         parser.add_argument('max_extra_second_pass', type=int,
-                            help='maximum number of second pass to get more itinararies',
+                            help='maximum number of second pass to get more itineraries',
                             location=('json', 'values'), default=instance.max_extra_second_pass)
 
         args = parser.parse_args()
