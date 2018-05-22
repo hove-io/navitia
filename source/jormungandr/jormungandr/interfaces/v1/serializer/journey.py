@@ -36,7 +36,9 @@ from jormungandr.interfaces.v1.serializer.fields import LinkSchema, RoundedField
 from jormungandr.interfaces.v1.serializer.base import AmountSerializer, PbNestedSerializer,\
     EnumField, EnumListField, NestedEnumField, PbField, PbStrField, IntNestedPropertyField, PbIntField
 from flask import g
-from navitiacommon.response_pb2 import SectionAdditionalInformationType
+from navitiacommon.response_pb2 import SectionAdditionalInformationType, GenderType, TransferType, \
+    StreetNetworkMode, SectionType
+from navitiacommon.type_pb2 import RTLevel
 from jormungandr.interfaces.v1.make_links import create_internal_link
 
 
@@ -176,7 +178,7 @@ class IndividualRatingSerializer(PbNestedSerializer):
 class IndividualInformationSerializer(PbNestedSerializer):
     alias = jsonschema.Field(schema_type=str, display_none=True)
     image = jsonschema.Field(schema_type=str, display_none=False)
-    gender = EnumField()
+    gender = EnumField(attr='gender', pb_type=GenderType)
     rating = IndividualRatingSerializer(display_none=False)
 
 
@@ -192,7 +194,7 @@ class SectionSerializer(PbNestedSerializer):
     duration = jsonschema.Field(schema_type=int, display_none=True,
                                 description='Duration of the section (seconds)')
     co2_emission = AmountSerializer(display_none=True)
-    transfer_type = EnumField()
+    transfer_type = EnumField(attr='transfer_type', pb_type=TransferType)
     departure_date_time = DateTimeField(attr='begin_date_time',
                                         description='Departure date and time of the section')
     arrival_date_time = DateTimeField(attr='end_date_time',
@@ -201,7 +203,7 @@ class SectionSerializer(PbNestedSerializer):
                                              description='Base-schedule departure date and time of the section')
     base_arrival_date_time = DateTimeField(attr='base_end_date_time',
                                            description='Base-schedule arrival date and time of the section')
-    data_freshness = EnumField(attr="realtime_level", display_none=False)
+    data_freshness = EnumField(attr="realtime_level", pb_type=RTLevel, display_none=False)
     to = jsonschema.MethodField(schema_type=PlaceSerializer(), attr='destination')
 
     def get_to(self, obj):
@@ -223,8 +225,8 @@ class SectionSerializer(PbNestedSerializer):
 
     additional_informations = EnumListField(attr='additional_informations', pb_type=SectionAdditionalInformationType)
     geojson = SectionGeoJsonField(display_none=False, description='GeoJSON of the shape of the section')
-    mode = NestedEnumField(attr='street_network.mode')
-    type = SectionTypeEnum()
+    mode = NestedEnumField(attr='street_network.mode', pb_type=StreetNetworkMode)
+    type = SectionTypeEnum(attr='type', pb_type=SectionType)
 
     display_informations = VJDisplayInformationSerializer(attr='pt_display_informations', display_none=False)
 

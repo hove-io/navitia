@@ -353,7 +353,8 @@ def purge_jobs(days_to_keep=None):
         days_to_keep = current_app.config.get('JOB_MAX_PERIOD_TO_KEEP', 60)
 
     time_limit = datetime.utcnow() - timedelta(days=int(days_to_keep))
-    instances = models.Instance.query_existing().all()
+    # Purge all instances (even discarded = true)
+    instances = models.Instance.query_all().all()
 
     logger = logging.getLogger(__name__)
     logger.info('Purge old jobs and datasets backup created before {}'.format(time_limit))

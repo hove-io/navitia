@@ -743,8 +743,8 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('lines')
         assert 'error' not in response
         lines = get_not_null(response, 'lines')
-        assert len(lines) == 4
-        assert {"1A", "1B", "1C", "1D"} == {l['code'] for l in lines}
+        assert len(lines) == 5
+        assert {"1A", "1B", "1C", "1D", "1M"} == {l['code'] for l in lines}
 
     def test_line_filter_line_code(self):
         """test filtering lines from line code 1A in the pt call"""
@@ -779,7 +779,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('lines?filter=route.code=bob')
         assert 'error' not in response
         lines = get_not_null(response, 'lines')
-        assert len(lines) == 4
+        assert len(lines) == 5
         assert {l['code'] for l in all_lines} == {l['code'] for l in lines}
 
     def test_route_filter_line_code(self):
@@ -870,8 +870,8 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('stop_points/stop_point:stopB/departures?from_datetime=20120615T000000')
         assert 'error' not in response
         departures = get_not_null(response, 'departures')
-        assert len(departures) == 2
-        assert {"A00", "vjB"} == {d['display_informations']['headsign'] for d in departures}
+        assert len(departures) == 3
+        assert {"A00", "vjM", "vjB"} == {d['display_informations']['headsign'] for d in departures}
 
     def test_headsign_display_info_arrivals(self):
         """test basic print of headsign in display informations for arrivals"""
@@ -879,7 +879,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         assert 'error' not in response
         arrivals = get_not_null(response, 'arrivals')
         assert len(arrivals) == 2
-        assert arrivals[0]['display_informations']['headsign'] == "vehicle_journey 3"
+        assert arrivals[0]['display_informations']['headsign'] == "vehicle_journey 4"
 
     def test_headsign_display_info_route_schedules(self):
         """test basic print of headsign in display informations for route schedules"""
@@ -934,7 +934,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('trips')
 
         trips = get_not_null(response, 'trips')
-        assert len(trips) == 6
+        assert len(trips) == 7
         for t in trips:
             is_valid_trip(t)
 

@@ -768,29 +768,38 @@ class JourneyCommon(object):
         assert len(response['journeys']) == 3
         assert len(response['journeys'][0]['sections']) == 1
         assert response['journeys'][0]['sections'][0]['mode'] == 'bike'
+        assert response['journeys'][0]['durations']['total'] == 62
+        assert response['journeys'][0]['durations']['bike'] == 62
         assert len(response['journeys'][1]['sections']) == 3
         assert response['journeys'][1]['sections'][0]['mode'] == 'walking'
+        assert response['journeys'][1]['durations']['walking'] == 97
+        assert response['journeys'][1]['durations']['total'] == 99
         assert len(response['journeys'][2]['sections']) == 1
         assert response['journeys'][2]['sections'][0]['mode'] == 'walking'
+        assert response['journeys'][2]['durations']['total'] == 276
+        assert response['journeys'][2]['durations']['walking'] == 276
 
         query += '&bike_speed=1.5'
         response = self.query_region(query)
         check_best(response)
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) == 4
-        print(response['journeys'][0]['tags'])
-        print(response['journeys'][1]['tags'])
-        print(response['journeys'][2]['tags'])
-        print(response['journeys'][3]['tags'])
         assert len(response['journeys'][0]['sections']) == 3
         assert response['journeys'][0]['sections'][0]['mode'] == 'bike'
+        assert response['journeys'][0]['durations']['total'] == 95
+        assert response['journeys'][0]['durations']['bike'] == 13
         assert len(response['journeys'][1]['sections']) == 3
         assert response['journeys'][1]['sections'][0]['mode'] == 'walking'
+        assert response['journeys'][1]['durations']['walking'] == 97
+        assert response['journeys'][1]['durations']['total'] == 99
         assert len(response['journeys'][2]['sections']) == 1
         assert response['journeys'][2]['sections'][0]['mode'] == 'bike'
+        assert response['journeys'][2]['durations']['total'] == 171
+        assert response['journeys'][2]['durations']['bike'] == 171
         assert len(response['journeys'][3]['sections']) == 1
         assert response['journeys'][3]['sections'][0]['mode'] == 'walking'
-
+        assert response['journeys'][3]['durations']['walking'] == 276
+        assert response['journeys'][3]['durations']['total'] == 276
 
     def test_call_kraken_boarding_alighting(self):
         '''
