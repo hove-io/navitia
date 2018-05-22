@@ -835,8 +835,8 @@ class Scenario(simple.Scenario):
         nb_qualified_journeys = nb_journeys(responses)
 
         while request is not None and \
-                (nb_qualified_journeys < min_nb_journeys and nb_try < min_nb_journeys) \
-                or (nb_try < min_journeys_calls):
+                ((nb_qualified_journeys < min_nb_journeys and nb_try < min_nb_journeys) \
+                or nb_try < min_journeys_calls):
             nb_try = nb_try + 1
 
             new_resp = self.call_kraken(request_type, request, instance, krakens_call)
@@ -997,6 +997,7 @@ class Scenario(simple.Scenario):
                 request['datetime'] = self.next_journey_datetime(vjs, request["clockwise"])
             else:
                 request['datetime'] = self.previous_journey_datetime(vjs, request["clockwise"])
+
         if request['datetime'] is None:
             logger = logging.getLogger(__name__)
             logger.error("In response next_request_date_time does not exist")
