@@ -144,7 +144,7 @@ The profiling is triggered on every arrival of a request, so a profile file is g
 
 Once the profile file is generated, download `gprof2dot` with `pip install gprof2dot` and run the following command to visualize the graph `gprof2dot.py -f pstats your_profiling.prof | dot -Tsvg -o callgraph.svg`
 
-Note that, in order to profile the real performance, you should activate the cpp implementation of protobuf by adding ` PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION_VERSION=2 PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp`.
+Note that, in order to profile the real performance, you should activate the cpp implementation of protobuf by adding the env vars: `PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION_VERSION=2 PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=cpp`.
 
 Have fun! 
 
