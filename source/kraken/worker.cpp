@@ -1021,7 +1021,7 @@ void Worker::direct_path(const pbnavitia::Request& request) {
                              geo_path,
                              origin,
                              destination,
-                             {bt::from_time_t(dp_request.datetime())},
+                             {std::make_pair(bt::from_time_t(dp_request.datetime()), dp_request.datetime())},
                              dp_request.clockwise());
 }
 

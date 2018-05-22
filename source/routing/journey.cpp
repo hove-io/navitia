@@ -51,6 +51,14 @@ bool Journey::Section::operator==(const Section & rhs) const {
         && get_out_dt == rhs.get_out_dt;
 }
 
+bool Journey::is_pt() const {
+    if (sections.empty()) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
 bool Journey::better_on_dt(const Journey& that, bool request_clockwise) const {
     if (request_clockwise) {
         if (arrival_dt != that.arrival_dt) { return arrival_dt <= that.arrival_dt; }
@@ -83,7 +91,9 @@ bool Journey::better_on_sn(const Journey& that, bool) const {
 }
 
 bool Journey::operator==(const Journey & rhs) const {
-    return sections == rhs.sections;
+    return departure_dt == rhs.departure_dt
+        && arrival_dt == rhs.arrival_dt
+        && sections == rhs.sections;
 }
 
 

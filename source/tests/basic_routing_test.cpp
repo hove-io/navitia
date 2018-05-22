@@ -36,7 +36,7 @@ www.navitia.io
  *               2 minutes connection
  *    A       B----------------------->C        D
  *    8h     8h05                     14h07     15h
- *    15    15h05                     15h10     15h20
+ *    15    15h05                     15h10     16h
  *    15h                                       15h10   (only day 2)
  *
  * Two long waiting time
@@ -74,7 +74,7 @@ namespace bg = boost::geometry;
 typedef bg::model::point<double, 2, bg::cs::cartesian> point_t;
 
 int main(int argc, const char* const argv[]) {
-    navitia::init_app();    
+    navitia::init_app();
     ed::builder b = {"20120614"};
     b.generate_dummy_basis();
     b.sa("A", 1., 1.)("stop_point:uselessA", 1., 1.);

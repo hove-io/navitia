@@ -56,6 +56,8 @@ struct Journey {
         bool operator==(const Section & rhs) const;
     };
 
+    bool is_pt() const;
+
     bool better_on_dt(const Journey& that, bool request_clockwise) const;
     bool better_on_transfer(const Journey& that, bool) const;
     bool better_on_sn(const Journey& that, bool) const;

@@ -1098,7 +1098,6 @@ class OnBasicRouting():
         """
         query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&debug=true"\
             .format(from_sa="A", to_sa="D", datetime="20120614T080000")
-        print(query)
         response = self.query_region(query, display=True)
         check_best(response)
         #self.is_valid_journey_response(response, query)# linestring with 1 value (0,0)

@@ -38,6 +38,8 @@ www.navitia.io
 #include "raptor.h"
 #include "routing/routing.h"
 
+#define MAX_NB_RAPTOR_CALL 100
+
 namespace navitia{
     namespace type{
         struct EntryPoint;
@@ -56,11 +58,26 @@ namespace routing {
 
 struct RAPTOR;
 
+struct NightBusFilter {
+
+    static constexpr double default_max_factor = 3;
+    static constexpr int32_t default_base_factor = 3600; /*seconds*/
+
+    struct Params
+    {
+        DateTime requested_datetime;
+        bool clockwise;
+        double max_factor;
+        int32_t base_factor;
+    };
+};
+
+
 void add_direct_path(PbCreator& pb_creator,
                      const georef::Path& path,
                      const type::EntryPoint& origin,
                      const type::EntryPoint& destination,
-                     const std::vector<bt::ptime>& datetimes,
+                     const std::vector<std::pair<bt::ptime, uint64_t>>& datetimes,
                      const bool clockwise);
 
 void make_response(navitia::PbCreator& pb_creator,
@@ -81,8 +98,8 @@ void make_response(navitia::PbCreator& pb_creator,
                    uint32_t free_radius_from = 0,
                    uint32_t free_radius_to = 0,
                    uint32_t min_nb_journeys = 0,
-                   double night_bus_filter_max_factor = 3,
-                   int32_t night_bus_filter_base_factor = 3600 /*seconds*/ );
+                   double night_bus_filter_max_factor = NightBusFilter::default_max_factor,
+                   int32_t night_bus_filter_base_factor = NightBusFilter::default_base_factor );
 
 void make_isochrone(navitia::PbCreator& pb_creator,
                     RAPTOR &raptor,
@@ -137,6 +154,26 @@ void free_radius_filter(routing::map_stop_point_duration& sp_list,
                         const  uint32_t free_radius);
 
 /**
+ * @brief Remove direct path
+ *
+ * @param journeys Raptor Journeys list
+ */
+void filter_direct_path(RAPTOR::Journeys& journeys);
+
+/**
+* @brief Check if a journey is way later than another journey
+*/
+bool way_later(const Journey & j1, const Journey & j2,
+               const NightBusFilter::Params & params);
+
+/**
+* @brief Compare the journeys 2 by 2 and remove the ones
+* that arrives way later from the list.
+*/
+void filter_late_journeys(RAPTOR::Journeys & journeys,
+                          const NightBusFilter::Params & params);
+
+/**
  * @brief Prepare next call for raptor with min_nb_journeys option
  *
  * Find the earliest departure (clockwise case) and add +1 to use like the
@@ -186,7 +223,7 @@ void make_pathes(PbCreator& pb_creator,
                  const georef::Path& direct_path,
                  const type::EntryPoint& origin,
                  const type::EntryPoint& destination,
-                 const std::vector<bt::ptime>& datetimes,
+                 const std::vector<std::pair<bt::ptime, uint64_t>>& datetimes,
                  const bool clockwise,
                  const uint32_t free_radius_from = 0,
                  const uint32_t free_radius_to = 0);

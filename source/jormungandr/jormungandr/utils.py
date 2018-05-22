@@ -48,7 +48,10 @@ from flask import request
 import re
 import flask
 from contextlib import contextmanager
-
+import functools
+import sys
+PY2 = sys.version_info[0] == 2
+PY3 = sys.version_info[0] == 3
 
 DATETIME_FORMAT = "%Y%m%dT%H%M%S"
 
@@ -308,7 +311,7 @@ def realtime_level_to_pbf(level):
 #we can't use reverse(enumerate(list)) without creating a temporary
 #list, so we define our own reverse enumerate
 def reverse_enumerate(l):
-    return list(zip(list(range(len(l)-1, -1, -1)), reversed(l)))
+    return zip(xrange(len(l)-1, -1, -1), reversed(l))
 
 
 def pb_del_if(l, pred):
@@ -563,3 +566,85 @@ def copy_context_in_greenlet_stack(request_context):
     flask.globals._request_ctx_stack.push(request_context)
     yield
     flask.globals._request_ctx_stack.pop()
+
+
+def compose(*funs):
+    """
+    compose functions and return a callable object
+
+    example 1:
+    f(x) = x + 1
+    g(x) = 2*x
+
+    compose(f,g) = g(f(x)) = 2 * (x + 1 )
+
+    example 2:
+    f(a list of integer): returns multiples of 3
+    g(a list of integer): returns multiples of 5
+
+    compose(f,g): returns multiples of 3 AND 5
+
+    :param funs:
+    :return: a lambda
+
+    >>> c = compose(lambda x: x+1, lambda x: 2*x)
+    >>> c(42)
+    86
+
+    >>> f = lambda l: (x for x in l if x%3 == 0)
+    >>> g = lambda l: (x for x in l if x%5 == 0)
+    >>> c = compose(f, g)
+    >>> list(c(range(45)))
+    [0, 15, 30]
+    """
+    return lambda obj: functools.reduce(lambda prev, f: f(prev), funs, obj)
+
+class ComposedFilter(object):
+    """
+    Compose several filters with convenient interfaces
+    All filters are evaluated lazily
+
+    >>> F = ComposedFilter()
+    >>> f = F.add_filter(lambda x: x % 2 == 0).add_filter(lambda x: x % 5 == 0).compose_filters()
+    >>> list(f(range(40)))
+    [0, 10, 20, 30]
+    >>> list(f(range(20))) # we can reuse the composed filter
+    [0, 10]
+    >>> f = F.add_filter(lambda x: x % 3 == 0).compose_filters() # we can continue on adding new filter
+    >>> list(f(range(40)))
+    [0, 30]
+    """
+    def __init__(self):
+        self.filters = []
+
+    def add_filter(self, pred):
+        self.filters.append(lambda iterable: (i for i in iterable if pred(i)))
+        return self
+
+    def compose_filters(self):
+        return compose(*self.filters)
+
+
+def portable_min(*args, **kwargs):
+    """
+    a portable min() for python2 which takes a default value when
+    the iterable is empty
+
+    >>> portable_min([1], default=42)
+    1
+    >>> portable_min([], default=42)
+    42
+    >>> portable_min(iter(()), default=43) # empty iterable
+    43
+
+    """
+    if PY2:
+        default = kwargs.pop('default', None)
+        try:
+            return min(*args, **kwargs)
+        except ValueError:
+            return default
+        except Exception:
+            raise
+    if PY3:
+        return min(*args, **kwargs)

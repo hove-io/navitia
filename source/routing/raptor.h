@@ -61,6 +61,8 @@ struct StartingPointSndPhase {
 /** Worker Raptor : une instance par thread, les données sont modifiées par le calcul */
 struct RAPTOR
 {
+    typedef std::list<Journey> Journeys;
+
     const navitia::type::Data& data;
 
     std::shared_ptr<const CachedNextStopTime> next_st;
@@ -144,8 +146,7 @@ struct RAPTOR
                 const boost::optional<navitia::time_duration>& direct_path_dur = boost::none,
                 const size_t max_extra_second_pass = 0);
 
-
-    std::list<Journey>
+    Journeys
     compute_all_journeys(const map_stop_point_duration& departs,
                          const map_stop_point_duration& destinations,
                          const DateTime& departure_datetime,
