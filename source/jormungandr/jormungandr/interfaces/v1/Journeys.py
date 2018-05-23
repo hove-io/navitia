@@ -535,7 +535,18 @@ class Journeys(JourneyCommon):
                 args['_night_bus_filter_max_factor'] = mod.night_bus_filter_max_factor
             if args.get('_max_additional_connections') is None:
                 args['_max_additional_connections'] = mod.max_additional_connections
-
+            if args.get('min_nb_journeys') is None:
+                args['min_nb_journeys'] = mod.min_nb_journeys
+            if args.get('max_nb_journeys') is None:
+                args['max_nb_journeys'] = mod.max_nb_journeys
+            if args.get('_min_journeys_calls') is None:
+                args['_min_journeys_calls'] = mod.min_journeys_calls
+            if args.get('_max_successive_physical_mode') is None:
+                args['_max_successive_physical_mode'] = mod.max_successive_physical_mode
+            if args.get('_final_line_filter') is None:
+                args['_final_line_filter'] = mod.final_line_filter
+            if args.get('_max_extra_second_pass') is None:
+                args['_max_extra_second_pass'] = mod.max_extra_second_pass
         if region:
             _set_specific_params(i_manager.instances[region])
         else:

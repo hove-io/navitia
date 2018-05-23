@@ -112,7 +112,13 @@ def test_update_instances(create_instance):
               "bss_provider": False,
               "full_sn_geometries": True,
               "max_car_no_park_duration_to_pt": 2691,
-              "car_no_park_speed": 2.42}
+              "car_no_park_speed": 2.42,
+              "min_nb_journeys": 1,
+              "max_nb_journeys": None,
+              "min_journeys_calls": 2,
+              "max_successive_physical_mode": 3,
+              "final_line_filter": True,
+              "max_extra_second_pass": 1}
 
     resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
     for key, param in params.iteritems():
@@ -233,3 +239,46 @@ def test_delete_traveler_profile(create_instance):
 
     _, status = api_get('/v0/instances/fr/traveler_profiles/standard', check=False)
     assert status == 404
+
+
+def test_update_instances_with_invalid_scenario(create_instance):
+    params = {"min_tc_with_bss": 5,
+              "journey_order": "arrival_time",
+              "max_duration": 200,
+              "max_bss_duration_to_pt": 10,
+              "max_nb_transfers": 5,
+              "bike_speed": 2.2,
+              "walking_transfer_penalty": 20,
+              "night_bus_filter_base_factor": 300,
+              "walking_speed": 1.62,
+              "max_duration_fallback_mode": "bike",
+              "priority": 4,
+              "car_speed": 55.55,
+              "min_tc_with_car": 100,
+              "min_tc_with_bike": 100,
+              "min_bike": 40,
+              "max_walking_duration_to_pt": 300,
+              "min_car": 400,
+              "max_bike_duration_to_pt": 600,
+              "max_duration_criteria": "duration",
+              "scenario": "stif",
+              "bss_speed": 2.1,
+              "min_bss": 40,
+              "night_bus_filter_max_factor": 1.5,
+              "max_car_duration_to_pt": 800,
+              "bss_provider": False,
+              "full_sn_geometries": True,
+              "max_car_no_park_duration_to_pt": 2691,
+              "car_no_park_speed": 2.42,
+              "min_nb_journeys": 1,
+              "max_nb_journeys": None,
+              "min_journeys_calls": 2,
+              "max_successive_physical_mode": 3,
+              "final_line_filter": True,
+              "max_extra_second_pass": 1}
+
+    resp, status = api_put('/v0/instances/fr', data=json.dumps(params), check=False, content_type='application/json')
+    assert status == 400
+
+    resp = api_get('/v0/instances/')
+    assert resp[0]['scenario'] == 'new_default'
