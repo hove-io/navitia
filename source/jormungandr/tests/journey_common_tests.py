@@ -225,8 +225,6 @@ class JourneyCommon(object):
         2 To obtain at least "min_nb_journeys" journeys in the result each call to kraken
          in a loop is made with datatime + 1 of de best journey but not of global request.
         """
-
-        #In this request only two journeys are found
         query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
                 "min_nb_journeys=3&_night_bus_filter_base_factor=0&_night_bus_filter_max_factor=2"\
                 .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")

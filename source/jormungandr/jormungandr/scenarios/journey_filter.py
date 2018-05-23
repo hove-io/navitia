@@ -186,10 +186,9 @@ def filter_shared_sections_journeys(journeys, request):
 
 def _filter_similar_journeys(journeys_pool, request, similar_journey_generator):
     """
-    we filter similar journeys
-    The given generator tells which part of journeys are compared
-
-    in case of similar journeys we let _get_worst_similar_vjs decide which one to delete
+    Compare journeys 2 by 2.
+    The given generator tells which part of journeys are compared.
+    In case of similar journeys, the function '_get_worst_similar_vjs' decides which one to delete.
     """
 
     logger = logging.getLogger(__name__)
@@ -198,7 +197,7 @@ def _filter_similar_journeys(journeys_pool, request, similar_journey_generator):
         if to_be_deleted(j1) or to_be_deleted(j2):
             continue
         if compare(j1, j2, similar_journey_generator):
-            # choose the best
+            # After comparison, if the 2 journeys are similar, the worst one must be eliminated
             worst = _get_worst_similar(j1, j2, request)
             logger.debug("the journeys {}, {} are similar, we delete {}".format(j1.internal_id,
                                                                                 j2.internal_id,
@@ -461,9 +460,9 @@ def _filter_too_late_journeys(responses, request):
 
 
 def is_walk_after_parking(journey, idx_section):
-    '''
+    """
     True if section at given index is a walking after/before parking car/bss, False otherwise
-    '''
+    """
     is_park_section = lambda section: section.type in {response_pb2.PARK,
                                                        response_pb2.LEAVE_PARKING,
                                                        response_pb2.BSS_PUT_BACK,
@@ -514,6 +513,7 @@ def shared_section_generator(journey):
     # Early return: test if the journeys have the same number of sections
     yield len(journey.sections)
 
+    # Compare each section of the journey with the criteria in the function description
     for s in journey.sections:
         if s.type == response_pb2.PUBLIC_TRANSPORT:
             yield "mode:{}-{}/origin:{}/dest:{}".format(s.pt_display_informations.physical_mode,
@@ -556,7 +556,7 @@ def _debug_journey(journey):
     for s in journey.sections:
         if s.type == response_pb2.PUBLIC_TRANSPORT:
             sections.append(u"{line} ({vj})".format(line=s.pt_display_informations.uris.line,
-                                                   vj=s.pt_display_informations.uris.vehicle_journey))
+                                                    vj=s.pt_display_informations.uris.vehicle_journey))
         elif s.type == response_pb2.STREET_NETWORK:
             sections.append(shorten(response_pb2.StreetNetworkMode.Name(s.street_network.mode)))
         else:
@@ -578,7 +578,6 @@ def _debug_journey(journey):
 
 def get_qualified_journeys(responses):
     """
-
     :param responses: protobuf
     :return: generator of journeys
     """
