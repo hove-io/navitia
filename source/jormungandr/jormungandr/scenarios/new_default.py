@@ -582,6 +582,7 @@ def _switch_back_to_ridesharing(response, is_first_section):
             journey.distances.ridesharing += section.length
             journey.distances.car -= section.length
 
+
 def nb_journeys(responses):
     return sum(1 for r in responses for j in r.journeys if not journey_filter.to_be_deleted(j))
 
