@@ -1309,15 +1309,16 @@ void make_response(navitia::PbCreator& pb_creator,
                 accessibilite_params, forbidden, allowed, clockwise, direct_path_dur,
                 max_extra_second_pass);
 
-            // Remove direct path
-            filter_direct_path(raptor_journeys);
             LOG4CPLUS_DEBUG(logger, "raptor found " << raptor_journeys.size() << " solutions");
-
-            if (raptor_journeys.empty())
-                break;
 
             // filter joureys that are too late.....with the magic formula...
             filter_late_journeys(raptor_journeys, params);
+
+            // Remove direct path
+            filter_direct_path(raptor_journeys);
+
+            if (raptor_journeys.empty())
+                break;
 
             // Prepare next call for raptor with min_nb_journeys option
             request_date_secs = prepare_next_call_for_raptor(raptor_journeys, clockwise);
