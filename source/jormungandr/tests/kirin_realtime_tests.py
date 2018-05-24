@@ -312,7 +312,8 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         assert len(pt_response['disruptions']) == 1
         _check_train_delay_disruption(pt_response['disruptions'][0])
 
-        # so the first real-time vj created for the first disruption should be deactivated
+        # So the first real-time vj created for the first disruption should be deactivated
+        # In order to not disturb the test, line M which was added afterwards for shared section tests, is forbidden here
         new_response = self.query_region(journey_basic_query + "&data_freshness=realtime&forbidden_uris[]=M&")
         assert get_arrivals(new_response) == ['20120614T080436', '20120614T080520']
         assert get_used_vj(new_response), [[] == ['vjA:modified:1:vjA_delayed']]

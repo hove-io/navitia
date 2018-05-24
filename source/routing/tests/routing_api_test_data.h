@@ -425,7 +425,6 @@ struct routing_api_data {
 			b.lines["M"]->code = "1M";
 			b.lines["M"]->color = "3ACCDC";
 			b.lines["M"]->text_color = "FFFFFF";
-			//b.data->pt_data->headsign_handler.affect_headsign_to_stop_time(b.data->pt_data->vehicle_journeys.at(0)->stop_time_list.at(0), "A00");
 
             //We need another route on the line A with a vj on it to test line sections disruptions
             b.vj("A", "000000", "", false, "vjA2").route("route2")
