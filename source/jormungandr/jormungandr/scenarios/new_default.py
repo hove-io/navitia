@@ -176,6 +176,9 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     if request["min_nb_journeys"]:
         req.journeys.min_nb_journeys = request["min_nb_journeys"]
 
+    req.journeys.night_bus_filter_max_factor = request['_night_bus_filter_max_factor']
+    req.journeys.night_bus_filter_base_factor = request['_night_bus_filter_base_factor']
+
     return req
 
 
@@ -840,7 +843,7 @@ class Scenario(simple.Scenario):
             _tag_by_mode(new_resp)
             _tag_direct_path(new_resp)
             _tag_bike_in_pt(new_resp)
-            journey_filter._filter_too_late_journeys(new_resp, request)
+
             if nb_journeys(new_resp) == 0:
                 # no new journeys found, we stop
                 # we still append the new_resp because there are journeys that a tagged as dead probably
