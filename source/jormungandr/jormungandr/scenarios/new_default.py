@@ -861,7 +861,7 @@ class Scenario(simple.Scenario):
             pool1, pool2 = itertools.tee(journeys_pool)
             journey_filter.filter_similar_vj_journeys(pool1, api_request)
 
-            if api_request['_no_shared_section']:
+            if api_request['no_shared_section']:
                 journey_filter.filter_shared_sections_journeys(pool2, api_request)
 
             responses.extend(new_resp)  # we keep the error for building the response
