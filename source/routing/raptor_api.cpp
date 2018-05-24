@@ -1285,13 +1285,6 @@ void make_response(navitia::PbCreator& pb_creator,
             }
         }
 
-        NightBusFilter::Params params {
-            to_datetime(datetime.first, *pb_creator.data),
-            clockwise,
-            night_bus_filter_max_factor,
-            night_bus_filter_base_factor
-        };
-
         // Call raptor
         // note : Loop is for min_nb_journeys options
         //
@@ -1303,6 +1296,7 @@ void make_response(navitia::PbCreator& pb_creator,
         // If the number of Path finds is greater or equal than min_nb_journeys, we stop.
         JourneySet journeys;
         uint32_t nb_try = 0;
+        uint nb_direct_path = direct_path.path_items.empty() ? 0 : 1;
         do {
             auto raptor_journeys = raptor.compute_all_journeys(
                 *departures, *destinations, request_date_secs, rt_level, transfer_penalty, bound, max_transfers,
@@ -1315,6 +1309,12 @@ void make_response(navitia::PbCreator& pb_creator,
             filter_direct_path(raptor_journeys);
 
             // filter joureys that are too late.....with the magic formula...
+            NightBusFilter::Params params {
+                request_date_secs,
+                clockwise,
+                night_bus_filter_max_factor,
+                night_bus_filter_base_factor
+            };
             filter_late_journeys(raptor_journeys, params);
 
             if (raptor_journeys.empty())
@@ -1330,7 +1330,7 @@ void make_response(navitia::PbCreator& pb_creator,
 
             nb_try++;
 
-        } while (( journeys.size() < min_nb_journeys) && (nb_try < MAX_NB_RAPTOR_CALL));
+        } while (( journeys.size() + nb_direct_path < min_nb_journeys) && (nb_try < MAX_NB_RAPTOR_CALL));
 
 
         // create date time for next
