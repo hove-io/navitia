@@ -734,6 +734,11 @@ Data::get_target_by_one_source(Type_e source, Type_e target,
     }
     if (target == Type_e::JourneyPatternPoint) {
         switch (source) {
+        case Type_e::PhysicalMode:
+            for (const auto& jpp: jp_container.get_jpps_from_phy_mode()[routing::PhyModeIdx(source_idx)]){
+                result.insert(jpp.val);
+            }
+            break;
         case Type_e::StopPoint:
             for (const auto& jpp: dataRaptor->jpps_from_sp[routing::SpIdx(source_idx)]) {
                 result.insert(jpp.idx.val); //TODO use bulk insert ?

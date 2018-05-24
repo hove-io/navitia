@@ -59,6 +59,7 @@ void JourneyPatternContainer::load(const nt::PT_Data& pt_data) {
     jps_from_route.assign(pt_data.routes);
     jp_from_vj.assign(pt_data.vehicle_journeys);
     jps_from_phy_mode.assign(pt_data.physical_modes);
+    jpps_from_phy_mode.assign(pt_data.physical_modes);
     for (const auto* route: pt_data.routes) {
         for (const auto& vj: route->discrete_vehicle_journey_list) { add_vj(*vj); }
         for (const auto& vj: route->frequency_vehicle_journey_list) { add_vj(*vj); }
@@ -199,6 +200,7 @@ JpIdx JourneyPatternContainer::make_jp(const JpKey& key) {
     for (const auto& jpp_key: key.jpp_keys) {
         jp.jpps.push_back(make_jpp(jp_idx, jpp_key.sp_idx, order++));
     }
+    jpps_from_phy_mode[jp.phy_mode_idx].insert(jpps_from_phy_mode[jp.phy_mode_idx].end(), jp.jpps.begin(), jp.jpps.end());
     jps.push_back(std::move(jp));
     return jp_idx;
 }
