@@ -42,6 +42,7 @@ www.navitia.io
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/range/algorithm/count.hpp>
+#include <boost/range/algorithm/count_if.hpp>
 #include <unordered_set>
 #include <chrono>
 #include <string>
@@ -1157,6 +1158,14 @@ void filter_late_journeys(RAPTOR::Journeys & journeys,
     std::vector<RAPTOR::Journeys::const_iterator> late_journeys;
 
     for(auto journey_pair : journeys_pairs_gen) {
+
+        auto is_in_pair = [&](const RAPTOR::Journeys::const_iterator& it) {
+        	return it == journey_pair.first || it == journey_pair.second;
+        };
+
+        if (boost::count_if(late_journeys, is_in_pair))
+        	continue;
+
         auto& j1 = *journey_pair.first;
         auto& j2 = *journey_pair.second;
 
