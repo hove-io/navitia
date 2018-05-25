@@ -90,12 +90,6 @@ class AtosProvider(AbstractParkingPlacesProvider):
         finally:
             transport.session.close()
 
-    def _get_client(self):
-        if not self._client:
-            transport = zeep.Transport(timeout=self.timeout, operation_timeout=self.timeout)
-            self._client = zeep.Client(self.WS_URL, transport=transport)
-        return self._client
-
     def status(self):
         return {'network': self.network, 'operators': self.operators, 'id_ao': self.id_ao}
 
