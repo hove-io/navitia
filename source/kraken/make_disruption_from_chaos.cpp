@@ -321,6 +321,30 @@ make_impact(const chaos::Impact& chaos_impact, nt::PT_Data& pt_data,
     return impact;
 }
 
+bool is_publishable(transit_realtime::TimeRange publication_period,
+                    boost::posix_time::time_period production_period) {
+    // Publication period should have a valid start date
+    if (publication_period.start() == 0) {
+        return false;
+    }
+
+    bt::time_period tp_publication_period = {
+        navitia::from_posix_timestamp(publication_period.start()),
+        navitia::from_posix_timestamp(publication_period.end())};
+    // if publication period doesn't have a valid end date start date be
+    // smaller than production period end date.
+    if (publication_period.end() == 0) {
+        if (publication_period.start() > to_posix_timestamp(production_period.begin())) {
+            return false;
+        }
+    }
+    // verify the real intersection of two periods with valid values.
+    else if (tp_publication_period.intersection(production_period).is_null()) {
+        return false;
+    }
+    return true;
+}
+
 static const type::disruption::Disruption&
 make_disruption(const chaos::Disruption& chaos_disruption, nt::PT_Data& pt_data,
                 const navitia::type::MetaData& meta) {
@@ -367,8 +391,10 @@ void make_and_apply_disruption(const chaos::Disruption& chaos_disruption,
     //we delete the disruption before adding the new one
     delete_disruption(chaos_disruption.id(), pt_data, meta);
 
-    const auto& disruption = make_disruption(chaos_disruption, pt_data, meta);
-
-    apply_disruption(disruption, pt_data, meta);
+    //Filter the disruption using data production_period and disruption_publication_period
+    if (is_publishable(chaos_disruption.publication_period(), meta.production_period())) {
+        const auto& disruption = make_disruption(chaos_disruption, pt_data, meta);
+        apply_disruption(disruption, pt_data, meta);
+    }
 }
 }
