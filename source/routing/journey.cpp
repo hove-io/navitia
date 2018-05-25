@@ -52,11 +52,7 @@ bool Journey::Section::operator==(const Section & rhs) const {
 }
 
 bool Journey::is_pt() const {
-    if (sections.empty()) {
-        return false;
-    } else {
-        return true;
-    }
+    return !sections.empty();
 }
 
 bool Journey::better_on_dt(const Journey& that, bool request_clockwise) const {

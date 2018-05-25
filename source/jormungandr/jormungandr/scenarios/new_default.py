@@ -850,7 +850,7 @@ class Scenario(simple.Scenario):
                 responses.extend(new_resp)
                 break
 
-            request = self.create_next_kraken_request(request, new_resp, min_nb_journeys)
+            request = self.create_next_kraken_request(request, new_resp)
 
             # we filter unwanted journeys in the new response
             # note that filter_journeys returns a generator which will be evaluated later
@@ -980,7 +980,7 @@ class Scenario(simple.Scenario):
 
         return resp
 
-    def create_next_kraken_request(self, request, responses, min_nb_journeys = 0):
+    def create_next_kraken_request(self, request, responses):
         """
         modify the request to call the next (resp previous for non clockwise search) journeys in kraken
 

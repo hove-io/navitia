@@ -980,7 +980,7 @@ void free_radius_filter(routing::map_stop_point_duration& sp_list,
     }
 }
 
-DateTime prepare_next_call_for_raptor(const std::list<Journey>& journeys, const bool clockwise)
+DateTime prepare_next_call_for_raptor(const RAPTOR::Journeys& journeys, const bool clockwise)
 {
     DateTime lastest_arrival    = DateTimeUtils::min;
     DateTime earliest_departure = DateTimeUtils::inf; // clockwise
@@ -1134,7 +1134,7 @@ bool way_later(const Journey & j1, const Journey & j2,
     auto & requested_dt = params.requested_datetime;
     auto & clockwise = params.clockwise;
 
-    auto get_pseudo_duration = [&](const Journey & j){
+    auto get_pseudo_duration = [&](const Journey & j) {
         auto dt = clockwise ? j.arrival_dt : j.departure_dt;
         return std::abs(dt - requested_dt);
     };
@@ -1156,8 +1156,7 @@ void filter_late_journeys(RAPTOR::Journeys & journeys,
     auto journeys_pairs_gen = utils::make_pairs_generator(journeys);
     std::vector<RAPTOR::Journeys::const_iterator> late_journeys;
 
-    for(auto journey_pair : journeys_pairs_gen)
-    {
+    for(auto journey_pair : journeys_pairs_gen) {
         auto& j1 = *journey_pair.first;
         auto& j2 = *journey_pair.second;
 
@@ -1212,14 +1211,14 @@ void make_response(navitia::PbCreator& pb_creator,
     auto destinations = get_stop_points(destination, raptor.data, worker, free_radius_to, true);
 
     // case 1 : departure no exist
-    if (!departures){
+    if (!departures) {
         pb_creator.fill_pb_error(pbnavitia::Error::unknown_object,
                                  "The entry point: " + origin.uri + " is not valid");
         return;
     }
 
     // case 2 : destination no exist
-    if (!destinations){
+    if (!destinations) {
         pb_creator.fill_pb_error(pbnavitia::Error::unknown_object,
                                  "The entry point: " + destination.uri + " is not valid");
         return;
@@ -1227,8 +1226,7 @@ void make_response(navitia::PbCreator& pb_creator,
 
     // case 3 : departure or destination are emtpy
     if (departures->size() == 0 ||
-        destinations->size() == 0)
-    {
+        destinations->size() == 0) {
         make_pathes(pb_creator,
                     pathes,
                     worker,
@@ -1238,11 +1236,9 @@ void make_response(navitia::PbCreator& pb_creator,
                     datetimes,
                     clockwise);
 
-        if (pb_creator.empty_journeys())
-        {
+        if (pb_creator.empty_journeys()) {
             if (departures->size() == 0 &&
-                destinations->size() == 0)
-            {
+                destinations->size() == 0) {
                 pb_creator.fill_pb_error(pbnavitia::Error::no_origin_nor_destination,
                                          pbnavitia::NO_ORIGIN_NOR_DESTINATION_POINT,
                                          "no origin point nor destination point");
@@ -1290,7 +1286,7 @@ void make_response(navitia::PbCreator& pb_creator,
         //
         // min_nb_journeys options :
         // Compute several loop until the number of journeys >= min_nb_journeys
-        // For each step, we fing best pathes,
+        // For each step, we find best pathes,
         // start to the latest departure + 1 (clockwise) or the latest arrival - 1.
         // If Raptor does not return anything, we stop.
         // If the number of Path finds is greater or equal than min_nb_journeys, we stop.
