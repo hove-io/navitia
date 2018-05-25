@@ -334,7 +334,7 @@ bool is_publishable(transit_realtime::TimeRange publication_period,
     // if publication period doesn't have a valid end date start date be
     // smaller than production period end date.
     if (publication_period.end() == 0) {
-        if (publication_period.start() > to_posix_timestamp(production_period.begin())) {
+        if (publication_period.start() > to_posix_timestamp(production_period.end())) {
             return false;
         }
     }

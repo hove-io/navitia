@@ -767,17 +767,30 @@ BOOST_AUTO_TEST_CASE(make_disruption_with_different_publication_periods) {
     navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
     BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 0);
 
+    // Add a publication period with start date > production end date (2012,6,21)
+    // This disruption is again rejected.
+    auto period = disruption.mutable_publication_period();
+    period->set_start(ntest::to_posix_timestamp("20120622T153200"));
+    navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
+    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 0);
+
+    // Modify the publication start date with the value < production end date (2012,6,21)
+    // The disruption will be added.
+    period->set_start(ntest::to_posix_timestamp("20120618T153200"));
+    navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
+    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
+
     // create a disruption and associate a period
-    disruption = create_disruption("first_dis", "dead cow", "important", "a nice tag");
+    disruption = create_disruption("second_dis", "dead cow", "important", "a nice tag");
 
     //Add a period with valid start and end date
-    auto period = disruption.mutable_publication_period();
+    period = disruption.mutable_publication_period();
     period->set_start(ntest::to_posix_timestamp("20120613T153200"));
-    period->set_end(ntest::to_posix_timestamp("20120617T123200"));    
+    period->set_end(ntest::to_posix_timestamp("20120617T123200"));
     navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
 
-    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
-    const auto* nav_dis = b.data->pt_data->disruption_holder.get_disruption("first_dis");
+    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 2);
+    const auto* nav_dis = b.data->pt_data->disruption_holder.get_disruption("second_dis");
     BOOST_REQUIRE(nav_dis);
     BOOST_REQUIRE(nav_dis->cause);
     BOOST_CHECK_EQUAL(nav_dis->cause->wording, "dead cow");
@@ -797,7 +810,7 @@ BOOST_AUTO_TEST_CASE(make_disruption_with_different_publication_periods) {
     period->set_end(ntest::to_posix_timestamp("20120613T153200"));
 
     navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
-    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
+    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 2);
 
     // Modify publication period with valid value but does not intersect with production period
     // production_period : 2012-Jun-14 00:00:00 + 2012-Jun-21 00:00:00
@@ -806,7 +819,7 @@ BOOST_AUTO_TEST_CASE(make_disruption_with_different_publication_periods) {
     period->set_start(ntest::to_posix_timestamp("20120622T123200"));
     period->set_end(ntest::to_posix_timestamp("20120625T153200"));
     navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
-    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 1);
+    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 2);
 
     // Modify publication period with valid value and intersect with production period
     // publication_period: 2012-Jun-13 15:32:00 + 2012-Jun-17 12:32:00
@@ -814,5 +827,38 @@ BOOST_AUTO_TEST_CASE(make_disruption_with_different_publication_periods) {
     period->set_start(ntest::to_posix_timestamp("20120613T153200"));
     period->set_end(ntest::to_posix_timestamp("20120617T123200"));
     navitia::make_and_apply_disruption(disruption, *b.data->pt_data, *b.data->meta);
-    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 2);
+    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 3);
+}
+
+BOOST_AUTO_TEST_CASE(is_publishable_test) {
+    // Initialize production_period as in data
+    auto production_period = boost::posix_time::time_period("20180317T155000"_dt, "20180817T113000"_dt);
+
+    // Initialize publication_period with the same format as in disruption
+    // Initialize only start date with value < production_end. The test should be true
+    auto publication_period = transit_realtime::TimeRange();
+    publication_period.set_start(ntest::to_posix_timestamp("20180317T155000"));
+    BOOST_CHECK_EQUAL(navitia::is_publishable(publication_period, production_period), true);
+
+    // Modify publication_period start date with value > production_end. The test should be false
+    publication_period.set_start(ntest::to_posix_timestamp("20180818T113000"));
+    BOOST_CHECK_EQUAL(navitia::is_publishable(publication_period, production_period), false);
+
+    // Modify publication_period start and end date so that two periods do not intersect
+    // The test should be true
+    publication_period.set_start(ntest::to_posix_timestamp("20180818T113000"));
+    publication_period.set_end(ntest::to_posix_timestamp("20180820T113000"));
+    BOOST_CHECK_EQUAL(navitia::is_publishable(publication_period, production_period), false);
+
+    // Modify publication_period start and end date where start > end
+    // The test should be true
+    publication_period.set_start(ntest::to_posix_timestamp("20180518T113000"));
+    publication_period.set_end(ntest::to_posix_timestamp("20180420T113000"));
+    BOOST_CHECK_EQUAL(navitia::is_publishable(publication_period, production_period), false);
+
+    // Modify publication_period start and end date with valid value -> two periods intersect
+    // The test should be true
+    publication_period.set_start(ntest::to_posix_timestamp("20180618T113000"));
+    publication_period.set_end(ntest::to_posix_timestamp("20180623T113000"));
+    BOOST_CHECK_EQUAL(navitia::is_publishable(publication_period, production_period), true);
 }

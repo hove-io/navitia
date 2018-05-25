@@ -55,5 +55,7 @@ void make_and_apply_disruption(const chaos::Disruption& chaos_disruption,
 boost::optional<type::disruption::LineSection>
 make_line_section(const chaos::PtObject& chaos_section, nt::PT_Data& pt_data);
 
+bool is_publishable(transit_realtime::TimeRange publication_period,
+                    boost::posix_time::time_period production_period);
 
 }
