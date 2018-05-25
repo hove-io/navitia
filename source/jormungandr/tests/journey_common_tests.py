@@ -770,14 +770,17 @@ class JourneyCommon(object):
         assert response['journeys'][0]['sections'][0]['mode'] == 'bike'
         assert response['journeys'][0]['durations']['total'] == 62
         assert response['journeys'][0]['durations']['bike'] == 62
+        assert response['journeys'][0]['distances']['bike'] == 257
         assert len(response['journeys'][1]['sections']) == 3
         assert response['journeys'][1]['sections'][0]['mode'] == 'walking'
         assert response['journeys'][1]['durations']['walking'] == 97
+        assert response['journeys'][1]['distances']['walking'] == 108
         assert response['journeys'][1]['durations']['total'] == 99
         assert len(response['journeys'][2]['sections']) == 1
         assert response['journeys'][2]['sections'][0]['mode'] == 'walking'
         assert response['journeys'][2]['durations']['total'] == 276
         assert response['journeys'][2]['durations']['walking'] == 276
+        assert response['journeys'][2]['distances']['walking'] == 309
 
         query += '&bike_speed=1.5'
         response = self.query_region(query)
@@ -944,6 +947,7 @@ class AddErrorFieldInJormun(object):
             assert response['error']['message'] == "no solution found for this journey"
             #and no journey is to be provided
             assert 'journeys' not in response or len(response['journeys']) == 0
+
 
 @dataset({"main_routing_test": {}})
 class DirectPath(object):
@@ -1358,8 +1362,6 @@ class JourneyMinBikeMinCar(object):
         assert response['journeys'][1]['sections'][0]['mode'] == 'walking'
         assert response['journeys'][1]['sections'][0]['duration'] == 276
 
-
-
     def test_first_section_mode_walking_and_last_section_mode_bike(self):
         query = '{sub_query}&last_section_mode[]=walking&first_section_mode[]=bike&' \
                 'datetime={datetime}'.format(sub_query=sub_query, datetime="20120614T080000")
@@ -1404,13 +1406,18 @@ class JourneyMinBikeMinCar(object):
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) == 1
         assert len(response['journeys'][0]['sections']) == 3
+
         assert response['journeys'][0]['sections'][0]['mode'] == 'car'
-        assert response['journeys'][0]['sections'][0]['duration'] == 16
+        car_duration = response['journeys'][0]['sections'][0]['duration']
+        assert car_duration == 16
 
         assert response['journeys'][0]['sections'][-1]['mode'] == 'walking'
-        assert response['journeys'][0]['sections'][-1]['duration'] == 106
+        walk_duration = response['journeys'][0]['sections'][-1]['duration']
+        assert walk_duration == 106
 
-
+        assert response['journeys'][0]['durations']['walking'] == walk_duration
+        assert response['journeys'][0]['durations']['car'] == car_duration
+        assert response['journeys'][0]['distances']['car'] == 186
 
     def test_activate_min_car_bike(self):
         modes = [
