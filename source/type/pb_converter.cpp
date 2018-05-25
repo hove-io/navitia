@@ -705,7 +705,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Calendar* cal, pbnavitia::Calen
         auto pb_period = pb_cal->add_active_periods();
         pb_period->set_begin(gd::to_iso_string(p.begin()));
         pb_period->set_end(gd::to_iso_string(p.end()));
-    }    
+    }
     fill(cal->exceptions, pb_cal->mutable_exceptions());
 }
 
