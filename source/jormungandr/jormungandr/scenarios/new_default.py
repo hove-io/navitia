@@ -813,16 +813,10 @@ class Scenario(simple.Scenario):
         krakens_call = get_kraken_calls(api_request)
 
         # min_nb_journeys option
-        # we take into account the option only if we have one
-        # origin_mode and destination_mode couple.
         if api_request['min_nb_journeys']:
             min_nb_journeys = api_request['min_nb_journeys']
-            if min_nb_journeys > 1 and len(krakens_call) > 1:
-                api_request['min_nb_journeys'] = 1
-                min_nb_journeys = 1
         else:
-            api_request['min_nb_journeys'] = 1
-            min_nb_journeys = 1
+            min_nb_journeys = api_request['min_nb_journeys'] = 1
 
         # We need the original request (api_request) for filtering, but request
         # is modified by create_next_kraken_request function.
@@ -832,12 +826,20 @@ class Scenario(simple.Scenario):
 
         responses = []
         nb_try = 0
-        nb_qualified_journeys = nb_journeys(responses)
+        nb_qualified_journeys = 0
 
         while request is not None and \
                 ((nb_qualified_journeys < min_nb_journeys and nb_try < min_nb_journeys) \
                 or nb_try < min_journeys_calls):
+
             nb_try = nb_try + 1
+
+            # we take into account the option only if we have one origin_mode and destination_mode couple.
+            if len(krakens_call) > 1:
+                request['min_nb_journeys'] = 0
+            else:
+                min_nb_journeys_left = min_nb_journeys - nb_qualified_journeys
+                request['min_nb_journeys'] = max(0, min_nb_journeys_left)
 
             new_resp = self.call_kraken(request_type, request, instance, krakens_call)
             _tag_by_mode(new_resp)
