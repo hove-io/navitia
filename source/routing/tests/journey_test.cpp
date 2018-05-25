@@ -67,6 +67,28 @@ BOOST_AUTO_TEST_CASE(similar_sections_should_be_equal) {
     BOOST_CHECK_EQUAL(j1, j2);
 }
 
+BOOST_AUTO_TEST_CASE(similar_sections_should_not_be_equal_with_different_VJ) {
+
+    ed::builder b("20180101");
+
+    auto& vj1 = b.vj("VJ1")("StopPoint1", "09:42:00"_t)("StopPoint2", "10:00:00"_t);
+    auto& vj2 = b.vj("VJ2")("StopPoint1", "09:42:00"_t)("StopPoint2", "10:00:00"_t);
+
+    type::StopTime st1(1, 2, b.sps["StopPoint1"]);
+    type::StopTime st2(1, 2, b.sps["StopPoint1"]);
+
+    st1.vehicle_journey = vj1.vj;
+    st2.vehicle_journey = vj2.vj;
+
+    Journey::Section section1(st1, 1, st1, 2);
+    Journey::Section section2(st2, 1, st2, 2);
+
+    Journey j1; j1.sections.push_back(section1);
+    Journey j2; j2.sections.push_back(section2);
+
+    BOOST_CHECK_NE(j1, j2);
+}
+
 BOOST_AUTO_TEST_CASE(different_sections_should_NOT_be_equal) {
 
     ed::builder b("20180101");

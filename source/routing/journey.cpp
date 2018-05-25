@@ -46,8 +46,10 @@ Journey::Section::Section(const type::StopTime& in,
 bool Journey::Section::operator==(const Section & rhs) const {
 
     return get_in_st->order() == rhs.get_in_st->order()
+        && get_in_st->vehicle_journey == rhs.get_in_st->vehicle_journey
         && get_in_dt == rhs.get_in_dt
         && get_out_st->order() == rhs.get_out_st->order()
+        && get_out_st->vehicle_journey == rhs.get_out_st->vehicle_journey
         && get_out_dt == rhs.get_out_dt;
 }
 
@@ -96,8 +98,10 @@ bool Journey::operator==(const Journey & rhs) const {
 size_t SectionHash::operator()(const Journey::Section& s, size_t seed) const {
 
     boost::hash_combine(seed, s.get_in_st->order());
+    boost::hash_combine(seed, s.get_in_st->vehicle_journey);
     boost::hash_combine(seed, s.get_in_dt);
     boost::hash_combine(seed, s.get_out_st->order());
+    boost::hash_combine(seed, s.get_out_st->vehicle_journey);
     boost::hash_combine(seed, s.get_out_dt);
 
     return seed;

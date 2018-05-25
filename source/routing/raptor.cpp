@@ -391,18 +391,18 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
                     const size_t max_extra_second_pass) {
 
     const auto & journeys = compute_all_journeys(departures,
-                                         destinations,
-                                         departure_datetime,
-                                         rt_level,
-                                         transfer_penalty,
-                                         bound,
-                                         max_transfers,
-                                         accessibilite_params,
-                                         forbidden_uri,
-                                         allowed_ids,
-                                         clockwise,
-                                         direct_path_dur,
-                                         max_extra_second_pass);
+                                                 destinations,
+                                                 departure_datetime,
+                                                 rt_level,
+                                                 transfer_penalty,
+                                                 bound,
+                                                 max_transfers,
+                                                 accessibilite_params,
+                                                 forbidden_uri,
+                                                 allowed_ids,
+                                                 clockwise,
+                                                 direct_path_dur,
+                                                 max_extra_second_pass);
     return from_journeys_to_path(journeys);
 }
 
