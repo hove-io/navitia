@@ -27,8 +27,10 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, print_function, unicode_literals, division
 import pytest
+from contextlib import contextmanager
 from jormungandr.parking_space_availability.bss.atos import AtosProvider
 from jormungandr.parking_space_availability.bss.stands import Stands
 from mock import MagicMock
@@ -44,6 +46,7 @@ poi = {
         'id': 'poi_type:amenity:bicycle_rental'
     }
 }
+
 
 def parking_space_availability_atos_support_poi_test():
     """
@@ -72,6 +75,7 @@ def parking_space_availability_atos_support_poi_test():
     invalid_poi = {'properties': {}}
     assert not provider.support_poi(invalid_poi)
 
+
 def parking_space_availability_atos_get_informations_test():
     """
     Atos validate return good stands informations or None if an error occured
@@ -93,6 +97,7 @@ def parking_space_availability_atos_get_informations_test():
     provider._get_all_stands = MagicMock(side_effect=Exception('cannot access service'))
     assert provider.get_informations(poi) is None
 
+
 def parking_space_availability_atos_get_all_stands_test():
     """
     Atos validate transformation of webservice result
@@ -113,10 +118,17 @@ def parking_space_availability_atos_get_all_stands_test():
     client = lambda: None
     client.service = lambda: None
     client.service.getSummaryInformationTerminals = MagicMock(return_value=all_stands_list)
-    provider._get_client = MagicMock(return_value=client)
+
+    @contextmanager
+    def mock_get_client():
+        yield client
+
+    provider._get_client = mock_get_client
+
     all_stands = provider._get_all_stands()
     assert len(all_stands) == 2
     assert isinstance(all_stands.get('2'), Stands)
+
 
 def parking_space_availability_atos_get_all_stands_urlerror_test():
     """
