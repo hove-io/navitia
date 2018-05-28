@@ -265,7 +265,7 @@ void add_direct_path(PbCreator& pb_creator,
                      const georef::Path& path,
                      const type::EntryPoint& origin,
                      const type::EntryPoint& destination,
-                     const std::vector<std::pair<bt::ptime, uint64_t>>& datetimes,
+                     const std::vector<bt::ptime>& datetimes,
                      const bool clockwise){
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
@@ -276,13 +276,13 @@ void add_direct_path(PbCreator& pb_creator,
         //for each date time we add a direct street journey
         for(const auto & datetime : datetimes) {
             pbnavitia::Journey* pb_journey = pb_creator.add_journeys();
-            pb_journey->set_requested_date_time(navitia::to_posix_timestamp(datetime.first));
+            pb_journey->set_requested_date_time(navitia::to_posix_timestamp(datetime));
 
             bt::ptime departure;
             if (clockwise) {
-                departure = datetime.first;
+                departure = datetime;
             } else {
-                departure = datetime.first - bt::seconds(path.duration.total_seconds());
+                departure = datetime - bt::seconds(path.duration.total_seconds());
             }
             pb_creator.fill_street_sections(origin, path, pb_journey, departure);
 
@@ -533,7 +533,7 @@ void make_pathes(PbCreator& pb_creator,
                  const georef::Path& direct_path,
                  const type::EntryPoint& origin,
                  const type::EntryPoint& destination,
-                 const std::vector<std::pair<bt::ptime, uint64_t>>& datetimes,
+                 const std::vector<bt::ptime>& datetimes,
                  const bool clockwise,
                  const uint32_t free_radius_from,
                  const uint32_t free_radius_to) {
@@ -1003,25 +1003,25 @@ DateTime prepare_next_call_for_raptor(const RAPTOR::Journeys& journeys, const bo
     }
 }
 
-static std::vector<std::pair<bt::ptime, uint64_t>>
+static std::vector<bt::ptime>
 parse_datetimes(RAPTOR& raptor,
                 const std::vector<uint64_t>& timestamps,
                 navitia::PbCreator& pb_creator,
                 bool clockwise) {
-    std::vector<std::pair<bt::ptime, uint64_t>> datetimes;
+    std::vector<bt::ptime> datetimes;
 
-    for(uint32_t datetime: timestamps){
+    for(uint64_t datetime: timestamps){
         bt::ptime ptime = bt::from_time_t(datetime);
         if(!raptor.data.meta->production_date.contains(ptime.date())) {
             pb_creator.fill_pb_error(pbnavitia::Error::date_out_of_bounds,
                                      pbnavitia::DATE_OUT_OF_BOUNDS,
                                      "date is not in data production period");
         }
-        datetimes.push_back(std::make_pair(ptime, datetime));
+        datetimes.push_back(ptime);
     }
     if(clockwise)
         std::sort(datetimes.begin(), datetimes.end(),
-                  [](std::pair<bt::ptime, uint64_t> dt1, std::pair<bt::ptime, uint64_t> dt2){return dt1.first > dt2.first;});
+                  [](bt::ptime dt1, bt::ptime dt2){return dt1 > dt2;});
     else
         std::sort(datetimes.begin(), datetimes.end());
 
@@ -1074,7 +1074,7 @@ void make_pt_response(navitia::PbCreator& pb_creator,
     }
 
     DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
-    DateTime init_dt = to_datetime(datetime.first, raptor.data);
+    DateTime init_dt = to_datetime(datetime, raptor.data);
 
     if(max_duration != std::numeric_limits<uint32_t>::max()) {
         if (clockwise) {
@@ -1089,7 +1089,7 @@ void make_pt_response(navitia::PbCreator& pb_creator,
             max_extra_second_pass);
 
     for(auto & path : pathes) {
-        path.request_time = datetime.first;
+        path.request_time = datetime;
     }
     LOG4CPLUS_DEBUG(logger, "raptor found " << pathes.size() << " solutions");
     if(clockwise){
@@ -1207,7 +1207,7 @@ void make_response(navitia::PbCreator& pb_creator,
     std::vector<Path> pathes;
 
     // Create datetime vector first = posix time - second = timestamp uint64
-    std::vector<std::pair<bt::ptime, uint64_t>> datetimes = parse_datetimes(raptor, timestamps, pb_creator, clockwise);
+    auto datetimes = parse_datetimes(raptor, timestamps, pb_creator, clockwise);
     if(pb_creator.has_error() || pb_creator.has_response_type(pbnavitia::DATE_OUT_OF_BOUNDS)) {
         return;
     }
@@ -1280,7 +1280,7 @@ void make_response(navitia::PbCreator& pb_creator,
     for(const auto & datetime : datetimes) {
 
         // Compute start time and Bound
-        DateTime request_date_secs = to_datetime(datetime.first, raptor.data);
+        DateTime request_date_secs = to_datetime(datetime, raptor.data);
 
         if(max_duration != DateTimeUtils::inf) {
             if (clockwise) {
@@ -1339,7 +1339,7 @@ void make_response(navitia::PbCreator& pb_creator,
 
 
         // create date time for next
-        pb_creator.set_next_request_date_time(datetime.second + request_date_secs - datetime.first.time_of_day().total_seconds());
+        pb_creator.set_next_request_date_time(to_posix_timestamp(request_date_secs, raptor.data));
 
         auto tmp_pathes = raptor.from_journeys_to_path(journeys);
         LOG4CPLUS_DEBUG(logger, "raptor made " << tmp_pathes.size() << " Path(es)");
@@ -1348,14 +1348,14 @@ void make_response(navitia::PbCreator& pb_creator,
         if(datetimes.size() == 1) {
             pathes = tmp_pathes;
             for(auto & path : pathes) {
-                path.request_time = datetime.first;
+                path.request_time = datetime;
             }
         }
         // when we have several date time,
         // we keep that arrival at the earliest / departure at the latest
         else if (!tmp_pathes.empty()) {
 
-            tmp_pathes.back().request_time = datetime.first;
+            tmp_pathes.back().request_time = datetime;
             pathes.push_back(tmp_pathes.back());
             bound = to_datetime(tmp_pathes.back().items.back().arrival, raptor.data);
         }
@@ -1408,8 +1408,8 @@ void make_isochrone(navitia::PbCreator& pb_creator,
         return;
     }
 
-    int day = (datetime.first.date() - raptor.data.meta->production_date.begin()).days();
-    int time = datetime.first.time_of_day().total_seconds();
+    int day = (datetime.date() - raptor.data.meta->production_date.begin()).days();
+    int time = datetime.time_of_day().total_seconds();
     DateTime init_dt = DateTimeUtils::set(day, time);
     DateTime bound = clockwise ? init_dt + max_duration : init_dt - max_duration;
 
@@ -1538,12 +1538,12 @@ static bool fill_isochrone_common(IsochroneCommon& isochrone_common,
         return true;
     }
 
-    DateTime init_dt = to_datetime(datetime.first, raptor.data);
+    DateTime init_dt = to_datetime(datetime, raptor.data);
     DateTime bound = build_bound(clockwise, max_duration, init_dt);
     raptor.isochrone(*departures, init_dt, bound, max_transfers,
                      accessibilite_params, forbidden, allowed, clockwise, rt_level);
     type::GeographicalCoord coord_origin = center.coordinates;
-    isochrone_common = IsochroneCommon(clockwise, coord_origin, *departures, init_dt, center, bound, datetime.first);
+    isochrone_common = IsochroneCommon(clockwise, coord_origin, *departures, init_dt, center, bound, datetime);
     return false;
 }
 

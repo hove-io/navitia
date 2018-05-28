@@ -77,7 +77,7 @@ void add_direct_path(PbCreator& pb_creator,
                      const georef::Path& path,
                      const type::EntryPoint& origin,
                      const type::EntryPoint& destination,
-                     const std::vector<std::pair<bt::ptime, uint64_t>>& datetimes,
+                     const std::vector<bt::ptime>& datetimes,
                      const bool clockwise);
 
 void make_response(navitia::PbCreator& pb_creator,
@@ -223,7 +223,7 @@ void make_pathes(PbCreator& pb_creator,
                  const georef::Path& direct_path,
                  const type::EntryPoint& origin,
                  const type::EntryPoint& destination,
-                 const std::vector<std::pair<bt::ptime, uint64_t>>& datetimes,
+                 const std::vector<bt::ptime>& datetimes,
                  const bool clockwise,
                  const uint32_t free_radius_from = 0,
                  const uint32_t free_radius_to = 0);
