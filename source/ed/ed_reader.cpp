@@ -632,7 +632,7 @@ void EdReader::fill_lines(nt::Data& data, pqxx::work& work){
 }
 
 void EdReader::fill_line_groups(nt::Data& data, pqxx::work& work){
-    std::string request = "SELECT id, uri, name, main_line_id FROM navitia.line_group";
+    std::string request = "SELECT id, uri, name, m_bain_line_id FROM navitia.line_group";
 
     pqxx::result result = work.exec(request);
     for(auto const_it = result.begin(); const_it != result.end(); ++const_it){
@@ -1365,7 +1365,7 @@ static std::vector<component_vertex_t> get_useless_nodes(const filtered_graph& g
 
         size_t count = component_size[component];
         if (! principal_component || principal_component->second < count) {
-            principal_component = {component, count} ;
+            principal_component = {{component, count}} ;
         }
     }
 
