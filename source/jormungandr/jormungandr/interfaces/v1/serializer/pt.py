@@ -36,7 +36,8 @@ from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, DateTi
 from jormungandr.interfaces.v1.serializer.time import TimeField, PeriodSerializer, DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import *
 from jormungandr.interfaces.v1.serializer import jsonschema, base
-from navitiacommon.type_pb2 import ActiveStatus, Channel, hasEquipments, Properties, NavitiaType, Severity
+from navitiacommon.type_pb2 import ActiveStatus, Channel, hasEquipments, Properties, NavitiaType, Severity, \
+    StopTimeUpdateStatus
 from navitiacommon.response_pb2 import SectionAdditionalInformationType
 
 
@@ -200,7 +201,7 @@ class ImpactedStopSerializer(PbNestedSerializer):
     amended_arrival_time = TimeField(attr='amended_stop_time.arrival_time')
     amended_departure_time = TimeField(attr='amended_stop_time.departure_time')
     cause = jsonschema.Field(schema_type=str, display_none=True)
-    stop_time_effect = EnumField(attr='effect', pb_type=Severity.Effect, lower_case=False)
+    stop_time_effect = EnumField(attr='effect', pb_type=StopTimeUpdateStatus)
     departure_status = EnumField()
     arrival_status = EnumField()
 

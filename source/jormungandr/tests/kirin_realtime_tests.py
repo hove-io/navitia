@@ -101,7 +101,7 @@ class TestKirinOnVJDeletion(MockKirinDisruptionsFixture):
             is_valid_disruption(dis, chaos_disrup=False)
             assert dis['contributor'] == rt_topic
             assert dis['disruption_id'] == 'disruption_bob'
-            assert dis['severity']['effect'] == 'no_service'
+            assert dis['severity']['effect'] == 'NO_SERVICE'
             assert len(dis['impacted_objects']) == 1
             ptobj = dis['impacted_objects'][0]['pt_object']
             assert ptobj['embedded_type'] == 'trip'
@@ -212,7 +212,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
         def _check_train_delay_disruption(dis):
             is_valid_disruption(dis, chaos_disrup=False)
             assert dis['disruption_id'] == 'vjA_delayed'
-            assert dis['severity']['effect'] == 'significant_delays'
+            assert dis['severity']['effect'] == 'SIGNIFICANT_DELAYS'
             assert len(dis['impacted_objects']) == 1
             ptobj = dis['impacted_objects'][0]['pt_object']
             assert ptobj['embedded_type'] == 'trip'
@@ -356,7 +356,7 @@ class TestKirinOnVJDelay(MockKirinDisruptionsFixture):
 
         is_valid_disruption(dis, chaos_disrup=False)
         assert dis['disruption_id'] == 'vjA_skip_A'
-        assert dis['severity']['effect'] == 'detour'
+        assert dis['severity']['effect'] == 'DETOUR'
         assert len(dis['impacted_objects']) == 1
         ptobj = dis['impacted_objects'][0]['pt_object']
         assert ptobj['embedded_type'] == 'trip'
