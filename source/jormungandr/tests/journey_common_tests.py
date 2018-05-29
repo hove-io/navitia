@@ -225,8 +225,6 @@ class JourneyCommon(object):
         2 To obtain at least "min_nb_journeys" journeys in the result each call to kraken
          in a loop is made with datatime + 1 of de best journey but not of global request.
         """
-
-        #In this request only two journeys are found
         query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
                 "min_nb_journeys=3&_night_bus_filter_base_factor=0&_night_bus_filter_max_factor=2"\
                 .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
@@ -770,14 +768,17 @@ class JourneyCommon(object):
         assert response['journeys'][0]['sections'][0]['mode'] == 'bike'
         assert response['journeys'][0]['durations']['total'] == 62
         assert response['journeys'][0]['durations']['bike'] == 62
+        assert response['journeys'][0]['distances']['bike'] == 257
         assert len(response['journeys'][1]['sections']) == 3
         assert response['journeys'][1]['sections'][0]['mode'] == 'walking'
         assert response['journeys'][1]['durations']['walking'] == 97
+        assert response['journeys'][1]['distances']['walking'] == 108
         assert response['journeys'][1]['durations']['total'] == 99
         assert len(response['journeys'][2]['sections']) == 1
         assert response['journeys'][2]['sections'][0]['mode'] == 'walking'
         assert response['journeys'][2]['durations']['total'] == 276
         assert response['journeys'][2]['durations']['walking'] == 276
+        assert response['journeys'][2]['distances']['walking'] == 309
 
         query += '&bike_speed=1.5'
         response = self.query_region(query)
@@ -920,6 +921,28 @@ class JourneyCommon(object):
         assert(r['journeys'][0]['sections'][-1]['duration'] == 0)
         assert(r['journeys'][0]['sections'][-2]['type'] == 'public_transport')
 
+    def test_shared_section(self):
+        # Query a journey from stopB to stopA
+        r = self.query('/v1/coverage/main_routing_test/journeys?to=stopA&from=stopB&datetime=20120614T080100&')
+        assert r['journeys'][0]['type'] == 'best'
+        assert r['journeys'][0]['sections'][1]['type'] == 'public_transport'
+        first_journey_pt = r['journeys'][0]['sections'][1]['display_informations']['name']
+
+        # Query same journey schedules
+        # A new journey vjM is available
+        r = self.query('v1/coverage/main_routing_test/journeys?_no_shared_section=False&allowed_id%5B%5D=stop_point%3AstopA&allowed_id%5B%5D=stop_point%3AstopB&first_section_mode%5B%5D=walking&last_section_mode%5B%5D=walking&is_journey_schedules=True&datetime=20120614T080100&to=stopA&min_nb_journeys=5&min_nb_transfers=0&direct_path=none&from=stopB&')
+        assert r['journeys'][0]['sections'][1]['display_informations']['name'] == first_journey_pt
+        assert r['journeys'][0]['sections'][1]['type'] == 'public_transport'
+        assert len(r['journeys']) > 1
+        next_journey_pt = r['journeys'][1]['sections'][1]['display_informations']['name']
+        assert next_journey_pt != first_journey_pt
+
+        # Activate 'no_shared_section' parameter and query the same journey scehdules again
+        # The journey vjM isn't available as it is a shared section
+        r = self.query('v1/coverage/main_routing_test/journeys?allowed_id%5B%5D=stop_point%3AstopA&allowed_id%5B%5D=stop_point%3AstopB&first_section_mode%5B%5D=walking&last_section_mode%5B%5D=walking&is_journey_schedules=True&datetime=20120614T080100&to=stopA&min_nb_journeys=5&min_nb_transfers=0&direct_path=none&from=stopB&_no_shared_section=True&')
+        assert r['journeys'][0]['sections'][1]['display_informations']['name'] == first_journey_pt
+        assert len(r['journeys']) == 1
+
 
 @dataset({"main_stif_test": {}})
 class AddErrorFieldInJormun(object):
@@ -944,6 +967,7 @@ class AddErrorFieldInJormun(object):
             assert response['error']['message'] == "no solution found for this journey"
             #and no journey is to be provided
             assert 'journeys' not in response or len(response['journeys']) == 0
+
 
 @dataset({"main_routing_test": {}})
 class DirectPath(object):
@@ -1358,8 +1382,6 @@ class JourneyMinBikeMinCar(object):
         assert response['journeys'][1]['sections'][0]['mode'] == 'walking'
         assert response['journeys'][1]['sections'][0]['duration'] == 276
 
-
-
     def test_first_section_mode_walking_and_last_section_mode_bike(self):
         query = '{sub_query}&last_section_mode[]=walking&first_section_mode[]=bike&' \
                 'datetime={datetime}'.format(sub_query=sub_query, datetime="20120614T080000")
@@ -1404,13 +1426,18 @@ class JourneyMinBikeMinCar(object):
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) == 1
         assert len(response['journeys'][0]['sections']) == 3
+
         assert response['journeys'][0]['sections'][0]['mode'] == 'car'
-        assert response['journeys'][0]['sections'][0]['duration'] == 16
+        car_duration = response['journeys'][0]['sections'][0]['duration']
+        assert car_duration == 16
 
         assert response['journeys'][0]['sections'][-1]['mode'] == 'walking'
-        assert response['journeys'][0]['sections'][-1]['duration'] == 106
+        walk_duration = response['journeys'][0]['sections'][-1]['duration']
+        assert walk_duration == 106
 
-
+        assert response['journeys'][0]['durations']['walking'] == walk_duration
+        assert response['journeys'][0]['durations']['car'] == car_duration
+        assert response['journeys'][0]['distances']['car'] == 186
 
     def test_activate_min_car_bike(self):
         modes = [

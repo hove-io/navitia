@@ -588,6 +588,7 @@ def _switch_back_to_ridesharing(response, is_first_section):
             journey.distances.ridesharing += section.length
             journey.distances.car -= section.length
 
+
 def nb_journeys(responses):
     return sum(1 for r in responses for j in r.journeys if not journey_filter.to_be_deleted(j))
 
@@ -880,7 +881,12 @@ class Scenario(simple.Scenario):
                 # (n_1, q_1), (n_1, q_2),(n_1, q_3),(n_2, q_1),(n_2, q_2),(n_2, q_3)
                 itertools.product(tmp2, qualified_journeys),
             )
-            journey_filter.filter_similar_vj_journeys(journeys_pool, api_request)
+
+            pool1, pool2 = itertools.tee(journeys_pool)
+            journey_filter.filter_similar_vj_journeys(pool1, api_request)
+
+            if api_request['no_shared_section']:
+                journey_filter.filter_shared_sections_journeys(pool2, api_request)
 
             responses.extend(new_resp)  # we keep the error for building the response
 

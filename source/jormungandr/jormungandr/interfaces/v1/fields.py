@@ -927,7 +927,13 @@ instance_parameters = {
     'priority': fields.Raw,
     'bss_provider': fields.Boolean,
     'successive_physical_mode_to_limit_id': fields.Raw,
-    'max_additional_connections': fields.Raw
+    'max_additional_connections': fields.Raw,
+    'min_nb_journeys': fields.Raw,
+    'max_nb_journeys': fields.Raw,
+    'min_journeys_calls': fields.Raw,
+    'max_successive_physical_mode': fields.Raw,
+    'final_line_filter': fields.Boolean,
+    'max_extra_second_pass': fields.Raw
 }
 
 instance_status_with_parameters = deepcopy(instance_status)

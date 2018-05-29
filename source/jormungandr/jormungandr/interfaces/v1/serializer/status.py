@@ -67,6 +67,12 @@ class ParametersSerializer(serpy.Serializer):
     successive_physical_mode_to_limit_id = Field(schema_type=str)
     walking_speed = Field(schema_type=float)
     walking_transfer_penalty = Field(schema_type=int)
+    min_nb_journeys = Field(schema_type=int)
+    max_nb_journeys = Field(schema_type=int)
+    min_journeys_calls = Field(schema_type=int)
+    max_successive_physical_mode = Field(schema_type=int)
+    final_line_filter = Field(schema_type=bool)
+    max_extra_second_pass = Field(schema_type=int)
 
 
 class TravelerProfilesSerializer(serpy.Serializer):

@@ -48,7 +48,8 @@ class TestStif(AbstractTestFixture):
         * we don't want 2 journeys using the same line and changing at same points
         So here we want journeys 1 and 2
         """
-        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=stif"\
+        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default" \
+                "&min_nb_journeys=1&_min_journeys_calls=2&_final_line_filter=true&_max_successive_physical_mode=3"\
             .format(from_sp="stopA", to_sp="stopB", datetime="20140614T075500")
 
         response = self.query_region(query)
@@ -62,7 +63,8 @@ class TestStif(AbstractTestFixture):
         * we only want 1 journey calls (no next call)
         So here we only want journeys 1
         """
-        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=stif&_min_journeys_calls=1"\
+        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default" \
+                "&min_nb_journeys=1&_min_journeys_calls=1&_final_line_filter=true&_max_successive_physical_mode=3"\
             .format(from_sp="stopA", to_sp="stopB", datetime="20140614T075500")
 
         response = self.query_region(query)
@@ -76,7 +78,8 @@ class TestStif(AbstractTestFixture):
         * we deactivate the filter on journeys using the same line and changing at same points
         So here we want journeys 1, 2 and 3
         """
-        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=stif&_final_line_filter=false"\
+        query = "journeys?from={from_sp}&to={to_sp}&datetime={datetime}&_override_scenario=new_default" \
+                "&min_nb_journeys=1&_min_journeys_calls=2&_final_line_filter=false&_max_successive_physical_mode=3"\
             .format(from_sp="stopA", to_sp="stopB", datetime="20140614T075500")
 
         response = self.query_region(query)

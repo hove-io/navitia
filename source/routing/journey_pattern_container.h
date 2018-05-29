@@ -114,6 +114,9 @@ struct JourneyPatternContainer {
     const IdxMap<type::PhysicalMode, std::vector<JpIdx>>& get_jps_from_phy_mode() const {
         return jps_from_phy_mode;
     }
+    const IdxMap<type::PhysicalMode, std::vector<JppIdx>>& get_jpps_from_phy_mode() const {
+        return jpps_from_phy_mode;
+    }
     const IdxMap<type::VehicleJourney, JpIdx>& get_jp_from_vj() const {
         return jp_from_vj;
     }
@@ -179,6 +182,7 @@ private:
     IdxMap<type::Route, std::vector<JpIdx>> jps_from_route;
     IdxMap<type::VehicleJourney, JpIdx> jp_from_vj;
     IdxMap<type::PhysicalMode, std::vector<JpIdx>> jps_from_phy_mode;
+    IdxMap<type::PhysicalMode, std::vector<JppIdx>> jpps_from_phy_mode;
 
     template<typename VJ> void add_vj(const VJ&);
     template<typename VJ> static JpKey make_key(const VJ&);

@@ -221,7 +221,7 @@ class TestDisruptions(AbstractTestFixture):
         departures_lines = jmespath.search('[].route.line.name', departures)
 
         # Line not impacted shouldn't return a disruption
-        not_impacted_lines = set(departures_lines)-set(disruption_lines)
+        not_impacted_lines = set(departures_lines) - set(disruption_lines)
         for line in not_impacted_lines:
             not_impacted_departure = jmespath.search("[?route.line.name=='{}']".format(line), departures)
             departure_disruptions = get_all_element_disruptions(not_impacted_departure[0], response)

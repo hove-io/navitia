@@ -27,8 +27,9 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-from __future__ import absolute_import, print_function, unicode_literals, division
 
+from __future__ import absolute_import, print_function, unicode_literals, division
+from contextlib import contextmanager
 import logging
 import pybreaker
 import zeep
@@ -76,17 +77,18 @@ class AtosProvider(AbstractParkingPlacesProvider):
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_ATOS', 30))
     def _get_all_stands(self):
-        client = self._get_client()
-        if not client:
-            return {}
-        all_stands = client.service.getSummaryInformationTerminals(self.id_ao)
-        return {stands.libelle: Stands(stands.nbPlacesDispo, stands.nbVelosDispo) for stands in all_stands}
+        with self._get_client() as client:
+            all_stands = client.service.getSummaryInformationTerminals(self.id_ao)
+            return {stands.libelle: Stands(stands.nbPlacesDispo, stands.nbVelosDispo) for stands in all_stands}
 
+    @contextmanager
     def _get_client(self):
-        if not self._client:
+        try:
             transport = zeep.Transport(timeout=self.timeout, operation_timeout=self.timeout)
-            self._client = zeep.Client(self.WS_URL, transport=transport)
-        return self._client
+            client = zeep.Client(self.WS_URL, transport=transport)
+            yield client
+        finally:
+            transport.session.close()
 
     def status(self):
         return {'network': self.network, 'operators': self.operators, 'id_ao': self.id_ao}
