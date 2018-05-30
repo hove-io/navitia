@@ -139,34 +139,34 @@ def str_datetime_utc_to_local(dt, timezone):
     local = pytz.timezone(timezone)
     return dt_to_str(utc_dt.replace(tzinfo=pytz.UTC).astimezone(local), request.id)
 
+MAXINT = 9223372036854775807
 
-@functools32.lru_cache(2048)
+@functools32.lru_cache(4096)
 def timestamp_to_datetime(timestamp, req_id, tz=None):
     """
     Convert a timestamp to datetime
     if timestamp > MAX_INT we return None
     """
-    maxint = 9223372036854775807
+
     # when a date is > 2038-01-19 03:14:07
     # we receive a timestamp = 18446744071562142720 (64 bits) > 9223372036854775807 (MAX_INT 32 bits)
     # And ValueError: timestamp out of range for platform time_t is raised
-    if timestamp >= maxint:
+    if timestamp >= MAXINT:
         return None
-
-    dt = datetime.utcfromtimestamp(timestamp)
 
     timezone = tz or get_timezone(req_id or request.id)
     if timezone:
-        dt = pytz.utc.localize(dt)
+        dt = pytz.utc.localize(datetime.utcfromtimestamp(timestamp))
         return dt.astimezone(timezone)
     return None
 
 
-@functools32.lru_cache(2048)
+@functools32.lru_cache(4096)
 def dt_to_str(dt, req_id):
     return dt.strftime(DATETIME_FORMAT)
 
-@functools32.lru_cache(2048)
+
+@functools32.lru_cache(4096)
 def timestamp_to_str(timestamp, req_id):
     dt = timestamp_to_datetime(timestamp, req_id)
     if dt:

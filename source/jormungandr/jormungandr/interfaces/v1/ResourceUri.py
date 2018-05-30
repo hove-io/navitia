@@ -190,7 +190,7 @@ class complete_links(object):
     def get_links(self, data):
         queue = deque()
         result = {"notes": [], "exceptions": []}
-        queue.extend(list(data.values()))
+        queue.extend(data.values())
         while queue:
             elem = queue.pop()
             if isinstance(elem, (list, tuple)):
@@ -203,10 +203,9 @@ class complete_links(object):
                         result[collect].append(link)
                     # Delete all items from link not in expected_keys
                     del_keys = set(elem.keys()).difference(self.EXPECTED_ITEMS)
-                    if len(del_keys):
-                        list(map(elem.pop, del_keys))
+                    list(map(elem.pop, del_keys))
                 else:
-                    queue.extend(list(elem.values()))
+                    queue.extend(elem.values())
         return result
 
     def __call__(self, f):

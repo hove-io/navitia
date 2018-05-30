@@ -321,13 +321,13 @@ class BetaEndpointsSerializer(serpy.Serializer):
                            schema_type=str, display_none=True)
 
 def make_notes(notes):
-    return [{"type": "notes",
+    return ({"type": "notes",
              "rel": "notes",
              "category": "comment",
              "id": value.uri,
              "value": value.note,
              "internal": True}
-            for value in notes]
+            for value in notes)
 
 
 class NestedDictGenericField(DictGenericSerializer, NestedPropertyField):

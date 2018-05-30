@@ -303,13 +303,11 @@ class add_id_links(generate_links):
         if hasattr(data, 'keys'):
             if "id" in data and "type" in data:
                 self.data.add(data["type"])
-            if "id" in data and ("href" not in data) and collection_name:
+            elif "id" in data and ("href" not in data) and collection_name:
                 self.data.add(collection_name)
-            for key, value in data.items():
-                self.get_objets(value, key)
-        if isinstance(data, (list, tuple)):
-            for item in data:
-                self.get_objets(item, collection_name)
+            [self.get_objets(value, key)for key, value in data.iteritems() if hasattr(value, '__iter__')]
+        elif hasattr(data, '__iter__'):
+            [self.get_objets(value, collection_name) for value in data if hasattr(value, '__iter__')]
 
 
 class clean_links(object):

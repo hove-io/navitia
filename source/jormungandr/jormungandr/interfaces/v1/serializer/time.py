@@ -66,7 +66,6 @@ class DateTimeDictField(Field, DateTimeType):
     """
     def to_value(self, value):
         return timestamp_to_str(value) if value else None
-        super(DateTimeDictField, self).__init__(schema_type=str, schema_metadata=schema_metadata, **kwargs)
 
 
 class PeriodSerializer(PbNestedSerializer):

@@ -28,6 +28,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from datetime import datetime
+from itertools import chain
 from flask import request
 from jormungandr.interfaces.v1.serializer.base import PbNestedSerializer, EnumField, EnumListField
 from jormungandr.interfaces.v1.serializer import pt, jsonschema, base
@@ -37,17 +38,20 @@ from jormungandr.interfaces.v1.make_links import create_internal_link
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import TimeOrDateTimeType
 from jormungandr.utils import timestamp_to_str
 
+LINK_ATTRS_NAMES = ("line", "company", "vehicle_journey", "route", "commercial_mode", "physical_mode", "physical_mode",
+
+                    "network")
 def _get_links(obj):
     display_info = obj.pt_display_informations
     uris = display_info.uris
-    l = [("line", uris.line),
-         ("company", uris.company),
-         ("vehicle_journey", uris.vehicle_journey),
-         ("route", uris.route),
-         ("commercial_mode", uris.commercial_mode),
-         ("physical_mode", uris.physical_mode),
-         ("network", uris.network)]
-    return [{"type": k, "id": v} for k, v in l if v != ""] + base.make_notes(display_info.notes)
+
+    def gen(attr_uris):
+        for attr_name in LINK_ATTRS_NAMES:
+            attr = getattr(attr_uris, attr_name, "")
+            if attr != "":
+                yield {"type": attr_name, "id": attr}
+    return list(chain(gen(uris), base.make_notes(display_info.notes)))
+
 
 
 class PassageSerializer(PbNestedSerializer):
@@ -69,10 +73,10 @@ class DateTimeTypeSerializer(PbNestedSerializer):
     data_freshness = EnumField(attr="realtime_level", display_none=True)
 
     def get_links(self, obj):
-        disruption_links = [create_internal_link(_type="disruption", rel="disruptions", id=uri)
-                            for uri in obj.impact_uris]
         properties_links = pt.make_properties_links(obj.properties)
-        return properties_links + disruption_links
+        properties_links.extend(create_internal_link(_type="disruption", rel="disruptions", id=uri)
+                                for uri in obj.impact_uris)
+        return properties_links
 
     def get_date_time(self, obj):
         __date_time_null_value__ = 2**64 - 1

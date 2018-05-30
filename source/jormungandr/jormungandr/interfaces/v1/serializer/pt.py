@@ -31,6 +31,10 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import serpy
 from navitiacommon import type_pb2
 
+import copy
+import functools32
+from itertools import chain
+from functools import wraps
 from jormungandr.interfaces.v1.serializer.base import PbGenericSerializer, EnumListField, LiteralField
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, DateTimeType, DateType
 from jormungandr.interfaces.v1.serializer.time import TimeField, PeriodSerializer, DateTimeField
@@ -38,7 +42,6 @@ from jormungandr.interfaces.v1.serializer.fields import *
 from jormungandr.interfaces.v1.serializer import jsonschema, base
 from navitiacommon.type_pb2 import ActiveStatus, Channel, hasEquipments, Properties, NavitiaType, Severity, \
     StopTimeUpdateStatus
-from navitiacommon.response_pb2 import SectionAdditionalInformationType
 
 
 LABEL_DESCRIPTION = """
@@ -523,19 +526,43 @@ class VJDisplayInformationSerializer(RouteDisplayInformationSerializer):
     headsigns = StringListField(display_none=False)
 
 
+class Hack(object):
+
+    __slots__ = ['fun', 'proto']
+
+    @functools32.lru_cache(5000)
+    def call(self, hash_code):
+        return self.fun(self.proto)
+
+    def __repr__(self):
+        return 'CATCH THAT HACKER!'
+
+
+_hack = Hack()
+
+
+def jormun_lru_cache_docorator(fun):
+    @wraps(fun)
+    def wrapper(proto):
+        _hack.fun = fun
+        _hack.proto = proto
+        return _hack.call(_hack.proto.SerializeToString())
+    return wrapper
+
+
+# @jormun_lru_cache_docorator
 def make_properties_links(properties):
     if properties is None:
         return []
 
-    response = base.make_notes(properties.notes)
-
-    response.extend([{"type": "exceptions", # type should be 'exception' but retrocompatibility...
+    response = list(chain(base.make_notes(properties.notes),
+                    ({"type": "exceptions", # type should be 'exception' but retrocompatibility...
                       "rel": "exceptions",
                       "id": exception.uri,
                       "date": exception.date,
                       "except_type": exception.type,
                       "internal": True}
-                     for exception in properties.exceptions])
+                    for exception in properties.exceptions)))
 
     if properties.HasField(str("destination")) and properties.destination.HasField(str("uri")):
         response.append({"type": "notes",

@@ -360,7 +360,6 @@ class Scenario(object):
     def _add_prev_link(self, resp, params, clockwise):
         prev_dt = self.previous_journey_datetime(resp.journeys, clockwise)
         if prev_dt is not None:
-            from flask import request
             params['datetime'] = timestamp_to_str(prev_dt, request.id)
             params['datetime_represents'] = 'arrival'
             add_link(resp, rel='prev', **params)
