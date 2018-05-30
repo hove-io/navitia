@@ -906,7 +906,7 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region('disruptions')
 
         disruptions = get_not_null(response, 'disruptions')
-        assert len(disruptions) == 9
+        assert len(disruptions) == 10
         for d in disruptions:
             is_valid_disruption(d)
 
