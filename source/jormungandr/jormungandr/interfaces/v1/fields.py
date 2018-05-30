@@ -224,8 +224,8 @@ class Time(DateTime):
 
 class enum_type(fields.Raw):
 
-    def __init__(self, *args, **kwargs):
-        self.lower_case = kwargs.pop('lower_case', True)
+    def __init__(self, lower_case=True, *args, **kwargs):
+        self.lower_case = lower_case
         super(enum_type, self).__init__(*args, **kwargs)
 
     def output(self, key, obj):
