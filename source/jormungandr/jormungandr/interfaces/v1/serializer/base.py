@@ -111,7 +111,7 @@ class EnumField(jsonschema.Field):
     def __init__(self, pb_type=None, **kwargs):
         schema_type = kwargs.pop('schema_type') if 'schema_type' in kwargs else str
         schema_metadata = kwargs.pop('schema_metadata') if 'schema_metadata' in kwargs else {}
-        self.lower_case = kwargs.pop('lower_case') if 'lower_case' in kwargs else True
+        self.lower_case = kwargs.pop('lower_case', True)
         if pb_type:
             schema_metadata['enum'] = self._get_all_possible_values(pb_type, self.lower_case)
         super(EnumField, self).__init__(schema_type=schema_type, schema_metadata=schema_metadata, **kwargs)
