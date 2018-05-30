@@ -1136,7 +1136,7 @@ bool way_later(const Journey & j1, const Journey & j2,
 
     auto get_pseudo_duration = [&](const Journey & j) {
         auto dt = clockwise ? j.arrival_dt : j.departure_dt;
-        return std::abs(dt - requested_dt);
+        return std::abs((double)dt - requested_dt);
     };
 
     auto j1_pseudo_duration = get_pseudo_duration(j1);

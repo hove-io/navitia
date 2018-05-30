@@ -3277,77 +3277,83 @@ BOOST_AUTO_TEST_CASE(journeys_with_min_nb_journeys_with_similar_journeys_filteri
 }
 
 namespace {
-    nr::NightBusFilter::Params filter_params {
-        navitia::DateTimeUtils::set(0, "08:00"_t),
-        true,
-        nr::NightBusFilter::default_max_factor,
-        nr::NightBusFilter::default_base_factor,
-    };
+
+    nr::NightBusFilter::Params get_default_filter_params() {
+        return  nr::NightBusFilter::Params {
+                    navitia::DateTimeUtils::set(0, "08:00"_t),
+                    true,
+                    nr::NightBusFilter::default_max_factor,
+                    nr::NightBusFilter::default_base_factor};
+    }
+
+    std::tuple<nr::Journey, nr::Journey> build_night_bus_journeys(ed::builder & b) {
+
+        b.vj("vj1")
+            ("A1", "09:00"_t, "09:00"_t)("C1", "12:00"_t, "12:00"_t);
+
+        b.vj("vj2")
+            ("B1", "22:00"_t, "22:00"_t)("C1", "23:00"_t, "23:00"_t);
+
+        nt::PT_Data & d = *b.data->pt_data;
+        auto stl1 = d.vehicle_journeys[0]->stop_time_list;
+        auto stl2 = d.vehicle_journeys[1]->stop_time_list;
+
+        nr::Journey j1;
+        j1.sections.push_back(nr::Journey::Section(
+            stl1[0], navitia::DateTimeUtils::set(0, "09:00"_t),
+            stl1[1], navitia::DateTimeUtils::set(0, "10:00"_t)
+        ));
+        j1.departure_dt = navitia::DateTimeUtils::set(0, "08:30"_t);
+        j1.arrival_dt = navitia::DateTimeUtils::set(0, "10:30"_t);
+
+        nr::Journey j2;
+        j2.sections.push_back(nr::Journey::Section(
+            stl2[0], navitia::DateTimeUtils::set(0, "22:00"_t),
+            stl2[1], navitia::DateTimeUtils::set(0, "23:00"_t)
+        ));
+        j2.departure_dt = navitia::DateTimeUtils::set(0, "21:55"_t);
+        j2.arrival_dt = navitia::DateTimeUtils::set(0, "23:10"_t);
+
+        return std::make_tuple(j1, j2);
+    }
 }
 
-BOOST_AUTO_TEST_CASE(night_bus_should_treated_as_way_later) {
-
+BOOST_AUTO_TEST_CASE(night_bus_should_treated_as_way_later)
+{
     ed::builder b("20120614");
 
-    b.vj("vj1")
-        ("A1", "09:00"_t, "09:00"_t)("C1", "12:00"_t, "12:00"_t);
+    nr::Journey j1, j2;
+    std::tie(j1, j2) = build_night_bus_journeys(b);
 
-    b.vj("vj2")
-        ("B1", "22:00"_t, "22:00"_t)("C1", "23:00"_t, "23:00"_t);
-
-    nt::PT_Data & d = *b.data->pt_data;
-    auto stl1 = d.vehicle_journeys[0]->stop_time_list;
-    auto stl2 = d.vehicle_journeys[1]->stop_time_list;
-
-    nr::Journey j1;
-    j1.sections.push_back(nr::Journey::Section(
-        stl1[0], navitia::DateTimeUtils::set(0, "09:00"_t),
-        stl1[1], navitia::DateTimeUtils::set(0, "10:00"_t)
-    ));
-    j1.departure_dt = navitia::DateTimeUtils::set(0, "08:30"_t);
-    j1.arrival_dt = navitia::DateTimeUtils::set(0, "10:30"_t);
-
-    nr::Journey j2;
-    j2.sections.push_back(nr::Journey::Section(
-        stl2[0], navitia::DateTimeUtils::set(0, "22:00"_t),
-        stl2[1], navitia::DateTimeUtils::set(0, "23:00"_t)
-    ));
-    j2.departure_dt = navitia::DateTimeUtils::set(0, "21:55"_t);
-    j2.arrival_dt = navitia::DateTimeUtils::set(0, "23:10"_t);
+    nr::NightBusFilter::Params filter_params = get_default_filter_params();
 
     BOOST_CHECK_EQUAL(nr::way_later(j1, j2, filter_params), false);
     BOOST_CHECK_EQUAL(nr::way_later(j2, j1, filter_params), true);
 }
 
-BOOST_AUTO_TEST_CASE(should_filter_night_bus_when_too_late) {
-
+BOOST_AUTO_TEST_CASE(night_bus_should_treated_as_way_later_anti_clockwise)
+{
     ed::builder b("20120614");
 
-    b.vj("vj1")
-        ("A1", "09:00"_t, "09:00"_t)("C1", "12:00"_t, "12:00"_t);
+    nr::Journey j1, j2;
+    std::tie(j1, j2) = build_night_bus_journeys(b);
 
-    b.vj("vj2")
-        ("B1", "22:00"_t, "22:00"_t)("C1", "23:00"_t, "23:00"_t);
+    nr::NightBusFilter::Params filter_params = get_default_filter_params();
+    filter_params.requested_datetime = navitia::DateTimeUtils::set(0, "23:30"_t);
+    filter_params.clockwise = false;
 
-    nt::PT_Data & d = *b.data->pt_data;
-    auto stl1 = d.vehicle_journeys[0]->stop_time_list;
-    auto stl2 = d.vehicle_journeys[1]->stop_time_list;
+    BOOST_CHECK_EQUAL(nr::way_later(j1, j2, filter_params), true);
+    BOOST_CHECK_EQUAL(nr::way_later(j2, j1, filter_params), false);
+}
 
-    nr::Journey j1;
-    j1.sections.push_back(nr::Journey::Section(
-        stl1[0], navitia::DateTimeUtils::set(0, "09:00"_t),
-        stl1[1], navitia::DateTimeUtils::set(0, "10:00"_t)
-    ));
-    j1.departure_dt = navitia::DateTimeUtils::set(0, "08:30"_t);
-    j1.arrival_dt = navitia::DateTimeUtils::set(0, "10:30"_t);
+BOOST_AUTO_TEST_CASE(should_filter_night_bus_when_too_late)
+{
+    ed::builder b("20120614");
 
-    nr::Journey j2;
-    j2.sections.push_back(nr::Journey::Section(
-        stl2[0], navitia::DateTimeUtils::set(0, "22:00"_t),
-        stl2[1], navitia::DateTimeUtils::set(0, "23:00"_t)
-    ));
-    j2.departure_dt = navitia::DateTimeUtils::set(0, "21:55"_t);
-    j2.arrival_dt = navitia::DateTimeUtils::set(0, "23:10"_t);
+    nr::Journey j1, j2;
+    std::tie(j1, j2) = build_night_bus_journeys(b);
+
+    nr::NightBusFilter::Params filter_params = get_default_filter_params();
 
     {
         nr::RAPTOR::Journeys journeys = {j1, j2};
@@ -3369,9 +3375,10 @@ BOOST_AUTO_TEST_CASE(should_filter_night_bus_when_too_late) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(should_filter_late_journeys_with_empty_list) {
+BOOST_AUTO_TEST_CASE(should_filter_late_journeys_with_empty_list)
+{
     nr::RAPTOR::Journeys journeys;
     BOOST_CHECK_NO_THROW(
-        nr::filter_late_journeys(journeys, filter_params)
+        nr::filter_late_journeys(journeys, get_default_filter_params())
     );
 }
