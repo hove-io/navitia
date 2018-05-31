@@ -1199,28 +1199,27 @@ void make_pt_response(navitia::PbCreator& pb_creator,
         }
     }
 
-    DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
-    DateTime init_dt = to_datetime(datetime, raptor.data);
-
-    if(max_duration != std::numeric_limits<uint32_t>::max()) {
-        if (clockwise) {
-            bound = init_dt + max_duration;
-        } else {
-            bound = init_dt > max_duration ? init_dt - max_duration : 0;
-        }
-    }
-    std::vector<Path> pathes = raptor.compute_all(
-            departures, arrivals, init_dt, rt_level, transfer_penalty, bound, max_transfers,
-            accessibilite_params, forbidden, allowed, clockwise, direct_path_duration,
-            max_extra_second_pass);
-
-    for(auto & path : pathes) {
-        path.request_time = datetime;
-    }
-    LOG4CPLUS_DEBUG(logger, "raptor found " << pathes.size() << " solutions");
-    if(clockwise){
-        std::reverse(pathes.begin(), pathes.end());
-    }
+    auto pathes = _call_raptor( pb_creator,
+                                raptor,
+                                departures,
+                                arrivals,
+                                datetimes,
+                                rt_level,
+                                transfer_penalty,
+                                accessibilite_params,
+                                forbidden,
+                                allowed,
+                                clockwise,
+                                direct_path_duration,
+                                min_nb_journeys,
+                                0,
+                                max_duration,
+                                max_transfers,
+                                max_extra_second_pass,
+                                free_radius_from,
+                                free_radius_to,
+                                night_bus_filter_max_factor,
+                                night_bus_filter_base_factor);
 
     // Create pb response
     make_pt_pathes(pb_creator, pathes);
