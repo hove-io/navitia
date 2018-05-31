@@ -80,7 +80,7 @@ class MessageSerializer(PbNestedSerializer):
 
 class SeveritySerializer(PbNestedSerializer):
     name = jsonschema.Field(schema_type=str)
-    effect = EnumField(attr='effect', pb_type=Severity.Effect, lower_case=False)
+    effect = EnumField(pb_type=Severity.Effect, lower_case=False)
     color = jsonschema.Field(schema_type=str)
     priority = jsonschema.Field(schema_type=int)
 
