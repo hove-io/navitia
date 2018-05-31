@@ -80,17 +80,20 @@ void add_direct_path(PbCreator& pb_creator,
                      const std::vector<bt::ptime>& datetimes,
                      const bool clockwise);
 
+/**
+ * @brief Used for classic Pt request
+ */
 void make_response(navitia::PbCreator& pb_creator,
                    RAPTOR &raptor,
                    const type::EntryPoint &origin,
                    const type::EntryPoint &destination,
                    const std::vector<uint64_t> &datetimes,
                    bool clockwise,
-                   const type::AccessibiliteParams & accessibilite_params,
+                   const type::AccessibiliteParams& accessibilite_params,
                    std::vector<std::string> forbidden,
                    std::vector<std::string> allowed,
-                   georef::StreetNetwork & worker,
-                   const type::RTLevel rt_level,
+                   georef::StreetNetwork& worker,
+                   const type::RTLevel& rt_level,
                    const navitia::time_duration& transfer_penalty,
                    uint32_t max_duration=std::numeric_limits<uint32_t>::max(),
                    uint32_t max_transfers=std::numeric_limits<uint32_t>::max(),
@@ -99,7 +102,7 @@ void make_response(navitia::PbCreator& pb_creator,
                    uint32_t free_radius_to = 0,
                    uint32_t min_nb_journeys = 0,
                    double night_bus_filter_max_factor = NightBusFilter::default_max_factor,
-                   int32_t night_bus_filter_base_factor = NightBusFilter::default_base_factor );
+                   int32_t night_bus_filter_base_factor = NightBusFilter::default_base_factor);
 
 void make_isochrone(navitia::PbCreator& pb_creator,
                     RAPTOR &raptor,
@@ -113,6 +116,9 @@ void make_isochrone(navitia::PbCreator& pb_creator,
                     int max_duration = 3600,
                     uint32_t max_transfers=std::numeric_limits<uint32_t>::max());
 
+/**
+ * @brief Used for Pt with distributed mode
+ */
 void make_pt_response(navitia::PbCreator& pb_creator,
                       RAPTOR &raptor,
                       const std::vector<type::EntryPoint> &origins,
@@ -127,7 +133,13 @@ void make_pt_response(navitia::PbCreator& pb_creator,
                       uint32_t max_duration=std::numeric_limits<uint32_t>::max(),
                       uint32_t max_transfers=std::numeric_limits<uint32_t>::max(),
                       uint32_t max_extra_second_pass = 0,
-                      const boost::optional<navitia::time_duration>& direct_path_duration = boost::none);
+                      const boost::optional<navitia::time_duration>& direct_path_duration = boost::none,
+                      uint32_t free_radius_from = 0,
+                      uint32_t free_radius_to = 0,
+                      uint32_t min_nb_journeys = 0,
+                      double night_bus_filter_max_factor = NightBusFilter::default_max_factor,
+                      int32_t night_bus_filter_base_factor = NightBusFilter::default_base_factor);
+
 
 boost::optional<routing::map_stop_point_duration>
 get_stop_points(const type::EntryPoint &ep,
@@ -187,6 +199,33 @@ void filter_late_journeys(RAPTOR::Journeys & journeys,
  * @return The earliest departure (clokcwise = true) or the lastest arrival (clokcwise = false)
  */
 DateTime prepare_next_call_for_raptor(const std::list<Journey> & journeys, const bool clockwise);
+
+
+/**
+ * @brief internal function to call raptor in a loop
+ */
+std::vector<Path>
+_call_raptor(navitia::PbCreator& pb_creator,
+             RAPTOR& raptor,
+             const map_stop_point_duration& departures,
+             const map_stop_point_duration& destinations,
+             std::vector<bt::ptime>& datetimes,
+             const type::RTLevel& rt_level,
+             const navitia::time_duration& transfer_penalty,
+             const type::AccessibiliteParams& accessibilite_params,
+             std::vector<std::string>& forbidden_uri,
+             std::vector<std::string>& allowed_ids,
+             bool clockwise,
+             const boost::optional<navitia::time_duration>& direct_path_duration,
+             uint32_t min_nb_journeys,
+             uint32_t nb_direct_path,
+             uint32_t max_duration,
+             uint32_t max_transfers,
+             size_t max_extra_second_pass,
+             uint32_t free_radius_from,
+             uint32_t free_radius_to,
+             double night_bus_filter_max_factor,
+             int32_t night_bus_filter_base_factor);
 
 void make_graphical_isochrone(navitia::PbCreator& pb_creator,
                               RAPTOR &raptor_max,
