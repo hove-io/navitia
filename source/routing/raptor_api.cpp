@@ -1033,7 +1033,7 @@ _call_raptor(navitia::PbCreator& pb_creator,
              const map_stop_point_duration& departures,
              const map_stop_point_duration& destinations,
              const std::vector<bt::ptime>& datetimes,
-             const type::RTLevel& rt_level,
+             const type::RTLevel rt_level,
              const navitia::time_duration& transfer_penalty,
              const type::AccessibiliteParams& accessibilite_params,
              const std::vector<std::string>& forbidden_uri,
@@ -1170,7 +1170,6 @@ void make_pt_response(navitia::PbCreator& pb_creator,
     if(pb_creator.has_error() || pb_creator.has_response_type(pbnavitia::DATE_OUT_OF_BOUNDS)) {
         return;
     }
-    auto datetime = datetimes.front();
 
     // Get stop points for departure and destination
     routing::map_stop_point_duration departures;
@@ -1195,34 +1194,35 @@ void make_pt_response(navitia::PbCreator& pb_creator,
         }
     }
 
-    auto pathes = _call_raptor( pb_creator,
-                                raptor,
-                                departures,
-                                arrivals,
-                                datetimes,
-                                rt_level,
-                                transfer_penalty,
-                                accessibilite_params,
-                                forbidden,
-                                allowed,
-                                clockwise,
-                                direct_path_duration,
-                                min_nb_journeys,
-                                0,
-                                max_duration,
-                                max_transfers,
-                                max_extra_second_pass,
-                                night_bus_filter_max_factor,
-                                night_bus_filter_base_factor);
+    // Call Raptor loop
+    const auto pathes = _call_raptor( pb_creator,
+                                      raptor,
+                                      departures,
+                                      arrivals,
+                                      datetimes,
+                                      rt_level,
+                                      transfer_penalty,
+                                      accessibilite_params,
+                                      forbidden,
+                                      allowed,
+                                      clockwise,
+                                      direct_path_duration,
+                                      min_nb_journeys,
+                                      0, // nb_direct_path = 0 for distributed
+                                      max_duration,
+                                      max_transfers,
+                                      max_extra_second_pass,
+                                      night_bus_filter_max_factor,
+                                      night_bus_filter_base_factor);
 
     // Create pb response
     make_pt_pathes(pb_creator, pathes);
 
     // Add error field
     if (pb_creator.empty_journeys()) {
-            pb_creator.fill_pb_error(pbnavitia::Error::no_solution,
-                                     pbnavitia::NO_SOLUTION,
-                                     "no solution found for this journey");
+        pb_creator.fill_pb_error(pbnavitia::Error::no_solution,
+                                    pbnavitia::NO_SOLUTION,
+                                    "no solution found for this journey");
     }
 }
 
@@ -1299,7 +1299,7 @@ void make_response(navitia::PbCreator& pb_creator,
                    std::vector<std::string> forbidden,
                    std::vector<std::string> allowed,
                    georef::StreetNetwork& worker,
-                   const type::RTLevel& rt_level,
+                   const type::RTLevel rt_level,
                    const navitia::time_duration& transfer_penalty,
                    uint32_t max_duration,
                    uint32_t max_transfers,
@@ -1311,7 +1311,6 @@ void make_response(navitia::PbCreator& pb_creator,
                    int32_t night_bus_filter_base_factor) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-    std::vector<Path> pathes;
 
     // Create datetime
     auto datetimes = parse_datetimes(raptor, timestamps, pb_creator, clockwise);
@@ -1323,8 +1322,8 @@ void make_response(navitia::PbCreator& pb_creator,
     worker.init(origin, {destination});
 
     // Get stop points for departure and destination
-    auto departures = get_stop_points(origin, raptor.data, worker, free_radius_from);
-    auto destinations = get_stop_points(destination, raptor.data, worker, free_radius_to, true);
+    const auto departures = get_stop_points(origin, raptor.data, worker, free_radius_from);
+    const auto destinations = get_stop_points(destination, raptor.data, worker, free_radius_to, true);
 
     // case 1 : departure no exist
     if (!departures) {
@@ -1381,27 +1380,28 @@ void make_response(navitia::PbCreator& pb_creator,
     const OptTimeDur direct_path_dur = direct_path.path_items.empty() ?
         OptTimeDur() :
         OptTimeDur(direct_path.duration / origin.streetnetwork_params.speed_factor);
-     uint nb_direct_path = direct_path.path_items.empty() ? 0 : 1;
+    const uint32_t nb_direct_path = direct_path.path_items.empty() ? 0 : 1;
 
-    pathes = _call_raptor(  pb_creator,
-                            raptor,
-                            *departures,
-                            *destinations,
-                            datetimes,
-                            rt_level,
-                            transfer_penalty,
-                            accessibilite_params,
-                            forbidden,
-                            allowed,
-                            clockwise,
-                            direct_path_dur,
-                            min_nb_journeys,
-                            nb_direct_path,
-                            max_duration,
-                            max_transfers,
-                            max_extra_second_pass,
-                            night_bus_filter_max_factor,
-                            night_bus_filter_base_factor);
+    // Call Raptor loop
+    const auto pathes = _call_raptor(pb_creator,
+                                     raptor,
+                                     *departures,
+                                     *destinations,
+                                     datetimes,
+                                     rt_level,
+                                     transfer_penalty,
+                                     accessibilite_params,
+                                     forbidden,
+                                     allowed,
+                                     clockwise,
+                                     direct_path_dur,
+                                     min_nb_journeys,
+                                     nb_direct_path,
+                                     max_duration,
+                                     max_transfers,
+                                     max_extra_second_pass,
+                                     night_bus_filter_max_factor,
+                                     night_bus_filter_base_factor);
 
     // Create pb response
     make_pathes(pb_creator,
