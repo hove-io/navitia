@@ -358,6 +358,10 @@ class add_journey_href(object):
                     args['allowed_id[]'] = list(allowed_ids)
                     args['_type'] = 'journeys'
                     args['rel'] = 'same_journey_schedules'
+                    # Shared section journeys shouldn't be removed in 'same_journey_schedules'
+                    if '_no_shared_section' in args:
+                        del args['_no_shared_section']
+
                     journey['links'] = [create_external_link('v1.journeys', **args)]
             return objects
         return wrapper
