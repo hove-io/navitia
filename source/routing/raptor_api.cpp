@@ -1045,8 +1045,6 @@ _call_raptor(navitia::PbCreator& pb_creator,
              const uint32_t max_duration,
              const uint32_t max_transfers,
              const size_t max_extra_second_pass,
-             const uint32_t free_radius_from,
-             const uint32_t free_radius_to,
              const double night_bus_filter_max_factor,
              const int32_t night_bus_filter_base_factor)
 {
@@ -1161,8 +1159,6 @@ void make_pt_response(navitia::PbCreator& pb_creator,
                       uint32_t max_transfers,
                       uint32_t max_extra_second_pass,
                       const boost::optional<navitia::time_duration>& direct_path_duration,
-                      uint32_t free_radius_from,
-                      uint32_t free_radius_to,
                       uint32_t min_nb_journeys,
                       double night_bus_filter_max_factor,
                       int32_t night_bus_filter_base_factor) {
@@ -1216,8 +1212,6 @@ void make_pt_response(navitia::PbCreator& pb_creator,
                                 max_duration,
                                 max_transfers,
                                 max_extra_second_pass,
-                                free_radius_from,
-                                free_radius_to,
                                 night_bus_filter_max_factor,
                                 night_bus_filter_base_factor);
 
@@ -1406,8 +1400,6 @@ void make_response(navitia::PbCreator& pb_creator,
                             max_duration,
                             max_transfers,
                             max_extra_second_pass,
-                            free_radius_from,
-                            free_radius_to,
                             night_bus_filter_max_factor,
                             night_bus_filter_base_factor);
 
