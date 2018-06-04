@@ -45,24 +45,50 @@ struct logger_initialized {
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized );
 
+namespace {
+    const std::vector<type::StopTime> make_stop_times(ed::builder &b)
+    {
+        auto& vj1 = b.vj("VJ1")("StopPoint1", "09:42:00"_t)("StopPoint2", "10:00:00"_t);
+        auto& vj2 = b.vj("VJ2")("StopPoint1", "09:37:00"_t)("StopPoint2", "09:55:00"_t);
+        auto& vj3 = b.vj("VJ3")("StopPoint1", "09:42:00"_t)("StopPoint2", "10:00:00"_t);
+
+        vj1.make();
+        vj2.make();
+        vj3.make();
+
+        vj1.stop_times[0].st.vehicle_journey = vj1.vj;
+        vj1.stop_times[1].st.vehicle_journey = vj1.vj;
+
+        vj2.stop_times[0].st.vehicle_journey = vj2.vj;
+        vj2.stop_times[1].st.vehicle_journey = vj2.vj;
+
+        vj3.stop_times[0].st.vehicle_journey = vj3.vj;
+        vj3.stop_times[1].st.vehicle_journey = vj3.vj;
+
+        std::vector<type::StopTime> stop_times;
+
+        stop_times.push_back(vj1.stop_times[0].st);
+        stop_times.push_back(vj1.stop_times[1].st);
+
+        stop_times.push_back(vj2.stop_times[0].st);
+        stop_times.push_back(vj2.stop_times[1].st);
+
+        stop_times.push_back(vj3.stop_times[0].st);
+        stop_times.push_back(vj3.stop_times[1].st);
+
+        return stop_times;
+    }
+}
+
 BOOST_AUTO_TEST_CASE(similar_sections_should_be_equal) {
 
     ed::builder b("20180101");
+    auto sts = make_stop_times(b);
 
-    auto& vj1 = b.vj("VJ1")("StopPoint1", "09:42:00"_t)("StopPoint2", "10:00:00"_t);
-    auto& vj2 = b.vj("VJ2")("StopPoint1", "09:37:00"_t)("StopPoint2", "09:55:00"_t);
+    Journey::Section section1(sts[0], 1, sts[1], 2);
 
-    type::StopTime st1(1, 2, b.sps["StopPoint1"]);
-    type::StopTime st2(3, 4, b.sps["StopPoint2"]);
-
-    st1.vehicle_journey = vj1.vj;
-    st2.vehicle_journey = vj2.vj;
-
-    Journey::Section section1(st1, 1, st2, 2);
-
-    Journey j1, j2;
-    j1.sections.push_back(section1);
-    j2.sections.push_back(section1);
+    Journey j1; j1.sections.push_back(section1);
+    Journey j2; j2.sections.push_back(section1);
 
     BOOST_CHECK_EQUAL(j1, j2);
 }
@@ -70,18 +96,10 @@ BOOST_AUTO_TEST_CASE(similar_sections_should_be_equal) {
 BOOST_AUTO_TEST_CASE(similar_sections_should_not_be_equal_with_different_VJ) {
 
     ed::builder b("20180101");
+    auto sts = make_stop_times(b);
 
-    auto& vj1 = b.vj("VJ1")("StopPoint1", "09:42:00"_t)("StopPoint2", "10:00:00"_t);
-    auto& vj2 = b.vj("VJ2")("StopPoint1", "09:42:00"_t)("StopPoint2", "10:00:00"_t);
-
-    type::StopTime st1(1, 2, b.sps["StopPoint1"]);
-    type::StopTime st2(1, 2, b.sps["StopPoint1"]);
-
-    st1.vehicle_journey = vj1.vj;
-    st2.vehicle_journey = vj2.vj;
-
-    Journey::Section section1(st1, 1, st1, 2);
-    Journey::Section section2(st2, 1, st2, 2);
+    Journey::Section section1(sts[0], 1, sts[1], 2);
+    Journey::Section section2(sts[4], 1, sts[5], 2);
 
     Journey j1; j1.sections.push_back(section1);
     Journey j2; j2.sections.push_back(section2);
@@ -92,45 +110,27 @@ BOOST_AUTO_TEST_CASE(similar_sections_should_not_be_equal_with_different_VJ) {
 BOOST_AUTO_TEST_CASE(different_sections_should_NOT_be_equal) {
 
     ed::builder b("20180101");
+    auto sts = make_stop_times(b);
 
-    auto& vj1 = b.vj("VJ1")("StopPoint1", "09:42:00"_t)("StopPoint2", "10:00:00"_t);
-    auto& vj2 = b.vj("VJ2")("StopPoint1", "09:37:00"_t)("StopPoint2", "09:55:00"_t);
+    Journey::Section section1(sts[0], 1, sts[1], 2);
+    Journey::Section section2(sts[1], 1, sts[0], 2);
 
-    type::StopTime st1(1, 2, b.sps["StopPoint1"]);
-    type::StopTime st2(3, 4, b.sps["StopPoint2"]);
-
-    st1.vehicle_journey = vj1.vj;
-    st2.vehicle_journey = vj2.vj;
-
-    Journey::Section section1(st1, 1, st2, 2);
-    Journey::Section section2(st2, 1, st1, 2);
-
-    Journey j1, j2;
-    j1.sections.push_back(section1);
-    j2.sections.push_back(section2);
+    Journey j1; j1.sections.push_back(section1);
+    Journey j2; j2.sections.push_back(section2);
 
     BOOST_CHECK_NE(j1, j2);
 }
 
-BOOST_AUTO_TEST_CASE(should_be_usable_in_a_set) {
+BOOST_AUTO_TEST_CASE(journeys_should_be_usable_in_a_set) {
 
     ed::builder b("20180101");
+    auto sts = make_stop_times(b);
 
-    auto& vj1 = b.vj("VJ1")("StopPoint1", "09:00:00"_t)("StopPoint2", "10:00:00"_t);
-    auto& vj2 = b.vj("VJ2")("StopPoint1", "09:00:00"_t)("StopPoint2", "10:00:00"_t);
+    Journey::Section section1(sts[0], 1, sts[1], 2);
+    Journey::Section section2(sts[2], 1, sts[3], 2);
 
-    type::StopTime st1(1, 2, b.sps["StopPoint1"]);
-    type::StopTime st2(3, 4, b.sps["StopPoint2"]);
-
-    Journey::Section section1(st1, 1, st2, 2);
-    Journey::Section section2(st2, 1, st1, 2);
-
-    st1.vehicle_journey = vj1.vj;
-    st2.vehicle_journey = vj2.vj;
-
-    Journey j1, j2;
-    j1.sections.push_back(section1);
-    j2.sections.push_back(section2);
+    Journey j1; j1.sections.push_back(section1);
+    Journey j2; j2.sections.push_back(section2);
 
     JourneySet journey_set;
     journey_set.insert(j1);
