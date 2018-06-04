@@ -367,10 +367,10 @@ static void init_best_pts_snd_pass(const routing::map_stop_point_duration& depar
     for (const auto& d: departures) {
         if (clockwise) {
             best_labels[d.first] = std::min(best_labels[d.first],
-                                            departure_datetime + d.second.total_seconds() - 1);
+                                            uint(departure_datetime + d.second.total_seconds() - 1));
         } else {
             best_labels[d.first] = std::max(best_labels[d.first],
-                                            departure_datetime - d.second.total_seconds() + 1);
+                                            uint(departure_datetime - d.second.total_seconds() + 1));
         }
     }
 }

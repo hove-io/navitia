@@ -979,6 +979,29 @@ compute_disruption_status(const nd::Impact& impact,
     }
 }
 
+static pbnavitia::Severity_Effect get_severity_effect(nd::Effect e) {
+    switch(e) {
+    case nd::Effect::NO_SERVICE:
+        return pbnavitia::Severity_Effect::Severity_Effect_NO_SERVICE;
+    case nd::Effect::REDUCED_SERVICE:
+        return pbnavitia::Severity_Effect::Severity_Effect_REDUCED_SERVICE;
+    case nd::Effect::SIGNIFICANT_DELAYS:
+        return pbnavitia::Severity_Effect::Severity_Effect_SIGNIFICANT_DELAYS;
+    case nd::Effect::DETOUR:
+        return pbnavitia::Severity_Effect::Severity_Effect_DETOUR;
+    case nd::Effect::ADDITIONAL_SERVICE:
+        return pbnavitia::Severity_Effect::Severity_Effect_ADDITIONAL_SERVICE;
+    case nd::Effect::MODIFIED_SERVICE:
+        return pbnavitia::Severity_Effect::Severity_Effect_MODIFIED_SERVICE;
+    case nd::Effect::OTHER_EFFECT:
+        return pbnavitia::Severity_Effect::Severity_Effect_OTHER_EFFECT;
+    case nd::Effect::STOP_MOVED:
+        return pbnavitia::Severity_Effect::Severity_Effect_STOP_MOVED;
+    case nd::Effect::UNKNOWN_EFFECT:
+        return pbnavitia::Severity_Effect::Severity_Effect_UNKNOWN_EFFECT;
+    }
+}
+
 template <typename P>
 void PbCreator::Filler::fill_message(const boost::shared_ptr<nd::Impact>& impact,
                                      P pb_object){
@@ -1014,7 +1037,7 @@ void PbCreator::Filler::fill_pb_object(const nd::Impact* impact, pbnavitia::Impa
     auto pb_severity = pb_impact->mutable_severity();
     pb_severity->set_name(impact->severity->wording);
     pb_severity->set_color(impact->severity->color);
-    pb_severity->set_effect(to_string(impact->severity->effect));
+    pb_severity->set_effect(get_severity_effect(impact->severity->effect));
     pb_severity->set_priority(impact->severity->priority);
 
     for (const auto& t: impact->disruption->tags) {

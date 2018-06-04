@@ -569,25 +569,25 @@ class TestDisruptions(AbstractTestFixture):
         response, code = self.query_no_assert("v1/coverage/main_routing_test/disruptions")
         assert code == 200
         disruptions = get_not_null(response, 'disruptions')
-        assert len(disruptions) == 9
+        assert len(disruptions) == 10
 
         #filtering disruptions on line A
         response, code = self.query_no_assert("v1/coverage/main_routing_test/disruptions?forbidden_uris[]=A")
         assert code == 200
         disruptions = get_not_null(response, 'disruptions')
-        assert len(disruptions) == 4
+        assert len(disruptions) == 5
 
         # for retrocompatibility purpose forbidden_id[] is the same
         response, code = self.query_no_assert("v1/coverage/main_routing_test/disruptions?forbidden_id[]=A")
         assert code == 200
         disruptions = get_not_null(response, 'disruptions')
-        assert len(disruptions) == 4
+        assert len(disruptions) == 5
 
         # when we forbid another id, we find again all our disruptions
         response, code = self.query_no_assert("v1/coverage/main_routing_test/disruptions?forbidden_id[]=bloubliblou")
         assert code == 200
         disruptions = get_not_null(response, 'disruptions')
-        assert len(disruptions) == 9
+        assert len(disruptions) == 10
 
     def test_line_reports(self):
         response = self.query_region("line_reports?_current_datetime=20120801T000000")

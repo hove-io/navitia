@@ -691,6 +691,13 @@ struct routing_api_data {
                 .severity("foo")
                 .on(nt::Type_e::Line, "C")
                 .msg("try again", nt::disruption::ChannelType::sms);
+
+        disruption_maker.impact()
+                .uri("too_bad_line_section_B_stop_B_route_B3")
+                .application_periods(boost::posix_time::time_period("20120826T060000"_dt, "20120830T120000"_dt))
+                .severity("disruption")
+                .on_line_section("B", "stopB", "stopB", {"B:3"})
+                .msg("try again", nt::disruption::ChannelType::sms);
     }
 
     int AA = 0;

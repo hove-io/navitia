@@ -190,6 +190,9 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
     def test_networks_schema(self):
         self._check_schema('/v1/coverage/main_routing_test/networks')
 
+    def test_disruptions_schema(self):
+        self._check_schema('/v1/coverage/main_routing_test/disruptions')
+
     def test_journeys_schema(self):
         self._check_schema('/v1/coverage/main_routing_test/journeys?'
                            'from=0.001527130369323005;0.0004491559909773545&'

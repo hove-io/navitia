@@ -506,7 +506,6 @@ def shared_section_generator(journey):
     """
     Definition of journeys with a shared section:
     - same stop point of departure and arrival
-    - same physical and commercial mode
     - same number of sections in the journey
     """
 
@@ -516,10 +515,7 @@ def shared_section_generator(journey):
     # Compare each section of the journey with the criteria in the function description
     for s in journey.sections:
         if s.type == response_pb2.PUBLIC_TRANSPORT:
-            yield "mode:{}-{}/origin:{}/dest:{}".format(s.pt_display_informations.physical_mode,
-                                                        s.pt_display_informations.commercial_mode,
-                                                        s.origin.uri,
-                                                        s.destination.uri)
+            yield "origin:{}/dest:{}".format(s.origin.uri, s.destination.uri)
 
 
 def fallback_duration(journey):
