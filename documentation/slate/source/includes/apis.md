@@ -1716,6 +1716,69 @@ object. Arrivals are ordered chronologically in ascending order.
 
 they are exactly the same as [departures](#departures)
 
+<a name="line-reports"></a>Line reports
+---------------------------------------
+
+This service provides the state of public transport traffic, grouped by lines and all their stops. 
+It can be called for an overall coverage or for a specific object.
+
+<img src="./images/traffic_reports.png" alt="Traffic reports" width="300"/>
+
+### Parameters
+
+You can access it via that kind of url: <https://api.navitia.io/v1/{a_path_to_a_resource}/line_reports>
+
+For example:
+
+-   overall public transport line report on Ile de France coverage
+    -   <https://api.navitia.io/v1/coverage/fr-idf/line_reports>
+-   Is there any perturbations on the RER network ?
+    -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/line_reports>
+-   Is there any perturbations on the "RER A" line ?
+    -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/lines/line:TRN:DUA810801043/line_reports>
+
+
+The response is made of an array of [line_reports](#line-reports),
+and another one of [disruptions](#disruption).
+
+There are inner links between this 2 arrays:
+see the [inner-reference](#inner-references) section to use them.
+
+### Line report object
+
+Line_reports is an array of some Line_report object.
+
+One Line_report object is a complex object, made of a line, and an array
+of [pt_objects](#pt-objects) linked (for example stop_areas, stop_point or network). 
+
+#### What a **complete** response **means**
+
+-   multiple line_reports
+    -   line 1
+          -   stop area concorde > internal link to disruption "green"
+          -   stop area bastille > internal link to disruption "pink"
+    -   line 2 > internal link to disruption "blue"
+          -   network RATP > internal link to disruption "green"
+          -   line 2 > internal link to disruption "blue"
+    -   line 3 > internal link to disruption "yellow"
+          -   stop point bourse > internal link to disruption "yellow"
+-   multiple disruptions (disruption target links)
+    -   disruption "green"
+    -   disruption "pink"
+    -   disruption "blue"
+    -   disruption "yellow"
+    -   Each disruption contains the messages to show.
+
+Details for disruption objects : [disruptions](#disruptions)
+
+#### What a line_report object **contains**
+
+-   1 line which is the grouping object
+    -   it can contain links to its disruptions.  
+    These disruptions are globals and might not be applied on stop_areas and stop_points. 
+-   1..n pt_objects
+    -   each one contains at least a link to its disruptions.
+
 <a name="traffic-reports"></a>Traffic reports
 ---------------------------------------------
 ``` shell
@@ -1745,7 +1808,7 @@ HTTP/1.1 200 OK
 }
 ```
 
-Also known as `/traffic_reports` service.
+Also known as `/traffic_reports` service. We recommand to use line_reports in place of traffic_reports.
 
 This service provides the state of public transport traffic, grouped by network.
 It can be called for an overall coverage or for a specific object.
