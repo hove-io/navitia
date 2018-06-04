@@ -32,7 +32,7 @@ import serpy
 from navitiacommon import type_pb2
 
 from jormungandr.interfaces.v1.serializer.base import PbGenericSerializer, EnumListField, LiteralField
-from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, DateTimeType, DateType
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, DateType
 from jormungandr.interfaces.v1.serializer.time import TimeField, PeriodSerializer, DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import *
 from jormungandr.interfaces.v1.serializer import jsonschema, base
@@ -328,6 +328,7 @@ class StopPointSerializer(PbGenericSerializer):
     stop_area = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer(), display_none=False)
     equipments = Equipments(attr='has_equipments', display_none=True)
     address = AddressSerializer(display_none=False)
+    fare_zone = FareZoneSerializer(attr='fare_zone', display_none=False)
 
     def get_stop_area(self, obj):
         if obj.HasField(str('stop_area')):
