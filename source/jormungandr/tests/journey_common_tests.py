@@ -937,9 +937,14 @@ class JourneyCommon(object):
         next_journey_pt = r['journeys'][1]['sections'][1]['display_informations']['name']
         assert next_journey_pt != first_journey_pt
 
-        # Activate 'no_shared_section' parameter and query the same journey scehdules again
-        # The journey vjM isn't available as it is a shared section
+        # Activate 'no_shared_section' parameter and query the same journey schedules
+        # The parameter 'no_shared_section' shouldn't be taken into account
         r = self.query('v1/coverage/main_routing_test/journeys?allowed_id%5B%5D=stop_point%3AstopA&allowed_id%5B%5D=stop_point%3AstopB&first_section_mode%5B%5D=walking&last_section_mode%5B%5D=walking&is_journey_schedules=True&datetime=20120614T080100&to=stopA&min_nb_journeys=5&min_nb_transfers=0&direct_path=none&from=stopB&_no_shared_section=True&')
+        assert len(r['journeys']) == 2
+
+        # Query the same journey schedules without 'is_journey_schedules' that deletes the parameter 'no_shared_section'
+        # The journey vjM isn't available as it is a shared section
+        r = self.query('v1/coverage/main_routing_test/journeys?allowed_id%5B%5D=stop_point%3AstopA&allowed_id%5B%5D=stop_point%3AstopB&first_section_mode%5B%5D=walking&last_section_mode%5B%5D=walking&datetime=20120614T080100&to=stopA&min_nb_journeys=5&min_nb_transfers=0&direct_path=none&from=stopB&_no_shared_section=True&')
         assert r['journeys'][0]['sections'][1]['display_informations']['name'] == first_journey_pt
         assert len(r['journeys']) == 1
 
