@@ -142,6 +142,9 @@ class Scenario(simple.Scenario):
         if request["free_radius_to"]:
             req.journeys.free_radius_to = request["free_radius_to"]
 
+        req.journeys.night_bus_filter_max_factor = request['_night_bus_filter_max_factor']
+        req.journeys.night_bus_filter_base_factor = request['_night_bus_filter_base_factor']
+
         #for the default scenario, we filter the walking if we have walking + bss
 
         # Technically, bss mode enable walking (if it is better than bss)

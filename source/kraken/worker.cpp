@@ -767,7 +767,10 @@ void Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API 
                                     request.max_transfers(),
                                     request.max_extra_second_pass(),
                                     request.free_radius_from(),
-                                    request.free_radius_to() );
+                                    request.free_radius_to(),
+                                    request.min_nb_journeys(),
+                                    request.night_bus_filter_max_factor(),
+                                    request.night_bus_filter_base_factor() );
         }
     }catch(const navitia::coord_conversion_exception& e) {
         this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());

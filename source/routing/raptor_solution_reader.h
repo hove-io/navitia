@@ -30,39 +30,16 @@ www.navitia.io
 
 #pragma once
 
-#include "raptor.h"
+#include "journey.h"
+#include "raptor_utils.h"
 #include "utils/multi_obj_pool.h"
+#include "routing.h"
 
-namespace navitia { namespace routing {
+namespace navitia {
+namespace routing {
 
-struct Journey {
-    struct Section {
-        Section() = default;
-        Section(const type::StopTime& in,
-                const DateTime in_dt,
-                const type::StopTime& out,
-                const DateTime out_dt):
-            get_in_st(&in), get_in_dt(in_dt), get_out_st(&out), get_out_dt(out_dt)
-        {}
-        const type::StopTime* get_in_st = nullptr;
-        DateTime get_in_dt = 0;
-        const type::StopTime* get_out_st = nullptr;
-        DateTime get_out_dt = 0;
-    };
-
-    bool better_on_dt(const Journey& that, bool request_clockwise) const;
-    bool better_on_transfer(const Journey& that, bool) const;
-    bool better_on_sn(const Journey& that, bool) const;
-    friend std::ostream& operator<<(std::ostream& os, const Journey& j);
-
-    std::vector<Section> sections;// the pt sections, with transfer between them
-    navitia::time_duration sn_dur = 0_s;// street network duration
-    navitia::time_duration transfer_dur = 0_s;// walking duration during transfer
-    navitia::time_duration min_waiting_dur = 0_s;// minimal waiting duration on every transfers
-    DateTime departure_dt = 0;// the departure dt of the journey, including sn
-    DateTime arrival_dt = 0;// the arrival dt of the journey, including sn
-    uint8_t nb_vj_extentions = 0;// number of vehicle journey extentions (I love useless comments!)
-};
+struct RAPTOR;
+struct StartingPointSndPhase;
 
 // this structure compare 2 solutions.  It chooses which solutions
 // will be kept at the end (only non dominated solutions will be kept

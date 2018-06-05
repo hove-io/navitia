@@ -29,9 +29,9 @@ www.navitia.io
 */
 
 #include "raptor_solution_reader.h"
-
 #include "raptor.h"
 #include "raptor_visitors.h"
+#include "journey.h"
 
 #include <boost/range/algorithm/reverse.hpp>
 #include <boost/range/algorithm/find_if.hpp>
@@ -604,37 +604,6 @@ void read_solutions(const RAPTOR& raptor,
 }
 
 } // anonymous namespace
-
-bool Journey::better_on_dt(const Journey& that, bool request_clockwise) const {
-    if (request_clockwise) {
-        if (arrival_dt != that.arrival_dt) { return arrival_dt <= that.arrival_dt; }
-        if (departure_dt != that.departure_dt) { return departure_dt >= that.departure_dt; }
-    } else {
-        if (departure_dt != that.departure_dt) { return departure_dt >= that.departure_dt; }
-        if (arrival_dt != that.arrival_dt) { return arrival_dt <= that.arrival_dt; }
-    }
-    // FIXME: I don't like this objective, for me, this is a
-    // transfer objective, but then you can return some solutions
-    // that we didn't return before.
-    if (! (better_on_transfer(that, request_clockwise) &&
-           that.better_on_transfer(*this, request_clockwise))) {
-        // if they are not equal on transfer, we don't check min_waiting_dur
-        return true;
-    }
-    return min_waiting_dur >= that.min_waiting_dur;
-}
-
-bool Journey::better_on_transfer(const Journey& that, bool) const {
-    if (sections.size() != that.sections.size()) {
-        return sections.size() <= that.sections.size();
-    }
-    return nb_vj_extentions <= that.nb_vj_extentions;
-}
-
-bool Journey::better_on_sn(const Journey& that, bool) const {
-    //we consider the transfer sections also as walking sections
-    return sn_dur + transfer_dur <= that.sn_dur + that.transfer_dur;
-}
 
 std::ostream& operator<<(std::ostream& os, const Journey& j) {
     os << "([" << navitia::str(j.departure_dt) << ", " << navitia::str(j.arrival_dt) << ", "

@@ -173,6 +173,12 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     if request["free_radius_to"]:
         req.journeys.free_radius_to = request["free_radius_to"]
 
+    if request["min_nb_journeys"]:
+        req.journeys.min_nb_journeys = request["min_nb_journeys"]
+
+    req.journeys.night_bus_filter_max_factor = request['_night_bus_filter_max_factor']
+    req.journeys.night_bus_filter_base_factor = request['_night_bus_filter_base_factor']
+
     return req
 
 
@@ -390,7 +396,7 @@ def _get_sorted_solutions_indexes(selected_sections_matrix, nb_journeys_to_find,
 def culling_journeys(resp, request):
     """
     Remove some journeys if there are too many of them to have max_nb_journeys journeys.
-    
+
     resp.journeys should be sorted before this function is called
 
     The goal is to choose a bunch of journeys(max_nv_journeys) that covers as many as possible sections
@@ -564,11 +570,11 @@ def _is_fake_car_section(section):
 
 def _switch_back_to_ridesharing(response, is_first_section):
     """
-    
+
     :param response: a pb_response returned by kraken
     :param is_first_section: a bool indicates that if the first_section or last_section is a ridesharing section
                              True if the first_section is, False if the last_section is
-    :return: 
+    :return:
     """
     for journey in response.journeys:
         if len(journey.sections) == 0:
@@ -804,26 +810,45 @@ class Scenario(simple.Scenario):
         if not api_request['destination_mode']:
             api_request['destination_mode'] = ['walking']
 
+        # Return the possible couples combinations (origin_mode and destination_mode)
         krakens_call = get_kraken_calls(api_request)
 
+        # min_nb_journeys option
+        if api_request['min_nb_journeys']:
+            min_nb_journeys = api_request['min_nb_journeys']
+        else:
+            min_nb_journeys = api_request['min_nb_journeys'] = 1
+
+        # We need the original request (api_request) for filtering, but request
+        # is modified by create_next_kraken_request function.
         request = deepcopy(api_request)
-        min_asked_journeys = get_or_default(request, 'min_nb_journeys', 1)
+
         min_journeys_calls = get_or_default(request, '_min_journeys_calls', 1)
 
         responses = []
         nb_try = 0
-        nb_qualified_journeys = nb_journeys(responses)
+        nb_qualified_journeys = 0
 
         while request is not None and \
-                ((nb_qualified_journeys < min_asked_journeys and nb_try < min_asked_journeys)
-                 or nb_try < min_journeys_calls):
+                ((nb_qualified_journeys < min_nb_journeys and nb_try < min_nb_journeys) \
+                or nb_try < min_journeys_calls):
+
             nb_try = nb_try + 1
+
+            # we take into account the option only if we have a single origin_mode and destination_mode couple.
+            if len(krakens_call) > 1:
+                request['min_nb_journeys'] = 0
+            else:
+                min_nb_journeys_left = min_nb_journeys - nb_qualified_journeys
+                request['min_nb_journeys'] = max(0, min_nb_journeys_left)
 
             new_resp = self.call_kraken(request_type, request, instance, krakens_call)
             _tag_by_mode(new_resp)
             _tag_direct_path(new_resp)
             _tag_bike_in_pt(new_resp)
+
             journey_filter._filter_too_late_journeys(new_resp, request)
+
             if nb_journeys(new_resp) == 0:
                 # no new journeys found, we stop
                 # we still append the new_resp because there are journeys that a tagged as dead probably
@@ -971,13 +996,21 @@ class Scenario(simple.Scenario):
 
         to do that we find ask the next (resp previous) query datetime
         """
-        vjs = journey_filter.get_qualified_journeys(responses)
-        if request["clockwise"]:
-            request['datetime'] = self.next_journey_datetime(vjs, request["clockwise"])
+
+        # If Kraken send a new request date time, we use it
+        # for the next call to skip current Journeys
+        if responses and responses[0].HasField('next_request_date_time'):
+            request['datetime'] = responses[0].next_request_date_time
         else:
-            request['datetime'] = self.previous_journey_datetime(vjs, request["clockwise"])
+            vjs = journey_filter.get_qualified_journeys(responses)
+            if request["clockwise"]:
+                request['datetime'] = self.next_journey_datetime(vjs, request["clockwise"])
+            else:
+                request['datetime'] = self.previous_journey_datetime(vjs, request["clockwise"])
 
         if request['datetime'] is None:
+            logger = logging.getLogger(__name__)
+            logger.error("In response next_request_date_time does not exist")
             return None
 
         #TODO forbid ODTs

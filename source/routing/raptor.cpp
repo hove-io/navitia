@@ -28,13 +28,13 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-#include "raptor_solution_reader.h"
 #include "raptor.h"
 #include "raptor_visitors.h"
 #include <boost/range/algorithm_ext/push_back.hpp>
 #include <boost/range/adaptor/filtered.hpp>
 #include <boost/range/algorithm/find_if.hpp>
 #include <boost/range/algorithm/fill.hpp>
+#include <boost/functional/hash.hpp>
 #include <chrono>
 
 namespace bt = boost::posix_time;
@@ -389,6 +389,37 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
                     bool clockwise,
                     const boost::optional<navitia::time_duration>& direct_path_dur,
                     const size_t max_extra_second_pass) {
+
+    const auto & journeys = compute_all_journeys(departures,
+                                                 destinations,
+                                                 departure_datetime,
+                                                 rt_level,
+                                                 transfer_penalty,
+                                                 bound,
+                                                 max_transfers,
+                                                 accessibilite_params,
+                                                 forbidden_uri,
+                                                 allowed_ids,
+                                                 clockwise,
+                                                 direct_path_dur,
+                                                 max_extra_second_pass);
+    return from_journeys_to_path(journeys);
+}
+
+RAPTOR::Journeys
+RAPTOR::compute_all_journeys(const map_stop_point_duration& departures,
+                             const map_stop_point_duration& destinations,
+                             const DateTime& departure_datetime,
+                             const nt::RTLevel rt_level,
+                             const navitia::time_duration& transfer_penalty,
+                             const DateTime& bound,
+                             const uint32_t max_transfers,
+                             const type::AccessibiliteParams& accessibilite_params,
+                             const std::vector<std::string>& forbidden_uri,
+                             const std::vector<std::string>& allowed_ids,
+                             bool clockwise,
+                             const boost::optional<navitia::time_duration>& direct_path_dur,
+                             const size_t max_extra_second_pass) {
     auto start_raptor = std::chrono::system_clock::now();
 
     auto solutions = ParetoFront<Journey, Dominates/*, JourneyParetoFrontVisitor*/>(Dominates(clockwise));
@@ -491,12 +522,8 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
             << ", 2nd pass = "
             << std::chrono::duration_cast<std::chrono::milliseconds>(end_raptor - end_first_pass).count());
 
-    std::vector<Path> result;
-    for (const auto& s: solutions) {
-        if (s.sections.empty()) { continue; }
-        result.push_back(make_path(s, data));
-    }
-    return result;
+    // return raw results
+    return solutions.get_pool();
 }
 
 void

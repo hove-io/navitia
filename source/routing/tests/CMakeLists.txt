@@ -52,3 +52,7 @@ ADD_BOOST_TEST(isochrone_test)
 add_executable(heat_map_test heat_map_test.cpp)
 target_link_libraries(heat_map_test ed data fare georef routing types utils ${BOOST_LIBS} log4cplus pb_lib protobuf)
 ADD_BOOST_TEST(heat_map_test)
+
+add_executable(journey_test journey_test.cpp)
+target_link_libraries(journey_test ed data fare georef routing types utils ${BOOST_LIBS} log4cplus pb_lib protobuf)
+ADD_BOOST_TEST(journey_test)
