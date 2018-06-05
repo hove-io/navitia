@@ -3318,7 +3318,7 @@ namespace {
     }
 }
 
-BOOST_AUTO_TEST_CASE(night_bus_should_treated_as_way_later)
+BOOST_AUTO_TEST_CASE(night_bus_should_be_treated_as_way_later)
 {
     ed::builder b("20120614");
 
@@ -3346,7 +3346,7 @@ BOOST_AUTO_TEST_CASE(night_bus_should_treated_as_way_later_anti_clockwise)
     BOOST_CHECK_EQUAL(nr::way_later(j2, j1, filter_params), false);
 }
 
-BOOST_AUTO_TEST_CASE(should_filter_night_bus_when_too_late)
+BOOST_AUTO_TEST_CASE(night_bus_filter_should_be_order_agnostic)
 {
     ed::builder b("20120614");
 

@@ -986,20 +986,14 @@ DateTime prepare_next_call_for_raptor(const RAPTOR::Journeys& journeys, const bo
     DateTime earliest_departure = DateTimeUtils::inf; // clockwise
 
     for (const auto & journey : journeys) {
-        if (clockwise) {
-            earliest_departure = std::min( earliest_departure, journey.departure_dt);
-        }
-        else {
-            lastest_arrival = std::max( lastest_arrival, journey.arrival_dt);
-        }
+            earliest_departure = std::min(earliest_departure, journey.departure_dt);
+            lastest_arrival = std::max(lastest_arrival, journey.arrival_dt);
     }
 
-    if (clockwise) {
-        return earliest_departure + 1;
-    }
-    else {
-        return lastest_arrival - 1;
-    }
+    earliest_departure += 1;
+    lastest_arrival -= 1;
+
+    return clockwise ? earliest_departure : lastest_arrival;
 }
 
 static std::vector<bt::ptime>
@@ -1279,9 +1273,9 @@ void make_response(navitia::PbCreator& pb_creator,
         // min_nb_journeys options :
         // Compute several loop until the number of journeys >= min_nb_journeys
         // For each step, we find best pathes,
-        // start to the latest departure + 1 (clockwise) or the latest arrival - 1.
+        // start to the earliest departure (clockwise)/latest arrival time +/- 1 sec.
         // If Raptor does not return anything, we stop.
-        // If the number of Path finds is greater or equal than min_nb_journeys, we stop.
+        // If the number of returned pathes are greater or equal than min_nb_journeys, we stop.
         JourneySet journeys;
         uint32_t nb_try = 0;
         uint nb_direct_path = direct_path.path_items.empty() ? 0 : 1;
@@ -1296,7 +1290,7 @@ void make_response(navitia::PbCreator& pb_creator,
             // Remove direct path
             filter_direct_path(raptor_journeys);
 
-            // filter joureys that are too late.....with the magic formula...
+            // filter journeys that are too late.....with the magic formula...
             NightBusFilter::Params params {
                 request_date_secs,
                 clockwise,
