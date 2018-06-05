@@ -119,7 +119,7 @@ Networks are fed by agencies in GTFS format.
 |-----|----|-----------|
 |id|string|Identifier of the route|
 |name|string|Name of the route|
-|is_frequence|enum|Is the route has frequency or not. Can only be "False"|
+|is_frequence|enum|If the route has frequency or not. Can only be "False", but may be "True" in the future|
 |line|[line](#line)|The line of this route|
 |direction|[place](#place)|The direction of this route|
 
