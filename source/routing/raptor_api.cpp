@@ -986,20 +986,14 @@ DateTime prepare_next_call_for_raptor(const RAPTOR::Journeys& journeys, const bo
     DateTime earliest_departure = DateTimeUtils::inf; // clockwise
 
     for (const auto & journey : journeys) {
-        if (clockwise) {
-            earliest_departure = std::min( earliest_departure, journey.departure_dt);
-        }
-        else {
-            lastest_arrival = std::max( lastest_arrival, journey.arrival_dt);
-        }
+            earliest_departure = std::min(earliest_departure, journey.departure_dt);
+            lastest_arrival = std::max(lastest_arrival, journey.arrival_dt);
     }
 
-    if (clockwise) {
-        return earliest_departure + 1;
-    }
-    else {
-        return lastest_arrival - 1;
-    }
+    earliest_departure += 1;
+    lastest_arrival -= 1;
+
+    return clockwise ? earliest_departure : lastest_arrival;
 }
 
 static std::vector<bt::ptime>

@@ -48,22 +48,17 @@ BOOST_GLOBAL_FIXTURE( logger_initialized );
 namespace {
     const std::vector<type::StopTime> make_stop_times(ed::builder &b)
     {
-        auto& vj1 = b.vj("VJ1")("StopPoint1", "09:42:00"_t)("StopPoint2", "10:00:00"_t);
-        auto& vj2 = b.vj("VJ2")("StopPoint1", "09:37:00"_t)("StopPoint2", "09:55:00"_t);
-        auto& vj3 = b.vj("VJ3")("StopPoint1", "09:42:00"_t)("StopPoint2", "10:00:00"_t);
+        auto vj1 = b.vj("VJ1");
+        auto vj2 = b.vj("VJ2");
+        auto vj3 = b.vj("VJ3");
 
         vj1.make();
         vj2.make();
         vj3.make();
 
-        vj1.stop_times[0].st.vehicle_journey = vj1.vj;
-        vj1.stop_times[1].st.vehicle_journey = vj1.vj;
-
-        vj2.stop_times[0].st.vehicle_journey = vj2.vj;
-        vj2.stop_times[1].st.vehicle_journey = vj2.vj;
-
-        vj3.stop_times[0].st.vehicle_journey = vj3.vj;
-        vj3.stop_times[1].st.vehicle_journey = vj3.vj;
+        vj1("StopPoint1", "09:42:00"_t)("StopPoint2", "10:00:00"_t);
+        vj2("StopPoint1", "09:37:00"_t)("StopPoint2", "09:55:00"_t);
+        vj3("StopPoint1", "09:42:00"_t)("StopPoint2", "10:00:00"_t);
 
         std::vector<type::StopTime> stop_times;
 
