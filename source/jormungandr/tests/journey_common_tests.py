@@ -30,12 +30,11 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from six.moves.urllib.parse import quote
-
 from .tests_mechanism import dataset
 from jormungandr import i_manager
-import mock
 from .check_utils import *
-
+import mock
+import  os
 
 def check_best(resp):
     assert not resp.get('journeys') or sum((1 for j in resp['journeys'] if j['type'] == "best")) == 1
@@ -948,6 +947,17 @@ class JourneyCommon(object):
         assert r['journeys'][0]['sections'][1]['display_informations']['name'] == first_journey_pt
         assert len(r['journeys']) == 1
 
+    if os.getenv('JORMUNGANDR_USE_SERPY'):
+        def test_section_fare_zone(self):
+            """
+            In the 'stop_point' section of a journey, the section 'fare_zone' should be present
+            (only the Serpy serializer has this feature, as Marshall will be deprecated soon)
+            """
+            r = self.query('/v1/coverage/main_routing_test/journeys?to=stopA&from=stopB&datetime=20120614T080100&')
+            assert r['journeys'][0]['type'] == 'best'
+            assert r['journeys'][0]['sections'][1]['type'] == 'public_transport'
+            assert r['journeys'][0]['sections'][1]['from']['stop_point']['fare_zone']
+            assert 'name' in r['journeys'][0]['sections'][1]['from']['stop_point']['fare_zone']
 
 @dataset({"main_stif_test": {}})
 class AddErrorFieldInJormun(object):
