@@ -842,7 +842,9 @@ BOOST_AUTO_TEST_CASE(journey_array){
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2);
 
-    pbnavitia::Journey journey = resp.journeys(0);
+    auto journeys = sort_journeys(resp);
+
+    auto& journey = journeys[0];
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
     pbnavitia::Section section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 2);
@@ -850,10 +852,10 @@ BOOST_AUTO_TEST_CASE(journey_array){
     auto st2 = section.stop_date_times(1);
     BOOST_CHECK_EQUAL(st1.stop_point().uri(), "stop_area:stop1");
     BOOST_CHECK_EQUAL(st2.stop_point().uri(), "stop_area:stop2");
-    BOOST_CHECK_EQUAL(st1.departure_date_time(), navitia::test::to_posix_timestamp("20120614T091100"));
-    BOOST_CHECK_EQUAL(st2.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T092000"));
+    BOOST_CHECK_EQUAL(st1.departure_date_time(), navitia::test::to_posix_timestamp("20120614T081100"));
+    BOOST_CHECK_EQUAL(st2.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T082000"));
 
-    journey = resp.journeys(1);
+    journey = journeys[1];
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 3);
     section = journey.sections(1);
     BOOST_REQUIRE_EQUAL(section.stop_date_times_size(), 2);
@@ -861,8 +863,8 @@ BOOST_AUTO_TEST_CASE(journey_array){
     st2 = section.stop_date_times(1);
     BOOST_CHECK_EQUAL(st1.stop_point().uri(), "stop_area:stop1");
     BOOST_CHECK_EQUAL(st2.stop_point().uri(), "stop_area:stop2");
-    BOOST_CHECK_EQUAL(st1.departure_date_time(), navitia::test::to_posix_timestamp("20120614T081100"));
-    BOOST_CHECK_EQUAL(st2.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T082000"));
+    BOOST_CHECK_EQUAL(st1.departure_date_time(), navitia::test::to_posix_timestamp("20120614T091100"));
+    BOOST_CHECK_EQUAL(st2.arrival_date_time(), navitia::test::to_posix_timestamp("20120614T092000"));
 }
 
 
