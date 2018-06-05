@@ -835,7 +835,7 @@ class Scenario(simple.Scenario):
 
             nb_try = nb_try + 1
 
-            # we take into account the option only if we have one origin_mode and destination_mode couple.
+            # we take into account the option only if we have a single origin_mode and destination_mode couple.
             if len(krakens_call) > 1:
                 request['min_nb_journeys'] = 0
             else:
