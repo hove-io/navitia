@@ -192,7 +192,7 @@ class Schedules(ResourceUri, ResourceUtc):
             self.endpoint = "previous" + self.endpoint[4:]
 
         # Add timezone in request for availability in greenlet
-        args['timezone'] = timezone.get_timezone()
+        args['timezone'] = timezone.get_timezone(request.id)
 
         self._register_interpreted_parameters(args)
         return i_manager.dispatch(args, self.endpoint,

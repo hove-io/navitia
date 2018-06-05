@@ -30,6 +30,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import serpy
 from datetime import datetime
+from flask import request
 from jormungandr.interfaces.v1.serializer.base import PbField, PbNestedSerializer, NestedPbField
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, TimeType, DateTimeType
 from jormungandr.utils import timestamp_to_str
@@ -56,7 +57,7 @@ class DateTimeField(PbField, DateTimeType):
     custom date format from timestamp
     """
     def to_value(self, value):
-        return timestamp_to_str(value)
+        return timestamp_to_str(value, request.id)
 
 
 class DateTimeDictField(Field, DateTimeType):
@@ -65,7 +66,6 @@ class DateTimeDictField(Field, DateTimeType):
     """
     def to_value(self, value):
         return timestamp_to_str(value) if value else None
-        super(DateTimeDictField, self).__init__(schema_type=str, schema_metadata=schema_metadata, **kwargs)
 
 
 class PeriodSerializer(PbNestedSerializer):

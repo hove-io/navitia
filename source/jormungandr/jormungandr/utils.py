@@ -49,6 +49,7 @@ import re
 import flask
 from contextlib import contextmanager
 import functools
+import functools32
 import sys
 PY2 = sys.version_info[0] == 2
 PY3 = sys.version_info[0] == 3
@@ -136,38 +137,40 @@ def str_datetime_utc_to_local(dt, timezone):
     else:
         utc_dt = datetime.utcnow()
     local = pytz.timezone(timezone)
-    return dt_to_str(utc_dt.replace(tzinfo=pytz.UTC).astimezone(local))
+    return dt_to_str(utc_dt.replace(tzinfo=pytz.UTC).astimezone(local), request.id)
 
+MAXINT = 9223372036854775807
 
-def timestamp_to_datetime(timestamp, tz=None):
+@functools32.lru_cache(4096)
+def timestamp_to_datetime(timestamp, req_id, tz=None):
     """
     Convert a timestamp to datetime
     if timestamp > MAX_INT we return None
     """
-    maxint = 9223372036854775807
+
     # when a date is > 2038-01-19 03:14:07
     # we receive a timestamp = 18446744071562142720 (64 bits) > 9223372036854775807 (MAX_INT 32 bits)
     # And ValueError: timestamp out of range for platform time_t is raised
-    if timestamp >= maxint:
+    if timestamp >= MAXINT:
         return None
 
-    dt = datetime.utcfromtimestamp(timestamp)
-
-    timezone = tz or get_timezone()
+    timezone = tz or get_timezone(req_id or request.id)
     if timezone:
-        dt = pytz.utc.localize(dt)
+        dt = pytz.utc.localize(datetime.utcfromtimestamp(timestamp))
         return dt.astimezone(timezone)
     return None
 
 
-def dt_to_str(dt):
+@functools32.lru_cache(4096)
+def dt_to_str(dt, req_id):
     return dt.strftime(DATETIME_FORMAT)
 
 
-def timestamp_to_str(timestamp):
-    dt = timestamp_to_datetime(timestamp)
+@functools32.lru_cache(4096)
+def timestamp_to_str(timestamp, req_id):
+    dt = timestamp_to_datetime(timestamp, req_id)
     if dt:
-        return dt_to_str(dt)
+        return dt_to_str(dt, req_id)
     return None
 
 
@@ -489,7 +492,7 @@ def make_namedtuple(typename, *fields, **fields_with_default):
 
 def get_timezone_str(default='Africa/Abidjan'):
     try:
-        timezone = get_timezone()
+        timezone = get_timezone(request.id)
     except TechnicalError:
         return default
     else:

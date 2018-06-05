@@ -360,31 +360,36 @@ class Scenario(object):
     def _add_prev_link(self, resp, params, clockwise):
         prev_dt = self.previous_journey_datetime(resp.journeys, clockwise)
         if prev_dt is not None:
-            params['datetime'] = timestamp_to_str(prev_dt)
+            params['datetime'] = timestamp_to_str(prev_dt, request.id)
             params['datetime_represents'] = 'arrival'
             add_link(resp, rel='prev', **params)
 
     def _add_next_link(self, resp, params, clockwise):
         next_dt = self.next_journey_datetime(resp.journeys, clockwise)
         if next_dt is not None:
-            params['datetime'] = timestamp_to_str(next_dt)
+            from flask import request
+            params['datetime'] = timestamp_to_str(next_dt, request.id)
             params['datetime_represents'] = 'departure'
             add_link(resp, rel='next', **params)
 
     def _add_first_last_links(self, resp, params):
         soonest_departure_ts = min(j.departure_date_time for j in resp.journeys)
-        soonest_departure = timestamp_to_datetime(soonest_departure_ts)
+        from flask import request
+        soonest_departure = timestamp_to_datetime(soonest_departure_ts, request.id)
         if soonest_departure:
             soonest_departure = soonest_departure.replace(hour=0, minute=0, second=0)
-            params['datetime'] = dt_to_str(soonest_departure)
+            from flask import request
+            params['datetime'] = dt_to_str(soonest_departure, request.id)
             params['datetime_represents'] = 'departure'
             add_link(resp, rel='first', **params)
 
         tardiest_arrival_ts = max(j.arrival_date_time for j in resp.journeys)
-        tardiest_arrival = timestamp_to_datetime(tardiest_arrival_ts)
+        from flask import request
+        tardiest_arrival = timestamp_to_datetime(tardiest_arrival_ts, request.id)
         if tardiest_arrival:
             tardiest_arrival = tardiest_arrival.replace(hour=23, minute=59, second=59)
-            params['datetime'] = dt_to_str(tardiest_arrival)
+            from flask import request
+            params['datetime'] = dt_to_str(tardiest_arrival, request.id)
             params['datetime_represents'] = 'arrival'
             add_link(resp, rel='last', **params)
 

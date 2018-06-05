@@ -300,7 +300,7 @@ class StatManager(object):
         """
         init_journey(stat_journey)
 
-        tz = utils.get_timezone()
+        tz = utils.get_timezone(request.id)
         if 'requested_date_time' in resp_journey:
             stat_journey.requested_date_time = tz_str_to_utc_timestamp(resp_journey['requested_date_time'], tz)
 
@@ -356,7 +356,7 @@ class StatManager(object):
         """
         journey_request = stat_request.journey_request
         if hasattr(g, 'stat_interpreted_parameters') and g.stat_interpreted_parameters['original_datetime']:
-            tz = utils.get_timezone()
+            tz = utils.get_timezone(request.id)
             dt = g.stat_interpreted_parameters['original_datetime']
             if dt.tzinfo is None:
                 dt = tz.normalize(tz.localize(dt))
@@ -394,7 +394,7 @@ class StatManager(object):
         return result
 
     def fill_section(self, stat_section, resp_section, previous_section):
-        tz = utils.get_timezone()
+        tz = utils.get_timezone(request.id)
         if 'departure_date_time' in resp_section:
             stat_section.departure_date_time = tz_str_to_utc_timestamp(resp_section['departure_date_time'], tz)
 

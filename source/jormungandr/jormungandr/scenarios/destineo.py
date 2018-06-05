@@ -45,6 +45,7 @@ import itertools
 from jormungandr.utils import pb_del_if, timestamp_to_str
 from six.moves import filter
 from six.moves import range
+from flask import request
 
 non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
@@ -415,7 +416,7 @@ class Scenario(default.Scenario):
         if not journeys:
             return None
         next_journey = max(journeys, key=lambda j: j.departure_date_time)
-        params['datetime'] = timestamp_to_str(next_journey.departure_date_time + 60)
+        params['datetime'] = timestamp_to_str(next_journey.departure_date_time + 60, request.id)
         params['datetime_represents'] = 'departure'
         add_link(resp, rel='next', **params)
 
@@ -424,7 +425,7 @@ class Scenario(default.Scenario):
         if not journeys:
             return None
         next_journey = max(journeys, key=lambda j: j.arrival_date_time)
-        params['datetime'] = timestamp_to_str(next_journey.arrival_date_time - 60)
+        params['datetime'] = timestamp_to_str(next_journey.arrival_date_time - 60, request.id)
         params['datetime_represents'] = 'arrival'
         add_link(resp, rel='prev', **params)
 
