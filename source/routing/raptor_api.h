@@ -38,8 +38,6 @@ www.navitia.io
 #include "raptor.h"
 #include "routing/routing.h"
 
-#define MAX_NB_RAPTOR_CALL 100
-
 namespace navitia{
     namespace type{
         struct EntryPoint;
@@ -123,7 +121,7 @@ void make_pt_response(navitia::PbCreator& pb_creator,
                       RAPTOR &raptor,
                       const std::vector<type::EntryPoint> &origins,
                       const std::vector<type::EntryPoint> &destinations,
-                      const uint64_t timestamps,
+                      const uint64_t timestamp,
                       bool clockwise,
                       const type::AccessibiliteParams& accessibilite_params,
                       const std::vector<std::string>& forbidden,
@@ -197,31 +195,6 @@ void filter_late_journeys(RAPTOR::Journeys & journeys,
  * @return The earliest departure (clokcwise = true) or the lastest arrival (clokcwise = false)
  */
 DateTime prepare_next_call_for_raptor(const std::list<Journey> & journeys, const bool clockwise);
-
-
-/**
- * @brief internal function to call raptor in a loop
- */
-std::vector<Path>
-_call_raptor(navitia::PbCreator& pb_creator,
-             RAPTOR& raptor,
-             const map_stop_point_duration& departures,
-             const map_stop_point_duration& destinations,
-             const std::vector<bt::ptime>& datetimes,
-             const type::RTLevel rt_level,
-             const navitia::time_duration& transfer_penalty,
-             const type::AccessibiliteParams& accessibilite_params,
-             const std::vector<std::string>& forbidden_uri,
-             const std::vector<std::string>& allowed_ids,
-             const bool clockwise,
-             const boost::optional<navitia::time_duration>& direct_path_duration,
-             const uint32_t min_nb_journeys,
-             const uint32_t nb_direct_path,
-             const uint32_t max_duration,
-             const uint32_t max_transfers,
-             const size_t max_extra_second_pass,
-             const double night_bus_filter_max_factor,
-             const int32_t night_bus_filter_base_factor);
 
 void make_graphical_isochrone(navitia::PbCreator& pb_creator,
                               RAPTOR &raptor_max,
