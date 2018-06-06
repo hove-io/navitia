@@ -1151,7 +1151,7 @@ void filter_late_journeys(RAPTOR::Journeys & journeys,
         return way_later(j1, j2, params);
     };
 
-    std::vector<RAPTOR::Journeys::const_iterator> late_journeys =
+    std::vector<RAPTOR::Journeys::iterator> late_journeys =
         utils::pairs_generator_unique_iterators(journeys, is_way_later);
 
     for(auto& late_journey : late_journeys) {
