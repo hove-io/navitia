@@ -166,3 +166,5 @@ PARSER_MAX_COUNT = int(os.getenv('JORMUNGANDR_PARSER_MAX_COUNT', 1000))
 if boolean(os.getenv('JORMUNGANDR_DISABLE_SQLPOOLING', False)):
     from sqlalchemy.pool import NullPool
     SQLALCHEMY_POOLCLASS = NullPool
+
+MAX_JOURNEYS_CALLS = int(os.getenv('JORMUNGANDR_MAX_JOURNEYS_CALLS', 20))

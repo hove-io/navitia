@@ -43,7 +43,7 @@ from jormungandr.scenarios.qualifier import min_from_criteria, arrival_crit, dep
     has_no_bike, has_bike, has_no_bss, has_bss, non_pt_journey, has_walk, and_filters
 import numpy as np
 import collections
-from jormungandr.utils import date_to_timestamp, PeriodExtremity, copy_flask_request_context, copy_context_in_greenlet_stack
+from jormungandr.utils import date_to_timestamp, copy_flask_request_context, copy_context_in_greenlet_stack
 from jormungandr.scenarios.simple import get_pb_data_freshness
 import gevent, gevent.pool
 import flask
@@ -829,9 +829,10 @@ class Scenario(simple.Scenario):
         nb_try = 0
         nb_qualified_journeys = 0
 
+        max_journeys_calls = app.config.get('MAX_JOURNEYS_CALLS', 20)
         while request is not None and \
-                ((nb_qualified_journeys < min_nb_journeys and nb_try < min_nb_journeys) \
-                or nb_try < min_journeys_calls):
+                ((nb_qualified_journeys < min_nb_journeys and nb_try < min(min_nb_journeys, max_journeys_calls))\
+                 or nb_try < min_journeys_calls):
 
             nb_try = nb_try + 1
 
