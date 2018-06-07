@@ -343,7 +343,7 @@ def filter_min_transfers(journey, is_debug, min_nb_transfers):
     logger = logging.getLogger(__name__)
     if get_nb_connections(journey) < min_nb_transfers:
         logger.debug("the journey {} has not enough connections, we delete it".format(journey.internal_id))
-        mark_as_dead(j, is_debug, "not_enough_connections")
+        mark_as_dead(journey, is_debug, "not_enough_connections")
         return False or is_debug
     return True
 

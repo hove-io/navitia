@@ -1470,3 +1470,20 @@ class JourneyMinBikeMinCar(object):
             assert len(response['journeys'][1]['sections']) == 1
             assert response['journeys'][1]['sections'][0]['mode'] == 'walking'
             assert response['journeys'][1]['sections'][0]['duration'] == 276
+
+    def test_min_nb_transfers(self):
+        query = '{sub_query}&datetime={datetime}'.format(sub_query=sub_query,
+                                                         datetime="20120614T080000")
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+        assert len(response['journeys']) == 2
+
+        # set the min_nb_transfers to 1
+        query = '{sub_query}&datetime={datetime}&min_nb_transfers=1&debug=true'\
+            .format(sub_query=sub_query,
+                    datetime="20120614T080000")
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+        assert len(response['journeys']) == 4
+        assert all("deleted_because_not_enough_connections" in j['tags']
+                   for j in response['journeys'])
