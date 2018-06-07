@@ -57,17 +57,18 @@ struct mock_kraken {
         // Prepare our context and sockets
         zmq::context_t context(1);
         const std::string zmq_socket = "ipc:///tmp/" + name;
-        LoadBalancer lb(context);
-        lb.bind(zmq_socket, "inproc://workers");
 
         //we load the conf to have the default values
         navitia::kraken::Configuration conf;
         //we mock a command line load
         po::options_description desc = navitia::kraken::get_options_description(
                     boost::optional<std::string>("default"),
-                    boost::optional<std::string>("42"),
+                    boost::optional<std::string>(zmq_socket),
                     boost::optional<bool>(true)); //not used
         auto other_options = conf.load_from_command_line(desc, argc, argv);
+
+        LoadBalancer lb(context);
+        lb.bind(conf.zmq_socket_path(), "inproc://workers");
 
         //this option is not parsed by get_options_description because it is used only here
         if (std::find(other_options.begin(), other_options.end(),
