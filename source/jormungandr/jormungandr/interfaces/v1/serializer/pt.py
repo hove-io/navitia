@@ -328,7 +328,13 @@ class StopPointSerializer(PbGenericSerializer):
     stop_area = jsonschema.MethodField(schema_type=lambda: StopAreaSerializer(), display_none=False)
     equipments = Equipments(attr='has_equipments', display_none=True)
     address = AddressSerializer(display_none=False)
-    fare_zone = FareZoneSerializer(attr='fare_zone', display_none=False)
+    fare_zone = jsonschema.MethodField(schema_type=lambda: FareZoneSerializer(), display_none=False)
+
+    def get_fare_zone(self, obj):
+        if obj.HasField(str('fare_zone')):
+            return FareZoneSerializer(obj.fare_zone, display_none=False).data
+        else:
+            return None
 
     def get_stop_area(self, obj):
         if obj.HasField(str('stop_area')):

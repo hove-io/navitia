@@ -950,14 +950,16 @@ class JourneyCommon(object):
     if os.getenv('JORMUNGANDR_USE_SERPY'):
         def test_section_fare_zone(self):
             """
-            In the 'stop_point' section of a journey, the section 'fare_zone' should be present
+            In a 'stop_point', the section 'fare_zone' should be present if the info is available
             (only the Serpy serializer has this feature, as Marshall will be deprecated soon)
             """
-            r = self.query('/v1/coverage/main_routing_test/journeys?to=stopA&from=stopB&datetime=20120614T080100&')
-            assert r['journeys'][0]['type'] == 'best'
-            assert r['journeys'][0]['sections'][1]['type'] == 'public_transport'
-            assert r['journeys'][0]['sections'][1]['from']['stop_point']['fare_zone']
-            assert 'name' in r['journeys'][0]['sections'][1]['from']['stop_point']['fare_zone']
+            r = self.query('/v1/coverage/main_routing_test/stop_points')
+            # Only stop point 'stopA' has fare zone info
+            assert r['stop_points'][0]['name'] == 'stop_point:stopA'
+            assert r['stop_points'][0]['fare_zone']['name'] == "2"
+            # Other stop points don't have the fare zone info
+            assert not 'fare_zone' in r['stop_points'][1]
+
 
 @dataset({"main_stif_test": {}})
 class AddErrorFieldInJormun(object):
