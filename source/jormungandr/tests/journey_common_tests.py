@@ -1487,3 +1487,15 @@ class JourneyMinBikeMinCar(object):
         assert len(response['journeys']) == 4
         assert all("deleted_because_not_enough_connections" in j['tags']
                    for j in response['journeys'])
+
+@dataset({"min_nb_journeys_test": {}})
+class JourneysMinNbJourneys():
+    """
+    For min_nb_journeys
+    We can test the late journeys filter with this set of data
+    """
+    def test_simple_min_nb_journeys(self):
+        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000"
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+        assert len(response['journeys']) == 2

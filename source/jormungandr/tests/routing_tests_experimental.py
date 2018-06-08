@@ -138,3 +138,7 @@ class TestDistributedOnBasicRouting(OnBasicRouting, NewDefaultScenarioAbstractTe
     @skip("temporarily disabled")
     def test_isochrone(self):
         super(TestExperimentalOnBasicRouting, self).test_isochrone()
+
+@config({"scenario": "distributed"})
+class TestDistributedMinNbJourneys(JourneysMinNbJourneys, NewDefaultScenarioAbstractTestFixture):
+    pass
