@@ -224,17 +224,6 @@ def filter_too_short_heavy_journeys(journey, request):
     """
     logger = logging.getLogger(__name__)
 
-    # Early return 1
-    # There are no bike/bss/car fallback
-    if journey.durations.bike == journey.durations.car == 0:
-        return True
-
-    # Early return 2
-    # Durations of every mode are >= min
-    if journey.durations.bike >= request.get('_min_bike', float('inf')) and \
-            journey.durations.car >= request.get('_min_car', float('inf')):
-        return True
-
     is_debug = request.get('debug', False)
 
     on_bss = False
