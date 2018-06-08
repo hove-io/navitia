@@ -848,8 +848,6 @@ class Scenario(simple.Scenario):
             _tag_direct_path(new_resp)
             _tag_bike_in_pt(new_resp)
 
-            journey_filter._filter_too_late_journeys(new_resp, request)
-
             if nb_journeys(new_resp) == 0:
                 # no new journeys found, we stop
                 # we still append the new_resp because there are journeys that a tagged as dead probably
