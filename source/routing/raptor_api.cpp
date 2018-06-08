@@ -79,7 +79,9 @@ call_raptor(navitia::PbCreator& pb_creator,
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     std::vector<Path> pathes;
 
-    // For each date time
+    // We loop on datetimes, but in practice there's always only one
+    // (It's a deprecated feature to provide multiple datetimes).
+    // TODO: remove the vector (and adapt protobuf of request).
     DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
     for(const auto & datetime : datetimes) {
 
