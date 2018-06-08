@@ -42,6 +42,19 @@ from datetime import datetime
 class Cleverage(RealtimeProxy):
     """
     class managing calls to cleverage external service providing real-time next passages
+
+
+    curl example to check/test that external service is working:
+    curl -X GET -H 'X-Keolis-Api-Version: <version>, X-Keolis-Api-Key: <key>' '<server>/<stop_code>'
+
+    On the response, Navitia matches route-point's <line_code> with
+    'code' in each element at the root of the response.
+
+    <line_code> and <stop_code> are provided using the same code key, named after
+    the 'destination_id_tag' if provided on connector's init, or the 'id' otherwise.
+
+    In practice it will look like:
+    curl -X GET -H 'X-Keolis-Api-Version: 1.0, X-Keolis-Api-Key: BLA-68764125-BOB' 'http://api.bobito.fr/api/schedule/3763'
     """
     def __init__(self, id, service_url, service_args, timezone, object_id_tag=None,
                  destination_id_tag=None, instance=None, timeout=10, **kwargs):
