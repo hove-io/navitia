@@ -114,6 +114,10 @@ class CommentSerializer(serpy.Serializer):
     type = jsonschema.Field(schema_type=str)
 
 
+class FareZoneSerializer(serpy.Serializer):
+    name = jsonschema.Field(schema_type=str)
+
+
 class FirstCommentField(jsonschema.Field):
     def __init__(self, **kwargs):
         super(FirstCommentField, self).__init__(schema_type=str, **kwargs)

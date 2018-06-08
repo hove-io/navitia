@@ -147,11 +147,11 @@ struct SA {
     builder& b;
     navitia::type::StopArea* sa;
 
-    /// Construit un nouveau stopArea
+    /// Create a new stopArea
     SA(builder & b, const std::string & sa_name, double x, double y,
        bool create_sp = true, bool wheelchair_boarding = true, bool bike_accepted = true);
 
-    /// Construit un stopPoint appartenant au stopArea courant
+    /// Create a stopPoint in the current stopArea
     SA & operator()(const std::string & sp_name, double x = 0, double y = 0, bool wheelchair_boarding = true,
                     bool bike_accepted = true);
 };
@@ -269,7 +269,7 @@ struct builder {
                     const std::string& uri="",
                     const std::string& meta_vj="");
 
-    /// Crée un nouveau stop area
+    // Create a new stop area
     SA sa(const std::string & name, double x = 0, double y = 0,
           const bool create_sp = true, const bool wheelchair_boarding = true, const bool bike_accepted = true);
     SA sa(const std::string & name, navitia::type::GeographicalCoord geo,

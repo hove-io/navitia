@@ -30,12 +30,11 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from six.moves.urllib.parse import quote
-
 from .tests_mechanism import dataset
 from jormungandr import i_manager
-import mock
 from .check_utils import *
-
+import mock
+import  os
 
 def check_best(resp):
     assert not resp.get('journeys') or sum((1 for j in resp['journeys'] if j['type'] == "best")) == 1
@@ -947,6 +946,19 @@ class JourneyCommon(object):
         r = self.query('v1/coverage/main_routing_test/journeys?allowed_id%5B%5D=stop_point%3AstopA&allowed_id%5B%5D=stop_point%3AstopB&first_section_mode%5B%5D=walking&last_section_mode%5B%5D=walking&datetime=20120614T080100&to=stopA&min_nb_journeys=5&min_nb_transfers=0&direct_path=none&from=stopB&_no_shared_section=True&')
         assert r['journeys'][0]['sections'][1]['display_informations']['name'] == first_journey_pt
         assert len(r['journeys']) == 1
+
+    if os.getenv('JORMUNGANDR_USE_SERPY'):
+        def test_section_fare_zone(self):
+            """
+            In a 'stop_point', the section 'fare_zone' should be present if the info is available
+            (only the Serpy serializer has this feature, as Marshall will be deprecated soon)
+            """
+            r = self.query('/v1/coverage/main_routing_test/stop_points')
+            # Only stop point 'stopA' has fare zone info
+            assert r['stop_points'][0]['name'] == 'stop_point:stopA'
+            assert r['stop_points'][0]['fare_zone']['name'] == "2"
+            # Other stop points don't have the fare zone info
+            assert not 'fare_zone' in r['stop_points'][1]
 
 
 @dataset({"main_stif_test": {}})

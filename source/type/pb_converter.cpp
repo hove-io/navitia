@@ -528,6 +528,11 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopP
         fill(pm, stop_point->mutable_physical_modes());
     }
 
+    if (!sp->fare_zone.empty()) {
+        auto* farezone = stop_point->mutable_fare_zone();
+        farezone->set_name(sp->fare_zone);
+    }
+
     fill_messages(sp, stop_point);
     fill_codes(sp, stop_point);
 }

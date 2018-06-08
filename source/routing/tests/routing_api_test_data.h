@@ -469,6 +469,9 @@ struct routing_api_data {
         b.data->pt_data->index();
         b.data->build_raptor();
 
+        //Add a fare_zone in stop point A
+        b.sps.begin()->second->fare_zone = "2";
+
         b.data->build_proximity_list();
         b.data->meta->production_date = boost::gregorian::date_period("20120614"_d, 365_days);
         b.data->compute_labels();
