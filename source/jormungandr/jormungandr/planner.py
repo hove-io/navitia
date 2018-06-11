@@ -31,7 +31,10 @@ class JourneyParameters(object):
                  realtime_level='base_schedule',
                  max_extra_second_pass=None,
                  walking_transfer_penalty=120,
-                 direct_path_duration=None):
+                 direct_path_duration=None,
+                 night_bus_filter_max_factor=None,
+                 night_bus_filter_base_factor=None):
+
         self.max_duration = max_duration
         self.max_transfers = max_transfers
         self.wheelchair = wheelchair
@@ -40,6 +43,8 @@ class JourneyParameters(object):
         self.realtime_level = realtime_level
         self.max_extra_second_pass = max_extra_second_pass
         self.direct_path_duration = direct_path_duration
+        self.night_bus_filter_max_factor = night_bus_filter_max_factor
+        self.night_bus_filter_base_factor = night_bus_filter_base_factor
 
 
 class Kraken(object):
@@ -59,6 +64,9 @@ class Kraken(object):
             location = req.journeys.destination.add()
             location.place = stop_point_id
             location.access_duration = access_duration
+
+        req.journeys.night_bus_filter_max_factor = journey_parameters.night_bus_filter_max_factor
+        req.journeys.night_bus_filter_base_factor = journey_parameters.night_bus_filter_base_factor
 
         req.journeys.datetimes.append(datetime)
         req.journeys.clockwise = clockwise

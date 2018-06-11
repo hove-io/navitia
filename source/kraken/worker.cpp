@@ -758,7 +758,10 @@ void Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API 
                                         request.max_extra_second_pass(),
                                         request.has_direct_path_duration() ?
                                             boost::optional<time_duration>(seconds{request.direct_path_duration()}) :
-                                            boost::optional<time_duration>());
+                                            boost::optional<time_duration>(),
+                                        request.min_nb_journeys(),
+                                        request.night_bus_filter_max_factor(),
+                                        request.night_bus_filter_base_factor() );
             break;
         default:
             routing::make_response( this->pb_creator,

@@ -197,42 +197,6 @@ class JourneyCommon(object):
         self.is_valid_journey_response(response, query)
         assert len(response["journeys"]) >= 3
 
-    def test_min_nb_journeys(self):
-        """Checks if min_nb_journeys works.
-
-        _night_bus_filter_base_factor is used because we need to find
-        2 journeys, and we can only take the bus the day after.
-        datetime is modified because, as the bus begins at 8, we need
-        to check that we don't do the next on the direct path starting
-        datetime.
-        """
-        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
-                "min_nb_journeys=3&_night_bus_filter_base_factor=86400"\
-                .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
-        response = self.query_region(query)
-        check_best(response)
-        self.is_valid_journey_response(response, query)
-        assert len(response["journeys"]) >= 3
-
-    def test_min_nb_journeys_with_night_bus_filter(self):
-        """
-        Tests the combination of parameters _night_bus_filter_base_factor,
-        _night_bus_filter_max_factor and min_nb_journeys
-
-        1. _night_bus_filter_base_factor and _night_bus_filter_max_factor are used to limit the next
-        journey with datetime of best response of last answer.
-
-        2 To obtain at least "min_nb_journeys" journeys in the result each call to kraken
-         in a loop is made with datatime + 1 of de best journey but not of global request.
-        """
-        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
-                "min_nb_journeys=3&_night_bus_filter_base_factor=0&_night_bus_filter_max_factor=2"\
-                .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
-        response = self.query_region(query)
-        check_best(response)
-        self.is_valid_journey_response(response, query)
-        assert len(response["journeys"]) == 3
-
     """
     test on date format
     """
@@ -1491,11 +1455,94 @@ class JourneyMinBikeMinCar(object):
 @dataset({"min_nb_journeys_test": {}})
 class JourneysMinNbJourneys():
     """
-    For min_nb_journeys
-    We can test the late journeys filter with this set of data
+    Test min_nb_journeys and late journey filter
     """
-    def test_simple_min_nb_journeys(self):
-        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000"
+
+    def test_minimum_journeys_with_min_nb_journeys_options(self):
+        """
+        By default, the raptor compute 2 journeys, so the response return to the minimum 2 journeys.
+
+        Note : The night bus filter is loaded with default parameters.
+        With this data, night bus filter parameters don't filter anything.
+        """
+        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=1"
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) == 2
+
+    def test_min_nb_journeys_options(self):
+        """
+        The data contains only 5 journeys, so the response return to the minimum 3 journeys.
+
+        Note : The night bus filter is loaded with default parameters.
+        With this data, night bus filter parameters don't filter anything.
+        """
+        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=3"
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+        assert len(response['journeys']) == 3
+
+    def test_maximum_journeys_with_min_nb_journeys_options(self):
+        """
+        The data contains only 5 journeys but we want 6 journeys.
+        The response have to contains only 5 journeys.
+
+        Note : The night bus filter is loaded with default parameters.
+        With this data, night bus filter parameters don't filter anything.
+        """
+        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=6"
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+        assert len(response['journeys']) == 5
+
+    def test_min_nb_journeys_with_classical_night_bus_filter_parameters(self):
+        """
+        The data contains only 5 journeys.
+        We active the min_nb_journeys option and change night bus filter parameters to
+        filter the 2 lastest journeys.
+        """
+        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=5&_night_bus_filter_base_factor=0&_night_bus_filter_max_factor=1.2"
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+        assert len(response['journeys']) == 3
+
+    def test_min_nb_journeys_with_particular_night_bus_filter_parameters_1(self):
+        """
+        The data contains only 5 journeys.
+        _night_bus_filter_base_factor = 0
+        _night_bus_filter_max_factor = 0
+
+        The filter is not active, so the response contains 5 journeys.
+        """
+        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=5&_night_bus_filter_base_factor=0&_night_bus_filter_max_factor=0"
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+        assert len(response['journeys']) == 5
+
+    def test_min_nb_journeys_with_particular_night_bus_filter_parameters_2(self):
+        """
+        The data contains only 5 journeys.
+        _night_bus_filter_base_factor = 0
+        _night_bus_filter_max_factor = 1
+
+        The filter is active only for the first journey, so the response contains 1 journey.
+        This is the min configuration.
+        """
+        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=5&_night_bus_filter_base_factor=0&_night_bus_filter_max_factor=1"
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+        assert len(response['journeys']) == 1
+
+    def test_min_nb_journeys_with_particular_night_bus_filter_parameters_3(self):
+        """
+        The data contains only 5 journeys.
+        _night_bus_filter_base_factor = 86040 (~ infinite)
+        _night_bus_filter_max_factor = 1000 (~ infinite)
+
+        The filter is active for all journeys, so the response contains 0 journey.
+        This is the max configuration.
+        """
+        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=5&_night_bus_filter_base_factor=86040&_night_bus_filter_max_factor=1000"
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+        assert len(response['journeys']) == 5
