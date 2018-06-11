@@ -409,3 +409,7 @@ class TestNewDefaultWithoutPt(WithoutPt, NewDefaultScenarioAbstractTestFixture):
 @config({"scenario": "new_default"})
 class TestNewDefaultMinNbJourneys(JourneysMinNbJourneys, NewDefaultScenarioAbstractTestFixture):
     pass
+
+@config({"scenario": "new_default"})
+class TestNewDefaultWithNightBusFilter(JourneysWithNightBusFilter, NewDefaultScenarioAbstractTestFixture):
+    pass

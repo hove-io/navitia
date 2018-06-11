@@ -142,3 +142,7 @@ class TestDistributedOnBasicRouting(OnBasicRouting, NewDefaultScenarioAbstractTe
 @config({"scenario": "distributed"})
 class TestDistributedMinNbJourneys(JourneysMinNbJourneys, NewDefaultScenarioAbstractTestFixture):
     pass
+
+@config({"scenario": "distributed"})
+class TestDistributedWithNightBusFilter(JourneysWithNightBusFilter, NewDefaultScenarioAbstractTestFixture):
+    pass
