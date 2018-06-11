@@ -44,6 +44,7 @@ MODE_TO_PB_MODE = {'walking': response_pb2.Walking,
                   'car': response_pb2.Car,
                   'ridesharing': response_pb2.Ridesharing}
 
+
 def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end, mode):
     section = response_pb2.Section()
     section.type = response_pb2.CROW_FLY
@@ -128,6 +129,13 @@ def _extend_journey(pt_journey, fallback_dp, fallback_extremity):
     pt_journey.distances.walking += aligned_fallback.journeys[0].distances.walking
     pt_journey.distances.bike += aligned_fallback.journeys[0].distances.bike
     pt_journey.distances.car += aligned_fallback.journeys[0].distances.car
+
+    #Copy pt_section.origin to fallback_section.destination and pt_section.destination to fallback_section.origin
+    _, represents_start_fallback = fallback_extremity
+    if represents_start_fallback:
+        aligned_fallback.journeys[0].sections[0].origin.CopyFrom(pt_journey.sections[-1].destination)
+    else:
+        aligned_fallback.journeys[0].sections[0].destination.CopyFrom(pt_journey.sections[0].origin)
 
     _extend_pt_sections_with_direct_path(pt_journey, aligned_fallback)
 
