@@ -828,6 +828,7 @@ class Scenario(simple.Scenario):
         responses = []
         nb_try = 0
         nb_qualified_journeys = 0
+        nb_previously_qualified_journeys = 0
 
         max_journeys_calls = app.config.get('MAX_JOURNEYS_CALLS', 20)
         while request is not None and \
@@ -893,9 +894,11 @@ class Scenario(simple.Scenario):
 
             nb_qualified_journeys = nb_journeys(responses)
 
-            # We allow one more call to kraken if there is no valid journey.
-            if nb_qualified_journeys == 0:
+            if nb_previously_qualified_journeys == nb_qualified_journeys:
+                # If there are no qualified journey in the kraken response,
+                # another request is sent to try to find more journeys, just in case...
                 min_journeys_calls = max(min_journeys_calls, 2)
+            nb_previously_qualified_journeys = nb_qualified_journeys
 
         logger.debug('nb of call kraken: %i', nb_try)
 
