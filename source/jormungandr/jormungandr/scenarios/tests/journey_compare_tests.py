@@ -944,6 +944,8 @@ def test_heavy_journey_bss():
     journey.sections[-1].street_network.mode = response_pb2.Walking
     journey.sections[-1].duration = 5
 
+    journey.durations.bike = 5
+    journey.durations.walking = 10
     journey_filter.filter_too_short_heavy_journeys(journey, request)
 
     assert 'to_delete' not in journey.tags
@@ -980,6 +982,7 @@ def test_activate_deactivate_min_bike():
     journey.sections[-1].street_network.mode = response_pb2.Bike
     journey.sections[-1].duration = 7
 
+    journey.durations.bike = 12
     journey_filter.filter_too_short_heavy_journeys(journey, request)
     assert 'to_delete' not in journey.tags
 
