@@ -99,8 +99,8 @@ def final_filter_journeys(response_list, instance, request):
     final_line_filter = get_or_default(request, '_final_line_filter', False)
     if final_line_filter:
         journeys = get_qualified_journeys(response_list)
-        journeys_pool = itertools.combinations(journeys, 2)
-        _filter_similar_line_journeys(journeys_pool, request)
+        journey_pairs_pool = itertools.combinations(journeys, 2)
+        _filter_similar_line_journeys(journey_pairs_pool, request)
 
     journeys = get_qualified_journeys(response_list)
     _filter_too_much_connections(journeys, instance, request)
@@ -172,20 +172,19 @@ def mark_as_dead(journey, is_debug, *reasons):
         journey.tags.extend(('deleted_because_' + reason for reason in reasons))
 
 
-def filter_similar_vj_journeys(journeys, request):
-    _filter_similar_journeys(journeys, request, similar_journeys_vj_generator)
+def filter_similar_vj_journeys(journey_pairs_pool, request):
+    _filter_similar_journeys(journey_pairs_pool, request, similar_journeys_vj_generator)
 
 
-def _filter_similar_line_journeys(journeys, request):
-    _filter_similar_journeys(journeys, request, similar_journeys_line_generator)
+def _filter_similar_line_journeys(journey_pairs_pool, request):
+    _filter_similar_journeys(journey_pairs_pool, request, similar_journeys_line_generator)
 
 
-def filter_shared_sections_journeys(journeys, request):
-    journeys_pool = itertools.combinations(journeys, 2)
-    _filter_similar_journeys(journeys_pool, request, shared_section_generator)
+def filter_shared_sections_journeys(journey_pairs_pool, request):
+    _filter_similar_journeys(journey_pairs_pool, request, shared_section_generator)
 
 
-def _filter_similar_journeys(journeys_pool, request, similar_journey_generator):
+def _filter_similar_journeys(journey_pairs_pool, request, similar_journey_generator):
     """
     Compare journeys 2 by 2.
     The given generator tells which part of journeys are compared.
@@ -194,7 +193,7 @@ def _filter_similar_journeys(journeys_pool, request, similar_journey_generator):
 
     logger = logging.getLogger(__name__)
     is_debug = request.get('debug')
-    for j1, j2 in journeys_pool:
+    for j1, j2 in journey_pairs_pool:
         if to_be_deleted(j1) or to_be_deleted(j2):
             continue
         if compare(j1, j2, similar_journey_generator):

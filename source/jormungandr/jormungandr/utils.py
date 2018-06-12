@@ -602,7 +602,7 @@ def compose(*funs):
 class ComposedFilter(object):
     """
     Compose several filters with convenient interfaces
-    All filters are evaluated lazily
+    All filters are evaluated lazily, the first added is the first tested
 
     >>> F = ComposedFilter()
     >>> f = F.add_filter(lambda x: x % 2 == 0).add_filter(lambda x: x % 5 == 0).compose_filters()

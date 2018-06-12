@@ -284,7 +284,7 @@ def test_journeys_equality_test_same_journeys():
     assert are_equals(journey1, journey2)
 
 
-def journeys_gen(list_responses):
+def journey_pairs_gen(list_responses):
     return itertools.combinations(get_qualified_journeys(list_responses), 2)
 
 def test_journeys_equality_test_almost_same_journeys():
@@ -317,7 +317,7 @@ def test_similar_journeys():
     journey2.duration = 43
     journey2.sections[0].uris.vehicle_journey = 'bob'
 
-    journey_filter.filter_similar_vj_journeys(list(journeys_gen(responses)), {})
+    journey_filter.filter_similar_vj_journeys(list(journey_pairs_gen(responses)), {})
     assert len(list(get_qualified_journeys(responses))) == 1
 
 
@@ -335,7 +335,7 @@ def test_similar_journeys_test2():
     journey2.duration = 43
     journey2.sections[-1].uris.vehicle_journey = 'bob'
 
-    journey_filter.filter_similar_vj_journeys(list(journeys_gen(responses)), {})
+    journey_filter.filter_similar_vj_journeys(list(journey_pairs_gen(responses)), {})
 
     assert len(list(get_qualified_journeys(responses))) == 1
 
@@ -354,7 +354,7 @@ def test_similar_journeys_test3():
     journey2.duration = 43
     journey2.sections[-1].uris.vehicle_journey = 'bobette'
 
-    journey_filter.filter_similar_vj_journeys(list(journeys_gen(responses)), {})
+    journey_filter.filter_similar_vj_journeys(list(journey_pairs_gen(responses)), {})
 
     assert 'to_delete' not in journey1.tags
     assert 'to_delete' in journey2.tags
@@ -386,7 +386,7 @@ def test_similar_journeys_different_transfer():
     journey2.duration = 43
     journey2.sections[-1].uris.vehicle_journey = 'bobette'
 
-    journey_filter.filter_similar_vj_journeys(journeys_gen(responses), {})
+    journey_filter.filter_similar_vj_journeys(journey_pairs_gen(responses), {})
 
     assert 'to_delete' not in journey1.tags
     assert 'to_delete' in journey2.tags
@@ -429,7 +429,7 @@ def test_similar_journeys_different_waiting_durations():
     journey2.sections[-1].uris.vehicle_journey = 'bobette'
     journey2.sections[-1].duration = 200
 
-    journey_filter.filter_similar_vj_journeys(journeys_gen(responses), {})
+    journey_filter.filter_similar_vj_journeys(journey_pairs_gen(responses), {})
 
     assert 'to_delete' not in journey2.tags
     assert 'to_delete' in journey1.tags
@@ -491,7 +491,7 @@ def test_similar_journeys_multi_trasfer_and_different_waiting_durations():
     journey2.sections[-1].uris.vehicle_journey = 'boby'
     journey2.sections[-1].duration = 200
 
-    journey_filter.filter_similar_vj_journeys(list(journeys_gen(responses)), {})
+    journey_filter.filter_similar_vj_journeys(list(journey_pairs_gen(responses)), {})
 
     assert 'to_delete' not in journey1.tags
     assert 'to_delete' in journey2.tags
@@ -531,7 +531,7 @@ def test_similar_journeys_with_and_without_waiting_section():
     journey2.sections[-1].uris.vehicle_journey = 'bobette'
     journey2.sections[-1].duration = 200
 
-    journey_filter.filter_similar_vj_journeys(list(journeys_gen(responses)), {})
+    journey_filter.filter_similar_vj_journeys(list(journey_pairs_gen(responses)), {})
 
     assert 'to_delete' not in journey1.tags
     assert 'to_delete' in journey2.tags
@@ -556,7 +556,7 @@ def test_similar_journeys_walking_bike():
     journey2.sections[-1].type = response_pb2.STREET_NETWORK
     journey2.sections[-1].street_network.mode = response_pb2.Bike
 
-    journey_filter.filter_similar_vj_journeys(list(journeys_gen(responses)), {})
+    journey_filter.filter_similar_vj_journeys(list(journey_pairs_gen(responses)), {})
 
     assert 'to_delete' not in journey1.tags
     assert 'to_delete' not in journey2.tags
