@@ -55,25 +55,34 @@ def filter_journeys(responses, instance, request):
     Filter by side effect the list of pb responses's journeys
 
     """
-    is_debug = request.get('debug')
+    is_debug = request.get('debug', False)
+    min_bike = request['_min_bike']
+    min_car = request['_min_car']
+    orig_modes = request.get('origin_mode', [])
+    dest_modes = request.get('destination_mode', [])
     #DEBUG
     if is_debug:
+        logger = logging.getLogger(__name__)
+        logger.debug("All journeys:")
+        [_debug_journey(j) for j in get_all_journeys(responses)]
+        logger.debug("Qualified journeys:")
         [_debug_journey(j) for j in get_qualified_journeys(responses)]
 
     min_nb_transfers = get_or_default(request, 'min_nb_transfers', 0)
 
     # Note that we use the functools.partial to capture the arguments
-    filters = [partial(filter_too_short_heavy_journeys, request=request),
+    filters = [partial(filter_too_short_heavy_journeys, is_debug=is_debug, min_bike=min_bike,
+                       min_car=min_car, orig_modes=orig_modes, dest_modes=dest_modes),
                partial(filter_too_long_waiting, is_debug=is_debug),
                partial(filter_min_transfers, is_debug=is_debug, min_nb_transfers=min_nb_transfers)]
 
     # we add more filters in some special cases:
     max_successive = get_or_default(request, '_max_successive_physical_mode', 0)
     if max_successive != 0:
-        limit_id = instance.successive_physical_mode_to_limit_id
+        limited_mode_id = instance.successive_physical_mode_to_limit_id # typically : physical_mode:bus
         filters.append(partial(filter_max_successive_physical_mode,
                                is_debug=is_debug,
-                               successive_physical_mode_to_limit_id=limit_id,
+                               successive_physical_mode_to_limit_id=limited_mode_id,
                                max_successive_physical_mode=max_successive))
 
     dp = get_or_default(request, 'direct_path', 'indifferent')
@@ -85,24 +94,33 @@ def filter_journeys(responses, instance, request):
     composed_filter = ComposedFilter()
     [composed_filter.add_filter(f) for f in filters]
 
-    return composed_filter.compose_filters()(get_qualified_journeys(responses))
+    if is_debug:
+        return composed_filter.compose_filters()(get_all_journeys(responses))
+    else:
+        return composed_filter.compose_filters()(get_qualified_journeys(responses))
 
 
 def final_filter_journeys(response_list, instance, request):
     """
     Filter by side effect the list of pb responses's journeys
     Final pass : we remove similar journeys (same lines and stop_points of change)
+
+    Nota: This filter is applied only once, after all calls to kraken are done
     """
+    is_debug = request.get('debug', False)
+    journey_generator = get_qualified_journeys
+    if is_debug:
+        journey_generator = get_all_journeys
 
     # for clarity purpose we build a temporary list
 
     final_line_filter = get_or_default(request, '_final_line_filter', False)
     if final_line_filter:
-        journeys = get_qualified_journeys(response_list)
+        journeys = journey_generator(response_list)
         journey_pairs_pool = itertools.combinations(journeys, 2)
         _filter_similar_line_journeys(journey_pairs_pool, request)
 
-    journeys = get_qualified_journeys(response_list)
+    journeys = journey_generator(response_list)
     _filter_too_much_connections(journeys, instance, request)
 
 
@@ -192,7 +210,7 @@ def _filter_similar_journeys(journey_pairs_pool, request, similar_journey_genera
     """
 
     logger = logging.getLogger(__name__)
-    is_debug = request.get('debug')
+    is_debug = request.get('debug', False)
     for j1, j2 in journey_pairs_pool:
         if to_be_deleted(j1) or to_be_deleted(j2):
             continue
@@ -207,23 +225,20 @@ def _filter_similar_journeys(journey_pairs_pool, request, similar_journey_genera
                           .format(other=j1.internal_id if worst == j2 else j2.internal_id))
 
 
-def exceed_min_duration(current_section, journey, request,  min_duration):
+def exceed_min_duration(current_section, journey, min_duration, orig_modes=[], dest_modes=[]):
     if current_section == journey.sections[0]:
-        return 'walking' in request.get('origin_mode', []) \
-               and current_section.duration < min_duration
-    return 'walking' in request.get('destination_mode', []) \
-           and current_section.duration < min_duration
+        return 'walking' in orig_modes and current_section.duration < min_duration
+    return 'walking' in dest_modes and current_section.duration < min_duration
 
 
-def filter_too_short_heavy_journeys(journey, request):
+def filter_too_short_heavy_journeys(journey, min_bike=None, min_car=None,
+                                    orig_modes=[], dest_modes=[], is_debug=False):
     """
     we filter the journeys with use an "heavy" fallback mode if it's use only for a few minutes
     Heavy fallback mode are Bike and Car, bss is not considered as one.
     Typically you don't take your car for only 2 minutes
     """
     logger = logging.getLogger(__name__)
-
-    is_debug = request.get('debug', False)
 
     on_bss = False
     for s in journey.sections:
@@ -235,16 +250,20 @@ def filter_too_short_heavy_journeys(journey, request):
             continue
 
         if s.street_network.mode == response_pb2.Car \
-                and exceed_min_duration(s, journey, request, request['_min_car']):
+                and min_car is not None \
+                and exceed_min_duration(s, journey, min_duration=min_car,
+                                        orig_modes=orig_modes, dest_modes=dest_modes):
             logger.debug("the journey {} has not enough car, we delete it".format(journey.internal_id))
             mark_as_dead(journey, is_debug, "not_enough_car")
-            return False or is_debug
+            return is_debug
         if not on_bss \
                 and s.street_network.mode == response_pb2.Bike \
-                and exceed_min_duration(s, journey, request, request['_min_bike']):
+                and min_bike is not None \
+                and exceed_min_duration(s, journey, min_duration=min_bike,
+                                        orig_modes=orig_modes, dest_modes=dest_modes):
             logger.debug("the journey {} has not enough bike, we delete it".format(journey.internal_id))
             mark_as_dead(journey, is_debug, "not_enough_bike")
-            return False or is_debug
+            return is_debug
     return True
 
 
@@ -272,7 +291,7 @@ def filter_too_long_waiting(journey, is_debug):
             continue
         logger.debug("the journey {} has a too long waiting, we delete it".format(journey.internal_id))
         mark_as_dead(journey, is_debug, "too_long_waiting")
-        return False or is_debug
+        return is_debug
     return True
 
 
@@ -300,7 +319,7 @@ def filter_max_successive_physical_mode(journey,
         logger.debug("the journey {} has a too much successive {}, we delete it".
             format(journey.internal_id, successive_physical_mode_to_limit_id))
         mark_as_dead(journey, is_debug, "too_much_successive_physical_mode")
-        return False or is_debug
+        return is_debug
 
     return True
 
@@ -316,7 +335,7 @@ def _filter_too_much_connections(journeys, instance, request):
     import itertools
     it1, it2 = itertools.tee(journeys, 2)
     min_connections = get_min_connections(it1)
-    is_debug = request.get('debug')
+    is_debug = request.get('debug', False)
     if min_connections is not None:
         max_connections_allowed = max_additional_connections + min_connections
         for j in it2:
@@ -333,7 +352,7 @@ def filter_min_transfers(journey, is_debug, min_nb_transfers):
     if get_nb_connections(journey) < min_nb_transfers:
         logger.debug("the journey {} has not enough connections, we delete it".format(journey.internal_id))
         mark_as_dead(journey, is_debug, "not_enough_connections")
-        return False or is_debug
+        return is_debug
     return True
 
 
@@ -347,13 +366,13 @@ def filter_direct_path(journey, is_debug, dp):
         logger.debug("the journey {} is direct, we delete it as param direct_path=none"
                      .format(journey.internal_id))
         mark_as_dead(journey, is_debug, "direct_path_none")
-        return False or is_debug
+        return is_debug
 
     elif dp == 'only' and 'non_pt' not in journey.tags:
         logger.debug("the journey {} uses pt, we delete it as param direct_path=only"
                      .format(journey.internal_id))
         mark_as_dead(journey, is_debug, "direct_path_only")
-        return False or is_debug
+        return is_debug
 
     return True
 
@@ -430,6 +449,7 @@ def way_later(request, journey1, journey2):
 def _filter_too_late_journeys(responses, request):
     """
     Filter not coherent journeys
+    TODO: This code is dead, to be removed
 
     The aim is to keep that as simple as possible
     """
@@ -567,4 +587,12 @@ def get_qualified_journeys(responses):
     :return: generator of journeys
     """
     return (j for r in responses for j in r.journeys if not to_be_deleted(j))
+
+
+def get_all_journeys(responses):
+    """
+    :param responses: protobuf
+    :return: generator of journeys
+    """
+    return (j for r in responses for j in r.journeys)
 
