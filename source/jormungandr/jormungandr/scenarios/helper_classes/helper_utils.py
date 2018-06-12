@@ -51,7 +51,6 @@ def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end,
     section.origin.CopyFrom(crowfly_origin)
     section.destination.CopyFrom(crowfly_destination)
     section.duration = end - begin
-    pt_journey.durations.walking += section.duration
     pt_journey.durations.total += section.duration
     pt_journey.duration += section.duration
     section.begin_date_time = begin
@@ -63,12 +62,16 @@ def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end,
     # We need to affect section length to distances.attribut correponding to the mode.
     if section.street_network.mode == response_pb2.Walking:
         pt_journey.distances.walking += section_length
+        pt_journey.durations.walking += section.duration
     elif section.street_network.mode == response_pb2.Bike or section.street_network.mode == response_pb2.Bss:
         pt_journey.distances.bike += section_length
+        pt_journey.durations.bike += section.duration
     elif section.street_network.mode == response_pb2.Car:
         pt_journey.distances.car += section_length
+        pt_journey.durations.car += section.duration
     elif section.street_network.mode == response_pb2.Ridesharing:
         pt_journey.distances.ridesharing += section_length
+        pt_journey.durations.ridesharing += section.duration
 
     section.id = six.text_type(uuid.uuid4())
     return section
