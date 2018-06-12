@@ -51,11 +51,11 @@ class Timeo(RealtimeProxy):
 
 
     curl example to check/test that external service is working:
-    curl -X GET '<server>?serviceID=<service>&EntityID=<entity>&Media=<spec>&StopDescription=?StopTimeoCode=<stop_code>&NextStopTimeNumber=<nb_desired>&LineTimeoCode=<line_code>&Way=<route_code>&StopTimeType=TR;'
+    curl -X GET '{server}?serviceID={service}&EntityID={entity}&Media={spec}&StopDescription=?StopTimeoCode={stop_code}&NextStopTimeNumber={nb_desired}&LineTimeoCode={line_code}&Way={route_code}&StopTimeType=TR;'
 
-    <line_code>, <route_code> and <stop_code> are provided using the same code key, named after
+    {line_code}, {route_code} and {stop_code} are provided using the same code key, named after
     the 'destination_id_tag' if provided on connector's init, or the 'id' otherwise.
-    <route_code> is in pratice 'A' or 'R' (for 'aller' or 'retour', French for 'forth' or 'back').
+    {route_code} is in pratice 'A' or 'R' (for 'aller' or 'retour', French for 'forth' or 'back').
 
     So in practice it will look like:
     curl -X GET 'http://bobimeo.fr/cgi/api_compagnon.cgi?serviceID=9&EntityID=289&Media=spec_navit_comp&StopDescription=?StopTimeoCode=1586&NextStopTimeNumber=10&LineTimeoCode=52&Way=A&StopTimeType=TR;'

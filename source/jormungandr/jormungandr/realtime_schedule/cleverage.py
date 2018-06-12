@@ -45,12 +45,12 @@ class Cleverage(RealtimeProxy):
 
 
     curl example to check/test that external service is working:
-    curl -X GET -H 'X-Keolis-Api-Version: <version>, X-Keolis-Api-Key: <key>' '<server>/<stop_code>'
+    curl -X GET -H 'X-Keolis-Api-Version: {version}, X-Keolis-Api-Key: {key}' '{server}/{stop_code}'
 
-    On the response, Navitia matches route-point's <line_code> with
+    On the response, Navitia matches route-point's {line_code} with
     'code' in each element at the root of the response.
 
-    <line_code> and <stop_code> are provided using the same code key, named after
+    {line_code} and {stop_code} are provided using the same code key, named after
     the 'destination_id_tag' if provided on connector's init, or the 'id' otherwise.
 
     In practice it will look like:
