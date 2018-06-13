@@ -823,22 +823,26 @@ class Scenario(simple.Scenario):
         # is modified by create_next_kraken_request function.
         request = deepcopy(api_request)
 
-        min_journeys_calls = get_or_default(request, '_min_journeys_calls', 1)
-
         responses = []
         nb_try = 0
         nb_qualified_journeys = 0
         nb_previously_qualified_journeys = 0
+        last_chance_retry = False
 
+        min_journeys_calls = get_or_default(request, '_min_journeys_calls', 1)
         max_journeys_calls = app.config.get('MAX_JOURNEYS_CALLS', 20)
+        max_nb_calls = min(min_nb_journeys, max_journeys_calls)
+
         while request is not None and \
-                ((nb_qualified_journeys < min_nb_journeys and nb_try < min(min_nb_journeys, max_journeys_calls))\
+                ((nb_qualified_journeys < min_nb_journeys and nb_try < max_nb_calls)\
                  or nb_try < min_journeys_calls):
 
             nb_try = nb_try + 1
 
-            # we take into account the option only if we have a single origin_mode and destination_mode couple.
-            if len(krakens_call) > 1:
+            # The parameter 'min_nb_journeys' isn't used in the following case:
+            # - If there's more than one single origin_mode and destination_mode couple.
+            # - If there was no journey qualified in the previous response, the last chance request is limited
+            if len(krakens_call) > 1 or last_chance_retry:
                 request['min_nb_journeys'] = 0
             else:
                 min_nb_journeys_left = min_nb_journeys - nb_qualified_journeys
@@ -897,9 +901,14 @@ class Scenario(simple.Scenario):
             if nb_previously_qualified_journeys == nb_qualified_journeys:
                 # If there are no qualified journey in the kraken response,
                 # another request is sent to try to find more journeys, just in case...
-                min_journeys_calls = max(min_journeys_calls, 2)
+                if last_chance_retry:
+                    break
+                last_chance_retry = True
             nb_previously_qualified_journeys = nb_qualified_journeys
 
+            if nb_qualified_journeys == 0:
+                min_journeys_calls = max(min_journeys_calls, 2)
+                
         logger.debug('nb of call kraken: %i', nb_try)
 
         journey_filter.final_filter_journeys(responses, instance, api_request)
