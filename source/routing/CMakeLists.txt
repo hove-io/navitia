@@ -9,18 +9,23 @@ SET(ROUTING_SRC
   journey.cpp)
 
 add_library(routing ${ROUTING_SRC})
+add_dependencies(routing protobuf_files)
 target_link_libraries(routing types fare georef utils autocomplete ${BOOST_LIBS})
 
 add_executable(benchmark benchmark.cpp)
 target_link_libraries(benchmark routing  boost_program_options data routing)
 
 add_library(routing_cli_utils routing_cli_utils.cpp)
+add_dependencies(routing_cli_utils protobuf_files)
+
 add_executable(standalone single_run.cpp)
+add_dependencies(standalone protobuf_files)
 target_link_libraries(standalone
   routing_cli_utils routing pb_lib boost_program_options data fare routing thermometer
   time_tables pb_lib georef utils autocomplete ${BOOST_LIBS} log4cplus pthread protobuf)
 
 add_executable(cli routing_cli.cpp)
+add_dependencies(cli protobuf_files)
 target_link_libraries(cli
   linenoise routing_cli_utils routing pb_lib boost_program_options data fare routing thermometer
   time_tables pb_lib georef utils autocomplete ${BOOST_LIBS} log4cplus pthread protobuf)

@@ -1,2 +1,3 @@
 add_library(proximitylist proximity_list.cpp proximitylist_api.cpp)
+add_dependencies(proximitylist protobuf_files)
 add_subdirectory(tests)
