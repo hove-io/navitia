@@ -125,6 +125,8 @@ call_raptor(navitia::PbCreator& pb_creator,
             };
             filter_late_journeys(raptor_journeys, params);
 
+            LOG4CPLUS_DEBUG(logger, "after filtering late journeys: " << raptor_journeys.size() << " solution(s) left");
+
             if (raptor_journeys.empty())
                 break;
 
