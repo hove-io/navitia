@@ -839,7 +839,7 @@ class Scenario(simple.Scenario):
 
             nb_try = nb_try + 1
 
-            # The parameter 'min_nb_journeys' isn't used in the following case:
+            # The parameter 'min_nb_journeys' isn't used in the following cases:
             # - If there's more than one single origin_mode and destination_mode couple.
             # - If there was no journey qualified in the previous response, the last chance request is limited
             if len(krakens_call) > 1 or last_chance_retry:
@@ -888,11 +888,7 @@ class Scenario(simple.Scenario):
                 itertools.product(tmp2, qualified_journeys),
             )
 
-            pool1, pool2 = itertools.tee(journeys_pool)
-            journey_filter.filter_similar_vj_journeys(pool1, api_request)
-
-            if api_request['no_shared_section']:
-                journey_filter.filter_shared_sections_journeys(pool2, api_request)
+            journey_filter.filter_similar_vj_journeys(journeys_pool, api_request)
 
             responses.extend(new_resp)  # we keep the error for building the response
 
@@ -910,6 +906,9 @@ class Scenario(simple.Scenario):
                 min_journeys_calls = max(min_journeys_calls, 2)
                 
         logger.debug('nb of call kraken: %i', nb_try)
+
+        if api_request['no_shared_section']:
+            journey_filter.filter_shared_sections_journeys(journey_filter.get_qualified_journeys(responses), api_request)
 
         journey_filter.final_filter_journeys(responses, instance, api_request)
         pb_resp = merge_responses(responses)

@@ -181,7 +181,8 @@ def _filter_similar_line_journeys(journeys, request):
 
 
 def filter_shared_sections_journeys(journeys, request):
-    _filter_similar_journeys(journeys, request, shared_section_generator)
+    journeys_pool = itertools.combinations(journeys, 2)
+    _filter_similar_journeys(journeys_pool, request, shared_section_generator)
 
 
 def _filter_similar_journeys(journeys_pool, request, similar_journey_generator):
