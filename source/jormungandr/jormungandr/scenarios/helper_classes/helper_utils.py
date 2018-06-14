@@ -60,18 +60,19 @@ def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end,
     to_coord = get_pt_object_coord(section.destination)
     section_length = int(crowfly_distance_between(from_coord, to_coord))
     # We need to affect section length to distances.attribut correponding to the mode.
-    if section.street_network.mode == response_pb2.Walking:
-        pt_journey.distances.walking += section_length
-        pt_journey.durations.walking += section.duration
-    elif section.street_network.mode == response_pb2.Bike or section.street_network.mode == response_pb2.Bss:
-        pt_journey.distances.bike += section_length
-        pt_journey.durations.bike += section.duration
-    elif section.street_network.mode == response_pb2.Car:
-        pt_journey.distances.car += section_length
-        pt_journey.durations.car += section.duration
-    elif section.street_network.mode == response_pb2.Ridesharing:
-        pt_journey.distances.ridesharing += section_length
-        pt_journey.durations.ridesharing += section.duration
+    if section.duration > 0:
+        if section.street_network.mode == response_pb2.Walking:
+            pt_journey.distances.walking += section_length
+            pt_journey.durations.walking += section.duration
+        elif section.street_network.mode == response_pb2.Bike or section.street_network.mode == response_pb2.Bss:
+            pt_journey.distances.bike += section_length
+            pt_journey.durations.bike += section.duration
+        elif section.street_network.mode == response_pb2.Car:
+            pt_journey.distances.car += section_length
+            pt_journey.durations.car += section.duration
+        elif section.street_network.mode == response_pb2.Ridesharing:
+            pt_journey.distances.ridesharing += section_length
+            pt_journey.durations.ridesharing += section.duration
 
     section.id = six.text_type(uuid.uuid4())
     return section

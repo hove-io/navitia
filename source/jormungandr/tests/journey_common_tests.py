@@ -887,7 +887,7 @@ class JourneyCommon(object):
         assert(r['journeys'][0]['sections'][0]['type'] == 'crow_fly')
         assert(r['journeys'][0]['sections'][0]['duration'] == 0)
         # Verify distances and durations in a journey with crow_fly
-        assert(r['journeys'][0]['distances']['walking'] == 19)
+        assert(r['journeys'][0]['distances']['walking'] == 0)
         assert(r['journeys'][0]['durations']['walking'] == 0)
 
         # The time of departure of PT is 08:01:00 and it takes 17s to walk to the station
@@ -923,7 +923,7 @@ class JourneyCommon(object):
         assert(r['journeys'][0]['sections'][-1]['duration'] == 0)
         # Verify distances and durations in a journey with crow_fly
         assert(r['journeys'][0]['durations']['walking'] == 0)
-        assert(r['journeys'][0]['distances']['walking'] == 19)
+        assert(r['journeys'][0]['distances']['walking'] == 0)
 
         # The estimated time of arrival without free_radius is 08:01:19
         # If the requested arrival time is before 08:01:19, the PT journey shouldn't be displayed
