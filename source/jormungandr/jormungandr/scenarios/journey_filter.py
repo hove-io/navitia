@@ -56,8 +56,8 @@ def filter_journeys(responses, instance, request):
 
     """
     is_debug = request.get('debug', False)
-    min_bike = request['_min_bike']
-    min_car = request['_min_car']
+    min_bike = request.get('_min_bike', None)
+    min_car = request.get('_min_car', None)
     orig_modes = request.get('origin_mode', [])
     dest_modes = request.get('destination_mode', [])
     #DEBUG
@@ -91,13 +91,14 @@ def filter_journeys(responses, instance, request):
                                is_debug=is_debug,
                                dp=dp))
 
+    journey_generator = get_qualified_journeys
+    if is_debug:
+        journey_generator = get_all_journeys
+
     composed_filter = ComposedFilter()
     [composed_filter.add_filter(f) for f in filters]
 
-    if is_debug:
-        return composed_filter.compose_filters()(get_all_journeys(responses))
-    else:
-        return composed_filter.compose_filters()(get_qualified_journeys(responses))
+    return composed_filter.compose_filters()(journey_generator(responses))
 
 
 def final_filter_journeys(response_list, instance, request):
