@@ -50,6 +50,30 @@ def delete_journeys(responses, request):
         logging.getLogger(__name__).info('filtering {} journeys'.format(nb_deleted))
 
 
+def filter_wrapper(f_msg_pair, is_debug=False):
+    """
+    Wraps a filter to automatically deal with debug-mode, logging and tagging
+
+    We always tag the journey 'to_delete'
+    In debug-mode, we deactivate filtering, only add a tag with the reason why it's deleted
+
+    :param f: simple-journey filter, a function (or functor) on a journey returning
+              True if the journey is valid, False otherwise
+    :param is_debug: True if we are in debug-mode
+    :param msg: a minimal message used to tag journey to be deleted and log (useful for debugging)
+    :return: a function to be called on a journey, returning True or False,tagging it if it's deleted
+    """
+    def wrapped_filter(journey):
+        logger = logging.getLogger(__name__)
+        f, msg = f_msg_pair
+        res = f(journey)
+        if not res:
+            logger.debug("We delete: {}, cause: {}".format(journey.internal_id, msg))
+            mark_as_dead(journey, is_debug, msg)
+        return res or is_debug
+    return wrapped_filter
+
+
 def filter_journeys(responses, instance, request):
     """
     Filter by side effect the list of pb responses's journeys
@@ -71,8 +95,10 @@ def filter_journeys(responses, instance, request):
     min_nb_transfers = get_or_default(request, 'min_nb_transfers', 0)
 
     # Note that we use the functools.partial to capture the arguments
-    filters = [partial(filter_too_short_heavy_journeys, is_debug=is_debug, min_bike=min_bike,
-                       min_car=min_car, orig_modes=orig_modes, dest_modes=dest_modes),
+    filters = [partial(filter_wrapper(is_debug=is_debug,
+                                      f_msg_pair=make_filter_too_short_heavy_journeys(
+                                                    min_bike=min_bike, min_car=min_car,
+                                                    orig_modes=orig_modes, dest_modes=dest_modes))),
                partial(filter_too_long_waiting, is_debug=is_debug),
                partial(filter_min_transfers, is_debug=is_debug, min_nb_transfers=min_nb_transfers)]
 
@@ -226,46 +252,47 @@ def _filter_similar_journeys(journey_pairs_pool, request, similar_journey_genera
                           .format(other=j1.internal_id if worst == j2 else j2.internal_id))
 
 
-def exceed_min_duration(current_section, journey, min_duration, orig_modes=[], dest_modes=[]):
+def exceed_min_duration(current_section, journey, min_duration, orig_modes=None, dest_modes=None):
+    orig_modes=[] if orig_modes is None else orig_modes
+    dest_modes=[] if dest_modes is None else dest_modes
+
     if current_section == journey.sections[0]:
         return 'walking' in orig_modes and current_section.duration < min_duration
     return 'walking' in dest_modes and current_section.duration < min_duration
 
 
-def filter_too_short_heavy_journeys(journey, min_bike=None, min_car=None,
-                                    orig_modes=[], dest_modes=[], is_debug=False):
-    """
-    we filter the journeys with use an "heavy" fallback mode if it's use only for a few minutes
-    Heavy fallback mode are Bike and Car, bss is not considered as one.
-    Typically you don't take your car for only 2 minutes
-    """
-    logger = logging.getLogger(__name__)
 
-    on_bss = False
-    for s in journey.sections:
-        if s.type == response_pb2.BSS_RENT:
-            on_bss = True
-        elif s.type == response_pb2.BSS_PUT_BACK:
-            on_bss = False
-        elif s.type != response_pb2.STREET_NETWORK:
-            continue
+def make_filter_too_short_heavy_journeys(min_bike=None, min_car=None, orig_modes=None, dest_modes=None):
+    orig_modes=[] if orig_modes is None else orig_modes
+    dest_modes=[] if dest_modes is None else dest_modes
+    def filter(journey):
+        """
+        we filter the journeys with use an "heavy" fallback mode if it's use only for a few minutes
+        Heavy fallback mode are Bike and Car, bss is not considered as one.
+        Typically you don't take your car for only 2 minutes
+        """
+        on_bss = False
+        for s in journey.sections:
+            if s.type == response_pb2.BSS_RENT:
+                on_bss = True
+            elif s.type == response_pb2.BSS_PUT_BACK:
+                on_bss = False
+            elif s.type != response_pb2.STREET_NETWORK:
+                continue
 
-        if s.street_network.mode == response_pb2.Car \
-                and min_car is not None \
-                and exceed_min_duration(s, journey, min_duration=min_car,
-                                        orig_modes=orig_modes, dest_modes=dest_modes):
-            logger.debug("the journey {} has not enough car, we delete it".format(journey.internal_id))
-            mark_as_dead(journey, is_debug, "not_enough_car")
-            return is_debug
-        if not on_bss \
-                and s.street_network.mode == response_pb2.Bike \
-                and min_bike is not None \
-                and exceed_min_duration(s, journey, min_duration=min_bike,
-                                        orig_modes=orig_modes, dest_modes=dest_modes):
-            logger.debug("the journey {} has not enough bike, we delete it".format(journey.internal_id))
-            mark_as_dead(journey, is_debug, "not_enough_bike")
-            return is_debug
-    return True
+            if s.street_network.mode == response_pb2.Car \
+                    and min_car is not None \
+                    and exceed_min_duration(s, journey, min_duration=min_car,
+                                            orig_modes=orig_modes, dest_modes=dest_modes):
+                return False
+            if not on_bss \
+                    and s.street_network.mode == response_pb2.Bike \
+                    and min_bike is not None \
+                    and exceed_min_duration(s, journey, min_duration=min_bike,
+                                            orig_modes=orig_modes, dest_modes=dest_modes):
+                return False
+        return True
+    return filter, 'too_short_heavy_mode_fallback'
 
 
 def filter_too_long_waiting(journey, is_debug):

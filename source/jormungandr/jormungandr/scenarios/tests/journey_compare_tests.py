@@ -27,9 +27,9 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from jormungandr.scenarios import journey_filter
+from copy import deepcopy
+from jormungandr.scenarios import journey_filter as jf
 from jormungandr.scenarios.utils import DepartureJourneySorter, ArrivalJourneySorter
-from jormungandr.scenarios.journey_filter import to_be_deleted, get_qualified_journeys
 import navitiacommon.response_pb2 as response_pb2
 from navitiacommon import default_values
 from jormungandr.scenarios.default import Scenario, are_equals
@@ -285,7 +285,7 @@ def test_journeys_equality_test_same_journeys():
 
 
 def journey_pairs_gen(list_responses):
-    return itertools.combinations(get_qualified_journeys(list_responses), 2)
+    return itertools.combinations(jf.get_qualified_journeys(list_responses), 2)
 
 def test_journeys_equality_test_almost_same_journeys():
     """
@@ -317,8 +317,8 @@ def test_similar_journeys():
     journey2.duration = 43
     journey2.sections[0].uris.vehicle_journey = 'bob'
 
-    journey_filter.filter_similar_vj_journeys(list(journey_pairs_gen(responses)), {})
-    assert len(list(get_qualified_journeys(responses))) == 1
+    jf.filter_similar_vj_journeys(list(journey_pairs_gen(responses)), {})
+    assert len(list(jf.get_qualified_journeys(responses))) == 1
 
 
 def test_similar_journeys_test2():
@@ -335,9 +335,9 @@ def test_similar_journeys_test2():
     journey2.duration = 43
     journey2.sections[-1].uris.vehicle_journey = 'bob'
 
-    journey_filter.filter_similar_vj_journeys(list(journey_pairs_gen(responses)), {})
+    jf.filter_similar_vj_journeys(list(journey_pairs_gen(responses)), {})
 
-    assert len(list(get_qualified_journeys(responses))) == 1
+    assert len(list(jf.get_qualified_journeys(responses))) == 1
 
 
 def test_similar_journeys_test3():
@@ -354,7 +354,7 @@ def test_similar_journeys_test3():
     journey2.duration = 43
     journey2.sections[-1].uris.vehicle_journey = 'bobette'
 
-    journey_filter.filter_similar_vj_journeys(list(journey_pairs_gen(responses)), {})
+    jf.filter_similar_vj_journeys(list(journey_pairs_gen(responses)), {})
 
     assert 'to_delete' not in journey1.tags
     assert 'to_delete' in journey2.tags
@@ -386,7 +386,7 @@ def test_similar_journeys_different_transfer():
     journey2.duration = 43
     journey2.sections[-1].uris.vehicle_journey = 'bobette'
 
-    journey_filter.filter_similar_vj_journeys(journey_pairs_gen(responses), {})
+    jf.filter_similar_vj_journeys(journey_pairs_gen(responses), {})
 
     assert 'to_delete' not in journey1.tags
     assert 'to_delete' in journey2.tags
@@ -429,7 +429,7 @@ def test_similar_journeys_different_waiting_durations():
     journey2.sections[-1].uris.vehicle_journey = 'bobette'
     journey2.sections[-1].duration = 200
 
-    journey_filter.filter_similar_vj_journeys(journey_pairs_gen(responses), {})
+    jf.filter_similar_vj_journeys(journey_pairs_gen(responses), {})
 
     assert 'to_delete' not in journey2.tags
     assert 'to_delete' in journey1.tags
@@ -491,7 +491,7 @@ def test_similar_journeys_multi_trasfer_and_different_waiting_durations():
     journey2.sections[-1].uris.vehicle_journey = 'boby'
     journey2.sections[-1].duration = 200
 
-    journey_filter.filter_similar_vj_journeys(list(journey_pairs_gen(responses)), {})
+    jf.filter_similar_vj_journeys(list(journey_pairs_gen(responses)), {})
 
     assert 'to_delete' not in journey1.tags
     assert 'to_delete' in journey2.tags
@@ -531,7 +531,7 @@ def test_similar_journeys_with_and_without_waiting_section():
     journey2.sections[-1].uris.vehicle_journey = 'bobette'
     journey2.sections[-1].duration = 200
 
-    journey_filter.filter_similar_vj_journeys(list(journey_pairs_gen(responses)), {})
+    jf.filter_similar_vj_journeys(list(journey_pairs_gen(responses)), {})
 
     assert 'to_delete' not in journey1.tags
     assert 'to_delete' in journey2.tags
@@ -556,7 +556,7 @@ def test_similar_journeys_walking_bike():
     journey2.sections[-1].type = response_pb2.STREET_NETWORK
     journey2.sections[-1].street_network.mode = response_pb2.Bike
 
-    journey_filter.filter_similar_vj_journeys(list(journey_pairs_gen(responses)), {})
+    jf.filter_similar_vj_journeys(list(journey_pairs_gen(responses)), {})
 
     assert 'to_delete' not in journey1.tags
     assert 'to_delete' not in journey2.tags
@@ -585,7 +585,7 @@ def test_similar_journeys_car_park():
     journey2.sections.add()
     journey2.sections[-1].type = response_pb2.PARK
 
-    assert journey_filter.compare(journey1, journey2, journey_filter.similar_journeys_vj_generator)
+    assert jf.compare(journey1, journey2, jf.similar_journeys_vj_generator)
 
 
 def test_similar_journeys_bss_park():
@@ -611,7 +611,7 @@ def test_similar_journeys_bss_park():
     journey2.sections[-1].type = response_pb2.STREET_NETWORK
     journey2.sections[-1].street_network.mode = response_pb2.Bss
 
-    assert journey_filter.compare(journey1, journey2, journey_filter.similar_journeys_vj_generator)
+    assert jf.compare(journey1, journey2, jf.similar_journeys_vj_generator)
 
 class MockInstance(object):
     def __init__(self):
@@ -637,7 +637,7 @@ def test_too_late_journeys():
     journey3.departure_date_time = 10000
     journey3.arrival_date_time = 13000
 
-    journey_filter._filter_too_late_journeys(responses, request)
+    jf._filter_too_late_journeys(responses, request)
 
     assert 'to_delete' not in journey1.tags
     assert 'to_delete' not in journey2.tags
@@ -659,7 +659,7 @@ def test_not_too_late_journeys():
     journey2.departure_date_time = 3100
     journey2.arrival_date_time = 3200
 
-    journey_filter._filter_too_late_journeys(responses, request)
+    jf._filter_too_late_journeys(responses, request)
 
     assert 'to_delete' not in journey1.tags
     assert 'to_delete' not in journey2.tags
@@ -695,7 +695,7 @@ def test_too_late_journeys_but_better_mode():
     walking.arrival_date_time = 1016070 # bss * 2 + 10
     walking.tags.append('walking')
 
-    journey_filter._filter_too_late_journeys(responses, request)
+    jf._filter_too_late_journeys(responses, request)
 
     assert all('to_delete' not in j.tags for r in responses for j in r.journeys)
 
@@ -730,7 +730,7 @@ def test_too_late_journeys_and_worst_mode():
     car.arrival_date_time = 1016070 # bike * 2 + 10
     car.tags.append('car')
 
-    journey_filter._filter_too_late_journeys(responses, request)
+    jf._filter_too_late_journeys(responses, request)
 
     assert ['to_delete' not in j.tags for r in responses for j in r.journeys].count(True) == 1
 
@@ -756,7 +756,7 @@ def test_not_too_late_journeys_non_clockwise():
     journey3.departure_date_time = 8000
     journey3.arrival_date_time = 9000
 
-    journey_filter._filter_too_late_journeys(responses, request)
+    jf._filter_too_late_journeys(responses, request)
 
     assert 'to_delete' in journey1.tags
     assert 'to_delete' not in journey2.tags
@@ -862,9 +862,8 @@ def test_heavy_journey_walking():
     journey.sections[-1].street_network.mode = response_pb2.Walking
     journey.sections[-1].duration = 5
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_bike=10, min_car=20)
-
-    assert 'to_delete' not in journey.tags
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_bike=10, min_car=20)
+    assert f(journey)
 
 def test_heavy_journey_bike():
     """
@@ -877,16 +876,75 @@ def test_heavy_journey_bike():
     journey.sections[-1].street_network.mode = response_pb2.Bike
     journey.durations.bike = journey.sections[-1].duration = 15
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_bike=10, min_car=20)
-
-    assert 'to_delete' not in journey.tags
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_bike=10, min_car=20)
+    assert f(journey)
 
     journey.durations.bike = journey.sections[-1].duration = 5
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_bike=10, min_car=20,
-                                                   orig_modes=['bike', 'walking'])
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_bike=10, min_car=20, orig_modes=['bike', 'walking'])
+    assert not f(journey)
 
-    assert 'to_delete' in journey.tags
+def test_filter_wrapper_on_heavy_journey_bike():
+    """
+    same test as above, but this time we wrap the filter to test wrapping is ok
+    """
+    ref_journey = response_pb2.Journey()
+    ref_journey.sections.add()
+    ref_journey.sections[-1].type = response_pb2.STREET_NETWORK
+    ref_journey.sections[-1].street_network.mode = response_pb2.Bike
+    ref_journey.durations.bike = ref_journey.sections[-1].duration = 15
+
+    # first we test when debug-mode deactivated
+    j = deepcopy(ref_journey)
+
+    wrapped_f = jf.filter_wrapper(is_debug=False,
+            f_msg_pair=jf.make_filter_too_short_heavy_journeys(min_bike=10, min_car=20))
+    assert wrapped_f(j)
+    assert 'to_delete' not in j.tags
+    assert 'deleted_because_too_short_heavy_mode_fallback' not in j.tags
+
+    j.durations.bike = j.sections[-1].duration = 5
+
+    wrapped_f = jf.filter_wrapper(is_debug=False,
+            f_msg_pair=jf.make_filter_too_short_heavy_journeys(min_bike=10, min_car=20,
+                                                               orig_modes=['bike', 'walking']))
+    assert not wrapped_f(j)
+    assert 'to_delete' in j.tags
+    assert 'deleted_because_too_short_heavy_mode_fallback' not in j.tags
+
+    # test using without debug mode (should be deactivated)
+    j = deepcopy(ref_journey)
+
+    wrapped_f = jf.filter_wrapper(jf.make_filter_too_short_heavy_journeys(min_bike=10, min_car=20))
+    assert wrapped_f(j)
+    assert 'to_delete' not in j.tags
+    assert 'deleted_because_too_short_heavy_mode_fallback' not in j.tags
+
+    j.durations.bike = j.sections[-1].duration = 5
+
+    wrapped_f = jf.filter_wrapper(jf.make_filter_too_short_heavy_journeys(min_bike=10, min_car=20,
+                                                                          orig_modes=['bike', 'walking']))
+    assert not wrapped_f(j)
+    assert 'to_delete' in j.tags
+    assert 'deleted_because_too_short_heavy_mode_fallback' not in j.tags
+
+    # test when debug-mode is activated
+    j = deepcopy(ref_journey)
+
+    wrapped_f = jf.filter_wrapper(is_debug=True,
+            f_msg_pair=jf.make_filter_too_short_heavy_journeys(min_bike=10, min_car=20))
+    assert wrapped_f(j)
+    assert 'to_delete' not in j.tags
+    assert 'deleted_because_too_short_heavy_mode_fallback' not in j.tags
+
+    j.durations.bike = j.sections[-1].duration = 5
+
+    wrapped_f = jf.filter_wrapper(is_debug=True,
+            f_msg_pair=jf.make_filter_too_short_heavy_journeys(min_bike=10, min_car=20,
+                                                               orig_modes=['bike', 'walking']))
+    assert wrapped_f(j)
+    assert 'to_delete' in j.tags
+    assert 'deleted_because_too_short_heavy_mode_fallback' in j.tags
 
 
 def test_heavy_journey_car():
@@ -900,17 +958,14 @@ def test_heavy_journey_car():
     journey.sections[-1].street_network.mode = response_pb2.Car
     journey.durations.car = journey.sections[-1].duration = 25
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_bike=10, min_car=20)
-
-    assert 'to_delete' not in journey.tags
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_bike=10, min_car=20)
+    assert f(journey)
 
     journey.durations.car = journey.sections[-1].duration = 15
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_bike=10, min_car=20,
-                                                   orig_modes=['car', 'walking'])
-
-    assert 'to_delete' in journey.tags
-
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_bike=10, min_car=20,
+                                                   orig_modes=['bike', 'walking'])
+    assert not f(journey)
 
 def test_heavy_journey_bss():
     """
@@ -943,9 +998,8 @@ def test_heavy_journey_bss():
     journey.durations.bike = 5
     journey.durations.walking = 10
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_bike=10, min_car=20)
-
-    assert 'to_delete' not in journey.tags
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_bike=10, min_car=20)
+    assert f(journey)
 
 
 def test_activate_deactivate_min_bike():
@@ -980,73 +1034,72 @@ def test_activate_deactivate_min_bike():
 
     journey.durations.bike = 12
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_bike=10)
-    assert 'to_delete' not in journey.tags
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_bike=10)
+    assert f(journey)
 
     # case 2: request without origin_mode
     journey.sections[-1].duration = 15
     journey.durations.bike = 20
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_bike=8, dest_modes=['bike', 'walking'])
-    assert 'to_delete' not in journey.tags
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_bike=8, dest_modes=['bike', 'walking'])
+    assert f(journey)
 
     # case 3: request without destination_mode
     journey.sections[0].duration = 15
     journey.sections[-1].duration = 5
     journey.durations.bike = 20
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_bike=8, orig_modes=['bike', 'walking'])
-    assert 'to_delete' not in journey.tags
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_bike=8, orig_modes=['bike', 'walking'])
+    assert f(journey)
 
     # case 4: request without walking in origin_mode
     journey.sections[0].duration = 5
     journey.sections[-1].duration = 15
     journey.durations.bike = 20
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_bike=8, orig_modes=['bike'])
-    assert 'to_delete' not in journey.tags
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_bike=8, orig_modes=['bike'])
+    assert f(journey)
 
     # case 5: request without walking in destination_mode
     journey.sections[0].duration = 15
     journey.sections[-1].duration = 5
     journey.durations.bike = 20
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_bike=8, dest_modes=['bike'])
-    assert 'to_delete' not in journey.tags
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_bike=8, dest_modes=['bike'])
+    assert f(journey)
 
     # case 6: request with bike only in origin_mode destination_mode
     journey.sections[0].duration = 15
     journey.sections[-1].duration = 14
     journey.durations.bike = 29
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_bike=17,
-                                                   orig_modes=['bike'], dest_modes=['bike'])
-    assert 'to_delete' not in journey.tags
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_bike=17, orig_modes=['bike'], dest_modes=['bike'])
+    assert f(journey)
 
     # case 7: request with walking in destination_mode
     journey.sections[0].duration = 15
     journey.sections[-1].duration = 5
     journey.durations.bike = 20
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_bike=8, dest_modes=['bike', 'walking'])
-    assert 'to_delete' in journey.tags
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_bike=8, dest_modes=['bike', 'walking'])
+    assert not f(journey)
 
     # case 8: request with walking in origin_mode
     journey.sections[0].duration = 5
     journey.sections[-1].duration = 15
     journey.durations.bike = 20
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_bike=8, orig_modes=['bike', 'walking'])
-    assert 'to_delete' in journey.tags
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_bike=8, orig_modes=['bike', 'walking'])
+    assert not f(journey)
 
     # case 9: request with bike in origin_mode and bike, walking in destination_mode
     journey.sections[0].duration = 5
     journey.sections[-1].duration = 7
     journey.durations.bike = 12
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_bike=8,
-                                                   orig_modes=['bike'], dest_modes=['bike', 'walking'])
-    assert 'to_delete' in journey.tags
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_bike=8, orig_modes=['bike'],
+                                                   dest_modes=['bike', 'walking'])
+    assert not f(journey)
 
 def test_activate_deactivate_min_car():
     """
@@ -1079,70 +1132,70 @@ def test_activate_deactivate_min_car():
     journey.sections[-1].duration = 7
 
     journey.durations.car = 12
-    journey_filter.filter_too_short_heavy_journeys(journey, min_car=10)
-    assert 'to_delete' not in journey.tags
+
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_car=10)
+    assert f(journey)
 
     # case 2: request without origin_mode
     journey.sections[-1].duration = 15
     journey.durations.car = 20
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_car=8, dest_modes=['car', 'walking'])
-    assert 'to_delete' not in journey.tags
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_car=8, dest_modes=['car', 'walking'])
+    assert f(journey)
 
     # case 3: request without destination_mode
     journey.sections[0].duration = 15
     journey.sections[-1].duration = 5
     journey.durations.car = 20
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_car=8, orig_modes=['car', 'walking'])
-    assert 'to_delete' not in journey.tags
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_car=8, orig_modes=['car', 'walking'])
+    assert f(journey)
 
     # case 4: request without walking in origin_mode
     journey.sections[0].duration = 5
     journey.sections[-1].duration = 15
     journey.durations.car = 20
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_car=8, orig_modes=['car'])
-    assert 'to_delete' not in journey.tags
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_car=8, orig_modes=['car'])
+    assert f(journey)
 
     # case 5: request without walking in destination_mode
     journey.sections[0].duration = 15
     journey.sections[-1].duration = 5
     journey.durations.car = 20
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_car=8, dest_modes=['car'])
-    assert 'to_delete' not in journey.tags
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_car=8, dest_modes=['car'])
+    assert f(journey)
 
     # case 6: request with car only in origin_mode destination_mode
     journey.sections[0].duration = 15
     journey.sections[-1].duration = 14
     journey.durations.car = 29
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_car=17,
-                                                   orig_modes=['car'], dest_modes=['car'])
-    assert 'to_delete' not in journey.tags
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_car=17, orig_modes=['car'], dest_modes=['car'])
+    assert f(journey)
 
     # case 7: request with walking in destination_mode
     journey.sections[0].duration = 15
     journey.sections[-1].duration = 5
     journey.durations.car = 20
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_car=8, dest_modes=['car', 'walking'])
-    assert 'to_delete' in journey.tags
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_car=8, dest_modes=['car', 'walking'])
+    assert not f(journey)
 
     # case 8: request with walking in origin_mode
     journey.sections[0].duration = 5
     journey.sections[-1].duration = 15
     journey.durations.car = 20
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_car=8, orig_modes=['car', 'walking'])
-    assert 'to_delete' in journey.tags
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_car=8, orig_modes=['car', 'walking'])
+    assert not f(journey)
 
     # case 9: request with bike in origin_mode and bike, walking in destination_mode
     journey.sections[0].duration = 5
     journey.sections[-1].duration = 7
     journey.durations.car = 12
 
-    journey_filter.filter_too_short_heavy_journeys(journey, min_car=8,
-                                                   orig_modes=['car'], dest_modes=['car', 'walking'])
-    assert 'to_delete' in journey.tags
+    f, _ = jf.make_filter_too_short_heavy_journeys(min_car=8, orig_modes=['car'],
+                                                   dest_modes=['car', 'walking'])
+    assert not f(journey)
