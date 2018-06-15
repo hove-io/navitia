@@ -181,19 +181,7 @@ bool way_later(const Journey & j1, const Journey & j2,
 void filter_late_journeys(RAPTOR::Journeys & journeys,
                           const NightBusFilter::Params & params);
 
-/**
- * @brief Prepare next call for raptor with min_nb_journeys option
- *
- * Find the earliest departure (clockwise case) and add +1 to use like the
- * request date time. we exclude the first journey.
- *
- * Find the lastest arrival (anti clockwise case) and add -1 to use like the
- * request date time. we exclude the last journey.
- *
- * @param journeys The journey list
- * @param clokwise Active clockwise or not
- * @return The earliest departure (clokcwise = true) or the lastest arrival (clokcwise = false)
- */
+
 DateTime prepare_next_call_for_raptor(const std::list<Journey> & journeys, const bool clockwise);
 
 void make_graphical_isochrone(navitia::PbCreator& pb_creator,
