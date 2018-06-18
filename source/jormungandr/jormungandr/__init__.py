@@ -86,6 +86,7 @@ else:
 from jormungandr.instance_manager import InstanceManager
 
 i_manager = InstanceManager(instances_dir=app.config.get('INSTANCES_DIR', None),
+                            instance_filename_pattern=app.config.get('INSTANCES_FILENAME_PATTERN', '*.json'),
                             start_ping=app.config.get('START_MONITORING_THREAD', True))
 i_manager.initialisation()
 

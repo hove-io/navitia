@@ -80,9 +80,9 @@ class InstanceManager(object):
     a kraken instance's id is associated to a zmq socket and possibly some custom configuration
     """
 
-    def __init__(self, instances_dir=None, start_ping=False):
-        # loads all .json files found in INSTANCES_DIR
-        self.configuration_files = glob.glob(instances_dir + '/*.json') if instances_dir else []
+    def __init__(self, instances_dir=None, instance_filename_pattern='*.json', start_ping=False):
+        # loads all json files found in 'instances_dir' that matches 'instance_filename_pattern'
+        self.configuration_files = glob.glob(instances_dir + '/' + instance_filename_pattern) if instances_dir else []
         self.start_ping = start_ping
         self.instances = {}
         self.context = zmq.Context()
