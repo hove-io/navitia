@@ -1,6 +1,7 @@
 
 add_library(autocomplete autocomplete.cpp autocomplete_api.cpp)
 target_link_libraries(autocomplete pb_lib)
+add_dependencies(autocomplete protobuf_files)
 
 SET(BOOST_LIBS ${BOOST_LIB} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} ${Boost_FILESYSTEM_LIBRARY}
     ${Boost_SYSTEM_LIBRARY} ${Boost_SERIALIZATION_LIBRARY}
