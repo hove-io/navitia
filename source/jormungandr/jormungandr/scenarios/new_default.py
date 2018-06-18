@@ -829,7 +829,7 @@ class Scenario(simple.Scenario):
         nb_previously_qualified_journeys = 0
         last_chance_retry = False
 
-        min_journeys_calls = get_or_default(request, '_min_journeys_calls', 1)
+        min_journeys_calls = request.get('_min_journeys_calls', 1)
         max_journeys_calls = app.config.get('MAX_JOURNEYS_CALLS', 20)
         max_nb_calls = min(min_nb_journeys, max_journeys_calls)
 
@@ -895,7 +895,7 @@ class Scenario(simple.Scenario):
             nb_qualified_journeys = nb_journeys(responses)
 
             if nb_previously_qualified_journeys == nb_qualified_journeys:
-                # If there are no qualified journey in the kraken response,
+                # If there is no additional qualified journey in the kraken response,
                 # another request is sent to try to find more journeys, just in case...
                 if last_chance_retry:
                     break
