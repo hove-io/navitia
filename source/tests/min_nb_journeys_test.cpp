@@ -38,25 +38,40 @@ www.navitia.io
  *
  * The data for testing :
  *
- * start : sp1
- * stop  : sp2
  *
  * Vehicle journey with multiple stops times
  * date : 2018 03 09
  *
- *                   sp1                   sp2
- *            /-------x---------------------x--------\
- *           /      - 8:01                - 8:20      \
- *          /       - 8:02                - 8:21       \
- *   Start x        - 8:03                - 8:22        x Stop
- *         |        - 8:04                - 8:23        |
- *         |                                            |
- *         |          We add an other way to test       |
- *         \         similar journeys filtering         /
- *          \        (Faster but with more walking)    /
- *           \       sp1                   sp2        /
- *            \-------x---------------------x--------/
- *                 - 8:05                - 8:15
+ *                   sp1    (A Line & C line)   sp2
+ *            /-------x--------------------------x--------\
+ *           /                                             \
+ *          /                                               \
+ *   Start x                                                 x Stop
+ *          \                                               /
+ *           \       sp1                        sp2        /
+ *            \-------x--------------------------x--------/
+ *                          (B Line)
+ *
+ *
+ *  A line validity pattern 00111111 :
+ *  - 08:01:00       - 08:20:00
+ *  - 08:02:00       - 08:21:00
+ *  - 08:03:00       - 08:22:00
+ *  - 08:04:00       - 08:23:00
+ *
+ *
+ *  B line validity pattern 00111111 :
+ *  - 08:05:00       - 08:15:00
+ *
+ *
+ *  C line validity pattern 11000000 :
+ *  - 08:00:00      - 08:05:00
+ *  - 08:10:00      - 08:15:00
+ *  - 08:20:00      - 08:25:00
+ *  - 08:30:00      - 08:35:00
+ *  - 08:40:00      - 08:45:00
+ *  - ... x100
+ *
  */
 
 int main(int argc, const char* const argv[]) {
@@ -82,6 +97,8 @@ int main(int argc, const char* const argv[]) {
 	b.lines["A"]->text_color = "FFFFFF";
 
     // journey 2
+    // We add an other way to test similar journeys filtering
+    // (Faster but with more walking)
     b.vj("B", "111111", "", false, "vj5")("stop_point:sa1:s2", "8:00"_t, "8:05"_t)("stop_point:sa3:s2", "8:15"_t, "8:16"_t);
 
     // Line B
@@ -90,6 +107,7 @@ int main(int argc, const char* const argv[]) {
 	b.lines["B"]->text_color = "FFFFFF";
 
 
+    // journey 3
     // adding new vjs to test timeframe_duration and max_nb_journeys
 	// All those vj start their service on 20180315
     auto dep_time = "08:00:00"_t;
@@ -99,6 +117,11 @@ int main(int argc, const char* const argv[]) {
                 ("stop_point:sa1:s1", dep_time + nb * "00:10::00"_t)
                 ("stop_point:sa3:s1", arr_time + nb * "00:10::00"_t);
     }
+
+    // Line B
+    b.lines["C"]->code = "C";
+	b.lines["C"]->color = "AAC2B1";
+	b.lines["C"]->text_color = "FFFFFF";
 
     // build data
     b.data->complete();
