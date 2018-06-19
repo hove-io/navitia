@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(journeys_should_get_best_journey_clockwise) {
     std::vector<Journey> journeys = { j1, j2, j3 };
 
     auto best = get_best_journey(journeys, true);
-    BOOST_CHECK_EQUAL(best.departure_dt, j3.departure_dt);
+    BOOST_CHECK_EQUAL(best.arrival_dt, j3.arrival_dt);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

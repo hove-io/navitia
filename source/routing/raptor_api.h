@@ -171,7 +171,7 @@ void filter_direct_path(RAPTOR::Journeys& journeys);
 /**
 * @brief Check if a journey is way later than another journey
 */
-bool way_later(const Journey & j1, const Journey & j2,
+bool is_way_later(const Journey & j1, const Journey & j2,
                const NightBusFilter::Params & params);
 
 /**

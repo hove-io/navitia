@@ -3329,8 +3329,8 @@ BOOST_AUTO_TEST_CASE(night_bus_should_be_treated_as_way_later)
 
     nr::NightBusFilter::Params filter_params = get_default_filter_params();
 
-    BOOST_CHECK_EQUAL(nr::way_later(j1, j2, filter_params), false);
-    BOOST_CHECK_EQUAL(nr::way_later(j2, j1, filter_params), true);
+    BOOST_CHECK_EQUAL(nr::is_way_later(j1, j2, filter_params), false);
+    BOOST_CHECK_EQUAL(nr::is_way_later(j2, j1, filter_params), true);
 }
 
 BOOST_AUTO_TEST_CASE(night_bus_should_treated_as_way_later_anti_clockwise)
@@ -3344,8 +3344,8 @@ BOOST_AUTO_TEST_CASE(night_bus_should_treated_as_way_later_anti_clockwise)
     filter_params.requested_datetime = navitia::DateTimeUtils::set(0, "23:30"_t);
     filter_params.clockwise = false;
 
-    BOOST_CHECK_EQUAL(nr::way_later(j1, j2, filter_params), true);
-    BOOST_CHECK_EQUAL(nr::way_later(j2, j1, filter_params), false);
+    BOOST_CHECK_EQUAL(nr::is_way_later(j1, j2, filter_params), true);
+    BOOST_CHECK_EQUAL(nr::is_way_later(j2, j1, filter_params), false);
 }
 
 BOOST_AUTO_TEST_CASE(night_bus_filter_should_be_order_agnostic)
