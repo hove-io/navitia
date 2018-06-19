@@ -405,3 +405,11 @@ class TestNewDefaultOneDeadRegion(OneDeadRegion, NewDefaultScenarioAbstractTestF
 @config({"scenario": "new_default"})
 class TestNewDefaultWithoutPt(WithoutPt, NewDefaultScenarioAbstractTestFixture):
     pass
+
+@config({"scenario": "new_default"})
+class TestNewDefaultMinNbJourneys(JourneysMinNbJourneys, NewDefaultScenarioAbstractTestFixture):
+    pass
+
+@config({"scenario": "new_default"})
+class TestNewDefaultWithNightBusFilter(JourneysWithNightBusFilter, NewDefaultScenarioAbstractTestFixture):
+    pass

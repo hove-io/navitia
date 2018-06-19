@@ -6,6 +6,7 @@ set(ALL_LIBS workers ed disruption_api calendar_api time_tables types autocomple
 
 add_executable(main_routing_test main_routing_test.cpp)
 add_executable(main_ptref_test main_ptref_test.cpp)
+add_executable(min_nb_journeys_test min_nb_journeys_test.cpp)
 add_executable(basic_routing_test basic_routing_test.cpp)
 add_executable(basic_schedule_test basic_schedule_test.cpp)
 add_executable(departure_board_test departure_board_test.cpp)
@@ -21,6 +22,7 @@ add_executable(timezone_cape_verde_test timezone_cape_verde_test.cpp)
 
 target_link_libraries(main_routing_test ${ALL_LIBS})
 target_link_libraries(main_ptref_test ${ALL_LIBS})
+target_link_libraries(min_nb_journeys_test ${ALL_LIBS})
 target_link_libraries(basic_routing_test ${ALL_LIBS})
 target_link_libraries(basic_schedule_test ${ALL_LIBS})
 target_link_libraries(departure_board_test ${ALL_LIBS})
