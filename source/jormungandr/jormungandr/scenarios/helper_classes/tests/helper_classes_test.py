@@ -157,14 +157,3 @@ def extend_journey_for_build_to_test():
     # We should have the same object used for the last pt_section.destination and crowfly_section.origin
     assert crowfly_section.origin == pt_section.destination
     assert crowfly_section.origin.uri == "stop_point_4"
-
-
-
-
-
-
-
-
-
-
-
