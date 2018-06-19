@@ -196,42 +196,6 @@ class JourneyCommon(object):
         self.is_valid_journey_response(response, query)
         assert len(response["journeys"]) >= 3
 
-    def test_min_nb_journeys(self):
-        """Checks if min_nb_journeys works.
-
-        _night_bus_filter_base_factor is used because we need to find
-        2 journeys, and we can only take the bus the day after.
-        datetime is modified because, as the bus begins at 8, we need
-        to check that we don't do the next on the direct path starting
-        datetime.
-        """
-        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
-                "min_nb_journeys=3&_night_bus_filter_base_factor=86400"\
-                .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
-        response = self.query_region(query)
-        check_best(response)
-        self.is_valid_journey_response(response, query)
-        assert len(response["journeys"]) >= 3
-
-    def test_min_nb_journeys_with_night_bus_filter(self):
-        """
-        Tests the combination of parameters _night_bus_filter_base_factor,
-        _night_bus_filter_max_factor and min_nb_journeys
-
-        1. _night_bus_filter_base_factor and _night_bus_filter_max_factor are used to limit the next
-        journey with datetime of best response of last answer.
-
-        2 To obtain at least "min_nb_journeys" journeys in the result each call to kraken
-         in a loop is made with datatime + 1 of de best journey but not of global request.
-        """
-        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
-                "min_nb_journeys=3&_night_bus_filter_base_factor=0&_night_bus_filter_max_factor=2"\
-                .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
-        response = self.query_region(query)
-        check_best(response)
-        self.is_valid_journey_response(response, query)
-        assert len(response["journeys"]) == 3
-
     """
     test on date format
     """
