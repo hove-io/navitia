@@ -3,5 +3,5 @@ SET(CALENDAR_SRC
     calendar.cpp
 )
 add_library(calendar_api ${CALENDAR_SRC})
-
+add_dependencies(calendar_api protobuf_files)
 add_subdirectory(tests)

@@ -823,21 +823,26 @@ class Scenario(simple.Scenario):
         # is modified by create_next_kraken_request function.
         request = deepcopy(api_request)
 
-        min_journeys_calls = get_or_default(request, '_min_journeys_calls', 1)
-
         responses = []
         nb_try = 0
         nb_qualified_journeys = 0
+        nb_previously_qualified_journeys = 0
+        last_chance_retry = False
 
+        min_journeys_calls = request.get('_min_journeys_calls', 1)
         max_journeys_calls = app.config.get('MAX_JOURNEYS_CALLS', 20)
+        max_nb_calls = min(min_nb_journeys, max_journeys_calls)
+
         while request is not None and \
-                ((nb_qualified_journeys < min_nb_journeys and nb_try < min(min_nb_journeys, max_journeys_calls))\
+                ((nb_qualified_journeys < min_nb_journeys and nb_try < max_nb_calls)\
                  or nb_try < min_journeys_calls):
 
             nb_try = nb_try + 1
 
-            # we take into account the option only if we have a single origin_mode and destination_mode couple.
-            if len(krakens_call) > 1:
+            # The parameter 'min_nb_journeys' isn't used in the following cases:
+            # - If there's more than one single origin_mode and destination_mode couple.
+            # - If there was no journey qualified in the previous response, the last chance request is limited
+            if len(krakens_call) > 1 or last_chance_retry:
                 request['min_nb_journeys'] = 0
             else:
                 min_nb_journeys_left = min_nb_journeys - nb_qualified_journeys
@@ -883,21 +888,27 @@ class Scenario(simple.Scenario):
                 itertools.product(tmp2, qualified_journeys),
             )
 
-            pool1, pool2 = itertools.tee(journeys_pool)
-            journey_filter.filter_similar_vj_journeys(pool1, api_request)
-
-            if api_request['no_shared_section']:
-                journey_filter.filter_shared_sections_journeys(pool2, api_request)
+            journey_filter.filter_similar_vj_journeys(journeys_pool, api_request)
 
             responses.extend(new_resp)  # we keep the error for building the response
 
             nb_qualified_journeys = nb_journeys(responses)
 
-            # We allow one more call to kraken if there is no valid journey.
+            if nb_previously_qualified_journeys == nb_qualified_journeys:
+                # If there is no additional qualified journey in the kraken response,
+                # another request is sent to try to find more journeys, just in case...
+                if last_chance_retry:
+                    break
+                last_chance_retry = True
+            nb_previously_qualified_journeys = nb_qualified_journeys
+
             if nb_qualified_journeys == 0:
                 min_journeys_calls = max(min_journeys_calls, 2)
-
+                
         logger.debug('nb of call kraken: %i', nb_try)
+
+        if api_request['no_shared_section']:
+            journey_filter.filter_shared_sections_journeys(journey_filter.get_qualified_journeys(responses), api_request)
 
         journey_filter.final_filter_journeys(responses, instance, api_request)
         pb_resp = merge_responses(responses)
