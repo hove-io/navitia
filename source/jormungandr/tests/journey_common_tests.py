@@ -196,6 +196,42 @@ class JourneyCommon(object):
         self.is_valid_journey_response(response, query)
         assert len(response["journeys"]) >= 3
 
+    def test_min_nb_journeys(self):
+        """Checks if min_nb_journeys works.
+
+        _night_bus_filter_base_factor is used because we need to find
+        2 journeys, and we can only take the bus the day after.
+        datetime is modified because, as the bus begins at 8, we need
+        to check that we don't do the next on the direct path starting
+        datetime.
+        """
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
+                "min_nb_journeys=3&_night_bus_filter_base_factor=86400"\
+                .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+        assert len(response["journeys"]) >= 3
+
+    def test_min_nb_journeys_with_night_bus_filter(self):
+        """
+        Tests the combination of parameters _night_bus_filter_base_factor,
+        _night_bus_filter_max_factor and min_nb_journeys
+
+        1. _night_bus_filter_base_factor and _night_bus_filter_max_factor are used to limit the next
+        journey with datetime of best response of last answer.
+
+        2 To obtain at least "min_nb_journeys" journeys in the result each call to kraken
+         in a loop is made with datatime + 1 of de best journey but not of global request.
+        """
+        query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&"\
+                "min_nb_journeys=3&_night_bus_filter_base_factor=0&_night_bus_filter_max_factor=2"\
+                .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T075500")
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+        assert len(response["journeys"]) == 3
+
     """
     test on date format
     """
@@ -1589,3 +1625,85 @@ class JourneysWithNightBusFilter():
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) == 2
+
+    def test_timeframe_duration(self):
+        """
+        https://jira.kisio.org/browse/NAVP-859
+
+        :return:
+        """
+        q = 'journeys?from={_from}&to={to}'.format(_from='stop_area:sa1',
+                                                   to='stop_area:sa3')
+
+        query = '{sub_query}&datetime={datetime}'.format(sub_query=q,
+                                                         datetime="20180315T080000")
+        response = self.query_region(query)
+
+        assert 1 == len(response['journeys'])
+
+        query = ('{sub_query}&'
+                 'datetime={datetime}&'
+                 'min_nb_journeys={min_nb_journeys}&'
+                 'datetime={datetime}').format(sub_query=q,
+                                               datetime="20180315T080000",
+                                               min_nb_journeys=5)
+        response = self.query_region(query)
+
+        assert 5 == len(response['journeys'])
+
+        # timeframe_duration = 0
+        query = ('{sub_query}&'
+                 'datetime={datetime}&'
+                 'timeframe_duration={timeframe_duration}&').format(sub_query=q,
+                                                                    datetime="20180315T080000",
+                                                                    timeframe_duration=0)
+        response = self.query_region(query)
+
+        assert 0 == len(response['journeys'])
+
+        # timeframe_duration = 0
+        query = ('{sub_query}&'
+                 'datetime={datetime}&'
+                 'min_nb_journeys={min_nb_journeys}&'
+                 'timeframe_duration={timeframe_duration}&').format(sub_query=q,
+                                                                    datetime="20180315T080000",
+                                                                    min_nb_journeys=5,
+                                                                    timeframe_duration=0)
+        response = self.query_region(query)
+
+        assert 0 == len(response['journeys'])
+
+        # timeframe_duration = 24H and max_nb_journeys>100
+        query = ('{sub_query}&'
+                 'datetime={datetime}&'
+                 'timeframe_duration={timeframe_duration}&'
+                 'max_nb_journeys={max_nb_journeys}').format(sub_query=q,
+                                                             datetime="20180315T080000",
+                                                             timeframe_duration=86400,
+                                                             max_nb_journeys=101)
+        response = self.query_region(query)
+
+        assert 101 == len(response['journeys'])
+
+        # max_nb_journeys = 0
+        query = ('{sub_query}&'
+                 'datetime={datetime}&'
+                 'max_nb_journeys={max_nb_journeys}').format(sub_query=q,
+                                                             datetime="20180315T080000",
+                                                             max_nb_journeys=0)
+        response = self.query_region(query)
+
+        assert 0 == len(response['journeys'])
+
+        # timeframe_duration = 24H and min_nb_journeys>100
+        query = ('{sub_query}&'
+                 'datetime={datetime}&'
+        
+                 'timeframe_duration={timeframe_duration}&'
+                 'max_nb_journeys={max_nb_journeys}').format(sub_query=q,
+                                                             datetime="20180316T080000",
+                                                             timeframe_duration=86400,
+                                                             max_nb_journeys=101)
+        response = self.query_region(query)
+
+        assert 100 == len(response['journeys'])

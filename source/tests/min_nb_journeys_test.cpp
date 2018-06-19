@@ -89,6 +89,17 @@ int main(int argc, const char* const argv[]) {
 	b.lines["B"]->color = "5AC8BC";
 	b.lines["B"]->text_color = "FFFFFF";
 
+
+    // adding new vjs to test timeframe_duration and max_nb_journeys
+	// All those vj start their service on 20180315
+    auto dep_time = "08:00:00"_t;
+    auto arr_time = "08:05:00"_t;
+    for (int nb = 0; nb < 100; ++nb) {
+        b.vj("C", "11000000", "", false, "vjC_" + std::to_string(nb))
+                ("stop_point:sa1:s1", dep_time + nb * "00:10::00"_t)
+                ("stop_point:sa3:s1", arr_time + nb * "00:10::00"_t);
+    }
+
     // build data
     b.data->complete();
     b.manage_admin();
