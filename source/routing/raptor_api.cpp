@@ -1279,17 +1279,17 @@ void filter_late_journeys(RAPTOR::Journeys & journeys,
     if(journeys.size() == 0)
         return;
 
-    const auto & best_journey = get_best_journey(journeys, params.clockwise);
-    auto it_j = journeys.cbegin();
+    const auto & best = get_best_journey(journeys, params.clockwise);
 
-    while(it_j != journeys.end()) {
-
-        if(is_way_later(*it_j, best_journey, params)) {
-            it_j = journeys.erase(it_j);
+    auto it = journeys.cbegin();
+    while(it != journeys.cend()) {
+        const auto & journey = *it;
+        if(best != journey && is_way_later(journey, best, params)) {
+            it = journeys.erase(it);
             continue;
         }
 
-        ++it_j;
+        ++it;
     }
 }
 

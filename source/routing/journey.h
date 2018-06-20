@@ -62,6 +62,7 @@ struct Journey {
     bool better_on_transfer(const Journey& that, bool) const;
     bool better_on_sn(const Journey& that, bool) const;
     bool operator==(const Journey & rhs) const;
+    bool operator!=(const Journey & rhs) const;
     friend std::ostream& operator<<(std::ostream& os, const Journey& j);
 
     std::vector<Section> sections;// the pt sections, with transfer between them

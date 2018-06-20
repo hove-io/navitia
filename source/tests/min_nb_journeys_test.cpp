@@ -89,6 +89,14 @@ int main(int argc, const char* const argv[]) {
 	b.lines["B"]->color = "5AC8BC";
 	b.lines["B"]->text_color = "FFFFFF";
 
+    // journey 3
+    b.vj("N", "111111", "", false, "vj6")("stop_point:sa1:s1", "15:00"_t, "15:01"_t)("stop_point:sa3:s1", "15:04"_t, "15:05"_t);
+
+    // Line N
+    b.lines["N"]->code = "N";
+	b.lines["N"]->color = "BC5AC8";
+	b.lines["N"]->text_color = "FFFFFF";
+
     // build data
     b.data->complete();
     b.manage_admin();
