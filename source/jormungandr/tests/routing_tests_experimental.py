@@ -174,6 +174,6 @@ class TestDistributedMinNbJourneys(JourneysMinNbJourneys, NewDefaultScenarioAbst
 class TestDistributedWithNightBusFilter(JourneysWithNightBusFilter, NewDefaultScenarioAbstractTestFixture):
     pass
 
-@config({"scenario": "distributed"})
-class TestDistributedTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScenarioAbstractTestFixture):
-    pass
+# @config({"scenario": "distributed"})
+# class TestDistributedTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScenarioAbstractTestFixture):
+#     pass
