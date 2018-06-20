@@ -64,13 +64,14 @@ www.navitia.io
  *  - 08:05:00       - 08:15:00
  *
  *
- *  C line validity pattern 11000000 :
+ *  C line validity pattern 01000000 :
  *  - 08:00:00      - 08:05:00
  *  - 08:10:00      - 08:15:00
  *  - 08:20:00      - 08:25:00
  *  - 08:30:00      - 08:35:00
  *  - 08:40:00      - 08:45:00
- *  - ... x100
+ *  - ... x20
+ *  - 08:00:00      - 08:05:00 (24H after the first)
  *
  */
 
@@ -112,11 +113,15 @@ int main(int argc, const char* const argv[]) {
 	// All those vj start their service on 20180315
     auto dep_time = "08:00:00"_t;
     auto arr_time = "08:05:00"_t;
-    for (int nb = 0; nb < 100; ++nb) {
-        b.vj("C", "11000000", "", false, "vjC_" + std::to_string(nb))
+    for (int nb = 0; nb < 20; ++nb) {
+        b.vj("C", "1000000", "", false, "vjC_" + std::to_string(nb))
                 ("stop_point:sa1:s1", dep_time + nb * "00:10::00"_t)
                 ("stop_point:sa3:s1", arr_time + nb * "00:10::00"_t);
     }
+    // Add a VJ 24H after to test the time frame duration max limit (24H)
+    b.vj("C", "10000000", "", false, "vjC_out_of_24_bound")
+                ("stop_point:sa1:s1", "08:00:00"_t)
+                ("stop_point:sa3:s1", "08:05:00"_t);
 
     // Line B
     b.lines["C"]->code = "C";

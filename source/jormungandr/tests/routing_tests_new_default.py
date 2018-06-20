@@ -413,3 +413,7 @@ class TestNewDefaultMinNbJourneys(JourneysMinNbJourneys, NewDefaultScenarioAbstr
 @config({"scenario": "new_default"})
 class TestNewDefaultWithNightBusFilter(JourneysWithNightBusFilter, NewDefaultScenarioAbstractTestFixture):
     pass
+
+@config({"scenario": "new_default"})
+class TestNewDefaultTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScenarioAbstractTestFixture):
+    pass
