@@ -175,14 +175,23 @@ bool is_way_later(const Journey & j1, const Journey & j2,
                const NightBusFilter::Params & params);
 
 /**
-* @brief Compare the journeys 2 by 2 and remove the ones
-* that arrives way later from the list.
+* @brief Remove from the list, the journeys that are
+* way later than the best.
+*
+* @param journeys A container of Journeys
+* @param params the night bus filter parameters
 */
 void filter_late_journeys(RAPTOR::Journeys & journeys,
                           const NightBusFilter::Params & params);
 
 
-DateTime prepare_next_call_for_raptor(const std::list<Journey> & journeys, const bool clockwise);
+/**
+* @brief Prepare the horizon for the next Raptor call
+*
+* @param journeys A container of journeys.
+* @param clockwise Leave after or Arrive before
+*/
+DateTime prepare_next_call_for_raptor(const RAPTOR::Journeys& journeys, const bool clockwise);
 
 void make_graphical_isochrone(navitia::PbCreator& pb_creator,
                               RAPTOR &raptor_max,
