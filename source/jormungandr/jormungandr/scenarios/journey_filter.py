@@ -32,6 +32,8 @@ import logging
 import itertools
 from functools import partial
 import datetime
+import abc
+import six
 from jormungandr.scenarios.utils import compare, get_pseudo_duration, get_or_default, mode_weight
 from navitiacommon import response_pb2
 from jormungandr.utils import pb_del_if, ComposedFilter, portable_min
@@ -50,27 +52,49 @@ def delete_journeys(responses, request):
         logging.getLogger(__name__).info('filtering {} journeys'.format(nb_deleted))
 
 
-def filter_wrapper(f_msg_pair, is_debug=False):
+@six.add_metaclass(abc.ABCMeta)
+class SingleJourneyFilter(object):
     """
-    Wraps a filter to automatically deal with debug-mode, logging and tagging
+    Interface to implement for filters applied to a single journey (no comparison)
+    """
+
+    @abc.abstractmethod
+    def filter_func(self, journey):
+        """
+        :return: True if the journey is valid, False otherwise
+        """
+        pass
+
+    @abc.abstractproperty
+    def message(self):
+        """
+        :return: a one-word, snake_case unicode to be used to explain why a journey is filtered
+        """
+        pass
+
+
+def filter_wrapper(filter_obj=None, is_debug=False):
+    """
+    Wraps a SingleJourneyFilter instance to automatically deal with debug-mode, logging and tagging
 
     We always tag the journey 'to_delete'
     In debug-mode, we deactivate filtering, only add a tag with the reason why it's deleted
 
-    :param f: simple-journey filter, a function (or functor) on a journey returning
-              True if the journey is valid, False otherwise
+    :param filter_obj: a SingleJourneyFilter to be wrapped (using it's message and filter_func attributes)
     :param is_debug: True if we are in debug-mode
-    :param msg: a minimal message used to tag journey to be deleted and log (useful for debugging)
     :return: a function to be called on a journey, returning True or False,tagging it if it's deleted
     """
+    filter_func = filter_obj.filter_func
+    message = filter_obj.message
+
     def wrapped_filter(journey):
         logger = logging.getLogger(__name__)
-        f, msg = f_msg_pair
-        res = f(journey)
+        res = filter_func(journey)
         if not res:
-            logger.debug("We delete: {}, cause: {}".format(journey.internal_id, msg))
-            mark_as_dead(journey, is_debug, msg)
+            logger.debug("We delete: {}, cause: {}".format(journey.internal_id, message))
+            mark_as_dead(journey, is_debug, message)
         return res or is_debug
+
     return wrapped_filter
 
 
@@ -95,10 +119,9 @@ def filter_journeys(responses, instance, request):
     min_nb_transfers = get_or_default(request, 'min_nb_transfers', 0)
 
     # Note that we use the functools.partial to capture the arguments
-    filters = [partial(filter_wrapper(is_debug=is_debug,
-                                      f_msg_pair=make_filter_too_short_heavy_journeys(
-                                                    min_bike=min_bike, min_car=min_car,
-                                                    orig_modes=orig_modes, dest_modes=dest_modes))),
+    f = FilterTooShortHeavyJourneys(min_bike=min_bike, min_car=min_car,
+                                    orig_modes=orig_modes, dest_modes=dest_modes)
+    filters = [filter_wrapper(is_debug=is_debug, filter_obj=f),
                partial(filter_too_long_waiting, is_debug=is_debug),
                partial(filter_min_transfers, is_debug=is_debug, min_nb_transfers=min_nb_transfers)]
 
@@ -261,11 +284,17 @@ def exceed_min_duration(current_section, journey, min_duration, orig_modes=None,
     return 'walking' in dest_modes and current_section.duration < min_duration
 
 
+class FilterTooShortHeavyJourneys(SingleJourneyFilter):
 
-def make_filter_too_short_heavy_journeys(min_bike=None, min_car=None, orig_modes=None, dest_modes=None):
-    orig_modes=[] if orig_modes is None else orig_modes
-    dest_modes=[] if dest_modes is None else dest_modes
-    def filter(journey):
+    message = 'too_short_heavy_mode_fallback'
+
+    def __init__(self, min_bike=None, min_car=None, orig_modes=None, dest_modes=None):
+        self.min_bike = min_bike
+        self.min_car = min_car
+        self.orig_modes = [] if orig_modes is None else orig_modes
+        self.dest_modes = [] if dest_modes is None else dest_modes
+
+    def filter_func(self, journey):
         """
         we filter the journeys with use an "heavy" fallback mode if it's use only for a few minutes
         Heavy fallback mode are Bike and Car, bss is not considered as one.
@@ -281,18 +310,17 @@ def make_filter_too_short_heavy_journeys(min_bike=None, min_car=None, orig_modes
                 continue
 
             if s.street_network.mode == response_pb2.Car \
-                    and min_car is not None \
-                    and exceed_min_duration(s, journey, min_duration=min_car,
-                                            orig_modes=orig_modes, dest_modes=dest_modes):
+                    and self.min_car is not None \
+                    and exceed_min_duration(s, journey, min_duration=self.min_car,
+                                            orig_modes=self.orig_modes, dest_modes=self.dest_modes):
                 return False
             if not on_bss \
                     and s.street_network.mode == response_pb2.Bike \
-                    and min_bike is not None \
-                    and exceed_min_duration(s, journey, min_duration=min_bike,
-                                            orig_modes=orig_modes, dest_modes=dest_modes):
+                    and self.min_bike is not None \
+                    and exceed_min_duration(s, journey, min_duration=self.min_bike,
+                                            orig_modes=self.orig_modes, dest_modes=self.dest_modes):
                 return False
         return True
-    return filter, 'too_short_heavy_mode_fallback'
 
 
 def filter_too_long_waiting(journey, is_debug):
