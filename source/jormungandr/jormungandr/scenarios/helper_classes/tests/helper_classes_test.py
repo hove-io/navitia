@@ -42,7 +42,7 @@ from jormungandr.scenarios.helper_classes.helper_utils import _extend_journey
 
 # This function creates a jouney with 4 sections from a stop_point to stop_point.
 # Sections PUBLIC_TRANSPORT, TRANSFER, WAITING, PUBLIC_TRANSPORT
-def create_pt_journeys_with_pt():
+def create_journeys_with_pt():
     journey = response_pb2.Journey()
     journey.departure_date_time = str_to_time_stamp("20180618T060500")
     journey.arrival_date_time = str_to_time_stamp("20180618T075000")
@@ -106,7 +106,7 @@ def create_response_with_crow_fly(start_date, end_date, origin, destination):
 # This methode tests building of fallbacks at the begining of a journey.
 def extend_journey_for_build_from_test():
     # create a journey with 4 sections having PUBLIC_TRANSPORT at the begining and at the end
-    pt_journey = create_pt_journeys_with_pt()
+    pt_journey = create_journeys_with_pt()
 
     fallback_extremity = PeriodExtremity(pt_journey.departure_date_time, False)
 
@@ -134,7 +134,7 @@ def extend_journey_for_build_from_test():
 # This methode tests building of fallbacks at the end of a journey.
 def extend_journey_for_build_to_test():
     # create a journey with 4 sections having PUBLIC_TRANSPORT at the begining and at the end
-    pt_journey = create_pt_journeys_with_pt()
+    pt_journey = create_journeys_with_pt()
 
     fallback_extremity = PeriodExtremity(pt_journey.arrival_date_time, True)
 
