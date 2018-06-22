@@ -97,6 +97,14 @@ int main(int argn, char** argv){
     const navitia::Metrics metrics(conf.metrics_binding(), conf.instance_name());
 
     threads.create_thread(navitia::MaintenanceWorker(data_manager, conf));
+    //
+    //Data have been loaded, we can now accept connections
+    try{
+        lb.bind(zmq_socket, "inproc://workers");
+    }catch(zmq::error_t& e){
+        LOG4CPLUS_ERROR(logger, "zmq::socket_t::bind() failure: " << e.what());
+        return 1;
+    }
 
     int nb_threads = conf.nb_threads();
     // Launch pool of worker threads
@@ -107,14 +115,6 @@ int main(int argn, char** argv){
                                         std::ref(data_manager),
                                         conf,
                                         std::ref(metrics)));
-    }
-
-    //Data have been loaded, we can now accept connections
-    try{
-        lb.bind(zmq_socket, "inproc://workers");
-    }catch(zmq::error_t& e){
-        LOG4CPLUS_ERROR(logger, "zmq::socket_t::bind() failure: " << e.what());
-        return 1;
     }
 
     // Connect worker threads to client threads via a queue
