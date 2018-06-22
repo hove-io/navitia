@@ -17,6 +17,7 @@ Dependencies
    * libgoogle-perftools-dev (tcmalloc)
    * protobuf
    * proj
+   * libgeos-dev
 
 #. Python
 
