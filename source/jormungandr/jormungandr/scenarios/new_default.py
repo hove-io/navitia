@@ -904,7 +904,7 @@ class Scenario(simple.Scenario):
 
             if nb_qualified_journeys == 0:
                 min_journeys_calls = max(min_journeys_calls, 2)
-                
+
         logger.debug('nb of call kraken: %i', nb_try)
 
         if api_request['no_shared_section']:

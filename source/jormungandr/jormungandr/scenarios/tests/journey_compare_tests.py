@@ -844,8 +844,8 @@ def test_arrival_sort():
     result = [j1, j2, j3, j4, j5]
     random.shuffle(result)
 
-    compartor = ArrivalJourneySorter(True)
-    result.sort(compartor)
+    comparator = ArrivalJourneySorter(True)
+    result.sort(comparator)
     assert result[0] ==  j1
     assert result[1] ==  j2
     assert result[2] ==  j5

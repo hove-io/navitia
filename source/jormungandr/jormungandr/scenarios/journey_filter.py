@@ -296,9 +296,9 @@ class FilterTooShortHeavyJourneys(SingleJourneyFilter):
 
     def filter_func(self, journey):
         """
-        we filter the journeys with use an "heavy" fallback mode if it's use only for a few minutes
-        Heavy fallback mode are Bike and Car, bss is not considered as one.
-        Typically you don't take your car for only 2 minutes
+        We filter the journeys that use an "heavy" mode as fallback for a short time.
+        Typically you don't take your car for only 2 minutes.
+        Heavy fallback modes are Bike and Car, BSS is not considered as one.
         """
         on_bss = False
         for s in journey.sections:
