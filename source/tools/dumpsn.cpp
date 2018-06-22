@@ -98,5 +98,5 @@ int main(int argc, char** argv) {
     }
     out.close();
 
-    return 1;
+    return 0;
 }
