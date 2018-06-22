@@ -1,53 +1,44 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
-
-#include "georef/street_network.h"
-#include "type/data.h"
-#include "utils/timer.h"
-#include <boost/program_options.hpp>
-#include <boost/progress.hpp>
-#include <random>
 #include <fstream>
-#include "utils/init.h"
-#include "utils/csv.h"
-#include <boost/algorithm/string/predicate.hpp>
+#include <boost/program_options.hpp>
+
+#include "utils/init.h" // init_app()
+#include "type/data.h"
 #include "type/pb_converter.h"
 
 using namespace navitia;
-using namespace routing;
+
 namespace po = boost::program_options;
-namespace ba = boost::algorithm;
 
-
-
-int main(int argc, char** argv){
+int main(int argc, char** argv) {
     navitia::init_app();
     po::options_description desc("options of dump streetnetwork");
     std::string file, output;
@@ -71,33 +62,32 @@ int main(int argc, char** argv){
         return 0;
     }
 
-    std::cout << "loading data" << std::endl;
+    LOG4CPLUS_INFO(logger, "loading data");
     type::Data data;
-    {
-        data.load_nav(file);
-    }
+    data.load_nav(file);
 
-    std::cout << "opening file" << std::endl;
+    LOG4CPLUS_INFO(logger, "opening file");
     std::fstream out;
     auto& g = data.geo_ref->graph;
     out.exceptions(std::ifstream::failbit | std::ifstream::badbit);
     out.open(output, std::ios::out | std::ios::trunc);
-    std::cout << "writing csv" << std::endl;
+
+    LOG4CPLUS_INFO(logger, "writing csv");
     out << std::setprecision(16);
-    for(const auto* way: data.geo_ref->ways){
-        if(way->geoms.empty()){
-            for(const auto& edge: way->edges){
+    for (const auto* way: data.geo_ref->ways) {
+        if (way->geoms.empty()) {
+            for (const auto& edge: way->edges) {
                 out << "LINESTRING(" << g[edge.first].coord.lon() << " " << g[edge.first].coord.lat()
                        << ", " << g[edge.second].coord.lon() << " " << g[edge.second].coord.lat() << ")" << '\n';
             }
-        }else{
-            for(const auto& geom: way->geoms){
+        } else {
+            for (const auto& geom: way->geoms) {
                 out << "LINESTRING(";
                 auto first = true;
-                for(const auto& coord: geom){
-                    if(not first){
+                for (const auto& coord: geom) {
+                    if (not first) {
                         out << ", ";
-                    }else{
+                    } else {
                         first =  false;
                     }
                     out << coord.lon() << " " << coord.lat();
@@ -107,4 +97,6 @@ int main(int argc, char** argv){
         }
     }
     out.close();
+
+    return 0;
 }
