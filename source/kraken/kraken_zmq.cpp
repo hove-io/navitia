@@ -93,12 +93,6 @@ int main(int argn, char** argv){
     std::string zmq_socket = conf.zmq_socket_path();
     //TODO: try/catch
     LoadBalancer lb(context);
-    try{
-        lb.bind(zmq_socket, "inproc://workers");
-    }catch(zmq::error_t& e){
-        LOG4CPLUS_ERROR(logger, "zmq::socket_t::bind() failure: " << e.what());
-        return 1;
-    }
 
     const navitia::Metrics metrics(conf.metrics_binding(), conf.instance_name());
 
@@ -113,6 +107,14 @@ int main(int argn, char** argv){
                                         std::ref(data_manager),
                                         conf,
                                         std::ref(metrics)));
+    }
+
+    //Data have been loaded, we can now accept connections
+    try{
+        lb.bind(zmq_socket, "inproc://workers");
+    }catch(zmq::error_t& e){
+        LOG4CPLUS_ERROR(logger, "zmq::socket_t::bind() failure: " << e.what());
+        return 1;
     }
 
     // Connect worker threads to client threads via a queue
