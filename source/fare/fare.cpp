@@ -301,7 +301,7 @@ Ticket DateTicket::get_fare(boost::gregorian::date date) const {
 DateTicket DateTicket::operator +(const DateTicket& other) const{
     DateTicket new_ticket = *this;
     if(this->tickets.size() != other.tickets.size())
-        LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"), "Tickets don't have the same number dates");
+        LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"), "Tickets don't have the same number of dates");
 
     for(size_t i = 0; i < std::min(this->tickets.size(), other.tickets.size()); ++i) {
         if(this->tickets[i].validity_period != other.tickets[i].validity_period)
