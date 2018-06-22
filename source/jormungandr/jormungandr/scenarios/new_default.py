@@ -907,11 +907,7 @@ class Scenario(simple.Scenario):
 
         logger.debug('nb of call kraken: %i', nb_try)
 
-        if api_request['no_shared_section']:
-            journey_pairs_pool = itertools.combinations(journey_filter.get_qualified_journeys(responses), 2)
-            journey_filter.filter_shared_sections_journeys(journey_pairs_pool, api_request)
-
-        journey_filter.final_filter_journeys(responses, instance, api_request)
+        journey_filter.apply_final_journey_filters(responses, instance, api_request)
         pb_resp = merge_responses(responses)
 
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])

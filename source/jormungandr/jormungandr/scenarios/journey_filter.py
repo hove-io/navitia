@@ -80,6 +80,9 @@ def filter_wrapper(filter_obj=None, is_debug=False):
     We always tag the journey 'to_delete'
     In debug-mode, we deactivate filtering, only add a tag with the reason why it's deleted
 
+    The main purpose of debug mode is to have all journeys generated (even the ones that should be filtered)
+    and log ALL the reasons why they are filtered (if they are)
+
     :param filter_obj: a SingleJourneyFilter to be wrapped (using it's message and filter_func attributes)
     :param is_debug: True if we are in debug-mode
     :return: a function to be called on a journey, returning True or False,tagging it if it's deleted
@@ -150,12 +153,11 @@ def filter_journeys(responses, instance, request):
     return composed_filter.compose_filters()(journey_generator(responses))
 
 
-def final_filter_journeys(response_list, instance, request):
+def apply_final_journey_filters(response_list, instance, request):
     """
-    Filter by side effect the list of pb responses's journeys
-    Final pass : we remove similar journeys (same lines and stop_points of change)
+    Final pass: Filter by side effect the list of pb responses's journeys
 
-    Nota: This filter is applied only once, after all calls to kraken are done
+    Nota: All filters below are applied only once, after all calls to kraken are done
     """
     is_debug = request.get('debug', False)
     journey_generator = get_qualified_journeys
@@ -164,12 +166,21 @@ def final_filter_journeys(response_list, instance, request):
 
     # for clarity purpose we build a temporary list
 
+    # we remove similar journeys (same lines and same succession of stop_points)
     final_line_filter = get_or_default(request, '_final_line_filter', False)
     if final_line_filter:
         journeys = journey_generator(response_list)
         journey_pairs_pool = itertools.combinations(journeys, 2)
         _filter_similar_line_journeys(journey_pairs_pool, request)
 
+    # we filter journeys having "shared sections" (same succession of stop_points + custom rules)
+    no_shared_section = get_or_default(request, 'no_shared_section', False)
+    if no_shared_section:
+        journeys = journey_generator(response_list)
+        journey_pairs_pool = itertools.combinations(journeys, 2)
+        filter_shared_sections_journeys(journey_pairs_pool, request)
+
+    # we filter journeys having too much connections compared to minimum
     journeys = journey_generator(response_list)
     _filter_too_much_connections(journeys, instance, request)
 
@@ -382,8 +393,8 @@ def filter_max_successive_physical_mode(journey,
 
 def _filter_too_much_connections(journeys, instance, request):
     """
-    eliminates journeys with number of connections more then minimum connections among journeys
-    in the result + _max_additional_connections
+    eliminates journeys with a number of connections strictly superior to the
+    minimum number of connections among all journeys + _max_additional_connections
     """
     logger = logging.getLogger(__name__)
     max_additional_connections = get_or_default(request, '_max_additional_connections',
