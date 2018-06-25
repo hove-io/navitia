@@ -420,6 +420,12 @@ struct routing_api_data {
             b.data->pt_data->headsign_handler.affect_headsign_to_stop_time(
                                 b.data->pt_data->vehicle_journeys.at(0)->stop_time_list.at(0), "A00");
 
+            b.vj("M", "111111", "", false, "vjM")("stop_point:stopB", "08:01:01"_t)("stop_point:stopA", "08:01:03"_t)
+                                        .st_shape({B, I, A});
+			b.lines["M"]->code = "1M";
+			b.lines["M"]->color = "3ACCDC";
+			b.lines["M"]->text_color = "FFFFFF";
+
             //We need another route on the line A with a vj on it to test line sections disruptions
             b.vj("A", "000000", "", false, "vjA2").route("route2")
                 ("stop_point:stopB", "22:01"_t)
@@ -462,6 +468,9 @@ struct routing_api_data {
         b.data->build_uri();
         b.data->pt_data->index();
         b.data->build_raptor();
+
+        //Add a fare_zone in stop point A
+        b.sps.begin()->second->fare_zone = "2";
 
         b.data->build_proximity_list();
         b.data->meta->production_date = boost::gregorian::date_period("20120614"_d, 365_days);
@@ -684,6 +693,13 @@ struct routing_api_data {
                 .application_periods(dis_maker_period)
                 .severity("foo")
                 .on(nt::Type_e::Line, "C")
+                .msg("try again", nt::disruption::ChannelType::sms);
+
+        disruption_maker.impact()
+                .uri("too_bad_line_section_B_stop_B_route_B3")
+                .application_periods(boost::posix_time::time_period("20120826T060000"_dt, "20120830T120000"_dt))
+                .severity("disruption")
+                .on_line_section("B", "stopB", "stopB", {"B:3"})
                 .msg("try again", nt::disruption::ChannelType::sms);
     }
 

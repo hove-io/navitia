@@ -26,6 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import
 import math
 from jormungandr.street_network.street_network import StreetNetworkPathType
@@ -113,13 +114,21 @@ def _extend_pt_sections_with_direct_path(pt_journey, dp_journey):
 
 
 def _extend_journey(pt_journey, fallback_dp, fallback_extremity):
-    '''
+    """
     :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
-    '''
+    """
     aligned_fallback = _align_fallback_direct_path_datetime(fallback_dp, fallback_extremity)
+
     pt_journey.duration += aligned_fallback.journeys[0].duration
     pt_journey.durations.total = pt_journey.duration
     pt_journey.durations.walking += aligned_fallback.journeys[0].durations.walking
+    pt_journey.durations.bike += aligned_fallback.journeys[0].durations.bike
+    pt_journey.durations.car += aligned_fallback.journeys[0].durations.car
+
+    pt_journey.distances.walking += aligned_fallback.journeys[0].distances.walking
+    pt_journey.distances.bike += aligned_fallback.journeys[0].distances.bike
+    pt_journey.distances.car += aligned_fallback.journeys[0].distances.car
+
     _extend_pt_sections_with_direct_path(pt_journey, aligned_fallback)
 
 

@@ -1,5 +1,5 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
 
@@ -22,7 +22,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -1235,7 +1235,7 @@ BOOST_AUTO_TEST_CASE(invalid_stay_in_overmidnight) {
     // first day
     auto res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop4"], 6*3600, 0, DateTimeUtils::inf, type::RTLevel::Base, 2_min, true);
     BOOST_REQUIRE_EQUAL(res1.size(), 0);
-    
+
     // There must be a journey the second day
     res1 = raptor.compute(d.stop_areas_map["stop1"], d.stop_areas_map["stop4"], 6*3600, 1, DateTimeUtils::inf, type::RTLevel::Base, 2_min, true);
     BOOST_CHECK_EQUAL(res1.size(), 1);
@@ -3763,6 +3763,4 @@ BOOST_AUTO_TEST_CASE(forbidden_uri_in_stay_in) {
     // we should do the cnx on Stalingrad_2
     BOOST_CHECK_EQUAL(j.items[1].stop_points.back()->uri, "Stalingrad_2");
     BOOST_CHECK_EQUAL(j.items[2].stop_points.front()->uri, "Stalingrad_2");
-
-
 }

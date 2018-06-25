@@ -155,7 +155,9 @@ class PtJourneyPool:
                                  max_extra_second_pass=request['max_extra_second_pass'],
                                  walking_transfer_penalty=request['_walking_transfer_penalty'],
                                  forbidden_uris=request['forbidden_uris[]'],
-                                 allowed_id=request['allowed_id[]'])
+                                 allowed_id=request['allowed_id[]'],
+                                 night_bus_filter_max_factor=request['_night_bus_filter_max_factor'],
+                                 night_bus_filter_base_factor=request['_night_bus_filter_base_factor'])
 
     def _async_request(self):
         direct_path_type = StreetNetworkPathType.DIRECT

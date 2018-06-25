@@ -742,13 +742,26 @@ void Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API 
         }
 
         case pbnavitia::pt_planner:
-            routing::make_pt_response(
-                this->pb_creator, *planner, arg.origins, arg.destinations, arg.datetimes[0],
-                request.clockwise(), arg.accessibilite_params,
-                arg.forbidden, arg.allowed, arg.rt_level,
-                seconds{request.walking_transfer_penalty()}, request.max_duration(),
-                request.max_transfers(), request.max_extra_second_pass(),
-                request.has_direct_path_duration() ? boost::optional<time_duration>(seconds{request.direct_path_duration()}) : boost::optional<time_duration>());
+            routing::make_pt_response(  this->pb_creator,
+                                        *planner,
+                                        arg.origins,
+                                        arg.destinations,
+                                        arg.datetimes[0],
+                                        request.clockwise(),
+                                        arg.accessibilite_params,
+                                        arg.forbidden,
+                                        arg.allowed,
+                                        arg.rt_level,
+                                        seconds{request.walking_transfer_penalty()},
+                                        request.max_duration(),
+                                        request.max_transfers(),
+                                        request.max_extra_second_pass(),
+                                        request.has_direct_path_duration() ?
+                                            boost::optional<time_duration>(seconds{request.direct_path_duration()}) :
+                                            boost::optional<time_duration>(),
+                                        request.min_nb_journeys(),
+                                        request.night_bus_filter_max_factor(),
+                                        request.night_bus_filter_base_factor() );
             break;
         default:
             routing::make_response( this->pb_creator,
@@ -767,7 +780,10 @@ void Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API 
                                     request.max_transfers(),
                                     request.max_extra_second_pass(),
                                     request.free_radius_from(),
-                                    request.free_radius_to() );
+                                    request.free_radius_to(),
+                                    request.min_nb_journeys(),
+                                    request.night_bus_filter_max_factor(),
+                                    request.night_bus_filter_base_factor() );
         }
     }catch(const navitia::coord_conversion_exception& e) {
         this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());

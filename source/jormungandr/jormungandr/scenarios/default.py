@@ -135,12 +135,15 @@ class Scenario(simple.Scenario):
         for allowed_id in get_or_default(request, "allowed_id[]", []):
             req.journeys.allowed_id.append(allowed_id)
         if not "type" in request:
-            request["type"] = "all" # why ?
+            request["type"] = "all"
 
         if request["free_radius_from"]:
             req.journeys.free_radius_from = request["free_radius_from"]
         if request["free_radius_to"]:
             req.journeys.free_radius_to = request["free_radius_to"]
+
+        req.journeys.night_bus_filter_max_factor = request['_night_bus_filter_max_factor']
+        req.journeys.night_bus_filter_base_factor = request['_night_bus_filter_base_factor']
 
         #for the default scenario, we filter the walking if we have walking + bss
 

@@ -190,6 +190,9 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
     def test_networks_schema(self):
         self._check_schema('/v1/coverage/main_routing_test/networks')
 
+    def test_disruptions_schema(self):
+        self._check_schema('/v1/coverage/main_routing_test/disruptions')
+
     def test_journeys_schema(self):
         self._check_schema('/v1/coverage/main_routing_test/journeys?'
                            'from=0.001527130369323005;0.0004491559909773545&'
@@ -214,7 +217,7 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
                            'from_datetime=20120614T165200', hard_check=False)
 
         # we have some errors, but only on additional_informations
-        assert len(errors) == 2
+        assert len(errors) == 3
         for k, e in errors.items():
             assert k.endswith('additional_informations[0].type[0]')
             assert e == "Got value `None` of type `null`. Value must be of type(s): `(u'string',)`"

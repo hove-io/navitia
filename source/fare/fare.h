@@ -95,7 +95,7 @@ inline std::ostream& operator<< (std::ostream& s, const Cost& c) {
 }
 
 
-/// Définit un billet : libellé et tarif
+/// Defines a ticket : name (caption) and price (value)
 struct SectionKey;
 struct Ticket {
     enum ticket_type {FlatFare, GraduatedFare, ODFare, None};
@@ -123,7 +123,7 @@ inline Ticket make_default_ticket() {
     return default_t;
 }
 
-/// Définit un billet pour une période données
+/// Defines a ticket for a given period
 struct PeriodTicket {
     PeriodTicket(){}
     PeriodTicket(boost::gregorian::date_period p, Ticket t): validity_period(p), ticket(t) {}
@@ -135,46 +135,46 @@ struct PeriodTicket {
     }
 };
 
-/// Contient un ensemble de tarif pour toutes les dates de validités
+/// Contains a set of fares for every validity dates
 struct DateTicket {
     std::vector<PeriodTicket> tickets;
 
-    /// Retourne le tarif à une date données
+    /// Returns fare for a given date
     Ticket get_fare(boost::gregorian::date date) const;
 
-    /// Ajoute une nouvelle période
+    /// Add a new period to a ticket
     void add(boost::gregorian::date begin_date, boost::gregorian::date end_date, const Ticket& ticket);
 
-    /// Somme deux tickets, suppose qu'il y a le même nombre de billet et que les dates sont compatibles
+    /// Sum of two DateTicket
+    /// This funciton assumes that there's the same number of tickets and that their validity period are the same
     DateTicket operator+(const DateTicket & other) const;
 
     template<class Archive> void serialize(Archive& ar, const unsigned int) {
         ar & tickets;
     }
-
 };
 
 struct no_ticket{};
 
 
-/// Définit l'état courant
+/// Defines the current state
 struct State {
-    /// Dernier mode utilisé
+    /// Last used mode
     std::string mode;
 
-    /// Dernière zone utilisée
+    /// Last used zone
     std::string zone;
 
-    /// Dernier endroit où à eu lieu l'achat
+    /// Last area of purchase
     std::string stop_area;
 
-    /// Dernière ligne utilisée
+    /// Last used line
     std::string line;
 
-    /// Réseau utilisé
+    /// Network used
     std::string network;
 
-    /// Ticket utilisé
+    /// Ticket used
     std::string ticket;
 
     State() {}

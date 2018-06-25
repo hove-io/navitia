@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -50,8 +50,7 @@ www.navitia.io
 namespace gd = boost::gregorian;
 namespace nd = navitia::type::disruption;
 
-namespace navitia{
-
+namespace navitia {
 
 struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
     const nd::Impact& impact;
@@ -529,6 +528,11 @@ void PbCreator::Filler::fill_pb_object(const nt::StopPoint* sp, pbnavitia::StopP
         fill(pm, stop_point->mutable_physical_modes());
     }
 
+    if (!sp->fare_zone.empty()) {
+        auto* farezone = stop_point->mutable_fare_zone();
+        farezone->set_name(sp->fare_zone);
+    }
+
     fill_messages(sp, stop_point);
     fill_codes(sp, stop_point);
 }
@@ -705,7 +709,7 @@ void PbCreator::Filler::fill_pb_object(const nt::Calendar* cal, pbnavitia::Calen
         auto pb_period = pb_cal->add_active_periods();
         pb_period->set_begin(gd::to_iso_string(p.begin()));
         pb_period->set_end(gd::to_iso_string(p.end()));
-    }    
+    }
     fill(cal->exceptions, pb_cal->mutable_exceptions());
 }
 
@@ -980,6 +984,29 @@ compute_disruption_status(const nd::Impact& impact,
     }
 }
 
+static pbnavitia::Severity_Effect get_severity_effect(nd::Effect e) {
+    switch(e) {
+    case nd::Effect::NO_SERVICE:
+        return pbnavitia::Severity_Effect::Severity_Effect_NO_SERVICE;
+    case nd::Effect::REDUCED_SERVICE:
+        return pbnavitia::Severity_Effect::Severity_Effect_REDUCED_SERVICE;
+    case nd::Effect::SIGNIFICANT_DELAYS:
+        return pbnavitia::Severity_Effect::Severity_Effect_SIGNIFICANT_DELAYS;
+    case nd::Effect::DETOUR:
+        return pbnavitia::Severity_Effect::Severity_Effect_DETOUR;
+    case nd::Effect::ADDITIONAL_SERVICE:
+        return pbnavitia::Severity_Effect::Severity_Effect_ADDITIONAL_SERVICE;
+    case nd::Effect::MODIFIED_SERVICE:
+        return pbnavitia::Severity_Effect::Severity_Effect_MODIFIED_SERVICE;
+    case nd::Effect::OTHER_EFFECT:
+        return pbnavitia::Severity_Effect::Severity_Effect_OTHER_EFFECT;
+    case nd::Effect::STOP_MOVED:
+        return pbnavitia::Severity_Effect::Severity_Effect_STOP_MOVED;
+    case nd::Effect::UNKNOWN_EFFECT:
+        return pbnavitia::Severity_Effect::Severity_Effect_UNKNOWN_EFFECT;
+    }
+}
+
 template <typename P>
 void PbCreator::Filler::fill_message(const boost::shared_ptr<nd::Impact>& impact,
                                      P pb_object){
@@ -1015,7 +1042,7 @@ void PbCreator::Filler::fill_pb_object(const nd::Impact* impact, pbnavitia::Impa
     auto pb_severity = pb_impact->mutable_severity();
     pb_severity->set_name(impact->severity->wording);
     pb_severity->set_color(impact->severity->color);
-    pb_severity->set_effect(to_string(impact->severity->effect));
+    pb_severity->set_effect(get_severity_effect(impact->severity->effect));
     pb_severity->set_priority(impact->severity->priority);
 
     for (const auto& t: impact->disruption->tags) {
@@ -1578,7 +1605,7 @@ void PbCreator::fill_fare_section(pbnavitia::Journey* pb_journey, const fare::re
         if (ticket.is_default_ticket()) {
             if (! unknown_ticket) {
                 pb_ticket = response.add_tickets();
-                pb_ticket->set_name(ticket.key);
+                pb_ticket->set_name(ticket.caption);
                 pb_ticket->set_found(false);
                 pb_ticket->set_id("unknown_ticket");
                 pb_ticket->set_comment("unknown ticket");
@@ -1592,7 +1619,7 @@ void PbCreator::fill_fare_section(pbnavitia::Journey* pb_journey, const fare::re
         else {
             pb_ticket = response.add_tickets();
 
-            pb_ticket->set_name(ticket.key);
+            pb_ticket->set_name(ticket.caption);
             pb_ticket->set_found(true);
             pb_ticket->set_comment(ticket.comment);
             pb_ticket->set_id("ticket_" + boost::lexical_cast<std::string>(++cpt_ticket));
@@ -1636,7 +1663,7 @@ void PbCreator::add_path_item(pbnavitia::StreetNetwork* sn, const ng::PathItem& 
 }
 
 void PbCreator::fill_street_sections(const type::EntryPoint& ori_dest, const georef::Path& path,
-                                     pbnavitia::Journey* pb_journey, const pt::ptime departure, 
+                                     pbnavitia::Journey* pb_journey, const pt::ptime departure,
                                      int max_depth) {
     int depth = std::min(max_depth, 3);
     if (path.path_items.empty())
@@ -2112,4 +2139,8 @@ void PbCreator::set_publication_date(pt::ptime ptime){
     response.set_publication_date(navitia::to_posix_timestamp(ptime));
 }
 
+void PbCreator::set_next_request_date_time(uint32_t next_request_date_time){
+    response.set_next_request_date_time(next_request_date_time);
 }
+
+} // namespace navitia

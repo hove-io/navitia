@@ -8,6 +8,10 @@ from flask_restful.inputs import boolean
 # path of the configuration file for each instances
 INSTANCES_DIR = os.getenv('JORMUNGANDR_INSTANCES_DIR', '/etc/jormungandr.d')
 
+# Patern that matches Jormungandr configuration files
+# ex: '*.json' will match all json files within "INSTANCES_DIR" directory
+INSTANCES_FILENAME_PATTERN = os.getenv('JORMUNGANDR_INSTANCES_FILENAME_PATTERN', '*.json')
+
 # Start the thread at startup, True in production, False for test environments
 START_MONITORING_THREAD = boolean(os.getenv('JORMUNGANDR_START_MONITORING_THREAD', True))
 
@@ -166,3 +170,5 @@ PARSER_MAX_COUNT = int(os.getenv('JORMUNGANDR_PARSER_MAX_COUNT', 1000))
 if boolean(os.getenv('JORMUNGANDR_DISABLE_SQLPOOLING', False)):
     from sqlalchemy.pool import NullPool
     SQLALCHEMY_POOLCLASS = NullPool
+
+MAX_JOURNEYS_CALLS = int(os.getenv('JORMUNGANDR_MAX_JOURNEYS_CALLS', 20))

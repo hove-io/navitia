@@ -358,6 +358,13 @@ class add_journey_href(object):
                     args['allowed_id[]'] = list(allowed_ids)
                     args['_type'] = 'journeys'
                     args['rel'] = 'same_journey_schedules'
+
+                    # Delete arguments that are contradictory to the 'same_journey_schedules' concept
+                    if '_final_line_filter' in args:
+                        del args['_final_line_filter']
+                    if '_no_shared_section' in args:
+                        del args['_no_shared_section']
+
                     journey['links'] = [create_external_link('v1.journeys', **args)]
             return objects
         return wrapper
@@ -490,6 +497,9 @@ class Journeys(JourneyCommon):
                                 dest="add_poi_infos", action="append",
                                 help="Show more information about the poi if it's available, for instance, show "
                                      "BSS/car park availability in the pois(BSS/car park) of response")
+        parser_get.add_argument("_no_shared_section", type=BooleanType(), default=False, hidden=True,
+                                dest="no_shared_section",
+                                help="Shared section journeys aren't returned as a separate journey")
 
         self.get_decorators.append(complete_links(self))
 
@@ -535,15 +545,30 @@ class Journeys(JourneyCommon):
                 args['_night_bus_filter_max_factor'] = mod.night_bus_filter_max_factor
             if args.get('_max_additional_connections') is None:
                 args['_max_additional_connections'] = mod.max_additional_connections
-
+            if args.get('min_nb_journeys') is None:
+                args['min_nb_journeys'] = mod.min_nb_journeys
+            if args.get('max_nb_journeys') is None:
+                args['max_nb_journeys'] = mod.max_nb_journeys
+            if args.get('_min_journeys_calls') is None:
+                args['_min_journeys_calls'] = mod.min_journeys_calls
+            if args.get('_max_successive_physical_mode') is None:
+                args['_max_successive_physical_mode'] = mod.max_successive_physical_mode
+            if args.get('_final_line_filter') is None:
+                args['_final_line_filter'] = mod.final_line_filter
+            if args.get('_max_extra_second_pass') is None:
+                args['_max_extra_second_pass'] = mod.max_extra_second_pass
         if region:
             _set_specific_params(i_manager.instances[region])
         else:
             _set_specific_params(default_values)
 
-        # set parameters when is_journey_schedules is set to True
+        # When computing 'same_journey_schedules'(is_journey_schedules=True), some parameters need to be overridden
+        # because they are contradictory to the request
         if args.get("is_journey_schedules"):
+            # '_final_line_filter' (defined in db) removes journeys with the same lines sequence
             args["_final_line_filter"] = False
+            # 'no_shared_section' removes journeys with a section that have the same origin and destination stop points
+            args["no_shared_section"] = False
 
         if not (args['destination'] or args['origin']):
             abort(400, message="you should at least provide either a 'from' or a 'to' argument")
@@ -551,25 +576,25 @@ class Journeys(JourneyCommon):
         if args['debug']:
             g.debug = True
 
-        #we add the interpreted parameters to the stats
+        # Add the interpreted parameters to the stats
         self._register_interpreted_parameters(args)
         logging.getLogger(__name__).debug("We are about to ask journeys on regions : {}".format(possible_regions))
 
-        #we want to store the different errors
+        # Store the different errors
         responses = {}
         for r in possible_regions:
             self.region = r
 
             set_request_timezone(self.region)
 
-            #we store the region in the 'g' object, which is local to a request
+            # Store the region in the 'g' object, which is local to a request
             if args['debug']:
                 # In debug we store all queried region
                 if not hasattr(g, 'regions_called'):
                     g.regions_called = []
                 g.regions_called.append(r)
 
-            # we save the original datetime for debuging purpose
+            # Save the original datetime for debuging purpose
             original_datetime = args['original_datetime']
             if original_datetime:
                 new_datetime = self.convert_to_utc(original_datetime)

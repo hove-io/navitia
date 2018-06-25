@@ -1,3 +1,32 @@
+navitia2 (2.57.0) unstable; urgency=low
+
+  * Kraken: Add ptref shortcut between physical_mode and jpps  <https://github.com/CanalTP/navitia/pull/2417>
+  * Jormungandr: Fix Close SOAP session  <https://github.com/CanalTP/navitia/pull/2418>
+  * Fare: Set fare ticket name in json response  <https://github.com/CanalTP/navitia/pull/2441>
+  * Tests: Allow to use custom zmq_socket in mocks for integration tests   <https://github.com/CanalTP/navitia/pull/2432>
+  * Tests: Tests refactoring for min nb journeys  <https://github.com/CanalTP/navitia/pull/2435>
+  * Jormungandr: Expose configuration file pattern for selecting json to be loaded at runtime  <https://github.com/CanalTP/navitia/pull/2440>
+  * Jormungandr: Condition to stop Kraken calls  <https://github.com/CanalTP/navitia/pull/2436>
+  * kraken & ed: Modification for ubuntu 18.04  <https://github.com/CanalTP/navitia/pull/2421>
+  * Kraken: Add min nb journeys for distributed  <https://github.com/CanalTP/navitia/pull/2425>
+  * kraken: min_nb_journeys feature  <https://github.com/CanalTP/navitia/pull/2405>
+  * Kraken: Fix protofile dependencies & Log night bus filtered itinaries  <https://github.com/CanalTP/navitia/pull/2439>
+  * Jormungandr: Journey filters optimization  <https://github.com/CanalTP/navitia/pull/2404>
+  * Jormungandr & Kraken: Add fare zone info in stop point   <https://github.com/CanalTP/navitia/pull/2427>
+  * Jormungandr: Fix min_nb_transfers in journey filter  <https://github.com/CanalTP/navitia/pull/2431>
+  * Jormungandr: Add parameter 'max_journey_calls'  <https://github.com/CanalTP/navitia/pull/2430>
+  * Jormungandr: Remove arg '_no_shared_section' for same journey schedules  <https://github.com/CanalTP/navitia/pull/2426>
+  * Doc: Fix severity effect for swagger  <https://github.com/CanalTP/navitia/pull/2410>
+  * Jormungandr: Remove Physical/Commercial modes from filter  <https://github.com/CanalTP/navitia/pull/2422>
+  * Jormungandr: Shared section filter + test  <https://github.com/CanalTP/navitia/pull/2411>
+  * kraken: Reject non-publishable disruption while charging from RMQ  <https://github.com/CanalTP/navitia/pull/2419>
+  * Jormungandr: Update 'distances' in distributed response  <https://github.com/CanalTP/navitia/pull/2416>
+  * Jormungandr: Add data for shared sections and adapt tests   <https://github.com/CanalTP/navitia/pull/2407>
+  * Jormungandr: Add scenario stif in tyr  <https://github.com/CanalTP/navitia/pull/2413>
+  * Jormungandr:Ddurations of car and bike for distributed  <https://github.com/CanalTP/navitia/pull/2414>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Mon, 25 Jun 2018 12:06:33 +0100
+
 navitia2 (2.56.0) unstable; urgency=low
 
   * Kraken: Fix MapFind for Debian 7  <https://github.com/CanalTP/navitia/pull/2401>

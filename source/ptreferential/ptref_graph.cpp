@@ -73,6 +73,7 @@ Jointures::Jointures() {
     // PhysicalMode => {VehicleJourney, JourneyPattern}
     boost::add_edge(vertex_map.at(Type_e::VehicleJourney), vertex_map.at(Type_e::PhysicalMode), g);
     boost::add_edge(vertex_map.at(Type_e::JourneyPattern), vertex_map.at(Type_e::PhysicalMode), Edge(0.9), g);
+    boost::add_edge(vertex_map.at(Type_e::JourneyPatternPoint), vertex_map.at(Type_e::PhysicalMode), Edge(1.8), g);
 
     // À partir d'une ligne on peut avoir ses modes commerciaux, compagnies, réseaux et routes
     boost::add_edge(vertex_map.at(Type_e::CommercialMode), vertex_map.at(Type_e::Line), g);

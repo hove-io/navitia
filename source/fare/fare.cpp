@@ -301,12 +301,12 @@ Ticket DateTicket::get_fare(boost::gregorian::date date) const {
 DateTicket DateTicket::operator +(const DateTicket& other) const{
     DateTicket new_ticket = *this;
     if(this->tickets.size() != other.tickets.size())
-        LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"), "Tickets n'ayant pas le même nombre de dates");
+        LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"), "Tickets don't have the same number of dates");
 
     for(size_t i = 0; i < std::min(this->tickets.size(), other.tickets.size()); ++i) {
         if(this->tickets[i].validity_period != other.tickets[i].validity_period)
             LOG4CPLUS_ERROR(log4cplus::Logger::getInstance("log"),
-                            "Le ticket n° " << i << " n'a pas les même dates; " << this->tickets[i].validity_period << " versus " << other.tickets[i].validity_period);
+                            "Ticket n° " << i << " doesn't have the same dates; " << this->tickets[i].validity_period << " as " << other.tickets[i].validity_period);
         new_ticket.tickets[i].ticket.value = this->tickets[i].ticket.value + other.tickets[i].ticket.value;
     }
     return new_ticket;
@@ -330,7 +330,7 @@ bool Transition::valid(const SectionKey& section, const Label& label) const
         } else if (cond.key == "stoparea" && ! boost::iequals(cond.value, section.start_stop_area)) {
             return false;
         } else if(cond.key == "duration") {
-            // Dans le fichier CSV, on rentre le temps en minutes, en interne on travaille en secondes
+            // In the CSV file, time is displayed in minutes. It is handled here in seconds
             int duration = boost::lexical_cast<int>(cond.value) * 60;
             int ticket_duration = section.duration_at_begin(label.start_time);
             if (!compare(ticket_duration, duration, cond.comparaison)) { return false; }
@@ -348,7 +348,7 @@ bool Transition::valid(const SectionKey& section, const Label& label) const
         } else if (cond.key == "stoparea" && ! boost::iequals(cond.value, section.dest_stop_area)) {
             return false;
         } else if (cond.key == "duration") {
-            // Dans le fichier CSV, on rentre le temps en minutes, en interne on travaille en secondes
+            // In the CSV file, time is displayed in minutes. It is handled here in seconds
             int duration = boost::lexical_cast<int>(cond.value) * 60;
             int ticket_duration = section.duration_at_end(label.start_time);
             if (!compare(ticket_duration, duration, cond.comparaison)) { return false; }

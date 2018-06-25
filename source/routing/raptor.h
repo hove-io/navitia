@@ -1,34 +1,35 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
 #pragma once
+
 #include <unordered_map>
 #include <queue>
 #include <limits>
@@ -36,7 +37,9 @@ www.navitia.io
 #include "type/data.h"
 #include "type/datetime.h"
 #include "type/rt_level.h"
+#include "raptor_solution_reader.h"
 #include "routing.h"
+#include "routing/journey.h"
 #include "utils/timer.h"
 #include "boost/dynamic_bitset.hpp"
 #include "dataraptor.h"
@@ -58,6 +61,8 @@ struct StartingPointSndPhase {
 /** Worker Raptor : une instance par thread, les données sont modifiées par le calcul */
 struct RAPTOR
 {
+    typedef std::list<Journey> Journeys;
+
     const navitia::type::Data& data;
 
     std::shared_ptr<const CachedNextStopTime> next_st;
@@ -122,7 +127,6 @@ struct RAPTOR
             const std::vector<std::string>& forbidden_uris = {},
             const boost::optional<navitia::time_duration>& direct_path_dur = boost::none);
 
-
     /** Calcul d'itinéraires multiples dans le sens horaire à partir de plusieurs
     * stop points de départs, vers plusieurs stoppoints d'arrivée,
     * à une heure donnée.
@@ -142,6 +146,33 @@ struct RAPTOR
                 const boost::optional<navitia::time_duration>& direct_path_dur = boost::none,
                 const size_t max_extra_second_pass = 0);
 
+    Journeys
+    compute_all_journeys(const map_stop_point_duration& departs,
+                         const map_stop_point_duration& destinations,
+                         const DateTime& departure_datetime,
+                         const nt::RTLevel rt_level,
+                         const navitia::time_duration& transfer_penalty,
+                         const DateTime& bound = DateTimeUtils::inf,
+                         const uint32_t max_transfers = 10,
+                         const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
+                         const std::vector<std::string>& forbidden = std::vector<std::string>(),
+                         const std::vector<std::string>& allowed = std::vector<std::string>(),
+                         bool clockwise = true,
+                         const boost::optional<navitia::time_duration>& direct_path_dur = boost::none,
+                         const size_t max_extra_second_pass = 0);
+
+    template<class T>
+    std::vector<Path> from_journeys_to_path(const T& journeys) const
+    {
+        std::vector<Path> result;
+        for (const auto& journey: journeys) {
+            if (journey.sections.empty()) {
+                continue;
+            }
+            result.push_back(make_path(journey, data));
+        }
+        return result;
+    }
 
     /** Calcul l'isochrone à partir de tous les points contenus dans departs,
      *  vers tous les autres points.

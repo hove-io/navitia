@@ -221,7 +221,12 @@ class Time(DateTime):
         t = datetime.datetime.utcfromtimestamp(time)
         return t.strftime("%H%M%S")
 
+
 class enum_type(fields.Raw):
+
+    def __init__(self, lower_case=True, *args, **kwargs):
+        self.lower_case = lower_case
+        super(enum_type, self).__init__(*args, **kwargs)
 
     def output(self, key, obj):
         if self.attribute:
@@ -241,7 +246,10 @@ class enum_type(fields.Raw):
         except ValueError:
             return None
         enum = obj.DESCRIPTOR.fields_by_name[key].enum_type.values_by_number
-        return enum[getattr(obj, key)].name.lower()
+        if self.lower_case:
+            return enum[getattr(obj, key)].name.lower()
+        else:
+            return enum[getattr(obj, key)].name
 
 
 class PbEnum(fields.Raw):
@@ -536,7 +544,7 @@ disruption_message = {
 
 disruption_severity = {
     "name": fields.String(),
-    "effect": fields.String(),
+    "effect": enum_type(lower_case=False),
     "color": fields.String(),
     "priority": fields.Integer(),
 }
@@ -927,7 +935,13 @@ instance_parameters = {
     'priority': fields.Raw,
     'bss_provider': fields.Boolean,
     'successive_physical_mode_to_limit_id': fields.Raw,
-    'max_additional_connections': fields.Raw
+    'max_additional_connections': fields.Raw,
+    'min_nb_journeys': fields.Raw,
+    'max_nb_journeys': fields.Raw,
+    'min_journeys_calls': fields.Raw,
+    'max_successive_physical_mode': fields.Raw,
+    'final_line_filter': fields.Boolean,
+    'max_extra_second_pass': fields.Raw
 }
 
 instance_status_with_parameters = deepcopy(instance_status)

@@ -1365,7 +1365,7 @@ static std::vector<component_vertex_t> get_useless_nodes(const filtered_graph& g
 
         size_t count = component_size[component];
         if (! principal_component || principal_component->second < count) {
-            principal_component = {component, count} ;
+            principal_component = {{component, count}} ;
         }
     }
 
