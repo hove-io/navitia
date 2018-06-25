@@ -128,6 +128,33 @@ class TestJourneysDistributed(JourneyCommon, DirectPath, JourneyMinBikeMinCar, N
         assert resp.rows[0].routing_response[0].duration == 0
         assert resp.rows[0].routing_response[0].routing_status == response_pb2.unreached
 
+    def test_intersection_objects(self):
+        # The coordinates of arrival and the stop point are separated by 20m
+        r = self.query('/v1/coverage/main_routing_test/journeys?from=stopA&to=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&datetime=20120614080000&')
+        assert len(r['journeys'][0]['sections']) == 3
+
+        # destination of crow_fly section and origin of next pt section should be the same object.
+        assert(r['journeys'][0]['sections'][0]['type'] == 'crow_fly')
+        assert(r['journeys'][0]['sections'][1]['type'] == 'public_transport')
+        assert(r['journeys'][0]['sections'][0]['to'] == r['journeys'][0]['sections'][1]['from'])
+
+        # destination of pt section and origin of next street_network section should be the same object.
+        assert(r['journeys'][0]['sections'][-1]['type'] == 'street_network')
+        assert(r['journeys'][0]['sections'][1]['to'] == r['journeys'][0]['sections'][-1]['from'])
+
+        r = self.query('/v1/coverage/main_routing_test/journeys?from=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&to=stopA&datetime=20120614080000')
+        assert len(r['journeys'][0]['sections']) == 3
+
+        # destination of crow_fly section and origin of next pt section should be the same object.
+        assert(r['journeys'][0]['sections'][0]['type'] == 'street_network')
+        assert(r['journeys'][0]['sections'][1]['type'] == 'public_transport')
+        assert(r['journeys'][0]['sections'][0]['to'] == r['journeys'][0]['sections'][1]['from'])
+
+        # destination of pt section and origin of next street_network section should be the same object.
+        assert(r['journeys'][0]['sections'][-1]['type'] == 'crow_fly')
+        assert(r['journeys'][0]['sections'][1]['to'] == r['journeys'][0]['sections'][-1]['from'])
+
+
 @config({"scenario": "distributed"})
 class TestDistributedJourneysWithPtref(JourneysWithPtref, NewDefaultScenarioAbstractTestFixture):
     pass
