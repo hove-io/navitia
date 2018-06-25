@@ -554,6 +554,10 @@ class JourneyCommon(object):
         assert section['from']['id'] == 'stop_point:stopB'
         assert section['to']['id'] == 'stopB'
 
+        # verify distances and durations in a journey with crow_fly
+        assert jrnys[0]['durations']['walking'] == 0
+        assert jrnys[0]['distances']['walking'] == 0
+
     def test_max_duration_equals_to_0(self):
         query = journey_basic_query + \
             "&first_section_mode[]=bss" + \
@@ -832,6 +836,9 @@ class JourneyCommon(object):
         r = self.query('/v1/coverage/main_routing_test/journeys?from=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&to=stopA&datetime=20120614080000')
         assert(r['journeys'][0]['sections'][0]['type'] == 'street_network')
         assert(r['journeys'][0]['sections'][0]['duration'] != 0)
+        # Verify distances and durations in a journey with street_network
+        assert(r['journeys'][0]['durations']['walking'] != 0)
+        assert(r['journeys'][0]['distances']['walking'] != 0)
 
         # Query journeys with free_radius = 19
         r = self.query('/v1/coverage/main_routing_test/journeys?from=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&to=stopA&datetime=20120614080000&free_radius_from=19')
@@ -842,6 +849,9 @@ class JourneyCommon(object):
         r = self.query('/v1/coverage/main_routing_test/journeys?from=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&to=stopA&datetime=20120614080000&free_radius_from=20')
         assert(r['journeys'][0]['sections'][0]['type'] == 'crow_fly')
         assert(r['journeys'][0]['sections'][0]['duration'] == 0)
+        # Verify distances and durations in a journey with crow_fly
+        assert(r['journeys'][0]['distances']['walking'] == 0)
+        assert(r['journeys'][0]['durations']['walking'] == 0)
 
         # The time of departure of PT is 08:01:00 and it takes 17s to walk to the station
         # If the requested departure time is 08:00:50, the PT journey shouldn't be displayed
@@ -861,6 +871,9 @@ class JourneyCommon(object):
         r = self.query('/v1/coverage/main_routing_test/journeys?from=stopA&to=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&datetime=20120614080000&')
         assert(r['journeys'][0]['sections'][-1]['type'] == 'street_network')
         assert(r['journeys'][0]['sections'][-1]['duration'] != 0)
+        # Verify distances and durations in a journey with street_network
+        assert(r['journeys'][0]['durations']['walking'] != 0)
+        assert(r['journeys'][0]['distances']['walking'] != 0)
 
         # Query journeys with free_radius = 19
         r = self.query('/v1/coverage/main_routing_test/journeys?from=stopA&to=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&datetime=20120614080000&free_radius_from=19')
@@ -871,6 +884,9 @@ class JourneyCommon(object):
         r = self.query('/v1/coverage/main_routing_test/journeys?from=stopA&to=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&datetime=20120614080000&free_radius_to=20&')
         assert(r['journeys'][0]['sections'][-1]['type'] == 'crow_fly')
         assert(r['journeys'][0]['sections'][-1]['duration'] == 0)
+        # Verify distances and durations in a journey with crow_fly
+        assert(r['journeys'][0]['durations']['walking'] == 0)
+        assert(r['journeys'][0]['distances']['walking'] == 0)
 
         # The estimated time of arrival without free_radius is 08:01:19
         # If the requested arrival time is before 08:01:19, the PT journey shouldn't be displayed

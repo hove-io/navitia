@@ -30,7 +30,7 @@
 from __future__ import absolute_import
 import math
 from jormungandr.street_network.street_network import StreetNetworkPathType
-from jormungandr.utils import PeriodExtremity, SectionSorter
+from jormungandr.utils import PeriodExtremity, SectionSorter, get_pt_object_coord
 from navitiacommon import response_pb2
 from .helper_exceptions import *
 import uuid
@@ -39,10 +39,11 @@ import logging
 import six
 
 MODE_TO_PB_MODE = {'walking': response_pb2.Walking,
-                  'bike': response_pb2.Bike,
-                  'bss': response_pb2.Bss,
-                  'car': response_pb2.Car,
-                  'ridesharing': response_pb2.Ridesharing}
+                   'bike': response_pb2.Bike,
+                   'bss': response_pb2.Bss,
+                   'car': response_pb2.Car,
+                   'ridesharing': response_pb2.Ridesharing}
+
 
 
 def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end, mode):
@@ -51,12 +52,23 @@ def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end,
     section.origin.CopyFrom(crowfly_origin)
     section.destination.CopyFrom(crowfly_destination)
     section.duration = end - begin
-    pt_journey.durations.walking += section.duration
     pt_journey.durations.total += section.duration
     pt_journey.duration += section.duration
     section.begin_date_time = begin
     section.end_date_time = end
     section.street_network.mode = MODE_TO_PB_MODE.get(mode)
+
+    # Calculate section length
+    from_coord = get_pt_object_coord(section.origin)
+    to_coord = get_pt_object_coord(section.destination)
+    section.length = int(crowfly_distance_between(from_coord, to_coord))
+
+    # The section "distances" and "durations" in the response needs to be updated according to the mode.
+    # only if it isn't a 'free' crow_fly
+    if section.duration > 0:
+        setattr(pt_journey.distances, mode, (getattr(pt_journey.distances, mode) + section.length))
+        setattr(pt_journey.durations, mode, (getattr(pt_journey.durations, mode) + section.duration))
+
     section.id = six.text_type(uuid.uuid4())
     return section
 
