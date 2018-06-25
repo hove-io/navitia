@@ -88,8 +88,8 @@ void make_response(navitia::PbCreator& pb_creator,
                    const std::vector<uint64_t> &datetimes,
                    bool clockwise,
                    const type::AccessibiliteParams& accessibilite_params,
-                   std::vector<std::string> forbidden,
-                   std::vector<std::string> allowed,
+                   const std::vector<std::string>& forbidden,
+                   const std::vector<std::string>& allowed,
                    georef::StreetNetwork& worker,
                    const type::RTLevel rt_level,
                    const navitia::time_duration& transfer_penalty,
@@ -98,9 +98,11 @@ void make_response(navitia::PbCreator& pb_creator,
                    uint32_t max_extra_second_pass = 0,
                    uint32_t free_radius_from = 0,
                    uint32_t free_radius_to = 0,
-                   uint32_t min_nb_journeys = 0,
+                   const boost::optional<uint32_t>& min_nb_journeys = boost::none,
                    double night_bus_filter_max_factor = NightBusFilter::default_max_factor,
-                   int32_t night_bus_filter_base_factor = NightBusFilter::default_base_factor);
+                   int32_t night_bus_filter_base_factor = NightBusFilter::default_base_factor,
+                   const boost::optional<DateTime>& timeframe_end_datetime = boost::none,
+                   const boost::optional<DateTime>& timeframe_max_datetime = boost::none);
 
 void make_isochrone(navitia::PbCreator& pb_creator,
                     RAPTOR &raptor,
@@ -132,9 +134,11 @@ void make_pt_response(navitia::PbCreator& pb_creator,
                       uint32_t max_transfers=std::numeric_limits<uint32_t>::max(),
                       uint32_t max_extra_second_pass = 0,
                       const boost::optional<navitia::time_duration>& direct_path_duration = boost::none,
-                      uint32_t min_nb_journeys = 0,
+                      const boost::optional<uint32_t>& min_nb_journeys = boost::none,
                       double night_bus_filter_max_factor = NightBusFilter::default_max_factor,
-                      int32_t night_bus_filter_base_factor = NightBusFilter::default_base_factor);
+                      int32_t night_bus_filter_base_factor = NightBusFilter::default_base_factor,
+                      const boost::optional<DateTime>& timeframe_end_datetime = boost::none,
+                      const boost::optional<DateTime>& timeframe_max_datetime = boost::none);
 
 
 boost::optional<routing::map_stop_point_duration>

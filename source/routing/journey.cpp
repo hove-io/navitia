@@ -116,3 +116,15 @@ size_t JourneyHash::operator()(const Journey& j) const {
 
     return seed;
 };
+
+bool JourneyCmp::operator()(const Journey& l, const Journey& r) const {
+    if (clockwise) {
+        if (l.departure_dt != r.departure_dt) { return l.departure_dt <= r.departure_dt; }
+        if (l.arrival_dt != r.arrival_dt) { return l.arrival_dt <= r.arrival_dt; }
+    }else {
+        if (l.arrival_dt != r.arrival_dt) { return l.arrival_dt >= r.arrival_dt; }
+        if (l.departure_dt != r.departure_dt) { return l.departure_dt >= r.departure_dt; }
+    }
+    return l.min_waiting_dur < r.min_waiting_dur;
+
+}

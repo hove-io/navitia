@@ -28,6 +28,8 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+
+from _ast import operator
 from copy import deepcopy
 import itertools
 import logging
@@ -53,6 +55,8 @@ from jormungandr import global_autocomplete
 from six.moves import filter
 from six.moves import range
 from six.moves import zip
+from datetime import timedelta
+import operator
 
 SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
 JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
@@ -99,7 +103,7 @@ def get_kraken_calls(request):
     return res
 
 
-def create_pb_request(requested_type, request, dep_mode, arr_mode):
+def create_pb_request(requested_type, request, dep_mode, arr_mode, timeframe=None):
     """Parse the request dict and create the protobuf version"""
     #TODO: bench if the creation of the request each time is expensive
     req = request_pb2.Request()
@@ -178,6 +182,10 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
 
     req.journeys.night_bus_filter_max_factor = request['_night_bus_filter_max_factor']
     req.journeys.night_bus_filter_base_factor = request['_night_bus_filter_base_factor']
+
+    if timeframe:
+        req.journeys.timeframe_end_datetime = int(timeframe.end_datetime)
+        req.journeys.timeframe_max_datetime = int(timeframe.max_datetime)
 
     return req
 
@@ -780,6 +788,9 @@ def get_kraken_id(entrypoint_detail):
     return '{};{}'.format(coord['lon'], coord['lat'])
 
 
+Timeframe = collections.namedtuple('Timeframe', ['end_datetime', 'max_datetime'])
+
+
 class Scenario(simple.Scenario):
     """
     TODO: a bit of explanation about the new scenario
@@ -813,15 +824,15 @@ class Scenario(simple.Scenario):
         # Return the possible couples combinations (origin_mode and destination_mode)
         krakens_call = get_kraken_calls(api_request)
 
-        # min_nb_journeys option
-        if api_request['min_nb_journeys']:
-            min_nb_journeys = api_request['min_nb_journeys']
-        else:
-            min_nb_journeys = api_request['min_nb_journeys'] = 1
-
         # We need the original request (api_request) for filtering, but request
         # is modified by create_next_kraken_request function.
         request = deepcopy(api_request)
+
+        # min_nb_journeys option
+        if request['min_nb_journeys']:
+            min_nb_journeys = request['min_nb_journeys']
+        else:
+            min_nb_journeys  = 1
 
         responses = []
         nb_try = 0
@@ -832,6 +843,15 @@ class Scenario(simple.Scenario):
         min_journeys_calls = request.get('_min_journeys_calls', 1)
         max_journeys_calls = app.config.get('MAX_JOURNEYS_CALLS', 20)
         max_nb_calls = min(min_nb_journeys, max_journeys_calls)
+
+        op = operator.add if api_request['clockwise'] else operator.sub
+        # we should ensure that the max timeframe don't exceed 24H
+
+        timeframe = None
+        if api_request.get('timeframe_duration'):
+            timeframe = Timeframe(end_datetime=op(api_request['datetime'], min(api_request.get('timeframe_duration'),
+                                                                               timedelta(days=1).total_seconds())),
+                                  max_datetime=op(api_request['datetime'], timedelta(days=1).total_seconds()))
 
         while request is not None and \
                 ((nb_qualified_journeys < min_nb_journeys and nb_try < max_nb_calls)\
@@ -844,11 +864,11 @@ class Scenario(simple.Scenario):
             # - If there was no journey qualified in the previous response, the last chance request is limited
             if len(krakens_call) > 1 or last_chance_retry:
                 request['min_nb_journeys'] = 0
-            else:
+            elif api_request['min_nb_journeys']:
                 min_nb_journeys_left = min_nb_journeys - nb_qualified_journeys
                 request['min_nb_journeys'] = max(0, min_nb_journeys_left)
 
-            new_resp = self.call_kraken(request_type, request, instance, krakens_call)
+            new_resp = self.call_kraken(request_type, request, instance, krakens_call, timeframe)
             _tag_by_mode(new_resp)
             _tag_direct_path(new_resp)
             _tag_bike_in_pt(new_resp)
@@ -934,7 +954,7 @@ class Scenario(simple.Scenario):
         self._compute_pagination_links(pb_resp, instance, api_request['clockwise'])
         return pb_resp
 
-    def call_kraken(self, request_type, request, instance, krakens_call):
+    def call_kraken(self, request_type, request, instance, krakens_call, timeframe=None):
         """
         For all krakens_call, call the kraken and aggregate the responses
 
@@ -953,7 +973,7 @@ class Scenario(simple.Scenario):
 
         pool = gevent.pool.Pool(app.config.get('GREENLET_POOL_SIZE', 3))
         for dep_mode, arr_mode in krakens_call:
-            pb_request = create_pb_request(request_type, request, dep_mode, arr_mode)
+            pb_request = create_pb_request(request_type, request, dep_mode, arr_mode, timeframe)
             # we spawn a new greenlet, it won't have access to our thread local request object so we pass the request_id
             futures.append(pool.spawn(worker, dep_mode, arr_mode, instance, pb_request, flask_request_id=flask.request.id))
 

@@ -68,14 +68,16 @@ call_raptor(navitia::PbCreator& pb_creator,
             const std::vector<std::string>& allowed_ids,
             const bool clockwise,
             const boost::optional<navitia::time_duration>& direct_path_duration,
-            const uint32_t min_nb_journeys,
+            const boost::optional<uint32_t>& min_nb_journeys,
             const uint32_t nb_direct_path,
             const uint32_t max_duration,
             const uint32_t max_transfers,
             const size_t max_extra_second_pass,
             const double night_bus_filter_max_factor,
-            const int32_t night_bus_filter_base_factor)
-{
+            const int32_t night_bus_filter_base_factor,
+            const boost::optional<DateTime>& timeframe_end_datetime,
+            const boost::optional<DateTime>& timeframe_max_datetime) {
+
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     std::vector<Path> pathes;
 
@@ -129,11 +131,6 @@ call_raptor(navitia::PbCreator& pb_creator,
 
             LOG4CPLUS_DEBUG(logger, "after filtering late journeys: " << raptor_journeys.size() << " solution(s) left");
 
-            if (raptor_journeys.empty())
-                break;
-
-            // Prepare next call for raptor with min_nb_journeys option
-            request_date_secs = prepare_next_call_for_raptor(raptor_journeys, clockwise);
 
             // filter the similar journeys
             for(const auto & journey : raptor_journeys) {
@@ -142,8 +139,68 @@ call_raptor(navitia::PbCreator& pb_creator,
 
             nb_try++;
 
-        } while (( journeys.size() + nb_direct_path < min_nb_journeys) && (nb_try < max_nb_raptor_call));
+            auto total_nb_journeys = journeys.size() + nb_direct_path;
+            // Prepare next call for raptor with min_nb_journeys option
+            request_date_secs = prepare_next_call_for_raptor(raptor_journeys, clockwise);
 
+            if (raptor_journeys.empty()) {
+                break;
+            }
+
+            if (min_nb_journeys) {
+                if (! timeframe_end_datetime && ! timeframe_max_datetime) {
+                    if ((total_nb_journeys > min_nb_journeys.get()) || (nb_try > max_nb_raptor_call)) {
+                        break;
+                    }
+                }
+                if (timeframe_end_datetime && timeframe_max_datetime) {
+                    if (total_nb_journeys < min_nb_journeys.get() && request_date_secs < timeframe_max_datetime.get()) {
+                        continue;
+                    }else {
+                        if (request_date_secs < timeframe_end_datetime.get()) {
+                            continue;
+                        }else {
+                            break;
+                        }
+                    }
+                }
+            }else {
+                if (! timeframe_end_datetime && ! timeframe_max_datetime) {
+                    if ((total_nb_journeys > 0) || (nb_try > max_nb_raptor_call)) {
+                        break;
+                    }
+                    continue;
+                } else if(request_date_secs < timeframe_end_datetime.get()) {
+                    continue;
+                }else {
+                    break;
+                }
+
+            }
+        } while (true);
+
+        auto total_nb_journeys = journeys.size() + nb_direct_path;
+
+        // Culling the excessive journeys
+        if (timeframe_end_datetime && timeframe_max_datetime) {
+            if (!min_nb_journeys ||
+                    (min_nb_journeys && total_nb_journeys > min_nb_journeys.get())) {
+                routing::JourneyCmp cmp{clockwise};
+                // filter journeys by end datetime until min_nb_journeys
+                std::vector<routing::Journey> sorted{journeys.begin(), journeys.end()};
+                std::sort(sorted.begin(), sorted.end(), cmp);
+                auto it = sorted.rbegin();
+                while (it != sorted.rend()) {
+                    auto& j = *it;
+                    ++it;
+                    if (j.departure_dt >= timeframe_end_datetime.get()) {
+                        journeys.erase(j);
+                    }else{
+                        break;
+                    }
+                }
+            }
+        }
 
         // create date time for next
         pb_creator.set_next_request_date_time(to_posix_timestamp(request_date_secs, raptor.data));
@@ -1163,9 +1220,11 @@ void make_pt_response(navitia::PbCreator& pb_creator,
                       uint32_t max_transfers,
                       uint32_t max_extra_second_pass,
                       const boost::optional<navitia::time_duration>& direct_path_duration,
-                      uint32_t min_nb_journeys,
+                      const boost::optional<uint32_t>& min_nb_journeys,
                       double night_bus_filter_max_factor,
-                      int32_t night_bus_filter_base_factor) {
+                      int32_t night_bus_filter_base_factor,
+                      const boost::optional<DateTime>& timeframe_end_datetime,
+                      const boost::optional<DateTime>& timeframe_max_datetime) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
@@ -1217,7 +1276,9 @@ void make_pt_response(navitia::PbCreator& pb_creator,
                                     max_transfers,
                                     max_extra_second_pass,
                                     night_bus_filter_max_factor,
-                                    night_bus_filter_base_factor);
+                                    night_bus_filter_base_factor,
+                                    timeframe_end_datetime,
+                                    timeframe_max_datetime);
 
     // Create pb response
     make_pt_pathes(pb_creator, pathes);
@@ -1264,7 +1325,7 @@ bool way_later(const Journey & j1, const Journey & j2,
 
     auto get_pseudo_duration = [&](const Journey & j) {
         auto dt = clockwise ? j.arrival_dt : j.departure_dt;
-        return std::abs(double(dt) - double(requested_dt));
+        return std::abs((double)dt - requested_dt);
     };
 
     auto j1_pseudo_duration = get_pseudo_duration(j1);
@@ -1300,8 +1361,8 @@ void make_response(navitia::PbCreator& pb_creator,
                    const std::vector<uint64_t>& timestamps,
                    bool clockwise,
                    const type::AccessibiliteParams& accessibilite_params,
-                   std::vector<std::string> forbidden,
-                   std::vector<std::string> allowed,
+                   const std::vector<std::string>& forbidden,
+                   const std::vector<std::string>& allowed,
                    georef::StreetNetwork& worker,
                    const type::RTLevel rt_level,
                    const navitia::time_duration& transfer_penalty,
@@ -1310,9 +1371,11 @@ void make_response(navitia::PbCreator& pb_creator,
                    uint32_t max_extra_second_pass,
                    uint32_t free_radius_from,
                    uint32_t free_radius_to,
-                   uint32_t min_nb_journeys,
+                   const boost::optional<uint32_t>& min_nb_journeys,
                    double night_bus_filter_max_factor,
-                   int32_t night_bus_filter_base_factor) {
+                   int32_t night_bus_filter_base_factor,
+                   const boost::optional<DateTime>& timeframe_end_datetime,
+                   const boost::optional<DateTime>& timeframe_max_datetime) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
@@ -1405,7 +1468,10 @@ void make_response(navitia::PbCreator& pb_creator,
                                     max_transfers,
                                     max_extra_second_pass,
                                     night_bus_filter_max_factor,
-                                    night_bus_filter_base_factor);
+                                    night_bus_filter_base_factor,
+                                    timeframe_end_datetime,
+                                    timeframe_max_datetime);
+
 
     // Create pb response
     make_pathes(pb_creator,

@@ -57,6 +57,7 @@ from jormungandr.parking_space_availability.parking_places_manager import Manage
 import six
 from navitiacommon.parser_args_type import BooleanType, OptionValue
 from jormungandr.interfaces.common import add_poi_infos_types
+from datetime import timedelta
 
 f_datetime = "%Y%m%dT%H%M%S"
 class SectionLinks(fields.Raw):
@@ -500,6 +501,9 @@ class Journeys(JourneyCommon):
         parser_get.add_argument("_no_shared_section", type=BooleanType(), default=False, hidden=True,
                                 dest="no_shared_section",
                                 help="Shared section journeys aren't returned as a separate journey")
+        parser_get.add_argument("timeframe_duration", type=int,
+                                dest="timeframe_duration",
+                                help="timeframe_duration") # more explanation!!!
 
         self.get_decorators.append(complete_links(self))
 
@@ -521,6 +525,9 @@ class Journeys(JourneyCommon):
         if 'count' in args and args['count']:
             args['min_nb_journeys'] = args['count']
             args['max_nb_journeys'] = args['count']
+
+        if args.get('timeframe_duration'):
+            args['timeframe_duration'] = min(args['timeframe_duration'], timedelta(days=1).total_seconds())
 
         if args['destination'] and args['origin']:
             api = 'journeys'

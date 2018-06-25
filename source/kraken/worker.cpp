@@ -759,9 +759,18 @@ void Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API 
                                         request.has_direct_path_duration() ?
                                             boost::optional<time_duration>(seconds{request.direct_path_duration()}) :
                                             boost::optional<time_duration>(),
-                                        request.min_nb_journeys(),
+                                        request.has_min_nb_journeys() ?
+                                            boost::make_optional(request.min_nb_journeys()) : boost::none,
                                         request.night_bus_filter_max_factor(),
-                                        request.night_bus_filter_base_factor() );
+                                        request.night_bus_filter_base_factor(),
+                                        request.has_timeframe_end_datetime() ?
+                                            boost::make_optional(
+                                                    to_datetime(from_posix_timestamp(request.timeframe_end_datetime()),planner->data))
+                                            : boost::none,
+                                        request.has_timeframe_max_datetime() ?
+                                                boost::make_optional(
+                                                        to_datetime(from_posix_timestamp(request.timeframe_max_datetime()),planner->data))
+                                            : boost::none);
             break;
         default:
             routing::make_response( this->pb_creator,
@@ -781,9 +790,18 @@ void Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API 
                                     request.max_extra_second_pass(),
                                     request.free_radius_from(),
                                     request.free_radius_to(),
-                                    request.min_nb_journeys(),
-                                    request.night_bus_filter_max_factor(),
-                                    request.night_bus_filter_base_factor() );
+                                    request.has_min_nb_journeys() ?
+                                            boost::make_optional(request.min_nb_journeys()) : boost::none,
+                                            request.night_bus_filter_max_factor(),
+                                    request.night_bus_filter_base_factor(),
+                                    request.has_timeframe_end_datetime() ?
+                                            boost::make_optional(
+                                                    to_datetime(from_posix_timestamp(request.timeframe_end_datetime()),planner->data))
+                                    : boost::none,
+                                      request.has_timeframe_max_datetime() ?
+                                              boost::make_optional(
+                                                      to_datetime(from_posix_timestamp(request.timeframe_max_datetime()),planner->data))
+                                    : boost::none);
         }
     }catch(const navitia::coord_conversion_exception& e) {
         this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());

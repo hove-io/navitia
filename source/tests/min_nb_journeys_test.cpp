@@ -115,8 +115,8 @@ int main(int argc, const char* const argv[]) {
     auto arr_time = "08:05:00"_t;
     for (int nb = 0; nb < 20; ++nb) {
         b.vj("C", "1000000", "", false, "vjC_" + std::to_string(nb))
-                ("stop_point:sa1:s1", dep_time + nb * "00:10::00"_t)
-                ("stop_point:sa3:s1", arr_time + nb * "00:10::00"_t);
+                ("stop_point:sa1:s1", dep_time + nb * "00:10:00"_t)
+                ("stop_point:sa3:s1", arr_time + nb * "00:10:00"_t);
     }
     // Add a VJ 24H after to test the time frame duration max limit (24H)
     b.vj("C", "10000000", "", false, "vjC_out_of_24_bound")
