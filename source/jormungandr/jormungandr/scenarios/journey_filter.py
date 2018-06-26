@@ -30,7 +30,6 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 import itertools
-from functools import partial
 import datetime
 import abc
 import six
@@ -50,6 +49,16 @@ def delete_journeys(responses, request):
 
     if nb_deleted:
         logging.getLogger(__name__).info('filtering {} journeys'.format(nb_deleted))
+
+
+def to_be_deleted(journey):
+    return 'to_delete' in journey.tags
+
+
+def mark_as_dead(journey, is_debug, *reasons):
+    journey.tags.append('to_delete')
+    if is_debug:
+        journey.tags.extend(('deleted_because_' + reason for reason in reasons))
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -154,148 +163,6 @@ def filter_journeys(responses, instance, request):
     return composed_filter.compose_filters()(journey_generator(responses))
 
 
-def apply_final_journey_filters(response_list, instance, request):
-    """
-    Final pass: Filter by side effect the list of pb responses's journeys
-
-    Nota: All filters below are applied only once, after all calls to kraken are done
-    """
-    is_debug = request.get('debug', False)
-    journey_generator = get_qualified_journeys
-    if is_debug:
-        journey_generator = get_all_journeys
-
-    # for clarity purpose we build a temporary list
-
-    # we remove similar journeys (same lines and same succession of stop_points)
-    final_line_filter = get_or_default(request, '_final_line_filter', False)
-    if final_line_filter:
-        journeys = journey_generator(response_list)
-        journey_pairs_pool = itertools.combinations(journeys, 2)
-        _filter_similar_line_journeys(journey_pairs_pool, request)
-
-    # we filter journeys having "shared sections" (same succession of stop_points + custom rules)
-    no_shared_section = get_or_default(request, 'no_shared_section', False)
-    if no_shared_section:
-        journeys = journey_generator(response_list)
-        journey_pairs_pool = itertools.combinations(journeys, 2)
-        filter_shared_sections_journeys(journey_pairs_pool, request)
-
-    # we filter journeys having too much connections compared to minimum
-    journeys = journey_generator(response_list)
-    _filter_too_much_connections(journeys, instance, request)
-
-
-def _get_worst_similar(j1, j2, request):
-    """
-    Decide which is the worst journey between 2 similar journeys.
-
-    The choice is made on:
-     - asap
-     - duration
-     - more fallback
-     - more connection
-     - smaller value among min waiting duration
-     - more constrained fallback mode : all else being equal,
-            it's better to know that you can do it by bike for 'bike_in_pt' tag
-            (and traveler presumes he can do it walking too, as the practical case is 0s fallback)
-    """
-    if request.get('clockwise', True):
-        if j1.arrival_date_time != j2.arrival_date_time:
-            return j1 if j1.arrival_date_time > j2.arrival_date_time else j2
-    else:
-        if j1.departure_date_time != j2.departure_date_time:
-            return j1 if j1.departure_date_time < j2.departure_date_time else j2
-
-    if j1.duration != j2.duration:
-        return j1 if j1.duration > j2.duration else j2
-
-    if fallback_duration(j1) != fallback_duration(j2):
-        return j1 if fallback_duration(j1) > fallback_duration(j2) else j2
-
-    if get_nb_connections(j1) != get_nb_connections(j2):
-        return j1 if get_nb_connections(j1) > get_nb_connections(j2) else j2
-
-    if get_min_waiting(j1) != get_min_waiting(j2):
-        return j1 if get_min_waiting(j1) < get_min_waiting(j2) else j2
-
-
-    def get_mode_rank(section):
-        mode_rank = {response_pb2.Car: 0,
-                     response_pb2.Bike: 1,
-                     response_pb2.Walking: 2}
-        return mode_rank.get(section.street_network.mode)
-
-    def is_fallback(section):
-        return section.type == response_pb2.CROW_FLY or section.type != response_pb2.STREET_NETWORK
-
-    s1 = j1.sections[0]
-    s2 = j2.sections[0]
-    if is_fallback(s1) and is_fallback(s2) and s1.street_network.mode != s2.street_network.mode:
-        return j1 if get_mode_rank(s1) > get_mode_rank(s2) else j2
-
-    s1 = j1.sections[-1]
-    s2 = j2.sections[-1]
-    if is_fallback(s1) and is_fallback(s2) and s1.street_network.mode != s2.street_network.mode:
-        return j1 if get_mode_rank(s1) > get_mode_rank(s2) else j2
-
-    return j2
-
-
-def to_be_deleted(journey):
-    return 'to_delete' in journey.tags
-
-
-def mark_as_dead(journey, is_debug, *reasons):
-    journey.tags.append('to_delete')
-    if is_debug:
-        journey.tags.extend(('deleted_because_' + reason for reason in reasons))
-
-
-def filter_similar_vj_journeys(journey_pairs_pool, request):
-    _filter_similar_journeys(journey_pairs_pool, request, similar_journeys_vj_generator)
-
-
-def _filter_similar_line_journeys(journey_pairs_pool, request):
-    _filter_similar_journeys(journey_pairs_pool, request, similar_journeys_line_generator)
-
-
-def filter_shared_sections_journeys(journey_pairs_pool, request):
-    _filter_similar_journeys(journey_pairs_pool, request, shared_section_generator)
-
-
-def _filter_similar_journeys(journey_pairs_pool, request, similar_journey_generator):
-    """
-    Compare journeys 2 by 2.
-    The given generator tells which part of journeys are compared.
-    In case of similar journeys, the function '_get_worst_similar_vjs' decides which one to delete.
-    """
-
-    logger = logging.getLogger(__name__)
-    is_debug = request.get('debug', False)
-    for j1, j2 in journey_pairs_pool:
-        if to_be_deleted(j1) or to_be_deleted(j2):
-            continue
-        if compare(j1, j2, similar_journey_generator):
-            # After comparison, if the 2 journeys are similar, the worst one must be eliminated
-            worst = _get_worst_similar(j1, j2, request)
-            logger.debug("the journeys {}, {} are similar, we delete {}".format(j1.internal_id,
-                                                                                j2.internal_id,
-                                                                                worst.internal_id))
-
-            mark_as_dead(worst, is_debug, 'duplicate_journey', 'similar_to_{other}'
-                          .format(other=j1.internal_id if worst == j2 else j2.internal_id))
-
-
-def exceed_min_duration(current_section, journey, min_duration, orig_modes=None, dest_modes=None):
-    orig_modes=[] if orig_modes is None else orig_modes
-    dest_modes=[] if dest_modes is None else dest_modes
-
-    if current_section == journey.sections[0]:
-        return 'walking' in orig_modes and current_section.duration < min_duration
-    return 'walking' in dest_modes and current_section.duration < min_duration
-
-
 class FilterTooShortHeavyJourneys(SingleJourneyFilter):
 
     message = 'too_short_heavy_mode_fallback'
@@ -312,6 +179,15 @@ class FilterTooShortHeavyJourneys(SingleJourneyFilter):
         Typically you don't take your car for only 2 minutes.
         Heavy fallback modes are Bike and Car, BSS is not considered as one.
         """
+
+        def _exceed_min_duration(current_section, journey, min_duration, orig_modes=None, dest_modes=None):
+            orig_modes=[] if orig_modes is None else orig_modes
+            dest_modes=[] if dest_modes is None else dest_modes
+
+            if current_section == journey.sections[0]:
+                return 'walking' in orig_modes and current_section.duration < min_duration
+            return 'walking' in dest_modes and current_section.duration < min_duration
+
         on_bss = False
         for s in journey.sections:
             if s.type == response_pb2.BSS_RENT:
@@ -323,14 +199,14 @@ class FilterTooShortHeavyJourneys(SingleJourneyFilter):
 
             if s.street_network.mode == response_pb2.Car \
                     and self.min_car is not None \
-                    and exceed_min_duration(s, journey, min_duration=self.min_car,
-                                            orig_modes=self.orig_modes, dest_modes=self.dest_modes):
+                    and _exceed_min_duration(s, journey, min_duration=self.min_car,
+                                             orig_modes=self.orig_modes, dest_modes=self.dest_modes):
                 return False
             if not on_bss \
                     and s.street_network.mode == response_pb2.Bike \
                     and self.min_bike is not None \
-                    and exceed_min_duration(s, journey, min_duration=self.min_bike,
-                                            orig_modes=self.orig_modes, dest_modes=self.dest_modes):
+                    and _exceed_min_duration(s, journey, min_duration=self.min_bike,
+                                             orig_modes=self.orig_modes, dest_modes=self.dest_modes):
                 return False
         return True
 
@@ -392,26 +268,6 @@ class FilterMaxSuccessivePhysicalMode(SingleJourneyFilter):
             return False
 
         return True
-
-
-def _filter_too_much_connections(journeys, instance, request):
-    """
-    eliminates journeys with a number of connections strictly superior to the
-    minimum number of connections among all journeys + _max_additional_connections
-    """
-    logger = logging.getLogger(__name__)
-    max_additional_connections = get_or_default(request, '_max_additional_connections',
-                                                instance.max_additional_connections)
-    import itertools
-    it1, it2 = itertools.tee(journeys, 2)
-    min_connections = get_min_connections(it1)
-    is_debug = request.get('debug', False)
-    if min_connections is not None:
-        max_connections_allowed = max_additional_connections + min_connections
-        for j in it2:
-            if get_nb_connections(j) > max_connections_allowed:
-                logger.debug("the journey {} has a too much connections, we delete it".format(j.internal_id))
-                mark_as_dead(j, is_debug, "too_much_connections")
 
 
 class FilterMinTransfers(SingleJourneyFilter):
@@ -667,3 +523,145 @@ def get_all_journeys(responses):
     """
     return (j for r in responses for j in r.journeys)
 
+
+def apply_final_journey_filters(response_list, instance, request):
+    """
+    Final pass: Filter by side effect the list of pb responses's journeys
+
+    Nota: All filters below are applied only once, after all calls to kraken are done
+    """
+    is_debug = request.get('debug', False)
+    journey_generator = get_qualified_journeys
+    if is_debug:
+        journey_generator = get_all_journeys
+
+    # for clarity purpose we build a temporary list
+
+    # we remove similar journeys (same lines and same succession of stop_points)
+    final_line_filter = get_or_default(request, '_final_line_filter', False)
+    if final_line_filter:
+        journeys = journey_generator(response_list)
+        journey_pairs_pool = itertools.combinations(journeys, 2)
+        _filter_similar_line_journeys(journey_pairs_pool, request)
+
+    # we filter journeys having "shared sections" (same succession of stop_points + custom rules)
+    no_shared_section = get_or_default(request, 'no_shared_section', False)
+    if no_shared_section:
+        journeys = journey_generator(response_list)
+        journey_pairs_pool = itertools.combinations(journeys, 2)
+        filter_shared_sections_journeys(journey_pairs_pool, request)
+
+    # we filter journeys having too much connections compared to minimum
+    journeys = journey_generator(response_list)
+    _filter_too_much_connections(journeys, instance, request)
+
+
+def _get_worst_similar(j1, j2, request):
+    """
+    Decide which is the worst journey between 2 similar journeys.
+
+    The choice is made on:
+     - asap
+     - duration
+     - more fallback
+     - more connection
+     - smaller value among min waiting duration
+     - more constrained fallback mode : all else being equal,
+            it's better to know that you can do it by bike for 'bike_in_pt' tag
+            (and traveler presumes he can do it walking too, as the practical case is 0s fallback)
+    """
+    if request.get('clockwise', True):
+        if j1.arrival_date_time != j2.arrival_date_time:
+            return j1 if j1.arrival_date_time > j2.arrival_date_time else j2
+    else:
+        if j1.departure_date_time != j2.departure_date_time:
+            return j1 if j1.departure_date_time < j2.departure_date_time else j2
+
+    if j1.duration != j2.duration:
+        return j1 if j1.duration > j2.duration else j2
+
+    if fallback_duration(j1) != fallback_duration(j2):
+        return j1 if fallback_duration(j1) > fallback_duration(j2) else j2
+
+    if get_nb_connections(j1) != get_nb_connections(j2):
+        return j1 if get_nb_connections(j1) > get_nb_connections(j2) else j2
+
+    if get_min_waiting(j1) != get_min_waiting(j2):
+        return j1 if get_min_waiting(j1) < get_min_waiting(j2) else j2
+
+
+    def get_mode_rank(section):
+        mode_rank = {response_pb2.Car: 0,
+                     response_pb2.Bike: 1,
+                     response_pb2.Walking: 2}
+        return mode_rank.get(section.street_network.mode)
+
+    def is_fallback(section):
+        return section.type == response_pb2.CROW_FLY or section.type != response_pb2.STREET_NETWORK
+
+    s1 = j1.sections[0]
+    s2 = j2.sections[0]
+    if is_fallback(s1) and is_fallback(s2) and s1.street_network.mode != s2.street_network.mode:
+        return j1 if get_mode_rank(s1) > get_mode_rank(s2) else j2
+
+    s1 = j1.sections[-1]
+    s2 = j2.sections[-1]
+    if is_fallback(s1) and is_fallback(s2) and s1.street_network.mode != s2.street_network.mode:
+        return j1 if get_mode_rank(s1) > get_mode_rank(s2) else j2
+
+    return j2
+
+
+def filter_similar_vj_journeys(journey_pairs_pool, request):
+    _filter_similar_journeys(journey_pairs_pool, request, similar_journeys_vj_generator)
+
+
+def _filter_similar_line_journeys(journey_pairs_pool, request):
+    _filter_similar_journeys(journey_pairs_pool, request, similar_journeys_line_generator)
+
+
+def filter_shared_sections_journeys(journey_pairs_pool, request):
+    _filter_similar_journeys(journey_pairs_pool, request, shared_section_generator)
+
+
+def _filter_similar_journeys(journey_pairs_pool, request, similar_journey_generator):
+    """
+    Compare journeys 2 by 2.
+    The given generator tells which part of journeys are compared.
+    In case of similar journeys, the function '_get_worst_similar_vjs' decides which one to delete.
+    """
+
+    logger = logging.getLogger(__name__)
+    is_debug = request.get('debug', False)
+    for j1, j2 in journey_pairs_pool:
+        if to_be_deleted(j1) or to_be_deleted(j2):
+            continue
+        if compare(j1, j2, similar_journey_generator):
+            # After comparison, if the 2 journeys are similar, the worst one must be eliminated
+            worst = _get_worst_similar(j1, j2, request)
+            logger.debug("the journeys {}, {} are similar, we delete {}".format(j1.internal_id,
+                                                                                j2.internal_id,
+                                                                                worst.internal_id))
+
+            mark_as_dead(worst, is_debug, 'duplicate_journey', 'similar_to_{other}'
+                          .format(other=j1.internal_id if worst == j2 else j2.internal_id))
+
+
+def _filter_too_much_connections(journeys, instance, request):
+    """
+    eliminates journeys with a number of connections strictly superior to the
+    minimum number of connections among all journeys + _max_additional_connections
+    """
+    logger = logging.getLogger(__name__)
+    max_additional_connections = get_or_default(request, '_max_additional_connections',
+                                                instance.max_additional_connections)
+    import itertools
+    it1, it2 = itertools.tee(journeys, 2)
+    min_connections = get_min_connections(it1)
+    is_debug = request.get('debug', False)
+    if min_connections is not None:
+        max_connections_allowed = max_additional_connections + min_connections
+        for j in it2:
+            if get_nb_connections(j) > max_connections_allowed:
+                logger.debug("the journey {} has a too much connections, we delete it".format(j.internal_id))
+                mark_as_dead(j, is_debug, "too_much_connections")
