@@ -249,21 +249,33 @@ VJ& VJ::st_shape(const navitia::type::LineString& shape) {
     return *this;
 }
 
-VJ& VJ::operator()(const std::string &stopPoint,const std::string& arrivee,
-                   const std::string& depart, uint16_t local_traffic_zone, bool drop_off_allowed,
-                   bool pick_up_allowed, int alighting_duration, int boarding_duration){
+VJ& VJ::operator()(const std::string &stopPoint,
+                   const std::string& arrival,
+                   const std::string& departure,
+                   uint16_t local_traffic_zone,
+                   bool drop_off_allowed,
+                   bool pick_up_allowed,
+                   int alighting_duration,
+                   int boarding_duration)
+{
+    auto _departure = departure;
+    if(_departure.empty())
+        _departure = arrival;
 
-    std::string departure = depart;
-    if(departure.empty())
-        departure = arrivee;
-
-    return (*this)(stopPoint, pt::duration_from_string(arrivee).total_seconds(),
-            pt::duration_from_string(departure).total_seconds(), local_traffic_zone,
+    return (*this)(stopPoint, pt::duration_from_string(arrival).total_seconds(),
+            pt::duration_from_string(_departure).total_seconds(), local_traffic_zone,
             drop_off_allowed, pick_up_allowed, alighting_duration, boarding_duration);
 }
 
-VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16_t local_trafic_zone,
-                    bool drop_off_allowed, bool pick_up_allowed, int alighting_duration, int boarding_duration){
+VJ & VJ::operator()(const std::string & sp_name,
+                    int arrival,
+                    int departure,
+                    uint16_t local_trafic_zone,
+                    bool drop_off_allowed,
+                    bool pick_up_allowed,
+                    int alighting_duration,
+                    int boarding_duration)
+{
     auto it = b.sps.find(sp_name);
     navitia::type::StopPoint* sp = nullptr;
     if(it == b.sps.end()){
@@ -310,11 +322,11 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16
     stop_time.set_pick_up_allowed(pick_up_allowed);
 
     ST st(stop_time);
-    if(depart == -1) depart = arrivee;
-    st.arrival_time = arrivee;
-    st.departure_time = depart;
-    st.alighting_time = arrivee + alighting_duration;
-    st.boarding_time = depart - boarding_duration;
+    if(departure == -1) departure = arrival;
+    st.arrival_time = arrival;
+    st.departure_time = departure;
+    st.alighting_time = arrival + alighting_duration;
+    st.boarding_time = departure - boarding_duration;
 
     stop_times.push_back(st);
     return *this;

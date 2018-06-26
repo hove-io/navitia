@@ -108,8 +108,8 @@ struct VJ {
     /// Lorsque le depart n'est pas specifié, on suppose que c'est le même qu'à l'arrivée
     /// Si le stopPoint n'est pas connu, on le crée avec un stopArea ayant le même nom
     VJ& operator()(const std::string& stopPoint,
-                   int arrivee,
-                   int depart = -1,
+                   int arrival,
+                   int departure = -1,
                    uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max(),
                    bool drop_off_allowed = true,
                    bool pick_up_allowed = true,
@@ -117,8 +117,8 @@ struct VJ {
                    int boarding_duration = 0);
 
     VJ& operator()(const std::string& stopPoint,
-                   const std::string& arrivee,
-                   const std::string& depart = "",
+                   const std::string& arrival,
+                   const std::string& departure = "",
                    uint16_t local_traffic_zone = std::numeric_limits<uint16_t>::max(),
                    bool drop_off_allowed = true,
                    bool pick_up_allowed = true,
