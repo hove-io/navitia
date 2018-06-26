@@ -68,7 +68,7 @@ class SingleJourneyFilter(object):
     @abc.abstractproperty
     def message(self):
         """
-        :return: a one-word, snake_case unicode to be used to explain why a journey is filtered
+        :attribute: a one-word, snake_case unicode to be used to explain why a journey is filtered
         """
         pass
 
@@ -107,10 +107,7 @@ def filter_journeys(responses, instance, request):
 
     """
     is_debug = request.get('debug', False)
-    min_bike = request.get('_min_bike', None)
-    min_car = request.get('_min_car', None)
-    orig_modes = request.get('origin_mode', [])
-    dest_modes = request.get('destination_mode', [])
+
     #DEBUG
     if is_debug:
         logger = logging.getLogger(__name__)
@@ -119,36 +116,40 @@ def filter_journeys(responses, instance, request):
         logger.debug("Qualified journeys:")
         [_debug_journey(j) for j in get_qualified_journeys(responses)]
 
-    min_nb_transfers = get_or_default(request, 'min_nb_transfers', 0)
+    # build filters
+    min_bike = request.get('_min_bike', None)
+    min_car = request.get('_min_car', None)
+    orig_modes = request.get('origin_mode', [])
+    dest_modes = request.get('destination_mode', [])
+    min_nb_transfers = request.get('min_nb_transfers', 0)
 
-    # Note that we use the functools.partial to capture the arguments
-    f = FilterTooShortHeavyJourneys(min_bike=min_bike, min_car=min_car,
-                                    orig_modes=orig_modes, dest_modes=dest_modes)
-    filters = [filter_wrapper(is_debug=is_debug, filter_obj=f),
-               partial(filter_too_long_waiting, is_debug=is_debug),
-               partial(filter_min_transfers, is_debug=is_debug, min_nb_transfers=min_nb_transfers)]
+    filters = [FilterTooShortHeavyJourneys(min_bike=min_bike, min_car=min_car,
+                                           orig_modes=orig_modes, dest_modes=dest_modes),
+               FilterTooLongWaiting(),
+               FilterMinTransfers(min_nb_transfers=min_nb_transfers)]
 
-    # we add more filters in some special cases:
-    max_successive = get_or_default(request, '_max_successive_physical_mode', 0)
+    # we add more filters in some special cases
+
+    max_successive = request.get('_max_successive_physical_mode', 0)
     if max_successive != 0:
         limited_mode_id = instance.successive_physical_mode_to_limit_id # typically : physical_mode:bus
-        filters.append(partial(filter_max_successive_physical_mode,
-                               is_debug=is_debug,
-                               successive_physical_mode_to_limit_id=limited_mode_id,
-                               max_successive_physical_mode=max_successive))
+        filters.append(FilterMaxSuccessivePhysicalMode(successive_physical_mode_to_limit_id=limited_mode_id,
+                                                       max_successive_physical_mode=max_successive))
 
-    dp = get_or_default(request, 'direct_path', 'indifferent')
+    dp = request.get('direct_path', 'indifferent')
     if dp != 'indifferent':
-        filters.append(partial(filter_direct_path,
-                               is_debug=is_debug,
-                               dp=dp))
+        filters.append(FilterDirectPath(dp=dp))
+
+
+    # compose filters
+
+    composed_filter = ComposedFilter()
+    for f in filters:
+        composed_filter.add_filter(filter_wrapper(is_debug=is_debug, filter_obj=f))
 
     journey_generator = get_qualified_journeys
     if is_debug:
         journey_generator = get_all_journeys
-
-    composed_filter = ComposedFilter()
-    [composed_filter.add_filter(f) for f in filters]
 
     return composed_filter.compose_filters()(journey_generator(responses))
 
@@ -334,61 +335,63 @@ class FilterTooShortHeavyJourneys(SingleJourneyFilter):
         return True
 
 
-def filter_too_long_waiting(journey, is_debug):
-    """
-    filter journeys with a too long section of type waiting
-    """
-    # early return
+class FilterTooLongWaiting(SingleJourneyFilter):
 
-    # if there is no transfers it won't have any waiting sections
-    if journey.nb_transfers == 0:
+    message = 'too_long_waiting'
+
+    def filter_func(self, journey):
+        """
+        filter journeys with a too long section of type waiting
+        """
+
+        # early returns
+
+        # if there is no transfer it won't have any waiting sections
+        if journey.nb_transfers == 0:
+            return True
+        # if the total duration is smaller that the max_waiting, no need to check
+        max_waiting = 4 * 60 * 60
+        if journey.duration < max_waiting:
+            return True
+
+        for s in journey.sections:
+            if s.type != response_pb2.WAITING:
+                continue
+            if s.duration < max_waiting:
+                continue
+            return False
         return True
 
-    # if the total duration is smaller that the max_waiting, no need to check
-    max_waiting = 4 * 60 * 60
-    if journey.duration < max_waiting:
+
+class FilterMaxSuccessivePhysicalMode(SingleJourneyFilter):
+
+    message = 'too_much_successive_section_same_physical_mode'
+
+    def __init__(self,
+                 successive_physical_mode_to_limit_id='physical_mode:Bus',
+                 max_successive_physical_mode=3):
+        self.successive_physical_mode_to_limit_id = successive_physical_mode_to_limit_id
+        self.max_successive_physical_mode = max_successive_physical_mode
+
+    def filter_func(self, journey):
+        """
+        eliminates journeys with specified public_transport.physical_mode more than
+        _max_successive_physical_mode (used for STIF buses)
+        """
+        bus_count = 0
+        for s in journey.sections:
+            if s.type != response_pb2.PUBLIC_TRANSPORT:
+                continue
+            if s.pt_display_informations.uris.physical_mode == self.successive_physical_mode_to_limit_id:
+                bus_count += 1
+            else:
+                if bus_count <= self.max_successive_physical_mode:
+                    bus_count = 0
+
+        if bus_count > self.max_successive_physical_mode:
+            return False
+
         return True
-
-    logger = logging.getLogger(__name__)
-
-    for s in journey.sections:
-        if s.type != response_pb2.WAITING:
-            continue
-        if s.duration < max_waiting:
-            continue
-        logger.debug("the journey {} has a too long waiting, we delete it".format(journey.internal_id))
-        mark_as_dead(journey, is_debug, "too_long_waiting")
-        return is_debug
-    return True
-
-
-def filter_max_successive_physical_mode(journey,
-                                        is_debug,
-                                        successive_physical_mode_to_limit_id,
-                                        max_successive_physical_mode):
-    """
-    eliminates journeys with specified public_transport.physical_mode more than
-    _max_successive_physical_mode (used for STIF buses)
-    """
-    logger = logging.getLogger(__name__)
-
-    bus_count = 0
-    for s in journey.sections:
-        if s.type != response_pb2.PUBLIC_TRANSPORT:
-            continue
-        if s.pt_display_informations.uris.physical_mode == successive_physical_mode_to_limit_id:
-            bus_count += 1
-        else:
-            if bus_count <= max_successive_physical_mode:
-                bus_count = 0
-
-    if bus_count > max_successive_physical_mode:
-        logger.debug("the journey {} has a too much successive {}, we delete it".
-            format(journey.internal_id, successive_physical_mode_to_limit_id))
-        mark_as_dead(journey, is_debug, "too_much_successive_physical_mode")
-        return is_debug
-
-    return True
 
 
 def _filter_too_much_connections(journeys, instance, request):
@@ -411,37 +414,38 @@ def _filter_too_much_connections(journeys, instance, request):
                 mark_as_dead(j, is_debug, "too_much_connections")
 
 
-def filter_min_transfers(journey, is_debug, min_nb_transfers):
-    """
-    eliminates journeys with number of connections less then min_nb_transfers among journeys
-    """
-    logger = logging.getLogger(__name__)
-    if get_nb_connections(journey) < min_nb_transfers:
-        logger.debug("the journey {} has not enough connections, we delete it".format(journey.internal_id))
-        mark_as_dead(journey, is_debug, "not_enough_connections")
-        return is_debug
-    return True
+class FilterMinTransfers(SingleJourneyFilter):
+
+    message = 'not_enough_connections'
+
+    def __init__(self, min_nb_transfers=0):
+        self.min_nb_transfers = min_nb_transfers
+
+    def filter_func(self, journey):
+        """
+        eliminates journeys with number of connections less than min_nb_transfers among journeys
+        """
+        if get_nb_connections(journey) < self.min_nb_transfers:
+            return False
+        return True
 
 
-def filter_direct_path(journey, is_debug, dp):
-    """
-    eliminates journeys that are not matching direct path parameter (none, only or indifferent)
-    """
-    logger = logging.getLogger(__name__)
+class FilterDirectPath(SingleJourneyFilter):
 
-    if dp == 'none' and 'non_pt' in journey.tags:
-        logger.debug("the journey {} is direct, we delete it as param direct_path=none"
-                     .format(journey.internal_id))
-        mark_as_dead(journey, is_debug, "direct_path_none")
-        return is_debug
+    message = 'direct_path_parameter'
 
-    elif dp == 'only' and 'non_pt' not in journey.tags:
-        logger.debug("the journey {} uses pt, we delete it as param direct_path=only"
-                     .format(journey.internal_id))
-        mark_as_dead(journey, is_debug, "direct_path_only")
-        return is_debug
+    def __init__(self, dp='indifferent'):
+        self.dp = dp
 
-    return True
+    def filter_func(self, journey):
+        """
+        eliminates journeys that are not matching direct path parameter (none, only or indifferent)
+        """
+        if self.dp == 'none' and 'non_pt' in journey.tags:
+            return False
+        elif self.dp == 'only' and 'non_pt' not in journey.tags:
+            return False
+        return True
 
 
 def get_min_connections(journeys):
