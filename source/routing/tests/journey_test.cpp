@@ -82,8 +82,6 @@ public:
 
         return j;
     }
-
-    std::vector<type::StopTime>& make_stop_times() { return stop_times; }
 };
 
 BOOST_FIXTURE_TEST_SUITE(journey, JourneyTest)

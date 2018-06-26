@@ -96,9 +96,6 @@ typedef std::unordered_set<Journey, JourneyHash> JourneySet;
 template<class Journeys>
 const Journey& get_best_journey(const Journeys & journeys, bool clockwise)
 {
-    typedef std::function<bool(const Journey&, const Journey&)> Compare_func;
-    typedef typename Journeys::const_iterator Iterator;
-
     if(journeys.size() == 0)
         throw std::invalid_argument("get_best_journey takes a list of at least 1 journey");
 
@@ -110,11 +107,9 @@ const Journey& get_best_journey(const Journeys & journeys, bool clockwise)
         return j1.arrival_dt > j2.arrival_dt;
     };
 
-    const auto best_element = clockwise ?
-                                std::min_element<Iterator, Compare_func> :
-                                std::max_element<Iterator, Compare_func>;
-    const auto comp_journeys = clockwise ? earliest_journey : latest_journey;
-    const auto best = best_element(journeys.cbegin(), journeys.cend(), comp_journeys);
+    const auto best = clockwise ?
+        std::min_element(journeys.cbegin(), journeys.cend(), earliest_journey):
+        std::max_element(journeys.cbegin(), journeys.cend(), latest_journey);
 
     return *best;
 }
