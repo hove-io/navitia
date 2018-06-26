@@ -32,6 +32,7 @@ www.navitia.io
 
 #include "type/time_duration.h"
 #include "type/datetime.h"
+#include "utils/exception.h"
 #include <unordered_set>
 
 namespace navitia {
@@ -97,7 +98,7 @@ template<class Journeys>
 const Journey& get_best_journey(const Journeys & journeys, bool clockwise)
 {
     if(journeys.size() == 0)
-        throw std::invalid_argument("get_best_journey takes a list of at least 1 journey");
+        throw recoverable_exception("get_best_journey takes a list of at least 1 journey");
 
     auto earliest_journey = [](const Journey& j1, const Journey& j2) {
         return j1.departure_dt < j2.departure_dt;

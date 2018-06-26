@@ -156,4 +156,10 @@ BOOST_AUTO_TEST_CASE(journeys_should_get_best_journey_clockwise) {
     BOOST_CHECK_EQUAL(best.arrival_dt, j3.arrival_dt);
 }
 
+BOOST_AUTO_TEST_CASE(get_best_journey_should) {
+
+    std::vector<Journey> journeys = {};
+    BOOST_CHECK_THROW(get_best_journey(journeys, true), recoverable_exception);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
