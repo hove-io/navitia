@@ -89,7 +89,7 @@ def _is_crowfly_needed(uri, fallback_durations, crowfly_sps, fallback_direct_pat
 
 def _align_fallback_direct_path_datetime(fallback_direct_path, fallback_extremity):
     """
-    :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
+    :param fallback_extremity: is a PeriodExtremity (a datetime and its meaning on the fallback period)
     in this function, we retrieve from streetnetwork_path_pool the direct path regarding to the given
     parameters(mode, orig_uri, etc...) then we recompute the datetimes of the found direct path,
     since the request datetime might no longer be the same (but we consider the same fallback duration).
