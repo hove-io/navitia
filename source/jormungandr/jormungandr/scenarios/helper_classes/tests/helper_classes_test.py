@@ -115,7 +115,8 @@ def extend_journey_for_build_from_test():
     cf_destination = make_pt_object(type_pb2.STOP_POINT, 2.0, 2.0, "stop_point_1_bis")
     response = create_response_with_crow_fly(start_date="20180618T060000", end_date="20180618T060500",
                                              origin=cf_origin, destination=cf_destination)
-    _extend_journey(pt_journey, response, fallback_extremity, is_start_fallback=True)
+
+    _extend_journey(pt_journey, response, fallback_extremity)
 
     pt_journey.sections.sort(SectionSorter())
     assert len(pt_journey.sections) == 5
@@ -143,7 +144,7 @@ def extend_journey_for_build_to_test():
     cf_destination = make_pt_object(type_pb2.ADDRESS, 5.0, 5.0, "address_1")
     response = create_response_with_crow_fly(start_date="20180618T075000", end_date="20180618T075500",
                                              origin=cf_origin, destination=cf_destination)
-    _extend_journey(pt_journey, response, fallback_extremity, is_start_fallback=False)
+    _extend_journey(pt_journey, response, fallback_extremity)
 
     pt_journey.sections.sort(SectionSorter())
     assert len(pt_journey.sections) == 5
