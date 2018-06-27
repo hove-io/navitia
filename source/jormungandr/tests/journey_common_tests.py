@@ -1698,6 +1698,22 @@ class JourneysTimeFrameDuration():
         response = self.query_region(query)
         assert 6 == len(response['journeys'])
 
+        # min_nb_journeys = 11 and timeframe_duration = 1H 35min (60*95 = 5700)
+        # The response have to contains 11 journeys because min_nb_journeys is the main criteria.
+        # With timeframe_duration = 1h35min, we can find 10 journeys but min_nb_journeys=11.
+        # So we continue until the eleventh.
+        query = ('journeys?from={_from}&'
+                'to={to}&'
+                'datetime={datetime}&'
+                'min_nb_journeys={min_nb_journeys}&'
+                'timeframe_duration={timeframe_duration}&').format( _from='stop_area:sa1',
+                                                                    to='stop_area:sa3',
+                                                                    datetime="20180315T080000",
+                                                                    min_nb_journeys="11",
+                                                                    timeframe_duration=5700)
+        response = self.query_region(query)
+        assert 11 == len(response['journeys'])
+
         # min_nb_journeys = 20 and timeframe_duration = 4H (60*60*4 = 14400)
         # The response have to contains 20 journeys because min_nb_journeys is verified.
         # In 4H, the data contains 20 journeys.
