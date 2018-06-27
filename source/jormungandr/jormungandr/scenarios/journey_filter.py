@@ -86,13 +86,13 @@ def filter_wrapper(filter_obj=None, is_debug=False):
     """
     Wraps a SingleJourneyFilter instance to automatically deal with debug-mode, logging and tagging
 
-    We always tag the journey 'to_delete'
+    If filtered, the journey is tagged 'to_delete' (regardless of the debug-mode)
     In debug-mode, we deactivate filtering, only add a tag with the reason why it's deleted
 
     The main purpose of debug mode is to have all journeys generated (even the ones that should be filtered)
     and log ALL the reasons why they are filtered (if they are)
 
-    :param filter_obj: a SingleJourneyFilter to be wrapped (using it's message and filter_func attributes)
+    :param filter_obj: a SingleJourneyFilter to be wrapped (using its message and filter_func attributes)
     :param is_debug: True if we are in debug-mode
     :return: a function to be called on a journey, returning True or False,tagging it if it's deleted
     """
@@ -534,8 +534,6 @@ def apply_final_journey_filters(response_list, instance, request):
     journey_generator = get_qualified_journeys
     if is_debug:
         journey_generator = get_all_journeys
-
-    # for clarity purpose we build a temporary list
 
     # we remove similar journeys (same lines and same succession of stop_points)
     final_line_filter = get_or_default(request, '_final_line_filter', False)
