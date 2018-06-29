@@ -97,7 +97,7 @@ class Geovelo(AbstractStreetNetworkService):
             'bikeDetails': {
                 'profile': 'MEDIAN', # can be BEGINNER, EXPERT
                 'bikeType': 'TRADITIONAL', # can be 'BSS'
-                # 'averageSpeed': '6' # in km/h, BEGINNER sets it to 13
+                # 'averageSpeed': '16' # in km/h, BEGINNER sets it to 13
             },
             'transportModes': ['BIKE']
         }
@@ -212,7 +212,7 @@ class Geovelo(AbstractStreetNetworkService):
         geovelo_resp = json_response[0]
 
         journey = resp.journeys.add()
-        journey.duration = geovelo_resp['duration']
+        journey.duration = int(geovelo_resp['duration'])
         datetime, represents_start_fallback = fallback_extremity
         if represents_start_fallback:
             journey.departure_date_time = datetime
@@ -228,7 +228,7 @@ class Geovelo(AbstractStreetNetworkService):
             section = journey.sections.add()
             section.type = response_pb2.STREET_NETWORK
 
-            section.duration = geovelo_section['duration']
+            section.duration = int(geovelo_section['duration'])
             section.begin_date_time = previous_section_endtime
             section.end_date_time = section.begin_date_time + section.duration
             previous_section_endtime = section.end_date_time
