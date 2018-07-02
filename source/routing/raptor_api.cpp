@@ -55,7 +55,7 @@ static const uint max_nb_raptor_call = 100;
 /**
  * @brief internal function to call raptor in a loop
  */
-std::vector<Path>
+static std::vector<Path>
 call_raptor(navitia::PbCreator& pb_creator,
             RAPTOR& raptor,
             const map_stop_point_duration& departures,
@@ -79,7 +79,9 @@ call_raptor(navitia::PbCreator& pb_creator,
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     std::vector<Path> pathes;
 
-    // For each date time
+    // We loop on datetimes, but in practice there's always only one
+    // (It's a deprecated feature to provide multiple datetimes).
+    // TODO: remove the vector (and adapt protobuf of request).
     DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
     for(const auto & datetime : datetimes) {
 
@@ -1262,7 +1264,7 @@ bool way_later(const Journey & j1, const Journey & j2,
 
     auto get_pseudo_duration = [&](const Journey & j) {
         auto dt = clockwise ? j.arrival_dt : j.departure_dt;
-        return std::abs((double)dt - requested_dt);
+        return std::abs(double(dt) - double(requested_dt));
     };
 
     auto j1_pseudo_duration = get_pseudo_duration(j1);

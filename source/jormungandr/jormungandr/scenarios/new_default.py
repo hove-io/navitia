@@ -874,8 +874,8 @@ class Scenario(simple.Scenario):
             # hopefully, it may lead to some early return for the second step to improve the perf a little
             # In the second step, we compare the journeys from the new response with those that have been qualified
             # already in the former iterations
-            # note that the journeys_pool is a list of 2-element tuple of journeys
-            journeys_pool = itertools.chain(
+            # note that the journey_pairs_pool is a list of 2-element tuple of journeys
+            journey_pairs_pool = itertools.chain(
                 # First step: compare journeys from the new response only
                 itertools.combinations(tmp1, 2),
                 # Second step:
@@ -888,7 +888,7 @@ class Scenario(simple.Scenario):
                 itertools.product(tmp2, qualified_journeys),
             )
 
-            journey_filter.filter_similar_vj_journeys(journeys_pool, api_request)
+            journey_filter.filter_similar_vj_journeys(journey_pairs_pool, api_request)
 
             responses.extend(new_resp)  # we keep the error for building the response
 
@@ -904,13 +904,10 @@ class Scenario(simple.Scenario):
 
             if nb_qualified_journeys == 0:
                 min_journeys_calls = max(min_journeys_calls, 2)
-                
+
         logger.debug('nb of call kraken: %i', nb_try)
 
-        if api_request['no_shared_section']:
-            journey_filter.filter_shared_sections_journeys(journey_filter.get_qualified_journeys(responses), api_request)
-
-        journey_filter.final_filter_journeys(responses, instance, api_request)
+        journey_filter.apply_final_journey_filters(responses, instance, api_request)
         pb_resp = merge_responses(responses)
 
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])
