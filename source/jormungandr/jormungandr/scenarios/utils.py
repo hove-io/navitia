@@ -280,13 +280,13 @@ def change_ids(new_journeys, journey_count):
         for i in range(len(ticket.section_id)):
             ticket.section_id[i] = ticket.section_id[i] + '_' + six.text_type(journey_count)
 
-    for new_journey in new_journeys.journeys:
+    for count, new_journey in enumerate(new_journeys.journeys):
         for i in range(len(new_journey.fare.ticket_id)):
             new_journey.fare.ticket_id[i] = new_journey.fare.ticket_id[i] \
-                                            + '_' + six.text_type(journey_count)
+                                            + '_' + six.text_type(journey_count+count)
 
         for section in new_journey.sections:
-            section.id = section.id + '_' + six.text_type(journey_count)
+            section.id = section.id + '_' + six.text_type(journey_count+count)
 
 
 def fill_uris(resp):

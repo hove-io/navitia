@@ -33,7 +33,10 @@ class JourneyParameters(object):
                  walking_transfer_penalty=120,
                  direct_path_duration=None,
                  night_bus_filter_max_factor=None,
-                 night_bus_filter_base_factor=None):
+                 night_bus_filter_base_factor=None,
+                 min_nb_journeys=None,
+                 timeframe=None
+                 ):
 
         self.max_duration = max_duration
         self.max_transfers = max_transfers
@@ -45,6 +48,8 @@ class JourneyParameters(object):
         self.direct_path_duration = direct_path_duration
         self.night_bus_filter_max_factor = night_bus_filter_max_factor
         self.night_bus_filter_base_factor = night_bus_filter_base_factor
+        self.min_nb_journeys = min_nb_journeys
+        self.timeframe = timeframe
 
 
 class Kraken(object):
@@ -87,5 +92,12 @@ class Kraken(object):
             req.journeys.direct_path_duration = journey_parameters.direct_path_duration
 
         req.journeys.bike_in_pt = bike_in_pt
+
+        if journey_parameters.min_nb_journeys:
+            req.journeys.min_nb_journeys = journey_parameters.min_nb_journeys
+
+        if journey_parameters.timeframe:
+           req.journeys.timeframe_end_datetime = int(journey_parameters.timeframe.end_datetime)
+           req.journeys.timeframe_max_datetime = int(journey_parameters.timeframe.max_datetime)
 
         return self.instance.send_and_receive(req)

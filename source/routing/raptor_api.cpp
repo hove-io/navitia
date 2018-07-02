@@ -52,6 +52,46 @@ namespace navitia { namespace routing {
 // Usefull to protect raptor loop
 static const uint max_nb_raptor_call = 100;
 
+
+static bool keep_going(
+        uint32_t total_nb_journeys,
+        uint32_t nb_try,
+        DateTime request_date_secs,
+        const boost::optional<uint32_t>& min_nb_journeys,
+        const boost::optional<DateTime>& timeframe_end_datetime,
+        const boost::optional<DateTime>& timeframe_max_datetime) {
+    if (min_nb_journeys) {
+        if (! timeframe_end_datetime && ! timeframe_max_datetime) {
+            if ((total_nb_journeys >= min_nb_journeys.get()) || (nb_try > max_nb_raptor_call)) {
+                return false;
+            }
+        }
+        if (timeframe_end_datetime && timeframe_max_datetime) {
+            if (total_nb_journeys < min_nb_journeys.get() && request_date_secs < timeframe_max_datetime.get()) {
+                return true;
+            }else {
+                if ((request_date_secs < timeframe_end_datetime.get()) && (request_date_secs < timeframe_max_datetime.get())) {
+                    return true;
+                }else {
+                    return false;
+                }
+            }
+        }
+    }else {
+        if (! timeframe_end_datetime && ! timeframe_max_datetime) {
+            if ((total_nb_journeys > 0) || (nb_try > max_nb_raptor_call)) {
+                return false;
+            }
+            return true;
+        } else if(request_date_secs < timeframe_end_datetime.get()) {
+            return true;
+        }else {
+            return false;
+        }
+    }
+    return true;
+}
+
 /**
  * @brief internal function to call raptor in a loop
  */
@@ -85,6 +125,7 @@ call_raptor(navitia::PbCreator& pb_creator,
     // (It's a deprecated feature to provide multiple datetimes).
     // TODO: remove the vector (and adapt protobuf of request).
     DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
+
     for(const auto & datetime : datetimes) {
 
         // Compute start time and Bound
@@ -98,6 +139,7 @@ call_raptor(navitia::PbCreator& pb_creator,
             }
         }
 
+
         // Call raptor
         // note : Loop is for min_nb_journeys options
         //
@@ -109,6 +151,7 @@ call_raptor(navitia::PbCreator& pb_creator,
         // If the number of Path finds is greater or equal than min_nb_journeys, we stop.
         JourneySet journeys;
         uint32_t nb_try = 0;
+        int total_nb_journeys = 0;
         do {
             auto raptor_journeys = raptor.compute_all_journeys(
                 departures, destinations, request_date_secs, rt_level, transfer_penalty, bound, max_transfers,
@@ -131,6 +174,9 @@ call_raptor(navitia::PbCreator& pb_creator,
 
             LOG4CPLUS_DEBUG(logger, "after filtering late journeys: " << raptor_journeys.size() << " solution(s) left");
 
+            if (raptor_journeys.empty()) {
+                break;
+            }
 
             // filter the similar journeys
             for(const auto & journey : raptor_journeys) {
@@ -139,63 +185,42 @@ call_raptor(navitia::PbCreator& pb_creator,
 
             nb_try++;
 
-            auto total_nb_journeys = journeys.size() + nb_direct_path;
+            total_nb_journeys = journeys.size() + nb_direct_path;
             // Prepare next call for raptor with min_nb_journeys option
             request_date_secs = prepare_next_call_for_raptor(raptor_journeys, clockwise);
 
-            if (raptor_journeys.empty()) {
-                break;
-            }
 
-            if (min_nb_journeys) {
-                if (! timeframe_end_datetime && ! timeframe_max_datetime) {
-                    if ((total_nb_journeys > min_nb_journeys.get()) || (nb_try > max_nb_raptor_call)) {
-                        break;
-                    }
-                }
-                if (timeframe_end_datetime && timeframe_max_datetime) {
-                    if (total_nb_journeys < min_nb_journeys.get() && request_date_secs < timeframe_max_datetime.get()) {
-                        continue;
-                    }else {
-                        if (request_date_secs < timeframe_end_datetime.get()) {
-                            continue;
-                        }else {
-                            break;
-                        }
-                    }
-                }
-            }else {
-                if (! timeframe_end_datetime && ! timeframe_max_datetime) {
-                    if ((total_nb_journeys > 0) || (nb_try > max_nb_raptor_call)) {
-                        break;
-                    }
-                    continue;
-                } else if(request_date_secs < timeframe_end_datetime.get()) {
-                    continue;
-                }else {
-                    break;
-                }
-
-            }
-        } while (true);
-
-        auto total_nb_journeys = journeys.size() + nb_direct_path;
+        } while (keep_going(total_nb_journeys,
+                            nb_try,
+                            request_date_secs,
+                            min_nb_journeys,
+                            timeframe_end_datetime,
+                            timeframe_max_datetime));
 
         // Culling the excessive journeys
-        if (timeframe_end_datetime && timeframe_max_datetime) {
-            if (!min_nb_journeys ||
-                    (min_nb_journeys && total_nb_journeys > min_nb_journeys.get())) {
-                routing::JourneyCmp cmp{clockwise};
-                // filter journeys by end datetime until min_nb_journeys
-                std::vector<routing::Journey> sorted{journeys.begin(), journeys.end()};
-                std::sort(sorted.begin(), sorted.end(), cmp);
-                auto it = sorted.rbegin();
-                while (it != sorted.rend()) {
-                    auto& j = *it;
-                    ++it;
+        if (timeframe_end_datetime && timeframe_max_datetime && journeys.size() > 0) {
+            routing::JourneyCmp cmp{clockwise};
+            // filter journeys by end datetime until min_nb_journeys
+            std::vector<routing::Journey> sorted{journeys.begin(), journeys.end()};
+            std::sort(sorted.begin(), sorted.end(), cmp);
+            auto it = sorted.begin();
+            uint count = 0;
+            while (it != sorted.end()) {
+                const auto& j = *it++;
+                if (!min_nb_journeys) {
                     if (j.departure_dt >= timeframe_end_datetime.get()) {
                         journeys.erase(j);
-                    }else{
+                    }
+                }else {
+                    if (j.departure_dt < timeframe_end_datetime.get()) {
+                        ++count;
+                    }
+                    if ( (j.departure_dt >= timeframe_end_datetime.get() && count >= min_nb_journeys.get())||
+                            (j.departure_dt >= timeframe_max_datetime.get())) {
+                        journeys.erase(j);
+                    }
+                    // We didn't find enough journeys
+                    if (j.departure_dt > timeframe_end_datetime.get() && count < min_nb_journeys.get()) {
                         break;
                     }
                 }
@@ -1271,7 +1296,8 @@ void make_pt_response(navitia::PbCreator& pb_creator,
                                     clockwise,
                                     direct_path_duration,
                                     min_nb_journeys,
-                                    0, // nb_direct_path = 0 for distributed
+                                    // nb_direct_path = 0 for distributed if direct_path_duration is none
+                                    direct_path_duration ? 1: 0, 
                                     max_duration,
                                     max_transfers,
                                     max_extra_second_pass,

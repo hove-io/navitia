@@ -803,6 +803,11 @@ class Scenario(simple.Scenario):
     def fill_journeys(self, request_type, api_request, instance):
         logger = logging.getLogger(__name__)
 
+        # early return
+        if api_request['timeframe_duration'] == api_request['min_nb_journeys'] == 0:
+            # create an empty response with warning ?
+            return response_pb2.Response()
+
         # sometimes we need to change the entrypoint id (eg if the id is from another autocomplete system)
         origin_detail = self.get_entrypoint_detail(api_request.get('origin'), instance)
         destination_detail = self.get_entrypoint_detail(api_request.get('destination'), instance)
@@ -832,7 +837,7 @@ class Scenario(simple.Scenario):
         if request['min_nb_journeys']:
             min_nb_journeys = request['min_nb_journeys']
         else:
-            min_nb_journeys  = 1
+            min_nb_journeys = 1
 
         responses = []
         nb_try = 0

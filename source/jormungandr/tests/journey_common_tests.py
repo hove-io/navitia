@@ -1709,7 +1709,7 @@ class JourneysTimeFrameDuration():
                 'timeframe_duration={timeframe_duration}&').format( _from='stop_area:sa1',
                                                                     to='stop_area:sa3',
                                                                     datetime="20180315T080000",
-                                                                    min_nb_journeys="11",
+                                                                    min_nb_journeys=11,
                                                                     timeframe_duration=5700)
         response = self.query_region(query)
         assert 11 == len(response['journeys'])

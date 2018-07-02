@@ -48,9 +48,7 @@ class Scenario(new_default.Scenario):
 
         return the list of all responses
         """
-        """
-        TODO: use timeframe to optimize
-        """
+
         logger = logging.getLogger(__name__)
         logger.debug('request datetime: %s', request['datetime'])
 
@@ -142,7 +140,8 @@ class Scenario(new_default.Scenario):
                                         krakens_call=krakens_call,
                                         orig_fallback_durations_pool=orig_fallback_durations_pool,
                                         dest_fallback_durations_pool=dest_fallback_durations_pool,
-                                        request=request)
+                                        request=request,
+                                        timeframe=timeframe)
 
         completed_pt_journeys = wait_and_complete_pt_journey(future_manager=future_manager,
                                                              requested_orig_obj=requested_orig_obj,
