@@ -760,7 +760,7 @@ void Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API 
                                             boost::optional<time_duration>(seconds{request.direct_path_duration()}) :
                                             boost::optional<time_duration>(),
                                         request.has_min_nb_journeys() ?
-                                            boost::make_optional(request.min_nb_journeys()) : boost::none,
+                                            boost::make_optional<uint32_t>(request.min_nb_journeys()) : boost::none,
                                         request.night_bus_filter_max_factor(),
                                         request.night_bus_filter_base_factor(),
                                         request.has_timeframe_end_datetime() ?
@@ -791,7 +791,7 @@ void Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API 
                                     request.free_radius_from(),
                                     request.free_radius_to(),
                                     request.has_min_nb_journeys() ?
-                                            boost::make_optional(request.min_nb_journeys()) : boost::none,
+                                            boost::make_optional<uint32_t>(request.min_nb_journeys()) : boost::none,
                                             request.night_bus_filter_max_factor(),
                                     request.night_bus_filter_base_factor(),
                                     request.has_timeframe_end_datetime() ?
