@@ -270,7 +270,7 @@ def merge_responses_on_errors_test():
     resp2.error.message = "you've been bad"
     r = [resp1, resp2]
     
-    merged_response = new_default.merge_responses(r)
+    merged_response = new_default.merge_responses(r, False)
     
     assert merged_response.HasField(str('error'))
     assert merged_response.error.id == response_pb2.Error.no_solution
