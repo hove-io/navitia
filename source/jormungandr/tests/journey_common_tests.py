@@ -1594,7 +1594,7 @@ class JourneysWithNightBusFilter():
 @dataset({"min_nb_journeys_test": {}})
 class JourneysTimeFrameDuration():
 
-    def test_timeframe_duration(self):
+    def test_timeframe_duration_simple_case(self):
         """
         The data contains 20 journeys (each 10 min) + 1 journeys 24H after the first.
         The first journeys is 20180315T080000.
