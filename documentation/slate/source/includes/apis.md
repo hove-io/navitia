@@ -1718,6 +1718,33 @@ they are exactly the same as [departures](#departures)
 
 <a name="line-reports"></a>Line reports
 ---------------------------------------
+``` shell
+#request
+$ curl 'http://api.navitia.io/v1/coverage/sandbox/line_reports' -H 'Authorization: 3b036afe-0110-4202-b9ed-99718476c2e0'
+
+#response, composed by 2 main lists: "line_reports" and "disruptions"
+HTTP/1.1 200 OK
+
+{
+"disruptions": [
+        #list of linked disruptions
+],
+"line_reports": [
+    {
+        "line": {
+            #main object (line) and links within its own disruptions
+        }
+        "pt_objects": [
+            #list of all disrupted objects related to the line: stop_area, networks, etc...
+        ]
+    },
+    {
+        #Another line with its objects
+    }
+]
+}
+
+```
 
 This service provides the state of public transport traffic, grouped by lines and all their stops. 
 It can be called for an overall coverage or for a specific object.
