@@ -94,6 +94,9 @@ bool Journey::operator==(const Journey & rhs) const {
         && sections == rhs.sections;
 }
 
+bool Journey::operator!=(const Journey & rhs) const {
+    return !(*this == rhs);
+}
 
 size_t SectionHash::operator()(const Journey::Section& s, size_t seed) const {
 
