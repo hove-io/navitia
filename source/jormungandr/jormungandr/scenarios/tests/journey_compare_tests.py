@@ -620,8 +620,8 @@ class MockInstance(object):
 
 def test_too_late_journeys():
     request = {'datetime': 1000,
-               '_night_bus_filter_max_factor': default_values.night_bus_filter_max_factor,
-               '_night_bus_filter_base_factor': default_values.night_bus_filter_base_factor,
+               '_night_bus_filter_max_factor': 3,
+               '_night_bus_filter_base_factor': 3600,
                }
     responses = [response_pb2.Response()]
     journey1 = responses[0].journeys.add()
@@ -738,8 +738,8 @@ def test_too_late_journeys_and_worst_mode():
 def test_not_too_late_journeys_non_clockwise():
     request = {'datetime': 12000,
                'clockwise': False,
-               '_night_bus_filter_max_factor': default_values.night_bus_filter_max_factor,
-               '_night_bus_filter_base_factor': default_values.night_bus_filter_base_factor,
+               '_night_bus_filter_max_factor': 3,
+               '_night_bus_filter_base_factor': 3600,
                }
 
     responses = [response_pb2.Response()]
