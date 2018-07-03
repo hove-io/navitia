@@ -272,7 +272,28 @@ I don't think we need to do some stuff here, the same rules as the common cases 
 
 ## journeys
 
-If a journey use a VJ of an impacted route on at least one stop point impacted by the line section we display it.
+If a journey use a VJ of an impacted route and the departure or arrival stop point of the section is impacted by the line section we display it.
+
+let's take the same example as before:
+
+```
+A           B           C           D           E           F
+o --------- o --------- o --------- o --------- o --------- o   <- route_1_of_the_line_1
+
+                        XXXXXXXXXXXXXXXXXXXXXXXXX               <- impact on the route_1_of_the_line_1 on [C, E]
+```
+
+Journey section from A to F --> NO
+
+Journey section from A to B --> NO
+
+Journey section from A to C --> YES
+
+Journey section from A to E --> YES
+
+Journey section from A to D --> YES
+
+Journey section from E to F --> YES
 
 
 # modelisation
