@@ -1826,7 +1826,7 @@ For example:
 -   Is there any perturbations on the RER network ?
     -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/traffic_reports>
 -   Is there any perturbations on the "RER A" line ?
-    -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/lines/line:TRN:DUA810801043/traffic_reports>
+    -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/lines/line:OIF:810:AOIF741/line_reports?>
 
 
 The response is made of an array of [traffic_reports](#traffic-reports),
