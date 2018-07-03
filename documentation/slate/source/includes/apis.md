@@ -1746,7 +1746,7 @@ see the [inner-reference](#inner-references) section to use them.
 
 ### Line report object
 
-Line_reports is an array of some Line_report object.
+Line_reports is an array of some line_report object.
 
 One Line_report object is a complex object, made of a line, and an array
 of [pt_objects](#pt-objects) linked (for example stop_areas, stop_point or network). 
@@ -1812,8 +1812,6 @@ Also known as `/traffic_reports` service. We recommand to use line_reports in pl
 
 This service provides the state of public transport traffic, grouped by network.
 It can be called for an overall coverage or for a specific object.
-
-<img src="./images/traffic_reports.png" alt="Traffic reports" width="300"/>
 
 ### Parameters
 
