@@ -1772,7 +1772,79 @@ There are inner links between this 2 arrays:
 see the [inner-reference](#inner-references) section to use them.
 
 ### Line report object
-
+``` shell
+#links between objects in a line_reports response
+```
+{
+  "disruptions": [
+    {
+      "status": "active",
+      "id": "17283fae-7dcf-11e8-898e-005056a47b86"
+    },
+    {
+      "status": "active",
+      "id": "140a9970-0c9b-11e8-b2b6-005056a44da2"
+    }
+  ],
+  "line_reports": [
+    {
+      "line": {
+        "links": [],
+        "id": "line:1"
+      },
+      "pt_objects": [
+        {
+          "embedded_type": "stop_point",
+          "stop_point": {
+            "name": "SP 1",
+            "links": [
+              {
+                "internal": true,
+                "type": "disruption",
+                "id": "140a9970-0c9b-11e8-b2b6-005056a44da2",
+                "rel": "disruptions",
+                "templated": false
+              }
+            ],
+          "id": "stop_point:1"
+          }
+        }
+      ]
+    },
+    {
+    "line": {
+        "id": "line:CAE:218",
+        "links": [
+              {
+                "internal": true,
+                "type": "disruption",
+                "id": "17283fae-7dcf-11e8-898e-005056a47b86",
+                "rel": "disruptions",
+                "templated": false
+              }
+        ]
+    },
+    "pt_objects": [
+        {
+            "embedded_type": "line",
+            "line": {
+                "id": "line:CAE:218",
+                "links": [
+                    {
+                        "internal": true,
+                        "type": "disruption",
+                        "id": "17283fae-7dcf-11e8-898e-005056a47b86",
+                        "rel": "disruptions",
+                        "templated": false
+                    }
+                ]
+            }
+        }
+    ]
+}
+]
+}
+```
 Line_reports is an array of some line_report object.
 
 One Line_report object is a complex object, made of a line, and an array
