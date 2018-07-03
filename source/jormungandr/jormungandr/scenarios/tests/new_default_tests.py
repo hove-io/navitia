@@ -279,6 +279,35 @@ def merge_responses_on_errors_test():
     assert resp2.error.message in merged_response.error.message
 
 
+def merge_responses_feed_publishers_test():
+    """
+    Check that the feed publishers are exposed according to the itineraries
+    """
+    resp1 = response_pb2.Response()
+    fp1 = resp1.feed_publishers.add()
+    fp1.id = "Bobby"
+    resp1.journeys.add()
+    resp2 = response_pb2.Response()
+    fp2 = resp2.feed_publishers.add()
+    fp2.id = "Bobbette"
+    resp2.journeys.add()
+    r = [resp1, resp2]
+
+    # The feed publishers of both journeys are exposed
+    merged_response = new_default.merge_responses(r, False)
+    assert len(merged_response.feed_publishers) == 2
+
+    # The 2nd journey is to be deleted so its feed publisher won't be exposed
+    resp2.journeys.add().tags.extend(['to_delete'])
+    merged_response = new_default.merge_responses(r, False)
+    assert len(merged_response.feed_publishers) == 1
+    assert merged_response.feed_publishers[0].id == 'Bobby'
+
+    # With 'debug=True', the journey to delete is exposed and so is its feed publisher
+    merged_response = new_default.merge_responses(r, True)
+    assert len(merged_response.feed_publishers) == 2
+
+
 def add_pt_sections(journey):
     section = journey.sections.add()
     section.type = response_pb2.STREET_NETWORK
