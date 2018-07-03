@@ -52,11 +52,11 @@ namespace navitia { namespace routing {
 // Usefull to protect raptor loop
 static const uint max_nb_raptor_call = 100;
 
-
-
-/*
- * This function dertermine the break condition that depends on nb of found journeys,
+/**
+ * @brief This function dertermine the break condition that depends on nb of found journeys,
  * min_nb_journeys and time frame.
+ *
+ * @details
  *
  *   T           T + N          T + 24H
  *   -----------------------------------
@@ -67,7 +67,6 @@ static const uint max_nb_raptor_call = 100;
  *                                   we still don't have enough journeys(total_nb_journeys<min_nb_journeys),
  *                                   we allow raptor to get out of the requested time frame (T + N) but still
  *                                   limit the search frame inside of 24H
- *
  *
  *                   min_nb_journeys is set?
  *                    /               \
@@ -84,7 +83,7 @@ static const uint max_nb_raptor_call = 100;
  *
  *
  *
- * */
+ */
 static bool keep_going(uint32_t total_nb_journeys,
                        uint32_t nb_try,
                        bool clockwise,
@@ -116,6 +115,53 @@ static bool keep_going(uint32_t total_nb_journeys,
     }
     // Case 5: no min_nb_journeys is given, we find all journeys inside of the time frame
     return is_inside(request_date_secs, timeframe_end_datetime.get());
+}
+
+/**
+ * @brief Culling excessive journeys if we exceed limits
+ */
+static void culling_excessive_journeys(const boost::optional<uint32_t>& min_nb_journeys,
+                                       const boost::optional<DateTime>& timeframe_end_datetime,
+                                       const boost::optional<DateTime>& timeframe_max_datetime,
+                                       const bool clockwise,
+                                       JourneySet& journeys) {
+
+    if (timeframe_end_datetime && timeframe_max_datetime && journeys.size() > 0) {
+
+        routing::JourneyCmp journey_cmp{clockwise};
+        // filter journeys by end datetime until min_nb_journeys
+        std::vector<routing::Journey> sorted{journeys.begin(), journeys.end()};
+        std::sort(sorted.begin(), sorted.end(), journey_cmp);
+        uint count = 0;
+        auto is_inside = [clockwise](const routing::Journey& j, DateTime dt){
+            return clockwise ? j.departure_dt < dt : j.arrival_dt > dt;
+        };
+
+        boost::for_each(sorted, [&](const routing::Journey& j){
+            // min_nb_journeys is not given, we cull the journeys until the end of time frame
+            if (!min_nb_journeys && ! is_inside(j, timeframe_end_datetime.get())) {
+                journeys.erase(j);
+                return;
+            }
+            // min_nb_journeys is given and journey's departure/arrival is inside of the time frame
+            // we keep this journey and increment the nb of journeys
+            if (is_inside(j, timeframe_end_datetime.get())) {
+                ++count;
+                return;
+            }
+            // the min_nb_journey is given and journey's departure/arrival is no longer inside of the
+            // time frame then:
+            // If we already have enough journeys
+            // Or
+            // If journeys's departure/arrival is later/ealier than the max of time frame
+            // then we remove this journey
+            if ( (! is_inside(j, timeframe_end_datetime.get()) && count >= min_nb_journeys.get()) ||
+                    (! is_inside(j, timeframe_max_datetime.get()))) {
+                journeys.erase(j);
+                return;
+            }
+        });
+    }
 }
 
 /**
@@ -165,16 +211,7 @@ call_raptor(navitia::PbCreator& pb_creator,
             }
         }
 
-
-        // Call raptor
-        // note : Loop is for min_nb_journeys options
-        //
-        // min_nb_journeys options :
-        // Compute several loop until the number of journeys >= min_nb_journeys
-        // For each step, we find best pathes,
-        // start to the latest departure + 1 (clockwise) or the latest arrival - 1.
-        // If Raptor does not return anything, we stop.
-        // If the number of Path finds is greater or equal than min_nb_journeys, we stop.
+        // Raptor Loop
         JourneySet journeys;
         uint32_t nb_try = 0;
         int total_nb_journeys = 0;
@@ -200,6 +237,7 @@ call_raptor(navitia::PbCreator& pb_creator,
 
             LOG4CPLUS_DEBUG(logger, "after filtering late journeys: " << raptor_journeys.size() << " solution(s) left");
 
+            // Break if empty
             if (raptor_journeys.empty()) {
                 break;
             }
@@ -212,6 +250,7 @@ call_raptor(navitia::PbCreator& pb_creator,
             nb_try++;
 
             total_nb_journeys = journeys.size() + nb_direct_path;
+
             // Prepare next call for raptor with min_nb_journeys option
             request_date_secs = prepare_next_call_for_raptor(raptor_journeys, clockwise);
 
@@ -225,41 +264,11 @@ call_raptor(navitia::PbCreator& pb_creator,
                             timeframe_max_datetime));
 
         // Culling the excessive journeys
-        if (timeframe_end_datetime && timeframe_max_datetime && journeys.size() > 0) {
-            routing::JourneyCmp journey_cmp{clockwise};
-            // filter journeys by end datetime until min_nb_journeys
-            std::vector<routing::Journey> sorted{journeys.begin(), journeys.end()};
-            std::sort(sorted.begin(), sorted.end(), journey_cmp);
-            uint count = 0;
-            auto is_inside = [clockwise](const routing::Journey& j, DateTime dt){
-                return clockwise ? j.departure_dt < dt : j.arrival_dt > dt;
-            };
-
-            boost::for_each(sorted, [&](const routing::Journey& j){
-                if (!min_nb_journeys && ! is_inside(j, timeframe_end_datetime.get())) {
-                    // min_nb_journeys is not given, we cull the journeys until the end of time frame
-                    journeys.erase(j);
-                    return;
-                }
-                if (is_inside(j, timeframe_end_datetime.get())) {
-                    // min_nb_journeys is given and journey's departure/arrival is inside of the time frame
-                    // we keep this journey and increment the nb of journeys
-                    ++count;
-                    return;
-                }
-                if ( (! is_inside(j, timeframe_end_datetime.get()) && count >= min_nb_journeys.get()) ||
-                        (! is_inside(j, timeframe_max_datetime.get()))) {
-                    // the min_nb_journey is given and journey's departure/arrival is no longer inside of the
-                    // time frame then:
-                    // If we already have enough journeys
-                    // Or
-                    // If journeys's departure/arrival is later/ealier than the max of time frame
-                    // then we remove this journey
-                    journeys.erase(j);
-                    return;
-                }
-            });
-        }
+        culling_excessive_journeys( min_nb_journeys,
+                                    timeframe_end_datetime,
+                                    timeframe_max_datetime,
+                                    clockwise,
+                                    journeys);
 
         // create date time for next
         pb_creator.set_next_request_date_time(to_posix_timestamp(request_date_secs, raptor.data));
@@ -1331,7 +1340,7 @@ void make_pt_response(navitia::PbCreator& pb_creator,
                                     direct_path_duration,
                                     min_nb_journeys,
                                     // nb_direct_path = 0 for distributed if direct_path_duration is none
-                                    direct_path_duration ? 1: 0, 
+                                    direct_path_duration ? 1: 0,
                                     max_duration,
                                     max_transfers,
                                     max_extra_second_pass,
