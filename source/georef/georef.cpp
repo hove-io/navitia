@@ -590,6 +590,16 @@ void GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_point
 
 std::vector<Admin*> GeoRef::find_admins(const type::GeographicalCoord& coord) const {
     try {
+        std::vector<Admin*> result;
+        for(auto* admin: this->admins){
+            if(boost::geometry::within(coord, admin->boundary)){
+                result.push_back(admin);
+            }
+        }
+        if(!result.empty()){
+            return result;
+        }
+        //we didn't found any results with boundary, as a fallback we search for the admin o the closest way
         const auto& filter = [](const Way& w){return w.admin_list.empty();};
         return nearest_addr(coord, filter).second->admin_list;
     } catch (proximitylist::NotFound&) {
