@@ -126,41 +126,39 @@ static void culling_excessive_journeys(const boost::optional<uint32_t>& min_nb_j
                                        const bool clockwise,
                                        JourneySet& journeys) {
 
+    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+
     if (timeframe_end_datetime && timeframe_max_datetime && journeys.size() > 0) {
 
         routing::JourneyCmp journey_cmp{clockwise};
         // filter journeys by end datetime until min_nb_journeys
         std::vector<routing::Journey> sorted{journeys.begin(), journeys.end()};
         std::sort(sorted.begin(), sorted.end(), journey_cmp);
-        uint count = 0;
+
         auto is_inside = [clockwise](const routing::Journey& j, DateTime dt){
             return clockwise ? j.departure_dt < dt : j.arrival_dt > dt;
         };
 
-        boost::for_each(sorted, [&](const routing::Journey& j){
-            // min_nb_journeys is not given, we cull the journeys until the end of time frame
-            if (!min_nb_journeys && ! is_inside(j, timeframe_end_datetime.get())) {
+        uint32_t count = 0;
+        boost::for_each(sorted, [&](const routing::Journey& j) {
+
+            // Erase journey if
+            // Journey exceed the max time frame limit
+            // or
+            // mim_nb_journeys is deactivated and journey exceed the time frame limit
+            // or
+            // mim_nb_journeys exist and Nb journeys is greater than min_nb_journeys and journey exceed the time frame limit
+            if ( !is_inside(j, timeframe_max_datetime.get()) ||
+                 (!min_nb_journeys && !is_inside(j, timeframe_end_datetime.get())) ||
+                 (min_nb_journeys && (count >= min_nb_journeys.get()) && !is_inside(j, timeframe_end_datetime.get())) )
+            {
                 journeys.erase(j);
-                return;
             }
-            // min_nb_journeys is given and journey's departure/arrival is inside of the time frame
-            // we keep this journey and increment the nb of journeys
-            if (is_inside(j, timeframe_end_datetime.get())) {
+            else {
                 ++count;
-                return;
-            }
-            // the min_nb_journey is given and journey's departure/arrival is no longer inside of the
-            // time frame then:
-            // If we already have enough journeys
-            // Or
-            // If journeys's departure/arrival is later/ealier than the max of time frame
-            // then we remove this journey
-            if ( (! is_inside(j, timeframe_end_datetime.get()) && count >= min_nb_journeys.get()) ||
-                    (! is_inside(j, timeframe_max_datetime.get()))) {
-                journeys.erase(j);
-                return;
             }
         });
+        LOG4CPLUS_DEBUG(logger, "after culling excessive journey: " << journeys.size() << " solution(s) left");
     }
 }
 
@@ -264,11 +262,11 @@ call_raptor(navitia::PbCreator& pb_creator,
                             timeframe_max_datetime));
 
         // Culling the excessive journeys
-        culling_excessive_journeys( min_nb_journeys,
-                                    timeframe_end_datetime,
-                                    timeframe_max_datetime,
-                                    clockwise,
-                                    journeys);
+        culling_excessive_journeys(min_nb_journeys,
+                                   timeframe_end_datetime,
+                                   timeframe_max_datetime,
+                                   clockwise,
+                                   journeys);
 
         // create date time for next
         pb_creator.set_next_request_date_time(to_posix_timestamp(request_date_secs, raptor.data));
