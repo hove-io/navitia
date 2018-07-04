@@ -1774,7 +1774,6 @@ see the [inner-reference](#inner-references) section to use them.
 ### Line report object
 ``` shell
 #links between objects in a line_reports response
-```
 {
   "disruptions": [
     {
