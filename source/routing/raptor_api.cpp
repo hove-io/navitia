@@ -1282,8 +1282,8 @@ void filter_late_journeys(RAPTOR::Journeys & journeys,
 
     const auto & best = get_best_journey(journeys, params.clockwise);
 
-    auto it = journeys.cbegin();
-    while(it != journeys.cend()) {
+    auto it = journeys.begin();
+    while(it != journeys.end()) {
         const auto & journey = *it;
         if(best != journey && is_way_later(journey, best, params)) {
             it = journeys.erase(it);
