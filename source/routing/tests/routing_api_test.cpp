@@ -46,7 +46,7 @@ www.navitia.io
 struct logger_initialized {
     logger_initialized()   { init_logger(); }
 };
-BOOST_GLOBAL_FIXTURE( logger_initialized );
+BOOST_GLOBAL_FIXTURE( logger_initialized )
 
 namespace nr = navitia::routing;
 namespace ntest = navitia::test;
@@ -3367,6 +3367,38 @@ BOOST_FIXTURE_TEST_CASE(night_bus_filter_should_be_order_agnostic, Night_bus_fix
 
         auto vj = journeys.begin()->sections[0].get_in_st->vehicle_journey;
         BOOST_CHECK_EQUAL(vj->uri, "vj:vj1:0");
+    }
+}
+
+BOOST_FIXTURE_TEST_CASE(night_bus_filter_change_parameters, Night_bus_fixture)
+{
+    // With the default parameters, the request departure is 08:00
+    // The max_pseudo_duration is 7h, so journeys departing after 15:00 are deleted 
+    nr::NightBusFilter::Params filter_params = get_default_filter_params();
+    {
+        nr::RAPTOR::Journeys journeys = {j1, j2};
+        nr::filter_late_journeys(journeys, filter_params);
+
+        BOOST_REQUIRE_EQUAL(journeys.size(), 1);
+
+        auto vj = journeys.begin()->sections[0].get_in_st->vehicle_journey;
+        BOOST_CHECK_EQUAL(vj->uri, "vj:vj1:0");
+    }
+
+    // With the custom parameters, the max_pseudo_duration is 15h
+    // The second vj departing at 22:00 is now kept with the request departure at 08:00
+    filter_params.max_factor = 7.0;
+    filter_params.base_factor = 3600;
+    {
+        nr::RAPTOR::Journeys journeys = {j1, j2};
+        nr::filter_late_journeys(journeys, filter_params);
+
+        BOOST_REQUIRE_EQUAL(journeys.size(), 2);
+
+        auto vj1 = journeys.front().sections[0].get_in_st->vehicle_journey;
+        BOOST_CHECK_EQUAL(vj1->uri, "vj:vj1:0");
+        auto vj2 = journeys.back().sections[0].get_in_st->vehicle_journey;
+        BOOST_CHECK_EQUAL(vj2->uri, "vj:vj2:1");
     }
 }
 
