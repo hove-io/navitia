@@ -185,11 +185,17 @@ call_raptor(navitia::PbCreator& pb_creator,
             const size_t max_extra_second_pass,
             const double night_bus_filter_max_factor,
             const int32_t night_bus_filter_base_factor,
-            const boost::optional<DateTime>& timeframe_end_datetime,
-            const boost::optional<DateTime>& timeframe_max_datetime) {
+            boost::optional<DateTime> timeframe_end_datetime,
+            boost::optional<DateTime> timeframe_max_datetime) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     std::vector<Path> pathes;
+
+     // timeframe_end_datetime and timeframe_max_datetime in raptor referential
+    if (timeframe_end_datetime)
+        *timeframe_end_datetime = to_datetime(from_posix_timestamp(*timeframe_end_datetime), raptor.data);
+    if (timeframe_max_datetime)
+        *timeframe_max_datetime = to_datetime(from_posix_timestamp(*timeframe_max_datetime), raptor.data);
 
     // We loop on datetimes, but in practice there's always only one
     // (It's a deprecated feature to provide multiple datetimes).
@@ -1441,8 +1447,8 @@ void make_response(navitia::PbCreator& pb_creator,
                    const boost::optional<uint32_t>& min_nb_journeys,
                    double night_bus_filter_max_factor,
                    int32_t night_bus_filter_base_factor,
-                   const boost::optional<DateTime>& timeframe_end_datetime,
-                   const boost::optional<DateTime>& timeframe_max_datetime) {
+                   boost::optional<DateTime> timeframe_end_datetime,
+                   boost::optional<DateTime> timeframe_max_datetime) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 

@@ -1622,6 +1622,21 @@ class JourneysTimeFrameDuration():
         response = self.query_region(query)
         assert 6 == len(response['journeys'])
 
+        # # Time frame to catch only the first journeys, timeframe_duration = 1 H (60*60=3600).
+        # query = ('journeys?from={_from}&'
+        #         'to={to}&'
+        #         'datetime={datetime}&'
+        #         'timeframe_duration={timeframe_duration}&').format( _from='stop_area:sa1',
+        #                                                             to='stop_area:sa3',
+        #                                                             datetime="20180315T082000",
+        #                                                             clockwise=True,
+        #                                                             timeframe_duration=1200)
+        # response = self.query_region(query)
+        # assert 1 == len(response['journeys'])
+
+        # assert len(response['journeys'][0]['sections']) == 1
+        # assert response['journeys'][0]['sections'][0]['mode'] == 'public_transport'
+
     def test_timeframe_duration_with_minimum_value(self):
         """
         The data contains 20 journeys (each 10 min) + 1 journeys 24H after the first.
