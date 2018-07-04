@@ -1764,6 +1764,13 @@ For example:
 -   Is there any perturbations on the "RER A" line ?
     -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/lines/line:TRN:DUA810801043/line_reports>
 
+Required | Name             | Type                            | Description                                       | Default Value
+---------|------------------|---------------------------------|---------------------------------------------------|--------------
+no       | since            | [iso-date-time](#iso-date-time) | Only display disruptions active after this date   |
+no       | until            | [iso-date-time](#iso-date-time) | Only display disruptions active before this date  |
+no       | count            | int                             | Maximum number of results.                        | 10
+no       | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc. |
+no       | disable_geojson  | boolean                         | remove geojson fields from the response           | false
 
 The response is made of an array of [line_reports](#line-reports),
 and another one of [disruptions](#disruption).
