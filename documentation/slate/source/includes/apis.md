@@ -959,6 +959,17 @@ It will retrieve all the journeys from the resource (in order to make *[isochron
 
 The [isochrones](#isochrones) service exposes another response structure, which is simpler, for the same data.
 
+### <a name="journeys-disruptions"></a> Disruptions
+By default Navitia compute journeys that doesn't take into account the disruptions, these will only be reported into the response.
+If you want to provide journeys without blocking disruptions you need to use the parameter `data_freshness=realtime`.
+
+In a journeys response there is disruptions in a lot of places, and not all have the same meaning.
+Each journey has a `status` attribute that indicate the most serious disruptions effect on this journey.
+The disruptions are on the sections, the ones that impact the journeys are in the links of the display_informations of the sections (`sections[].display_informations.links[]`)
+
+There also some others disruptions on the responses, these doesn't impact directly the journey but might affect them, by example some intermediate stops of a sections can be
+disrupted, it doesn't prevent the journey to be executed but modify it. These disruptions won't be on the display_informations of the sections nor used in the status of a journeys.
+
 ### <a name="journeys-parameters"></a>Main parameters
 
 | Required  | Name                    | Type          | Description                                                                            | Default value |
