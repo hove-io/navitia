@@ -732,6 +732,10 @@ def merge_responses(responses, debug):
         for fp in merged_response.feed_publishers:
             initial_feed_publishers[fp.id] = fp
 
+        # Add feed publishers from the qualified journeys only
+        # Note : For BSS, it can happen that one journey in the response has returned a walking fallback.
+        # If all other journeys in the response are to delete, the feed publisher will still be added
+        # TODO: link feed publisher to a journey instead of a response with several journeys
         merged_response.feed_publishers.extend(fp for fp in r.feed_publishers
                                                if fp.id not in initial_feed_publishers
                                                and (debug or all('to_delete' not in j.tags for j in r.journeys)))
