@@ -130,7 +130,7 @@ class _PtJourneySorter(object):
 
 class PtJourneyPool:
     def __init__(self, future_manager, instance, requested_orig_obj, requested_dest_obj, streetnetwork_path_pool, krakens_call,
-                 orig_fallback_durations_pool, dest_fallback_durations_pool, request, timeframe):
+                 orig_fallback_durations_pool, dest_fallback_durations_pool, request):
         self._future_manager = future_manager
         self._instance = instance
         self._requested_orig_obj = requested_orig_obj
@@ -139,14 +139,14 @@ class PtJourneyPool:
         self._krakens_call = krakens_call
         self._orig_fallback_durations_pool = orig_fallback_durations_pool
         self._dest_fallback_durations_pool = dest_fallback_durations_pool
-        self._journey_params = self._create_parameters(request, timeframe)
+        self._journey_params = self._create_parameters(request)
         self._request = request
         self._value = []
 
         self._async_request()
 
     @staticmethod
-    def _create_parameters(request, timeframe):
+    def _create_parameters(request):
         from jormungandr.planner import JourneyParameters
         return JourneyParameters(max_duration=request['max_duration'],
                                  max_transfers=request['max_transfers'],
@@ -159,7 +159,7 @@ class PtJourneyPool:
                                  night_bus_filter_max_factor=request['_night_bus_filter_max_factor'],
                                  night_bus_filter_base_factor=request['_night_bus_filter_base_factor'],
                                  min_nb_journeys=request['min_nb_journeys'],
-                                 timeframe=timeframe)
+                                 timeframe=request['timeframe_duration'])
 
     def _async_request(self):
         direct_path_type = StreetNetworkPathType.DIRECT

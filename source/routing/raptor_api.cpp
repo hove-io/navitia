@@ -125,8 +125,8 @@ static void culling_excessive_journeys(const boost::optional<uint32_t>& min_nb_j
                                        const boost::optional<DateTime>& timeframe_max_datetime,
                                        const bool clockwise,
                                        JourneySet& journeys) {
-
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
+ LOG4CPLUS_DEBUG(logger, "before culling excessive journey: " << journeys.size() << " solution(s) left");
 
     if (timeframe_end_datetime && timeframe_max_datetime && journeys.size() > 0) {
 
@@ -191,12 +191,6 @@ call_raptor(navitia::PbCreator& pb_creator,
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     std::vector<Path> pathes;
 
-     // timeframe_end_datetime and timeframe_max_datetime in raptor referential
-    if (timeframe_end_datetime)
-        *timeframe_end_datetime = to_datetime(from_posix_timestamp(*timeframe_end_datetime), raptor.data);
-    if (timeframe_max_datetime)
-        *timeframe_max_datetime = to_datetime(from_posix_timestamp(*timeframe_max_datetime), raptor.data);
-
     // We loop on datetimes, but in practice there's always only one
     // (It's a deprecated feature to provide multiple datetimes).
     // TODO: remove the vector (and adapt protobuf of request).
@@ -207,6 +201,24 @@ call_raptor(navitia::PbCreator& pb_creator,
         // Compute start time and Bound
         DateTime request_date_secs = to_datetime(datetime, raptor.data);
 
+        // timeframe_end_datetime and timeframe_max_datetime in raptor referential
+        if (timeframe_end_datetime) {
+            if (clockwise) {
+                *timeframe_end_datetime += request_date_secs;
+            } else {
+                *timeframe_end_datetime = request_date_secs - *timeframe_end_datetime;
+            }
+        }
+        if (timeframe_max_datetime) {
+            if (clockwise) {
+
+                *timeframe_max_datetime += request_date_secs;
+            } else {
+                *timeframe_max_datetime = request_date_secs - *timeframe_max_datetime;
+            }
+        }
+
+        // Compute Bound
         if(max_duration != DateTimeUtils::inf) {
             if (clockwise) {
                 bound = request_date_secs + max_duration;
@@ -1282,19 +1294,19 @@ void make_pt_response(navitia::PbCreator& pb_creator,
                       const std::vector<type::EntryPoint> &origins,
                       const std::vector<type::EntryPoint> &destinations,
                       const uint64_t timestamp,
-                      bool clockwise,
+                      const bool clockwise,
                       const type::AccessibiliteParams& accessibilite_params,
                       const std::vector<std::string>& forbidden,
                       const std::vector<std::string>& allowed,
                       const type::RTLevel rt_level,
                       const navitia::time_duration& transfer_penalty,
-                      uint32_t max_duration,
-                      uint32_t max_transfers,
-                      uint32_t max_extra_second_pass,
+                      const uint32_t max_duration,
+                      const uint32_t max_transfers,
+                      const uint32_t max_extra_second_pass,
                       const boost::optional<navitia::time_duration>& direct_path_duration,
                       const boost::optional<uint32_t>& min_nb_journeys,
-                      double night_bus_filter_max_factor,
-                      int32_t night_bus_filter_base_factor,
+                      const double night_bus_filter_max_factor,
+                      const int32_t night_bus_filter_base_factor,
                       const boost::optional<DateTime>& timeframe_end_datetime,
                       const boost::optional<DateTime>& timeframe_max_datetime) {
 
@@ -1432,23 +1444,23 @@ void make_response(navitia::PbCreator& pb_creator,
                    const type::EntryPoint& origin,
                    const type::EntryPoint& destination,
                    const std::vector<uint64_t>& timestamps,
-                   bool clockwise,
+                   const bool clockwise,
                    const type::AccessibiliteParams& accessibilite_params,
                    const std::vector<std::string>& forbidden,
                    const std::vector<std::string>& allowed,
                    georef::StreetNetwork& worker,
                    const type::RTLevel rt_level,
                    const navitia::time_duration& transfer_penalty,
-                   uint32_t max_duration,
-                   uint32_t max_transfers,
-                   uint32_t max_extra_second_pass,
-                   uint32_t free_radius_from,
-                   uint32_t free_radius_to,
+                   const uint32_t max_duration,
+                   const uint32_t max_transfers,
+                   const uint32_t max_extra_second_pass,
+                   const uint32_t free_radius_from,
+                   const uint32_t free_radius_to,
                    const boost::optional<uint32_t>& min_nb_journeys,
-                   double night_bus_filter_max_factor,
-                   int32_t night_bus_filter_base_factor,
-                   boost::optional<DateTime> timeframe_end_datetime,
-                   boost::optional<DateTime> timeframe_max_datetime) {
+                   const double night_bus_filter_max_factor,
+                   const int32_t night_bus_filter_base_factor,
+                   const boost::optional<DateTime>& timeframe_end_datetime,
+                   const boost::optional<DateTime>& timeframe_max_datetime) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 

@@ -1629,9 +1629,10 @@ class JourneysTimeFrameDuration():
         #         'timeframe_duration={timeframe_duration}&').format( _from='stop_area:sa1',
         #                                                             to='stop_area:sa3',
         #                                                             datetime="20180315T082000",
-        #                                                             clockwise=True,
+        #                                                             clockwise=False,
         #                                                             timeframe_duration=1200)
         # response = self.query_region(query)
+        # print("response %s" %response)
         # assert 1 == len(response['journeys'])
 
         # assert len(response['journeys'][0]['sections']) == 1
@@ -1701,7 +1702,6 @@ class JourneysTimeFrameDuration():
         # min_nb_journeys = 8 and timeframe_duration = 24H + 15 min
         # The response have to contain 20 journeys because min_nb_journeys is verified.
         # The superior criteria is timeframe_duration, so we continue until we have 20 journeys.
-
         query = ('journeys?from={_from}&'
                  'to={to}&'
                  'datetime={datetime}&'
@@ -1763,7 +1763,6 @@ class JourneysTimeFrameDuration():
         # min_nb_journeys = 21 and timeframe_duration = 4H (60*60*4 = 14400)
         # The response have to contains 20 journeys because min_nb_journeys is not verified.
         # Criteria is not verified, because we don't have 21 journeys in the time frame duration.
-        #
         # We continue to search out of the bound (during 24h if the min_nb_journeys is always not verified)
         query = ('journeys?from={_from}&'
                 'to={to}&'

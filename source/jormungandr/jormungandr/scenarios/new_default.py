@@ -103,7 +103,7 @@ def get_kraken_calls(request):
     return res
 
 
-def create_pb_request(requested_type, request, dep_mode, arr_mode, timeframe=None):
+def create_pb_request(requested_type, request, dep_mode, arr_mode):
     """Parse the request dict and create the protobuf version"""
     #TODO: bench if the creation of the request each time is expensive
     req = request_pb2.Request()
@@ -183,9 +183,9 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode, timeframe=Non
     req.journeys.night_bus_filter_max_factor = request['_night_bus_filter_max_factor']
     req.journeys.night_bus_filter_base_factor = request['_night_bus_filter_base_factor']
 
-    if timeframe:
-        req.journeys.timeframe_end_datetime = int(timeframe.end_datetime)
-        req.journeys.timeframe_max_datetime = int(timeframe.max_datetime)
+    if request['timeframe_duration']:
+        req.journeys.timeframe_end_datetime = int(request['timeframe_duration'])
+        req.journeys.timeframe_max_datetime = int(60*60*24)
 
     return req
 
@@ -849,15 +849,6 @@ class Scenario(simple.Scenario):
         max_journeys_calls = app.config.get('MAX_JOURNEYS_CALLS', 20)
         max_nb_calls = min(min_nb_journeys, max_journeys_calls)
 
-        op = operator.add if api_request['clockwise'] else operator.sub
-        # we should ensure that the max timeframe don't exceed 24H
-
-        timeframe = None
-        if api_request.get('timeframe_duration'):
-            timeframe = Timeframe(end_datetime=op(api_request['datetime'], min(api_request.get('timeframe_duration'),
-                                                                               timedelta(days=1).total_seconds())),
-                                  max_datetime=op(api_request['datetime'], timedelta(days=1).total_seconds()))
-
         while request is not None and \
                 ((nb_qualified_journeys < min_nb_journeys and nb_try < max_nb_calls)\
                  or nb_try < min_journeys_calls):
@@ -873,7 +864,7 @@ class Scenario(simple.Scenario):
                 min_nb_journeys_left = min_nb_journeys - nb_qualified_journeys
                 request['min_nb_journeys'] = max(0, min_nb_journeys_left)
 
-            new_resp = self.call_kraken(request_type, request, instance, krakens_call, timeframe)
+            new_resp = self.call_kraken(request_type, request, instance, krakens_call)
             _tag_by_mode(new_resp)
             _tag_direct_path(new_resp)
             _tag_bike_in_pt(new_resp)
@@ -919,6 +910,10 @@ class Scenario(simple.Scenario):
 
             nb_qualified_journeys = nb_journeys(responses)
 
+            if (api_request['timeframe_duration'] and api_request['min_nb_journeys'] and (nb_qualified_journeys < min_nb_journeys)):
+                # we break because the max time frame duration is reached
+                break
+
             if nb_previously_qualified_journeys == nb_qualified_journeys:
                 # If there is no additional qualified journey in the kraken response,
                 # another request is sent to try to find more journeys, just in case...
@@ -959,7 +954,7 @@ class Scenario(simple.Scenario):
         self._compute_pagination_links(pb_resp, instance, api_request['clockwise'])
         return pb_resp
 
-    def call_kraken(self, request_type, request, instance, krakens_call, timeframe=None):
+    def call_kraken(self, request_type, request, instance, krakens_call):
         """
         For all krakens_call, call the kraken and aggregate the responses
 
@@ -978,7 +973,7 @@ class Scenario(simple.Scenario):
 
         pool = gevent.pool.Pool(app.config.get('GREENLET_POOL_SIZE', 3))
         for dep_mode, arr_mode in krakens_call:
-            pb_request = create_pb_request(request_type, request, dep_mode, arr_mode, timeframe)
+            pb_request = create_pb_request(request_type, request, dep_mode, arr_mode)
             # we spawn a new greenlet, it won't have access to our thread local request object so we pass the request_id
             futures.append(pool.spawn(worker, dep_mode, arr_mode, instance, pb_request, flask_request_id=flask.request.id))
 
