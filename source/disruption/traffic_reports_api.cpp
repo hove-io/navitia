@@ -177,6 +177,27 @@ void TrafficReport::add_stop_areas(const type::Indexes& network_idx,
             } else {
                 it->second.insert(sa_mess.second.begin(), sa_mess.second.end());
             }
+
+            // also add the lines if the disruptions are line sections
+            for (auto& impact : sa_mess.second) {
+                for (auto &ptobj : impact->informed_entities()) {
+                    const auto line_section = boost::get<nt::disruption::LineSection>(&ptobj);
+
+                    if (line_section == nullptr) {
+                        continue;
+                    }
+
+                    auto find_predicate = [&](const std::pair<const type::Line*, DisruptionSet>& item) {
+                        return line_section->line == item.first;
+                    };
+                    auto it = boost::find_if(dist.lines, find_predicate);
+                    if (it == dist.lines.end()) {
+                        dist.lines.push_back(std::make_pair(line_section->line, DisruptionSet({impact})));
+                    } else {
+                        it->second.insert({impact});
+                    }
+                }
+            }
         }
     }
 }
