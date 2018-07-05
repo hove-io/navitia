@@ -3601,16 +3601,16 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
 
     //-----------------------------------
     // Case 4 :
-    // clockwise = false
-    // timeframe_end_datetime = 10*60
-    // timeframe_max_datetime = 86400 (24H)
+    // clockwise = true
+    // timeframe_end_datetime = 60*60*1 (1H)
+    // timeframe_max_datetime = 86400   (24H)
     //
     // We have a time frame duration = 30 min related to the first Journeys (08:30:00) and
     // a min_nb_journeys = 20.
     // We don't have 20 journeys in 30 min, so we continue until 20 journeys (min_nb_journeys is the main criteria).
     // The response must contains 20 journeys.
     min_nb_journeys = 20;
-    timeframe_end_datetime = 60*60*5;    // 30 min
+    timeframe_end_datetime = 60*60*1;  // 1H
     timeframe_max_datetime = 60*60*24; // 24H
     clockwise = true;
 
@@ -3646,12 +3646,12 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
 
     //-----------------------------------
     // Case 5 :
-    // clockwise = false
+    // clockwise = true
     // timeframe_end_datetime = 60*60*4 (4H)
     // timeframe_max_datetime = 60*60   (1H)
     //
     // the limit max is less than timeframe_end_datetime.
-    // We compute until the limit
+    // We compute until the max limit
     // The response must contains only 6 journeys.
     min_nb_journeys = 0;
     timeframe_end_datetime = 60*60*4; // 4H

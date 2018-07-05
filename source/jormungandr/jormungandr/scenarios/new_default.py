@@ -29,7 +29,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from _ast import operator
 from copy import deepcopy
 import itertools
 import logging
@@ -55,8 +54,6 @@ from jormungandr import global_autocomplete
 from six.moves import filter
 from six.moves import range
 from six.moves import zip
-from datetime import timedelta
-import operator
 
 SECTION_TYPES_TO_RETAIN = {response_pb2.PUBLIC_TRANSPORT, response_pb2.STREET_NETWORK}
 JOURNEY_TYPES_TO_RETAIN = ['best', 'comfort', 'non_pt_walk', 'non_pt_bike', 'non_pt_bss']
@@ -786,9 +783,6 @@ def get_kraken_id(entrypoint_detail):
         return None
 
     return '{};{}'.format(coord['lon'], coord['lat'])
-
-
-Timeframe = collections.namedtuple('Timeframe', ['end_datetime', 'max_datetime'])
 
 
 class Scenario(simple.Scenario):

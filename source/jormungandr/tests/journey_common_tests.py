@@ -1622,21 +1622,21 @@ class JourneysTimeFrameDuration():
         response = self.query_region(query)
         assert 6 == len(response['journeys'])
 
-        # # Time frame to catch only the first journeys, timeframe_duration = 1 H (60*60=3600).
-        # query = ('journeys?from={_from}&'
-        #         'to={to}&'
-        #         'datetime={datetime}&'
-        #         'clockwise={clockwise}&'
-        #         'timeframe_duration={timeframe_duration}&').format( _from='stop_area:sa1',
-        #                                                             to='stop_area:sa3',
-        #                                                             datetime="20180315T083500",
-        #                                                             clockwise=False,
-        #                                                             timeframe_duration=1200)
-        # response = self.query_region(query)
-        # assert 2 == len(response['journeys'])
+        # Time frame to catch only the first two journeys before the date time, because clockwise is active.
+        query = ('journeys?from={_from}&'
+                'to={to}&'
+                'datetime={datetime}&'
+                'datetime_represents={datetime_represents}&'
+                'timeframe_duration={timeframe_duration}&').format( _from='stop_area:sa1',
+                                                                    to='stop_area:sa3',
+                                                                    datetime="20180315T083500",
+                                                                    datetime_represents='arrival',
+                                                                    timeframe_duration=1200)
+        response = self.query_region(query)
+        assert 2 == len(response['journeys'])
 
-        # assert response['journeys'][0]['departure_date_time'] == u'20180315T084000'
-        # assert response['journeys'][1]['departure_date_time'] == u'20180315T082500'
+        assert response['journeys'][0]['departure_date_time'] == u'20180315T083000'
+        assert response['journeys'][1]['departure_date_time'] == u'20180315T082000'
 
 
     def test_timeframe_duration_with_minimum_value(self):

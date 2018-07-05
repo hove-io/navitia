@@ -11,7 +11,7 @@ INSTANCES_DIR = os.getenv('JORMUNGANDR_INSTANCES_DIR', '/etc/jormungandr.d')
 # Patern that matches Jormungandr configuration files
 # ex: '*.json' will match all json files within "INSTANCES_DIR" directory
 INSTANCES_FILENAME_PATTERN = os.getenv('JORMUNGANDR_INSTANCES_FILENAME_PATTERN', '*.json')
-
+INSTANCE_TIMEOUT = 20000000
 # Start the thread at startup, True in production, False for test environments
 START_MONITORING_THREAD = boolean(os.getenv('JORMUNGANDR_START_MONITORING_THREAD', True))
 

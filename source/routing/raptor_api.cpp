@@ -162,6 +162,37 @@ static void culling_excessive_journeys(const boost::optional<uint32_t>& min_nb_j
 }
 
 /**
+ * @brief Update timeframe_end_datetime and timeframe_max_datetime in raptor referential
+ */
+static void update_time_frame_parameters(const uint32_t request_date_secs,
+                                         const bool clockwise,
+                                         boost::optional<DateTime>& timeframe_end_datetime,
+                                         boost::optional<DateTime>& timeframe_max_datetime)
+{
+    if (timeframe_end_datetime) {
+        if (clockwise) {
+            *timeframe_end_datetime += request_date_secs;
+        } else {
+            if (request_date_secs > *timeframe_end_datetime)
+                *timeframe_end_datetime = request_date_secs - *timeframe_end_datetime;
+            else
+                *timeframe_end_datetime = 0;
+        }
+    }
+    if (timeframe_max_datetime) {
+        if (clockwise) {
+
+            *timeframe_max_datetime += request_date_secs;
+        } else {
+            if (request_date_secs > *timeframe_max_datetime)
+                *timeframe_max_datetime = request_date_secs - *timeframe_max_datetime;
+            else
+                *timeframe_max_datetime = 0;
+        }
+    }
+}
+
+/**
  * @brief internal function to call raptor in a loop
  */
 static std::vector<Path>
@@ -201,24 +232,10 @@ call_raptor(navitia::PbCreator& pb_creator,
         DateTime request_date_secs = to_datetime(datetime, raptor.data);
 
         // timeframe_end_datetime and timeframe_max_datetime in raptor referential
-        if (timeframe_end_datetime) {
-            if (clockwise) {
-                *timeframe_end_datetime += request_date_secs;
-            } else {
-                *timeframe_end_datetime = request_date_secs - *timeframe_end_datetime;
-            }
-        }
-        if (timeframe_max_datetime) {
-            if (clockwise) {
-
-                *timeframe_max_datetime += request_date_secs;
-            } else {
-                if (request_date_secs > *timeframe_max_datetime)
-                    *timeframe_max_datetime = request_date_secs - *timeframe_max_datetime;
-                else
-                    *timeframe_max_datetime = 0;
-            }
-        }
+        update_time_frame_parameters(request_date_secs,
+                                     clockwise,
+                                     timeframe_end_datetime,
+                                     timeframe_max_datetime);
 
         // Compute Bound
         if(max_duration != DateTimeUtils::inf) {
