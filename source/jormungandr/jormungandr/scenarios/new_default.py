@@ -707,7 +707,7 @@ def type_journeys(resp, req):
         best.type = "best"
 
 
-def merge_responses(responses):
+def merge_responses(responses, debug):
     """
     Merge all responses in one protobuf response
     """
@@ -731,7 +731,14 @@ def merge_responses(responses):
         initial_feed_publishers = {}
         for fp in merged_response.feed_publishers:
             initial_feed_publishers[fp.id] = fp
-        merged_response.feed_publishers.extend((fp for fp in r.feed_publishers if fp.id not in initial_feed_publishers))
+
+        # Add feed publishers from the qualified journeys only
+        # Note : For BSS, it can happen that one journey in the response has returned a walking fallback.
+        # If all other journeys in the response are to delete, the feed publisher will still be added
+        # TODO: link feed publisher to a journey instead of a response with several journeys
+        merged_response.feed_publishers.extend(fp for fp in r.feed_publishers
+                                               if fp.id not in initial_feed_publishers
+                                               and (debug or all('to_delete' not in j.tags for j in r.journeys)))
 
         # handle impacts
         for i in r.impacts:
@@ -908,7 +915,7 @@ class Scenario(simple.Scenario):
         logger.debug('nb of call kraken: %i', nb_try)
 
         journey_filter.apply_final_journey_filters(responses, instance, api_request)
-        pb_resp = merge_responses(responses)
+        pb_resp = merge_responses(responses, api_request['debug'])
 
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])
         compute_car_co2_emission(pb_resp, api_request, instance)
@@ -989,7 +996,7 @@ class Scenario(simple.Scenario):
         updated_request_with_default(request, instance)
         #we don't want to filter anything!
         krakens_call = get_kraken_calls(request)
-        resp = merge_responses(self.call_kraken(type_pb2.ISOCHRONE, request, instance, krakens_call))
+        resp = merge_responses(self.call_kraken(type_pb2.ISOCHRONE, request, instance, krakens_call), request['debug'])
         if not request['debug']:
             # on isochrone we can filter the number of max journeys
             if request["max_nb_journeys"] and len(resp.journeys) > request["max_nb_journeys"]:
