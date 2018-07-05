@@ -89,8 +89,8 @@ static bool keep_going(const uint32_t total_nb_journeys,
                        const bool clockwise,
                        const DateTime request_date_secs,
                        const boost::optional<uint32_t>& min_nb_journeys,
-                       const boost::optional<DateTime>& timeframe_end_datetime,
-                       const boost::optional<DateTime>& timeframe_max_datetime) {
+                       const boost::optional<uint32_t>& timeframe_end_datetime,
+                       const boost::optional<uint32_t>& timeframe_max_datetime) {
 
     auto is_inside = [clockwise](DateTime lhs, DateTime rhs){
         return clockwise ? lhs < rhs : lhs > rhs;
@@ -121,8 +121,8 @@ static bool keep_going(const uint32_t total_nb_journeys,
  * @brief Culling excessive journeys if we exceed limits
  */
 static void culling_excessive_journeys(const boost::optional<uint32_t>& min_nb_journeys,
-                                       const boost::optional<DateTime>& timeframe_end_datetime,
-                                       const boost::optional<DateTime>& timeframe_max_datetime,
+                                       const boost::optional<uint32_t>& timeframe_end_datetime,
+                                       const boost::optional<uint32_t>& timeframe_max_datetime,
                                        const bool clockwise,
                                        JourneySet& journeys) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
@@ -166,8 +166,8 @@ static void culling_excessive_journeys(const boost::optional<uint32_t>& min_nb_j
  */
 static void update_time_frame_parameters(const uint32_t request_date_secs,
                                          const bool clockwise,
-                                         boost::optional<DateTime>& timeframe_end_datetime,
-                                         boost::optional<DateTime>& timeframe_max_datetime)
+                                         boost::optional<uint32_t>& timeframe_end_datetime,
+                                         boost::optional<uint32_t>& timeframe_max_datetime)
 {
     if (timeframe_end_datetime) {
         if (clockwise) {
@@ -215,8 +215,8 @@ call_raptor(navitia::PbCreator& pb_creator,
             const size_t max_extra_second_pass,
             const double night_bus_filter_max_factor,
             const int32_t night_bus_filter_base_factor,
-            boost::optional<DateTime> timeframe_end_datetime,
-            boost::optional<DateTime> timeframe_max_datetime) {
+            boost::optional<uint32_t> timeframe_end_datetime,
+            boost::optional<uint32_t> timeframe_max_datetime) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     std::vector<Path> pathes;
@@ -1478,8 +1478,8 @@ void make_response(navitia::PbCreator& pb_creator,
                    const boost::optional<uint32_t>& min_nb_journeys,
                    const double night_bus_filter_max_factor,
                    const int32_t night_bus_filter_base_factor,
-                   const boost::optional<DateTime>& timeframe_end_datetime,
-                   const boost::optional<DateTime>& timeframe_max_datetime) {
+                   const boost::optional<uint32_t>& timeframe_end_datetime,
+                   const boost::optional<uint32_t>& timeframe_max_datetime) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 

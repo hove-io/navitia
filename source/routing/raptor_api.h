@@ -101,8 +101,8 @@ void make_response(navitia::PbCreator& pb_creator,
                    const boost::optional<uint32_t>& min_nb_journeys = boost::none,
                    const double night_bus_filter_max_factor = NightBusFilter::default_max_factor,
                    const int32_t night_bus_filter_base_factor = NightBusFilter::default_base_factor,
-                   const boost::optional<DateTime>& timeframe_end_datetime = boost::none,
-                   const boost::optional<DateTime>& timeframe_max_datetime = boost::none);
+                   const boost::optional<uint32_t>& timeframe_end_datetime = boost::none,
+                   const boost::optional<uint32_t>& timeframe_max_datetime = boost::none);
 
 void make_isochrone(navitia::PbCreator& pb_creator,
                     RAPTOR &raptor,
@@ -137,8 +137,8 @@ void make_pt_response(navitia::PbCreator& pb_creator,
                       const boost::optional<uint32_t>& min_nb_journeys = boost::none,
                       const double night_bus_filter_max_factor = NightBusFilter::default_max_factor,
                       const int32_t night_bus_filter_base_factor = NightBusFilter::default_base_factor,
-                      const boost::optional<DateTime>& timeframe_end_datetime = boost::none,
-                      const boost::optional<DateTime>& timeframe_max_datetime = boost::none);
+                      const boost::optional<uint32_t>& timeframe_end_datetime = boost::none,
+                      const boost::optional<uint32_t>& timeframe_max_datetime = boost::none);
 
 
 boost::optional<routing::map_stop_point_duration>
