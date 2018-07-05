@@ -45,6 +45,8 @@ struct logger_initialized {
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized );
 
+using boost::posix_time::duration_from_string;
+
 class JourneyTest
 {
     ed::builder b;
@@ -79,6 +81,8 @@ public:
         Journey::Section section = make_section(vj_name, departure_time, arrival_time);
 
         j.sections.push_back(section);
+        j.departure_dt = duration_from_string(departure_time).total_seconds();
+        j.arrival_dt = duration_from_string(arrival_time).total_seconds();
 
         return j;
     }
@@ -152,7 +156,7 @@ BOOST_AUTO_TEST_CASE(journeys_should_get_best_journey_clockwise) {
 
     std::vector<Journey> journeys = { j1, j2, j3 };
 
-    auto best = get_best_journey(journeys, true);
+    auto best = get_best_journey(journeys, false);
     BOOST_CHECK_EQUAL(best.arrival_dt, j3.arrival_dt);
 }
 

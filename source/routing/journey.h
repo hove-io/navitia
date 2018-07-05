@@ -105,7 +105,7 @@ const Journey& get_best_journey(const Journeys & journeys, bool clockwise)
     };
 
     auto latest_journey = [](const Journey& j1, const Journey& j2) {
-        return j1.arrival_dt > j2.arrival_dt;
+        return j1.arrival_dt < j2.arrival_dt;
     };
 
     const auto best = clockwise ?
