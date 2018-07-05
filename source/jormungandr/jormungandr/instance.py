@@ -463,7 +463,7 @@ class Instance(object):
         req = request_pb2.Request()
         req.requested_api = type_pb2.place_uri
         req.place_uri.uri = id_
-        return self.send_and_receive(req)
+        return self.send_and_receive(req, timeout=app.config.get('INSTANCE_FAST_TIMEOUT', 1000))
 
     def has_id(self, id_):
         """
@@ -495,7 +495,7 @@ class Instance(object):
         req.place_code.type_code = "external_code"
         req.place_code.code = id_
         #we set the timeout to 1s
-        return self.send_and_receive(req, 1000)
+        return self.send_and_receive(req, timeout=app.config.get('INSTANCE_FAST_TIMEOUT', 1000))
 
     def has_external_code(self, type_, id_):
         """
