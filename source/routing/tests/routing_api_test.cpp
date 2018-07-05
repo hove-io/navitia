@@ -3319,45 +3319,38 @@ namespace {
 
         return std::make_tuple(j1, j2);
     }
+
+    class Night_bus_fixture {
+    private:
+        ed::builder b;
+
+    public:
+        nr::NightBusFilter::Params filter_params;
+        nr::Journey j1, j2;
+        Night_bus_fixture():b("20120614") {
+            filter_params = get_default_filter_params();
+            std::tie(j1, j2) = build_night_bus_journeys(b);
+        }
+    };
 }
 
-BOOST_AUTO_TEST_CASE(night_bus_should_be_treated_as_way_later)
+BOOST_FIXTURE_TEST_CASE(night_bus_should_be_treated_as_way_later, Night_bus_fixture)
 {
-    ed::builder b("20120614");
-
-    nr::Journey j1, j2;
-    std::tie(j1, j2) = build_night_bus_journeys(b);
-
-    nr::NightBusFilter::Params filter_params = get_default_filter_params();
-
-    BOOST_CHECK_EQUAL(nr::way_later(j1, j2, filter_params), false);
-    BOOST_CHECK_EQUAL(nr::way_later(j2, j1, filter_params), true);
+    BOOST_CHECK_EQUAL(nr::is_way_later(j1, j2, filter_params), false);
+    BOOST_CHECK_EQUAL(nr::is_way_later(j2, j1, filter_params), true);
 }
 
-BOOST_AUTO_TEST_CASE(night_bus_should_treated_as_way_later_anti_clockwise)
+BOOST_FIXTURE_TEST_CASE(night_bus_should_treated_as_way_later_anti_clockwise, Night_bus_fixture)
 {
-    ed::builder b("20120614");
-
-    nr::Journey j1, j2;
-    std::tie(j1, j2) = build_night_bus_journeys(b);
-
-    nr::NightBusFilter::Params filter_params = get_default_filter_params();
     filter_params.requested_datetime = navitia::DateTimeUtils::set(0, "23:30"_t);
     filter_params.clockwise = false;
 
-    BOOST_CHECK_EQUAL(nr::way_later(j1, j2, filter_params), true);
-    BOOST_CHECK_EQUAL(nr::way_later(j2, j1, filter_params), false);
+    BOOST_CHECK_EQUAL(nr::is_way_later(j1, j2, filter_params), true);
+    BOOST_CHECK_EQUAL(nr::is_way_later(j2, j1, filter_params), false);
 }
 
-BOOST_AUTO_TEST_CASE(night_bus_filter_should_be_order_agnostic)
+BOOST_FIXTURE_TEST_CASE(night_bus_filter_should_be_order_agnostic, Night_bus_fixture)
 {
-    ed::builder b("20120614");
-
-    nr::Journey j1, j2;
-    std::tie(j1, j2) = build_night_bus_journeys(b);
-
-    nr::NightBusFilter::Params filter_params = get_default_filter_params();
-
     {
         nr::RAPTOR::Journeys journeys = {j1, j2};
         nr::filter_late_journeys(journeys, filter_params);
@@ -3378,11 +3371,12 @@ BOOST_AUTO_TEST_CASE(night_bus_filter_should_be_order_agnostic)
     }
 }
 
-BOOST_AUTO_TEST_CASE(should_filter_late_journeys_with_empty_list)
+BOOST_FIXTURE_TEST_CASE(should_filter_late_journeys_with_empty_list, Night_bus_fixture)
 {
     nr::RAPTOR::Journeys journeys;
+
     BOOST_CHECK_NO_THROW(
-        nr::filter_late_journeys(journeys, get_default_filter_params())
+        nr::filter_late_journeys(journeys, filter_params)
     );
 }
 

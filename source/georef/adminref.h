@@ -40,6 +40,7 @@ namespace navitia {
 
     namespace georef {
         typedef boost::geometry::model::polygon<navitia::type::GeographicalCoord> polygon_type;
+        typedef boost::geometry::model::multi_polygon<polygon_type> multi_polygon_type;
 
         struct Admin : nt::Header, nt::Nameable {
             const static type::Type_e type = type::Type_e::Admin;
@@ -62,7 +63,7 @@ namespace navitia {
             std::string comment;
 
             nt::GeographicalCoord coord;
-            polygon_type boundary;
+            multi_polygon_type boundary;
             std::vector<const Admin*> admin_list;
             std::vector<const nt::StopArea*> main_stop_areas;
 
