@@ -42,7 +42,7 @@ class Scenario(new_default.Scenario):
         super(Scenario, self).__init__()
 
     @staticmethod
-    def _compute_all(future_manager, request, instance, krakens_call, timeframe):
+    def _compute_all(future_manager, request, instance, krakens_call):
         """
         For all krakens_call, call the kraken and aggregate the responses
 
@@ -170,7 +170,7 @@ class Scenario(new_default.Scenario):
             fill_uris(r)
         return res
 
-    def call_kraken(self, request_type, request, instance, krakens_call, timeframe=None):
+    def call_kraken(self, request_type, request, instance, krakens_call):
         logger = logging.getLogger(__name__)
         logger.warning("using experimental scenario!!")
         """
@@ -183,7 +183,7 @@ class Scenario(new_default.Scenario):
         """
         try:
             with FutureManager() as future_manager:
-                res = self._compute_all(future_manager, request, instance, krakens_call, timeframe)
+                res = self._compute_all(future_manager, request, instance, krakens_call)
                 return res
         except PtException as e:
             return [e.get()]

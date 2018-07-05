@@ -113,12 +113,11 @@ struct JourneySectionCompare
 {
     bool operator()(
         const pbnavitia::Journey & j1,
-        const pbnavitia::Journey & j2)
+        const pbnavitia::Journey & j2) const
     {
         int idx = 1 ;
         if (j1.sections_size() == 1)
             idx = 0;
-        std::cout << " section size " << j1.sections_size() << std::endl;
 
         const auto & sec1_time = j1.sections(idx).begin_date_time() + j1.sections(idx).duration();
         const auto & sec2_time = j2.sections(idx).begin_date_time() + j2.sections(idx).duration();
