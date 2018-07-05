@@ -1626,17 +1626,18 @@ class JourneysTimeFrameDuration():
         # query = ('journeys?from={_from}&'
         #         'to={to}&'
         #         'datetime={datetime}&'
+        #         'clockwise={clockwise}&'
         #         'timeframe_duration={timeframe_duration}&').format( _from='stop_area:sa1',
         #                                                             to='stop_area:sa3',
-        #                                                             datetime="20180315T082000",
+        #                                                             datetime="20180315T083500",
         #                                                             clockwise=False,
         #                                                             timeframe_duration=1200)
         # response = self.query_region(query)
-        # print("response %s" %response)
-        # assert 1 == len(response['journeys'])
+        # assert 2 == len(response['journeys'])
 
-        # assert len(response['journeys'][0]['sections']) == 1
-        # assert response['journeys'][0]['sections'][0]['mode'] == 'public_transport'
+        # assert response['journeys'][0]['departure_date_time'] == u'20180315T084000'
+        # assert response['journeys'][1]['departure_date_time'] == u'20180315T082500'
+
 
     def test_timeframe_duration_with_minimum_value(self):
         """

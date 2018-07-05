@@ -113,13 +113,15 @@ struct JourneySectionCompare
 {
     bool operator()(
         const pbnavitia::Journey & j1,
-        const pbnavitia::Journey & j2) const
+        const pbnavitia::Journey & j2)
     {
-        const auto & section1 = j1.sections(1);
-        const auto & section2 = j2.sections(1);
+        int idx = 1 ;
+        if (j1.sections_size() == 1)
+            idx = 0;
+        std::cout << " section size " << j1.sections_size() << std::endl;
 
-        const auto & sec1_time = section1.begin_date_time() + section1.duration();
-        const auto & sec2_time = section2.begin_date_time() + section2.duration();
+        const auto & sec1_time = j1.sections(idx).begin_date_time() + j1.sections(idx).duration();
+        const auto & sec2_time = j2.sections(idx).begin_date_time() + j2.sections(idx).duration();
 
         return sec1_time < sec2_time;
     }
@@ -3482,59 +3484,59 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
     BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
 
-    // //-----------------------------------
-    // // Case 2 :
-    // // clockwise = true
-    // // min_nb_journeys = none
-    // // timeframe_end_datetime = 10*60 (10 min)
-    // // timeframe_max_datetime = 86400 (24H)
-    // //
-    // // We have a time frame duration = 10 min related to the first Journeys (08:00:00).
-    // // The response must contains 1 journeys
-    // uint32_t min_nb_journeys = 0;
-    // uint64_t timeframe_end_datetime = 10*60;   // 10 min
-    // uint64_t timeframe_max_datetime = 60*60*24; // 24H
-    // clockwise = true;
+    //-----------------------------------
+    // Case 2 :
+    // clockwise = true
+    // min_nb_journeys = none
+    // timeframe_end_datetime = 10*60 (10 min)
+    // timeframe_max_datetime = 86400 (24H)
+    //
+    // We have a time frame duration = 10 min related to the first Journeys (08:00:00).
+    // The response must contains 1 journeys
+    uint32_t min_nb_journeys = 0;
+    uint64_t timeframe_end_datetime = 10*60;   // 10 min
+    uint64_t timeframe_max_datetime = 60*60*24; // 24H
+    clockwise = true;
 
-    // // send request
-    // navitia::PbCreator pb_creator3(data_ptr, "20180309T080000"_dt, null_time_period);
-    // make_response(pb_creator3,
-    //               raptor,
-    //               origin,
-    //               destination,
-    //               {ntest::to_posix_timestamp("20180309T080000")},
-    //               clockwise,
-    //               navitia::type::AccessibiliteParams(),
-    //               forbidden,
-    //               {},
-    //               sn_worker,
-    //               nt::RTLevel::Base,
-    //               2_min,
-    //               8640,
-    //               10,
-    //               0,
-    //               0,
-    //               0,
-    //               boost::none,
-    //               1.5,
-    //               900,
-    //               timeframe_end_datetime,
-    //               timeframe_max_datetime);
+    // send request
+    navitia::PbCreator pb_creator3(data_ptr, "20180309T080000"_dt, null_time_period);
+    make_response(pb_creator3,
+                  raptor,
+                  origin,
+                  destination,
+                  {ntest::to_posix_timestamp("20180309T080000")},
+                  clockwise,
+                  navitia::type::AccessibiliteParams(),
+                  forbidden,
+                  {},
+                  sn_worker,
+                  nt::RTLevel::Base,
+                  2_min,
+                  8640,
+                  10,
+                  0,
+                  0,
+                  0,
+                  boost::none,
+                  1.5,
+                  900,
+                  timeframe_end_datetime,
+                  timeframe_max_datetime);
 
-    // // get the response
-    // resp = pb_creator3.get_response();
-    // BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    // BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+    // get the response
+    resp = pb_creator3.get_response();
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
 
-    // auto journeys = sort_journeys_by(resp, JourneySectionCompare());
+    auto journeys = sort_journeys_by(resp, JourneySectionCompare());
 
-    //  // Journey 1
-    // auto journey = journeys[0];
-    // BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
-    // auto section = journey.sections(0);
-    // BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
-    // BOOST_CHECK_EQUAL(section.begin_date_time(), "20180309T080000"_pts);
-    // BOOST_CHECK_EQUAL(section.end_date_time(), "20180309T080500"_pts);
+     // Journey 1
+    auto journey = journeys[0];
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
+    auto section = journey.sections(0);
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
+    BOOST_CHECK_EQUAL(section.begin_date_time(), "20180309T080000"_pts);
+    BOOST_CHECK_EQUAL(section.end_date_time(), "20180309T080500"_pts);
 
     //-----------------------------------
     // Case 3 :
@@ -3544,137 +3546,145 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     //
     // We have a time frame duration = 10 min related to the first Journeys (08:30:00).
     // The response must contains 1 journeys.
-    // min_nb_journeys = 0;
-    // timeframe_end_datetime = 10*60;    // 10 min
-    // timeframe_max_datetime = 60*60*24; // 24H
-    // clockwise = false;
+    min_nb_journeys = 0;
+    timeframe_end_datetime = 10*60*2;    // 10 min
+    timeframe_max_datetime = 60*60*24; // 24H
+    clockwise = false;
 
-    // // send request
-    // navitia::PbCreator pb_creator4(data_ptr, "20180309T080000"_dt, null_time_period);
-    // make_response(pb_creator4,
-    //               raptor,
-    //               origin,
-    //               destination,
-    //               {ntest::to_posix_timestamp("20180309T083000")},
-    //               clockwise,
-    //               navitia::type::AccessibiliteParams(),
-    //               forbidden,
-    //               {},
-    //               sn_worker,
-    //               nt::RTLevel::Base,
-    //               2_min,
-    //               8640,
-    //               10,
-    //               0,
-    //               0,
-    //               0,
-    //               min_nb_journeys,
-    //               1.5,
-    //               900,
-    //               timeframe_end_datetime,
-    //               timeframe_max_datetime);
+    // send request
+    navitia::PbCreator pb_creator4(data_ptr, "20180309T080000"_dt, null_time_period);
+    make_response(pb_creator4,
+                  raptor,
+                  origin,
+                  destination,
+                  {ntest::to_posix_timestamp("20180309T083500")},
+                  clockwise,
+                  navitia::type::AccessibiliteParams(),
+                  forbidden,
+                  {},
+                  sn_worker,
+                  nt::RTLevel::Base,
+                  2_min,
+                  8640,
+                  10,
+                  0,
+                  0,
+                  0,
+                  boost::none,
+                  1.5,
+                  900,
+                  timeframe_end_datetime,
+                  timeframe_max_datetime);
 
-    // // get the response
-    // resp = pb_creator4.get_response();
-    // BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    // BOOST_REQUIRE_EQUAL(resp.journeys_size(), 1);
+    // get the response
+    resp = pb_creator4.get_response();
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 2);
 
-    // journeys = sort_journeys_by(resp, JourneySectionCompare());
+    journeys = sort_journeys_by(resp, JourneySectionCompare());
 
-    //  // Journey 1
-    // journey = journeys[0];
-    // BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
-    // section = journey.sections(0);
-    // BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
-    // BOOST_CHECK_EQUAL(section.begin_date_time(), "20180309T083000"_pts);
-    // BOOST_CHECK_EQUAL(section.end_date_time(), "20180309T083500"_pts);
+    // Journey 1
+    journey = journeys[0];
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
+    section = journey.sections(0);
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
+    BOOST_CHECK_EQUAL(section.begin_date_time(), "20180309T082000"_pts);
+    BOOST_CHECK_EQUAL(section.end_date_time(), "20180309T082500"_pts);
 
-    // //-----------------------------------
-    // // Case 4 :
-    // // clockwise = false
-    // // timeframe_end_datetime = 10*60
-    // // timeframe_max_datetime = 86400 (24H)
-    // //
-    // // We have a time frame duration = 30 min related to the first Journeys (08:30:00) and
-    // // a min_nb_journeys = 20.
-    // // We don't have 20 journeys in 30 min, so we continue until 20 journeys (min_nb_journeys is the main criteria).
-    // // The response must contains 20 journeys.
-    // min_nb_journeys = 20;
-    // timeframe_end_datetime = 60*60*5;    // 30 min
-    // timeframe_max_datetime = 60*60*24; // 24H
-    // clockwise = true;
+    // Journey 1
+    journey = journeys[1];
+    BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
+    section = journey.sections(0);
+    BOOST_CHECK_EQUAL(section.type(), pbnavitia::SectionType::PUBLIC_TRANSPORT);
+    BOOST_CHECK_EQUAL(section.begin_date_time(), "20180309T083000"_pts);
+    BOOST_CHECK_EQUAL(section.end_date_time(), "20180309T083500"_pts);
 
-    // // send request
-    // navitia::PbCreator pb_creator5(data_ptr, "20180309T080000"_dt, null_time_period);
-    // make_response(pb_creator5,
-    //               raptor,
-    //               origin,
-    //               destination,
-    //               {ntest::to_posix_timestamp("20180309T080000")},
-    //               clockwise,
-    //               navitia::type::AccessibiliteParams(),
-    //               forbidden,
-    //               {},
-    //               sn_worker,
-    //               nt::RTLevel::Base,
-    //               2_min,
-    //               8640,
-    //               10,
-    //               0,
-    //               0,
-    //               0,
-    //               min_nb_journeys,
-    //               3,
-    //               6000,
-    //               "08:00:00"_t + timeframe_end_datetime,
-    //               "08:00:00"_t + timeframe_max_datetime);
+    //-----------------------------------
+    // Case 4 :
+    // clockwise = false
+    // timeframe_end_datetime = 10*60
+    // timeframe_max_datetime = 86400 (24H)
+    //
+    // We have a time frame duration = 30 min related to the first Journeys (08:30:00) and
+    // a min_nb_journeys = 20.
+    // We don't have 20 journeys in 30 min, so we continue until 20 journeys (min_nb_journeys is the main criteria).
+    // The response must contains 20 journeys.
+    min_nb_journeys = 20;
+    timeframe_end_datetime = 60*60*5;    // 30 min
+    timeframe_max_datetime = 60*60*24; // 24H
+    clockwise = true;
 
-    // // get the response
-    // resp = pb_creator5.get_response();
-    // BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    // BOOST_REQUIRE_EQUAL(resp.journeys_size(), 20);
+    // send request
+    navitia::PbCreator pb_creator5(data_ptr, "20180309T080000"_dt, null_time_period);
+    make_response(pb_creator5,
+                  raptor,
+                  origin,
+                  destination,
+                  {ntest::to_posix_timestamp("20180309T080000")},
+                  clockwise,
+                  navitia::type::AccessibiliteParams(),
+                  forbidden,
+                  {},
+                  sn_worker,
+                  nt::RTLevel::Base,
+                  2_min,
+                  60*60*24,
+                  10,
+                  0,
+                  0,
+                  0,
+                  min_nb_journeys,
+                  3,
+                  6000,
+                  timeframe_end_datetime,
+                  timeframe_max_datetime);
 
-    // //-----------------------------------
-    // // Case 5 :
-    // // clockwise = false
-    // // timeframe_end_datetime = 60*60*4 (4H)
-    // // timeframe_max_datetime = 60*60   (1H)
-    // //
-    // // the limit max is less than timeframe_end_datetime.
-    // // We compute until the limit
-    // // The response must contains only 6 journeys.
-    // min_nb_journeys = 0;
-    // timeframe_end_datetime = 60*60*4; // 4H
-    // timeframe_max_datetime = 60*60;   // 1H
-    // clockwise = true;
+    // get the response
+    resp = pb_creator5.get_response();
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 20);
 
-    // // send request
-    // navitia::PbCreator pb_creator6(data_ptr, "20180309T080000"_dt, null_time_period);
-    // make_response(pb_creator6,
-    //               raptor,
-    //               origin,
-    //               destination,
-    //               {ntest::to_posix_timestamp("20180309T080000")},
-    //               clockwise,
-    //               navitia::type::AccessibiliteParams(),
-    //               forbidden,
-    //               {},
-    //               sn_worker,
-    //               nt::RTLevel::Base,
-    //               2_min,
-    //               8640,
-    //               10,
-    //               0,
-    //               0,
-    //               0,
-    //               boost::none,
-    //               1.5,
-    //               900,
-    //               timeframe_end_datetime,
-    //               timeframe_max_datetime);
+    //-----------------------------------
+    // Case 5 :
+    // clockwise = false
+    // timeframe_end_datetime = 60*60*4 (4H)
+    // timeframe_max_datetime = 60*60   (1H)
+    //
+    // the limit max is less than timeframe_end_datetime.
+    // We compute until the limit
+    // The response must contains only 6 journeys.
+    min_nb_journeys = 0;
+    timeframe_end_datetime = 60*60*4; // 4H
+    timeframe_max_datetime = 60*60;   // 1H
+    clockwise = true;
 
-    // // get the response
-    // resp = pb_creator6.get_response();
-    // BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    // BOOST_REQUIRE_EQUAL(resp.journeys_size(), 6);
+    // send request
+    navitia::PbCreator pb_creator6(data_ptr, "20180309T080000"_dt, null_time_period);
+    make_response(pb_creator6,
+                  raptor,
+                  origin,
+                  destination,
+                  {ntest::to_posix_timestamp("20180309T080000")},
+                  clockwise,
+                  navitia::type::AccessibiliteParams(),
+                  forbidden,
+                  {},
+                  sn_worker,
+                  nt::RTLevel::Base,
+                  2_min,
+                  8640,
+                  10,
+                  0,
+                  0,
+                  0,
+                  boost::none,
+                  1.5,
+                  900,
+                  timeframe_end_datetime,
+                  timeframe_max_datetime);
+
+    // get the response
+    resp = pb_creator6.get_response();
+    BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
+    BOOST_REQUIRE_EQUAL(resp.journeys_size(), 6);
 }

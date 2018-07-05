@@ -84,10 +84,10 @@ static const uint max_nb_raptor_call = 100;
  *
  *
  */
-static bool keep_going(uint32_t total_nb_journeys,
-                       uint32_t nb_try,
-                       bool clockwise,
-                       DateTime request_date_secs,
+static bool keep_going(const uint32_t total_nb_journeys,
+                       const uint32_t nb_try,
+                       const bool clockwise,
+                       const DateTime request_date_secs,
                        const boost::optional<uint32_t>& min_nb_journeys,
                        const boost::optional<DateTime>& timeframe_end_datetime,
                        const boost::optional<DateTime>& timeframe_max_datetime) {
@@ -126,8 +126,7 @@ static void culling_excessive_journeys(const boost::optional<uint32_t>& min_nb_j
                                        const bool clockwise,
                                        JourneySet& journeys) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
- LOG4CPLUS_DEBUG(logger, "before culling excessive journey: " << journeys.size() << " solution(s) left");
-
+    LOG4CPLUS_DEBUG(logger, "after culling excessive journey: " << journeys.size() << " solution(s) left");
     if (timeframe_end_datetime && timeframe_max_datetime && journeys.size() > 0) {
 
         routing::JourneyCmp journey_cmp{clockwise};
@@ -214,7 +213,10 @@ call_raptor(navitia::PbCreator& pb_creator,
 
                 *timeframe_max_datetime += request_date_secs;
             } else {
-                *timeframe_max_datetime = request_date_secs - *timeframe_max_datetime;
+                if (request_date_secs > *timeframe_max_datetime)
+                    *timeframe_max_datetime = request_date_secs - *timeframe_max_datetime;
+                else
+                    *timeframe_max_datetime = 0;
             }
         }
 
