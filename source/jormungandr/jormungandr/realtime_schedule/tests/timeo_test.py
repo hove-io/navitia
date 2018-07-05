@@ -84,6 +84,15 @@ def make_url_count_and_dt_test():
     assert 'NextStopTimeNumber=2' in url
     assert 'NextStopReferenceTime=2016-02-07T12:00:00' in url
 
+    #same as before we only update the seconds of dt
+    url = timeo._make_url(MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu'),
+            count=2, from_dt=_timestamp("12:00:04"))
+    assert 'NextStopReferenceTime=2016-02-07T12:00:00' in url
+
+    url = timeo._make_url(MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu'),
+            count=2, from_dt=_timestamp("12:00:59"))
+    assert 'NextStopReferenceTime=2016-02-07T12:00:30' in url
+
 
 def make_url_invalid_code_test():
     """
