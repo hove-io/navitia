@@ -244,17 +244,18 @@ class TestLineSections(AbstractTestFixture):
         assert 'line_section_on_line_1' in disrupts
         assert impacted_ids(disrupts) == {'vj:1:1'}
 
-        r = journeys(_from='A', to='F')
-        assert get_used_vj(r) == [['vj:1:1']]
-        disrupts = get_all_element_disruptions(r['journeys'], r)
-        assert 'line_section_on_line_1' in disrupts
-        assert impacted_ids(disrupts) == {'vj:1:1'}
-
         r = journeys(_from='D', to='F')
         assert get_used_vj(r) == [['vj:1:1']]
         disrupts = get_all_element_disruptions(r['journeys'], r)
         assert 'line_section_on_line_1' in disrupts
         assert impacted_ids(disrupts) == {'vj:1:1'}
+
+        #this journey pass over the impacted section but do to stop on it
+        #as such it isn't impacted
+        r = journeys(_from='A', to='F')
+        assert get_used_vj(r) == [['vj:1:1']]
+        disrupts = get_all_element_disruptions(r['journeys'], r)
+        assert 'line_section_on_line_1' not in disrupts
 
     def test_journeys_use_vj_not_impacted_by_line_section(self):
         """

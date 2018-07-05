@@ -193,9 +193,10 @@ bool Impact::is_relevant(const std::vector<const StopTime*>& stop_times) const {
     if (line_section_impacted_obj_it != informed_entities().end()) {
         // note in this we take the premise that an impact
         // cannot impact a line section AND a vj
-        for (const auto& st: stop_times) {
-            // if one stop point of the stoptimes is impacted by the same impact
-            // it means the section is impacted
+
+        // if the origin or the destination is impacted by the same impact
+        // it means the section is impacted
+        for (const auto& st: {stop_times.front(), stop_times.back()}) {
             for (const auto& sp_message: st->stop_point->get_impacts()) {
                 if (sp_message.get() == this) {
                     return true;
