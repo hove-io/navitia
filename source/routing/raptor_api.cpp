@@ -52,7 +52,7 @@ namespace navitia { namespace routing {
 static const uint max_nb_raptor_call = 100;
 
 /**
- * @brief This function dertermine the break condition that depends on nb of found journeys,
+ * @brief This function determine the break condition that depends on nb of found journeys,
  * min_nb_journeys and time frame.
  *
  * @details
@@ -61,11 +61,11 @@ static const uint max_nb_raptor_call = 100;
  *   -----------------------------------
  *
  * timeframe_end_datetime (T + N): the end datetime of original request's timeframe
- * timeframe_max_datetime (T + 24H): the max datetime compared to the orignal datetime,
+ * max_duration (T + 24H): the max datetime compared to the orignal datetime,
  *                                   this param is used in case when T + N is reached but
  *                                   we still don't have enough journeys(total_nb_journeys<min_nb_journeys),
  *                                   we allow raptor to get out of the requested time frame (T + N) but still
- *                                   limit the search frame inside of 24H
+ *                                   limit the search frame inside bound
  *
  *                   min_nb_journeys is set?
  *                    /               \
@@ -140,7 +140,8 @@ static void culling_excessive_journeys(const boost::optional<uint32_t>& min_nb_j
             // Erase journey if
             // mim_nb_journeys is deactivated and journey exceed the time frame limit
             // or
-            // mim_nb_journeys exist and Nb journeys is greater than min_nb_journeys and journey exceed the time frame limit
+            // mim_nb_journeys exist and Nb journeys is greater than min_nb_journeys criteria 
+            // and journey exceed the time frame limit
             if ( (!min_nb_journeys && !is_inside(j, timeframe_end_datetime.get())) ||
                  (min_nb_journeys && (count >= min_nb_journeys.get()) && !is_inside(j, timeframe_end_datetime.get())) )
             {
@@ -150,16 +151,16 @@ static void culling_excessive_journeys(const boost::optional<uint32_t>& min_nb_j
                 ++count;
             }
         });
-        LOG4CPLUS_DEBUG(logger, "after culling excessive journey: " << journeys.size() << " solution(s) left");
+        LOG4CPLUS_DEBUG(logger, "after culling excessive journeys: " << journeys.size() << " solution(s) left");
     }
 }
 
 /**
- * @brief Update timeframe_end_datetime and timeframe_max_datetime in raptor referential
+ * @brief Update timeframe_end_datetime in raptor referential
  */
 static void update_timeframe_parameters(const uint32_t request_date_secs,
-                                    const bool clockwise,
-                                    boost::optional<uint32_t>& timeframe_end_datetime)
+                                        const bool clockwise,
+                                        boost::optional<uint32_t>& timeframe_end_datetime)
 {
     if (timeframe_end_datetime) {
         if (clockwise) {
