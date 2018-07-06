@@ -707,7 +707,7 @@ def type_journeys(resp, req):
         best.type = "best"
 
 
-def merge_responses(responses):
+def merge_responses(responses, debug):
     """
     Merge all responses in one protobuf response
     """
@@ -731,7 +731,14 @@ def merge_responses(responses):
         initial_feed_publishers = {}
         for fp in merged_response.feed_publishers:
             initial_feed_publishers[fp.id] = fp
-        merged_response.feed_publishers.extend((fp for fp in r.feed_publishers if fp.id not in initial_feed_publishers))
+
+        # Add feed publishers from the qualified journeys only
+        # Note : For BSS, it can happen that one journey in the response has returned a walking fallback.
+        # If all other journeys in the response are to delete, the feed publisher will still be added
+        # TODO: link feed publisher to a journey instead of a response with several journeys
+        merged_response.feed_publishers.extend(fp for fp in r.feed_publishers
+                                               if fp.id not in initial_feed_publishers
+                                               and (debug or all('to_delete' not in j.tags for j in r.journeys)))
 
         # handle impacts
         for i in r.impacts:
@@ -874,8 +881,8 @@ class Scenario(simple.Scenario):
             # hopefully, it may lead to some early return for the second step to improve the perf a little
             # In the second step, we compare the journeys from the new response with those that have been qualified
             # already in the former iterations
-            # note that the journeys_pool is a list of 2-element tuple of journeys
-            journeys_pool = itertools.chain(
+            # note that the journey_pairs_pool is a list of 2-element tuple of journeys
+            journey_pairs_pool = itertools.chain(
                 # First step: compare journeys from the new response only
                 itertools.combinations(tmp1, 2),
                 # Second step:
@@ -888,7 +895,7 @@ class Scenario(simple.Scenario):
                 itertools.product(tmp2, qualified_journeys),
             )
 
-            journey_filter.filter_similar_vj_journeys(journeys_pool, api_request)
+            journey_filter.filter_similar_vj_journeys(journey_pairs_pool, api_request)
 
             responses.extend(new_resp)  # we keep the error for building the response
 
@@ -904,14 +911,11 @@ class Scenario(simple.Scenario):
 
             if nb_qualified_journeys == 0:
                 min_journeys_calls = max(min_journeys_calls, 2)
-                
+
         logger.debug('nb of call kraken: %i', nb_try)
 
-        if api_request['no_shared_section']:
-            journey_filter.filter_shared_sections_journeys(journey_filter.get_qualified_journeys(responses), api_request)
-
-        journey_filter.final_filter_journeys(responses, instance, api_request)
-        pb_resp = merge_responses(responses)
+        journey_filter.apply_final_journey_filters(responses, instance, api_request)
+        pb_resp = merge_responses(responses, api_request['debug'])
 
         sort_journeys(pb_resp, instance.journey_order, api_request['clockwise'])
         compute_car_co2_emission(pb_resp, api_request, instance)
@@ -992,7 +996,7 @@ class Scenario(simple.Scenario):
         updated_request_with_default(request, instance)
         #we don't want to filter anything!
         krakens_call = get_kraken_calls(request)
-        resp = merge_responses(self.call_kraken(type_pb2.ISOCHRONE, request, instance, krakens_call))
+        resp = merge_responses(self.call_kraken(type_pb2.ISOCHRONE, request, instance, krakens_call), request['debug'])
         if not request['debug']:
             # on isochrone we can filter the number of max journeys
             if request["max_nb_journeys"] and len(resp.journeys) > request["max_nb_journeys"]:

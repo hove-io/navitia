@@ -554,6 +554,10 @@ class JourneyCommon(object):
         assert section['from']['id'] == 'stop_point:stopB'
         assert section['to']['id'] == 'stopB'
 
+        # verify distances and durations in a journey with crow_fly
+        assert jrnys[0]['durations']['walking'] == 0
+        assert jrnys[0]['distances']['walking'] == 0
+
     def test_max_duration_equals_to_0(self):
         query = journey_basic_query + \
             "&first_section_mode[]=bss" + \
@@ -832,6 +836,9 @@ class JourneyCommon(object):
         r = self.query('/v1/coverage/main_routing_test/journeys?from=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&to=stopA&datetime=20120614080000')
         assert(r['journeys'][0]['sections'][0]['type'] == 'street_network')
         assert(r['journeys'][0]['sections'][0]['duration'] != 0)
+        # Verify distances and durations in a journey with street_network
+        assert(r['journeys'][0]['durations']['walking'] != 0)
+        assert(r['journeys'][0]['distances']['walking'] != 0)
 
         # Query journeys with free_radius = 19
         r = self.query('/v1/coverage/main_routing_test/journeys?from=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&to=stopA&datetime=20120614080000&free_radius_from=19')
@@ -842,6 +849,9 @@ class JourneyCommon(object):
         r = self.query('/v1/coverage/main_routing_test/journeys?from=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&to=stopA&datetime=20120614080000&free_radius_from=20')
         assert(r['journeys'][0]['sections'][0]['type'] == 'crow_fly')
         assert(r['journeys'][0]['sections'][0]['duration'] == 0)
+        # Verify distances and durations in a journey with crow_fly
+        assert(r['journeys'][0]['distances']['walking'] == 0)
+        assert(r['journeys'][0]['durations']['walking'] == 0)
 
         # The time of departure of PT is 08:01:00 and it takes 17s to walk to the station
         # If the requested departure time is 08:00:50, the PT journey shouldn't be displayed
@@ -861,6 +871,9 @@ class JourneyCommon(object):
         r = self.query('/v1/coverage/main_routing_test/journeys?from=stopA&to=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&datetime=20120614080000&')
         assert(r['journeys'][0]['sections'][-1]['type'] == 'street_network')
         assert(r['journeys'][0]['sections'][-1]['duration'] != 0)
+        # Verify distances and durations in a journey with street_network
+        assert(r['journeys'][0]['durations']['walking'] != 0)
+        assert(r['journeys'][0]['distances']['walking'] != 0)
 
         # Query journeys with free_radius = 19
         r = self.query('/v1/coverage/main_routing_test/journeys?from=stopA&to=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&datetime=20120614080000&free_radius_from=19')
@@ -871,6 +884,9 @@ class JourneyCommon(object):
         r = self.query('/v1/coverage/main_routing_test/journeys?from=stopA&to=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&datetime=20120614080000&free_radius_to=20&')
         assert(r['journeys'][0]['sections'][-1]['type'] == 'crow_fly')
         assert(r['journeys'][0]['sections'][-1]['duration'] == 0)
+        # Verify distances and durations in a journey with crow_fly
+        assert(r['journeys'][0]['durations']['walking'] == 0)
+        assert(r['journeys'][0]['distances']['walking'] == 0)
 
         # The estimated time of arrival without free_radius is 08:01:19
         # If the requested arrival time is before 08:01:19, the PT journey shouldn't be displayed
@@ -1484,7 +1500,7 @@ class JourneysMinNbJourneys():
 
     def test_min_nb_journeys_options(self):
         """
-        The data contains only 5 journeys, so the response return at least 3 journeys.
+        The data contains only 6 journeys, so the response return at least 3 journeys.
 
         Note : The night bus filter is loaded with default parameters.
         With this data, night bus filter parameters doesn't filter anything.
@@ -1496,16 +1512,16 @@ class JourneysMinNbJourneys():
 
     def test_maximum_journeys_with_min_nb_journeys_options(self):
         """
-        The data contains only 5 journeys but we want 6 journeys.
-        The response has to contain only 5 journeys.
+        The data contains only 6 journeys but we want 7 journeys.
+        The response has to contain only 6 journeys.
 
         Note : The night bus filter is loaded with default parameters.
         With this data, night bus filter parameters doesn't filter anything.
         """
-        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=6"
+        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=7"
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
-        assert len(response['journeys']) == 5
+        assert len(response['journeys']) == 6
 
 
 @dataset({"min_nb_journeys_test": {}})
@@ -1513,18 +1529,18 @@ class JourneysWithNightBusFilter():
 
     def classical_night_bus_filter_parameters(self):
         """
-        The data contains 5 journeys with min_nb_journeys = 5.
+        The data contains 6 journeys with min_nb_journeys = 5.
         We active the min_nb_journeys option and change night bus filter parameters
         (ax + b with a = 1.2, b = 0) to filter the 2 latest journeys.
         """
         query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=5&_night_bus_filter_base_factor=0&_night_bus_filter_max_factor=1.2"
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
-        assert len(response['journeys']) == 3
+        assert len(response['journeys']) == 5
 
     def test_night_bus_filter_parameters_with_minimum_values_1(self):
         """
-        The data contains 2 journeys.
+        Raptor computes 2 journeys.
         parameters :
         _night_bus_filter_base_factor = 0
         _night_bus_filter_max_factor = 0
@@ -1535,14 +1551,14 @@ class JourneysWithNightBusFilter():
         We shouldn't have this configuration of filter, but rather ax + b with a = 1, b = 0
         to have a filter with no effect.
         """
-        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&_night_bus_filter_base_factor=0&_night_bus_filter_max_factor=0"
+        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080400&_night_bus_filter_base_factor=0&_night_bus_filter_max_factor=0"
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) == 1
 
     def test_night_bus_filter_parameters_with_minimum_values_2(self):
         """
-        The data contains 2 journeys without min_nb_journeys parameters.
+        Raptor computes 2 journeys without min_nb_journeys parameters.
         parameters :
         _night_bus_filter_base_factor = 0
         _night_bus_filter_max_factor = 1
@@ -1552,14 +1568,14 @@ class JourneysWithNightBusFilter():
         The filter is active but we compare directly the 2 journeys
         It's the tightest configuration
         """
-        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&_night_bus_filter_base_factor=0&_night_bus_filter_max_factor=1"
+        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080400&_night_bus_filter_base_factor=0&_night_bus_filter_max_factor=1"
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) == 1
 
     def test_night_bus_filter_parameters_with_maximum_values_3(self):
         """
-        The data contains 2 journeys.
+        Raptor computes 2 journeys.
         parameters :
         _night_bus_filter_base_factor = 86040 (~ infinite)
         _night_bus_filter_max_factor = 1000 (~ infinite)
@@ -1569,7 +1585,7 @@ class JourneysWithNightBusFilter():
         Filter parameters are infinite, so the response contains all journey (This is not filtered)
         It's the widest configuration
         """
-        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&_night_bus_filter_base_factor=86040&_night_bus_filter_max_factor=1000"
+        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080400&_night_bus_filter_base_factor=86040&_night_bus_filter_max_factor=1000"
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) == 2

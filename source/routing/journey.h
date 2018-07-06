@@ -32,6 +32,7 @@ www.navitia.io
 
 #include "type/time_duration.h"
 #include "type/datetime.h"
+#include "utils/exception.h"
 #include <unordered_set>
 
 namespace navitia {
@@ -62,6 +63,7 @@ struct Journey {
     bool better_on_transfer(const Journey& that, bool) const;
     bool better_on_sn(const Journey& that, bool) const;
     bool operator==(const Journey & rhs) const;
+    bool operator!=(const Journey & rhs) const;
     friend std::ostream& operator<<(std::ostream& os, const Journey& j);
 
     std::vector<Section> sections;// the pt sections, with transfer between them
@@ -82,6 +84,36 @@ struct SectionHash {
 };
 
 typedef std::unordered_set<Journey, JourneyHash> JourneySet;
+
+/**
+ * @brief Get the best journey
+ *
+ * Find the earliest departure (clockwise case) or the lastest arrival (anti clockwise case)
+ *
+ * @param journeys A container of journeys
+ * @param clokwise Active clockwise or not
+ * @return best jouney
+ */
+template<class Journeys>
+const Journey& get_best_journey(const Journeys & journeys, bool clockwise)
+{
+    if(journeys.size() == 0)
+        throw recoverable_exception("get_best_journey takes a list of at least 1 journey");
+
+    auto earliest_journey = [](const Journey& j1, const Journey& j2) {
+        return j1.departure_dt < j2.departure_dt;
+    };
+
+    auto latest_journey = [](const Journey& j1, const Journey& j2) {
+        return j1.arrival_dt < j2.arrival_dt;
+    };
+
+    const auto best = clockwise ?
+        std::min_element(journeys.cbegin(), journeys.cend(), earliest_journey):
+        std::max_element(journeys.cbegin(), journeys.cend(), latest_journey);
+
+    return *best;
+}
 
 } // namespace routing
 } // namespace navitia

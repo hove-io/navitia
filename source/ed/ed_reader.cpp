@@ -132,7 +132,7 @@ void EdReader::fill(navitia::type::Data& data, const double min_non_connected_gr
 
 void EdReader::fill_admins(navitia::type::Data& nav_data, pqxx::work& work){
     std::string request = "SELECT id, name, uri, comment, insee, level, ST_X(coord::geometry) as lon, "
-        "ST_Y(coord::geometry) as lat "
+        "ST_Y(coord::geometry) as lat, ST_asText(boundary) as boundary "
         "FROM georef.admin";
 
     pqxx::result result = work.exec(request);
@@ -145,6 +145,10 @@ void EdReader::fill_admins(navitia::type::Data& nav_data, pqxx::work& work){
         const_it["level"].to(admin->level);
         admin->coord.set_lon(const_it["lon"].as<double>());
         admin->coord.set_lat(const_it["lat"].as<double>());
+
+        if(!const_it["boundary"].is_null()){
+            boost::geometry::read_wkt(const_it["boundary"].as<std::string>(), admin->boundary);
+        }
 
         admin->idx = nav_data.geo_ref->admins.size();
 

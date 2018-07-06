@@ -1,3 +1,21 @@
+navitia2 (2.58.0) unstable; urgency=low
+
+  * Kraken: Line_section doesn't disrupt journey not stopping on the section  <https://github.com/CanalTP/navitia/pull/2455>
+  * Kraken: Fix get_best_journey when datetime represents arrival  <https://github.com/CanalTP/navitia/pull/2461>
+  * Jormungandr: Condition for feed publishers  <https://github.com/CanalTP/navitia/pull/2454>
+  * Doc: Add RFC on distributed  <https://github.com/CanalTP/navitia/pull/2433>
+  * Jormungandr: update default night bus filter parameters with more realistic values  <https://github.com/CanalTP/navitia/pull/2452>
+  * Kraken: Night bus filter linearisation  <https://github.com/CanalTP/navitia/pull/2444>
+  * Ed: Match stop_area and poi by using admin boundary if possible  <https://github.com/CanalTP/navitia/pull/2449>
+  * Doc: Add info about crow fly distance and duration  <https://github.com/CanalTP/navitia/pull/2450>
+  * Jormungandr: Filter optim  <https://github.com/CanalTP/navitia/pull/2438>
+  * Jormungandr: Secure geovelo integration  <https://github.com/CanalTP/navitia/pull/2453>
+  * Jormungandr: Fallback period extremity  <https://github.com/CanalTP/navitia/pull/2451>
+  * Jormungandr: Synchronize fallback section objects with pt section  <https://github.com/CanalTP/navitia/pull/2434>
+  * Jormungandr: Distance per mode in a journey with CROW_FLY section  <https://github.com/CanalTP/navitia/pull/2437>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Fri, 06 Jul 2018 14:07:49 +0100
+
 navitia2 (2.57.0) unstable; urgency=low
 
   * Kraken: Add ptref shortcut between physical_mode and jpps  <https://github.com/CanalTP/navitia/pull/2417>

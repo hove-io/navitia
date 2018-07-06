@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -249,16 +249,33 @@ VJ& VJ::st_shape(const navitia::type::LineString& shape) {
     return *this;
 }
 
-VJ& VJ::operator()(const std::string &stopPoint,const std::string& arrivee,
-                   const std::string& depart, uint16_t local_traffic_zone, bool drop_off_allowed,
-                   bool pick_up_allowed, int alighting_duration, int boarding_duration){
-    return (*this)(stopPoint, pt::duration_from_string(arrivee).total_seconds(),
-            pt::duration_from_string(depart).total_seconds(), local_traffic_zone,
+VJ& VJ::operator()(const std::string &stopPoint,
+                   const std::string& arrival,
+                   const std::string& departure,
+                   uint16_t local_traffic_zone,
+                   bool drop_off_allowed,
+                   bool pick_up_allowed,
+                   int alighting_duration,
+                   int boarding_duration)
+{
+    auto _departure = departure;
+    if(_departure.empty())
+        _departure = arrival;
+
+    return (*this)(stopPoint, pt::duration_from_string(arrival).total_seconds(),
+            pt::duration_from_string(_departure).total_seconds(), local_traffic_zone,
             drop_off_allowed, pick_up_allowed, alighting_duration, boarding_duration);
 }
 
-VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16_t local_trafic_zone,
-                    bool drop_off_allowed, bool pick_up_allowed, int alighting_duration, int boarding_duration){
+VJ & VJ::operator()(const std::string & sp_name,
+                    int arrival,
+                    int departure,
+                    uint16_t local_trafic_zone,
+                    bool drop_off_allowed,
+                    bool pick_up_allowed,
+                    int alighting_duration,
+                    int boarding_duration)
+{
     auto it = b.sps.find(sp_name);
     navitia::type::StopPoint* sp = nullptr;
     if(it == b.sps.end()){
@@ -305,11 +322,11 @@ VJ & VJ::operator()(const std::string & sp_name, int arrivee, int depart, uint16
     stop_time.set_pick_up_allowed(pick_up_allowed);
 
     ST st(stop_time);
-    if(depart == -1) depart = arrivee;
-    st.arrival_time = arrivee;
-    st.departure_time = depart;
-    st.alighting_time = arrivee + alighting_duration;
-    st.boarding_time = depart - boarding_duration;
+    if(departure == -1) departure = arrival;
+    st.arrival_time = arrival;
+    st.departure_time = departure;
+    st.alighting_time = arrival + alighting_duration;
+    st.boarding_time = departure - boarding_duration;
 
     stop_times.push_back(st);
     return *this;

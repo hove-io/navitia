@@ -44,6 +44,57 @@ from datetime import datetime
 class Siri(RealtimeProxy):
     """
     Class managing calls to siri external service providing real-time next passages
+
+
+    curl example to check/test that external service is working:
+    curl -X POST '{server}' -d '<x:Envelope 
+    xmlns:x="http://schemas.xmlsoap.org/soap/envelope/" xmlns:wsd="http://wsdl.siri.org.uk" xmlns:siri="http://www.siri.org.uk/siri">
+        <x:Header/>
+        <x:Body>
+            <GetStopMonitoring xmlns="http://wsdl.siri.org.uk" xmlns:siri="http://www.siri.org.uk/siri">
+                <ServiceRequestInfo xmlns="">
+                    <siri:RequestTimestamp>{datetime}</siri:RequestTimestamp>
+                    <siri:RequestorRef>{requestor_ref}</siri:RequestorRef>
+                    <siri:MessageIdentifier>IDontCare</siri:MessageIdentifier>
+                </ServiceRequestInfo>
+                <Request version="1.3" xmlns="">
+                    <siri:RequestTimestamp>{datetime}</siri:RequestTimestamp>
+                    <siri:MessageIdentifier>IDontCare</siri:MessageIdentifier>
+                    <siri:MonitoringRef>{stop_code}</siri:MonitoringRef>
+                    <siri:MaximumStopVisits>{nb_desired}</siri:MaximumStopVisits>
+                </Request>
+                <RequestExtension xmlns=""/>
+            </GetStopMonitoring>
+        </x:Body>
+    </x:Envelope>'
+
+    Then Navitia matches route-points in the response using {stop_code}, {route_code} and {line_code}.
+
+    {datetime} is iso-formated: YYYY-mm-ddTHH:MM:ss.sss+HH:MM
+    {stop_code}, {route_code} and {line_code} are provided using the same code key, named after
+    the 'destination_id_tag' if provided on connector's init, or the 'id' otherwise.
+
+    In practice it will look like:
+    curl -X POST 'http://bobito.fr:8080/ProfilSiriKidfProducer-Bobito/SiriServices' -d '<x:Envelope 
+    xmlns:x="http://schemas.xmlsoap.org/soap/envelope/" xmlns:wsd="http://wsdl.siri.org.uk" xmlns:siri="http://www.siri.org.uk/siri">
+        <x:Header/>
+        <x:Body>
+            <GetStopMonitoring xmlns="http://wsdl.siri.org.uk" xmlns:siri="http://www.siri.org.uk/siri">
+                <ServiceRequestInfo xmlns="">
+                    <siri:RequestTimestamp>2018-06-11T17:21:49.703+02:00</siri:RequestTimestamp>
+                    <siri:RequestorRef>BobitoJVM</siri:RequestorRef>
+                    <siri:MessageIdentifier>IDontCare</siri:MessageIdentifier>
+                </ServiceRequestInfo>
+                <Request version="1.3" xmlns="">
+                    <siri:RequestTimestamp>2018-06-11T17:21:49.703+02:00</siri:RequestTimestamp>
+                    <siri:MessageIdentifier>IDontCare</siri:MessageIdentifier>
+                    <siri:MonitoringRef>Bobito:StopPoint:BOB:00021201:ITO</siri:MonitoringRef>
+                    <siri:MaximumStopVisits>5</siri:MaximumStopVisits>
+                </Request>
+                <RequestExtension xmlns=""/>
+            </GetStopMonitoring>
+        </x:Body>
+    </x:Envelope>'
     """
 
     def __init__(self, id, service_url, requestor_ref,

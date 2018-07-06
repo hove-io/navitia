@@ -38,7 +38,6 @@ www.navitia.io
 #include "isochrone.h"
 #include "heat_map.h"
 #include "utils/map_find.h"
-#include "utils/pairs_generator.h"
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/range/algorithm/count.hpp>
@@ -55,7 +54,7 @@ static const uint max_nb_raptor_call = 100;
 /**
  * @brief internal function to call raptor in a loop
  */
-std::vector<Path>
+static std::vector<Path>
 call_raptor(navitia::PbCreator& pb_creator,
             RAPTOR& raptor,
             const map_stop_point_duration& departures,
@@ -79,7 +78,9 @@ call_raptor(navitia::PbCreator& pb_creator,
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     std::vector<Path> pathes;
 
-    // For each date time
+    // We loop on datetimes, but in practice there's always only one
+    // (It's a deprecated feature to provide multiple datetimes).
+    // TODO: remove the vector (and adapt protobuf of request).
     DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
     for(const auto & datetime : datetimes) {
 
@@ -1254,7 +1255,7 @@ void filter_direct_path(RAPTOR::Journeys& journeys)
     |------------------------------------------------------|
             journey1 pseudo duration
  */
-bool way_later(const Journey & j1, const Journey & j2,
+bool is_way_later(const Journey & j1, const Journey & j2,
                const NightBusFilter::Params & params)
 {
     auto & requested_dt = params.requested_datetime;
@@ -1262,7 +1263,7 @@ bool way_later(const Journey & j1, const Journey & j2,
 
     auto get_pseudo_duration = [&](const Journey & j) {
         auto dt = clockwise ? j.arrival_dt : j.departure_dt;
-        return std::abs((double)dt - requested_dt);
+        return std::abs(double(dt) - double(requested_dt));
     };
 
     auto j1_pseudo_duration = get_pseudo_duration(j1);
@@ -1279,15 +1280,17 @@ void filter_late_journeys(RAPTOR::Journeys & journeys,
     if(journeys.size() == 0)
         return;
 
-    auto is_way_later = [&params](const Journey & j1, const Journey & j2){
-        return way_later(j1, j2, params);
-    };
+    const auto & best = get_best_journey(journeys, params.clockwise);
 
-    std::vector<RAPTOR::Journeys::iterator> late_journeys =
-        utils::pairs_generator_unique_iterators(journeys, is_way_later);
+    auto it = journeys.begin();
+    while(it != journeys.end()) {
+        const auto & journey = *it;
+        if(best != journey && is_way_later(journey, best, params)) {
+            it = journeys.erase(it);
+            continue;
+        }
 
-    for(auto& late_journey : late_journeys) {
-        journeys.erase(late_journey);
+        ++it;
     }
 }
 

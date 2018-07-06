@@ -73,6 +73,7 @@ add_subdirectory(tests)
 add_subdirectory(scripts)
 add_subdirectory(cities)
 add_library(linenoise linenoise/linenoise.c)
+add_subdirectory(tools)
 
 include(CheckIncludeFiles)
 include(CheckIncludeFileCXX)
