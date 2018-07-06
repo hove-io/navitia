@@ -764,10 +764,7 @@ void Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API 
                                         request.night_bus_filter_max_factor(),
                                         request.night_bus_filter_base_factor(),
                                         request.has_timeframe_end_datetime() ?
-                                            boost::make_optional<uint32_t>(request.timeframe_end_datetime()) : boost::none,
-                                        request.has_timeframe_max_datetime() ?
-                                            boost::make_optional<uint32_t>(request.timeframe_max_datetime()) : boost::none);
-
+                                            boost::make_optional<uint32_t>(request.timeframe_end_datetime()) : boost::none);
             break;
         default:
             routing::make_response( this->pb_creator,
@@ -792,9 +789,7 @@ void Worker::journeys(const pbnavitia::JourneysRequest &request, pbnavitia::API 
                                     request.night_bus_filter_max_factor(),
                                     request.night_bus_filter_base_factor(),
                                     request.has_timeframe_end_datetime() ?
-                                        boost::make_optional<uint32_t>(request.timeframe_end_datetime()) : boost::none,
-                                    request.has_timeframe_max_datetime() ?
-                                        boost::make_optional<uint32_t>(request.timeframe_max_datetime()) : boost::none);
+                                        boost::make_optional<uint32_t>(request.timeframe_end_datetime()) : boost::none);
         }
     }catch(const navitia::coord_conversion_exception& e) {
         this->pb_creator.fill_pb_error(pbnavitia::Error::bad_format, e.what());

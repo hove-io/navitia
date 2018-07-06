@@ -182,7 +182,6 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
 
     if request['timeframe_duration']:
         req.journeys.timeframe_end_datetime = int(request['timeframe_duration'])
-        req.journeys.timeframe_max_datetime = int(60*60*24)
 
     return req
 

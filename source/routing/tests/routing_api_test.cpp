@@ -3488,7 +3488,6 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     // The response must contains 1 journeys
     uint32_t min_nb_journeys = 0;
     uint64_t timeframe_end_datetime = 10*60;   // 10 min
-    uint64_t timeframe_max_datetime = 60*60*24; // 24H
     clockwise = true;
 
     // send request
@@ -3505,7 +3504,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
                   sn_worker,
                   nt::RTLevel::Base,
                   2_min,
-                  8640,
+                  60*60*24,
                   10,
                   0,
                   0,
@@ -3513,8 +3512,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
                   boost::none,
                   1.5,
                   900,
-                  timeframe_end_datetime,
-                  timeframe_max_datetime);
+                  timeframe_end_datetime);
 
     // get the response
     resp = pb_creator3.get_response();
@@ -3541,7 +3539,6 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     // The response must contains 1 journeys.
     min_nb_journeys = 0;
     timeframe_end_datetime = 10*60*2;    // 10 min
-    timeframe_max_datetime = 60*60*24; // 24H
     clockwise = false;
 
     // send request
@@ -3558,7 +3555,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
                   sn_worker,
                   nt::RTLevel::Base,
                   2_min,
-                  8640,
+                  60*60*24,
                   10,
                   0,
                   0,
@@ -3566,8 +3563,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
                   boost::none,
                   1.5,
                   900,
-                  timeframe_end_datetime,
-                  timeframe_max_datetime);
+                  timeframe_end_datetime);
 
     // get the response
     resp = pb_creator4.get_response();
@@ -3604,7 +3600,6 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     // The response must contains 20 journeys.
     min_nb_journeys = 20;
     timeframe_end_datetime = 60*60*1;  // 1H
-    timeframe_max_datetime = 60*60*24; // 24H
     clockwise = true;
 
     // send request
@@ -3629,8 +3624,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
                   min_nb_journeys,
                   3,
                   6000,
-                  timeframe_end_datetime,
-                  timeframe_max_datetime);
+                  timeframe_end_datetime);
 
     // get the response
     resp = pb_creator5.get_response();
@@ -3648,7 +3642,6 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     // The response must contains only 6 journeys.
     min_nb_journeys = 0;
     timeframe_end_datetime = 60*60*4; // 4H
-    timeframe_max_datetime = 60*60;   // 1H
     clockwise = true;
 
     // send request
@@ -3665,7 +3658,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
                   sn_worker,
                   nt::RTLevel::Base,
                   2_min,
-                  8640,
+                  60*60,
                   10,
                   0,
                   0,
@@ -3673,8 +3666,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
                   boost::none,
                   1.5,
                   900,
-                  timeframe_end_datetime,
-                  timeframe_max_datetime);
+                  timeframe_end_datetime);
 
     // get the response
     resp = pb_creator6.get_response();

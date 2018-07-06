@@ -98,6 +98,5 @@ class Kraken(object):
 
         if journey_parameters.timeframe:
            req.journeys.timeframe_end_datetime = int(journey_parameters.timeframe)
-           req.journeys.timeframe_max_datetime = int(60*60*24)
 
         return self.instance.send_and_receive(req)

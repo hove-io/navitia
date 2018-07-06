@@ -121,6 +121,5 @@ const Journey& get_best_journey(const Journeys & journeys, bool clockwise)
     return *best;
 }
 
-
 } // namespace routing
 } // namespace navitia
