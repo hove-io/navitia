@@ -805,8 +805,8 @@ class Scenario(simple.Scenario):
         logger = logging.getLogger(__name__)
 
         # early return
-        if api_request['timeframe_duration'] == api_request['min_nb_journeys'] == 0:
-            # create an empty response with warning ?
+        if (api_request['timeframe_duration'] == 0):
+            logger.debug("timeframe_duration option have to be greater than 0)")
             return response_pb2.Response()
 
         # sometimes we need to change the entrypoint id (eg if the id is from another autocomplete system)

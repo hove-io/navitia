@@ -503,7 +503,7 @@ class Journeys(JourneyCommon):
                                 help="Shared section journeys aren't returned as a separate journey")
         parser_get.add_argument("timeframe_duration", type=int,
                                 dest="timeframe_duration",
-                                help="timeframe_duration") # more explanation!!!
+                                help="time frame limit to search journeys")
 
         self.get_decorators.append(complete_links(self))
 

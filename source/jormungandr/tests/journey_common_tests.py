@@ -1486,6 +1486,18 @@ class JourneysMinNbJourneys():
     Test min_nb_journeys and late journey filter
     """
 
+    def test_min_nb_journeys_options_with_minmum_value(self):
+        """
+        By default, the raptor computes 2 journeys, so the response returns at least 2 journeys.
+
+        Note : The night bus filter is loaded with default parameters.
+        With this data, night bus filter parameters doesn't filter anything.
+        """
+        query = "journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=0"
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+        assert len(response['journeys']) >= 2
+
     def test_minimum_journeys_with_min_nb_journeys_options(self):
         """
         By default, the raptor computes 2 journeys, so the response returns at least 2 journeys.
@@ -1596,7 +1608,7 @@ class JourneysTimeFrameDuration():
 
     def test_timeframe_duration_simple_case(self):
         """
-        The data contains 20 journeys (each 10 min) + 1 journeys 24H after the first.
+        The data contains 20 journeys (every 10 min) + 1 journey 24H after the first.
         The first journeys is 20180315T080000.
         """
 
@@ -1641,7 +1653,7 @@ class JourneysTimeFrameDuration():
 
     def test_timeframe_duration_with_minimum_value(self):
         """
-        The data contains 20 journeys (each 10 min) + 1 journeys 24H after the first.
+        The data contains 20 journeys (every 10 min) + 1 journey 24H after the first.
         The first journeys is 20180315T080000.
 
         If timeframe_duration is set to 0, the response have to return 0 journeys.
@@ -1657,9 +1669,29 @@ class JourneysTimeFrameDuration():
         assert 'journeys' not in response
         assert 'no_solution' == response['error']['id']
 
+    def test_timeframe_duration_and_min_nb_journeys_with_minimum_value(self):
+        """
+        The data contains 20 journeys (every 10 min) + 1 journey 24H after the first.
+        The first journeys is 20180315T080000.
+
+        If timeframe_duration and min_nb_journeys are set to 0, the response have to return 0 journeys.
+        """
+        query = ('journeys?from={_from}&'
+                'to={to}&'
+                'datetime={datetime}&'
+                'timeframe_duration={timeframe_duration}&').format( _from='stop_area:sa1',
+                                                                    to='stop_area:sa3',
+                                                                    datetime="20180315T080000",
+                                                                    min_nb_journeys=0,
+                                                                    timeframe_duration=0)
+        response = self.query_region(query)
+        assert 'journeys' not in response
+        assert 'no_solution' == response['error']['id']
+
+
     def test_timeframe_duration_with_maximum_value(self):
         """
-        The data contains 20 journeys (each 10 min) + 1 journeys 24H after the first.
+        The data contains 20 journeys (every 10 min) + 1 journey 24H after the first.
         The first journeys is 20180315T080000.
 
         timeframe_duration is set to 24H + 15 min (86400 + 60*15).
@@ -1678,7 +1710,7 @@ class JourneysTimeFrameDuration():
 
     def test_timeframe_duration_with_min_nb_journeys(self):
         """
-        The data contains 20 journeys (each 10 min) + 1 journeys 24H after the first.
+        The data contains 20 journeys (every 10 min) + 1 journey 24H after the first.
         The first journeys is 20180315T080000.
 
         timeframe_duration and min_nb_journeys is active
