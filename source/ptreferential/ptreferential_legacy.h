@@ -51,6 +51,7 @@ www.navitia.io
 #include "type/type.h"
 #include "georef/georef.h"
 #include "where.h"
+#include "ptreferential.h"
 #include "utils/paginate.h"
 
 using navitia::type::Type_e;
@@ -81,47 +82,14 @@ struct Filter {
     Filter() {}
 };
 
-//@TODO inherit from navitia::exception
-struct ptref_error : public std::exception {
-    std::string more;
-
-    ptref_error(const std::string & more) : more(more) {}
-    virtual const char* what() const noexcept override;
-};
-
-struct parsing_error : public ptref_error{
-    enum error_type {
-        global_error ,
-        partial_error,
-        unknown_object
-    };
-
-    error_type type;
-
-    parsing_error(error_type type, const std::string & str) : ptref_error(str), type(type) {}
-    parsing_error(const parsing_error&) = default;
-    parsing_error& operator=(const parsing_error&) = default;
-    ~parsing_error() noexcept;
-};
-
 /// Exécute une requête sur les données Data : retourne les idx des objets demandés
-type::Indexes make_query(const type::Type_e requested_type,
-                                    const std::string& request,
-                                    const std::vector<std::string>& forbidden_uris,
-                                    const type::OdtLevel_e odt_level,
-                                    const boost::optional<boost::posix_time::ptime>& since,
-                                    const boost::optional<boost::posix_time::ptime>& until,
-                                    const type::Data& data);
-
-type::Indexes make_query(const type::Type_e requested_type,
-                                    const std::string& request,
-                                    const std::vector<std::string>& forbidden_uris,
-                                    const type::Data& data);
-
-type::Indexes make_query(const type::Type_e requested_type,
-                                    const std::string& request,
-                                    const type::Data& data);
-
+type::Indexes make_query_legacy(const type::Type_e requested_type,
+                                const std::string& request,
+                                const std::vector<std::string>& forbidden_uris,
+                                const type::OdtLevel_e odt_level,
+                                const boost::optional<boost::posix_time::ptime>& since,
+                                const boost::optional<boost::posix_time::ptime>& until,
+                                const type::Data& data);
 
 /// Trouve le chemin d'un type de données à un autre
 /// Par exemple StopArea → StopPoint → JourneyPatternPoint

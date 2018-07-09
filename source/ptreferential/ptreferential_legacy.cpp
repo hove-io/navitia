@@ -28,7 +28,7 @@ https://groups.google.com/d/forum/navitia
 www.navitia.io
 */
 
-#include "ptreferential.h"
+#include "ptreferential_legacy.h"
 #include "reflexion.h"
 #include "where.h"
 #include "proximity_list/proximity_list.h"
@@ -563,13 +563,13 @@ filter_on_period(const Indexes& indexes,
     }
 }
 
-Indexes make_query(const Type_e requested_type,
-                              const std::string& request,
-                              const std::vector<std::string>& forbidden_uris,
-                              const type::OdtLevel_e odt_level,
-                              const boost::optional<boost::posix_time::ptime>& since,
-                              const boost::optional<boost::posix_time::ptime>& until,
-                              const Data& data) {
+Indexes make_query_legacy(const Type_e requested_type,
+                          const std::string& request,
+                          const std::vector<std::string>& forbidden_uris,
+                          const type::OdtLevel_e odt_level,
+                          const boost::optional<boost::posix_time::ptime>& since,
+                          const boost::optional<boost::posix_time::ptime>& until,
+                          const Data& data) {
     std::vector<Filter> filters;
 
     if(!request.empty()){
@@ -723,26 +723,6 @@ Indexes make_query(const Type_e requested_type,
     }
 
     return final_indexes;
-}
-
-Indexes make_query(const type::Type_e requested_type,
-                                    const std::string& request,
-                                    const std::vector<std::string>& forbidden_uris,
-                                    const type::Data &data) {
-    return make_query(requested_type,
-                      request,
-                      forbidden_uris,
-                      type::OdtLevel_e::all,
-                      boost::none,
-                      boost::none,
-                      data);
-}
-
-Indexes make_query(const type::Type_e requested_type,
-                                    const std::string& request,
-                                    const type::Data &data) {
-    const std::vector<std::string> forbidden_uris;
-    return make_query(requested_type, request, forbidden_uris, data);
 }
 
 }} // navitia::ptref

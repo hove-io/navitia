@@ -42,10 +42,6 @@ www.navitia.io
 #include <boost/graph/connected_components.hpp>
 #include "type/pt_data.h"
 
-namespace navitia{namespace ptref {
-template<typename T> type::Indexes get_indexes(Filter filter,  Type_e requested_type, const type::Data & d);
-}}
-
 
 using namespace navitia::ptref;
 

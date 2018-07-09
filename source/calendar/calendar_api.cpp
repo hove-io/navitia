@@ -32,6 +32,7 @@ www.navitia.io
 #include "type/pb_converter.h"
 #include "calendar.h"
 #include "ptreferential/ptreferential.h"
+#include "utils/paginate.h"
 
 namespace navitia { namespace calendar {
 

@@ -50,6 +50,8 @@ namespace nt = navitia::type;
 namespace pt = boost::posix_time;
 namespace bg = boost::gregorian;
 
+using navitia::type::Type_e;
+
 static const double CO2_ESTIMATION_COEFF = 1.35;
 
 namespace navitia {
