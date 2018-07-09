@@ -3445,7 +3445,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     //-----------------------------------
     // Case 1 :
     // clockwise = true
-    // timeframe_end_datetime = 0
+    // timeframe_duration = 0
     // timeframe_max_datetime = 86400 (24H)
     //
     // In this case, the time frame duration is equal to 0.
@@ -3481,13 +3481,13 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     // Case 2 :
     // clockwise = true
     // min_nb_journeys = none
-    // timeframe_end_datetime = 10*60 (10 min)
+    // timeframe_duration = 10*60 (10 min)
     // timeframe_max_datetime = 86400 (24H)
     //
     // We have a time frame duration = 10 min related to the first Journeys (08:00:00).
     // The response must contains 1 journeys
     uint32_t min_nb_journeys = 0;
-    uint64_t timeframe_end_datetime = 10*60;   // 10 min
+    uint64_t timeframe_duration = 10*60;   // 10 min
     clockwise = true;
 
     // send request
@@ -3512,7 +3512,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
                   boost::none,
                   1.5,
                   900,
-                  timeframe_end_datetime);
+                  timeframe_duration);
 
     // get the response
     resp = pb_creator3.get_response();
@@ -3532,13 +3532,13 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     //-----------------------------------
     // Case 3 :
     // clockwise = false !!
-    // timeframe_end_datetime = 10*60 (10 min)
+    // timeframe_duration = 10*60 (10 min)
     // timeframe_max_datetime = 86400 (24H)
     //
     // We have a time frame duration = 10 min related to the first Journeys (08:30:00).
     // The response must contains 1 journeys.
     min_nb_journeys = 0;
-    timeframe_end_datetime = 10*60*2;    // 10 min
+    timeframe_duration = 10*60*2;    // 10 min
     clockwise = false;
 
     // send request
@@ -3563,7 +3563,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
                   boost::none,
                   1.5,
                   900,
-                  timeframe_end_datetime);
+                  timeframe_duration);
 
     // get the response
     resp = pb_creator4.get_response();
@@ -3591,7 +3591,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     //-----------------------------------
     // Case 4 :
     // clockwise = true
-    // timeframe_end_datetime = 60*60*1 (1H)
+    // timeframe_duration = 60*60*1 (1H)
     // timeframe_max_datetime = 86400   (24H)
     //
     // We have a time frame duration = 30 min related to the first Journeys (08:30:00) and
@@ -3599,7 +3599,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     // We don't have 20 journeys in 30 min, so we continue until 20 journeys (min_nb_journeys is the main criteria).
     // The response must contains 20 journeys.
     min_nb_journeys = 20;
-    timeframe_end_datetime = 60*60*1;  // 1H
+    timeframe_duration = 60*60*1;  // 1H
     clockwise = true;
 
     // send request
@@ -3624,7 +3624,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
                   min_nb_journeys,
                   3,
                   6000,
-                  timeframe_end_datetime);
+                  timeframe_duration);
 
     // get the response
     resp = pb_creator5.get_response();
@@ -3634,14 +3634,14 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     //-----------------------------------
     // Case 5 :
     // clockwise = true
-    // timeframe_end_datetime = 60*60*4 (4H)
+    // timeframe_duration = 60*60*4 (4H)
     // timeframe_max_datetime = 60*60   (1H)
     //
-    // the limit max is less than timeframe_end_datetime.
+    // the limit max is less than timeframe_duration.
     // We compute until the max limit
     // The response must contains only 6 journeys.
     min_nb_journeys = 0;
-    timeframe_end_datetime = 60*60*4; // 4H
+    timeframe_duration = 60*60*4; // 4H
     clockwise = true;
 
     // send request
@@ -3666,7 +3666,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
                   boost::none,
                   1.5,
                   900,
-                  timeframe_end_datetime);
+                  timeframe_duration);
 
     // get the response
     resp = pb_creator6.get_response();

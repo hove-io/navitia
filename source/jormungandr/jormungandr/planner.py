@@ -97,6 +97,6 @@ class Kraken(object):
             req.journeys.min_nb_journeys = journey_parameters.min_nb_journeys
 
         if journey_parameters.timeframe:
-           req.journeys.timeframe_end_datetime = int(journey_parameters.timeframe)
+           req.journeys.timeframe_duration = int(journey_parameters.timeframe)
 
         return self.instance.send_and_receive(req)

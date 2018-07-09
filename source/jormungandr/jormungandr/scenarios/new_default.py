@@ -181,7 +181,7 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     req.journeys.night_bus_filter_base_factor = request['_night_bus_filter_base_factor']
 
     if request['timeframe_duration']:
-        req.journeys.timeframe_end_datetime = int(request['timeframe_duration'])
+        req.journeys.timeframe_duration = int(request['timeframe_duration'])
 
     return req
 
