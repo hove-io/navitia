@@ -434,3 +434,24 @@ def isochrone_geovelo_test():
         assert geovelo_response.rows[0].routing_response[0].routing_status == response_pb2.reached
         assert geovelo_response.rows[0].routing_response[1].duration == 1656
         assert geovelo_response.rows[0].routing_response[1].routing_status == response_pb2.reached
+
+def distances_durations_test():
+    """
+    Check that the response from geovelo is correctly formatted with 'distances' and 'durations' sections
+    """
+    instance = MagicMock()
+    geovelo = Geovelo(instance=instance,
+                      service_url='http://bob.com')
+    resp_json = direct_path_response_valid()
+
+    origin = make_pt_object(type_pb2.ADDRESS, lon=2, lat=48.2, uri='refStart1')
+    destination = make_pt_object(type_pb2.ADDRESS, lon=3, lat=48.3, uri='refEnd1')
+    fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), True)
+
+    proto_resp = geovelo._get_response(resp_json, origin, destination, fallback_extremity)
+    assert proto_resp.journeys[0].durations.total
+    assert proto_resp.journeys[0].durations.total != 0
+    assert proto_resp.journeys[0].durations.bike
+    assert proto_resp.journeys[0].durations.bike != 0
+    assert proto_resp.journeys[0].distances.bike
+    assert proto_resp.journeys[0].distances.bike != 0
