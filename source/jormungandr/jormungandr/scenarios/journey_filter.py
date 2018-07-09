@@ -33,7 +33,7 @@ import itertools
 import datetime
 import abc
 import six
-from jormungandr.scenarios.utils import compare, get_pseudo_duration, get_or_default, mode_weight
+from jormungandr.scenarios.utils import compare, get_or_default
 from navitiacommon import response_pb2
 from jormungandr.utils import pb_del_if, ComposedFilter, portable_min
 
@@ -320,12 +320,6 @@ def get_nb_connections(journey):
     Returns connections count in a journey
     """
     return journey.nb_transfers
-
-
-def _get_mode_weight(journey):
-    if not journey.tags:
-        return 1
-    return max(mode_weight.get(mode, 1) for mode in journey.tags)
 
 
 def get_min_waiting(journey):
