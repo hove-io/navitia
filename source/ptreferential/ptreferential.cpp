@@ -30,6 +30,7 @@ www.navitia.io
 
 #include "ptreferential.h"
 #include "ptreferential_legacy.h"
+#include "ptreferential_ng.h"
 
 namespace navitia{
 namespace ptref{
@@ -41,6 +42,12 @@ type::Indexes make_query(const type::Type_e requested_type,
                          const boost::optional<boost::posix_time::ptime>& since,
                          const boost::optional<boost::posix_time::ptime>& until,
                          const type::Data& data) {
+    auto logger = log4cplus::Logger::getInstance("logger");
+
+    // Should be always less strict on errors
+    const auto indices = make_query_ng(requested_type, request, forbidden_uris, odt_level, since, until, data);
+    LOG4CPLUS_DEBUG(logger, "ptref_ng nb found: " << indices.size());
+
     return make_query_legacy(requested_type, request, forbidden_uris, odt_level, since, until, data);
 }
 

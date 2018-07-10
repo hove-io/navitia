@@ -34,6 +34,7 @@ www.navitia.io
 #include <boost/test/unit_test.hpp>
 #include "ptreferential/ptreferential_legacy.h"
 #include "tests/utils_test.h"
+#include "ed/build_helper.h"
 
 namespace nt = navitia::type;
 using namespace navitia::ptref;
@@ -182,4 +183,24 @@ BOOST_AUTO_TEST_CASE(parser_method_has_disruption) {
     BOOST_CHECK_EQUAL(filters[0].object, "vehicle_journey");
     BOOST_CHECK_EQUAL(filters[0].method, "has_disruption");
     BOOST_CHECK_EQUAL(filters[0].args.size(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(after_filter) {
+    ed::builder b("201303011T1739");
+    b.generate_dummy_basis();
+    b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250)("stop3", 8500)("stop4", 9000);
+    b.vj("B")("stop5", 9000,9050)("stop2", 9200,9250);
+    b.vj("C")("stop6", 9000,9050)("stop2", 9200,9250)("stop7", 10000);
+    b.vj("D")("stop5", 9000,9050)("stop2", 9200,9250)("stop3", 10000);
+    b.finish();
+    b.data->pt_data->build_uri();
+
+    auto indexes = make_query_legacy(nt::Type_e::StopArea, "AFTER(stop_area.uri=stop2)", {}, {}, {}, {}, *(b.data));
+    BOOST_REQUIRE_EQUAL(indexes.size(), 3);
+    auto expected_uris = {"stop3", "stop4", "stop7"};
+    for(auto stop_area_idx : indexes) {
+        auto stop_area = b.data->pt_data->stop_areas[stop_area_idx];
+        BOOST_REQUIRE(std::find(expected_uris.begin(), expected_uris.end(),
+                            stop_area->uri) != expected_uris.end());
+    }
 }

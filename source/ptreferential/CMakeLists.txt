@@ -1,6 +1,7 @@
 SET(PTREF_SRC
   ptreferential.cpp
   ptreferential_legacy.cpp
+  ptreferential_ng.cpp
   ptreferential_api.cpp
   where.h
   reflexion.h
