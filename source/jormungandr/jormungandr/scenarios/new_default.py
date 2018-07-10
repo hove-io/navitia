@@ -910,10 +910,9 @@ class Scenario(simple.Scenario):
 
             nb_qualified_journeys = nb_journeys(responses)
 
-            if (api_request['timeframe_duration'] and api_request['min_nb_journeys'] and (nb_qualified_journeys < min_nb_journeys)):
-                # timeframe_duration and min_nb_journeys is active. We call kraken.
-                # If Kraken return not enough journeys, we don't need to recall it, because it is
-                # the max number of journeys.
+            if api_request['timeframe_duration']:
+                # If timeframe_duration is active, it is useless to recall Kraken,
+                # it has already sent back that he could
                 break
 
             if nb_previously_qualified_journeys == nb_qualified_journeys:
