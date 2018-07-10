@@ -33,6 +33,7 @@ www.navitia.io
 
 #include <boost/test/unit_test.hpp>
 #include "ptreferential/ptreferential_ng.h"
+#include "ptreferential/ptreferential.h"
 
 using namespace navitia::ptref;
 
@@ -98,4 +99,36 @@ BOOST_AUTO_TEST_CASE(parse_str) {
     assert_expr(R"#(a.a("\""))#", R"#(a.a("\""))#");
     assert_expr(R"#(a.a("\\"))#", R"#(a.a("\\"))#");
     assert_expr(R"#(a.a("  "))#", R"#(a.a("  "))#");    
+}
+
+BOOST_AUTO_TEST_CASE(parse_legacy_tests) {
+    assert_expr("stop_areas.uri=42", "stop_areas.uri(\"42\")");
+    assert_expr("line.code=42", "line.code(\"42\")");
+    assert_expr("  stop_areas.uri    =  42    ", "stop_areas.uri(\"42\")");
+    assert_expr(
+        "stop_areas.uri = 42 and  line.name=bus",
+        "(stop_areas.uri(\"42\") AND line.name(\"bus\"))"
+    );
+
+    // escaped values
+    assert_expr("stop_areas.uri=\"42\"", "stop_areas.uri(\"42\")");
+    assert_expr("stop_areas.uri=\"4-2\"", "stop_areas.uri(\"4-2\")");
+    assert_expr("stop_areas.uri=\"4|2\"", "stop_areas.uri(\"4|2\")");
+    assert_expr("stop_areas.uri=\"42.\"", "stop_areas.uri(\"42.\")");
+    assert_expr("stop_areas.uri=\"42 12\"", "stop_areas.uri(\"42 12\")");
+    assert_expr("stop_areas.uri=\"  42  \"", "stop_areas.uri(\"  42  \")");
+    assert_expr("stop_areas.uri=\"4&2\"", "stop_areas.uri(\"4&2\")");
+
+    // exception
+    BOOST_CHECK_THROW(parse(""), parsing_error);
+    BOOST_CHECK_THROW(parse("mouuuhh bliiii"), parsing_error);
+    BOOST_CHECK_THROW(parse("stop_areas.uri==42"), parsing_error);
+
+    // escaped string
+    assert_expr("stop_areas.uri=\"bob the coolest\"", "stop_areas.uri(\"bob the coolest\")");
+    assert_expr("stop_areas.uri=\"bob the coolést\"", "stop_areas.uri(\"bob the coolést\")");
+    assert_expr(R"(stop_areas.uri="bob the \"coolést\"")", R"(stop_areas.uri("bob the \"coolést\""))");
+    assert_expr(R"(stop_areas.uri="bob the \\ er")", R"(stop_areas.uri("bob the \\ er"))");
+    assert_expr(R"(vehicle_journey.has_headsign("john"))", R"(vehicle_journey.has_headsign("john"))");
+    assert_expr(R"(vehicle_journey.has_disruption())", R"(vehicle_journey.has_disruption())");
 }
