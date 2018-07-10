@@ -138,10 +138,10 @@ static void culling_excessive_journeys(const boost::optional<uint32_t>& min_nb_j
         boost::for_each(sorted, [&](const routing::Journey& j) {
 
             // Erase journey if
-            // mim_nb_journeys is deactivated and journey exceed the time frame limit
+            // min_nb_journeys is deactivated and journey exceed the time frame limit
             // or
-            // mim_nb_journeys exist and Nb journeys is greater than min_nb_journeys criteria 
-            // and journey exceed the time frame limit
+            // min_nb_journeys exist and Nb journeys is greater than min_nb_journeys criteria
+            // and journey exceeds the time frame limit
             if ( (!min_nb_journeys && !is_inside(j, timeframe_duration.get())) ||
                  (min_nb_journeys && (count >= min_nb_journeys.get()) && !is_inside(j, timeframe_duration.get())) )
             {

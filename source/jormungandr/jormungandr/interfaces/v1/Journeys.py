@@ -57,7 +57,6 @@ from jormungandr.parking_space_availability.parking_places_manager import Manage
 import six
 from navitiacommon.parser_args_type import BooleanType, OptionValue
 from jormungandr.interfaces.common import add_poi_infos_types
-from datetime import timedelta
 
 f_datetime = "%Y%m%dT%H%M%S"
 class SectionLinks(fields.Raw):
@@ -527,7 +526,7 @@ class Journeys(JourneyCommon):
             args['max_nb_journeys'] = args['count']
 
         if args.get('timeframe_duration'):
-            args['timeframe_duration'] = min(args['timeframe_duration'], timedelta(days=1).total_seconds())
+            args['timeframe_duration'] = min(args['timeframe_duration'], default_values.max_duration)
 
         if args['destination'] and args['origin']:
             api = 'journeys'

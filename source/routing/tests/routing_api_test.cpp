@@ -3535,10 +3535,10 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     // timeframe_duration = 10*60 (10 min)
     // timeframe_max_datetime = 86400 (24H)
     //
-    // We have a time frame duration = 10 min related to the first Journeys (08:30:00).
-    // The response must contains 1 journeys.
+    // We have a time frame duration = 20 min related to the first Journeys (08:30:00).
+    // The response must contains 2 journeys.
     min_nb_journeys = 0;
-    timeframe_duration = 10*60*2;    // 10 min
+    timeframe_duration = 10*60*2;    // 20 min
     clockwise = false;
 
     // send request
@@ -3580,7 +3580,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     BOOST_CHECK_EQUAL(section.begin_date_time(), "20180309T082000"_pts);
     BOOST_CHECK_EQUAL(section.end_date_time(), "20180309T082500"_pts);
 
-    // Journey 1
+    // Journey 2
     journey = journeys[1];
     BOOST_REQUIRE_EQUAL(journey.sections_size(), 1);
     section = journey.sections(0);

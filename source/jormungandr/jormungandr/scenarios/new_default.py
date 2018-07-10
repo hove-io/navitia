@@ -911,7 +911,9 @@ class Scenario(simple.Scenario):
             nb_qualified_journeys = nb_journeys(responses)
 
             if (api_request['timeframe_duration'] and api_request['min_nb_journeys'] and (nb_qualified_journeys < min_nb_journeys)):
-                # we break because the max time frame duration is reached
+                # timeframe_duration and min_nb_journeys is active. We call kraken.
+                # If Kraken return not enough journeys, we don't need to recall it, because it is
+                # the max number of journeys.
                 break
 
             if nb_previously_qualified_journeys == nb_qualified_journeys:
