@@ -1,0 +1,3 @@
+coverage,type,from,to,datetime,datetime_represents,other_args
+fr-idf,base,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,
+fr-idf,min_nb,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,min_nb_journeys=3
