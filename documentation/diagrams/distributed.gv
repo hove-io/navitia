@@ -1,0 +1,37 @@
+digraph distributed {
+    //direct paths
+    "resolve origin" -> "walking direct path" -> "final response"
+    "resolve destination" -> "walking direct path"
+
+    "resolve origin" -> "bike direct path" -> "final response"
+    "resolve destination" -> "bike direct path"
+
+    //free access
+    "resolve origin" -> "origin free access"
+    "resolve destination" -> "destination free access"
+
+    //matrix
+    "resolve origin" -> "bike origin proximity list" -> "bike origin sn matrix"
+    "resolve origin" -> "walking origin proximity list" -> "walking origin sn matrix"
+    "resolve destination" -> "walking destination proximity list" -> "walking destination sn matrix"
+
+    //PT walking - walking
+    "walking origin sn matrix" -> "PT walking - walking"
+    "walking destination sn matrix" -> "PT walking - walking"
+    "walking direct path" -> "PT walking - walking"
+    "origin free access" -> "PT walking - walking"
+    "destination free access" -> "PT walking - walking"
+
+    //PT bike - walking
+    "bike origin sn matrix" -> "PT bike - walking"
+    "walking destination sn matrix" -> "PT bike - walking"
+    "bike direct path" -> "PT bike - walking"
+    "origin free access" -> "PT bike - walking"
+    "destination free access" -> "PT bike - walking"
+
+    "PT bike - walking" -> "bike origin fallback"  -> "build bike-walking" -> "final response"
+    "PT bike - walking" -> "walking destination fallback" -> "build bike-walking"
+
+    "PT walking - walking" -> "walking origin fallback" -> "build walking-walking" -> "final response"
+    "PT walking - walking" -> "walking destination fallback" -> "build walking-walking"
+}
