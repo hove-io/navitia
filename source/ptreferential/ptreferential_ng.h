@@ -141,6 +141,13 @@ OS& operator<<(OS& os, const BinaryOp<Diff>& op) {
 }// namespace ast
 
 ast::Expr parse(const std::string& s);
+std::string make_request(const type::Type_e requested_type,
+                         const std::string& request,
+                         const std::vector<std::string>& forbidden_uris,
+                         const type::OdtLevel_e odt_level,
+                         const boost::optional<boost::posix_time::ptime>& since,
+                         const boost::optional<boost::posix_time::ptime>& until,
+                         const type::Data& data);
 
 }} // namespace navitia::ptref
 

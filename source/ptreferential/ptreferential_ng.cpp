@@ -132,15 +132,76 @@ ast::Expr parse(const std::string& request) {
     return expr;
 }
 
-static std::string make_request(const type::Type_e requested_type,
-                                const std::string& request,
-                                const std::vector<std::string>& forbidden_uris,
-                                const type::OdtLevel_e odt_level,
-                                const boost::optional<boost::posix_time::ptime>& since,
-                                const boost::optional<boost::posix_time::ptime>& until,
-                                const type::Data& data) {
+static const char* to_string(type::OdtLevel_e level) {
+    switch (level) {
+    case type::OdtLevel_e::scheduled: return "scheduled";
+    case type::OdtLevel_e::with_stops: return "with_stops";
+    case type::OdtLevel_e::zonal: return "zonal";
+    default: return "all";
+    }
+}
+
+std::string make_request(const type::Type_e requested_type,
+                         const std::string& request,
+                         const std::vector<std::string>& forbidden_uris,
+                         const type::OdtLevel_e odt_level,
+                         const boost::optional<boost::posix_time::ptime>& since,
+                         const boost::optional<boost::posix_time::ptime>& until,
+                         const type::Data& data) {
+    type::static_data* static_data = type::static_data::get();
     std::string res = request.empty() ? std::string("all") : request;
-    // TODO: implement the other args (generating warnings)
+
+    switch (requested_type) {
+    case type::Type_e::Line:
+        if (odt_level != type::OdtLevel_e::all) {
+            res = "(" + res + ") AND line.odt_level = " + to_string(odt_level);
+        }
+        break;
+    case type::Type_e::VehicleJourney:
+    case type::Type_e::Impact:
+        if (since && until) {
+            res = "(" + res + ") AND " +
+                static_data->captionByType(requested_type) + ".between(" +
+                to_iso_string(*since) + "Z, " + to_iso_string(*until) + "Z)";
+        } else if (since) {
+            res = "(" + res + ") AND " +
+                static_data->captionByType(requested_type) + ".since(" +
+                to_iso_string(*since) + "Z)";
+        } else if (until) {
+            res = "(" + res + ") AND " +
+                static_data->captionByType(requested_type) + ".until(" +
+                to_iso_string(*until) + "Z)";
+        }
+        break;
+    default: break;
+    }
+
+    std::vector<std::string> forbidden;
+    for (const auto& id: forbidden_uris) {
+        const auto type = data.get_type_of_id(id);
+        if (type == navitia::type::Type_e::Unknown) { continue; }
+        std::stringstream ss;
+        try {
+            ss << static_data->captionByType(type);
+        } catch(std::out_of_range&) {
+            throw parsing_error(parsing_error::error_type::unknown_object,
+                                "Filter Unknown object type: " + id);
+        }
+        ss << ".id = ";
+        ast::print_quoted_string(ss, id);
+        forbidden.push_back(ss.str());
+    }
+    if (!forbidden.empty()) {
+        std::stringstream ss;
+        ss << '(' << res << ") - (";
+        auto it = forbidden.begin(), end = forbidden.end();
+        ss << *it;
+        for (++it; it != end; ++it) {
+            ss << " OR " << *it;
+        }
+        ss << ')';
+        res = ss.str();
+    }
         
     return res;
 }
