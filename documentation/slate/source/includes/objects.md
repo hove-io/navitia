@@ -442,7 +442,8 @@ Real time and disruption objects
 |Field|Type|Description|
 |-----|----|-----------|
 |from|[pt_object](#pt_object)|The beginning of the section|
-|to|[pt_object](#pt_object)|The end of the section|
+|to|[pt_object](#pt_object)|The end of the section. This can be the same as `from` when only one point is impacted|
+|routes|[route](#route)| The list of impacted routes by the impacted_section|
 
 ### Impacted_stop
 
