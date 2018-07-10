@@ -1623,7 +1623,7 @@ class JourneysTimeFrameDuration():
         response = self.query_region(query)
         assert 1 == len(response['journeys'])
 
-        # Time frame to catch only the first journeys, timeframe_duration = 1 H (60*60=3600).
+        # Time frame to catch journeys in the first hour, timeframe_duration = 1 H (60*60=3600).
         query = ('journeys?from={_from}&'
                 'to={to}&'
                 'datetime={datetime}&'

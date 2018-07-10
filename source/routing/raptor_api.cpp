@@ -107,8 +107,8 @@ static bool keep_going(const uint32_t total_nb_journeys,
         return is_inside(request_date_secs, timeframe_duration.get());
     }
     if (! timeframe_duration) {
-        // Case 4: Neither time duration nor min_nb_journeys are given, we return all raptor can find
-        return (total_nb_journeys <= 0) && (nb_try <= max_nb_raptor_call);
+        // Case 4: Neither time duration nor min_nb_journeys are given, we call only once Raptor
+        return false;
     }
     // Case 5: no min_nb_journeys is given, we find all journeys inside of the time frame
     return is_inside(request_date_secs, timeframe_duration.get());
@@ -1402,7 +1402,7 @@ bool is_way_later(const Journey & j1, const Journey & j2,
 
     auto get_pseudo_duration = [&](const Journey & j) {
         auto dt = clockwise ? j.arrival_dt : j.departure_dt;
-        return std::abs((double)dt - requested_dt);
+        return std::abs(double(dt) - double(requested_dt));
     };
 
     auto j1_pseudo_duration = get_pseudo_duration(j1);
