@@ -43,7 +43,7 @@ class CarParkingProviderManager(AbstractProviderManager):
             self.car_park_providers.append(self._init_class(configuration['class'], arguments))
 
     def _handle_poi(self, item):
-        if 'poi_type' in item and item['poi_type']['id'] in POI_TYPE_ID:
+        if 'poi_type' in item and item['poi_type']['id'] == POI_TYPE_ID:
             provider = self._find_provider(item)
             if provider:
                 item['car_park'] = provider.get_informations(item)
