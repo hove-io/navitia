@@ -96,16 +96,16 @@ static bool keep_going(const uint32_t total_nb_journeys,
 
     if (min_nb_journeys) {
 
-        auto has_min_nb_journeys = total_nb_journeys < *min_nb_journeys;
+        auto need_more_journeys = total_nb_journeys < *min_nb_journeys;
 
         if (timeframe_duration) {
             // Case 1: if we don't have enough journeys,
             // we keep searching until the end of time frame
-            return has_min_nb_journeys || is_inside(request_date_secs, *timeframe_duration);
+            return need_more_journeys || is_inside(request_date_secs, *timeframe_duration);
         }
 
         // Case 2: we return all min_nb_journeys journeys that raptor can find
-        return has_min_nb_journeys;
+        return need_more_journeys;
     }
 
     if (timeframe_duration) {
