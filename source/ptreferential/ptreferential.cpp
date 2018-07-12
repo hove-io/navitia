@@ -45,10 +45,26 @@ type::Indexes make_query(const type::Type_e requested_type,
     auto logger = log4cplus::Logger::getInstance("logger");
 
     // Should be always less strict on errors
-    const auto indices = make_query_ng(requested_type, request, forbidden_uris, odt_level, since, until, data);
-    LOG4CPLUS_DEBUG(logger, "ptref_ng nb found: " << indices.size());
+    const auto indices_ng = make_query_ng(requested_type, request, forbidden_uris, odt_level, since, until, data);
+    const auto indices_legacy = make_query_legacy(requested_type, request, forbidden_uris, odt_level, since, until, data);
 
-    return make_query_legacy(requested_type, request, forbidden_uris, odt_level, since, until, data);
+    //return indices_legacy;
+
+    if (indices_legacy != indices_ng) {
+        const auto expr = make_request(requested_type, request, forbidden_uris, odt_level, since, until, data);
+        std::stringstream ss;
+        ss << "ptref legacy and ng differ for "
+            << "GET " << type::static_data::get()->captionByType(requested_type)
+            << " <- " << expr;
+
+        ss << "\nlegacy:";
+        for (const auto& i: indices_legacy) { ss << " " << i; }
+        ss << "\n    ng:";
+        for (const auto& i: indices_ng) { ss << " " << i; }
+        throw navitia::recoverable_exception(ss.str());
+    }
+
+    return indices_legacy;
 }
 
 type::Indexes make_query(const type::Type_e requested_type,
