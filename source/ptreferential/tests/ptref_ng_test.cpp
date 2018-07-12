@@ -32,13 +32,16 @@ www.navitia.io
 #define BOOST_TEST_MODULE ptref_ng_test
 
 #include <boost/test/unit_test.hpp>
+#include "tests/utils_test.h"
 #include "ptreferential/ptreferential_ng.h"
 #include "ptreferential/ptreferential.h"
 #include "ed/build_helper.h"
+#include "type/pt_data.h"
 
 using namespace navitia::ptref;
 using navitia::type::Type_e;
 using navitia::type::OdtLevel_e;
+using navitia::type::make_indexes;
 
 static void assert_expr(const std::string& to_parse, const std::string& expected) {
     const ast::Expr expr = parse(to_parse);
@@ -238,4 +241,36 @@ BOOST_AUTO_TEST_CASE(make_request_since_forbidden_uris) {
                                   {},
                                   *b.data);
     assert_expr(req, R"((((all OR all) AND disruption.since("20180714T133700Z")) - (commercial_mode.id("Bus") OR commercial_mode.id("0x1"))))");
+}
+
+BOOST_AUTO_TEST_CASE(ng_specific_features) {
+    ed::builder b("20180710");
+    b.generate_dummy_basis();
+    b.vj("A")("stop0", 700)("stop1", 800)("stop2", 900);
+    b.vj("B")("stop2", 700)("stop3", 800)("stop4", 900);
+    b.vj("C")("stop1", 700)("stop3", 800)("stop5", 900);
+    b.finish();
+    b.data->pt_data->build_uri();
+
+    auto indexes = make_query_ng(Type_e::StopArea, "get vehicle_journey <- stop_area.id=stop2",
+                                 {}, OdtLevel_e::all, {}, {}, *b.data);
+    BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({0, 1, 2, 3, 4}));
+
+    indexes = make_query_ng(Type_e::StopArea,
+                            "(get vehicle_journey <- stop_area.id=stop2) - stop_area.id=stop2",
+                            {}, OdtLevel_e::all, {}, {}, *b.data);
+    BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({0, 1, 3, 4}));
+
+    indexes = make_query_ng(Type_e::StopArea, "all", {}, OdtLevel_e::all, {}, {}, *b.data);
+    BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({0, 1, 2, 3, 4, 5}));
+
+    indexes = make_query_ng(Type_e::StopArea, "empty", {}, OdtLevel_e::all, {}, {}, *b.data);
+    BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({}));
+
+    indexes = make_query_ng(Type_e::StopArea, "all and empty", {}, OdtLevel_e::all, {}, {}, *b.data);
+    BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({}));
+
+    indexes = make_query_ng(Type_e::StopArea, "stop_area.id=stop2 or stop_area.id=stop5",
+                            {}, OdtLevel_e::all, {}, {}, *b.data);
+    BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({2, 5}));
 }
