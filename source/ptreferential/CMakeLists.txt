@@ -1,5 +1,6 @@
 SET(PTREF_SRC
   ptreferential.cpp
+  ptreferential_utils.cpp
   ptreferential_legacy.cpp
   ptreferential_ng.cpp
   ptreferential_api.cpp

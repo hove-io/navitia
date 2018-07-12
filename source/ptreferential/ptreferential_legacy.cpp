@@ -29,6 +29,7 @@ www.navitia.io
 */
 
 #include "ptreferential_legacy.h"
+#include "ptreferential_utils.h"
 #include "reflexion.h"
 #include "where.h"
 #include "proximity_list/proximity_list.h"
@@ -188,118 +189,6 @@ Indexes filtered_indexes(const T& data, const C& clause) {
     return result;
 }
 
-namespace {
-
-// has_string_lookup is used to know if we can search for an element by it's uri in the container
-// (ie for maps, ObjFactory, ...)
-template <typename Container>
-constexpr auto has_string_lookup(const Container& c, int)
--> decltype(find_or_default(std::string(), c), std::true_type{}) {
-    return std::true_type{};
-}
-template <typename Container>
-inline constexpr std::false_type has_string_lookup(const Container&, ...) {
-    return std::false_type{};
-}
-
-template<typename T, typename Container>
-Indexes filter_by_uri(const Container& data, const std::string& uri, std::false_type) {
-    // by default, we loop over all element to find the one
-    return filtered_indexes(data, WHERE(ptr_uri<T>(), Operator_e::EQ, uri));
-}
-
-template<typename T, typename Container>
-Indexes filter_by_uri(const Container& c, const std::string& uri, std::true_type) {
-    // for associative containers we can do a better search
-    auto elt = find_or_default(uri, c);
-    if (elt) { return make_indexes({elt->idx}); }
-    return Indexes{};
-}
-}
-
-template<typename T, typename Container>
-Indexes filtered_indexes_by_uri(const Container& container, const std::string& uri) {
-    return filter_by_uri<T>(container, uri, has_string_lookup(container, 0));
-}
-
-template<typename T>
-static
-typename boost::enable_if<
-    typename boost::mpl::contains<
-        nt::CodeContainer::SupportedTypes,
-        T>::type,
-    Indexes>::type
-get_indexes_from_code(const Data& d, const std::string& key, const std::string& value) {
-    Indexes res;
-    for (const auto* obj: d.pt_data->codes.get_objs<T>(key, value)) {
-        res.insert(obj->idx); // TODO: use bulk insert there ?
-    }
-    return res;
-}
-template<typename T>
-static
-typename boost::disable_if<
-    typename boost::mpl::contains<
-        nt::CodeContainer::SupportedTypes,
-        T>::type,
-    Indexes>::type
-get_indexes_from_code(const Data&, const std::string&, const std::string&) {
-    // there is no codes for unsupporded types, thus the result is empty
-    return Indexes{};
-}
-
-typedef std::pair<type::Type_e, Indexes> pair_indexes;
-struct VariantVisitor: boost::static_visitor<pair_indexes>{
-    const Data& d;
-    VariantVisitor(const Data & d): d(d){}
-    pair_indexes operator()(const type::disruption::UnknownPtObj){
-        return {type::Type_e::Unknown, Indexes{}};
-    }
-    pair_indexes operator()(const type::Network*){
-        return {type::Type_e::Network, Indexes{}};
-    }
-    pair_indexes operator()(const type::StopArea*){
-        return {type::Type_e::StopArea, Indexes{}};
-    }
-    pair_indexes operator()(const type::StopPoint*){
-        return {type::Type_e::StopPoint, Indexes{}};
-    }
-    pair_indexes operator()(const type::disruption::LineSection){
-        return {type::Type_e::Unknown, Indexes{}};
-    }
-    pair_indexes operator()(const type::Line*){
-        return {type::Type_e::Line, Indexes{}};
-    }
-    pair_indexes operator()(const type::Route*){
-        return {type::Type_e::Route, Indexes{}};
-    }
-    pair_indexes operator()(const type::MetaVehicleJourney* meta_vj){
-        return {type::Type_e::VehicleJourney, meta_vj->get(type::Type_e::VehicleJourney, *d.pt_data)};
-    }
-};
-
-static Indexes get_indexes_by_impacts(const Data & d, const type::Type_e& type_e){
-    Indexes result;
-    VariantVisitor visit(d);
-    const auto& impacts = d.get_assoc_data<navitia::type::disruption::Impact>();
-    for(const auto& impact: impacts){
-        const auto imp = impact.lock();
-        if (!imp) {
-            continue;
-        }
-        if (imp->severity->effect != type::disruption::Effect::NO_SERVICE) {
-            continue;
-        }
-        for(const auto& entitie: imp->informed_entities()){
-            auto pair_type_indexes = boost::apply_visitor(visit, entitie);
-            if(type_e == pair_type_indexes.first){
-                result.insert(pair_type_indexes.second.begin(), pair_type_indexes.second.end());
-            }
-        }
-    }
-    return result;
-}
-
 template<typename T>
 Indexes get_indexes(Filter filter,  Type_e requested_type, const Data & d) {
     Indexes indexes;
@@ -318,26 +207,17 @@ Indexes get_indexes(Filter filter,  Type_e requested_type, const Data & d) {
             } catch (...) {
                 throw parsing_error(parsing_error::partial_error, "Unable to parse the DWITHIN parameter " + filter.value);
             }
-            std::vector<std::pair<idx_t, GeographicalCoord> > tmp;
-            switch(filter.navitia_type){
-            case Type_e::StopPoint: tmp = d.pt_data->stop_point_proximity_list.find_within(coord, distance); break;
-            case Type_e::StopArea: tmp = d.pt_data->stop_area_proximity_list.find_within(coord, distance);break;
-            case Type_e::POI: tmp = d.geo_ref->poi_proximity_list.find_within(coord, distance);break;
-            default: throw ptref_error("The requested object can not be used a DWITHIN clause");
-            }
-            std::vector<idx_t> tmp_idx;
-            for (const auto& p : tmp) { tmp_idx.push_back(p.first); }
-            indexes.insert(tmp_idx.begin(), tmp_idx.end());
+            indexes = get_within(filter.navitia_type, coord, distance, d);
         }
     }
 
     else if( filter.op == HAVING ) {
-        indexes = make_query(nt::static_data::get()->typeByCaption(filter.object), filter.value, d);
+        indexes = make_query(type_by_caption(filter.object), filter.value, d);
     } else if(filter.op == AFTER) {
         //this does only work with jpp
         if (filter.object == "journey_pattern_point") {
             // Getting the jpps from the request
-            const auto& first_jpps = make_query(nt::static_data::get()->typeByCaption(filter.object), filter.value, d);
+            const auto& first_jpps = make_query(type_by_caption(filter.object), filter.value, d);
 
             // We get the jpps after the ones of the request
             for (const auto& first_jpp: first_jpps) {
@@ -362,43 +242,21 @@ Indexes get_indexes(Filter filter,  Type_e requested_type, const Data & d) {
                    && (filter.method == "has_disruption")
                    && (filter.args.size() == 0)) {
                 // For traffic_report api, get indexes of VehicleJourney impacted only.
-                indexes = get_indexes_by_impacts(d, type::Type_e::VehicleJourney);
+            indexes = get_indexes_by_impacts(type::Type_e::VehicleJourney, d);
         } else if (filter.method == "has_code" && filter.args.size() == 2) {
-            indexes = get_indexes_from_code<T>(d, filter.args.at(0), filter.args.at(1));
+            indexes = get_indexes_from_code(filter.navitia_type, filter.args.at(0), filter.args.at(1), d);
         } else {
             throw parsing_error(parsing_error::partial_error,
                                 "Unknown method " + filter.object + ":" + filter.method);
         }
-    } else if (filter.object == "journey_pattern" && filter.op == EQ &&
-               in(filter.attribute, {"uri", "name"})) {
-        if (const auto jp_idx = d.dataRaptor->jp_container.get_jp_from_id(filter.value)) {
-            indexes.insert(jp_idx->val);
-        }
-    } else if (filter.object == "journey_pattern_point" && filter.op == EQ &&
-               in(filter.attribute, {"uri", "name"})) {
-        if (const auto jpp_idx = d.dataRaptor->jp_container.get_jpp_from_id(filter.value)) {
-            indexes.insert(jpp_idx->val);
-        }
     } else if (filter.attribute == "uri" && filter.op == EQ) {
         // for filtering with uri we can look up in the maps
-        indexes = filtered_indexes_by_uri<T>(d.get_assoc_data<T>(), filter.value);
+        indexes = get_indexes_from_id(filter.navitia_type, filter.value, d);
     } else {
         const auto& data = d.get_data<T>();
         indexes = filtered_indexes(data, build_clause<T>({filter}));
     }
-    Type_e current = filter.navitia_type;
-    std::map<Type_e, Type_e> path = find_path(requested_type);
-    while(path[current] != current){
-        indexes = d.get_target_by_source(current, path[current], indexes);
-        current = path[current];
-    }
-
-    if (current != requested_type) {
-        // there was no path to find a requested type
-        return Indexes{};
-    }
-
-    return indexes;
+    return get_corresponding(indexes, filter.navitia_type, requested_type, d);
 }
 
 std::vector<Filter> parse(std::string request){
@@ -415,20 +273,6 @@ std::vector<Filter> parse(std::string request){
         throw parsing_error(parsing_error::global_error, "Filter: unable to parse " + request);
     }
     return filters;
-}
-
-Indexes get_difference(const Indexes& idxs1, const Indexes& idxs2) {
-    Indexes tmp_indexes;
-    std::insert_iterator<Indexes> it(tmp_indexes, std::begin(tmp_indexes));
-    std::set_difference(std::begin(idxs1), std::end(idxs1), std::begin(idxs2), std::end(idxs2), it);
-    return tmp_indexes;
-}
-
-Indexes get_intersection(const Indexes& idxs1, const Indexes& idxs2) {
-   Indexes tmp_indexes;
-   std::insert_iterator<Indexes> it(tmp_indexes, std::begin(tmp_indexes));
-   std::set_intersection(std::begin(idxs1), std::end(idxs1), std::begin(idxs2), std::end(idxs2), it);
-   return tmp_indexes;
 }
 
 Indexes manage_odt_level(const Indexes& final_indexes,
@@ -465,102 +309,6 @@ Indexes manage_odt_level(const Indexes& final_indexes,
     return final_indexes;
 }
 
-static bool keep_vj(const nt::VehicleJourney* vj,
-                    const bt::time_period& period) {
-    if (vj->stop_time_list.empty()) {
-        return false; //no stop time, so it cannot be valid
-    }
-
-    const auto& first_departure_dt = vj->earliest_time();
-    for (boost::gregorian::day_iterator it(period.begin().date()); it <= period.last().date(); ++it) {
-        if (! vj->base_validity_pattern()->check(*it)) { continue; }
-        bt::ptime vj_dt = bt::ptime(*it, bt::seconds(first_departure_dt));
-        if (period.contains(vj_dt)) { return true; }
-    }
-
-    return false;
-}
-
-static Indexes
-filter_vj_on_period(const Indexes& indexes,
-                    const  bt::time_period& period,
-                    const type::Data& data) {
-
-    Indexes res;
-    for (const idx_t idx: indexes) {
-        const auto* vj = data.pt_data->vehicle_journeys[idx];
-        if (! keep_vj(vj, period)) { continue; }
-        res.insert(idx);
-    }
-    return res;
-}
-
-static Indexes
-filter_impact_on_period(const Indexes& indexes,
-                    const  bt::time_period& period,
-                    const type::Data& data) {
-
-    Indexes res;
-    for (const idx_t idx: indexes) {
-        auto impact = data.pt_data->disruption_holder.get_weak_impacts()[idx].lock();
-
-        if (! impact) { continue; }
-
-        // to keep an impact, we want the intersection between its application periods
-        // and the period to be non empy
-        for (const auto& application_period: impact->application_periods) {
-            if (application_period.intersection(period).is_null()) { continue; }
-            res.insert(idx);
-            break;
-        }
-    }
-    return res;
-}
-
-static Indexes
-filter_on_period(const Indexes& indexes,
-                 const navitia::type::Type_e requested_type,
-                 const boost::optional<boost::posix_time::ptime>& since,
-                 const boost::optional<boost::posix_time::ptime>& until,
-                 const type::Data& data) {
-
-    // we create the right period using since, until and the production period
-    if (since && until && until < since) {
-        throw ptref_error("invalid filtering period");
-    }
-    auto start = bt::ptime(data.meta->production_date.begin());
-    auto end = bt::ptime(data.meta->production_date.end());
-
-    if (since) {
-        if (data.meta->production_date.is_before(since->date())) {
-            throw ptref_error("invalid filtering period, not in production period");
-        }
-        if (since->date() >= data.meta->production_date.begin()) {
-            start = *since;
-        }
-    }
-    if (until) {
-        if (data.meta->production_date.is_after(until->date())) {
-            throw ptref_error("invalid filtering period, not in production period");
-        }
-        if (until->date() <= data.meta->production_date.last()) {
-            end = *until;
-        }
-    }
-    // we want end to be in the period, so we add one seconds
-    bt::time_period period {start, end + bt::seconds(1)};
-
-    switch (requested_type) {
-    case nt::Type_e::VehicleJourney:
-        return filter_vj_on_period(indexes, period, data);
-    case nt::Type_e::Impact:
-        return filter_impact_on_period(indexes, period, data);
-    default:
-        throw parsing_error(parsing_error::error_type::global_error,
-                            "cannot filter on validity period for this type");
-    }
-}
-
 Indexes make_query_legacy(const Type_e requested_type,
                           const std::string& request,
                           const std::vector<std::string>& forbidden_uris,
@@ -576,12 +324,7 @@ Indexes make_query_legacy(const Type_e requested_type,
 
     type::static_data* static_data = type::static_data::get();
     for(Filter & filter : filters){
-        try {
-            filter.navitia_type = static_data->typeByCaption(filter.object);
-        } catch(...) {
-            throw parsing_error(parsing_error::error_type::unknown_object,
-                    "Filter Unknown object type: " + filter.object);
-        }
+        filter.navitia_type = type_by_caption(filter.object);
     }
 
     Indexes final_indexes;

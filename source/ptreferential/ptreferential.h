@@ -40,7 +40,6 @@ www.navitia.io
 namespace navitia{
 namespace ptref{
 
-//@TODO inherit from navitia::exception
 struct ptref_error : public navitia::recoverable_exception {
     std::string more;
 

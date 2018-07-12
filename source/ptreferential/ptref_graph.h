@@ -52,4 +52,8 @@ struct Jointures {
     Jointures();
 };
 
+/// Trouve le chemin d'un type de données à un autre
+/// Par exemple StopArea → StopPoint → JourneyPatternPoint
+std::map<type::Type_e, type::Type_e> find_path(type::Type_e source);
+
 }}

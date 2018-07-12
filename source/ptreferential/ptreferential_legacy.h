@@ -91,10 +91,6 @@ type::Indexes make_query_legacy(const type::Type_e requested_type,
                                 const boost::optional<boost::posix_time::ptime>& until,
                                 const type::Data& data);
 
-/// Trouve le chemin d'un type de données à un autre
-/// Par exemple StopArea → StopPoint → JourneyPatternPoint
-std::map<Type_e,Type_e> find_path(Type_e source);
-
 /// À parti d'un élément, on veut retrouver tous ceux de destination
 navitia::type::Indexes get(Type_e source, Type_e destination, type::idx_t source_idx, type::PT_Data & data);
 
