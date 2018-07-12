@@ -57,7 +57,7 @@ struct All {};
 struct Empty {};
 
 struct Fun {
-    std::string obj;
+    std::string type;
     std::string method;
     std::vector<std::string> args;
 };
@@ -68,7 +68,7 @@ typedef boost::variant<
     Fun>
 Pred;
 
-struct ToObject;
+struct GetCorresponding;
 struct And;
 struct Or;
 struct Diff;
@@ -77,14 +77,14 @@ struct BinaryOp;
 
 typedef boost::variant<
     Pred,
-    boost::recursive_wrapper<ToObject>,
+    boost::recursive_wrapper<GetCorresponding>,
     boost::recursive_wrapper<BinaryOp<And>>,
     boost::recursive_wrapper<BinaryOp<Or>>,
     boost::recursive_wrapper<BinaryOp<Diff>>>
 Expr;
 
-struct ToObject {
-    std::string object;
+struct GetCorresponding {
+    std::string type;
     Expr expr;
 };
 template<typename OpTag>
@@ -112,7 +112,7 @@ void print_quoted_string(OS& os, const std::string& s) {
 }
 template<typename OS>
 OS& operator<<(OS& os, const Fun& fun) {
-    os << fun.obj << '.' << fun.method << '(';
+    os << fun.type << '.' << fun.method << '(';
     auto it = fun.args.begin(), end = fun.args.end();
     if (it != end) { print_quoted_string(os, *it); ++it; }
     for (; it != end; ++it) {
@@ -122,8 +122,8 @@ OS& operator<<(OS& os, const Fun& fun) {
     return os << ')';
 }
 template<typename OS>
-OS& operator<<(OS& os, const ToObject& to_object) {
-    return os << "(GET " << to_object.object << " <- " << to_object.expr << ')';
+OS& operator<<(OS& os, const GetCorresponding& to_object) {
+    return os << "(GET " << to_object.type << " <- " << to_object.expr << ')';
 }
 template<typename OS>
 OS& operator<<(OS& os, const BinaryOp<And>& op) {
@@ -155,13 +155,13 @@ BOOST_FUSION_ADAPT_STRUCT(navitia::ptref::ast::All, )
 BOOST_FUSION_ADAPT_STRUCT(navitia::ptref::ast::Empty, )
 BOOST_FUSION_ADAPT_STRUCT(
     navitia::ptref::ast::Fun,
-    (std::string, obj)
+    (std::string, type)
     (std::string, method)
     (std::vector<std::string>, args)
 )
 BOOST_FUSION_ADAPT_STRUCT(
-    navitia::ptref::ast::ToObject,
-    (std::string, object)
+    navitia::ptref::ast::GetCorresponding,
+    (std::string, type)
     (navitia::ptref::ast::Expr, expr)
 )
 BOOST_FUSION_ADAPT_STRUCT(
