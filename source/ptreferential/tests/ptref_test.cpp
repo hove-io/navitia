@@ -367,9 +367,8 @@ BOOST_AUTO_TEST_CASE(line_code) {
     BOOST_REQUIRE_EQUAL(routes.size(), 1);
     BOOST_CHECK_EQUAL((*routes.begin())->line->code, "line_A");
 
-    //route has no code attribute, no filter can be used
-    indexes = make_query(nt::Type_e::Line, "route.code=test", *(b.data));
-    BOOST_CHECK_EQUAL(indexes.size(), 2);
+    //route has no code attribute, error
+    BOOST_CHECK_THROW(make_query(nt::Type_e::Line, "route.code=test", *(b.data)), ptref_error);
 }
 
 BOOST_AUTO_TEST_CASE(forbidden_uri) {

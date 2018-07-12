@@ -131,12 +131,10 @@ WhereWrapper<T> build_clause(std::vector<Filter> filters) {
             } else if(filter.attribute == "code") {
                 wh = wh && WHERE(ptr_code<T>(), filter.op, filter.value);
             } else {
-                LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
-                        "unhandled filter type: " << filter.attribute << ". The filter is ignored");
+                throw parsing_error(parsing_error::partial_error, "unhandled filter type: " + filter.attribute);
             }
         } catch (unknown_member) {
-            LOG4CPLUS_WARN(log4cplus::Logger::getInstance("log"),
-                    "given object has no member: " << filter.attribute << ". The filter is ignored");
+            throw parsing_error(parsing_error::partial_error, "given object has no member: " + filter.attribute);
         }
     }
     return wh;
