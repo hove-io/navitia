@@ -33,6 +33,7 @@ www.navitia.io
 
 #include <boost/geometry/geometries/polygon.hpp>
 #include <unordered_map>
+#include <RTree/RTree.h>
 
 namespace nt = navitia::type;
 
@@ -80,5 +81,8 @@ namespace navitia {
                         & name & uri & coord & admin_list & main_stop_areas & label & odt_stop_points & postal_codes;
             }
         };
+
+        using AdminRtree = RTree<Admin*, double, 2>;
+        AdminRtree build_admins_tree(const std::vector<Admin*> admins);
     }
 }

@@ -72,8 +72,8 @@ Data::Data(size_t data_identifier) :
     dataRaptor(std::make_unique<navitia::routing::dataRAPTOR>()),
     fare(std::make_unique<navitia::fare::Fare>()),
     find_admins(
-            [&](const GeographicalCoord &c){
-            return geo_ref->find_admins(c);
+            [&](const GeographicalCoord &c, georef::AdminRtree& admin_tree){
+            return geo_ref->find_admins(c, admin_tree);
             }),
     last_load_succeeded(false)
 {
@@ -248,6 +248,7 @@ void Data::build_proximity_list(){
 
 void  Data::build_administrative_regions() {
     auto log = log4cplus::Logger::getInstance("ed::Data");
+    georef::AdminRtree admin_tree = georef::build_admins_tree(geo_ref->admins);
 
     // set admins to stop points
     int cpt_no_projected = 0;
@@ -255,7 +256,7 @@ void  Data::build_administrative_regions() {
         if (!stop_point->admin_list.empty()) {
             continue;
         }
-        const auto &admins = find_admins(stop_point->coord);
+        const auto &admins = find_admins(stop_point->coord, admin_tree);
         boost::push_back(stop_point->admin_list, admins);
         if (admins.empty()) ++cpt_no_projected;
     }
@@ -274,7 +275,7 @@ void  Data::build_administrative_regions() {
         if (!poi->admin_list.empty()) {
             continue;
         }
-        const auto &admins = find_admins(poi->coord);
+        const auto &admins = find_admins(poi->coord, admin_tree);
         boost::push_back(poi->admin_list, admins);
         if (admins.empty()) {
             ++cpt_no_projected;
