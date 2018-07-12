@@ -385,8 +385,6 @@ BOOST_AUTO_TEST_CASE(forbidden_uri) {
     BOOST_CHECK_THROW(make_query(nt::Type_e::Line, "stop_point.uri=stop1", {"A"}, *(b.data)), ptref_error);
 }
 
-// TODO: reactivate when this code is moved
-#if 0
 BOOST_AUTO_TEST_CASE(find_path_test){
     auto res = find_path(nt::Type_e::Route);
     // Cas où on veut partir et arriver au même point
@@ -414,7 +412,6 @@ BOOST_AUTO_TEST_CASE(find_path_test){
     // Type qui n'existe pas dans le graph : il n'y a pas de chemin
     BOOST_CHECK_THROW(find_path(nt::Type_e::Unknown), ptref_error);
 }
-#endif
 
 //helper to get default values
 static nt::Indexes query(nt::Type_e requested_type, std::string request,
