@@ -40,8 +40,7 @@ stop_point of the last section to the destination.
 Like others operations this is done asynchronously as soon as we get a kraken response and if multiple journeys
 use the same fallback journey, it will only be computed one time.
 
-By example for a request like this one: https://api.navitia.io/v1/coverage/fr-idf/journeys?from=stop_area%3AOIF%3ASA%3A59238&to=2.33071%3B48.83890&first_section_mode%5B%5D=bike&first_section_mode%5B%5D=walking&datetime=20180614T113500&last_section_mode%5B%5D=walking&
+For instance, a request like—https://api.navitia.io/v1/coverage/fr-idf/journeys?from=stop_area%3AOIF%3ASA%3A59238&to=2.33071%3B48.83890&first_section_mode%5B%5D=bike&first_section_mode%5B%5D=walking&datetime=20180614T113500&last_section_mode%5B%5D=walking&, will produce the following calls. 
 
-We will do this:
 ![graph](../diagrams/distributed.png)
 
