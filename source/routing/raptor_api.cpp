@@ -52,7 +52,7 @@ namespace navitia { namespace routing {
 static const uint max_nb_raptor_call = 100;
 
 /**
- * @brief This function determine the break condition that depends on nb of found journeys,
+ * @brief This function determine the breaking condition that depends on nb of found journeys,
  * min_nb_journeys and time frame.
  *
  * @details
@@ -72,13 +72,10 @@ static const uint max_nb_raptor_call = 100;
  *                   / Y               \ N
  *          time frame is set?        time frame is set?
  *            /       \                  /     \
- *           / N       \                /N      \Y
- *       Case 1         \            Case 4     Case 5
- *                       \ Y
- *      total_nb_journeys < min_nb_journeys?
- *                   /        \
- *                  /Y         \N
- *              Case 2       Case 3
+ *           / Y       \                / Y      \ N
+ *       Case 1         \            Case 3     Case 4
+ *                       \ N
+ *                       Case 2
  *
  *
  *
@@ -89,29 +86,35 @@ static bool keep_going(const uint32_t total_nb_journeys,
                        const DateTime request_date_secs,
                        const boost::optional<uint32_t>& min_nb_journeys,
                        const boost::optional<uint32_t>& timeframe_duration) {
+    if(nb_try > max_nb_raptor_call) {
+        return false;
+    }
 
     auto is_inside = [clockwise](DateTime lhs, DateTime rhs){
         return clockwise ? lhs < rhs : lhs > rhs;
     };
+
     if (min_nb_journeys) {
-        if (! timeframe_duration) {
-            // Case 1: we return all min_nb_journeys journeys that raptor can find
-            return (total_nb_journeys < min_nb_journeys.get()) && (nb_try <= max_nb_raptor_call);
+
+        auto need_more_journeys = total_nb_journeys < *min_nb_journeys;
+
+        if (timeframe_duration) {
+            // Case 1: if we don't have enough journeys,
+            // we keep searching until the end of time frame
+            return need_more_journeys || is_inside(request_date_secs, *timeframe_duration);
         }
-        if (total_nb_journeys < min_nb_journeys.get()) {
-            // Case 2: we continue searching journeys until min_nb_journeys is reached
-            return true;
-        }
-        // Case 3: we have already enough journeys, but the search datetime is still inside of the time frame
-        //         we keep searching until the end of time frame
-        return is_inside(request_date_secs, timeframe_duration.get());
+
+        // Case 2: we return all min_nb_journeys journeys that raptor can find
+        return need_more_journeys;
     }
-    if (! timeframe_duration) {
-        // Case 4: Neither time duration nor min_nb_journeys are given, we call only once Raptor
-        return false;
+
+    if (timeframe_duration) {
+        // Case 3: no min_nb_journeys is given, we find all journeys inside of the time frame
+        return is_inside(request_date_secs, *timeframe_duration);
     }
-    // Case 5: no min_nb_journeys is given, we find all journeys inside of the time frame
-    return is_inside(request_date_secs, timeframe_duration.get());
+
+    // Case 4: Neither time duration nor min_nb_journeys are given, we call only once Raptor
+    return false;
 }
 
 /**
@@ -265,7 +268,6 @@ call_raptor(navitia::PbCreator& pb_creator,
 
             // Prepare next call for raptor with min_nb_journeys option
             request_date_secs = prepare_next_call_for_raptor(raptor_journeys, clockwise);
-
 
         } while (keep_going(total_nb_journeys,
                             nb_try,
