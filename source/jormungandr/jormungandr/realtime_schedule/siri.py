@@ -108,7 +108,8 @@ class Siri(RealtimeProxy):
         self.instance = instance
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config.get('CIRCUIT_BREAKER_MAX_SIRI_FAIL', 5),
                                                 reset_timeout=app.config.get('CIRCUIT_BREAKER_SIRI_TIMEOUT_S', 60))
-        self.step = kwargs.get('step', 30)
+        # A step is applied on from_datetime to discretize calls and allow caching them
+        self.from_datetime_step = kwargs.get('from_datetime_step', app.config['CACHE_CONFIGURATION'].get('TIMEOUT_SIRI', 60))
 
     def __repr__(self):
         """
@@ -224,7 +225,7 @@ class Siri(RealtimeProxy):
             </GetStopMonitoring>
           </x:Body>
         </x:Envelope>
-        """.format(dt=floor_datetime(datetime.utcfromtimestamp(dt), self.step).isoformat(),
+        """.format(dt=floor_datetime(datetime.utcfromtimestamp(dt), self.from_datetime_step).isoformat(),
                    count=count,
                    RequestorRef=self.requestor_ref,
                    MessageIdentifier=message_identifier,

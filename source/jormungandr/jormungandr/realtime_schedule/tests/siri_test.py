@@ -40,7 +40,7 @@ from jormungandr.tests.utils_test import MockResponse, MockRequests
 
 
 def make_request_test():
-    siri = Siri(id='tata', service_url='http://bob.com/', requestor_ref='Stibada')
+    siri = Siri(id='tata', service_url='http://bob.com/', requestor_ref='Stibada', from_datetime_step=30)
 
     request = siri._make_request(dt=_timestamp("12:00"), count=2, monitoring_ref='Tri:SP:toto:LOC')
 

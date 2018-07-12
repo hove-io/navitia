@@ -66,7 +66,8 @@ def make_url_count_and_dt_test():
     same as make_url_test but with a count and a from_dt
     """
     timeo = Timeo(id='tata', timezone='UTC', service_url='http://bob.com/tata',
-                  service_args={'a': 'bobette', 'b': '12'})
+                  service_args={'a': 'bobette', 'b': '12'},
+                  from_datetime_step=30)
 
     url = timeo._make_url(MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu'),
                           count=2, from_dt=_timestamp("12:00"))

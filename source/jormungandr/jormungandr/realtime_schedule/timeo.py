@@ -73,7 +73,8 @@ class Timeo(RealtimeProxy):
         fail_max = kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_TIMEO_FAIL'])
         reset_timeout = kwargs.get('circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_TIMEO_TIMEOUT_S'])
         self.breaker = pybreaker.CircuitBreaker(fail_max=fail_max, reset_timeout=reset_timeout)
-        self.step = kwargs.get('step', 30)
+        # A step is applied on from_datetime to discretize calls and allow caching them
+        self.from_datetime_step = kwargs.get('from_datetime_step', app.config['CACHE_CONFIGURATION'].get('TIMEOUT_TIMEO', 60))
 
         # Note: if the timezone is not know, pytz raise an error
         self.timezone = pytz.timezone(timezone)
@@ -220,7 +221,7 @@ class Timeo(RealtimeProxy):
 
         # if a custom datetime is provided we give it to timeo but we round it to improve cachability
         dt_param = '&NextStopReferenceTime={dt}'\
-            .format(dt=floor_datetime(self._timestamp_to_date(from_dt), self.step).strftime('%Y-%m-%dT%H:%M:%S')) \
+            .format(dt=floor_datetime(self._timestamp_to_date(from_dt), self.from_datetime_step).strftime('%Y-%m-%dT%H:%M:%S')) \
             if from_dt else ''
 
         #We want to have StopTimeType as it make parsing of the request way easier
