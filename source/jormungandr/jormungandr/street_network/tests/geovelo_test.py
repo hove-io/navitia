@@ -39,8 +39,10 @@ import json
 
 def direct_path_response_valid():
     """
-    reply to POST of {"starts":[[48.803064,2.443385, "refStart1"]],
+    A mock of a valid response from geovelo.
+    Reply to POST of {"starts":[[48.803064,2.443385, "refStart1"]],
                       "ends":[[48.802049,2.426482, "refEnd1"]]}
+    Modify with caution as it will affect every tests using these start and end uris.
     """
     return [
         {
@@ -449,9 +451,6 @@ def distances_durations_test():
     fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), True)
 
     proto_resp = geovelo._get_response(resp_json, origin, destination, fallback_extremity)
-    assert proto_resp.journeys[0].durations.total
-    assert proto_resp.journeys[0].durations.total != 0
-    assert proto_resp.journeys[0].durations.bike
-    assert proto_resp.journeys[0].durations.bike != 0
-    assert proto_resp.journeys[0].distances.bike
-    assert proto_resp.journeys[0].distances.bike != 0
+    assert proto_resp.journeys[0].durations.total == 3155
+    assert proto_resp.journeys[0].durations.bike == 3155
+    assert proto_resp.journeys[0].distances.bike == 11393.0
