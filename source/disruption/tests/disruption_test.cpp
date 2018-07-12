@@ -93,6 +93,7 @@ public:
         b.generate_dummy_basis();
         b.finish();
         b.data->pt_data->index();
+        b.data->pt_data->sort();
         b.data->build_uri();
         b.data->build_raptor();
         for(navitia::type::Line *line : b.data->pt_data->lines){

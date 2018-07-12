@@ -125,12 +125,6 @@ struct PT_Data : boost::noncopyable{
                 & tz_manager;
     }
 
-    /** Initialise tous les indexes
-      *
-      * Les données doivent bien évidemment avoir été initialisés
-      */
-    void build_index();
-
     /** Construit l'indexe ExternelCode */
     void build_uri();
 

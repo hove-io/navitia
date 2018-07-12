@@ -1462,6 +1462,7 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys) {
     b.generate_dummy_basis();
     b.finish();
     b.data->pt_data->index();
+    b.data->pt_data->sort();
     b.data->build_uri();
     b.data->build_raptor();
 
@@ -1492,6 +1493,7 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys_no_base) {
     b.generate_dummy_basis();
     b.finish();
     b.data->pt_data->index();
+    b.data->pt_data->sort();
     b.data->build_uri();
     b.data->build_raptor();
 

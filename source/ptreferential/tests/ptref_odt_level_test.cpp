@@ -1,4 +1,3 @@
-
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
@@ -149,6 +148,7 @@ public:
         add_route("Route21");
         add_vj("VJ211");
         add_vj("VJ212");
+        data.pt_data->index();
         data.build_uri();
     }
 
