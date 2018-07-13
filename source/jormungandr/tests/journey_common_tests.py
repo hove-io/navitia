@@ -1656,7 +1656,8 @@ class JourneysTimeFrameDuration():
         The data contains 20 journeys (every 10 min) + 1 journey 24H after the first.
         The first journeys is 20180315T080000.
 
-        If timeframe_duration is set to 0, the response have to return 0 journeys.
+        If timeframe_duration is set to 0, the response should return 1 journey,
+        as there is simply no contraint
         '''
         query = ('journeys?from={_from}&'
                 'to={to}&'
@@ -1666,15 +1667,15 @@ class JourneysTimeFrameDuration():
                                                                     datetime='20180315T080000',
                                                                     timeframe_duration=0)
         response = self.query_region(query)
-        assert 'journeys' not in response
-        assert 'no_solution' == response['error']['id']
+        assert 1 == len(response['journeys'])
 
     def test_timeframe_duration_and_min_nb_journeys_with_minimum_value(self):
         '''
         The data contains 20 journeys (every 10 min) + 1 journey 24H after the first.
         The first journeys is 20180315T080000.
 
-        If timeframe_duration and min_nb_journeys are set to 0, the response have to return 0 journeys.
+        If timeframe_duration and min_nb_journeys are set to 0, the response should return 1 journey,
+        as there is simply no contraint
         '''
         query = ('journeys?from={_from}&'
                 'to={to}&'
@@ -1685,8 +1686,7 @@ class JourneysTimeFrameDuration():
                                                                     min_nb_journeys=0,
                                                                     timeframe_duration=0)
         response = self.query_region(query)
-        assert 'journeys' not in response
-        assert 'no_solution' == response['error']['id']
+        assert 1 == len(response['journeys'])
 
 
     def test_timeframe_duration_with_maximum_value(self):

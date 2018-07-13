@@ -803,11 +803,6 @@ class Scenario(simple.Scenario):
     def fill_journeys(self, request_type, api_request, instance):
         logger = logging.getLogger(__name__)
 
-        # early return
-        if (api_request['timeframe_duration'] == 0):
-            logger.debug("timeframe_duration option have to be greater than 0)")
-            return response_pb2.Response()
-
         # sometimes we need to change the entrypoint id (eg if the id is from another autocomplete system)
         origin_detail = self.get_entrypoint_detail(api_request.get('origin'), instance)
         destination_detail = self.get_entrypoint_detail(api_request.get('destination'), instance)
