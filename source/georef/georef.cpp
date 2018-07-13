@@ -615,13 +615,8 @@ std::vector<Admin*> GeoRef::find_admins(const type::GeographicalCoord& coord, Ad
     if(!result.empty()){
         return result;
     }
-    //we didn't found any results with boundary, as a fallback we search for the admin o the closest way
-    try {
-        const auto& filter = [](const Way& w){return w.admin_list.empty();};
-        return nearest_addr(coord, filter).second->admin_list;
-    } catch (proximitylist::NotFound&) {
-        return {};
-    }
+    //we didn't found any results with boundary, as a fallback we search for the admin of the closest way
+    return this->find_admins(coord);
 }
 
 std::pair<GeoRef::ProjectionByMode, bool> GeoRef::project_stop_point(const type::StopPoint* stop_point) const {
