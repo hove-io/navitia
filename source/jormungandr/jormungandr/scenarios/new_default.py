@@ -36,7 +36,7 @@ from flask import g
 from jormungandr.scenarios import simple, journey_filter, helpers
 from jormungandr.scenarios.ridesharing.ridesharing_helper import decorate_journeys
 from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, \
-    get_or_default, fill_uris, gen_all_combin, get_pseudo_duration, mode_weight
+    get_or_default, fill_uris, gen_all_combin, get_pseudo_duration, mode_weight, switch_back_to_ridesharing
 from navitiacommon import type_pb2, response_pb2, request_pb2
 from jormungandr.scenarios.qualifier import min_from_criteria, arrival_crit, departure_crit, \
     duration_crit, transfers_crit, nonTC_crit, trip_carac, has_no_car, has_car, has_pt, \
@@ -560,35 +560,6 @@ def _tag_by_mode(responses):
             _tag_journey_by_mode(j)
 
 
-def _is_fake_car_section(section):
-    """
-    This function test if the section is a fake car section
-    """
-    return (section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY) and \
-            section.street_network.mode == response_pb2.Car
-
-
-def _switch_back_to_ridesharing(response, is_first_section):
-    """
-
-    :param response: a pb_response returned by kraken
-    :param is_first_section: a bool indicates that if the first_section or last_section is a ridesharing section
-                             True if the first_section is, False if the last_section is
-    :return:
-    """
-    for journey in response.journeys:
-        if len(journey.sections) == 0:
-            continue
-        section_idx = 0 if is_first_section else -1
-        section = journey.sections[section_idx]
-        if _is_fake_car_section(section):
-            section.street_network.mode = response_pb2.Ridesharing
-            journey.durations.ridesharing += section.duration
-            journey.durations.car -= section.duration
-            journey.distances.ridesharing += section.length
-            journey.distances.car -= section.length
-
-
 def nb_journeys(responses):
     return sum(1 for r in responses for j in r.journeys if not journey_filter.to_be_deleted(j))
 
@@ -972,9 +943,9 @@ class Scenario(simple.Scenario):
                 j.internal_id = "{resp}-{j}".format(resp=self.nb_kraken_calls, j=idx)
 
             if dep_mode == 'ridesharing':
-                _switch_back_to_ridesharing(local_resp, True)
+                switch_back_to_ridesharing(local_resp, True)
             if arr_mode == 'ridesharing':
-                _switch_back_to_ridesharing(local_resp, False)
+                switch_back_to_ridesharing(local_resp, False)
 
             fill_uris(local_resp)
             resp.append(local_resp)

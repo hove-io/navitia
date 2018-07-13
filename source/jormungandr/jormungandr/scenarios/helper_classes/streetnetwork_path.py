@@ -31,6 +31,7 @@ from . import helper_future
 from jormungandr import utils
 from jormungandr.street_network.street_network import StreetNetworkPathType
 import logging
+from jormungandr.scenarios.utils import switch_back_to_ridesharing
 
 class StreetNetworkPath:
     """
@@ -69,6 +70,8 @@ class StreetNetworkPath:
                                                 self._fallback_extremity, self._request,
                                                 self._path_type)
         if getattr(dp, "journeys", None):
+            if self._mode == "ridesharing":
+                switch_back_to_ridesharing(dp, True)
             dp.journeys[0].internal_id = str(utils.generate_id())
 
         logger.debug("finish %s direct path from %s to %s by %s", self._path_type,

@@ -32,6 +32,7 @@ import navitiacommon.response_pb2 as response_pb2
 import jormungandr.scenarios.tests.helpers_tests as helpers_tests
 from jormungandr.scenarios import new_default
 from jormungandr.scenarios.new_default import _tag_journey_by_mode, get_kraken_calls
+from jormungandr.scenarios.utils import switch_back_to_ridesharing
 from werkzeug.exceptions import HTTPException
 import pytest
 """
@@ -501,7 +502,7 @@ def crowfly_in_ridesharing_test():
     section.type = response_pb2.STREET_NETWORK
     section.street_network.mode = response_pb2.Walking
 
-    new_default._switch_back_to_ridesharing(response, True)
+    new_default.switch_back_to_ridesharing(response, True)
 
     assert section_crowfly.street_network.mode == response_pb2.Ridesharing
     assert journey.durations.ridesharing == 42

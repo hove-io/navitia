@@ -33,7 +33,7 @@ from jormungandr.scenarios import new_default
 from jormungandr.utils import PeriodExtremity
 from jormungandr.street_network.street_network import StreetNetworkPathType
 from jormungandr.scenarios.helper_classes import *
-from jormungandr.scenarios.utils import fill_uris
+from jormungandr.scenarios.utils import fill_uris, switch_back_to_ridesharing
 
 
 class Scenario(new_default.Scenario):
@@ -158,6 +158,8 @@ class Scenario(new_default.Scenario):
         for mode in requested_dep_modes:
             dp = direct_paths_by_mode.get(mode).wait_and_get()
             if getattr(dp, "journeys", None):
+                if mode == "ridesharing":
+                    switch_back_to_ridesharing(dp, True)
                 res.append(dp)
 
         # completed_pt_journeys may contain None and res must be a list of protobuf journey
