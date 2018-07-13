@@ -57,26 +57,20 @@ static const uint MAX_NB_RAPTOR_CALL = 100;
  *
  * @details
  *
- *   T           T + N          T + 24H
- *   -----------------------------------
+ *   requested_datetime           requested_datetime + timeframe_duration
+ *   -------[--------------------------------------------]-------------------------->
+ *                  minimal period to explore
  *
- * timeframe_duration (T + N): the end datetime of original request's timeframe
- * max_duration (T + 24H): the max datetime compared to the orignal datetime,
- *                                   this param is used in case when T + N is reached but
- *                                   we still don't have enough journeys(total_nb_journeys<min_nb_journeys),
- *                                   we allow raptor to get out of the requested time frame (T + N) but still
- *                                   limit the search frame inside bound
+ * timeframe_limit (request_date_secs + timeframe_duration):
+ *          The end datetime of original request's timeframe (we have to explore at minimum this period)
  *
  *                   min_nb_journeys is set?
  *                    /               \
  *                   / Y               \ N
- *          time frame is set?        time frame is set?
+ *          timeframe is set?        timeframe is set?
  *            /       \                  /     \
- *           / Y       \                / Y      \ N
- *       Case 1         \            Case 3     Case 4
- *                       \ N
- *                       Case 2
- *
+ *           / Y       \ N              / Y      \ N
+ *       Case 1      Case 2          Case 3     Case 4
  *
  *
  */
@@ -85,7 +79,7 @@ static bool keep_going(const uint32_t total_nb_journeys,
                        const bool clockwise,
                        const DateTime request_date_secs,
                        const boost::optional<uint32_t>& min_nb_journeys,
-                       const boost::optional<uint32_t>& timeframe_duration) {
+                       const boost::optional<DateTime>& timeframe_limit) {
     if(nb_try > MAX_NB_RAPTOR_CALL) {
         return false;
     }
@@ -96,21 +90,21 @@ static bool keep_going(const uint32_t total_nb_journeys,
 
     if (min_nb_journeys) {
 
-        auto need_more_journeys = total_nb_journeys < *min_nb_journeys;
+        auto need_more_journeys_for_min = total_nb_journeys < *min_nb_journeys;
 
-        if (timeframe_duration) {
+        if (timeframe_limit) {
             // Case 1: if we don't have enough journeys,
             // we keep searching until the end of time frame
-            return need_more_journeys || is_inside(request_date_secs, *timeframe_duration);
+            return need_more_journeys_for_min || is_inside(request_date_secs, *timeframe_limit);
         }
 
         // Case 2: we return all min_nb_journeys journeys that raptor can find
-        return need_more_journeys;
+        return need_more_journeys_for_min;
     }
 
-    if (timeframe_duration) {
+    if (timeframe_limit) {
         // Case 3: no min_nb_journeys is given, we find all journeys inside of the time frame
-        return is_inside(request_date_secs, *timeframe_duration);
+        return is_inside(request_date_secs, *timeframe_limit);
     }
 
     // Case 4: Neither time duration nor min_nb_journeys are given, we call only once Raptor
@@ -121,19 +115,19 @@ static bool keep_going(const uint32_t total_nb_journeys,
  * @brief Culling excessive journeys if we exceed limits
  */
 static void culling_excessive_journeys(const boost::optional<uint32_t>& min_nb_journeys,
-                                       const boost::optional<uint32_t>& timeframe_duration,
+                                       const boost::optional<DateTime>& timeframe_limit,
                                        const bool clockwise,
                                        JourneySet& journeys) {
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
-    if (timeframe_duration && journeys.size() > 0) {
+    if (timeframe_limit && journeys.size() > 0) {
 
         routing::JourneyCmp journey_cmp{clockwise};
         // filter journeys by end datetime until min_nb_journeys
         std::vector<routing::Journey> sorted{journeys.begin(), journeys.end()};
         std::sort(sorted.begin(), sorted.end(), journey_cmp);
 
-        auto is_inside = [clockwise](const routing::Journey& j, DateTime dt){
+        auto is_inside = [&clockwise](const routing::Journey& j, DateTime dt){
             return clockwise ? j.departure_dt < dt : j.arrival_dt > dt;
         };
 
@@ -145,8 +139,8 @@ static void culling_excessive_journeys(const boost::optional<uint32_t>& min_nb_j
             // or
             // min_nb_journeys exist and Nb journeys is greater than min_nb_journeys criteria
             // and journey exceeds the time frame limit
-            if ( (!min_nb_journeys && !is_inside(j, timeframe_duration.get())) ||
-                 (min_nb_journeys && (count >= min_nb_journeys.get()) && !is_inside(j, timeframe_duration.get())) )
+            if ( (!min_nb_journeys && !is_inside(j, timeframe_limit.get())) ||
+                 (min_nb_journeys && (count >= min_nb_journeys.get()) && !is_inside(j, timeframe_limit.get())) )
             {
                 journeys.erase(j);
             }
@@ -159,20 +153,25 @@ static void culling_excessive_journeys(const boost::optional<uint32_t>& min_nb_j
 }
 
 /**
- * @brief Update timeframe_duration in raptor referential
+ * @brief Process timeframe_limit in raptor referential from request_datetime and timeframe_duration
  */
-static void update_timeframe_parameters(const uint32_t request_date_secs,
-                                        const bool clockwise,
-                                        boost::optional<uint32_t>& timeframe_duration)
+static boost::optional<DateTime> get_timeframe_limit(const DateTime request_date_secs,
+                                                     const bool clockwise,
+                                                     const boost::optional<uint32_t>& timeframe_duration)
 {
-    if (timeframe_duration) {
-        if (clockwise) {
-            *timeframe_duration += request_date_secs;
-        } else {
-            *timeframe_duration = request_date_secs > *timeframe_duration ? request_date_secs - *timeframe_duration : 0;
-        }
+    if (! timeframe_duration) {
+        return boost::none;
     }
+
+    DateTime limit = 0; // cannot be negative
+    if (clockwise) {
+        limit = request_date_secs + *timeframe_duration;
+    } else if (request_date_secs > *timeframe_duration) {
+        limit = request_date_secs - *timeframe_duration;
+    }
+    return limit;
 }
+
 
 /**
  * @brief internal function to call raptor in a loop
@@ -212,10 +211,10 @@ call_raptor(navitia::PbCreator& pb_creator,
         // Compute start time and Bound
         DateTime request_date_secs = to_datetime(datetime, raptor.data);
 
-        // timeframe_duration in raptor referential
-        update_timeframe_parameters(request_date_secs,
-                                     clockwise,
-                                     timeframe_duration);
+        // timeframe_limit in raptor referential
+        boost::optional<DateTime> timeframe_limit = get_timeframe_limit(request_date_secs,
+                                                                        clockwise,
+                                                                        timeframe_duration);
 
         // Compute Bound
         if(max_duration != DateTimeUtils::inf) {
@@ -273,11 +272,11 @@ call_raptor(navitia::PbCreator& pb_creator,
                             clockwise,
                             request_date_secs,
                             min_nb_journeys,
-                            timeframe_duration));
+                            timeframe_limit));
 
         // Culling the excessive journeys
         culling_excessive_journeys(min_nb_journeys,
-                                   timeframe_duration,
+                                   timeframe_limit,
                                    clockwise,
                                    journeys);
 
