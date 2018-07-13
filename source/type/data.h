@@ -40,6 +40,7 @@ www.navitia.io
 #include "utils/serialization_atomic.h"
 #include "data_exceptions.h"
 #include "utils/obj_factory.h"
+#include "georef/adminref.h"
 
 //forward declare
 namespace navitia {
@@ -145,7 +146,7 @@ public:
     std::unique_ptr<navitia::fare::Fare> fare;
 
     // functor to find admins
-    std::function<std::vector<georef::Admin*>(const GeographicalCoord&)> find_admins;
+    std::function<std::vector<georef::Admin*>(const GeographicalCoord&, georef::AdminRtree&)> find_admins;
 
     /** Return the vector containing all the objects of type T*/
     template<typename T> const typename ContainerTrait<T>::vect_type& get_data() const;

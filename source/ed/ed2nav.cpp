@@ -106,7 +106,7 @@ struct FindAdminWithCities {
         }
     }
 
-    result_type operator()(const navitia::type::GeographicalCoord& c) {
+    result_type operator()(const navitia::type::GeographicalCoord& c, navitia::georef::AdminRtree& admin_tree) {
         if(nb_call == 0){
             init();
         }
@@ -114,7 +114,7 @@ struct FindAdminWithCities {
 
         if (!c.is_initialized()) {++nb_uninitialized; return {};}
 
-        const auto &georef_res = georef.find_admins(c);
+        const auto &georef_res = georef.find_admins(c, admin_tree);
         if (!georef_res.empty()) {++nb_georef; return georef_res;}
 
         std::stringstream request;
