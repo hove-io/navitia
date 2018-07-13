@@ -740,3 +740,20 @@ BOOST_AUTO_TEST_CASE(get_potential_routes_test) {
                                                 {"code_key", "stop1 code"});
     BOOST_CHECK_EQUAL_RANGE(routes_names(routes), std::set<std::string>({}));
 }
+
+namespace navitia { namespace type {
+std::ostream& operator<<(std::ostream& os, const Type_e& type) {
+    return os << navitia::type::static_data::get()->captionByType(type);
+}
+}}
+
+BOOST_AUTO_TEST_CASE(find_path_example) {
+    // searching for the path between Route and CommercialMode
+    const auto succ = find_path(Type_e::CommercialMode);
+    std::vector<Type_e> res;
+    for (auto cur = Type_e::Route; succ.at(cur) != cur; cur = succ.at(cur)) {
+        res.push_back(succ.at(cur));
+    }
+    // the path is Route -> Line -> CommercialMode
+    BOOST_CHECK_EQUAL_RANGE(res, std::vector<Type_e>({Type_e::Line, Type_e::CommercialMode}));
+}

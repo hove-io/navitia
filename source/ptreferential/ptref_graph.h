@@ -52,8 +52,20 @@ struct Jointures {
     Jointures();
 };
 
-/// Trouve le chemin d'un type de données à un autre
-/// Par exemple StopArea → StopPoint → JourneyPatternPoint
+/// Find the path between types.  `res[t]` is the successor of `t` in
+/// the path. If `res[t] == t`, we are at the begin of the path,
+/// i.e. we arrived at the source, or there is no path to the source.
+///
+/// For example, to find the path from Route to CommercialMode:
+/// ```
+/// const auto succ = find_path(Type_e::CommercialMode);
+/// std::vector<Type_e> res;
+/// for (auto cur = Type_e::Route; succ.at(cur) != cur; cur = succ.at(cur)) {
+///     res.push_back(succ.at(cur));
+/// }
+/// // the path is Route -> Line -> CommercialMode
+/// BOOST_CHECK_EQUAL_RANGE(res, std::vector<Type_e>({Type_e::Line, Type_e::CommercialMode}));
+/// ```
 std::map<type::Type_e, type::Type_e> find_path(type::Type_e source);
 
 }}
