@@ -40,7 +40,7 @@ from jormungandr.tests.utils_test import MockResponse, MockRequests
 
 
 def make_request_test():
-    siri = Siri(id='tata', service_url='http://bob.com/', requestor_ref='Stibada')
+    siri = Siri(id='tata', service_url='http://bob.com/', requestor_ref='Stibada', from_datetime_step=30)
 
     request = siri._make_request(dt=_timestamp("12:00"), count=2, monitoring_ref='Tri:SP:toto:LOC')
 
@@ -52,6 +52,14 @@ def make_request_test():
     assert root.find('.//siri:MaximumStopVisits', ns).text == '2'
     assert root.find('.//siri:RequestTimestamp', ns).text == '2016-02-07T12:00:00'
     assert root.find('.//siri:RequestorRef', ns).text == 'Stibada'
+
+    request = siri._make_request(dt=_timestamp("12:00:12"), count=2, monitoring_ref='Tri:SP:toto:LOC')
+    root = et.fromstring(request)
+    assert root.find('.//siri:RequestTimestamp', ns).text == '2016-02-07T12:00:00'
+
+    request = siri._make_request(dt=_timestamp("12:00:33"), count=2, monitoring_ref='Tri:SP:toto:LOC')
+    root = et.fromstring(request)
+    assert root.find('.//siri:RequestTimestamp', ns).text == '2016-02-07T12:00:30'
 
 
 def mock_good_response():
