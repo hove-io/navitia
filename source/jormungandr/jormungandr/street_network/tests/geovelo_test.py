@@ -39,8 +39,10 @@ import json
 
 def direct_path_response_valid():
     """
-    reply to POST of {"starts":[[48.803064,2.443385, "refStart1"]],
+    A mock of a valid response from geovelo.
+    Reply to POST of {"starts":[[48.803064,2.443385, "refStart1"]],
                       "ends":[[48.802049,2.426482, "refEnd1"]]}
+    Modify with caution as it will affect every tests using these start and end uris.
     """
     return [
         {
@@ -434,3 +436,21 @@ def isochrone_geovelo_test():
         assert geovelo_response.rows[0].routing_response[0].routing_status == response_pb2.reached
         assert geovelo_response.rows[0].routing_response[1].duration == 1656
         assert geovelo_response.rows[0].routing_response[1].routing_status == response_pb2.reached
+
+def distances_durations_test():
+    """
+    Check that the response from geovelo is correctly formatted with 'distances' and 'durations' sections
+    """
+    instance = MagicMock()
+    geovelo = Geovelo(instance=instance,
+                      service_url='http://bob.com')
+    resp_json = direct_path_response_valid()
+
+    origin = make_pt_object(type_pb2.ADDRESS, lon=2, lat=48.2, uri='refStart1')
+    destination = make_pt_object(type_pb2.ADDRESS, lon=3, lat=48.3, uri='refEnd1')
+    fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), True)
+
+    proto_resp = geovelo._get_response(resp_json, origin, destination, fallback_extremity)
+    assert proto_resp.journeys[0].durations.total == 3155
+    assert proto_resp.journeys[0].durations.bike == 3155
+    assert proto_resp.journeys[0].distances.bike == 11393.0

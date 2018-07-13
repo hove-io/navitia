@@ -177,7 +177,7 @@ class Geovelo(AbstractStreetNetworkService):
 
 
     @classmethod
-    def _get_response(cls, json_response, mode, pt_object_origin, pt_object_destination, fallback_extremity):
+    def _get_response(cls, json_response, pt_object_origin, pt_object_destination, fallback_extremity):
         '''
         :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
         '''
@@ -222,6 +222,9 @@ class Geovelo(AbstractStreetNetworkService):
             journey.arrival_date_time = datetime
 
         journey.durations.total = journey.duration
+        journey.durations.bike = journey.duration
+
+        journey.distances.bike = int(geovelo_resp['distances']['total'])
 
         previous_section_endtime = journey.departure_date_time
         for index, geovelo_section in enumerate(geovelo_resp['sections']):
@@ -283,7 +286,7 @@ class Geovelo(AbstractStreetNetworkService):
             logging.getLogger(__name__).error('Geovelo nb response != nb requested')
             raise UnableToParse('Geovelo nb response != nb requested')
 
-        return self._get_response(resp_json, mode, pt_object_origin, pt_object_destination, fallback_extremity)
+        return self._get_response(resp_json, pt_object_origin, pt_object_destination, fallback_extremity)
 
     def make_path_key(self, mode, orig_uri, dest_uri, streetnetwork_path_type, period_extremity):
         """
