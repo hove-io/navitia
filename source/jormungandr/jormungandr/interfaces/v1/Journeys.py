@@ -502,7 +502,13 @@ class Journeys(JourneyCommon):
                                 help="Shared section journeys aren't returned as a separate journey")
         parser_get.add_argument("timeframe_duration", type=int,
                                 dest="timeframe_duration",
-                                help="time frame limit to search journeys")
+                                help="Minimum timeframe to search journeys.\n"
+                                     "For example 'timeframe_duration=3600' will search for all "
+                                     "interesting journeys departing within the next hour.\n"
+                                     "Nota 1: Navitia can return journeys after that timeframe as it's "
+                                     "actually a minimum.\n"
+                                     "Nota 2: 'max_nb_journeys' parameter has priority over "
+                                     "'timeframe_duration' parameter.")
 
         self.get_decorators.append(complete_links(self))
 

@@ -42,13 +42,13 @@ www.navitia.io
  * Vehicle journey with multiple stops times
  * date : 2018 03 09
  *
- *                   sp1    (A Line & C line)   sp2
+ *                sa1:sp1   (A Line & C line)   sa3:sp1
  *            /-------x--------------------------x--------\
  *           /                                             \
  *          /                                               \
  *   Start x                                                 x Stop
  *          \                                               /
- *           \       sp1                        sp2        /
+ *           \    sa1:sp2                       sa3:sp2    /
  *            \-------x--------------------------x--------/
  *                          (B Line)
  *
@@ -100,9 +100,9 @@ int main(int argc, const char* const argv[]) {
     // journey 2
     // We add an other way to test similar journeys filtering
     // (Faster but with more walking)
-    b.vj("B", "111111", "", false, "vj5")("stop_point:sa1:s2", "8:00"_t, "8:05"_t)("stop_point:sa3:s2", "8:15"_t, "8:16"_t);
 
-    // Line B
+	// Line B
+    b.vj("B", "111111", "", false, "vj5")("stop_point:sa1:s2", "8:00"_t, "8:05"_t)("stop_point:sa3:s2", "8:15"_t, "8:16"_t);
     b.lines["B"]->code = "B";
 	b.lines["B"]->color = "5AC8BC";
 	b.lines["B"]->text_color = "FFFFFF";
@@ -110,10 +110,12 @@ int main(int argc, const char* const argv[]) {
     // journey 3
     // adding new vjs to test timeframe_duration and max_nb_journeys
 	// All those vj start their service on 20180315
+
+	// Line C
     auto dep_time = "08:00:00"_t;
     auto arr_time = "08:05:00"_t;
     for (int nb = 0; nb < 20; ++nb) {
-        b.vj("C", "1000000", "", false, "vjC_" + std::to_string(nb))
+        b.vj("C", "01000000", "", false, "vjC_" + std::to_string(nb))
                 ("stop_point:sa1:s1", dep_time + nb * "00:10:00"_t)
                 ("stop_point:sa3:s1", arr_time + nb * "00:10:00"_t);
     }
@@ -121,8 +123,6 @@ int main(int argc, const char* const argv[]) {
     b.vj("C", "10000000", "", false, "vjC_out_of_24_bound")
                 ("stop_point:sa1:s1", "08:00:00"_t)
                 ("stop_point:sa3:s1", "08:05:00"_t);
-
-    // Line B
     b.lines["C"]->code = "C";
 	b.lines["C"]->color = "AAC2B1";
 	b.lines["C"]->text_color = "FFFFFF";

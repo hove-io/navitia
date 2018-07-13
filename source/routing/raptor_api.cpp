@@ -49,7 +49,7 @@ www.navitia.io
 namespace navitia { namespace routing {
 
 // Usefull to protect raptor loop
-static const uint max_nb_raptor_call = 100;
+static const uint MAX_NB_RAPTOR_CALL = 100;
 
 /**
  * @brief This function determine the breaking condition that depends on nb of found journeys,
@@ -86,11 +86,11 @@ static bool keep_going(const uint32_t total_nb_journeys,
                        const DateTime request_date_secs,
                        const boost::optional<uint32_t>& min_nb_journeys,
                        const boost::optional<uint32_t>& timeframe_duration) {
-    if(nb_try > max_nb_raptor_call) {
+    if(nb_try > MAX_NB_RAPTOR_CALL) {
         return false;
     }
 
-    auto is_inside = [clockwise](DateTime lhs, DateTime rhs){
+    auto is_inside = [&clockwise](DateTime lhs, DateTime rhs){
         return clockwise ? lhs < rhs : lhs > rhs;
     };
 
@@ -252,7 +252,6 @@ call_raptor(navitia::PbCreator& pb_creator,
 
             LOG4CPLUS_DEBUG(logger, "after filtering late journeys: " << raptor_journeys.size() << " solution(s) left");
 
-            // Break if empty
             if (raptor_journeys.empty()) {
                 break;
             }

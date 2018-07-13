@@ -912,7 +912,7 @@ class Scenario(simple.Scenario):
 
             if api_request['timeframe_duration']:
                 # If timeframe_duration is active, it is useless to recall Kraken,
-                # it has already sent back that he could
+                # it has already sent back what he could
                 break
 
             if nb_previously_qualified_journeys == nb_qualified_journeys:
