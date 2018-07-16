@@ -31,10 +31,11 @@ from .tests_mechanism import NewDefaultScenarioAbstractTestFixture
 from .tests_mechanism import config
 from .journey_common_tests import *
 
-'''
+"""
 This unit runs all the common tests in journey_common_tests.py along with locals tests added in this
 unit for scenario new_default
-'''
+"""
+
 
 @config({"scenario": "new_default"})
 class TestJourneysNewDefault(JourneyCommon,  DirectPath, JourneyMinBikeMinCar, NewDefaultScenarioAbstractTestFixture):

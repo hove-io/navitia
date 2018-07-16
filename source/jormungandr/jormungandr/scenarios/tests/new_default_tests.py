@@ -35,6 +35,7 @@ from jormungandr.scenarios.new_default import _tag_journey_by_mode, get_kraken_c
 from jormungandr.scenarios.utils import switch_back_to_ridesharing
 from werkzeug.exceptions import HTTPException
 import pytest
+
 """
  sections       0   1   2   3   4   5   6   7   8   9   10
  -------------------------------------------------------------
@@ -502,7 +503,7 @@ def crowfly_in_ridesharing_test():
     section.type = response_pb2.STREET_NETWORK
     section.street_network.mode = response_pb2.Walking
 
-    new_default.switch_back_to_ridesharing(response, True)
+    switch_back_to_ridesharing(response, True)
 
     assert section_crowfly.street_network.mode == response_pb2.Ridesharing
     assert journey.durations.ridesharing == 42

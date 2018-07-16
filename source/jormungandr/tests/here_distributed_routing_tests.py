@@ -30,9 +30,8 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import pytest
 
 from jormungandr.tests.utils_test import MockResponse
-from jormungandr.utils import str_to_time_stamp
-from tests.check_utils import journey_basic_query, get_not_null, s_coord, r_coord
-from tests.tests_mechanism import AbstractTestFixture, dataset, config, NewDefaultScenarioAbstractTestFixture
+from tests.check_utils import get_not_null, s_coord, r_coord
+from tests.tests_mechanism import dataset, NewDefaultScenarioAbstractTestFixture
 
 MOCKED_INSTANCE_CONF = {
     'scenario': 'distributed',

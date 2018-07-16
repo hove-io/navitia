@@ -34,7 +34,8 @@ from .tests_mechanism import dataset
 from jormungandr import i_manager
 from .check_utils import *
 import mock
-import os
+from os import getenv
+from pytest import approx
 
 
 def check_best(resp):
@@ -720,9 +721,9 @@ class JourneyCommon(object):
         assert 'journeys' not in response or len(response['journeys']) == 0
 
     def test_call_kraken_foreach_mode(self):
-        '''
+        """
         test if the different pt computation do not interfer
-        '''
+        """
         query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&first_section_mode[]=walking&first_section_mode[]=bike&debug=true"\
             .format(from_coord="0.0000898312;0.0000898312",
                     to_coord="0.00188646;0.00071865",
@@ -771,9 +772,9 @@ class JourneyCommon(object):
         assert response['journeys'][3]['durations']['total'] == 276
 
     def test_call_kraken_boarding_alighting(self):
-        '''
+        """
         test that boarding and alighting sections are present
-        '''
+        """
         query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&debug=true&max_duration_to_pt=0"\
                     .format(from_sa="stopA",
                             to_sa="stopB",
@@ -928,7 +929,7 @@ class JourneyCommon(object):
         assert r['journeys'][0]['sections'][1]['display_informations']['name'] == first_journey_pt
         assert len(r['journeys']) == 1
 
-    if os.getenv('JORMUNGANDR_USE_SERPY'):
+    if getenv('JORMUNGANDR_USE_SERPY'):
         def test_section_fare_zone(self):
             """
             In a 'stop_point', the section 'fare_zone' should be present if the info is available
@@ -1593,7 +1594,7 @@ class JourneysWithNightBusFilter():
 @dataset({"main_routing_test": {}})
 class JourneysRidesharing():
     def test_first_ridesharing_last_walking_section_mode(self):
-        query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
+        query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.000449156&datetime=20120614T075500&"\
                 "first_section_mode[]={first}&last_section_mode[]={last}&debug=true"\
                 .format(first='ridesharing', last='walking')
         response = self.query_region(query)
@@ -1619,10 +1620,10 @@ class JourneysRidesharing():
         assert rs_section["type"] == "street_network"
         assert rs_section["id"] # check that id is provided
         assert rs_section["geojson"]["properties"][0]["length"] == rs_journey["distances"]["ridesharing"]
-        assert (rs_section["geojson"]["coordinates"][0][0] - float(rs_section["from"]["address"]["coord"]["lon"])) < 0.000001
-        assert (rs_section["geojson"]["coordinates"][0][1] - float(rs_section["from"]["address"]["coord"]["lat"])) < 0.000001
-        assert (rs_section["geojson"]["coordinates"][1][0] - float(rs_section["to"]["address"]["coord"]["lon"])) < 0.000001
-        assert (rs_section["geojson"]["coordinates"][1][1] - float(rs_section["to"]["address"]["coord"]["lat"])) < 0.000001
+        assert rs_section["geojson"]["coordinates"][0][0] == approx(float(rs_section["from"]["address"]["coord"]["lon"]))
+        assert rs_section["geojson"]["coordinates"][0][1] == approx(float(rs_section["from"]["address"]["coord"]["lat"]))
+        assert rs_section["geojson"]["coordinates"][-1][0] == approx(float(rs_section["to"]["address"]["coord"]["lon"]))
+        assert rs_section["geojson"]["coordinates"][-1][1] == approx(float(rs_section["to"]["address"]["coord"]["lat"]))
 
     def test_first_ridesharing_section_mode_forbidden(self):
         def exec_and_check(query):

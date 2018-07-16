@@ -208,6 +208,7 @@ def compute_car_co2_emission(pb_resp, api_request, instance):
         pb_resp.car_co2_emission.value = car.co2_emission.value
         pb_resp.car_co2_emission.unit = car.co2_emission.unit
 
+
 def tag_ecologic(resp):
     # if there is no available car_co2_emission in resp, no tag will be assigned
     if resp.car_co2_emission.value and resp.car_co2_emission.unit:
@@ -241,12 +242,14 @@ def _is_bike_section(s):
     return ((s.type == response_pb2.CROW_FLY or s.type == response_pb2.STREET_NETWORK) and
             s.street_network.mode == response_pb2.Bike)
 
+
 def _is_pt_bike_accepted_section(s):
     bike_ok = type_pb2.hasEquipments.has_bike_accepted
     return (s.type == response_pb2.PUBLIC_TRANSPORT and
             bike_ok in s.pt_display_informations.has_equipments.has_equipments and
             bike_ok in s.origin.stop_point.has_equipments.has_equipments and
             bike_ok in s.destination.stop_point.has_equipments.has_equipments)
+
 
 def _is_bike_in_pt_journey(j):
     bike_indifferent = [response_pb2.boarding,
@@ -260,11 +263,12 @@ def _is_bike_in_pt_journey(j):
                or s.type in bike_indifferent
                    for s in j.sections)
 
+
 def _tag_bike_in_pt(responses):
-    '''
+    """
     we tag as 'bike _in_pt' journeys that are using bike as start AND end fallback AND
     that allow carrying bike in transport (and journey has to include PT)
-    '''
+    """
     for j in itertools.chain.from_iterable(r.journeys for r in responses):
         if _is_bike_in_pt_journey(j):
             j.tags.extend(['bike_in_pt'])

@@ -33,10 +33,11 @@ from .journey_common_tests import *
 from unittest import skip
 from .routing_tests import OnBasicRouting
 
-'''
+"""
 This unit runs all the common tests in journey_common_tests.py along with locals tests added in this
 unit for scenario experimental
-'''
+"""
+
 
 @config({'scenario': 'distributed'})
 class TestJourneysDistributed(JourneyCommon, DirectPath, JourneyMinBikeMinCar, NewDefaultScenarioAbstractTestFixture):
@@ -55,7 +56,6 @@ class TestJourneysDistributed(JourneyCommon, DirectPath, JourneyMinBikeMinCar, N
         query = journey_basic_query + "&first_section_mode[]=walking&last_section_mode[]=car&debug=true"
         response = self.query_region(query)
         check_best(response)
-        #self.is_valid_journey_response(response, query)# linestring with 1 value (0,0)
         jrnys = response['journeys']
         assert jrnys
         assert jrnys[0]['sections'][0]['mode'] == 'walking'
