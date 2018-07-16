@@ -151,8 +151,6 @@ std::string make_request(const type::Type_e requested_type,
 
 }} // namespace navitia::ptref
 
-BOOST_FUSION_ADAPT_STRUCT(navitia::ptref::ast::All, )
-BOOST_FUSION_ADAPT_STRUCT(navitia::ptref::ast::Empty, )
 BOOST_FUSION_ADAPT_STRUCT(
     navitia::ptref::ast::Fun,
     (std::string, type)
