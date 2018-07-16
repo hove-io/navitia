@@ -3446,7 +3446,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     // Case 1 :
     // clockwise = true
     // timeframe_duration = 0
-    // timeframe_max_datetime = 86400 (24H)
+    // timeframe_max_bound = 24H (very late search limit)
     //
     // In the response, we want 0 journeys, all is filtered.
     bool clockwise = true;
@@ -3465,7 +3465,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
                   sn_worker,
                   nt::RTLevel::Base,
                   2_min,
-                  8640,
+                  24*60*60,
                   10,
                   0,
                   0,
@@ -3480,13 +3480,13 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     // Case 2 :
     // clockwise = true
     // min_nb_journeys = none
-    // timeframe_max_datetime = 86400 (24H)
+    // timeframe_max_bound = 24H (very late search limit)
     //
     // timeframe_duration = 10*60 (10 min)
     // We have a timeframe duration = 10 min related to the first journeys (08:00:00), so [08:00; 08:10[.
     // The response must contain 1 journeys
     uint32_t min_nb_journeys = 0;
-    uint64_t timeframe_duration = 10*60;   // 10 min
+    uint64_t timeframe_duration = 10*60;
     clockwise = true;
 
     // send request
@@ -3503,7 +3503,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
                   sn_worker,
                   nt::RTLevel::Base,
                   2_min,
-                  60*60*24,
+                  24*60*60,
                   10,
                   0,
                   0,
@@ -3531,14 +3531,14 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     //-----------------------------------
     // Case 3 :
     // clockwise = false !!
-    // timeframe_max_datetime = 86400 (24H)
+    // timeframe_max_bound = 24H (very late search limit)
     //
-    // timeframe_duration = 10*60*2 (20 min)
+    // timeframe_duration = 20*60 (20 min)
     // We have a timeframe duration = 20 min related to the first
     // journeys (08:30:00), so reversed [08:30; 08:10[.
     // The response must contain 2 journeys.
     min_nb_journeys = 0;
-    timeframe_duration = 10*60*2;    // 20 min
+    timeframe_duration = 20*60;
     clockwise = false;
 
     // send request
@@ -3555,7 +3555,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
                   sn_worker,
                   nt::RTLevel::Base,
                   2_min,
-                  60*60*24,
+                  24*60*60,
                   10,
                   0,
                   0,
@@ -3592,7 +3592,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     // Case 4 :
     // clockwise = true
     // timeframe_duration = 60*60 (1H)
-    // timeframe_max_datetime = 86400   (24H)
+    // timeframe_max_bound = 24H (very late search limit)
     //
     // We have a time frame duration = 1H related to the first Journeys (08:30:00) and
     // a min_nb_journeys = 20.
@@ -3600,7 +3600,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     // min_nb_journeys is the limiting criteria.
     // The response must contain 20 journeys.
     min_nb_journeys = 20;
-    timeframe_duration = 60*60*1;  // 1H
+    timeframe_duration = 1*60*60;
     clockwise = true;
 
     // send request
@@ -3617,7 +3617,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
                   sn_worker,
                   nt::RTLevel::Base,
                   2_min,
-                  60*60*24,
+                  24*60*60,
                   10,
                   0,
                   0,
@@ -3635,8 +3635,8 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     //-----------------------------------
     // Case 5 :
     // clockwise = true
-    // timeframe_duration = 60*60*4 (4H)
-    // timeframe_max_datetime = 60*60   (1H)
+    // timeframe_duration = 4*60*60 (4H)
+    // timeframe_max_bound = 1H (very late search limit)
     //
     // the limit max is less than timeframe_duration.
     // We compute until the max limit
@@ -3644,7 +3644,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     min_nb_journeys = 0;
     timeframe_duration = 60*60*4; // 4H
     clockwise = true;
-    uint32_t timeframe_max_datetime = 60*60;
+    uint32_t timeframe_max_duration = 60*60;
 
     // send request
     navitia::PbCreator pb_creator_case5(data_ptr, "20180309T080000"_dt, null_time_period);
@@ -3660,7 +3660,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
                   sn_worker,
                   nt::RTLevel::Base,
                   2_min,
-                  timeframe_max_datetime,
+                  timeframe_max_duration,
                   10,
                   0,
                   0,

@@ -84,7 +84,7 @@ static bool keep_going(const uint32_t total_nb_journeys,
         return false;
     }
 
-    auto is_inside = [&clockwise](DateTime lhs, DateTime rhs){
+    auto is_inside = [clockwise](DateTime lhs, DateTime rhs){
         return clockwise ? lhs < rhs : lhs > rhs;
     };
 
@@ -127,7 +127,7 @@ static void culling_excessive_journeys(const boost::optional<uint32_t>& min_nb_j
         std::vector<routing::Journey> sorted{journeys.begin(), journeys.end()};
         std::sort(sorted.begin(), sorted.end(), journey_cmp);
 
-        auto is_inside = [&clockwise](const routing::Journey& j, DateTime dt){
+        auto is_inside = [clockwise](const routing::Journey& j, DateTime dt){
             return clockwise ? j.departure_dt < dt : j.arrival_dt > dt;
         };
 
