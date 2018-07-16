@@ -1,3 +1,9 @@
+navitia2 (2.58.1) unstable; urgency=low
+
+  * Ed: add rtree to speedup stop_point association to admins <https://github.com/CanalTP/navitia/pull/2466>
+
+ -- mbounabi <Mehdi.Bounabi@Kisio.org>  Mon, 16 Jul 2018 14:07:54 +0100
+
 navitia2 (2.58.0) unstable; urgency=low
 
   * Kraken: Line_section doesn't disrupt journey not stopping on the section  <https://github.com/CanalTP/navitia/pull/2455>

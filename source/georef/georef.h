@@ -300,9 +300,8 @@ struct GeoRef {
 
     /// Recherche d'une adresse avec un numéro en utilisant Autocomplete
     std::vector<nf::Autocomplete<nt::idx_t>::fl_quality> find_ways(const std::string & str, const int nbmax, const int search_type,std::function<bool(nt::idx_t)> keep_element, const std::set<std::string>& ghostwords) const;
-
-
     std::vector<Admin*> find_admins(const type::GeographicalCoord&) const;
+    std::vector<Admin*> find_admins(const type::GeographicalCoord&, AdminRtree&) const;
 
     /**
      * Project each stop_point on the georef network
