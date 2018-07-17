@@ -34,7 +34,9 @@ from .tests_mechanism import dataset
 from jormungandr import i_manager
 from .check_utils import *
 import mock
-import  os
+from os import getenv
+from pytest import approx
+
 
 def check_best(resp):
     assert not resp.get('journeys') or sum((1 for j in resp['journeys'] if j['type'] == "best")) == 1
@@ -927,7 +929,7 @@ class JourneyCommon(object):
         assert r['journeys'][0]['sections'][1]['display_informations']['name'] == first_journey_pt
         assert len(r['journeys']) == 1
 
-    if os.getenv('JORMUNGANDR_USE_SERPY'):
+    if getenv('JORMUNGANDR_USE_SERPY'):
         def test_section_fare_zone(self):
             """
             In a 'stop_point', the section 'fare_zone' should be present if the info is available
@@ -1130,7 +1132,6 @@ class OnBasicRouting():
             .format(from_sa="A", to_sa="D", datetime="20120614T080000")
         response = self.query_region(query, display=True)
         check_best(response)
-        #self.is_valid_journey_response(response, query)# linestring with 1 value (0,0)
         assert len(response['journeys']) == 2
         assert response['journeys'][0]['arrival_date_time'] == "20120614T150000"
         assert('to_delete' in response['journeys'][0]['tags'])
@@ -1826,3 +1827,61 @@ class JourneysTimeFrameDuration():
                                                                     timeframe_duration=14400)
         response = self.query_region(query)
         assert 20 == len(response['journeys'])
+
+
+@dataset({"main_routing_test": {}})
+class JourneysRidesharing():
+    def test_first_ridesharing_last_walking_section_mode(self):
+        query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.000449156&datetime=20120614T075500&"\
+                "first_section_mode[]={first}&last_section_mode[]={last}&debug=true"\
+                .format(first='ridesharing', last='walking')
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+        assert len(response["journeys"]) == 1
+        assert response["journeys"][0]["type"] == "best"
+        rs_journey = response["journeys"][0]
+        assert "ridesharing" in rs_journey["tags"]
+        assert rs_journey["requested_date_time"] == "20120614T075500"
+        assert rs_journey["departure_date_time"] == "20120614T075500"
+        assert rs_journey["arrival_date_time"] == "20120614T075513"
+        assert rs_journey["distances"]["ridesharing"] == 94
+        assert rs_journey["duration"] == 13
+        assert rs_journey["durations"]["ridesharing"] == rs_journey["duration"]
+        assert rs_journey["durations"]["total"] == rs_journey["duration"]
+        assert 'to_delete' in rs_journey["tags"]  # no response provided for ridesharing: to_delete
+        rs_section = rs_journey["sections"][0]
+        assert rs_section["departure_date_time"] == rs_journey["departure_date_time"]
+        assert rs_section["arrival_date_time"] == rs_journey["arrival_date_time"]
+        assert rs_section["duration"] == rs_journey["duration"]
+        assert rs_section["mode"] == "ridesharing"
+        assert rs_section["type"] == "street_network"
+        assert rs_section["id"] # check that id is provided
+        assert rs_section["geojson"]["properties"][0]["length"] == rs_journey["distances"]["ridesharing"]
+        assert rs_section["geojson"]["coordinates"][0][0] == approx(float(rs_section["from"]["address"]["coord"]["lon"]))
+        assert rs_section["geojson"]["coordinates"][0][1] == approx(float(rs_section["from"]["address"]["coord"]["lat"]))
+        assert rs_section["geojson"]["coordinates"][-1][0] == approx(float(rs_section["to"]["address"]["coord"]["lon"]))
+        assert rs_section["geojson"]["coordinates"][-1][1] == approx(float(rs_section["to"]["address"]["coord"]["lat"]))
+
+    def test_first_ridesharing_section_mode_forbidden(self):
+        def exec_and_check(query):
+            response, status = self.query_region(query, check=False)
+            check_best(response)
+            assert status == 400
+            assert "message" in response
+            assert "ridesharing" in response['message']
+
+        query = "journeys?from=0.0000898312;0.0000898312&datetime=20120614T075500&"\
+                "first_section_mode[]={first}&last_section_mode[]={last}"\
+                .format(first='ridesharing', last='walking')
+        exec_and_check(query)
+
+        query = "isochrones?from=0.0000898312;0.0000898312&datetime=20120614T075500&"\
+                "first_section_mode[]={first}&last_section_mode[]={last}&max_duration=2"\
+                .format(first='ridesharing', last='walking')
+        exec_and_check(query)
+
+        query = "heat_maps?from=0.0000898312;0.0000898312&datetime=20120614T075500&"\
+                "first_section_mode[]={first}&last_section_mode[]={last}&max_duration=2"\
+                .format(first='ridesharing', last='walking')
+        exec_and_check(query)

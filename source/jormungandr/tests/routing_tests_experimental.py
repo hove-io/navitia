@@ -26,16 +26,18 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import, print_function, unicode_literals, division
 from .tests_mechanism import config, NewDefaultScenarioAbstractTestFixture
 from .journey_common_tests import *
 from unittest import skip
 from .routing_tests import OnBasicRouting
 
-'''
+"""
 This unit runs all the common tests in journey_common_tests.py along with locals tests added in this
 unit for scenario experimental
-'''
+"""
+
 
 @config({'scenario': 'distributed'})
 class TestJourneysDistributed(JourneyCommon, DirectPath, JourneyMinBikeMinCar, NewDefaultScenarioAbstractTestFixture):
@@ -54,7 +56,6 @@ class TestJourneysDistributed(JourneyCommon, DirectPath, JourneyMinBikeMinCar, N
         query = journey_basic_query + "&first_section_mode[]=walking&last_section_mode[]=car&debug=true"
         response = self.query_region(query)
         check_best(response)
-        #self.is_valid_journey_response(response, query)# linestring with 1 value (0,0)
         jrnys = response['journeys']
         assert jrnys
         assert jrnys[0]['sections'][0]['mode'] == 'walking'
@@ -106,12 +107,14 @@ class TestJourneysDistributed(JourneyCommon, DirectPath, JourneyMinBikeMinCar, N
             "bike": instance.bike_speed,
             "car": instance.car_speed,
             "bss": instance.bss_speed,
+            "ridesharing": instance.car_no_park_speed,
         }
         request = {
             "walking_speed": instance.walking_speed,
             "bike_speed": instance.bike_speed,
             "car_speed": instance.car_speed,
             "bss_speed": instance.bss_speed,
+            "car_no_park_speed": instance.car_no_park_speed,
         }
         resp = instance.get_street_network_routing_matrix([origin], [destination],
                                                           mode, max_duration, request, **kwargs)
@@ -162,7 +165,8 @@ class TestDistributedJourneysWithPtref(JourneysWithPtref, NewDefaultScenarioAbst
 class TestDistributedOnBasicRouting(OnBasicRouting, NewDefaultScenarioAbstractTestFixture):
     @skip("temporarily disabled")
     def test_isochrone(self):
-        super(TestExperimentalOnBasicRouting, self).test_isochrone()
+        super(TestDistributedOnBasicRouting, self).test_isochrone()
+
 
 @config({"scenario": "distributed"})
 class TestDistributedMinNbJourneys(JourneysMinNbJourneys, NewDefaultScenarioAbstractTestFixture):
@@ -175,3 +179,44 @@ class TestDistributedWithNightBusFilter(JourneysWithNightBusFilter, NewDefaultSc
 @config({"scenario": "distributed"})
 class TestDistributedTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScenarioAbstractTestFixture):
     pass
+
+
+@config({"scenario": "distributed",
+         'instance_config': {
+             "ridesharing": [
+             {
+                 "class": "jormungandr.scenarios.ridesharing.instant_system.InstantSystem",
+                 "args": {
+                     "service_url": "http://distributed_ridesharing.wtf",
+                     "api_key": "key",
+                     "network": "Super Covoit 3000",
+                     "rating_scale_min": 0,
+                     "rating_scale_max": 5
+                 }
+             }
+         ]}})
+class TestJourneysRidesharingDistributed(JourneysRidesharing, JourneyCommon, DirectPath, JourneyMinBikeMinCar,
+                                         NewDefaultScenarioAbstractTestFixture):
+    def test_best_filtering(self):
+        """
+        This feature is not supported
+        """
+        pass
+
+    def test_journeys_wheelchair_profile(self):
+        """
+        This feature is not supported
+        """
+        pass
+
+    def test_not_existent_filtering(self):
+        """
+        This feature is not supported
+        """
+        pass
+
+    def test_other_filtering(self):
+        """
+        This feature is not supported
+        """
+        pass

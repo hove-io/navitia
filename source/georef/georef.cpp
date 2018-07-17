@@ -590,21 +590,33 @@ void GeoRef::project_stop_points(const std::vector<type::StopPoint*> &stop_point
 
 std::vector<Admin*> GeoRef::find_admins(const type::GeographicalCoord& coord) const {
     try {
-        std::vector<Admin*> result;
-        for(auto* admin: this->admins){
-            if(boost::geometry::within(coord, admin->boundary)){
-                result.push_back(admin);
-            }
-        }
-        if(!result.empty()){
-            return result;
-        }
-        //we didn't found any results with boundary, as a fallback we search for the admin o the closest way
         const auto& filter = [](const Way& w){return w.admin_list.empty();};
         return nearest_addr(coord, filter).second->admin_list;
     } catch (proximitylist::NotFound&) {
         return {};
     }
+}
+
+std::vector<Admin*> GeoRef::find_admins(const type::GeographicalCoord& coord, AdminRtree& admins_tree) const {
+    std::vector<Admin*> result;
+
+    auto callback = [](Admin* admin, void* c)->bool{
+        auto* context = reinterpret_cast<std::pair<type::GeographicalCoord, std::vector<Admin*>*>*>(c);
+        if(boost::geometry::within(context->first, admin->boundary)){
+            context->second->push_back(admin);
+        }
+        return true;
+    };
+    double c[2];
+    c[0] = coord.lon();
+    c[1] = coord.lat();
+    auto context = std::make_pair(coord, &result);
+    admins_tree.Search(c, c, callback, &context);
+    if(!result.empty()){
+        return result;
+    }
+    //we didn't found any results with boundary, as a fallback we search for the admin of the closest way
+    return this->find_admins(coord);
 }
 
 std::pair<GeoRef::ProjectionByMode, bool> GeoRef::project_stop_point(const type::StopPoint* stop_point) const {

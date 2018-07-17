@@ -66,7 +66,8 @@ def make_url_count_and_dt_test():
     same as make_url_test but with a count and a from_dt
     """
     timeo = Timeo(id='tata', timezone='UTC', service_url='http://bob.com/tata',
-                  service_args={'a': 'bobette', 'b': '12'})
+                  service_args={'a': 'bobette', 'b': '12'},
+                  from_datetime_step=30)
 
     url = timeo._make_url(MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu'),
                           count=2, from_dt=_timestamp("12:00"))
@@ -83,6 +84,15 @@ def make_url_count_and_dt_test():
     # we should have the param we provided
     assert 'NextStopTimeNumber=2' in url
     assert 'NextStopReferenceTime=2016-02-07T12:00:00' in url
+
+    #same as before we only update the seconds of dt
+    url = timeo._make_url(MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu'),
+            count=2, from_dt=_timestamp("12:00:04"))
+    assert 'NextStopReferenceTime=2016-02-07T12:00:00' in url
+
+    url = timeo._make_url(MockRoutePoint(route_id='route_tata', line_id='line_toto', stop_id='stop_tutu'),
+            count=2, from_dt=_timestamp("12:00:59"))
+    assert 'NextStopReferenceTime=2016-02-07T12:00:30' in url
 
 
 def make_url_invalid_code_test():
