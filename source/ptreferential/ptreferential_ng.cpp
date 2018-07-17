@@ -97,7 +97,7 @@ struct PtRefGrammar: qi::grammar<Iterator, ast::Expr(), ascii::space_type> {
     }
 
     // Pred
-    qi::rule<Iterator, ast::Pred(), ascii::space_type> pred;
+    qi::rule<Iterator, ast::Expr(), ascii::space_type> pred;
     qi::rule<Iterator, ast::All(), ascii::space_type> all;
     qi::rule<Iterator, ast::Empty(), ascii::space_type> empty;
     qi::rule<Iterator, ast::Fun(), ascii::space_type> fun;
@@ -237,9 +237,6 @@ struct Eval: boost::static_visitor<Indexes> {
             throw parsing_error(parsing_error::partial_error, ss.str());
         }
         return get_corresponding(indexes, type_by_caption(f.type), target, data);
-    }
-    Indexes operator()(const ast::Pred& expr) const {
-        return boost::apply_visitor(*this, expr);
     }
     Indexes operator()(const ast::GetCorresponding& expr) const {
         const auto from = type_by_caption(expr.type);

@@ -62,12 +62,6 @@ struct Fun {
     std::vector<std::string> args;
 };
 
-typedef boost::variant<
-    All,
-    Empty,
-    Fun>
-Pred;
-
 struct GetCorresponding;
 struct And;
 struct Or;
@@ -76,7 +70,9 @@ template<typename OpTag>
 struct BinaryOp;
 
 typedef boost::variant<
-    Pred,
+    All,
+    Empty,
+    Fun,
     boost::recursive_wrapper<GetCorresponding>,
     boost::recursive_wrapper<BinaryOp<And>>,
     boost::recursive_wrapper<BinaryOp<Or>>,
