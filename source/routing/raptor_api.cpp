@@ -49,7 +49,89 @@ www.navitia.io
 namespace navitia { namespace routing {
 
 // Usefull to protect raptor loop
-static const uint max_nb_raptor_call = 100;
+static const uint MAX_NB_RAPTOR_CALL = 100;
+
+/**
+ * @brief This function determine the breaking condition that depends on nb of found journeys,
+ * min_nb_journeys and time frame.
+ *
+ * @details
+ *
+ *   requested_datetime           requested_datetime + timeframe_duration
+ *   -------[--------------------------------------------]-------------------------->
+ *                  minimal period to explore
+ *
+ * timeframe_limit (request_date_secs + timeframe_duration):
+ *          The end datetime of original request's timeframe (we have to explore at minimum this period)
+ *
+ *                   min_nb_journeys is set?
+ *                    /               \
+ *                   / Y               \ N
+ *          timeframe is set?        timeframe is set?
+ *            /       \                  /     \
+ *           / Y       \ N              / Y      \ N
+ *       Case 1      Case 2          Case 3     Case 4
+ *
+ *
+ */
+static bool keep_going(const uint32_t total_nb_journeys,
+                       const uint32_t nb_try,
+                       const bool clockwise,
+                       const DateTime request_date_secs,
+                       const boost::optional<uint32_t>& min_nb_journeys,
+                       const boost::optional<DateTime>& timeframe_limit) {
+    if(nb_try > MAX_NB_RAPTOR_CALL) {
+        return false;
+    }
+
+    auto is_inside = [clockwise](DateTime lhs, DateTime rhs){
+        return clockwise ? lhs < rhs : lhs > rhs;
+    };
+
+    if (min_nb_journeys) {
+
+        auto need_more_journeys_for_min = total_nb_journeys < *min_nb_journeys;
+
+        if (timeframe_limit) {
+            // Case 1: if we don't have enough journeys,
+            // we keep searching until the end of time frame
+            return need_more_journeys_for_min || is_inside(request_date_secs, *timeframe_limit);
+        }
+
+        // Case 2: we return all min_nb_journeys journeys that raptor can find
+        return need_more_journeys_for_min;
+    }
+
+    if (timeframe_limit) {
+        // Case 3: no min_nb_journeys is given, we find all journeys inside of the time frame
+        return is_inside(request_date_secs, *timeframe_limit);
+    }
+
+    // Case 4: Neither time duration nor min_nb_journeys are given, we call only once Raptor
+    return false;
+}
+
+
+/**
+ * @brief Process timeframe_limit in raptor referential from request_datetime and timeframe_duration
+ */
+static boost::optional<DateTime> get_timeframe_limit(const DateTime request_date_secs,
+                                                     const bool clockwise,
+                                                     const boost::optional<uint32_t>& timeframe_duration)
+{
+    if (! timeframe_duration) {
+        return boost::none;
+    }
+
+    DateTime limit = 0; // cannot be negative
+    if (clockwise) {
+        limit = request_date_secs + *timeframe_duration;
+    } else if (request_date_secs > *timeframe_duration) {
+        limit = request_date_secs - *timeframe_duration;
+    }
+    return limit;
+}
+
 
 /**
  * @brief internal function to call raptor in a loop
@@ -67,14 +149,15 @@ call_raptor(navitia::PbCreator& pb_creator,
             const std::vector<std::string>& allowed_ids,
             const bool clockwise,
             const boost::optional<navitia::time_duration>& direct_path_duration,
-            const uint32_t min_nb_journeys,
+            const boost::optional<uint32_t>& min_nb_journeys,
             const uint32_t nb_direct_path,
             const uint32_t max_duration,
             const uint32_t max_transfers,
             const size_t max_extra_second_pass,
             const double night_bus_filter_max_factor,
-            const int32_t night_bus_filter_base_factor)
-{
+            const int32_t night_bus_filter_base_factor,
+            boost::optional<uint32_t> timeframe_duration) {
+
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
     std::vector<Path> pathes;
 
@@ -82,11 +165,18 @@ call_raptor(navitia::PbCreator& pb_creator,
     // (It's a deprecated feature to provide multiple datetimes).
     // TODO: remove the vector (and adapt protobuf of request).
     DateTime bound = clockwise ? DateTimeUtils::inf : DateTimeUtils::min;
+
     for(const auto & datetime : datetimes) {
 
         // Compute start time and Bound
         DateTime request_date_secs = to_datetime(datetime, raptor.data);
 
+        // timeframe_limit in raptor referential
+        boost::optional<DateTime> timeframe_limit = get_timeframe_limit(request_date_secs,
+                                                                        clockwise,
+                                                                        timeframe_duration);
+
+        // Compute Bound
         if(max_duration != DateTimeUtils::inf) {
             if (clockwise) {
                 bound = request_date_secs + max_duration;
@@ -95,17 +185,10 @@ call_raptor(navitia::PbCreator& pb_creator,
             }
         }
 
-        // Call raptor
-        // note : Loop is for min_nb_journeys options
-        //
-        // min_nb_journeys options :
-        // Compute several loop until the number of journeys >= min_nb_journeys
-        // For each step, we find best pathes,
-        // start to the latest departure + 1 (clockwise) or the latest arrival - 1.
-        // If Raptor does not return anything, we stop.
-        // If the number of Path finds is greater or equal than min_nb_journeys, we stop.
+        // Raptor Loop
         JourneySet journeys;
         uint32_t nb_try = 0;
+        int total_nb_journeys = 0;
         do {
             auto raptor_journeys = raptor.compute_all_journeys(
                 departures, destinations, request_date_secs, rt_level, transfer_penalty, bound, max_transfers,
@@ -128,11 +211,9 @@ call_raptor(navitia::PbCreator& pb_creator,
 
             LOG4CPLUS_DEBUG(logger, "after filtering late journeys: " << raptor_journeys.size() << " solution(s) left");
 
-            if (raptor_journeys.empty())
+            if (raptor_journeys.empty()) {
                 break;
-
-            // Prepare next call for raptor with min_nb_journeys option
-            request_date_secs = prepare_next_call_for_raptor(raptor_journeys, clockwise);
+            }
 
             // filter the similar journeys
             for(const auto & journey : raptor_journeys) {
@@ -141,8 +222,17 @@ call_raptor(navitia::PbCreator& pb_creator,
 
             nb_try++;
 
-        } while (( journeys.size() + nb_direct_path < min_nb_journeys) && (nb_try < max_nb_raptor_call));
+            total_nb_journeys = journeys.size() + nb_direct_path;
 
+            // Prepare next call for raptor with min_nb_journeys option
+            request_date_secs = prepare_next_call_for_raptor(raptor_journeys, clockwise);
+
+        } while (keep_going(total_nb_journeys,
+                            nb_try,
+                            clockwise,
+                            request_date_secs,
+                            min_nb_journeys,
+                            timeframe_limit));
 
         // create date time for next
         pb_creator.set_next_request_date_time(to_posix_timestamp(request_date_secs, raptor.data));
@@ -1152,19 +1242,20 @@ void make_pt_response(navitia::PbCreator& pb_creator,
                       const std::vector<type::EntryPoint> &origins,
                       const std::vector<type::EntryPoint> &destinations,
                       const uint64_t timestamp,
-                      bool clockwise,
+                      const bool clockwise,
                       const type::AccessibiliteParams& accessibilite_params,
                       const std::vector<std::string>& forbidden,
                       const std::vector<std::string>& allowed,
                       const type::RTLevel rt_level,
                       const navitia::time_duration& transfer_penalty,
-                      uint32_t max_duration,
-                      uint32_t max_transfers,
-                      uint32_t max_extra_second_pass,
+                      const uint32_t max_duration,
+                      const uint32_t max_transfers,
+                      const uint32_t max_extra_second_pass,
                       const boost::optional<navitia::time_duration>& direct_path_duration,
-                      uint32_t min_nb_journeys,
-                      double night_bus_filter_max_factor,
-                      int32_t night_bus_filter_base_factor) {
+                      const boost::optional<uint32_t>& min_nb_journeys,
+                      const double night_bus_filter_max_factor,
+                      const int32_t night_bus_filter_base_factor,
+                      const boost::optional<DateTime>& timeframe_duration) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
@@ -1211,12 +1302,14 @@ void make_pt_response(navitia::PbCreator& pb_creator,
                                     clockwise,
                                     direct_path_duration,
                                     min_nb_journeys,
-                                    0, // nb_direct_path = 0 for distributed
+                                    // nb_direct_path = 0 for distributed if direct_path_duration is none
+                                    direct_path_duration ? 1: 0,
                                     max_duration,
                                     max_transfers,
                                     max_extra_second_pass,
                                     night_bus_filter_max_factor,
-                                    night_bus_filter_base_factor);
+                                    night_bus_filter_base_factor,
+                                    timeframe_duration);
 
     // Create pb response
     make_pt_pathes(pb_creator, pathes);
@@ -1299,21 +1392,22 @@ void make_response(navitia::PbCreator& pb_creator,
                    const type::EntryPoint& origin,
                    const type::EntryPoint& destination,
                    const std::vector<uint64_t>& timestamps,
-                   bool clockwise,
+                   const bool clockwise,
                    const type::AccessibiliteParams& accessibilite_params,
-                   std::vector<std::string> forbidden,
-                   std::vector<std::string> allowed,
+                   const std::vector<std::string>& forbidden,
+                   const std::vector<std::string>& allowed,
                    georef::StreetNetwork& worker,
                    const type::RTLevel rt_level,
                    const navitia::time_duration& transfer_penalty,
-                   uint32_t max_duration,
-                   uint32_t max_transfers,
-                   uint32_t max_extra_second_pass,
-                   uint32_t free_radius_from,
-                   uint32_t free_radius_to,
-                   uint32_t min_nb_journeys,
-                   double night_bus_filter_max_factor,
-                   int32_t night_bus_filter_base_factor) {
+                   const uint32_t max_duration,
+                   const uint32_t max_transfers,
+                   const uint32_t max_extra_second_pass,
+                   const uint32_t free_radius_from,
+                   const uint32_t free_radius_to,
+                   const boost::optional<uint32_t>& min_nb_journeys,
+                   const double night_bus_filter_max_factor,
+                   const int32_t night_bus_filter_base_factor,
+                   const boost::optional<uint32_t>& timeframe_duration) {
 
     log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
 
@@ -1406,7 +1500,9 @@ void make_response(navitia::PbCreator& pb_creator,
                                     max_transfers,
                                     max_extra_second_pass,
                                     night_bus_filter_max_factor,
-                                    night_bus_filter_base_factor);
+                                    night_bus_filter_base_factor,
+                                    timeframe_duration);
+
 
     // Create pb response
     make_pathes(pb_creator,

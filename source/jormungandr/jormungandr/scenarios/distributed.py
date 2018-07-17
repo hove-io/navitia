@@ -48,6 +48,7 @@ class Scenario(new_default.Scenario):
 
         return the list of all responses
         """
+
         logger = logging.getLogger(__name__)
         logger.debug('request datetime: %s', request['datetime'])
 

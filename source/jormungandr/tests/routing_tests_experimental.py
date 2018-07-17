@@ -69,8 +69,6 @@ class TestJourneysDistributed(JourneyCommon, DirectPath, JourneyMinBikeMinCar, N
         This feature is no longer supported"""
         pass
 
-    def test_datetime_represents_arrival(self):
-        super(TestJourneysDistributed, self).test_datetime_represents_arrival()
 
     def test_journeys_wheelchair_profile(self):
         """
@@ -174,9 +172,12 @@ class TestDistributedOnBasicRouting(OnBasicRouting, NewDefaultScenarioAbstractTe
 class TestDistributedMinNbJourneys(JourneysMinNbJourneys, NewDefaultScenarioAbstractTestFixture):
     pass
 
-
 @config({"scenario": "distributed"})
 class TestDistributedWithNightBusFilter(JourneysWithNightBusFilter, NewDefaultScenarioAbstractTestFixture):
+    pass
+
+@config({"scenario": "distributed"})
+class TestDistributedTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScenarioAbstractTestFixture):
     pass
 
 

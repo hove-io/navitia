@@ -28,6 +28,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+
 from copy import deepcopy
 import itertools
 import logging
@@ -178,6 +179,9 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
 
     req.journeys.night_bus_filter_max_factor = request['_night_bus_filter_max_factor']
     req.journeys.night_bus_filter_base_factor = request['_night_bus_filter_base_factor']
+
+    if request['timeframe_duration']:
+        req.journeys.timeframe_duration = int(request['timeframe_duration'])
 
     return req
 
@@ -795,15 +799,15 @@ class Scenario(simple.Scenario):
         # Return the possible couples combinations (origin_mode and destination_mode)
         krakens_call = get_kraken_calls(api_request)
 
-        # min_nb_journeys option
-        if api_request['min_nb_journeys']:
-            min_nb_journeys = api_request['min_nb_journeys']
-        else:
-            min_nb_journeys = api_request['min_nb_journeys'] = 1
-
         # We need the original request (api_request) for filtering, but request
         # is modified by create_next_kraken_request function.
         request = deepcopy(api_request)
+
+        # min_nb_journeys option
+        if request['min_nb_journeys']:
+            min_nb_journeys = request['min_nb_journeys']
+        else:
+            min_nb_journeys = 1
 
         responses = []
         nb_try = 0
@@ -826,7 +830,7 @@ class Scenario(simple.Scenario):
             # - If there was no journey qualified in the previous response, the last chance request is limited
             if len(krakens_call) > 1 or last_chance_retry:
                 request['min_nb_journeys'] = 0
-            else:
+            elif api_request['min_nb_journeys']:
                 min_nb_journeys_left = min_nb_journeys - nb_qualified_journeys
                 request['min_nb_journeys'] = max(0, min_nb_journeys_left)
 
@@ -875,6 +879,11 @@ class Scenario(simple.Scenario):
             responses.extend(new_resp)  # we keep the error for building the response
 
             nb_qualified_journeys = nb_journeys(responses)
+
+            if api_request['timeframe_duration']:
+                # If timeframe_duration is active, it is useless to recall Kraken,
+                # it has already sent back what he could
+                break
 
             if nb_previously_qualified_journeys == nb_qualified_journeys:
                 # If there is no additional qualified journey in the kraken response,
