@@ -67,7 +67,7 @@ type_to_pttype = {
       "calendar": request_pb2.PlaceCodeRequest.Calendar
 }
 
-STREET_NETWORK_MODES = ('walking', 'car', 'bss', 'bike')
+STREET_NETWORK_MODES = ('walking', 'car', 'bss', 'bike', 'ridesharing')
 
 @app.before_request
 def _init_g():
@@ -577,7 +577,7 @@ class Instance(object):
 
     def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
         """
-        :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
+        :param fallback_extremity: is a PeriodExtremity (a datetime and its meaning on the fallback period)
         """
         service = self.get_street_network(mode, request)
         if not service:

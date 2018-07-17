@@ -361,3 +361,30 @@ def add_link(resp, rel, **kwargs):
             args.values.extend(v)
         else:
             args.values.extend([v])
+
+
+def _is_fake_car_section(section):
+    """
+    This function tests if the section is a fake car section
+    """
+    return (section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY) and \
+            section.street_network.mode == response_pb2.Car
+
+
+def switch_back_to_ridesharing(response, is_first_section):
+    """
+    :param response: a pb_response returned by kraken
+    :param is_first_section: a bool indicates that if the first_section or last_section is a ridesharing section
+                             True if the first_section is, False if the last_section is
+    """
+    for journey in response.journeys:
+        if len(journey.sections) == 0:
+            continue
+        section_idx = 0 if is_first_section else -1
+        section = journey.sections[section_idx]
+        if _is_fake_car_section(section):
+            section.street_network.mode = response_pb2.Ridesharing
+            journey.durations.ridesharing += section.duration
+            journey.durations.car -= section.duration
+            journey.distances.ridesharing += section.length
+            journey.distances.car -= section.length

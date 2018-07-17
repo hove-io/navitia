@@ -26,6 +26,7 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import
 from . import helper_future
 from navitiacommon import response_pb2
@@ -194,6 +195,7 @@ class FallbackDurationsPool(dict):
             "bike": instance.bike_speed,
             "car": instance.car_speed,
             "bss": instance.bss_speed,
+            "ridesharing": instance.car_no_park_speed,
         }
 
         self._value = {}
