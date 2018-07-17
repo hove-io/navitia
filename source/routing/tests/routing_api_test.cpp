@@ -3447,8 +3447,6 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     // clockwise = true
     // timeframe_duration = 0
     // timeframe_max_bound = 24H (very late search limit)
-    //
-    // In the response, we want 0 journeys, all is filtered.
     bool clockwise = true;
 
     // send request
@@ -3538,7 +3536,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     // We have a timeframe duration = 20 min related to the first
     // journeys (08:30:00), as explained above, even though some journeys' arrivals are
     // not in the interval, we still keep them
-    // The response must contain at least 3 journeys.
+    // The response must contain at least 2 journeys.
     min_nb_journeys = 0;
     timeframe_duration = 20*60;
     clockwise = false;
@@ -3570,7 +3568,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     // get the response
     resp = pb_creator_case3.get_response();
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_GE(resp.journeys_size(), 1);
+    BOOST_REQUIRE_GE(resp.journeys_size(), 2);
 
     journeys = sort_journeys_by(resp, JourneySectionCompare());
 
@@ -3689,7 +3687,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     // timeframe_duration = 40*60 (40min)
     // timeframe_max_bound = 1H
     //
-    // the reponse should contain at least 2 journeys
+    // the reponse should contain at least 4 journeys
     min_nb_journeys = 2;
     timeframe_duration = 40*60; // 40 min
     clockwise = true;
@@ -3722,7 +3720,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     // get the response
     resp = pb_creator_case6.get_response();
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ITINERARY_FOUND);
-    BOOST_REQUIRE_GE(resp.journeys_size(), 2);
+    BOOST_REQUIRE_GE(resp.journeys_size(), 4);
 
     //-----------------------------------
     // Case 7 :
@@ -3773,14 +3771,13 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     // clockwise = true
     // min_nb_journeys = 5
     // timeframe_duration = 1 day
-    // timeframe_max_bound = 1H
-    // max_duration = 10s
+    // timeframe_max_bound = 10s
     //
     // max_duration is too small, no solution is found
     min_nb_journeys = 5;
     timeframe_duration = 24*60*60; // 1 day
     clockwise = true;
-    timeframe_max_duration = 10; // 10 second
+    timeframe_max_duration = 10; // 10 seconds
 
     // send request
     navitia::PbCreator pb_creator_case8(data_ptr, "20180309T075900"_dt, null_time_period);
