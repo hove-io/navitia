@@ -1613,6 +1613,7 @@ class JourneysTimeFrameDuration():
         """
 
         # Time frame to catch only the first journeys, timeframe_duration = 10 min (60*10=600).
+        # Even though a journey's departure is later thant the timeframe, we still keep it
         query = ('journeys?from={_from}&'
                 'to={to}&'
                 'datetime={datetime}&'
@@ -1621,7 +1622,7 @@ class JourneysTimeFrameDuration():
                                                                     datetime='20180315T080000',
                                                                     timeframe_duration=600)
         response = self.query_region(query)
-        assert 1 == len(response['journeys'])
+        assert 2 == len(response['journeys'])
 
         # Time frame to catch journeys in the first hour, timeframe_duration = 1 H (60*60=3600).
         query = ('journeys?from={_from}&'
@@ -1632,7 +1633,7 @@ class JourneysTimeFrameDuration():
                                                                     datetime='20180315T080000',
                                                                     timeframe_duration=3600)
         response = self.query_region(query)
-        assert 6 == len(response['journeys'])
+        assert 7 == len(response['journeys'])
 
         # Time frame to catch only the first two journeys before the date time, because clockwise is active.
         query = ('journeys?from={_from}&'
@@ -1645,7 +1646,7 @@ class JourneysTimeFrameDuration():
                                                                     datetime_represents='arrival',
                                                                     timeframe_duration=1200)
         response = self.query_region(query)
-        assert 2 == len(response['journeys'])
+        assert 3 == len(response['journeys'])
 
         assert response['journeys'][0]['departure_date_time'] == u'20180315T083000'
         assert response['journeys'][1]['departure_date_time'] == u'20180315T082000'
@@ -1675,19 +1676,35 @@ class JourneysTimeFrameDuration():
         The first journeys is 20180315T080000.
 
         If timeframe_duration and min_nb_journeys are set to 0, the response should return 1 journey,
-        as there is simply no contraint
+        as there is simply no constraints
+
+        If timeframe_duration is set to 0 and min_nb_journeys is set to 2,
+        the response should return at least 2 journeys
         """
         query = ('journeys?from={_from}&'
                 'to={to}&'
                 'datetime={datetime}&'
-                'timeframe_duration={timeframe_duration}&').format( _from='stop_area:sa1',
-                                                                    to='stop_area:sa3',
-                                                                    datetime='20180315T080000',
-                                                                    min_nb_journeys=0,
-                                                                    timeframe_duration=0)
+                'timeframe_duration={timeframe_duration}&'
+                 'min_nb_journeys={min_nb_journeys}').format( _from='stop_area:sa1',
+                                                              to='stop_area:sa3',
+                                                              datetime='20180315T080000',
+                                                              min_nb_journeys=0,
+                                                              timeframe_duration=0)
         response = self.query_region(query)
-        assert 1 == len(response['journeys'])
+        assert 1 <= len(response['journeys'])
 
+
+        query = ('journeys?from={_from}&'
+                'to={to}&'
+                'datetime={datetime}&'
+                'timeframe_duration={timeframe_duration}&'
+                'min_nb_journeys={min_nb_journeys}').format( _from='stop_area:sa1',
+                                                              to='stop_area:sa3',
+                                                              datetime='20180315T080000',
+                                                              min_nb_journeys=2,
+                                                              timeframe_duration=0)
+        response = self.query_region(query)
+        assert 2 <= len(response['journeys'])
 
     def test_timeframe_duration_with_maximum_value(self):
         """
@@ -1760,7 +1777,7 @@ class JourneysTimeFrameDuration():
                                                                     min_nb_journeys=2,
                                                                     timeframe_duration=3600)
         response = self.query_region(query)
-        assert 6 == len(response['journeys'])
+        assert 7 == len(response['journeys'])
 
         # min_nb_journeys = 11 and timeframe_duration = 1H 35min (60*95 = 5700)
         # The response have to contains 11 journeys because min_nb_journeys is the main criteria.

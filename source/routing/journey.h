@@ -86,10 +86,6 @@ struct SectionHash {
 typedef std::unordered_set<Journey, JourneyHash> JourneySet;
 
 
-struct JourneyCmp {
-    bool operator()(const Journey& l, const Journey& r) const;
-    bool clockwise;
-};
 
 /**
  * @brief Get the best journey

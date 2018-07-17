@@ -111,46 +111,6 @@ static bool keep_going(const uint32_t total_nb_journeys,
     return false;
 }
 
-/**
- * @brief Culling excessive journeys if we exceed limits
- */
-static void culling_excessive_journeys(const boost::optional<uint32_t>& min_nb_journeys,
-                                       const boost::optional<DateTime>& timeframe_limit,
-                                       const bool clockwise,
-                                       JourneySet& journeys) {
-    log4cplus::Logger logger = log4cplus::Logger::getInstance(LOG4CPLUS_TEXT("logger"));
-
-    if (timeframe_limit && journeys.size() > 0) {
-
-        routing::JourneyCmp journey_cmp{clockwise};
-        // filter journeys by end datetime until min_nb_journeys
-        std::vector<routing::Journey> sorted{journeys.begin(), journeys.end()};
-        std::sort(sorted.begin(), sorted.end(), journey_cmp);
-
-        auto is_inside = [clockwise](const routing::Journey& j, DateTime dt){
-            return clockwise ? j.departure_dt < dt : j.arrival_dt > dt;
-        };
-
-        uint32_t count = 0;
-        boost::for_each(sorted, [&](const routing::Journey& j) {
-
-            // Erase journey if
-            // min_nb_journeys is deactivated and journey exceed the time frame limit
-            // or
-            // min_nb_journeys exist and Nb journeys is greater than min_nb_journeys criteria
-            // and journey exceeds the time frame limit
-            if ( (!min_nb_journeys && !is_inside(j, timeframe_limit.get())) ||
-                 (min_nb_journeys && (count >= min_nb_journeys.get()) && !is_inside(j, timeframe_limit.get())) )
-            {
-                journeys.erase(j);
-            }
-            else {
-                ++count;
-            }
-        });
-        LOG4CPLUS_DEBUG(logger, "after culling excessive journeys: " << journeys.size() << " solution(s) left");
-    }
-}
 
 /**
  * @brief Process timeframe_limit in raptor referential from request_datetime and timeframe_duration
@@ -273,12 +233,6 @@ call_raptor(navitia::PbCreator& pb_creator,
                             request_date_secs,
                             min_nb_journeys,
                             timeframe_limit));
-
-        // Culling the excessive journeys
-        culling_excessive_journeys(min_nb_journeys,
-                                   timeframe_limit,
-                                   clockwise,
-                                   journeys);
 
         // create date time for next
         pb_creator.set_next_request_date_time(to_posix_timestamp(request_date_secs, raptor.data));
