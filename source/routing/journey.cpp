@@ -119,4 +119,3 @@ size_t JourneyHash::operator()(const Journey& j) const {
 
     return seed;
 };
-

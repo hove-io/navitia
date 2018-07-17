@@ -85,8 +85,6 @@ struct SectionHash {
 
 typedef std::unordered_set<Journey, JourneyHash> JourneySet;
 
-
-
 /**
  * @brief Get the best journey
  *
