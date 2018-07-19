@@ -942,19 +942,29 @@ class JourneyCommon(object):
             # Other stop points don't have the fare zone info
             assert not 'fare_zone' in r['stop_points'][1]
 
-    def test_max_nb_journeys_equals_0(self):
+    def test_min_max_nb_journeys_should_be_GT_0(self):
         """
-        if the user ask for 0 journey, we return 0 journey
+        max_nb_journeys should be greater than 0
         """
         query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&max_nb_journeys={max_nb_journeys}"\
                 .format(from_sa="stopA",
                         to_sa="stopB",
                         datetime="20120614T223000",
-                        max_nb_journeys=0)
+                        max_nb_journeys=int(-42))
 
         response = self.query_region(query, check=False)
         assert response[1] == 400
-        assert "Invalid max_nb_journeys: 0. max_nb_journeys must be a positive integer" in response[0]['message']
+        assert "max_nb_journeys must be a positive integer" in response[0]['message']
+
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&min_nb_journeys={min_nb_journeys}"\
+                .format(from_sa="stopA",
+                        to_sa="stopB",
+                        datetime="20120614T223000",
+                        min_nb_journeys=int(-42))
+
+        response = self.query_region(query, check=False)
+        assert response[1] == 400
+        assert "min_nb_journeys must be a positive integer" in response[0]['message']
 
 @dataset({"main_stif_test": {}})
 class AddErrorFieldInJormun(object):
@@ -1507,7 +1517,7 @@ class JourneysMinNbJourneys():
         Note : The night bus filter is loaded with default parameters.
         With this data, night bus filter parameters doesn't filter anything.
         """
-        query = 'journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=0'
+        query = 'journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=1'
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) >= 2
@@ -1702,7 +1712,7 @@ class JourneysTimeFrameDuration():
                  'min_nb_journeys={min_nb_journeys}').format( _from='stop_area:sa1',
                                                               to='stop_area:sa3',
                                                               datetime='20180315T080000',
-                                                              min_nb_journeys=0,
+                                                              min_nb_journeys=1,
                                                               timeframe_duration=0)
         response = self.query_region(query)
         assert 1 <= len(response['journeys'])

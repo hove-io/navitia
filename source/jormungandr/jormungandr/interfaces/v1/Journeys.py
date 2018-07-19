@@ -468,10 +468,10 @@ class Journeys(JourneyCommon):
                                 help="True when '/journeys' is called to compute"
                                      "the same journey schedules and "
                                      "it'll override some specific parameters")
-        parser_get.add_argument("min_nb_journeys", type=int,
-                                help='Minimum number of different suggested journeys')
+        parser_get.add_argument("min_nb_journeys", type=inputs.positive,
+                                help='Minimum number of different suggested journeys, must be > 0')
         parser_get.add_argument("max_nb_journeys", type=inputs.positive,
-                                help='Maximum number of different suggested journeys')
+                                help='Maximum number of different suggested journeys, must be > 0')
         parser_get.add_argument("_max_extra_second_pass", type=int, dest="max_extra_second_pass", hidden=True)
 
         parser_get.add_argument("debug", type=BooleanType(), default=False, hidden=True,
