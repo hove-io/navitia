@@ -31,10 +31,11 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 class Stands(object):
 
-    def __init__(self, available_places, available_bikes):
+    def __init__(self, available_places, available_bikes, status=None):
         self.available_places = available_places
         self.available_bikes = available_bikes
         self.total_stands = available_places + available_bikes
+        self.status = status
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__

@@ -63,23 +63,39 @@ class AtosProvider(AbstractParkingPlacesProvider):
         return properties.get('operator', '').lower() in self.operators and \
                properties.get('network', '').lower() == self.network
 
+    def get_navitia_status(self, status):
+        if status == 'CONNECTEE':
+            return 'Open'
+        else:
+            return 'Unavailable'
+
     def get_informations(self, poi):
         logging.debug('building stands')
         try:
+            # Possible status values of the station: CONNECTEE and DECONNECTEE
             all_stands = self.breaker.call(self._get_all_stands)
             ref = poi.get('properties', {}).get('ref')
-            if ref:
-                stands = all_stands.get(ref.lstrip('0'))
+            if not ref:
+                return Stands(0, 0, 'Unavailable')
+            stands = all_stands.get(ref.lstrip('0'))
+            if stands:
+                if stands.status in ['Closed', 'Unavailable']:
+                    stands.available_bikes = 0
+                    stands.available_places = 0
+                    stands.total_stands = 0
                 return stands
         except:
             logging.getLogger(__name__).exception('transport error during call to %s bss provider', self.id_ao)
-        return None
+
+        return Stands(0, 0, 'Unavailable')
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_ATOS', 30))
     def _get_all_stands(self):
         with self._get_client() as client:
             all_stands = client.service.getSummaryInformationTerminals(self.id_ao)
-            return {stands.libelle: Stands(stands.nbPlacesDispo, stands.nbVelosDispo) for stands in all_stands}
+            return {stands.libelle: Stands(stands.nbPlacesDispo, stands.nbVelosDispo,
+                                           self.get_navitia_status(stands.etatConnexion))
+                    for stands in all_stands}
 
     @contextmanager
     def _get_client(self):

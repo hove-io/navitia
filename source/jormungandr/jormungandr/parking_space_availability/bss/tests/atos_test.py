@@ -78,24 +78,40 @@ def parking_space_availability_atos_support_poi_test():
 
 def parking_space_availability_atos_get_informations_test():
     """
-    Atos validate return good stands informations or None if an error occured
+    Atos validate return good stands informations or or stands with status='Unavailable' if an error occured
     """
-    stands = Stands(5, 9)
+    stands = Stands(5, 9, 'Open')
     all_stands = {
-        '1': Stands(4, 8),
+        '1': Stands(4, 8, 'Open'),
         '2': stands
     }
     provider = AtosProvider(u'10', u'vélitul', u'https://webservice.atos.com?wsdl', {'keolis'})
     provider._get_all_stands = MagicMock(return_value=all_stands)
     assert provider.get_informations(poi) == stands
     invalid_poi = {}
-    assert provider.get_informations(invalid_poi) is None
+    assert provider.get_informations(invalid_poi) == Stands(0, 0, 'Unavailable')
 
     poi_blur_ref = {'properties': {'ref': '02'}}
     assert provider.get_informations(poi_blur_ref) == stands
 
     provider._get_all_stands = MagicMock(side_effect=Exception('cannot access service'))
-    assert provider.get_informations(poi) is None
+    assert provider.get_informations(poi) == Stands(0, 0, 'Unavailable')
+
+
+def parking_space_availability_atos_get_informations_with_closed_status_test():
+    """
+    Atos validate return good stands informations or stands with status='Unavailable' if an error occured
+    """
+    stands = Stands(5, 9, 'Closed')
+    all_stands = {
+        '1': Stands(4, 8, 'Open'),
+        '2': stands
+    }
+    provider = AtosProvider(u'10', u'vélitul', u'https://webservice.atos.com?wsdl', {'keolis'})
+    provider._get_all_stands = MagicMock(return_value=all_stands)
+    assert provider.get_informations(poi) == Stands(0, 0, 'Closed')
+    invalid_poi = {}
+    assert provider.get_informations(invalid_poi) == Stands(0, 0, 'Unavailable')
 
 
 def parking_space_availability_atos_get_all_stands_test():
@@ -107,12 +123,20 @@ def parking_space_availability_atos_get_all_stands_test():
     stands.libelle = '1'
     stands.nbPlacesDispo = 4
     stands.nbVelosDispo = 8
+    stands.etatConnexion = 'CONNECTEE'
     all_stands_list.append(stands)
     stands2 = lambda: None
     stands2.libelle = '2'
     stands2.nbPlacesDispo = 5
     stands2.nbVelosDispo = 9
+    stands2.etatConnexion = 'CONNECTEE'
     all_stands_list.append(stands2)
+    stands3 = lambda: None
+    stands3.libelle = '3'
+    stands3.nbPlacesDispo = 10
+    stands3.nbVelosDispo = 20
+    stands3.etatConnexion = 'DECONNECTEE'
+    all_stands_list.append(stands3)
 
     provider = AtosProvider(u'10', u'vélitul', u'https://webservice.atos.com?wsdl', {'keolis'})
     client = lambda: None
@@ -126,8 +150,13 @@ def parking_space_availability_atos_get_all_stands_test():
     provider._get_client = mock_get_client
 
     all_stands = provider._get_all_stands()
-    assert len(all_stands) == 2
+    assert len(all_stands) == 3
     assert isinstance(all_stands.get('2'), Stands)
+
+    #The status of stand=3 is converted to status navitia='Unavailable' from 'DECONNECTEE'
+    #and other attributs are initialized to 0.
+    stand = provider.get_informations('3')
+    assert stand == Stands(0, 0, 'Unavailable')
 
 
 def parking_space_availability_atos_get_all_stands_urlerror_test():
