@@ -88,7 +88,7 @@ struct calendar_fixture {
         b.lines["line:B"]->calendar_list.push_back(calB);
 
         b.data->build_uri();
-        b.data->pt_data->index();
+        b.data->pt_data->sort_and_index();
     }
 };
 /*

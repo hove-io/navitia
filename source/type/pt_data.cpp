@@ -51,7 +51,7 @@ ValidityPattern* PT_Data::get_or_create_validity_pattern(const ValidityPattern& 
     return vp;
 }
 
-void PT_Data::sort(){
+void PT_Data::sort_and_index(){
 
 #define SORT_AND_INDEX(type_name, collection_name)\
     std::stable_sort(collection_name.begin(), collection_name.end(), Less());\
@@ -203,11 +203,6 @@ struct Indexer{
     template<class T>
     void operator()(T* obj){obj->idx = idx; idx++;}
 };
-
-void PT_Data::index(){
-#define INDEX(type_name, collection_name) std::for_each(collection_name.begin(), collection_name.end(), Indexer());
-    ITERATE_NAVITIA_PT_TYPES(INDEX)
-}
 
 void PT_Data::clean_weak_impacts() {
     for (const auto& obj: stop_points) { obj->clean_weak_impacts(); }

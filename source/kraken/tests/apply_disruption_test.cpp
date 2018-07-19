@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_stops_different_hours) {
     const auto* vj5 = b.vj("A").uri("vj5")("S1", "08:00"_t)("S2", "13:00"_t)("S3", "13:30"_t).make();
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
 
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_stop_area) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_stop_area_with_several_stop_point) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
@@ -443,7 +443,7 @@ BOOST_AUTO_TEST_CASE(add_stop_area_impact_on_vj_pass_midnight) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
@@ -508,7 +508,7 @@ BOOST_AUTO_TEST_CASE(add_stop_point_impact_check_vp_filtering_last_day) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2016,4,4), bg::days(7));
@@ -568,7 +568,7 @@ BOOST_AUTO_TEST_CASE(add_impact_with_sevral_application_period) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
@@ -635,7 +635,7 @@ BOOST_AUTO_TEST_CASE(remove_stop_point_impact) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
@@ -683,7 +683,7 @@ BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
@@ -750,7 +750,7 @@ BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
     
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
@@ -825,7 +825,7 @@ BOOST_AUTO_TEST_CASE(test_shift_of_a_disrupted_delayed_train) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
@@ -933,7 +933,7 @@ BOOST_AUTO_TEST_CASE(disrupted_stop_point_then_delayed) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
 
@@ -1036,7 +1036,7 @@ BOOST_AUTO_TEST_CASE(same_stop_point_on_vj) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
@@ -1127,7 +1127,7 @@ BOOST_AUTO_TEST_CASE(stop_point_deletion_test) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
 
@@ -1219,7 +1219,7 @@ BOOST_AUTO_TEST_CASE(add_simple_impact_on_line_section) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2016,4,4), bg::days(7));
@@ -1321,7 +1321,7 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_line_section) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2016,4,4), bg::days(7));
@@ -1472,7 +1472,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section_with_vj_pass_midnight) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2016,4,4), bg::days(7));
@@ -1536,7 +1536,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section_cancelling_vj) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2016,4,4), bg::days(7));
@@ -1657,7 +1657,7 @@ BOOST_AUTO_TEST_CASE(add_line_section_impact_on_line_with_repeated_stops) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2016,4,4), bg::days(7));
@@ -1856,7 +1856,7 @@ BOOST_AUTO_TEST_CASE(add_multiple_impact_on_line_section) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2016,4,4), bg::days(7));
@@ -1948,7 +1948,7 @@ BOOST_AUTO_TEST_CASE(update_impact) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
@@ -2016,7 +2016,7 @@ BOOST_AUTO_TEST_CASE(impact_with_boarding_alighting_times) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2017,1,1), bg::days(7));
@@ -2078,7 +2078,7 @@ BOOST_AUTO_TEST_CASE(impact_lollipop_with_boarding_alighting_times) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2017,1,1), bg::days(7));
@@ -2136,7 +2136,7 @@ BOOST_AUTO_TEST_CASE(test_delay_on_line_does_nothing) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period("20120614"_d, 7_days);
@@ -2196,7 +2196,7 @@ BOOST_AUTO_TEST_CASE(test_indexes_after_applying_disruption) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
 
@@ -2264,7 +2264,7 @@ BOOST_AUTO_TEST_CASE(significant_delay_on_stop_point_dont_remove_it) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
 

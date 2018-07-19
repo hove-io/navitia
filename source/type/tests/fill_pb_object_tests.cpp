@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(test_pt_displayinfo_destination) {
     b.vj("V")("stop2", 8000, 8050);
     b.finish();
     b.data->build_uri();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
 
     auto pt_display_info = new pbnavitia::PtDisplayInfo();
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(test_pt_displayinfo_destination_without_vj) {
     b.data->pt_data->routes.push_back(route);
     b.finish();
     b.data->build_uri();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
 
     auto pt_display_info = new pbnavitia::PtDisplayInfo();
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(disable_geojson_on_route_line) {
     b.vj("A");
     b.finish();
     b.data->build_uri();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
 
     Route* r = b.data->pt_data->routes_map["A:0"];
@@ -265,7 +265,7 @@ BOOST_AUTO_TEST_CASE(pb_convertor_ptref) {
     b.vj("A great \"uri\" for café");
     b.finish();
     b.data->build_uri();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
 
     auto modes = navitia::ptref_indexes<navitia::type::PhysicalMode>(

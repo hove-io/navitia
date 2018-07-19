@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(build_single_ischron_test) {
     b.connection("stop4", "stop4", 120);
     b.connection("stop5", "stop5", 120);
     b.connection("stop6", "stop6", 120);
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.sps["stop1"]->coord = coord_Paris;
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(build_ischrons_test) {
     b.connection("stop4", "stop4", 120);
     b.connection("stop5", "stop5", 120);
     b.connection("stop6", "stop6", 120);
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.sps["stop1"]->coord = coord_Paris;

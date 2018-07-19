@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line) {
     navitia::type::Data data;
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
@@ -162,7 +162,7 @@ BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
@@ -250,7 +250,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt) {
     b.vj("A", "010101", "", true, "vj:1")("stop_area:stop1", 23*3600 +10*60, 23*3600 + 11*60)("stop_area:stop2", 24*3600 + 20*60, 24*3600 + 21*60);
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
@@ -289,7 +289,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt_2) {
     b.vj("A", "010111", "", true, "vj:1")("stop_area:stop1", 23*3600 +10*60, 23*3600 + 11*60)("stop_area:stop2", 24*3600 + 20*60, 24*3600 + 21*60);
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
@@ -345,7 +345,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section) {
     navitia::type::Data data;
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2016,4,4), boost::gregorian::days(7));
@@ -460,7 +460,7 @@ BOOST_AUTO_TEST_CASE(update_cause_severities_and_tag) {
     navitia::type::Data data;
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14),
@@ -549,7 +549,7 @@ BOOST_AUTO_TEST_CASE(update_properties) {
     navitia::type::Data data;
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14),
@@ -650,7 +650,7 @@ BOOST_AUTO_TEST_CASE(make_line_section_test) {
             ("stop_area:stop4", "09:40"_t, "09:41"_t);
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14),
@@ -731,7 +731,7 @@ BOOST_AUTO_TEST_CASE(make_disruption_with_different_publication_periods) {
     navitia::type::Data data;
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14),

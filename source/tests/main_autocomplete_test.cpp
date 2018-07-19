@@ -71,7 +71,7 @@ int main(int argc, const char* const argv[]) {
     b.sa("Luther King", 7, 5);
     b.sa("Napoleon III", 0, 0);
     b.sa("MPT kerfeunteun", 0, 0);
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
 
     boost::add_vertex(navitia::georef::Vertex(100, 80, false), b.data->geo_ref->graph);
     boost::add_vertex(navitia::georef::Vertex(110, 80, false), b.data->geo_ref->graph);
@@ -115,7 +115,7 @@ int main(int argc, const char* const argv[]) {
     b.build_autocomplete();
 
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
 

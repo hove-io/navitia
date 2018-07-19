@@ -112,7 +112,7 @@ struct route_schedule_fixture {
         b.vj("A", "1111111", "", true, "3", "3")(a_name, 8*3600 + 5*60)(b_name, 8*3600 + 20*60);
         b.vj("A", "1111111", "", true, "4", "4")(b_name, 8*3600+25*60)(d_name, 9*3600 + 35*60);
         b.finish();
-        b.data->pt_data->index();
+        b.data->pt_data->sort_and_index();
         b.data->build_raptor();
         b.data->pt_data->build_uri();
 
@@ -233,7 +233,7 @@ struct route_schedule_calendar_fixture {
         b.data->pt_data->meta_vjs.get_mut("MVJ6")->associated_calendars.insert({c3->uri, a3});
 
         b.finish();
-        b.data->pt_data->index();
+        b.data->pt_data->sort_and_index();
         b.data->build_raptor();
         b.data->pt_data->build_uri();
 
@@ -410,7 +410,7 @@ struct CalWithDSTFixture {
         }
 
         b.finish();
-        b.data->pt_data->index();
+        b.data->pt_data->sort_and_index();
         b.data->build_raptor();
     }
 };
@@ -499,7 +499,7 @@ BOOST_AUTO_TEST_CASE(test_route_schedule_with_different_vp_over_midnight) {
     b.data->pt_data->meta_vjs.get_mut("C")->associated_calendars.insert({c1->uri, a1});
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->pt_data->build_uri();
 
@@ -544,7 +544,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_1) {
         ("st6", "5:00"_t);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->pt_data->build_uri();
 
@@ -596,7 +596,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_2) {
         ("st8", "10:00"_t);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->pt_data->build_uri();
 
@@ -643,7 +643,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_3) {
         ("st2", "5:00"_t);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->pt_data->build_uri();
 
@@ -726,7 +726,7 @@ BOOST_AUTO_TEST_CASE(complicated_order_with_impacts) {
         ("st2", "5:00"_t);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->pt_data->build_uri();
 
@@ -807,7 +807,7 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_frequency_and_calendar) {
     b.data->pt_data->meta_vjs.get_mut("vj:1")->associated_calendars.insert({c->uri, a1});
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->pt_data->build_uri();
 
@@ -869,7 +869,7 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_order_check) {
         ("stop3", "8:15"_t, "8:15"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->pt_data->build_uri();
 
@@ -902,7 +902,7 @@ BOOST_AUTO_TEST_CASE(route_schedule_multiple_days) {
                     ("stop1", "10:00:00"_t, "10:00:00"_t)
                     ("stop2", "10:05:00"_t, "10:05:00"_t);
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->pt_data->build_uri();
 

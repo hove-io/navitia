@@ -59,7 +59,7 @@ struct HeadsignFixture {
         b.vj("C")("stop20", 8000)("stop21", 8100)("stop22", 8200);
         b.vj("D")("stop30", 8000);
         b.vj("E")("stop40", 8000);
-        b.data->pt_data->index();
+        b.data->pt_data->sort_and_index();
         b.finish();
     }
 };

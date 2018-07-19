@@ -138,7 +138,7 @@ struct PT_Data : boost::noncopyable{
     void build_proximity_list();
     void build_admins_stop_areas();
     /// tris les collections et affecte un idx a chaque élément
-    void sort();
+    void sort_and_index();
 
     size_t nb_stop_times() const {
         size_t nb = 0;
@@ -161,9 +161,6 @@ struct PT_Data : boost::noncopyable{
     std::vector<RequestedType*> find(std::string RequestedType::* attribute, const char * str){
         return find(attribute, std::string(str));
     }
-
-    /** Définis les idx des différents objets */
-    void index();
 
     void clean_weak_impacts();
 

@@ -48,7 +48,7 @@ namespace bt = boost::posix_time;
 BOOST_AUTO_TEST_CASE(direct){
     ed::builder b("20120614");
     b.vj("A")("stop1", 8000, 8050)("stop2", 8100,8150);
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     RAPTOR raptor(*b.data);
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(change){
     b.connection("stop3", "stop3", 120);
     b.connection("stop4", "stop4", 120);
     b.connection("stop5", "stop5", 120);
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     RAPTOR raptor(*(b.data));
@@ -236,7 +236,7 @@ BOOST_AUTO_TEST_CASE(different_connection_time) {
     b.connection("B", "B", 120);
     b.connection("C", "C", 120);
     b.connection("D", "D", 120);
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -272,7 +272,7 @@ BOOST_AUTO_TEST_CASE(over_midnight){
     b.connection("stop1", "stop1", 120);
     b.connection("stop2", "stop2", 120);
     b.connection("stop3", "stop3", 120);
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     RAPTOR raptor(*(b.data));
@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(over_midnight_2){
     b.connection("stop2", "stop2", 120);
     b.connection("stop3", "stop3", 120);
     b.connection("stop4", "stop4", 120);
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -399,7 +399,7 @@ BOOST_AUTO_TEST_CASE(over_midnight_2){
 BOOST_AUTO_TEST_CASE(over_midnight_interne){
     ed::builder b("20120614");
     b.vj("A")("stop1", 23*3600)("stop2", 23*3600 + 30*60, 24*3600 + 30*60)("stop3", 24*3600 + 40 * 60);
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -455,7 +455,7 @@ BOOST_AUTO_TEST_CASE(validity_pattern){
     b.vj("D", "10", "", true)("stop1", 8000)("stop2", 8200);
     b.vj("D", "1", "", true)("stop1", 9000)("stop2", 9200);
 
-    b.data->pt_data->index(); b.finish();
+    b.data->pt_data->sort_and_index(); b.finish();
     b.data->build_raptor();
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
@@ -492,7 +492,7 @@ BOOST_AUTO_TEST_CASE(validity_pattern){
     ed::builder b("20120614");
     b.vj("D", "10", "", true)("stop1", 8000)("stop2", 8200);
 
-   b.data->pt_data->index(); b.finish();
+   b.data->pt_data->sort_and_index(); b.finish();
     b.data->build_raptor();
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
@@ -514,7 +514,7 @@ BOOST_AUTO_TEST_CASE(forbidden_uri){
     b.vj("B")("stop3", 9500)("stop4", 10000);
     b.vj("C")("stop1", 8000, 8050)("stop4", 18000);
 
-    b.data->pt_data->index(); b.finish();
+    b.data->pt_data->sort_and_index(); b.finish();
     b.data->build_raptor();
     RAPTOR raptor(*b.data);
 
@@ -538,7 +538,7 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_milieu){
     b.connection("stop3", "stop3", 120);
     b.connection("stop4", "stop4", 120);
 
-    b.data->pt_data->index(); b.finish();
+    b.data->pt_data->sort_and_index(); b.finish();
     b.data->build_raptor();
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
@@ -584,7 +584,7 @@ BOOST_AUTO_TEST_CASE(marche_a_pied_pam){
     b.connection("stop4", "stop4", 120);
 
 
-    b.data->pt_data->index(); b.finish();
+    b.data->pt_data->sort_and_index(); b.finish();
     b.data->build_raptor();
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
@@ -633,7 +633,7 @@ BOOST_AUTO_TEST_CASE(test_rattrapage) {
     b.connection("stop4", "stop4", 120);
     b.connection("stop5", "stop5", 120);
 
-    b.data->pt_data->index(); b.finish();
+    b.data->pt_data->sort_and_index(); b.finish();
     b.data->build_raptor();
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
@@ -724,7 +724,7 @@ BOOST_AUTO_TEST_CASE(pam_veille) {
     b.vj("A", "11111111", "", true)("stop1", 3*60)("stop2", 20*60);
     b.vj("B", "01", "", true)("stop0", 23*3600)("stop2", 24*3600 + 30*60)("stop3", 24*3600 + 40*60);
 
-    b.data->pt_data->index(); b.finish();
+    b.data->pt_data->sort_and_index(); b.finish();
     b.data->build_raptor();
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
@@ -747,7 +747,7 @@ BOOST_AUTO_TEST_CASE(pam_3) {
     b.connection("stop3", "stop3", 120);
     b.connection("stop4", "stop4", 120);
 
-    b.data->pt_data->index(); b.finish();
+    b.data->pt_data->sort_and_index(); b.finish();
     b.data->build_raptor();
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
@@ -769,7 +769,7 @@ BOOST_AUTO_TEST_CASE(sn_debut) {
     departs[SpIdx(0)] = 10_min;
     destinations[SpIdx(1)] = 0_s;
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -786,7 +786,7 @@ BOOST_AUTO_TEST_CASE(stay_in_basic) {
     b.vj("A", "1111111", "block1", true)("stop1", 8*3600)("stop2", 8*3600+10*60);
     b.vj("B", "1111111", "block1", true)("stop2", 8*3600+15*60)("stop3", 8*3600 + 20*60);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -804,7 +804,7 @@ BOOST_AUTO_TEST_CASE(stay_in_short) {
     b.vj("A", "1111111", "block1", true)("stop1", 8*3600)("stop2", 8*3600+10*60);
     b.vj("B", "1111111", "block1", true)("stop2", 8*3600+10*60)("stop3", 8*3600 + 20*60);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -829,7 +829,7 @@ BOOST_AUTO_TEST_CASE(stay_in_nl) {
             ("hto", 62940,62940)
             ("rs",  63180,63180);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -854,7 +854,7 @@ BOOST_AUTO_TEST_CASE(stay_in_nl_counterclock) {
             ("hto", 62940,62940)
             ("rs",  63180,63180);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -873,7 +873,7 @@ BOOST_AUTO_TEST_CASE(stay_in_teleport) {
     b.vj("A", "1111111", "block1", true)("stop1", 8*3600)("stop2", 8*3600+10*60);
     b.vj("B", "1111111", "block1", true)("stop4", 8*3600+15*60)("stop3", 8*3600 + 20*60);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -892,7 +892,7 @@ BOOST_AUTO_TEST_CASE(stay_in_departure_last_of_first_vj) {
     b.vj("A", "1111111", "block1", true)("stop1", 8*3600)("stop2", 8*3600+10*60);
     b.vj("B", "1111111", "block1", true)("stop4", 8*3600+15*60)("stop3", 8*3600 + 20*60);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -915,7 +915,7 @@ BOOST_AUTO_TEST_CASE(stay_in_complex) {
     b.connection("stop4", "stop4", 120);
     b.connection("stop5", "stop5", 120);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -939,7 +939,7 @@ BOOST_AUTO_TEST_CASE(stay_in_and_one_earlier_with_connection) {
     b.connection("stop3", "stop3", 120);
     b.connection("stop4", "stop4", 120);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -962,7 +962,7 @@ BOOST_AUTO_TEST_CASE(stay_in_3_vj) {
     b.vj("B", "1111111", "block1", true)("stop4", 8*3600+15*60)("stop5", 8*3600 + 20*60);
     b.vj("C", "1111111", "block1", true)("stop6", 8*3600+25*60)("stop3", 8*3600 + 30*60);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -982,7 +982,7 @@ BOOST_AUTO_TEST_CASE(stay_in_loop) {
     b.vj("C", "1111111", "block1", true)("stop5", 8*3600+25*60)("stop1", 8*3600 + 30*60);
     b.vj("D", "1111111", "block1", true)("stop4", 8*3600+35*60)("stop3", 8*3600 + 40*60);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -999,7 +999,7 @@ BOOST_AUTO_TEST_CASE(stay_in_invalid_vp) {
     b.vj("A", "1111111", "block1", true)("stop1", 8*3600)("stop2", 8*3600+10*60);
     b.vj("B", "0000", "block1", true)("stop4", 8*3600+15*60)("stop3", 8*3600 + 20*60);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -1021,7 +1021,7 @@ BOOST_AUTO_TEST_CASE(first_vj_stay_in) {
     b.vj("C", "111111", "block1")("stop2", 8*3600+25*60)("stop3", 8*3600+30*60)("stop4", 8*3600+45*60);
     b.vj("D", "111111", "block1")("stop5", 8*3600+50*60);
 
-   b.data->pt_data->index(); b.finish();
+   b.data->pt_data->sort_and_index(); b.finish();
     b.data->build_raptor();
     b.data->build_uri();
     RAPTOR raptor(*(b.data));
@@ -1038,7 +1038,7 @@ BOOST_AUTO_TEST_CASE(itl) {
     b.vj("A")("stop1",8*3600+10*60, 8*3600 + 10*60,1)("stop2",8*3600+15*60,8*3600+15*60,1)("stop3", 8*3600+20*60);
     b.vj("B")("stop1",9*3600)("stop2",10*3600);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -1062,7 +1062,7 @@ BOOST_AUTO_TEST_CASE(mdi) {
     b.vj("B")("stop1",17*3600, 17*3600,std::numeric_limits<uint16_t>::max(), true, false)("stop2", 17*3600+15*60)("stop3",17*3600+30*60, 17*3600+30*60,std::numeric_limits<uint16_t>::max(), true, false);
     b.vj("C")("stop4",16*3600, 16*3600,std::numeric_limits<uint16_t>::max(), true, true)("stop5", 16*3600+15*60)("stop6",16*3600+30*60, 16*3600+30*60,std::numeric_limits<uint16_t>::max(), false, true);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -1096,7 +1096,7 @@ BOOST_AUTO_TEST_CASE(multiples_vj) {
     b.connection("stop4", "stop4", 120);
     b.connection("stop5", "stop5", 120);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -1113,7 +1113,7 @@ BOOST_AUTO_TEST_CASE(max_duration){
     ed::builder b("20120614");
     b.vj("A")("stop1", 8000, 8050)("stop2", 8100,8150);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -1139,7 +1139,7 @@ BOOST_AUTO_TEST_CASE(max_transfers){
     b.vj("D")("stop3",9000)("stop4",9500);
     b.vj("E")("stop4",10000)("stop2",10500);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -1172,7 +1172,7 @@ BOOST_AUTO_TEST_CASE(destination_over_writing) {
     b.connection("stop2", "stop2", 120);
     b.connection("stop3", "stop3", 120);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -1200,7 +1200,7 @@ BOOST_AUTO_TEST_CASE(over_midnight_special) {
     b.connection("stop4", "stop4", 120);
 
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -1224,7 +1224,7 @@ BOOST_AUTO_TEST_CASE(invalid_stay_in_overmidnight) {
     b.vj("A", "111", "block1", true)("stop1", 8*3600)("stop2", 8*3600+10*60);
     b.vj("B", "010", "block1", true)("stop2", 8*3600+15*60)("stop3", 24*3600 + 20*60, 24*3600+25*60)("stop4", 24*3600+30*60, 24*3600+35*60);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -1266,7 +1266,7 @@ BOOST_AUTO_TEST_CASE(no_departure_before_given_date) {
     b.connection("stop5", "stop5", 100);
 
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -1304,7 +1304,7 @@ BOOST_AUTO_TEST_CASE(less_fallback) {
     ed::builder b("20120614");
     b.vj("A")("stop1", 8*3600)("stop2", 8*3600 + 1*60)("stop3", 8*3600 + 12*60);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -1357,7 +1357,7 @@ BOOST_AUTO_TEST_CASE(pareto_front) {
     b.connection("stop2", "stop2", 120);
 
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -1390,7 +1390,7 @@ BOOST_AUTO_TEST_CASE(overlapping_on_first_st) {
     b.vj("A")("stop1", 8000, 8200)("stop2", 8500);
     b.vj("A")("stop1", 8100, 8300)("stop2", 8600);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     RAPTOR raptor(*b.data);
@@ -1413,7 +1413,7 @@ BOOST_AUTO_TEST_CASE(stay_in_unnecessary) {
     b.vj("A", "1111111", "block1", true)("stop2", 8*3600)("stop3", 8*3600+10*60);
     b.vj("B", "1111111", "block1", true)("stop1", 7*3600)("stop2", 8*3600);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -1433,7 +1433,7 @@ BOOST_AUTO_TEST_CASE(stay_in_unnecessary2) {
     b.vj("line2")("stop2", 9*3600 + 55*60)("stop4", 10*3600);
     b.connection("stop2", "stop2", 120);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -1459,7 +1459,7 @@ BOOST_AUTO_TEST_CASE(forbid_transfer_between_2_odt){
             st.set_date_time_estimated(true);
         }
     }
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->aggregate_odt();
     RAPTOR raptor(*(b.data));
@@ -1479,7 +1479,7 @@ BOOST_AUTO_TEST_CASE(simple_odt){
             st.set_date_time_estimated(true);
         }
     }
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->aggregate_odt();
     RAPTOR raptor(*(b.data));
@@ -1505,7 +1505,7 @@ BOOST_AUTO_TEST_CASE(simple_odt_virtual_with_stop_time){
             st.set_odt(true);
         }
     }
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->aggregate_odt();
     b.data->build_raptor();
     RAPTOR raptor(*(b.data));
@@ -1550,7 +1550,7 @@ BOOST_AUTO_TEST_CASE(y_line_the_ultimate_political_blocking_bug){
     b.connection("stop2", "stop2", 10);
     b.connection("stop3", "stop3", 10);
     b.connection("stop4", "stop4", 10);
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
     RAPTOR raptor(*(b.data));
@@ -1580,7 +1580,7 @@ BOOST_AUTO_TEST_CASE(finish_on_service_extension) {
     b.vj("l3", "1", "toto", true)("C", 8600, 8600)("D", 10000, 10000);
 
     b.connection("B", "B", 10);
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
     RAPTOR raptor(*(b.data));
@@ -1616,7 +1616,7 @@ BOOST_AUTO_TEST_CASE(finish_on_foot_path) {
     b.connection("C", "C", 0); // -> C can connect with itself
     b.connection("E", "C", 150);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
     RAPTOR raptor(*(b.data));
@@ -1681,7 +1681,7 @@ BOOST_AUTO_TEST_CASE(test_2nd_and_3rd_pass) {
     b.connection("B", "B", 1000);
     b.connection("C", "C", 1000);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
     RAPTOR raptor(*(b.data));
@@ -1754,7 +1754,7 @@ BOOST_AUTO_TEST_CASE(test_2nd_and_3rd_pass_ext) {
     b.connection("B", "B", 100);
     b.connection("C", "C", 100);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -1782,7 +1782,7 @@ BOOST_AUTO_TEST_CASE(direct_and_1trans_at_same_dt) {
     b.vj("2", "1")("A", 9000, 9000)("B", 10000, 10000);
     b.connection("B", "B", 100);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -1829,7 +1829,7 @@ BOOST_AUTO_TEST_CASE(dont_return_dominated_solutions) {
     b.vj("3", "1")("B", 12000, 12000)("C", 13000, 13000);
     b.connection("B", "B", 0);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -1886,7 +1886,7 @@ BOOST_AUTO_TEST_CASE(second_pass) {
     b.connection("DC1", "DC2", "00:02"_t);
     b.connection("DC2", "DC1", "00:02"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -1943,7 +1943,7 @@ BOOST_AUTO_TEST_CASE(good_connection_when_walking_as_fast_as_bus) {
     b.connection("B", "C", "01:00"_t);
     b.connection("B", "D", "02:00"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -1976,7 +1976,7 @@ BOOST_AUTO_TEST_CASE(accessible_on_first_sp) {
     auto params = type::AccessibiliteParams();
     params.properties.set(hasProperties::WHEELCHAIR_BOARDING, true);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -2005,7 +2005,7 @@ BOOST_AUTO_TEST_CASE(direct_path_filter) {
 
     b.vj("1")("A", "8:02"_t)("B", "8:03"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -2089,7 +2089,7 @@ BOOST_AUTO_TEST_CASE(no_iti_from_to_same_sa) {
     b.vj("2")("B1", "8:20"_t)("A2", "8:30"_t);
     b.connection("B1", "B1", "00:01"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -2133,7 +2133,7 @@ BOOST_AUTO_TEST_CASE(no_going_backward) {
     b.vj("l2")("B2", "8:07"_t)("A", "8:08"_t);
     b.connection("A", "A", "00:00"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -2178,7 +2178,7 @@ BOOST_AUTO_TEST_CASE(walking_doesnt_break_connection) {
     b.vj("2", "1")("B", "8:11"_t)("C", "9:00"_t);
     b.connection("B", "B", "00:00"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -2236,7 +2236,7 @@ BOOST_AUTO_TEST_CASE(accessibility_drop_off_forbidden) {
     params.properties.set(type::hasProperties::WHEELCHAIR_BOARDING, true);
     params.vehicle_properties.set(type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE, true);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -2299,7 +2299,7 @@ BOOST_AUTO_TEST_CASE(accessibility_on_departure_cnx_no_solution) {
     params.properties.set(type::hasProperties::WHEELCHAIR_BOARDING, true);
     params.vehicle_properties.set(type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE, true);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -2347,7 +2347,7 @@ BOOST_AUTO_TEST_CASE(accessibility_on_departure_cnx) {
     params.properties.set(type::hasProperties::WHEELCHAIR_BOARDING, true);
     params.vehicle_properties.set(type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE, true);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -2403,7 +2403,7 @@ BOOST_AUTO_TEST_CASE(forbidden_uri_cnx) {
     b.connection("B1", "B2", "00:00"_t);
     b.connection("C1", "C2", "01:00"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -2465,7 +2465,7 @@ BOOST_AUTO_TEST_CASE(accessibility_on_departure_cnx_2) {
     params.properties.set(type::hasProperties::WHEELCHAIR_BOARDING, true);
     params.vehicle_properties.set(type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE, true);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -2533,7 +2533,7 @@ BOOST_AUTO_TEST_CASE(accessibility_on_departure_cnx_3) {
     params.properties.set(type::hasProperties::WHEELCHAIR_BOARDING, true);
     params.vehicle_properties.set(type::hasVehicleProperties::WHEELCHAIR_ACCESSIBLE, true);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -2571,7 +2571,7 @@ BOOST_AUTO_TEST_CASE(begin_different_zone1) {
     ed::builder b("20150101");
     b.vj("1")("A", "8:00"_t, "8:00"_t, 1)("B", "8:10"_t, "8:10"_t, 2)("C", "8:20"_t, "8:20"_t, 2);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -2602,7 +2602,7 @@ BOOST_AUTO_TEST_CASE(begin_different_zone2) {
     ed::builder b("20150101");
     b.vj("1")("A", "8:00"_t, "8:00"_t, 1)("B", "8:10"_t, "8:10"_t, 2)("C", "8:20"_t, "8:20"_t, 1);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -2634,7 +2634,7 @@ BOOST_AUTO_TEST_CASE(begin_different_zone3) {
     b.vj("1")("A", "8:00"_t, "8:00"_t, 1)("B", "8:10"_t, "8:10"_t, 2)("C", "8:20"_t, "8:20"_t, 2);
     b.vj("1")("A", "8:05"_t, "8:05"_t, 1)("B", "8:15"_t, "8:15"_t, 2)("C", "8:25"_t, "8:25"_t, 2);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -2681,7 +2681,7 @@ BOOST_AUTO_TEST_CASE(exhaustive_second_pass) {
     b.vj("1")("A", "8:00"_t, "8:00"_t)("B", "9:10"_t, "9:10"_t);
     b.vj("2")("C", "8:00"_t, "8:01"_t)("D", "9:00"_t, "9:00"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -2728,7 +2728,7 @@ BOOST_AUTO_TEST_CASE(penalty_on_vj_extentions) {
     b.vj("1").block_id("42")("A", "09:00"_t)("B", "10:00"_t)("C", "11:00"_t);
     b.vj("2").block_id("42")("C", "11:00"_t)("D", "12:00"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -2771,7 +2771,7 @@ BOOST_AUTO_TEST_CASE(reader_with_invalid_vj_extensions) {
     b.connection("B", "B", 60);
     b.connection("C", "C", 60);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -2844,7 +2844,7 @@ BOOST_AUTO_TEST_CASE(fix_datetime_represents_arrival_departure) {
     b.vj("A").uri("vj:B").block_id("B1")("stop_point:B1", "08:40"_t, "09:05"_t)
             ("stop_point:C", "11:50"_t, "11:50"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -2921,7 +2921,7 @@ BOOST_AUTO_TEST_CASE(optimize_extention_before_min_wait) {
     b.connection("2", "5", 120);
     b.connection("3", "5", 60);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -2968,7 +2968,7 @@ BOOST_AUTO_TEST_CASE(forbidden_uri_1) {
     b.connection(auber, opera, "0:9:14"_t);
     b.connection(chateletLesHalles, chatelet, "0:17:12"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -3060,7 +3060,7 @@ BOOST_AUTO_TEST_CASE(with_boarding_alighting_time){
 
     b.connection("S4", "S4", 120);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -3182,7 +3182,7 @@ BOOST_AUTO_TEST_CASE(with_boarding_alighting_time_and_stay_in){
 
     b.connection("S4", "S4", 120);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -3218,7 +3218,7 @@ BOOST_AUTO_TEST_CASE(reverse_pass_midnight_with_boardings){
         ("S3", "00:25"_t, "00:25"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)
         ("S4", "00:35"_t, "00:35"_t, std::numeric_limits<uint16_t>::max(), true, false, 600, 0);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -3264,7 +3264,7 @@ BOOST_AUTO_TEST_CASE(stay_in_pass_midnight){
         ("S5", "24:55"_t, "24:55"_t)
         .make();
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -3301,7 +3301,7 @@ BOOST_AUTO_TEST_CASE(bike_accepted_on_first_sp) {
     auto params = type::AccessibiliteParams();
     params.properties.set(hasProperties::BIKE_ACCEPTED, true);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -3350,7 +3350,7 @@ BOOST_AUTO_TEST_CASE(bike_drop_off_forbidden) {
     params.properties.set(type::hasProperties::BIKE_ACCEPTED, true);
     params.vehicle_properties.set(type::hasVehicleProperties::BIKE_ACCEPTED, true);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -3402,7 +3402,7 @@ BOOST_AUTO_TEST_CASE(bike_accepted_on_departure_cnx_no_solution) {
     params.properties.set(type::hasProperties::BIKE_ACCEPTED, true);
     params.vehicle_properties.set(type::hasVehicleProperties::BIKE_ACCEPTED, true);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -3437,7 +3437,7 @@ BOOST_AUTO_TEST_CASE(bike_accepted_on_departure_cnx) {
     params.properties.set(type::hasProperties::BIKE_ACCEPTED, true);
     params.vehicle_properties.set(type::hasVehicleProperties::BIKE_ACCEPTED, true);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -3496,7 +3496,7 @@ BOOST_AUTO_TEST_CASE(bike_accepted_on_departure_cnx_2) {
     params.properties.set(type::hasProperties::BIKE_ACCEPTED, true);
     params.vehicle_properties.set(type::hasVehicleProperties::BIKE_ACCEPTED, true);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -3563,7 +3563,7 @@ BOOST_AUTO_TEST_CASE(bike_accepted_on_departure_cnx_3) {
     params.properties.set(type::hasProperties::BIKE_ACCEPTED, true);
     params.vehicle_properties.set(type::hasVehicleProperties::BIKE_ACCEPTED, true);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -3610,7 +3610,7 @@ BOOST_AUTO_TEST_CASE(allowed_id_sa) {
     b.connection("B", "B", "00:00"_t);
     b.connection("C", "C", "00:00"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -3647,7 +3647,7 @@ BOOST_AUTO_TEST_CASE(allowed_id_line) {
     b.connection("B", "B", "00:00"_t);
     b.connection("C", "C", "00:00"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -3713,7 +3713,7 @@ BOOST_AUTO_TEST_CASE(forbidden_uri_in_stay_in) {
     b.connection("Stalingrad_A", "Stalingrad_2", "00:06:00"_t);
 
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();

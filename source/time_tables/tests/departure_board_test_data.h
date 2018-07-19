@@ -87,7 +87,7 @@ struct departure_board_fixture {
         sp_ptr->stop_area->admin_list.push_back(ad);
 
         b.finish();
-        b.data->pt_data->index();
+        b.data->pt_data->sort_and_index();
         b.data->pt_data->build_uri();
         b.data->complete();
         b.data->compute_labels();

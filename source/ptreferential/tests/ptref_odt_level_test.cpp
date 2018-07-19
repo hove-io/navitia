@@ -148,7 +148,7 @@ public:
         add_route("Route21");
         add_vj("VJ211");
         add_vj("VJ212");
-        data.pt_data->index();
+        data.pt_data->sort_and_index();
         data.build_uri();
     }
 

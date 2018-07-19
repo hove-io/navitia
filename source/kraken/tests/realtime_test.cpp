@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(simple_train_cancellation_routing) {
     transit_realtime::TripUpdate trip_update = make_cancellation_message("vj:1", "20150928");
     const auto& pt_data = b.data->pt_data;
 
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(train_cancellation_with_choice_routing) {
     transit_realtime::TripUpdate trip_update = make_cancellation_message("vj:1", "20150928");
     const auto& pt_data = b.data->pt_data;
 
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -285,7 +285,7 @@ BOOST_AUTO_TEST_CASE(train_delayed) {
 
     BOOST_REQUIRE_EQUAL(vj->meta_vj->get_impacts().size(), 2);
 
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
 
@@ -366,7 +366,7 @@ BOOST_AUTO_TEST_CASE(two_different_delays_on_same_vj) {
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     {
@@ -396,7 +396,7 @@ BOOST_AUTO_TEST_CASE(two_different_delays_on_same_vj) {
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     {
@@ -470,7 +470,7 @@ BOOST_AUTO_TEST_CASE(train_pass_midnight_delayed) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
 
@@ -542,7 +542,7 @@ BOOST_AUTO_TEST_CASE(add_two_delay_disruption) {
     BOOST_CHECK_NE(vj_B->base_validity_pattern(), vj_B->rt_validity_pattern());
 
 
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
 
@@ -619,7 +619,7 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
 
     navitia::apply_disruption(disrup, *b.data->pt_data, *b.data->meta);
 
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     {
@@ -648,7 +648,7 @@ BOOST_AUTO_TEST_CASE(add_blocking_disruption_and_delay_disruption) {
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
     // but the vp should be equals again
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     {
@@ -774,7 +774,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
 
@@ -841,7 +841,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_pass_midnight_day_after) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
 
@@ -921,7 +921,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
 
@@ -1001,7 +1001,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_back_to_normal) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
 
@@ -1081,7 +1081,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_one_hour_on_next_day) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
 
@@ -1154,7 +1154,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_cancel) {
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
 
@@ -1223,7 +1223,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_day_after_then_day_after_cancel) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
 
@@ -1287,7 +1287,7 @@ BOOST_AUTO_TEST_CASE(train_canceled_first_day_then_cancel_second_day) {
     // The base VP is different from realtime VP
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
 
@@ -1359,7 +1359,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_10_hours_then_canceled) {
     BOOST_CHECK_NE(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
 
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
 
@@ -1461,8 +1461,7 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys) {
     b.vj_with_network("nt", "A", "000111", "", true, "vj:3")("stop1", "08:20"_t)("stop2", "09:20"_t);
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
-    b.data->pt_data->sort();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
 
@@ -1492,8 +1491,7 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys_no_base) {
     b.vj_with_network("nt", "A", "000110", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
-    b.data->pt_data->sort();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
 
@@ -1549,7 +1547,7 @@ BOOST_AUTO_TEST_CASE(unknown_stop_point) {
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 1);
     BOOST_CHECK_EQUAL(vj->base_validity_pattern(), vj->rt_validity_pattern());
 
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     {
@@ -1624,7 +1622,7 @@ BOOST_AUTO_TEST_CASE(ordered_delay_message_test) {
     BOOST_CHECK_EQUAL(pt_data->lines.size(), 1);
     BOOST_CHECK_EQUAL(pt_data->validity_patterns.size(), 2);
 
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     {
@@ -1647,7 +1645,7 @@ BOOST_AUTO_TEST_CASE(ordered_delay_message_test) {
     // Now we remove the first disruption
     navitia::delete_disruption("feed_42", *pt_data, *b.data->meta);
 
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     {
@@ -1681,7 +1679,7 @@ BOOST_AUTO_TEST_CASE(delays_with_boarding_alighting_times) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
 
@@ -1747,7 +1745,7 @@ BOOST_AUTO_TEST_CASE(delays_on_lollipop_with_boarding_alighting_times) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
 
@@ -1800,7 +1798,7 @@ BOOST_AUTO_TEST_CASE(simple_skipped_stop) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
 
@@ -1873,7 +1871,7 @@ BOOST_AUTO_TEST_CASE(skipped_stop_then_delay) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
 
@@ -1994,7 +1992,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_and_on_time) {
     navitia::handle_realtime("bob", timestamp, trip_update, *b.data);
 
     const auto& pt_data = b.data->pt_data;
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
 
@@ -2093,7 +2091,7 @@ BOOST_AUTO_TEST_CASE(train_delayed_3_times_different_id) {
     navitia::handle_realtime("bob3", timestamp, trip_update2, *b.data);
 
     const auto& pt_data = b.data->pt_data;
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
 
@@ -2148,7 +2146,7 @@ BOOST_AUTO_TEST_CASE(teleportation_train_2_delays_check_disruptions) {
     navitia::handle_realtime("late-02", timestamp, trip_update2, *b.data);
 
     const auto& pt_data = b.data->pt_data;
-    pt_data->index();
+    pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
 

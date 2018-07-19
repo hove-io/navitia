@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
     navitia::type::Data data;
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(simple_journey_with_crow_fly) {
     navitia::type::Data data;
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->build_proximity_list();
@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in) {
     b.finish();
     navitia::type::Data data;
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -367,7 +367,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_teleport) {
     b.finish();
     navitia::type::Data data;
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport) {
     b.finish();
     navitia::type::Data data;
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -514,7 +514,7 @@ BOOST_AUTO_TEST_CASE(journey_departure_from_a_stay_in) {
     b.finish();
     navitia::type::Data data;
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -583,7 +583,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_before_a_stay_in) {
     b.finish();
     navitia::type::Data data;
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -641,7 +641,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_in_a_stay_in) {
     b.finish();
     navitia::type::Data data;
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -710,7 +710,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_before_a_stay_in_without_teleport) {
     b.finish();
     navitia::type::Data data;
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -758,7 +758,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport_counterclockwise) {
     b.finish();
     navitia::type::Data data;
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -816,7 +816,7 @@ BOOST_AUTO_TEST_CASE(journey_array){
     navitia::type::Data data;
     b.finish();
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->geo_ref->init();
@@ -1829,7 +1829,7 @@ BOOST_AUTO_TEST_CASE(projection_on_one_way) {
     destination.streetnetwork_params.max_duration = bt::pos_infin;
 
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->build_proximity_list();
@@ -1947,7 +1947,7 @@ struct isochrone_fixture {
         b.vj("l5")("A", "8:28"_t)("C", "9:50"_t);
         b.vj("l6")("C", "8:29"_t)("B", "10:50"_t);
 
-        b.data->pt_data->index();
+        b.data->pt_data->sort_and_index();
         b.data->build_uri();
         b.data->build_raptor();
     }
@@ -2032,7 +2032,7 @@ BOOST_AUTO_TEST_CASE(with_information_disruptions) {
 
     b.finish();
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     std::set<ChannelType> channel_types;
@@ -2089,7 +2089,7 @@ BOOST_AUTO_TEST_CASE(with_disruptions_on_network) {
 
     b.finish();
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
 
@@ -2141,7 +2141,7 @@ BOOST_AUTO_TEST_CASE(journey_with_forbidden) {
     navitia::type::Data data;
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -2325,7 +2325,7 @@ BOOST_AUTO_TEST_CASE(stop_times_with_distinct_arrival_departure) {
 
     b.finish();
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
 
@@ -2378,7 +2378,7 @@ BOOST_AUTO_TEST_CASE(section_geometry_without_shapes) {
         ("stop_point:stop3", 1700, 2000);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     auto prod_date = boost::gregorian::date(2018, 3, 9);
@@ -2511,7 +2511,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_free_radius_filter) {
     b.vj("vj4")("stop_point:sa2:s2", "8:00"_t, "8:01"_t)("stop_point:sa3:s4", "8:05"_t, "8:11"_t);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->build_proximity_list();
@@ -2755,7 +2755,7 @@ BOOST_AUTO_TEST_CASE(section_geometry_with_shapes) {
         ("stop_point:stop3", 1700, 2000).st_shape(shape_S3);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2018, 3, 9), boost::gregorian::days(1));
@@ -2845,7 +2845,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_min_nb_journeys) {
     b.vj("vj4")("stop_point:sa1:sp1", "8:06"_t, "8:07"_t)("stop_point:sa2:sp2", "8:16"_t, "8:17"_t);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->build_proximity_list();
@@ -3103,7 +3103,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_min_nb_journeys_with_similar_journeys_filteri
     b.vj("vj5")("stop_point:sa1:s2", "8:00"_t, "8:05"_t)("stop_point:sa3:s2", "8:15"_t, "8:16"_t);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->build_proximity_list();
@@ -3452,7 +3452,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
                 ("stop_point:sa3:s1", "08:05:00"_t);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->build_proximity_list();

@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(get_indexes_test){
     b.connection("stop2", "stop3", 10*60);
     b.connection("stop3", "stop2", 10*60);
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->pt_data->build_uri();
 
     // On cherche à retrouver la ligne 1, en passant le stoparea en filtre
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(get_impact_indexes_of_line){
     b.vj("A", "000001", "", true, "vj:A-1")("stop1", "08:00"_t)("stop2", "09:00"_t);
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->pt_data->build_uri();
 
     using btp = boost::posix_time::time_period;
@@ -239,7 +239,7 @@ BOOST_AUTO_TEST_CASE(get_impact_indexes_of_stop_point){
     b.vj("A", "000001", "", true, "vj:A-1")("stop1", "08:00"_t)("stop2", "09:00"_t);
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->pt_data->build_uri();
 
     using btp = boost::posix_time::time_period;
@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(ptref_on_vj_impacted){
     b.vj("A", "000001", "", true, "vj:A-3")("stop1", "08:30"_t)("stop2", "09:30"_t);
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->pt_data->build_uri();
 
     // no disruptions

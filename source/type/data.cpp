@@ -369,7 +369,7 @@ void Data::complete(){
     compute_labels();
 
     start = pt::microsec_clock::local_time();
-    pt_data->sort();
+    pt_data->sort_and_index();
     sort = (pt::microsec_clock::local_time() - start).total_milliseconds();
 
     start = pt::microsec_clock::local_time();
