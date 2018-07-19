@@ -942,19 +942,22 @@ class JourneyCommon(object):
             # Other stop points don't have the fare zone info
             assert not 'fare_zone' in r['stop_points'][1]
 
-    def test_min_max_nb_journeys_should_be_GT_0(self):
+    def test_when_min_max_nb_journeys_equal_0(self):
         """
         max_nb_journeys should be greater than 0
+        min_nb_journeys should be greater than 0 or equal to 0
         """
-        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&max_nb_journeys={max_nb_journeys}"\
-                .format(from_sa="stopA",
-                        to_sa="stopB",
-                        datetime="20120614T223000",
-                        max_nb_journeys=int(-42))
+        for nb in (-42, 0):
+            query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&max_nb_journeys={max_nb_journeys}"\
+                    .format(from_sa="stopA",
+                            to_sa="stopB",
+                            datetime="20120614T223000",
+                            max_nb_journeys=nb)
 
-        response = self.query_region(query, check=False)
-        assert response[1] == 400
-        assert "max_nb_journeys must be a positive integer" in response[0]['message']
+            response = self.query_region(query, check=False)
+            assert response[1] == 400
+            assert "max_nb_journeys must be a positive integer" in response[0]['message']
+
 
         query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&min_nb_journeys={min_nb_journeys}"\
                 .format(from_sa="stopA",
@@ -964,7 +967,7 @@ class JourneyCommon(object):
 
         response = self.query_region(query, check=False)
         assert response[1] == 400
-        assert "min_nb_journeys must be a positive integer" in response[0]['message']
+        assert "min_nb_journeys must be a non-negative integer" in response[0]['message']
 
 @dataset({"main_stif_test": {}})
 class AddErrorFieldInJormun(object):

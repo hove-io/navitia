@@ -302,7 +302,7 @@ class TestHere(NewDefaultScenarioAbstractTestFixture):
         test with car fallback and car direct path
         """
         q = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&first_section_mode[]=car" \
-            "&last_section_mode[]=car&debug=true&min_nb_journeys=1"\
+            "&last_section_mode[]=car&debug=true&min_nb_journeys=0"\
             .format(from_coord=s_coord, to_coord=r_coord, datetime=QUERY_DATETIME_STR)
         response = self.query_region(q)
         # we don't want to check the journeys links as that will make more HERE call (when testing the links)
