@@ -430,7 +430,7 @@ def culling_journeys(resp, request):
     """
     logger = logging.getLogger(__name__)
 
-    if not request["max_nb_journeys"] or request["max_nb_journeys"] >= len(resp.journeys):
+    if request["max_nb_journeys"] is None or request["max_nb_journeys"] >= len(resp.journeys):
         logger.debug('No need to cull journeys')
         return
 
@@ -777,6 +777,9 @@ class Scenario(simple.Scenario):
 
     def fill_journeys(self, request_type, api_request, instance):
         logger = logging.getLogger(__name__)
+
+        if api_request['max_nb_journeys'] is not None and api_request['max_nb_journeys'] <= 0:
+            return response_pb2.Response()
 
         # sometimes we need to change the entrypoint id (eg if the id is from another autocomplete system)
         origin_detail = self.get_entrypoint_detail(api_request.get('origin'), instance)

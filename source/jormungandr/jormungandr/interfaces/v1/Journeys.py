@@ -31,7 +31,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 from flask import request, g
-from flask_restful import fields, marshal_with, abort
+from flask_restful import fields, marshal_with, abort, inputs
 from jormungandr import i_manager, app
 from jormungandr.interfaces.v1.fields import disruption_marshaller, Links
 from jormungandr.interfaces.v1.fields import display_informations_vj, error, place,\
@@ -470,7 +470,7 @@ class Journeys(JourneyCommon):
                                      "it'll override some specific parameters")
         parser_get.add_argument("min_nb_journeys", type=int,
                                 help='Minimum number of different suggested journeys')
-        parser_get.add_argument("max_nb_journeys", type=int,
+        parser_get.add_argument("max_nb_journeys", type=inputs.positive,
                                 help='Maximum number of different suggested journeys')
         parser_get.add_argument("_max_extra_second_pass", type=int, dest="max_extra_second_pass", hidden=True)
 

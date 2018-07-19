@@ -942,6 +942,19 @@ class JourneyCommon(object):
             # Other stop points don't have the fare zone info
             assert not 'fare_zone' in r['stop_points'][1]
 
+    def test_max_nb_journeys_equals_0(self):
+        """
+        if the user ask for 0 journey, we return 0 journey
+        """
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&max_nb_journeys={max_nb_journeys}"\
+                .format(from_sa="stopA",
+                        to_sa="stopB",
+                        datetime="20120614T223000",
+                        max_nb_journeys=0)
+
+        response = self.query_region(query, check=False)
+        assert response[1] == 400
+        assert "Invalid max_nb_journeys: 0. max_nb_journeys must be a positive integer" in response[0]['message']
 
 @dataset({"main_stif_test": {}})
 class AddErrorFieldInJormun(object):
