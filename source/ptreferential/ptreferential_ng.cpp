@@ -78,7 +78,7 @@ struct PtRefGrammar: qi::grammar<Iterator, ast::Expr(), ascii::space_type> {
             >> str[phx::at(phx::at_c<2>(_val), 0) = _1]
             >> ')';
 
-        get_corresponding = (qi::lit("get") | "GET") >> ident >> "<-" >> expr;
+        get_corresponding = (qi::lit("get") | qi::lit("GET")) >> ident >> "<-" >> expr;
         expr_leaf = '(' >> expr >> ')' | pred | get_corresponding;
         expr_diff = (expr_leaf >> '-' >> expr_diff)
             [_val = phx::construct<ast::BinaryOp<ast::Diff>>(_1, _2)]
