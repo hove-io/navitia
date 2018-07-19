@@ -1520,7 +1520,7 @@ class JourneysMinNbJourneys():
         Note : The night bus filter is loaded with default parameters.
         With this data, night bus filter parameters doesn't filter anything.
         """
-        query = 'journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=1'
+        query = 'journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=0'
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) >= 2
@@ -1715,7 +1715,7 @@ class JourneysTimeFrameDuration():
                  'min_nb_journeys={min_nb_journeys}').format( _from='stop_area:sa1',
                                                               to='stop_area:sa3',
                                                               datetime='20180315T080000',
-                                                              min_nb_journeys=1,
+                                                              min_nb_journeys=0,
                                                               timeframe_duration=0)
         response = self.query_region(query)
         assert 1 <= len(response['journeys'])

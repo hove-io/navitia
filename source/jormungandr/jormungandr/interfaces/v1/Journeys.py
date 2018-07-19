@@ -531,6 +531,10 @@ class Journeys(JourneyCommon):
             args['min_nb_journeys'] = args['count']
             args['max_nb_journeys'] = args['count']
 
+        if args['min_nb_journeys'] and args['max_nb_journeys'] and \
+                args['max_nb_journeys'] < args['min_nb_journeys']:
+            abort(400, message='max_nb_journeyes must be >= min_nb_journeys')
+
         if args.get('timeframe_duration'):
             args['timeframe_duration'] = min(args['timeframe_duration'], default_values.max_duration)
 
