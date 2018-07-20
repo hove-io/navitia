@@ -345,4 +345,35 @@ type::Indexes get_indexes_from_id(const type::Type_e type,
     }
 }
 
+template<typename T>
+static Indexes get_indexes_from_name(const std::string& name, const std::vector<T*>& objs) {
+    Indexes indexes;
+    for (const auto* obj: objs) {
+        if (obj->name != name) { continue; }
+        indexes.insert(obj->idx);
+    }
+    return indexes;
+}
+static Indexes get_indexes_from_name(const std::string&, const std::vector<type::ValidityPattern*>&) {
+    return Indexes();
+}
+
+type::Indexes get_indexes_from_name(const type::Type_e type,
+                                    const std::string& name,
+                                    const type::Data& data) {
+    switch (type) {
+#define GET_INDEXES(type_name, collection_name) \
+        case Type_e::type_name: \
+            return get_indexes_from_name(name, data.pt_data->collection_name);
+        ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
+#undef GET_INDEXES
+    case Type_e::POI:
+        return get_indexes_from_name(name, data.geo_ref->pois);
+    case Type_e::POIType:
+        return get_indexes_from_name(name, data.geo_ref->poitypes);
+    default:
+        return Indexes();
+    }
+}
+
 }} // navitia::ptref

@@ -666,7 +666,6 @@ struct AssociatedCalendar {
         ar & calendar & exceptions;
     }
 };
-struct MetaVehicleJourney;
 
 
 struct StopTime {

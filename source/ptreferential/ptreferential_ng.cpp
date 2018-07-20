@@ -229,6 +229,8 @@ struct Eval: boost::static_visitor<Indexes> {
             indexes = get_within(type_by_caption(f.type), coord, distance, data);
         } else if ((f.method == "id" || f.method == "uri") && f.args.size() == 1) {
             indexes = get_indexes_from_id(type_by_caption(f.type), f.args.at(0), data);
+        } else if (f.method == "name" && f.args.size() == 1) {
+            indexes = get_indexes_from_name(type_by_caption(f.type), f.args.at(0), data);
         } else if (f.method == "has_code" && f.args.size() == 2) {
             indexes = get_indexes_from_code(type_by_caption(f.type), f.args.at(0), f.args.at(1), data);
         } else {
