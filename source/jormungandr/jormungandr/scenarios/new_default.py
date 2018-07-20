@@ -28,6 +28,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
+
 from copy import deepcopy
 import itertools
 import logging
@@ -36,7 +37,7 @@ from flask import g
 from jormungandr.scenarios import simple, journey_filter, helpers
 from jormungandr.scenarios.ridesharing.ridesharing_helper import decorate_journeys
 from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, \
-    get_or_default, fill_uris, gen_all_combin, get_pseudo_duration, mode_weight
+    get_or_default, fill_uris, gen_all_combin, get_pseudo_duration, mode_weight, switch_back_to_ridesharing
 from navitiacommon import type_pb2, response_pb2, request_pb2
 from jormungandr.scenarios.qualifier import min_from_criteria, arrival_crit, departure_crit, \
     duration_crit, transfers_crit, nonTC_crit, trip_carac, has_no_car, has_car, has_pt, \
@@ -179,6 +180,9 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     req.journeys.night_bus_filter_max_factor = request['_night_bus_filter_max_factor']
     req.journeys.night_bus_filter_base_factor = request['_night_bus_filter_base_factor']
 
+    if request['timeframe_duration']:
+        req.journeys.timeframe_duration = int(request['timeframe_duration'])
+
     return req
 
 
@@ -207,6 +211,7 @@ def compute_car_co2_emission(pb_resp, api_request, instance):
         # Assign car_co2_emission into the resp, these value will be exposed in the final result
         pb_resp.car_co2_emission.value = car.co2_emission.value
         pb_resp.car_co2_emission.unit = car.co2_emission.unit
+
 
 def tag_ecologic(resp):
     # if there is no available car_co2_emission in resp, no tag will be assigned
@@ -241,12 +246,14 @@ def _is_bike_section(s):
     return ((s.type == response_pb2.CROW_FLY or s.type == response_pb2.STREET_NETWORK) and
             s.street_network.mode == response_pb2.Bike)
 
+
 def _is_pt_bike_accepted_section(s):
     bike_ok = type_pb2.hasEquipments.has_bike_accepted
     return (s.type == response_pb2.PUBLIC_TRANSPORT and
             bike_ok in s.pt_display_informations.has_equipments.has_equipments and
             bike_ok in s.origin.stop_point.has_equipments.has_equipments and
             bike_ok in s.destination.stop_point.has_equipments.has_equipments)
+
 
 def _is_bike_in_pt_journey(j):
     bike_indifferent = [response_pb2.boarding,
@@ -260,11 +267,12 @@ def _is_bike_in_pt_journey(j):
                or s.type in bike_indifferent
                    for s in j.sections)
 
+
 def _tag_bike_in_pt(responses):
-    '''
+    """
     we tag as 'bike _in_pt' journeys that are using bike as start AND end fallback AND
     that allow carrying bike in transport (and journey has to include PT)
-    '''
+    """
     for j in itertools.chain.from_iterable(r.journeys for r in responses):
         if _is_bike_in_pt_journey(j):
             j.tags.extend(['bike_in_pt'])
@@ -422,7 +430,7 @@ def culling_journeys(resp, request):
     """
     logger = logging.getLogger(__name__)
 
-    if not request["max_nb_journeys"] or request["max_nb_journeys"] >= len(resp.journeys):
+    if request["max_nb_journeys"] is None or request["max_nb_journeys"] >= len(resp.journeys):
         logger.debug('No need to cull journeys')
         return
 
@@ -558,35 +566,6 @@ def _tag_by_mode(responses):
     for r in responses:
         for j in r.journeys:
             _tag_journey_by_mode(j)
-
-
-def _is_fake_car_section(section):
-    """
-    This function test if the section is a fake car section
-    """
-    return (section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY) and \
-            section.street_network.mode == response_pb2.Car
-
-
-def _switch_back_to_ridesharing(response, is_first_section):
-    """
-
-    :param response: a pb_response returned by kraken
-    :param is_first_section: a bool indicates that if the first_section or last_section is a ridesharing section
-                             True if the first_section is, False if the last_section is
-    :return:
-    """
-    for journey in response.journeys:
-        if len(journey.sections) == 0:
-            continue
-        section_idx = 0 if is_first_section else -1
-        section = journey.sections[section_idx]
-        if _is_fake_car_section(section):
-            section.street_network.mode = response_pb2.Ridesharing
-            journey.durations.ridesharing += section.duration
-            journey.durations.car -= section.duration
-            journey.distances.ridesharing += section.length
-            journey.distances.car -= section.length
 
 
 def nb_journeys(responses):
@@ -799,6 +778,9 @@ class Scenario(simple.Scenario):
     def fill_journeys(self, request_type, api_request, instance):
         logger = logging.getLogger(__name__)
 
+        if api_request['max_nb_journeys'] is not None and api_request['max_nb_journeys'] <= 0:
+            return response_pb2.Response()
+
         # sometimes we need to change the entrypoint id (eg if the id is from another autocomplete system)
         origin_detail = self.get_entrypoint_detail(api_request.get('origin'), instance)
         destination_detail = self.get_entrypoint_detail(api_request.get('destination'), instance)
@@ -820,15 +802,15 @@ class Scenario(simple.Scenario):
         # Return the possible couples combinations (origin_mode and destination_mode)
         krakens_call = get_kraken_calls(api_request)
 
-        # min_nb_journeys option
-        if api_request['min_nb_journeys']:
-            min_nb_journeys = api_request['min_nb_journeys']
-        else:
-            min_nb_journeys = api_request['min_nb_journeys'] = 1
-
         # We need the original request (api_request) for filtering, but request
         # is modified by create_next_kraken_request function.
         request = deepcopy(api_request)
+
+        # min_nb_journeys option
+        if request['min_nb_journeys']:
+            min_nb_journeys = request['min_nb_journeys']
+        else:
+            min_nb_journeys = 1
 
         responses = []
         nb_try = 0
@@ -851,7 +833,7 @@ class Scenario(simple.Scenario):
             # - If there was no journey qualified in the previous response, the last chance request is limited
             if len(krakens_call) > 1 or last_chance_retry:
                 request['min_nb_journeys'] = 0
-            else:
+            elif api_request['min_nb_journeys']:
                 min_nb_journeys_left = min_nb_journeys - nb_qualified_journeys
                 request['min_nb_journeys'] = max(0, min_nb_journeys_left)
 
@@ -900,6 +882,11 @@ class Scenario(simple.Scenario):
             responses.extend(new_resp)  # we keep the error for building the response
 
             nb_qualified_journeys = nb_journeys(responses)
+
+            if api_request['timeframe_duration']:
+                # If timeframe_duration is active, it is useless to recall Kraken,
+                # it has already sent back what he could
+                break
 
             if nb_previously_qualified_journeys == nb_qualified_journeys:
                 # If there is no additional qualified journey in the kraken response,
@@ -972,9 +959,9 @@ class Scenario(simple.Scenario):
                 j.internal_id = "{resp}-{j}".format(resp=self.nb_kraken_calls, j=idx)
 
             if dep_mode == 'ridesharing':
-                _switch_back_to_ridesharing(local_resp, True)
+                switch_back_to_ridesharing(local_resp, True)
             if arr_mode == 'ridesharing':
-                _switch_back_to_ridesharing(local_resp, False)
+                switch_back_to_ridesharing(local_resp, False)
 
             fill_uris(local_resp)
             resp.append(local_resp)

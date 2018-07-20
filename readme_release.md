@@ -19,20 +19,36 @@ Then follow the instructions given by the script, and also:
 
 ## Other releases
 
-For a major release, same as minor, but major:
+### For a major release, same as minor, but major:
 ```
 python ./script_release.py major <canaltp_distant_repo_name>
 ```
 
-For hotfix:
+### For hotfix:
 ```
 python ./script_release.py hotfix <canaltp_distant_repo_name>
 ```
+A new branch has been created <release_x.yy.z> and the changelog is opened.
 Then the process is less automated (but still, instructions are given):
-* you have to populate the changelog
-* and the TAG yourself
-* also cherry-pick the commits you want to release
-
+* Populate the changelog :
+	Add the hotfix PR name and link to github (as for the automated changelog in the release process)
+* Cherry-pick the commits you want to release:
+	```
+	git cherry-pick <commit_id> # Each commit_id of the hotfix PR
+	```
+* Merge the content of the new release branch with the hotfix commits to the 'release' branch:
+	```
+	git checkout release		
+	git merge --no-ff <release_x.yy.z>
+	```
+* Tag the new release:
+	``` 
+	git tag -a vx.yy.z
+	```
+* Push the release branch to the dev branch
+	``` 
+	git push upstream release dev --tags
+	```
 
 # Troubleshooting
 If you run into github's daily limitation, you can easily provide your login/token into the script.

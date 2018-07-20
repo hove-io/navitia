@@ -67,7 +67,8 @@ def car_park_space_get_information_test():
                     "nombreplacesdisponibles": 4,
                     "nombreplacesoccupees": 3,
                     "nombreplacesdisponiblespmr": 2,
-                    "nombreplacesoccupeespmr": 0
+                    "nombreplacesoccupeespmr": 0,
+                    "idparc": "42"
                 }
             }
         ]
@@ -88,6 +89,7 @@ def car_park_space_get_information_test():
         "records":[
             {
                 "fields": {
+                    "idparc": "42"
                 }
             }
         ]
@@ -107,7 +109,7 @@ def car_park_space_get_information_test():
     }
     """
     provider._call_webservice = MagicMock(return_value=json.loads(star_response))
-    assert provider.get_informations(poi) == empty_parking
+    assert provider.get_informations(poi) is None
 
     # Information of PRM is not provided
     parking_places = ParkingPlaces(available=4,
@@ -119,7 +121,8 @@ def car_park_space_get_information_test():
             {
                 "fields": {
                     "nombreplacesdisponibles": 4,
-                    "nombreplacesoccupees": 3
+                    "nombreplacesoccupees": 3,
+                    "idparc": "42"
                 }
             }
         ]
@@ -129,5 +132,7 @@ def car_park_space_get_information_test():
     provider._call_webservice = MagicMock(return_value=json.loads(star_response))
     info = provider.get_informations(poi)
     assert info == parking_places
+    assert hasattr(info, "available")
+    assert hasattr(info, "occupied")
     assert not hasattr(info, "available_PRM")
     assert not hasattr(info, "occupied_PRM")

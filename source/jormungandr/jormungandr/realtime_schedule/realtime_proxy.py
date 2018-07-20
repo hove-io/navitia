@@ -40,7 +40,36 @@ import datetime
 import hashlib
 import logging
 import six
+import math
 
+
+def floor_datetime(dt, step):
+    """
+    floor the second of a datetime to the nearest multiple of step
+    >>> floor_datetime(datetime.datetime(2018, 1, 1, 10, 10, 0), 15)
+    datetime.datetime(2018, 1, 1, 10, 10)
+    >>> floor_datetime(datetime.datetime(2018, 1, 1, 10, 10, 12), 15)
+    datetime.datetime(2018, 1, 1, 10, 10)
+    >>> floor_datetime(datetime.datetime(2018, 1, 1, 10, 10, 29), 15)
+    datetime.datetime(2018, 1, 1, 10, 10, 15)
+    >>> floor_datetime(datetime.datetime(2018, 1, 1, 10, 10, 30), 15)
+    datetime.datetime(2018, 1, 1, 10, 10, 30)
+    >>> floor_datetime(datetime.datetime(2018, 1, 1, 10, 10, 59), 15)
+    datetime.datetime(2018, 1, 1, 10, 10, 45)
+
+    >>> floor_datetime(datetime.datetime(2018, 1, 1, 10, 10), 30)
+    datetime.datetime(2018, 1, 1, 10, 10)
+    >>> floor_datetime(datetime.datetime(2018, 1, 1, 10, 10, 59), 30)
+    datetime.datetime(2018, 1, 1, 10, 10, 30)
+    >>> floor_datetime(datetime.datetime(2018, 1, 1, 10, 10, 59), 60)
+    datetime.datetime(2018, 1, 1, 10, 10)
+
+    >>> floor_datetime(datetime.datetime(2018, 1, 1, 10, 10, 28), 1)
+    datetime.datetime(2018, 1, 1, 10, 10, 28)
+    >>> floor_datetime(datetime.datetime(2018, 1, 1, 10, 10, 59), 1)
+    datetime.datetime(2018, 1, 1, 10, 10, 59)
+    """
+    return dt.replace(second=int(math.floor(dt.second/float(step))*step), microsecond=0)
 
 class RealtimeProxyError(RuntimeError):
     pass

@@ -33,7 +33,7 @@ import itertools
 import datetime
 import abc
 import six
-from jormungandr.scenarios.utils import compare, get_pseudo_duration, get_or_default, mode_weight
+from jormungandr.scenarios.utils import compare, get_or_default
 from navitiacommon import response_pb2
 from jormungandr.utils import pb_del_if, ComposedFilter, portable_min
 
@@ -322,77 +322,11 @@ def get_nb_connections(journey):
     return journey.nb_transfers
 
 
-def _get_mode_weight(journey):
-    if not journey.tags:
-        return 1
-    return max(mode_weight.get(mode, 1) for mode in journey.tags)
-
-
 def get_min_waiting(journey):
     """
     Returns min waiting time in a journey
     """
     return portable_min((s.duration for s in journey.sections if s.type == response_pb2.WAITING), default=0)
-
-
-def way_later(request, journey1, journey2):
-    """to check if a journey is way later than another journey
-
-    First, this rule doesn't apply if journey1 has a strictly better
-    mode than journey2.
-
-    Then, we check for each journey the difference between the
-    requested datetime and the arrival datetime (the other way around
-    for non clockwise)
-
-    requested dt
-    *
-                   |=============>
-                          journey2
-
-                                           |=============>
-                                                 journey1
-
-    -------------------------------
-             journey2 pseudo duration
-
-    ------------------------------------------------------
-                       journey1 pseudo duration
-
-    """
-    if _get_mode_weight(journey1) < _get_mode_weight(journey2):
-        return False
-
-    requested_dt = request['datetime']
-    is_clockwise = request.get('clockwise', True)
-
-    pseudo_j2_duration = get_pseudo_duration(journey2, requested_dt, is_clockwise)
-    pseudo_j1_duration = get_pseudo_duration(journey1, requested_dt, is_clockwise)
-
-    max_value = pseudo_j2_duration * request['_night_bus_filter_max_factor'] + request['_night_bus_filter_base_factor']
-    return pseudo_j1_duration > max_value
-
-
-def _filter_too_late_journeys(responses, request):
-    """
-    Filter not coherent journeys
-    TODO: This code is dead, to be removed
-
-    The aim is to keep that as simple as possible
-    """
-    # for clarity purpose we build a temporary generator
-    journeys = (j for r in responses for j in r.journeys if 'non_pt' not in j.tags
-                and not to_be_deleted(j))
-
-    logger = logging.getLogger(__name__)
-    is_debug = request.get('debug')
-    for (j1, j2) in itertools.permutations(journeys, 2):
-        if to_be_deleted(j1) or to_be_deleted(j2):
-            continue
-        if way_later(request, j1, j2):
-            logger.debug("the journey {} is too long compared to {}, we delete it"
-                         .format(j1.internal_id, j2.internal_id))
-            mark_as_dead(j1, is_debug, 'too_long', 'too_long_compared_to_{}'.format(j2.internal_id))
 
 
 def is_walk_after_parking(journey, idx_section):

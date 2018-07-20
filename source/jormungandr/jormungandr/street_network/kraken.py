@@ -95,6 +95,8 @@ class Kraken(AbstractStreetNetworkService):
         req.direct_path.streetnetwork_params.max_bss_duration_to_pt = request['max_bss_duration_to_pt']
         req.direct_path.streetnetwork_params.car_speed = request['car_speed']
         req.direct_path.streetnetwork_params.max_car_duration_to_pt = request['max_car_duration_to_pt']
+        req.direct_path.streetnetwork_params.car_no_park_speed = request['car_no_park_speed']
+        req.direct_path.streetnetwork_params.max_car_no_park_duration_to_pt = request['max_car_no_park_duration_to_pt']
 
         response = self.instance.send_and_receive(req)
 
@@ -110,6 +112,7 @@ class Kraken(AbstractStreetNetworkService):
             "bike": request['bike_speed'],
             "car": request['car_speed'],
             "bss": request['bss_speed'],
+            "ridesharing": request['car_no_park_speed'],
         }
         req = request_pb2.Request()
         req.requested_api = type_pb2.street_network_routing_matrix
@@ -147,7 +150,7 @@ class Kraken(AbstractStreetNetworkService):
         :param streetnetwork_path_type: whether it's a fallback at
         the beginning, the end of journey or a direct path without PT also matters especially for car (to know if we
         park before or after)
-        :param period_extremity: is a PeriodExtremity (a datetime and it's meaning on the
+        :param period_extremity: is a PeriodExtremity (a datetime and its meaning on the
         fallback period)
         Nota: period_extremity is not taken into consideration so far because we assume that a
         direct path from A to B remains the same even the departure time are different (no realtime)

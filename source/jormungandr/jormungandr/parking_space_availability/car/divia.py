@@ -1,5 +1,5 @@
 # encoding: utf-8
-# Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
+# Copyright (c) 2001-2018, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
 #     the software to build cool stuff with public transport.
@@ -35,24 +35,25 @@ from jormungandr.parking_space_availability.car.common_car_park_provider import 
 from jormungandr.parking_space_availability.car.parking_places import ParkingPlaces
 from jormungandr.ptref import FeedPublisher
 
-DEFAULT_STAR_FEED_PUBLISHER = None
+DEFAULT_DIVIA_FEED_PUBLISHER = None
 
 
-class StarProvider(CommonCarParkProvider):
+class DiviaProvider(CommonCarParkProvider):
 
-    def __init__(self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_STAR_FEED_PUBLISHER, **kwargs):
+    def __init__(self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_DIVIA_FEED_PUBLISHER, **kwargs):
 
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
-        self.provider_name = 'STAR'
+        self.provider_name = 'DIVIA'
 
-        super(StarProvider, self).__init__(url, operators, dataset, timeout, **kwargs)
+        super(DiviaProvider, self).__init__(url, operators, dataset, timeout, **kwargs)
 
     def process_data(self, data, poi):
-        park = jmespath.search('records[?fields.idparc==\'{}\']|[0]'.format(poi['properties']['ref']), data)
+        park = jmespath.search('records[?fields.numero_parking==\'{}\']|[0]'.format(poi['properties']['ref'].zfill(2)), data)
         if park:
-            available = jmespath.search('fields.nombreplacesdisponibles', park)
-            occupied = jmespath.search('fields.nombreplacesoccupees', park)
-            # Person with reduced mobility
-            available_PRM = jmespath.search('fields.nombreplacesdisponiblespmr', park)
-            occupied_PRM = jmespath.search('fields.nombreplacesoccupeespmr', park)
-            return ParkingPlaces(available, occupied, available_PRM, occupied_PRM)
+            available = jmespath.search('fields.nombre_places_libres', park)
+            nb_places = jmespath.search('fields.nombre_places', park)
+            if available is not None and nb_places is not None and nb_places >= available:
+                occupied = nb_places - available
+            else:
+                occupied = None
+            return ParkingPlaces(available, occupied, None, None)

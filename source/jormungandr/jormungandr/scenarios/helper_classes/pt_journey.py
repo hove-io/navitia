@@ -157,7 +157,9 @@ class PtJourneyPool:
                                  forbidden_uris=request['forbidden_uris[]'],
                                  allowed_id=request['allowed_id[]'],
                                  night_bus_filter_max_factor=request['_night_bus_filter_max_factor'],
-                                 night_bus_filter_base_factor=request['_night_bus_filter_base_factor'])
+                                 night_bus_filter_base_factor=request['_night_bus_filter_base_factor'],
+                                 min_nb_journeys=request['min_nb_journeys'],
+                                 timeframe=request['timeframe_duration'])
 
     def _async_request(self):
         direct_path_type = StreetNetworkPathType.DIRECT

@@ -34,7 +34,9 @@ from .tests_mechanism import dataset
 from jormungandr import i_manager
 from .check_utils import *
 import mock
-import  os
+from os import getenv
+from pytest import approx
+
 
 def check_best(resp):
     assert not resp.get('journeys') or sum((1 for j in resp['journeys'] if j['type'] == "best")) == 1
@@ -719,9 +721,9 @@ class JourneyCommon(object):
         assert 'journeys' not in response or len(response['journeys']) == 0
 
     def test_call_kraken_foreach_mode(self):
-        '''
+        """
         test if the different pt computation do not interfer
-        '''
+        """
         query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&first_section_mode[]=walking&first_section_mode[]=bike&debug=true"\
             .format(from_coord="0.0000898312;0.0000898312",
                     to_coord="0.00188646;0.00071865",
@@ -770,9 +772,9 @@ class JourneyCommon(object):
         assert response['journeys'][3]['durations']['total'] == 276
 
     def test_call_kraken_boarding_alighting(self):
-        '''
+        """
         test that boarding and alighting sections are present
-        '''
+        """
         query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&debug=true&max_duration_to_pt=0"\
                     .format(from_sa="stopA",
                             to_sa="stopB",
@@ -927,7 +929,7 @@ class JourneyCommon(object):
         assert r['journeys'][0]['sections'][1]['display_informations']['name'] == first_journey_pt
         assert len(r['journeys']) == 1
 
-    if os.getenv('JORMUNGANDR_USE_SERPY'):
+    if getenv('JORMUNGANDR_USE_SERPY'):
         def test_section_fare_zone(self):
             """
             In a 'stop_point', the section 'fare_zone' should be present if the info is available
@@ -940,6 +942,32 @@ class JourneyCommon(object):
             # Other stop points don't have the fare zone info
             assert not 'fare_zone' in r['stop_points'][1]
 
+    def test_when_min_max_nb_journeys_equal_0(self):
+        """
+        max_nb_journeys should be greater than 0
+        min_nb_journeys should be greater than 0 or equal to 0
+        """
+        for nb in (-42, 0):
+            query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&max_nb_journeys={max_nb_journeys}"\
+                    .format(from_sa="stopA",
+                            to_sa="stopB",
+                            datetime="20120614T223000",
+                            max_nb_journeys=nb)
+
+            response = self.query_region(query, check=False)
+            assert response[1] == 400
+            assert "max_nb_journeys must be a positive integer" in response[0]['message']
+
+
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&min_nb_journeys={min_nb_journeys}"\
+                .format(from_sa="stopA",
+                        to_sa="stopB",
+                        datetime="20120614T223000",
+                        min_nb_journeys=int(-42))
+
+        response = self.query_region(query, check=False)
+        assert response[1] == 400
+        assert "min_nb_journeys must be a non-negative integer" in response[0]['message']
 
 @dataset({"main_stif_test": {}})
 class AddErrorFieldInJormun(object):
@@ -1130,7 +1158,6 @@ class OnBasicRouting():
             .format(from_sa="A", to_sa="D", datetime="20120614T080000")
         response = self.query_region(query, display=True)
         check_best(response)
-        #self.is_valid_journey_response(response, query)# linestring with 1 value (0,0)
         assert len(response['journeys']) == 2
         assert response['journeys'][0]['arrival_date_time'] == "20120614T150000"
         assert('to_delete' in response['journeys'][0]['tags'])
@@ -1486,6 +1513,18 @@ class JourneysMinNbJourneys():
     Test min_nb_journeys and late journey filter
     """
 
+    def test_min_nb_journeys_options_with_minimum_value(self):
+        """
+        By default, the raptor computes 2 journeys, so the response returns at least 2 journeys.
+
+        Note : The night bus filter is loaded with default parameters.
+        With this data, night bus filter parameters doesn't filter anything.
+        """
+        query = 'journeys?from=2.39592;48.84838&to=2.36381;48.86750&datetime=20180309T080000&min_nb_journeys=0'
+        response = self.query_region(query)
+        self.is_valid_journey_response(response, query)
+        assert len(response['journeys']) >= 2
+
     def test_minimum_journeys_with_min_nb_journeys_options(self):
         """
         By default, the raptor computes 2 journeys, so the response returns at least 2 journeys.
@@ -1589,3 +1628,286 @@ class JourneysWithNightBusFilter():
         response = self.query_region(query)
         self.is_valid_journey_response(response, query)
         assert len(response['journeys']) == 2
+
+
+@dataset({'min_nb_journeys_test': {}})
+class JourneysTimeFrameDuration():
+
+    def test_timeframe_duration_simple_case(self):
+        """
+        The data contains 20 journeys (every 10 min) + 1 journey 24H after the first.
+        The first journeys is 20180315T080000.
+        """
+
+        # Time frame to catch only the first journeys, timeframe_duration = 10 min (60*10=600).
+        # Even though a journey's departure is later than the timeframe, we still keep it
+        query = ('journeys?from={_from}&'
+                'to={to}&'
+                'datetime={datetime}&'
+                'timeframe_duration={timeframe_duration}&').format( _from='stop_area:sa1',
+                                                                    to='stop_area:sa3',
+                                                                    datetime='20180315T080000',
+                                                                    timeframe_duration=600)
+        response = self.query_region(query)
+        assert 1 <= len(response['journeys'])
+
+        # Time frame to catch journeys in the first hour, timeframe_duration = 1 H (60*60=3600).
+        query = ('journeys?from={_from}&'
+                'to={to}&'
+                'datetime={datetime}&'
+                'timeframe_duration={timeframe_duration}&').format( _from='stop_area:sa1',
+                                                                    to='stop_area:sa3',
+                                                                    datetime='20180315T080000',
+                                                                    timeframe_duration=3600)
+        response = self.query_region(query)
+        assert 6 <= len(response['journeys'])
+
+        # Time frame to catch only the first two journeys before the date time, because clockwise is active.
+        query = ('journeys?from={_from}&'
+                'to={to}&'
+                'datetime={datetime}&'
+                'datetime_represents={datetime_represents}&'
+                'timeframe_duration={timeframe_duration}&').format( _from='stop_area:sa1',
+                                                                    to='stop_area:sa3',
+                                                                    datetime='20180315T083500',
+                                                                    datetime_represents='arrival',
+                                                                    timeframe_duration=1200)
+        response = self.query_region(query)
+        assert 2 <= len(response['journeys'])
+
+        assert response['journeys'][0]['departure_date_time'] == u'20180315T083000'
+        assert response['journeys'][1]['departure_date_time'] == u'20180315T082000'
+
+
+    def test_timeframe_duration_with_minimum_value(self):
+        """
+        The data contains 20 journeys (every 10 min) + 1 journey 24H after the first.
+        The first journeys is 20180315T080000.
+
+        If timeframe_duration is set to 0, the response should return 1 journey,
+        as there is simply no contraint
+        """
+        query = ('journeys?from={_from}&'
+                'to={to}&'
+                'datetime={datetime}&'
+                'timeframe_duration={timeframe_duration}&').format( _from='stop_area:sa1',
+                                                                    to='stop_area:sa3',
+                                                                    datetime='20180315T080000',
+                                                                    timeframe_duration=0)
+        response = self.query_region(query)
+        assert 1 == len(response['journeys'])
+
+    def test_timeframe_duration_and_min_nb_journeys_with_minimum_value(self):
+        """
+        The data contains 20 journeys (every 10 min) + 1 journey 24H after the first.
+        The first journeys is 20180315T080000.
+
+        If timeframe_duration and min_nb_journeys are set to 0, the response should return 1 journey,
+        as there is simply no constraints
+
+        If timeframe_duration is set to 0 and min_nb_journeys is set to 2,
+        the response should return at least 2 journeys
+        """
+        query = ('journeys?from={_from}&'
+                'to={to}&'
+                'datetime={datetime}&'
+                'timeframe_duration={timeframe_duration}&'
+                 'min_nb_journeys={min_nb_journeys}').format( _from='stop_area:sa1',
+                                                              to='stop_area:sa3',
+                                                              datetime='20180315T080000',
+                                                              min_nb_journeys=0,
+                                                              timeframe_duration=0)
+        response = self.query_region(query)
+        assert 1 <= len(response['journeys'])
+
+
+        query = ('journeys?from={_from}&'
+                'to={to}&'
+                'datetime={datetime}&'
+                'timeframe_duration={timeframe_duration}&'
+                'min_nb_journeys={min_nb_journeys}').format( _from='stop_area:sa1',
+                                                              to='stop_area:sa3',
+                                                              datetime='20180315T080000',
+                                                              min_nb_journeys=2,
+                                                              timeframe_duration=0)
+        response = self.query_region(query)
+        assert 2 <= len(response['journeys'])
+
+    def test_timeframe_duration_with_maximum_value(self):
+        """
+        The data contains 20 journeys (every 10 min) + 1 journey 24H after the first.
+        The first journeys is 20180315T080000.
+
+        timeframe_duration is set to 24H + 15 min (86400 + 60*15).
+        The response must not contains the last jouneys because we filter with a max time frame of 24H
+        """
+        query = ('journeys?from={_from}&'
+                'to={to}&'
+                'datetime={datetime}&'
+                'timeframe_duration={timeframe_duration}&').format( _from='stop_area:sa1',
+                                                                    to='stop_area:sa3',
+                                                                    datetime='20180315T080000',
+                                                                    timeframe_duration=87300)
+        response = self.query_region(query)
+        assert 20 == len(response['journeys'])
+
+
+    def test_timeframe_duration_with_min_nb_journeys(self):
+        """
+        The data contains 20 journeys (every 10 min) + 1 journey 24H after the first.
+        The first journeys is 20180315T080000.
+
+        timeframe_duration and min_nb_journeys is active
+
+        """
+
+        # min_nb_journeys = 8 and timeframe_duration = 1H (60*60 = 3600)
+        # The response have to contain 20 journeys because min_nb_journeys is verified.
+        # The superior criteria is min_nb_journeys, so we continue until we have 8 journeys.
+        query = ('journeys?from={_from}&'
+                'to={to}&'
+                'datetime={datetime}&'
+                'min_nb_journeys={min_nb_journeys}&'
+                'timeframe_duration={timeframe_duration}&').format( _from='stop_area:sa1',
+                                                                    to='stop_area:sa3',
+                                                                    datetime='20180315T080000',
+                                                                    min_nb_journeys=8,
+                                                                    timeframe_duration=3600)
+        response = self.query_region(query)
+        assert 8 <= len(response['journeys'])
+
+        # min_nb_journeys = 8 and timeframe_duration = 24H + 15 min
+        # The response have to contain 20 journeys because min_nb_journeys is verified.
+        # The superior criteria is timeframe_duration, so we continue until we have 20 journeys.
+        query = ('journeys?from={_from}&'
+                 'to={to}&'
+                 'datetime={datetime}&'
+                 'min_nb_journeys={min_nb_journeys}&'
+                 'timeframe_duration={timeframe_duration}&').format(_from='stop_area:sa1',
+                                                                    to='stop_area:sa3',
+                                                                    datetime='20180315T080000',
+                                                                    min_nb_journeys=8,
+                                                                    timeframe_duration=87300)
+        response = self.query_region(query)
+        assert 20 == len(response['journeys'])
+
+        # min_nb_journeys = 2 and timeframe_duration = 1H (60*60 = 3600)
+        # The response have to contains 6 journeys because min_nb_journeys is verified.
+        # The superior criteria is timeframe_duration and we have 6 journeys in 1H.
+        query = ('journeys?from={_from}&'
+                'to={to}&'
+                'datetime={datetime}&'
+                'min_nb_journeys={min_nb_journeys}&'
+                'timeframe_duration={timeframe_duration}&').format( _from='stop_area:sa1',
+                                                                    to='stop_area:sa3',
+                                                                    datetime='20180315T080000',
+                                                                    min_nb_journeys=2,
+                                                                    timeframe_duration=3600)
+        response = self.query_region(query)
+        assert 6 <= len(response['journeys'])
+
+        # min_nb_journeys = 11 and timeframe_duration = 1H 35min (60*95 = 5700)
+        # The response have to contains 11 journeys because min_nb_journeys is the main criteria.
+        # With timeframe_duration = 1h35min, we can find 10 journeys but min_nb_journeys=11.
+        # So we continue until the eleventh.
+        query = ('journeys?from={_from}&'
+                'to={to}&'
+                'datetime={datetime}&'
+                'min_nb_journeys={min_nb_journeys}&'
+                'timeframe_duration={timeframe_duration}&').format( _from='stop_area:sa1',
+                                                                    to='stop_area:sa3',
+                                                                    datetime='20180315T080000',
+                                                                    min_nb_journeys=11,
+                                                                    timeframe_duration=5700)
+        response = self.query_region(query)
+        assert 11 == len(response['journeys'])
+
+        # min_nb_journeys = 20 and timeframe_duration = 4H (60*60*4 = 14400)
+        # The response have to contains 20 journeys because min_nb_journeys is verified.
+        # In 4H, the data contains 20 journeys.
+        query = ('journeys?from={_from}&'
+                'to={to}&'
+                'datetime={datetime}&'
+                'min_nb_journeys={min_nb_journeys}&'
+                'timeframe_duration={timeframe_duration}&').format( _from='stop_area:sa1',
+                                                                    to='stop_area:sa3',
+                                                                    datetime='20180315T080000',
+                                                                    min_nb_journeys=20,
+                                                                    timeframe_duration=14400)
+        response = self.query_region(query)
+        assert 20 == len(response['journeys'])
+
+        # min_nb_journeys = 21 and timeframe_duration = 4H (60*60*4 = 14400)
+        # The response have to contains 20 journeys because min_nb_journeys is not verified.
+        # Criteria is not verified, because we don't have 21 journeys in the time frame duration.
+        # We continue to search out of the bound, but only during 24h if the min_nb_journeys is
+        # always not verified (and we reach that 24h-max limit before finding 21st journey)
+        query = ('journeys?from={_from}&'
+                'to={to}&'
+                'datetime={datetime}&'
+                'min_nb_journeys={min_nb_journeys}&'
+                'timeframe_duration={timeframe_duration}&').format( _from='stop_area:sa1',
+                                                                    to='stop_area:sa3',
+                                                                    datetime='20180315T080000',
+                                                                    min_nb_journeys=21,
+                                                                    timeframe_duration=14400)
+        response = self.query_region(query)
+        assert 20 == len(response['journeys'])
+
+
+@dataset({"main_routing_test": {}})
+class JourneysRidesharing():
+    def test_first_ridesharing_last_walking_section_mode(self):
+        query = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.000449156&datetime=20120614T075500&"\
+                "first_section_mode[]={first}&last_section_mode[]={last}&debug=true"\
+                .format(first='ridesharing', last='walking')
+        response = self.query_region(query)
+        check_best(response)
+        self.is_valid_journey_response(response, query)
+        assert len(response["journeys"]) == 1
+        assert response["journeys"][0]["type"] == "best"
+        rs_journey = response["journeys"][0]
+        assert "ridesharing" in rs_journey["tags"]
+        assert rs_journey["requested_date_time"] == "20120614T075500"
+        assert rs_journey["departure_date_time"] == "20120614T075500"
+        assert rs_journey["arrival_date_time"] == "20120614T075513"
+        assert rs_journey["distances"]["ridesharing"] == 94
+        assert rs_journey["duration"] == 13
+        assert rs_journey["durations"]["ridesharing"] == rs_journey["duration"]
+        assert rs_journey["durations"]["total"] == rs_journey["duration"]
+        assert 'to_delete' in rs_journey["tags"]  # no response provided for ridesharing: to_delete
+        rs_section = rs_journey["sections"][0]
+        assert rs_section["departure_date_time"] == rs_journey["departure_date_time"]
+        assert rs_section["arrival_date_time"] == rs_journey["arrival_date_time"]
+        assert rs_section["duration"] == rs_journey["duration"]
+        assert rs_section["mode"] == "ridesharing"
+        assert rs_section["type"] == "street_network"
+        assert rs_section["id"] # check that id is provided
+        assert rs_section["geojson"]["properties"][0]["length"] == rs_journey["distances"]["ridesharing"]
+        assert rs_section["geojson"]["coordinates"][0][0] == approx(float(rs_section["from"]["address"]["coord"]["lon"]))
+        assert rs_section["geojson"]["coordinates"][0][1] == approx(float(rs_section["from"]["address"]["coord"]["lat"]))
+        assert rs_section["geojson"]["coordinates"][-1][0] == approx(float(rs_section["to"]["address"]["coord"]["lon"]))
+        assert rs_section["geojson"]["coordinates"][-1][1] == approx(float(rs_section["to"]["address"]["coord"]["lat"]))
+
+    def test_first_ridesharing_section_mode_forbidden(self):
+        def exec_and_check(query):
+            response, status = self.query_region(query, check=False)
+            check_best(response)
+            assert status == 400
+            assert "message" in response
+            assert "ridesharing" in response['message']
+
+        query = "journeys?from=0.0000898312;0.0000898312&datetime=20120614T075500&"\
+                "first_section_mode[]={first}&last_section_mode[]={last}"\
+                .format(first='ridesharing', last='walking')
+        exec_and_check(query)
+
+        query = "isochrones?from=0.0000898312;0.0000898312&datetime=20120614T075500&"\
+                "first_section_mode[]={first}&last_section_mode[]={last}&max_duration=2"\
+                .format(first='ridesharing', last='walking')
+        exec_and_check(query)
+
+        query = "heat_maps?from=0.0000898312;0.0000898312&datetime=20120614T075500&"\
+                "first_section_mode[]={first}&last_section_mode[]={last}&max_duration=2"\
+                .format(first='ridesharing', last='walking')
+        exec_and_check(query)

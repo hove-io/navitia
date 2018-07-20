@@ -1,3 +1,18 @@
+navitia2 (2.59.0) unstable; urgency=low
+
+  * Jormun & Kraken: add timeframe_duration for journeys  <https://github.com/CanalTP/navitia/pull/2442>
+  * Jormun: Add ridesharing for distributed scenario + tests  <https://github.com/CanalTP/navitia/pull/2467>
+  * Doc: more details on hotfix procedure  <https://github.com/CanalTP/navitia/pull/2468>
+  * Ed: add rtree to speedup stop_point association to admins  <https://github.com/CanalTP/navitia/pull/2466>
+  * Jormun: Update ProtoResponse from geovelo  <https://github.com/CanalTP/navitia/pull/2462>
+  * jormun: Round second of datetime before calling realtime proxy to improve cachability  <https://github.com/CanalTP/navitia/pull/2459>
+  * Jormungandr:  parking DIVIA real-time  <https://github.com/CanalTP/navitia/pull/2398>
+  * Doc: routepoint  <https://github.com/CanalTP/navitia/pull/2428>
+  * Jormun & Kraken: Remove unused filter  <https://github.com/CanalTP/navitia/pull/2457>
+  * jormun: reduce timeout for instance.get_external_codes()  <https://github.com/CanalTP/navitia/pull/2460>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Fri, 20 Jul 2018 14:07:22 +0100
+
 navitia2 (2.58.1) unstable; urgency=low
 
   * Ed: add rtree to speedup stop_point association to admins <https://github.com/CanalTP/navitia/pull/2466>

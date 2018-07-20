@@ -50,6 +50,7 @@ class ProximitiesByCrowfly:
             "bike": instance.bike_speed,
             "car": instance.car_speed,
             "bss": instance.bss_speed,
+            "ridesharing": instance.car_no_park_speed,
         }
         self._value = None
         self._async_request()
