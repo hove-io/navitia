@@ -31,7 +31,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 import logging
 from flask import request, g
-from flask_restful import fields, marshal_with, abort
+from flask_restful import fields, marshal_with, abort, inputs
 from jormungandr import i_manager, app
 from jormungandr.interfaces.v1.fields import disruption_marshaller, Links
 from jormungandr.interfaces.v1.fields import display_informations_vj, error, place,\
@@ -468,10 +468,10 @@ class Journeys(JourneyCommon):
                                 help="True when '/journeys' is called to compute"
                                      "the same journey schedules and "
                                      "it'll override some specific parameters")
-        parser_get.add_argument("min_nb_journeys", type=int,
-                                help='Minimum number of different suggested journeys')
-        parser_get.add_argument("max_nb_journeys", type=int,
-                                help='Maximum number of different suggested journeys')
+        parser_get.add_argument("min_nb_journeys", type=inputs.natural,
+                                help='Minimum number of different suggested journeys, must be >= 0')
+        parser_get.add_argument("max_nb_journeys", type=inputs.positive,
+                                help='Maximum number of different suggested journeys, must be > 0')
         parser_get.add_argument("_max_extra_second_pass", type=int, dest="max_extra_second_pass", hidden=True)
 
         parser_get.add_argument("debug", type=BooleanType(), default=False, hidden=True,
@@ -530,6 +530,10 @@ class Journeys(JourneyCommon):
         if 'count' in args and args['count']:
             args['min_nb_journeys'] = args['count']
             args['max_nb_journeys'] = args['count']
+
+        if args['min_nb_journeys'] and args['max_nb_journeys'] and \
+                args['max_nb_journeys'] < args['min_nb_journeys']:
+            abort(400, message='max_nb_journeyes must be >= min_nb_journeys')
 
         if args.get('timeframe_duration'):
             args['timeframe_duration'] = min(args['timeframe_duration'], default_values.max_duration)
