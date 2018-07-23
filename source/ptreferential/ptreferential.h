@@ -62,7 +62,8 @@ struct parsing_error : public ptref_error{
     ~parsing_error() noexcept;
 };
 
-/// Exécute une requête sur les données Data : retourne les idx des objets demandés
+/// Runs the query on the data, and returns the corresponding indexes.
+/// Throws in case of error (parsing, unknown function, no resultst...).
 type::Indexes make_query(const type::Type_e requested_type,
                          const std::string& request,
                          const std::vector<std::string>& forbidden_uris,

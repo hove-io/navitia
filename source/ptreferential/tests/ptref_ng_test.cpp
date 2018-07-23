@@ -139,6 +139,14 @@ BOOST_AUTO_TEST_CASE(parse_legacy_tests) {
     assert_expr(R"(vehicle_journey.has_disruption())", R"(vehicle_journey.has_disruption())");
 }
 
+BOOST_AUTO_TEST_CASE(parse_deprecated_features) {
+    BOOST_CHECK_THROW(parse("stop_areas HAVING (line.uri=1)"), parsing_error);
+    BOOST_CHECK_THROW(parse("line.uri>=2"), parsing_error);
+    BOOST_CHECK_THROW(parse("line.uri<=2"), parsing_error);
+    BOOST_CHECK_THROW(parse("line.uri<>2"), parsing_error);
+    BOOST_CHECK_THROW(parse("AFTER(stop_area.uri=stop2)"), parsing_error);
+}
+
 void assert_odt_level(const Type_e requested_type,
                       const std::string& request,
                       const OdtLevel_e odt_level,
