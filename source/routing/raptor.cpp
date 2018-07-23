@@ -180,17 +180,17 @@ void RAPTOR::init(const map_stop_point_duration& dep,
     }
 }
 
-void RAPTOR::first_raptor_loop(const map_stop_point_duration& dep,
+void RAPTOR::first_raptor_loop(const map_stop_point_duration& departures,
                                const DateTime& departure_datetime,
                                const nt::RTLevel rt_level,
-                               const DateTime& b,
+                               const DateTime& bound_limit,
                                const uint32_t max_transfers,
                                const type::AccessibiliteParams& accessibilite_params,
                                const std::vector<std::string>& forbidden_uri,
                                const std::vector<std::string>& allowed_ids,
                                bool clockwise) {
 
-    const DateTime bound = limit_bound(clockwise, departure_datetime, b);
+    const DateTime bound = limit_bound(clockwise, departure_datetime, bound_limit);
 
     set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
                          accessibilite_params,
@@ -205,7 +205,7 @@ void RAPTOR::first_raptor_loop(const map_stop_point_duration& dep,
         accessibilite_params);
 
     clear(clockwise, bound);
-    init(dep, departure_datetime, clockwise, accessibilite_params.properties);
+    init(departures, departure_datetime, clockwise, accessibilite_params.properties);
 
     boucleRAPTOR(clockwise, rt_level, max_transfers);
 }
@@ -390,6 +390,11 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
                     const boost::optional<navitia::time_duration>& direct_path_dur,
                     const size_t max_extra_second_pass) {
 
+    set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
+                accessibilite_params,
+                forbidden_uri, allowed_ids,
+                rt_level);
+
     const auto & journeys = compute_all_journeys(departures,
                                                  destinations,
                                                  departure_datetime,
@@ -535,23 +540,17 @@ RAPTOR::isochrone(const map_stop_point_duration& departures,
                   const std::vector<std::string>& forbidden,
                   const std::vector<std::string>& allowed,
                   bool clockwise,
-                  const nt::RTLevel rt_level) {
-    const DateTime bound = limit_bound(clockwise, departure_datetime, b);
+                  const nt::RTLevel rt_level)
+{
     set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
                          accessibilite_params,
                          forbidden,
                          allowed,
                          rt_level);
-    assert(data.dataRaptor->cached_next_st_manager);
-    next_st = data.dataRaptor->cached_next_st_manager->load(
-        clockwise ? departure_datetime : bound,
-        rt_level,
-        accessibilite_params);
 
-    clear(clockwise, bound);
-    init(departures, departure_datetime, clockwise, accessibilite_params.properties);
-
-    boucleRAPTOR(clockwise, rt_level, max_transfers);
+    first_raptor_loop(departures, departure_datetime, rt_level,
+                      b, max_transfers, accessibilite_params, forbidden,
+                      allowed, clockwise);
 }
 
 namespace {
