@@ -69,7 +69,7 @@ struct disruption_periods_fixture {
 
         b.finish();
         b.data->build_uri();
-        b.data->pt_data->index();
+        b.data->pt_data->sort_and_index();
         b.data->build_raptor();
 
         navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "line_1_closed")

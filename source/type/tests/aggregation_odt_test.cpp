@@ -114,7 +114,7 @@ struct aggregate_odt_fixture {
             b.data->pt_data->stop_points_map.at("zone1")->is_zonal = true;
             b.data->pt_data->stop_points_map.at("zone2")->is_zonal = true;
 
-            b.data->pt_data->index();
+            b.data->pt_data->sort_and_index();
             b.data->aggregate_odt();
         }
     }

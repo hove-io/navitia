@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(comment_map_test) {
 
     ed::builder b("20120614");
     b.vj("A")("stop1", 8000, 8050)("stop2", 8100,8150);
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
 
     nt::Comments& comments_container = b.data->pt_data->comments;

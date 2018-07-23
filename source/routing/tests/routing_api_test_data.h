@@ -466,7 +466,7 @@ struct routing_api_data {
         b.manage_admin();
         b.finish();
         b.data->build_uri();
-        b.data->pt_data->index();
+        b.data->pt_data->sort_and_index();
         b.data->build_raptor();
 
         //Add a fare_zone in stop point A

@@ -56,7 +56,7 @@ int main(int argc, const char* const argv[]) {
 
     b.data->complete();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->pt_data->build_uri();
     b.data->build_raptor();
 

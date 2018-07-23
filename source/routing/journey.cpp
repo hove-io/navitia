@@ -118,4 +118,4 @@ size_t JourneyHash::operator()(const Journey& j) const {
         boost::hash_combine(seed, sect_hash(s, seed));
 
     return seed;
-};
+}

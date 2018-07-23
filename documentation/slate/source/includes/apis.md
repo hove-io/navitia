@@ -388,8 +388,7 @@ Examples :
 It is possible to apply a filter to the returned collection, using
 "filter" parameter. If no object matches the filter, a "bad_filter"
 error is sent. If filter can not be parsed, an "unable_to_parse" error
-is sent. If object or attribute provided is not handled, the filter is
-ignored.
+is sent.
 
 #### {collection}.has_code
 

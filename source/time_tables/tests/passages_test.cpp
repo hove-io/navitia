@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(passages_boarding_order) {
         ("stop3", "8:15"_t, "8:16"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->pt_data->build_uri();
     auto * data_ptr = b.data.get();
@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(next_passages_on_last_production_day) {
         ("stop3", "9:10"_t, "9:11"_t);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->pt_data->build_uri();
     auto * data_ptr = b.data.get();

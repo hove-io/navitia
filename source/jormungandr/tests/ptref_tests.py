@@ -771,16 +771,15 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         assert 'error' in response
         assert 'bad_filter' in response['error']['id']
 
-    def test_line_filter_route_code_ignored(self):
+    def test_line_filter_route_code_invalid(self):
         """test filtering lines from route code bob in the pt call
-        as there is no attribute "code" for route, filter is invalid and ignored"""
+        as there is no attribute "code" for route, filter is invalid"""
         response_all_lines = self.query_region('lines')
         all_lines = get_not_null(response_all_lines, 'lines')
-        response = self.query_region('lines?filter=route.code=bob')
-        assert 'error' not in response
-        lines = get_not_null(response, 'lines')
-        assert len(lines) == 5
-        assert {l['code'] for l in all_lines} == {l['code'] for l in lines}
+        response, status = self.query_no_assert('v1/coverage/main_routing_test/lines?filter=route.code=bob')
+        assert status == 400
+        assert 'error' in response
+        assert 'unable_to_parse' in response['error']['id']
 
     def test_route_filter_line_code(self):
         """test filtering routes from line code 1B in the pt call"""

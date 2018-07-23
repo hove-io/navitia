@@ -234,7 +234,7 @@ BOOST_AUTO_TEST_CASE(get_sections_stop_points){
         ("5", "09:00"_t)
         ("2", "09:00"_t)
         .make();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->complete();
     b.finish();
 

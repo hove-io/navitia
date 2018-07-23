@@ -628,7 +628,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_and_SA_test) {
     b.sa("chaptal", 0, 0);
     b.sa("Zebre", 0, 0);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     Admin* ad = new Admin;
     ad->name = "Quimper";
     ad->uri = "Quimper";
@@ -691,7 +691,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_SA_test) {
     b.sa("Tourbie", 0, 0);
     b.sa("Bourgogne", 0, 0);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     Admin* ad = new Admin;
     ad->name = "Quimper";
     ad->uri = "Quimper";
@@ -738,7 +738,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_admin_SA_and_Address_test) {
     b.sa("Luther King", 0, 0);
     b.sa("Napoleon III", 0, 0);
     b.sa("MPT kerfeunteun", 0, 0);
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
 
 
     b.add_way("rue DU TREGOR", "");
@@ -1061,7 +1061,6 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_SA_temp_test) {
     b.sa("Tourbie", 0, 0);
     b.sa("Bourgogne", 0, 0);
 
-    b.data->pt_data->index();
     Admin* ad = new Admin;
     ad->name = "Santec";
     ad->uri = "Santec";
@@ -1070,19 +1069,27 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_SA_temp_test) {
     ad->idx = 0;
     b.data->geo_ref->admins.push_back(ad);
     b.manage_admin();
+    b.data->pt_data->sort_and_index();
+    b.data->build_uri();
     b.build_autocomplete();
+
+    auto set_sa_score = [&](const char* uri, int score) {
+        const auto idx = b.data->pt_data->stop_areas_map.at(uri)->idx;
+        b.data->pt_data->stop_area_autocomplete.word_quality_list.at(idx).score = score;
+    };
+
     b.data->geo_ref->fl_admin.word_quality_list.at(0).score = 50;
-    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(0).score = 10;
-    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(1).score = 7;
-    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(2).score = 35;
-    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(3).score = 35;
-    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(4).score = 75;
-    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(5).score = 70;
-    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(6).score = 45;
-    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(7).score = 50;
-    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(8).score = 5;
-    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(9).score = 5;
-    b.data->pt_data->stop_area_autocomplete.word_quality_list.at(10).score = 70;
+    set_sa_score("Santec", 10);
+    set_sa_score("Ar Santé Les Fontaines Nantes", 7);
+    set_sa_score("Santenay-Haut Nantes", 35);
+    set_sa_score("Roye-Agri-Santerre Nantes", 35);
+    set_sa_score("Fontenay-le-Comte-Santé Nantes", 75);
+    set_sa_score("gare de Santes Nantes", 70);
+    set_sa_score("gare de Santenay-les-Bains Nantes", 45);
+    set_sa_score("gare de Santeuil-le-Perchay Nantes", 50);
+    set_sa_score("chaptal", 5);
+    set_sa_score("Tourbie", 5);
+    set_sa_score("Bourgogne", 70);
 
 
     type_filter.push_back(navitia::type::Type_e::StopArea);
@@ -1094,10 +1101,9 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_SA_temp_test) {
 
     BOOST_REQUIRE_EQUAL(resp.places_size(), 12);
     BOOST_CHECK_EQUAL(resp.places(0).embedded_type() , pbnavitia::ADMINISTRATIVE_REGION);
-    BOOST_CHECK_EQUAL(resp.places(1).embedded_type() , pbnavitia::STOP_AREA);
-    BOOST_CHECK_EQUAL(resp.places(0).quality(), 90);
-    BOOST_CHECK_EQUAL(resp.places(1).quality(), 100);
     BOOST_CHECK_EQUAL(resp.places(0).uri(), "Santec"); //Admin
+    BOOST_CHECK_EQUAL(resp.places(0).quality(), 90);
+    BOOST_CHECK_EQUAL(resp.places(1).embedded_type() , pbnavitia::STOP_AREA);
     BOOST_CHECK_EQUAL(resp.places(1).uri(), "Santec"); //score = 7 but quality = 100
     BOOST_CHECK_EQUAL(resp.places(1).quality(), 100);
     BOOST_CHECK_EQUAL(resp.places(2).uri(), "Fontenay-le-Comte-Santé Nantes"); //score = 75
@@ -1218,7 +1224,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_with_multi_postal_codes_test) {
     ed::builder b("20140614");
     b.sa("Santec", 0, 0);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     Admin* ad = new Admin;
     ad->name = "Nantes";
     ad->uri = "URI-NANTES";
@@ -1255,7 +1261,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_with_multi_postal_codes_alphanumeric_test) {
     ed::builder b("20140614");
     b.sa("Santec", 0, 0);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     Admin* ad = new Admin;
     ad->name = "Nantes";
     ad->uri = "URI-NANTES";
@@ -1293,7 +1299,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_without_postal_codes_test) {
     ed::builder b("20140614");
     b.sa("Santec", 0, 0);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     Admin* ad = new Admin;
     ad->name = "Nantes";
     ad->uri = "URI-NANTES";
@@ -1720,7 +1726,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_admin_filtering_tests) {
     bob->admin_list.push_back(bobville);
     b.sa("bobette", 0, 0);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.build_autocomplete();
 
     std::vector<navitia::type::Type_e> type_filter {
@@ -1871,7 +1877,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_piquet) {
     b.sa("Napoleon III", 0, 0);
     b.sa("MPT kerfeunteun", 0, 0);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     Admin* ad = new Admin;
     ad->name = "Quimper";
     ad->uri = "Quimper";
@@ -1912,7 +1918,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_functional_test_orleans) {
     b.sa("Napoleon III", 0, 0);
     b.sa("MPT kerfeunteun", 0, 0);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     Admin* ad = new Admin;
     ad->name = "Quimper";
     ad->uri = "Quimper";
@@ -1963,7 +1969,7 @@ BOOST_AUTO_TEST_CASE(autocomplete_test_stop_area_longest_substring) {
     ed::builder b("20180201");
     b.sa("Jean Jaurès", 0, 0);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     Admin* ad = new Admin;
     ad->name = "Toulouse";
     ad->uri = "admin:fr:31555";

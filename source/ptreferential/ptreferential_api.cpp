@@ -35,8 +35,10 @@ www.navitia.io
 #include "type/pt_data.h"
 #include "type/meta_data.h"
 #include "routing/dataraptor.h"
+#include "utils/paginate.h"
 
 namespace pt = boost::posix_time;
+using navitia::type::Type_e;
 
 namespace navitia{ namespace ptref{
 /// build the protobuf response of a pt ref query

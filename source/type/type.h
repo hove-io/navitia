@@ -666,7 +666,6 @@ struct AssociatedCalendar {
         ar & calendar & exceptions;
     }
 };
-struct MetaVehicleJourney;
 
 
 struct StopTime {
@@ -780,7 +779,7 @@ struct Calendar : public Nameable, public Header {
     void build_validity_pattern(boost::gregorian::date_period production_period);
 
 
-    bool operator<(const Calendar & other) const { return this < &other; }
+    bool operator<(const Calendar& other) const { return this->uri < other.uri; }
 
     Indexes get(Type_e type, const PT_Data & data) const;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {

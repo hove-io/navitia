@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(freq_vj) {
     ed::builder b("20120614");
     b.frequency_vj("A1", "8:00"_t, "18:00"_t, "00:05"_t)("stop1", "8:00"_t)("stop2", "8:10"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(freq_vj_pam) {
     ed::builder b("20120614");
     b.frequency_vj("A1", 8*3600,26*3600,5*60)("stop1", 8*3600)("stop2", 8*3600+10*60);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(freq_vj_stop_times) {
             ("stop2", 8*3600 + 15*60, 8*3600 + 25*60)
             ("stop3", 8*3600 + 30*60, 8*3600 + 40*60);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(freq_vj_different_departure_arrival_duration) {
             ("stop2", 8*3600 + 15*60, 8*3600 + 40*60) // 25mn
             ("stop3", 9*3600, 9*3600 + 5*60); //5mn
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(freq_vj_overmidnight_different_dep_arr) {
             ("stop2", 8*3600 + 30*60, 8*3600 + 35*60)
             ("stop3", 9*3600 + 20*60, 9*3600 + 40*60);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -246,7 +246,7 @@ BOOST_AUTO_TEST_CASE(freq_vj_transfer_with_regular_vj) {
 
     b.connection("stop2", "stop2", 120);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(transfer_between_freq) {
 
     b.connection("stop3", "stop4", "00:20"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -397,7 +397,7 @@ BOOST_AUTO_TEST_CASE(freq_vj_end_time_is_smaller_than_start_time) {
             ("stop2", "21:00"_t, "21:10"_t)
             ("stop3", "22:00"_t, "22:10"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -435,7 +435,7 @@ BOOST_AUTO_TEST_CASE(freq_vj_with_boarding_alighting) {
         ("stop2", "8:05"_t, "8:07"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 900)
         ("stop3", "8:10"_t, "8:12"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -490,7 +490,7 @@ BOOST_AUTO_TEST_CASE(transfer_between_freq_with_boarding_alighting) {
 
     b.connection("stop3", "stop3", 120);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -575,7 +575,7 @@ BOOST_AUTO_TEST_CASE(transfer_pass_midnight_freq_vj_to_vj_with_boarding_time) {
 
     b.connection("stop3", "stop4", "00:15"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();

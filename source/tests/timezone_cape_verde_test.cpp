@@ -74,7 +74,7 @@ int main(int argc, const char* const argv[]) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.build_autocomplete();

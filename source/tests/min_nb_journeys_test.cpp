@@ -138,7 +138,7 @@ int main(int argc, const char* const argv[]) {
     // build data
     b.data->complete();
     b.manage_admin();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
 

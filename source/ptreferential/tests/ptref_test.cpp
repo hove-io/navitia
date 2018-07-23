@@ -44,157 +44,9 @@ www.navitia.io
 #include "kraken/apply_disruption.h"
 #include <boost/range/adaptors.hpp>
 
-namespace navitia{namespace ptref {
-template<typename T> nt::Indexes get_indexes(Filter filter,  Type_e requested_type, const type::Data & d);
-}}
-
 namespace nt = navitia::type;
 using namespace navitia::ptref;
-BOOST_AUTO_TEST_CASE(parser){
-    std::vector<Filter> filters = parse("stop_areas.uri=42");
-    BOOST_REQUIRE_EQUAL(filters.size(), 1);
-    BOOST_CHECK_EQUAL(filters[0].object, "stop_areas");
-    BOOST_CHECK_EQUAL(filters[0].attribute, "uri");
-    BOOST_CHECK_EQUAL(filters[0].value, "42");
-    BOOST_CHECK_EQUAL(filters[0].op, EQ);
-}
-
-BOOST_AUTO_TEST_CASE(parse_code){
-    std::vector<Filter> filters = parse("line.code=42");
-    BOOST_REQUIRE_EQUAL(filters.size(), 1);
-    BOOST_CHECK_EQUAL(filters[0].object, "line");
-    BOOST_CHECK_EQUAL(filters[0].attribute, "code");
-    BOOST_CHECK_EQUAL(filters[0].value, "42");
-    BOOST_CHECK_EQUAL(filters[0].op, EQ);
-}
-
-BOOST_AUTO_TEST_CASE(whitespaces){
-    std::vector<Filter> filters = parse("  stop_areas.uri    =  42    ");
-    BOOST_REQUIRE_EQUAL(filters.size(), 1);
-    BOOST_CHECK_EQUAL(filters[0].object, "stop_areas");
-    BOOST_CHECK_EQUAL(filters[0].attribute, "uri");
-    BOOST_CHECK_EQUAL(filters[0].value, "42");
-    BOOST_CHECK_EQUAL(filters[0].op, EQ);
-}
-
-
-BOOST_AUTO_TEST_CASE(many_filter){
-    std::vector<Filter> filters = parse("stop_areas.uri = 42 and  line.name=bus");
-    BOOST_REQUIRE_EQUAL(filters.size(), 2);
-    BOOST_CHECK_EQUAL(filters[0].object, "stop_areas");
-    BOOST_CHECK_EQUAL(filters[0].attribute, "uri");
-    BOOST_CHECK_EQUAL(filters[0].value, "42");
-    BOOST_CHECK_EQUAL(filters[0].op, EQ);
-
-    BOOST_CHECK_EQUAL(filters[1].object, "line");
-    BOOST_CHECK_EQUAL(filters[1].attribute, "name");
-    BOOST_CHECK_EQUAL(filters[1].value, "bus");
-    BOOST_CHECK_EQUAL(filters[1].op, EQ);
-}
-
-BOOST_AUTO_TEST_CASE(having) {
-    std::vector<Filter> filters = parse("stop_areas HAVING (line.uri=1 and stop_area.uri=3) and line.uri>=2");
-    BOOST_REQUIRE_EQUAL(filters.size(), 2);
-    BOOST_CHECK_EQUAL(filters[0].object, "stop_areas");
-    BOOST_CHECK_EQUAL(filters[0].attribute, "");
-    BOOST_CHECK_EQUAL(filters[0].value, "line.uri=1 and stop_area.uri=3");
-    BOOST_CHECK_EQUAL(filters[0].op, HAVING);
-
-    BOOST_CHECK_EQUAL(filters[1].object, "line");
-    BOOST_CHECK_EQUAL(filters[1].attribute, "uri");
-    BOOST_CHECK_EQUAL(filters[1].value, "2");
-    BOOST_CHECK_EQUAL(filters[1].op,  GEQ);
-}
-
-
-BOOST_AUTO_TEST_CASE(escaped_value){
-    std::vector<Filter> filters = parse("stop_areas.uri=\"42\"");
-    BOOST_REQUIRE_EQUAL(filters.size(), 1);
-    BOOST_CHECK_EQUAL(filters[0].value, "42");
-
-    filters = parse("stop_areas.uri=\"4-2\"");
-    BOOST_REQUIRE_EQUAL(filters.size(), 1);
-    BOOST_CHECK_EQUAL(filters[0].value, "4-2");
-
-    filters = parse("stop_areas.uri=\"4|2\"");
-    BOOST_REQUIRE_EQUAL(filters.size(), 1);
-    BOOST_CHECK_EQUAL(filters[0].value, "4|2");
-
-    filters = parse("stop_areas.uri=\"42.\"");
-    BOOST_REQUIRE_EQUAL(filters.size(), 1);
-    BOOST_CHECK_EQUAL(filters[0].value, "42.");
-
-    filters = parse("stop_areas.uri=\"42 12\"");
-    BOOST_REQUIRE_EQUAL(filters.size(), 1);
-    BOOST_CHECK_EQUAL(filters[0].value, "42 12");
-
-    filters = parse("stop_areas.uri=\"  42  \"");
-    BOOST_REQUIRE_EQUAL(filters.size(), 1);
-    BOOST_CHECK_EQUAL(filters[0].value, "  42  ");
-
-    filters = parse("stop_areas.uri=\"4&2\"");
-    BOOST_REQUIRE_EQUAL(filters.size(), 1);
-    BOOST_CHECK_EQUAL(filters[0].value, "4&2");
-}
-
-BOOST_AUTO_TEST_CASE(exception){
-    BOOST_CHECK_THROW(parse(""), parsing_error);
-    BOOST_CHECK_THROW(parse("mouuuhh bliiii"), parsing_error);
-    BOOST_CHECK_THROW(parse("stop_areas.uri==42"), parsing_error);
-}
-
-BOOST_AUTO_TEST_CASE(parser_escaped_string) {
-    std::vector<Filter> filters = parse("stop_areas.uri=\"bob the coolest\"");
-    BOOST_REQUIRE_EQUAL(filters.size(), 1);
-    BOOST_CHECK_EQUAL(filters[0].object, "stop_areas");
-    BOOST_CHECK_EQUAL(filters[0].attribute, "uri");
-    BOOST_CHECK_EQUAL(filters[0].value, "bob the coolest");
-    BOOST_CHECK_EQUAL(filters[0].op, EQ);
-}
-
-BOOST_AUTO_TEST_CASE(parser_escaped_string_with_particular_char_quote) {
-    std::vector<Filter> filters = parse("stop_areas.uri=\"bob the coolést\"");
-    BOOST_REQUIRE_EQUAL(filters.size(), 1);
-    BOOST_CHECK_EQUAL(filters[0].object, "stop_areas");
-    BOOST_CHECK_EQUAL(filters[0].attribute, "uri");
-    BOOST_CHECK_EQUAL(filters[0].value, "bob the coolést");
-    BOOST_CHECK_EQUAL(filters[0].op, EQ);
-}
-
-
-BOOST_AUTO_TEST_CASE(parser_escaped_string_with_nested_quote) {
-    std::vector<Filter> filters = parse(R"(stop_areas.uri="bob the \"coolést\"")");
-    BOOST_REQUIRE_EQUAL(filters.size(), 1);
-    BOOST_CHECK_EQUAL(filters[0].object, "stop_areas");
-    BOOST_CHECK_EQUAL(filters[0].attribute, "uri");
-    BOOST_CHECK_EQUAL(filters[0].value, "bob the \"coolést\"");
-    BOOST_CHECK_EQUAL(filters[0].op, EQ);
-}
-
-BOOST_AUTO_TEST_CASE(parser_escaped_string_with_slash) {
-    std::vector<Filter> filters = parse(R"(stop_areas.uri="bob the \\ er")");
-    BOOST_REQUIRE_EQUAL(filters.size(), 1);
-    BOOST_CHECK_EQUAL(filters[0].object, "stop_areas");
-    BOOST_CHECK_EQUAL(filters[0].attribute, "uri");
-    BOOST_CHECK_EQUAL(filters[0].value, R"(bob the \ er)");
-    BOOST_CHECK_EQUAL(filters[0].op, EQ);
-}
-
-BOOST_AUTO_TEST_CASE(parser_method) {
-    std::vector<Filter> filters = parse(R"(vehicle_journey.has_headsign("john"))");
-    BOOST_REQUIRE_EQUAL(filters.size(), 1);
-    BOOST_CHECK_EQUAL(filters[0].object, "vehicle_journey");
-    BOOST_CHECK_EQUAL(filters[0].method, "has_headsign");
-    BOOST_CHECK_EQUAL(filters[0].args, std::vector<std::string>{"john"});
-}
-
-BOOST_AUTO_TEST_CASE(parser_method_has_disruption) {
-    std::vector<Filter> filters = parse(R"(vehicle_journey.has_disruption())");
-    BOOST_REQUIRE_EQUAL(filters.size(), 1);
-    BOOST_CHECK_EQUAL(filters[0].object, "vehicle_journey");
-    BOOST_CHECK_EQUAL(filters[0].method, "has_disruption");
-    BOOST_CHECK_EQUAL(filters[0].args.size(), 0);
-}
+using navitia::type::Type_e;
 
 struct Moo {
     int bli;
@@ -327,22 +179,15 @@ BOOST_AUTO_TEST_CASE(get_indexes_test){
     b.connection("stop2", "stop3", 10*60);
     b.connection("stop3", "stop2", 10*60);
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->pt_data->build_uri();
 
     // On cherche à retrouver la ligne 1, en passant le stoparea en filtre
-    Filter filter;
-    filter.navitia_type = Type_e::StopArea;
-    filter.attribute = "uri";
-    filter.op = EQ;
-    filter.value = "stop1";
-    auto indexes = get_indexes<nt::StopArea>(filter, Type_e::Line, *(b.data));
+    auto indexes = make_query(Type_e::Line, "stop_area.uri = stop1",*b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, nt::make_indexes({0}));
 
     // On cherche les stopareas de la ligneA
-    filter.navitia_type = Type_e::Line;
-    filter.value = "A";
-    indexes = get_indexes<nt::Line>(filter, Type_e::StopArea, *(b.data));
+    indexes = make_query(Type_e::StopArea, "line.uri = A", *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, nt::make_indexes({0, 1}));
 }
 
@@ -351,7 +196,7 @@ BOOST_AUTO_TEST_CASE(get_impact_indexes_of_line){
     b.vj("A", "000001", "", true, "vj:A-1")("stop1", "08:00"_t)("stop2", "09:00"_t);
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->pt_data->build_uri();
 
     using btp = boost::posix_time::time_period;
@@ -361,19 +206,12 @@ BOOST_AUTO_TEST_CASE(get_impact_indexes_of_line){
                      .application_periods(btp("20150928T000000"_dt, "20150928T240000"_dt))
                      .get_disruption();
 
-    Filter filter;
-    filter.navitia_type = Type_e::Line;
-    filter.attribute = "uri";
-    filter.op = EQ;
-    filter.value = "A";
-
     navitia::apply_disruption(disrup_1, *b.data->pt_data, *b.data->meta);
-    auto indexes = get_indexes<nt::Line>(filter, Type_e::Impact, *(b.data));
+    auto indexes = make_query(Type_e::Impact, "line.uri = A", *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, std::vector<size_t>{0});
 
     navitia::delete_disruption("Disruption 1", *b.data->pt_data, *b.data->meta);
-    indexes = get_indexes<nt::Line>(filter, Type_e::Impact, *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 0);
+    BOOST_CHECK_THROW(make_query(Type_e::Impact, "line.uri = A", *b.data), ptref_error);
 
     const auto& disrup_2 = b.impact(nt::RTLevel::RealTime, "Disruption 2")
                      .severity(nt::disruption::Effect::NO_SERVICE)
@@ -382,7 +220,7 @@ BOOST_AUTO_TEST_CASE(get_impact_indexes_of_line){
                      .get_disruption();
 
     navitia::apply_disruption(disrup_2, *b.data->pt_data, *b.data->meta);
-    indexes = get_indexes<nt::Line>(filter, Type_e::Impact, *(b.data));
+    indexes = make_query(Type_e::Impact, "line.uri = A", *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, std::vector<size_t>{0});
 
     const auto& disrup_3 = b.impact(nt::RTLevel::RealTime, "Disruption 3")
@@ -392,7 +230,7 @@ BOOST_AUTO_TEST_CASE(get_impact_indexes_of_line){
                      .get_disruption();
 
     navitia::apply_disruption(disrup_3, *b.data->pt_data, *b.data->meta);
-    indexes = get_indexes<nt::Line>(filter, Type_e::Impact, *(b.data));
+    indexes = make_query(Type_e::Impact, "line.uri = A", *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, nt::make_indexes({0, 1}));
 }
 
@@ -401,7 +239,7 @@ BOOST_AUTO_TEST_CASE(get_impact_indexes_of_stop_point){
     b.vj("A", "000001", "", true, "vj:A-1")("stop1", "08:00"_t)("stop2", "09:00"_t);
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->pt_data->build_uri();
 
     using btp = boost::posix_time::time_period;
@@ -411,14 +249,8 @@ BOOST_AUTO_TEST_CASE(get_impact_indexes_of_stop_point){
                      .application_periods(btp("20150928T000000"_dt, "20150928T240000"_dt))
                      .get_disruption();
 
-    Filter filter;
-    filter.navitia_type = Type_e::StopPoint;
-    filter.attribute = "uri";
-    filter.op = EQ;
-    filter.value = "stop1";
-
     navitia::apply_disruption(disrup_1, *b.data->pt_data, *b.data->meta);
-    auto indexes = get_indexes<nt::StopPoint>(filter, Type_e::Impact, *(b.data));
+    auto indexes = make_query(Type_e::Impact, "stop_point.uri = stop1", *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, std::vector<size_t>{0});
 }
 
@@ -429,7 +261,7 @@ BOOST_AUTO_TEST_CASE(ptref_on_vj_impacted){
     b.vj("A", "000001", "", true, "vj:A-3")("stop1", "08:30"_t)("stop2", "09:30"_t);
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->pt_data->build_uri();
 
     // no disruptions
@@ -535,9 +367,8 @@ BOOST_AUTO_TEST_CASE(line_code) {
     BOOST_REQUIRE_EQUAL(routes.size(), 1);
     BOOST_CHECK_EQUAL((*routes.begin())->line->code, "line_A");
 
-    //route has no code attribute, no filter can be used
-    indexes = make_query(nt::Type_e::Line, "route.code=test", *(b.data));
-    BOOST_CHECK_EQUAL(indexes.size(), 2);
+    //route has no code attribute, error
+    BOOST_CHECK_THROW(make_query(nt::Type_e::Line, "route.code=test", *(b.data)), ptref_error);
 }
 
 BOOST_AUTO_TEST_CASE(forbidden_uri) {
@@ -553,26 +384,6 @@ BOOST_AUTO_TEST_CASE(forbidden_uri) {
 
     BOOST_CHECK_THROW(make_query(nt::Type_e::Line, "stop_point.uri=stop1", {"A"}, *(b.data)), ptref_error);
 }
-BOOST_AUTO_TEST_CASE(after_filter) {
-    ed::builder b("201303011T1739");
-    b.generate_dummy_basis();
-    b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250)("stop3", 8500)("stop4", 9000);
-    b.vj("B")("stop5", 9000,9050)("stop2", 9200,9250);
-    b.vj("C")("stop6", 9000,9050)("stop2", 9200,9250)("stop7", 10000);
-    b.vj("D")("stop5", 9000,9050)("stop2", 9200,9250)("stop3", 10000);
-    b.finish();
-    b.data->pt_data->build_uri();
-
-    auto indexes = make_query(nt::Type_e::StopArea, "AFTER(stop_area.uri=stop2)", *(b.data));
-    BOOST_REQUIRE_EQUAL(indexes.size(), 3);
-    auto expected_uris = {"stop3", "stop4", "stop7"};
-    for(auto stop_area_idx : indexes) {
-        auto stop_area = b.data->pt_data->stop_areas[stop_area_idx];
-        BOOST_REQUIRE(std::find(expected_uris.begin(), expected_uris.end(),
-                            stop_area->uri) != expected_uris.end());
-    }
-}
-
 
 BOOST_AUTO_TEST_CASE(find_path_test){
     auto res = find_path(nt::Type_e::Route);
@@ -650,21 +461,8 @@ BOOST_AUTO_TEST_CASE(mvj_filtering) {
     const auto mvj_idx = navitia::Idx<nt::MetaVehicleJourney>(*indexes.begin());
     BOOST_CHECK_EQUAL(builder.data->pt_data->meta_vjs[mvj_idx]->uri, "vehicle_journey 0");
 
-    // looking for MetaVJ 0 another way
-    Filter filter;
-    filter.navitia_type = Type_e::MetaVehicleJourney;
-    filter.attribute = "uri";
-    filter.op = EQ;
-    filter.value = "vehicle_journey 0";
-    indexes = get_indexes<nt::MetaVehicleJourney>(filter, Type_e::MetaVehicleJourney, *(builder.data));
-    BOOST_CHECK_EQUAL_RANGE(indexes, {0});
-
     // looking for MetaVJ A through VJ A
-    filter.navitia_type = Type_e::VehicleJourney;
-    filter.attribute = "uri";
-    filter.op = EQ;
-    filter.value = "vj:A:0";
-    indexes = get_indexes<nt::VehicleJourney>(filter, Type_e::MetaVehicleJourney, *(builder.data));
+    indexes = make_query(Type_e::MetaVehicleJourney, "vehicle_journey.uri = vj:A:0", *builder.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, {0})
 
     //not limited, we get 3 vj
@@ -672,11 +470,7 @@ BOOST_AUTO_TEST_CASE(mvj_filtering) {
     BOOST_CHECK_EQUAL_RANGE(indexes, std::vector<size_t>({a, b, c}));
 
     // looking for VJ B through MetaVJ B
-    filter.navitia_type = Type_e::MetaVehicleJourney;
-    filter.attribute = "uri";
-    filter.op = EQ;
-    filter.value = "vehicle_journey 1";
-    indexes = get_indexes<nt::MetaVehicleJourney>(filter, Type_e::VehicleJourney, *(builder.data));
+    indexes = make_query(Type_e::VehicleJourney, R"(trip.uri="vehicle_journey 1")", *builder.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, {b})
 }
 
@@ -945,4 +739,21 @@ BOOST_AUTO_TEST_CASE(get_potential_routes_test) {
                                                  b.get<nt::StopPoint>("stop2"),
                                                 {"code_key", "stop1 code"});
     BOOST_CHECK_EQUAL_RANGE(routes_names(routes), std::set<std::string>({}));
+}
+
+namespace navitia { namespace type {
+std::ostream& operator<<(std::ostream& os, const Type_e& type) {
+    return os << navitia::type::static_data::get()->captionByType(type);
+}
+}}
+
+BOOST_AUTO_TEST_CASE(find_path_example) {
+    // searching for the path between Route and CommercialMode
+    const auto succ = find_path(Type_e::CommercialMode);
+    std::vector<Type_e> res;
+    for (auto cur = Type_e::Route; succ.at(cur) != cur; cur = succ.at(cur)) {
+        res.push_back(succ.at(cur));
+    }
+    // the path is Route -> Line -> CommercialMode
+    BOOST_CHECK_EQUAL_RANGE(res, std::vector<Type_e>({Type_e::Line, Type_e::CommercialMode}));
 }

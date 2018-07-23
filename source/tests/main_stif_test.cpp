@@ -69,7 +69,7 @@ int main(int argc, const char* const argv[]) {
     b.connection("stopV", "stopV", 0);
     b.vj("PW", "11111111", "", true, "", "", "physical_mode:Bus")("stopP", "15:00"_t)("stopW", "21:00"_t); //Bus
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
 

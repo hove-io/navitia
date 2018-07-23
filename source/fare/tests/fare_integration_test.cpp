@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(test_protobuff) {
     b.connection("stop5", "stop5", 120);
     b.finish();
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->compute_labels();
@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(test_protobuff_no_data) {
     b.connection("stop5", "stop5", 120);
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->compute_labels();

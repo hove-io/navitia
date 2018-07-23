@@ -32,8 +32,10 @@ www.navitia.io
 #include "ptreferential.h"
 #include <boost/graph/dijkstra_shortest_paths.hpp>
 
-namespace navitia { namespace ptref {
+namespace navitia {
+namespace ptref {
 
+using navitia::type::Type_e;
 
 /** Contient le graph des transitions
  *
