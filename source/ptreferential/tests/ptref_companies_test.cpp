@@ -33,7 +33,6 @@ www.navitia.io
 #define BOOST_TEST_MODULE ptref_companies_test
 #include <boost/test/unit_test.hpp>
 #include "ptreferential/ptreferential.h"
-#include "ptreferential/reflexion.h"
 #include "ptreferential/ptref_graph.h"
 #include "ed/build_helper.h"
 #include "tests/utils_test.h"

@@ -33,7 +33,6 @@ www.navitia.io
 #include <boost/test/unit_test.hpp>
 #include "ptreferential/ptreferential.h"
 #include "ptreferential/ptreferential_api.h"
-#include "ptreferential/reflexion.h"
 #include "ptreferential/ptref_graph.h"
 #include "ed/build_helper.h"
 
@@ -47,23 +46,6 @@ www.navitia.io
 namespace nt = navitia::type;
 using namespace navitia::ptref;
 using navitia::type::Type_e;
-
-struct Moo {
-    int bli;
-};
-DECL_HAS_MEMBER(bli)
-DECL_HAS_MEMBER(foo)
-
-BOOST_AUTO_TEST_CASE(reflexion){
-    BOOST_CHECK(Reflect_bli<Moo>::value);
-    BOOST_CHECK(!Reflect_foo<Moo>::value);
-
-    Moo m;
-    m.bli = 42;
-    BOOST_CHECK_EQUAL(get_bli(m), 42);
-    BOOST_CHECK_THROW(get_foo(m), unknown_member);
-}
-
 
 BOOST_AUTO_TEST_CASE(sans_filtre) {
 
