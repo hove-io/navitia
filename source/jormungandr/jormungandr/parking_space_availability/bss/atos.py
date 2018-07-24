@@ -63,23 +63,16 @@ class AtosProvider(AbstractParkingPlacesProvider):
         return properties.get('operator', '').lower() in self.operators and \
                properties.get('network', '').lower() == self.network
 
-    def get_navitia_status(self, status):
-        if status == 'CONNECTEE':
-            return 'Open'
-        else:
-            return 'Unavailable'
-
     def get_informations(self, poi):
         logging.debug('building stands')
         try:
-            # Possible status values of the station: CONNECTEE and DECONNECTEE
             all_stands = self.breaker.call(self._get_all_stands)
             ref = poi.get('properties', {}).get('ref')
             if not ref:
                 return Stands(0, 0, 'Unavailable')
             stands = all_stands.get(ref.lstrip('0'))
             if stands:
-                if stands.status in ['Closed', 'Unavailable']:
+                if stands.status != 'Open':
                     stands.available_bikes = 0
                     stands.available_places = 0
                     stands.total_stands = 0
@@ -94,7 +87,7 @@ class AtosProvider(AbstractParkingPlacesProvider):
         with self._get_client() as client:
             all_stands = client.service.getSummaryInformationTerminals(self.id_ao)
             return {stands.libelle: Stands(stands.nbPlacesDispo, stands.nbVelosDispo,
-                                           self.get_navitia_status(stands.etatConnexion))
+                                           'Open' if stands.etatConnexion == 'CONNECTEE' else 'Unavailable')
                     for stands in all_stands}
 
     @contextmanager

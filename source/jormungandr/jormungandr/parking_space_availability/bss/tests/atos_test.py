@@ -78,7 +78,7 @@ def parking_space_availability_atos_support_poi_test():
 
 def parking_space_availability_atos_get_informations_test():
     """
-    Atos validate return good stands informations or or stands with status='Unavailable' if an error occured
+    The service returns real stand informations or stand with status='Unavailable' if an error occured
     """
     stands = Stands(5, 9, 'Open')
     all_stands = {
@@ -100,7 +100,7 @@ def parking_space_availability_atos_get_informations_test():
 
 def parking_space_availability_atos_get_informations_with_closed_status_test():
     """
-    Atos validate return good stands informations or stands with status='Unavailable' if an error occured
+    The service returns real stand informations or stand with status='Unavailable' if an error occured
     """
     stands = Stands(5, 9, 'Closed')
     all_stands = {

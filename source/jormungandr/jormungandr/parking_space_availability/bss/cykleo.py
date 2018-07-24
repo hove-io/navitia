@@ -137,25 +137,26 @@ class CykleoProvider(AbstractParkingPlacesProvider):
         return ('cykleo-{}'.format(self.network)).encode('utf-8', 'backslashreplace')
 
     def get_informations(self, poi):
-        # Possible status values of the station: IN_SERVICE, IN_MAINTENANCE, OUT_OF_SERVICE, DISCONNECTED
-        # and DECOMMISSIONED
         ref = poi.get('properties', {}).get('ref')
         if ref is not None:
             ref = ref.lstrip('0')
         data = self._call_webservice()
+
+        # Possible status values of the station: IN_SERVICE, IN_MAINTENANCE, OUT_OF_SERVICE, DISCONNECTED
+        # and DECOMMISSIONED
         if not data:
             return Stands(0, 0, 'Unavailable')
-        station = data.get(ref)
-        if not station:
+        obj_station = data.get(ref)
+        if not obj_station:
             return Stands(0, 0, 'Unavailable')
 
-        if station.get('station', {}).get('status') == 'IN_SERVICE' and 'availableDockCount' in station:
-            return Stands(station.get('availableDockCount'),
-                          station.get('availableClassicBikeCount', 0) + station.get('availableElectricBikeCount', 0),
+        if obj_station.get('station', {}).get('status') == 'IN_SERVICE' and 'availableDockCount' in obj_station:
+            return Stands(obj_station.get('availableDockCount', 0),
+                          obj_station.get('availableClassicBikeCount', 0) +
+                          obj_station.get('availableElectricBikeCount', 0),
                           'Open')
-        elif station.get('station', {}).get('status') == 'OUT_OF_SERVICE':
+        elif obj_station.get('station', {}).get('status') == 'OUT_OF_SERVICE':
             return Stands(0, 0, 'Closed')
         else:
             return Stands(0, 0, 'Unavailable')
 
-        return Stands(0, 0, 'Unavailable')

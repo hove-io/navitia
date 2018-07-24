@@ -68,7 +68,7 @@ def parking_space_availability_jcdecaux_support_poi_test():
 
 def parking_space_availability_jcdecaux_get_informations_test():
     """
-    Jcdecaux validate return good stands informations or stands with status='Unavailable' if an error occured
+    The service returns real stand informations or stand with status='Unavailable' if an error occured
     """
     webservice_response = {'2': {
         'available_bike_stands': 4,
@@ -86,7 +86,7 @@ def parking_space_availability_jcdecaux_get_informations_test():
 
 def parking_space_availability_jcdecaux_get_informations_unauthorized_test():
     """
-    Jcdecaux validate return stands with status='Unavailable' if not authorized
+    The service returns real stand informations or stand with status='Unavailable' if not authorized
     """
     webservice_unauthorized_response = {
         'error': 'Unauthorized'
@@ -98,7 +98,7 @@ def parking_space_availability_jcdecaux_get_informations_unauthorized_test():
 
 def parking_space_availability_jcdecaux_get_informations_with_status_Closed_test():
     """
-    Jcdecaux validate return good stands informations or stands with status='Unavailable' if an error occured
+    The service returns real stand informations or stand with status='Unavailable' if an error occured
     """
     webservice_response = {'2': {
         'available_bike_stands': 4,

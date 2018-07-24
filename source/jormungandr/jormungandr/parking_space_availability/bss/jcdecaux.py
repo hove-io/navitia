@@ -86,15 +86,12 @@ class JcdecauxProvider(AbstractParkingPlacesProvider):
         # Possible status values of the station: OPEN and CLOSED
         ref = poi.get('properties', {}).get('ref')
         data = self._call_webservice()
-        if not data or ref not in data:
-            return Stands(0, 0, 'Unavailable')
-        if 'status' in data[ref]:
+        if data and 'status' in data.get(ref, {}):
             if data[ref]['status'] == 'OPEN':
                 return Stands(data[ref].get('available_bike_stands', 0), data[ref].get('available_bikes', 0), 'Open')
             elif data[ref]['status'] == 'CLOSED':
                 return Stands(0, 0, 'Closed')
-            else:
-                return Stands(0, 0, 'Unavailable')
+        return Stands(0, 0, 'Unavailable')
 
     def status(self):
         return {'network': self.network, 'operators': self.operators, 'contract': self.contract}
