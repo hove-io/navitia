@@ -189,6 +189,12 @@ call_raptor(navitia::PbCreator& pb_creator,
         JourneySet journeys;
         uint32_t nb_try = 0;
         int total_nb_journeys = 0;
+
+        raptor.set_valid_jp_and_jpp(DateTimeUtils::date(request_date_secs),
+                                    accessibilite_params,
+                                    forbidden_uri, allowed_ids,
+                                    rt_level);
+
         do {
             auto raptor_journeys = raptor.compute_all_journeys(
                 departures, destinations, request_date_secs, rt_level, transfer_penalty, bound, max_transfers,

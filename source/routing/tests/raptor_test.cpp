@@ -1589,7 +1589,10 @@ BOOST_AUTO_TEST_CASE(finish_on_service_extension) {
     routing::map_stop_point_duration departs;
     departs[routing::SpIdx(*d.stop_points_map["A"])] = {};
 
-    raptor.first_raptor_loop(departs, DateTimeUtils::set(0, 7900), nt::RTLevel::Base, DateTimeUtils::inf,
+    auto departure_time = DateTimeUtils::set(0, 7900);
+    auto rt_level = nt::RTLevel::Base;
+    raptor.set_valid_jp_and_jpp( DateTimeUtils::date(departure_time), {}, {}, {}, rt_level);
+    raptor.first_raptor_loop(departs, departure_time, rt_level, DateTimeUtils::inf,
                              std::numeric_limits<uint32_t>::max(), {}, {}, {}, true);
 
     //and raptor has to stop on count 2
@@ -1625,7 +1628,10 @@ BOOST_AUTO_TEST_CASE(finish_on_foot_path) {
     routing::map_stop_point_duration departs;
     departs[routing::SpIdx(*d.stop_points_map["A"])] = {};
 
-    raptor.first_raptor_loop(departs, DateTimeUtils::set(0, 7900), type::RTLevel::Base, DateTimeUtils::inf,
+    auto departure_time = DateTimeUtils::set(0, 7900);
+    auto rt_level = nt::RTLevel::Base;
+    raptor.set_valid_jp_and_jpp( DateTimeUtils::date(departure_time), {}, {}, {}, rt_level);
+    raptor.first_raptor_loop(departs, departure_time, rt_level, DateTimeUtils::inf,
                              std::numeric_limits<uint32_t>::max(), {}, {}, {}, true);
 
     //and raptor has to stop on count 2

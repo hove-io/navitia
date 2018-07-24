@@ -227,10 +227,10 @@ struct RAPTOR
 
     /// First raptor loop
     /// externalized for testing purposes
-    void first_raptor_loop(const map_stop_point_duration& dep,
+    void first_raptor_loop(const map_stop_point_duration& departures,
                            const DateTime& departure_datetime,
                            const nt::RTLevel rt_level,
-                           const DateTime& bound,
+                           const DateTime& bound_limit,
                            const uint32_t max_transfers,
                            const type::AccessibiliteParams& accessibilite_params,
                            const std::vector<std::string>& forbidden_uri,
