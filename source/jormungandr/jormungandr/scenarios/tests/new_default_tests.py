@@ -159,7 +159,7 @@ def create_candidate_pool_and_sections_set_test():
     """
     mocked_pb_response = build_mocked_response()
     candidates_pool, sections_set, idx_jrny_must_keep = \
-        new_default._build_candidate_pool_and_sections_set(mocked_pb_response)
+        new_default._build_candidate_pool_and_sections_set(mocked_pb_response.journeys)
 
     # We got 19 journeys in all and 4 of them are tagged with 'best', 'comfort', 'non_pt_bike', 'non_pt_walk'
     assert candidates_pool.shape[0] == 19
@@ -171,7 +171,7 @@ def create_candidate_pool_and_sections_set_test():
 def build_candidate_pool_and_sections_set_test():
     mocked_pb_response = build_mocked_response()
     candidates_pool, sections_set, idx_jrny_must_keep = \
-        new_default._build_candidate_pool_and_sections_set(mocked_pb_response)
+        new_default._build_candidate_pool_and_sections_set(mocked_pb_response.journeys)
     selected_sections_matrix = new_default._build_selected_sections_matrix(sections_set, candidates_pool)
 
     # selected_sections_matrix should have 19 lines(19 journeys) and 11 columns(11 sections)
@@ -185,7 +185,7 @@ def build_candidate_pool_and_sections_set_test():
 def get_sorted_solutions_indexes_test():
     mocked_pb_response = build_mocked_response()
     candidates_pool, sections_set, idx_jrny_must_keep = \
-        new_default._build_candidate_pool_and_sections_set(mocked_pb_response)
+        new_default._build_candidate_pool_and_sections_set(mocked_pb_response.journeys)
     selected_sections_matrix = new_default._build_selected_sections_matrix(sections_set, candidates_pool)
     # 4 journeys are must-have, we'd like to select another 5 journeys
     best_indexes, selection_matrix = \
@@ -258,6 +258,13 @@ def culling_jounreys_4_test():
     for jrny in mocked_pb_response.journeys:
         # 'non_pt_bike' shouldn't appear in returned journeys
         assert jrny.type in ('best', 'comfort', 'non_pt_walk')
+
+
+def aggregate_joureys_test():
+    mocked_pb_response = build_mocked_response()
+    aggregated_journeys, remaining_journeys = new_default.aggregate_joureys(mocked_pb_response.journeys)
+    assert len(aggregated_journeys) == 17
+    assert len(remaining_journeys) == 2
 
 
 def merge_responses_on_errors_test():

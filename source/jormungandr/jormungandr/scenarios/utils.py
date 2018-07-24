@@ -327,6 +327,8 @@ def gen_all_combin(n, t):
     Combination = {c_1, c_2, ..., c_t |  all c_t belongs to S }
     where S is a set whose card(S) = n, c_t are indexes of elements in S (c as choice)
 
+    Note that when n <= t, we consider there is only one possible combination.
+
     The function is a implementation of the algorithm L from the book of DONALD E.KNUTH's
     <The art of computer programming> Section7.2.1.3
 
@@ -335,8 +337,21 @@ def gen_all_combin(n, t):
     >>> list(gen_all_combin(4, 3))
     [[0, 1, 2], [0, 1, 3], [0, 2, 3], [1, 2, 3]]
 
+    >>> list(gen_all_combin(3, 3))
+    [[0, 1, 2]]
+
+    We assume that it's also valid when n < t
+    >>> list(gen_all_combin(3, 4))
+    [[0, 1, 2]]
+
     """
     import numpy as np
+    if n <= t:
+        """
+        nothing to do when n <= t, there is only one possible combination
+        """
+        yield range(n)
+        return
     # c is an array of choices
     c = np.ones(t+2, dtype=int).tolist()
     # init
@@ -392,3 +407,24 @@ def switch_back_to_ridesharing(response, is_first_section):
             journey.durations.car -= section.duration
             journey.distances.ridesharing += section.length
             journey.distances.car -= section.length
+
+
+def nCr(n, r):
+    """
+    Classic combination operator but accept r > n
+    :param n: objects
+    :param r: sample
+    :return: answer
+    >>> nCr(10, 11)
+    1
+    >>> nCr(5, 2)
+    10
+    """
+    if n <= r:
+        """
+        We assume that it's valid when n <= r 
+        """
+        return 1
+    import math
+    f = math.factorial
+    return int(f(n) / f(r) / f(n-r))
