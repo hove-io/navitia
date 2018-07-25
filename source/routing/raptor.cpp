@@ -192,12 +192,6 @@ void RAPTOR::first_raptor_loop(const map_stop_point_duration& departures,
 
     const DateTime bound = limit_bound(clockwise, departure_datetime, bound_limit);
 
-    set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
-                         accessibilite_params,
-                         forbidden_uri,
-                         allowed_ids,
-                         rt_level);
-
     assert(data.dataRaptor->cached_next_st_manager);
     next_st = data.dataRaptor->cached_next_st_manager->load(
         clockwise ? departure_datetime : bound,
