@@ -69,10 +69,10 @@ class AtosProvider(AbstractParkingPlacesProvider):
             all_stands = self.breaker.call(self._get_all_stands)
             ref = poi.get('properties', {}).get('ref')
             if not ref:
-                return Stands(0, 0, 'Unavailable')
+                return Stands(0, 0, 'UNAVAILABLE')
             stands = all_stands.get(ref.lstrip('0'))
             if stands:
-                if stands.status != 'Open':
+                if stands.status != 'open':
                     stands.available_bikes = 0
                     stands.available_places = 0
                     stands.total_stands = 0
@@ -80,14 +80,14 @@ class AtosProvider(AbstractParkingPlacesProvider):
         except:
             logging.getLogger(__name__).exception('transport error during call to %s bss provider', self.id_ao)
 
-        return Stands(0, 0, 'Unavailable')
+        return Stands(0, 0, 'UNAVAILABLE')
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_ATOS', 30))
     def _get_all_stands(self):
         with self._get_client() as client:
             all_stands = client.service.getSummaryInformationTerminals(self.id_ao)
             return {stands.libelle: Stands(stands.nbPlacesDispo, stands.nbVelosDispo,
-                                           'Open' if stands.etatConnexion == 'CONNECTEE' else 'Unavailable')
+                                           'OPEN' if stands.etatConnexion == 'CONNECTEE' else 'UNAVAILABLE')
                     for stands in all_stands}
 
     @contextmanager

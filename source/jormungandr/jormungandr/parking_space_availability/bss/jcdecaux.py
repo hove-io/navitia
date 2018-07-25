@@ -88,10 +88,10 @@ class JcdecauxProvider(AbstractParkingPlacesProvider):
         data = self._call_webservice()
         if data and 'status' in data.get(ref, {}):
             if data[ref]['status'] == 'OPEN':
-                return Stands(data[ref].get('available_bike_stands', 0), data[ref].get('available_bikes', 0), 'Open')
+                return Stands(data[ref].get('available_bike_stands', 0), data[ref].get('available_bikes', 0), 'OPEN')
             elif data[ref]['status'] == 'CLOSED':
-                return Stands(0, 0, 'Closed')
-        return Stands(0, 0, 'Unavailable')
+                return Stands(0, 0, 'CLOSED')
+        return Stands(0, 0, 'UNAVAILABLE')
 
     def status(self):
         return {'network': self.network, 'operators': self.operators, 'contract': self.contract}

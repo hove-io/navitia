@@ -39,7 +39,7 @@ class BssMockProvider(AbstractParkingPlacesProvider):
         return poi['id'] == 'station_1'
 
     def get_informations(self, poi):
-        return Stands(5, 9, 'Open')
+        return Stands(5, 9, 'OPEN')
 
     def status(self):
         return {}
