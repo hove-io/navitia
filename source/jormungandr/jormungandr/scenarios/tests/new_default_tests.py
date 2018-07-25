@@ -262,7 +262,7 @@ def culling_jounreys_4_test():
 
 def aggregate_joureys_test():
     mocked_pb_response = build_mocked_response()
-    aggregated_journeys, remaining_journeys = new_default.aggregate_joureys(mocked_pb_response.journeys)
+    aggregated_journeys, remaining_journeys = new_default.aggregate_journeys(mocked_pb_response.journeys)
     assert len(aggregated_journeys) == 17
     assert len(remaining_journeys) == 2
 

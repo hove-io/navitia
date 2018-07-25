@@ -347,7 +347,7 @@ def _get_sorted_solutions_indexes(selected_sections_matrix, nb_journeys_to_find,
     """
     # Allocation of memory
     shape = (nCr(selected_sections_matrix.shape[0], nb_journeys_to_find), nb_journeys_to_find)
-    selected_journeys_matrix = np.empty(shape, dtype=int)
+    selected_journeys_matrix = np.empty(shape, dtype=np.uint16)
 
     def f((i, c)):
         selected_journeys_matrix[i] = c
@@ -425,8 +425,10 @@ def culling_journeys(resp, request):
     Journey_1 : Line 1 -> Line 8 -> Bus 172
     Journey_2 : Line 14 -> Line 6 -> Bus 165
     Journey_3 : Line 14 -> Line 6 ->Line 8 -> Bus 165
+    Journey_4 : Line 1 -> Line 8 -> Bus 172 (this may happen when timeframe_duration or same_journey_schedule is used)
 
-    W'd like to choose two journeys. The algo will return Journey_1 and Journey2.
+    We'd like to choose two journeys. The algo will return Journey_1 and Journey2.
+    Note that Journey_4 is similar to the Journey_1 and will be ignored when max_nb_journeys<=3
 
     Because
     With Journey_1 and Journey_3, they cover all lines but have 5 transfers in all
@@ -446,13 +448,14 @@ def culling_journeys(resp, request):
     """
     Why aggregating journeys before culling journeys?
     We have encountered severe slowness when combining max_nb_journeys(ex: 20) and a big timeframe_duration(ex: 86400s). 
-    It turned out that, with this configuration, kraken will return 100 journeys and the algorithm was trying to figure 
-    out the best solution over 5.35E+20 possible combinations( 5.35E+20=Combination(100,20) )!!
+    It turned out that, with this configuration, kraken will return a lot of journeys(ex: 100 journeys) and the 
+    algorithm was trying to figure out the best solution over 5.35E+20 possible combinations
+    ( 5.35E+20=Combination(100,20) )!!
      
     aggregated_journeys will group journeys that are similar('similar' is defined by 'Journeys that have the same sequence
-    of sections are similar'), which reduce the number of possible combinations considerably 
+    of sections are similar'), which reduces the number of possible combinations considerably 
     """
-    aggregated_journeys, remaining_journeys = aggregate_joureys(resp.journeys)
+    aggregated_journeys, remaining_journeys = aggregate_journeys(resp.journeys)
     logger.debug('aggregated_journeys: {} remaining_journeys: {}'
                  .format(len(aggregated_journeys), len(remaining_journeys)))
     is_debug = request.get('debug')
@@ -468,7 +471,7 @@ def culling_journeys(resp, request):
         return
 
     """
-    When max_nb_journeys < len(aggregated_journeys), we first remove all remaining journeys from final responses because
+    When max_nb_journeys < len(aggregated_journeys), we first remove all remaining journeys from final response because
     those journeys already have a similar journey in aggregated_journeys
     """
     for j in remaining_journeys:
@@ -805,10 +808,11 @@ def get_kraken_id(entrypoint_detail):
 
     return '{};{}'.format(coord['lon'], coord['lat'])
 
-def aggregate_joureys(journeys):
+
+def aggregate_journeys(journeys):
     """
     when building candidates_pool, we should take into count the similarity of journeys, which means, we add a journey
-    into the pool only when there are no other "similar" journey already exist in the pool.
+    into the pool only when there are no other "similar" journey already existing in the pool.
 
     the similarity is defined by a tuple of journeys sections.
     """
