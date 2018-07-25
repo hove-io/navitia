@@ -277,6 +277,7 @@ class StandsSerializer(PbNestedSerializer):
     available_places = jsonschema.IntField()
     available_bikes = jsonschema.IntField()
     total_stands = jsonschema.IntField()
+    status = jsonschema.StrField()
 
 
 class AdminSerializer(PbGenericSerializer):

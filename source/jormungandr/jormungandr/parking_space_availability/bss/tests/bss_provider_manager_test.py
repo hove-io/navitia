@@ -87,6 +87,7 @@ def realtime_places_handle_test():
     assert stands.available_places == 5
     assert stands.available_bikes == 9
     assert stands.total_stands == 14
+    assert stands.status == 'open'
 
     assert providers and len(providers) == 1
     f = providers.pop().feed_publisher()
@@ -113,6 +114,7 @@ def realtime_pois_handle_test():
     assert stands.available_places == 5
     assert stands.available_bikes == 9
     assert stands.total_stands == 14
+    assert stands.status == 'open'
 
 
 def realtime_poi_supported_handle_test():
@@ -133,6 +135,7 @@ def realtime_poi_supported_handle_test():
     assert stands.available_places == 5
     assert stands.available_bikes == 9
     assert stands.total_stands == 14
+    assert stands.status == 'open'
 
 
 def realtime_poi_not_supported_handle_test():
@@ -213,3 +216,4 @@ def realtime_journey_handle_test():
     assert journey_to['poi']['stands'].available_places == 5
     assert journey_to['poi']['stands'].available_bikes == 9
     assert journey_to['poi']['stands'].total_stands == 14
+    assert journey_to['poi']['stands'].status == 'open'
