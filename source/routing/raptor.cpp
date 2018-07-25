@@ -186,17 +186,9 @@ void RAPTOR::first_raptor_loop(const map_stop_point_duration& departures,
                                const DateTime& bound_limit,
                                const uint32_t max_transfers,
                                const type::AccessibiliteParams& accessibilite_params,
-                               const std::vector<std::string>& forbidden_uri,
-                               const std::vector<std::string>& allowed_ids,
                                bool clockwise) {
 
     const DateTime bound = limit_bound(clockwise, departure_datetime, bound_limit);
-
-    set_valid_jp_and_jpp(DateTimeUtils::date(departure_datetime),
-                         accessibilite_params,
-                         forbidden_uri,
-                         allowed_ids,
-                         rt_level);
 
     assert(data.dataRaptor->cached_next_st_manager);
     next_st = data.dataRaptor->cached_next_st_manager->load(
@@ -447,7 +439,7 @@ RAPTOR::compute_all_journeys(const map_stop_point_duration& departures,
 
     first_raptor_loop(calc_dep, departure_datetime, rt_level,
                       bound, max_transfers, accessibilite_params,
-                      forbidden_uri, allowed_ids, clockwise);
+                      clockwise);
 
     auto end_first_pass = std::chrono::system_clock::now();
 
@@ -549,8 +541,8 @@ RAPTOR::isochrone(const map_stop_point_duration& departures,
                          rt_level);
 
     first_raptor_loop(departures, departure_datetime, rt_level,
-                      b, max_transfers, accessibilite_params, forbidden,
-                      allowed, clockwise);
+                      b, max_transfers, accessibilite_params,
+                      clockwise);
 }
 
 namespace {

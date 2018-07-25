@@ -233,8 +233,6 @@ struct RAPTOR
                            const DateTime& bound_limit,
                            const uint32_t max_transfers,
                            const type::AccessibiliteParams& accessibilite_params,
-                           const std::vector<std::string>& forbidden_uri,
-                           const std::vector<std::string>& allowed_ids,
                            bool clockwise);
 
     ~RAPTOR() = default;

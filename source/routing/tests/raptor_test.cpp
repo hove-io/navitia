@@ -1593,7 +1593,7 @@ BOOST_AUTO_TEST_CASE(finish_on_service_extension) {
     auto rt_level = nt::RTLevel::Base;
     raptor.set_valid_jp_and_jpp( DateTimeUtils::date(departure_time), {}, {}, {}, rt_level);
     raptor.first_raptor_loop(departs, departure_time, rt_level, DateTimeUtils::inf,
-                             std::numeric_limits<uint32_t>::max(), {}, {}, {}, true);
+                             std::numeric_limits<uint32_t>::max(), {}, true);
 
     //and raptor has to stop on count 2
     BOOST_CHECK_EQUAL(raptor.count, 2);
@@ -1632,7 +1632,7 @@ BOOST_AUTO_TEST_CASE(finish_on_foot_path) {
     auto rt_level = nt::RTLevel::Base;
     raptor.set_valid_jp_and_jpp( DateTimeUtils::date(departure_time), {}, {}, {}, rt_level);
     raptor.first_raptor_loop(departs, departure_time, rt_level, DateTimeUtils::inf,
-                             std::numeric_limits<uint32_t>::max(), {}, {}, {}, true);
+                             std::numeric_limits<uint32_t>::max(), {}, true);
 
     //and raptor has to stop on count 2
     BOOST_CHECK_EQUAL(raptor.count, 2);
