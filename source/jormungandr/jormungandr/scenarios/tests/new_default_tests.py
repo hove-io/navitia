@@ -260,7 +260,7 @@ def culling_jounreys_4_test():
         assert jrny.type in ('best', 'comfort', 'non_pt_walk')
 
 
-def aggregate_joureys_test():
+def aggregate_journeys_test():
     mocked_pb_response = build_mocked_response()
     aggregated_journeys, remaining_journeys = new_default.aggregate_journeys(mocked_pb_response.journeys)
     assert len(aggregated_journeys) == 17
