@@ -48,7 +48,7 @@ enable-threads = True
 
 **Run Jormun with uWSGI**
 
-Active the jormungandr virtual env and in *root_project/source/jormungandr/jormaungandr* run :
+Activate the jormungandr virtual env and in *root_project/source/jormungandr/jormaungandr* run :
 
 ```bash
 PYTHONPATH=/<ROOT_PROJECT>/source/navitiacommon:/<ROOT_PROJECT>/source/jormungandr JORMUNGANDR_CONFIG_FILE=default_settings.py uwsgi <PATH_TO>/uwsgi_config_file.ini
