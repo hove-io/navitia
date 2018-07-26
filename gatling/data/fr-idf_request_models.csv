@@ -13,7 +13,10 @@ fr-idf,walking-bike count=10,2.37715;48.846781,2.43425;48.794755,20180710T090000
 fr-idf,bike-walking departure,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,bike,walking,
 fr-idf,bike-walking arrival,2.37715;48.846781,2.43425;48.794755,20180710T100000,arrival,bike,walking,
 fr-idf,bike-walking min_nb=3,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,bike,walking,min_nb_journeys=3
+fr-idf,bike-walking count=10,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,bike,walking,count=10
 
+fr-idf,walking-car departure,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,walking,car,
+fr-idf,walking-car arrival,2.37715;48.846781,2.43425;48.794755,20180710T100000,arrival,walking,car,
 fr-idf,walking-car min_nb=3,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,walking,car,min_nb_journeys=3
 fr-idf,walking-car count=10,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,walking,car,count=10
 
