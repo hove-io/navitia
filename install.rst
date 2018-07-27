@@ -119,6 +119,8 @@ Testing
 
    This step will generate a compressed nav file that can be given as input to *Kraken*
 
+   ***Alternative to step 1 to 5*** : You can use *Eitri* as an alternative to generate the *.nav* file (cf. https://github.com/CanalTP/navitia/tree/dev/source/eitri). This will setup the environment and call the right tool for you. Hasle-free Navitia file generator :)
+
 #. Running the *Kraken* backend
 
    #. To run *Kraken*, you need to supply some parameters. You can give those parameters either via a file or via the command-line. By default you can take the documentation/examples/config/kraken.ini configuration file. The configuration file needs at least the path of the exported nav file and the zmq socket used to communicate with Jörmungandr. Run ``kraken --help`` to see the list of arguments
