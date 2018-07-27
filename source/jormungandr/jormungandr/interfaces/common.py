@@ -47,7 +47,5 @@ def handle_poi_infos(add_poi_info_param, bss_stands_param):
     if bss_stands_param and "bss_stands" not in add_poi_info_param:
         add_poi_info_param.append("bss_stands")
 
-    if any(value in add_poi_info_param for value in ['bss_stands', 'car_park']):
-        return True
+    return any(value in add_poi_info_param for value in ['bss_stands', 'car_park'])
 
-    return False
