@@ -39,7 +39,7 @@ pb_odt_level = {
     'all': type_pb2.all
 }
 
-# When an emtpy string is passed, it deactivates all
+# When an emtpy string or 'none' is passed, it deactivates all
 add_poi_infos_types = ('bss_stands', 'car_park', '', 'none')
 
 
