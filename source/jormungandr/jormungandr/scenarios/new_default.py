@@ -37,7 +37,7 @@ from flask import g
 from jormungandr.scenarios import simple, journey_filter, helpers
 from jormungandr.scenarios.ridesharing.ridesharing_helper import decorate_journeys
 from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, \
-    get_or_default, fill_uris, gen_all_combin, get_pseudo_duration, mode_weight, switch_back_to_ridesharing
+    get_or_default, fill_uris, gen_all_combin, get_pseudo_duration, mode_weight, switch_back_to_ridesharing, nCr
 from navitiacommon import type_pb2, response_pb2, request_pb2
 from jormungandr.scenarios.qualifier import min_from_criteria, arrival_crit, departure_crit, \
     duration_crit, transfers_crit, nonTC_crit, trip_carac, has_no_car, has_car, has_pt, \
@@ -293,12 +293,12 @@ def _get_section_id(section):
     return section.uris.line, street_network_mode, section.type
 
 
-def _build_candidate_pool_and_sections_set(resp):
+def _build_candidate_pool_and_sections_set(journeys):
     sections_set = set()
     candidates_pool = list()
     idx_of_jrny_must_keep = list()
 
-    for (i, jrny) in enumerate(resp.journeys):
+    for (i, jrny) in enumerate(journeys):
         if jrny.type in JOURNEY_TYPES_TO_RETAIN:
             idx_of_jrny_must_keep.append(i)
         sections_set |= set([_get_section_id(s) for s in jrny.sections if s.type in SECTION_TYPES_TO_RETAIN])
@@ -345,8 +345,16 @@ def _get_sorted_solutions_indexes(selected_sections_matrix, nb_journeys_to_find,
      [0,2]
      [1,2]]
     """
-    selected_journeys_matrix = np.array(list(gen_all_combin(selected_sections_matrix.shape[0], nb_journeys_to_find)))
+    # Allocation of memory
+    shape = (nCr(selected_sections_matrix.shape[0], nb_journeys_to_find), nb_journeys_to_find)
+    selected_journeys_matrix = np.empty(shape, dtype=np.uint16)
 
+    def f((i, c)):
+        selected_journeys_matrix[i] = c
+
+    # replace line by line
+    from itertools import izip
+    map(f, izip(xrange(shape[0]), gen_all_combin(selected_sections_matrix.shape[0], nb_journeys_to_find)))
     """
     We should cut out those combinations that don't contain must-keep journeys
     """
@@ -407,7 +415,7 @@ def culling_journeys(resp, request):
 
     resp.journeys should be sorted before this function is called
 
-    The goal is to choose a bunch of journeys(max_nv_journeys) that covers as many as possible sections
+    The goal is to choose a bunch of journeys(max_nb_journeys) that covers as many as possible sections
     but have as few as possible sum(sections)
 
     Ex:
@@ -417,8 +425,10 @@ def culling_journeys(resp, request):
     Journey_1 : Line 1 -> Line 8 -> Bus 172
     Journey_2 : Line 14 -> Line 6 -> Bus 165
     Journey_3 : Line 14 -> Line 6 ->Line 8 -> Bus 165
+    Journey_4 : Line 1 -> Line 8 -> Bus 172 (this may happen when timeframe_duration or same_journey_schedule is used)
 
-    W'd like to choose two journeys. The algo will return Journey_1 and Journey2.
+    We'd like to choose two journeys. The algo will return Journey_1 and Journey2.
+    Note that Journey_4 is similar to the Journey_1 and will be ignored when max_nb_journeys<=3
 
     Because
     With Journey_1 and Journey_3, they cover all lines but have 5 transfers in all
@@ -430,9 +440,43 @@ def culling_journeys(resp, request):
     """
     logger = logging.getLogger(__name__)
 
-    if request["max_nb_journeys"] is None or request["max_nb_journeys"] >= len(resp.journeys):
+    max_nb_journeys = request["max_nb_journeys"]
+    if max_nb_journeys is None or max_nb_journeys >= len(resp.journeys):
         logger.debug('No need to cull journeys')
         return
+
+    """
+    Why aggregating journeys before culling journeys?
+    We have encountered severe slowness when combining max_nb_journeys(ex: 20) and a big timeframe_duration(ex: 86400s). 
+    It turned out that, with this configuration, kraken will return a lot of journeys(ex: 100 journeys) and the 
+    algorithm was trying to figure out the best solution over 5.35E+20 possible combinations
+    ( 5.35E+20=Combination(100,20) )!!
+     
+    aggregated_journeys will group journeys that are similar('similar' is defined by 'Journeys that have the same sequence
+    of sections are similar'), which reduces the number of possible combinations considerably 
+    """
+    aggregated_journeys, remaining_journeys = aggregate_journeys(resp.journeys)
+    logger.debug('aggregated_journeys: {} remaining_journeys: {}'
+                 .format(len(aggregated_journeys), len(remaining_journeys)))
+    is_debug = request.get('debug')
+
+    if max_nb_journeys >= len(aggregated_journeys):
+        """
+        In this case, we return all aggregated_journeys plus earliest/latest journeys in remaining journeys
+        """
+        for j in remaining_journeys[max(0, max_nb_journeys - len(aggregated_journeys)):]:
+            journey_filter.mark_as_dead(j, is_debug, 'max_nb_journeys >= len(aggregated_journeys), '
+                                                     'Filtered by max_nb_journeys')
+        journey_filter.delete_journeys((resp,), request)
+        return
+
+    """
+    When max_nb_journeys < len(aggregated_journeys), we first remove all remaining journeys from final response because
+    those journeys already have a similar journey in aggregated_journeys
+    """
+    for j in remaining_journeys:
+        journey_filter.mark_as_dead(j, is_debug, 'Filtered by max_nb_journeys, '
+                                                 'max_nb_journeys < len(aggregated_journeys)')
 
     logger.debug('Trying to culling the journeys')
 
@@ -448,12 +492,12 @@ def culling_journeys(resp, request):
     The candidate pool will be like [Journey_2, Journey_3]
     The sections set will be like set([Line 14, Line 6, Line 8, Bus 165])
     """
-    candidates_pool, sections_set, idx_of_jrnys_must_keep = _build_candidate_pool_and_sections_set(resp)
+    candidates_pool, sections_set, idx_of_jrnys_must_keep = _build_candidate_pool_and_sections_set(aggregated_journeys)
 
     nb_journeys_must_have = len(idx_of_jrnys_must_keep)
     logger.debug("There are {0} journeys we must keep".format(nb_journeys_must_have))
-    is_debug = request.get('debug')
-    if (request["max_nb_journeys"] - nb_journeys_must_have) <= 0:
+
+    if max_nb_journeys <= nb_journeys_must_have:
         # At this point, max_nb_journeys is smaller than nb_journeys_must_have, we have to make choices
 
         def _inverse_selection(d, indexes):
@@ -464,7 +508,7 @@ def culling_journeys(resp, request):
         for jrny in _inverse_selection(candidates_pool, idx_of_jrnys_must_keep):
              journey_filter.mark_as_dead(jrny, is_debug, 'Filtered by max_nb_journeys')
 
-        if request["max_nb_journeys"] == nb_journeys_must_have:
+        if max_nb_journeys == nb_journeys_must_have:
             logger.debug('max_nb_journeys equals to nb_journeys_must_have')
             journey_filter.delete_journeys((resp,), request)
             return
@@ -482,14 +526,13 @@ def culling_journeys(resp, request):
         for t in JOURNEY_TYPES_TO_RETAIN:
             sorted_by_type_journeys.extend(list_dict.get(t, []))
 
-        for jrny in sorted_by_type_journeys[request["max_nb_journeys"]:]:
+        for jrny in sorted_by_type_journeys[max_nb_journeys:]:
             journey_filter.mark_as_dead(jrny, is_debug, 'Filtered by max_nb_journeys')
 
         journey_filter.delete_journeys((resp,), request)
         return
 
-    nb_journeys_to_find = request["max_nb_journeys"]
-    logger.debug('Trying to find {0} journeys from {1}'.format(nb_journeys_to_find,
+    logger.debug('Trying to find {0} journeys from {1}'.format(max_nb_journeys,
                                                                candidates_pool.shape[0]))
 
     """
@@ -508,7 +551,7 @@ def culling_journeys(resp, request):
     selected_sections_matrix = _build_selected_sections_matrix(sections_set, candidates_pool)
 
     best_indexes, selection_matrix = _get_sorted_solutions_indexes(selected_sections_matrix,
-                                                                   nb_journeys_to_find,
+                                                                   max_nb_journeys,
                                                                    idx_of_jrnys_must_keep)
 
     logger.debug("Nb best solutions: {0}".format(best_indexes.shape[0]))
@@ -764,6 +807,34 @@ def get_kraken_id(entrypoint_detail):
         return None
 
     return '{};{}'.format(coord['lon'], coord['lat'])
+
+
+def aggregate_journeys(journeys):
+    """
+    when building candidates_pool, we should take into count the similarity of journeys, which means, we add a journey
+    into the pool only when there are no other "similar" journey already existing in the pool.
+
+    the similarity is defined by a tuple of journeys sections.
+    """
+    added_sections_ids = set()
+    aggregated_journeys = list()
+    remaining_journeys = list()
+
+    # we pick out all journeys that must be kept:
+    for j in (j for j in journeys if j.type in JOURNEY_TYPES_TO_RETAIN):
+        section_id = tuple(_get_section_id(s) for s in j.sections if s.type in SECTION_TYPES_TO_RETAIN)
+        aggregated_journeys.append(j)
+        added_sections_ids.add(section_id)
+
+    for j in (j for j in journeys if j.type not in JOURNEY_TYPES_TO_RETAIN):
+        section_id = tuple(_get_section_id(s) for s in j.sections if s.type in SECTION_TYPES_TO_RETAIN)
+
+        if section_id in added_sections_ids:
+            remaining_journeys.append(j)
+        else:
+            aggregated_journeys.append(j)
+            added_sections_ids.add(section_id)
+    return aggregated_journeys, remaining_journeys
 
 
 class Scenario(simple.Scenario):
