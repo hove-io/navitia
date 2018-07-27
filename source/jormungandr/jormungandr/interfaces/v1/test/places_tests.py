@@ -26,8 +26,10 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
+
 from __future__ import absolute_import
 from jormungandr.autocomplete.geocodejson import format_zip_code
+from jormungandr.interfaces.common import handle_poi_infos
 
 
 def test_format_zip_code():
@@ -48,3 +50,18 @@ def test_format_zip_code():
 
     zip_codes = ["75013", "75014", "75012"]
     assert format_zip_code(zip_codes) == "75012-75014"
+
+
+def test_poi_infos():
+    """
+    Test the different possible values for the enum 'add_poi_infos[]'
+    For retrocompatibility, test 'bss_stands' parameter that is now deprecated
+    """
+    # POI infos are not added if '' or 'none' is passed
+    assert not handle_poi_infos([''], False)
+    assert not handle_poi_infos(['none'], False)
+    # Otherwise, it should be added.
+    assert handle_poi_infos(['bss_stands', ''], False)
+    assert handle_poi_infos(['car_park', 'none'], False)
+    # For retrocompatibility, the parameter 'bss_stands' is still taken into account
+    assert handle_poi_infos([''], True)
