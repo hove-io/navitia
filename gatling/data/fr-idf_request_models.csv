@@ -1,0 +1,27 @@
+coverage,type,from,to,datetime,datetime_represents,first_section_mode,last_section_mode,other_args
+
+fr-idf,walking-walking departure,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,walking,walking,
+fr-idf,walking-walking arrival,2.37715;48.846781,2.43425;48.794755,20180710T100000,arrival,walking,walking,
+fr-idf,walking-walking min_nb=3,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,walking,walking,min_nb_journeys=3
+fr-idf,walking-walking count=10,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,walking,walking,count=10
+
+fr-idf,walking-bike departure,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,walking,bike,
+fr-idf,walking-bike arrival,2.37715;48.846781,2.43425;48.794755,20180710T100000,arrival,walking,bike,
+fr-idf,walking-bike min_nb=3,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,walking,bike,min_nb_journeys=3
+fr-idf,walking-bike count=10,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,walking,bike,count=10
+
+fr-idf,bike-walking departure,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,bike,walking,
+fr-idf,bike-walking arrival,2.37715;48.846781,2.43425;48.794755,20180710T100000,arrival,bike,walking,
+fr-idf,bike-walking min_nb=3,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,bike,walking,min_nb_journeys=3
+fr-idf,bike-walking count=10,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,bike,walking,count=10
+
+fr-idf,walking-car departure,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,walking,car,
+fr-idf,walking-car arrival,2.37715;48.846781,2.43425;48.794755,20180710T100000,arrival,walking,car,
+fr-idf,walking-car min_nb=3,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,walking,car,min_nb_journeys=3
+fr-idf,walking-car count=10,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,walking,car,count=10
+
+fr-idf,car-walking departure,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,car,walking,
+fr-idf,car-walking arrival,2.37715;48.846781,2.43425;48.794755,20180710T100000,arrival,car,walking,
+fr-idf,car-walking min_nb=3,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,car,walking,min_nb_journeys=3
+fr-idf,car-walking count=10,2.37715;48.846781,2.43425;48.794755,20180710T090000,departure,car,walking,count=10
+
