@@ -1,3 +1,75 @@
-Image generated with Sequence Diagram. 
-Please, edit the following link to re-generate the diagram: 
-https://sequencediagram.org/index.html#initialData=C4S2BsFMAIBEQM7AE4gEYFdiQCYCg8BDAY2AHtloAlSARw0iQJvseAFoA+AKQoFsMAOwBcAegBWZDMkGQAngUFls0VAHMAFsGhkAZtF7IBImgjLgAbjEiCUc6AAcyIWwmhFSIC4RWHj0AGI1ZEIFcBdIQmQ8PyEAHi4AaRCAaxthAAVwEkgAITkAVVRoAG0KEDUXABpoHDYXHxAyQQBdPGTCNMEEzg6u4Qds4kgAfWkQPHDZKJ1dXTwEBxy8OpJQb19+IUVlGHUtWYMtkXhkSFJHHw1oXQpoSCtkez4yOo91nxhYwUDg0Jjjgkkql0gB1QjgFIuNTQdzfIGcABqEI0EOywgAwlEAUZ4uwuABxSBkKzgMjCXIgNILJbDdyrTwbL7HHYqfbaPRHXEiACCxGGCAQ6Cg0AAyuQHI5nK53GsvJ8uf4giEFPDgZ10oMcggRtNkGh7GV1NVavVBI1mm0ppFKDjjAi+ukstqAGJnSB8gUIdog7r43q+4SvYAjJBkBwjJwuYDe60zPTzBkfTbcgiLHLuPBKNkVA6c76Ysh8BxYGC6NFoEgpWrSC2Cb1ypmKoS-FWTCIzO149X9cGQ6HQF0VqtwWugZrex1+nvpJDukOyYAAdwoKRGyCkoEEahGfB8qAAHl3p0iUWjCJiZkPwOBK8Rq7Ax0163hkeBUTfCAi3x-0XPIJAC6ASuyBrhuWDQru+4gEeaqEsSpLkpSaSDsO96jiE44vkSJKQGSCI4Yhwj-oBurAau66bpBe4oDB7Z6rMiaRIyCrfKyey5hy+gFhiRYlioGQYGg4TENAAAqIT1k4yDaJI0iyHIDYsSmSp-GEHa2mqAYaiIGTALw8nyD6Ok9FOAwhlqgiyNEcaUAmKzMcmzKpngLAMEgCQFnJMjyAgQA
+Image generated with Sequence Diagram.
+Please, edit the following link to re-generate the diagram:
+https://sequencediagram.org/index.html#initialData=C4S2BsFMAIBEQM7AE4gEYFdiQCYCg8BDAY2AHtloAlSARw0iQJvseAFoA+AKQoFsMAOwDmhQTmQAuAPQArMhmSDIATwKCy2aKmEALYNDIAzaL2QCRYiZJoIy4AG4xIglCugAHMiFcJoRUhAHQi0zC1FxSgBiYWRCNXAfSEJkPDChCIkAHi4AaTiAaxdJAAVwEkgAIRUAVVRoAG0KEGEfABpoHDYfEJAyQQBdPHzCIsEczhGxyQ9y4kgAfUUQPETlFMMjIzwEDwq8LpJQYND+DKtUvA0tHX1N0zPLSMl4ZEhSTxDdaCMKaEgnMh3HwyF0AscQjB0k8JNAYnE1NDMsgcnlCsUAOqEcAFHzCaD+JEXVGcABq2N02PKkgAwik0o9kSSAOKQMhOcBkSSVEBFHZ7eb+Q6BE5QxkXdSaGC3AzGB7mc7PACCxHmCAQ6Cg0AAyuQPJ5vL5-EcgpD5eELnDYvEGQqYSi0aNirMKggFutkGh3E0dO1Ot1BL1+kM1slKLaLZESVNimVXQAxN6QFVqhDDdHjdiO6ag4ALJBkDwLLw+YBp0MbYzbYUQ0525EEXYVfxXKXaFp3OVE540sh8DxYGBGKloEgFTqKIOCNMm0XmxWw+E2ivh7vZLOTDOSLE4vHQeMjsdwSegfppmOZ7PFJBJvPKYAAdwoBQWyAUoBECz4IVQAA8IwuDpcOS4CUuA1J0pQB7gaOxDjrAJ59NOeAgWB5QkqhVKEJIN6QJAd74U+yAvm+WB4l+P4gP+a5AZwrLspAnLcryMDQeAsHwYhZ54PRHJkCybJ8ThKB4QRj7Pq+77kd+KBUasSSVlsBzJCKZo0ZKNwdrKJg0bSfYDloJQYGgiTENAAAqcTTl4yAGPIijKCoM6qXWkaLtaCQKau4pRlegilMAvAOao6ZOpmm5hTMeYuoIyipCumzViptZivWEqtppejafO9rchgIDgDgPw9OA2iMF406MOCpquYBVoIvJHqEj565+du2K4iI+6HnBcD4YQBXnhm0ZbjgIBvKQxZfAsD5gLoCxGB4AH2hhFJYbSGxsRxfXAAN4Bpph4GEKtoHrWNE3RdNs3APNi3LUyG68YxXI8kU3UwUesD9YNPGCc9AkMUx53vJdN0zXNC1LTREy6Q+A15lYCzEPpUDYMWeb2UoIUJVWymzmpLWXCwDBIDkumY45CBAA
+
+Please also update here for safety:
+```
+title Distributed
+
+actor Request
+
+Request->Jormungandr:/journey
+
+note right of Jormungandr:Resolve entry points
+activate Jormungandr #gray
+linear
+Jormungandr<->Kraken:PlaceByUri [origin, destination]
+Kraken<->Kraken:place_uri
+linear off
+space
+deactivate Jormungandr
+
+note right of Jormungandr:Direct path for every mode
+activate Jormungandr #gray
+Jormungandr<-->Kraken:Walking
+Jormungandr<-->Valhalla:Car
+Jormungandr<-->Geovelo:Bike
+space
+deactivate Jormungandr
+
+note right of Jormungandr:Accessible Stop points
+activate Jormungandr #gray
+Jormungandr<->Kraken:places_nearby [origin, destination]
+linear
+Jormungandr<-->Kraken:PlacesFreeAccess
+Kraken<-->Kraken:odt_stop_points
+linear off
+deactivate Jormungandr
+
+space
+
+note right of Jormungandr:Compute fallback durations
+activate Jormungandr #gray
+linear
+Jormungandr<-->Kraken:Walking Fallback Durations
+Kraken<-->Kraken:street_network_routing_matrix
+Jormungandr<-->Valhalla:Car Fallback Durations
+Valhalla<-->Valhalla:street_network_routing_matrix
+Jormungandr<-->Geovelo:Bike Fallback Durations
+Geovelo<-->Geovelo:street_network_routing_matrix
+linear off
+deactivate Jormungandr
+
+note right of Jormungandr:Compute Public Transport journeys
+activate Jormungandr #gray
+linear
+Jormungandr<->Kraken:PtJourney
+Kraken<->Kraken:pt_planner
+linear off
+deactivate Jormungandr
+
+note right of Jormungandr:Build final responses
+activate Jormungandr #gray
+linear
+Jormungandr<-->Kraken:Walking Fallback Details
+Kraken<-->Kraken:direct_path_with_fp
+Jormungandr<-->Valhalla:Car Fallback Details
+Valhalla<-->Valhalla:direct_path_with_fp
+Jormungandr<-->Geovelo:Bike Fallback Details
+Geovelo<-->Geovelo:direct_path_with_fp
+Jormungandr<->Jormungandr:wait_and_complete_pt_journey
+linear off
+deactivate Jormungandr
+
+Request<-Jormungandr:journeys
+```

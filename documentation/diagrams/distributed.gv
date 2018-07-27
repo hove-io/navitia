@@ -1,37 +1,104 @@
-digraph distributed {
-    //direct paths
-    "resolve origin" -> "walking direct path" -> "final response"
-    "resolve destination" -> "walking direct path"
+// request in this example
+// https://api.navitia.io/v1/coverage/fr-idf/journeys?from=stop_area%3AOIF%3ASA%3A59238&to=2.33071%3B48.83890&first_section_mode%5B%5D=bike&first_section_mode%5B%5D=walking&datetime=20180614T113500&last_section_mode%5B%5D=walking&
 
-    "resolve origin" -> "bike direct path" -> "final response"
-    "resolve destination" -> "bike direct path"
+digraph distributed {
+    subgraph cluster_legend {
+        label = "Legend:"
+        labeljust = "l"
+
+        legend_delegated [label = "Street network\nexternal calculation"]
+        legend_kraken [label = "Done by\nKraken", shape = box, color = lightblue, style = filled]
+        legend_jormungandr [label= "Done by\nJormungandr", shape = box, color = lightyellow, style = filled]
+        legend_external [label = "External\ninteraction", shape = diamond, color = gray]
+    }
+
+
+    req [label = "journey request", shape = diamond, color = gray]
+    resp [label = "final response", shape = diamond, color = gray]
+
+    subgraph cluster_preprocess_for_pt {
+        label = "Preprocess to feed PT calculation"
+        labeljust = "l"
+        color = red
+        fontcolor = red
+
+        res_orig [label = "resolve origin", shape = box, color = lightblue, style = filled]
+        res_dest [label = "resolve destination", shape = box, color = lightblue, style = filled]
+        orig_free [label = "origin free access", shape = box, color = lightblue, style = filled]
+        dest_free [label = "destination free access", shape = box, color = lightblue, style = filled]
+        walk_dp [label = "walking\ndirect path"]
+        bike_dp [label = "bike\ndirect path"]
+        orig_walk_pl [label = "walking origin\nproximity list", shape = box, color = lightblue, style = filled]
+        orig_bike_pl [label = "bike origin\nproximity list", shape = box, color = lightblue, style = filled]
+        dest_walk_pl [label = "walking destination\nproximity list", shape = box, color = lightblue, style = filled]
+        orig_walk_matrix [label = "walking origin\nsn matrix"]
+        orig_bike_matrix [label = "bike origin\nsn matrix"]
+        dest_walk_matrix [label = "walking destination\nsn matrix"]
+    }
+
+    subgraph cluster_pt_calculation {
+        walking_pt_walking [label = "compute\nwalking>PT>walking", shape = box, color = lightblue, style = filled]
+        bike_pt_walking [label = "compute\nbike>PT>walking", shape = box, color = lightblue, style = filled]
+
+        label = "PT calculation"
+        labeljust = "l"
+        color = red
+        fontcolor = red
+    }
+
+    subgraph cluster_assembly {
+        orig_walk_fallback [label = "walking origin\nfallback details"]
+        orig_bike_fallback [label = "bike origin\nfallback details"]
+        dest_walk_fallback [label = "walking destination\nfallback details"]
+        assemble_walk_pt_walk [label = "assemble responses\nwalking>PT>walking", shape = "box", color = lightyellow, style = filled]
+        assemble_bike_pt_walk [label = "assemble responses\nbike>PT>walking", shape = "box", color = lightyellow, style = filled]
+        collect [label= "collect all journeys", shape = box, color = lightyellow, style = filled]
+
+        label = "Journeys assembly"
+        labeljust = "l"
+        color = red
+        fontcolor = red
+    }
+
+    req -> res_orig
+    req -> res_dest
+
+    //direct paths
+    res_orig -> walk_dp -> collect
+    res_dest -> walk_dp
+
+    res_orig -> bike_dp -> collect
+    res_dest -> bike_dp
 
     //free access
-    "resolve origin" -> "origin free access"
-    "resolve destination" -> "destination free access"
+    res_orig -> orig_free
+    res_dest -> dest_free
 
     //matrix
-    "resolve origin" -> "bike origin proximity list" -> "bike origin sn matrix"
-    "resolve origin" -> "walking origin proximity list" -> "walking origin sn matrix"
-    "resolve destination" -> "walking destination proximity list" -> "walking destination sn matrix"
+    res_orig -> orig_walk_pl -> orig_walk_matrix
+    res_orig -> orig_bike_pl -> orig_bike_matrix
+    res_dest -> dest_walk_pl -> dest_walk_matrix
 
     //PT walking - walking
-    "walking origin sn matrix" -> "PT walking - walking"
-    "walking destination sn matrix" -> "PT walking - walking"
-    "walking direct path" -> "PT walking - walking"
-    "origin free access" -> "PT walking - walking"
-    "destination free access" -> "PT walking - walking"
+    orig_walk_matrix -> walking_pt_walking
+    dest_walk_matrix -> walking_pt_walking
+    walk_dp -> walking_pt_walking
+    orig_free -> walking_pt_walking
+    dest_free -> walking_pt_walking
 
     //PT bike - walking
-    "bike origin sn matrix" -> "PT bike - walking"
-    "walking destination sn matrix" -> "PT bike - walking"
-    "bike direct path" -> "PT bike - walking"
-    "origin free access" -> "PT bike - walking"
-    "destination free access" -> "PT bike - walking"
+    orig_bike_matrix -> bike_pt_walking
+    dest_walk_matrix -> bike_pt_walking
+    bike_dp -> bike_pt_walking
+    orig_free -> bike_pt_walking
+    dest_free -> bike_pt_walking
 
-    "PT bike - walking" -> "bike origin fallback"  -> "build bike-walking" -> "final response"
-    "PT bike - walking" -> "walking destination fallback" -> "build bike-walking"
+    //Journey assembly
+    walking_pt_walking -> dest_walk_fallback -> assemble_walk_pt_walk
+    walking_pt_walking -> orig_walk_fallback -> assemble_walk_pt_walk -> collect
 
-    "PT walking - walking" -> "walking origin fallback" -> "build walking-walking" -> "final response"
-    "PT walking - walking" -> "walking destination fallback" -> "build walking-walking"
+    bike_pt_walking -> dest_walk_fallback -> assemble_bike_pt_walk
+    bike_pt_walking -> orig_bike_fallback  -> assemble_bike_pt_walk -> collect
+
+    collect -> resp
 }
