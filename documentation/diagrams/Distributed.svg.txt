@@ -1,6 +1,6 @@
 Image generated with Sequence Diagram.
 Please, edit the following link to re-generate the diagram:
-https://sequencediagram.org/index.html#initialData=C4S2BsFMAIBEQM7AE4gEYFdiQCYCg8BDAY2AHtloAlSARw0iQJvseAFoA+AKQoFsMAOwDmhQTmQAuAPQArMhmSDIATwKCy2aKmEALYNDIAzaL2QCRYiZJoIy4AG4xIglCugAHMiFcJoRUhAHQi0zC1FxSgBiYWRCNXAfSEJkPDChCIkAHi4AaTiAaxdJAAVwEkgAIRUAVVRoAG0KEGEfABpoHDYfEJAyQQBdPHzCIsEczhGxyQ9y4kgAfUUQPETlFMMjIzwEDwq8LpJQYND+DKtUvA0tHX1N0zPLSMl4ZEhSTxDdaCMKaEgnMh3HwyF0AscQjB0k8JNAYnE1NDMsgcnlCsUAOqEcAFHzCaD+JEXVGcABq2N02PKkgAwik0o9kSSAOKQMhOcBkSSVEBFHZ7eb+Q6BE5QxkXdSaGC3AzGB7mc7PACCxHmCAQ6Cg0AAyuQPJ5vL5-EcgpD5eELnDYvEGQqYSi0aNiiVkGQAB4gPhgECMaBodzEV0Adx+4HcTR07U63UEvX6QzWyUototkQmU2dc19ADE3jAVWq-BGWlGukgeqB46skhtjNthRDTnbkQRdhV-FcpdoWnc5UTnjSyHwPFgYEYqWgSAVOoo44IEODTU3U7D4TbExsU4rsuxHdMsTi8dBsxOp3BZ5X58N0eNd5Mb5IkHngAtlMAgxQCgtXVg8Qs+CEqBulu9okuS4CUuA1J0pQJ5QZOxDTrAF59Fe4GQeUYEUlShCPigkCQC+b4fsgX4-qAIj-oBIDAf2O5cKy7KQJy3K8jAcHgAhSEof0C6MRyZAsmyAl4c+r6ESRZEKBRwhUSgNHVuslB1gcyQimadGXNc0o9rKJiabSQ4jloJQYGgiTENAAAqcTzl4yAGPIijKCoC4mqK5rbtE1oJDWyaaemD4lMAvDOao15Ore96RTML6zGIyipBuylbKp7kaeKkSSjcun3AZlQYCA4A4D8PTgNojBePOjCLh5mlWgiilJoSmX0dF+7YriIjHqeiFwIRhBFQuGa3nuxQ4CAbykAsezALoCxBmA81GB4IFMne6E4bSGwcVx-XAIN4ALptUGEFhEFbRNU1xV8C1LQsK1rcSd78cxXI8kUPXwWesADUNeCvZyQlMSxV3vDdc13ZDj0BVwBlBoNL5WAsxBGVA2AzS+TlKOFyWbPWamNmKzYSngLAMEgOQGdjLkIEAA
+https://sequencediagram.org/index.html#initialData=C4S2BsFMAIBEQM7AE4gEYFdiQCYCg8BDAY2AHtloAlSARw0iQJvseAFoA+AKQoFsMAOwDmhQTmQAuAPQArMhmSDIATwKCy2aKmEALYNDIAzaL2QCRYiZJoIy4AG4xIglCugAHMiFcIipEAdCLTMLUXFKAGJhZEI1cB9IQmQ8UKFwiQAeLgBpWIBrF0kABXASSAAhFQBVVGgAbQoQYR8AGmgcNh9gkDJBAF08PMJCwWzOYdHJDzLiSAB9RRA8BOVkwyMjPAQPcrxOklAgkP50qxS8DS0dfQ3TU8sIyXhkSFJPYN1oIwpoSCdkO4+GROv4jsEYGlHhJoNFYmooRlkNlcgUigB1QjgfI+YSpB5IlGcABqWN0WLKkgAwsl8eYzhEiQBxSBkJzgMiSCogQrbXZzfZJALHSEE87qTQwG4GYz3enQqQAQWIcwQCHQUGgAGVyB5PN5fGDAhC5WFzrCYnE6WbGaiRkVisgyAAPEB8MAgRjQNDuYhOgDu33A7kaOjaHS6gh6fUGqySKUR53Gkwdsy9ADFXjBlaqEA0mi1BO1OkhuqAYytEutjFsDsKTYmIgQdntLpLtM1brLG9YqWQ+B4sDAjBS0CR8h1FNHBH5DsaTvKkRb4ZW1gmxba7VNMdjcdB06Px3Ap+WZ0M0WN2Fuikgs8B5spgP6KPl5k6sLj5nxgqhndaGVkV4kmSFKENS6wHuA4BjsQE6wCevRnqS4DklBhBEshqGUrekCQPej7Psgr7vqAIhfj+IB-j2yJASybKQByXI8jAkHQUe8GxKefh0eyZDMqyvGSDheEPnhhHEQopHCORKCUau8YbLWQrgguNoSBK1ydjKJjUdS-aDloxQYGgCTENAAAqsQzl4yAGPIijKCos71qpAFRJa8RVuui5JtegglMAvAOao572peEwXtM94zGIygpHG1abIKc4iqabkaVKWl3LpFQYCA4A4N83TgNojBeDOjBGql1HLlaCXeWpNF+ZIO44iI+6HrBcB4YQ+V+Cml7NTgICvKQ8y7MAujzP6YBTUYHj-gqGEgWh4GUKxMFwT1fV4JhoHLShoGSMNo3RZ802zfM82LYStECQxnLcoUHVQZt3XAL14DcfdHL8fRjEnW8Z2TRdIPXdR4y6f6vX3lY8zEPpUDYON972UoIX1YpyUuaKPlNngLAMEg2S6WjjkIEAA
 
 Please also update here for safety:
 ```
@@ -10,7 +10,7 @@ actor Request
 
 Request->Jormungandr:/journey
 
-note right of Jormungandr:Resolve entry points 
+note right of Jormungandr:Resolve entry points
 activate Jormungandr #gray
 linear
 Jormungandr<->Kraken:PlaceByUri [origin, destination]
@@ -21,25 +21,25 @@ deactivate Jormungandr
 
 note right of Jormungandr:Direct path for every mode
 activate Jormungandr #gray
-Jormungandr<-->Kraken:Walking  
+Jormungandr<-->Kraken:Walking
 Jormungandr<-->Valhalla:Car
 Jormungandr<-->Geovelo:Bike
-space 
+space
 deactivate Jormungandr
 
-note right of Jormungandr:Accessible Stop points 
+note right of Jormungandr:Accessible Stop points
 activate Jormungandr #gray
 Jormungandr<->Kraken:Proximities by crow fly [origin, destination]
-linear 
+linear
 Jormungandr<->Kraken:Places Free Access [origin, destination]
 linear off
 deactivate Jormungandr
 
-space 
+space
 
 note right of Jormungandr:Compute fallback durations
 activate Jormungandr #gray
-linear 
+linear
 Jormungandr<-->Kraken:Walking Fallback Durations
 Kraken<-->Kraken:street_network_routing_matrix
 Jormungandr<-->Valhalla:Car Fallback Durations
@@ -51,7 +51,7 @@ deactivate Jormungandr
 
 note right of Jormungandr:Compute Public Transport journeys
 activate Jormungandr #gray
-linear 
+linear
 Jormungandr<->Kraken:PtJourney
 Kraken<->Kraken:pt_planner
 linear off
@@ -59,7 +59,7 @@ deactivate Jormungandr
 
 note right of Jormungandr:Build final responses
 activate Jormungandr #gray
-linear 
+linear
 Jormungandr<-->Kraken:Walking Fallback Details
 Kraken<-->Kraken:direct_path_with_fp
 Jormungandr<-->Valhalla:Car Fallback Details
