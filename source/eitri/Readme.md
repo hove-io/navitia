@@ -9,7 +9,7 @@ Eitri consumes GTFS/NTFS, POI infos, Open Street Map data etc... to generate a `
 ## How to run Eitri
 
 ```sh
-PYTHONPATH=.:../navitiacommon eitri.py /my/data/
+PYTHONPATH=.:../navitiacommon python eitri.py /my/data/
 ```
 
 ## Options
