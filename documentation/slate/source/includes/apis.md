@@ -752,7 +752,7 @@ coordinates, returning a [places](#place) collection.
   nop      | disable_geojson | boolean     | Remove geojson from the response  | False
   nop      | count       | int             | Elements per page                 | 10
   nop      | start_page  | int             | The page number (cf the [paging section](#paging)) | 0
-  nop      | add_poi_infos[] | enum        | Activate the output of additional infomations about the poi. For example, parking availability (BSS, car parking etc.) in the pois of response. Pass `none` or `add_poi_infos[]=&` (empty string) to deactivate all.   | [`bss_stands`, `car_park`]
+  nop      | add_poi_infos[] | enum        | Activate the output of additional infomations about the poi. For example, parking availability (BSS, car parking etc.) in the pois of response. Pass `add_poi_infos[]=none&` or `add_poi_infos[]=&` (empty string) to deactivate all.   | [`bss_stands`, `car_park`]
 
 Filters can be added:
 
