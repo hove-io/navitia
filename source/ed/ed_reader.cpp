@@ -1341,7 +1341,7 @@ static ComponentGraph make_graph(pqxx::work& work) {
     request += " pedestrian_allowed as walk, cycles_allowed as bike, cars_allowed as car from georef.edge;";
     result = work.exec(request);
     for (auto const_it = result.begin(); const_it != result.end(); ++const_it) {
-        ComponentEdge e;
+        auto e = ComponentEdge();
         e.modes[nt::Mode_e::Walking] = const_it["walk"].as<bool>();
         e.modes[nt::Mode_e::Bike] = const_it["bike"].as<bool>();
         e.modes[nt::Mode_e::Car] = const_it["car"].as<bool>();

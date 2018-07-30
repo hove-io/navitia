@@ -95,6 +95,7 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
         case nd::StopTimeUpdate::Status::DELETED:
             return pbnavitia::DELETED;
         case nd::StopTimeUpdate::Status::UNCHANGED:
+        default:
             return pbnavitia::UNCHANGED;
         }
     }
@@ -1003,6 +1004,7 @@ static pbnavitia::Severity_Effect get_severity_effect(nd::Effect e) {
     case nd::Effect::STOP_MOVED:
         return pbnavitia::Severity_Effect::Severity_Effect_STOP_MOVED;
     case nd::Effect::UNKNOWN_EFFECT:
+    default:
         return pbnavitia::Severity_Effect::Severity_Effect_UNKNOWN_EFFECT;
     }
 }
