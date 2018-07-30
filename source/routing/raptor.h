@@ -155,8 +155,6 @@ struct RAPTOR
                          const DateTime& bound = DateTimeUtils::inf,
                          const uint32_t max_transfers = 10,
                          const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
-                         const std::vector<std::string>& forbidden = std::vector<std::string>(),
-                         const std::vector<std::string>& allowed = std::vector<std::string>(),
                          bool clockwise = true,
                          const boost::optional<navitia::time_duration>& direct_path_dur = boost::none,
                          const size_t max_extra_second_pass = 0);
