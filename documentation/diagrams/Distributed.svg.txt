@@ -10,7 +10,7 @@ actor Request
 
 Request->Jormungandr:/journey
 
-note right of Jormungandr:Resolve entry points
+note right of Jormungandr:Resolve entry points 
 activate Jormungandr #gray
 linear
 Jormungandr<->Kraken:PlaceByUri [origin, destination]
@@ -21,26 +21,25 @@ deactivate Jormungandr
 
 note right of Jormungandr:Direct path for every mode
 activate Jormungandr #gray
-Jormungandr<-->Kraken:Walking
+Jormungandr<-->Kraken:Walking  
 Jormungandr<-->Valhalla:Car
 Jormungandr<-->Geovelo:Bike
-space
+space 
 deactivate Jormungandr
 
-note right of Jormungandr:Accessible Stop points
+note right of Jormungandr:Accessible Stop points 
 activate Jormungandr #gray
-Jormungandr<->Kraken:places_nearby [origin, destination]
-linear
-Jormungandr<-->Kraken:PlacesFreeAccess
-Kraken<-->Kraken:odt_stop_points
+Jormungandr<->Kraken:Proximities by crow fly [origin, destination]
+linear 
+Jormungandr<->Kraken:Places Free Access [origin, destination]
 linear off
 deactivate Jormungandr
 
-space
+space 
 
 note right of Jormungandr:Compute fallback durations
 activate Jormungandr #gray
-linear
+linear 
 Jormungandr<-->Kraken:Walking Fallback Durations
 Kraken<-->Kraken:street_network_routing_matrix
 Jormungandr<-->Valhalla:Car Fallback Durations
@@ -52,7 +51,7 @@ deactivate Jormungandr
 
 note right of Jormungandr:Compute Public Transport journeys
 activate Jormungandr #gray
-linear
+linear 
 Jormungandr<->Kraken:PtJourney
 Kraken<->Kraken:pt_planner
 linear off
@@ -60,7 +59,7 @@ deactivate Jormungandr
 
 note right of Jormungandr:Build final responses
 activate Jormungandr #gray
-linear
+linear 
 Jormungandr<-->Kraken:Walking Fallback Details
 Kraken<-->Kraken:direct_path_with_fp
 Jormungandr<-->Valhalla:Car Fallback Details
