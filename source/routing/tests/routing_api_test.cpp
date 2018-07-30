@@ -135,7 +135,7 @@ std::vector<pbnavitia::Journey> sort_journeys_by(pbnavitia::Response resp,
         journeys.push_back(j);
 
     std::sort(journeys.begin(), journeys.end(), compare);
-    return std::move(journeys);
+    return journeys;
 }
 
 std::vector<pbnavitia::Journey> sort_journeys(pbnavitia::Response resp) {

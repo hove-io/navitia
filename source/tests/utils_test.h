@@ -23,7 +23,7 @@ inline void handle_realtime_test(const std::string& id,
                                  std::unique_ptr<navitia::routing::RAPTOR>& raptor) {
     navitia::handle_realtime(id, timestamp, trip_update, data);
     data.dataRaptor->load(*data.pt_data);
-    raptor = std::move(std::make_unique<navitia::routing::RAPTOR>(data));
+    raptor = std::make_unique<navitia::routing::RAPTOR>(data);
 }
 
 inline uint64_t to_posix_timestamp(const std::string& str) {

@@ -1328,7 +1328,7 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_line_section) {
 
     auto get_stops = [](const nt::VehicleJourney* vj) {
           std::vector<std::string> res;
-          for (const auto st: vj->stop_time_list) {
+          for (const auto& st: vj->stop_time_list) {
               res.push_back(st.stop_point->uri);
           }
           return res;

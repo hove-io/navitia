@@ -147,10 +147,10 @@ BOOST_AUTO_TEST_CASE(parse_deprecated_features) {
     BOOST_CHECK_THROW(parse("AFTER(stop_area.uri=stop2)"), parsing_error);
 }
 
-void assert_odt_level(const Type_e requested_type,
-                      const std::string& request,
-                      const OdtLevel_e odt_level,
-                      const std::string& expected) {
+static void assert_odt_level(const Type_e requested_type,
+                             const std::string& request,
+                             const OdtLevel_e odt_level,
+                             const std::string& expected) {
     const auto req = make_request(requested_type, request, {}, odt_level, {}, {}, {});
     assert_expr(req, expected);
 }
@@ -164,11 +164,11 @@ BOOST_AUTO_TEST_CASE(make_request_odt_level) {
                      "((all OR all) AND line.odt_level(\"zonal\"))");
 }
 
-void assert_since_until(const Type_e requested_type,
-                        const std::string& request,
-                        const std::string& since_str,
-                        const std::string& until_str,
-                        const std::string& expected) {
+static void assert_since_until(const Type_e requested_type,
+                               const std::string& request,
+                               const std::string& since_str,
+                               const std::string& until_str,
+                               const std::string& expected) {
     boost::optional<boost::posix_time::ptime> since, until;
     if (!since_str.empty()) { since = boost::posix_time::from_iso_string(since_str); }
     if (!until_str.empty()) { until = boost::posix_time::from_iso_string(until_str); }
@@ -209,10 +209,10 @@ BOOST_AUTO_TEST_CASE(make_request_since_until) {
     );
 }
 
-void assert_forbidden(const Type_e requested_type,
-                      const std::string& request,
-                      const std::vector<std::string>& forbidden,
-                      const std::string& expected) {
+static void assert_forbidden(const Type_e requested_type,
+                             const std::string& request,
+                             const std::vector<std::string>& forbidden,
+                             const std::string& expected) {
     ed::builder b("20180710");
     b.generate_dummy_basis();
     b.finish();

@@ -793,7 +793,7 @@ void PbCreator::Filler::fill_pb_object(const nt::MultiLineString* shape,
                                          pbnavitia::MultiLineString* geojson){
     for (const std::vector<nt::GeographicalCoord>& line: *shape) {
         auto l = geojson->add_lines();
-        for (const auto coord: line) {
+        for (const auto& coord: line) {
             auto c = l->add_coordinates();
             c->set_lon(coord.lon());
             c->set_lat(coord.lat());
@@ -875,7 +875,7 @@ void PbCreator::Filler::fill_pb_object(const nt::StopTime* st, pbnavitia::StopTi
     // we always dump the stop point (with the same depth)
     copy(depth, dump_message_options).fill_pb_object(st->stop_point, stop_time->mutable_stop_point());
 
-    if ( depth > 0) {
+    if (depth > 0) {
         fill(st->vehicle_journey, stop_time);
     }
 }
@@ -1722,7 +1722,7 @@ const ng::POI* PbCreator::get_nearest_bss_station(const nt::GeographicalCoord& c
 
 const ng::POI* PbCreator::get_nearest_poi(const nt::GeographicalCoord& coord, const ng::POIType& poi_type) {
     //we loop through all poi near the coord to find a poi of the required type
-    for (const auto pair: data->geo_ref->poi_proximity_list.find_within(coord, 500)) {
+    for (const auto& pair: data->geo_ref->poi_proximity_list.find_within(coord, 500)) {
         const auto poi_idx = pair.first;
         const auto poi = data->geo_ref->pois[poi_idx];
         if (poi->poitype_idx == poi_type.idx) {

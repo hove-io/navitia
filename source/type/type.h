@@ -840,7 +840,7 @@ struct MetaVehicleJourney: public Header, HasMessages {
 
     template<typename T>
     void for_all_vjs(T fun) const{
-        for (const auto& rt_vjs: rtlevel_to_vjs_map) {
+        for (const auto rt_vjs: rtlevel_to_vjs_map) {
             auto& vjs = rt_vjs.second;
             boost::for_each(vjs, [&](const std::unique_ptr<VehicleJourney>& vj){fun(*vj);});
         }
