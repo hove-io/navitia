@@ -173,8 +173,10 @@ struct PathFinder {
      * Warning, it modifies the distances and the predecessors
      **/
     template<class Visitor>
-    void dijkstra(vertex_t start, Visitor visitor) {
+    void dijkstra(vertex_t source, vertex_t target, Visitor visitor) {
         // Note: the predecessors have been updated in init
+
+        std::vector<georef::vertex_t> vertex {source, target};
 
         // Fill color map in white before dijkstra
         std::fill(color.data.get(),
@@ -185,7 +187,7 @@ struct PathFinder {
         using filtered_graph = boost::filtered_graph<georef::Graph, boost::keep_all, TransportationModeFilter>;
         boost::dijkstra_shortest_paths_no_init_with_heap(
                 filtered_graph(geo_ref.graph, {}, TransportationModeFilter(mode, geo_ref)),
-                &start, &start + 1, &predecessors[0], &distances[0],
+                vertex.begin(), vertex.end(), &predecessors[0], &distances[0],
                 boost::get(&Edge::duration, geo_ref.graph), // weigth map
                 std::less<navitia::time_duration>(),
                 SpeedDistanceCombiner(speed_factor), //we multiply the edge duration by a speed factor
