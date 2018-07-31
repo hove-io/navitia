@@ -703,7 +703,9 @@ std::pair<navitia::time_duration, ProjectionData::Direction> PathFinder::update_
     if (distances[target[source_e]] == max || distances[target[target_e]] == max) {
         bool found = false;
         try {
-            dijkstra(starting_edge[source_e], starting_edge[target_e], target_all_visitor({target[source_e], target[target_e]}));
+            dijkstra(starting_edge[source_e],
+                     starting_edge[target_e],
+                     target_all_visitor({target[source_e], target[target_e]}));
         } catch(DestinationFound) { found = true; }
 
         //if no way has been found, we can stop the search
