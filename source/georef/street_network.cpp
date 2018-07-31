@@ -266,20 +266,15 @@ void PathFinder::start_distance_dijkstra(const navitia::time_duration& radius) {
     // We start dijkstra from source and target nodes
     try {
 #ifndef _DEBUG_DIJKSTRA_QUANTUM_
-        dijkstra(starting_edge[source_e], distance_visitor(radius, distances));
+        dijkstra(starting_edge[source_e],
+                 starting_edge[target_e],
+                 distance_visitor(radius, distances));
 #else
-        dijkstra(starting_edge[source_e], printer_distance_visitor(radius, distances, "source"));
+        dijkstra(starting_edge[source_e],
+                 starting_edge[target_e],
+                 printer_distance_visitor(radius, distances, "source"));
 #endif
     } catch(DestinationFound){}
-
-    try {
-#ifndef _DEBUG_DIJKSTRA_QUANTUM_
-        dijkstra(starting_edge[target_e], distance_visitor(radius, distances));
-#else
-        dijkstra(starting_edge[target_e], printer_distance_visitor(radius, distances, "target"));
-#endif
-    } catch(DestinationFound){}
-
 }
 
 void PathFinder::start_distance_or_target_dijkstra(const navitia::time_duration& radius, const std::vector<vertex_t>& destinations){
@@ -289,22 +284,15 @@ void PathFinder::start_distance_or_target_dijkstra(const navitia::time_duration&
     // We start dijkstra from source and target nodes
     try {
 #ifndef _DEBUG_DIJKSTRA_QUANTUM_
-        dijkstra(starting_edge[source_e], distance_or_target_visitor(radius, distances, destinations));
+        dijkstra(starting_edge[source_e],
+                 starting_edge[target_e],
+                 distance_or_target_visitor(radius, distances, destinations));
 #else
         dijkstra(starting_edge[source_e],
+                 starting_edge[target_e],
                  printer_distance_or_target_visitor(radius, distances, destinations, "direct_path_source"));
 #endif
     } catch(DestinationFound&){}
-
-    try {
-#ifndef _DEBUG_DIJKSTRA_QUANTUM_
-        dijkstra(starting_edge[target_e], distance_or_target_visitor(radius, distances, destinations));
-#else
-        dijkstra(starting_edge[target_e],
-                 printer_distance_or_target_visitor(radius, distances, destinations, "direct_path_target"));
-#endif
-    } catch(DestinationFound&){}
-
 }
 
 std::vector<std::pair<type::idx_t, type::GeographicalCoord>>
@@ -715,7 +703,9 @@ std::pair<navitia::time_duration, ProjectionData::Direction> PathFinder::update_
     if (distances[target[source_e]] == max || distances[target[target_e]] == max) {
         bool found = false;
         try {
-            dijkstra(starting_edge[source_e], target_all_visitor({target[source_e], target[target_e]}));
+            dijkstra(starting_edge[source_e],
+                     starting_edge[target_e],
+                     target_all_visitor({target[source_e], target[target_e]}));
         } catch(DestinationFound) { found = true; }
 
         //if no way has been found, we can stop the search
@@ -730,10 +720,6 @@ std::pair<navitia::time_duration, ProjectionData::Direction> PathFinder::update_
 
             return {max, source_e};
         }
-        try {
-            dijkstra(starting_edge[target_e], target_all_visitor({target[source_e], target[target_e]}));
-        } catch(DestinationFound) { found = true; }
-
     }
     //if we succeded in the first search, we must have found one of the other distances
     assert(distances[target[source_e]] != max && distances[target[target_e]] != max);
