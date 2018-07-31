@@ -1128,7 +1128,7 @@ BOOST_FIXTURE_TEST_CASE(biking_walking, streetnetworkmode_fixture<test_speed_pro
     BOOST_CHECK_EQUAL(journey.durations().car(), 0);
     BOOST_CHECK_EQUAL(journey.durations().total(), 130);
     BOOST_CHECK_EQUAL(journey.distances().walking(), 0);
-    BOOST_CHECK_EQUAL(journey.distances().bike(), 532);
+    BOOST_CHECK_EQUAL(journey.distances().bike(), 533);
     BOOST_CHECK_EQUAL(journey.distances().car(), 0);
 
     auto pathitem = section.street_network().path_items(0);
@@ -1527,7 +1527,7 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
     BOOST_CHECK_EQUAL(journey->durations().car(), 0);
     BOOST_CHECK_EQUAL(journey->durations().total(), 309);
     BOOST_CHECK_EQUAL(journey->distances().walking(), 144);
-    BOOST_CHECK_EQUAL(journey->distances().bike(), 450);
+    BOOST_CHECK_EQUAL(journey->distances().bike(), 451);
     BOOST_CHECK_EQUAL(journey->distances().car(), 0);
 
     //bike
