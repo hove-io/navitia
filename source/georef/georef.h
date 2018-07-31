@@ -61,7 +61,7 @@ const flat_enum_map<nt::Mode_e, float> default_speed {
                                                     }}
                                                     };
 
-/** Propriétés Nœud (intersection entre deux routes) */
+/** Node properties (road intersection) */
 struct Vertex {
     nt::GeographicalCoord coord;
 
@@ -79,10 +79,10 @@ struct Vertex {
     }
 };
 
-/** Propriétés des arcs : (anciennement "segment")*/
+/** Edge properties (used to be "segment")*/
 
 struct Edge {
-    nt::idx_t way_idx = nt::invalid_idx; //< indexe vers le nom de rue
+    nt::idx_t way_idx = nt::invalid_idx; //< indexing street name
     nt::idx_t geom_idx = nt::invalid_idx; // geometry index
     navitia::time_duration duration = {}; // duration of the edge
 
@@ -199,10 +199,10 @@ struct PathItem {
     float get_length(float speed_factor) const;
 };
 
-/** Itinéraire complet */
+/** Complete path */
 struct Path {
-    navitia::time_duration duration = {}; //< Longueur totale du parcours
-    std::deque<PathItem> path_items = {}; //< Liste des voies parcourues
+    navitia::time_duration duration = {}; //< Total length of the path
+    std::deque<PathItem> path_items = {}; //< List of street used
 };
 
 struct ProjectionData;
