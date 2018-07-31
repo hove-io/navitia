@@ -148,7 +148,7 @@ private:
     void fill_vertex(navitia::type::Data& data, pqxx::work& work);
     void fill_graph(navitia::type::Data& data, pqxx::work& work, bool export_georef_edges_geometries);
     boost::optional<navitia::time_res_traits::sec_type>
-    get_duration (nt::Mode_e mode, float len, uint64_t source, uint64_t target);
+    get_duration (nt::Mode_e mode, double len, uint64_t source, uint64_t target);
     void fill_vector_to_ignore(pqxx::work& work, const double percent_delete);
     void fill_graph_bss(navitia::type::Data& data, pqxx::work& work);
     void fill_graph_parking(navitia::type::Data& data, pqxx::work& work);

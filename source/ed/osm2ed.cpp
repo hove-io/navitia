@@ -669,7 +669,7 @@ void OSMRelation::build_geometry(OSMCache& cache) const {
                 continue;
             }
             if (ref.role == "admin_centre") {
-                set_centre(float(node_it->lon()), float(node_it->lat()));
+                set_centre(node_it->lon(), node_it->lat());
                 break;
             }
         }

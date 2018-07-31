@@ -262,7 +262,7 @@ void OSMRelation::build_polygon(OSMCache& cache, OSMId osm_id) {
             if (!node->second.is_defined()) {
                 continue;
             }
-            const auto p = point(float(node->second.lon()), float(node->second.lat()));
+            const auto p = point(node->second.lon(), node->second.lat());
             tmp_polygon.outer().push_back(p);
         }
 
@@ -292,7 +292,7 @@ void OSMRelation::build_polygon(OSMCache& cache, OSMId osm_id) {
                 if (!node->second.is_defined()) {
                     continue;
                 }
-                const auto p = point(float(node->second.lon()), float(node->second.lat()));
+                const auto p = point(node->second.lon(), node->second.lat());
                 tmp_polygon.outer().push_back(p);
             }
             next_node = next_way.nodes.back();
@@ -348,7 +348,7 @@ void OSMRelation::build_geometry(OSMCache& cache, OSMId osm_id) {
                 continue;
             }
             if (in(ref.role, {"admin_centre", "admin_center"})) {
-                set_centre(float(node_it->second.lon()), float(node_it->second.lat()));
+                set_centre(node_it->second.lon(), node_it->second.lat());
                 this->add_postal_code(node_it->second.postal_code);
                 break;
             }

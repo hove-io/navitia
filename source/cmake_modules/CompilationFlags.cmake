@@ -24,7 +24,7 @@ endif(CMAKE_COMPILER_IS_GNUCXX)
 if("${CMAKE_CXX_COMPILER_ID}" MATCHES "Clang")
     # it could be great to remove these warnings, but there is so much :
     # -Wno-shorten-64-to-32 -Wno-sign-conversion -Wno-conversion
-    set(CMAKE_CLANG_WARN_FLAGS "-Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-documentation -Wno-shadow -Wno-covered-switch-default -Wno-switch-enum -Wno-missing-noreturn -Wno-disabled-macro-expansion -Wno-shorten-64-to-32 -Wno-sign-conversion -Wno-conversion -Wno-double-promotion")
+    set(CMAKE_CLANG_WARN_FLAGS "-Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-global-constructors -Wno-exit-time-destructors -Wno-documentation -Wno-shadow -Wno-covered-switch-default -Wno-switch-enum -Wno-missing-noreturn -Wno-disabled-macro-expansion -Wno-shorten-64-to-32 -Wno-sign-conversion -Wno-conversion")
     set(CMAKE_CLANG_COMMON_FLAGS "-std=c++11 -stdlib=libstdc++  -ferror-limit=10 -pthread -ftemplate-depth=1024")
     set(CMAKE_CXX_FLAGS "${CMAKE_CLANG_COMMON_FLAGS} ${CMAKE_CLANG_WARN_FLAGS}")
     set(CMAKE_C_FLAGS "-ferror-limit=10 -I/usr/local/include/c++/v1 -pthread")

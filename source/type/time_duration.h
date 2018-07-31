@@ -237,7 +237,7 @@ public:
 
     //float division (rounding is done on the ticks)
     time_duration operator/(float divisor) const {
-        if (divisor == 0.0) {
+        if (divisor == 0.0f) {
             throw navitia::exception("cannot divide duration by 0");
         }
         return time_duration(ticks_.as_number() / divisor);
@@ -247,8 +247,8 @@ public:
        return time_duration(ticks_.as_number() * multiplicator);
     }
 
-    double total_fractional_seconds() const {
-        return double(ticks()) / ticks_per_second();
+    float total_fractional_seconds() const {
+        return float(ticks()) / ticks_per_second();
     }
 
   private:

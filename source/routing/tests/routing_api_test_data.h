@@ -75,7 +75,7 @@ struct normal_speed_provider {
 template <typename speed_provider_trait>
 struct routing_api_data {
 
-    routing_api_data(float distance_a_b = 200, bool activate_pt = true) : distance_ab(distance_a_b) {
+    routing_api_data(double distance_a_b = 200, bool activate_pt = true) : distance_ab(distance_a_b) {
         /*
 
            K  ------------------------------ J

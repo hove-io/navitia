@@ -273,8 +273,8 @@ PathItem::TransportCaracteristic GeoRef::get_caracteristic(edge_t edge) const {
     throw navitia::exception("unhandled path item caracteristic");
 }
 
-double PathItem::get_length(double speed_factor) const {
-    double def_speed = default_speed[type::Mode_e::Walking];
+float PathItem::get_length(float speed_factor) const {
+    float def_speed = default_speed[type::Mode_e::Walking];
     switch (transportation) {
     case TransportCaracteristic::BssPutBack:
     case TransportCaracteristic::BssTake:

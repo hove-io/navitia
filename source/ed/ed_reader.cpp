@@ -1464,11 +1464,11 @@ void EdReader::fill_vertex(navitia::type::Data& data, pqxx::work& work) {
 }
 
 boost::optional<navitia::time_res_traits::sec_type>
-EdReader::get_duration (nt::Mode_e mode, float len, uint64_t source, uint64_t target) {
+EdReader::get_duration (nt::Mode_e mode, double len, uint64_t source, uint64_t target) {
     try {
         // overflow check since we want to store that on a int32
         return  boost::lexical_cast<navitia::time_res_traits::sec_type>(
-                                    std::floor(len / ng::default_speed[mode]));
+                                    std::floor(len / double(ng::default_speed[mode])));
     } catch (const boost::bad_lexical_cast&) {
         LOG4CPLUS_WARN(log, "edge length overflow for " << mode << " for source " << source
                             << " target " << target << " length: " << len << ", we ignore this edge");
@@ -1513,7 +1513,7 @@ void EdReader::fill_graph(navitia::type::Data& data, pqxx::work& work, bool expo
         }
 
         navitia::georef::Edge e;
-        float len = const_it["leng"].as<float>();
+        double len = const_it["leng"].as<double>();
         e.way_idx = way->idx;
         if(export_georef_edges_geometries) {
             nt::LineString geometry;

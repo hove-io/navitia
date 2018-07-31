@@ -1183,7 +1183,7 @@ BOOST_FIXTURE_TEST_CASE(biking_with_different_speed, streetnetworkmode_fixture<t
     auto pathitem = section.street_network().path_items(0);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue bs");
     //NOTE: we cannot check length here, it has to be checked in a separate test (below), since the used faked speed in the test
-    BOOST_CHECK_CLOSE(pathitem.duration(), S.distance_to(B) / (get_default_speed()[nt::Mode_e::Bike] * .5), 1);
+    BOOST_CHECK_CLOSE(pathitem.duration(), S.distance_to(B) / double(get_default_speed()[nt::Mode_e::Bike] * .5f), 1);
     pathitem = section.street_network().path_items(1);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue kb");
     pathitem = section.street_network().path_items(2);
@@ -1196,7 +1196,7 @@ BOOST_FIXTURE_TEST_CASE(biking_with_different_speed, streetnetworkmode_fixture<t
     BOOST_CHECK_EQUAL(pathitem.name(), "rue gh");
     pathitem = section.street_network().path_items(6);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ag");
-    BOOST_CHECK_CLOSE(pathitem.duration(), A.distance_to(G) / (get_default_speed()[nt::Mode_e::Bike] * .5), 1);
+    BOOST_CHECK_CLOSE(pathitem.duration(), A.distance_to(G) / double(get_default_speed()[nt::Mode_e::Bike] * .5f), 1);
 }
 
 // for an admin, when no main stop area is set
@@ -1233,12 +1233,12 @@ BOOST_FIXTURE_TEST_CASE(car_direct, streetnetworkmode_fixture<test_speed_provide
 
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Car;
     origin.streetnetwork_params.offset = b.data->geo_ref->offsets[navitia::type::Mode_e::Car];
-    origin.streetnetwork_params.max_duration = navitia::seconds(total_distance / get_default_speed()[navitia::type::Mode_e::Car]);
+    origin.streetnetwork_params.max_duration = navitia::seconds(total_distance / double(get_default_speed()[navitia::type::Mode_e::Car]));
     origin.streetnetwork_params.speed_factor = 1;
 
     destination.streetnetwork_params.mode = navitia::type::Mode_e::Car;
     destination.streetnetwork_params.offset = b.data->geo_ref->offsets[navitia::type::Mode_e::Car];
-    destination.streetnetwork_params.max_duration = navitia::seconds(total_distance / get_default_speed()[navitia::type::Mode_e::Car]);
+    destination.streetnetwork_params.max_duration = navitia::seconds(total_distance / double(get_default_speed()[navitia::type::Mode_e::Car]));
     destination.streetnetwork_params.speed_factor = 1;
 
     auto resp = make_response();
@@ -1301,16 +1301,16 @@ BOOST_FIXTURE_TEST_CASE(car_parking_bus, streetnetworkmode_fixture<test_speed_pr
     origin.streetnetwork_params.mode = Mode_e::Car;
     origin.streetnetwork_params.offset = b.data->geo_ref->offsets[Mode_e::Car];
     origin.streetnetwork_params.max_duration =
-        seconds(distance_sd / get_default_speed()[Mode_e::Car] / speed_factor)
+        seconds(distance_sd / double(get_default_speed()[Mode_e::Car]) / speed_factor)
         + b.data->geo_ref->default_time_parking_park
-        + seconds(B.distance_to(D) / get_default_speed()[Mode_e::Walking] / speed_factor)
+        + seconds(B.distance_to(D) / double(get_default_speed()[Mode_e::Walking]) / speed_factor)
         + seconds(2);
     origin.streetnetwork_params.speed_factor = speed_factor;
 
     destination.streetnetwork_params.mode = Mode_e::Walking;
     destination.streetnetwork_params.offset = b.data->geo_ref->offsets[Mode_e::Walking];
     destination.streetnetwork_params.max_duration =
-        seconds(distance_ar / get_default_speed()[Mode_e::Walking] / speed_factor)
+        seconds(distance_ar / double(get_default_speed()[Mode_e::Walking]) / speed_factor)
         + seconds(1);
     destination.streetnetwork_params.speed_factor = speed_factor;
 
@@ -1389,16 +1389,16 @@ BOOST_FIXTURE_TEST_CASE(bus_car_parking, streetnetworkmode_fixture<test_speed_pr
     origin.streetnetwork_params.mode = Mode_e::Car;
     origin.streetnetwork_params.offset = b.data->geo_ref->offsets[Mode_e::Car];
     origin.streetnetwork_params.max_duration =
-        seconds(distance_sd / get_default_speed()[Mode_e::Car] / speed_factor)
+        seconds(distance_sd / double(get_default_speed()[Mode_e::Car]) / speed_factor)
         + b.data->geo_ref->default_time_parking_park
-        + seconds(B.distance_to(D) / get_default_speed()[Mode_e::Walking] / speed_factor)
+        + seconds(B.distance_to(D) / double(get_default_speed()[Mode_e::Walking]) / speed_factor)
         + seconds(2);
     origin.streetnetwork_params.speed_factor = speed_factor;
 
     destination.streetnetwork_params.mode = Mode_e::Walking;
     destination.streetnetwork_params.offset = b.data->geo_ref->offsets[Mode_e::Walking];
     destination.streetnetwork_params.max_duration =
-        seconds(distance_ar / get_default_speed()[Mode_e::Walking] / speed_factor)
+        seconds(distance_ar / double(get_default_speed()[Mode_e::Walking]) / speed_factor)
         + seconds(1);
     destination.streetnetwork_params.speed_factor = speed_factor;
     datetimes = {navitia::test::to_posix_timestamp("20120614T070000")};
@@ -1593,7 +1593,7 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
     pathitem = section.street_network().path_items(1);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ar");
 //    BOOST_CHECK_EQUAL(pathitem.duration(), 0); //projection
-    BOOST_CHECK_CLOSE(pathitem.duration(), A.distance_to(R) / (get_default_speed()[nt::Mode_e::Walking]), 1);
+    BOOST_CHECK_CLOSE(pathitem.duration(), A.distance_to(R) / double(get_default_speed()[nt::Mode_e::Walking]), 1);
     BOOST_CHECK_EQUAL(section.origin().address().coord().lon(), section.street_network().coordinates(0).lon());
     BOOST_CHECK_EQUAL(section.origin().address().coord().lat(), section.street_network().coordinates(0).lat());
 }
@@ -1737,7 +1737,7 @@ BOOST_FIXTURE_TEST_CASE(speed_factor_length_test, streetnetworkmode_fixture<norm
     pathitem = path_items[cpt++];
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ab");
     BOOST_CHECK_CLOSE(pathitem.duration(),
-                      200 / (speed_factor * get_default_speed()[nt::Mode_e::Walking]),
+                      200 / (speed_factor * double(get_default_speed()[nt::Mode_e::Walking])),
                       2);
     BOOST_CHECK_CLOSE(pathitem.length(), 200, 2);
     // check again on crowfly
