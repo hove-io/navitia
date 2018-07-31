@@ -173,7 +173,7 @@ struct PathFinder {
      * Warning, it modifies the distances and the predecessors
      **/
     template<class Visitor>
-    void dijkstra(const vertex_t& source, const vertex_t& target, const Visitor& visitor) {
+    void dijkstra(const vertex_t source, const vertex_t target, const Visitor& visitor) {
         // Note: the predecessors have been updated in init
 
         std::array<georef::vertex_t, 2> vertex {source, target};
