@@ -43,10 +43,10 @@ namespace navitia { namespace georef {
 const auto source_e = ProjectionData::Direction::Source;
 const auto target_e = ProjectionData::Direction::Target;
 
-navitia::time_duration PathFinder::crow_fly_duration(const float distance) const {
+navitia::time_duration PathFinder::crow_fly_duration(const double distance) const {
     // For BSS we want the default speed of walking, because on extremities we walk !
     const auto mode_ = mode == nt::Mode_e::Bss ? nt::Mode_e::Walking : mode;
-    return navitia::seconds(distance / (default_speed[mode_] * speed_factor));
+    return navitia::seconds(distance / double(default_speed[mode_] * speed_factor));
 }
 
 static bool is_projected_on_same_edge(const ProjectionData& p1, const ProjectionData& p2){
