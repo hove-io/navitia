@@ -747,7 +747,7 @@ BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
 BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
     ed::builder b("20120614");
     auto* vj1 = b.vj("A").uri("vj:1")("stop1", "23:00"_t)("stop2", "24:15"_t)("stop3", "24:45"_t).make();
-    
+
     b.generate_dummy_basis();
     b.finish();
     b.data->pt_data->sort_and_index();
@@ -805,7 +805,7 @@ BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
             vj->rt_validity_pattern()->days);
 
     navitia::delete_disruption("bob", *b.data->pt_data, *b.data->meta);
-    
+
     check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys, "1111111");
 }
 
@@ -2283,7 +2283,8 @@ BOOST_AUTO_TEST_CASE(significant_delay_on_stop_point_dont_remove_it) {
 
 BOOST_AUTO_TEST_CASE(test_disruption_on_line_then_stop_point) {
     ed::builder b("20120614");
-    auto* vj1 = b.vj("A").uri("vj:1")("stop1", "10:00"_t)("stop2", "11:00"_t)("stop3", "12:00"_t).make();
+    auto* vj1 = b.vj("A").uri("vj:1")("stopA1", "10:00"_t)("stopA2", "11:00"_t)("stopA3", "12:00"_t).make();
+    auto* vj2 = b.vj("B").uri("vj:2")("stop1B", "10:00"_t)("stopB2", "11:00"_t)("stopB3", "12:00"_t).make();
 
     b.generate_dummy_basis();
     b.finish();
@@ -2292,6 +2293,13 @@ BOOST_AUTO_TEST_CASE(test_disruption_on_line_then_stop_point) {
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period("20120614"_d, 7_days);
 
+    /*
+    * For VJ1
+    *
+    * Let's apply 2 disruption on 2 objects types (line then stop point)
+    * Then, we make sure that the real time validity pattern has been disabled
+    *
+    */
     navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Line A : penguins on the line")
                               .severity(nt::disruption::Effect::NO_SERVICE)
                               .on(nt::Type_e::Line, "A")
@@ -2301,29 +2309,40 @@ BOOST_AUTO_TEST_CASE(test_disruption_on_line_then_stop_point) {
 
     navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Fire at Montparnasse")
                               .severity(nt::disruption::Effect::NO_SERVICE)
-                              .on(nt::Type_e::StopPoint, "stop2")
+                              .on(nt::Type_e::StopPoint, "stopA2")
                               .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
                               .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
-    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 2);
-    BOOST_CHECK_EQUAL(b.data->pt_data->lines.size(), 1);
-    BOOST_CHECK_EQUAL(b.get<nt::Line>("A")->get_impacts().size(), 1); // the impact is linked to the line
-    BOOST_CHECK_EQUAL(b.data->pt_data->routes.size(), 1);
-    BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 1); // we should not have created a VJ
-
     BOOST_CHECK_MESSAGE(
             ba::ends_with(vj1->rt_validity_pattern()->days.to_string(), "11110111"),
             vj1->rt_validity_pattern()->days);
-    BOOST_CHECK_MESSAGE(
-            ba::ends_with(vj1->base_validity_pattern()->days.to_string(), "11111111"),
-            vj1->base_validity_pattern()->days);
-}
 
+    /*
+    * For VJ2
+    *
+    * Let's apply only 1 disruption on the same objects types (line then stop point)
+    * Then, we make sure that the real time validity pattern has been disabled
+    *
+    */
+    navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Penguins on fire at Montparnasse")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::Line, "B")
+                              .on(nt::Type_e::StopPoint, "stopB2")
+                              .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_MESSAGE(
+            ba::ends_with(vj2->rt_validity_pattern()->days.to_string(), "11110111"),
+            vj1->rt_validity_pattern()->days);
+
+}
 
 BOOST_AUTO_TEST_CASE(test_disruption_on_stop_point_then_line) {
     ed::builder b("20120614");
-    auto* vj1 = b.vj("A").uri("vj:1")("stop1", "10:00"_t)("stop2", "11:00"_t)("stop3", "12:00"_t).make();
+    auto* vj1 = b.vj("A").uri("vj:1")("stopA1", "10:00"_t)("stopA2", "11:00"_t)("stopA3", "12:00"_t).make();
+    auto* vj2 = b.vj("B").uri("vj:2")("stopB1", "10:00"_t)("stopB2", "11:00"_t)("stopB3", "12:00"_t).make();
 
     b.generate_dummy_basis();
     b.finish();
@@ -2332,9 +2351,16 @@ BOOST_AUTO_TEST_CASE(test_disruption_on_stop_point_then_line) {
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period("20120614"_d, 7_days);
 
+    /*
+    * For VJ1
+    *
+    * Let's apply 2 disruption on 2 objects types (stop point then line)
+    * Then, we make sure that the real time validity pattern has been disabled
+    *
+    */
     navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Fire at Montparnasse")
                               .severity(nt::disruption::Effect::NO_SERVICE)
-                              .on(nt::Type_e::StopPoint, "stop2")
+                              .on(nt::Type_e::StopPoint, "stopA2")
                               .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
                               .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
@@ -2346,26 +2372,35 @@ BOOST_AUTO_TEST_CASE(test_disruption_on_stop_point_then_line) {
                               .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
-    BOOST_CHECK_EQUAL(b.data->pt_data->disruption_holder.nb_disruptions(), 2);
-    BOOST_CHECK_EQUAL(b.data->pt_data->lines.size(), 1);
-    BOOST_CHECK_EQUAL(b.get<nt::Line>("A")->get_impacts().size(), 1); // the impact is linked to the line
-    BOOST_CHECK_EQUAL(b.data->pt_data->routes.size(), 1);
-    BOOST_CHECK_EQUAL(b.data->pt_data->vehicle_journeys.size(), 2); // we should not have created a VJ
-
-
     BOOST_CHECK_MESSAGE(
             ba::ends_with(vj1->rt_validity_pattern()->days.to_string(), "11110111"),
             vj1->rt_validity_pattern()->days);
-    BOOST_CHECK_MESSAGE(
-            ba::ends_with(vj1->base_validity_pattern()->days.to_string(), "11111111"),
-            vj1->base_validity_pattern()->days);
 
-    auto rt_vj = b.data->pt_data->vehicle_journeys_map["vj:1:RealTime:0:Fire at Montparnasse"];
+    auto rt_vj1 = b.data->pt_data->vehicle_journeys_map["vj:1:RealTime:0:Fire at Montparnasse"];
+    BOOST_CHECK_MESSAGE(
+            ba::ends_with(rt_vj1->rt_validity_pattern()->days.to_string(), "00000000"),
+            rt_vj1->rt_validity_pattern()->days);
 
+   /*
+    * For VJ2
+    *
+    * Let's apply only 1 disruption on the same objects types (stop point then line)
+    * Then, we make sure that the real time validity pattern has been disabled
+    *
+    */
+    navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Penguins on fire at Montparnasse")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::StopPoint, "stopB2")
+                              .on(nt::Type_e::Line, "B")
+                              .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
     BOOST_CHECK_MESSAGE(
-            ba::ends_with(rt_vj->rt_validity_pattern()->days.to_string(), "00000000"),
-            rt_vj->rt_validity_pattern()->days);
+            ba::ends_with(vj2->rt_validity_pattern()->days.to_string(), "11110111"),
+            vj2->rt_validity_pattern()->days);
+
+    auto rt_vj2 = b.data->pt_data->vehicle_journeys_map["vj:2:RealTime:0:Penguins on fire at Montparnasse"];
     BOOST_CHECK_MESSAGE(
-            ba::ends_with(rt_vj->base_validity_pattern()->days.to_string(), "00000000"),
-            rt_vj->base_validity_pattern()->days);
+            ba::ends_with(rt_vj2->rt_validity_pattern()->days.to_string(), "00000000"),
+            rt_vj2->rt_validity_pattern()->days);
 }
