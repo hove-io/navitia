@@ -65,15 +65,25 @@ class DbParams(object):
 
 class PostgresDocker(object):
     """
-    launch a temporary docker with a postgresql db
+    launch a temporary docker with a postgresql-postgis db
     """
     def __init__(self):
         log = logging.getLogger(__name__)
         self.docker = docker.Client(base_url='unix://var/run/docker.sock')
 
-        log.info("building the temporary docker image")
-        for build_output in self.docker.build(POSTGIS_IMAGE, tag=POSTGIS_CONTAINER_NAME, rm=True):
-            log.debug(build_output)
+        log.info("Trying to build/update the docker image")
+        try:
+            for build_output in self.docker.build(POSTGIS_IMAGE, tag=POSTGIS_CONTAINER_NAME, rm=True):
+                log.debug(build_output)
+        except docker.errors.APIError as e:
+            if e.is_server_error():
+                log.error("[docker server error] A server error occcured, maybe "
+                                                "missing internet connection?")
+                log.error("[docker server error] Details: {}".format(e))
+                log.error("[docker server error] Trying to go on anyway, assuming '{}' docker image "
+                                                "is already built...".format(POSTGIS_IMAGE))
+            else:
+                raise
 
         self.container_id = self.docker.create_container(POSTGIS_CONTAINER_NAME).get('Id')
 

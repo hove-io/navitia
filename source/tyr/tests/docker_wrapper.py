@@ -58,10 +58,19 @@ class PostgresDocker(object):
         log = logging.getLogger(__name__)
         self.docker = docker.Client(base_url='unix://var/run/docker.sock')
 
-        log.info('building docker image')
-        for build_output in self.docker.build(fileobj=_get_docker_file(),
-                                              tag=POSTGRES_IMAGE, rm=True):
-            log.debug(build_output)
+        log.info('Trying to build/update the docker image')
+        try:
+            for build_output in self.docker.build(fileobj=_get_docker_file(), tag=POSTGRES_IMAGE, rm=True):
+                log.debug(build_output)
+        except docker.errors.APIError as e:
+            if e.is_server_error():
+                log.error("[docker server error] A server error occcured, maybe "
+                                                "missing internet connection?")
+                log.error("[docker server error] Details: {}".format(e))
+                log.error("[docker server error] Trying to go on anyway, assuming '{}' docker image "
+                                                "is already built...".format(POSTGRES_IMAGE))
+            else:
+                raise
 
         self.container_id = self.docker.create_container(POSTGRES_IMAGE, name=POSTGRES_CONTAINER_NAME).get('Id')
 
