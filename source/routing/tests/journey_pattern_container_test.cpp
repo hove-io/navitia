@@ -73,7 +73,7 @@ static size_t check_jp_container(const nr::JourneyPatternContainer& jp_container
     std::set<const nt::VehicleJourney*> vjs;
 
     // check jp coherence
-    for (const auto& jp: jp_container.get_jps()) {
+    for (const auto jp: jp_container.get_jps()) {
         // check that the jp getter is coherent
         BOOST_CHECK_EQUAL(jp.second, jp_container.get(jp.first));
 
@@ -84,7 +84,7 @@ static size_t check_jp_container(const nr::JourneyPatternContainer& jp_container
             });
     }
     // check route coherence
-    for (const auto& jps_from_route: jp_container.get_jps_from_route()) {
+    for (const auto jps_from_route: jp_container.get_jps_from_route()) {
         for (const auto& jp_idx: jps_from_route.second) {
             const auto& jp = jp_container.get(jp_idx);
             BOOST_CHECK_EQUAL(jps_from_route.first, jp.route_idx);// jp.route_idx coherence
@@ -97,7 +97,7 @@ static size_t check_jp_container(const nr::JourneyPatternContainer& jp_container
         }
     }
     // check phy_mode coherence
-    for (const auto& jps_from_phy_mode: jp_container.get_jps_from_phy_mode()) {
+    for (const auto jps_from_phy_mode: jp_container.get_jps_from_phy_mode()) {
         for (const auto& jp_idx: jps_from_phy_mode.second) {
             const auto& jp = jp_container.get(jp_idx);
             BOOST_CHECK_EQUAL(jps_from_phy_mode.first, jp.phy_mode_idx);// jp.phy_mode_idx coherence

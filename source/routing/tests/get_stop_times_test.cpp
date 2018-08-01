@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(test1){
     b.data->build_raptor();
 
     std::vector<JppIdx> jpps;
-    for (const auto& jpp: b.data->dataRaptor->jp_container.get_jpps())
+    for (const auto jpp: b.data->dataRaptor->jp_container.get_jpps())
         jpps.push_back(jpp.first);
 
     auto result = get_stop_times(StopEvent::pick_up, jpps, navitia::DateTimeUtils::min,

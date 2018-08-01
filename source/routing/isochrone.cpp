@@ -73,7 +73,7 @@ type::GeographicalCoord project_in_direction(const type::GeographicalCoord& cent
     } else {
         double delta_lat;
         double delta_lon;
-        if (fmod(direction, 180) == 0) {
+        if (fabs(fmod(direction, 180)) < GeographicalCoord::coord_epsilon) {
             delta_lat = pow(-1, fmod(direction / 180, 2)) * alpha;
             lat = center_lat_rad + delta_lat;
             lon = center_lon_rad;

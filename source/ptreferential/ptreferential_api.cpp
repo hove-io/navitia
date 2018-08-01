@@ -198,13 +198,13 @@ get_matching_routes(const type::Data* data,
     }
     std::set<const nt::Route*> routes;
     const auto& data_raptor = data->dataRaptor;
-    for (const auto jpp: data_raptor->jpps_from_sp[routing::SpIdx(start->idx)]) {
+    for (const auto& jpp: data_raptor->jpps_from_sp[routing::SpIdx(start->idx)]) {
         const auto& jp = data_raptor->jp_container.get(jpp.jp_idx);
         const auto* r = data->get_data<nt::Route>()[jp.route_idx.val];
         if (r->line != line) {
             continue;
         }
-        for (const auto next_jpp_idx: boost::make_iterator_range(jp.jpps.begin() + jpp.order,
+        for (const auto& next_jpp_idx: boost::make_iterator_range(jp.jpps.begin() + jpp.order,
                                                              jp.jpps.end())) {
             const auto next_jpp = data_raptor->jp_container.get(next_jpp_idx);
             const auto sp = data->get_data<nt::StopPoint>()[next_jpp.sp_idx.val];

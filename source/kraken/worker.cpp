@@ -509,27 +509,27 @@ streetnetwork_params_of_entry_point(const pbnavitia::StreetNetworkParams& reques
     switch(result.mode){
         case type::Mode_e::Bike:
             result.offset = data->geo_ref->offsets[type::Mode_e::Bike];
-            result.speed_factor = request.bike_speed() / georef::default_speed[type::Mode_e::Bike];
+            result.speed_factor = request.bike_speed() / double(georef::default_speed[type::Mode_e::Bike]);
             max_non_pt = request.max_bike_duration_to_pt();
             break;
         case type::Mode_e::Car:
             result.offset = data->geo_ref->offsets[type::Mode_e::Car];
-            result.speed_factor = request.car_speed() / georef::default_speed[type::Mode_e::Car];
+            result.speed_factor = request.car_speed() / double(georef::default_speed[type::Mode_e::Car]);
             max_non_pt = request.max_car_duration_to_pt();
             break;
         case type::Mode_e::CarNoPark:
             result.offset = data->geo_ref->offsets[type::Mode_e::CarNoPark];
-            result.speed_factor = request.car_no_park_speed() / georef::default_speed[type::Mode_e::CarNoPark];
+            result.speed_factor = request.car_no_park_speed() / double(georef::default_speed[type::Mode_e::CarNoPark]);
             max_non_pt = request.max_car_no_park_duration_to_pt();
             break;
         case type::Mode_e::Bss:
             result.offset = data->geo_ref->offsets[type::Mode_e::Bss];
-            result.speed_factor = request.bss_speed() / georef::default_speed[type::Mode_e::Bss];
+            result.speed_factor = request.bss_speed() / double(georef::default_speed[type::Mode_e::Bss]);
             max_non_pt = request.max_bss_duration_to_pt();
             break;
         default:
             result.offset = data->geo_ref->offsets[type::Mode_e::Walking];
-            result.speed_factor = request.walking_speed() / georef::default_speed[type::Mode_e::Walking];
+            result.speed_factor = request.walking_speed() / double(georef::default_speed[type::Mode_e::Walking]);
             max_non_pt = request.max_walking_duration_to_pt();
             break;
     }

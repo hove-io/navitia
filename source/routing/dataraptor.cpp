@@ -52,7 +52,7 @@ void dataRAPTOR::Connections::load(const type::PT_Data& data) {
 void dataRAPTOR::JppsFromSp::load(const type::PT_Data& data,
                                   const JourneyPatternContainer& jp_container) {
     jpps_from_sp.assign(data.stop_points);
-    for (const auto& jp: jp_container.get_jps()) {
+    for (const auto jp: jp_container.get_jps()) {
         for (const auto& jpp_idx: jp.second.jpps) {
             const auto& jpp = jp_container.get(jpp_idx);
             jpps_from_sp[jpp.sp_idx].push_back({jpp_idx, jp.first, jpp.order});
@@ -71,7 +71,7 @@ void dataRAPTOR::JppsFromSp::filter_jpps(const boost::dynamic_bitset<>& valid_jp
 
 void dataRAPTOR::JppsFromJp::load(const JourneyPatternContainer& jp_container) {
     jpps_from_jp.assign(jp_container.get_jps_values());
-    for (const auto& jp: jp_container.get_jps()) {
+    for (const auto jp: jp_container.get_jps()) {
         const bool has_freq = !jp.second.freq_vjs.empty();
         for (const auto& jpp_idx: jp.second.jpps) {
             const auto& jpp = jp_container.get(jpp_idx);
@@ -97,7 +97,7 @@ void dataRAPTOR::load(const type::PT_Data& data, size_t cache_size)
         const auto rt_level = level_cont.first;
         auto& jp_vp = level_cont.second;
         jp_vp.assign(366, boost::dynamic_bitset<>(jp_container.nb_jps()));
-        for (const auto& jp: jp_container.get_jps()) {
+        for (const auto jp: jp_container.get_jps()) {
             for (int i = 0; i <= 365; ++i) {
                 jp.second.for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
                     if (vj.validity_patterns[rt_level]->check2(i)) {
@@ -111,7 +111,7 @@ void dataRAPTOR::load(const type::PT_Data& data, size_t cache_size)
     }
 
     min_connection_time = std::numeric_limits<uint32_t>::max();
-    for (const auto& conns : connections.forward_connections) {
+    for (const auto conns : connections.forward_connections) {
         for (const auto& conn : conns.second) {
             min_connection_time = std::min(min_connection_time, conn.duration);
         }

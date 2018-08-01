@@ -127,7 +127,7 @@ GeographicalCoord project(const MultiLineString& multiline, const GeographicalCo
     if (multiline.empty()) { return p; }
 
     GeographicalCoord projected;
-    float min_dist = std::numeric_limits<float>::infinity();
+    double min_dist = std::numeric_limits<double>::infinity();
     for (const auto& line: multiline) {
         const auto projection = project(line, p);
         const auto cur_dist = projection.distance_to(p);
@@ -155,7 +155,7 @@ LineString split_line_at_point(const LineString& ls, const GeographicalCoord& bl
             float ab = coord->distance_to(*(coord + 1));
             float ac = blade.distance_to(*coord);
             float bc = blade.distance_to(*(coord + 1));
-            if(std::abs(ac + bc - ab) < 0.1) {
+            if(std::abs(ac + bc - ab) < 0.1f) {
                 if(end_of_geom) {
                     result.push_back(blade);
                     result.insert(result.end(), coord + 1, ls.end());

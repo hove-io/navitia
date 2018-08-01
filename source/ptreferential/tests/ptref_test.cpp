@@ -724,7 +724,7 @@ BOOST_AUTO_TEST_CASE(get_potential_routes_test) {
 }
 
 namespace navitia { namespace type {
-std::ostream& operator<<(std::ostream& os, const Type_e& type) {
+static std::ostream& operator<<(std::ostream& os, const Type_e& type) {
     return os << navitia::type::static_data::get()->captionByType(type);
 }
 }}

@@ -278,7 +278,7 @@ struct StreetNetwork {
 Path create_path(const GeoRef& georef,
                  const std::vector<vertex_t>& reverse_path,
                  bool add_one_elt,
-                 double speed_factor);
+                 float speed_factor);
 
 /// Compute the angle between the last segment of the path and the next point
 int compute_directions(const navitia::georef::Path& path, const nt::GeographicalCoord& c_coord);

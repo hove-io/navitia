@@ -198,8 +198,7 @@ call_raptor(navitia::PbCreator& pb_creator,
         do {
             auto raptor_journeys = raptor.compute_all_journeys(
                 departures, destinations, request_date_secs, rt_level, transfer_penalty, bound, max_transfers,
-                accessibilite_params, forbidden_uri, allowed_ids, clockwise, direct_path_duration,
-                max_extra_second_pass);
+                accessibilite_params, clockwise, direct_path_duration, max_extra_second_pass);
 
             LOG4CPLUS_DEBUG(logger, "raptor found " << raptor_journeys.size() << " solutions");
 

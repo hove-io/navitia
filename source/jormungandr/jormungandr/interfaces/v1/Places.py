@@ -158,8 +158,8 @@ class PlaceUri(ResourceUri):
 
     def __init__(self, *args, **kwargs):
         ResourceUri.__init__(self, authentication=False, output_type_serializer=PlacesSerializer, *args, **kwargs)
-        self.parsers["get"].add_argument("bss_stands", type=BooleanType(), default=False,
-                                         help="Deprecated - Use add_poi_infos[]=bss_stands")
+        self.parsers["get"].add_argument("bss_stands", type=BooleanType(), default=False, deprecated=True,
+                                         help="DEPRECATED, Use add_poi_infos[]=bss_stands")
         self.parsers["get"].add_argument("add_poi_infos[]", type=OptionValue(add_poi_infos_types),
                                          default=['bss_stands', 'car_park'],
                                          dest="add_poi_infos", action="append",
@@ -233,8 +233,8 @@ class PlacesNearby(ResourceUri):
                                          help="Maximum depth on objects")
         self.parsers["get"].add_argument("start_page", type=int, default=0,
                                          help="The page number of the ptref result")
-        self.parsers["get"].add_argument("bss_stands", type=BooleanType(), default=False,
-                                         help="Deprecated - Use add_poi_infos[]=bss_stands")
+        self.parsers["get"].add_argument("bss_stands", type=BooleanType(), default=False, deprecated=True,
+                                         help="DEPRECATED, Use add_poi_infos[]=bss_stands")
         self.parsers["get"].add_argument("add_poi_infos[]", type=OptionValue(add_poi_infos_types),
                                          default=['bss_stands', 'car_park'],
                                          dest="add_poi_infos", action="append",

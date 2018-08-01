@@ -44,7 +44,7 @@ struct GraphBuilder{
     std::map<std::string, vertex_t> vertex_map;
 
     /// upsert a node
-    GraphBuilder& add_vertex(std::string node_name, float x, float y);
+    GraphBuilder& add_vertex(std::string node_name, double x, double y);
 
     /// upsert an edge
     GraphBuilder& add_edge(std::string source_name, std::string target_name, navitia::time_duration dur = {}, bool bidirectionnal = false);
@@ -52,7 +52,7 @@ struct GraphBuilder{
     GraphBuilder& add_geom(edge_t edge_ref, const nt::LineString& geom);
 
     /// Syntaxic sugar on node creation
-    GraphBuilder& operator()(std::string node_name, float x, float y) { return add_vertex(node_name, x, y);}
+    GraphBuilder& operator()(std::string node_name, double x, double y) { return add_vertex(node_name, x, y);}
 
     /// Syntaxic sugar on edge creation
     GraphBuilder& operator()(std::string source_name, std::string target_name, navitia::time_duration dur = {}, bool bidirectionnal = false) {

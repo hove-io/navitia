@@ -273,8 +273,8 @@ PathItem::TransportCaracteristic GeoRef::get_caracteristic(edge_t edge) const {
     throw navitia::exception("unhandled path item caracteristic");
 }
 
-double PathItem::get_length(double speed_factor) const {
-    double def_speed = default_speed[type::Mode_e::Walking];
+float PathItem::get_length(float speed_factor) const {
+    float def_speed = default_speed[type::Mode_e::Walking];
     switch (transportation) {
     case TransportCaracteristic::BssPutBack:
     case TransportCaracteristic::BssTake:
@@ -632,7 +632,7 @@ std::pair<GeoRef::ProjectionByMode, bool> GeoRef::project_stop_point(const type:
         nt::Mode_e::Car // CarNoPark -> Car
     }}};
 
-    for (auto const &mode_layer: mode_to_layer) {
+    for (auto const mode_layer: mode_to_layer) {
         nt::Mode_e mode = mode_layer.first;
         nt::idx_t offset = offsets[mode_layer.second];
 
@@ -669,7 +669,7 @@ edge_t GeoRef::nearest_edge(const type::GeographicalCoord & coordinates, const p
     boost::optional<edge_t> res;
     float min_dist = 0., cur_dist = 0.;
     double coslat = ::cos(coordinates.lat() * type::GeographicalCoord::N_DEG_TO_RAD);
-    for (const auto pair_coord : prox.find_within(coordinates, horizon)) {
+    for (const auto& pair_coord : prox.find_within(coordinates, horizon)) {
         //we increment the index to get the vertex in the other graph
         const auto u = pair_coord.first + offset;
 

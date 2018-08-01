@@ -91,7 +91,7 @@ ed::types::Node* GeopalParser::add_node(const navitia::type::GeographicalCoord& 
 }
 
 void GeopalParser::fill_postal_codes(){
-    for(const std::string file_name : this->files){
+    for(const std::string& file_name : this->files){
         if(!this->starts_with(file_name, "adresse")){
             continue;
         }
@@ -122,7 +122,7 @@ void GeopalParser::fill_postal_codes(){
 }
 
 void GeopalParser::fill_admins(){
-    for(const std::string file_name : this->files){
+    for(const std::string& file_name : this->files){
         if (! this->starts_with(file_name, "commune")){
             continue;
         }
@@ -317,7 +317,7 @@ private:
 }
 
 void GeopalParser::fill_ways_edges(){
-    for(const std::string file_name : this->files){
+    for(const std::string& file_name : this->files){
         if (! this->starts_with(file_name, "route_a")){
             continue;
         }

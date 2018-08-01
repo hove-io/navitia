@@ -170,7 +170,7 @@ void RAPTOR::init(const map_stop_point_duration& dep,
         const DateTime begin_dt = bound + (clockwise ? sn_dur : -sn_dur);
         labels[0].mut_dt_transfer(sp_dt.first) = begin_dt;
         best_labels_transfers[sp_dt.first] = begin_dt;
-        for (const auto jpp: jpps_from_sp[sp_dt.first]) {
+        for (const auto& jpp: jpps_from_sp[sp_dt.first]) {
             if (clockwise && Q[jpp.jp_idx] > jpp.order) {
                 Q[jpp.jp_idx] = jpp.order;
             } else if (! clockwise && Q[jpp.jp_idx] < jpp.order) {
@@ -349,7 +349,7 @@ snd_pass_best_labels(const bool clockwise, IdxMap<type::StopPoint, DateTime> bes
     for (auto& dt: best_labels.values()) {
         if (is_dt_initialized(dt)) { dt += clockwise ? -1 : 1; }
     }
-    return std::move(best_labels);
+    return best_labels;
 }
 // Set the departure bounds on best_labels_pts for the second pass.
 static void init_best_pts_snd_pass(const routing::map_stop_point_duration& departures,
@@ -395,8 +395,6 @@ RAPTOR::compute_all(const map_stop_point_duration& departures,
                                                  bound,
                                                  max_transfers,
                                                  accessibilite_params,
-                                                 forbidden_uri,
-                                                 allowed_ids,
                                                  clockwise,
                                                  direct_path_dur,
                                                  max_extra_second_pass);
@@ -412,8 +410,6 @@ RAPTOR::compute_all_journeys(const map_stop_point_duration& departures,
                              const DateTime& bound,
                              const uint32_t max_transfers,
                              const type::AccessibiliteParams& accessibilite_params,
-                             const std::vector<std::string>& forbidden_uri,
-                             const std::vector<std::string>& allowed_ids,
                              bool clockwise,
                              const boost::optional<navitia::time_duration>& direct_path_dur,
                              const size_t max_extra_second_pass) {

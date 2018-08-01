@@ -46,7 +46,7 @@ const auto target_e = ProjectionData::Direction::Target;
 navitia::time_duration PathFinder::crow_fly_duration(const double distance) const {
     // For BSS we want the default speed of walking, because on extremities we walk !
     const auto mode_ = mode == nt::Mode_e::Bss ? nt::Mode_e::Walking : mode;
-    return navitia::seconds(distance / (default_speed[mode_] * speed_factor));
+    return navitia::seconds(distance / double(default_speed[mode_] * speed_factor));
 }
 
 static bool is_projected_on_same_edge(const ProjectionData& p1, const ProjectionData& p2){
@@ -300,7 +300,7 @@ PathFinder::crow_fly_find_nearest_stop_points(const navitia::time_duration& max_
                                               const proximitylist::ProximityList<type::idx_t>& pl) {
     // Searching for all the elements that are less than radius meters awyway in crow fly
     float crow_fly_dist = max_duration.total_seconds() * speed_factor * georef::default_speed[mode];
-    return pl.find_within(start_coord, crow_fly_dist);
+    return pl.find_within(start_coord, double(crow_fly_dist));
 }
 
 
@@ -756,7 +756,7 @@ static edge_t get_best_edge(vertex_t u, vertex_t v, const GeoRef& georef) {
 Path create_path(const GeoRef& geo_ref,
                  const std::vector<vertex_t>& reverse_path,
                  bool add_one_elt,
-                 double speed_factor) {
+                 float speed_factor) {
     Path p;
 
     // On reparcourt tout dans le bon ordre

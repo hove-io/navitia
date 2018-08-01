@@ -157,7 +157,7 @@ struct OSMRelation {
         return osm_id < other;
     }
 
-    void set_centre(float lon, float lat) const {
+    void set_centre(double lon, double lat) const {
         centre = point(lon, lat);
     }
 

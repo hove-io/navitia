@@ -136,8 +136,8 @@ BOOST_AUTO_TEST_CASE(idempotence) {
               << " distance to target " << worker.distances[proj[dir::Target]] << std::endl;
 
     // the distance matrix also has to be updated
-    BOOST_CHECK(worker.distances[proj[dir::Source]] + navitia::seconds(proj.distances[dir::Source] / default_speed[type::Mode_e::Walking]) == distance//we have to take into account the projection distance
-                    || worker.distances[proj[dir::Target]] + navitia::seconds(proj.distances[dir::Target] / default_speed[type::Mode_e::Walking]) == distance);
+    BOOST_CHECK(worker.distances[proj[dir::Source]] + navitia::seconds(proj.distances[dir::Source] / double(default_speed[type::Mode_e::Walking])) == distance//we have to take into account the projection distance
+                    || worker.distances[proj[dir::Target]] + navitia::seconds(proj.distances[dir::Target] / double(default_speed[type::Mode_e::Walking])) == distance);
 
     computation_results first_res {distance, worker};
 
@@ -151,8 +151,8 @@ BOOST_AUTO_TEST_CASE(idempotence) {
         //we have to find a way to get there
         BOOST_REQUIRE_NE(other_distance, bt::pos_infin);
         // the distance matrix  also has to be updated
-        BOOST_CHECK(worker.distances[proj[dir::Source]] + navitia::seconds(proj.distances[dir::Source] / default_speed[type::Mode_e::Walking]) == other_distance
-                        || worker.distances[proj[dir::Target]] + navitia::seconds(proj.distances[dir::Target] / default_speed[type::Mode_e::Walking]) == other_distance);
+        BOOST_CHECK(worker.distances[proj[dir::Source]] + navitia::seconds(proj.distances[dir::Source] / double(default_speed[type::Mode_e::Walking])) == other_distance
+                        || worker.distances[proj[dir::Target]] + navitia::seconds(proj.distances[dir::Target] / double(default_speed[type::Mode_e::Walking])) == other_distance);
 
         BOOST_REQUIRE(first_res == other_res);
     }
@@ -165,8 +165,8 @@ BOOST_AUTO_TEST_CASE(idempotence) {
         //we have to find a way to get there
         BOOST_CHECK_NE(other_distance, bt::pos_infin);
 
-        BOOST_CHECK(worker.distances[proj[dir::Source]] + navitia::seconds(proj.distances[dir::Source] / default_speed[type::Mode_e::Walking]) == other_distance
-                        || worker.distances[proj[dir::Target]] + navitia::seconds(proj.distances[dir::Target] / default_speed[type::Mode_e::Walking]) == other_distance);
+        BOOST_CHECK(worker.distances[proj[dir::Source]] + navitia::seconds(proj.distances[dir::Source] / double(default_speed[type::Mode_e::Walking])) == other_distance
+                        || worker.distances[proj[dir::Target]] + navitia::seconds(proj.distances[dir::Target] / double(default_speed[type::Mode_e::Walking])) == other_distance);
 
         BOOST_CHECK(first_res == other_res);
     }

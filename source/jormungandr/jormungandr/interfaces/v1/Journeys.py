@@ -56,7 +56,7 @@ from jormungandr.interfaces.v1.journey_common import JourneyCommon, compute_poss
 from jormungandr.parking_space_availability.parking_places_manager import ManageParkingPlaces
 import six
 from navitiacommon.parser_args_type import BooleanType, OptionValue
-from jormungandr.interfaces.common import add_poi_infos_types
+from jormungandr.interfaces.common import add_poi_infos_types, handle_poi_infos
 
 f_datetime = "%Y%m%dT%H%M%S"
 class SectionLinks(fields.Raw):
@@ -478,7 +478,7 @@ class Journeys(JourneyCommon):
                                 help='Activate debug mode.\n'
                                      'No journeys are filtered in this mode.')
         parser_get.add_argument("show_codes", type=BooleanType(), default=False, hidden=True, deprecated=True,
-                                help="show more identification codes")
+                                help="DEPRECATED, show more identification codes")
         parser_get.add_argument("_override_scenario", type=six.text_type, hidden=True,
                                 help="debug param to specify a custom scenario")
         parser_get.add_argument("_street_network", type=six.text_type, hidden=True,
@@ -490,9 +490,8 @@ class Journeys(JourneyCommon):
         parser_get.add_argument("_night_bus_filter_max_factor", hidden=True, type=float)
         parser_get.add_argument("_min_car", hidden=True, type=int)
         parser_get.add_argument("_min_bike", hidden=True, type=int)
-        parser_get.add_argument("bss_stands", type=BooleanType(), default=False,
-                                help="Show bss stands availability "
-                                     "in the bicycle_rental pois of response")
+        parser_get.add_argument("bss_stands", type=BooleanType(), default=False, deprecated=True,
+                                help="DEPRECATED, Use add_poi_infos[]=bss_stands")
         parser_get.add_argument("add_poi_infos[]", type=OptionValue(add_poi_infos_types), default=[],
                                 dest="add_poi_infos", action="append",
                                 help="Show more information about the poi if it's available, for instance, show "
@@ -510,9 +509,11 @@ class Journeys(JourneyCommon):
                                      "Nota 2: 'max_nb_journeys' parameter has priority over "
                                      "'timeframe_duration' parameter.")
 
+        args = self.parsers["get"].parse_args()
+
         self.get_decorators.append(complete_links(self))
 
-        if parser_get.parse_args().get("add_poi_infos") or parser_get.parse_args().get("bss_stands"):
+        if handle_poi_infos(args["add_poi_infos"], args["bss_stands"]):
             self.get_decorators.insert(1, ManageParkingPlaces(self, 'journeys'))
 
     @add_debug_info()

@@ -1,5 +1,5 @@
 future==0.13.1
-docker-py==0.4.0
+docker-py==1.10.6
 retrying==1.2.3
 psycopg2==2.4.5
 clingon==0.1.4

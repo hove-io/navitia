@@ -95,6 +95,7 @@ struct PbCreator::Filler::PtObjVisitor: public boost::static_visitor<> {
         case nd::StopTimeUpdate::Status::DELETED:
             return pbnavitia::DELETED;
         case nd::StopTimeUpdate::Status::UNCHANGED:
+        default:
             return pbnavitia::UNCHANGED;
         }
     }
@@ -793,7 +794,7 @@ void PbCreator::Filler::fill_pb_object(const nt::MultiLineString* shape,
                                          pbnavitia::MultiLineString* geojson){
     for (const std::vector<nt::GeographicalCoord>& line: *shape) {
         auto l = geojson->add_lines();
-        for (const auto coord: line) {
+        for (const auto& coord: line) {
             auto c = l->add_coordinates();
             c->set_lon(coord.lon());
             c->set_lat(coord.lat());
@@ -875,7 +876,7 @@ void PbCreator::Filler::fill_pb_object(const nt::StopTime* st, pbnavitia::StopTi
     // we always dump the stop point (with the same depth)
     copy(depth, dump_message_options).fill_pb_object(st->stop_point, stop_time->mutable_stop_point());
 
-    if ( depth > 0) {
+    if (depth > 0) {
         fill(st->vehicle_journey, stop_time);
     }
 }
@@ -1003,6 +1004,7 @@ static pbnavitia::Severity_Effect get_severity_effect(nd::Effect e) {
     case nd::Effect::STOP_MOVED:
         return pbnavitia::Severity_Effect::Severity_Effect_STOP_MOVED;
     case nd::Effect::UNKNOWN_EFFECT:
+    default:
         return pbnavitia::Severity_Effect::Severity_Effect_UNKNOWN_EFFECT;
     }
 }
@@ -1647,8 +1649,8 @@ void PbCreator::add_path_item(pbnavitia::StreetNetwork* sn, const ng::PathItem& 
 
     pbnavitia::PathItem* path_item = sn->add_path_items();
     path_item->set_name(data->geo_ref->ways[item.way_idx]->name);
-    path_item->set_length(item.get_length(ori_dest.streetnetwork_params.speed_factor));
-    path_item->set_duration(item.duration.total_fractional_seconds());
+    path_item->set_length(double(item.get_length(ori_dest.streetnetwork_params.speed_factor)));
+    path_item->set_duration(double(item.duration.total_fractional_seconds()));
     path_item->set_direction(item.angle);
 
     //we add each path item coordinate to the global coordinate list
@@ -1722,7 +1724,7 @@ const ng::POI* PbCreator::get_nearest_bss_station(const nt::GeographicalCoord& c
 
 const ng::POI* PbCreator::get_nearest_poi(const nt::GeographicalCoord& coord, const ng::POIType& poi_type) {
     //we loop through all poi near the coord to find a poi of the required type
-    for (const auto pair: data->geo_ref->poi_proximity_list.find_within(coord, 500)) {
+    for (const auto& pair: data->geo_ref->poi_proximity_list.find_within(coord, 500)) {
         const auto poi_idx = pair.first;
         const auto poi = data->geo_ref->pois[poi_idx];
         if (poi->poitype_idx == poi_type.idx) {
