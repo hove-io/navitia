@@ -1,3 +1,4 @@
+# coding=utf-8
 # Copyright (c) 2001-2015, Canal TP and/or its affiliates. All rights reserved.
 #
 # This file is part of Navitia,
@@ -34,7 +35,7 @@ import psycopg2
 
 # postgres/postgis image
 POSTGIS_IMAGE = 'github.com/CanalTP/docker-postgis.git'
-POSTGIS_CONTAINER_NAME = 'postgis:2.1'
+POSTGIS_IMAGE_NAME = 'postgis:2.1'
 
 
 class DbParams(object):
@@ -69,32 +70,37 @@ class PostgresDocker(object):
     """
     def __init__(self):
         log = logging.getLogger(__name__)
-        self.docker = docker.Client(base_url='unix://var/run/docker.sock')
+        base_url = 'unix://var/run/docker.sock'
+        self.docker_client = docker.DockerClient(base_url=base_url)
+        self.docker_api_client = docker.APIClient(base_url=base_url)
 
         log.info("Trying to build/update the docker image")
         try:
-            for build_output in self.docker.build(POSTGIS_IMAGE, tag=POSTGIS_CONTAINER_NAME, rm=True):
+            for build_output in self.docker_client.images.build(path=POSTGIS_IMAGE, tag=POSTGIS_IMAGE_NAME, rm=True):
                 log.debug(build_output)
         except docker.errors.APIError as e:
             if e.is_server_error():
-                log.error("[docker server error] A server error occcured, maybe "
-                                                "missing internet connection?")
-                log.error("[docker server error] Details: {}".format(e))
-                log.error("[docker server error] Trying to go on anyway, assuming '{}' docker image "
-                                                "is already built...".format(POSTGIS_IMAGE))
+                log.warn("[docker server error] A server error occcured, maybe "
+                                               "missing internet connection?")
+                log.warn("[docker server error] Details: {}".format(e))
+                log.warn("[docker server error] Checking if '{}' docker image "
+                                               "is already built".format(POSTGIS_IMAGE_NAME))
+                self.docker_client.images.get(POSTGIS_IMAGE_NAME)
+                log.warn("[docker server error] Going on, as '{}' docker image "
+                                               "is already built".format(POSTGIS_IMAGE_NAME))
             else:
                 raise
 
-        self.container_id = self.docker.create_container(POSTGIS_CONTAINER_NAME).get('Id')
+        self.container = self.docker_client.containers.create(POSTGIS_IMAGE_NAME)
 
-        log.info("docker id is {}".format(self.container_id))
+        log.info("docker id is {}".format(self.container.id))
 
         log.info("starting the temporary docker")
-        self.docker.start(self.container_id)
-        self.ip_addr = self.docker.inspect_container(self.container_id).get('NetworkSettings', {}).get('IPAddress')
+        self.container.start()
+        self.ip_addr = self.docker_api_client.inspect_container(self.container.id).get('NetworkSettings', {}).get('IPAddress')
 
         if not self.ip_addr:
-            log.error("temporary docker {} not started".format(self.container_id))
+            log.error("temporary docker {} not started".format(self.container.id))
             exit(1)
 
         # we poll to ensure that the db is ready
@@ -104,18 +110,22 @@ class PostgresDocker(object):
         return self
 
     def __exit__(self, *args, **kwargs):
-        logging.getLogger(__name__).info("stoping the temporary docker")
-        self.docker.stop(container=self.container_id)
+        logging.getLogger(__name__).info("stopping the temporary docker")
+        self.container.stop()
 
         logging.getLogger(__name__).info("removing the temporary docker")
-        self.docker.remove_container(container=self.container_id, v=True)
+        self.container.remove(v=True)
 
         # test to be sure the docker is removed at the end
-        for cont in self.docker.containers(all=True):
-            if cont['Image'].split(':')[0] == POSTGIS_IMAGE:
-                if self.container_id in (name[1:] for name in cont['Names']):
-                    logging.getLogger(__name__).error("something is strange, the container is still there ...")
-                    exit(1)
+        still_exists = True
+        try:
+            self.docker_client.containers.get(self.container.id)
+        except docker.errors.NotFound:
+            still_exists = False
+
+        if still_exists:
+            logging.getLogger(__name__).error("something is strange, the container is still there ...")
+            exit(1)
 
     def get_db_params(self):
         """
