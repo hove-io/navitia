@@ -36,6 +36,7 @@ from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, DateTy
 from jormungandr.interfaces.v1.serializer.time import TimeField, PeriodSerializer, DateTimeField
 from jormungandr.interfaces.v1.serializer.fields import *
 from jormungandr.interfaces.v1.serializer import jsonschema, base
+from jormungandr.parking_space_availability.bss import stands
 from navitiacommon.type_pb2 import ActiveStatus, Channel, hasEquipments, Properties, NavitiaType, Severity, \
     StopTimeUpdateStatus
 from navitiacommon.response_pb2 import SectionAdditionalInformationType
@@ -277,7 +278,7 @@ class StandsSerializer(PbNestedSerializer):
     available_places = jsonschema.IntField()
     available_bikes = jsonschema.IntField()
     total_stands = jsonschema.IntField()
-    status = jsonschema.StrField()
+    status = jsonschema.StrField(schema_metadata={"enum": [v for (_, v) in stands.status_list.items()], "type": "string"})
 
 
 class AdminSerializer(PbGenericSerializer):

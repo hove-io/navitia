@@ -562,6 +562,18 @@ $ curl 'https://api.navitia.io/v1/coverage/sandbox/poi_types' -H 'Authorization:
 |id|string|Identifier of the poi type|
 |name|string|Name of the poi type|
 
+### Stands
+
+A description of the number of stands/places and vehicles available at one POI
+(for example a bike sharing station, or a car park).
+
+|Field           |Type|Description                                                              |
+|----------------|----|-------------------------------------------------------------------------|
+|available_places|int |Number of places where one can park (bike, car, etc.)                    |
+|available_bikes |int |Number of bikes available                                                |
+|total_stands    |int |Total number stands (occupied or not, with or without special equipment) |
+|status          |enum|Information about the station itself:<ul><li>`unavailable`: Navitia is not able to obtain information about the station</li><li>`open`: The station is open</li><li>`closed`: The station is closed</li></ul>|
+
 ### <a name="poi"></a>Poi
 ``` shell
 #useless request, with huge response
@@ -578,12 +590,13 @@ $ curl 'https://api.navitia.io/v1/coverage/sandbox/poi_types/poi_type:amenity:bi
 
 Poi = Point Of Interest
 
-|Field|Type|Description|
-|-----|----|-----------|
-|id|string|Identifier of the poi|
-|name|string|Name of the poi|
-|label|string|Label of the poi. The name is directly taken from the data whereas the label is something we compute for better traveler information. If you don't know what to display, display the label.|
-|poi_type|[poi_type](#poi-type)|Type of the poi|
+|Field   |Type                 |Description                                                         |
+|--------|---------------------|--------------------------------------------------------------------|
+|id      |string               |Identifier of the poi                                               |
+|name    |string               |Name of the poi                                                     |
+|label   |string               |Label of the poi. The name is directly taken from the data whereas the label is something we compute for better traveler information. If you don't know what to display, display the label.|
+|poi_type|[poi_type](#poi-type)|Type of the poi                                                     |
+|stands  |[stands](#stands)    |Informations on the spots available, for BSS stations or car park   |
 
 ### Address
 
