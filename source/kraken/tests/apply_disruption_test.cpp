@@ -474,7 +474,6 @@ BOOST_AUTO_TEST_CASE(add_stop_area_impact_on_vj_pass_midnight) {
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "0000111"),
             vj->adapted_validity_pattern()->days);
 
-
     auto res = compute(*b.data, nt::RTLevel::Adapted, "A1", "A2", "23:00"_t, 1);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_REQUIRE_EQUAL(res[0].items[0].stop_times.size(), 2);
@@ -487,7 +486,6 @@ BOOST_AUTO_TEST_CASE(add_stop_area_impact_on_vj_pass_midnight) {
     navitia::delete_disruption("stop_area_closed", *b.data->pt_data, *b.data->meta);
 
     check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys, "0111111");
-
 
     BOOST_REQUIRE(! compute(*b.data, nt::RTLevel::Base, "A1", "stop_area", "08:00"_t, 1).empty());
     BOOST_REQUIRE(! compute(*b.data, nt::RTLevel::Adapted, "A1", "stop_area", "08:00"_t, 1).empty());
