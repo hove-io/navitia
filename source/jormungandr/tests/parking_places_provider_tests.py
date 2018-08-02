@@ -31,9 +31,7 @@ from __future__ import absolute_import
 import mock
 from mock import PropertyMock
 
-from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
-from jormungandr.parking_space_availability import Stands
-from jormungandr.parking_space_availability import get_from_to_pois_of_journeys
+from jormungandr.parking_space_availability import AbstractParkingPlacesProvider, Stands, StandsStatus, get_from_to_pois_of_journeys
 from jormungandr.ptref import FeedPublisher
 from tests.check_utils import is_valid_poi, get_not_null, journey_basic_query
 from tests.tests_mechanism import AbstractTestFixture, dataset
@@ -50,7 +48,7 @@ class MockBssProvider(AbstractParkingPlacesProvider):
     def get_informations(self, poi):
         available_places = 13 if poi['id'] == 'poi:station_1' else 99
         available_bikes = 3 if poi['id'] == 'poi:station_1' else 98
-        return Stands(available_places=available_places, available_bikes=available_bikes, status='OPEN')
+        return Stands(available_places=available_places, available_bikes=available_bikes, status=StandsStatus.open)
 
     def status(self):
         return {}

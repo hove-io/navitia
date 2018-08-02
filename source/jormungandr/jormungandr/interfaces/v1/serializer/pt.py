@@ -278,7 +278,7 @@ class StandsSerializer(PbNestedSerializer):
     available_places = jsonschema.IntField()
     available_bikes = jsonschema.IntField()
     total_stands = jsonschema.IntField()
-    status = jsonschema.StrField(schema_metadata={"enum": [v for (_, v) in stands.status_list.items()], "type": "string"})
+    status = jsonschema.StrField(schema_metadata={"enum": [v.name for v in stands.StandsStatus], "type": "string"})
 
 
 class AdminSerializer(PbGenericSerializer):

@@ -27,17 +27,22 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
+from enum import Enum
 
-status_list = {'OPEN': 'open', 'CLOSED': 'closed', 'UNAVAILABLE': 'unavailable'}
-
+class StandsStatus(Enum):
+    unavailable = -1
+    closed = 0
+    open = 1
 
 class Stands(object):
 
     def __init__(self, available_places, available_bikes, status=None):
+        if status is not None and not isinstance(status, StandsStatus):
+            raise TypeError('status must be a StandsStatus enum')
         self.available_places = available_places
         self.available_bikes = available_bikes
         self.total_stands = available_places + available_bikes
-        self.status = status_list.get(status)
+        self.status = status.name
 
     def __eq__(self, other):
         return self.__dict__ == other.__dict__

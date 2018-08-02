@@ -35,7 +35,7 @@ import logging
 import json
 import requests as requests
 from jormungandr.ptref import FeedPublisher
-from jormungandr.parking_space_availability.bss.stands import Stands
+from jormungandr.parking_space_availability.bss.stands import Stands, StandsStatus
 
 
 DEFAULT_CYKLEO_FEED_PUBLISHER = {
@@ -145,18 +145,18 @@ class CykleoProvider(AbstractParkingPlacesProvider):
         # Possible status values of the station: IN_SERVICE, IN_MAINTENANCE, OUT_OF_SERVICE, DISCONNECTED
         # and DECOMMISSIONED
         if not data:
-            return Stands(0, 0, 'UNAVAILABLE')
+            return Stands(0, 0, StandsStatus.unavailable)
         obj_station = data.get(ref)
         if not obj_station:
-            return Stands(0, 0, 'UNAVAILABLE')
+            return Stands(0, 0, StandsStatus.unavailable)
 
         if obj_station.get('station', {}).get('status') == 'IN_SERVICE' and 'availableDockCount' in obj_station:
             return Stands(obj_station.get('availableDockCount', 0),
                           obj_station.get('availableClassicBikeCount', 0) +
                           obj_station.get('availableElectricBikeCount', 0),
-                          'OPEN')
+                          StandsStatus.open)
         elif obj_station.get('station', {}).get('status') in ('OUT_OF_SERVICE', 'DECOMMISSIONED'):
-            return Stands(0, 0, 'CLOSED')
+            return Stands(0, 0, StandsStatus.closed)
         else:
-            return Stands(0, 0, 'UNAVAILABLE')
+            return Stands(0, 0, StandsStatus.unavailable)
 
