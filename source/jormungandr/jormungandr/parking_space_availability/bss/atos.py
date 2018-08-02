@@ -34,7 +34,7 @@ import logging
 import pybreaker
 import zeep
 
-from jormungandr import cache, app
+from jormungandr import cache, app, utils, new_relic
 from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
 from jormungandr.parking_space_availability.bss.stands import Stands, StandsStatus
 from jormungandr.ptref import FeedPublisher
@@ -69,6 +69,7 @@ class AtosProvider(AbstractParkingPlacesProvider):
             all_stands = self.breaker.call(self._get_all_stands)
             ref = poi.get('properties', {}).get('ref')
             if not ref:
+                utils.record_internal_failure('unavailable', 'bss', self.network)
                 return Stands(0, 0, StandsStatus.unavailable)
             stands = all_stands.get(ref.lstrip('0'))
             if stands:
@@ -76,10 +77,16 @@ class AtosProvider(AbstractParkingPlacesProvider):
                     stands.available_bikes = 0
                     stands.available_places = 0
                     stands.total_stands = 0
+
+                utils.record_call('ok', 'bss', self.network)
                 return stands
         except:
-            logging.getLogger(__name__).exception('transport error during call to %s bss provider', self.id_ao)
+            msg = 'transport error during call to {} bss provider'.format(self.network)
+            logging.getLogger(__name__).exception(msg)
+            #record in newrelic
+            utils.record_external_failure(msg, 'bss', self.network)
 
+        utils.record_internal_failure('unavailable', 'bss', self.network)
         return Stands(0, 0, StandsStatus.unavailable)
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_ATOS', 30))

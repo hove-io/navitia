@@ -29,7 +29,7 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
-from jormungandr import cache, app
+from jormungandr import cache, app, utils, new_relic
 import pybreaker
 import logging
 import json
@@ -73,16 +73,23 @@ class CykleoProvider(AbstractParkingPlacesProvider):
                 kwargs.update({'params': params})
             response = self.breaker.call(method, url, **kwargs)
             if not response or response.status_code != 200:
-                logging.getLogger(__name__).error('cykleo, Invalid response, status_code: {}'.format(
-                    response.status_code))
+                msg = 'cykleo, Invalid response, status_code: {}'.format(response.status_code)
+                logging.getLogger(__name__).error(msg)
+                utils.record_external_failure(msg, 'bss', self.network)
                 return None
             return response
         except pybreaker.CircuitBreakerError as e:
-            logging.getLogger(__name__).error('cykleo service dead (error: {})'.format(e))
+            msg = 'cykleo service dead (error: {})'.format(e)
+            logging.getLogger(__name__).error(msg)
+            utils.record_external_failure(msg, 'bss', self.network)
         except requests.Timeout as t:
-            logging.getLogger(__name__).error('cykleo service timeout (error: {})'.format(t))
+            msg = 'cykleo service timeout (error: {})'.format(t)
+            logging.getLogger(__name__).error(msg)
+            utils.record_external_failure(msg, 'bss', self.network)
         except Exception as e:
-            logging.getLogger(__name__).exception('cykleo error : {}'.format(str(e)))
+            msg = 'cykleo error : {}'.format(str(e))
+            logging.getLogger(__name__).exception(msg)
+            utils.record_external_failure(msg, 'bss', self.network)
         return None
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_CYKLEO_JETON', 10*60))
@@ -102,7 +109,9 @@ class CykleoProvider(AbstractParkingPlacesProvider):
         content = response.json()
         access_token = content.get("access_token")
         if not access_token:
-            logging.getLogger(__name__).error('cykleo, no access_token in response')
+            msg = 'cykleo, no access_token in response'
+            logging.getLogger(__name__).error(msg)
+            utils.record_external_failure(msg, 'bss', self.network)
             return None
         return access_token
 
@@ -145,12 +154,15 @@ class CykleoProvider(AbstractParkingPlacesProvider):
         # Possible status values of the station: IN_SERVICE, IN_MAINTENANCE, OUT_OF_SERVICE, DISCONNECTED
         # and DECOMMISSIONED
         if not data:
+            utils.record_internal_failure('unavailable', 'bss', self.network)
             return Stands(0, 0, StandsStatus.unavailable)
         obj_station = data.get(ref)
         if not obj_station:
+            utils.record_internal_failure('unavailable', 'bss', self.network)
             return Stands(0, 0, StandsStatus.unavailable)
 
         if obj_station.get('station', {}).get('status') == 'IN_SERVICE' and 'availableDockCount' in obj_station:
+            utils.record_call('ok', 'bss', self.network)
             return Stands(obj_station.get('availableDockCount', 0),
                           obj_station.get('availableClassicBikeCount', 0) +
                           obj_station.get('availableElectricBikeCount', 0),
@@ -158,5 +170,6 @@ class CykleoProvider(AbstractParkingPlacesProvider):
         elif obj_station.get('station', {}).get('status') in ('OUT_OF_SERVICE', 'DECOMMISSIONED'):
             return Stands(0, 0, StandsStatus.closed)
         else:
+            utils.record_internal_failure('unavailable', 'bss', self.network)
             return Stands(0, 0, StandsStatus.unavailable)
 

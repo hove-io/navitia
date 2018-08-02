@@ -32,7 +32,7 @@ import logging
 import pybreaker
 import requests as requests
 
-from jormungandr import cache, app
+from jormungandr import cache, app, utils, new_relic
 from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
 from jormungandr.parking_space_availability.bss.stands import Stands, StandsStatus
 from jormungandr.ptref import FeedPublisher
@@ -75,11 +75,17 @@ class JcdecauxProvider(AbstractParkingPlacesProvider):
                 stands[str(s['number'])] = s
             return stands
         except pybreaker.CircuitBreakerError as e:
-            logging.getLogger(__name__).error('JCDecaux service dead (error: {})'.format(e))
+            msg = 'JCDecaux service dead (error: {})'.format(e)
+            logging.getLogger(__name__).error(msg)
+            utils.record_external_failure(msg, 'bss', self.network)
         except requests.Timeout as t:
-            logging.getLogger(__name__).error('JCDecaux service timeout (error: {})'.format(t))
+            msg = 'JCDecaux service timeout (error: {})'.format(t)
+            logging.getLogger(__name__).error(msg)
+            utils.record_external_failure(msg, 'bss', self.network)
         except:
-            logging.getLogger(__name__).exception('JCDecaux error')
+            msg = 'JCDecaux error'
+            logging.getLogger(__name__).exception(msg)
+            utils.record_external_failure(msg, 'bss', self.network)
         return None
 
     def get_informations(self, poi):
@@ -88,9 +94,11 @@ class JcdecauxProvider(AbstractParkingPlacesProvider):
         data = self._call_webservice()
         if data and 'status' in data.get(ref, {}):
             if data[ref]['status'] == 'OPEN':
-                return Stands(data[ref].get('available_bike_stands', 0), data[ref].get('available_bikes', 0), StandsStatus.open)
+                utils.record_call('ok', 'bss', self.network)
+                return Stands(data[ref].get('available_bike_stands', 0), data[ref].get('available_bikes', 0), 'OPEN')
             elif data[ref]['status'] == 'CLOSED':
                 return Stands(0, 0, StandsStatus.closed)
+        utils.record_internal_failure('unavailable', 'bss', self.network)
         return Stands(0, 0, StandsStatus.unavailable)
 
     def status(self):
