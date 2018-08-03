@@ -1,3 +1,22 @@
+navitia2 (2.60.0) unstable; urgency=low
+
+  * Kraken: Teleportation crowfly.mode=walking  <https://github.com/CanalTP/navitia/pull/2486>
+  * Eitri, Tyr & docker tests: Launch even if docker can't reach server  <https://github.com/CanalTP/navitia/pull/2485>
+  * Jormungandr: Taking into account status in BSS station.  <https://github.com/CanalTP/navitia/pull/2471> 
+  * All: Miscellaneous fixes  <https://github.com/CanalTP/navitia/pull/2483>
+  * Kraken: Dijkstra multi start  <https://github.com/CanalTP/navitia/pull/2482>
+  * Doc: Add graph of call made by distributed  <https://github.com/CanalTP/navitia/pull/2463>
+  * Doc: add Eitri as an alternative to .nav generation  <https://github.com/CanalTP/navitia/pull/2480>
+  * Jormungandr: Handle 'add_poi_infos[]' parameter + test  <https://github.com/CanalTP/navitia/pull/2477>
+  * Eitri: fix python command  <https://github.com/CanalTP/navitia/pull/2481>
+  * Ptref: Remove ptref legacy  <https://github.com/CanalTP/navitia/pull/2474>
+  * Jormungandr: improvements in culling journeys  <https://github.com/CanalTP/navitia/pull/2475>
+  * Gatling: new default VS distributed  <https://github.com/CanalTP/navitia/pull/2470>
+  * Kraken: Move set_valid_jp_and_jpp outside of the RAPTOR loop  <https://github.com/CanalTP/navitia/pull/2473>
+  * Ptref next gen, or the OR feature  <https://github.com/CanalTP/navitia/pull/2465>
+
+ -- XL <patrick.qian@canaltp.fr>  Fri, 03 Aug 2018 14:08:08 +0100
+
 navitia2 (2.59.0) unstable; urgency=low
 
   * Jormun & Kraken: add timeframe_duration for journeys  <https://github.com/CanalTP/navitia/pull/2442>
