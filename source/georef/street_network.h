@@ -176,7 +176,7 @@ struct PathFinder {
     void dijkstra(const vertex_t source, const vertex_t target, const Visitor& visitor) {
         // Note: the predecessors have been updated in init
 
-        std::array<georef::vertex_t, 2> vertex {source, target};
+        std::array<georef::vertex_t, 2> vertex {{source, target}};
 
         // Fill color map in white before dijkstra
         std::fill(color.data.get(),

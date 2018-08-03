@@ -61,11 +61,11 @@ class Metrics: boost::noncopyable {
         std::map<pbnavitia::API, prometheus::Histogram*> request_histogram;
     public:
         Metrics(const boost::optional<std::string>& endpoint, const std::string& coverage);
-        void observe_api(pbnavitia::API api, float duration) const;
+        void observe_api(pbnavitia::API api, double duration) const;
 #else
     public:
         Metrics(const boost::optional<std::string>&, const std::string&) {}
-        void observe_api(pbnavitia::API, float) const {}
+        void observe_api(pbnavitia::API, double) const {}
 #endif
 };
 
