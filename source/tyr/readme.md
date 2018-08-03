@@ -116,6 +116,10 @@ You may want to specify an instance to filter these jobs :
 A job is created when a new dataset is detected by tyr_beat.
 You can also trigger a data integration by posting your dataset to the job endpoint filtered by instance.
 
+```bash
+curl -F 'file=@/PATH/TO/FILE' -X POST '$HOST/v0/jobs/<INSTANCE>'
+```
+
 ## Authentication
 
 With the authentication we can associate a user account to
@@ -714,7 +718,10 @@ Finally if you want to delete a poi_type you just have to use the DELETE action:
 
 #### Migrate from POI to OSM
 
-Load POI from OSM.
+When one provides a POI file to Tyr a flag is triggered to avoid reading POIs from OSM files.
+If one wants to trigger that flag back to reading POIs from OSM files, it's possible.
+
+Load POIs from OSM file:
 
     PUT $HOST/v0/instances/$INSTANCE_NAME/actions/migrate_from_poi_to_osm
 
@@ -724,6 +731,13 @@ response:
     "action": "Parameter parse_pois_from_osm activated"
 }
 ```
+
+In that case, one might probably want Tyr to forget about the POI files (in case there is a data-reload).
+It is doable (see also [delete](#Delete-data_sets-by-type) section):
+
+    DELETE $HOST/v0/instances/$INSTANCE_NAME/actions/delete_dataset/poi
+
+One will also probably want to provide an OSM file to load data from it (see [Data integration](#Data-integration))
 
 
 #### Delete data_sets by type
@@ -738,3 +752,5 @@ response:
     "action": "All $TYPE datasets deleted for instance $INSTANCE_NAME"
 }
 ```
+
+Types available are `poi`, `fusio`, `osm`, `geopal`, `synonym`, `shape`.
