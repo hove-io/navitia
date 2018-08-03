@@ -564,14 +564,13 @@ $ curl 'https://api.navitia.io/v1/coverage/sandbox/poi_types' -H 'Authorization:
 
 ### Stands
 
-A description of the number of stands/places and vehicles available at one POI
-(for example a bike sharing station, or a car park).
+A description of the number of stands/places and vehicles available at a bike sharing station.
 
-|Field           |Type|Description                                                              |
-|----------------|----|-------------------------------------------------------------------------|
-|available_places|int |Number of places where one can park (bike, car, etc.)                    |
-|available_bikes |int |Number of bikes available                                                |
-|total_stands    |int |Total number stands (occupied or not, with or without special equipment) |
+|Field           |Type|Description                                                                  |
+|----------------|----|-----------------------------------------------------------------------------|
+|available_places|int |Number of places where one can park                                          |
+|available_bikes |int |Number of bikes available                                                    |
+|total_stands    |int |Total number of stands (occupied or not, with or without special equipment)  |
 |status          |enum|Information about the station itself:<ul><li>`unavailable`: Navitia is not able to obtain information about the station</li><li>`open`: The station is open</li><li>`closed`: The station is closed</li></ul>|
 
 ### <a name="poi"></a>Poi
@@ -596,7 +595,7 @@ Poi = Point Of Interest
 |name    |string               |Name of the poi                                                     |
 |label   |string               |Label of the poi. The name is directly taken from the data whereas the label is something we compute for better traveler information. If you don't know what to display, display the label.|
 |poi_type|[poi_type](#poi-type)|Type of the poi                                                     |
-|stands  |[stands](#stands)    |Informations on the spots available, for BSS stations or car park   |
+|stands  |[stands](#stands)    |Informations on the spots available, for BSS stations               |
 
 ### Address
 
