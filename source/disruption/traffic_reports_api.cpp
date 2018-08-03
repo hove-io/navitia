@@ -32,6 +32,7 @@ www.navitia.io
 #include "type/pb_converter.h"
 #include "ptreferential/ptreferential.h"
 #include "utils/logger.h"
+#include "utils/paginate.h"
 
 namespace bt = boost::posix_time;
 namespace nt = navitia::type;

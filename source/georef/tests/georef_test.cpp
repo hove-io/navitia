@@ -53,7 +53,7 @@ using namespace boost;
 static std::vector<navitia::type::GeographicalCoord> get_coords_from_path(const Path& path) {
     std::vector<navitia::type::GeographicalCoord> res;
     for (const auto& item : path.path_items) {
-        for (const auto coord : item.coordinates) {
+        for (const auto& coord : item.coordinates) {
             res.push_back(coord);
         }
     }

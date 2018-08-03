@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_stops_different_hours) {
     const auto* vj5 = b.vj("A").uri("vj5")("S1", "08:00"_t)("S2", "13:00"_t)("S3", "13:30"_t).make();
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
 
@@ -282,7 +282,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_stop_area) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
@@ -358,7 +358,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_stop_area_with_several_stop_point) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
@@ -443,7 +443,7 @@ BOOST_AUTO_TEST_CASE(add_stop_area_impact_on_vj_pass_midnight) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
@@ -474,7 +474,6 @@ BOOST_AUTO_TEST_CASE(add_stop_area_impact_on_vj_pass_midnight) {
     BOOST_CHECK_MESSAGE(ba::ends_with(vj->adapted_validity_pattern()->days.to_string(), "0000111"),
             vj->adapted_validity_pattern()->days);
 
-
     auto res = compute(*b.data, nt::RTLevel::Adapted, "A1", "A2", "23:00"_t, 1);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_REQUIRE_EQUAL(res[0].items[0].stop_times.size(), 2);
@@ -487,7 +486,6 @@ BOOST_AUTO_TEST_CASE(add_stop_area_impact_on_vj_pass_midnight) {
     navitia::delete_disruption("stop_area_closed", *b.data->pt_data, *b.data->meta);
 
     check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys, "0111111");
-
 
     BOOST_REQUIRE(! compute(*b.data, nt::RTLevel::Base, "A1", "stop_area", "08:00"_t, 1).empty());
     BOOST_REQUIRE(! compute(*b.data, nt::RTLevel::Adapted, "A1", "stop_area", "08:00"_t, 1).empty());
@@ -508,7 +506,7 @@ BOOST_AUTO_TEST_CASE(add_stop_point_impact_check_vp_filtering_last_day) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2016,4,4), bg::days(7));
@@ -568,7 +566,7 @@ BOOST_AUTO_TEST_CASE(add_impact_with_sevral_application_period) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
@@ -635,7 +633,7 @@ BOOST_AUTO_TEST_CASE(remove_stop_point_impact) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
@@ -683,7 +681,7 @@ BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
@@ -747,10 +745,10 @@ BOOST_AUTO_TEST_CASE(remove_all_stop_point) {
 BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
     ed::builder b("20120614");
     auto* vj1 = b.vj("A").uri("vj:1")("stop1", "23:00"_t)("stop2", "24:15"_t)("stop3", "24:45"_t).make();
-    
+
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
@@ -805,7 +803,7 @@ BOOST_AUTO_TEST_CASE(stop_point_no_service_with_shift) {
             vj->rt_validity_pattern()->days);
 
     navitia::delete_disruption("bob", *b.data->pt_data, *b.data->meta);
-    
+
     check_vjs_without_disruptions(b.data->pt_data->vehicle_journeys, "1111111");
 }
 
@@ -825,7 +823,7 @@ BOOST_AUTO_TEST_CASE(test_shift_of_a_disrupted_delayed_train) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
@@ -933,7 +931,7 @@ BOOST_AUTO_TEST_CASE(disrupted_stop_point_then_delayed) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
 
@@ -1036,7 +1034,7 @@ BOOST_AUTO_TEST_CASE(same_stop_point_on_vj) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
@@ -1127,7 +1125,7 @@ BOOST_AUTO_TEST_CASE(stop_point_deletion_test) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
 
@@ -1219,7 +1217,7 @@ BOOST_AUTO_TEST_CASE(add_simple_impact_on_line_section) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2016,4,4), bg::days(7));
@@ -1321,14 +1319,14 @@ BOOST_AUTO_TEST_CASE(multiple_impact_on_line_section) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2016,4,4), bg::days(7));
 
     auto get_stops = [](const nt::VehicleJourney* vj) {
           std::vector<std::string> res;
-          for (const auto st: vj->stop_time_list) {
+          for (const auto& st: vj->stop_time_list) {
               res.push_back(st.stop_point->uri);
           }
           return res;
@@ -1472,7 +1470,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section_with_vj_pass_midnight) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2016,4,4), bg::days(7));
@@ -1536,7 +1534,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section_cancelling_vj) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2016,4,4), bg::days(7));
@@ -1657,7 +1655,7 @@ BOOST_AUTO_TEST_CASE(add_line_section_impact_on_line_with_repeated_stops) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2016,4,4), bg::days(7));
@@ -1856,7 +1854,7 @@ BOOST_AUTO_TEST_CASE(add_multiple_impact_on_line_section) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2016,4,4), bg::days(7));
@@ -1948,7 +1946,7 @@ BOOST_AUTO_TEST_CASE(update_impact) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2012,6,14), bg::days(7));
@@ -2016,7 +2014,7 @@ BOOST_AUTO_TEST_CASE(impact_with_boarding_alighting_times) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2017,1,1), bg::days(7));
@@ -2078,7 +2076,7 @@ BOOST_AUTO_TEST_CASE(impact_lollipop_with_boarding_alighting_times) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period(bg::date(2017,1,1), bg::days(7));
@@ -2136,7 +2134,7 @@ BOOST_AUTO_TEST_CASE(test_delay_on_line_does_nothing) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = bg::date_period("20120614"_d, 7_days);
@@ -2196,7 +2194,7 @@ BOOST_AUTO_TEST_CASE(test_indexes_after_applying_disruption) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
 
@@ -2264,7 +2262,7 @@ BOOST_AUTO_TEST_CASE(significant_delay_on_stop_point_dont_remove_it) {
 
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
 
@@ -2279,4 +2277,128 @@ BOOST_AUTO_TEST_CASE(significant_delay_on_stop_point_dont_remove_it) {
     auto res = compute(*b.data, nt::RTLevel::Adapted, "A", "B", "08:00"_t, 0);
     BOOST_REQUIRE_EQUAL(res.size(), 1);
     BOOST_CHECK_EQUAL(res[0].items[0].stop_times.size(), 2);
+}
+
+BOOST_AUTO_TEST_CASE(test_disruption_on_line_then_stop_point) {
+    ed::builder b("20120614");
+    auto* vj1 = b.vj("A").uri("vj:1")("stopA1", "10:00"_t)("stopA2", "11:00"_t)("stopA3", "12:00"_t).make();
+    auto* vj2 = b.vj("B").uri("vj:2")("stop1B", "10:00"_t)("stopB2", "11:00"_t)("stopB3", "12:00"_t).make();
+
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->sort_and_index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = bg::date_period("20120614"_d, 7_days);
+
+    /*
+    * For VJ1
+    *
+    * Let's apply 2 disruption on 2 objects types (line then stop point)
+    * Then, we make sure that the real time validity pattern has been disabled
+    *
+    */
+    navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Line A : penguins on the line")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::Line, "A")
+                              .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Fire at Montparnasse")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::StopPoint, "stopA2")
+                              .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_MESSAGE(
+            ba::ends_with(vj1->rt_validity_pattern()->days.to_string(), "11110111"),
+            vj1->rt_validity_pattern()->days);
+
+    /*
+    * For VJ2
+    *
+    * Let's apply only 1 disruption on the same objects types (line then stop point)
+    * Then, we make sure that the real time validity pattern has been disabled
+    *
+    */
+    navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Penguins on fire at Montparnasse")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::Line, "B")
+                              .on(nt::Type_e::StopPoint, "stopB2")
+                              .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_MESSAGE(
+            ba::ends_with(vj2->rt_validity_pattern()->days.to_string(), "11110111"),
+            vj1->rt_validity_pattern()->days);
+
+}
+
+BOOST_AUTO_TEST_CASE(test_disruption_on_stop_point_then_line) {
+    ed::builder b("20120614");
+    auto* vj1 = b.vj("A").uri("vj:1")("stopA1", "10:00"_t)("stopA2", "11:00"_t)("stopA3", "12:00"_t).make();
+    auto* vj2 = b.vj("B").uri("vj:2")("stopB1", "10:00"_t)("stopB2", "11:00"_t)("stopB3", "12:00"_t).make();
+
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->sort_and_index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = bg::date_period("20120614"_d, 7_days);
+
+    /*
+    * For VJ1
+    *
+    * Let's apply 2 disruption on 2 objects types (stop point then line)
+    * Then, we make sure that the real time validity pattern has been disabled
+    *
+    */
+    navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Fire at Montparnasse")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::StopPoint, "stopA2")
+                              .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Line A : penguins on the line")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::Line, "A")
+                              .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_MESSAGE(
+            ba::ends_with(vj1->rt_validity_pattern()->days.to_string(), "11110111"),
+            vj1->rt_validity_pattern()->days);
+
+    auto rt_vj1 = b.data->pt_data->vehicle_journeys_map["vj:1:RealTime:0:Fire at Montparnasse"];
+    BOOST_CHECK_MESSAGE(
+            ba::ends_with(rt_vj1->rt_validity_pattern()->days.to_string(), "00000000"),
+            rt_vj1->rt_validity_pattern()->days);
+
+   /*
+    * For VJ2
+    *
+    * Let's apply only 1 disruption on the same objects types (stop point then line)
+    * Then, we make sure that the real time validity pattern has been disabled
+    *
+    */
+    navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Penguins on fire at Montparnasse")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::StopPoint, "stopB2")
+                              .on(nt::Type_e::Line, "B")
+                              .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+    BOOST_CHECK_MESSAGE(
+            ba::ends_with(vj2->rt_validity_pattern()->days.to_string(), "11110111"),
+            vj2->rt_validity_pattern()->days);
+
+    auto rt_vj2 = b.data->pt_data->vehicle_journeys_map["vj:2:RealTime:0:Penguins on fire at Montparnasse"];
+    BOOST_CHECK_MESSAGE(
+            ba::ends_with(rt_vj2->rt_validity_pattern()->days.to_string(), "00000000"),
+            rt_vj2->rt_validity_pattern()->days);
 }

@@ -1,4 +1,3 @@
-
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
@@ -33,7 +32,6 @@ www.navitia.io
 #define BOOST_TEST_MODULE ptref_test
 #include <boost/test/unit_test.hpp>
 #include "ptreferential/ptreferential.h"
-#include "ptreferential/reflexion.h"
 #include "ptreferential/ptref_graph.h"
 #include "ed/build_helper.h"
 #include "tests/utils_test.h"
@@ -41,10 +39,6 @@ www.navitia.io
 #include <boost/graph/strong_components.hpp>
 #include <boost/graph/connected_components.hpp>
 #include "type/pt_data.h"
-
-namespace navitia{namespace ptref {
-template<typename T> type::Indexes get_indexes(Filter filter,  Type_e requested_type, const type::Data & d);
-}}
 
 
 using namespace navitia::ptref;
@@ -153,6 +147,7 @@ public:
         add_route("Route21");
         add_vj("VJ211");
         add_vj("VJ212");
+        data.pt_data->sort_and_index();
         data.build_uri();
     }
 

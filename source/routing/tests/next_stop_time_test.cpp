@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(dropoff_pickup) {
     b.vj("A")(spa1, sp1_departure, sp1_departure, 0, false, false)
              (spa2, sp2_arrival, sp2_arrival, 0, false, false);
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
     NextStopTime next_st(*b.data);
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(base) {
              (spa2, sp2_arrival, sp2_departure)
              (spa3, sp3_arrival);
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
     NextStopTime next_st(*b.data);
@@ -413,7 +413,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_1) {
     b.vj("A")(spa1, sp1_departure)
              (spa2, sp2_arrival);
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
     NextStopTime next_st(*b.data);
@@ -548,7 +548,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2) {
              (spa2, sp2_arrival, sp2_departure)
              (spa3, sp3_arrival);
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
     NextStopTime next_st(*b.data);
@@ -745,7 +745,7 @@ BOOST_AUTO_TEST_CASE(base_vp) {
     b.vj("A", "1010", "", true)(spa1, sp1_departure, sp1_departure)
                              (spa2, sp2_arrival, sp2_arrival);
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
     NextStopTime next_st(*b.data);
@@ -843,7 +843,7 @@ BOOST_AUTO_TEST_CASE(vj2) {
     b.vj("A")(spa1, sp1_departure2)
                              (spa2, sp2_arrival2);
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
     NextStopTime next_st(*b.data);
@@ -988,7 +988,7 @@ BOOST_AUTO_TEST_CASE(vp2) {
     b.vj("A", "10", "", true)(spa1, sp1_departure2)
                              (spa2, sp2_arrival2);
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
     NextStopTime next_st(*b.data);
@@ -1072,7 +1072,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_2_vp) {
                              (spa2, sp2_arrival, sp2_departure)
                              (spa3, sp3_arrival);
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
     NextStopTime next_st(*b.data);
@@ -1239,7 +1239,7 @@ BOOST_AUTO_TEST_CASE(passe_minuit_3_vp) {
                              (spa2, sp2_arrival, sp2_departure)
                              (spa3, sp3_arrival);
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
     NextStopTime next_st(*b.data);
@@ -1424,7 +1424,7 @@ BOOST_AUTO_TEST_CASE(freq_base) {
              (spa3, sp3_arrival);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
     NextStopTime next_st(*b.data);
@@ -1647,7 +1647,7 @@ BOOST_AUTO_TEST_CASE(freq_pam) {
              (spa2, sp2_arrival);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
     NextStopTime next_st(*b.data);
@@ -1800,7 +1800,7 @@ BOOST_AUTO_TEST_CASE(freq_base_pam) {
              (spa2, sp2_arrival);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
     NextStopTime next_st(*b.data);
@@ -2222,7 +2222,7 @@ BOOST_AUTO_TEST_CASE(next_stop_time_with_distant_bounds) {
     b.vj("A", "10000001", "")(spa1, sp1_departure, sp1_departure)
                              (spa2, sp2_arrival, sp2_arrival);
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
     NextStopTime next_st(*b.data);
@@ -2433,7 +2433,7 @@ BOOST_AUTO_TEST_CASE(freq_next_stop_time_with_distant_bounds) {
                                                                           (spa2, sp2_arrival);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->build_raptor();
     NextStopTime next_st(*b.data);

@@ -75,7 +75,7 @@ struct normal_speed_provider {
 template <typename speed_provider_trait>
 struct routing_api_data {
 
-    routing_api_data(float distance_a_b = 200, bool activate_pt = true) : distance_ab(distance_a_b) {
+    routing_api_data(double distance_a_b = 200, bool activate_pt = true) : distance_ab(distance_a_b) {
         /*
 
            K  ------------------------------ J
@@ -466,7 +466,7 @@ struct routing_api_data {
         b.manage_admin();
         b.finish();
         b.data->build_uri();
-        b.data->pt_data->index();
+        b.data->pt_data->sort_and_index();
         b.data->build_raptor();
 
         //Add a fare_zone in stop point A

@@ -1,9 +1,9 @@
 future==0.13.1
-docker-py==0.4.0
+docker==3.4.1
 retrying==1.2.3
 psycopg2==2.4.5
 clingon==0.1.4
 GeoAlchemy2==0.2.4
 SQLAlchemy==1.0.4
 alembic==0.6.7
-requests==2.6.0
+requests==2.19.1

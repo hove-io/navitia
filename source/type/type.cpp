@@ -93,7 +93,7 @@ std::vector<boost::shared_ptr<disruption::Impact>> HasMessages::get_applicable_m
 
 std::vector<boost::shared_ptr<disruption::Impact>> HasMessages::get_impacts() const {
     std::vector<boost::shared_ptr<disruption::Impact>> result;
-    for (const auto impact: impacts) {
+    for (const auto& impact: impacts) {
         auto impact_sptr = impact.lock();
         if (impact_sptr == nullptr) { continue; }
         result.push_back(impact_sptr);
@@ -485,7 +485,7 @@ void cleanup_useless_vj_link(const nt::VehicleJourney* vj, nt::PT_Data& pt_data)
 
 void MetaVehicleJourney::clean_up_useless_vjs(nt::PT_Data& pt_data) {
     std::vector<std::pair<RTLevel, size_t>> vj_idx_to_remove;
-    for (const auto& rt_vjs: rtlevel_to_vjs_map) {
+    for (const auto rt_vjs: rtlevel_to_vjs_map) {
         auto& vjs = rt_vjs.second;
         if (vjs.empty()) { continue; }
         // reverse iteration for later deletion
@@ -1023,7 +1023,7 @@ std::vector<boost::shared_ptr<disruption::Impact>>
 VehicleJourney::get_impacts() const {
     std::vector<boost::shared_ptr<disruption::Impact>> result;
     // considering which impact concerns this vj
-    for (const auto impact: meta_vj->get_impacts()) {
+    for (const auto& impact: meta_vj->get_impacts()) {
         // checking if impact concerns the period where this vj is valid (base-schedule centric)
         auto vp_functor = [&] (const unsigned) {
             return false; // we don't need to carry on when we find a day concerned

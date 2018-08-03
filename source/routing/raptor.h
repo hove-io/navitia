@@ -155,8 +155,6 @@ struct RAPTOR
                          const DateTime& bound = DateTimeUtils::inf,
                          const uint32_t max_transfers = 10,
                          const type::AccessibiliteParams& accessibilite_params = type::AccessibiliteParams(),
-                         const std::vector<std::string>& forbidden = std::vector<std::string>(),
-                         const std::vector<std::string>& allowed = std::vector<std::string>(),
                          bool clockwise = true,
                          const boost::optional<navitia::time_duration>& direct_path_dur = boost::none,
                          const size_t max_extra_second_pass = 0);
@@ -227,14 +225,12 @@ struct RAPTOR
 
     /// First raptor loop
     /// externalized for testing purposes
-    void first_raptor_loop(const map_stop_point_duration& dep,
+    void first_raptor_loop(const map_stop_point_duration& departures,
                            const DateTime& departure_datetime,
                            const nt::RTLevel rt_level,
-                           const DateTime& bound,
+                           const DateTime& bound_limit,
                            const uint32_t max_transfers,
                            const type::AccessibiliteParams& accessibilite_params,
-                           const std::vector<std::string>& forbidden_uri,
-                           const std::vector<std::string>& allowed_ids,
                            bool clockwise);
 
     ~RAPTOR() = default;

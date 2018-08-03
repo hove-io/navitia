@@ -74,7 +74,7 @@ Metrics::Metrics(const boost::optional<std::string>& endpoint, const std::string
     }
 }
 
-void Metrics::observe_api(pbnavitia::API api, float duration) const{
+void Metrics::observe_api(pbnavitia::API api, double duration) const{
     if(!registry) {
         return;
     }

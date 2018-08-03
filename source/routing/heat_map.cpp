@@ -174,11 +174,12 @@ static std::vector<std::vector<Projection>> find_projection(BoundBox box,
                     auto center = type::GeographicalCoord(heat_map.body[lon_rank].first.min_coord + width_step/2,
                                                           heat_map.header[lat_rank].min_coord + height_step / 2);
                     auto proj = center.approx_project(source, target, coslat);
-                    if (proj.second < min_dist &&
+                    auto length = double(proj.second);
+                    if (length < min_dist &&
                         (!dist_pixel[lon_rank][lat_rank].distance ||
-                         proj.second < *dist_pixel[lon_rank][lat_rank].distance))
+                         length < *dist_pixel[lon_rank][lat_rank].distance))
                     {
-                        dist_pixel[lon_rank][lat_rank].distance = proj.second;
+                        dist_pixel[lon_rank][lat_rank].distance = length;
                         dist_pixel[lon_rank][lat_rank].source = it->element;
                         dist_pixel[lon_rank][lat_rank].target = v;
                     }
@@ -375,7 +376,7 @@ std::string build_raster_isochrone(const georef::GeoRef& worker,
                                    clockwise, bound, speed);
     auto start = init_points.begin();
     auto end = init_points.end();
-    double speed_factor = speed / georef::default_speed[mode];
+    float speed_factor = float(speed) / georef::default_speed[mode];
     auto visitor = georef::distance_visitor(navitia::seconds(duration), distances);
     auto index_map = boost::identity_property_map();
     using filtered_graph = boost::filtered_graph<georef::Graph, boost::keep_all, georef::TransportationModeFilter>;

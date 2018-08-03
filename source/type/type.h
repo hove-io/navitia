@@ -666,7 +666,6 @@ struct AssociatedCalendar {
         ar & calendar & exceptions;
     }
 };
-struct MetaVehicleJourney;
 
 
 struct StopTime {
@@ -780,7 +779,7 @@ struct Calendar : public Nameable, public Header {
     void build_validity_pattern(boost::gregorian::date_period production_period);
 
 
-    bool operator<(const Calendar & other) const { return this < &other; }
+    bool operator<(const Calendar& other) const { return this->uri < other.uri; }
 
     Indexes get(Type_e type, const PT_Data & data) const;
     template<class Archive> void serialize(Archive & ar, const unsigned int ) {
@@ -841,7 +840,7 @@ struct MetaVehicleJourney: public Header, HasMessages {
 
     template<typename T>
     void for_all_vjs(T fun) const{
-        for (const auto& rt_vjs: rtlevel_to_vjs_map) {
+        for (const auto rt_vjs: rtlevel_to_vjs_map) {
             auto& vjs = rt_vjs.second;
             boost::for_each(vjs, [&](const std::unique_ptr<VehicleJourney>& vj){fun(*vj);});
         }

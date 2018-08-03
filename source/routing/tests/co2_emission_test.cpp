@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(co2_emission_higher_0) {
     navitia::type::Data data;
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(co2_emission_equal_0) {
     navitia::type::Data data;
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -145,7 +145,7 @@ BOOST_AUTO_TEST_CASE(co2_emission_lower_0) {
     navitia::type::Data data;
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));

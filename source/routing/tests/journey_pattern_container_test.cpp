@@ -73,7 +73,7 @@ static size_t check_jp_container(const nr::JourneyPatternContainer& jp_container
     std::set<const nt::VehicleJourney*> vjs;
 
     // check jp coherence
-    for (const auto& jp: jp_container.get_jps()) {
+    for (const auto jp: jp_container.get_jps()) {
         // check that the jp getter is coherent
         BOOST_CHECK_EQUAL(jp.second, jp_container.get(jp.first));
 
@@ -84,7 +84,7 @@ static size_t check_jp_container(const nr::JourneyPatternContainer& jp_container
             });
     }
     // check route coherence
-    for (const auto& jps_from_route: jp_container.get_jps_from_route()) {
+    for (const auto jps_from_route: jp_container.get_jps_from_route()) {
         for (const auto& jp_idx: jps_from_route.second) {
             const auto& jp = jp_container.get(jp_idx);
             BOOST_CHECK_EQUAL(jps_from_route.first, jp.route_idx);// jp.route_idx coherence
@@ -97,7 +97,7 @@ static size_t check_jp_container(const nr::JourneyPatternContainer& jp_container
         }
     }
     // check phy_mode coherence
-    for (const auto& jps_from_phy_mode: jp_container.get_jps_from_phy_mode()) {
+    for (const auto jps_from_phy_mode: jp_container.get_jps_from_phy_mode()) {
         for (const auto& jp_idx: jps_from_phy_mode.second) {
             const auto& jp = jp_container.get(jp_idx);
             BOOST_CHECK_EQUAL(jps_from_phy_mode.first, jp.phy_mode_idx);// jp.phy_mode_idx coherence
@@ -124,7 +124,7 @@ BOOST_AUTO_TEST_CASE(non_overtaking_one_jp) {
     // it overtakes the others, but the validity pattern doesn't overlap
     b.vj("1", "111000")("A", "7:55"_t, "7:55"_t)("B", "8:15"_t, "8:15"_t)("C", "8:35"_t, "8:35"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(not_same_stop_points) {
     b.vj("1", "000111")("A", "8:00"_t, "8:00"_t)("B", "8:10"_t, "8:10"_t)("C", "8:20"_t, "8:20"_t);
     b.vj("1", "000111")("A", "8:05"_t, "8:05"_t)("B", "8:15"_t, "8:15"_t)("D", "8:25"_t, "8:25"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(not_same_route) {
     b.vj("1", "000111")("A", "8:00"_t, "8:00"_t)("B", "8:10"_t, "8:10"_t)("C", "8:20"_t, "8:20"_t);
     b.vj("2", "000111")("A", "8:05"_t, "8:05"_t)("B", "8:15"_t, "8:15"_t)("C", "8:25"_t, "8:25"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(overtaking) {
     b.vj("1", "000111")("A", "8:00"_t, "8:00"_t)("B", "8:10"_t, "8:10"_t)("C", "8:20"_t, "8:20"_t);
     b.vj("1", "000111")("A", "7:55"_t, "7:55"_t)("B", "8:15"_t, "8:15"_t)("C", "8:35"_t, "8:35"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(lightly_overtaking1) {
     b.vj("1", "000111")("A", "8:00"_t, "8:00"_t)("B", "8:10"_t, "8:10"_t)("C", "8:20"_t, "8:20"_t);
     b.vj("1", "000111")("A", "7:55"_t, "7:55"_t)("B", "8:00"_t, "8:00"_t)("C", "8:20"_t, "8:20"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();
@@ -232,7 +232,7 @@ BOOST_AUTO_TEST_CASE(lightly_overtaking2) {
     b.vj("1", "000111")("A", "8:00"_t, "8:00"_t)("B", "8:10"_t, "8:10"_t)("C", "8:20"_t, "8:20"_t);
     b.vj("1", "000111")("A", "8:00"_t, "8:00"_t)("B", "8:15"_t, "8:15"_t)("C", "8:35"_t, "8:35"_t);
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.finish();
     b.data->build_raptor();
     b.data->build_uri();

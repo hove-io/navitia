@@ -135,7 +135,7 @@ std::vector<pbnavitia::Journey> sort_journeys_by(pbnavitia::Response resp,
         journeys.push_back(j);
 
     std::sort(journeys.begin(), journeys.end(), compare);
-    return std::move(journeys);
+    return journeys;
 }
 
 std::vector<pbnavitia::Journey> sort_journeys(pbnavitia::Response resp) {
@@ -151,7 +151,7 @@ BOOST_AUTO_TEST_CASE(simple_journey) {
     navitia::type::Data data;
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE(simple_journey_with_crow_fly) {
     navitia::type::Data data;
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->build_proximity_list();
@@ -304,7 +304,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in) {
     b.finish();
     navitia::type::Data data;
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -367,7 +367,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_teleport) {
     b.finish();
     navitia::type::Data data;
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -436,7 +436,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport) {
     b.finish();
     navitia::type::Data data;
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -514,7 +514,7 @@ BOOST_AUTO_TEST_CASE(journey_departure_from_a_stay_in) {
     b.finish();
     navitia::type::Data data;
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -583,7 +583,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_before_a_stay_in) {
     b.finish();
     navitia::type::Data data;
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -641,7 +641,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_in_a_stay_in) {
     b.finish();
     navitia::type::Data data;
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -710,7 +710,7 @@ BOOST_AUTO_TEST_CASE(journey_arrival_before_a_stay_in_without_teleport) {
     b.finish();
     navitia::type::Data data;
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -758,7 +758,7 @@ BOOST_AUTO_TEST_CASE(journey_stay_in_shortteleport_counterclockwise) {
     b.finish();
     navitia::type::Data data;
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -816,7 +816,7 @@ BOOST_AUTO_TEST_CASE(journey_array){
     navitia::type::Data data;
     b.finish();
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->geo_ref->init();
@@ -1128,7 +1128,7 @@ BOOST_FIXTURE_TEST_CASE(biking_walking, streetnetworkmode_fixture<test_speed_pro
     BOOST_CHECK_EQUAL(journey.durations().car(), 0);
     BOOST_CHECK_EQUAL(journey.durations().total(), 130);
     BOOST_CHECK_EQUAL(journey.distances().walking(), 0);
-    BOOST_CHECK_EQUAL(journey.distances().bike(), 532);
+    BOOST_CHECK_EQUAL(journey.distances().bike(), 533);
     BOOST_CHECK_EQUAL(journey.distances().car(), 0);
 
     auto pathitem = section.street_network().path_items(0);
@@ -1183,7 +1183,7 @@ BOOST_FIXTURE_TEST_CASE(biking_with_different_speed, streetnetworkmode_fixture<t
     auto pathitem = section.street_network().path_items(0);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue bs");
     //NOTE: we cannot check length here, it has to be checked in a separate test (below), since the used faked speed in the test
-    BOOST_CHECK_CLOSE(pathitem.duration(), S.distance_to(B) / (get_default_speed()[nt::Mode_e::Bike] * .5), 1);
+    BOOST_CHECK_CLOSE(pathitem.duration(), S.distance_to(B) / double(get_default_speed()[nt::Mode_e::Bike] * .5f), 1);
     pathitem = section.street_network().path_items(1);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue kb");
     pathitem = section.street_network().path_items(2);
@@ -1196,7 +1196,7 @@ BOOST_FIXTURE_TEST_CASE(biking_with_different_speed, streetnetworkmode_fixture<t
     BOOST_CHECK_EQUAL(pathitem.name(), "rue gh");
     pathitem = section.street_network().path_items(6);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ag");
-    BOOST_CHECK_CLOSE(pathitem.duration(), A.distance_to(G) / (get_default_speed()[nt::Mode_e::Bike] * .5), 1);
+    BOOST_CHECK_CLOSE(pathitem.duration(), A.distance_to(G) / double(get_default_speed()[nt::Mode_e::Bike] * .5f), 1);
 }
 
 // for an admin, when no main stop area is set
@@ -1233,12 +1233,12 @@ BOOST_FIXTURE_TEST_CASE(car_direct, streetnetworkmode_fixture<test_speed_provide
 
     origin.streetnetwork_params.mode = navitia::type::Mode_e::Car;
     origin.streetnetwork_params.offset = b.data->geo_ref->offsets[navitia::type::Mode_e::Car];
-    origin.streetnetwork_params.max_duration = navitia::seconds(total_distance / get_default_speed()[navitia::type::Mode_e::Car]);
+    origin.streetnetwork_params.max_duration = navitia::seconds(total_distance / double(get_default_speed()[navitia::type::Mode_e::Car]));
     origin.streetnetwork_params.speed_factor = 1;
 
     destination.streetnetwork_params.mode = navitia::type::Mode_e::Car;
     destination.streetnetwork_params.offset = b.data->geo_ref->offsets[navitia::type::Mode_e::Car];
-    destination.streetnetwork_params.max_duration = navitia::seconds(total_distance / get_default_speed()[navitia::type::Mode_e::Car]);
+    destination.streetnetwork_params.max_duration = navitia::seconds(total_distance / double(get_default_speed()[navitia::type::Mode_e::Car]));
     destination.streetnetwork_params.speed_factor = 1;
 
     auto resp = make_response();
@@ -1301,16 +1301,16 @@ BOOST_FIXTURE_TEST_CASE(car_parking_bus, streetnetworkmode_fixture<test_speed_pr
     origin.streetnetwork_params.mode = Mode_e::Car;
     origin.streetnetwork_params.offset = b.data->geo_ref->offsets[Mode_e::Car];
     origin.streetnetwork_params.max_duration =
-        seconds(distance_sd / get_default_speed()[Mode_e::Car] / speed_factor)
+        seconds(distance_sd / double(get_default_speed()[Mode_e::Car]) / speed_factor)
         + b.data->geo_ref->default_time_parking_park
-        + seconds(B.distance_to(D) / get_default_speed()[Mode_e::Walking] / speed_factor)
+        + seconds(B.distance_to(D) / double(get_default_speed()[Mode_e::Walking]) / speed_factor)
         + seconds(2);
     origin.streetnetwork_params.speed_factor = speed_factor;
 
     destination.streetnetwork_params.mode = Mode_e::Walking;
     destination.streetnetwork_params.offset = b.data->geo_ref->offsets[Mode_e::Walking];
     destination.streetnetwork_params.max_duration =
-        seconds(distance_ar / get_default_speed()[Mode_e::Walking] / speed_factor)
+        seconds(distance_ar / double(get_default_speed()[Mode_e::Walking]) / speed_factor)
         + seconds(1);
     destination.streetnetwork_params.speed_factor = speed_factor;
 
@@ -1389,16 +1389,16 @@ BOOST_FIXTURE_TEST_CASE(bus_car_parking, streetnetworkmode_fixture<test_speed_pr
     origin.streetnetwork_params.mode = Mode_e::Car;
     origin.streetnetwork_params.offset = b.data->geo_ref->offsets[Mode_e::Car];
     origin.streetnetwork_params.max_duration =
-        seconds(distance_sd / get_default_speed()[Mode_e::Car] / speed_factor)
+        seconds(distance_sd / double(get_default_speed()[Mode_e::Car]) / speed_factor)
         + b.data->geo_ref->default_time_parking_park
-        + seconds(B.distance_to(D) / get_default_speed()[Mode_e::Walking] / speed_factor)
+        + seconds(B.distance_to(D) / double(get_default_speed()[Mode_e::Walking]) / speed_factor)
         + seconds(2);
     origin.streetnetwork_params.speed_factor = speed_factor;
 
     destination.streetnetwork_params.mode = Mode_e::Walking;
     destination.streetnetwork_params.offset = b.data->geo_ref->offsets[Mode_e::Walking];
     destination.streetnetwork_params.max_duration =
-        seconds(distance_ar / get_default_speed()[Mode_e::Walking] / speed_factor)
+        seconds(distance_ar / double(get_default_speed()[Mode_e::Walking]) / speed_factor)
         + seconds(1);
     destination.streetnetwork_params.speed_factor = speed_factor;
     datetimes = {navitia::test::to_posix_timestamp("20120614T070000")};
@@ -1527,7 +1527,7 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
     BOOST_CHECK_EQUAL(journey->durations().car(), 0);
     BOOST_CHECK_EQUAL(journey->durations().total(), 309);
     BOOST_CHECK_EQUAL(journey->distances().walking(), 144);
-    BOOST_CHECK_EQUAL(journey->distances().bike(), 450);
+    BOOST_CHECK_EQUAL(journey->distances().bike(), 451);
     BOOST_CHECK_EQUAL(journey->distances().car(), 0);
 
     //bike
@@ -1593,7 +1593,7 @@ BOOST_FIXTURE_TEST_CASE(bss_test, streetnetworkmode_fixture<test_speed_provider>
     pathitem = section.street_network().path_items(1);
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ar");
 //    BOOST_CHECK_EQUAL(pathitem.duration(), 0); //projection
-    BOOST_CHECK_CLOSE(pathitem.duration(), A.distance_to(R) / (get_default_speed()[nt::Mode_e::Walking]), 1);
+    BOOST_CHECK_CLOSE(pathitem.duration(), A.distance_to(R) / double(get_default_speed()[nt::Mode_e::Walking]), 1);
     BOOST_CHECK_EQUAL(section.origin().address().coord().lon(), section.street_network().coordinates(0).lon());
     BOOST_CHECK_EQUAL(section.origin().address().coord().lat(), section.street_network().coordinates(0).lat());
 }
@@ -1737,7 +1737,7 @@ BOOST_FIXTURE_TEST_CASE(speed_factor_length_test, streetnetworkmode_fixture<norm
     pathitem = path_items[cpt++];
     BOOST_CHECK_EQUAL(pathitem.name(), "rue ab");
     BOOST_CHECK_CLOSE(pathitem.duration(),
-                      200 / (speed_factor * get_default_speed()[nt::Mode_e::Walking]),
+                      200 / (speed_factor * double(get_default_speed()[nt::Mode_e::Walking])),
                       2);
     BOOST_CHECK_CLOSE(pathitem.length(), 200, 2);
     // check again on crowfly
@@ -1829,7 +1829,7 @@ BOOST_AUTO_TEST_CASE(projection_on_one_way) {
     destination.streetnetwork_params.max_duration = bt::pos_infin;
 
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->build_proximity_list();
@@ -1947,7 +1947,7 @@ struct isochrone_fixture {
         b.vj("l5")("A", "8:28"_t)("C", "9:50"_t);
         b.vj("l6")("C", "8:29"_t)("B", "10:50"_t);
 
-        b.data->pt_data->index();
+        b.data->pt_data->sort_and_index();
         b.data->build_uri();
         b.data->build_raptor();
     }
@@ -2032,7 +2032,7 @@ BOOST_AUTO_TEST_CASE(with_information_disruptions) {
 
     b.finish();
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     std::set<ChannelType> channel_types;
@@ -2089,7 +2089,7 @@ BOOST_AUTO_TEST_CASE(with_disruptions_on_network) {
 
     b.finish();
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
 
@@ -2141,7 +2141,7 @@ BOOST_AUTO_TEST_CASE(journey_with_forbidden) {
     navitia::type::Data data;
     b.generate_dummy_basis();
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14), boost::gregorian::days(7));
@@ -2325,7 +2325,7 @@ BOOST_AUTO_TEST_CASE(stop_times_with_distinct_arrival_departure) {
 
     b.finish();
     b.generate_dummy_basis();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
 
@@ -2378,7 +2378,7 @@ BOOST_AUTO_TEST_CASE(section_geometry_without_shapes) {
         ("stop_point:stop3", 1700, 2000);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     auto prod_date = boost::gregorian::date(2018, 3, 9);
@@ -2511,7 +2511,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_free_radius_filter) {
     b.vj("vj4")("stop_point:sa2:s2", "8:00"_t, "8:01"_t)("stop_point:sa3:s4", "8:05"_t, "8:11"_t);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->build_proximity_list();
@@ -2755,7 +2755,7 @@ BOOST_AUTO_TEST_CASE(section_geometry_with_shapes) {
         ("stop_point:stop3", 1700, 2000).st_shape(shape_S3);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2018, 3, 9), boost::gregorian::days(1));
@@ -2845,7 +2845,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_min_nb_journeys) {
     b.vj("vj4")("stop_point:sa1:sp1", "8:06"_t, "8:07"_t)("stop_point:sa2:sp2", "8:16"_t, "8:17"_t);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->build_proximity_list();
@@ -3103,7 +3103,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_min_nb_journeys_with_similar_journeys_filteri
     b.vj("vj5")("stop_point:sa1:s2", "8:00"_t, "8:05"_t)("stop_point:sa3:s2", "8:15"_t, "8:16"_t);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->build_proximity_list();
@@ -3452,7 +3452,7 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
                 ("stop_point:sa3:s1", "08:05:00"_t);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->build_uri();
     b.data->build_proximity_list();

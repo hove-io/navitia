@@ -91,7 +91,7 @@ void NextStopTimeData::load(const JourneyPatternContainer& jp_container) {
     departure.assign(jp_container.get_jpps_values());
     arrival.assign(jp_container.get_jpps_values());
 
-    for (const auto& jp: jp_container.get_jps()) {
+    for (const auto jp: jp_container.get_jps()) {
         for (const auto& jpp_idx: jp.second.jpps) {
             const auto& jpp = jp_container.get(jpp_idx);
             departure[jpp_idx].init(jp.second, jpp);
@@ -426,10 +426,10 @@ CachedNextStopTime CachedNextStopTimeManager::CacheCreator::operator()(const Cac
     auto compare = [](const CachedNextStopTime::DtSt& lhs, const CachedNextStopTime::DtSt& rhs) noexcept{
         return lhs.first < rhs.first;
     };
-    for (const auto& jpp_dtst : arrival) {
+    for (const auto jpp_dtst : arrival) {
         boost::sort(jpp_dtst.second, compare);
     }
-    for (const auto& jpp_dtst : departure) {
+    for (const auto jpp_dtst : departure) {
         boost::sort(jpp_dtst.second, compare);
     }
     return {departure, arrival};
@@ -437,7 +437,7 @@ CachedNextStopTime CachedNextStopTimeManager::CacheCreator::operator()(const Cac
 
 CachedNextStopTime::DtStFromJpp::DtStFromJpp(const vDtStByJpp& map) {
     until.assign(map, 0);
-    for (const auto& elt: map) {
+    for (const auto elt: map) {
         boost::push_back(dtsts, elt.second);
         until[elt.first] = dtsts.size();
     }

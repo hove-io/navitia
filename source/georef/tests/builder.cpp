@@ -32,7 +32,7 @@ www.navitia.io
 
 namespace navitia { namespace georef {
 
-GraphBuilder & GraphBuilder::add_vertex(std::string node_name, float x, float y){
+GraphBuilder & GraphBuilder::add_vertex(std::string node_name, double x, double y){
     auto it = this->vertex_map.find(node_name);
     vertex_t v;
     type::GeographicalCoord coord;

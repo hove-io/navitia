@@ -48,7 +48,7 @@ type::Indexes Calendar::get_calendars(const std::string& filter,
     type::Indexes indexes;
     for (type::idx_t idx : to_return) {
         navitia::type::Calendar* cal = d.pt_data->calendars[idx];
-        for (const boost::gregorian::date_period per : cal->active_periods) {
+        for (const boost::gregorian::date_period& per : cal->active_periods) {
             if (filter_period.begin() == filter_period.end()) {
                 if (per.contains(filter_period.begin())) {
                     indexes.insert(cal->idx);

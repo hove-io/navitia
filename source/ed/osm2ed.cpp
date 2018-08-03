@@ -570,7 +570,7 @@ void OSMRelation::build_polygon(OSMCache& cache) const {
             if (!node->is_defined()) {
                 continue;
             }
-            const auto p = point(float(node->lon()), float(node->lat()));
+            const auto p = point(node->lon(), node->lat());
             tmp_polygon.outer().push_back(p);
         }
 
@@ -600,7 +600,7 @@ void OSMRelation::build_polygon(OSMCache& cache) const {
                 if (!node->is_defined()) {
                     continue;
                 }
-                const auto p = point(float(node->lon()), float(node->lat()));
+                const auto p = point(node->lon(), node->lat());
                 tmp_polygon.outer().push_back(p);
             }
             next_node = next_way->nodes.back();
@@ -669,7 +669,7 @@ void OSMRelation::build_geometry(OSMCache& cache) const {
                 continue;
             }
             if (ref.role == "admin_centre") {
-                set_centre(float(node_it->lon()), float(node_it->lat()));
+                set_centre(node_it->lon(), node_it->lat());
                 break;
             }
         }
@@ -700,7 +700,7 @@ void PoiHouseNumberVisitor::way_callback(uint64_t osm_id, const CanalTP::Tags &t
         if (node_it == cache.nodes.end() || !node_it->is_defined()) {
             continue;
         }
-        const auto p = point(float(node_it->lon()), float(node_it->lat()));
+        const auto p = point(node_it->lon(), node_it->lat());
         tmp_polygon.outer().push_back(p);
     }
     if (tmp_polygon.outer().size() <= 2) {
@@ -847,8 +847,8 @@ const OSMWay* PoiHouseNumberVisitor::find_way(const CanalTP::Tags& tags, const d
     double min_distance = std::numeric_limits<double>::max();
     const OSMWay* candidate_way = nullptr;
     point p(lon, lat);
-    for (const auto admin_ways : it_ways->second) {
-        for (const auto way_it : admin_ways.second) {
+    for (const auto& admin_ways : it_ways->second) {
+        for (const auto& way_it : admin_ways.second) {
             const auto& way = *way_it;
             const auto distance = way.distance(p);
             if (distance < min_distance) {
@@ -929,7 +929,7 @@ void PoiHouseNumberVisitor::fill_poi(const u_int64_t osm_id, const CanalTP::Tags
 
 void OSMCache::flag_nodes() {
     for (const auto& way : ways) {
-        for (const auto node: way.nodes) {
+        for (const auto& node: way.nodes) {
             if(node->is_defined()) {
                 node->set_first_or_last();
                 break;

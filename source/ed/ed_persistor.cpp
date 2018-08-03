@@ -1128,7 +1128,7 @@ void EdPersistor::insert_meta_vj(const std::map<std::string, types::MetaVehicleJ
         const types::MetaVehicleJourney& meta_vj = meta_vj_pair.second;
         for (auto map : meta_vj.associated_calendars) {
             types::AssociatedCalendar* associated_calendar = map.second;
-            for(const auto except : associated_calendar->exceptions){
+            for(const auto& except : associated_calendar->exceptions){
                 this->lotus.insert({std::to_string(id++),
                                     bg::to_iso_extended_string(except.date),
                                     navitia::type::to_string(except.type),
@@ -1316,7 +1316,7 @@ void EdPersistor::insert_exception_dates(const std::vector<types::Calendar*>& ca
     this->lotus.prepare_bulk_insert("navitia.exception_date", {"datetime", "type_ex", "calendar_id"});
 
     for(const types::Calendar* cal : calendars){
-        for( const auto except : cal->exceptions){
+        for( const auto& except : cal->exceptions){
             std::vector<std::string> values;
             values.push_back(bg::to_iso_extended_string(except.date));
             values.push_back(navitia::type::to_string(except.type));
@@ -1331,7 +1331,7 @@ void EdPersistor::insert_periods(const std::vector<types::Calendar*>& calendars)
     this->lotus.prepare_bulk_insert("navitia.period", {"id", "calendar_id", "begin_date", "end_date"});
     size_t idx(0);
     for (const types::Calendar* cal : calendars) {
-        for (const boost::gregorian::date_period period : cal->period_list) {
+        for (const boost::gregorian::date_period& period : cal->period_list) {
             std::vector<std::string> values {
                 std::to_string(idx++),
                 std::to_string(cal->idx),

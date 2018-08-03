@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
     const auto it2 = b.sas.find("stop3");
     b.data->pt_data->routes.back()->destination= it2->second; // Route B
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->pt_data->build_uri();
 
@@ -217,7 +217,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test_with_impacts) {
     const auto it2 = b.sas.find("stop3");
     b.data->pt_data->routes.back()->destination= it2->second; // Route B
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->pt_data->build_uri();
 
@@ -321,7 +321,7 @@ BOOST_AUTO_TEST_CASE(partial_terminus_test1) {
     b.data->pt_data->routes.front()->destination= it->second;
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->pt_data->build_uri();
 
@@ -386,7 +386,7 @@ BOOST_AUTO_TEST_CASE(terminus_multiple_route) {
     b.vj("bobette")("C", "10:00"_t)("B", "11:00"_t)("A", "12:00"_t);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->pt_data->build_uri();
     auto * data_ptr = b.data.get();
@@ -413,7 +413,7 @@ BOOST_AUTO_TEST_CASE(departure_board_multiple_days) {
     b.vj("A", "10000001")("stop1", "10:00:00"_t, "10:00:00"_t)
                          ("stop2", "10:30:00"_t, "10:30:00"_t);
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->pt_data->build_uri();
     auto * data_ptr = b.data.get();
@@ -500,7 +500,7 @@ BOOST_AUTO_TEST_CASE(departure_board_multiple_days_with_freq) {
                     ("stop1", "10:00:00"_t, "10:00:00"_t)
                     ("stop2", "10:30:00"_t, "10:30:00"_t);
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->pt_data->build_uri();
     auto * data_ptr = b.data.get();
@@ -710,7 +710,7 @@ BOOST_FIXTURE_TEST_CASE(test_not_associated_cal, calendar_fixture) {
                               *b.data->pt_data, *b.data->meta);
 
 
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->complete();
     b.data->build_raptor();
@@ -780,7 +780,7 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_exception, calendar_fixture) {
     //call all the init again
     b.finish();
     b.data->build_uri();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
 
     b.data->complete();
@@ -832,7 +832,7 @@ BOOST_FIXTURE_TEST_CASE(test_calendar_with_impact, calendar_fixture) {
                               .msg("Disruption on stop_point stop2")
                               .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_uri();
     b.data->complete();
     b.data->build_raptor();
@@ -889,7 +889,7 @@ struct small_cal_fixture {
         //call all the init again
         b.finish();
         b.data->build_uri();
-        b.data->pt_data->index();
+        b.data->pt_data->sort_and_index();
         b.data->build_raptor();
 
         b.data->complete();
@@ -1189,7 +1189,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test_with_lines_closed) {
     b.lines["B"]->opening_time = boost::posix_time::time_duration(23,30,0);
     b.lines["B"]->closing_time = boost::posix_time::time_duration(6,0,0);
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->pt_data->build_uri();
     pbnavitia::Response resp;
@@ -1210,7 +1210,7 @@ BOOST_AUTO_TEST_CASE(departureboard_no_geojson) {
 
     b.vj("A", "11111", "", true, "vj1", "")("stop1", "10:00"_t, "10:00"_t)("stop2", "10:30"_t, "10:30"_t);
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->pt_data->build_uri();
 
@@ -1271,7 +1271,7 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_frequency_and_calendar) {
     b.data->pt_data->meta_vjs.get_mut("vj:1")->associated_calendars.insert({c->uri, a1});
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->pt_data->build_uri();
 
@@ -1321,7 +1321,7 @@ BOOST_AUTO_TEST_CASE(route_schedule_with_boarding_time_order_check) {
         ("stop3", "8:15"_t, "8:15"_t, std::numeric_limits<uint16_t>::max(), true, false, 0, 900);
 
     b.finish();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     b.data->pt_data->build_uri();
     auto * data_ptr = b.data.get();
@@ -1380,7 +1380,7 @@ BOOST_AUTO_TEST_CASE(stop_schedules_order_by_line_route_stop_point) {
     auto* route5lr = b.data->pt_data->routes_map["route:5lr"];
     route5lr->name = "Left - Right";
 
-    b.data->pt_data->sort();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
     auto * data_ptr = b.data.get();
 

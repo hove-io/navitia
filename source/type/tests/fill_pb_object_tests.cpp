@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(test_pt_displayinfo_destination) {
     b.vj("V")("stop2", 8000, 8050);
     b.finish();
     b.data->build_uri();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
 
     auto pt_display_info = new pbnavitia::PtDisplayInfo();
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(test_pt_displayinfo_destination_without_vj) {
     b.data->pt_data->routes.push_back(route);
     b.finish();
     b.data->build_uri();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
 
     auto pt_display_info = new pbnavitia::PtDisplayInfo();
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(disable_geojson_on_route_line) {
     b.vj("A");
     b.finish();
     b.data->build_uri();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
 
     Route* r = b.data->pt_data->routes_map["A:0"];
@@ -265,11 +265,38 @@ BOOST_AUTO_TEST_CASE(pb_convertor_ptref) {
     b.vj("A great \"uri\" for café");
     b.finish();
     b.data->build_uri();
-    b.data->pt_data->index();
+    b.data->pt_data->sort_and_index();
     b.data->build_raptor();
 
     auto modes = navitia::ptref_indexes<navitia::type::PhysicalMode>(
         b.data->pt_data->lines.front(),
         *b.data);
     BOOST_CHECK_EQUAL(modes.size(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(fill_crowfly_section_test) {
+    ed::builder b("20120614");
+    b.finish();
+    b.data->build_uri();
+    b.data->pt_data->sort_and_index();
+    b.data->build_raptor();
+
+    auto pt_journey = new pbnavitia::Journey();
+    boost::gregorian::date d1(2014,06,14);
+    boost::posix_time::ptime t1(d1, boost::posix_time::seconds(10));
+    boost::posix_time::ptime t2(d1, boost::posix_time::hours(10));
+    boost::posix_time::time_period period(t1, t2);
+
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, pt::not_a_date_time, period); 
+
+    pb_creator.fill_crowfly_section(EntryPoint(Type_e::StopPoint, "Totorigin"), 
+                                    EntryPoint(Type_e::StopPoint, "Tatastination"),   
+                                    navitia::time_duration(0,0,0),
+                                    Mode_e::Car,
+                                    t1,
+                                    pt_journey);
+
+    BOOST_CHECK_EQUAL(pt_journey->sections(0).street_network().duration(), 0);
+    BOOST_CHECK_EQUAL(pt_journey->sections(0).street_network().mode(), pbnavitia::Walking);
 }

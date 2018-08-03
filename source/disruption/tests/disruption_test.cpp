@@ -92,7 +92,7 @@ public:
                 ("stop_area:stop22", 8*3600 + 20 * 60 ,8*3600 + 21*60);
         b.generate_dummy_basis();
         b.finish();
-        b.data->pt_data->index();
+        b.data->pt_data->sort_and_index();
         b.data->build_uri();
         b.data->build_raptor();
         for(navitia::type::Line *line : b.data->pt_data->lines){

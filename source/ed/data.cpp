@@ -30,7 +30,6 @@ www.navitia.io
 
 #include "data.h"
 #include <iostream>
-#include "ptreferential/where.h"
 #include "utils/timer.h"
 #include "utils/functions.h"
 #include "utils/exception.h"
@@ -474,7 +473,7 @@ static nt::GeographicalCoord
 get_nearest_projection(const nt::GeographicalCoord& coord, const nt::LineString& line) {
     if (line.empty()) return coord;
     nt::GeographicalCoord projected_point = *line.begin();
-    auto nearest_dist = coord.distance_to(projected_point);
+    auto nearest_dist = float(coord.distance_to(projected_point));
     for (auto it1 = line.begin(), it2 = it1 + 1; it2 != line.end(); ++it1, ++it2) {
         auto projection = coord.project(*it1, *it2);
         if (nearest_dist <= projection.second) continue;

@@ -39,5 +39,13 @@ pb_odt_level = {
     'all': type_pb2.all
 }
 
-# When an emtpy string is passed, it deactivates all
-add_poi_infos_types = ('bss_stands', 'car_park', '')
+# When an emtpy string or 'none' is passed, it deactivates all
+add_poi_infos_types = ('bss_stands', 'car_park', '', 'none')
+
+
+def handle_poi_infos(add_poi_info_param, bss_stands_param):
+    if bss_stands_param and "bss_stands" not in add_poi_info_param:
+        add_poi_info_param.append("bss_stands")
+
+    return any(value in add_poi_info_param for value in ['bss_stands', 'car_park'])
+
