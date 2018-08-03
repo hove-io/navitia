@@ -273,3 +273,30 @@ BOOST_AUTO_TEST_CASE(pb_convertor_ptref) {
         *b.data);
     BOOST_CHECK_EQUAL(modes.size(), 1);
 }
+
+BOOST_AUTO_TEST_CASE(fill_crowfly_section_test) {
+    ed::builder b("20120614");
+    b.finish();
+    b.data->build_uri();
+    b.data->pt_data->sort_and_index();
+    b.data->build_raptor();
+
+    auto pt_journey = new pbnavitia::Journey();
+    boost::gregorian::date d1(2014,06,14);
+    boost::posix_time::ptime t1(d1, boost::posix_time::seconds(10));
+    boost::posix_time::ptime t2(d1, boost::posix_time::hours(10));
+    boost::posix_time::time_period period(t1, t2);
+
+    auto * data_ptr = b.data.get();
+    navitia::PbCreator pb_creator(data_ptr, pt::not_a_date_time, period); 
+
+    pb_creator.fill_crowfly_section(EntryPoint(Type_e::StopPoint, "Totorigin"), 
+                                    EntryPoint(Type_e::StopPoint, "Tatastination"),   
+                                    navitia::time_duration(0,0,0),
+                                    Mode_e::Car,
+                                    t1,
+                                    pt_journey);
+
+    BOOST_CHECK_EQUAL(pt_journey->sections(0).street_network().duration(), 0);
+    BOOST_CHECK_EQUAL(pt_journey->sections(0).street_network().mode(), pbnavitia::Walking);
+}

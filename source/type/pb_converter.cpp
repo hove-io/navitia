@@ -1900,22 +1900,6 @@ void PbCreator::fill_crowfly_section(const type::EntryPoint& origin, const type:
     fill(&origin, section->mutable_origin(), 2);
     fill(&destination, section->mutable_destination(), 2);
 
-    section->set_begin_date_time(navitia::to_posix_timestamp(origin_time));
-    section->set_duration(crow_fly_duration.total_seconds());
-    if (crow_fly_duration.total_seconds() > 0) {
-        section->set_length(origin.coordinates.distance_to(destination.coordinates));
-        auto* new_coord = section->add_shape();
-        new_coord->set_lon(origin.coordinates.lon());
-        new_coord->set_lat(origin.coordinates.lat());
-        new_coord = section->add_shape();
-        new_coord->set_lon(destination.coordinates.lon());
-        new_coord->set_lat(destination.coordinates.lat());
-    } else {
-        section->set_length(0);
-    }
-    section->set_end_date_time(navitia::to_posix_timestamp(origin_time + crow_fly_duration.to_posix()));
-    section->set_type(pbnavitia::SectionType::CROW_FLY);
-
     //we want to store the transportation mode used
     switch (mode) {
     case type::Mode_e::Walking:
@@ -1934,6 +1918,26 @@ void PbCreator::fill_crowfly_section(const type::EntryPoint& origin, const type:
     default:
         throw navitia::exception("Unhandled TransportCaracteristic value in pb_converter");
     }
+
+    section->set_begin_date_time(navitia::to_posix_timestamp(origin_time));
+    section->set_duration(crow_fly_duration.total_seconds());
+    if (crow_fly_duration.total_seconds() > 0) {
+        section->set_length(origin.coordinates.distance_to(destination.coordinates));
+        auto* new_coord = section->add_shape();
+        new_coord->set_lon(origin.coordinates.lon());
+        new_coord->set_lat(origin.coordinates.lat());
+        new_coord = section->add_shape();
+        new_coord->set_lon(destination.coordinates.lon());
+        new_coord->set_lat(destination.coordinates.lat());
+    } else {
+        section->set_length(0);
+        // For teleportation crow_fly (duration=0), the mode is always 'walking'
+        section->mutable_street_network()->set_mode(pbnavitia::Walking);
+    }
+    section->set_end_date_time(navitia::to_posix_timestamp(origin_time + crow_fly_duration.to_posix()));
+    section->set_type(pbnavitia::SectionType::CROW_FLY);
+
+
 }
 
 void PbCreator::fill_pb_error(const pbnavitia::Error::error_id id,
