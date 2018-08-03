@@ -282,3 +282,21 @@ BOOST_AUTO_TEST_CASE(ng_specific_features) {
                             {}, OdtLevel_e::all, {}, {}, *b.data);
     BOOST_CHECK_EQUAL_RANGE(indexes, make_indexes({2, 5}));
 }
+
+BOOST_AUTO_TEST_CASE(get_connection) {
+    ed::builder b("20180710");
+    b.generate_dummy_basis();
+    b.vj("A")("stop0", 700)("stop1", 800);
+    b.vj("B")("stop2", 900)("stop3", 1000);
+    b.connection("stop1", "stop2", 50);
+    b.connection("stop2", "stop1", 50);
+    b.data->pt_data->build_uri();
+    b.data->pt_data->sort_and_index();
+    b.finish();
+    b.data->build_raptor();
+
+    auto indexes = make_query_ng(Type_e::Line, "(get connection <- line.id=A) - line.id=A",
+                                 {}, OdtLevel_e::all, {}, {}, *b.data);
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+    BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.at(*indexes.begin())->uri, "B");
+}

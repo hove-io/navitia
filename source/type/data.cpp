@@ -783,6 +783,9 @@ Data::get_target_by_one_source(Type_e source, Type_e target,
         result = pt_data->collection_name[source_idx]->get(target, *pt_data); \
         break;
     ITERATE_NAVITIA_PT_TYPES(GET_INDEXES)
+    case Type_e::Connection:
+        result = pt_data->stop_point_connections[source_idx]->get(target, *pt_data);
+        break;
     case Type_e::POI:
         result = geo_ref->pois[source_idx]->get(target, *geo_ref);
         break;
