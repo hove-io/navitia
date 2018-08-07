@@ -29,7 +29,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 import serpy
-from navitiacommon import type_pb2
 
 from jormungandr.interfaces.v1.serializer.base import PbGenericSerializer, EnumListField, LiteralField
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, DateType
@@ -38,8 +37,7 @@ from jormungandr.interfaces.v1.serializer.fields import *
 from jormungandr.interfaces.v1.serializer import jsonschema, base
 from jormungandr.parking_space_availability.bss import stands
 from navitiacommon.type_pb2 import ActiveStatus, Channel, hasEquipments, Properties, NavitiaType, Severity, \
-    StopTimeUpdateStatus
-from navitiacommon.response_pb2 import SectionAdditionalInformationType
+    StopTimeUpdateStatus, RTLevel
 
 
 LABEL_DESCRIPTION = """
@@ -301,7 +299,7 @@ class PoiSerializer(PbGenericSerializer):
     label = jsonschema.Field(schema_type=str)
     administrative_regions = AdminSerializer(many=True, display_none=False)
     poi_type = PoiTypeSerializer(display_none=False)
-    properties = jsonschema.MethodField(schema_metadata={'type': 'object','additionalProperties': {'type': 'string'}})
+    properties = jsonschema.MethodField(schema_metadata={'type': 'object', 'additionalProperties': {'type': 'string'}})
     address = AddressSerializer()
     stands = LiteralField(None, schema_type=StandsSerializer, display_none=False)
 
@@ -581,4 +579,4 @@ class StopDateTimeSerializer(PbNestedSerializer):
     # additional_informations is a nullable field, add nullable=True when we migrate to swagger 3
     additional_informations = AdditionalInformation(attr='additional_informations', display_none=True, pb_type=Properties.AdditionalInformation)
     links = PropertiesLinksSerializer(attr="properties")
-    data_freshness = EnumField()
+    data_freshness = EnumField(pb_type=RTLevel)

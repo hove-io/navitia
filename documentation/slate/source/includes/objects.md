@@ -595,7 +595,7 @@ Poi = Point Of Interest
 |name    |string               |Name of the poi                                                     |
 |label   |string               |Label of the poi. The name is directly taken from the data whereas the label is something we compute for better traveler information. If you don't know what to display, display the label.|
 |poi_type|[poi_type](#poi-type)|Type of the poi                                                     |
-|stands  |[stands](#stands)    |Informations on the spots available, for BSS stations               |
+|stands  |[stands](#stands)    |Information on the spots available, for BSS stations               |
 
 ### Address
 
