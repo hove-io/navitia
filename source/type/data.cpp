@@ -75,7 +75,8 @@ Data::Data(size_t data_identifier) :
             [&](const GeographicalCoord &c, georef::AdminRtree& admin_tree){
             return geo_ref->find_admins(c, admin_tree);
             }),
-    last_load_succeeded(false)
+    last_load_succeeded(false),
+    last_rt_data_loaded(std::make_shared<const pt::ptime>(pt::not_a_date_time))
 {
     loaded = false;
     is_connected_to_rabbitmq = false;
@@ -852,6 +853,11 @@ void Data::clone_from(const Data& from) {
     std::thread write([&]() {boost::archive::binary_oarchive oa(p.out); oa << from;});
     { boost::archive::binary_iarchive ia(p.in); ia >> *this; }
     write.join();
+}
+
+void Data::set_last_rt_data_loaded(const boost::posix_time::ptime& p) const{
+    auto ptr = std::make_shared<const boost::posix_time::ptime>(p);
+    std::atomic_store(&this->last_rt_data_loaded, ptr);
 }
 
 }} //namespace navitia::type

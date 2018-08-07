@@ -185,7 +185,7 @@ public:
     // UTC
     boost::posix_time::ptime last_load_at;
 
-    boost::posix_time::ptime last_rt_data_loaded; //datetime of the last Real Time loaded data
+    mutable std::shared_ptr<const boost::posix_time::ptime> last_rt_data_loaded; //datetime of the last Real Time loaded data
 
     // This object is the only field mutated in this object. As it is
     // thread safe to mutate it, we mark it as mutable.  Maybe we can
@@ -264,6 +264,8 @@ public:
 
     // Deep clone from the given Data.
     void clone_from(const Data&);
+
+    void set_last_rt_data_loaded(const boost::posix_time::ptime&) const;
 private:
     /** Get similar validitypattern **/
     ValidityPattern* get_similar_validity_pattern(ValidityPattern* vp) const;

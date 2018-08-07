@@ -248,7 +248,11 @@ void Worker::status() {
     status->set_loaded(d->loaded);
     status->set_last_load_status(d->last_load_succeeded);
     status->set_last_load_at(pt::to_iso_string(d->last_load_at));
-    status->set_last_rt_data_loaded(pt::to_iso_string(d->last_rt_data_loaded));
+    //make a copy of shared_ptr to use it locally
+    auto last_rt_data_loaded = std::atomic_load(&d->last_rt_data_loaded);
+    if(last_rt_data_loaded){
+        status->set_last_rt_data_loaded(pt::to_iso_string(*d->last_rt_data_loaded));
+    }
     status->set_nb_threads(conf.nb_threads());
     status->set_is_connected_to_rabbitmq(d->is_connected_to_rabbitmq);
     status->set_disruption_error(d->disruption_error);
