@@ -2312,20 +2312,6 @@ BOOST_AUTO_TEST_CASE(test_realtime_disruption_on_line_then_stop_point) {
                               .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
-    navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Y'a plus qu'a attendre ton train")
-                              .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
-                              .on(nt::Type_e::Line, "A")
-                              .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
-                              .get_disruption(),
-                              *b.data->pt_data, *b.data->meta);
-
-    navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Un peu de patience...")
-                              .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
-                              .on(nt::Type_e::StopPoint, "stopA2")
-                              .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
-                              .get_disruption(),
-                              *b.data->pt_data, *b.data->meta);
-
     BOOST_CHECK_MESSAGE(
             ba::ends_with(vj1->rt_validity_pattern()->days.to_string(), "11110111"),
             vj1->rt_validity_pattern()->days);
@@ -2339,14 +2325,6 @@ BOOST_AUTO_TEST_CASE(test_realtime_disruption_on_line_then_stop_point) {
     */
     navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Penguins on fire at Montparnasse")
                               .severity(nt::disruption::Effect::NO_SERVICE)
-                              .on(nt::Type_e::Line, "B")
-                              .on(nt::Type_e::StopPoint, "stopB2")
-                              .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
-                              .get_disruption(),
-                              *b.data->pt_data, *b.data->meta);
-
-    navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Prends ton mal en patience")
-                              .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
                               .on(nt::Type_e::Line, "B")
                               .on(nt::Type_e::StopPoint, "stopB2")
                               .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
