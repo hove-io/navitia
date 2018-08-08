@@ -91,7 +91,8 @@ class JcdecauxProvider(CommonBssProvider):
         data = self._call_webservice()
         if data and 'status' in data.get(ref, {}):
             if data[ref]['status'] == 'OPEN':
-                return Stands(data[ref].get('available_bike_stands', 0), data[ref].get('available_bikes', 0), 'OPEN')
+                return Stands(data[ref].get('available_bike_stands', 0), data[ref].get('available_bikes', 0),
+                              StandsStatus.open)
             elif data[ref]['status'] == 'CLOSED':
                 return Stands(0, 0, StandsStatus.closed)
         return Stands(0, 0, StandsStatus.unavailable)

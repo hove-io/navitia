@@ -160,7 +160,7 @@ class CykleoProvider(CommonBssProvider):
                           obj_station.get('availableElectricBikeCount', 0),
                           StandsStatus.open)
         elif obj_station.get('station', {}).get('status') in ('OUT_OF_SERVICE', 'DECOMMISSIONED'):
-            return Stands(0, 0, 'CLOSED')
-        else:
             return Stands(0, 0, StandsStatus.closed)
+        else:
+            return Stands(0, 0, StandsStatus.unavailable)
 
