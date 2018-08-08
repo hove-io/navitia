@@ -2312,6 +2312,20 @@ BOOST_AUTO_TEST_CASE(test_disruption_on_line_then_stop_point) {
                               .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
+    navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Y'a plus qu'a attendre ton train")
+                              .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
+                              .on(nt::Type_e::Line, "A")
+                              .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Un peu de patience...")
+                              .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
+                              .on(nt::Type_e::StopPoint, "stopA2")
+                              .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
     BOOST_CHECK_MESSAGE(
             ba::ends_with(vj1->rt_validity_pattern()->days.to_string(), "11110111"),
             vj1->rt_validity_pattern()->days);
@@ -2325,6 +2339,14 @@ BOOST_AUTO_TEST_CASE(test_disruption_on_line_then_stop_point) {
     */
     navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Penguins on fire at Montparnasse")
                               .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::Line, "B")
+                              .on(nt::Type_e::StopPoint, "stopB2")
+                              .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Prends ton mal en patience")
+                              .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
                               .on(nt::Type_e::Line, "B")
                               .on(nt::Type_e::StopPoint, "stopB2")
                               .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
@@ -2356,15 +2378,29 @@ BOOST_AUTO_TEST_CASE(test_disruption_on_stop_point_then_line) {
     * Then, we make sure that the real time validity pattern has been disabled
     *
     */
-    navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Fire at Montparnasse")
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Fire at Montparnasse")
                               .severity(nt::disruption::Effect::NO_SERVICE)
                               .on(nt::Type_e::StopPoint, "stopA2")
                               .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
                               .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
 
-    navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Line A : penguins on the line")
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Line A : penguins on the line")
                               .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::Line, "A")
+                              .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Un peu de patience...")
+                              .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
+                              .on(nt::Type_e::StopPoint, "stopA2")
+                              .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Y'a plus qu'a attendre ton train")
+                              .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
                               .on(nt::Type_e::Line, "A")
                               .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
                               .get_disruption(),
@@ -2373,11 +2409,17 @@ BOOST_AUTO_TEST_CASE(test_disruption_on_stop_point_then_line) {
     BOOST_CHECK_MESSAGE(
             ba::ends_with(vj1->rt_validity_pattern()->days.to_string(), "11110111"),
             vj1->rt_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(
+            ba::ends_with(vj1->adapted_validity_pattern()->days.to_string(), "11110111"),
+            vj1->adapted_validity_pattern()->days);
 
-    auto rt_vj1 = b.data->pt_data->vehicle_journeys_map["vj:1:RealTime:0:Fire at Montparnasse"];
+    auto rt_vj1 = b.data->pt_data->vehicle_journeys_map["vj:1:Adapted:0:Fire at Montparnasse"];
     BOOST_CHECK_MESSAGE(
             ba::ends_with(rt_vj1->rt_validity_pattern()->days.to_string(), "00000000"),
             rt_vj1->rt_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(
+            ba::ends_with(rt_vj1->adapted_validity_pattern()->days.to_string(), "00000000"),
+            rt_vj1->adapted_validity_pattern()->days);
 
    /*
     * For VJ2
@@ -2386,19 +2428,93 @@ BOOST_AUTO_TEST_CASE(test_disruption_on_stop_point_then_line) {
     * Then, we make sure that the real time validity pattern has been disabled
     *
     */
-    navitia::apply_disruption(b.impact(nt::RTLevel::RealTime, "Penguins on fire at Montparnasse")
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Penguins on fire at Montparnasse")
                               .severity(nt::disruption::Effect::NO_SERVICE)
                               .on(nt::Type_e::StopPoint, "stopB2")
                               .on(nt::Type_e::Line, "B")
                               .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
                               .get_disruption(),
                               *b.data->pt_data, *b.data->meta);
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Prends ton mal en patience")
+                              .severity(nt::disruption::Effect::SIGNIFICANT_DELAYS)
+                              .on(nt::Type_e::StopPoint, "stopB2")
+                              .on(nt::Type_e::Line, "B")
+                              .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
     BOOST_CHECK_MESSAGE(
             ba::ends_with(vj2->rt_validity_pattern()->days.to_string(), "11110111"),
             vj2->rt_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(
+            ba::ends_with(vj2->adapted_validity_pattern()->days.to_string(), "11110111"),
+            vj2->adapted_validity_pattern()->days);
 
-    auto rt_vj2 = b.data->pt_data->vehicle_journeys_map["vj:2:RealTime:0:Penguins on fire at Montparnasse"];
+    auto rt_vj2 = b.data->pt_data->vehicle_journeys_map["vj:2:Adapted:0:Penguins on fire at Montparnasse"];
     BOOST_CHECK_MESSAGE(
             ba::ends_with(rt_vj2->rt_validity_pattern()->days.to_string(), "00000000"),
             rt_vj2->rt_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(
+            ba::ends_with(rt_vj2->adapted_validity_pattern()->days.to_string(), "00000000"),
+            rt_vj2->adapted_validity_pattern()->days);
+}
+
+BOOST_AUTO_TEST_CASE(repro_disruption_error) {
+    ed::builder b("20120614");
+    auto* vj1 = b.vj("A").uri("vj:1")("stopA1", "10:00"_t)("stopA2", "11:00"_t)("stopA3", "12:00"_t).make();
+    //auto* vj2 = b.vj("B").uri("vj:2")("stopB1", "10:00"_t)("stopB2", "11:00"_t)("stopB3", "12:00"_t).make();
+
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->sort_and_index();
+    b.data->build_raptor();
+    b.data->build_uri();
+    b.data->meta->production_date = bg::date_period("20120614"_d, 7_days);
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "Penguins on fire at Montparnasse")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::StopPoint, "stopA2")
+                              .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_MESSAGE(
+            ba::ends_with(vj1->base_validity_pattern()->days.to_string(), "11111111"),
+            vj1->rt_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(
+            ba::ends_with(vj1->adapted_validity_pattern()->days.to_string(), "11110111"),
+            vj1->adapted_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(
+            ba::ends_with(vj1->rt_validity_pattern()->days.to_string(), "11110111"),
+            vj1->rt_validity_pattern()->days);
+
+    auto rt_vj1 = b.data->pt_data->vehicle_journeys_map["vj:1:Adapted:0:Penguins on fire at Montparnasse"];
+
+    BOOST_CHECK_MESSAGE(
+            ba::ends_with(rt_vj1->base_validity_pattern()->days.to_string(), "00000000"),
+            rt_vj1->rt_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(
+            ba::ends_with(rt_vj1->adapted_validity_pattern()->days.to_string(), "00001000"),
+            rt_vj1->rt_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(
+            ba::ends_with(rt_vj1->rt_validity_pattern()->days.to_string(), "00001000"),
+            rt_vj1->rt_validity_pattern()->days);
+
+    navitia::apply_disruption(b.impact(nt::RTLevel::Adapted, "coffee spilled on the line")
+                              .severity(nt::disruption::Effect::NO_SERVICE)
+                              .on(nt::Type_e::Line, "A")
+                              .application_periods(btp("20120617T1000"_dt, "20120617T1200"_dt))
+                              .get_disruption(),
+                              *b.data->pt_data, *b.data->meta);
+
+    BOOST_CHECK_MESSAGE(
+            ba::ends_with(rt_vj1->base_validity_pattern()->days.to_string(), "00000000"),
+            rt_vj1->rt_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(
+            ba::ends_with(rt_vj1->adapted_validity_pattern()->days.to_string(), "00000000"),
+            rt_vj1->rt_validity_pattern()->days);
+    BOOST_CHECK_MESSAGE(
+            ba::ends_with(rt_vj1->rt_validity_pattern()->days.to_string(), "00000000"),
+            rt_vj1->rt_validity_pattern()->days);
 }

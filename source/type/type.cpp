@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -396,12 +396,16 @@ bool VehicleJourney::has_landing() const{
 namespace {
 template <typename F>
 static bool concerns_base_at_period(const VehicleJourney& vj,
+                                    const RTLevel rt_level,
                                     const std::vector<bt::time_period>& periods,
                                     const F& fun,
                                     bool check_past_midnight = true) {
     bool intersect = false;
-    // we only need to check on the base canceled vp
-    ValidityPattern concerned_vp = vj.get_base_canceled_validity_pattern();
+
+    ValidityPattern concerned_vp = *vj.validity_patterns[rt_level];
+    // We shift the vlidity pattern to get the base one (from adapted or realtime)
+    concerned_vp.days >>= vj.shift;
+
     for (const auto& period: periods) {
         //we can impact a vj with a departure the day before who past midnight
         namespace bg = boost::gregorian;
@@ -638,7 +642,7 @@ void MetaVehicleJourney::cancel_vj(RTLevel level,
                     return true; // we don't want to stop
                 };
 
-                if (concerns_base_at_period(*vj, periods, vp_modifier)) {
+                if (concerns_base_at_period(*vj, vp_level, periods, vp_modifier)) {
                     vj->validity_patterns[vp_level] = pt_data.get_or_create_validity_pattern(tmp_vp);
                 }
             }
@@ -1028,7 +1032,7 @@ VehicleJourney::get_impacts() const {
         auto vp_functor = [&] (const unsigned) {
             return false; // we don't need to carry on when we find a day concerned
         };
-        if (concerns_base_at_period(*this, impact->application_periods, vp_functor, false)) {
+        if (concerns_base_at_period(*this, realtime_level, impact->application_periods, vp_functor, false)) {
             result.push_back(impact);
         }
     }
@@ -1136,7 +1140,7 @@ EntryPoint::EntryPoint(const Type_e type, const std::string &uri, int access_dur
             this->coordinates.set_lon(coord.first);
             this->coordinates.set_lat(coord.second);
         } catch (const navitia::wrong_coordinate&) {
-            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"), 
+            LOG4CPLUS_INFO(log4cplus::Logger::getInstance("logger"),
                            "uri " << uri << " partialy match coordinate, cannot work");
             this->coordinates.set_lon(0);
             this->coordinates.set_lat(0);
