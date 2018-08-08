@@ -87,15 +87,15 @@ def parking_space_availability_atos_get_informations_test():
     }
     provider = AtosProvider(u'10', u'vélitul', u'https://webservice.atos.com?wsdl', {'keolis'})
     provider._get_all_stands = MagicMock(return_value=all_stands)
-    assert provider.get_informations(poi) == stand_2
+    assert provider._get_informations(poi) == stand_2
     invalid_poi = {}
-    assert provider.get_informations(invalid_poi) == Stands(0, 0, StandsStatus.unavailable)
+    assert provider._get_informations(invalid_poi) == Stands(0, 0, StandsStatus.unavailable)
 
     poi_blur_ref = {'properties': {'ref': '02'}}
-    assert provider.get_informations(poi_blur_ref) == stand_2
+    assert provider._get_informations(poi_blur_ref) == stand_2
 
     provider._get_all_stands = MagicMock(side_effect=Exception('cannot access service'))
-    assert provider.get_informations(poi) == Stands(0, 0, StandsStatus.unavailable)
+    assert provider._get_informations(poi) == Stands(0, 0, StandsStatus.unavailable)
 
 
 def parking_space_availability_atos_get_informations_with_closed_status_test():
@@ -110,9 +110,9 @@ def parking_space_availability_atos_get_informations_with_closed_status_test():
     }
     provider = AtosProvider(u'10', u'vélitul', u'https://webservice.atos.com?wsdl', {'keolis'})
     provider._get_all_stands = MagicMock(return_value=all_stands)
-    assert provider.get_informations(poi) == Stands(0, 0, StandsStatus.closed)
+    assert provider._get_informations(poi) == Stands(0, 0, StandsStatus.closed)
     invalid_poi = {}
-    assert provider.get_informations(invalid_poi) == Stands(0, 0, StandsStatus.unavailable)
+    assert provider._get_informations(invalid_poi) == Stands(0, 0, StandsStatus.unavailable)
 
 
 def parking_space_availability_atos_get_all_stands_test():

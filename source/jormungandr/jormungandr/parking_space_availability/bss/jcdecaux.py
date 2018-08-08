@@ -32,8 +32,8 @@ import logging
 import pybreaker
 import requests as requests
 
-from jormungandr import cache, app, utils, new_relic
-from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
+from jormungandr import cache, app
+from jormungandr.parking_space_availability.bss.common_bss_provider import CommonBssProvider, BssProxyError
 from jormungandr.parking_space_availability.bss.stands import Stands, StandsStatus
 from jormungandr.ptref import FeedPublisher
 
@@ -45,7 +45,7 @@ DEFAULT_JCDECAUX_FEED_PUBLISHER = {
 }
 
 
-class JcdecauxProvider(AbstractParkingPlacesProvider):
+class JcdecauxProvider(CommonBssProvider):
 
     WS_URL_TEMPLATE = 'https://api.jcdecaux.com/vls/v1/stations/?contract={}&apiKey={}'
 
@@ -75,30 +75,25 @@ class JcdecauxProvider(AbstractParkingPlacesProvider):
                 stands[str(s['number'])] = s
             return stands
         except pybreaker.CircuitBreakerError as e:
-            msg = 'JCDecaux service dead (error: {})'.format(e)
-            logging.getLogger(__name__).error(msg)
-            utils.record_external_failure(msg, 'bss', self.network)
+            logging.getLogger(__name__).error('JCDecaux service dead (error: {})'.format(e))
+            raise BssProxyError('circuit breaker open')
         except requests.Timeout as t:
-            msg = 'JCDecaux service timeout (error: {})'.format(t)
-            logging.getLogger(__name__).error(msg)
-            utils.record_external_failure(msg, 'bss', self.network)
-        except:
-            msg = 'JCDecaux error'
-            logging.getLogger(__name__).exception(msg)
-            utils.record_external_failure(msg, 'bss', self.network)
+            logging.getLogger(__name__).error('JCDecaux service timeout (error: {})'.format(t))
+            raise BssProxyError('timeout')
+        except Exception as e:
+            logging.getLogger(__name__).exception('JCDecaux error : {}'.format(str(e)))
+            raise BssProxyError(str(e))
         return None
 
-    def get_informations(self, poi):
+    def _get_informations(self, poi):
         # Possible status values of the station: OPEN and CLOSED
         ref = poi.get('properties', {}).get('ref')
         data = self._call_webservice()
         if data and 'status' in data.get(ref, {}):
             if data[ref]['status'] == 'OPEN':
-                utils.record_call('ok', 'bss', self.network)
                 return Stands(data[ref].get('available_bike_stands', 0), data[ref].get('available_bikes', 0), 'OPEN')
             elif data[ref]['status'] == 'CLOSED':
                 return Stands(0, 0, StandsStatus.closed)
-        utils.record_internal_failure('unavailable', 'bss', self.network)
         return Stands(0, 0, StandsStatus.unavailable)
 
     def status(self):

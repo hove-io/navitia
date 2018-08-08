@@ -34,15 +34,15 @@ import logging
 import pybreaker
 import zeep
 
-from jormungandr import cache, app, utils, new_relic
-from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
+from jormungandr import cache, app
+from jormungandr.parking_space_availability.bss.common_bss_provider import CommonBssProvider, BssProxyError
 from jormungandr.parking_space_availability.bss.stands import Stands, StandsStatus
 from jormungandr.ptref import FeedPublisher
 
 DEFAULT_ATOS_FEED_PUBLISHER = None
 
 
-class AtosProvider(AbstractParkingPlacesProvider):
+class AtosProvider(CommonBssProvider):
 
     def __init__(self, id_ao, network, url, operators={'keolis'}, timeout=5,
                  feed_publisher=DEFAULT_ATOS_FEED_PUBLISHER, **kwargs):
@@ -63,13 +63,12 @@ class AtosProvider(AbstractParkingPlacesProvider):
         return properties.get('operator', '').lower() in self.operators and \
                properties.get('network', '').lower() == self.network
 
-    def get_informations(self, poi):
+    def _get_informations(self, poi):
         logging.debug('building stands')
         try:
             all_stands = self.breaker.call(self._get_all_stands)
             ref = poi.get('properties', {}).get('ref')
             if not ref:
-                utils.record_internal_failure('unavailable', 'bss', self.network)
                 return Stands(0, 0, StandsStatus.unavailable)
             stands = all_stands.get(ref.lstrip('0'))
             if stands:
@@ -78,15 +77,11 @@ class AtosProvider(AbstractParkingPlacesProvider):
                     stands.available_places = 0
                     stands.total_stands = 0
 
-                utils.record_call('ok', 'bss', self.network)
                 return stands
         except:
             msg = 'transport error during call to {} bss provider'.format(self.network)
             logging.getLogger(__name__).exception(msg)
-            #record in newrelic
-            utils.record_external_failure(msg, 'bss', self.network)
 
-        utils.record_internal_failure('unavailable', 'bss', self.network)
         return Stands(0, 0, StandsStatus.unavailable)
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_ATOS', 30))
@@ -94,7 +89,7 @@ class AtosProvider(AbstractParkingPlacesProvider):
         with self._get_client() as client:
             all_stands = client.service.getSummaryInformationTerminals(self.id_ao)
             return {stands.libelle: Stands(stands.nbPlacesDispo, stands.nbVelosDispo,
-                                           StandsStatus.open if stands.etatConnexion == 'CONNECTEE' else StandsStatus.unavailable)
+                                           StandsStatus.open if stands.etatConnexion == 'CONNECTEE' else 'UNAVAILABLE')
                     for stands in all_stands}
 
     @contextmanager
