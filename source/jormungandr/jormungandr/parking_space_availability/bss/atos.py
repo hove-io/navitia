@@ -79,8 +79,7 @@ class AtosProvider(CommonBssProvider):
 
                 return stands
         except:
-            msg = 'transport error during call to {} bss provider'.format(self.network)
-            logging.getLogger(__name__).exception(msg)
+            logging.getLogger(__name__).exception('transport error during call to %s bss provider', self.id_ao)
 
         return Stands(0, 0, StandsStatus.unavailable)
 
