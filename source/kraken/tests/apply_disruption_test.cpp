@@ -2362,7 +2362,6 @@ BOOST_AUTO_TEST_CASE(test_realtime_disruption_on_line_then_stop_point) {
 BOOST_AUTO_TEST_CASE(test_adapted_disruptions_on_stop_point_then_line) {
     ed::builder b("20120614");
     auto* vj1 = b.vj("A").uri("vj:1")("stopA1", "10:00"_t)("stopA2", "11:00"_t)("stopA3", "12:00"_t).make();
-    //auto* vj2 = b.vj("B").uri("vj:2")("stopB1", "10:00"_t)("stopB2", "11:00"_t)("stopB3", "12:00"_t).make();
 
     b.generate_dummy_basis();
     b.finish();
