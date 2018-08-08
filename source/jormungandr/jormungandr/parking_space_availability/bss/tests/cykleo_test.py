@@ -31,7 +31,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from copy import deepcopy
 from jormungandr.parking_space_availability.bss.cykleo import CykleoProvider
-from jormungandr.parking_space_availability.bss.stands import Stands
+from jormungandr.parking_space_availability.bss.stands import Stands, StandsStatus
 from mock import MagicMock
 
 network = u'DiviaVélodi'
@@ -111,14 +111,14 @@ def parking_space_availability_cykleo_get_informations_test():
     }}
     provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
-    assert provider.get_informations(poi) == Stands(2, 4, 'OPEN')
-    assert provider.get_informations(poi_with_0) == Stands(2, 4, 'OPEN')
+    assert provider.get_informations(poi) == Stands(2, 4, StandsStatus.open)
+    assert provider.get_informations(poi_with_0) == Stands(2, 4, StandsStatus.open)
     provider._call_webservice = MagicMock(return_value=None)
-    assert provider.get_informations(poi) == Stands(0, 0, 'UNAVAILABLE')
-    assert provider.get_informations(poi_with_0) == Stands(0, 0, 'UNAVAILABLE')
+    assert provider.get_informations(poi) == Stands(0, 0, StandsStatus.unavailable)
+    assert provider.get_informations(poi_with_0) == Stands(0, 0, StandsStatus.unavailable)
 
     invalid_poi = {}
-    assert provider.get_informations(invalid_poi) == Stands(0, 0, 'UNAVAILABLE')
+    assert provider.get_informations(invalid_poi) == Stands(0, 0, StandsStatus.unavailable)
 
 
 def parking_space_availability_cykleo_get_informations_with_status_Closed_test():
@@ -141,8 +141,8 @@ def parking_space_availability_cykleo_get_informations_with_status_Closed_test()
     }}
     provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
-    assert provider.get_informations(poi) == Stands(0, 0, 'Closed')
-    assert provider.get_informations(poi_with_0) == Stands(0, 0, 'Closed')
+    assert provider.get_informations(poi) == Stands(0, 0, StandsStatus.closed)
+    assert provider.get_informations(poi_with_0) == Stands(0, 0, StandsStatus.closed)
 
 
 def parking_space_availability_cykleo_get_informations_with_status_Closed_test():
@@ -165,8 +165,8 @@ def parking_space_availability_cykleo_get_informations_with_status_Closed_test()
     }}
     provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
-    assert provider.get_informations(poi) == Stands(0, 0, 'UNAVAILABLE')
-    assert provider.get_informations(poi_with_0) == Stands(0, 0, 'UNAVAILABLE')
+    assert provider.get_informations(poi) == Stands(0, 0, StandsStatus.unavailable)
+    assert provider.get_informations(poi_with_0) == Stands(0, 0, StandsStatus.unavailable)
 
 
 def available_classic_bike_count_only_test():
@@ -188,8 +188,8 @@ def available_classic_bike_count_only_test():
     }}
     provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
-    assert provider.get_informations(poi) == Stands(2, 1, 'OPEN')
-    assert provider.get_informations(poi_with_0) == Stands(2, 1, 'OPEN')
+    assert provider.get_informations(poi) == Stands(2, 1, StandsStatus.open)
+    assert provider.get_informations(poi_with_0) == Stands(2, 1, StandsStatus.open)
 
 
 def available_electric_bike_count_only_test():
@@ -211,8 +211,8 @@ def available_electric_bike_count_only_test():
     }}
     provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
-    assert provider.get_informations(poi) == Stands(2, 1, 'OPEN')
-    assert provider.get_informations(poi_with_0) == Stands(2, 1, 'OPEN')
+    assert provider.get_informations(poi) == Stands(2, 1, StandsStatus.open)
+    assert provider.get_informations(poi_with_0) == Stands(2, 1, StandsStatus.open)
 
 
 def witout_available_dock_count_test():
@@ -234,6 +234,6 @@ def witout_available_dock_count_test():
     provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
     res_stands = provider.get_informations(poi)
-    assert res_stands == Stands(0, 0, 'UNAVAILABLE')
+    assert res_stands == Stands(0, 0, StandsStatus.unavailable)
     res_stands = provider.get_informations(poi_with_0)
-    assert res_stands == Stands(0, 0, 'UNAVAILABLE')
+    assert res_stands == Stands(0, 0, StandsStatus.unavailable)
