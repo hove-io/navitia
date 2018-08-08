@@ -5,7 +5,13 @@ You should first have a proper python env:
 pip install -r requirements_release.txt -U
 ```
 
-Then for a "Normal" release (minor):
+## "Normal" release (minor)
+
+First have a look on github's repo at PRs about to be released https://github.com/CanalTP/navitia/pulls?q=is%3Apr+is%3Aclosed+sort%3Aupdated-desc
+* Check that `not_in_changelog` and `hotfix` labels are correct and none is missing on PRs that are gonna be released
+* Check that titles are correct (clear, with the component impacted)
+
+Then the script should take over:
 ```
 cd <path/to/repo/navitia>
 # to be sure to launch the correct version of the release script
@@ -45,6 +51,12 @@ Then the process is less automated (but still, instructions are given):
 	``` 
 	git tag -a vx.yy.z
 	```
+    _Minor_: You will have to populate the tag with correct blank lines if you want a nice github changelog:
+    ```
+    Version 2.57.0
+
+        * Kraken: Add ptref shortcut between physical_mode and jpps  <https://github.com/CanalTP/navitia/pull/2417>
+    ```
 * Push the release branch to the dev branch
 	``` 
 	git push upstream release dev --tags
