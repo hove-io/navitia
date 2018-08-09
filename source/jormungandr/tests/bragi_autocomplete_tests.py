@@ -109,7 +109,8 @@ BRAGI_MOCK_RESPONSE = {
                     ],
                 }
             },
-            "type": "Feature"
+            "type": "Feature",
+            "distance": 400
         }
     ]
 }
@@ -219,7 +220,8 @@ BRAGI_MOCK_POI_WITHOUT_ADDRESS = {
                     ],
                     }
             },
-            "type": "Feature"
+            "type": "Feature",
+            "distance": 400
         }
     ]
 }
@@ -299,7 +301,8 @@ BRAGI_MOCK_STOP_AREA_WITH_MORE_ATTRIBUTS = {
                     ],
                     }
             },
-            "type": "Feature"
+            "type": "Feature",
+            "distance": 400
         }
     ]
 }
@@ -493,6 +496,7 @@ BRAGI_MOCK_ADMIN = {
     "features": [
         {
             "type": "Feature",
+            "distance": 400,
             "geometry": {
                 "coordinates": [
                     5.0414701,
@@ -733,6 +737,7 @@ def mock_bragi_autocomplete_call(bragi_response, limite=10, http_response_code=2
 
     return mock_requests
 
+
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF}, global_config={'activate_bragi': True})
 class TestBragiAutocomplete(AbstractTestFixture):
 
@@ -749,6 +754,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['embedded_type'] == 'address'
             assert r[0]['address']['name'] == 'Rue Bob'
             assert r[0]['address']['label'] == '20 Rue Bob (Bobtown)'
+            assert r[0]['distance'] == 400
             fbs = response['feed_publishers']
             assert {fb['id'] for fb in fbs} >= {u'osm', u'bano'}
             assert len(r[0]['address'].get('administrative_regions')) == 1
@@ -919,6 +925,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['embedded_type'] == 'poi'
             assert r[0]['poi']['name'] == 'bobette'
             assert r[0]['poi']['label'] == "bobette's label"
+            assert r[0]['distance'] == 400
             assert not r[0]['poi'].get('address')
 
     def test_stop_area_with_modes(self):
@@ -966,6 +973,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
 
             assert r[0]['stop_area'].get('timezone') == 'Europe/Paris'
             admins = r[0]['stop_area'].get('administrative_regions')
+            assert r[0]['distance'] == 400
             assert len(admins) == 1
 
     def test_stop_area_with_modes_depth_zero(self):
@@ -1035,6 +1043,10 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert 'properties' not in r[0]['stop_area']
             # Attribute displayed but None
             assert not r[0]['stop_area'].get('timezone')
+            if os.getenv('JORMUNGANDR_USE_SERPY'):
+                assert 'distance' not in r[0]
+            else:
+                assert not r[0]['distance']
 
     def test_feature_unknown_type(self):
         mock_requests = mock_bragi_autocomplete_call(BRAGI_MOCK_TYPE_UNKNOWN, limite=2)
@@ -1157,6 +1169,10 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert len(r) == 1
             assert r[0]['name'] == "bobette's label"
             assert r[0]['embedded_type'] == "poi"
+            if os.getenv('JORMUNGANDR_USE_SERPY'):
+                assert 'distance' not in r[0]
+            else:
+                assert not r[0]['distance']
             poi = r[0]['poi']
             assert poi['label'] == "bobette's label"
             assert poi['properties']["amenity"] == "bicycle_rental"
@@ -1199,6 +1215,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['name'] == 'Dijon'
             assert r[0]['embedded_type'] == 'administrative_region'
             assert r[0]['id'] == 'admin:fr:21231'
+            assert r[0]['distance'] == 400
             assert r[0]['administrative_region']['id'] == 'admin:fr:21231'
             assert r[0]['administrative_region']['insee'] == '21231'
             assert r[0]['administrative_region']['label'] == 'Dijon (21000)'
@@ -1219,6 +1236,10 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['administrative_region']['label'] == 'Créteil (94000)'
             assert r[0]['administrative_region']['id'] == 'admin:fr:941'
             assert r[0]['administrative_region']['zip_code'] == '94000'
+            if os.getenv('JORMUNGANDR_USE_SERPY'):
+                assert 'distance' not in r[0]
+            else:
+                assert not r[0]['distance']
 
     def test_autocomplete_for_administrative_region_with_wrong_type(self):
         mock_requests = mock_bragi_autocomplete_call(BRAGI_MOCK_ADMINISTRATIVE_REGION_WITH_WRONG_TYPE)

@@ -38,7 +38,7 @@ from jormungandr.utils import get_lon_lat as get_lon_lat_from_id, get_house_numb
 import requests
 from jormungandr.exceptions import TechnicalError, UnknownObject
 from flask.ext.restful import marshal, fields
-from jormungandr.interfaces.v1.fields import Lit, ListLit, beta_endpoint, feed_publisher_bano, feed_publisher_osm
+from jormungandr.interfaces.v1.fields import Lit, ListLit, beta_endpoint, feed_publisher_bano, feed_publisher_osm, Integer
 import re
 
 
@@ -305,7 +305,8 @@ geocode_admin = {
     "quality": Lit(0),
     "id": fields.String(attribute='properties.geocoding.id'),
     "name": fields.String(attribute='properties.geocoding.name'),
-    "administrative_region": AdministrativeRegionField()
+    "administrative_region": AdministrativeRegionField(),
+    "distance": Integer(attribute='distance', default=None)
 }
 
 
@@ -314,7 +315,8 @@ geocode_addr = {
     "quality": Lit(0),
     "id": CoordId,
     "name": fields.String(attribute='properties.geocoding.label'),
-    "address": AddressField()
+    "address": AddressField(),
+    "distance": Integer(attribute='distance', default=None)
 }
 
 geocode_poi = {
@@ -322,7 +324,8 @@ geocode_poi = {
     "quality": Lit(0),
     "id": fields.String(attribute='properties.geocoding.id'),
     "name": fields.String(attribute='properties.geocoding.label'),
-    "poi": PoiField()
+    "poi": PoiField(),
+    "distance": Integer(attribute='distance', default=None)
 }
 
 geocode_stop_area = {
@@ -330,7 +333,8 @@ geocode_stop_area = {
     "quality": Lit(0),
     "id": fields.String(attribute='properties.geocoding.id'),
     "name": fields.String(attribute='properties.geocoding.label'),
-    "stop_area": StopAreaField()
+    "stop_area": StopAreaField(),
+    "distance": Integer(attribute='distance', default=None)
 }
 
 geocode_feature_func_mapping = { 

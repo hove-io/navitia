@@ -48,7 +48,7 @@ JORMUNGANDR_INSTANCE_FR_IDF='{"key": "fr-idf","zmq_socket": "tcp://localhost:300
 
 Environment variables can be set when the service is started. Referer to [default_settings.py](https://github.com/CanalTP/navitia/blob/dev/source/jormungandr/jormungandr/default_settings.py)
 
-example for a devlopment environment: 
+example for a development environment: 
 
 ```sh
 PYTHONPATH=..:../../navitiacommon/ JORMUNGANDR_INSTANCES_DIR=~/jormung_conf/ JORMUNGANDR_START_MONITORING_THREAD=False  JORMUNGANDR_DISABLE_DATABASE=True JORMUNGANDR_IS_PUBLIC=True python manage.py runserver
@@ -93,6 +93,12 @@ You can select your autocomplete engine based on the hidden and debug-only `_aut
 
 ```sh
 http://localhost:5000/v1/coverage/default/places?q=rennes&_autocomplete='<kraken|bragi>'
+```
+
+It is also possible to set the autocomplete engine for an instance by adding the following line in the config file `jormungandr.json`:
+
+```sh
+"default_autocomplete": "<kraken|bragi>"
 ```
 
 # Troubleshooting
