@@ -84,21 +84,14 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
             self.record_call("OK")
             return data.json()
         except pybreaker.CircuitBreakerError as e:
-            msg = '{} service dead (error: {})'.format(self.provider_name, e)
-            self.log.error(msg)
-            # record in newrelic
-            utils.record_external_failure(msg, 'parking', self.provider_name)
+            self.log.error('{} service dead (error: {})'.format(self.provider_name, e))
+            self.record_call('failure', reason='circuit breaker open')
         except requests.Timeout as t:
-            msg = '{} service timeout (error: {})'.format(self.provider_name, t)
-            self.log.error(msg)
-            # record in newrelic
-            utils.record_external_failure(msg, 'parking', self.provider_name)
-        except:
-            msg = '{} service error'.format(self.provider_name)
-            self.log.exception(msg)
-            # record in newrelic
-            utils.record_external_failure(msg, 'parking', self.provider_name)
-
+            self.log.error('{} service timeout (error: {})'.format(self.provider_name, t))
+            self.record_call('failure', reason='timeout')
+        except Exception as e:
+            self.log.exception('{} service error: {}'.format(self.provider_name, e))
+            self.record_call('failure', reason=str(e))
         return None
 
     def status(self):
@@ -111,6 +104,6 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
         """
         status can be in: ok, failure
         """
-        params = {'parking_service': self.provider_name, 'dataset': self.dataset, 'status': status}
+        params = {'parking_system_id': self.provider_name, 'dataset': self.dataset, 'status': status}
         params.update(kwargs)
-        new_relic.record_custom_event('parking_service', params)
+        new_relic.record_custom_event('parking_status', params)

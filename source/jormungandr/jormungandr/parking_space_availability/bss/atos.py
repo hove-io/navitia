@@ -88,7 +88,7 @@ class AtosProvider(CommonBssProvider):
         with self._get_client() as client:
             all_stands = client.service.getSummaryInformationTerminals(self.id_ao)
             return {stands.libelle: Stands(stands.nbPlacesDispo, stands.nbVelosDispo,
-                                           StandsStatus.open if stands.etatConnexion == 'CONNECTEE' else 'UNAVAILABLE')
+                                           StandsStatus.open if stands.etatConnexion == 'CONNECTEE' else StandsStatus.unavailable)
                     for stands in all_stands}
 
     @contextmanager

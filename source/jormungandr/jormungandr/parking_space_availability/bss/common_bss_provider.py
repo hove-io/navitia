@@ -49,6 +49,7 @@ class CommonBssProvider(AbstractParkingPlacesProvider):
 
         except BssProxyError as e:
             self.record_call('failure', reason=str(e))
+            return None
 
     def record_call(self, status, **kwargs):
         """
