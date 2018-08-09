@@ -42,6 +42,13 @@ www.navitia.io
 #include "utils/obj_factory.h"
 #include "georef/adminref.h"
 
+// workaround missing "is_trivially_copyable" in g++ < 5.0
+#if __GNUG__ && __GNUC__ < 5
+#define IS_TRIVIALLY_COPYABLE(T) __has_trivial_copy(T)
+#else
+#define IS_TRIVIALLY_COPYABLE(T) std::is_trivially_copyable<T>::value
+#endif
+
 //forward declare
 namespace navitia {
     namespace georef {
@@ -122,7 +129,7 @@ struct ContainerTrait<type::MetaVehicleJourney> {
   */
 class Data : boost::noncopyable{
 
-    static_assert(std::is_trivially_copyable<const boost::posix_time::ptime>::value, "ptime isn't is_trivially_copyable and can't be used with std::atomic");
+    static_assert(IS_TRIVIALLY_COPYABLE(const boost::posix_time::ptime), "ptime isn't is_trivially_copyable and can't be used with std::atomic");
     mutable std::atomic<const boost::posix_time::ptime> _last_rt_data_loaded; //datetime of the last Real Time loaded data
 public:
 
