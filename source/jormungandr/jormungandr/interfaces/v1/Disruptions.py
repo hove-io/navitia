@@ -96,6 +96,9 @@ class TrafficReport(ResourceUri):
                                 help="Distance range of the query. Used only if a coord is in the query")
         parser_get.add_argument("disable_geojson", type=BooleanType(), default=False,
                                 help="remove geojson from the response")
+        self.parsers["get"].add_argument("tags[]", type=six.text_type, action="append",
+                                         help="If filled, will restrained the search within "
+                                              "the given disruption tags")
         self.collection = 'traffic_reports'
         self.collections = traffic_reports
         self.get_decorators.insert(0, ManageError())

@@ -92,6 +92,9 @@ class LineReports(ResourceUri, ResourceUtc):
                                 help="use disruptions valid after this date")
         parser_get.add_argument("until", type=DateTimeFormat(),
                                 help="use disruptions valid before this date")
+        self.parsers["get"].add_argument("tags[]", type=six.text_type, action="append",
+                                         help="If filled, will restrained the search within "
+                                              "the given disruption tags")
 
         self.collection = 'line_reports'
         self.collections = line_reports

@@ -64,6 +64,13 @@ class ResourceUri(StatedResource):
             #by default ALWAYS use authentication=True
             self.get_decorators.append(authentication_required)
 
+    def get_taglist(self, tags):
+
+        tag_list = []
+        for tag in tags:
+            tag_list.append("tag=" + protect(tag))
+        return tag_list
+
     def get_filter(self, items, args):
 
         filter_list = [args["filter"]] if args.get("filter") else []
@@ -96,6 +103,10 @@ class ResourceUri(StatedResource):
                 else:
                     filter_list.append(type_ + ".uri=" + protect(item))
                 type_ = None
+        tags_list = self.get_taglist(args.get("tags[]", []))
+        if tags_list:
+            tags_filter = '({})'.format(" or ".join(tags_list))
+            filter_list.append(tags_filter)
         return " and ".join(filter_list)
 
 

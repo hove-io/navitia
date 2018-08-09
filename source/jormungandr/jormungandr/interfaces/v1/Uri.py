@@ -107,6 +107,9 @@ class Uri(ResourceUri, ResourceUtc):
         if is_collection:
             parser.add_argument("filter", type=six.text_type, default="",
                                 help="The filter parameter")
+        self.parsers["get"].add_argument("tags[]", type=six.text_type, action="append",
+                                         help="If filled, will restrained the search within "
+                                              "the given disruption tags")
         self.collection = collection
         self.get_decorators.insert(0, ManageError())
 
