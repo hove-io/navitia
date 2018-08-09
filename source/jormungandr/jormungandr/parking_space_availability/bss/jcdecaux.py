@@ -83,7 +83,6 @@ class JcdecauxProvider(CommonBssProvider):
         except Exception as e:
             logging.getLogger(__name__).exception('JCDecaux error : {}'.format(str(e)))
             raise BssProxyError(str(e))
-        return None
 
     def _get_informations(self, poi):
         # Possible status values of the station: OPEN and CLOSED

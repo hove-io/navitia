@@ -80,9 +80,9 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
             else:
                 headers = None
             data = self.breaker.call(requests.get, url=request_url, headers=headers, timeout=self.timeout)
-            # record in newrelic
-            self.record_call("OK")
             return data.json()
+            self.record_call("OK")
+
         except pybreaker.CircuitBreakerError as e:
             self.log.error('{} service dead (error: {})'.format(self.provider_name, e))
             self.record_call('failure', reason='circuit breaker open')

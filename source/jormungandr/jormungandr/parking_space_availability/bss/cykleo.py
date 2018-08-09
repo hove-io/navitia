@@ -76,7 +76,6 @@ class CykleoProvider(CommonBssProvider):
                 logging.getLogger(__name__).error('cykleo, Invalid response, status_code: {}'.format(
                     response.status_code))
                 raise BssProxyError('non 200 response')
-                return None
             return response
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('cykleo service dead (error: {})'.format(e))
@@ -87,7 +86,6 @@ class CykleoProvider(CommonBssProvider):
         except Exception as e:
             logging.getLogger(__name__).exception('cykleo error : {}'.format(str(e)))
             raise BssProxyError(str(e))
-        return None
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_CYKLEO_JETON', 10*60))
     def get_access_token(self):
