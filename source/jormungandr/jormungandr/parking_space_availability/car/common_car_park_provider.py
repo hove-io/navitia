@@ -80,8 +80,9 @@ class CommonCarParkProvider(AbstractParkingPlacesProvider):
             else:
                 headers = None
             data = self.breaker.call(requests.get, url=request_url, headers=headers, timeout=self.timeout)
-            return data.json()
+            json_data = data.json()
             self.record_call("OK")
+            return json_data
 
         except pybreaker.CircuitBreakerError as e:
             self.log.error('{} service dead (error: {})'.format(self.provider_name, e))
