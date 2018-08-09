@@ -64,6 +64,7 @@ namespace navitia { namespace type {
 const unsigned int Data::data_version = 68; //< *INCREMENT* every time serialized data are modified
 
 Data::Data(size_t data_identifier) :
+    _last_rt_data_loaded(boost::posix_time::not_a_date_time),
     disruption_error(false),
     data_identifier(data_identifier),
     meta(std::make_unique<MetaData>()),
@@ -75,8 +76,7 @@ Data::Data(size_t data_identifier) :
             [&](const GeographicalCoord &c, georef::AdminRtree& admin_tree){
             return geo_ref->find_admins(c, admin_tree);
             }),
-    last_load_succeeded(false),
-    last_rt_data_loaded(std::make_shared<const pt::ptime>(pt::not_a_date_time))
+    last_load_succeeded(false)
 {
     loaded = false;
     is_connected_to_rabbitmq = false;
@@ -856,8 +856,11 @@ void Data::clone_from(const Data& from) {
 }
 
 void Data::set_last_rt_data_loaded(const boost::posix_time::ptime& p) const{
-    auto ptr = std::make_shared<const boost::posix_time::ptime>(p);
-    std::atomic_store(&this->last_rt_data_loaded, ptr);
+    this->_last_rt_data_loaded.store(p);
+}
+
+const boost::posix_time::ptime Data::last_rt_data_loaded() const {
+    return this->_last_rt_data_loaded.load();
 }
 
 }} //namespace navitia::type

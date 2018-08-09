@@ -121,6 +121,9 @@ struct ContainerTrait<type::MetaVehicleJourney> {
   * peut même (sur des disques lents) accélerer le chargement).
   */
 class Data : boost::noncopyable{
+
+    static_assert(std::is_trivially_copyable<const boost::posix_time::ptime>::value, "ptime isn't is_trivially_copyable and can't be used with std::atomic");
+    mutable std::atomic<const boost::posix_time::ptime> _last_rt_data_loaded; //datetime of the last Real Time loaded data
 public:
 
     static const unsigned int data_version; //< Data version number. *INCREMENT* in cpp file
@@ -185,7 +188,6 @@ public:
     // UTC
     boost::posix_time::ptime last_load_at;
 
-    mutable std::shared_ptr<const boost::posix_time::ptime> last_rt_data_loaded; //datetime of the last Real Time loaded data
 
     // This object is the only field mutated in this object. As it is
     // thread safe to mutate it, we mark it as mutable.  Maybe we can
@@ -266,6 +268,7 @@ public:
     void clone_from(const Data&);
 
     void set_last_rt_data_loaded(const boost::posix_time::ptime&) const;
+    const boost::posix_time::ptime last_rt_data_loaded() const;
 private:
     /** Get similar validitypattern **/
     ValidityPattern* get_similar_validity_pattern(ValidityPattern* vp) const;
