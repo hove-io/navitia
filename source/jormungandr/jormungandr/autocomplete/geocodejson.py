@@ -36,7 +36,7 @@ import jormungandr
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
 from jormungandr.utils import get_lon_lat as get_lon_lat_from_id, get_house_number
 import requests
-from jormungandr.exceptions import TechnicalError, UnknownObject
+from jormungandr.exceptions import UnknownObject
 from flask.ext.restful import marshal, fields
 from jormungandr.interfaces.v1.fields import Lit, ListLit, beta_endpoint, feed_publisher_bano, feed_publisher_osm, Integer
 import re
@@ -389,19 +389,19 @@ class GeocodeJson(AbstractAutocomplete):
             return method(url, **kwargs)
         except requests.Timeout:
             logging.getLogger(__name__).error('autocomplete request timeout')
-            raise TechnicalError('external autocomplete service timeout')
+            raise GeocodeJsonError('external autocomplete service timeout')
         except:
             logging.getLogger(__name__).exception('error in autocomplete request')
-            raise TechnicalError('impossible to access external autocomplete service')
+            raise GeocodeJsonError('impossible to access external autocomplete service')
 
     @classmethod
     def _check_response(cls, response, uri):
         if response is None:
-            raise TechnicalError('impossible to access autocomplete service')
+            raise GeocodeJsonError('impossible to access autocomplete service')
         if response.status_code == 404:
             raise UnknownObject(uri)
         if response.status_code != 200:
-            raise TechnicalError('error in autocomplete request')
+            raise GeocodeJsonError('error in autocomplete request')
 
     @classmethod
     def _clean_response(cls, response, depth=1):
@@ -462,10 +462,10 @@ class GeocodeJson(AbstractAutocomplete):
     def make_url(self, end_point, uri=None):
 
         if end_point not in ['autocomplete', 'features', 'reverse']:
-            raise TechnicalError('Unknown endpoint')
+            raise GeocodeJsonError('Unknown endpoint')
 
         if not self.host:
-            raise TechnicalError('global autocomplete not configured')
+            raise GeocodeJsonError('global autocomplete not configured')
 
         url = "{host}/{end_point}".format(host=self.host, end_point=end_point)
         if uri:
@@ -551,3 +551,7 @@ class GeocodeJson(AbstractAutocomplete):
 
     def status(self):
         return {'class': self.__class__.__name__, 'timeout': self.timeout}
+
+
+class GeocodeJsonError(Exception):
+    pass
