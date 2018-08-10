@@ -92,9 +92,8 @@ class LineReports(ResourceUri, ResourceUtc):
                                 help="use disruptions valid after this date")
         parser_get.add_argument("until", type=DateTimeFormat(),
                                 help="use disruptions valid before this date")
-        self.parsers["get"].add_argument("tags[]", type=six.text_type, action="append",
-                                         help="If filled, will restrained the search within "
-                                              "the given disruption tags")
+        parser_get.add_argument("tags[]", type=six.text_type, action="append",
+                                help="If filled, will restrained the search within the given disruption tags")
 
         self.collection = 'line_reports'
         self.collections = line_reports
@@ -112,10 +111,12 @@ class LineReports(ResourceUri, ResourceUtc):
         if args['disable_geojson']:
             g.disable_geojson = True
 
+        uris = []
         if uri:
             if uri[-1] == "/":
                 uri = uri[:-1]
             uris = uri.split("/")
+        if uris or args.get('tags[]', []):
             args["filter"] = self.get_filter(uris, args)
         else:
             args["filter"] = ""
