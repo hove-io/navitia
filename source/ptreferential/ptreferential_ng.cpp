@@ -93,7 +93,7 @@ struct PtRefGrammar: qi::grammar<Iterator, ast::Expr(), ascii::space_type> {
 
         ident = qi::lexeme[qi::alpha >> *(qi::alnum | qi::char_("_"))];
         str = qi::lexeme[+(qi::alnum | qi::char_("_.:;|-"))]
-            | qi::lexeme['"' > *(qi::char_ - qi::char_("\"\\") | ('\\' > qi::char_)) > '"'];
+            | qi::lexeme['"' > (*(qi::char_ - qi::char_("\"\\") | ('\\' > qi::char_))) > '"'];
     }
 
     // Pred
