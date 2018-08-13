@@ -941,7 +941,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             response = self.query_region("places/1234?&pt_dataset=main_routing_test")
 
             assert response.get('feed_publishers')
-            if os.getenv('JORMUNGANDR_USE_SERPY'):
+            if app.config['USE_SERPY']:
                 assert len(response.get('feed_publishers')) == 3
             else:
                 assert len(response.get('feed_publishers')) == 2
@@ -983,7 +983,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
                                          "&type[]=address&type[]=poi&type[]=administrative_region&depth=0")
 
             assert response.get('feed_publishers')
-            if os.getenv('JORMUNGANDR_USE_SERPY'):
+            if app.config['USE_SERPY']:
                 assert len(response.get('feed_publishers')) == 3
             else:
                 assert len(response.get('feed_publishers')) == 2
@@ -1043,7 +1043,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert 'properties' not in r[0]['stop_area']
             # Attribute displayed but None
             assert not r[0]['stop_area'].get('timezone')
-            if os.getenv('JORMUNGANDR_USE_SERPY'):
+            if app.config['USE_SERPY']:
                 assert 'distance' not in r[0]
             else:
                 assert not r[0]['distance']
@@ -1169,7 +1169,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert len(r) == 1
             assert r[0]['name'] == "bobette's label"
             assert r[0]['embedded_type'] == "poi"
-            if os.getenv('JORMUNGANDR_USE_SERPY'):
+            if app.config['USE_SERPY']:
                 assert 'distance' not in r[0]
             else:
                 assert not r[0]['distance']
@@ -1236,7 +1236,7 @@ class TestBragiAutocomplete(AbstractTestFixture):
             assert r[0]['administrative_region']['label'] == 'Créteil (94000)'
             assert r[0]['administrative_region']['id'] == 'admin:fr:941'
             assert r[0]['administrative_region']['zip_code'] == '94000'
-            if os.getenv('JORMUNGANDR_USE_SERPY'):
+            if app.config['USE_SERPY']:
                 assert 'distance' not in r[0]
             else:
                 assert not r[0]['distance']
