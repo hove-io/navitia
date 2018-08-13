@@ -64,6 +64,7 @@ namespace navitia { namespace type {
 const unsigned int Data::data_version = 68; //< *INCREMENT* every time serialized data are modified
 
 Data::Data(size_t data_identifier) :
+    _last_rt_data_loaded(boost::posix_time::not_a_date_time),
     disruption_error(false),
     data_identifier(data_identifier),
     meta(std::make_unique<MetaData>()),
@@ -852,6 +853,14 @@ void Data::clone_from(const Data& from) {
     std::thread write([&]() {boost::archive::binary_oarchive oa(p.out); oa << from;});
     { boost::archive::binary_iarchive ia(p.in); ia >> *this; }
     write.join();
+}
+
+void Data::set_last_rt_data_loaded(const boost::posix_time::ptime& p) const{
+    this->_last_rt_data_loaded.store(p);
+}
+
+const boost::posix_time::ptime Data::last_rt_data_loaded() const {
+    return this->_last_rt_data_loaded.load();
 }
 
 }} //namespace navitia::type
