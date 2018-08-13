@@ -35,14 +35,14 @@ import pybreaker
 import zeep
 
 from jormungandr import cache, app
-from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
+from jormungandr.parking_space_availability.bss.common_bss_provider import CommonBssProvider, BssProxyError
 from jormungandr.parking_space_availability.bss.stands import Stands, StandsStatus
 from jormungandr.ptref import FeedPublisher
 
 DEFAULT_ATOS_FEED_PUBLISHER = None
 
 
-class AtosProvider(AbstractParkingPlacesProvider):
+class AtosProvider(CommonBssProvider):
 
     def __init__(self, id_ao, network, url, operators={'keolis'}, timeout=5,
                  feed_publisher=DEFAULT_ATOS_FEED_PUBLISHER, **kwargs):
@@ -63,7 +63,7 @@ class AtosProvider(AbstractParkingPlacesProvider):
         return properties.get('operator', '').lower() in self.operators and \
                properties.get('network', '').lower() == self.network
 
-    def get_informations(self, poi):
+    def _get_informations(self, poi):
         logging.debug('building stands')
         try:
             all_stands = self.breaker.call(self._get_all_stands)
@@ -76,6 +76,7 @@ class AtosProvider(AbstractParkingPlacesProvider):
                     stands.available_bikes = 0
                     stands.available_places = 0
                     stands.total_stands = 0
+
                 return stands
         except:
             logging.getLogger(__name__).exception('transport error during call to %s bss provider', self.id_ao)
