@@ -29,6 +29,7 @@
 from jormungandr import new_relic
 from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
 from abc import abstractmethod
+from jormungandr.parking_space_availability.bss.stands import Stands, StandsStatus
 
 
 class BssProxyError(RuntimeError):
@@ -49,7 +50,7 @@ class CommonBssProvider(AbstractParkingPlacesProvider):
 
         except BssProxyError as e:
             self.record_call('failure', reason=str(e))
-            return None
+            return Stands(0, 0, StandsStatus.unavailable)
 
     def record_call(self, status, **kwargs):
         """
