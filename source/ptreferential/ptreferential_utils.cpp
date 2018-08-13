@@ -37,7 +37,6 @@ www.navitia.io
 #include "type/meta_data.h"
 #include "routing/dataraptor.h"
 
-#include <boost/range/adaptor/indexed.hpp>
 #include <boost/range/algorithm/find.hpp>
 #include <string>
 
@@ -145,12 +144,12 @@ Indexes get_impacts_by_tags(const std::vector<std::string> & tag_uris,
     Indexes result;
     const auto& w_impacts = d.pt_data->disruption_holder.get_weak_impacts();
 
-    for(const auto& w_impact : w_impacts | boost::adaptors::indexed(0)) {
-        auto impact = w_impact.value().lock();
+    for(size_t i=0; i<w_impacts.size(); i++) {
+        auto impact = w_impacts[i].lock();
         if(impact && impact->disruption) {
             for(const auto& tag : impact->disruption->tags) {
                 if(tag && boost::range::find(tag_uris, tag->uri) != tag_uris.end()) {
-                    result.insert(w_impact.index());
+                    result.insert(i);
                 }
             }
         }
