@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -37,10 +37,15 @@ www.navitia.io
 #include "type/meta_data.h"
 #include "routing/dataraptor.h"
 
+#include <boost/range/adaptor/indexed.hpp>
+#include <boost/range/algorithm/find.hpp>
+#include <string>
+
 using navitia::type::Indexes;
 using navitia::type::Type_e;
 using navitia::type::Data;
 using navitia::type::make_indexes;
+
 namespace bt = boost::posix_time;
 
 namespace navitia {
@@ -134,6 +139,26 @@ Indexes get_indexes_by_impacts(const type::Type_e& type_e, const Data& d) {
     }
     return result;
 }
+
+Indexes get_impacts_by_tags(const std::vector<std::string> & tag_uris,
+                            const Data& d) {
+    Indexes result;
+    const auto& w_impacts = d.pt_data->disruption_holder.get_weak_impacts();
+
+    for(const auto& w_impact : w_impacts | boost::adaptors::indexed(0)) {
+        auto impact = w_impact.value().lock();
+        if(impact && impact->disruption) {
+            for(const auto& tag : impact->disruption->tags) {
+                if(tag && boost::range::find(tag_uris, tag->uri) != tag_uris.end()) {
+                    result.insert(w_impact.index());
+                }
+            }
+        }
+    }
+
+    return result;
+}
+
 
 static bool keep_vj(const type::VehicleJourney* vj,
                     const bt::time_period& period) {

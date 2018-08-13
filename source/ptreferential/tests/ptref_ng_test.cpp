@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -37,18 +37,32 @@ www.navitia.io
 #include "ptreferential/ptreferential.h"
 #include "ed/build_helper.h"
 #include "type/pt_data.h"
+#include "kraken/apply_disruption.h"
+
+#include <boost/range/algorithm/transform.hpp>
+#include <memory>
 
 using namespace navitia::ptref;
+using navitia::type::disruption::Tag;
 using navitia::type::Type_e;
 using navitia::type::OdtLevel_e;
 using navitia::type::make_indexes;
+using boost::posix_time::time_period;
 
-static void assert_expr(const std::string& to_parse, const std::string& expected) {
-    const ast::Expr expr = parse(to_parse);
-    std::stringstream ss;
-    ss << expr;
-    BOOST_CHECK_EQUAL(ss.str(), expected);
-}
+namespace {
+    static void assert_expr(const std::string& to_parse, const std::string& expected) {
+        const ast::Expr expr = parse(to_parse);
+        std::stringstream ss;
+        ss << expr;
+        BOOST_CHECK_EQUAL(ss.str(), expected);
+    }
+
+    std::string get_disruption_uri(navitia::idx_t id, const navitia::type::Data & data) {
+        auto impact = data.pt_data->disruption_holder.get_impact(id);
+        BOOST_REQUIRE(impact && impact->disruption);
+        return impact->disruption->uri;
+    }
+} // namespace
 
 BOOST_AUTO_TEST_CASE(parse_pred) {
     assert_expr("  all  ", "all");
@@ -104,7 +118,7 @@ BOOST_AUTO_TEST_CASE(parse_str) {
     assert_expr(R"#(a.a("foo"))#", R"#(a.a("foo"))#");
     assert_expr(R"#(a.a("\""))#", R"#(a.a("\""))#");
     assert_expr(R"#(a.a("\\"))#", R"#(a.a("\\"))#");
-    assert_expr(R"#(a.a("  "))#", R"#(a.a("  "))#");    
+    assert_expr(R"#(a.a("  "))#", R"#(a.a("  "))#");
 }
 
 BOOST_AUTO_TEST_CASE(parse_legacy_tests) {
@@ -299,4 +313,72 @@ BOOST_AUTO_TEST_CASE(get_connection) {
                                  {}, OdtLevel_e::all, {}, {}, *b.data);
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
     BOOST_REQUIRE_EQUAL(b.data->pt_data->lines.at(*indexes.begin())->uri, "B");
+}
+
+BOOST_AUTO_TEST_CASE(get_disruption_by_tag) {
+    ed::builder b("20180710");
+    b.generate_dummy_basis();
+
+    navitia::apply_disruption(
+        b.disrupt(nt::RTLevel::RealTime, "disrupt_0")
+        .tag("my_tag")
+        .impact()
+        .severity(nt::disruption::Effect::NO_SERVICE)
+        .get_disruption(), *b.data->pt_data, *b.data->meta);
+
+    b.finish();
+    b.data->pt_data->sort_and_index();
+    b.data->pt_data->build_uri();
+    b.data->build_raptor();
+
+    auto indexes = make_query_ng(Type_e::Impact, "disruption.tag=my_tag",
+                                  {}, OdtLevel_e::all, {}, {}, *b.data);
+
+    BOOST_REQUIRE_EQUAL(indexes.size(), 1);
+
+    auto idx = *indexes.begin();
+    BOOST_CHECK_EQUAL( get_disruption_uri(idx, *b.data), "disrupt_0");
+}
+
+BOOST_AUTO_TEST_CASE(get_disruptions_with_multiple_tags) {
+    ed::builder b("20180710");
+    b.generate_dummy_basis();
+
+    navitia::apply_disruption(
+        b.disrupt(nt::RTLevel::RealTime, "disrupt_0")
+        .tag("tag_0")
+        .impact()
+        .severity(nt::disruption::Effect::NO_SERVICE)
+        .get_disruption(), *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(
+        b.disrupt(nt::RTLevel::RealTime, "disrupt_1")
+        .tag("tag_1")
+        .impact()
+        .severity(nt::disruption::Effect::NO_SERVICE)
+        .get_disruption(), *b.data->pt_data, *b.data->meta);
+    navitia::apply_disruption(
+        b.disrupt(nt::RTLevel::RealTime, "disrupt_2")
+        .tag("tag_2")
+        .impact()
+        .severity(nt::disruption::Effect::NO_SERVICE)
+        .get_disruption(), *b.data->pt_data, *b.data->meta);
+
+    b.finish();
+    b.data->pt_data->sort_and_index();
+    b.data->pt_data->build_uri();
+    b.data->build_raptor();
+
+    auto indexes = make_query_ng(Type_e::Impact, "disruption.tags(tag_0,tag_2)",
+                                  {}, OdtLevel_e::all, {}, {}, *b.data);
+    BOOST_CHECK_EQUAL(indexes.size(), 2);
+
+    std::vector<std::string> disruption_names;
+    boost::range::transform(indexes, std::back_inserter(disruption_names),
+                            [&b](const navitia::idx_t id) {
+        return get_disruption_uri(id, *b.data);
+    });
+
+    auto expected_disruption_names = {"disrupt_0", "disrupt_2"};
+    BOOST_CHECK_EQUAL_RANGE(disruption_names, expected_disruption_names);
+
 }
