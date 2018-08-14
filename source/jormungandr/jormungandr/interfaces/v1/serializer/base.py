@@ -296,7 +296,7 @@ class DoubleToStringField(Field):
 
     def to_value(self, value):
         # we don't want to loose precision while converting a double to string
-        return "{:.16g}".format(value)
+        return '%.16f' % value
 
 
 class DescribedField(LambdaField):
