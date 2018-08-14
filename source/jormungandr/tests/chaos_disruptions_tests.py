@@ -42,10 +42,10 @@ class ChaosDisruptionsFixture(RabbitMQCnxFixture):
     def _make_mock_item(self, disruption_name, impacted_obj, impacted_obj_type, start=None, end=None,
                         message='default_message', is_deleted=False, blocking=False,
                         start_period="20100412T165200", end_period="20200412T165200",
-                        cause='CauseTest', category=None, routes=None, properties=None):
+                        cause='CauseTest', category=None, routes=None, properties=None, tags=None):
         return make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end, message,
                                     is_deleted, blocking, start_period, end_period, cause=cause,
-                                    category=category, routes=routes, properties=properties)
+                                    category=category, routes=routes, properties=properties, tags=tags)
 
 
 MAIN_ROUTING_TEST_SETTING = {"main_routing_test": {'kraken_args': ['--BROKER.sleeptime=0',
@@ -73,7 +73,8 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         assert 'disruptions' not in stop
 
         properties = [{'key': 'foo', 'type': 'bar', 'value': '42'}]
-        self.send_mock("bob_the_disruption", "stopB", "stop_area", properties=properties)
+        tags = [{'id': 're', 'name': 'rer'}, {'id': 'met', 'name': 'metro'}]
+        self.send_mock("bob_the_disruption", "stopB", "stop_area", properties=properties, tags=tags)
 
         #and we call again, we must have the disruption now
         response = self.query_region('stop_areas/stopB?_current_datetime=20160314T104600')
@@ -89,6 +90,9 @@ class TestChaosDisruptions(ChaosDisruptionsFixture):
         assert any(d['disruption_id'] == 'bob_the_disruption' for d in disruptions)
         assert disruptions[0]['cause'] == 'CauseTest'
         assert 'category' not in disruptions[0]
+        assert len(disruptions[0]['tags']) == 2
+        assert 'metro' in disruptions[0]['tags']
+        assert 'rer' in disruptions[0]['tags']
 
         #here we test messages in disruption: message, channel and types
         messages = get_not_null(disruptions[0], 'messages')
@@ -164,6 +168,7 @@ class TestPlacesWithDisruptions(ChaosDisruptionsFixture):
 
         assert len(response['disruptions']) == 1
         assert response['disruptions'][0]['updated_at'] == u'20160405T150733'
+        assert 'tags' not in response['disruptions'][0]
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
@@ -819,12 +824,10 @@ class TestChaosDisruptionsStopArea(ChaosDisruptionsFixture):
         assert len(response['journeys']) == 2
 
 
-
-
 def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start, end,
                          message_text='default_message', is_deleted=False, blocking=False,
                          start_period="20100412T165200", end_period="20200412T165200",
-                         cause='CauseTest', category=None, routes=None, properties=None):
+                         cause='CauseTest', category=None, routes=None, properties=None, tags=None):
     feed_message = gtfs_realtime_pb2.FeedMessage()
     feed_message.header.gtfs_realtime_version = '1.0'
     feed_message.header.incrementality = gtfs_realtime_pb2.FeedHeader.DIFFERENTIAL
@@ -846,13 +849,11 @@ def make_mock_chaos_item(disruption_name, impacted_obj, impacted_obj_type, start
     disruption.publication_period.start = utils.str_to_time_stamp(start_period)
     disruption.publication_period.end = utils.str_to_time_stamp(end_period)
 
-    # Tag
-    tag = disruption.tags.add()
-    tag.name = "rer"
-    tag.id = "rer"
-    tag = disruption.tags.add()
-    tag.name = "metro"
-    tag.id = "rer"
+    # disruption tags
+    for t in tags or []:
+        tag = disruption.tags.add()
+        tag.id = t['id']
+        tag.name = t['name']
 
     if not impacted_obj or not impacted_obj_type:
         return feed_message.SerializeToString()
