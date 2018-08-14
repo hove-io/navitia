@@ -1938,11 +1938,11 @@ For example:
 -   overall public transport traffic report on Ile de France coverage
     -   <https://api.navitia.io/v1/coverage/fr-idf/traffic_reports>
 -   overall public transport traffic report on Ile de France coverage with disruptions having tags passed in parameter values
-    -   <https://api.navitia.io/v1/coverage/fr-idf/traffic_reports?tags[]=bob&tags[]=bobette>
+    -   <https://api.navitia.io/v1/coverage/fr-idf/traffic_reports?tags[]=incidents&tags[]=alerte>
 -   Is there any perturbations on the RER network ?
     -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/traffic_reports>
 -   Is there any perturbations on the RER network with disruptions having tags passed in parameter values ?
-    -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/traffic_reports?tags[]=bob&tags[]=bobette>
+    -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/traffic_reports?tags[]=incidents&tags[]=alerte>
 -   Is there any perturbations on the "RER A" line ?
     -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/lines/line:OIF:810:AOIF741/line_reports?>
 
