@@ -40,18 +40,26 @@ DEFAULT_DIVIA_FEED_PUBLISHER = None
 
 class DiviaProvider(CommonCarParkProvider):
 
-    def __init__(self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_DIVIA_FEED_PUBLISHER, **kwargs):
+    def __init__(self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_DIVIA_FEED_PUBLISHER,
+                 attr_mapping=None, **kwargs):
 
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
         self.provider_name = 'DIVIA'
+        if attr_mapping is None:
+            attr_mapping = ['numero_parking', 'nombre_places_libres', 'nombre_places']
+
+        self.park = attr_mapping[0]
+        self.available = attr_mapping[1]
+        self.nb_places = attr_mapping[2]
 
         super(DiviaProvider, self).__init__(url, operators, dataset, timeout, **kwargs)
 
     def process_data(self, data, poi):
-        park = jmespath.search('records[?fields.numero_parking==\'{}\']|[0]'.format(poi['properties']['ref'].zfill(2)), data)
+        park = jmespath.search('records[?fields.{}==`{}`]|[0]'
+                               .format(self.park, poi['properties']['ref'].zfill(2)), data)
         if park:
-            available = jmespath.search('fields.nombre_places_libres', park)
-            nb_places = jmespath.search('fields.nombre_places', park)
+            available = jmespath.search('fields.{}'.format(self.available), park)
+            nb_places = jmespath.search('fields.{}'.format(self.nb_places), park)
             if available is not None and nb_places is not None and nb_places >= available:
                 occupied = nb_places - available
             else:
