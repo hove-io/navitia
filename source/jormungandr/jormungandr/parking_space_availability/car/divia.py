@@ -55,8 +55,8 @@ class DiviaProvider(CommonCarParkProvider):
         super(DiviaProvider, self).__init__(url, operators, dataset, timeout, **kwargs)
 
     def process_data(self, data, poi):
-        park = jmespath.search('records[?fields.{}==`{}`]|[0]'
-                               .format(self.park, poi['properties']['ref'].zfill(2)), data)
+        park = jmespath.search('records[?to_number(fields.{})==`{}`]|[0]'
+                               .format(self.park, poi['properties']['ref']), data)
         if park:
             available = jmespath.search('fields.{}'.format(self.available), park)
             nb_places = jmespath.search('fields.{}'.format(self.nb_places), park)
