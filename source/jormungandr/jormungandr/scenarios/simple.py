@@ -345,7 +345,6 @@ class Scenario(object):
         return self.__on_ptref("impact", type_pb2.IMPACT, request, instance)
 
     def contributors(self, request, instance):
-
         return self.__on_ptref("contributors", type_pb2.CONTRIBUTOR, request, instance)
 
     def datasets(self, request, instance):
