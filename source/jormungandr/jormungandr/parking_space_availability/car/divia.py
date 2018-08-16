@@ -30,6 +30,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 import jmespath
+from collections import namedtuple
 
 from jormungandr.parking_space_availability.car.common_car_park_provider import CommonCarParkProvider
 from jormungandr.parking_space_availability.car.parking_places import ParkingPlaces
@@ -37,31 +38,38 @@ from jormungandr.ptref import FeedPublisher
 
 DEFAULT_DIVIA_FEED_PUBLISHER = None
 
+SearchPattern = namedtuple('SearchPattern', ['id_park', 'available', 'total'])
 
-class DiviaProvider(CommonCarParkProvider):
 
-    def __init__(self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_DIVIA_FEED_PUBLISHER,
-                 attr_mapping=None, **kwargs):
+def divia_maker(search_patterns):
 
-        self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
-        self.provider_name = 'DIVIA'
-        if attr_mapping is None:
-            attr_mapping = ['numero_parking', 'nombre_places_libres', 'nombre_places']
+    class DiviaProvider(CommonCarParkProvider):
+        # search patterns that are different depending on divia's dataset
+        id_park = None
+        available = None
+        total = None
 
-        self.park = attr_mapping[0]
-        self.available = attr_mapping[1]
-        self.nb_places = attr_mapping[2]
+        def __init__(self, url, operators, dataset, timeout=1, feed_publisher=DEFAULT_DIVIA_FEED_PUBLISHER, **kwargs):
 
-        super(DiviaProvider, self).__init__(url, operators, dataset, timeout, **kwargs)
+            self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
+            self.provider_name = 'DIVIA'
 
-    def process_data(self, data, poi):
-        park = jmespath.search('records[?to_number(fields.{})==`{}`]|[0]'
-                               .format(self.park, poi['properties']['ref']), data)
-        if park:
-            available = jmespath.search('fields.{}'.format(self.available), park)
-            nb_places = jmespath.search('fields.{}'.format(self.nb_places), park)
-            if available is not None and nb_places is not None and nb_places >= available:
-                occupied = nb_places - available
-            else:
-                occupied = None
-            return ParkingPlaces(available, occupied, None, None)
+            super(DiviaProvider, self).__init__(url, operators, dataset, timeout, **kwargs)
+
+        def process_data(self, data, poi):
+            park = jmespath.search('records[?to_number(fields.{})==`{}`]|[0]'
+                                   .format(self.id_park, poi['properties']['ref']), data)
+            if park:
+                available = jmespath.search('fields.{}'.format(self.available), park)
+                nb_places = jmespath.search('fields.{}'.format(self.total), park)
+                if available is not None and nb_places is not None and nb_places >= available:
+                    occupied = nb_places - available
+                else:
+                    occupied = None
+                return ParkingPlaces(available, occupied, None, None)
+
+    DiviaProvider.id_park = search_patterns.id_park
+    DiviaProvider.available = search_patterns.available
+    DiviaProvider.total = search_patterns.total
+
+    return DiviaProvider
