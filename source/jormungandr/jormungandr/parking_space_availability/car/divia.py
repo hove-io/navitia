@@ -73,3 +73,13 @@ def divia_maker(search_patterns):
     DiviaProvider.total = search_patterns.total
 
     return DiviaProvider
+
+
+DiviaParkOthers = divia_maker(SearchPattern(id_park='numero_parking',
+                                            available='nombre_places_libres',
+                                            total='nombre_places'))
+
+
+DiviaPRPark = divia_maker(SearchPattern(id_park='numero_parc',
+                                        available='nb_places_libres',
+                                        total='nombre_places'))

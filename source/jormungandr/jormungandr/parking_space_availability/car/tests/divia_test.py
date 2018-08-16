@@ -33,10 +33,8 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import pytest
 from mock import MagicMock
 
-
-from jormungandr.parking_space_availability.car.divia import SearchPattern
-from jormungandr.parking_space_availability.car.divia_park_others import DiviaParkOthers
-from jormungandr.parking_space_availability.car.divia_pr_park import DiviaPRPark
+from jormungandr.parking_space_availability.car.divia import \
+    SearchPattern, DiviaParkOthers, DiviaPRPark
 
 from jormungandr.parking_space_availability.car.parking_places import ParkingPlaces
 
