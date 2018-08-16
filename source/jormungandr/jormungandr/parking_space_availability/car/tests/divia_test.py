@@ -34,7 +34,7 @@ import pytest
 from mock import MagicMock
 
 from jormungandr.parking_space_availability.car.divia import \
-    SearchPattern, DiviaParkOthers, DiviaPRPark
+    SearchPattern, DiviaProvider, DiviaPRParkProvider
 
 from jormungandr.parking_space_availability.car.parking_places import ParkingPlaces
 
@@ -53,7 +53,7 @@ def car_park_space_availability_support_poi_test():
     """
     DIVIA car provider support
     """
-    provider = DiviaParkOthers("fake.url", {'Divia'}, 'toto', 42)
+    provider = DiviaProvider("fake.url", {'Divia'}, 'toto', 42)
     assert provider.support_poi(poi)
 
     invalid_poi = {}
@@ -137,13 +137,13 @@ def car_park_maker(divia_class, search_pattern):
     return _test
 
 
-divia_pr_park_test = car_park_maker(DiviaPRPark,
+divia_pr_park_test = car_park_maker(DiviaPRParkProvider,
                                     SearchPattern(id_park='numero_parc',
                                                   available='nb_places_libres',
                                                   total='nombre_places'))
 
 
-divia_pr_others_test = car_park_maker(DiviaParkOthers,
+divia_pr_others_test = car_park_maker(DiviaProvider,
                                       SearchPattern(id_park='numero_parking',
                                                     available='nombre_places_libres',
                                                     total='nombre_places'))
