@@ -1,4 +1,4 @@
-#Autocomplete
+# Autocomplete
 
 This RFC describes how kraken's autocomplete works.
 
@@ -45,13 +45,13 @@ The results are sorted by type, with the following order:
   - other (stop_points by example)
 
 
-Foreach types, we have the follwing order:
+Foreach types, we have the following order:
 In firsts positions, we have the results with a 100 quality (exact match). After them, the order is based
 on the *global score*, then by the length of the longest, then by the position of this substring, 
 and finally by the quality.
 
 
-##What does it mean?
+## What does it mean?
 If a request returns a lot of admins, the response will be filled with the ten most important admins 
 and won't have any stop_area or way.
 
