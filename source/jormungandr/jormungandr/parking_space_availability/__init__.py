@@ -30,4 +30,4 @@ from __future__ import absolute_import, print_function, division
 from jormungandr.parking_space_availability.abstract_parking_places_provider import AbstractParkingPlacesProvider
 from jormungandr.parking_space_availability.abstract_provider_manager import AbstractProviderManager
 from jormungandr.parking_space_availability.abstract_provider_manager import get_from_to_pois_of_journeys
-from jormungandr.parking_space_availability.bss.stands import Stands
+from jormungandr.parking_space_availability.bss.stands import Stands, StandsStatus

@@ -29,7 +29,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
-from jormungandr.parking_space_availability.bss.stands import Stands
+from jormungandr.parking_space_availability.bss.stands import Stands, StandsStatus
 from jormungandr.ptref import FeedPublisher
 
 
@@ -39,7 +39,7 @@ class BssMockProvider(AbstractParkingPlacesProvider):
         return poi['id'] == 'station_1'
 
     def get_informations(self, poi):
-        return Stands(5, 9, 'OPEN')
+        return Stands(5, 9, StandsStatus.open)
 
     def status(self):
         return {}

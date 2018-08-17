@@ -1,3 +1,20 @@
+navitia2 (2.61.0) unstable; urgency=low
+
+  * Jormun: divia connector P+R  <https://github.com/CanalTP/navitia/pull/2500>
+  * Ptref disruption by tags  <https://github.com/CanalTP/navitia/pull/2498>
+  * Doc: add documentation on kraken autocompletion  <https://github.com/CanalTP/navitia/pull/2501>
+  * Jormun: Add 'distance' in autocomplete response + tests  <https://github.com/CanalTP/navitia/pull/2493>
+  * Jormun: A few optimizations in jormun's hot path  <https://github.com/CanalTP/navitia/pull/2496>
+  * jormungandr: metrics on bss services in newrelic  <https://github.com/CanalTP/navitia/pull/2487>
+  * Kraken: update "last_rt_data_loaded" on each update even if Data hasn't changed  <https://github.com/CanalTP/navitia/pull/2491>
+  * Kraken: Fix adapted validity pattern with disruption  <https://github.com/CanalTP/navitia/pull/2492>
+  * raptor: increase number of try in raptor for journeys without transfers  <https://github.com/CanalTP/navitia/pull/2494>
+  * Doc: miscellaneous fixes  <https://github.com/CanalTP/navitia/pull/2489>
+  * Doc: BSS/park info status  <https://github.com/CanalTP/navitia/pull/2488>
+  * add connection -> stop_point link in ptref  <https://github.com/CanalTP/navitia/pull/2490>
+
+ -- Alexandre Jacquin <alexandre.jacquin@canaltp.fr>  Fri, 17 Aug 2018 11:08:54 +0100
+
 navitia2 (2.60.0) unstable; urgency=low
 
   * Kraken: Teleportation crowfly.mode=walking  <https://github.com/CanalTP/navitia/pull/2486>

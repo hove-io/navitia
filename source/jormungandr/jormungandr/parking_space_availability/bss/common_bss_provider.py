@@ -26,31 +26,36 @@
 # IRC #navitia on freenode
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
-
-from __future__ import absolute_import, print_function, unicode_literals, division
-from enum import Enum
-import logging
-
-
-class StandsStatus(Enum):
-    unavailable = -1
-    closed = 0
-    open = 1
+from jormungandr import new_relic
+from jormungandr.parking_space_availability import AbstractParkingPlacesProvider
+from abc import abstractmethod
+from jormungandr.parking_space_availability.bss.stands import Stands, StandsStatus
 
 
-class Stands(object):
+class BssProxyError(RuntimeError):
+    pass
 
-    def __init__(self, available_places, available_bikes, status=None):
-        if status is not None and not isinstance(status, StandsStatus):
-            logging.getLogger(__name__).error('status must be a StandsStatus enum value, '
-                                              'obtained: {}', status)
-            self.status = None
-        else:
-            self.status = status.name  # can't serialize enum value with ujson as it's a recursive struct
 
-        self.available_places = available_places
-        self.available_bikes = available_bikes
-        self.total_stands = available_places + available_bikes
+class CommonBssProvider(AbstractParkingPlacesProvider):
 
-    def __eq__(self, other):
-        return self.__dict__ == other.__dict__
+    @abstractmethod
+    def _get_informations(self, poi):
+        pass
+
+    def get_informations(self, poi):
+        try:
+            stand = self._get_informations(poi)
+            self.record_call('ok')
+            return stand
+
+        except BssProxyError as e:
+            self.record_call('failure', reason=str(e))
+            return Stands(0, 0, StandsStatus.unavailable)
+
+    def record_call(self, status, **kwargs):
+        """
+        status can be in: ok, failure
+        """
+        params = {'bss_system_id': unicode(self.network), 'status': status}
+        params.update(kwargs)
+        new_relic.record_custom_event('bss_status', params)

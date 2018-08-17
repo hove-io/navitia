@@ -196,10 +196,16 @@ void MaintenanceWorker::handle_rt_in_batch(const std::vector<AmqpClient::Envelop
         data->pt_data->clean_weak_impacts();
         LOG4CPLUS_INFO(logger, "rebuilding data raptor");
         data->build_raptor(conf.raptor_cache_size());
-        data->last_rt_data_loaded = pt::microsec_clock::universal_time();
+        data->set_last_rt_data_loaded(pt::microsec_clock::universal_time());
         data_manager.set_data(std::move(data));
         LOG4CPLUS_INFO(logger, "data updated " << envelopes.size() << " disruption applied in "
                                                << pt::microsec_clock::universal_time() - begin);
+    } else if (envelopes.size() > 0) {
+        // we didn't had to update Data because there is no change but we want to track that realtime data
+        // is being processed as it should because "nothing has changed" isn't the same thing
+        // than "I don't known what's happening"
+        auto current_data = data_manager.get_data();
+        current_data->set_last_rt_data_loaded(pt::microsec_clock::universal_time());
     }
 }
 

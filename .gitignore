@@ -11,7 +11,7 @@ documentation/build
 *.swp
 source/CMakeLists.txt.user
 tags
-*.pyc
+*.py[co]
 *_pb2.py
 *.idea*
 .ycm_extra_conf.py

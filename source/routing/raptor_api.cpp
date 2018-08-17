@@ -48,39 +48,19 @@ www.navitia.io
 
 namespace navitia { namespace routing {
 
-// Usefull to protect raptor loop
+// Useful to protect raptor loop
 static const uint MAX_NB_RAPTOR_CALL = 100;
 
-/**
- * @brief This function determine the breaking condition that depends on nb of found journeys,
- * min_nb_journeys and time frame.
- *
- * @details
- *
- *   requested_datetime           requested_datetime + timeframe_duration
- *   -------[--------------------------------------------]-------------------------->
- *                  minimal period to explore
- *
- * timeframe_limit (request_date_secs + timeframe_duration):
- *          The end datetime of original request's timeframe (we have to explore at minimum this period)
- *
- *                   min_nb_journeys is set?
- *                    /               \
- *                   / Y               \ N
- *          timeframe is set?        timeframe is set?
- *            /       \                  /     \
- *           / Y       \ N              / Y      \ N
- *       Case 1      Case 2          Case 3     Case 4
- *
- *
- */
-static bool keep_going(const uint32_t total_nb_journeys,
+bool keep_going(const uint32_t total_nb_journeys,
                        const uint32_t nb_try,
                        const bool clockwise,
                        const DateTime request_date_secs,
                        const boost::optional<uint32_t>& min_nb_journeys,
-                       const boost::optional<DateTime>& timeframe_limit) {
-    if(nb_try > MAX_NB_RAPTOR_CALL) {
+                       const boost::optional<DateTime>& timeframe_limit,
+                       const uint32_t max_transfers) {
+    //we allow more call to kraken for simple request
+    const uint32_t max_raptor_call = (max_transfers == 0) ? MAX_NB_RAPTOR_CALL*10 : MAX_NB_RAPTOR_CALL;
+    if(nb_try > max_raptor_call) {
         return false;
     }
 
@@ -237,7 +217,8 @@ call_raptor(navitia::PbCreator& pb_creator,
                             clockwise,
                             request_date_secs,
                             min_nb_journeys,
-                            timeframe_limit));
+                            timeframe_limit,
+                            max_transfers));
 
         // create date time for next
         pb_creator.set_next_request_date_time(to_posix_timestamp(request_date_secs, raptor.data));

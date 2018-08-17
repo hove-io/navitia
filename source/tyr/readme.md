@@ -27,40 +27,40 @@ There are multiple ways to make it available but one easy way is to change the P
 
     PYTHONPATH=<path_to_tyr>:<path_to_navitiacommon> TYR_CONFIG_FILE=<your_config_file.py> manage_tyr.py <command>
 
-To list all available command, call manage_py with the -h option.
+To list all available commands, call manage_py with the -h option.
 
-To setup the tyr database you need to call:
+To setup the Tyr database, you need to call:
 
     PYTHONPATH=<path_to_tyr>:<path_to_navitiacommon> TYR_CONFIG_FILE=<your_config_file.py> manage_tyr.py db upgrade
 
 
 ### Services
 
-Tyr is split in 3 different services:
+Tyr is split into 3 different services:
 
-* tyr beat
-    Scheduler based on celery. Launches a worker when a task need to be done
+* Tyr beat
+    Scheduler based on celery. Launches a worker when a task needs to be done
 
-* tyr worker
-    Launched by tyr beat. They are the one getting the job done
+* Tyr worker
+    Launched by Tyr beat, it does all the heavy work.
 
-    If no worker is launched, a lot of tyr command will not work
+    If no worker exists, a lot of Tyr's command will not work.
 
-* tyr reloader
-    Handle the reloading of the kraken (this is the old way of handling real time data)
+* Tyr reloader
+    Handles the reloading of Krakens instances (this is the old way of handling real time data)
 
 
-### Example with honcho
+### Example with Honcho
 
-In CanalTP production environments tyr is installed as a service via debian packages, but to configure it on dev environment honcho can be used.
+In Kisio production environments, Tyr is installed as a service via debian packages, but to configure it on dev environment Honcho can be used.
 
-Honcho is handy to launch all the different services.
+Honcho is handy to start all the different services.
 
-install honcho:
+Install honcho:
 
     pip install honcho
 
-In the tyr directory create 2 files:
+In the Tyr's directory, create 2 files:
 
 Procfile:
 ```
@@ -74,17 +74,17 @@ scheduler: celery beat -A tyr.tasks
 PYTHONPATH=.:../navitiacommon
 TYR_CONFIG_FILE=dev_settings.py
 ```
-with dev_settings.py the tyr settings file
+With dev_settings.py being your Tyr's settings file.
 
-With those 2 files, running the commande ```honcho start``` in the tyr directory will launch all tyr services.
+With those 2 files, running the commande ```honcho start``` in the Tyr's directory will start all Tyr's services.
 
 ## Running tests
 
-You need to install the dependancies for developements:
+You will need to install the dependencies for developements:
 ```
 pip install -r requirements_dev.txt
 ```
-You will need docker on your machine, it will be used for spawning a database.
+You will need Docker on your machine, it will be used for spawning a database.
 
 You will also need the python protobuf files from Navitia, so you should use CMake target `protobuf_files` for that :
 ```
@@ -115,6 +115,10 @@ You may want to specify an instance to filter these jobs :
 
 A job is created when a new dataset is detected by tyr_beat.
 You can also trigger a data integration by posting your dataset to the job endpoint filtered by instance.
+
+```bash
+curl -F 'file=@/PATH/TO/FILE' -X POST '$HOST/v0/jobs/<INSTANCE>'
+```
 
 ## Authentication
 
@@ -714,7 +718,10 @@ Finally if you want to delete a poi_type you just have to use the DELETE action:
 
 #### Migrate from POI to OSM
 
-Load POI from OSM.
+When one provides a POI file to Tyr a flag is triggered to avoid reading POIs from OSM files.
+If one wants to trigger that flag back to reading POIs from OSM files, it's possible.
+
+Load POIs from OSM file:
 
     PUT $HOST/v0/instances/$INSTANCE_NAME/actions/migrate_from_poi_to_osm
 
@@ -724,6 +731,13 @@ response:
     "action": "Parameter parse_pois_from_osm activated"
 }
 ```
+
+In that case, one might probably want Tyr to forget about the POI files (in case there is a data-reload).
+It is doable (see also [delete](#Delete-data_sets-by-type) section):
+
+    DELETE $HOST/v0/instances/$INSTANCE_NAME/actions/delete_dataset/poi
+
+One will also probably want to provide an OSM file to load data from it (see [Data integration](#Data-integration))
 
 
 #### Delete data_sets by type
@@ -738,3 +752,5 @@ response:
     "action": "All $TYPE datasets deleted for instance $INSTANCE_NAME"
 }
 ```
+
+Types available are `poi`, `fusio`, `osm`, `geopal`, `synonym`, `shape`.
