@@ -128,57 +128,57 @@ void TrafficReport::add_stop_areas(const type::Indexes& network_idx,
                                    const type::Data& d,
                                    const boost::posix_time::ptime now) {
 
-   for (auto idx : network_idx) {
-       const auto* network = d.pt_data->networks[idx];
-       std::string new_filter = "network.uri=" + network->uri;
-       if (!filter.empty()) {
-           new_filter += " and " + filter;
-       }
+    for (auto idx : network_idx) {
+        const auto* network = d.pt_data->networks[idx];
+        std::string new_filter = "network.uri=" + network->uri;
+        if (!filter.empty()) {
+            new_filter += " and " + filter;
+        }
 
-       type::Indexes stop_points;
-       try {
-           stop_points = ptref::make_query(type::Type_e::StopPoint, new_filter, forbidden_uris, d);
-       } catch (const ptref::parsing_error& parse_error) {
-           LOG4CPLUS_WARN(logger, "Disruption::add_stop_points : Unable to parse filter "
-                               + parse_error.more);
-       } catch (const ptref::ptref_error& /*ptref_error*/) {
-          // that can arrive quite often if there is a filter, and
-          // it's quite normal. Imagine /line/metro1/traffic_reports
-          // for the network SNCF.
-       }
+        type::Indexes stop_points;
+        try {
+            stop_points = ptref::make_query(type::Type_e::StopPoint, new_filter, forbidden_uris, d);
+        } catch (const ptref::parsing_error& parse_error) {
+            LOG4CPLUS_WARN(logger, "Disruption::add_stop_points : Unable to parse filter "
+                                + parse_error.more);
+        } catch (const ptref::ptref_error& /*ptref_error*/) {
+            // that can arrive quite often if there is a filter, and
+            // it's quite normal. Imagine /line/metro1/traffic_reports
+            // for the network SNCF.
+        }
 
-       // build a map of messages per stop_area (iterate only on stop_points of the network)
-       std::map<const nt::StopArea*, std::vector<boost::shared_ptr<nt::disruption::Impact>>> sa_messages;
-       for (const auto& sp_idx: stop_points) {
-           const auto* sp = d.pt_data->stop_points[sp_idx];
-           const auto* sa = sp->stop_area;
-           if (sa_messages.find(sa) == sa_messages.end()) {
-               // add stop_area messages only once
-               sa_messages[sa] = sa->get_publishable_messages(now);
-           }
-           // add stop_point messages
-           auto sp_mess = sp->get_publishable_messages(now);
-           sa_messages[sa].insert(sa_messages[sa].end(), sp_mess.begin(), sp_mess.end());
-       }
+        // build a map of messages per stop_area (iterate only on stop_points of the network)
+        std::map<const nt::StopArea*, std::vector<boost::shared_ptr<nt::disruption::Impact>>> sa_messages;
+        for (const auto& sp_idx: stop_points) {
+            const auto* sp = d.pt_data->stop_points[sp_idx];
+            const auto* sa = sp->stop_area;
+            if (sa_messages.find(sa) == sa_messages.end()) {
+                // add stop_area messages only once
+                sa_messages[sa] = sa->get_publishable_messages(now);
+            }
+            // add stop_point messages
+            auto sp_mess = sp->get_publishable_messages(now);
+            sa_messages[sa].insert(sa_messages[sa].end(), sp_mess.begin(), sp_mess.end());
+        }
 
-       for (const auto& sa_mess : sa_messages) {
-           if (sa_mess.second.empty()) {
-               continue;
-           }
+        for (const auto& sa_mess : sa_messages) {
+            if (sa_mess.second.empty()) {
+                continue;
+            }
 
-           NetworkDisrupt& dist = this->find_or_create(network);
-           auto find_predicate = [&](const std::pair<const type::StopArea*, DisruptionSet>& item) {
-               return item.first == sa_mess.first;
-           };
-           auto it = boost::find_if(dist.stop_areas, find_predicate);
-           if (it == dist.stop_areas.end()) {
-               auto ds = DisruptionSet(sa_mess.second.begin(), sa_mess.second.end());
-               dist.stop_areas.push_back(std::make_pair(sa_mess.first, ds));
-           } else {
-               it->second.insert(sa_mess.second.begin(), sa_mess.second.end());
-           }
-       }
-   }
+            NetworkDisrupt& dist = this->find_or_create(network);
+            auto find_predicate = [&](const std::pair<const type::StopArea*, DisruptionSet>& item) {
+                return item.first == sa_mess.first;
+            };
+            auto it = boost::find_if(dist.stop_areas, find_predicate);
+            if (it == dist.stop_areas.end()) {
+                auto ds = DisruptionSet(sa_mess.second.begin(), sa_mess.second.end());
+                dist.stop_areas.push_back(std::make_pair(sa_mess.first, ds));
+            } else {
+                it->second.insert(sa_mess.second.begin(), sa_mess.second.end());
+            }
+        }
+    }
 }
 
 void TrafficReport::add_vehicle_journeys(const type::Indexes& network_idx,
