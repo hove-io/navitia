@@ -121,7 +121,7 @@ class Uri(ResourceUri, ResourceUtc):
         if args.get("headsign"):
             f = u"vehicle_journey.has_headsign({})".format(protect(args["headsign"]))
             if args.get("filter"):
-                args["filter"] = '({})'.format(args["filter"]) + " and " + f
+                args["filter"] = '({}) and {}'.format(args["filter"], f)
             else:
                 args["filter"] = f
 
