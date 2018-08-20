@@ -148,7 +148,7 @@ Indexes get_impacts_by_tags(const std::vector<std::string> & tag_uris,
         auto impact = w_impacts[i].lock();
         if(impact && impact->disruption) {
             for(const auto& tag : impact->disruption->tags) {
-                if(tag && boost::range::find(tag_uris, tag->uri) != tag_uris.end()) {
+                if(tag && boost::range::find(tag_uris, tag->name) != tag_uris.end()) {
                     result.insert(i);
                 }
             }

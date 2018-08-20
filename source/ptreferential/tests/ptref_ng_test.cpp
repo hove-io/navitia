@@ -57,7 +57,7 @@ namespace {
         BOOST_CHECK_EQUAL(ss.str(), expected);
     }
 
-    std::string get_disruption_uri(navitia::idx_t id, const navitia::type::Data & data) {
+    std::string get_disruption_name(navitia::idx_t id, const navitia::type::Data & data) {
         auto impact = data.pt_data->disruption_holder.get_impact(id);
         BOOST_REQUIRE(impact && impact->disruption);
         return impact->disruption->uri;
@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(get_disruption_by_tag) {
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
 
     auto idx = *indexes.begin();
-    BOOST_CHECK_EQUAL( get_disruption_uri(idx, *b.data), "disrupt_0");
+    BOOST_CHECK_EQUAL( get_disruption_name(idx, *b.data), "disrupt_0");
 }
 
 BOOST_AUTO_TEST_CASE(get_disruptions_with_multiple_tags) {
@@ -375,7 +375,7 @@ BOOST_AUTO_TEST_CASE(get_disruptions_with_multiple_tags) {
     std::vector<std::string> disruption_names;
     boost::range::transform(indexes, std::back_inserter(disruption_names),
                             [&b](const navitia::idx_t id) {
-        return get_disruption_uri(id, *b.data);
+        return get_disruption_name(id, *b.data);
     });
 
     auto expected_disruption_names = {"disrupt_0", "disrupt_2"};
