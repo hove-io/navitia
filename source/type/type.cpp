@@ -50,7 +50,8 @@ www.navitia.io
 
 namespace bt = boost::posix_time;
 
-namespace navitia { namespace type {
+namespace navitia {
+namespace type {
 
 ValidityPattern VehicleJourney::get_base_canceled_validity_pattern() const {
     ValidityPattern base_canceled_vp = *validity_patterns[realtime_level];

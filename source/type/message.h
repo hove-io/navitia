@@ -31,8 +31,6 @@ www.navitia.io
 #pragma once
 
 #include <boost/date_time/posix_time/posix_time.hpp>
-
-
 #include <boost/serialization/weak_ptr.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/date_time/gregorian/greg_serialize.hpp>
@@ -49,13 +47,15 @@ www.navitia.io
 #include <map>
 #include <vector>
 #include <string>
+
+#include "utils/exception.h"
 #include "utils/serialization_unique_ptr.h"
 #include "utils/serialization_unique_ptr_container.h"
 
 #include "type/type.h"
 
-namespace navitia { namespace type {
-
+namespace navitia {
+namespace type {
 namespace disruption {
 
 enum class Effect {
@@ -306,7 +306,7 @@ struct Impact {
     bool is_relevant(const std::vector<const StopTime*>& stop_times) const;
     bool is_only_line_section() const;
     bool is_line_section_of(const Line&) const;
-
+    Indexes get(Type_e target, const PT_Data & pt_data) const;
     const type::ValidityPattern get_impact_vp(const boost::gregorian::date_period& production_date) const;
 
     bool operator<(const Impact& other);

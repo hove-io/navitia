@@ -300,14 +300,17 @@ struct builder {
     DisruptionCreator disrupt(nt::RTLevel lvl, const std::string& uri);
     Impacter impact(nt::RTLevel lvl, std::string disruption_uri = "");
 
-    /// Crée une connexion
+    /// Make a connection
     void connection(const std::string & name1, const std::string & name2, float length);
+
     void build_blocks();
     void finish();
     void generate_dummy_basis();
     void manage_admin();
     void build_autocomplete();
     void fill_missing_destinations();
+
+    void make(); // Build the all thing !
 
     navitia::georef::Way* add_way(const std::string& name, const std::string& way_type);
 };

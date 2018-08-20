@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -30,15 +30,20 @@ www.navitia.io
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE test_disruption
-#include <boost/test/unit_test.hpp>
+
 #include "disruption/traffic_reports_api.h"
+#include "disruption/line_reports_api.h"
 #include "routing/raptor.h"
 #include "ed/build_helper.h"
-#include <boost/make_shared.hpp>
 #include "tests/utils_test.h"
 #include "type/chaos.pb.h"
 #include "type/datetime.h"
 #include "type/pb_converter.h"
+#include "kraken/apply_disruption.h"
+#include "ptreferential/ptreferential.h"
+
+#include <boost/test/unit_test.hpp>
+#include <boost/make_shared.hpp>
 
 /*
 
@@ -67,11 +72,13 @@ struct logger_initialized {
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized );
 
-namespace pt = boost::posix_time;
+using namespace navitia;
+
 using navitia::type::disruption::Impact;
 using navitia::type::disruption::PtObj;
 using navitia::type::disruption::Disruption;
 using navitia::type::disruption::Severity;
+using boost::posix_time::time_period;
 
 class Params {
 public:
@@ -254,4 +261,65 @@ BOOST_FIXTURE_TEST_CASE(Test5, Params) {
     navitia::disruption::traffic_reports(pb_creator, *(b.data), 1, 10, 0, "", forbidden_uris);
     pbnavitia::Response resp = pb_creator.get_response();
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::ResponseType::NO_SOLUTION);
+}
+
+BOOST_AUTO_TEST_CASE(should_filter_disruption_by_tag) {
+    ed::builder b("20180101");
+    auto & data = *b.data;
+
+    b.vj_with_network("my_network","line_A")
+        .route("route_1")
+            ("sp1_1", "08:10"_t)
+            ("sp1_2", "08:20"_t);
+    b.vj_with_network("my_network","line_B")
+        .route("route_2")
+            ("sp2_1", "08:10"_t)
+            ("sp2_2", "08:20"_t);
+    b.make();
+
+    auto since = "20180102T060000"_dt;
+    auto until = "20180103T060000"_dt;
+    auto period = time_period(since, until);
+    navitia::apply_disruption(
+            b.disrupt(nt::RTLevel::Adapted,
+                "Penguins on fire at Montparnasse")
+                            .tag("Penguins")
+                            .impact()
+                            .severity(nt::disruption::Effect::NO_SERVICE)
+                            .on(nt::Type_e::Line, "line_A")
+                            .application_periods(period)
+                            .publish(period)
+                            .get_disruption(),
+            *data.pt_data, *data.meta);
+
+    navitia::apply_disruption(
+            b.disrupt(nt::RTLevel::Adapted,
+                "coffee spilled on the track")
+                            .tag("coffee")
+                            .impact()
+                            .severity(nt::disruption::Effect::NO_SERVICE)
+                            .on(nt::Type_e::Line, "line_B")
+                            .application_periods(period)
+                            .publish(period)
+                            .get_disruption(),
+            *data.pt_data, *data.meta);
+
+    {
+        navitia::PbCreator pb_creator(b.data.get(), since, period);
+        disruption::line_reports( pb_creator, *b.data, 1, 25, 0, "", {},
+                since, until);
+
+        BOOST_CHECK_EQUAL( pb_creator.impacts.size(), 2);
+    }
+    {
+        navitia::PbCreator pb_creator(b.data.get(), since, period);
+        disruption::line_reports( pb_creator, *b.data, 1, 25, 0,
+                "disruption.tag(\"Penguins name\")", {},
+                since, until);
+
+        BOOST_REQUIRE_EQUAL( pb_creator.impacts.size(), 1);
+        auto & impact = *pb_creator.impacts.begin();
+        BOOST_CHECK_EQUAL( impact->disruption->uri,
+                           "Penguins on fire at Montparnasse");
+    }
 }

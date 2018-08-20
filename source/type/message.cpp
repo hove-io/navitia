@@ -224,6 +224,76 @@ bool Impact::is_line_section_of(const Line& line) const {
     });
 }
 
+typedef std::pair<Type_e, Indexes> pair_indexes;
+template<class T>
+pair_indexes make_pair_indexes_from_idx(Type_e type, const T* obj) {
+    return {type, Indexes{obj->idx}};
+}
+
+struct ImpactVisitor : boost::static_visitor<pair_indexes> {
+    Type_e target = Type_e::Unknown;
+    ImpactVisitor(Type_e target): target(target) {}
+    pair_indexes operator()(const disruption::UnknownPtObj){
+        return {Type_e::Unknown, Indexes{}};
+    }
+    pair_indexes operator()(const Network*){
+        return {Type_e::Network, Indexes{}};
+    }
+    pair_indexes operator()(const StopArea*){
+        return {Type_e::StopArea, Indexes{}};
+    }
+    pair_indexes operator()(const StopPoint* sp){
+        return {Type_e::StopPoint, Indexes{sp->idx}};
+    }
+    pair_indexes operator()(const LineSection& ls){
+        switch(target) {
+            case Type_e::Line:
+                return {Type_e::Line, Indexes{ls.line->idx}};
+            case Type_e::StopPoint:
+            {
+                Indexes indexes;
+                for(const auto* route: ls.routes) {
+                    route->for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
+                        auto stop_points = vj.get_sections_stop_points(ls.start_point, ls.end_point);
+                        for(auto & sp : stop_points) {
+                            indexes.insert(sp->idx);
+                        }
+                        return true;
+                    });
+                }
+                return {Type_e::StopPoint, indexes};
+            }
+            default:
+                return {Type_e::Unknown, Indexes{}};
+        }
+    }
+    pair_indexes operator()(const Line* l){
+        return {Type_e::Line, Indexes{l->idx}};
+    }
+    pair_indexes operator()(const Route*){
+        return {Type_e::Route, Indexes{}};
+    }
+    pair_indexes operator()(const MetaVehicleJourney*){
+        return {Type_e::ValidityPattern, Indexes{}};
+    }
+};
+
+Indexes Impact::get(Type_e target, const PT_Data&) const {
+    Indexes result;
+    ImpactVisitor visitor(target);
+    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "line section impact "
+        << "Impact::get - " << static_data::captionByType(target) << "\n");
+
+    for(const auto& entitie: informed_entities()){
+        auto pair_type_indexes = boost::apply_visitor(visitor, entitie);
+        if(target == pair_type_indexes.first){
+            result.insert(pair_type_indexes.second.begin(), pair_type_indexes.second.end());
+        }
+    }
+
+    return result;
+}
+
 const type::ValidityPattern Impact::get_impact_vp(const boost::gregorian::date_period& production_date) const {
     type::ValidityPattern impact_vp{production_date.begin()}; // bitset are all initialised to 0
     for (const auto& period: this->application_periods) {

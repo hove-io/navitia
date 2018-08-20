@@ -2402,3 +2402,4 @@ BOOST_AUTO_TEST_CASE(test_disruption_on_stop_point_then_line) {
             ba::ends_with(rt_vj2->rt_validity_pattern()->days.to_string(), "00000000"),
             rt_vj2->rt_validity_pattern()->days);
 }
+

@@ -93,7 +93,7 @@ struct PtRefGrammar: qi::grammar<Iterator, ast::Expr(), ascii::space_type> {
 
         ident = qi::lexeme[qi::alpha >> *(qi::alnum | qi::char_("_"))];
         str = qi::lexeme[+(qi::alnum | qi::char_("_.:;|-"))]
-            | qi::lexeme['"' > (*(qi::char_ - qi::char_("\"\\") | ('\\' > qi::char_))) > '"'];
+            | qi::lexeme['"' > (*(qi::char_ - qi::char_("\"\\")) | ('\\' > qi::char_)) > '"'];
     }
 
     // Pred
@@ -359,7 +359,8 @@ Indexes make_query_ng(const Type_e requested_type,
     auto logger = log4cplus::Logger::getInstance("logger");
     const auto request_ng = make_request(requested_type, request, forbidden_uris, odt_level, since, until, data);
     const auto expr = parse(request_ng);
-    LOG4CPLUS_DEBUG(logger, "ptref_ng parsed: " << expr);
+    LOG4CPLUS_DEBUG(logger, "ptref_ng parsed: " << expr
+            << " [requesting: " << navitia::type::static_data::captionByType(requested_type) << "]");
     return boost::apply_visitor(Eval(requested_type, data), expr);
 }
 
