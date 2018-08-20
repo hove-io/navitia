@@ -99,7 +99,7 @@ class ResourceUri(StatedResource):
         # handle tags
         tags = args.get("tags[]", [])
         if tags:
-            filter_list.append('disruptions.tags({})'.format(' ,'.join([protect(t) for t in tags])))
+            filter_list.append('disruption.tags({})'.format(' ,'.join([protect(t) for t in tags])))
         return " and ".join(filter_list)
 
 

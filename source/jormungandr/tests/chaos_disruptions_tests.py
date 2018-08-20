@@ -706,6 +706,40 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
             assert disruption['uri'] != 'test_disruption', 'this disruption must have been deleted'
 
 
+    def test_disruption_with_and_without_tags(self):
+        """
+        test api /disruptions with and without parameter tags[] and check the result
+        """
+        query = 'disruptions?since=20120801T000000'
+        disruptions = self.query_region(query)['disruptions']
+        assert len(disruptions) == 9
+
+        #query with parameter tags[]
+        resp, code = self.query_region('disruptions?since=20120801T000000&tags[]=tag_name', check=False)
+        assert code == 404
+        assert resp['error']['message'] == 'ptref : Filters: Unable to find object'
+
+        #we create some disruptions with tags
+        tags = [{'id': 're', 'name': 'rer'}, {'id': 'met', 'name': 'metro'}]
+        self.send_mock("disruption_on_network", "base_network", "network", message='message', tags=tags)
+        tags = [{'id': 'bu', 'name': 'bus'}, {'id': 'met', 'name': 'metro'}]
+        self.send_mock("disruption_on_sa", "base_sa", "stop_area", message='message', tags=tags)
+        tags = [{'id': 'met', 'name': 'metro'}]
+        self.send_mock("disruption_on_line", "base_line", "line", message='message', tags=tags)
+
+        disruptions = self.query_region(query)['disruptions']
+        assert len(disruptions) == 12
+
+        disruptions = self.query_region('disruptions?since=20120801T000000&tags[]=rer')['disruptions']
+        assert len(disruptions) == 1
+
+        disruptions = self.query_region('disruptions?since=20120801T000000&tags[]=rer&tags[]=bus')['disruptions']
+        assert len(disruptions) == 2
+
+        disruptions = self.query_region('disruptions?since=20120801T000000&tags[]=metro')['disruptions']
+        assert len(disruptions) == 3
+
+
 @dataset(MAIN_ROUTING_TEST_SETTING)
 class TestChaosDisruptionsStopPoint(ChaosDisruptionsFixture):
     """

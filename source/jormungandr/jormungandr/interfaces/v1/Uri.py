@@ -177,7 +177,7 @@ class Uri(ResourceUri, ResourceUtc):
         if collection and id:
             f = u'{o}.uri={v}'.format(o=collections_to_resource_type[collection], v=protect(id))
             if args.get("filter"):
-                args["filter"] = '({})'.format(args["filter"]) + " and " + f
+                args["filter"] = '({}) and {}'.format(args["filter"], f)
             else:
                 args["filter"] = f
 
