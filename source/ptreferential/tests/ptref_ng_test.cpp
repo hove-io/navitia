@@ -331,7 +331,7 @@ BOOST_AUTO_TEST_CASE(get_disruption_by_tag) {
     b.data->pt_data->build_uri();
     b.data->build_raptor();
 
-    auto indexes = make_query_ng(Type_e::Impact, "disruption.tag=my_tag",
+    auto indexes = make_query_ng(Type_e::Impact, "disruption.tag=\"my_tag name\"",
                                   {}, OdtLevel_e::all, {}, {}, *b.data);
 
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE(get_disruptions_with_multiple_tags) {
     b.data->pt_data->build_uri();
     b.data->build_raptor();
 
-    auto indexes = make_query_ng(Type_e::Impact, "disruption.tags(tag_0,tag_2)",
+    auto indexes = make_query_ng(Type_e::Impact, "disruption.tags(\"tag_0 name\",\"tag_2 name\")",
                                   {}, OdtLevel_e::all, {}, {}, *b.data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
 
