@@ -705,7 +705,6 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         for disruption in disrupt:
             assert disruption['uri'] != 'test_disruption', 'this disruption must have been deleted'
 
-
     def test_disruption_with_and_without_tags(self):
         """
         test api /disruptions with and without parameter tags[] and check the result
@@ -723,9 +722,9 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
         tags = [{'id': 're', 'name': 'rer'}, {'id': 'met', 'name': 'metro'}]
         self.send_mock("disruption_on_network", "base_network", "network", message='message', tags=tags)
         tags = [{'id': 'bu', 'name': 'bus'}, {'id': 'met', 'name': 'metro'}]
-        self.send_mock("disruption_on_sa", "base_sa", "stop_area", message='message', tags=tags)
+        self.send_mock("disruption_on_stopA", "stopA", "stop_area", message='message', tags=tags)
         tags = [{'id': 'met', 'name': 'metro'}]
-        self.send_mock("disruption_on_line", "base_line", "line", message='message', tags=tags)
+        self.send_mock("disruption_on_stopB", "stopB", "stop_area", message='message', tags=tags)
 
         disruptions = self.query_region(query)['disruptions']
         assert len(disruptions) == 12
@@ -738,6 +737,23 @@ class TestChaosDisruptionsUpdate(ChaosDisruptionsFixture):
 
         disruptions = self.query_region('disruptions?since=20120801T000000&tags[]=metro')['disruptions']
         assert len(disruptions) == 3
+
+        #query with parameter filter
+        disruptions = self.query_region('disruptions?since=20120801T000000'
+                                        '&filter=stop_area.id="stopA" or stop_area.id="stopB"')['disruptions']
+        assert len(disruptions) == 3
+
+        #query with parameter filter and tags with one value
+        disruptions = self.query_region('disruptions?since=20120801T000000'
+                                        '&filter=stop_area.id="stopA" or stop_area.id="stopB"'
+                                        '&tags[]=bus')['disruptions']
+        assert len(disruptions) == 1
+
+        #query with parameter filter and tags with two values
+        disruptions = self.query_region('disruptions?since=20120801T000000'
+                                        '&filter=stop_area.id="stopA" or stop_area.id="stopB"'
+                                        '&tags[]=bus&tags[]=metro')['disruptions']
+        assert len(disruptions) == 2
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
