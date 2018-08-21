@@ -286,5 +286,9 @@ def test_update_instances_with_invalid_scenario(create_instance):
 
 def test_update_max_nb_crowfly_by_mode(create_instance):
     params = {"max_nb_crowfly_by_mode": {'car': 4242, 'walking': 4141}}
-    resp, status = api_put('/v0/instances/us', data=json.dumps(params), check=False, content_type='application/json')
+    resp, status = api_put('/v0/instances/fr', data=json.dumps(params), check=False, content_type='application/json')
     assert status == 200
+    assert resp['max_nb_crowfly_by_mode']['car'] == 4242
+    assert resp['max_nb_crowfly_by_mode']['walking'] == 4141
+    assert resp['max_nb_crowfly_by_mode']['bike'] == 5000
+    assert resp['max_nb_crowfly_by_mode']['bss'] == 5000
