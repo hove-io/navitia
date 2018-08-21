@@ -64,6 +64,26 @@ class TestJourneysDistributed(JourneyCommon, DirectPath, JourneyMinBikeMinCar, N
         assert 'car_direct_path' in context
         assert 'co2_emission' in context['car_direct_path']
 
+    def test_journey_with_limited_nb_crowfly(self):
+        """
+        Test when max_nb_crowfly_by_car=0, we cannot fallback with car..
+        """
+        query = journey_basic_query + "&first_section_mode[]=walking&last_section_mode[]=car&max_nb_crowfly_by_car=0"
+        response = self.query_region(query)
+        check_best(response)
+        jrnys = response['journeys']
+        assert len(jrnys) == 1
+        assert jrnys[0]['sections'][0]['mode'] == 'walking'
+        assert jrnys[0]['sections'][-1]['mode'] == 'walking'
+
+        query = journey_basic_query + "&first_section_mode[]=walking&max_nb_crowfly_by_walking=0"
+        response = self.query_region(query)
+        check_best(response)
+        jrnys = response['journeys']
+        assert len(jrnys) == 1
+        assert 'walking' in jrnys[0]['tags']
+        assert 'non_pt' in jrnys[0]['tags']
+
     def test_best_filtering(self):
         """
         This feature is no longer supported"""

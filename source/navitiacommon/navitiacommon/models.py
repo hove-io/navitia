@@ -371,6 +371,10 @@ class Instance(db.Model):
                                       nullable=False, server_default='0')
     max_nb_journeys = db.Column(db.Integer, nullable=True)
 
+    # param only used by distributed scenario
+    import json
+    max_nb_crowfly_by_mode = db.Column(db.PickleType(pickler=json), default=default_values.max_nb_crowfly_by_mode)
+
     def __init__(self, name=None, is_free=False, authorizations=None,
                  jobs=None):
         self.name = name

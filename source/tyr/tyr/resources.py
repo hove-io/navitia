@@ -315,6 +315,10 @@ class Instance(flask_restful.Resource):
                             help='maximum number of second pass to get more itineraries',
                             location=('json', 'values'), default=instance.max_extra_second_pass)
 
+        parser.add_argument('max_nb_crowfly_by_mode', type=dict,
+                            help='maximum number of second pass to get more itineraries',
+                            location=('json', 'values'), default=instance.max_nb_crowfly_by_mode)
+
         args = parser.parse_args()
 
         try:
@@ -361,7 +365,8 @@ class Instance(flask_restful.Resource):
                                        'min_journeys_calls',
                                        'max_successive_physical_mode',
                                        'final_line_filter',
-                                       'max_extra_second_pass'])
+                                       'max_extra_second_pass',
+                                       'max_nb_crowfly_by_mode'])
             db.session.commit()
         except Exception:
             logging.exception("fail")

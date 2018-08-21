@@ -396,6 +396,11 @@ class Instance(object):
         instance_db = self.get_models()
         return get_value_or_default('max_extra_second_pass', instance_db, self.name)
 
+    @property
+    def max_nb_crowfly_by_mode(self):
+        instance_db = self.get_models()
+        return get_value_or_default('max_nb_crowfly_by_mode', instance_db, self.name)
+
     @contextmanager
     def socket(self, context):
         socket = None

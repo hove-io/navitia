@@ -282,3 +282,9 @@ def test_update_instances_with_invalid_scenario(create_instance):
 
     resp = api_get('/v0/instances/')
     assert resp[0]['scenario'] == 'new_default'
+
+
+def test_update_max_nb_crowfly_by_mode(create_instance):
+    params = {"max_nb_crowfly_by_mode": {'car': 4242, 'walking': 4141}}
+    resp, status = api_put('/v0/instances/us', data=json.dumps(params), check=False, content_type='application/json')
+    assert status == 200

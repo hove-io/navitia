@@ -88,7 +88,8 @@ class ProximitiesByCrowfly:
 
 
 class ProximitiesByCrowflyPool:
-    def __init__(self, future_manager, instance, requested_place_obj, modes, request, direct_paths_by_mode, max_nb_crowfly=5000):
+    def __init__(self, future_manager, instance, requested_place_obj, modes, request, direct_paths_by_mode,
+                 max_nb_crowfly_by_mode):
         """
         A ProximitiesByCrowflyPool is a set of ProximitiesByCrowfly grouped by mode
 
@@ -102,7 +103,8 @@ class ProximitiesByCrowflyPool:
                                      Ex. If we find a direct path from A to B by car whose duration is 15min, then there
                                      is no need to compute ProximitiesByCrowfly from A with a max_duration more than
                                      15min (max_duration is 30min by default).
-        :param max_nb_crowfly:
+        :param max_nb_crowfly_by_mode: a map of "mode" vs "nb of proximities by crowfly", used to reduce the load of
+                                       street network services if necessary
         """
         self._future_manager = future_manager
         self._instance = instance
@@ -111,7 +113,7 @@ class ProximitiesByCrowflyPool:
         self._modes = set(modes)
         self._request = request
         self._direct_paths_by_mode = direct_paths_by_mode
-        self._max_nb_crowfly = max_nb_crowfly
+        self._max_nb_crowfly_by_mode = max_nb_crowfly_by_mode
 
         self._future = None
         self._value = {}
@@ -127,7 +129,7 @@ class ProximitiesByCrowflyPool:
                                      requested_place_obj=self._requested_place_obj,
                                      mode=mode,
                                      max_duration=max_fallback_duration,
-                                     max_nb_crowfly=self._max_nb_crowfly)
+                                     max_nb_crowfly=self._max_nb_crowfly_by_mode.get(mode, 5000))
 
             self._value[mode] = p
 
