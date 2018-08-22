@@ -316,7 +316,8 @@ class Instance(flask_restful.Resource):
                             location=('json', 'values'), default=instance.max_extra_second_pass)
 
         parser.add_argument('max_nb_crowfly_by_mode', type=dict,
-                            help='maximum number of second pass to get more itineraries',
+                            help='maximum nb of crowfly, used before computing the fallback matrix,'
+                                 ' in distributed scenario',
                             location=('json', 'values'), default=instance.max_nb_crowfly_by_mode)
 
         args = parser.parse_args()

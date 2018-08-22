@@ -508,16 +508,16 @@ class Journeys(JourneyCommon):
                                      "actually a minimum.\n"
                                      "Nota 2: 'max_nb_journeys' parameter has priority over "
                                      "'timeframe_duration' parameter.")
-        parser_get.add_argument("_max_nb_crowfly_by_walking", type=int,
+        parser_get.add_argument("_max_nb_crowfly_by_walking", type=int, hidden=True,
                                 help="limit nb of stop points accesible by walking crowfly, "
                                      "used especially in distributed scenario")
-        parser_get.add_argument("_max_nb_crowfly_by_car", type=int,
+        parser_get.add_argument("_max_nb_crowfly_by_car", type=int, hidden=True,
                                 help="limit nb of stop points accesible by car crowfly, "
                                      "used especially in distributed scenario")
-        parser_get.add_argument("_max_nb_crowfly_by_bike", type=int,
+        parser_get.add_argument("_max_nb_crowfly_by_bike", type=int, hidden=True,
                                 help="limit nb of stop points accesible by bike crowfly, "
                                      "used especially in distributed scenario")
-        parser_get.add_argument("_max_nb_crowfly_by_bss", type=int,
+        parser_get.add_argument("_max_nb_crowfly_by_bss", type=int, hidden=True,
                                 help="limit nb of stop points accesible by bss crowfly, "
                                      "used especially in distributed scenario")
 
