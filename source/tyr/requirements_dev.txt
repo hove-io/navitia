@@ -3,3 +3,4 @@ docker==3.4.1
 pytest==3.1.1
 python-dateutil==2.5.3
 mock==1.0.1
+clingon==0.1.4

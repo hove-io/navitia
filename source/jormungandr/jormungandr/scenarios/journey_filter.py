@@ -348,27 +348,25 @@ def is_walk_after_parking(journey, idx_section):
 
 def similar_journeys_vj_generator(journey):
     for idx, s in enumerate(journey.sections):
-        # special case, we don't want to consider the walking section after/before parking a car
-        # so CAR / PARK / WALK / PT is equivalent to CAR / PARK / PT
-        if is_walk_after_parking(journey, idx):
-            continue
-
         if s.type == response_pb2.PUBLIC_TRANSPORT:
-            yield "pt:{}".format(s.pt_display_informations.uris.vehicle_journey)
+            yield 'pt:%s' % s.pt_display_informations.uris.vehicle_journey
         elif s.type == response_pb2.STREET_NETWORK:
-            yield "sn:{}".format(s.street_network.mode)
+            # special case, we don't want to consider the walking section after/before parking a car
+            # so CAR / PARK / WALK / PT is equivalent to CAR / PARK / PT
+            if is_walk_after_parking(journey, idx):
+                continue
+            yield 'sn:%s' % s.street_network.mode
 
 
 def similar_journeys_line_generator(journey):
     for idx, s in enumerate(journey.sections):
-        # special case, we don't want to consider the walking section after/before parking a car
-        # so CAR / PARK / WALK / PT is equivalent to CAR / PARK / PT
-        if is_walk_after_parking(journey, idx):
-            continue
-
         if s.type == response_pb2.PUBLIC_TRANSPORT:
             yield "pt:{}".format(s.pt_display_informations.uris.line)
         elif s.type == response_pb2.STREET_NETWORK:
+            # special case, we don't want to consider the walking section after/before parking a car
+            # so CAR / PARK / WALK / PT is equivalent to CAR / PARK / PT
+            if is_walk_after_parking(journey, idx):
+                continue
             yield "sn:{}".format(s.street_network.mode)
 
 

@@ -145,7 +145,7 @@ def parking_space_availability_cykleo_get_informations_with_status_Closed_test()
     assert provider.get_informations(poi_with_0) == Stands(0, 0, StandsStatus.closed)
 
 
-def parking_space_availability_cykleo_get_informations_with_status_Closed_test():
+def parking_space_availability_cykleo_get_informations_with_status_unavailable_test():
     webservice_response = {'2': {
         "station": {
             "assetStation": {

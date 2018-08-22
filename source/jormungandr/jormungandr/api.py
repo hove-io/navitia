@@ -123,7 +123,11 @@ else:
 if rest_api.app.config.get('ACTIVATE_PROFILING'):
     rest_api.app.logger.warning('=======================================================')
     rest_api.app.logger.warning('activation of the profiling, all query will be slow !')
+    rest_api.app.logger.warning('For better result you can do the calibration by setting PROFILING_BIAS!')
+    rest_api.app.logger.warning('https://docs.python.org/2.7/library/profile.html#calibration')
     rest_api.app.logger.warning('=======================================================')
+    import profile
+    profile.Profile.bias = rest_api.app.config.get('PROFILING_BIAS', 0)
     from werkzeug.contrib.profiler import ProfilerMiddleware
     rest_api.app.config['PROFILE'] = True
     f = open('/tmp/profiler.log', 'a')

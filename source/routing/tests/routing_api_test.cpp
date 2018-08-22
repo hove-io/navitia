@@ -3839,3 +3839,238 @@ BOOST_AUTO_TEST_CASE(journeys_with_time_frame_duration) {
     resp = pb_creator_case8.get_response();
     BOOST_REQUIRE_EQUAL(resp.response_type(), pbnavitia::NO_SOLUTION);
 }
+
+
+
+//basic journey without min_nb_journey nor timeframe_limit
+BOOST_AUTO_TEST_CASE(keep_going_tests_simple) {
+    //no solution found: stop the search
+    BOOST_CHECK_EQUAL(navitia::routing::keep_going(0, //total_nb_journeys
+                                                   1, //nb_try
+                                                   true, //clockwise
+                                                   navitia::DateTimeUtils::set(1, 2), //request_date_secs
+                                                   boost::none, //min_nb_journeys
+                                                   boost::none, //timeframe_limit
+                                                   10), //max_transfers
+            false);
+
+    //some solutions have been found: stop the search
+    BOOST_CHECK_EQUAL(navitia::routing::keep_going(3, //total_nb_journeys
+                                                   1, //nb_try
+                                                   true, //clockwise
+                                                   navitia::DateTimeUtils::set(1, 2), //request_date_secs
+                                                   boost::none, //min_nb_journeys
+                                                   boost::none, //timeframe_limit
+                                                   10), //max_transfers
+            false);
+
+}
+
+//journeys with min_nb_journeys=3
+BOOST_AUTO_TEST_CASE(keep_going_tests_min_nb_journeys) {
+    //only one solution found: continue to search
+    BOOST_CHECK_EQUAL(navitia::routing::keep_going(1, //total_nb_journeys
+                                                   1, //nb_try
+                                                   true, //clockwise
+                                                   navitia::DateTimeUtils::set(1, 2), //request_date_secs
+                                                   3, //min_nb_journeys
+                                                   boost::none, //timeframe_limit
+                                                   10), //max_transfers
+            true);
+
+    //3 solutions found, stop the search
+    BOOST_CHECK_EQUAL(navitia::routing::keep_going(3, //total_nb_journeys
+                                                   1, //nb_try
+                                                   true, //clockwise
+                                                   navitia::DateTimeUtils::set(1, 2), //request_date_secs
+                                                   3, //min_nb_journeys
+                                                   boost::none, //timeframe_limit
+                                                   10), //max_transfers
+            false);
+
+    //only one solution found, but MAX_NB_RAPTOR_CALL is reached: stop the search
+    BOOST_CHECK_EQUAL(navitia::routing::keep_going(1, //total_nb_journeys
+                                                   101, //nb_try
+                                                   true, //clockwise
+                                                   navitia::DateTimeUtils::set(1, 2), //request_date_secs
+                                                   3, //min_nb_journeys
+                                                   boost::none, //timeframe_limit
+                                                   10), //max_transfers
+            false);
+
+    // max_transfers=0, only one solution found
+    // MAX_NB_RAPTOR_CALL is increased since we are in "simple mode": continue the search
+    BOOST_CHECK_EQUAL(navitia::routing::keep_going(1, //total_nb_journeys
+                                                   101, //nb_try
+                                                   true, //clockwise
+                                                   navitia::DateTimeUtils::set(1, 2), //request_date_secs
+                                                   3, //min_nb_journeys
+                                                   boost::none, //timeframe_limit
+                                                   0), //max_transfers
+            true);
+    //we finally stop after 1000 try
+    BOOST_CHECK_EQUAL(navitia::routing::keep_going(1, //total_nb_journeys
+                                                   1001, //nb_try
+                                                   true, //clockwise
+                                                   navitia::DateTimeUtils::set(1, 2), //request_date_secs
+                                                   3, //min_nb_journeys
+                                                   boost::none, //timeframe_limit
+                                                   0), //max_transfers
+            false);
+}
+
+
+//journeys with a timeframe_limit
+BOOST_AUTO_TEST_CASE(keep_going_tests_timeframe) {
+    // request_date_secs < timeframe_limit: continue
+    BOOST_CHECK_EQUAL(navitia::routing::keep_going(1, //total_nb_journeys
+                                                   1, //nb_try
+                                                   true, //clockwise
+                                                   navitia::DateTimeUtils::set(1, 2), //request_date_secs
+                                                   boost::none, //min_nb_journeys
+                                                   navitia::DateTimeUtils::set(1, 900), //timeframe_limit
+                                                   10), //max_transfers
+            true);
+
+    // request_date_secs == timeframe_limit: stop
+    BOOST_CHECK_EQUAL(navitia::routing::keep_going(1, //total_nb_journeys
+                                                   1, //nb_try
+                                                   true, //clockwise
+                                                   navitia::DateTimeUtils::set(1, 900), //request_date_secs
+                                                   boost::none, //min_nb_journeys
+                                                   navitia::DateTimeUtils::set(1, 900), //timeframe_limit
+                                                   10), //max_transfers
+            false);
+
+    // request_date_secs < timeframe_limit but MAX_NB_RAPTOR_CALL is reached: stop the search
+    BOOST_CHECK_EQUAL(navitia::routing::keep_going(1, //total_nb_journeys
+                                                   101, //nb_try
+                                                   true, //clockwise
+                                                   navitia::DateTimeUtils::set(1, 100), //request_date_secs
+                                                   boost::none, //min_nb_journeys
+                                                   navitia::DateTimeUtils::set(1, 900), //timeframe_limit
+                                                   10), //max_transfers
+            false);
+
+    // request_date_secs < timeframe_limit and max_transfers=0 (simple mode)
+    //  MAX_NB_RAPTOR_CALL is increased: continue
+    BOOST_CHECK_EQUAL(navitia::routing::keep_going(1, //total_nb_journeys
+                                                   101, //nb_try
+                                                   true, //clockwise
+                                                   navitia::DateTimeUtils::set(1, 100), //request_date_secs
+                                                   boost::none, //min_nb_journeys
+                                                   navitia::DateTimeUtils::set(1, 900), //timeframe_limit
+                                                   0), //max_transfers
+            true);
+    // last try
+    BOOST_CHECK_EQUAL(navitia::routing::keep_going(1, //total_nb_journeys
+                                                   1000, //nb_try
+                                                   true, //clockwise
+                                                   navitia::DateTimeUtils::set(1, 100), //request_date_secs
+                                                   boost::none, //min_nb_journeys
+                                                   navitia::DateTimeUtils::set(1, 900), //timeframe_limit
+                                                   0), //max_transfers
+            true);
+
+    //after 1001 try: stop
+    BOOST_CHECK_EQUAL(navitia::routing::keep_going(1, //total_nb_journeys
+                                                   1001, //nb_try
+                                                   true, //clockwise
+                                                   navitia::DateTimeUtils::set(1, 100), //request_date_secs
+                                                   boost::none, //min_nb_journeys
+                                                   navitia::DateTimeUtils::set(1, 900), //timeframe_limit
+                                                   0), //max_transfers
+            false);
+    //or before if we reach the timeframe_limit
+    BOOST_CHECK_EQUAL(navitia::routing::keep_going(1, //total_nb_journeys
+                                                   102, //nb_try
+                                                   true, //clockwise
+                                                   navitia::DateTimeUtils::set(1, 900), //request_date_secs
+                                                   boost::none, //min_nb_journeys
+                                                   navitia::DateTimeUtils::set(1, 900), //timeframe_limit
+                                                   0), //max_transfers
+            false);
+}
+
+//journeys with a timeframe_limit
+BOOST_AUTO_TEST_CASE(keep_going_tests_timeframe_and_min_nb_journey) {
+    // request_date_secs < timeframe_limit && total_nb_journeys < min_nb_journeys: continue
+    BOOST_CHECK_EQUAL(navitia::routing::keep_going(1, //total_nb_journeys
+                                                   1, //nb_try
+                                                   true, //clockwise
+                                                   navitia::DateTimeUtils::set(1, 2), //request_date_secs
+                                                   5, //min_nb_journeys
+                                                   navitia::DateTimeUtils::set(1, 900), //timeframe_limit
+                                                   10), //max_transfers
+            true);
+
+    // request_date_secs == timeframe_limit && total_nb_journeys < min_nb_journeys: continue
+    BOOST_CHECK_EQUAL(navitia::routing::keep_going(1, //total_nb_journeys
+                                                   1, //nb_try
+                                                   true, //clockwise
+                                                   navitia::DateTimeUtils::set(1, 900), //request_date_secs
+                                                   5, //min_nb_journeys
+                                                   navitia::DateTimeUtils::set(1, 900), //timeframe_limit
+                                                   10), //max_transfers
+            true);
+
+    // request_date_secs < timeframe_limit && total_nb_journeys == min_nb_journeys: continue
+    BOOST_CHECK_EQUAL(navitia::routing::keep_going(5, //total_nb_journeys
+                                                   1, //nb_try
+                                                   true, //clockwise
+                                                   navitia::DateTimeUtils::set(1, 9), //request_date_secs
+                                                   5, //min_nb_journeys
+                                                   navitia::DateTimeUtils::set(1, 900), //timeframe_limit
+                                                   10), //max_transfers
+            true);
+
+    // request_date_secs == timeframe_limit && total_nb_journeys == min_nb_journeys: continue
+    BOOST_CHECK_EQUAL(navitia::routing::keep_going(5, //total_nb_journeys
+                                                   1, //nb_try
+                                                   true, //clockwise
+                                                   navitia::DateTimeUtils::set(1, 900), //request_date_secs
+                                                   5, //min_nb_journeys
+                                                   navitia::DateTimeUtils::set(1, 900), //timeframe_limit
+                                                   10), //max_transfers
+            false);
+
+    // request_date_secs < timeframe_limit && total_nb_journeys < min_nb_journeys: we try really hard!
+    BOOST_CHECK_EQUAL(navitia::routing::keep_going(1, //total_nb_journeys
+                                                   100, //nb_try
+                                                   true, //clockwise
+                                                   navitia::DateTimeUtils::set(1, 2), //request_date_secs
+                                                   5, //min_nb_journeys
+                                                   navitia::DateTimeUtils::set(1, 900), //timeframe_limit
+                                                   10), //max_transfers
+            true);
+
+    //but we finally give up
+    BOOST_CHECK_EQUAL(navitia::routing::keep_going(1, //total_nb_journeys
+                                                   101, //nb_try
+                                                   true, //clockwise
+                                                   navitia::DateTimeUtils::set(1, 2), //request_date_secs
+                                                   5, //min_nb_journeys
+                                                   navitia::DateTimeUtils::set(1, 900), //timeframe_limit
+                                                   10), //max_transfers
+            false);
+    // except if it's really easy then we try harder
+    BOOST_CHECK_EQUAL(navitia::routing::keep_going(1, //total_nb_journeys
+                                                   1000, //nb_try
+                                                   true, //clockwise
+                                                   navitia::DateTimeUtils::set(1, 2), //request_date_secs
+                                                   5, //min_nb_journeys
+                                                   navitia::DateTimeUtils::set(1, 900), //timeframe_limit
+                                                   0), //max_transfers
+            true);
+
+    // until we stop trying
+    BOOST_CHECK_EQUAL(navitia::routing::keep_going(1, //total_nb_journeys
+                                                   1001, //nb_try
+                                                   true, //clockwise
+                                                   navitia::DateTimeUtils::set(1, 2), //request_date_secs
+                                                   5, //min_nb_journeys
+                                                   navitia::DateTimeUtils::set(1, 900), //timeframe_limit
+                                                   0), //max_transfers
+            false);
+
+}

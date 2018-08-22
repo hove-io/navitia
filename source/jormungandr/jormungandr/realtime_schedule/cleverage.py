@@ -29,7 +29,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, division
-from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy
+from jormungandr.realtime_schedule.realtime_proxy import RealtimeProxy, RealtimeProxyError
 from flask import logging
 import pybreaker
 import pytz

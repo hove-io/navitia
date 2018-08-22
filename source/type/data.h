@@ -42,6 +42,13 @@ www.navitia.io
 #include "utils/obj_factory.h"
 #include "georef/adminref.h"
 
+// workaround missing "is_trivially_copyable" in g++ < 5.0
+#if __GNUG__ && __GNUC__ < 5
+#define IS_TRIVIALLY_COPYABLE(T) __has_trivial_copy(T)
+#else
+#define IS_TRIVIALLY_COPYABLE(T) std::is_trivially_copyable<T>::value
+#endif
+
 //forward declare
 namespace navitia {
     namespace georef {
@@ -121,6 +128,9 @@ struct ContainerTrait<type::MetaVehicleJourney> {
   * peut même (sur des disques lents) accélerer le chargement).
   */
 class Data : boost::noncopyable{
+
+    static_assert(IS_TRIVIALLY_COPYABLE(const boost::posix_time::ptime), "ptime isn't is_trivially_copyable and can't be used with std::atomic");
+    mutable std::atomic<const boost::posix_time::ptime> _last_rt_data_loaded; //datetime of the last Real Time loaded data
 public:
 
     static const unsigned int data_version; //< Data version number. *INCREMENT* in cpp file
@@ -185,7 +195,6 @@ public:
     // UTC
     boost::posix_time::ptime last_load_at;
 
-    boost::posix_time::ptime last_rt_data_loaded; //datetime of the last Real Time loaded data
 
     // This object is the only field mutated in this object. As it is
     // thread safe to mutate it, we mark it as mutable.  Maybe we can
@@ -264,6 +273,9 @@ public:
 
     // Deep clone from the given Data.
     void clone_from(const Data&);
+
+    void set_last_rt_data_loaded(const boost::posix_time::ptime&) const;
+    const boost::posix_time::ptime last_rt_data_loaded() const;
 private:
     /** Get similar validitypattern **/
     ValidityPattern* get_similar_validity_pattern(ValidityPattern* vp) const;
