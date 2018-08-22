@@ -261,7 +261,7 @@ class Geovelo(AbstractStreetNetworkService):
                 path_item = section.street_network.path_items.add()
                 path_item.name = geovelo_instruction[1]
                 path_item.length = geovelo_instruction[2]
-                path_item.duration = round(path_item.length * speed)
+                path_item.duration = round(path_item.length / speed if speed != 0 else 0)
                 path_item.direction = map_instructions_direction.get(geovelo_instruction[0], 0)
 
             shape = decode_polyline(geovelo_resp['sections'][0]['geometry'])

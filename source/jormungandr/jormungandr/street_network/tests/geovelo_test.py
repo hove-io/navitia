@@ -369,7 +369,7 @@ def direct_path_geovelo_test():
         assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].name == "Rue Jouffroy d'Abbans"
         assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].direction == 0
         assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].length == 40
-        assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].duration == 144
+        assert geovelo_resp.journeys[0].sections[0].street_network.path_items[1].duration == 11
 
 
 def direct_path_geovelo_zero_test():
