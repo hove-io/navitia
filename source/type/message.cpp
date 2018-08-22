@@ -242,9 +242,7 @@ struct ImpactVisitor : boost::static_visitor<pair_indexes> {
         return {Type_e::Unknown, Indexes{}};
     }
     pair_indexes operator()(const Network* n){
-
-        switch(target)
-        {
+        switch(target) {
             case Type_e::Line : {
                 Indexes indexes;
                 for(auto line : n->line_list) {
@@ -265,28 +263,15 @@ struct ImpactVisitor : boost::static_visitor<pair_indexes> {
     pair_indexes operator()(const StopPoint* sp){
         return {Type_e::StopPoint, Indexes{sp->idx}};
     }
-    pair_indexes operator()(const LineSection& ){
-        // switch(target) {
-        //     case Type_e::Line:
-        //         return {Type_e::Line, Indexes{ls.line->idx}};
-        //     case Type_e::StopPoint:
-        //     {
-        //         Indexes indexes;
-        //         for(const auto* route: ls.routes) {
-        //             route->for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
-        //                 auto stop_points = vj.get_sections_stop_points(ls.start_point, ls.end_point);
-        //                 for(auto & sp : stop_points) {
-        //                     indexes.insert(sp->idx);
-        //                 }
-        //                 return true;
-        //             });
-        //         }
-        //         return {Type_e::StopPoint, indexes};
-        //     }
-        //     default:
-        //         return {Type_e::Unknown, Indexes{}};
-        // }
-        return {Type_e::Unknown, Indexes{}};
+    pair_indexes operator()(const LineSection& ls){
+        switch(target) {
+            case Type_e::Line:
+                return {Type_e::Line, Indexes{ls.line->idx}};
+            case Type_e::Network:
+                return {Type_e::Network, Indexes{ls.line->network->idx}};
+            default:
+                return {Type_e::Unknown, Indexes{}};
+        }
     }
     pair_indexes operator()(const Line* l){
         switch(target)

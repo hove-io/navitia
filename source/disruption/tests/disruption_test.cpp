@@ -104,6 +104,18 @@ namespace {
 
         navitia::apply_disruption( disruption, *b.data->pt_data, *b.data->meta);
     }
+
+    std::set<std::string> get_impacts_uris(const std::set<Impact::SharedImpact> & impacts)
+    {
+        std::set<std::string> uris;
+        boost::range::transform(impacts,
+                                std::inserter(uris, uris.begin()),
+                                [](const Impact::SharedImpact & i) {
+            return i->disruption->uri;
+        });
+
+        return uris;
+    }
 }
 
 class Params {
@@ -303,9 +315,13 @@ struct DisruptedNetwork {
         b.vj_with_network("network_2","line_2")
             .route("route_2")
                 ("sp2_1", "08:10"_t)
-                ("sp2_2", "08:20"_t)
-                ("sp2_3", "08:30"_t)
-                ("sp2_4", "08:40"_t);
+                ("sp2_2", "08:20"_t);
+        b.vj_with_network("network_3","line_3")
+            .route("route_3")
+                ("sp3_1", "08:10"_t)
+                ("sp3_2", "08:20"_t)
+                ("sp3_3", "08:30"_t)
+                ("sp3_4", "08:40"_t);
         b.make();
 
         auto period = time_period(since, until);
@@ -333,7 +349,7 @@ struct DisruptedNetwork {
                 .severity(nt::disruption::Effect::NO_SERVICE)
                 .application_periods(period)
                 .publish(period)
-                .on_line_section("line_2", "sp2_2", "sp2_3", {"route_2"})
+                .on_line_section("line_3", "sp3_2", "sp3_3", {"route_3"})
                 .get_disruption(),
             *b.data->pt_data, *b.data->meta);
 
@@ -349,13 +365,13 @@ struct DisruptedNetwork {
 BOOST_FIXTURE_TEST_CASE(line_report_should_return_all_disruptions, DisruptedNetwork)
 {
     disruption::line_reports( pb_creator, *b.data, 1, 25, 0, "", {}, since, until);
-    BOOST_CHECK_EQUAL( pb_creator.impacts.size(), 10);
+    BOOST_CHECK_EQUAL( pb_creator.impacts.size(), 11);
 }
 
 BOOST_FIXTURE_TEST_CASE(traffic_report_should_return_all_disruptions, DisruptedNetwork)
 {
     disruption::traffic_reports(pb_creator, *b.data, 1, 25, 0, "", {});
-    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 10);
+    BOOST_CHECK_EQUAL(pb_creator.impacts.size(), 11);
 }
 
 /*
@@ -371,15 +387,9 @@ BOOST_FIXTURE_TEST_CASE(line_report_should_return_disruptions_from_tagged_disrup
             since, until);
 
     auto & impacts = pb_creator.impacts;
-    BOOST_REQUIRE_EQUAL( impacts.size(), 5);
+    BOOST_CHECK_EQUAL( impacts.size(), 5);
 
-    std::set<std::string> uris;
-    boost::range::transform(impacts,
-                            std::inserter(uris, uris.begin()),
-                            [](const Impact::SharedImpact & i){
-        return i->disruption->uri;
-    });
-
+    std::set<std::string> uris = get_impacts_uris(impacts);
     std::set<std::string> res = {
         "dusruption1", "dusruption2", "dusruption3", "dusruption4", "dusruption5" };
     BOOST_CHECK_EQUAL_RANGE( res, uris);
@@ -391,15 +401,9 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_should_return_disruptions_from_tagged_dis
             "disruption.tag(\"TAG_2 name\")", {});
 
     auto & impacts = pb_creator.impacts;
-    BOOST_REQUIRE_EQUAL( impacts.size(), 5);
+    BOOST_CHECK_EQUAL( impacts.size(), 5);
 
-    std::set<std::string> uris;
-    boost::range::transform(impacts,
-                            std::inserter(uris, uris.begin()),
-                            [](const Impact::SharedImpact & i){
-        return i->disruption->uri;
-    });
-
+    std::set<std::string> uris = get_impacts_uris(impacts);
     std::set<std::string> res = {
         "dusruption1", "dusruption2", "dusruption3", "dusruption4", "dusruption5" };
     BOOST_CHECK_EQUAL_RANGE( res, uris);
@@ -412,19 +416,42 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_should_return_disruptions_from_tagged_dis
 BOOST_FIXTURE_TEST_CASE(line_report_should_not_return_disruptions_from_non_tagged_line, DisruptedNetwork)
 {
     disruption::line_reports( pb_creator, *b.data, 1, 25, 0,
-            "disruption.tag(\"TAG_3 name\")", {},
-            since, until);
+            "disruption.tag(\"TAG_3 name\")", {}, since, until);
 
-    BOOST_REQUIRE_EQUAL( pb_creator.impacts.size(), 0);
+    BOOST_CHECK_EQUAL( pb_creator.impacts.size(), 0);
 }
 
 BOOST_FIXTURE_TEST_CASE(traffic_report_should_not_return_disruptions_from_non_tagged_network, DisruptedNetwork)
 {
-    disruption::line_reports( pb_creator, *b.data, 1, 25, 0,
-            "disruption.tag(\"TAG_3 name\")", {},
-            since, until);
+    disruption::traffic_reports( pb_creator, *b.data, 1, 25, 0,
+            "disruption.tag(\"TAG_3 name\")", {});
 
-    BOOST_REQUIRE_EQUAL( pb_creator.impacts.size(), 0);
+    BOOST_CHECK_EQUAL( pb_creator.impacts.size(), 0);
 }
 
+/*
+*   We want to make sure disruption on a line section works with line_reports
+*   and trafic_report along with disruption tag
+*/
+BOOST_FIXTURE_TEST_CASE(line_report_on_a_tagged_line_section, DisruptedNetwork)
+{
+    disruption::line_reports( pb_creator, *b.data, 1, 25, 0,
+            "disruption.tag(\"TAG_11 name\")", {}, since, until);
 
+    BOOST_CHECK_EQUAL( pb_creator.impacts.size(), 1);
+
+    std::set<std::string> uris = get_impacts_uris(pb_creator.impacts);
+    std::set<std::string> res = { "dusruption11" };
+    BOOST_CHECK_EQUAL_RANGE( res, uris);
+}
+BOOST_FIXTURE_TEST_CASE(traffic_report_on_a_tagged_line_section, DisruptedNetwork)
+{
+    disruption::traffic_reports( pb_creator, *b.data, 1, 25, 0,
+            "disruption.tag(\"TAG_11 name\")", {});
+
+    BOOST_CHECK_EQUAL( pb_creator.impacts.size(), 1);
+
+    std::set<std::string> uris = get_impacts_uris(pb_creator.impacts);
+    std::set<std::string> res = { "dusruption11" };
+    BOOST_CHECK_EQUAL_RANGE( res, uris);
+}
