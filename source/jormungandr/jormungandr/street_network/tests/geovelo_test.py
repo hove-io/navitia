@@ -36,6 +36,8 @@ from jormungandr.utils import str_to_time_stamp, PeriodExtremity
 import requests_mock
 import json
 
+MOCKED_REQUEST = {'walking_speed': 1, 'bike_speed': 3.33}
+
 
 def direct_path_response_valid():
     """
@@ -299,10 +301,9 @@ def make_data_test():
                     make_pt_object(type_pb2.ADDRESS, lon=4, lat=48.4, uri='refEnd2')]
     data = Geovelo._make_request_arguments_isochrone(origins, destinations)
     assert json.loads(json.dumps(data)) == json.loads('''{
-            "starts":[[48.2,2, "refStart1"]],
-            "ends":[[48.3,3, "refEnd1"],
-                    [48.4,4, "refEnd2"]]
-        }''')
+            "starts": [[48.2, 2.0, "refStart1"]], "ends": [[48.3, 3.0, "refEnd1"], [48.4, 4.0, "refEnd2"]],
+            "transportMode": "BIKE",
+            "bikeDetails": {"profile": "MEDIAN", "averageSpeed": 12, "bikeType": "TRADITIONAL"}}''')
 
 
 def call_geovelo_func_with_circuit_breaker_error_test():
@@ -348,7 +349,7 @@ def direct_path_geovelo_test():
                                                    origin,
                                                    destination,
                                                    fallback_extremity,
-                                                   None,
+                                                   MOCKED_REQUEST,
                                                    None)
         assert geovelo_resp.status_code == 200
         assert geovelo_resp.response_type == response_pb2.ITINERARY_FOUND
@@ -387,7 +388,7 @@ def direct_path_geovelo_zero_test():
                                                    origin,
                                                    destination,
                                                    fallback_extremity,
-                                                   None,
+                                                   MOCKED_REQUEST,
                                                    None)
         assert geovelo_resp.status_code == 200
         assert geovelo_resp.response_type == response_pb2.ITINERARY_FOUND
@@ -431,7 +432,7 @@ def isochrone_geovelo_test():
             destinations,
             'bike',
             13371337,
-            None)
+            MOCKED_REQUEST)
         assert geovelo_response.rows[0].routing_response[0].duration == 1051
         assert geovelo_response.rows[0].routing_response[0].routing_status == response_pb2.reached
         assert geovelo_response.rows[0].routing_response[1].duration == 1656
@@ -454,3 +455,20 @@ def distances_durations_test():
     assert proto_resp.journeys[0].durations.total == 3155
     assert proto_resp.journeys[0].durations.bike == 3155
     assert proto_resp.journeys[0].distances.bike == 11393.0
+
+def make_request_arguments_bike_details_test():
+    """
+    Check that the bikeDetails is well formatted for the request with right averageSpeed value
+    """
+    instance = MagicMock()
+    geovelo = Geovelo(instance=instance, service_url='http://bob.com')
+    data = geovelo._make_request_arguments_bike_details(bike_speed=3.33)
+    assert json.loads(json.dumps(data)) == json.loads('''{"profile": "MEDIAN", "averageSpeed": 12,
+    "bikeType": "TRADITIONAL"}''')
+
+    data = geovelo._make_request_arguments_bike_details(bike_speed=4.1)
+    assert json.loads(json.dumps(data)) == json.loads('''{"profile": "MEDIAN", "averageSpeed": 15,
+    "bikeType": "TRADITIONAL"}''')
+
+
+

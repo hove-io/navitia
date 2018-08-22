@@ -648,3 +648,7 @@ def portable_min(*args, **kwargs):
             raise
     if PY3:
         return min(*args, **kwargs)
+
+
+def mps_to_kmph(speed):
+    return int(round(3.6 * speed))
