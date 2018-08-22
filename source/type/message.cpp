@@ -232,57 +232,85 @@ pair_indexes make_pair_indexes_from_idx(Type_e type, const T* obj) {
 
 struct ImpactVisitor : boost::static_visitor<pair_indexes> {
     Type_e target = Type_e::Unknown;
-    ImpactVisitor(Type_e target): target(target) {}
+    const PT_Data& pt_data;
+
+    ImpactVisitor(Type_e target, const PT_Data& pt_data):
+            target(target), pt_data(pt_data)
+    {}
+
     pair_indexes operator()(const disruption::UnknownPtObj){
         return {Type_e::Unknown, Indexes{}};
     }
-    pair_indexes operator()(const Network*){
-        return {Type_e::Network, Indexes{}};
-    }
-    pair_indexes operator()(const StopArea*){
-        return {Type_e::StopArea, Indexes{}};
-    }
-    pair_indexes operator()(const StopPoint* sp){
-        return {Type_e::StopPoint, Indexes{sp->idx}};
-    }
-    pair_indexes operator()(const LineSection& ls){
-        switch(target) {
-            case Type_e::Line:
-                return {Type_e::Line, Indexes{ls.line->idx}};
-            case Type_e::StopPoint:
-            {
+    pair_indexes operator()(const Network* n){
+
+        switch(target)
+        {
+            case Type_e::Line : {
                 Indexes indexes;
-                for(const auto* route: ls.routes) {
-                    route->for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
-                        auto stop_points = vj.get_sections_stop_points(ls.start_point, ls.end_point);
-                        for(auto & sp : stop_points) {
-                            indexes.insert(sp->idx);
-                        }
-                        return true;
-                    });
+                for(auto line : n->line_list) {
+                    indexes.insert(line->idx);
                 }
-                return {Type_e::StopPoint, indexes};
+                return {Type_e::Line, indexes};
+            }
+            case Type_e::Network : {
+                return {Type_e::Network, Indexes{n->idx}};
             }
             default:
                 return {Type_e::Unknown, Indexes{}};
         }
     }
+    pair_indexes operator()(const StopArea* sa){
+        return {Type_e::StopArea, Indexes{sa->idx}};
+    }
+    pair_indexes operator()(const StopPoint* sp){
+        return {Type_e::StopPoint, Indexes{sp->idx}};
+    }
+    pair_indexes operator()(const LineSection& ){
+        // switch(target) {
+        //     case Type_e::Line:
+        //         return {Type_e::Line, Indexes{ls.line->idx}};
+        //     case Type_e::StopPoint:
+        //     {
+        //         Indexes indexes;
+        //         for(const auto* route: ls.routes) {
+        //             route->for_each_vehicle_journey([&](const nt::VehicleJourney& vj) {
+        //                 auto stop_points = vj.get_sections_stop_points(ls.start_point, ls.end_point);
+        //                 for(auto & sp : stop_points) {
+        //                     indexes.insert(sp->idx);
+        //                 }
+        //                 return true;
+        //             });
+        //         }
+        //         return {Type_e::StopPoint, indexes};
+        //     }
+        //     default:
+        //         return {Type_e::Unknown, Indexes{}};
+        // }
+        return {Type_e::Unknown, Indexes{}};
+    }
     pair_indexes operator()(const Line* l){
-        return {Type_e::Line, Indexes{l->idx}};
+        switch(target)
+        {
+            case Type_e::Line :
+                return {Type_e::Line, Indexes{l->idx}};
+            case Type_e::Network : {
+                return {Type_e::Network, Indexes{ l->network->idx }};
+            }
+            default:
+                return {Type_e::Unknown, Indexes{}};
+        }
     }
-    pair_indexes operator()(const Route*){
-        return {Type_e::Route, Indexes{}};
+    pair_indexes operator()(const Route* r){
+        return {Type_e::Route, Indexes{r->idx}};
     }
-    pair_indexes operator()(const MetaVehicleJourney*){
-        return {Type_e::ValidityPattern, Indexes{}};
+    pair_indexes operator()(const MetaVehicleJourney* vj){
+        return {Type_e::ValidityPattern, Indexes{vj->idx}};
     }
 };
 
-Indexes Impact::get(Type_e target, const PT_Data&) const {
+Indexes Impact::get(Type_e target, const PT_Data& pt_data) const {
     Indexes result;
-    ImpactVisitor visitor(target);
-    LOG4CPLUS_INFO(log4cplus::Logger::getInstance("log"), "line section impact "
-        << "Impact::get - " << static_data::captionByType(target) << "\n");
+    ImpactVisitor visitor( target, pt_data);
 
     for(const auto& entitie: informed_entities()){
         auto pair_type_indexes = boost::apply_visitor(visitor, entitie);

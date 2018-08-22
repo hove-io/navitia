@@ -205,6 +205,7 @@ struct DisruptionCreator {
         return *this;
     }
     DisruptionCreator& tag(const std::string& t);
+    DisruptionCreator& tag_if_not_empty(const std::string& t);
 
     DisruptionCreator& properties(const std::vector<nt::disruption::Property>& properties);
 

@@ -108,8 +108,6 @@ struct LineReport {
     }
 };
 
-}
-
 void line_reports(navitia::PbCreator& pb_creator,
                   const navitia::type::Data& d,
                   const size_t depth,

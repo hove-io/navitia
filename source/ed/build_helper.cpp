@@ -410,6 +410,13 @@ DisruptionCreator& DisruptionCreator::tag(const std::string& t) {
     return *this;
 }
 
+DisruptionCreator& DisruptionCreator::tag_if_not_empty(const std::string& t) {
+    if(t.size()) {
+        tag(t);
+    }
+    return *this;
+}
+
 DisruptionCreator& DisruptionCreator::properties(const std::vector<dis::Property>& properties) {
     for (auto &property : properties) {
         disruption.properties.insert(property);

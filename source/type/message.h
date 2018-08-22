@@ -265,6 +265,7 @@ struct AuxInfoForMetaVJ {
 }
 
 struct Impact {
+    typedef boost::shared_ptr<Impact> SharedImpact;
     std::string uri;
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
@@ -300,7 +301,7 @@ struct Impact {
 
     // add the ptobj to the enformed entities and make all the needed backref
     // Note: it's a static method because we need the shared_ptr to the impact
-    static void link_informed_entity(PtObj ptobj, boost::shared_ptr<Impact>& impact, const boost::gregorian::date_period&, type::RTLevel);
+    static void link_informed_entity(PtObj ptobj, SharedImpact& impact, const boost::gregorian::date_period&, type::RTLevel);
 
     bool is_valid(const boost::posix_time::ptime& current_time, const boost::posix_time::time_period& action_period) const;
     bool is_relevant(const std::vector<const StopTime*>& stop_times) const;
@@ -371,8 +372,8 @@ struct Disruption {
            & created_at & updated_at & cause & impacts & localization & tags & note & contributor & properties;
     }
 
-    void add_impact(const boost::shared_ptr<Impact>& impact, DisruptionHolder& holder);
-    const std::vector<boost::shared_ptr<Impact>>& get_impacts() const {
+    void add_impact(const Impact::SharedImpact& impact, DisruptionHolder& holder);
+    const std::vector<Impact::SharedImpact>& get_impacts() const {
         return impacts;
     }
 
@@ -382,7 +383,7 @@ private:
     //Disruption have the ownership of the Impacts.  Impacts are
     //shared_ptr and not unique_ptr because there are weak_ptr
     //pointing to them in the impacted objects
-    std::vector<boost::shared_ptr<Impact>> impacts;
+    std::vector<Impact::SharedImpact> impacts;
 };
 
 class DisruptionHolder {

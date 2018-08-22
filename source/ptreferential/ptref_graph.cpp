@@ -156,11 +156,6 @@ Jointures::Jointures() {
     // Network -> Dataset -> VJ that has a cost of 4
     boost::add_edge(vertex_map.at(Type_e::Dataset), vertex_map.at(Type_e::Network), Edge(3), g);
 
-	// Retrieve a Line from an Impact. The edge has a super heavy weight to make sure we don't go
-	// through the impact object to resolve another type. Because objects might not have impact attached,
-	// we would not convert object properly otherwise.
-    boost::add_edge(vertex_map.at(Type_e::Line), vertex_map.at(Type_e::Impact), Edge(100), g);
-
     // edges for the impacts. for the moment we only need unilateral links,
     // we don't need from an impact all the impacted objects
     const auto objects_having_impacts = {Type_e::StopPoint, Type_e::Line, Type_e::Route, Type_e::StopArea,
@@ -168,6 +163,11 @@ Jointures::Jointures() {
     for (auto object: objects_having_impacts) {
         boost::add_edge(vertex_map.at(Type_e::Impact), vertex_map.at(object), g);
     }
+    // Retrieve a Line from an Impact. The edge has a super heavy weight to make sure we don't go
+	    // through the impact object to resolve another type. Because objects might not have impact attached,
+	    // we would not convert object properly otherwise.
+        boost::add_edge(vertex_map.at(Type_e::Line), vertex_map.at(Type_e::Impact), Edge(100), g);
+        boost::add_edge(vertex_map.at(Type_e::Network), vertex_map.at(Type_e::Impact), Edge(100), g);
 }
 
 // Retourne un map qui indique pour chaque type par quel type on peut l'atteindre
