@@ -172,8 +172,10 @@ class Uri(ResourceUri, ResourceUtc):
             uris = uri.split("/")
             if collection is None:
                 collection = uris[-1] if len(uris) % 2 != 0 else uris[-2]
-        if uris or args.get('tags[]', []):
-            args["filter"] = self.get_filter(uris, args)
+        param_filter = self.get_filter(uris, args)
+        if param_filter:
+            args["filter"] = param_filter
+
         if collection and id:
             f = u'{o}.uri={v}'.format(o=collections_to_resource_type[collection], v=protect(id))
             if args.get("filter"):

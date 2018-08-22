@@ -123,10 +123,7 @@ class TrafficReport(ResourceUri):
             if uri[-1] == "/":
                 uri = uri[:-1]
             uris = uri.split("/")
-        if uris or args.get('tags[]', []):
-            args["filter"] = self.get_filter(uris, args)
-        else:
-            args["filter"] = ""
+        args["filter"] = self.get_filter(uris, args)
 
         response = i_manager.dispatch(args, "traffic_reports", instance_name=self.region)
 

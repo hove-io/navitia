@@ -116,10 +116,7 @@ class LineReports(ResourceUri, ResourceUtc):
             if uri[-1] == "/":
                 uri = uri[:-1]
             uris = uri.split("/")
-        if uris or args.get('tags[]', []):
-            args["filter"] = self.get_filter(uris, args)
-        else:
-            args["filter"] = ""
+        args["filter"] = self.get_filter(uris, args)
 
         if args['since']:
             args['since'] = date_to_timestamp(self.convert_to_utc(args['since']))

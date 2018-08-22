@@ -135,6 +135,7 @@ class Calendars(ResourceUri):
         for forbid_id in args['__temporary_forbidden_id[]']:
             args['forbidden_uris[]'].append(forbid_id)
 
+        uris = []
         if id:
             args["filter"] = "calendar.uri=" + id
         elif uri:
@@ -142,9 +143,8 @@ class Calendars(ResourceUri):
             if uri[-1] == "/":
                 uri = uri[:-1]
             uris = uri.split("/")
-            args["filter"] = self.get_filter(uris, args)
-        else:
-            args["filter"] = ""
+
+        args["filter"] = self.get_filter(uris, args)
 
         self._register_interpreted_parameters(args)
         response = i_manager.dispatch(args, "calendars",

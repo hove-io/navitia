@@ -65,6 +65,8 @@ class ResourceUri(StatedResource):
             self.get_decorators.append(authentication_required)
 
     def get_filter(self, items, args):
+        if not (items or args.get('tags[]', [])):
+            return ""
 
         filter_list = ['({})'.format(args["filter"])] if args.get("filter") else []
         type_ = None
