@@ -68,7 +68,7 @@ class TestJourneysDistributed(JourneyCommon, DirectPath, JourneyMinBikeMinCar, N
         """
         Test when max_nb_crowfly_by_car=0, we cannot fallback with car..
         """
-        query = journey_basic_query + "&first_section_mode[]=walking&last_section_mode[]=car&max_nb_crowfly_by_car=0"
+        query = journey_basic_query + "&first_section_mode[]=walking&last_section_mode[]=car&_max_nb_crowfly_by_car=0"
         response = self.query_region(query)
         check_best(response)
         jrnys = response['journeys']
@@ -76,7 +76,7 @@ class TestJourneysDistributed(JourneyCommon, DirectPath, JourneyMinBikeMinCar, N
         assert jrnys[0]['sections'][0]['mode'] == 'walking'
         assert jrnys[0]['sections'][-1]['mode'] == 'walking'
 
-        query = journey_basic_query + "&first_section_mode[]=walking&max_nb_crowfly_by_walking=0"
+        query = journey_basic_query + "&first_section_mode[]=walking&_max_nb_crowfly_by_walking=0"
         response = self.query_region(query)
         check_best(response)
         jrnys = response['journeys']

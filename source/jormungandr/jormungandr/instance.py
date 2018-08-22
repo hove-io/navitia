@@ -35,6 +35,7 @@ import queue
 from threading import Lock
 from flask.ext.restful import abort
 from zmq import green as zmq
+import copy
 
 from jormungandr.exceptions import TechnicalError
 from navitiacommon import response_pb2, request_pb2, type_pb2
@@ -399,7 +400,8 @@ class Instance(object):
     @property
     def max_nb_crowfly_by_mode(self):
         instance_db = self.get_models()
-        return get_value_or_default('max_nb_crowfly_by_mode', instance_db, self.name)
+        # the value by default is a dict...
+        return copy.deepcopy(get_value_or_default('max_nb_crowfly_by_mode', instance_db, self.name))
 
     @contextmanager
     def socket(self, context):

@@ -38,7 +38,7 @@ class ProximitiesByCrowfly:
     """
     A ProximitiesByCrowfly is a set of stop_points that are accessible by crowfly within a time of 'max_duration'.
     """
-    def __init__(self, future_manager, instance, requested_place_obj, mode, max_duration, max_nb_crowfly=5000):
+    def __init__(self, future_manager, instance, requested_place_obj, mode, max_duration, max_nb_crowfly):
         self._future_manager = future_manager
         self._instance = instance
         self._requested_place_obj = requested_place_obj

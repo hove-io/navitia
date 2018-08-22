@@ -366,7 +366,7 @@ class Instance(flask_restful.Resource):
                                        'max_successive_physical_mode',
                                        'final_line_filter',
                                        'max_extra_second_pass'])
-            max_nb_crowfly_by_mode = args.get('max_nb_crowfly_by_mode', {})
+            max_nb_crowfly_by_mode = args.get('max_nb_crowfly_by_mode')
             import copy
             new = copy.deepcopy(instance.max_nb_crowfly_by_mode)
             new.update(max_nb_crowfly_by_mode)
