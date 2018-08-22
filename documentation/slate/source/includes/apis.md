@@ -546,42 +546,39 @@ Differents kind of objects can be returned (sorted as):
 
 Here is a typical use case. A traveler has to find a line between the
 1500 lines around Paris.
-For example, he could key without any filters:
 
-<div data-collapse>
-    <p>traveler input: "bob"</p>
-    <ul>
-        <li>network : "bobby network"</li>
-        <li>line : "bobby bus 1"</li>
-        <li>line : "bobby bus 2"</li>
-        <li>route : "bobby bus 1 to green"</li>
-        <li>route : "bobby bus 1 to rose"</li>
-        <li>route : "bobby bus 2 to yellow"</li>
-        <li>stop_area : "...</li>
-    </ul>
-</div>
-<div data-collapse>
-    <p>traveler input: "bobby met"</p>
-    <ul>
-        <li>line : "bobby metro 1"</li>
-        <li>line : "bobby metro 11"</li>
-        <li>line : "bobby metro 2"</li>
-        <li>line : "bobby metro 3"</li>
-        <li>route : "bobby metro 1 to Martin"</li>
-        <li>route : "bobby metro 1 to Mahatma"</li>
-        <li>route : "bobby metro 11 to Marcus"</li>
-        <li>route : "bobby metro 11 to Steven"</li>
-        <li>route : "...</li>
-    </ul>
-</div>
-<div data-collapse>
-    <p>traveler input: "bobby met 11" or "bobby metro 11"</p>
-    <ul>
-        <li>line : "bobby metro 11"</li>
-        <li>route : "bobby metro 11 to Marcus"</li>
-        <li>route : "bobby metro 11 to Steven"</li>
-    </ul>
-</div>
+#### Examples
+
+User could type one of the following without any filters:
+
+##### Traveler input "bob":
+
+-  network : "bobby network"
+-  line : "bobby bus 1"
+-  line : "bobby bus 2"
+-  route : "bobby bus 1 to green"
+-  route : "bobby bus 1 to rose"
+-  route : "bobby bus 2 to yellow"
+-  stop_area : "...
+
+##### Traveler input "bobby met":
+
+-  line : "bobby metro 1"
+-  line : "bobby metro 11"
+-  line : "bobby metro 2"
+-  line : "bobby metro 3"
+-  route : "bobby metro 1 to Martin"
+-  route : "bobby metro 1 to Mahatma"
+-  route : "bobby metro 11 to Marcus"
+-  route : "bobby metro 11 to Steven"
+-  route : "...
+
+##### Traveler input: "bobby met 11" or "bobby metro 11":
+
+-  line : "bobby metro 11"
+-  route : "bobby metro 11 to Marcus"
+-  route : "bobby metro 11 to Steven"
+
 
 ### Access
 
@@ -977,7 +974,7 @@ disrupted, it doesn't prevent the journey from beeing executed but modifies it. 
 | nop       | to                      | id            | The id of the arrival of your journey. If none are provided an isochrone is computed   |               |
 | nop       | datetime                | [iso-date-time](#iso-date-time) | Date and time to go.<br>Note: the datetime must be in the [coverage's publication period](#coverage)                                                   | now           |
 | nop       | datetime_represents     | string        | Can be `departure` or `arrival`.<br>If `departure`, the request will retrieve journeys starting after datetime.<br>If `arrival` it will retrieve journeys arriving before datetime.                      | departure     |
-| nop       | <a name="traveler-type"></a>traveler_type | enum | Define speeds and accessibility values for different kind of people.<br>Each profile also automatically determines appropriate first and last section modes to the covered area. Note: this means that you might get car, bike, etc fallback routes even if you set `forbidden_uris[]`! You can overload all parameters (especially speeds, distances, first and last modes) by setting all of them specifically. We advise that you don't rely on the traveler_type's fallback modes (`first_section_mode[]` and `last_section_mode[]`) and set them yourself.<br><div data-collapse><p>enum values:</p><ul><li>standard</li><li>slow_walker</li><li>fast_walker</li><li>luggage</li><li>wheelchair</li></ul></div>| standard      |
+| nop       | <a name="traveler-type"></a>traveler_type | enum | Define speeds and accessibility values for different kind of people.<br>Each profile also automatically determines appropriate first and last section modes to the covered area. Note: this means that you might get car, bike, etc fallback routes even if you set `forbidden_uris[]`! You can overload all parameters (especially speeds, distances, first and last modes) by setting all of them specifically.<br> We advise that you don't rely on the traveler_type's fallback modes (`first_section_mode[]` and `last_section_mode[]`) and set them yourself.<br>enum values:<ul><li>standard</li><li>slow_walker</li><li>fast_walker</li><li>luggage</li><li>wheelchair</li></ul>|               |
 | nop       | data_freshness          | enum          | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> _**when using the following parameter**_ "&data_freshness=base_schedule" <br> you can get disrupted journeys in the response. You can then display the disruption message to the traveler and make a realtime request to get a new undisrupted solution.   | base_schedule |
 | nop       | forbidden_uris[]        | id            | If you want to avoid lines, modes, networks, etc.</br> Note: the forbidden_uris[] concern only the public transport objects. You can't for example forbid the use of the bike with them, you have to set the fallback modes for this (`first_section_mode[]` and `last_section_mode[]`) |               |
 |nop        | allowed_id[]            | id            | If you want to use only a small subset of the public transport objects in your solution. The constraint intersects with `forbidden_uris[]`. For example, if you ask for `allowed_id[]=line:A&forbidden_uris[]=physical_mode:Bus`, only vehicles of the line A that are not buses will be used. | everything |
@@ -1566,7 +1563,7 @@ nop      | disable_geojson | boolean                | remove geojson fields from
 |route|[route](#route)|The route of the schedule|
 |date_times|Array of [pt-date-time](#pt-date-time)|When does a bus stops at the stop point|
 |stop_point|[stop_point](#stop-point)|The stop point of the schedule|
-|additional_informations|[additional_informations](#additional-informations)|Other informations, when no departures <div data-collapse><p>enum values:</p><ul><li>date_out_of_bounds</li><li>terminus</li><li>partial_terminus</li><li>active_disruption</li><li>no_departures_known</li></ul></div>|
+|additional_informations|[additional_informations](#additional-informations)|Other informations, when no departures<br> enum values:<ul><li>date_out_of_bounds</li><li>terminus</li><li>partial_terminus</li><li>active_disruption</li><li>no_departures_known</li></ul>|
 
 
 <a name="departures"></a>Departures
