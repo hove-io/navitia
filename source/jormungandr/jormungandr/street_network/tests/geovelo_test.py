@@ -462,11 +462,11 @@ def make_request_arguments_bike_details_test():
     """
     instance = MagicMock()
     geovelo = Geovelo(instance=instance, service_url='http://bob.com')
-    data = geovelo._make_request_arguments_bike_details(bike_speed=3.33)
+    data = geovelo._make_request_arguments_bike_details(bike_speed_mps=3.33)
     assert json.loads(json.dumps(data)) == json.loads('''{"profile": "MEDIAN", "averageSpeed": 12,
     "bikeType": "TRADITIONAL"}''')
 
-    data = geovelo._make_request_arguments_bike_details(bike_speed=4.1)
+    data = geovelo._make_request_arguments_bike_details(bike_speed_mps=4.1)
     assert json.loads(json.dumps(data)) == json.loads('''{"profile": "MEDIAN", "averageSpeed": 15,
     "bikeType": "TRADITIONAL"}''')
 

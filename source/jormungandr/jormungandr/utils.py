@@ -651,4 +651,4 @@ def portable_min(*args, **kwargs):
 
 
 def mps_to_kmph(speed):
-    return int(round(3.6 * speed))
+    return round(3.6 * speed)

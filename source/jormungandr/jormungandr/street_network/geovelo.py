@@ -79,8 +79,8 @@ class Geovelo(AbstractStreetNetworkService):
         return [coord.lat, coord.lon, getattr(pt_object, 'uri', None)]
 
     @classmethod
-    def _make_request_arguments_bike_details(cls, bike_speed):
-        bike_speed = mps_to_kmph(bike_speed)
+    def _make_request_arguments_bike_details(cls, bike_speed_mps):
+        bike_speed = mps_to_kmph(bike_speed_mps)
 
         return {
             'profile': 'MEDIAN',  # can be BEGINNER, EXPERT
@@ -89,16 +89,16 @@ class Geovelo(AbstractStreetNetworkService):
         }
 
     @classmethod
-    def _make_request_arguments_isochrone(cls, origins, destinations, bike_speed=3.33):
+    def _make_request_arguments_isochrone(cls, origins, destinations, bike_speed_mps=3.33):
         return {
             'starts': [cls._pt_object_summary_isochrone(o) for o in origins],
             'ends': [cls._pt_object_summary_isochrone(o) for o in destinations],
-            'bikeDetails': cls._make_request_arguments_bike_details(bike_speed),
+            'bikeDetails': cls._make_request_arguments_bike_details(bike_speed_mps),
             'transportMode': 'BIKE'
         }
 
     @classmethod
-    def _make_request_arguments_direct_path(cls, origin, destination, bike_speed=3.33):
+    def _make_request_arguments_direct_path(cls, origin, destination, bike_speed_mps=3.33):
         coord_orig = get_pt_object_coord(origin)
         coord_dest = get_pt_object_coord(destination)
         return {
@@ -107,7 +107,7 @@ class Geovelo(AbstractStreetNetworkService):
                 {'latitude': coord_dest.lat, 'longitude': coord_dest.lon}
             ],
             'transportModes': ['BIKE'],
-            'bikeDetails': cls._make_request_arguments_bike_details(bike_speed)
+            'bikeDetails': cls._make_request_arguments_bike_details(bike_speed_mps)
         }
 
     def _call_geovelo(self, url, method=requests.post, data=None):
@@ -261,7 +261,7 @@ class Geovelo(AbstractStreetNetworkService):
                 path_item = section.street_network.path_items.add()
                 path_item.name = geovelo_instruction[1]
                 path_item.length = geovelo_instruction[2]
-                path_item.duration = round(path_item.length / speed if speed != 0 else 0)
+                path_item.duration = round(path_item.length / speed) if speed != 0 else 0
                 path_item.direction = map_instructions_direction.get(geovelo_instruction[0], 0)
 
             shape = decode_polyline(geovelo_resp['sections'][0]['geometry'])
