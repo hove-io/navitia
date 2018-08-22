@@ -387,9 +387,9 @@ BOOST_AUTO_TEST_CASE(find_path_test){
     Jointures j;
     std::vector<Jointures::vertex_t> component(boost::num_vertices(j.g));
     int num = boost::connected_components(j.g, &component[0]);
-    BOOST_CHECK_EQUAL(num, 3);
+    BOOST_CHECK_EQUAL(num, 2);
     num =  boost::strong_components(j.g, &component[0]);
-    BOOST_CHECK_EQUAL(num, 4);
+    BOOST_CHECK_EQUAL(num, 3);
 
     // Type qui n'existe pas dans le graph : il n'y a pas de chemin
     BOOST_CHECK_THROW(find_path(nt::Type_e::Unknown), ptref_error);
