@@ -328,22 +328,22 @@ struct DisruptedNetwork {
 
         // Let's create a disruption for all the different pt_objects related to
         // the line 'line_1'
-        disrupt(b, "dusruption1", nt::Type_e::Line, "line_1", period, "TAG_1");
-        disrupt(b, "dusruption2", nt::Type_e::Network, "network_1", period, "TAG_2");
-        disrupt(b, "dusruption3", nt::Type_e::Route, "route_1", period, "TAG_3");
-        disrupt(b, "dusruption4", nt::Type_e::StopArea, "sp1_1", period, "TAG_4");
-        disrupt(b, "dusruption5", nt::Type_e::StopPoint, "sp1_1", period, "TAG_5");
+        disrupt(b, "disruption1", nt::Type_e::Line, "line_1", period, "TAG_1");
+        disrupt(b, "disruption2", nt::Type_e::Network, "network_1", period, "TAG_2");
+        disrupt(b, "disruption3", nt::Type_e::Route, "route_1", period, "TAG_3");
+        disrupt(b, "disruption4", nt::Type_e::StopArea, "sp1_1", period, "TAG_4");
+        disrupt(b, "disruption5", nt::Type_e::StopPoint, "sp1_1", period, "TAG_5");
 
         // Let's do the same for all pt_objets from 'line_2'
-        disrupt(b, "dusruption6", nt::Type_e::Line, "line_2", period, "TAG_6");
-        disrupt(b, "dusruption7", nt::Type_e::Network, "network_2", period, "TAG_7");
-        disrupt(b, "dusruption8", nt::Type_e::Route, "route_2", period, "TAG_8");
-        disrupt(b, "dusruption9", nt::Type_e::StopArea, "sp2_1", period, "TAG_9");
-        disrupt(b, "dusruption10", nt::Type_e::StopPoint, "sp2_1", period, "TAG_10");
+        disrupt(b, "disruption6", nt::Type_e::Line, "line_2", period, "TAG_6");
+        disrupt(b, "disruption7", nt::Type_e::Network, "network_2", period, "TAG_7");
+        disrupt(b, "disruption8", nt::Type_e::Route, "route_2", period, "TAG_8");
+        disrupt(b, "disruption9", nt::Type_e::StopArea, "sp2_1", period, "TAG_9");
+        disrupt(b, "disruption10", nt::Type_e::StopPoint, "sp2_1", period, "TAG_10");
 
         // now applying disruption on a 'Line Section'
         navitia::apply_disruption(
-            b.disrupt(nt::RTLevel::Adapted, "dusruption11")
+            b.disrupt(nt::RTLevel::Adapted, "disruption11")
                 .tag("TAG_11")
                 .impact()
                 .severity(nt::disruption::Effect::NO_SERVICE)
@@ -360,7 +360,6 @@ struct DisruptedNetwork {
 /*
 *   By default, line report should return all the different pt objects
 *   that has an applicable disruption
-*   In our case, we have 10 !
 */
 BOOST_FIXTURE_TEST_CASE(line_report_should_return_all_disruptions, DisruptedNetwork)
 {
@@ -375,7 +374,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_should_return_all_disruptions, DisruptedN
 }
 
 /*
-*   We now query a line_report on a line that has a discruption with
+*   We now query a line_report on a line that has a disruption with
 *   a specific tag ( => 'TAG_1')
 *   In this case, we will return all the disruptions associated with
 *   that line that matches the specific tag.
@@ -391,7 +390,7 @@ BOOST_FIXTURE_TEST_CASE(line_report_should_return_disruptions_from_tagged_disrup
 
     std::set<std::string> uris = get_impacts_uris(impacts);
     std::set<std::string> res = {
-        "dusruption1", "dusruption2", "dusruption3", "dusruption4", "dusruption5" };
+        "disruption1", "disruption2", "disruption3", "disruption4", "disruption5" };
     BOOST_CHECK_EQUAL_RANGE( res, uris);
 }
 
@@ -405,7 +404,7 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_should_return_disruptions_from_tagged_dis
 
     std::set<std::string> uris = get_impacts_uris(impacts);
     std::set<std::string> res = {
-        "dusruption1", "dusruption2", "dusruption3", "dusruption4", "dusruption5" };
+        "disruption1", "disruption2", "disruption3", "disruption4", "disruption5" };
     BOOST_CHECK_EQUAL_RANGE( res, uris);
 }
 
@@ -441,7 +440,7 @@ BOOST_FIXTURE_TEST_CASE(line_report_on_a_tagged_line_section, DisruptedNetwork)
     BOOST_CHECK_EQUAL( pb_creator.impacts.size(), 1);
 
     std::set<std::string> uris = get_impacts_uris(pb_creator.impacts);
-    std::set<std::string> res = { "dusruption11" };
+    std::set<std::string> res = { "disruption11" };
     BOOST_CHECK_EQUAL_RANGE( res, uris);
 }
 BOOST_FIXTURE_TEST_CASE(traffic_report_on_a_tagged_line_section, DisruptedNetwork)
@@ -452,6 +451,6 @@ BOOST_FIXTURE_TEST_CASE(traffic_report_on_a_tagged_line_section, DisruptedNetwor
     BOOST_CHECK_EQUAL( pb_creator.impacts.size(), 1);
 
     std::set<std::string> uris = get_impacts_uris(pb_creator.impacts);
-    std::set<std::string> res = { "dusruption11" };
+    std::set<std::string> res = { "disruption11" };
     BOOST_CHECK_EQUAL_RANGE( res, uris);
 }

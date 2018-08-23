@@ -265,7 +265,7 @@ struct AuxInfoForMetaVJ {
 }
 
 struct Impact {
-    typedef boost::shared_ptr<Impact> SharedImpact;
+    using SharedImpact = boost::shared_ptr<Impact>;
     std::string uri;
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;

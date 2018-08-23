@@ -224,12 +224,7 @@ bool Impact::is_line_section_of(const Line& line) const {
     });
 }
 
-typedef std::pair<Type_e, Indexes> pair_indexes;
-template<class T>
-pair_indexes make_pair_indexes_from_idx(Type_e type, const T* obj) {
-    return {type, Indexes{obj->idx}};
-}
-
+using pair_indexes = std::pair<Type_e, Indexes> ;
 struct ImpactVisitor : boost::static_visitor<pair_indexes> {
     Type_e target = Type_e::Unknown;
     const PT_Data& pt_data;
@@ -279,7 +274,7 @@ struct ImpactVisitor : boost::static_visitor<pair_indexes> {
             case Type_e::Line :
                 return {Type_e::Line, Indexes{l->idx}};
             case Type_e::Network : {
-                return {Type_e::Network, Indexes{ l->network->idx }};
+                return {Type_e::Network, Indexes{l->network->idx }};
             }
             default:
                 return {Type_e::Unknown, Indexes{}};
@@ -288,14 +283,14 @@ struct ImpactVisitor : boost::static_visitor<pair_indexes> {
     pair_indexes operator()(const Route* r){
         return {Type_e::Route, Indexes{r->idx}};
     }
-    pair_indexes operator()(const MetaVehicleJourney* vj){
-        return {Type_e::ValidityPattern, Indexes{vj->idx}};
+    pair_indexes operator()(const MetaVehicleJourney* mvj){
+        return {Type_e::ValidityPattern, Indexes{mvj->idx}};
     }
 };
 
 Indexes Impact::get(Type_e target, const PT_Data& pt_data) const {
     Indexes result;
-    ImpactVisitor visitor( target, pt_data);
+    ImpactVisitor visitor(target, pt_data);
 
     for(const auto& entitie: informed_entities()){
         auto pair_type_indexes = boost::apply_visitor(visitor, entitie);
