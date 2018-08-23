@@ -796,9 +796,12 @@ Data::get_target_by_one_source(Type_e source, Type_e target,
     case Type_e::POIType:
         result = geo_ref->poitypes[source_idx]->get(target, *geo_ref);
         break;
-    case Type_e::Impact:
-        result = pt_data->disruption_holder.get_impact(source_idx)->get(target, *pt_data);
+    case Type_e::Impact: {
+        auto impact = pt_data->disruption_holder.get_impact(source_idx);
+        if(impact)
+            result = impact->get(target, *pt_data);
         break;
+    }
     default: break;
     }
     return result;
