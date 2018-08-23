@@ -224,6 +224,31 @@ bool Impact::is_line_section_of(const Line& line) const {
     });
 }
 
+template<class Cont>
+Indexes make_indexes(const Cont& objs) {
+
+    using ObjPtrType = typename Cont::value_type;
+    static_assert(std::is_pointer<ObjPtrType>::value,
+                 "objs should be a container of pointers");
+
+    using ObjType = typename std::remove_pointer<ObjPtrType>::type;
+    static_assert(std::is_base_of<Header, ObjType>::value,
+                  "objs be a container of pointers that inherit from navitia::type::Header");
+
+    Indexes indexes;
+    for(const auto o : objs) {
+        indexes.insert(o->idx);
+    }
+    return indexes;
+}
+
+template<>
+Indexes make_indexes(const idx_t& idx) {
+    Indexes indexes;
+    indexes.insert(idx);
+    return indexes;
+}
+
 using pair_indexes = std::pair<Type_e, Indexes> ;
 struct ImpactVisitor : boost::static_visitor<pair_indexes> {
     Type_e target = Type_e::Unknown;
@@ -233,58 +258,50 @@ struct ImpactVisitor : boost::static_visitor<pair_indexes> {
             target(target), pt_data(pt_data)
     {}
 
-    pair_indexes operator()(const disruption::UnknownPtObj){
+    pair_indexes operator()(const disruption::UnknownPtObj) {
         return {Type_e::Unknown, Indexes{}};
     }
-    pair_indexes operator()(const Network* n){
+    pair_indexes operator()(const Network* n) {
         switch(target) {
-            case Type_e::Line : {
-                Indexes indexes;
-                for(auto line : n->line_list) {
-                    indexes.insert(line->idx);
-                }
-                return {Type_e::Line, indexes};
-            }
-            case Type_e::Network : {
-                return {Type_e::Network, Indexes{n->idx}};
-            }
+            case Type_e::Line :
+                return {target, make_indexes(n->line_list)};
+            case Type_e::Network :
+                return {target, make_indexes(n->idx)};
             default:
                 return {Type_e::Unknown, Indexes{}};
         }
     }
-    pair_indexes operator()(const StopArea* sa){
-        return {Type_e::StopArea, Indexes{sa->idx}};
+    pair_indexes operator()(const StopArea* sa) {
+        return {Type_e::StopArea, make_indexes(sa->idx)};
     }
-    pair_indexes operator()(const StopPoint* sp){
-        return {Type_e::StopPoint, Indexes{sp->idx}};
+    pair_indexes operator()(const StopPoint* sp) {
+        return {Type_e::StopPoint, make_indexes(sp->idx)};
     }
-    pair_indexes operator()(const LineSection& ls){
+    pair_indexes operator()(const LineSection& ls) {
         switch(target) {
             case Type_e::Line:
-                return {Type_e::Line, Indexes{ls.line->idx}};
+                return {target, make_indexes(ls.line->idx)};
             case Type_e::Network:
-                return {Type_e::Network, Indexes{ls.line->network->idx}};
+                return {target, make_indexes(ls.line->network->idx)};
             default:
                 return {Type_e::Unknown, Indexes{}};
         }
     }
-    pair_indexes operator()(const Line* l){
-        switch(target)
-        {
+    pair_indexes operator()(const Line* l) {
+        switch(target) {
             case Type_e::Line :
-                return {Type_e::Line, Indexes{l->idx}};
-            case Type_e::Network : {
-                return {Type_e::Network, Indexes{l->network->idx }};
-            }
+                return {target, make_indexes(l->idx)};
+            case Type_e::Network :
+                return {target, make_indexes(l->network->idx)};
             default:
                 return {Type_e::Unknown, Indexes{}};
         }
     }
-    pair_indexes operator()(const Route* r){
-        return {Type_e::Route, Indexes{r->idx}};
+    pair_indexes operator()(const Route* r) {
+        return {Type_e::Route, make_indexes(r->idx)};
     }
-    pair_indexes operator()(const MetaVehicleJourney* mvj){
-        return {Type_e::ValidityPattern, Indexes{mvj->idx}};
+    pair_indexes operator()(const MetaVehicleJourney* mvj) {
+        return {Type_e::ValidityPattern, make_indexes(mvj->idx)};
     }
 };
 
