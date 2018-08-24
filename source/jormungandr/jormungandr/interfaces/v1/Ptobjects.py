@@ -72,7 +72,7 @@ class Ptobjects(ResourceUri):
         self.parsers["get"].add_argument("search_type", type=int, default=0, hidden=True,
                                          help="Type of search: firstletter or type error")
         self.parsers["get"].add_argument("admin_uri[]", type=six.text_type, action="append",
-                                         help="If filled, will restrained the search within "
+                                         help="If filled, will restrain the search within "
                                               "the given admin uris")
         self.parsers["get"].add_argument("depth", type=depth_argument, default=1,
                                          help="The depth of objects")

@@ -108,7 +108,7 @@ class Uri(ResourceUri, ResourceUtc):
             parser.add_argument("filter", type=six.text_type, default="",
                                 help="The filter parameter")
         parser.add_argument("tags[]", type=six.text_type, action="append",
-                            help="If filled, will restrained the search within the given disruption tags")
+                            help="If filled, will restrain the search within the given disruption tags")
         self.collection = collection
         self.get_decorators.insert(0, ManageError())
 
@@ -116,14 +116,6 @@ class Uri(ResourceUri, ResourceUtc):
         collection = self.collection
 
         args = self.parsers["get"].parse_args()
-
-        # handle headsign
-        if args.get("headsign"):
-            f = u"vehicle_journey.has_headsign({})".format(protect(args["headsign"]))
-            if args.get("filter"):
-                args["filter"] = '({}) and {}'.format(args["filter"], f)
-            else:
-                args["filter"] = f
 
         if args['disable_geojson']:
             g.disable_geojson = True
@@ -172,9 +164,7 @@ class Uri(ResourceUri, ResourceUtc):
             uris = uri.split("/")
             if collection is None:
                 collection = uris[-1] if len(uris) % 2 != 0 else uris[-2]
-        param_filter = self.get_filter(uris, args)
-        if param_filter:
-            args["filter"] = param_filter
+        args["filter"] = self.get_filter(uris, args)
 
         if collection and id:
             f = u'{o}.uri={v}'.format(o=collections_to_resource_type[collection], v=protect(id))
