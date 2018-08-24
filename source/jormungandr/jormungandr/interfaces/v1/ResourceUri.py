@@ -66,7 +66,15 @@ class ResourceUri(StatedResource):
 
     def get_filter(self, items, args):
 
-        filter_list = [args["filter"]] if args.get("filter") else []
+        # handle headsign
+        if args.get("headsign"):
+            f = u"vehicle_journey.has_headsign({})".format(protect(args["headsign"]))
+            if args.get("filter"):
+                args["filter"] = '({}) and {}'.format(args["filter"], f)
+            else:
+                args["filter"] = f
+
+        filter_list = ['({})'.format(args["filter"])] if args.get("filter") else []
         type_ = None
 
         for item in items:
@@ -96,6 +104,10 @@ class ResourceUri(StatedResource):
                 else:
                     filter_list.append(type_ + ".uri=" + protect(item))
                 type_ = None
+        # handle tags
+        tags = args.get("tags[]", [])
+        if tags:
+            filter_list.append('disruption.tags({})'.format(' ,'.join([protect(t) for t in tags])))
         return " and ".join(filter_list)
 
 
