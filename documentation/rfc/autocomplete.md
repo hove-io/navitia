@@ -20,7 +20,7 @@ Every result has four properties used for the "scoring":
         terms' query should have a score of 30. (In reality it's more complicated than that).
   - the *global score*: computed at the "binarisation" is the *importance* of a object, each type has it's own formula:
     - admin: based on the number of *ways* of the admin or the number of *stop_points* associated to it, if it doesn't have any way. This score is normalized with the formula: `score = log(score+2)*10`.
-    - stop_area: the number of *stop_points* associated to the stop_area, normalized as a integer between 0 and 100,
+    - stop_area: the number of *stop_points* associated to the stop_area, normalized as an integer between 0 and 100,
       to which is added the score of its first admin of level 8.
     - stop_point: the score is equal to the score of its first admin of level 8.
     - way: the score is equal to the score of its first admin of level 8.
@@ -31,7 +31,7 @@ Every result has four properties used for the "scoring":
 
 
 If *search_type=1*, we start by removing unwanted results: we keep the N results with the best *quality*
-where N is the number of result want.
+where N is the number of result wanted.
 
 The results are sorted by type, with the following order:
   - network
@@ -45,7 +45,7 @@ The results are sorted by type, with the following order:
   - other (stop_points by example)
 
 
-Foreach types, we have the following order:
+For each type, we have the following order:  
 In firsts positions, we have the results with a 100 quality (exact match). After them, the order is based
 on the *global score*, then by the length of the longest, then by the position of this substring, 
 and finally by the quality.
@@ -55,6 +55,6 @@ and finally by the quality.
 If a request returns a lot of admins, the response will be filled with the ten most important admins 
 and won't have any stop_area or way.
 
-Most of the times the complain we got on the autocompletion is that a stop_area can't be found.
+Most of the times the complains we got on the autocompletion is that a stop_area can't be found.
 In fact the stop_area isn't in the ten first results, thus it isn't visible. This is due to how the "scoring" is done, when `search_mode=0` the order of the response is only based on the *global score* (aka. the *importance* of the
-object) and not on how much it matchs the request.
+object) and not on how much it matches the request.
