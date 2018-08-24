@@ -394,10 +394,39 @@ BOOST_FIXTURE_TEST_CASE(line_report_should_return_disruptions_from_tagged_disrup
     BOOST_CHECK_EQUAL_RANGE( res, uris);
 }
 
+BOOST_FIXTURE_TEST_CASE(line_report_should_return_disruptions_from_tagged_networkd, DisruptedNetwork)
+{
+    disruption::line_reports( pb_creator, *b.data, 1, 25, 0,
+            "disruption.tag(\"TAG_2 name\")", {},
+            since, until);
+
+    auto & impacts = pb_creator.impacts;
+    BOOST_CHECK_EQUAL( impacts.size(), 5);
+
+    std::set<std::string> uris = get_impacts_uris(impacts);
+    std::set<std::string> res = {
+        "disruption1", "disruption2", "disruption3", "disruption4", "disruption5" };
+    BOOST_CHECK_EQUAL_RANGE( res, uris);
+}
+
 BOOST_FIXTURE_TEST_CASE(traffic_report_should_return_disruptions_from_tagged_disruption, DisruptedNetwork)
 {
     disruption::traffic_reports( pb_creator, *b.data, 1, 25, 0,
             "disruption.tag(\"TAG_2 name\")", {});
+
+    auto & impacts = pb_creator.impacts;
+    BOOST_CHECK_EQUAL( impacts.size(), 5);
+
+    std::set<std::string> uris = get_impacts_uris(impacts);
+    std::set<std::string> res = {
+        "disruption1", "disruption2", "disruption3", "disruption4", "disruption5" };
+    BOOST_CHECK_EQUAL_RANGE( res, uris);
+}
+
+BOOST_FIXTURE_TEST_CASE(traffic_report_should_return_disruptions_from_tagged_line, DisruptedNetwork)
+{
+    disruption::traffic_reports( pb_creator, *b.data, 1, 25, 0,
+            "disruption.tag(\"TAG_1 name\")", {});
 
     auto & impacts = pb_creator.impacts;
     BOOST_CHECK_EQUAL( impacts.size(), 5);

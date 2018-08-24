@@ -36,7 +36,7 @@ from navitiacommon import response_pb2
 from jormungandr import app
 from jormungandr.exceptions import TechnicalError, InvalidArguments, UnableToParse
 from jormungandr.street_network.street_network import AbstractStreetNetworkService, StreetNetworkPathKey
-from jormungandr.utils import get_pt_object_coord, is_url, decode_polyline
+from jormungandr.utils import get_pt_object_coord, is_url, decode_polyline, mps_to_kmph
 from jormungandr.ptref import FeedPublisher
 
 DEFAULT_GEOVELO_FEED_PUBLISHER = {
@@ -79,14 +79,26 @@ class Geovelo(AbstractStreetNetworkService):
         return [coord.lat, coord.lon, getattr(pt_object, 'uri', None)]
 
     @classmethod
-    def _make_request_arguments_isochrone(cls, origins, destinations):
+    def _make_request_arguments_bike_details(cls, bike_speed_mps):
+        bike_speed = mps_to_kmph(bike_speed_mps)
+
         return {
-            'starts': [cls._pt_object_summary_isochrone(o) for o in origins],
-            'ends': [cls._pt_object_summary_isochrone(o) for o in destinations],
+            'profile': 'MEDIAN',  # can be BEGINNER, EXPERT
+            'bikeType': 'TRADITIONAL',  # can be 'BSS'
+            'averageSpeed': bike_speed  # in km/h, BEGINNER sets it to 13
         }
 
     @classmethod
-    def _make_request_arguments_direct_path(cls, origin, destination):
+    def _make_request_arguments_isochrone(cls, origins, destinations, bike_speed_mps=3.33):
+        return {
+            'starts': [cls._pt_object_summary_isochrone(o) for o in origins],
+            'ends': [cls._pt_object_summary_isochrone(o) for o in destinations],
+            'bikeDetails': cls._make_request_arguments_bike_details(bike_speed_mps),
+            'transportMode': 'BIKE'
+        }
+
+    @classmethod
+    def _make_request_arguments_direct_path(cls, origin, destination, bike_speed_mps=3.33):
         coord_orig = get_pt_object_coord(origin)
         coord_dest = get_pt_object_coord(destination)
         return {
@@ -94,12 +106,8 @@ class Geovelo(AbstractStreetNetworkService):
                 {'latitude': coord_orig.lat, 'longitude': coord_orig.lon},
                 {'latitude': coord_dest.lat, 'longitude': coord_dest.lon}
             ],
-            'bikeDetails': {
-                'profile': 'MEDIAN', # can be BEGINNER, EXPERT
-                'bikeType': 'TRADITIONAL', # can be 'BSS'
-                # 'averageSpeed': '16' # in km/h, BEGINNER sets it to 13
-            },
-            'transportModes': ['BIKE']
+            'transportModes': ['BIKE'],
+            'bikeDetails': cls._make_request_arguments_bike_details(bike_speed_mps)
         }
 
     def _call_geovelo(self, url, method=requests.post, data=None):
@@ -163,7 +171,7 @@ class Geovelo(AbstractStreetNetworkService):
             raise InvalidArguments('Geovelo, managing only 1-n in connector, requested {}-{}'
                                    .format(len(origins), len(destinations)))
 
-        data = self._make_request_arguments_isochrone(origins, destinations)
+        data = self._make_request_arguments_isochrone(origins, destinations, request['bike_speed'])
         r = self._call_geovelo('{}/{}'.format(self.service_url, 'api/v2/routes_m2m'),
                                requests.post, json.dumps(data))
         self._check_response(r)
@@ -174,7 +182,6 @@ class Geovelo(AbstractStreetNetworkService):
             raise UnableToParse('Geovelo nb response != nb requested')
 
         return self._get_matrix(resp_json)
-
 
     @classmethod
     def _get_response(cls, json_response, pt_object_origin, pt_object_destination, fallback_extremity):
@@ -254,7 +261,7 @@ class Geovelo(AbstractStreetNetworkService):
                 path_item = section.street_network.path_items.add()
                 path_item.name = geovelo_instruction[1]
                 path_item.length = geovelo_instruction[2]
-                path_item.duration = round(path_item.length * speed)
+                path_item.duration = round(path_item.length / speed) if speed != 0 else 0
                 path_item.direction = map_instructions_direction.get(geovelo_instruction[0], 0)
 
             shape = decode_polyline(geovelo_resp['sections'][0]['geometry'])
@@ -270,7 +277,7 @@ class Geovelo(AbstractStreetNetworkService):
             logging.getLogger(__name__).error('Geovelo, mode {} not implemented'.format(mode))
             raise InvalidArguments('Geovelo, mode {} not implemented'.format(mode))
 
-        data = self._make_request_arguments_direct_path(pt_object_origin, pt_object_destination)
+        data = self._make_request_arguments_direct_path(pt_object_origin, pt_object_destination, request['bike_speed'])
         r = self._call_geovelo('{}/{}'.format(self.service_url, 'api/v2/computedroutes?'
                                                                 'instructions=true&'
                                                                 'elevations=false&'
