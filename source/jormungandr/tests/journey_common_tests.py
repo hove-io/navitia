@@ -636,11 +636,13 @@ class JourneyCommon(object):
         assert len(jrnys) == 2
         section_0 = jrnys[0]['sections'][0]
         assert section_0['type'] == 'crow_fly'
+        assert section_0['mode'] == 'walking'
         assert section_0['from']['id'] == 'stopA'
         assert section_0['to']['id'] == 'stop_point:stopA'
 
         section_2 = jrnys[0]['sections'][2]
         assert section_2['type'] == 'crow_fly'
+        assert section_0['mode'] == 'walking'
         assert section_2['from']['id'] == 'stop_point:stopB'
         assert section_2['to']['id'] == 'stopB'
 
