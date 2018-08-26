@@ -1,0 +1,15 @@
+[tool.black]
+line-length = 113
+skip-string-normalization = true
+include = '\.pyi?$'
+exclude = '''
+/(
+    \.git
+  | _build
+  | build
+  | release
+  | debug
+  | debian
+  | source/third_party
+)/
+'''
