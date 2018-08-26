@@ -52,12 +52,12 @@ namespace navitia { namespace routing {
 static const uint MAX_NB_RAPTOR_CALL = 100;
 
 bool keep_going(const uint32_t total_nb_journeys,
-                       const uint32_t nb_try,
-                       const bool clockwise,
-                       const DateTime request_date_secs,
-                       const boost::optional<uint32_t>& min_nb_journeys,
-                       const boost::optional<DateTime>& timeframe_limit,
-                       const uint32_t max_transfers) {
+                const uint32_t nb_try,
+                const bool clockwise,
+                const DateTime request_date_secs,
+                const boost::optional<uint32_t>& min_nb_journeys,
+                const boost::optional<DateTime>& timeframe_limit,
+                const uint32_t max_transfers) {
     //we allow more call to kraken for simple request
     const uint32_t max_raptor_call = (max_transfers == 0) ? MAX_NB_RAPTOR_CALL*10 : MAX_NB_RAPTOR_CALL;
     if(nb_try > max_raptor_call) {

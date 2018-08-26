@@ -963,8 +963,9 @@ In a journey's response, different disruptions may have different meanings.
 Each journey has a `status` attribute that indicates the most serious disruption effect.
 Disruptions are on the sections, the ones that impact the journey are in the sections's display_informations links  (`sections[].display_informations.links[]`).
 
-You might also have others disruptions in the response. They don't directly impact the journey, but might affect them. By example, some intermediate stops of a section can be
-disrupted, it doesn't prevent the journey from beeing executed but modifies it. These disruptions won't be on the `display_informations` of the sections or used in the journey's status.
+You might also have other disruptions in the response. They don't directly impact the journey, but might affect them.
+For example, some intermediate stops of a section can be disrupted, it doesn't prevent the journey from being realised but modifies it.
+These disruptions won't be on the `display_informations` of the sections or used in the journey's status.
 
 ### <a name="journeys-parameters"></a>Main parameters
 

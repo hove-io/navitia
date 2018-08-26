@@ -615,7 +615,7 @@ std::vector<Admin*> GeoRef::find_admins(const type::GeographicalCoord& coord, Ad
     if(!result.empty()){
         return result;
     }
-    //we didn't found any results with boundary, as a fallback we search for the admin of the closest way
+    //we didn't find any result with boundary, as a fallback we search for the admin of the closest way
     return this->find_admins(coord);
 }
 
