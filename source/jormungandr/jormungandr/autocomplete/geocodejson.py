@@ -36,6 +36,8 @@ import jormungandr
 from jormungandr.autocomplete.abstract_autocomplete import AbstractAutocomplete
 from jormungandr.utils import get_lon_lat as get_lon_lat_from_id, get_house_number
 import requests
+import pybreaker
+from jormungandr import app
 from jormungandr.exceptions import UnknownObject
 from flask.ext.restful import marshal, fields
 from jormungandr.interfaces.v1.fields import Lit, ListLit, beta_endpoint, feed_publisher_bano, feed_publisher_osm, Integer
@@ -382,11 +384,15 @@ class GeocodeJson(AbstractAutocomplete):
     def __init__(self, **kwargs):
         self.host = kwargs.get('host')
         self.timeout = kwargs.get('timeout', 10)
+        self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_BRAGI_FAIL'],
+                                                reset_timeout=app.config['CIRCUIT_BREAKER_BRAGI_TIMEOUT_S'])
 
-    @staticmethod
-    def call_bragi(url, method, **kwargs):
+    def call_bragi(self, url, method, **kwargs):
         try:
-            return method(url, **kwargs)
+            return self.breaker.call(method, url, **kwargs)
+        except pybreaker.CircuitBreakerError as e:
+            logging.getLogger(__name__).error('external autocomplete service dead (error: {})'.format(e))
+            raise GeocodeJsonError('circuit breaker open')
         except requests.Timeout:
             logging.getLogger(__name__).error('autocomplete request timeout')
             raise GeocodeJsonError('external autocomplete service timeout')
