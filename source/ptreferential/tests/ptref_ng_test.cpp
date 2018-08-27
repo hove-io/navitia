@@ -368,8 +368,9 @@ BOOST_AUTO_TEST_CASE(get_disruptions_with_multiple_tags) {
     b.data->pt_data->build_uri();
     b.data->build_raptor();
 
-    auto indexes = make_query_ng(Type_e::Impact, "disruption.tags(\"tag_0 name\",\"tag_2 name\")",
-                                  {}, OdtLevel_e::all, {}, {}, *b.data);
+    auto indexes = make_query_ng(Type_e::Impact,
+                                "disruption.tags(\"tag_0 name\", \"tag_2 name\")",
+                                {}, OdtLevel_e::all, {}, {}, *b.data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
 
     std::vector<std::string> disruption_names;

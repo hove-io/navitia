@@ -139,7 +139,7 @@ Indexes get_indexes_by_impacts(const type::Type_e& type_e, const Data& d) {
     return result;
 }
 
-Indexes get_impacts_by_tags(const std::vector<std::string> & tag_uris,
+Indexes get_impacts_by_tags(const std::vector<std::string> & tag_name,
                             const Data& d) {
     Indexes result;
     const auto& w_impacts = d.pt_data->disruption_holder.get_weak_impacts();
@@ -148,7 +148,7 @@ Indexes get_impacts_by_tags(const std::vector<std::string> & tag_uris,
         auto impact = w_impacts[i].lock();
         if(impact && impact->disruption) {
             for(const auto& tag : impact->disruption->tags) {
-                if(tag && boost::range::find(tag_uris, tag->name) != tag_uris.end()) {
+                if(tag && boost::range::find(tag_name, tag->name) != tag_name.end()) {
                     result.insert(i);
                 }
             }
@@ -157,7 +157,6 @@ Indexes get_impacts_by_tags(const std::vector<std::string> & tag_uris,
 
     return result;
 }
-
 
 static bool keep_vj(const type::VehicleJourney* vj,
                     const bt::time_period& period) {

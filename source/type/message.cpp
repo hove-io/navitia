@@ -224,6 +224,101 @@ bool Impact::is_line_section_of(const Line& line) const {
     });
 }
 
+template<class Cont>
+Indexes make_indexes(const Cont& objs) {
+
+    using ObjPtrType = typename Cont::value_type;
+    static_assert(std::is_pointer<ObjPtrType>::value,
+                 "objs should be a container of pointers");
+
+    using ObjType = typename std::remove_pointer<ObjPtrType>::type;
+    static_assert(std::is_base_of<Header, ObjType>::value,
+                  "objs be a container of pointers that inherit from navitia::type::Header");
+
+    Indexes indexes;
+    for(const auto o : objs) {
+        indexes.insert(o->idx);
+    }
+    return indexes;
+}
+
+template<>
+Indexes make_indexes(const idx_t& idx) {
+    Indexes indexes;
+    indexes.insert(idx);
+    return indexes;
+}
+
+using pair_indexes = std::pair<Type_e, Indexes> ;
+struct ImpactVisitor : boost::static_visitor<pair_indexes> {
+    Type_e target = Type_e::Unknown;
+    const PT_Data& pt_data;
+
+    ImpactVisitor(Type_e target, const PT_Data& pt_data):
+            target(target), pt_data(pt_data)
+    {}
+
+    pair_indexes operator()(const disruption::UnknownPtObj) {
+        return {Type_e::Unknown, Indexes{}};
+    }
+    pair_indexes operator()(const Network* n) {
+        switch(target) {
+            case Type_e::Line :
+                return {target, make_indexes(n->line_list)};
+            case Type_e::Network :
+                return {target, make_indexes(n->idx)};
+            default:
+                return {Type_e::Unknown, Indexes{}};
+        }
+    }
+    pair_indexes operator()(const StopArea* sa) {
+        return {Type_e::StopArea, make_indexes(sa->idx)};
+    }
+    pair_indexes operator()(const StopPoint* sp) {
+        return {Type_e::StopPoint, make_indexes(sp->idx)};
+    }
+    pair_indexes operator()(const LineSection& ls) {
+        switch(target) {
+            case Type_e::Line:
+                return {target, make_indexes(ls.line->idx)};
+            case Type_e::Network:
+                return {target, make_indexes(ls.line->network->idx)};
+            default:
+                return {Type_e::Unknown, Indexes{}};
+        }
+    }
+    pair_indexes operator()(const Line* l) {
+        switch(target) {
+            case Type_e::Line :
+                return {target, make_indexes(l->idx)};
+            case Type_e::Network :
+                return {target, make_indexes(l->network->idx)};
+            default:
+                return {Type_e::Unknown, Indexes{}};
+        }
+    }
+    pair_indexes operator()(const Route* r) {
+        return {Type_e::Route, make_indexes(r->idx)};
+    }
+    pair_indexes operator()(const MetaVehicleJourney* mvj) {
+        return {Type_e::ValidityPattern, make_indexes(mvj->idx)};
+    }
+};
+
+Indexes Impact::get(Type_e target, const PT_Data& pt_data) const {
+    Indexes result;
+    ImpactVisitor visitor(target, pt_data);
+
+    for(const auto& entitie: informed_entities()){
+        auto pair_type_indexes = boost::apply_visitor(visitor, entitie);
+        if(target == pair_type_indexes.first){
+            result.insert(pair_type_indexes.second.begin(), pair_type_indexes.second.end());
+        }
+    }
+
+    return result;
+}
+
 const type::ValidityPattern Impact::get_impact_vp(const boost::gregorian::date_period& production_date) const {
     type::ValidityPattern impact_vp{production_date.begin()}; // bitset are all initialised to 0
     for (const auto& period: this->application_periods) {

@@ -410,6 +410,13 @@ DisruptionCreator& DisruptionCreator::tag(const std::string& t) {
     return *this;
 }
 
+DisruptionCreator& DisruptionCreator::tag_if_not_empty(const std::string& t) {
+    if(t.size()) {
+        tag(t);
+    }
+    return *this;
+}
+
 DisruptionCreator& DisruptionCreator::properties(const std::vector<dis::Property>& properties) {
     for (auto &property : properties) {
         disruption.properties.insert(property);
@@ -580,7 +587,7 @@ SA builder::sa(const std::string &name, double x, double y,
     return SA(*this, name, x, y, create_sp, wheelchair_boarding, bike_accepted);
 }
 
-builder::builder(const std::string & date,
+builder::builder(const std::string& date,
                  const std::string& publisher_name,
                  const std::string& timezone_name,
                  navitia::type::TimeZoneHandler::dst_periods timezone):
@@ -811,6 +818,13 @@ void builder::finish() {
      }
      data->build_raptor();
  }
+
+ void builder::make() {
+    generate_dummy_basis();
+    data->pt_data->sort_and_index();
+    data->build_uri();
+    finish();
+}
 
 /*
 1. Initilise the first admin in the list to all stop_area and way

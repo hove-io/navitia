@@ -356,10 +356,11 @@ Indexes make_query_ng(const Type_e requested_type,
                       const boost::optional<boost::posix_time::ptime>& since,
                       const boost::optional<boost::posix_time::ptime>& until,
                       const type::Data& data) {
-    auto logger = log4cplus::Logger::getInstance("logger");
+    auto logger = log4cplus::Logger::getInstance("ptref");
     const auto request_ng = make_request(requested_type, request, forbidden_uris, odt_level, since, until, data);
     const auto expr = parse(request_ng);
-    LOG4CPLUS_DEBUG(logger, "ptref_ng parsed: " << expr);
+    LOG4CPLUS_DEBUG(logger, "ptref_ng parsed: " << expr
+            << " [requesting: " << navitia::type::static_data::captionByType(requested_type) << "]");
     return boost::apply_visitor(Eval(requested_type, data), expr);
 }
 
