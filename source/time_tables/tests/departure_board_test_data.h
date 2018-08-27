@@ -73,6 +73,14 @@ struct departure_board_fixture {
             ("stopf2", "18:05"_t, "18:10"_t, std::numeric_limits<uint16_t>::max(), true, true, 900, 900)
             ("stopf3", "18:10"_t, "18:10"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
 
+        /* The X line is used to test first/last departure of a line
+         * */
+        b.vj("X", "11100111").uri("X:vj1")("X_S1", "08:00"_t)("X_S2", "16:00"_t)("X_S3", "24:30"_t).make();
+        b.vj("X", "00011000").uri("X:vj2")("X_S1", "08:05"_t)("X_S2", "16:00"_t)("X_S3", "24:45"_t).make();
+        auto* line_X = b.lines["X"];
+        line_X->opening_time = boost::make_optional(boost::posix_time::duration_from_string("07:55"));
+        line_X->closing_time = boost::make_optional(boost::posix_time::duration_from_string("01:00"));
+
         navitia::georef::Admin* ad = new navitia::georef::Admin();
         ad->name = "Quimper";
         ad->uri = "Quimper";
