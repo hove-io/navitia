@@ -69,6 +69,41 @@ class TestLineSections(AbstractTestFixture):
         r = self.default_query('{col}/{uri}'.format(col=object_get.collection, uri=object_get.uri))
         return has_disruption(r, object_get, disruption_uri)
 
+    def has_tf_disruption(self, q, disruption):
+        """
+        checks a disruption is present in traffic report response to
+        the request provided
+        """
+        r = self.default_query(q)
+
+        return any(
+            disruption == d['disruption_id'] for d in r.get('disruptions', [])
+        )
+
+    def has_tf_linked_disruption(self, q, disruption, object_get):
+        """
+        checks a disruption is present in traffic report response to
+        the request provided
+        also check that the disruption is linked to the specified object
+        """
+        r = self.default_query(q)
+
+        if not (r.get('disruptions')
+                and r.get('traffic_reports')
+                and r['traffic_reports'][0].get(object_get.collection)):
+            return False
+
+        if disruption not in [d['disruption_id'] for d in r['disruptions']]:
+            return False
+
+        for obj in r['traffic_reports'][0][object_get.collection]:
+            if obj['id'] == object_get.uri:
+                return any(
+                    disruption == link['id'] for link in obj.get('links', [])
+                )
+
+        return False
+
     def test_line_section_structure(self):
         r = self.default_query('stop_points/C_1')
 
@@ -108,16 +143,48 @@ class TestLineSections(AbstractTestFixture):
         """
         we should be able to find the related line section disruption with /traffic_report
         """
-        def has_dis(q):
-            r = self.default_query(q)
-            return 'line_section_on_line_1' in (d['disruption_id'] for d in r['disruptions'])
 
-        assert not has_dis('stop_areas/A/traffic_reports')
-        assert not has_dis('stop_areas/B/traffic_reports')
-        assert has_dis('stop_areas/C/traffic_reports')
-        assert has_dis('stop_areas/D/traffic_reports')
-        assert has_dis('stop_areas/E/traffic_reports')
-        assert not has_dis('stop_areas/F/traffic_reports')
+        # line_section_on_line_1
+        scenario = {
+            'A': False,
+            'B': False,
+            'C': True,
+            'D': True,
+            'E': True,
+            'F': False,
+        }
+
+        for sa, result in scenario.iteritems():
+            assert result == self.has_tf_disruption(
+                'stop_areas/{}/traffic_reports'.format(sa),
+                'line_section_on_line_1',
+            )
+            assert result == self.has_tf_linked_disruption(
+                'stop_areas/{}/traffic_reports'.format(sa),
+                'line_section_on_line_1',
+                ObjGetter('stop_areas', sa)
+            )
+
+        # line_section_on_line_1_other_effect
+        scenario = {
+            'A': False,
+            'B': False,
+            'C': False,
+            'D': False,
+            'E': True,
+            'F': True,
+        }
+
+        for sa, result in scenario.iteritems():
+            assert result == self.has_tf_disruption(
+                'stop_areas/{}/traffic_reports'.format(sa),
+                'line_section_on_line_1_other_effect',
+            )
+            assert result == self.has_tf_linked_disruption(
+                'stop_areas/{}/traffic_reports'.format(sa),
+                'line_section_on_line_1_other_effect',
+                ObjGetter('stop_areas', sa)
+            )
 
     def test_traffic_reports_on_networks(self):
         def has_dis(q):
@@ -136,12 +203,55 @@ class TestLineSections(AbstractTestFixture):
         """
         we should be able to find the related line section disruption with /traffic_report
         """
-        def has_dis(q):
-            r = self.default_query(q)
-            return 'line_section_on_line_1' in (d['disruption_id'] for d in r['disruptions'])
 
-        assert has_dis('lines/line:1/traffic_reports')
-        assert not has_dis('lines/line:2/traffic_reports')
+        # line_section_on_line_1
+        assert self.has_tf_disruption(
+            'lines/line:1/traffic_reports',
+            'line_section_on_line_1'
+        )
+        assert self.has_tf_linked_disruption(
+            'lines/line:1/traffic_reports',
+            'line_section_on_line_1',
+            ObjGetter('lines', 'line:1')
+        )
+
+        assert not self.has_tf_disruption(
+            'lines/line:2/traffic_reports',
+            'line_section_on_line_1'
+        )
+        assert not self.has_tf_linked_disruption(
+            'lines/line:2/traffic_reports',
+            'line_section_on_line_1',
+            ObjGetter('lines', 'line:2')
+        )
+
+        # line_section_on_line_1_other_effect
+        assert self.has_tf_disruption(
+            'lines/line:1/traffic_reports',
+            'line_section_on_line_1_other_effect',
+        )
+        assert self.has_tf_linked_disruption(
+            'lines/line:1/traffic_reports',
+            'line_section_on_line_1_other_effect',
+            ObjGetter('lines', 'line:1')
+        )
+
+        # There is a disruption and it affects 1 stop of the line
+        # whereas the line itself is not concerned (the
+        # disrupted routes are linked to other lines)
+        #
+        # This test doesn't work with the actual behavior
+        # assert not self.has_tf_disruption(
+        #     'lines/line:2/traffic_reports',
+        #     'line_section_on_line_1_other_effect',
+        # )
+
+        # At least, the disruption and the line are not linked
+        assert not self.has_tf_linked_disruption(
+            'lines/line:2/traffic_reports',
+            'line_section_on_line_1_other_effect',
+            ObjGetter('lines', 'line:2')
+        )
 
     def test_traffic_reports_on_routes(self):
         """
@@ -173,26 +283,63 @@ class TestLineSections(AbstractTestFixture):
 
     def test_traffic_reports_on_stop_points(self):
         """
-        for /traffic_reports on stopoints
-        we display a line section disruption if it impacts the stop_area
+        for /traffic_reports on stop_points
+        there is a line section disruption link if it impacts the stop_point
         """
-        def has_dis(q):
-            r = self.default_query(q)
-            return 'line_section_on_line_1' in (d['disruption_id'] for d in r['disruptions'])
 
-        assert not has_dis('stop_points/A_1/traffic_reports')
-        assert not has_dis('stop_points/A_2/traffic_reports')
-        assert not has_dis('stop_points/B_1/traffic_reports')
-        assert not has_dis('stop_points/B_2/traffic_reports')
-        assert has_dis('stop_points/C_1/traffic_reports')
-        # even if C_2 is not impacted, we display the line section impact because C has been impacted
-        assert not has_dis('stop_points/C_2/traffic_reports')
-        assert has_dis('stop_points/D_1/traffic_reports')
-        assert not has_dis('stop_points/D_2/traffic_reports')
-        assert has_dis('stop_points/E_1/traffic_reports')
-        assert not has_dis('stop_points/E_2/traffic_reports')
-        assert not has_dis('stop_points/F_1/traffic_reports')
-        assert not has_dis('stop_points/F_2/traffic_reports')
+        # line_section_on_line_1
+        scenario = {
+            'A_1': False,
+            'A_2': False,
+            'B_1': False,
+            'B_2': False,
+            'C_1': True,
+            'C_2': False,
+            'D_1': True,
+            'D_2': False,
+            'E_1': True,
+            'E_2': False,
+            'F_1': False,
+            'F_2': False
+        }
+
+        for sp, result in scenario.iteritems():
+            assert result == self.has_tf_disruption(
+                'stop_points/{}/traffic_reports'.format(sp),
+                'line_section_on_line_1'
+            )
+            assert result == self.has_tf_linked_disruption(
+                'stop_points/{}/traffic_reports'.format(sp),
+                'line_section_on_line_1',
+                ObjGetter('stop_areas', sp[0])
+            )
+
+        # line_section_on_line_1_other_effect
+        scenario = {
+            'A_1': False,
+            'A_2': False,
+            'B_1': False,
+            'B_2': False,
+            'C_1': False,
+            'C_2': False,
+            'D_1': False,
+            'D_2': False,
+            'E_1': True,
+            'E_2': False,
+            'F_1': True,
+            'F_2': False
+        }
+
+        for sp, result in scenario.iteritems():
+            assert result == self.has_tf_disruption(
+                'stop_points/{}/traffic_reports'.format(sp),
+                'line_section_on_line_1_other_effect'
+            )
+            assert result == self.has_tf_linked_disruption(
+                'stop_points/{}/traffic_reports'.format(sp),
+                'line_section_on_line_1_other_effect',
+                ObjGetter('stop_areas', sp[0])
+            )
 
     def test_journeys_use_vj_impacted_by_line_section(self):
         """
