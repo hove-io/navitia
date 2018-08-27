@@ -149,12 +149,7 @@ struct fixture {
         b.sps["stop_point:A"]->coord = coord_Paris;
         b.sps["stop_point:B"]->coord = coord_Notre_Dame;
         b.sps["stop_point:C"]->coord = coord_Pantheon;
-
-        b.finish();
-        b.generate_dummy_basis();
-        b.data->pt_data->sort_and_index();
-        b.data->build_raptor();
-        b.data->build_uri();
+        b.make();
 
         data_manager.set_data(b.data.release());
     }

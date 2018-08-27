@@ -135,11 +135,7 @@ public:
                 ("stop_area:stop22", 8*3600 + 20 * 60 ,8*3600 + 21*60);
         b.vj_with_network("network:Test","line:test","11111111","",true, "")("stop_area:stop22", 8*3600 +10*60, 8*3600 + 11 * 60)
                 ("stop_area:stop22", 8*3600 + 20 * 60 ,8*3600 + 21*60);
-        b.generate_dummy_basis();
-        b.finish();
-        b.data->pt_data->sort_and_index();
-        b.data->build_uri();
-        b.data->build_raptor();
+        b.make();
         for(navitia::type::Line *line : b.data->pt_data->lines){
             line->network->line_list.push_back(line);
         }

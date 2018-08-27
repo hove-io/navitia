@@ -155,14 +155,11 @@ BOOST_AUTO_TEST_CASE(physical_modes) {
 
 BOOST_AUTO_TEST_CASE(get_indexes_test){
     ed::builder b("201303011T1739");
-    b.generate_dummy_basis();
     b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
     b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
     b.connection("stop2", "stop3", 10*60);
     b.connection("stop3", "stop2", 10*60);
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->pt_data->build_uri();
+    b.make();
 
     // On cherche à retrouver la ligne 1, en passant le stoparea en filtre
     auto indexes = make_query(Type_e::Line, "stop_area.uri = stop1",*b.data);
@@ -176,10 +173,7 @@ BOOST_AUTO_TEST_CASE(get_indexes_test){
 BOOST_AUTO_TEST_CASE(get_impact_indexes_of_line){
     ed::builder b("201303011T1739");
     b.vj("A", "000001", "", true, "vj:A-1")("stop1", "08:00"_t)("stop2", "09:00"_t);
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->pt_data->build_uri();
+    b.make();
 
     using btp = boost::posix_time::time_period;
     const auto& disrup_1 = b.impact(nt::RTLevel::RealTime, "Disruption 1")
@@ -219,10 +213,7 @@ BOOST_AUTO_TEST_CASE(get_impact_indexes_of_line){
 BOOST_AUTO_TEST_CASE(get_impact_indexes_of_stop_point){
     ed::builder b("201303011T1739");
     b.vj("A", "000001", "", true, "vj:A-1")("stop1", "08:00"_t)("stop2", "09:00"_t);
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->pt_data->build_uri();
+    b.make();
 
     using btp = boost::posix_time::time_period;
     const auto& disrup_1 = b.impact(nt::RTLevel::RealTime, "Disruption 1")
@@ -241,10 +232,7 @@ BOOST_AUTO_TEST_CASE(ptref_on_vj_impacted){
     b.vj("A", "000001", "", true, "vj:A-1")("stop1", "08:00"_t)("stop2", "09:00"_t);
     b.vj("A", "000001", "", true, "vj:A-2")("stop1", "08:20"_t)("stop2", "09:20"_t);
     b.vj("A", "000001", "", true, "vj:A-3")("stop1", "08:30"_t)("stop2", "09:30"_t);
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->pt_data->build_uri();
+    b.make();
 
     // no disruptions
     BOOST_CHECK_THROW(make_query(nt::Type_e::VehicleJourney, "vehicle_journey.has_disruption()", *b.data),
@@ -277,13 +265,11 @@ BOOST_AUTO_TEST_CASE(ptref_on_vj_impacted){
 BOOST_AUTO_TEST_CASE(make_query_filtre_direct) {
 
     ed::builder b("201303011T1739");
-    b.generate_dummy_basis();
     b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
     b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
     b.connection("stop2", "stop3", 10*60);
     b.connection("stop3", "stop2", 10*60);
-    b.finish();
-    b.data->pt_data->build_uri();
+    b.make();
 
     auto indexes = make_query(nt::Type_e::Line, "line.uri=A", *(b.data));
     BOOST_CHECK_EQUAL(indexes.size(), 1);
@@ -319,14 +305,12 @@ BOOST_AUTO_TEST_CASE(make_query_filtre_direct) {
 BOOST_AUTO_TEST_CASE(line_code) {
 
     ed::builder b("201303011T1739");
-    b.generate_dummy_basis();
     b.vj("A")("stop1", 8000, 8050);
     b.lines["A"]->code = "line_A";
     b.vj("C")("stop2", 8000, 8050);
     b.lines["C"]->code = "line C";
     b.data->build_relations();
-    b.finish();
-    b.data->pt_data->build_uri();
+    b.make();
 
     //find line by code
     auto indexes = make_query(nt::Type_e::Line, "line.code=line_A", *(b.data));
@@ -356,13 +340,11 @@ BOOST_AUTO_TEST_CASE(line_code) {
 BOOST_AUTO_TEST_CASE(forbidden_uri) {
 
     ed::builder b("201303011T1739");
-    b.generate_dummy_basis();
     b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
     b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
     b.connection("stop2", "stop3", 10*60);
     b.connection("stop3", "stop2", 10*60);
-    b.finish();
-    b.data->pt_data->build_uri();
+    b.make();
 
     BOOST_CHECK_THROW(make_query(nt::Type_e::Line, "stop_point.uri=stop1", {"A"}, *(b.data)), ptref_error);
 }
@@ -417,7 +399,6 @@ static nt::Indexes query(nt::Type_e requested_type, std::string request,
  */
 BOOST_AUTO_TEST_CASE(mvj_filtering) {
     ed::builder builder("20130311");
-    builder.generate_dummy_basis();
     // Date  11    12    13    14
     // A      -   08:00 08:00   -
     // B    10:00 10:00   -   10:00
@@ -425,8 +406,7 @@ BOOST_AUTO_TEST_CASE(mvj_filtering) {
     builder.vj("A", "0110")("stop1", "08:00"_t);
     builder.vj("B", "1011")("stop3", "10:00"_t);
     builder.vj("C", "1000")("stop3", "10:00"_t);
-    builder.finish();
-    builder.data->pt_data->build_uri();
+    builder.make();
     nt::idx_t a = 0;
     nt::idx_t b = 1;
     nt::idx_t c = 2;
@@ -461,7 +441,6 @@ BOOST_AUTO_TEST_CASE(mvj_filtering) {
  */
 BOOST_AUTO_TEST_CASE(vj_filtering) {
     ed::builder builder("20130311");
-    builder.generate_dummy_basis();
     // Date  11    12    13    14
     // A      -   08:00 08:00   -
     // B    10:00 10:00   -   10:00
@@ -469,7 +448,7 @@ BOOST_AUTO_TEST_CASE(vj_filtering) {
     builder.vj("A", "0110")("stop1", "08:00"_t)("stop2", "09:00"_t);
     builder.vj("B", "1011")("stop3", "10:00"_t)("stop2", "11:00"_t);
     builder.vj("C", "1000")("stop3", "10:00"_t)("stop2", "11:00"_t);
-    builder.finish();
+    builder.make();
     nt::idx_t a = 0;
     nt::idx_t b = 1;
     nt::idx_t c = 2;
@@ -536,12 +515,10 @@ BOOST_AUTO_TEST_CASE(vj_filtering) {
 
 BOOST_AUTO_TEST_CASE(headsign_request) {
     ed::builder b("201303011T1739");
-    b.generate_dummy_basis();
     b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
     b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
     b.vj("C")("stop3", 9000,9050)("stop5", 9200,9250);
-    b.finish();
-    b.data->pt_data->build_uri();
+    b.make();
 
     const auto res = make_query(nt::Type_e::VehicleJourney,
                                 R"(vehicle_journey.has_headsign("vehicle_journey 1"))",
@@ -551,12 +528,10 @@ BOOST_AUTO_TEST_CASE(headsign_request) {
 
 BOOST_AUTO_TEST_CASE(headsign_sa_request) {
     ed::builder b("201303011T1739");
-    b.generate_dummy_basis();
     b.vj("A")("stop1", 8000,8050)("stop2", 8200,8250);
     b.vj("B")("stop3", 9000,9050)("stop4", 9200,9250);
     b.vj("C")("stop3", 9000,9050)("stop5", 9200,9250);
-    b.finish();
-    b.data->pt_data->build_uri();
+    b.make();
 
     const auto res = make_query(nt::Type_e::StopArea,
                                 R"(vehicle_journey.has_headsign("vehicle_journey 1"))",
@@ -571,12 +546,10 @@ BOOST_AUTO_TEST_CASE(headsign_sa_request) {
 
 BOOST_AUTO_TEST_CASE(code_request) {
     ed::builder b("20150101");
-    b.generate_dummy_basis();
     const auto* a = b.sa("A").sa;
     b.sa("B");
     b.data->pt_data->codes.add(a, "UIC", "8727100");
-    b.finish();
-    b.data->pt_data->build_uri();
+    b.make();
 
     const auto res = make_query(nt::Type_e::StopArea,
                                 R"(stop_area.has_code(UIC, 8727100))",
@@ -588,7 +561,6 @@ BOOST_AUTO_TEST_CASE(code_request) {
 BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
 
     ed::builder b("201601011T1739");
-    b.generate_dummy_basis();
     auto* vj_a = b.vj("A")("stop1", 8000, 8050).make();
     b.lines["A"]->code = "line_A";
     auto* vj_c = b.vj("C")("stop2", 8000, 8050).make();
@@ -621,8 +593,7 @@ BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
     contributor->dataset_list.insert(dataset);
 
     b.data->build_relations();
-    b.finish();
-    b.data->pt_data->build_uri();
+    b.make();
 
     auto indexes = make_query(nt::Type_e::Contributor, "contributor.uri=c1", *(b.data));
     BOOST_CHECK_EQUAL_RANGE(get_uris<nt::Contributor>(indexes, *b.data), std::set<std::string>({"c1"}));
@@ -671,15 +642,13 @@ BOOST_AUTO_TEST_CASE(contributor_and_dataset) {
 
 BOOST_AUTO_TEST_CASE(get_potential_routes_test) {
     ed::builder b("201601011T1739");
-    b.generate_dummy_basis();
     b.vj("A").route("r1")("stop1", "09:00"_t)("stop2", "10:00"_t)("stop3", "11:00"_t);
     b.vj("A").route("r1")("stop1", "09:10"_t)("stop2", "10:10"_t)("stop3", "11:10"_t);
     b.vj("A").route("r2")("stop1", "09:10"_t)("stop2", "10:10"_t)("stop3", "11:10"_t);
     b.vj("A").route("r3")("stop2", "09:10"_t)("stop3", "10:10"_t)("stop4", "11:10"_t);
     b.vj("B").route("r3")("stop1", "09:10"_t)("stop2", "10:10"_t)("stop3", "11:10"_t);
 
-    b.finish();
-    b.data->build_uri();
+    b.make();
 
     b.data->pt_data->codes.add(b.get<nt::StopPoint>("stop1"), "code_key", "stop1 code");
     b.data->pt_data->codes.add(b.get<nt::StopPoint>("stop2"), "code_key", "stop2 code");
