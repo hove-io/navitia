@@ -77,7 +77,7 @@ struct departure_board_fixture {
          * */
         b.vj("X", "11100111").uri("X:vj1")("X_S1", "08:00"_t)("X_S2", "16:00"_t)("X_S3", "24:30"_t).make();
         b.vj("X", "00011000").uri("X:vj2")("X_S1", "08:05"_t)("X_S2", "16:00"_t)("X_S3", "24:45"_t).make();
-        auto* line_X = b.lines["X"];
+        auto line_X = b.lines.find("X")->second;
         line_X->opening_time = boost::make_optional(boost::posix_time::duration_from_string("07:55"));
         line_X->closing_time = boost::make_optional(boost::posix_time::duration_from_string("01:00"));
 
