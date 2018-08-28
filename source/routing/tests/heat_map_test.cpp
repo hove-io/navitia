@@ -149,10 +149,6 @@ BOOST_AUTO_TEST_CASE(heat_map_test) {
     b.data->geo_ref->ways[1]->edges.push_back(std::make_pair(BB, CC));
     b.data->geo_ref->ways[2]->edges.push_back(std::make_pair(AA, CC));
     b.data->geo_ref->ways[3]->edges.push_back(std::make_pair(CC, DD));
-
-    b.generate_dummy_basis();
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
     b.data->build_proximity_list();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,06,14),
                                                                   7_days);
@@ -162,13 +158,12 @@ BOOST_AUTO_TEST_CASE(heat_map_test) {
     b.connection("stop2", "stop2", 120);
     b.connection("stop3", "stop3", 120);
     b.connection("stop4", "stop4", 120);
-    b.data->pt_data->sort_and_index();
-    b.finish();
+
     b.sps["stop1"]->coord = A;
     b.sps["stop2"]->coord = B;
     b.sps["stop3"]->coord = C;
     b.sps["stop4"]->coord = D;
-    b.data->build_raptor();
+    b.make();
     RAPTOR raptor(*b.data);
     navitia::routing::map_stop_point_duration d;
     d.emplace(navitia::routing::SpIdx(*b.sps["stop1"]), navitia::seconds(0));

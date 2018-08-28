@@ -72,11 +72,7 @@ int main(int argc, const char* const argv[]) {
         ("F", "01:30"_t)
         ("G", "02:00"_t);
 
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.build_autocomplete();
     b.data->meta->production_date = bg::date_period(bg::date(2017, 1, 1), bg::days(30));
 

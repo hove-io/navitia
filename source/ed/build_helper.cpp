@@ -823,6 +823,7 @@ void builder::finish() {
     generate_dummy_basis();
     data->pt_data->sort_and_index();
     data->build_uri();
+    data->build_raptor();
     finish();
 }
 

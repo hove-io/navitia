@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -125,8 +125,7 @@ BOOST_AUTO_TEST_CASE(physical_and_commercial_modes_stop_area) {
     ln->commercial_mode = b.data->pt_data->commercial_modes_map["Car"];
 
     b.data->build_relations();
-    b.finish();
-    b.data->pt_data->build_uri();
+    b.make();
 
     auto stop_area = new pbnavitia::StopArea();
     boost::gregorian::date d1(2014,06,14);
@@ -152,13 +151,9 @@ BOOST_AUTO_TEST_CASE(physical_and_commercial_modes_stop_area) {
 // Test that the geojson isn't in the pb object when disabling geojson output
 BOOST_AUTO_TEST_CASE(disable_geojson_on_route_line) {
     ed::builder b("20161026");
-    b.generate_dummy_basis();
 
     b.vj("A");
-    b.finish();
-    b.data->build_uri();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
+    b.make();
 
     Route* r = b.data->pt_data->routes_map["A:0"];
     auto route = new pbnavitia::Route;
@@ -200,7 +195,6 @@ std::set<std::string> uris(const C& objs) {
  */
 BOOST_AUTO_TEST_CASE(ptref_indexes_test) {
     ed::builder b("20160101");
-    b.generate_dummy_basis();
 
     auto* c1 = b.add<nt::Contributor>("c1", "name-c1");
     auto* d1 = b.add<nt::Dataset>("d1", "name-d1");
@@ -224,8 +218,7 @@ BOOST_AUTO_TEST_CASE(ptref_indexes_test) {
     vj_b->dataset = d2;
 
     b.data->build_relations();
-    b.finish();
-    b.data->build_uri();
+    b.make();
 
     auto objs = navitia::ptref_indexes<nt::Contributor>(vj_a, *b.data);
     BOOST_CHECK_EQUAL_RANGE(uris(objs), std::set<std::string>({"c1"}));
@@ -260,13 +253,9 @@ BOOST_AUTO_TEST_CASE(label_formater_line) {
 
 BOOST_AUTO_TEST_CASE(pb_convertor_ptref) {
     ed::builder b("20161026");
-    b.generate_dummy_basis();
 
     b.vj("A great \"uri\" for café");
-    b.finish();
-    b.data->build_uri();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
+    b.make();
 
     auto modes = navitia::ptref_indexes<navitia::type::PhysicalMode>(
         b.data->pt_data->lines.front(),
@@ -276,10 +265,7 @@ BOOST_AUTO_TEST_CASE(pb_convertor_ptref) {
 
 BOOST_AUTO_TEST_CASE(fill_crowfly_section_test) {
     ed::builder b("20120614");
-    b.finish();
-    b.data->build_uri();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
+    b.make();
 
     auto pt_journey = new pbnavitia::Journey();
     boost::gregorian::date d1(2014,06,14);
@@ -288,10 +274,10 @@ BOOST_AUTO_TEST_CASE(fill_crowfly_section_test) {
     boost::posix_time::time_period period(t1, t2);
 
     auto * data_ptr = b.data.get();
-    navitia::PbCreator pb_creator(data_ptr, pt::not_a_date_time, period); 
+    navitia::PbCreator pb_creator(data_ptr, pt::not_a_date_time, period);
 
-    pb_creator.fill_crowfly_section(EntryPoint(Type_e::StopPoint, "Totorigin"), 
-                                    EntryPoint(Type_e::StopPoint, "Tatastination"),   
+    pb_creator.fill_crowfly_section(EntryPoint(Type_e::StopPoint, "Totorigin"),
+                                    EntryPoint(Type_e::StopPoint, "Tatastination"),
                                     navitia::time_duration(0,0,0),
                                     Mode_e::Car,
                                     t1,

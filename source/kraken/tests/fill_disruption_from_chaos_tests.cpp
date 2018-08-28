@@ -84,11 +84,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line) {
     b.vj("A", "000111", "", true, "vj:2")("stop_area:stop1", 9*3600 +10*60, 9*3600 + 11 * 60)("stop_area:stop2", 9*3600 + 20 * 60, 9*3600 + 21*60);
     b.vj("A", "001101", "", true, "vj:3")("stop_area:stop1", 16*3600 +10*60, 16*3600 + 11 * 60)("stop_area:stop2", 16*3600 + 20 * 60, 16*3600 + 21*60);
     navitia::type::Data data;
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
 
     //we delete the line A for three day, the first two vj start too early for being impacted on the first day
@@ -160,11 +156,7 @@ BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
             ("stop_area:stop3", "09:30"_t, "09:31"_t)
             ("stop_area:stop4", "09:40"_t, "09:41"_t);
 
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
 
     //mostly like the previous test, but we disable the stop_area 1 and 2
@@ -248,11 +240,7 @@ BOOST_AUTO_TEST_CASE(add_impact_and_update_on_stop_area) {
 BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt) {
     ed::builder b("20120614");
     b.vj("A", "010101", "", true, "vj:1")("stop_area:stop1", 23*3600 +10*60, 23*3600 + 11*60)("stop_area:stop2", 24*3600 + 20*60, 24*3600 + 21*60);
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
 
     //same as before but with a vehicle_journey that span on two day
@@ -287,11 +275,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt) {
 BOOST_AUTO_TEST_CASE(add_impact_on_line_over_midnigt_2) {
     ed::builder b("20120614");
     b.vj("A", "010111", "", true, "vj:1")("stop_area:stop1", 23*3600 +10*60, 23*3600 + 11*60)("stop_area:stop2", 24*3600 + 20*60, 24*3600 + 21*60);
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14), boost::gregorian::days(7));
 
     //again a vehicle_journey than span on two day, but this time the disruption only start the second day,
@@ -343,11 +327,7 @@ BOOST_AUTO_TEST_CASE(add_impact_on_line_section) {
             ("stop3", "14:00"_t, "14:10"_t)
             ("stop4", "15:00"_t, "15:10"_t);
     navitia::type::Data data;
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2016,4,4), boost::gregorian::days(7));
 
 
@@ -458,11 +438,7 @@ BOOST_AUTO_TEST_CASE(update_cause_severities_and_tag) {
             ("stop2", "16:00"_t);
 
     navitia::type::Data data;
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14),
                                                                   boost::gregorian::days(7));
 
@@ -547,11 +523,7 @@ BOOST_AUTO_TEST_CASE(update_properties) {
     ed::builder b("20171127");
 
     navitia::type::Data data;
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14),
                                                                   boost::gregorian::days(7));
 
@@ -648,11 +620,7 @@ BOOST_AUTO_TEST_CASE(make_line_section_test) {
             ("stop_area:stop2", "09:20"_t, "09:21"_t)
             ("stop_area:stop3", "09:30"_t, "09:31"_t)
             ("stop_area:stop4", "09:40"_t, "09:41"_t);
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14),
                                                                   boost::gregorian::days(7));
 
@@ -729,11 +697,7 @@ BOOST_AUTO_TEST_CASE(make_disruption_with_different_publication_periods) {
             ("stop2", "16:00"_t);
 
     navitia::type::Data data;
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
     b.data->meta->production_date = boost::gregorian::date_period(boost::gregorian::date(2012,6,14),
                                                                   boost::gregorian::days(7));
 
@@ -746,7 +710,7 @@ BOOST_AUTO_TEST_CASE(make_disruption_with_different_publication_periods) {
         pb_cause->set_wording(cause);
         auto* pb_tag = disruption.add_tags();
         pb_tag->set_id("tag_id");
-        pb_tag->set_name(tag);        
+        pb_tag->set_name(tag);
         auto* impact = disruption.add_impacts();
         impact->set_id(uri);
         auto* pb_severity = impact->mutable_severity();
