@@ -42,8 +42,6 @@ www.navitia.io
 
 #include <utility>
 
-namespace pt = boost::posix_time;
-
 namespace navitia {
 namespace timetables {
 
@@ -263,8 +261,6 @@ void departure_board(PbCreator& pb_creator,
 
         // date time
         std::vector<routing::datetime_stop_time> stop_times;
-        routing::datetime_stop_time first_time;
-        routing::datetime_stop_time last_time;
         if (! calendar_id) {
             stop_times = routing::get_stop_times(routing::StopEvent::pick_up, routepoint_jpps, handler.date_time,
                     handler.max_datetime, items_per_route_point, *pb_creator.data, rt_level);
@@ -272,31 +268,31 @@ void departure_board(PbCreator& pb_creator,
 
             // Opening Time
             if (route->line->opening_time) {
-                DateTime opening_time = DateTimeUtils::date(handler.date_time)*DateTimeUtils::SECONDS_PER_DAY + (*route->line->opening_time).total_seconds();
-                auto first_times = routing::get_stop_times(routing::StopEvent::pick_up,
-                                                           routepoint_jpps,
-                                                           opening_time,
-                                                           handler.max_datetime,
-                                                           1,
-                                                           *pb_creator.data,
-                                                           rt_level);
-                if (!first_times.empty()) {
-                    first_time = first_times[0];
+                auto stop_time = get_one_stop_time(datetime_type::opening,
+                                                   calendar_id,
+                                                   handler.date_time,
+                                                   *route->line->opening_time,
+                                                   routepoint_jpps,
+                                                   handler.max_datetime,
+                                                   *pb_creator.data,
+                                                   rt_level);
+                if (stop_time) {
+                    map_route_first_point[route_point] = *stop_time;
                 }
             }
 
             // Opening Time
             if (route->line->closing_time) {
-                DateTime closing_time = (DateTimeUtils::date(handler.date_time) + 1)*DateTimeUtils::SECONDS_PER_DAY + (*route->line->closing_time).total_seconds();
-                auto last_times = routing::get_stop_times(routing::StopEvent::pick_up,
-                                                          routepoint_jpps,
-                                                          closing_time,
-                                                          handler.max_datetime,
-                                                          1,
-                                                          *pb_creator.data,
-                                                          rt_level);
-                if (!last_times.empty()) {
-                    last_time = last_times[0];
+                auto stop_time = get_one_stop_time(datetime_type::closing,
+                                                   calendar_id,
+                                                   handler.date_time,
+                                                   *route->line->closing_time,
+                                                   routepoint_jpps,
+                                                   handler.max_datetime,
+                                                   *pb_creator.data,
+                                                   rt_level);
+                if (stop_time) {
+                    map_route_last_point[route_point] = *stop_time;
                 }
             }
 
@@ -311,31 +307,31 @@ void departure_board(PbCreator& pb_creator,
 
             // Opening Time
             if (route->line->opening_time) {
-                DateTime opening_time = DateTimeUtils::date(handler.date_time)*DateTimeUtils::SECONDS_PER_DAY + (*route->line->opening_time).total_seconds();
-
-                auto first_times = routing::get_calendar_stop_times(routepoint_jpps,
-                                                              DateTimeUtils::hour(opening_time),
-                                                              DateTimeUtils::hour(handler.max_datetime),
-                                                              *pb_creator.data,
-                                                              *calendar_id);
-                std::sort(first_times.begin(), first_times.end(), routing::CalendarScheduleSort(opening_time));
-                if (!first_times.empty()) {
-                    first_time = first_times[0];
+                auto stop_time = get_one_stop_time(datetime_type::opening,
+                                                   calendar_id,
+                                                   handler.date_time,
+                                                   *route->line->opening_time,
+                                                   routepoint_jpps,
+                                                   handler.max_datetime,
+                                                   *pb_creator.data,
+                                                   rt_level);
+                if (stop_time) {
+                    map_route_first_point[route_point] = *stop_time;
                 }
             }
 
             // Closing Time
             if (route->line->closing_time) {
-                DateTime closing_time = DateTimeUtils::date(handler.date_time)*DateTimeUtils::SECONDS_PER_DAY + (*route->line->closing_time).total_seconds();
-
-                auto last_times = routing::get_calendar_stop_times(routepoint_jpps,
-                                                              DateTimeUtils::hour(closing_time),
-                                                              DateTimeUtils::hour(handler.max_datetime),
-                                                              *pb_creator.data,
-                                                              *calendar_id);
-                std::sort(last_times.begin(), last_times.end(), routing::CalendarScheduleSort(closing_time));
-                if (!last_times.empty()) {
-                    last_time = last_times[0];
+                auto stop_time = get_one_stop_time(datetime_type::closing,
+                                                   calendar_id,
+                                                   handler.date_time,
+                                                   *route->line->closing_time,
+                                                   routepoint_jpps,
+                                                   handler.max_datetime,
+                                                   *pb_creator.data,
+                                                   rt_level);
+                if (stop_time) {
+                    map_route_last_point[route_point] = *stop_time;
                 }
             }
         }
@@ -367,8 +363,6 @@ void departure_board(PbCreator& pb_creator,
         }
 
         map_route_stop_point[route_point] = stop_times;
-        map_route_first_point[route_point] = first_time;
-        map_route_last_point[route_point] = last_time;
     }
 
     render(pb_creator,
@@ -382,6 +376,56 @@ void departure_board(PbCreator& pb_creator,
 
     pb_creator.make_paginate(total_result, start_page, count, std::max(pb_creator.departure_boards_size(),
                                                                        pb_creator.stop_schedules_size()));
+}
+
+DateTime convert_duration_into_datetime(const datetime_type type, const DateTime date, const pt::time_duration& time)
+{
+    uint offset = 0;
+    if (type == datetime_type::closing)
+        offset++;
+    return (DateTimeUtils::date(date) + offset)*DateTimeUtils::SECONDS_PER_DAY + (time).total_seconds();
+}
+
+boost::optional<routing::datetime_stop_time>
+get_one_stop_time(const datetime_type type,
+                  const boost::optional<const std::string>& calendar_id,
+                  const DateTime current_datetime,
+                  const pt::time_duration& time_duration,
+                  const std::vector<routing::JppIdx>& journey_pattern_points,
+                  const DateTime max_datetime,
+                  const type::Data& data,
+                  const type::RTLevel rt_level)
+{
+    std::vector<routing::datetime_stop_time> stop_times;
+    if (calendar_id) {
+
+        DateTime new_current_time = convert_duration_into_datetime(type,
+                                                                   current_datetime,
+                                                                   time_duration);
+        stop_times = routing::get_calendar_stop_times(journey_pattern_points,
+                                                      DateTimeUtils::hour(new_current_time),
+                                                      DateTimeUtils::hour(max_datetime),
+                                                      data,
+                                                      *calendar_id);
+        std::sort(stop_times.begin(), stop_times.end(), routing::CalendarScheduleSort(new_current_time));
+    } else {
+
+        DateTime new_current_time = convert_duration_into_datetime(type,
+                                                                   current_datetime,
+                                                                   time_duration);
+        stop_times = routing::get_stop_times(routing::StopEvent::pick_up,
+                                             journey_pattern_points,
+                                             new_current_time,
+                                             max_datetime,
+                                             1,
+                                             data,
+                                             rt_level);
+    }
+    if (!stop_times.empty()) {
+        return stop_times[0];
+    } else {
+        return boost::optional<routing::datetime_stop_time>{};
+    }
 }
 
 } // namespace timetables

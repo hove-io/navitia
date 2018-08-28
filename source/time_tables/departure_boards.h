@@ -34,11 +34,18 @@ www.navitia.io
 #include "routing/get_stop_times.h"
 #include "routing/raptor.h"
 
+namespace pt = boost::posix_time;
+
 namespace navitia {
 namespace timetables {
 
 typedef std::vector<DateTime> vector_datetime;
 typedef std::vector<routing::datetime_stop_time> vector_dt_st;
+
+enum class datetime_type {
+    opening,
+    closing
+};
 
 void departure_board(PbCreator& pb_creator,
                      const std::string &filter,
@@ -63,6 +70,26 @@ bool line_closed (const time_duration& duration,
                   const time_duration& opening,
                   const time_duration& closing,
                   const pt::ptime& date );
+/**
+ * @brief Convert a posix_time::time_duration in DateTime (uint32_t).
+ * Usefull for opening and closing date time.
+ */
+DateTime convert_duration_into_datetime(const datetime_type type,
+                                        const DateTime date,
+                                        const pt::time_duration& time);
+
+/**
+ * @brief Get Opening/Closing datetime with specific calendar or not.
+ */
+boost::optional<routing::datetime_stop_time>
+get_one_stop_time(const datetime_type type,
+                  const boost::optional<const std::string>& calendar_id,
+                  const DateTime current_datetime,
+                  const pt::time_duration& time_duration,
+                  const std::vector<routing::JppIdx>& journey_pattern_points,
+                  const DateTime max_datetime,
+                  const type::Data& data,
+                  const type::RTLevel rt_level);
 
 } // namespace timetable
 } // namespace navitia
