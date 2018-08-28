@@ -72,7 +72,19 @@ int main(int argc, const char* const argv[]) {
         ("F", "01:30"_t)
         ("G", "02:00"_t);
 
-    b.make();
+    /* The X line is used to test first/last departure of a line
+     * */
+    b.vj("X", "11100111").uri("X:vj1")("X_S1", "08:00"_t)("X_S2", "16:00"_t)("X_S3", "24:30"_t).make();
+    b.vj("X", "00011000").uri("X:vj2")("X_S1", "08:05"_t)("X_S2", "16:00"_t)("X_S3", "24:45"_t).make();
+    auto line_X = b.lines.find("X")->second;
+    line_X->opening_time = boost::make_optional(boost::posix_time::duration_from_string("07:55"));
+    line_X->closing_time = boost::make_optional(boost::posix_time::duration_from_string("01:00"));
+
+    b.generate_dummy_basis();
+    b.finish();
+    b.data->pt_data->sort_and_index();
+    b.data->build_raptor();
+    b.data->build_uri();
     b.build_autocomplete();
     b.data->meta->production_date = bg::date_period(bg::date(2017, 1, 1), bg::days(30));
 

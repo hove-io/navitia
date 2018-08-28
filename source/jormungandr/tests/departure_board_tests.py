@@ -1105,58 +1105,63 @@ class TestSchedules(AbstractTestFixture):
                                      "from_datetime=20120615T080000&forbidden_uris[]=toto", check=False)
         assert code == 404
 
+
+@dataset({"timezone_cape_verde_test": {}})
+class TestFirstLastDatetime(AbstractTestFixture):
     def test_first_last_datetime(self):
         """
         test first/last datetime
 
         the closing time of line X is 01:00 and the opening time is 7:55
+
+        Datetimes shown in the figure are all local datetimes
         """
 
-        """              20160102
+        """              20170102
                                from_datetime        
                                     |  
                                     v
-        08:00             16:00             00:30  
+        07:00             15:00             23:30  
          X_s1 ------------ X_S2 ------------ X_S3
          
         """
-        response = self.query_region("stop_points/X_S2/stop_schedules?from_datetime=20160102T170000"
+        response = self.query_region("stop_points/X_S2/stop_schedules?from_datetime=20170102T170000"
                                      "&data_freshness=base_schedule")
 
         stop_schedules = response['stop_schedules']
         assert stop_schedules
-        assert stop_schedules['first_date_time'] == "20161002T080000"
-        assert stop_schedules['last_date_time'] == "20161003T003000"
+        assert stop_schedules[0]['first_date_time'] == "20171002T080000"
+        assert stop_schedules[0]['last_date_time'] == "20171003T003000"
 
-        """              20160102                                                20160103
+        """              20170102                                                20170103
                                                     from_datetime        
                                                          |  
                                                          v
-        08:00             16:00             00:30      02:00    08:00             16:00             00:30  
+        07:00             15:00             23:30      02:00    07:00             15:00             23:30  
          X_s1 ------------ X_S2 ------------ X_S3                X_s1 ------------ X_S2 ------------ X_S3
 
         """
-        response = self.query_region("stop_points/X_S2/stop_schedules?from_datetime=20160103T020000"
+        response = self.query_region("stop_points/X_S2/stop_schedules?from_datetime=20170103T020000"
                                      "&data_freshness=base_schedule")
 
         stop_schedules = response['stop_schedules']
         assert stop_schedules
-        assert stop_schedules['first_date_time'] == "20161003T080000"
-        assert stop_schedules['last_date_time'] == "20161003T003000"
+        assert stop_schedules[0]['first_date_time'] == "20171003T080000"
+        assert stop_schedules[0]['last_date_time'] == "20171003T003000"
 
         """ 
-                        20160103                                                  20160104    
+                        20170103                                                  20170104    
                                                    from_datetime        
                                                         |  
                                                         v
-        08:00             16:00             00:30     02:00       08:05             16:00             00:45   
+        07:00             15:00             23:30     02:00       07:05             15:00             23:45   
          X_s1 ------------ X_S2 ------------ X_S3                  X_s1 ------------ X_S2 ------------ X_S3
 
         """
-        response = self.query_region("stop_points/X_S2/stop_schedules?from_datetime=20160104T020000"
+        response = self.query_region("stop_points/X_S2/stop_schedules?from_datetime=20170104T020000"
                                      "&data_freshness=base_schedule")
 
         stop_schedules = response['stop_schedules']
         assert stop_schedules
-        assert stop_schedules['first_date_time'] == "20160102T080500"
-        assert stop_schedules['last_date_time'] == "20160104T004500"
+        assert stop_schedules[0]['first_date_time'] == "20170102T080500"
+        assert stop_schedules[0]['last_date_time'] == "20170104T004500"
