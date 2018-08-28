@@ -120,6 +120,24 @@ render(PbCreator& pb_creator,
                 }
             }
         }
+
+        // add first datetime
+        auto first_it = map_route_first_point.find(id_vec.first);
+        if (first_it != map_route_first_point.end()) {
+            const auto& st_calendar = navitia::StopTimeCalendar(first_it->second.second, first_it->second.first, calendar_id);
+            auto date_time = schedule->mutable_first_datetime();
+            pb_creator.fill(&st_calendar, date_time, 0);
+        }
+
+        // add last datetime
+        auto last_it = map_route_last_point.find(id_vec.first);
+        if (last_it != map_route_last_point.end()) {
+            const auto& st_calendar = navitia::StopTimeCalendar(last_it->second.second, last_it->second.first, calendar_id);
+            auto date_time = schedule->mutable_last_datetime();
+            pb_creator.fill(&st_calendar, date_time, 0);
+        }
+
+        // response status
         const auto& it = response_status.find(id_vec.first);
         if(it != response_status.end()){
             schedule->set_response_status(it->second);
