@@ -1,5 +1,4 @@
-"""empty message
-
+"""add max_nb_crowfly_by_mode, this parameter is used by distributed scenario
 Revision ID: 483639f1f00
 Revises: 4cd2ff722a7c
 Create Date: 2018-08-21 11:48:08.941764
