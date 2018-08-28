@@ -73,12 +73,12 @@ static void
 render(PbCreator& pb_creator,
        const std::map<RoutePointIdx, pbnavitia::ResponseStatus>& response_status,
        const std::map<RoutePointIdx, vector_dt_st>& map_route_stop_point,
-       const std::map<RoutePointIdx, routing::datetime_stop_time> map_route_first_point,
-       const std::map<RoutePointIdx, routing::datetime_stop_time> map_route_last_point,
-       DateTime datetime,
-       DateTime max_datetime,
-       boost::optional<const std::string> calendar_id,
-       uint32_t depth) {
+       const std::map<RoutePointIdx, routing::datetime_stop_time>& map_route_first_point,
+       const std::map<RoutePointIdx, routing::datetime_stop_time>& map_route_last_point,
+       const DateTime datetime,
+       const DateTime max_datetime,
+       const boost::optional<const std::string> calendar_id,
+       const uint32_t depth) {
 
     pb_creator.action_period = pt::time_period(to_posix_time(datetime, *pb_creator.data),
                                                to_posix_time(max_datetime, *pb_creator.data));
@@ -122,19 +122,19 @@ render(PbCreator& pb_creator,
         }
 
         // add first datetime
-        auto first_it = map_route_first_point.find(id_vec.first);
+        const auto& first_it = map_route_first_point.find(id_vec.first);
         if (first_it != map_route_first_point.end()) {
-            const auto& st_calendar = navitia::StopTimeCalendar(first_it->second.second, first_it->second.first, calendar_id);
-            auto date_time = schedule->mutable_first_datetime();
-            pb_creator.fill(&st_calendar, date_time, 0);
+            const auto& st_calendar = navitia::StopTimeCalendar(first_it->second.second,
+                                                                first_it->second.first, calendar_id);
+            pb_creator.fill(&st_calendar, schedule->mutable_first_datetime(), 0);
         }
 
         // add last datetime
-        auto last_it = map_route_last_point.find(id_vec.first);
+        const auto& last_it = map_route_last_point.find(id_vec.first);
         if (last_it != map_route_last_point.end()) {
-            const auto& st_calendar = navitia::StopTimeCalendar(last_it->second.second, last_it->second.first, calendar_id);
-            auto date_time = schedule->mutable_last_datetime();
-            pb_creator.fill(&st_calendar, date_time, 0);
+            const auto& st_calendar = navitia::StopTimeCalendar(last_it->second.second,
+                                                                last_it->second.first, calendar_id);
+            pb_creator.fill(&st_calendar, schedule->mutable_last_datetime(), 0);
         }
 
         // response status
@@ -206,13 +206,13 @@ static std::vector<routing::JppIdx> get_jpp_from_route_point(const RoutePointIdx
 
 void departure_board(PbCreator& pb_creator,
                      const std::string& request,
-                     boost::optional<const std::string> calendar_id,
+                     const boost::optional<const std::string> calendar_id,
                      const std::vector<std::string>& forbidden_uris,
                      const pt::ptime date,
-                     uint32_t duration,
-                     uint32_t depth,
-                     int count,
-                     int start_page,
+                     const uint32_t duration,
+                     const uint32_t depth,
+                     const int count,
+                     const int start_page,
                      const type::RTLevel rt_level,
                      const size_t items_per_route_point) {
 

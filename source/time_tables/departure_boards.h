@@ -42,13 +42,13 @@ typedef std::vector<routing::datetime_stop_time> vector_dt_st;
 
 void departure_board(PbCreator& pb_creator,
                      const std::string &filter,
-                     boost::optional<const std::string> calendar_id,
+                     const boost::optional<const std::string> calendar_id,
                      const std::vector<std::string>& forbidden_uris,
                      const boost::posix_time::ptime datetime,
-                     uint32_t duration,
-                     uint32_t depth,
-                     int count,
-                     int start_page,
+                     const uint32_t duration,
+                     const uint32_t depth,
+                     const int count,
+                     const int start_page,
                      const type::RTLevel rt_level,
                      const size_t items_per_route_point);
 
