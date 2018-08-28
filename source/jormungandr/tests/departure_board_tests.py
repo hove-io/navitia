@@ -1125,8 +1125,8 @@ class TestSchedules(AbstractTestFixture):
 
         stop_schedules = response['stop_schedules']
         assert stop_schedules
-        assert stop_schedules['first_datetime'] == "20161002T080000"
-        assert stop_schedules['last_datetime'] == "20161003T003000"
+        assert stop_schedules['first_date_time'] == "20161002T080000"
+        assert stop_schedules['last_date_time'] == "20161003T003000"
 
         """              20160102                                                20160103
                                                     from_datetime        
@@ -1141,8 +1141,8 @@ class TestSchedules(AbstractTestFixture):
 
         stop_schedules = response['stop_schedules']
         assert stop_schedules
-        assert stop_schedules['first_datetime'] == "20161003T080000"
-        assert stop_schedules['last_datetime'] == "20161003T003000"
+        assert stop_schedules['first_date_time'] == "20161003T080000"
+        assert stop_schedules['last_date_time'] == "20161003T003000"
 
         """ 
                         20160103                                                  20160104    
@@ -1158,5 +1158,5 @@ class TestSchedules(AbstractTestFixture):
 
         stop_schedules = response['stop_schedules']
         assert stop_schedules
-        assert stop_schedules['first_datetime'] == "20160102T080500"
-        assert stop_schedules['last_datetime'] == "20160104T004500"
+        assert stop_schedules['first_date_time'] == "20160102T080500"
+        assert stop_schedules['last_date_time'] == "20160104T004500"
