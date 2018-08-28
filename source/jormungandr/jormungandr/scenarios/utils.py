@@ -274,20 +274,22 @@ def change_ids(new_journeys, journey_count):
 
     we need to change the fare id , the section id and the fare ref in the journey
     """
-    #we need to change the fare id, the section id and the fare ref in the journey
+    # we need to change the fare id, the section id and the fare ref in the journey
     for ticket in new_journeys.tickets:
         ticket.id = ticket.id + '_' + six.text_type(journey_count)
-        for i in range(len(ticket.section_id)):
-            ticket.section_id[i] = ticket.section_id[i] + '_' + six.text_type(journey_count)
+        for i, _ in enumerate(ticket.section_id):
+            ticket.section_id[i] = ticket.section_id[i] \
+                                   + '_' + six.text_type(journey_count)
 
     for count, new_journey in enumerate(new_journeys.journeys):
         for i in range(len(new_journey.fare.ticket_id)):
+            # the ticket_id inside of journeys must be the same as the one at the root of journey
             new_journey.fare.ticket_id[i] = new_journey.fare.ticket_id[i] \
-                                            + '_' + six.text_type(journey_count) \
-                                            + '_' + six.text_type(count)
+                                            + '_' + six.text_type(journey_count)
 
         for section in new_journey.sections:
-            section.id = section.id + '_' + six.text_type(journey_count) \
+            section.id = section.id + \
+                         '_' + six.text_type(journey_count) \
                          + '_' + six.text_type(count)
 
 
