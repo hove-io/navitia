@@ -37,6 +37,7 @@ import uuid
 import copy
 import logging
 import six
+import shortuuid
 
 MODE_TO_PB_MODE = {'walking': response_pb2.Walking,
                    'bike': response_pb2.Bike,
@@ -69,7 +70,7 @@ def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end,
         setattr(pt_journey.distances, mode, (getattr(pt_journey.distances, mode) + section.length))
         setattr(pt_journey.durations, mode, (getattr(pt_journey.durations, mode) + section.duration))
 
-    section.id = six.text_type(uuid.uuid4())
+    section.id = six.text_type(shortuuid.uuid())
     return section
 
 
@@ -114,15 +115,14 @@ def _align_fallback_direct_path_datetime(fallback_direct_path, fallback_extremit
     return fallback_copy
 
 
-def _rename_journey_sections_ids(start_idx, sections):
+def _rename_fallback_sections_ids(sections):
     for s in sections:
-        s.id = "dp_section_{}".format(start_idx)
-        start_idx += 1
+        s.id = six.text_type(shortuuid.uuid())
 
 
-def _extend_pt_sections_with_direct_path(pt_journey, dp_journey):
+def _extend_pt_sections_with_fallback_sections(pt_journey, dp_journey):
     if getattr(dp_journey, 'journeys', []) and hasattr(dp_journey.journeys[0], 'sections'):
-        _rename_journey_sections_ids(len(pt_journey.sections), dp_journey.journeys[0].sections)
+        _rename_fallback_sections_ids(dp_journey.journeys[0].sections)
         pt_journey.sections.extend(dp_journey.journeys[0].sections)
 
 
@@ -149,7 +149,7 @@ def _extend_journey(pt_journey, fallback_dp, fallback_period_extremity):
     else:
         aligned_fallback.journeys[0].sections[-1].destination.CopyFrom(pt_journey.sections[0].origin)
 
-    _extend_pt_sections_with_direct_path(pt_journey, aligned_fallback)
+    _extend_pt_sections_with_fallback_sections(pt_journey, aligned_fallback)
 
 
 def _build_from(requested_orig_obj, pt_journeys, dep_mode, streetnetwork_path_pool, orig_accessible_by_crowfly,
