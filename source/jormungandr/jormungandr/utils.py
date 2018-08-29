@@ -362,8 +362,8 @@ def create_object(configuration):
 
 
 def generate_id():
-    import uuid
-    return uuid.uuid4()
+    import shortuuid
+    return shortuuid.uuid()
 
 
 def get_pt_object_coord(pt_object):

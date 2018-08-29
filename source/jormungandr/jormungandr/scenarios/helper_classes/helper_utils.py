@@ -30,14 +30,12 @@
 from __future__ import absolute_import
 import math
 from jormungandr.street_network.street_network import StreetNetworkPathType
-from jormungandr.utils import PeriodExtremity, SectionSorter, get_pt_object_coord
+from jormungandr.utils import PeriodExtremity, SectionSorter, get_pt_object_coord, generate_id
 from navitiacommon import response_pb2
 from .helper_exceptions import *
-import uuid
 import copy
 import logging
 import six
-import shortuuid
 
 MODE_TO_PB_MODE = {'walking': response_pb2.Walking,
                    'bike': response_pb2.Bike,
@@ -70,7 +68,7 @@ def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end,
         setattr(pt_journey.distances, mode, (getattr(pt_journey.distances, mode) + section.length))
         setattr(pt_journey.durations, mode, (getattr(pt_journey.durations, mode) + section.duration))
 
-    section.id = six.text_type(shortuuid.uuid())
+    section.id = six.text_type(generate_id())
     return section
 
 
@@ -117,7 +115,7 @@ def _align_fallback_direct_path_datetime(fallback_direct_path, fallback_extremit
 
 def _rename_fallback_sections_ids(sections):
     for s in sections:
-        s.id = six.text_type(shortuuid.uuid())
+        s.id = six.text_type(generate_id())
 
 
 def _extend_pt_sections_with_fallback_sections(pt_journey, dp_journey):
