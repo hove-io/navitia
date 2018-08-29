@@ -89,6 +89,8 @@ class StopScheduleSerializer(PbNestedSerializer):
     display_informations = pt.RouteDisplayInformationSerializer(attr='pt_display_informations')
     date_times = DateTimeTypeSerializer(many=True, display_none=True)
     links = jsonschema.MethodField(schema_type=LinkSchema(many=True))
+    first_datetime = DateTimeTypeSerializer(display_none=True)
+    last_datetime = DateTimeTypeSerializer(display_none=True)
 
     def get_links(self, obj):
         return _get_links(obj)

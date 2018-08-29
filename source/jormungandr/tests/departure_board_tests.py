@@ -29,12 +29,11 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 
 from six.moves.urllib.parse import quote
-from collections import namedtuple
 import itertools
 from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
 import datetime
-
+from jormungandr import app
 
 def is_valid_stop_schedule_datetime(dt_wrapper, tester, only_time):
     dt = dt_wrapper["date_time"]
@@ -1109,6 +1108,8 @@ class TestSchedules(AbstractTestFixture):
 @dataset({"timezone_cape_verde_test": {}})
 class TestFirstLastDatetime(AbstractTestFixture):
     def test_first_last_datetime(self):
+        if not app.config['USE_SERPY']:
+            return
         """
         test first/last datetime
 
@@ -1130,8 +1131,8 @@ class TestFirstLastDatetime(AbstractTestFixture):
 
         stop_schedules = response['stop_schedules']
         assert stop_schedules
-        assert stop_schedules[0]['first_date_time'] == "20171002T080000"
-        assert stop_schedules[0]['last_date_time'] == "20171003T003000"
+        assert stop_schedules[0]['first_datetime']['date_time'] == "20171002T080000"
+        assert stop_schedules[0]['last_datetime']['date_time'] == "20171003T003000"
 
         """              20170102                                                20170103
                                                     from_datetime        
@@ -1146,8 +1147,8 @@ class TestFirstLastDatetime(AbstractTestFixture):
 
         stop_schedules = response['stop_schedules']
         assert stop_schedules
-        assert stop_schedules[0]['first_date_time'] == "20171003T080000"
-        assert stop_schedules[0]['last_date_time'] == "20171003T003000"
+        assert stop_schedules[0]['first_datetime']['date_time'] == "20171003T080000"
+        assert stop_schedules[0]['last_datetime']['date_time'] == "20171003T003000"
 
         """ 
                         20170103                                                  20170104    
@@ -1163,5 +1164,5 @@ class TestFirstLastDatetime(AbstractTestFixture):
 
         stop_schedules = response['stop_schedules']
         assert stop_schedules
-        assert stop_schedules[0]['first_date_time'] == "20170102T080500"
-        assert stop_schedules[0]['last_date_time'] == "20170104T004500"
+        assert stop_schedules[0]['first_datetime']['date_time'] == "20170102T080500"
+        assert stop_schedules[0]['last_datetime']['date_time'] == "20170104T004500"
