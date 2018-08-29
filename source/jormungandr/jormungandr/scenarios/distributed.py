@@ -96,14 +96,16 @@ class Scenario(new_default.Scenario):
                                                                requested_place_obj=requested_orig_obj,
                                                                modes=requested_dep_modes,
                                                                request=request,
-                                                               direct_paths_by_mode=direct_paths_by_mode)
+                                                               direct_paths_by_mode=direct_paths_by_mode,
+                                                               max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'])
 
         dest_proximities_by_crowfly = ProximitiesByCrowflyPool(future_manager=future_manager,
                                                                instance=instance,
                                                                requested_place_obj=requested_dest_obj,
                                                                modes=requested_arr_modes,
                                                                request=request,
-                                                               direct_paths_by_mode=direct_paths_by_mode)
+                                                               direct_paths_by_mode=direct_paths_by_mode,
+                                                               max_nb_crowfly_by_mode=request['max_nb_crowfly_by_mode'])
 
         orig_places_free_access = PlacesFreeAccess(future_manager=future_manager,
                                                    instance=instance,

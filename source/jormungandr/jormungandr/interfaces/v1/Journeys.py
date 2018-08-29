@@ -508,6 +508,18 @@ class Journeys(JourneyCommon):
                                      "actually a minimum.\n"
                                      "Nota 2: 'max_nb_journeys' parameter has priority over "
                                      "'timeframe_duration' parameter.")
+        parser_get.add_argument("_max_nb_crowfly_by_walking", type=int, hidden=True,
+                                help="limit nb of stop points accesible by walking crowfly, "
+                                     "used especially in distributed scenario")
+        parser_get.add_argument("_max_nb_crowfly_by_car", type=int, hidden=True,
+                                help="limit nb of stop points accesible by car crowfly, "
+                                     "used especially in distributed scenario")
+        parser_get.add_argument("_max_nb_crowfly_by_bike", type=int, hidden=True,
+                                help="limit nb of stop points accesible by bike crowfly, "
+                                     "used especially in distributed scenario")
+        parser_get.add_argument("_max_nb_crowfly_by_bss", type=int, hidden=True,
+                                help="limit nb of stop points accesible by bss crowfly, "
+                                     "used especially in distributed scenario")
 
         args = self.parsers["get"].parse_args()
 
@@ -574,6 +586,14 @@ class Journeys(JourneyCommon):
                 args['_final_line_filter'] = mod.final_line_filter
             if args.get('_max_extra_second_pass') is None:
                 args['_max_extra_second_pass'] = mod.max_extra_second_pass
+
+            # we create a new arg for internal usage, only used by distributed scenario
+            args['max_nb_crowfly_by_mode'] = mod.max_nb_crowfly_by_mode # it's a dict of str vs int
+            for mode in ('walking', 'car', 'bike', 'bss'):
+                nb_crowfly = args.get('_max_nb_crowfly_by_{}'.format(mode))
+                if nb_crowfly is not None:
+                    args['max_nb_crowfly_by_mode'][mode] = nb_crowfly
+
         if region:
             _set_specific_params(i_manager.instances[region])
         else:

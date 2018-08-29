@@ -118,7 +118,8 @@ instance_fields = {
     'min_journeys_calls': fields.Raw,
     'max_successive_physical_mode': fields.Raw,
     'final_line_filter': fields.Boolean,
-    'max_extra_second_pass': fields.Raw
+    'max_extra_second_pass': fields.Raw,
+    'max_nb_crowfly_by_mode': fields.Raw,
 }
 
 api_fields = {
