@@ -84,6 +84,18 @@ class TestJourneysDistributed(JourneyCommon, DirectPath, JourneyMinBikeMinCar, N
         assert 'walking' in jrnys[0]['tags']
         assert 'non_pt' in jrnys[0]['tags']
 
+        """
+        Test when max_nb_crowfly_by_walking=1
+        """
+        query = journey_basic_query + "&first_section_mode[]=walking&_max_nb_crowfly_by_walking=1"
+        response = self.query_region(query)
+        check_best(response)
+        jrnys = response['journeys']
+        assert len(jrnys) == 2
+        # we should find at least one pt journey in the response
+        assert any('non_pt' not in j['tags'] for j in jrnys)
+
+
     def test_best_filtering(self):
         """
         This feature is no longer supported"""
