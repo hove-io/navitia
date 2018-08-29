@@ -55,6 +55,6 @@ and finally by the quality.
 If a request returns a lot of admins, the response will be filled with the ten most important admins 
 and won't have any stop_area or way.
 
-Most of the times the complains we got on the autocompletion is that a stop_area can't be found.
+Most of the complains we've got on the autocompletion is that a stop_area can't be found.
 In fact the stop_area isn't in the ten first results, thus it isn't visible. This is due to how the "scoring" is done, when `search_mode=0` the order of the response is only based on the *global score* (aka. the *importance* of the
 object) and not on how much it matches the request.
