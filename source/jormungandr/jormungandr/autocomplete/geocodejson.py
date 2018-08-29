@@ -383,7 +383,9 @@ class GeocodeJson(AbstractAutocomplete):
 
     def __init__(self, **kwargs):
         self.host = kwargs.get('host')
-        self.timeout = kwargs.get('timeout', 10)
+        self.timeout = kwargs.get('timeout', 2) # used for slow call, like geocoding
+        # used for fast call like reverse geocoding and features
+        self.fast_timeout = kwargs.get('fast_timeout', 0.2)
         self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_BRAGI_FAIL'],
                                                 reset_timeout=app.config['CIRCUIT_BREAKER_BRAGI_TIMEOUT_S'])
 
@@ -483,7 +485,7 @@ class GeocodeJson(AbstractAutocomplete):
             return {}
         return {'pt_dataset': [i.name for i in instances]}
 
-    def make_params(self, request, instances):
+    def make_params(self, request, instances, timeout):
         params = self.basic_params(instances)
         params.update({
             "q": request["q"],
@@ -508,16 +510,18 @@ class GeocodeJson(AbstractAutocomplete):
 
         if request.get("from"):
             params["lon"], params["lat"] = self.get_coords(request["from"])
+        if timeout:
+            # bragi timeout is in ms
+            params["timeout"] = int(timeout * 1000)
 
         return params
 
     def get(self, request, instances):
-        params = self.make_params(request, instances)
+        params = self.make_params(request, instances, self.timeout)
 
         shape = request.get('shape', None)
 
         url = self.make_url('autocomplete')
-
         kwargs = {"params": params, "timeout": self.timeout}
         method = requests.get
         if shape:
@@ -552,11 +556,13 @@ class GeocodeJson(AbstractAutocomplete):
         else:
             url = self.make_url('features', uri)
 
-        raw_response = self.call_bragi(url, requests.get, timeout=self.timeout, params=params)
+        params['timeout'] = int(self.fast_timeout * 1000)
+
+        raw_response = self.call_bragi(url, requests.get, timeout=self.fast_timeout, params=params)
         return self.response_marshaler(raw_response, uri)
 
     def status(self):
-        return {'class': self.__class__.__name__, 'timeout': self.timeout}
+        return {'class': self.__class__.__name__, 'timeout': self.timeout, 'fast_timeout': self.fast_timeout}
 
 
 class GeocodeJsonError(Exception):
