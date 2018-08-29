@@ -1541,7 +1541,7 @@ class JourneysMinNbJourneys():
 
     def test_min_nb_journeys_options(self):
         """
-        The data contains only 6 journeys, so the response return at least 3 journeys.
+        The data contains only 6 journeys, so the response returns at least 3 journeys.
 
         Note : The night bus filter is loaded with default parameters.
         With this data, night bus filter parameters doesn't filter anything.

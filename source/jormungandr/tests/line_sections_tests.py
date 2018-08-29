@@ -397,7 +397,7 @@ class TestLineSections(AbstractTestFixture):
         assert 'line_section_on_line_1' in disrupts
         assert impacted_ids(disrupts) == {'vj:1:1'}
 
-        #this journey pass over the impacted section but do to stop on it
+        #this journey passes over the impacted section but does not stop (or transfer) on it
         #as such it isn't impacted
         r = journeys(_from='A', to='F')
         assert get_used_vj(r) == [['vj:1:1']]
