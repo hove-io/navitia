@@ -39,6 +39,7 @@ from sqlalchemy.orm import load_only, backref, aliased
 from datetime import datetime
 from sqlalchemy import func, and_, UniqueConstraint, cast, true, false
 from sqlalchemy.dialects.postgresql import ARRAY, UUID, INTERVAL
+from sqlalchemy.dialects.postgresql.json import JSONB
 from navitiacommon.utils import street_source_types, address_source_types, \
     poi_source_types, admin_source_types
 
@@ -373,7 +374,8 @@ class Instance(db.Model):
 
     # param only used by distributed scenario
     import json
-    max_nb_crowfly_by_mode = db.Column(db.PickleType(pickler=json), default=default_values.max_nb_crowfly_by_mode)
+    dumped = json.dumps(default_values.max_nb_crowfly_by_mode)
+    max_nb_crowfly_by_mode = db.Column(JSONB, default=dumped, server_default=dumped)
 
     autocomplete_backend = db.Column(db.Text, nullable=False, default=default_values.autocomplete_backend)
 
