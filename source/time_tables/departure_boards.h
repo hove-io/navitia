@@ -91,7 +91,8 @@ get_one_stop_time(const datetime_type type,
                   const std::vector<routing::JppIdx>& journey_pattern_points,
                   const DateTime max_datetime,
                   const type::Data& data,
-                  const type::RTLevel rt_level);
+                  const type::RTLevel rt_level,
+                  const size_t utc_offset);
 
 } // namespace timetable
 } // namespace navitia
