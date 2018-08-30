@@ -102,7 +102,9 @@ int main(int argn, char** argv){
     try{
         lb.bind(zmq_socket, "inproc://workers");
     }catch(zmq::error_t& e){
-        LOG4CPLUS_ERROR(logger, "zmq::socket_t::bind() failure: " << e.what());
+        LOG4CPLUS_ERROR(logger, "zmq::socket_t::bind( "<< zmq_socket << " ) failure: " << e.what());
+        threads.interrupt_all();
+        threads.join_all();
         return 1;
     }
 
