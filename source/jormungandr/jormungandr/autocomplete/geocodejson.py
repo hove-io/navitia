@@ -565,5 +565,5 @@ class GeocodeJson(AbstractAutocomplete):
         return {'class': self.__class__.__name__, 'timeout': self.timeout, 'fast_timeout': self.fast_timeout}
 
 
-class GeocodeJsonError(Exception):
+class GeocodeJsonError(RuntimeError):
     pass
