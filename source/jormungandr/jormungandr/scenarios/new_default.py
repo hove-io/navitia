@@ -735,12 +735,12 @@ def merge_responses(responses, debug):
     """
     merged_response = response_pb2.Response()
 
-    for r in responses:
+    for response_index, r in enumerate(responses):
         if r.HasField(str('error')) or not r.journeys:
             # we do not take responses with error, but if all responses have errors, we'll aggregate them
             continue
 
-        change_ids(r, len(merged_response.journeys))
+        change_ids(r, response_index)
 
         # we don't want to add a journey already there
         merged_response.journeys.extend(r.journeys)
