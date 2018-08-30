@@ -375,6 +375,8 @@ class Instance(db.Model):
     import json
     max_nb_crowfly_by_mode = db.Column(db.PickleType(pickler=json), default=default_values.max_nb_crowfly_by_mode)
 
+    autocomplete_backend = db.Column(db.Text, nullable=False, default=default_values.autocomplete_backend)
+
     def __init__(self, name=None, is_free=False, authorizations=None,
                  jobs=None):
         self.name = name
