@@ -98,7 +98,7 @@ class InstanceManager(object):
                             config.get('ridesharing'),
                             config.get('realtime_proxies', []),
                             config.get('zmq_socket_type', 'persistent'),
-                            config.get('default_autocomplete', 'kraken'))
+                            config.get('default_autocomplete', None))
         self.instances[instance.name] = instance
 
     def initialisation(self):

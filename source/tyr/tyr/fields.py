@@ -120,6 +120,7 @@ instance_fields = {
     'final_line_filter': fields.Boolean,
     'max_extra_second_pass': fields.Raw,
     'max_nb_crowfly_by_mode': fields.Raw,
+    'autocomplete_backend': fields.Raw,
 }
 
 api_fields = {

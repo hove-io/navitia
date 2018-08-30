@@ -298,3 +298,14 @@ def test_update_max_nb_crowfly_by_mode(create_instance):
     assert resp['max_nb_crowfly_by_mode']['walking'] == 4141
     assert resp['max_nb_crowfly_by_mode']['bike'] == 5000
     assert resp['max_nb_crowfly_by_mode']['bss'] == 5000
+
+def test_update_autocomplete_backend(create_instance):
+    resp = api_get('/v0/instances/fr')
+    assert resp[0]['autocomplete_backend'] == 'kraken'
+
+    params = {'autocomplete_backend': 'bragi'}
+    resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
+    assert resp['autocomplete_backend'] == 'bragi'
+
+    resp = api_get('/v0/instances/fr')
+    assert resp[0]['autocomplete_backend'] == 'bragi'
