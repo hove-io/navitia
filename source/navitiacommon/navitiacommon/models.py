@@ -374,8 +374,11 @@ class Instance(db.Model):
 
     # param only used by distributed scenario
     import json
-    dumped = json.dumps(default_values.max_nb_crowfly_by_mode)
-    max_nb_crowfly_by_mode = db.Column(JSONB, default=dumped, server_default=dumped)
+    # default value is read when there is no record in db
+    # server_default(dumped json) is the actual value stored in db, postgres will convert it to a dict when it's read
+    max_nb_crowfly_by_mode = db.Column(JSONB,
+                                       default=default_values.max_nb_crowfly_by_mode,
+                                       server_default=json.dumps(default_values.max_nb_crowfly_by_mode))
 
     autocomplete_backend = db.Column(db.Text, nullable=False, default=default_values.autocomplete_backend)
 

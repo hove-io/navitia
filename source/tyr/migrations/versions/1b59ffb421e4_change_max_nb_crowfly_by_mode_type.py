@@ -24,3 +24,5 @@ def upgrade():
 
 def downgrade():
     op.drop_column('instance', 'max_nb_crowfly_by_mode')
+    op.add_column('instance', sa.Column('max_nb_crowfly_by_mode', sa.PickleType(pickler=json), nullable=True))
+
