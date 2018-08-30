@@ -78,6 +78,8 @@ class AbstractAutocomplete(six.with_metaclass(ABCMeta, object)):
             details = self.get_by_uri(uri, instances=instances, current_datetime=current_datetime)
         except TechnicalError as e:
             log_exception(sender=None, exception=e)
+        except RuntimeError as e:
+            log_exception(sender=None, exception=e)
         except UnknownObject:
             pass
 
