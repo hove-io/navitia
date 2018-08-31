@@ -37,7 +37,7 @@ from datetime import datetime
 from jormungandr.resources_utils import ResourceUtc
 from jormungandr.interfaces.v1.transform_id import transform_id
 from jormungandr.interfaces.parsers import float_gt_0, UnsignedInteger
-from flask.ext.restful import reqparse, abort
+from flask_restful import reqparse, abort
 import logging
 from jormungandr.exceptions import RegionNotFound
 from functools import cmp_to_key

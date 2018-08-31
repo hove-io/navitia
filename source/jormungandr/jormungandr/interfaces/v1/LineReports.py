@@ -44,7 +44,7 @@ from jormungandr.interfaces.v1.serializer import api
 from jormungandr.resources_utils import ResourceUtc
 from jormungandr.utils import date_to_timestamp
 
-from flask.ext.restful import fields, reqparse
+from flask_restful import fields, reqparse
 from flask.globals import g
 from datetime import datetime
 import six

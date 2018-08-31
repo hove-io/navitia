@@ -33,7 +33,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from contextlib import contextmanager
 import queue
 from threading import Lock
-from flask.ext.restful import abort
+from flask_restful import abort
 from zmq import green as zmq
 import copy
 

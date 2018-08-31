@@ -28,7 +28,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask.ext.restful import fields
+from flask_restful import fields
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.serializer.api import GeoStatusSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer

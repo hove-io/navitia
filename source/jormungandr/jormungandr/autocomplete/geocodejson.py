@@ -39,7 +39,7 @@ import requests
 import pybreaker
 from jormungandr import app
 from jormungandr.exceptions import UnknownObject
-from flask.ext.restful import marshal, fields
+from flask_restful import marshal, fields
 from jormungandr.interfaces.v1.fields import Lit, ListLit, beta_endpoint, feed_publisher_bano, feed_publisher_osm, Integer
 import re
 
@@ -460,7 +460,6 @@ class GeocodeJson(AbstractAutocomplete):
             from jormungandr.interfaces.v1.serializer.geocode_json import GeocodePlacesSerializer
             return GeocodePlacesSerializer(json_response).data
         else:
-            from flask.ext.restful import marshal
             m = marshal(json_response, geocodejson)
             # Removing places that are not marshalled (None)
             if isinstance(m.get('places'), list):

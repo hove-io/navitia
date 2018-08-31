@@ -33,7 +33,7 @@ import mock
 from jormungandr.autocomplete.geocodejson import GeocodeJson
 from jormungandr.interfaces.v1 import Places
 from jormungandr.tests.utils_test import MockRequests
-from flask.ext.restful import marshal_with
+from flask_restful import marshal_with
 from jormungandr.autocomplete.geocodejson import geocodejson
 from jormungandr.interfaces.v1.serializer.geocode_json import GeocodePlacesSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer

@@ -31,7 +31,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals, division
 
-from flask.ext.restful import fields, abort
+from flask_restful import fields, abort
 from flask.globals import g
 
 from jormungandr import i_manager, timezone
