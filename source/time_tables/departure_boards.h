@@ -76,8 +76,8 @@ bool line_closed (const time_duration& duration,
  */
 DateTime convert_duration_into_datetime(const datetime_type type,
                                         const DateTime date,
-                                        const pt::time_duration& opening_time,
-                                        const pt::time_duration& closing_time);
+                                        const int opening_time,
+                                        const int closing_time);
 
 /**
  * @brief Get Opening/Closing datetime with specific calendar or not.

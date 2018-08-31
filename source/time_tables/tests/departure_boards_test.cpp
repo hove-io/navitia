@@ -266,9 +266,6 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
         b.data->pt_data->routes.front()->line->closing_time = boost::posix_time::duration_from_string("09:00:00.000");
 
         data_ptr = b.data.get();
-
-        // the datetime request is on the service hole.
-        // "First" is the classic next departure and "Last" is the last departure during the next day.
         navitia::PbCreator pb_creator2(data_ptr, bt::second_clock::universal_time(), null_time_period);
         departure_board(pb_creator2, "stop_point.uri=stop1", {}, {}, d("20150615T094500"), 43200, 0,
                         10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
@@ -302,9 +299,6 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
         b.data->pt_data->routes.front()->line->closing_time = boost::posix_time::duration_from_string("01:30:00.000");
 
         data_ptr = b.data.get();
-
-        // the datetime request is on the service hole.
-        // "First" is the classic next departure and "Last" is the last departure during the next day.
         navitia::PbCreator pb_creator3(data_ptr, bt::second_clock::universal_time(), null_time_period);
         departure_board(pb_creator3, "stop_point.uri=stop1", {}, {}, d("20150615T020000"), 86400, 0,
                         10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());

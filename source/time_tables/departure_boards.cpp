@@ -391,16 +391,16 @@ void departure_board(PbCreator& pb_creator,
 
 DateTime convert_duration_into_datetime(const datetime_type type,
                                         const DateTime date,
-                                        const pt::time_duration& opening_time,
-                                        const pt::time_duration& closing_time)
+                                        const int opening_time,
+                                        const int closing_time)
 {
     if (type == datetime_type::opening) {
-        return DateTimeUtils::date(date)*DateTimeUtils::SECONDS_PER_DAY + opening_time.total_seconds();
+        return DateTimeUtils::date(date)*DateTimeUtils::SECONDS_PER_DAY + opening_time;
     } else {
-        if (closing_time.total_seconds() <= opening_time.total_seconds()) {
-            return (DateTimeUtils::date(date) + 1)*DateTimeUtils::SECONDS_PER_DAY + closing_time.total_seconds();
+        if (closing_time <= opening_time) {
+            return (DateTimeUtils::date(date) + 1)*DateTimeUtils::SECONDS_PER_DAY + closing_time;
         } else {
-            return DateTimeUtils::date(date)*DateTimeUtils::SECONDS_PER_DAY + closing_time.total_seconds();
+            return DateTimeUtils::date(date)*DateTimeUtils::SECONDS_PER_DAY + closing_time;
         }
     }
 }
@@ -424,9 +424,8 @@ get_one_stop_time(const datetime_type type,
     std::vector<routing::datetime_stop_time> stop_times;
     DateTime new_current_time = convert_duration_into_datetime(type,
                                                                current_datetime,
-                                                               opening_time,
-                                                               closing_time);
-    new_current_time -= utc_offset;
+                                                               int(opening_time.total_seconds() - utc_offset),
+                                                               int(closing_time.total_seconds() - utc_offset));
     if (calendar_id) {
 
         stop_times = routing::get_calendar_stop_times(journey_pattern_points,
