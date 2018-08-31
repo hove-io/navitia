@@ -75,10 +75,18 @@ int main(int argc, const char* const argv[]) {
     /* The X line is used to test first/last departure of a line
      * */
     b.vj("X", "11100111").uri("X:vj1")("X_S1", "08:00"_t)("X_S2", "16:00"_t)("X_S3", "24:30"_t).make();
+    b.vj("X", "11100111").uri("X:vj1")("X_S1", "09:00"_t)("X_S2", "17:00"_t)("X_S3", "25:30"_t).make();
+    b.vj("X", "11100111").uri("X:vj1")("X_S1", "10:00"_t)("X_S2", "18:00"_t)("X_S3", "26:30"_t).make();
+
     b.vj("X", "00011000").uri("X:vj2")("X_S1", "08:05"_t)("X_S2", "16:00"_t)("X_S3", "24:45"_t).make();
+    b.vj("X", "00011000").uri("X:vj2")("X_S1", "09:05"_t)("X_S2", "17:00"_t)("X_S3", "25:45"_t).make();
+    b.vj("X", "00011000").uri("X:vj2")("X_S1", "10:05"_t)("X_S2", "18:00"_t)("X_S3", "26:45"_t).make();
     auto line_X = b.lines.find("X")->second;
-    line_X->opening_time = boost::make_optional(boost::posix_time::duration_from_string("07:55"));
-    line_X->closing_time = boost::make_optional(boost::posix_time::duration_from_string("01:00"));
+
+    // opening time should be the earliest departure of all vjs of the line
+    line_X->opening_time = boost::make_optional(boost::posix_time::duration_from_string("08:00"));
+    // closing time should be the latest arrival of all vjs of the line
+    line_X->closing_time = boost::make_optional(boost::posix_time::duration_from_string("26:45"));
 
     b.generate_dummy_basis();
     b.finish();
