@@ -315,6 +315,16 @@ class Instance(flask_restful.Resource):
                             help='maximum number of second pass to get more itineraries',
                             location=('json', 'values'), default=instance.max_extra_second_pass)
 
+        parser.add_argument('max_nb_crowfly_by_mode', type=dict,
+                            help='maximum nb of crowfly, used before computing the fallback matrix,'
+                                 ' in distributed scenario',
+                            location=('json', 'values'), default=instance.max_nb_crowfly_by_mode)
+
+        parser.add_argument('autocomplete_backend', type=str, case_sensitive=False,
+                help='the name of the backend used by jormungandr for the autocompletion',
+                choices=['kraken', 'bragi'],
+                location=('json', 'values'), default=instance.autocomplete_backend)
+
         args = parser.parse_args()
 
         try:
@@ -361,7 +371,14 @@ class Instance(flask_restful.Resource):
                                        'min_journeys_calls',
                                        'max_successive_physical_mode',
                                        'final_line_filter',
-                                       'max_extra_second_pass'])
+                                       'max_extra_second_pass',
+                                       'autocomplete_backend',
+                                    ])
+            max_nb_crowfly_by_mode = args.get('max_nb_crowfly_by_mode')
+            import copy
+            new = copy.deepcopy(instance.max_nb_crowfly_by_mode)
+            new.update(max_nb_crowfly_by_mode)
+            instance.max_nb_crowfly_by_mode = new
             db.session.commit()
         except Exception:
             logging.exception("fail")

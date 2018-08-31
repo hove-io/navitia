@@ -268,29 +268,28 @@ def updated_request_with_default(request, instance):
         request['_min_bike'] = instance.min_bike
 
 
-def change_ids(new_journeys, journey_count):
+def change_ids(new_journeys, response_index):
     """
     we have to change some id's on the response not to have id's collision between response
 
     we need to change the fare id , the section id and the fare ref in the journey
     """
-    #we need to change the fare id, the section id and the fare ref in the journey
+    # we need to change the fare id, the section id and the fare ref in the journey
+    def _change_id(old_id):
+        return '{id}_{response_index}'.format(id=old_id, response_index=response_index)
+
     for ticket in new_journeys.tickets:
-        ticket.id = ticket.id + '_' + six.text_type(journey_count)
-        for i in range(len(ticket.section_id)):
-            ticket.section_id[i] = ticket.section_id[i] + '_' + six.text_type(journey_count)
+        ticket.id = _change_id(ticket.id)
+        for i, _ in enumerate(ticket.section_id):
+            ticket.section_id[i] = _change_id(ticket.section_id[i])
 
     for count, new_journey in enumerate(new_journeys.journeys):
         for i in range(len(new_journey.fare.ticket_id)):
-            new_journey.fare.ticket_id[i] = new_journey.fare.ticket_id[i] \
-                                            + '_' + six.text_type(journey_count) \
-                                            + '_' + six.text_type(count)
+            # the ticket_id inside of journeys must be the same as the one at the root of journey
+            new_journey.fare.ticket_id[i] = _change_id(new_journey.fare.ticket_id[i])
 
         for section in new_journey.sections:
-            section.id = section.id + '_' + six.text_type(journey_count) \
-                         + '_' + six.text_type(count)
-
-
+            section.id = _change_id(section.id)
 
 
 def fill_uris(resp):

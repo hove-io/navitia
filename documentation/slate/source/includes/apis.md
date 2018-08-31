@@ -546,42 +546,39 @@ Differents kind of objects can be returned (sorted as):
 
 Here is a typical use case. A traveler has to find a line between the
 1500 lines around Paris.
-For example, he could key without any filters:
 
-<div data-collapse>
-    <p>traveler input: "bob"</p>
-    <ul>
-        <li>network : "bobby network"</li>
-        <li>line : "bobby bus 1"</li>
-        <li>line : "bobby bus 2"</li>
-        <li>route : "bobby bus 1 to green"</li>
-        <li>route : "bobby bus 1 to rose"</li>
-        <li>route : "bobby bus 2 to yellow"</li>
-        <li>stop_area : "...</li>
-    </ul>
-</div>
-<div data-collapse>
-    <p>traveler input: "bobby met"</p>
-    <ul>
-        <li>line : "bobby metro 1"</li>
-        <li>line : "bobby metro 11"</li>
-        <li>line : "bobby metro 2"</li>
-        <li>line : "bobby metro 3"</li>
-        <li>route : "bobby metro 1 to Martin"</li>
-        <li>route : "bobby metro 1 to Mahatma"</li>
-        <li>route : "bobby metro 11 to Marcus"</li>
-        <li>route : "bobby metro 11 to Steven"</li>
-        <li>route : "...</li>
-    </ul>
-</div>
-<div data-collapse>
-    <p>traveler input: "bobby met 11" or "bobby metro 11"</p>
-    <ul>
-        <li>line : "bobby metro 11"</li>
-        <li>route : "bobby metro 11 to Marcus"</li>
-        <li>route : "bobby metro 11 to Steven"</li>
-    </ul>
-</div>
+#### Examples
+
+User could type one of the following without any filters:
+
+##### Traveler input "bob":
+
+-  network : "bobby network"
+-  line : "bobby bus 1"
+-  line : "bobby bus 2"
+-  route : "bobby bus 1 to green"
+-  route : "bobby bus 1 to rose"
+-  route : "bobby bus 2 to yellow"
+-  stop_area : "...
+
+##### Traveler input "bobby met":
+
+-  line : "bobby metro 1"
+-  line : "bobby metro 11"
+-  line : "bobby metro 2"
+-  line : "bobby metro 3"
+-  route : "bobby metro 1 to Martin"
+-  route : "bobby metro 1 to Mahatma"
+-  route : "bobby metro 11 to Marcus"
+-  route : "bobby metro 11 to Steven"
+-  route : "...
+
+##### Traveler input: "bobby met 11" or "bobby metro 11":
+
+-  line : "bobby metro 11"
+-  route : "bobby metro 11 to Marcus"
+-  route : "bobby metro 11 to Steven"
+
 
 ### Access
 
@@ -966,8 +963,9 @@ In a journey's response, different disruptions may have different meanings.
 Each journey has a `status` attribute that indicates the most serious disruption effect.
 Disruptions are on the sections, the ones that impact the journey are in the sections's display_informations links  (`sections[].display_informations.links[]`).
 
-You might also have others disruptions in the response. They don't directly impact the journey, but might affect them. By example, some intermediate stops of a section can be
-disrupted, it doesn't prevent the journey from beeing executed but modifies it. These disruptions won't be on the `display_informations` of the sections or used in the journey's status.
+You might also have other disruptions in the response. They don't directly impact the journey, but might affect them.
+For example, some intermediate stops of a section can be disrupted, it doesn't prevent the journey from being realised but modifies it.
+These disruptions won't be on the `display_informations` of the sections or used in the journey's status.
 
 ### <a name="journeys-parameters"></a>Main parameters
 
@@ -977,7 +975,7 @@ disrupted, it doesn't prevent the journey from beeing executed but modifies it. 
 | nop       | to                      | id            | The id of the arrival of your journey. If none are provided an isochrone is computed   |               |
 | nop       | datetime                | [iso-date-time](#iso-date-time) | Date and time to go.<br>Note: the datetime must be in the [coverage's publication period](#coverage)                                                   | now           |
 | nop       | datetime_represents     | string        | Can be `departure` or `arrival`.<br>If `departure`, the request will retrieve journeys starting after datetime.<br>If `arrival` it will retrieve journeys arriving before datetime.                      | departure     |
-| nop       | <a name="traveler-type"></a>traveler_type | enum | Define speeds and accessibility values for different kind of people.<br>Each profile also automatically determines appropriate first and last section modes to the covered area. Note: this means that you might get car, bike, etc fallback routes even if you set `forbidden_uris[]`! You can overload all parameters (especially speeds, distances, first and last modes) by setting all of them specifically. We advise that you don't rely on the traveler_type's fallback modes (`first_section_mode[]` and `last_section_mode[]`) and set them yourself.<br><div data-collapse><p>enum values:</p><ul><li>standard</li><li>slow_walker</li><li>fast_walker</li><li>luggage</li><li>wheelchair</li></ul></div>| standard      |
+| nop       | <a name="traveler-type"></a>traveler_type | enum | Define speeds and accessibility values for different kind of people.<br>Each profile also automatically determines appropriate first and last section modes to the covered area. Note: this means that you might get car, bike, etc fallback routes even if you set `forbidden_uris[]`! You can overload all parameters (especially speeds, distances, first and last modes) by setting all of them specifically.<br> We advise that you don't rely on the traveler_type's fallback modes (`first_section_mode[]` and `last_section_mode[]`) and set them yourself.<br>enum values:<ul><li>standard</li><li>slow_walker</li><li>fast_walker</li><li>luggage</li><li>wheelchair</li></ul>|               |
 | nop       | data_freshness          | enum          | Define the freshness of data to use to compute journeys <ul><li>realtime</li><li>base_schedule</li></ul> _**when using the following parameter**_ "&data_freshness=base_schedule" <br> you can get disrupted journeys in the response. You can then display the disruption message to the traveler and make a realtime request to get a new undisrupted solution.   | base_schedule |
 | nop       | forbidden_uris[]        | id            | If you want to avoid lines, modes, networks, etc.</br> Note: the forbidden_uris[] concern only the public transport objects. You can't for example forbid the use of the bike with them, you have to set the fallback modes for this (`first_section_mode[]` and `last_section_mode[]`) |               |
 |nop        | allowed_id[]            | id            | If you want to use only a small subset of the public transport objects in your solution. The constraint intersects with `forbidden_uris[]`. For example, if you ask for `allowed_id[]=line:A&forbidden_uris[]=physical_mode:Bus`, only vehicles of the line A that are not buses will be used. | everything |
@@ -1566,7 +1564,7 @@ nop      | disable_geojson | boolean                | remove geojson fields from
 |route|[route](#route)|The route of the schedule|
 |date_times|Array of [pt-date-time](#pt-date-time)|When does a bus stops at the stop point|
 |stop_point|[stop_point](#stop-point)|The stop point of the schedule|
-|additional_informations|[additional_informations](#additional-informations)|Other informations, when no departures <div data-collapse><p>enum values:</p><ul><li>date_out_of_bounds</li><li>terminus</li><li>partial_terminus</li><li>active_disruption</li><li>no_departures_known</li></ul></div>|
+|additional_informations|[additional_informations](#additional-informations)|Other informations, when no departures<br> enum values:<ul><li>date_out_of_bounds</li><li>terminus</li><li>partial_terminus</li><li>active_disruption</li><li>no_departures_known</li></ul>|
 
 
 <a name="departures"></a>Departures
@@ -1781,6 +1779,7 @@ no       | until            | [iso-date-time](#iso-date-time) | Only display dis
 no       | count            | int                             | Maximum number of results.                        | 10
 no       | forbidden_uris[] | id                              | If you want to avoid lines, modes, networks, etc. |
 no       | disable_geojson  | boolean                         | remove geojson fields from the response           | false
+no       | tags[]           | array of string                 | Restrain the search within the given disruption tags| 
 
 The response is made of an array of [line_reports](#line-reports),
 and another one of [disruptions](#disruption).
@@ -1936,8 +1935,12 @@ For example:
 
 -   overall public transport traffic report on Ile de France coverage
     -   <https://api.navitia.io/v1/coverage/fr-idf/traffic_reports>
+-   overall public transport traffic report on Ile de France coverage with disruptions having tags passed in parameter values
+    -   <https://api.navitia.io/v1/coverage/fr-idf/traffic_reports?tags[]=incident&tags[]=alert>
 -   Is there any perturbations on the RER network ?
     -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/traffic_reports>
+-   Is there any perturbations on the RER network with disruptions having tags passed in parameter values ?
+    -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/traffic_reports?tags[]=incident&tags[]=alert>
 -   Is there any perturbations on the "RER A" line ?
     -   <https://api.navitia.io/v1/coverage/fr-idf/networks/network:RER/lines/line:OIF:810:AOIF741/line_reports?>
 

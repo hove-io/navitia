@@ -31,8 +31,6 @@ www.navitia.io
 #pragma once
 
 #include <boost/date_time/posix_time/posix_time.hpp>
-
-
 #include <boost/serialization/weak_ptr.hpp>
 #include <boost/serialization/serialization.hpp>
 #include <boost/date_time/gregorian/greg_serialize.hpp>
@@ -49,13 +47,15 @@ www.navitia.io
 #include <map>
 #include <vector>
 #include <string>
+
+#include "utils/exception.h"
 #include "utils/serialization_unique_ptr.h"
 #include "utils/serialization_unique_ptr_container.h"
 
 #include "type/type.h"
 
-namespace navitia { namespace type {
-
+namespace navitia {
+namespace type {
 namespace disruption {
 
 enum class Effect {
@@ -265,6 +265,7 @@ struct AuxInfoForMetaVJ {
 }
 
 struct Impact {
+    using SharedImpact = boost::shared_ptr<Impact>;
     std::string uri;
     boost::posix_time::ptime created_at;
     boost::posix_time::ptime updated_at;
@@ -300,13 +301,13 @@ struct Impact {
 
     // add the ptobj to the enformed entities and make all the needed backref
     // Note: it's a static method because we need the shared_ptr to the impact
-    static void link_informed_entity(PtObj ptobj, boost::shared_ptr<Impact>& impact, const boost::gregorian::date_period&, type::RTLevel);
+    static void link_informed_entity(PtObj ptobj, SharedImpact& impact, const boost::gregorian::date_period&, type::RTLevel);
 
     bool is_valid(const boost::posix_time::ptime& current_time, const boost::posix_time::time_period& action_period) const;
     bool is_relevant(const std::vector<const StopTime*>& stop_times) const;
     bool is_only_line_section() const;
     bool is_line_section_of(const Line&) const;
-
+    Indexes get(Type_e target, const PT_Data & pt_data) const;
     const type::ValidityPattern get_impact_vp(const boost::gregorian::date_period& production_date) const;
 
     bool operator<(const Impact& other);
@@ -371,8 +372,8 @@ struct Disruption {
            & created_at & updated_at & cause & impacts & localization & tags & note & contributor & properties;
     }
 
-    void add_impact(const boost::shared_ptr<Impact>& impact, DisruptionHolder& holder);
-    const std::vector<boost::shared_ptr<Impact>>& get_impacts() const {
+    void add_impact(const Impact::SharedImpact& impact, DisruptionHolder& holder);
+    const std::vector<Impact::SharedImpact>& get_impacts() const {
         return impacts;
     }
 
@@ -382,7 +383,7 @@ private:
     //Disruption have the ownership of the Impacts.  Impacts are
     //shared_ptr and not unique_ptr because there are weak_ptr
     //pointing to them in the impacted objects
-    std::vector<boost::shared_ptr<Impact>> impacts;
+    std::vector<Impact::SharedImpact> impacts;
 };
 
 class DisruptionHolder {

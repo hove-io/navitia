@@ -104,8 +104,8 @@ int main(int argc, const char* const argv[]) {
 	// Line B
     b.vj("B", "111111", "", false, "vj5")("stop_point:sa1:s2", "8:00"_t, "8:05"_t)("stop_point:sa3:s2", "8:15"_t, "8:16"_t);
     b.lines["B"]->code = "B";
-	b.lines["B"]->color = "5AC8BC";
-	b.lines["B"]->text_color = "FFFFFF";
+    b.lines["B"]->color = "5AC8BC";
+    b.lines["B"]->text_color = "FFFFFF";
 
     // journey 3
     // adding new vjs to test timeframe_duration and max_nb_journeys

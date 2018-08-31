@@ -636,11 +636,13 @@ class JourneyCommon(object):
         assert len(jrnys) == 2
         section_0 = jrnys[0]['sections'][0]
         assert section_0['type'] == 'crow_fly'
+        assert section_0['mode'] == 'walking'
         assert section_0['from']['id'] == 'stopA'
         assert section_0['to']['id'] == 'stop_point:stopA'
 
         section_2 = jrnys[0]['sections'][2]
         assert section_2['type'] == 'crow_fly'
+        assert section_0['mode'] == 'walking'
         assert section_2['from']['id'] == 'stop_point:stopB'
         assert section_2['to']['id'] == 'stopB'
 
@@ -1539,7 +1541,7 @@ class JourneysMinNbJourneys():
 
     def test_min_nb_journeys_options(self):
         """
-        The data contains only 6 journeys, so the response return at least 3 journeys.
+        The data contains only 6 journeys, so the response returns at least 3 journeys.
 
         Note : The night bus filter is loaded with default parameters.
         With this data, night bus filter parameters doesn't filter anything.

@@ -1345,11 +1345,6 @@ BOOST_AUTO_TEST_CASE(geolocalization) {
     ac->edges.push_back(std::make_pair(AA, CC));
     ac->edges.push_back(std::make_pair(CC, AA));
 
-    /*
-    b.generate_dummy_basis();
-    b.data->pt_data->index();
-    b.data->build_raptor();
-    */
     b.data->build_uri();
     b.data->build_proximity_list();
 

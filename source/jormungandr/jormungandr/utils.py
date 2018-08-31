@@ -362,8 +362,8 @@ def create_object(configuration):
 
 
 def generate_id():
-    import uuid
-    return uuid.uuid4()
+    import shortuuid
+    return shortuuid.uuid()
 
 
 def get_pt_object_coord(pt_object):
@@ -648,3 +648,7 @@ def portable_min(*args, **kwargs):
             raise
     if PY3:
         return min(*args, **kwargs)
+
+
+def mps_to_kmph(speed):
+    return round(3.6 * speed)

@@ -7,22 +7,22 @@ Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -118,19 +118,19 @@ Jointures::Jointures() {
     boost::add_edge(vertex_map.at(Type_e::Connection), vertex_map.at(Type_e::StopPoint), g);
 
     // D'une connection on a ses deux stop points
-    boost::add_edge(vertex_map[Type_e::StopPoint], vertex_map[Type_e::Connection], g);
+    boost::add_edge(vertex_map.at(Type_e::StopPoint), vertex_map.at(Type_e::Connection), g);
 
     //De poi vers poi type et vice et versa
-    boost::add_edge(vertex_map[Type_e::POI], vertex_map[Type_e::POIType], g);
-    boost::add_edge(vertex_map[Type_e::POIType], vertex_map[Type_e::POI], g);
+    boost::add_edge(vertex_map.at(Type_e::POI), vertex_map.at(Type_e::POIType), g);
+    boost::add_edge(vertex_map.at(Type_e::POIType), vertex_map.at(Type_e::POI), g);
 
     //from line to calendar
-    boost::add_edge(vertex_map[Type_e::Calendar], vertex_map[Type_e::Line], g);
-    boost::add_edge(vertex_map[Type_e::Line], vertex_map[Type_e::Calendar], g);
+    boost::add_edge(vertex_map.at(Type_e::Calendar), vertex_map.at(Type_e::Line), g);
+    boost::add_edge(vertex_map.at(Type_e::Line), vertex_map.at(Type_e::Calendar), g);
 
     // from line_group to lines
-    boost::add_edge(vertex_map[Type_e::LineGroup], vertex_map[Type_e::Line], g);
-    boost::add_edge(vertex_map[Type_e::Line], vertex_map[Type_e::LineGroup], g);
+    boost::add_edge(vertex_map.at(Type_e::LineGroup), vertex_map.at(Type_e::Line), g);
+    boost::add_edge(vertex_map.at(Type_e::Line), vertex_map.at(Type_e::LineGroup), g);
 
     // From a MetaVehicleJourney, we can have its VehicleJourneys.
     boost::add_edge(vertex_map.at(Type_e::VehicleJourney), vertex_map.at(Type_e::MetaVehicleJourney), g);
@@ -163,6 +163,12 @@ Jointures::Jointures() {
     for (auto object: objects_having_impacts) {
         boost::add_edge(vertex_map.at(Type_e::Impact), vertex_map.at(object), g);
     }
+
+    // Retrieve a Line from an Impact. The edge has a super heavy weight to make sure we don't go
+    // through the impact object to resolve another type. Because objects might not have impact attached,
+    // we would not convert object properly otherwise.
+    boost::add_edge(vertex_map.at(Type_e::Line), vertex_map.at(Type_e::Impact), Edge(100), g);
+    boost::add_edge(vertex_map.at(Type_e::Network), vertex_map.at(Type_e::Impact), Edge(100), g);
 }
 
 // Retourne un map qui indique pour chaque type par quel type on peut l'atteindre

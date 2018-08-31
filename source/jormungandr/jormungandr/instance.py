@@ -35,6 +35,7 @@ import queue
 from threading import Lock
 from flask.ext.restful import abort
 from zmq import green as zmq
+import copy
 
 from jormungandr.exceptions import TechnicalError
 from navitiacommon import response_pb2, request_pb2, type_pb2
@@ -130,12 +131,25 @@ class Instance(object):
         self.schedule = schedule.MixedSchedule(self)
         self.realtime_proxy_manager = realtime_schedule.RealtimeProxyManager(realtime_proxies_configuration, self)
 
-        self.autocomplete = global_autocomplete.get(autocomplete_type)
-        if not self.autocomplete:
-            raise TechnicalError('impossible to find autocomplete system {} '
+        self._autocomplete_type = autocomplete_type
+        if self._autocomplete_type is not None and self._autocomplete_type not in global_autocomplete:
+            raise RuntimeError('impossible to find autocomplete system {} '
                                  'cannot initialize instance {}'.format(autocomplete_type, name))
 
         self.zmq_socket_type = zmq_socket_type
+
+    @property
+    def autocomplete(self):
+        if self._autocomplete_type:
+            # retrocompat: we need to continue to read configuration from file
+            # while we migrate to database configuration
+            return global_autocomplete.get(self._autocomplete_type)
+        backend = global_autocomplete.get(self.autocomplete_backend)
+        if backend is None:
+            raise RuntimeError('impossible to find autocomplete {} for instance {}'
+                               .format(self.autocomplete_backend, self.name))
+        return backend
+
 
     def get_models(self):
         if self.name not in g.instances_model:
@@ -194,6 +208,11 @@ class Instance(object):
     def journey_order(self):
         instance_db = self.get_models()
         return get_value_or_default('journey_order', instance_db, self.name)
+
+    @property
+    def autocomplete_backend(self):
+        instance_db = self.get_models()
+        return get_value_or_default('autocomplete_backend', instance_db, self.name)
 
     @property
     def max_walking_duration_to_pt(self):
@@ -395,6 +414,12 @@ class Instance(object):
     def max_extra_second_pass(self):
         instance_db = self.get_models()
         return get_value_or_default('max_extra_second_pass', instance_db, self.name)
+
+    @property
+    def max_nb_crowfly_by_mode(self):
+        instance_db = self.get_models()
+        # the value by default is a dict...
+        return copy.deepcopy(get_value_or_default('max_nb_crowfly_by_mode', instance_db, self.name))
 
     @contextmanager
     def socket(self, context):

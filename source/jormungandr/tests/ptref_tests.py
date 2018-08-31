@@ -921,12 +921,9 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         disruptions_uris = set([d['uri'] for d in disruptions])
         assert {"too_bad_line_C", "too_bad_all_lines"} == disruptions_uris
 
-        # we can't access object from the disruption though (we don't think it to be useful for the moment)
+        # we can access line object from the disruption
         response, status = self.query_region('disruptions/too_bad_line_C/lines', check=False)
-        assert status == 404
-        e = get_not_null(response, 'error')
-        assert e['id'] == 'unknown_object'
-        assert e['message'] == 'ptref : Filters: Unable to find object'
+        assert status == 200
 
     def test_trips(self):
         """test the /trips api"""

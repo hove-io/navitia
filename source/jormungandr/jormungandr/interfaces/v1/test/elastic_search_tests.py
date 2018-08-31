@@ -586,7 +586,7 @@ def bragi_call_test():
         ]
     }
     mock_requests = MockRequests({
-        'http://bob.com/autocomplete?q=rue+bobette&limit=10':
+        'http://bob.com/autocomplete?q=rue+bobette&limit=10&timeout=2000':
         (bragi_response, 200)
     })
     from jormungandr import app
@@ -624,8 +624,8 @@ def bragi_make_params_with_instance_test():
         "count": 20
     }
 
-    params = bragi.make_params(request=request, instances=[instance])
-    rsp = {'q': 'aa', 'limit': 20, 'pt_dataset': ['bib']}
+    params = bragi.make_params(request=request, instances=[instance], timeout=1)
+    rsp = {'q': 'aa', 'limit': 20, 'pt_dataset': ['bib'], 'timeout': 1000}
     len(list(rsp.keys())) == len(list(params.keys()))
     for key, value in rsp.items():
         assert key in params
@@ -644,8 +644,8 @@ def bragi_make_params_without_instance_test():
         "count": 20
     }
 
-    params = bragi.make_params(request=request, instances=[])
-    rsp = {'q': 'aa', 'limit': 20}
+    params = bragi.make_params(request=request, instances=[], timeout=0.1)
+    rsp = {'q': 'aa', 'limit': 20, 'timeout': 100}
     assert len(list(rsp.keys())) == len(list(params.keys()))
     for key, value in rsp.items():
         assert key in params

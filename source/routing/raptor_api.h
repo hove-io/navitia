@@ -236,7 +236,7 @@ void make_pathes(PbCreator& pb_creator,
                  const uint32_t free_radius_to = 0);
 
 /**
- * @brief This function determine the breaking condition that depends on nb of found journeys,
+ * @brief This function determines the breaking condition that depends on nb of found journeys,
  * min_nb_journeys and time frame.
  *
  * @details
@@ -259,11 +259,11 @@ void make_pathes(PbCreator& pb_creator,
  *
  */
 bool keep_going(const uint32_t total_nb_journeys,
-                       const uint32_t nb_try,
-                       const bool clockwise,
-                       const DateTime request_date_secs,
-                       const boost::optional<uint32_t>& min_nb_journeys,
-                       const boost::optional<DateTime>& timeframe_limit,
-                       const uint32_t max_transfers);
+                const uint32_t nb_try,
+                const bool clockwise,
+                const DateTime request_date_secs,
+                const boost::optional<uint32_t>& min_nb_journeys,
+                const boost::optional<DateTime>& timeframe_limit,
+                const uint32_t max_transfers);
 } // namespace routing
 } // namespace navitia

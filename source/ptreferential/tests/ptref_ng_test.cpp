@@ -57,7 +57,7 @@ namespace {
         BOOST_CHECK_EQUAL(ss.str(), expected);
     }
 
-    std::string get_disruption_uri(navitia::idx_t id, const navitia::type::Data & data) {
+    std::string get_disruption_name(navitia::idx_t id, const navitia::type::Data & data) {
         auto impact = data.pt_data->disruption_holder.get_impact(id);
         BOOST_REQUIRE(impact && impact->disruption);
         return impact->disruption->uri;
@@ -267,12 +267,10 @@ BOOST_AUTO_TEST_CASE(make_request_since_forbidden_uris) {
 
 BOOST_AUTO_TEST_CASE(ng_specific_features) {
     ed::builder b("20180710");
-    b.generate_dummy_basis();
     b.vj("A")("stop0", 700)("stop1", 800)("stop2", 900);
     b.vj("B")("stop2", 700)("stop3", 800)("stop4", 900);
     b.vj("C")("stop1", 700)("stop3", 800)("stop5", 900);
-    b.finish();
-    b.data->pt_data->build_uri();
+    b.make();
 
     auto indexes = make_query_ng(Type_e::StopArea, "get vehicle_journey <- stop_area.id=stop2",
                                  {}, OdtLevel_e::all, {}, {}, *b.data);
@@ -299,15 +297,11 @@ BOOST_AUTO_TEST_CASE(ng_specific_features) {
 
 BOOST_AUTO_TEST_CASE(get_connection) {
     ed::builder b("20180710");
-    b.generate_dummy_basis();
     b.vj("A")("stop0", 700)("stop1", 800);
     b.vj("B")("stop2", 900)("stop3", 1000);
     b.connection("stop1", "stop2", 50);
     b.connection("stop2", "stop1", 50);
-    b.data->pt_data->build_uri();
-    b.data->pt_data->sort_and_index();
-    b.finish();
-    b.data->build_raptor();
+    b.make();
 
     auto indexes = make_query_ng(Type_e::Line, "(get connection <- line.id=A) - line.id=A",
                                  {}, OdtLevel_e::all, {}, {}, *b.data);
@@ -317,7 +311,6 @@ BOOST_AUTO_TEST_CASE(get_connection) {
 
 BOOST_AUTO_TEST_CASE(get_disruption_by_tag) {
     ed::builder b("20180710");
-    b.generate_dummy_basis();
 
     navitia::apply_disruption(
         b.disrupt(nt::RTLevel::RealTime, "disrupt_0")
@@ -325,24 +318,19 @@ BOOST_AUTO_TEST_CASE(get_disruption_by_tag) {
         .impact()
         .severity(nt::disruption::Effect::NO_SERVICE)
         .get_disruption(), *b.data->pt_data, *b.data->meta);
+    b.make();
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->pt_data->build_uri();
-    b.data->build_raptor();
-
-    auto indexes = make_query_ng(Type_e::Impact, "disruption.tag=my_tag",
+    auto indexes = make_query_ng(Type_e::Impact, "disruption.tag=\"my_tag name\"",
                                   {}, OdtLevel_e::all, {}, {}, *b.data);
 
     BOOST_REQUIRE_EQUAL(indexes.size(), 1);
 
     auto idx = *indexes.begin();
-    BOOST_CHECK_EQUAL( get_disruption_uri(idx, *b.data), "disrupt_0");
+    BOOST_CHECK_EQUAL( get_disruption_name(idx, *b.data), "disrupt_0");
 }
 
 BOOST_AUTO_TEST_CASE(get_disruptions_with_multiple_tags) {
     ed::builder b("20180710");
-    b.generate_dummy_basis();
 
     navitia::apply_disruption(
         b.disrupt(nt::RTLevel::RealTime, "disrupt_0")
@@ -362,20 +350,17 @@ BOOST_AUTO_TEST_CASE(get_disruptions_with_multiple_tags) {
         .impact()
         .severity(nt::disruption::Effect::NO_SERVICE)
         .get_disruption(), *b.data->pt_data, *b.data->meta);
+    b.make();
 
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->pt_data->build_uri();
-    b.data->build_raptor();
-
-    auto indexes = make_query_ng(Type_e::Impact, "disruption.tags(tag_0,tag_2)",
-                                  {}, OdtLevel_e::all, {}, {}, *b.data);
+    auto indexes = make_query_ng(Type_e::Impact,
+                                "disruption.tags(\"tag_0 name\", \"tag_2 name\")",
+                                {}, OdtLevel_e::all, {}, {}, *b.data);
     BOOST_CHECK_EQUAL(indexes.size(), 2);
 
     std::vector<std::string> disruption_names;
     boost::range::transform(indexes, std::back_inserter(disruption_names),
                             [&b](const navitia::idx_t id) {
-        return get_disruption_uri(id, *b.data);
+        return get_disruption_name(id, *b.data);
     });
 
     auto expected_disruption_names = {"disrupt_0", "disrupt_2"};

@@ -282,3 +282,30 @@ def test_update_instances_with_invalid_scenario(create_instance):
 
     resp = api_get('/v0/instances/')
     assert resp[0]['scenario'] == 'new_default'
+
+
+def test_update_max_nb_crowfly_by_mode(create_instance):
+    resp = api_get('/v0/instances/fr')
+    assert resp[0]['max_nb_crowfly_by_mode']['car'] == 5000
+    assert resp[0]['max_nb_crowfly_by_mode']['walking'] == 5000
+    assert resp[0]['max_nb_crowfly_by_mode']['bike'] == 5000
+    assert resp[0]['max_nb_crowfly_by_mode']['bss'] == 5000
+
+    params = {"max_nb_crowfly_by_mode": {'car': 4242, 'walking': 4141}}
+    resp, status = api_put('/v0/instances/fr', data=json.dumps(params), check=False, content_type='application/json')
+    assert status == 200
+    assert resp['max_nb_crowfly_by_mode']['car'] == 4242
+    assert resp['max_nb_crowfly_by_mode']['walking'] == 4141
+    assert resp['max_nb_crowfly_by_mode']['bike'] == 5000
+    assert resp['max_nb_crowfly_by_mode']['bss'] == 5000
+
+def test_update_autocomplete_backend(create_instance):
+    resp = api_get('/v0/instances/fr')
+    assert resp[0]['autocomplete_backend'] == 'kraken'
+
+    params = {'autocomplete_backend': 'bragi'}
+    resp = api_put('/v0/instances/fr', data=json.dumps(params), content_type='application/json')
+    assert resp['autocomplete_backend'] == 'bragi'
+
+    resp = api_get('/v0/instances/fr')
+    assert resp[0]['autocomplete_backend'] == 'bragi'

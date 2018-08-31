@@ -1459,11 +1459,7 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys) {
     b.vj_with_network("nt", "A", "000111", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
     b.vj_with_network("nt", "A", "000111", "", true, "vj:2")("stop1", "08:10"_t)("stop2", "09:10"_t);
     b.vj_with_network("nt", "A", "000111", "", true, "vj:3")("stop1", "08:20"_t)("stop2", "09:20"_t);
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+    b.make();
 
     transit_realtime::TripUpdate trip_update_vj2 = ntest::make_delay_message(
         "vj:2",
@@ -1489,11 +1485,7 @@ BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys) {
 BOOST_AUTO_TEST_CASE(traffic_reports_vehicle_journeys_no_base) {
     ed::builder b("20150928");
     b.vj_with_network("nt", "A", "000110", "", true, "vj:1")("stop1", "08:00"_t)("stop2", "09:00"_t);
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_uri();
-    b.data->build_raptor();
+    b.make();
 
     transit_realtime::TripUpdate trip_update = ntest::make_delay_message(
         "vj:1",
@@ -1561,7 +1553,7 @@ BOOST_AUTO_TEST_CASE(unknown_stop_point) {
         auto res = compute(nt::RTLevel::Base, "stop1", "stop2");
         BOOST_REQUIRE_EQUAL(res.size(), 1);
         BOOST_CHECK_EQUAL(res[0].items[0].arrival, "20150928T0901"_dt);
-        
+
         // Nothing has changed, the result is the same than Base
         res = compute(nt::RTLevel::RealTime, "stop1", "stop2");
         BOOST_REQUIRE_EQUAL(res.size(), 1);
@@ -1677,11 +1669,7 @@ BOOST_AUTO_TEST_CASE(delays_with_boarding_alighting_times) {
             ("stop_point:30", "08:30"_t, "08:31"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)
             ("stop_point:40", "08:40"_t, "08:41"_t, std::numeric_limits<uint16_t>::max(), true, false, 300, 0);
 
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
 
     auto trip_update_1 = ntest::make_delay_message("vj:1",
             "20170102",
@@ -1743,11 +1731,7 @@ BOOST_AUTO_TEST_CASE(delays_on_lollipop_with_boarding_alighting_times) {
             ("stop_point:20", "08:20"_t, "08:21"_t, std::numeric_limits<uint16_t>::max(), true, true, 0, 0)
             ("stop_point:10", "08:30"_t, "08:31"_t, std::numeric_limits<uint16_t>::max(), true, true, 300, 0);
 
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
 
     auto trip_update_1 = ntest::make_delay_message("vj:1",
             "20170102",
@@ -1795,12 +1779,7 @@ BOOST_AUTO_TEST_CASE(simple_skipped_stop) {
             ("A", "08:10"_t)
             ("B", "08:20"_t)
             ("C", "08:30"_t);
-
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
 
     auto trip_update_1 = ntest::make_delay_message("vj:1",
             "20170101",
@@ -1868,12 +1847,7 @@ BOOST_AUTO_TEST_CASE(skipped_stop_then_delay) {
             ("B", "08:20"_t)
             ("C", "08:30"_t)
             ("D", "08:40"_t);
-
-    b.generate_dummy_basis();
-    b.finish();
-    b.data->pt_data->sort_and_index();
-    b.data->build_raptor();
-    b.data->build_uri();
+    b.make();
 
     auto trip_update_1 = ntest::make_delay_message("vj:1",
             "20170101",
