@@ -267,13 +267,12 @@ void departure_board(PbCreator& pb_creator,
                     handler.max_datetime, items_per_route_point, *pb_creator.data, rt_level);
             std::sort(stop_times.begin(), stop_times.end(), sort_predicate);
 
-            // retreive utc offset
-            if (!stop_times.empty()) {
-                utc_offset = stop_times[0].second->vehicle_journey->utc_to_local_offset();
-            }
-
             // Opening/Closing Time
-            if ((route->line->opening_time) && (route->line->closing_time)) {
+            if (route->line->opening_time && route->line->closing_time && !stop_times.empty()) {
+
+                // retreive utc offset
+                utc_offset = stop_times[0].second->vehicle_journey->utc_to_local_offset();
+
                 auto stop_time = get_one_stop_time(datetime_type::opening,
                                                    calendar_id,
                                                    handler.date_time,
@@ -311,13 +310,12 @@ void departure_board(PbCreator& pb_creator,
                 stop_times.resize(items_per_route_point);
             }
 
-            // retreive utc offset
-            if (!stop_times.empty()) {
-                utc_offset = stop_times[0].second->vehicle_journey->utc_to_local_offset();
-            }
-
             // Opening/Closing Time
-            if ((route->line->opening_time) && (route->line->closing_time)) {
+            if (route->line->opening_time && route->line->closing_time && !stop_times.empty()) {
+
+                // retreive utc offset
+                utc_offset = stop_times[0].second->vehicle_journey->utc_to_local_offset();
+
                 auto stop_time = get_one_stop_time(datetime_type::opening,
                                                    calendar_id,
                                                    handler.date_time,
