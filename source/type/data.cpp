@@ -689,7 +689,7 @@ Indexes Data::get_all_index(Type_e type) const {
 
 Indexes
 Data::get_target_by_source(Type_e source, Type_e target,
-                           Indexes source_idx) const {
+                           const Indexes& source_idx) const {
     Indexes result;
     result.reserve(source_idx.size());
     for(idx_t idx : source_idx) {

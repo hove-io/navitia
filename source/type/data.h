@@ -183,7 +183,7 @@ public:
     /** Étant donné une liste d'indexes pointant vers source,
       * retourne une liste d'indexes pointant vers target
       */
-    Indexes get_target_by_source(Type_e source, Type_e target, Indexes source_idx) const;
+    Indexes get_target_by_source(Type_e source, Type_e target, const Indexes& source_idx) const;
 
     /** Étant donné un index pointant vers source,
       * retourne une liste d'indexes pointant vers target
