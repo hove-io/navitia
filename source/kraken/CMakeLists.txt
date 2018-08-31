@@ -25,7 +25,7 @@ target_link_libraries(workers apply_disruption make_disruption_from_chaos rt_han
   routing time_tables tcmalloc)
 
 if(ENABLE_PROMETHEUS)
-  target_link_libraries(workers prometheus-cpp)
+  target_link_libraries(workers prometheus-cpp-core prometheus-cpp-pull)
 endif(ENABLE_PROMETHEUS)
 
 add_library(fill_disruption_from_database fill_disruption_from_database.cpp)
