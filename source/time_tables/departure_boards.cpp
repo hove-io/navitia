@@ -257,7 +257,6 @@ void departure_board(PbCreator& pb_creator,
         const type::Route* route = pb_creator.data->pt_data->routes[route_point.first.val];
 
         const auto routepoint_jpps = get_jpp_from_route_point(route_point, *pb_creator.data->dataRaptor);
-        std::cout << "route jpps " << routepoint_jpps.size() << std::endl;
 
         // date time
         std::vector<routing::datetime_stop_time> stop_times;
