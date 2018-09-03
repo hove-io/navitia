@@ -42,6 +42,8 @@ www.navitia.io
 
 #include <utility>
 
+namespace pt = boost::posix_time;
+
 namespace navitia {
 namespace timetables {
 
@@ -355,12 +357,19 @@ DateTime first_or_last_request_datetime(const datetime_type type,
                                         const routing::datetime_stop_time& first_stop_time,
                                         const int opening_time)
 {
+    // First date time case.
+    // The request date time is equal to the opening date time -1 sec.
     if (type == datetime_type::first) {
         return DateTimeUtils::date(first_stop_time.first)*DateTimeUtils::SECONDS_PER_DAY + opening_time - 1;
-    } else {
+    }
+    // Last date time case.
+    else {
+        // The request date time is equal to the opening date time -1 sec.
         if (first_stop_time.second->departure_time <= opening_time) {
             return (DateTimeUtils::date(first_stop_time.first))*DateTimeUtils::SECONDS_PER_DAY + opening_time - 1;
-        } else {
+        }
+        // The request date time is equal to the opening date time the day after -1 sec.
+        else {
             return (DateTimeUtils::date(first_stop_time.first) + 1)*DateTimeUtils::SECONDS_PER_DAY + opening_time - 1;
         }
     }

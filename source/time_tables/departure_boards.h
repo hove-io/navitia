@@ -34,8 +34,6 @@ www.navitia.io
 #include "routing/get_stop_times.h"
 #include "routing/raptor.h"
 
-namespace pt = boost::posix_time;
-
 namespace navitia {
 namespace timetables {
 
@@ -69,7 +67,7 @@ time_duration length_of_time(const time_duration& duration_1,
 bool line_closed (const time_duration& duration,
                   const time_duration& opening,
                   const time_duration& closing,
-                  const pt::ptime& date );
+                  const boost::posix_time::ptime& date );
 
 DateTime first_or_last_request_datetime(const datetime_type type,
                                         const routing::datetime_stop_time& first_stop_time,
@@ -80,7 +78,7 @@ DateTime first_or_last_request_datetime(const datetime_type type,
 boost::optional<routing::datetime_stop_time>
 get_one_stop_time(const datetime_type type,
                   const routing::datetime_stop_time& first_stop_time,
-                  const pt::time_duration& opening_time,
+                  const boost::posix_time::time_duration& opening_time,
                   const std::vector<routing::JppIdx>& journey_pattern_points,
                   const DateTime max_datetime,
                   const type::Data& data,
