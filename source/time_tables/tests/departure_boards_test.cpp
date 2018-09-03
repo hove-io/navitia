@@ -244,6 +244,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().time(), "06:00"_t);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().base_date_time(), "20150615T060000"_pts);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().time(), "10:00"_t);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().base_date_time(), "20150615T100000"_pts);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).has_first_datetime(),false);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).has_last_datetime(), false);
 
@@ -254,7 +255,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
         //
         // Input
         // - opening date time : 05:30:00
-        // - closing date time : 09:00:00
+        // - closing date time : 11:00:00
         // - request date time : 09:45:00
         //
         // Output :
@@ -263,7 +264,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
         // - route 2, first date time : none
         // - route 2, last date time  : none
         b.data->pt_data->routes.front()->line->opening_time = boost::posix_time::duration_from_string("05:30:00.000");
-        b.data->pt_data->routes.front()->line->closing_time = boost::posix_time::duration_from_string("09:00:00.000");
+        b.data->pt_data->routes.front()->line->closing_time = boost::posix_time::duration_from_string("11:00:00.000");
 
         data_ptr = b.data.get();
         navitia::PbCreator pb_creator2(data_ptr, bt::second_clock::universal_time(), null_time_period);
@@ -277,6 +278,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().time(), "06:00"_t);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().base_date_time(), "20150615T060000"_pts);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().time(), "10:00"_t);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().base_date_time(), "20150615T100000"_pts);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).has_first_datetime(),false);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).has_last_datetime(), false);
 
@@ -310,6 +312,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().time(), "06:00"_t);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().base_date_time(), "20150615T060000"_pts);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().time(), "10:00"_t);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().base_date_time(), "20150615T060000"_pts);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).has_first_datetime(),false);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).has_last_datetime(), false);
     }
