@@ -63,7 +63,6 @@ static pt::ptime d(std::string str) {
 BOOST_AUTO_TEST_CASE(departureboard_test1) {
     ed::builder b("20150615");
     b.vj("A", "110011000001", "", true, "vj1", "")
-        ("stop1", "06:00"_t, "06:00"_t)
         ("stop1", "10:00"_t, "10:00"_t)
         ("stop2", "10:30"_t, "10:30"_t);
     b.vj("B", "110000001111", "", true, "vj2", "")
@@ -211,6 +210,28 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).stop_point().uri(),"stop1");
     BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).stop_point().impact_uris_size(),0);
     }
+}
+
+BOOST_AUTO_TEST_CASE(first_last_test1) {
+    ed::builder b("20150615");
+    b.vj("A", "11111111111111", "", true, "vj1", "")
+        ("stop1", "06:00"_t, "06:00"_t)
+        ("stop1", "07:00"_t, "07:00"_t)
+        ("stop1", "10:00"_t, "10:00"_t)
+        ("stop2", "10:30"_t, "10:30"_t);
+
+    const auto it1 = b.sas.find("stop2");
+    b.data->pt_data->routes.front()->destination= it1->second; // Route A
+    b.finish();
+    b.data->pt_data->sort_and_index();
+    b.data->build_raptor();
+    b.data->pt_data->build_uri();
+
+    boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20150615");
+    boost::gregorian::date end = boost::gregorian::date_from_iso_string("20150630");
+
+    b.data->meta->production_date = boost::gregorian::date_period(begin, end);
+    pbnavitia::Response resp;
 
     // fisrt and last date time tests
     {
@@ -238,15 +259,13 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
                         10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
 
         resp = pb_creator1.get_response();
-        BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_first_datetime(),true);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_last_datetime(), true);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().time(), "06:00"_t);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().base_date_time(), "20150615T060000"_pts);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().time(), "10:00"_t);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().base_date_time(), "20150615T100000"_pts);
-        BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).has_first_datetime(),false);
-        BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).has_last_datetime(), false);
 
         // Case 2 :
         //
@@ -272,15 +291,13 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
                         10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
 
         resp = pb_creator2.get_response();
-        BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_first_datetime(),true);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_last_datetime(), true);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().time(), "06:00"_t);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().base_date_time(), "20150615T060000"_pts);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().time(), "10:00"_t);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().base_date_time(), "20150615T100000"_pts);
-        BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).has_first_datetime(),false);
-        BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).has_last_datetime(), false);
 
         // Case 3 :
         //
@@ -302,22 +319,19 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
 
         data_ptr = b.data.get();
         navitia::PbCreator pb_creator3(data_ptr, bt::second_clock::universal_time(), null_time_period);
-        departure_board(pb_creator3, "stop_point.uri=stop1", {}, {}, d("20150615T020000"), 86400, 0,
+        departure_board(pb_creator3, "stop_point.uri=stop1", {}, {}, d("20150616T020000"), 86400, 0,
                         10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
 
         resp = pb_creator3.get_response();
-        BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 2);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_first_datetime(),true);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_last_datetime(), true);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().time(), "06:00"_t);
-        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().base_date_time(), "20150615T060000"_pts);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().base_date_time(), "20150616T060000"_pts);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().time(), "10:00"_t);
-        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().base_date_time(), "20150615T060000"_pts);
-        BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).has_first_datetime(),false);
-        BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).has_last_datetime(), false);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().base_date_time(), "20150616T100000"_pts);
     }
 }
-
 BOOST_AUTO_TEST_CASE(departureboard_test_with_impacts) {
     ed::builder b("20150615");
     b.vj("A", "110011000001", "", true, "vj1", "")("stop1", 10*3600, 10*3600)("stop2", 10*3600 + 30*60,10*3600 + 30*60);
