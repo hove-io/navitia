@@ -248,8 +248,6 @@ BOOST_AUTO_TEST_CASE(first_last_test1) {
         // Output :
         // - route 1, first date time : 06:00
         // - route 1, last date time  : 10:00
-        // - route 2, first date time : none
-        // - route 2, last date time  : none
         b.data->pt_data->routes.front()->line->opening_time = boost::posix_time::duration_from_string("05:30:00.000");
         b.data->pt_data->routes.front()->line->closing_time = boost::posix_time::duration_from_string("01:30:00.000");
 
@@ -280,8 +278,6 @@ BOOST_AUTO_TEST_CASE(first_last_test1) {
         // Output :
         // - route 1, first date time : 06:00
         // - route 1, last date time  : 10:00
-        // - route 2, first date time : none
-        // - route 2, last date time  : none
         b.data->pt_data->routes.front()->line->opening_time = boost::posix_time::duration_from_string("05:30:00.000");
         b.data->pt_data->routes.front()->line->closing_time = boost::posix_time::duration_from_string("11:00:00.000");
 
@@ -312,8 +308,6 @@ BOOST_AUTO_TEST_CASE(first_last_test1) {
         // Output :
         // - route 1, first date time : 06:00
         // - route 1, last date time  : 10:00
-        // - route 2, first date time : none
-        // - route 2, last date time  : none
         b.data->pt_data->routes.front()->line->opening_time = boost::posix_time::duration_from_string("05:30:00.000");
         b.data->pt_data->routes.front()->line->closing_time = boost::posix_time::duration_from_string("01:30:00.000");
 
