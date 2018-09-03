@@ -268,16 +268,15 @@ void departure_board(PbCreator& pb_creator,
             std::sort(stop_times.begin(), stop_times.end(), sort_predicate);
 
             // Opening/Closing Time
-            if (route->line->opening_time && route->line->closing_time && !stop_times.empty()) {
+            if (route->line->opening_time && !stop_times.empty()) {
 
                 // retreive utc offset
                 utc_offset = stop_times[0].second->vehicle_journey->utc_to_local_offset();
 
-                auto stop_time = get_one_stop_time(datetime_type::opening,
-                                                   calendar_id,
-                                                   handler.date_time,
+                // first Date time
+                auto stop_time = get_one_stop_time(datetime_type::first,
+                                                   stop_times[0],
                                                    *route->line->opening_time,
-                                                   *route->line->closing_time,
                                                    routepoint_jpps,
                                                    handler.max_datetime,
                                                    *pb_creator.data,
@@ -286,11 +285,11 @@ void departure_board(PbCreator& pb_creator,
                 if (stop_time) {
                     map_route_first_point[route_point] = *stop_time;
                 }
-                stop_time = get_one_stop_time(datetime_type::closing,
-                                              calendar_id,
-                                              handler.date_time,
+
+                // last Date time
+                stop_time = get_one_stop_time(datetime_type::last,
+                                              stop_times[0],
                                               *route->line->opening_time,
-                                              *route->line->closing_time,
                                               routepoint_jpps,
                                               handler.max_datetime,
                                               *pb_creator.data,
@@ -308,40 +307,6 @@ void departure_board(PbCreator& pb_creator,
             std::sort(stop_times.begin(), stop_times.end(), routing::CalendarScheduleSort(handler.date_time));
             if (stop_times.size() > items_per_route_point) {
                 stop_times.resize(items_per_route_point);
-            }
-
-            // Opening/Closing Time
-            if (route->line->opening_time && route->line->closing_time && !stop_times.empty()) {
-
-                // retreive utc offset
-                utc_offset = stop_times[0].second->vehicle_journey->utc_to_local_offset();
-
-                auto stop_time = get_one_stop_time(datetime_type::opening,
-                                                   calendar_id,
-                                                   handler.date_time,
-                                                   *route->line->opening_time,
-                                                   *route->line->closing_time,
-                                                   routepoint_jpps,
-                                                   handler.max_datetime,
-                                                   *pb_creator.data,
-                                                   rt_level,
-                                                   utc_offset);
-                if (stop_time) {
-                    map_route_first_point[route_point] = *stop_time;
-                }
-                stop_time = get_one_stop_time(datetime_type::closing,
-                                              calendar_id,
-                                              handler.date_time,
-                                              *route->line->opening_time,
-                                              *route->line->closing_time,
-                                              routepoint_jpps,
-                                              handler.max_datetime,
-                                              *pb_creator.data,
-                                              rt_level,
-                                              utc_offset);
-                if (stop_time) {
-                    map_route_last_point[route_point] = *stop_time;
-                }
             }
         }
 
@@ -387,28 +352,25 @@ void departure_board(PbCreator& pb_creator,
                                                                        pb_creator.stop_schedules_size()));
 }
 
-DateTime convert_duration_into_datetime(const datetime_type type,
-                                        const DateTime date,
-                                        const int opening_time,
-                                        const int closing_time)
+DateTime first_or_last_request_datetime(const datetime_type type,
+                                        const routing::datetime_stop_time& first_stop_time,
+                                        const int opening_time)
 {
-    if (type == datetime_type::opening) {
-        return DateTimeUtils::date(date)*DateTimeUtils::SECONDS_PER_DAY + opening_time;
+    if (type == datetime_type::first) {
+        return DateTimeUtils::date(first_stop_time.first)*DateTimeUtils::SECONDS_PER_DAY + opening_time - 1;
     } else {
-        if (closing_time <= opening_time) {
-            return (DateTimeUtils::date(date) + 1)*DateTimeUtils::SECONDS_PER_DAY + closing_time;
+        if (first_stop_time.second->departure_time <= opening_time) {
+            return (DateTimeUtils::date(first_stop_time.first))*DateTimeUtils::SECONDS_PER_DAY + opening_time - 1;
         } else {
-            return DateTimeUtils::date(date)*DateTimeUtils::SECONDS_PER_DAY + closing_time;
+            return (DateTimeUtils::date(first_stop_time.first) + 1)*DateTimeUtils::SECONDS_PER_DAY + opening_time - 1;
         }
     }
 }
 
 boost::optional<routing::datetime_stop_time>
 get_one_stop_time(const datetime_type type,
-                  const boost::optional<const std::string>& calendar_id,
-                  const DateTime current_datetime,
+                  const routing::datetime_stop_time& first_stop_time,
                   const pt::time_duration& opening_time,
-                  const pt::time_duration& closing_time,
                   const std::vector<routing::JppIdx>& journey_pattern_points,
                   const DateTime max_datetime,
                   const type::Data& data,
@@ -416,32 +378,20 @@ get_one_stop_time(const datetime_type type,
                   const size_t utc_offset)
 {
     DateTime max_dt = max_datetime;
-    if (type == datetime_type::closing) {
+    if (type == datetime_type::last) {
         max_dt = 0; // clockwise == false
     }
-    std::vector<routing::datetime_stop_time> stop_times;
-    DateTime new_current_time = convert_duration_into_datetime(type,
-                                                               current_datetime,
-                                                               int(opening_time.total_seconds() - utc_offset),
-                                                               int(closing_time.total_seconds() - utc_offset));
-    if (calendar_id) {
+    DateTime new_current_time = first_or_last_request_datetime(type,
+                                                               first_stop_time,
+                                                               int(opening_time.total_seconds() - utc_offset));
 
-        stop_times = routing::get_calendar_stop_times(journey_pattern_points,
-                                                      DateTimeUtils::hour(new_current_time),
-                                                      DateTimeUtils::hour(max_dt),
-                                                      data,
-                                                      *calendar_id);
-        std::sort(stop_times.begin(), stop_times.end(), routing::CalendarScheduleSort(new_current_time));
-    } else {
-
-        stop_times = routing::get_stop_times(routing::StopEvent::pick_up,
-                                             journey_pattern_points,
-                                             new_current_time,
-                                             max_dt,
-                                             1,
-                                             data,
-                                             rt_level);
-    }
+    auto stop_times = routing::get_stop_times(routing::StopEvent::pick_up,
+                                         journey_pattern_points,
+                                         new_current_time,
+                                         max_dt,
+                                         1,
+                                         data,
+                                         rt_level);
     if (!stop_times.empty()) {
         return stop_times[0];
     } else {

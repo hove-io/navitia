@@ -259,7 +259,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
         //
         // Output :
         // - route 1, first date time : 06:00
-        // - route 1, last date time  : 06:00
+        // - route 1, last date time  : 10:00
         // - route 2, first date time : none
         // - route 2, last date time  : none
         b.data->pt_data->routes.front()->line->opening_time = boost::posix_time::duration_from_string("05:30:00.000");
@@ -276,7 +276,7 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_last_datetime(), true);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().time(), "06:00"_t);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().base_date_time(), "20150615T060000"_pts);
-        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().time(), "06:00"_t);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().time(), "10:00"_t);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).has_first_datetime(),false);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(1).has_last_datetime(), false);
 
