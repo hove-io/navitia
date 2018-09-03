@@ -235,6 +235,28 @@ BOOST_AUTO_TEST_CASE(first_last_test1) {
 
     // fisrt and last date time tests
     {
+        // Case 0 :
+        //
+        // Note
+        // - no opening/closing date time not available
+        //
+        // Input
+        // - request date time : 09:45:00
+        //
+        // Output :
+        // - route 1, first date time : none
+        // - route 1, last date time  : none
+
+        auto * data_ptr = b.data.get();
+        navitia::PbCreator pb_creator0(data_ptr, bt::second_clock::universal_time(), null_time_period);
+        departure_board(pb_creator0, "stop_point.uri=stop1", {}, {}, d("20150615T094500"), 43200, 0,
+                        10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+
+        resp = pb_creator0.get_response();
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_first_datetime(),false);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_last_datetime(), false);
+
         // Case 1 :
         //
         // Note
@@ -251,7 +273,7 @@ BOOST_AUTO_TEST_CASE(first_last_test1) {
         b.data->pt_data->routes.front()->line->opening_time = boost::posix_time::duration_from_string("05:30:00.000");
         b.data->pt_data->routes.front()->line->closing_time = boost::posix_time::duration_from_string("01:30:00.000");
 
-        auto * data_ptr = b.data.get();
+        data_ptr = b.data.get();
         navitia::PbCreator pb_creator1(data_ptr, bt::second_clock::universal_time(), null_time_period);
         departure_board(pb_creator1, "stop_point.uri=stop1", {}, {}, d("20150615T094500"), 43200, 0,
                         10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
