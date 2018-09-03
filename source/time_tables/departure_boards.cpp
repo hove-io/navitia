@@ -44,6 +44,15 @@ www.navitia.io
 
 namespace pt = boost::posix_time;
 
+namespace {
+    // mathmatical modulus
+    // math_mod(1, 5) == 1
+    // math_mod(-1, 5) == 4
+    int math_mod(int x, int m){
+        return (x%m + m)%m;
+    }
+}
+
 namespace navitia {
 namespace timetables {
 
@@ -262,7 +271,7 @@ void departure_board(PbCreator& pb_creator,
 
         // date time
         std::vector<routing::datetime_stop_time> stop_times;
-        size_t utc_offset = 0;
+        int32_t utc_offset = 0;
         if (! calendar_id) {
             stop_times = routing::get_stop_times(routing::StopEvent::pick_up, routepoint_jpps, handler.date_time,
                     handler.max_datetime, items_per_route_point, *pb_creator.data, rt_level);
@@ -355,7 +364,7 @@ void departure_board(PbCreator& pb_creator,
 
 DateTime first_or_last_request_datetime(const datetime_type type,
                                         const routing::datetime_stop_time& first_stop_time,
-                                        const int opening_time)
+                                        const uint32_t opening_time)
 {
     // First date time case.
     // The request date time is equal to the opening date time -1 sec.
@@ -389,9 +398,12 @@ get_one_stop_time(const datetime_type type,
     if (type == datetime_type::last) {
         max_dt = 0; // clockwise == false
     }
+    // if the opening_time is 03:00(local_time) and the utc_offset is 5 hours, we want 22:00(UTC) as opening time
+    int local_opening_time = math_mod(opening_time.total_seconds() - utc_offset, DateTimeUtils::SECONDS_PER_DAY);
+    assert(local_opening_time > 0);
     DateTime new_current_time = first_or_last_request_datetime(type,
                                                                first_stop_time,
-                                                               int(opening_time.total_seconds() - utc_offset));
+                                                               static_cast<uint32_t>(local_opening_time));
 
     auto stop_times = routing::get_stop_times(routing::StopEvent::pick_up,
                                          journey_pattern_points,
