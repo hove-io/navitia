@@ -189,7 +189,22 @@ struct LineSection {
     void serialize(Archive& ar, const unsigned int) {
         ar & line & start_point & end_point & routes;
     }
+
+    std::set<StopPoint*> get_stop_points_section() const {
+        std::set<StopPoint*> res;
+        for(const auto* route: routes) {
+            route->for_each_vehicle_journey([&](const VehicleJourney& vj) {
+                res = vj.get_sections_stop_points(start_point, end_point);
+                if(res.empty()) {
+                    return true;
+                }
+                return false;
+            });
+        }
+        return res;
+    }
 };
+
 typedef boost::variant<
     UnknownPtObj,
     Network*,
