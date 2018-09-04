@@ -28,7 +28,7 @@
 from __future__ import absolute_import
 import jormungandr
 from jormungandr.interfaces.v1.serializer import serialize_with, api
-from flask.ext.restful import marshal_with
+from flask_restful import marshal_with
 from collections import OrderedDict
 
 

@@ -30,7 +30,7 @@
 from __future__ import absolute_import
 from flask import current_app
 import flask_restful
-from flask.ext.restful import reqparse
+from flask_restful import reqparse
 import six
 
 

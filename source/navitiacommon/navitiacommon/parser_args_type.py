@@ -33,6 +33,7 @@ from collections import namedtuple
 import ujson
 import geojson
 import flask
+from flask_restful.inputs import boolean
 
 class TypeSchema(object):
     def __init__(self, type=None, metadata=None):
@@ -73,7 +74,7 @@ class BooleanType(CustomSchemaType):
     def __call__(self, value):
         if isinstance(value, bool):
              return value
-        return flask.ext.restful.inputs.boolean(value)
+        return boolean(value)
 
     def schema(self):
         return TypeSchema(type=bool)

@@ -32,7 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from copy import deepcopy
 import itertools
 import logging
-from flask.ext.restful import abort
+from flask_restful import abort
 from flask import g
 from jormungandr.scenarios import simple, journey_filter, helpers
 from jormungandr.scenarios.ridesharing.ridesharing_helper import decorate_journeys

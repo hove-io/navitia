@@ -36,7 +36,7 @@ from jormungandr.interfaces.v1.serializer import api
 from jormungandr.scenarios.utils import build_pagination, places_type
 from jormungandr.interfaces.v1.fields import NonNullList, place, NonNullNested, PbField, error, feed_publisher,\
     disruption_marshaller
-from flask.ext.restful import marshal_with, fields, abort
+from flask_restful import marshal_with, fields, abort
 import navitiacommon.request_pb2 as request_pb2
 import navitiacommon.type_pb2 as type_pb2
 from jormungandr.utils import date_to_timestamp

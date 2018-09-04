@@ -27,7 +27,7 @@
 # https://groups.google.com/d/forum/navitia
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask.ext.restful.utils import unpack
+from flask_restful.utils import unpack
 from jormungandr import i_manager, bss_provider_manager, car_park_provider_manager
 from functools import wraps
 import logging

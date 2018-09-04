@@ -35,8 +35,8 @@ import logging.config
 import os
 from flask import Flask, got_request_exception
 from flask_restful import Api
-from flask.ext.cache import Cache
-from flask.ext.cors import CORS
+from flask_cache import Cache
+from flask_cors import CORS
 import sys
 from jormungandr.exceptions import log_exception
 from jormungandr.helper import ReverseProxied, NavitiaRequest, NavitiaRule

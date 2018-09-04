@@ -28,7 +28,7 @@
 # www.navitia.io
 
 from __future__ import absolute_import, print_function, unicode_literals, division
-from flask.ext.restful import marshal
+from flask_restful import marshal
 from jormungandr import i_manager
 from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.v1.fields import address, context
@@ -39,7 +39,7 @@ import six
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer import api
 import jormungandr
-from flask.ext.restful.fields import Raw
+from flask_restful.fields import Raw
 
 
 

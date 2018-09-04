@@ -32,7 +32,7 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from collections import defaultdict
 
-from flask.ext.restful import reqparse, Resource
+from flask_restful import reqparse, Resource
 
 import jormungandr
 from jormungandr import i_manager
