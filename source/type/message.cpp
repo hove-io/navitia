@@ -262,14 +262,7 @@ struct ImpactVisitor : boost::static_visitor<pair_indexes> {
         return {Type_e::Unknown, Indexes{}};
     }
     pair_indexes operator()(const Network* n) {
-        switch(target) {
-            case Type_e::Line :
-                return {target, make_indexes(n->line_list)};
-            case Type_e::Network :
-                return {target, make_indexes(n->idx)};
-            default:
-                return {Type_e::Unknown, Indexes{}};
-        }
+        return {Type_e::Network, make_indexes(n->idx)};
     }
     pair_indexes operator()(const StopArea* sa) {
         return {Type_e::StopArea, make_indexes(sa->idx)};
@@ -283,19 +276,18 @@ struct ImpactVisitor : boost::static_visitor<pair_indexes> {
                 return {target, make_indexes(ls.line->idx)};
             case Type_e::Network:
                 return {target, make_indexes(ls.line->network->idx)};
+            case Type_e::Route:
+                return {target, make_indexes(ls.routes)};
+            case Type_e::StopPoint: {
+                const auto & sps = ls.get_stop_points_section();
+                return {target, make_indexes(sps)};
+            }
             default:
                 return {Type_e::Unknown, Indexes{}};
         }
     }
     pair_indexes operator()(const Line* l) {
-        switch(target) {
-            case Type_e::Line :
-                return {target, make_indexes(l->idx)};
-            case Type_e::Network :
-                return {target, make_indexes(l->network->idx)};
-            default:
-                return {Type_e::Unknown, Indexes{}};
-        }
+        return {Type_e::Line, make_indexes(l->idx)};
     }
     pair_indexes operator()(const Route* r) {
         return {Type_e::Route, make_indexes(r->idx)};
