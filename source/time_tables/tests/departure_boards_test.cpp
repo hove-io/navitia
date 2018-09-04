@@ -238,7 +238,7 @@ BOOST_AUTO_TEST_CASE(first_last_test1) {
         // Case 0 :
         //
         // Note
-        // - no opening/closing date time not available
+        // - opening and closing date time not available
         //
         // Input
         // - request date time : 09:45:00

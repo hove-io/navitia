@@ -40,12 +40,10 @@ www.navitia.io
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/container/flat_set.hpp>
 
-#include <utility>
-
 namespace pt = boost::posix_time;
 
 namespace {
-    // mathmatical modulus
+    // mathematical modulus
     // math_mod(1, 5) == 1
     // math_mod(-1, 5) == 4
     int math_mod(int x, int m){
@@ -269,7 +267,6 @@ void departure_board(PbCreator& pb_creator,
 
         const auto routepoint_jpps = get_jpp_from_route_point(route_point, *pb_creator.data->dataRaptor);
 
-        // date time
         std::vector<routing::datetime_stop_time> stop_times;
         int32_t utc_offset = 0;
         if (! calendar_id) {
@@ -280,7 +277,7 @@ void departure_board(PbCreator& pb_creator,
             // Opening/Closing Time
             if (route->line->opening_time && !stop_times.empty()) {
 
-                // retreive utc offset
+                // retrieve utc offset
                 utc_offset = stop_times[0].second->vehicle_journey->utc_to_local_offset();
 
                 // first Date time
