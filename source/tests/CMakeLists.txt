@@ -18,6 +18,7 @@ add_executable(main_routing_without_pt_test main_routing_without_pt_test.cpp)
 add_executable(multiple_schedules multiple_schedules.cpp)
 add_executable(line_sections_test line_sections_test.cpp)
 add_executable(timezone_cape_verde_test timezone_cape_verde_test.cpp)
+add_executable(timezone_hong_kong_test timezone_hong_kong_test.cpp)
 
 #every test must be added to this target
 add_custom_target(integration_tests_bin DEPENDS main_routing_test
@@ -33,7 +34,8 @@ add_custom_target(integration_tests_bin DEPENDS main_routing_test
                                                 main_routing_without_pt_test
                                                 multiple_schedules
                                                 line_sections_test
-                                                timezone_cape_verde_test)
+                                                timezone_cape_verde_test
+                                                timezone_hong_kong_test)
 
 
 target_link_libraries(main_routing_test ${ALL_LIBS})
@@ -50,3 +52,4 @@ target_link_libraries(main_routing_without_pt_test ${ALL_LIBS})
 target_link_libraries(multiple_schedules ${ALL_LIBS})
 target_link_libraries(line_sections_test ${ALL_LIBS})
 target_link_libraries(timezone_cape_verde_test ${ALL_LIBS})
+target_link_libraries(timezone_hong_kong_test ${ALL_LIBS})

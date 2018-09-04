@@ -47,7 +47,7 @@ int main(int argc, const char* const argv[]) {
     const auto date = "20170101";
     const auto begin = boost::gregorian::date_from_iso_string(date);
     const boost::gregorian::date_period production_date = {begin, begin + boost::gregorian::years(1)};
-    navitia::type::TimeZoneHandler::dst_periods timezones = {{-3600, {production_date}}};
+    navitia::type::TimeZoneHandler::dst_periods timezones = {{-"01:00"_t, {production_date}}};
     ed::builder b("20170101", "canal tp", "Atlantic/Cape_Verde", timezones);
 
     // Times here are UTC
@@ -85,10 +85,10 @@ int main(int argc, const char* const argv[]) {
     b.vj("X", "00011000").uri("X:vj6")("X_S1", "10:05"_t)("X_S2", "18:05"_t)("X_S3", "26:45"_t).make();
     auto line_X = b.lines.find("X")->second;
 
-    // opening time should be the earliest departure of all vjs of the line
-    line_X->opening_time = boost::make_optional(boost::posix_time::duration_from_string("08:00"));
-    // closing time should be the latest arrival of all vjs of the line
-    line_X->closing_time = boost::make_optional(boost::posix_time::duration_from_string("26:45"));
+    // the opening time should be the earliest departure of all vjs of the line and it's stored as local time
+    line_X->opening_time = boost::make_optional(boost::posix_time::duration_from_string("07:00"));
+    // the closing time should be the latest arrival of all vjs of the line and it's stored as local time
+    line_X->closing_time = boost::make_optional(boost::posix_time::duration_from_string("25:45"));
 
     b.generate_dummy_basis();
     b.finish();

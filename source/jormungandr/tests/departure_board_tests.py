@@ -1106,29 +1106,29 @@ class TestSchedules(AbstractTestFixture):
 
 
 @dataset({"timezone_cape_verde_test": {}})
-class TestFirstLastDatetime(AbstractTestFixture):
+class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
     def test_first_last_datetime(self):
         """
-        test first/last datetime
+        test first/last datetime with a timezone whose UTC offset is **negative**
 
         * The opening time should be the earliest departure of all vjs of the line
         * The closing time should be the latest arrival of all vjs of the line
 
         The closing time of line X is 02:45(local time) and the opening time is 8:00(local time)
 
-        Datetimes shown in the figure are all **UTC** datetimes
+        Datetimes shown in the figure are all **LOCAL** datetimes
 
         [2017T0101, 2017T0103] and [2017T0106, 2017T0108]
         X_s1 ------------ X_S2 ------------ X_S3
-        08:00             16:00             24:30    X:vj1
-        09:00             17:00             25:30    X:vj2
-        10:00             18:00             26:30    X:vj3
+        07:00             15:00             23:30    X:vj1
+        08:00             16:00             24:30    X:vj2
+        09:00             17:00             25:30    X:vj3
 
         [2017T0104, 2017T0105]
         X_s1 ------------ X_S2 ------------ X_S3
-        08:05             16:05             24:45    X:vj4
-        09:05             17:05             25:45    X:vj5
-        10:05             18:05             26:45    X:vj6
+        07:05             15:05             23:45    X:vj4
+        08:05             16:05             24:45    X:vj5
+        09:05             17:05             25:45    X:vj6
 
         """
 
@@ -1139,8 +1139,8 @@ class TestFirstLastDatetime(AbstractTestFixture):
                                from_datetime 20170102T1630       
                                     |  
                                     v
-         (Open)                             (Close)
-        08:00                               26:45  
+        (Open)                             (Close)
+        07:00                               25:45  
          X_s1 ------------ X_S2 ------------ X_S3
          
         """
@@ -1156,8 +1156,8 @@ class TestFirstLastDatetime(AbstractTestFixture):
                                from_datetime 20170103T0001
                                           |  
                                           v
-        (Open)                             (Close)
-        08:00                                26:45  
+        (Open)                              (Close)
+        07:00                                25:45  
          X_s1 ------------ X_S2 ------------ X_S3
 
         """
@@ -1173,8 +1173,8 @@ class TestFirstLastDatetime(AbstractTestFixture):
                                               from_datetime 20170103T0300       
                                                          |  
                                                          v
-        (Open)                             (Close)              (Open)                             (Close)
-        08:00                                26:45      03:00    08:00                              26:45  
+        (Open)                              (Close)             (Open)                             (Close)
+        07:00                                25:45       03:00   07:00                              25:45  
          X_s1 ------------ X_S2 ------------ X_S3                X_s1 ------------ X_S2 ------------ X_S3
 
         """
@@ -1192,7 +1192,7 @@ class TestFirstLastDatetime(AbstractTestFixture):
                                                         |  
                                                         v
         (Open)                             (Close)              (Open)                             (Close)
-        08:00                               26:45      03:00    08:00                               26:45  
+        07:00                                25:45       03:00   07:00                              25:45  
          X_s1 ------------ X_S2 ------------ X_S3                X_s1 ------------ X_S2 ------------ X_S3
 
         """
@@ -1209,7 +1209,7 @@ class TestFirstLastDatetime(AbstractTestFixture):
                                           |  
                                           v
         (Open)                             (Close)
-        08:00                                26:45  
+        07:00                                25:45  
          X_s1 ------------ X_S2 ------------ X_S3
 
         """
@@ -1220,3 +1220,118 @@ class TestFirstLastDatetime(AbstractTestFixture):
         assert stop_schedules
         assert stop_schedules[0]['first_datetime']['date_time'] == "20170105T150500"
         assert stop_schedules[0]['last_datetime']['date_time'] == "20170105T170500"
+
+
+@dataset({"timezone_hong_kong_test": {}})
+class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
+    def test_first_last_datetime(self):
+        """
+        test first/last datetime with a timezone whose UTC offset is **positive**
+        (opening_time - utc_offset < 0)
+
+        The closing time of line X is 07:25(local time) and the opening time is 6:00(local time)
+
+        Datetimes shown in the figure are all **UTC** datetimes
+
+        [2017T0101, 2017T0103] and [2017T0106, 2017T0108]
+        X_s1 ------------ X_S2 ------------ X_S3
+        06:00             06:30             07:00    X:vj1
+        06:10             06:40             07:10    X:vj2
+        06:20             06:50             07:20    X:vj3
+
+        [2017T0104, 2017T0105]
+        X_s1 ------------ X_S2 ------------ X_S3
+        06:05             06:35             07:05    X:vj4
+        06:05             06:45             07:15    X:vj5
+        06:05             06:55             07:25    X:vj6
+
+        """
+
+        if not app.config['USE_SERPY']:
+            return
+
+        """              20170102
+                               from_datetime 20170102T0631       
+                                    |  
+                                    v
+        (Open)                             (Close)
+        06:00                               07:25  
+         X_s1 ------------ X_S2 ------------ X_S3
+
+        """
+        response = self.query_region("stop_points/X_S2/stop_schedules?from_datetime=20170102T0631"
+                                     "&data_freshness=base_schedule")
+
+        stop_schedules = response['stop_schedules']
+        assert stop_schedules
+        assert stop_schedules[0]['first_datetime']['date_time'] == "20170102T063000"
+        assert stop_schedules[0]['last_datetime']['date_time'] == "20170102T065000"
+
+        """              20170102
+                               from_datetime 20170102T0700
+                                          |  
+                                          v
+        (Open)                             (Close)
+        06:00                               07:25  
+         X_s1 ------------ X_S2 ------------ X_S3
+
+        """
+        response = self.query_region("stop_points/X_S2/stop_schedules?from_datetime=20170103T0001"
+                                     "&data_freshness=base_schedule")
+
+        stop_schedules = response['stop_schedules']
+        assert stop_schedules
+        assert stop_schedules[0]['first_datetime']['date_time'] == "20170103T063000"
+        assert stop_schedules[0]['last_datetime']['date_time'] == "20170103T065000"
+
+        """              20170102                                                20170103
+                                              from_datetime 20170103T0300       
+                                                         |  
+                                                         v
+        (Open)                             (Close)              (Open)                             (Close)
+        06:00                               07:25       03:00    06:00                               07:25  
+         X_s1 ------------ X_S2 ------------ X_S3                X_s1 ------------ X_S2 ------------ X_S3
+
+        """
+        response = self.query_region("stop_points/X_S2/stop_schedules?from_datetime=20170103T0300"
+                                     "&data_freshness=base_schedule")
+
+        stop_schedules = response['stop_schedules']
+        assert stop_schedules
+        assert stop_schedules[0]['first_datetime']['date_time'] == "20170103T063000"
+        assert stop_schedules[0]['last_datetime']['date_time'] == "20170103T065000"
+
+        """ 
+                        20170104                                                  20170105    
+                                             from_datetime 20170105T0300        
+                                                         |  
+                                                         v
+        (Open)                             (Close)              (Open)                             (Close)
+        06:00                               07:25       03:00    06:00                               07:25  
+         X_s1 ------------ X_S2 ------------ X_S3                X_s1 ------------ X_S2 ------------ X_S3
+
+        """
+        response = self.query_region("stop_points/X_S2/stop_schedules?from_datetime=20170105T0300"
+                                     "&data_freshness=base_schedule")
+
+        stop_schedules = response['stop_schedules']
+        assert stop_schedules
+        assert stop_schedules[0]['first_datetime']['date_time'] == "20170105T063500"
+        assert stop_schedules[0]['last_datetime']['date_time'] == "20170105T065500"
+
+        """              20170105
+                               from_datetime 20170105T0730       
+                                          |  
+                                          v
+        (Open)                             (Close)
+        06:00                                07:25  
+         X_s1 ------------ X_S2 ------------ X_S3
+
+        """
+        response = self.query_region("stop_points/X_S2/stop_schedules?from_datetime=20170105T0730"
+                                     "&data_freshness=base_schedule")
+
+        stop_schedules = response['stop_schedules']
+        assert stop_schedules
+        assert stop_schedules[0]['first_datetime']['date_time'] == "20170106T063500"
+        assert stop_schedules[0]['last_datetime']['date_time'] == "20170106T065500"
