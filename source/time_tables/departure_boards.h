@@ -39,11 +39,7 @@ namespace timetables {
 
 typedef std::vector<DateTime> vector_datetime;
 typedef std::vector<routing::datetime_stop_time> vector_dt_st;
-
-enum class datetime_type {
-    first,
-    last
-};
+typedef std::pair<boost::optional<routing::datetime_stop_time>, boost::optional<routing::datetime_stop_time>> first_and_last_stop_time;
 
 void departure_board(PbCreator& pb_creator,
                      const std::string &filter,
@@ -69,21 +65,18 @@ bool line_closed (const time_duration& duration,
                   const time_duration& closing,
                   const boost::posix_time::ptime& date );
 
-DateTime first_or_last_request_datetime(const datetime_type type,
-                                        const routing::datetime_stop_time& first_stop_time,
-                                        const int opening_time);
+std::pair<DateTime, DateTime> shift_next_stop_time_to_opening_time(const routing::datetime_stop_time& next_stop_time,
+                                                                   const uint32_t opening_time);
 /**
  * @brief Return Opening/Closing datetime.
  */
-boost::optional<routing::datetime_stop_time>
-get_one_stop_time(const datetime_type type,
-                  const routing::datetime_stop_time& first_stop_time,
-                  const boost::posix_time::time_duration& opening_time,
-                  const std::vector<routing::JppIdx>& journey_pattern_points,
-                  const DateTime max_datetime,
-                  const type::Data& data,
-                  const type::RTLevel rt_level,
-                  const size_t utc_offset);
+first_and_last_stop_time get_first_and_last_stop_time(const routing::datetime_stop_time& next_stop_time,
+                                                      const pt::time_duration& opening_time,
+                                                      const std::vector<routing::JppIdx>& journey_pattern_points,
+                                                      const DateTime max_datetime,
+                                                      const type::Data& data,
+                                                      const type::RTLevel rt_level,
+                                                      const size_t utc_offset);
 
 } // namespace timetable
 } // namespace navitia
