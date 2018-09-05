@@ -342,7 +342,7 @@ std::pair<DateTime, DateTime> shift_next_stop_time_to_opening_time(const routing
 {
     uint nb_days = DateTimeUtils::date(next_stop_time.first); // Nb days from the data set origin until the next stop time.
 
-    if (next_stop_time.second->departure_time <= opening_time) {
+    if (next_stop_time.second->departure_time < opening_time) {
         return std::make_pair(nb_days*DateTimeUtils::SECONDS_PER_DAY + opening_time - 1,
                               nb_days*DateTimeUtils::SECONDS_PER_DAY + opening_time - 1);
     }
