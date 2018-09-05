@@ -67,9 +67,6 @@ bool line_closed (const time_duration& duration,
 
 std::pair<DateTime, DateTime> shift_next_stop_time_to_opening_time(const routing::datetime_stop_time& next_stop_time,
                                                                    const uint32_t opening_time);
-/**
- * @brief Return Opening/Closing stop time.
- */
 first_and_last_stop_time get_first_and_last_stop_time(const routing::datetime_stop_time& next_stop_time,
                                                       const pt::time_duration& opening_time,
                                                       const std::vector<routing::JppIdx>& journey_pattern_points,

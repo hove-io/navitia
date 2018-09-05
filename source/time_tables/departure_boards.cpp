@@ -271,7 +271,6 @@ void departure_board(PbCreator& pb_creator,
                     handler.max_datetime, items_per_route_point, *pb_creator.data, rt_level);
             std::sort(stop_times.begin(), stop_times.end(), sort_predicate);
 
-            // Opening/Closing Time
             if (route->line->opening_time && !stop_times.empty()) {
 
                 // retrieve utc offset
@@ -341,16 +340,13 @@ void departure_board(PbCreator& pb_creator,
 std::pair<DateTime, DateTime> shift_next_stop_time_to_opening_time(const routing::datetime_stop_time& next_stop_time,
                                                                    const uint32_t opening_time)
 {
-    uint nb_days = DateTimeUtils::date(next_stop_time.first); // Nb days since the opening data set date time.
+    uint nb_days = DateTimeUtils::date(next_stop_time.first); // Nb days from the data set origin until the next stop time.
+
     if (next_stop_time.second->departure_time <= opening_time) {
-        // first = opening date time the same day of next stop time - 1 seconds
-        // last  = opening date time the same day of next stop time - 1 seconds
         return std::make_pair(nb_days*DateTimeUtils::SECONDS_PER_DAY + opening_time - 1,
                               nb_days*DateTimeUtils::SECONDS_PER_DAY + opening_time - 1);
     }
     else {
-        // first = opening date time the same day of next stop time - 1 seconds
-        // last  = opening date time the day after of next stop time - 1 seconds
         return std::make_pair(nb_days*DateTimeUtils::SECONDS_PER_DAY + opening_time - 1,
                               (nb_days + 1)*DateTimeUtils::SECONDS_PER_DAY + opening_time - 1);
     }
