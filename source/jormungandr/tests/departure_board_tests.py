@@ -1119,23 +1119,23 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
     Datetimes shown in the figure are all **LOCAL** datetimes
 
     [2017T0101, 2017T0103] and [2017T0106, 2017T0108]
-    X_s1 ------------ X_S2 ------------ X_S3
-    07:00             15:00             23:30    X:vj1    route_1
-    08:00             16:00             24:30    X:vj2    route_1
-    09:00             17:00             25:30    X:vj3    route_1
+    X_s1 ------------ X_S2 ------------ X_S3 ------------ X_S4
+    07:00             15:00             23:30             24:40  X:vj1    route_1
+    08:00             16:00             24:30             24:40  X:vj2    route_1
+    09:00             17:00             25:30             25:40  X:vj3    route_1
 
     [2017T0104, 2017T0105]
-    X_s1 ------------ X_S2 ------------ X_S3
-    07:05             15:05             23:45    X:vj4    route_1
-    08:05             16:05             24:45    X:vj5    route_1
-    09:05             17:05             25:45    X:vj6    route_1
+    X_s1 ------------ X_S2 ------------ X_S3 ------------ X_S4
+    07:05             15:05             23:45             23:55  X:vj4    route_1
+    08:05             16:05             24:45             24:55  X:vj5    route_1
+    09:05             17:05             25:45             25:55  X:vj6    route_1
 
 
 
     [2017T0101, 2017T0108]
-    X_s3 ------------ X_S2 ------------ X_S1
-    08:05             16:05             24:45    X:vj7    route_2
-    09:05             17:05             25:45    X:vj8    route_2
+    X_S4 ------------ X_S3 ------------ X_S2 ------------ X_S1
+    07:55             08:05             16:05             24:45    X:vj7    route_2
+    08:55             09:05             17:05             25:45    X:vj8    route_2
 
     """
 
@@ -1144,15 +1144,15 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
             return
 
         """              20170102
-                               from_datetime 20170102T1630       
-                                    |  
-                                    v
-        (Open)                             (Close)
-        07:00                               25:45  
-         X_s1 ------------ X_S2 ------------ X_S3
+                       from_datetime 20170102T1630       
+                            |  
+                            v
+        (Open)                        (Close)
+        07:00                          25:55  
+         X_s1 ------------------------ X_S4
          
         """
-        from_datetime = "20170102T1630"
+        from_datetime = "20170102T163000"
         response = self.query_region("stop_points/X_S2/stop_schedules?from_datetime={}"
                                      "&data_freshness=base_schedule".format(from_datetime))
 
@@ -1170,21 +1170,21 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
         stop_schedules = response['stop_schedules']
         assert len(stop_schedules) == 2
         assert stop_schedules[0]['first_datetime']['date_time'] == "20170103T070000"
-        assert stop_schedules[0]['last_datetime']['date_time'] == "20170102T090000"
+        assert stop_schedules[0]['last_datetime']['date_time'] == "20170103T090000"
         # since it's the last stop_point, we cannot get on the bus....
         assert 'first_datetime' not in stop_schedules[1]
         assert 'last_datetime' not in stop_schedules[1]
 
         """              20170102
-                               from_datetime 20170103T0001
-                                          |  
-                                          v
-        (Open)                              (Close)
-        07:00                                25:45  
-         X_s1 ------------ X_S2 ------------ X_S3
+                       from_datetime 20170103T0001
+                                  |  
+                                  v
+        (Open)                        (Close)
+        07:00                          25:55  
+         X_s1 ------------------------ X_S4
 
         """
-        from_datetime = "20170103T0001"
+        from_datetime = "20170103T000100"
         response = self.query_region("stop_points/X_S2/stop_schedules?from_datetime={}"
                                      "&data_freshness=base_schedule".format(from_datetime))
 
@@ -1201,7 +1201,7 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
         stop_schedules = response['stop_schedules']
         assert len(stop_schedules) == 2
         assert stop_schedules[0]['first_datetime']['date_time'] == "20170103T070000"
-        assert stop_schedules[0]['last_datetime']['date_time'] == "20170102T090000"
+        assert stop_schedules[0]['last_datetime']['date_time'] == "20170103T090000"
         # since it's the last stop_point, we cannot get on the bus....
         assert 'first_datetime' not in stop_schedules[1]
         assert 'last_datetime' not in stop_schedules[1]
@@ -1210,15 +1210,15 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
         if not app.config['USE_SERPY']:
             return
         """              20170102                                                20170103
-                                              from_datetime 20170103T0300       
-                                                         |  
-                                                         v
-        (Open)                              (Close)             (Open)                             (Close)
-        07:00                                25:45       03:00   07:00                              25:45  
-         X_s1 ------------ X_S2 ------------ X_S3                X_s1 ------------ X_S2 ------------ X_S3
+                                      from_datetime 20170103T0300       
+                                                  |  
+                                                  v
+        (Open)                         (Close)           (Open)                       (Close)
+        07:00                          25:55     03:00   07:00                        25:55 
+         X_s1 ------------------------ X_S4              X_s1 ----------------------- X_S4
 
         """
-        from_datetime = "20170103T0300"
+        from_datetime = "20170103T030000"
         response = self.query_region("stop_points/X_S2/stop_schedules?from_datetime={}"
                                      "&data_freshness=base_schedule".format(from_datetime))
 
@@ -1235,22 +1235,22 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
         stop_schedules = response['stop_schedules']
         assert len(stop_schedules) == 2
         assert stop_schedules[0]['first_datetime']['date_time'] == "20170103T070000"
-        assert stop_schedules[0]['last_datetime']['date_time'] == "20170102T090000"
+        assert stop_schedules[0]['last_datetime']['date_time'] == "20170103T090000"
         # since it's the last stop_point, we cannot get on the bus....
         assert 'first_datetime' not in stop_schedules[1]
         assert 'last_datetime' not in stop_schedules[1]
 
         """ 
                         20170103                                                  20170104    
-                                             from_datetime 20170104T0300        
-                                                        |  
-                                                        v
-        (Open)                             (Close)              (Open)                             (Close)
-        07:00                                25:45       03:00   07:00                              25:45  
-         X_s1 ------------ X_S2 ------------ X_S3                X_s1 ------------ X_S2 ------------ X_S3
+                                         from_datetime 20170104T0300        
+                                                    |  
+                                                    v
+        (Open)                         (Close)           (Open)                       (Close)
+        07:00                          25:55     03:00   07:00                        25:55 
+         X_s1 ------------------------ X_S4              X_s1 ----------------------- X_S4
 
         """
-        from_datetime = "20170104T0300"
+        from_datetime = "20170104T030000"
         response = self.query_region("stop_points/X_S2/stop_schedules?from_datetime={}"
                                      "&data_freshness=base_schedule".format(from_datetime))
 
@@ -1276,15 +1276,15 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
         if not app.config['USE_SERPY']:
             return
         """              20170104
-                               from_datetime 20170105T0030       
-                                          |  
-                                          v
-        (Open)                             (Close)
-        07:00                                25:45  
-         X_s1 ------------ X_S2 ------------ X_S3
+                           from_datetime 20170105T0030       
+                                      |  
+                                      v
+        (Open)                        (Close)
+        07:00                          25:55  
+         X_s1 ------------------------ X_S4
 
         """
-        from_datetime = "20170105T0030"
+        from_datetime = "20170105T003000"
         response = self.query_region("stop_points/X_S2/stop_schedules?from_datetime={}"
                                      "&data_freshness=base_schedule".format(from_datetime))
 
@@ -1303,6 +1303,73 @@ class TestFirstLastDatetimeWithNegativeTimezone(AbstractTestFixture):
         assert stop_schedules[0]['first_datetime']['date_time'] == "20170105T070500"
         assert stop_schedules[0]['last_datetime']['date_time'] == "20170105T090500"
         # since it's the last stop_point, we cannot get on the bus....
+        assert 'first_datetime' not in stop_schedules[1]
+        assert 'last_datetime' not in stop_schedules[1]
+
+    def test_first_last_datetime_just_after_midnight(self):
+        if not app.config['USE_SERPY']:
+            return
+        """              20170101
+                           from_datetime 20170102T002959
+                                      |  
+                                      v
+        (Open)                        (Close)
+        07:00                          25:55  
+         X_s1 ------------------------ X_S4
+
+        """
+        from_datetime = "20170102T002959"
+        response = self.query_region("stop_points/X_S3/stop_schedules?from_datetime={}"
+                                     "&data_freshness=base_schedule".format(from_datetime))
+
+        stop_schedules = response['stop_schedules']
+        assert stop_schedules
+        assert stop_schedules[0]['first_datetime']['date_time'] == "20170101T233000"
+        assert stop_schedules[0]['last_datetime']['date_time'] == "20170102T013000"
+
+    def test_first_last_datetime_with_very_small_duration(self):
+        if not app.config['USE_SERPY']:
+            return
+        """              20170101
+                           from_datetime 20170102T002959
+                                      |  
+                                      v
+        (Open)                        (Close)
+        07:00                          25:55  
+         X_s1 ------------------------ X_S4
+
+        """
+        from_datetime = "20170102T002959"
+        response = self.query_region("stop_points/X_S3/stop_schedules?from_datetime={}"
+                                     "&data_freshness=base_schedule&duration=1".format(from_datetime))
+
+        stop_schedules = response['stop_schedules']
+        assert stop_schedules
+        assert len(stop_schedules[0]['date_times']) == 1
+        assert stop_schedules[0]['route']['name'] == 'route_1'
+        assert stop_schedules[0]['first_datetime']['date_time'] == "20170101T233000"
+        assert stop_schedules[0]['last_datetime']['date_time'] == "20170102T013000"
+
+        """              20170102
+        from_datetime 20170102T065959       
+                  |  
+                  v
+                    (Open)                        (Close)
+                    07:00                          25:55  
+                     X_s1 ------------------------ X_S4
+
+        """
+        from_datetime = "20170102T065959"
+        response = self.query_region("stop_points/X_S1/stop_schedules?from_datetime={}"
+                                     "&data_freshness=base_schedule&duration=1".format(from_datetime))
+
+        stop_schedules = response['stop_schedules']
+        assert stop_schedules
+        assert len(stop_schedules[0]['date_times']) == 1
+        assert stop_schedules[0]['first_datetime']['date_time'] == "20170102T070000"
+        assert stop_schedules[0]['last_datetime']['date_time'] == "20170102T090000"
+        # since the duration is very small we can't find anything for this route point
+        assert len(stop_schedules[1]['date_times']) == 0
         assert 'first_datetime' not in stop_schedules[1]
         assert 'last_datetime' not in stop_schedules[1]
 
@@ -1349,7 +1416,7 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
          X_s1 ------------ X_S2 ------------ X_S3
 
         """
-        from_datetime = "20170102T0631"
+        from_datetime = "20170102T063100"
         response = self.query_region("stop_points/X_S2/stop_schedules?from_datetime={}"
                                      "&data_freshness=base_schedule".format(from_datetime))
 
@@ -1366,7 +1433,7 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
         stop_schedules = response['stop_schedules']
         assert len(stop_schedules) == 2
         assert stop_schedules[0]['first_datetime']['date_time'] == "20170103T060000"
-        assert stop_schedules[0]['last_datetime']['date_time'] == "20170102T062000"
+        assert stop_schedules[0]['last_datetime']['date_time'] == "20170103T062000"
         # since it's the last stop_point, we cannot get on the bus....
         assert 'first_datetime' not in stop_schedules[1]
         assert 'last_datetime' not in stop_schedules[1]
@@ -1380,7 +1447,7 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
          X_s1 ------------ X_S2 ------------ X_S3
 
         """
-        from_datetime = "20170103T0001"
+        from_datetime = "20170103T000100"
         response = self.query_region("stop_points/X_S2/stop_schedules?from_datetime={}"
                                      "&data_freshness=base_schedule".format(from_datetime))
 
@@ -1397,7 +1464,7 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
         stop_schedules = response['stop_schedules']
         assert len(stop_schedules) == 2
         assert stop_schedules[0]['first_datetime']['date_time'] == "20170103T060000"
-        assert stop_schedules[0]['last_datetime']['date_time'] == "20170102T062000"
+        assert stop_schedules[0]['last_datetime']['date_time'] == "20170103T062000"
         # since it's the last stop_point, we cannot get on the bus....
         assert 'first_datetime' not in stop_schedules[1]
         assert 'last_datetime' not in stop_schedules[1]
@@ -1414,7 +1481,7 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
          X_s1 ------------ X_S2 ------------ X_S3                X_s1 ------------ X_S2 ------------ X_S3
 
         """
-        from_datetime = "20170103T0300"
+        from_datetime = "20170103T030000"
         response = self.query_region("stop_points/X_S2/stop_schedules?from_datetime={}"
                                      "&data_freshness=base_schedule".format(from_datetime))
 
@@ -1431,7 +1498,7 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
         stop_schedules = response['stop_schedules']
         assert len(stop_schedules) == 2
         assert stop_schedules[0]['first_datetime']['date_time'] == "20170103T060000"
-        assert stop_schedules[0]['last_datetime']['date_time'] == "20170102T062000"
+        assert stop_schedules[0]['last_datetime']['date_time'] == "20170103T062000"
         # since it's the last stop_point, we cannot get on the bus....
         assert 'first_datetime' not in stop_schedules[1]
         assert 'last_datetime' not in stop_schedules[1]
@@ -1446,7 +1513,7 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
          X_s1 ------------ X_S2 ------------ X_S3                X_s1 ------------ X_S2 ------------ X_S3
 
         """
-        from_datetime = "20170105T0300"
+        from_datetime = "20170105T030000"
         response = self.query_region("stop_points/X_S2/stop_schedules?from_datetime={}"
                                      "&data_freshness=base_schedule".format(from_datetime))
 
@@ -1481,7 +1548,7 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
          X_s1 ------------ X_S2 ------------ X_S3
 
         """
-        from_datetime = "20170105T0730"
+        from_datetime = "20170105T073000"
         response = self.query_region("stop_points/X_S2/stop_schedules?from_datetime=20170105T0730"
                                      "&data_freshness=base_schedule".format(from_datetime))
 
@@ -1500,5 +1567,54 @@ class TestFirstLastDatetimeWithPositiveTimezone(AbstractTestFixture):
         assert stop_schedules[0]['first_datetime']['date_time'] == "20170106T060500"
         assert stop_schedules[0]['last_datetime']['date_time'] == "20170106T062500"
         # since it's the last stop_point, we cannot get on the bus....
+        assert 'first_datetime' not in stop_schedules[1]
+        assert 'last_datetime' not in stop_schedules[1]
+
+    def test_first_last_datetime_with_very_small_duration(self):
+        if not app.config['USE_SERPY']:
+            return
+        """              20170102
+                            from_datetime 20170102T062959  
+                                      |  
+                                      v
+                    (Open)                             (Close)
+                    06:00                                07:20  
+                     X_s1 ------------ X_S2 ------------ X_S3
+
+        """
+        from_datetime = "20170102T062959"
+        response = self.query_region("stop_points/X_S2/stop_schedules?from_datetime={}"
+                                     "&data_freshness=base_schedule&duration=1".format(from_datetime))
+
+        stop_schedules = response['stop_schedules']
+        assert stop_schedules
+        assert len(stop_schedules[0]['date_times']) == 1
+        assert stop_schedules[0]['first_datetime']['date_time'] == "20170102T063000"
+        assert stop_schedules[0]['last_datetime']['date_time'] == "20170102T065000"
+        # since the duration is very small we can't find anything for this route point
+        assert len(stop_schedules[1]['date_times']) == 0
+        assert 'first_datetime' not in stop_schedules[1]
+        assert 'last_datetime' not in stop_schedules[1]
+
+        """              20170102
+        from_datetime 20170102T055959  
+                  |  
+                  v
+                    (Open)                             (Close)
+                    06:00                                07:20  
+                     X_s1 ------------ X_S2 ------------ X_S3
+
+        """
+        from_datetime = "20170102T055959"
+        response = self.query_region("stop_points/X_S1/stop_schedules?from_datetime={}"
+                                     "&data_freshness=base_schedule&duration=1".format(from_datetime))
+
+        stop_schedules = response['stop_schedules']
+        assert stop_schedules
+        assert len(stop_schedules[0]['date_times']) == 1
+        assert stop_schedules[0]['first_datetime']['date_time'] == "20170102T060000"
+        assert stop_schedules[0]['last_datetime']['date_time'] == "20170102T062000"
+        # since the duration is very small we can't find anything for this route point
+        assert len(stop_schedules[1]['date_times']) == 0
         assert 'first_datetime' not in stop_schedules[1]
         assert 'last_datetime' not in stop_schedules[1]

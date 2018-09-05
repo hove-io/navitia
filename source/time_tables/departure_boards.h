@@ -73,7 +73,7 @@ first_and_last_stop_time get_first_and_last_stop_time(const routing::datetime_st
                                                       const DateTime max_datetime,
                                                       const type::Data& data,
                                                       const type::RTLevel rt_level,
-                                                      const size_t utc_offset);
+                                                      const int utc_offset);
 
 } // namespace timetable
 } // namespace navitia

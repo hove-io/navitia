@@ -358,7 +358,7 @@ first_and_last_stop_time get_first_and_last_stop_time(const routing::datetime_st
                                                       const DateTime max_datetime,
                                                       const type::Data& data,
                                                       const type::RTLevel rt_level,
-                                                      const size_t utc_offset)
+                                                      const int utc_offset)
 {
     // if the opening_time is 03:00(local_time) and the utc_offset is 5 hours, we want 22:00(UTC) as opening time
     int local_opening_time = math_mod(opening_time.total_seconds() - utc_offset, DateTimeUtils::SECONDS_PER_DAY);
