@@ -34,6 +34,7 @@ www.navitia.io
 #include "type/pb_converter.h"
 #include "routing/dataraptor.h"
 #include "utils/paginate.h"
+#include "utils/functions.h"
 #include "routing/dataraptor.h"
 
 #include <boost/lexical_cast.hpp>
@@ -41,15 +42,6 @@ www.navitia.io
 #include <boost/container/flat_set.hpp>
 
 namespace pt = boost::posix_time;
-
-namespace {
-    // mathematical modulus
-    // math_mod(1, 5) == 1
-    // math_mod(-1, 5) == 4
-    int math_mod(int x, int m){
-        return (x%m + m)%m;
-    }
-}
 
 namespace navitia {
 namespace timetables {
