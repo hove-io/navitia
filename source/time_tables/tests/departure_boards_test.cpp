@@ -346,6 +346,36 @@ BOOST_AUTO_TEST_CASE(first_last_test1) {
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().base_date_time(), "20150616T060000"_pts);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().time(), "10:00"_t);
         BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().base_date_time(), "20150616T100000"_pts);
+
+        // Case 4 :
+        //
+        // Note
+        // - opening date time is equal to the next stop time.
+        //
+        // Input
+        // - opening date time : 06:00:00
+        // - next stop time    : 06:00:00
+        // - request date time : 04:00:00
+        //
+        // Output :
+        // - route 1, first date time : 06:00
+        // - route 1, last date time  : 10:00
+        b.data->pt_data->routes.front()->line->opening_time = boost::posix_time::duration_from_string("06:00:00.000");
+        b.data->pt_data->routes.front()->line->closing_time = boost::posix_time::duration_from_string("02:00:00.000");
+
+        data_ptr = b.data.get();
+        navitia::PbCreator pb_creator4(data_ptr, bt::second_clock::universal_time(), null_time_period);
+        departure_board(pb_creator4, "stop_point.uri=stop1", {}, {}, d("20150615T040000"), 86400, 0,
+                        10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+
+        resp = pb_creator4.get_response();
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_first_datetime(),true);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_last_datetime(), true);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().time(), "06:00"_t);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().base_date_time(), "20150615T060000"_pts);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().time(), "10:00"_t);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().base_date_time(), "20150615T100000"_pts);
     }
 }
 BOOST_AUTO_TEST_CASE(departureboard_test_with_impacts) {
