@@ -1017,7 +1017,9 @@ void PbCreator::Filler::fill_message(const boost::shared_ptr<nd::Impact>& impact
     if (none_of(pb_object->impact_uris(), [&](const std::string& uri) { return impact->uri == uri; })) {
         *pb_object->add_impact_uris() = impact->uri;
     }
-    pb_creator.impacts.insert(impact);
+    if (!pb_creator.disable_disruption) {
+        pb_creator.impacts.insert(impact);
+    }
 }
 template void navitia::PbCreator::Filler::fill_message<pbnavitia::Network*>(boost::shared_ptr<navitia::type::disruption::Impact> const&, pbnavitia::Network*);
 template void navitia::PbCreator::Filler::fill_message<pbnavitia::Line*>(boost::shared_ptr<navitia::type::disruption::Impact> const&, pbnavitia::Line*);
