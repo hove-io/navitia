@@ -64,6 +64,7 @@ class Kraken(AbstractAutocomplete):
         req.places.count = request['count']
         req.places.search_type = request['search_type']
         req._current_datetime = date_to_timestamp(request['_current_datetime'])
+        req.disable_disruption = True
         if request["type[]"]:
             for type in request["type[]"]:
                 if type not in places_type:

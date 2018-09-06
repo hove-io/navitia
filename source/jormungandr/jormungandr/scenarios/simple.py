@@ -189,6 +189,7 @@ class Scenario(object):
         if request["admin_uri[]"]:
             for admin_uri in request["admin_uri[]"]:
                 req.pt_objects.admin_uris.append(admin_uri)
+        req.disable_disruption = request["disable_disruption"]
 
         resp = instance.send_and_receive(req)
         #The result contains places but not pt_objects,
@@ -228,6 +229,7 @@ class Scenario(object):
 
                 req.places_nearby.types.append(places_type[type])
         req.places_nearby.filter = request["filter"]
+        req.disable_disruption = request["disable_disruption"] if request.get("disable_disruption") else False
         resp = instance.send_and_receive(req)
         build_pagination(request, resp)
         return resp
@@ -252,7 +254,7 @@ class Scenario(object):
             req.ptref.since_datetime = request['since']
         if request['until']:
             req.ptref.until_datetime = request['until']
-
+        req.disable_disruption = request["disable_disruption"]
         resp = instance.send_and_receive(req)
         build_pagination(request, resp)
         return resp
@@ -291,7 +293,6 @@ class Scenario(object):
         req.heat_map.journeys_request.max_duration = request["max_duration"]
         resp = instance.send_and_receive(req)
         return resp
-
 
     def stop_areas(self, request, instance):
         return self.__on_ptref("stop_areas", type_pb2.STOP_AREA, request,instance)

@@ -642,6 +642,55 @@ class TestPtRef(AbstractTestFixture):
 
         assert len([r for r in i.ptref.get_objs(type_pb2.ROUTE)]) == 3
 
+    def test_ptref_on_stop_areas_with_disable_disruption(self):
+        """
+        stop_area:stop1 with and without disable_disruption
+        """
+        utc_datetime = '20140115T235959'
+        response = self.query_region("stop_areas/stop_area:stop1?_current_datetime={}".format(utc_datetime))
+
+        disruptions = get_not_null(response, 'disruptions')
+
+        assert len(disruptions) == 1
+
+        response = self.query_region("stop_areas/stop_area:stop1?_current_datetime={}&disable_disruption=true".
+                                     format(utc_datetime))
+        assert len(response['disruptions']) == 0
+
+        response = self.query_region("stop_areas/stop_area:stop1?_current_datetime={}&disable_disruption=false".
+                                     format(utc_datetime))
+        assert len(response['disruptions']) == 1
+
+    def test_ptref_on_lines_with_disable_disruption(self):
+        """
+        line:A with and without disable_disruption
+        """
+        response = self.query_region("lines/line:A?_current_datetime=20140115T235959")
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) == 1
+
+        response = self.query_region("lines/line:A?_current_datetime=20140115T235959&disable_disruption=true")
+        assert len(response['disruptions']) == 0
+
+        response = self.query_region("lines/line:A?_current_datetime=20140115T235959&disable_disruption=false")
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) == 1
+
+    def test_pt_objects_with_disable_disruption(self):
+        response = self.query_region('pt_objects?q=line:A&type[]=line&_current_datetime=20140115T235959')
+        is_valid_pt_objects_response(response)
+        disruptions = get_not_null(response, 'disruptions')
+        assert len(disruptions) == 1
+        assert disruptions[0]['disruption_id'] == 'Disruption On line:A'
+
+        response = self.query_region('pt_objects?q=line:A&type[]=line&_current_datetime=20140115T235959'
+                                     '&disable_disruption=true')
+        assert len(response['disruptions']) == 0
+
+        response = self.query_region('pt_objects?q=line:A&type[]=line&_current_datetime=20140115T235959'
+                                     '&disable_disruption=false')
+        assert len(response['disruptions']) == 1
+
 
 @dataset({"main_ptref_test": {}, "main_routing_test": {}})
 class TestPtRefRoutingAndPtrefCov(AbstractTestFixture):
@@ -973,3 +1022,4 @@ class TestPtRefRoutingCov(AbstractTestFixture):
         response = self.query_region("pois/poi:station_1/poi_types")
         assert len(response["poi_types"]) == 1
         assert response["poi_types"][0]["id"] == "poi_type:amenity:bicycle_rental"
+

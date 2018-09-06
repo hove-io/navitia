@@ -167,6 +167,8 @@ class PlaceUri(ResourceUri):
                                               "show BSS/car park availability in the pois(BSS/car park) of the response")
         self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
                                          help="remove geojson from the response")
+        self.parsers['get'].add_argument("disable_disruption", type=BooleanType(), default=False,
+                                         help="remove disruptions from the response")
         args = self.parsers["get"].parse_args()
 
         if handle_poi_infos(args["add_poi_infos"], args["bss_stands"]):
@@ -248,6 +250,8 @@ class PlacesNearby(ResourceUri):
                                               'of the disruptions.')
         self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
                                          help="remove geojson from the response")
+        self.parsers['get'].add_argument("disable_disruption", type=BooleanType(), default=False,
+                                         help="remove disruptions from the response")
         args = self.parsers["get"].parse_args()
         if handle_poi_infos(args["add_poi_infos"], args["bss_stands"]):
             self.get_decorators.insert(1, ManageParkingPlaces(self, 'places_nearby'))

@@ -84,6 +84,8 @@ class Ptobjects(ResourceUri):
                                               'of the disruptions.')
         self.parsers['get'].add_argument("disable_geojson", type=BooleanType(), default=False,
                                          help="remove geojson from the response")
+        self.parsers['get'].add_argument("disable_disruption", type=BooleanType(), default=False,
+                                         help="remove disruptions from the response")
         self.collection = 'pt_objects'
         self.collections = pt_objects
         self.get_decorators.insert(0, get_obj_serializer(self))

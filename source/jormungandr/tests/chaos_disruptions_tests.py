@@ -166,9 +166,8 @@ class TestPlacesWithDisruptions(ChaosDisruptionsFixture):
         assert len(response['places']) == 1
         assert response['places'][0]['id'] == 'stopB'
 
-        assert len(response['disruptions']) == 1
-        assert response['disruptions'][0]['updated_at'] == u'20160405T150733'
-        assert 'tags' not in response['disruptions'][0]
+        #we shouldn't have any disruption in api /places
+        assert len(response['disruptions']) == 0
 
 
 @dataset(MAIN_ROUTING_TEST_SETTING)
