@@ -50,31 +50,46 @@ int main(int argc, const char* const argv[]) {
     navitia::type::TimeZoneHandler::dst_periods timezones = {{"08:00"_t, {production_date}}};
     ed::builder b("20170101", "canal tp", "Asia/Hong_Kong", timezones);
 
-    // Times here are UTC
-
     /* The X line is used to test first/last departure of a line
      *
      * Times here are UTC
      * */
-    b.vj("X", "11100111").route("route_1")
-    		.uri("X:vj1")("X_S1", "22:00"_t)("X_S2", "22:30"_t)("X_S3", "23:00"_t).make();
-    b.vj("X", "11100111").route("route_1")
-    		.uri("X:vj2")("X_S1", "22:10"_t)("X_S2", "22:40"_t)("X_S3", "23:10"_t).make();
-    b.vj("X", "11100111").route("route_1")
-    		.uri("X:vj3")("X_S1", "22:20"_t)("X_S2", "22:50"_t)("X_S3", "23:20"_t).make();
+    b.vj("X", "11100111")
+    		.route("route_1")
+    		.uri("X:vj1")
+			// 06:00 UTC+08       06:30 UTC+08        23:50 UTC+08        00:30 UTC+08
+			("X_S1", "22:00"_t)("X_S2", "22:30"_t)("X_S3", "39:50"_t)("X_S4", "40:30"_t).make();
+    b.vj("X", "11100111")
+    		.route("route_1")
+    		.uri("X:vj2")
+			("X_S1", "22:10"_t)("X_S2", "22:40"_t)("X_S3", "40:00"_t)("X_S4", "40:40"_t).make();
+    b.vj("X", "11100111")
+    		.route("route_1")
+    		.uri("X:vj3")
+			("X_S1", "22:20"_t)("X_S2", "22:50"_t)("X_S3", "40:10"_t)("X_S4", "40:50"_t).make();
 
-    b.vj("X", "00011000").route("route_1")
-    		.uri("X:vj4")("X_S1", "22:05"_t)("X_S2", "22:35"_t)("X_S3", "23:05"_t).make();
-    b.vj("X", "00011000").route("route_1")
-    		.uri("X:vj5")("X_S1", "22:15"_t)("X_S2", "22:45"_t)("X_S3", "23:15"_t).make();
-    b.vj("X", "00011000").route("route_1")
-    		.uri("X:vj6")("X_S1", "22:25"_t)("X_S2", "22:55"_t)("X_S3", "23:25"_t).make();
+    b.vj("X", "00011000")
+    		.route("route_1")
+    		.uri("X:vj4")
+			("X_S1", "22:05"_t)("X_S2", "22:35"_t)("X_S3", "39:55"_t)("X_S4", "40:35"_t).make();
+    b.vj("X", "00011000")
+    		.route("route_1")
+    		.uri("X:vj5")
+			("X_S1", "22:15"_t)("X_S2", "22:45"_t)("X_S3", "40:05"_t)("X_S4", "40:45"_t).make();
+    b.vj("X", "00011000")
+    		.route("route_1")
+    		.uri("X:vj6")
+			("X_S1", "22:25"_t)("X_S2", "22:55"_t)("X_S3", "40:15"_t)("X_S4", "40:55"_t).make();
 
 
-    b.vj("X", "11111111").route("route_2")
-    		.uri("X:vj7")("X_S3", "22:20"_t)("X_S2", "22:50"_t)("X_S1", "23:20"_t).make();
-    b.vj("X", "11111111").route("route_2")
-    		.uri("X:vj8")("X_S3", "22:25"_t)("X_S2", "22:55"_t)("X_S1", "23:25"_t).make();
+    b.vj("X", "11111111")
+    		.route("route_2")
+    		.uri("X:vj7")
+			("X_S4", "22:00"_t)("X_S3", "22:40"_t)("X_S2", "39:40"_t)("X_S1", "40:20"_t).make();
+    b.vj("X", "11111111")
+    		.route("route_2")
+    		.uri("X:vj8")
+			("X_S4", "22:05"_t)("X_S3", "22:45"_t)("X_S2", "39:45"_t)("X_S1", "40:25"_t).make();
 
 
     auto line_X = b.lines.find("X")->second;
@@ -82,7 +97,7 @@ int main(int argc, const char* const argv[]) {
     // opening time should be the earliest departure of all vjs of the line and it's stored as local time
     line_X->opening_time = boost::make_optional(boost::posix_time::duration_from_string("06:00"));
     // closing time should be the latest arrival of all vjs of the line and it's stored as local time
-    line_X->closing_time = boost::make_optional(boost::posix_time::duration_from_string("07:25"));
+    line_X->closing_time = boost::make_optional(boost::posix_time::duration_from_string("00:55"));
 
     b.generate_dummy_basis();
     b.finish();
