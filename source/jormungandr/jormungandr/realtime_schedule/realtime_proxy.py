@@ -68,8 +68,19 @@ def floor_datetime(dt, step):
     datetime.datetime(2018, 1, 1, 10, 10, 28)
     >>> floor_datetime(datetime.datetime(2018, 1, 1, 10, 10, 59), 1)
     datetime.datetime(2018, 1, 1, 10, 10, 59)
+
+    >>> floor_datetime(datetime.datetime(2018, 1, 1, 0, 1, 0), 120)
+    datetime.datetime(2018, 1, 1, 0, 0)
+    >>> floor_datetime(datetime.datetime(2018, 1, 1, 0, 2, 0), 120)
+    datetime.datetime(2018, 1, 1, 0, 2)
+
+    >>> floor_datetime(datetime.datetime(2018, 1, 1, 1, 0, 0), 7*60)
+    datetime.datetime(2018, 1, 1, 0, 56)
     """
-    return dt.replace(second=int(math.floor(dt.second/float(step))*step), microsecond=0)
+    dt = dt.replace(microsecond=0)
+    base = dt.replace(hour=0, minute=0, second=0)
+    delta = dt - base
+    return base + datetime.timedelta(seconds=int(math.floor(delta.total_seconds()/float(step))*step))
 
 class RealtimeProxyError(RuntimeError):
     pass
