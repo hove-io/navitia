@@ -280,7 +280,7 @@ void departure_board(PbCreator& pb_creator,
                 map_route_first_and_last_point[route_point] = get_first_and_last_stop_time(stop_times[0],
                                                                                            *route->line->opening_time,
                                                                                            routepoint_jpps,
-                                                                                           handler.max_datetime,
+                                                                                           handler.date_time + DateTimeUtils::SECONDS_PER_DAY,
                                                                                            *pb_creator.data,
                                                                                            rt_level,
                                                                                            utc_offset);
@@ -342,8 +342,10 @@ std::pair<DateTime, DateTime> shift_next_stop_time_to_opening_time(const routing
 {
     uint nb_days = DateTimeUtils::date(next_stop_time.first); // Nb days from the data set origin until the next stop time.
 
-    if (next_stop_time.second->departure_time < opening_time) {
-        return std::make_pair(nb_days*DateTimeUtils::SECONDS_PER_DAY + opening_time - 1,
+    // sometimes a departure_time(stop_time) may exceed 24H and we suppose it doesn't exceed 48H  
+    uint32_t dep_time = math_mod(next_stop_time.second->departure_time, DateTimeUtils::SECONDS_PER_DAY);
+    if (dep_time < opening_time) {
+        return std::make_pair((nb_days - 1)*DateTimeUtils::SECONDS_PER_DAY + opening_time - 1,
                               nb_days*DateTimeUtils::SECONDS_PER_DAY + opening_time - 1);
     }
     else {
