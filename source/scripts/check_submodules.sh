@@ -2,7 +2,7 @@
 
 red=`tput setaf 1`
 reset=`tput sgr0`
-_errors=("")
+_errors=()
 
 function _add_error() {
 	_errors=("${_errors[@]}" "${red}$1")

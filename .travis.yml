@@ -13,4 +13,4 @@ script:
   - bash source/scripts/check_submodules.sh
 
   # Warn about dava_version if the model changes
-  - bash -x source/scripts/check_retrocompat.sh $TRAVIS_BRANCH $TRAVIS_PULL_REQUEST $TRAVIS_PULL_REQUEST_SLUG
+  - bash source/scripts/check_retrocompat.sh $TRAVIS_BRANCH $TRAVIS_PULL_REQUEST $TRAVIS_PULL_REQUEST_SLUG
