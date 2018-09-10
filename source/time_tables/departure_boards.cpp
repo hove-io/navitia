@@ -74,7 +74,7 @@ static void
 render(PbCreator& pb_creator,
        const std::map<RoutePointIdx, pbnavitia::ResponseStatus>& response_status,
        const std::map<RoutePointIdx, vector_dt_st>& map_route_stop_point,
-       const std::map<RoutePointIdx, first_and_last_stop_time>& map_route_first_and_last_point,
+       const std::map<RoutePointIdx, first_and_last_stop_time>& map_route_point_first_last_st,
        const DateTime datetime,
        const DateTime max_datetime,
        const boost::optional<const std::string> calendar_id,
@@ -122,19 +122,19 @@ render(PbCreator& pb_creator,
         }
 
         // add first and last datetime
-        const auto& first_it = map_route_first_and_last_point.find(id_vec.first);
-        if (first_it != map_route_first_and_last_point.end()) {
+        const auto& first_last_it = map_route_point_first_last_st.find(id_vec.first);
+        if (first_last_it != map_route_point_first_last_st.end()) {
             // first date time
-            if (first_it->second.first) {
-                auto first_stop_time = *(first_it->second.first);
+            if (first_last_it->second.first) {
+                auto first_stop_time = *(first_last_it->second.first);
                 const auto& st_calendar = navitia::StopTimeCalendar(first_stop_time.second,
                                                                     first_stop_time.first,
                                                                     calendar_id);
                 pb_creator.fill(&st_calendar, schedule->mutable_first_datetime(), 0);
             }
             // last date time
-            if (first_it->second.second) {
-                auto last_stop_time = *(first_it->second.second);
+            if (first_last_it->second.second) {
+                auto last_stop_time = *(first_last_it->second.second);
                 const auto& st_calendar = navitia::StopTimeCalendar(last_stop_time.second,
                                                                     last_stop_time.first,
                                                                     calendar_id);
@@ -239,7 +239,7 @@ void departure_board(PbCreator& pb_creator,
     std::map<RoutePointIdx, pbnavitia::ResponseStatus> response_status;
 
     std::map<RoutePointIdx, vector_dt_st> map_route_stop_point;
-    std::map<RoutePointIdx, first_and_last_stop_time> map_route_first_and_last_point;
+    std::map<RoutePointIdx, first_and_last_stop_time> map_route_point_first_last_st;
 
     //Mapping route/stop_point
     boost::container::flat_set<RoutePointIdx> route_points;
@@ -277,13 +277,13 @@ void departure_board(PbCreator& pb_creator,
                 utc_offset = stop_times[0].second->vehicle_journey->utc_to_local_offset();
 
                 // first and last Date time
-                map_route_first_and_last_point[route_point] = get_first_and_last_stop_time(stop_times[0],
-                                                                                           *route->line->opening_time,
-                                                                                           routepoint_jpps,
-                                                                                           handler.date_time + DateTimeUtils::SECONDS_PER_DAY,
-                                                                                           *pb_creator.data,
-                                                                                           rt_level,
-                                                                                           utc_offset);
+                map_route_point_first_last_st[route_point] = get_first_and_last_stop_time(stop_times[0],
+                                                                                          *route->line->opening_time,
+                                                                                          routepoint_jpps,
+                                                                                          handler.date_time + DateTimeUtils::SECONDS_PER_DAY,
+                                                                                          *pb_creator.data,
+                                                                                          rt_level,
+                                                                                          utc_offset);
             }
 
         } else {
@@ -328,7 +328,7 @@ void departure_board(PbCreator& pb_creator,
     render(pb_creator,
            response_status,
            map_route_stop_point,
-           map_route_first_and_last_point,
+           map_route_point_first_last_st,
            handler.date_time,
            handler.max_datetime,
            calendar_id, depth);
@@ -337,12 +337,12 @@ void departure_board(PbCreator& pb_creator,
                                                                        pb_creator.stop_schedules_size()));
 }
 
-std::pair<DateTime, DateTime> shift_next_stop_time_to_opening_time(const routing::datetime_stop_time& next_stop_time,
-                                                                   const uint32_t opening_time)
+std::pair<DateTime, DateTime> get_daily_opening_time_bounds(const routing::datetime_stop_time& next_stop_time,
+                                                            const uint32_t opening_time)
 {
     uint nb_days = DateTimeUtils::date(next_stop_time.first); // Nb days from the data set origin until the next stop time.
 
-    // sometimes a departure_time(stop_time) may exceed 24H and we suppose it doesn't exceed 48H  
+    // sometimes a departure_time(stop_time) may exceed 24H and we suppose it doesn't exceed 48H
     uint32_t dep_time = math_mod(next_stop_time.second->departure_time, DateTimeUtils::SECONDS_PER_DAY);
     if (dep_time < opening_time) {
         return std::make_pair((nb_days - 1)*DateTimeUtils::SECONDS_PER_DAY + opening_time - 1,
@@ -366,10 +366,8 @@ first_and_last_stop_time get_first_and_last_stop_time(const routing::datetime_st
     int local_opening_time = math_mod(opening_time.total_seconds() - utc_offset, DateTimeUtils::SECONDS_PER_DAY);
     assert(local_opening_time > 0);
 
-    // Shift the first stop time finded to local opening time. In this way, we can find the first or the last stop time,
-    // it depends of the direction (clockwise or not) to get stop time.
-    auto new_request_date_times = shift_next_stop_time_to_opening_time(next_stop_time,
-                                                                       static_cast<uint32_t>(local_opening_time));
+    auto new_request_date_times = get_daily_opening_time_bounds(next_stop_time,
+                                                                static_cast<uint32_t>(local_opening_time));
 
     // get first stop time
     auto first_times = routing::get_stop_times(routing::StopEvent::pick_up,

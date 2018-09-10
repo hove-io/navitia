@@ -45,7 +45,7 @@ void departure_board(PbCreator& pb_creator,
                      const std::string &filter,
                      const boost::optional<const std::string> calendar_id,
                      const std::vector<std::string>& forbidden_uris,
-                     const boost::posix_time::ptime datetime,
+                     const pt::ptime datetime,
                      const uint32_t duration,
                      const uint32_t depth,
                      const int count,
@@ -63,10 +63,29 @@ time_duration length_of_time(const time_duration& duration_1,
 bool line_closed (const time_duration& duration,
                   const time_duration& opening,
                   const time_duration& closing,
-                  const boost::posix_time::ptime& date );
+                  const pt::ptime& date );
 
-std::pair<DateTime, DateTime> shift_next_stop_time_to_opening_time(const routing::datetime_stop_time& next_stop_time,
-                                                                   const uint32_t opening_time);
+std::pair<DateTime, DateTime> get_daily_opening_time_bounds(const routing::datetime_stop_time& next_stop_time,
+                                                            const uint32_t opening_time);
+
+/**
+ * @brief Find the new request date time to invoke routing::get_stop_times function,
+ * in order to catch the first and last datetime.
+ *
+ * @note The algorithm is only based on opening time.
+ *
+ * If request date time < opening date time :
+ *   - The first :  new request date time = (opening date time - 1 sec)
+ *                  The day before with clockwise mode
+ *   - The last  :  new request date time = (opening date time - 1 sec)
+ *                  The current day with anticlockwise mode
+ *
+ * else
+ *   - The first :  new request date time = (opening date time - 1 sec)
+ *                  The current day with clockwise mode
+ *   - The last  :  new request date time = (opening date time - 1 sec)
+ *                  The day after with anticlockwise mode
+ */
 first_and_last_stop_time get_first_and_last_stop_time(const routing::datetime_stop_time& next_stop_time,
                                                       const pt::time_duration& opening_time,
                                                       const std::vector<routing::JppIdx>& journey_pattern_points,
