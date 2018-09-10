@@ -1,9 +1,9 @@
 #!/bin/bash
 
-branch_to=$1
-pull_request_num=$2
-pull_request_slug=$3 # Canaltp/navitia
-buildbotctp_token="$GITHUB_TOKEN" # Taken from the encrypted env var
+branch_to=$1 # Branch to merge to
+pull_request_num=$2 # Github PR number
+pull_request_slug=$3 # Git respo destination (eg. Canaltp/navitia)
+buildbotctp_token=$4 # Github token
 github_api_endpoint="https://api.github.com/repos"
 warning_msg="## Warning \n You've modified files that potentially affect the model. \
     If so, for compatilility reason, please make sure you've updated \`Data::data_version\` in \`source/type/data.cpp\`."
