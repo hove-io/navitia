@@ -29,7 +29,7 @@ www.navitia.io
 */
 
 #pragma once
-
+CHANGEMENT !
 #include "type_interfaces.h"
 #include "type/time_duration.h"
 #include "datetime.h"
