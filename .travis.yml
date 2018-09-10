@@ -8,9 +8,14 @@ before_install:
   - sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
   - git submodule update --init --recursive
 
+install:
+  - env
+  - gpg --list-keys
+  - gpg --list-secret-keys
+
 script:
   # Make sure submodules references are merged in !
   - bash source/scripts/check_submodules.sh
 
   # Warn about dava_version if the model changes
-  - bash source/scripts/check_retrocompat.sh $TRAVIS_BRANCH $TRAVIS_PULL_REQUEST $TRAVIS_PULL_REQUEST_SLUG
+  - bash -x source/scripts/check_retrocompat.sh $TRAVIS_BRANCH $TRAVIS_PULL_REQUEST $TRAVIS_PULL_REQUEST_SLUG
