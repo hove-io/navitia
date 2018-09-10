@@ -3,7 +3,7 @@
 branch_to=$1
 pull_request_num=$2
 pull_request_slug=$3 # Canaltp/navitia
-buildbotctp_token="cdb50828e1c85fb8561a4f3fe236a0eb532456ed"
+buildbotctp_token=$buildbot_ctp_token # Taken from the encrypted env var
 github_api_endpoint="https://api.github.com/repos"
 warning_msg="## Warning \n You've modified files that potentially affect the model. \
     If so, for compatilility reason, please make sure you've updated \`Data::data_version\` in \`source/type/data.cpp\`."
