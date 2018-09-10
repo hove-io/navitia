@@ -4,10 +4,6 @@ language: cpp
 git:
   submodules: false
 
-env:
-  global:
-    secure: awV80AgActH6PnXN8th46CdchpNIs+mrMXfSm4JckUUTMdlTPVdSW1LQ/JBGwZwt3Tooawx33AaFznAXQfMl379QFShF7yp+0qgiD8RbN9M1PLwy0SaQYt8GJQUwnav/6g9hW5G0QG5kaomo0UrRzIRPxqEXyLSXBt2dC6sm2JU=
-
 before_install:
   - sed -i 's,git\@github.com:\([^/]*\)/\(.*\).git,https://github.com/\1/\2,' .gitmodules
   - git submodule update --init --recursive
@@ -15,6 +11,3 @@ before_install:
 script:
   # Make sure submodules references are merged in !
   - bash source/scripts/check_submodules.sh
-
-  # Warn about dava_version if the model changes
-  - bash source/scripts/check_retrocompat.sh $TRAVIS_BRANCH $TRAVIS_PULL_REQUEST $TRAVIS_PULL_REQUEST_SLUG
