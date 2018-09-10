@@ -383,6 +383,19 @@ Examples :
 
 -   <https://api.navitia.io/v1/coverage/fr-idf/lines?disable_geojson=true>
 
+#### disable_disruption
+
+By default disruptions are also present in navitia's responses on apis "PtRef", "pt_objects" and "places_nearby". This parameter allows you to
+remove them reducing the response size.
+
+<aside class="notice">
+    Disruptions can be large and not necessary while searching objects. This parameter is mostly here to be able to search objects without disruptions in the response.
+</aside>
+
+Examples :
+
+-   <https://api.navitia.io/v1/coverage/fr-idf/lines?disable_disruption=true>
+
 ### <a name="filter"></a>Filter
 
 It is possible to apply a filter to the returned collection, using
@@ -615,6 +628,7 @@ HTTP/1.1 200 OK
 -----------|----------|------------------|----------------------|-----------------
   yep      | q        | string           | The search term      |
   nop      | type[]   | array of string  | Type of objects you want to query It takes one the following values: [`network`, `commercial_mode`, `line`, `route`, `stop_area`] | [`network`, `commercial_mode`, `line`, `route`, `stop_area`]
+  nop      | disable_disruption | boolean  | Remove disruptions from the response  | False
 
 <aside class="warning">
 There is no pagination for this api
@@ -747,6 +761,7 @@ coordinates, returning a [places](#place) collection.
   nop      | admin_uri[] | array of string | If filled, will filter the search within the given admin uris       |
   nop      | filter      | string          | Use to filter returned objects. for example: places_type.id=theater |
   nop      | disable_geojson | boolean     | Remove geojson from the response  | False
+  nop      | disable_disruption | boolean  | Remove disruptions from the response  | False
   nop      | count       | int             | Elements per page                 | 10
   nop      | start_page  | int             | The page number (cf the [paging section](#paging)) | 0
   nop      | add_poi_infos[] | enum        | Activate the output of additional infomations about the poi. For example, parking availability (BSS, car parking etc.) in the pois of response. Pass `add_poi_infos[]=none&` or `add_poi_infos[]=&` (empty string) to deactivate all.   | [`bss_stands`, `car_park`]
