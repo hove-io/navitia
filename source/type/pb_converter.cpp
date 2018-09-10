@@ -1012,14 +1012,13 @@ static pbnavitia::Severity_Effect get_severity_effect(nd::Effect e) {
 template <typename P>
 void PbCreator::Filler::fill_message(const boost::shared_ptr<nd::Impact>& impact,
                                      P pb_object){
+    if (pb_creator.disable_disruption) { return; }
     using boost::algorithm::none_of;
     // Adding the uri only if not already present
     if (none_of(pb_object->impact_uris(), [&](const std::string& uri) { return impact->uri == uri; })) {
         *pb_object->add_impact_uris() = impact->uri;
     }
-    if (!pb_creator.disable_disruption) {
-        pb_creator.impacts.insert(impact);
-    }
+    pb_creator.impacts.insert(impact);
 }
 template void navitia::PbCreator::Filler::fill_message<pbnavitia::Network*>(boost::shared_ptr<navitia::type::disruption::Impact> const&, pbnavitia::Network*);
 template void navitia::PbCreator::Filler::fill_message<pbnavitia::Line*>(boost::shared_ptr<navitia::type::disruption::Impact> const&, pbnavitia::Line*);

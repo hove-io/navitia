@@ -646,19 +646,19 @@ class TestPtRef(AbstractTestFixture):
         """
         stop_area:stop1 with and without disable_disruption
         """
-        utc_datetime = '20140115T235959'
-        response = self.query_region("stop_areas/stop_area:stop1?_current_datetime={}".format(utc_datetime))
+        current_datetime = '20140115T235959'
+        response = self.query_region("stop_areas/stop_area:stop1?_current_datetime={}".format(current_datetime))
 
         disruptions = get_not_null(response, 'disruptions')
 
         assert len(disruptions) == 1
 
         response = self.query_region("stop_areas/stop_area:stop1?_current_datetime={}&disable_disruption=true".
-                                     format(utc_datetime))
+                                     format(current_datetime))
         assert len(response['disruptions']) == 0
 
         response = self.query_region("stop_areas/stop_area:stop1?_current_datetime={}&disable_disruption=false".
-                                     format(utc_datetime))
+                                     format(current_datetime))
         assert len(response['disruptions']) == 1
 
     def test_ptref_on_lines_with_disable_disruption(self):
