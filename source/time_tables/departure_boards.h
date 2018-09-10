@@ -65,26 +65,29 @@ bool line_closed (const time_duration& duration,
                   const time_duration& closing,
                   const pt::ptime& date );
 
-std::pair<DateTime, DateTime> get_daily_opening_time_bounds(const routing::datetime_stop_time& next_stop_time,
-                                                            const uint32_t opening_time);
-
 /**
  * @brief Find the new request date time to invoke routing::get_stop_times function,
  * in order to catch the first and last datetime.
  *
- * @note The algorithm is only based on opening time.
- *
- * If request date time < opening date time :
- *   - The first :  new request date time = (opening date time - 1 sec)
- *                  The day before with clockwise mode
- *   - The last  :  new request date time = (opening date time - 1 sec)
- *                  The current day with anticlockwise mode
+ * If the next stop time < opening date time :
+ *   - for the first :  new request date time = (opening date time - 1 sec)
+ *                      The day before with clockwise mode
+ *   - for the last  :  new request date time = (opening date time - 1 sec)
+ *                      The current day with anticlockwise mode
  *
  * else
- *   - The first :  new request date time = (opening date time - 1 sec)
- *                  The current day with clockwise mode
- *   - The last  :  new request date time = (opening date time - 1 sec)
- *                  The day after with anticlockwise mode
+ *   - for the first :  new request date time = (opening date time - 1 sec)
+ *                      The current day with clockwise mode
+ *   - for the last  :  new request date time = (opening date time - 1 sec)
+ *                      The day after with anticlockwise mode
+ */
+std::pair<DateTime, DateTime> get_daily_opening_time_bounds(const routing::datetime_stop_time& next_stop_time,
+                                                            const uint32_t opening_time);
+
+/**
+ * @brief Return first and last date time
+ *
+ * @note The algorithm is only based on opening time and next stop time.
  */
 first_and_last_stop_time get_first_and_last_stop_time(const routing::datetime_stop_time& next_stop_time,
                                                       const pt::time_duration& opening_time,
