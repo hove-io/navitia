@@ -38,15 +38,24 @@ from flask_restful import Api
 from flask_cache import Cache
 from flask_cors import CORS
 import sys
+import six
+from jormungandr import init
+
+app = Flask(__name__)
+
+init.load_configuration(app)
+init.logger(app)
+
+# we want to patch gevent as early as possible
+if app.config.get('PATCH_WITH_GEVENT_SOCKET', False):
+    init.patch_http()
+
+from jormungandr import new_relic
+new_relic.init(app.config.get('NEWRELIC_CONFIG_PATH', None))
+
 from jormungandr.exceptions import log_exception
 from jormungandr.helper import ReverseProxied, NavitiaRequest, NavitiaRule
 from jormungandr import compat, utils
-import six
-
-app = Flask(__name__)
-app.config.from_object('jormungandr.default_settings')
-if 'JORMUNGANDR_CONFIG_FILE' in os.environ:
-    app.config.from_envvar('JORMUNGANDR_CONFIG_FILE')
 
 # there is a import order problem to get this variable in decorators (current_app is not in the context)
 # so we make it a global variable
@@ -58,12 +67,6 @@ CORS(app, vary_headers=True, allow_credentials=True, send_wildcard=False,
         headers=['Access-Control-Request-Headers', 'Authorization'])
 app.config['CORS_HEADERS'] = 'Content-Type'
 
-if 'LOGGER' in app.config:
-    logging.config.dictConfig(app.config['LOGGER'])
-else:  # Default is std out
-    handler = logging.StreamHandler(stream=sys.stdout)
-    app.logger.addHandler(handler)
-    app.logger.setLevel('INFO')
 
 app.wsgi_app = ReverseProxied(app.wsgi_app)
 got_request_exception.connect(log_exception, app)

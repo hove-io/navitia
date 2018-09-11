@@ -28,6 +28,8 @@ PUBLIC = boolean(os.getenv('JORMUNGANDR_IS_PUBLIC', True))
 #message returned on authentication request
 HTTP_BASIC_AUTH_REALM = os.getenv('JORMUNGANDR_HTTP_BASIC_AUTH_REALM', 'Token Required')
 
+NEWRELIC_CONFIG_PATH = os.getenv('JORMUNGANDR_NEWRELIC_CONFIG_PATH', None)
+
 from jormungandr.logging_utils import IdFilter
 
 log_level = os.getenv('JORMUNGANDR_LOG_LEVEL', 'DEBUG')
