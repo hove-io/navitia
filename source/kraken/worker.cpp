@@ -335,7 +335,8 @@ void Worker::init_worker_data(const navitia::type::Data* data,
                               const pt::ptime now,
                               const pt::time_period action_period,
                               const bool disable_geojson,
-                              const bool disable_feedpublisher){
+                              const bool disable_feedpublisher,
+                              const bool disable_disruption){
     //@TODO should be done in data_manager
     if(data->data_identifier != this->last_data_identifier || !planner){
         planner = std::make_unique<routing::RAPTOR>(*data);
@@ -343,7 +344,7 @@ void Worker::init_worker_data(const navitia::type::Data* data,
         this->last_data_identifier = data->data_identifier;
         LOG4CPLUS_INFO(logger, "Instanciate planner");
     }
-    this->pb_creator.init(data, now, action_period, disable_geojson, disable_feedpublisher);
+    this->pb_creator.init(data, now, action_period, disable_geojson, disable_feedpublisher, disable_disruption);
 }
 
 
@@ -1050,7 +1051,9 @@ void Worker::direct_path(const pbnavitia::Request& request) {
 void Worker::dispatch(const pbnavitia::Request& request, const nt::Data& data) {
     bool disable_geojson = get_geojson_state(request);
     boost::posix_time::ptime current_datetime = bt::from_time_t(request._current_datetime());
-    this->init_worker_data(&data, current_datetime, null_time_period, disable_geojson, request.disable_feedpublisher());
+    this->init_worker_data(&data, current_datetime, null_time_period, disable_geojson,
+                           request.disable_feedpublisher(),
+                           request.disable_disruption());
 
     // These api can respond even if the data isn't loaded
     if (request.requested_api() == pbnavitia::STATUS) {

@@ -184,3 +184,40 @@ class TestPlaces(AbstractTestFixture):
         assert status == 400
         assert 'parameter "type[]" invalid' in response["message"]
         assert 'you gave line' in response["message"]
+
+    def test_places_nearby_with_disable_disruption(self):
+        """places_nearby with disable_disruption"""
+
+        id = "8.9831195195e-05;0.000898311281954"
+        response = self.query_region("coords/{}/places_nearby?_current_datetime=20120815T160000".format(id))
+        assert(len(response['places_nearby']) > 0)
+        is_valid_places(response['places_nearby'])
+        assert len(response['disruptions']) == 1
+
+        response = self.query_region("coords/{}/places_nearby?_current_datetime=20120815T160000"
+                                     "&disable_disruption=true".format(id))
+        assert(len(response['places_nearby']) > 0)
+        is_valid_places(response['places_nearby'])
+        assert len(response['disruptions']) == 0
+
+        response = self.query_region("coords/{}/places_nearby?_current_datetime=20120815T160000"
+                                     "&disable_disruption=false".format(id))
+        assert(len(response['places_nearby']) > 0)
+        is_valid_places(response['places_nearby'])
+        assert len(response['disruptions']) == 1
+
+    def test_disruptions_in_places(self):
+        """check disruptions in places"""
+
+        response = self.query_region("places?type[]=stop_area&q=stopA&_current_datetime=20120815T160000")
+        places = response['places']
+        assert len(places) == 1
+        is_valid_places(places)
+        assert len(response['disruptions']) == 0
+
+        response = self.query_region("places?type[]=stop_area&q=stopA&_current_datetime=20120815T160000"
+                                     "&disable_disruption=true")
+        places = response['places']
+        assert len(places) == 1
+        is_valid_places(places)
+        assert len(response['disruptions']) == 0

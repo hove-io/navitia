@@ -1012,6 +1012,7 @@ static pbnavitia::Severity_Effect get_severity_effect(nd::Effect e) {
 template <typename P>
 void PbCreator::Filler::fill_message(const boost::shared_ptr<nd::Impact>& impact,
                                      P pb_object){
+    if (pb_creator.disable_disruption) { return; }
     using boost::algorithm::none_of;
     // Adding the uri only if not already present
     if (none_of(pb_object->impact_uris(), [&](const std::string& uri) { return impact->uri == uri; })) {

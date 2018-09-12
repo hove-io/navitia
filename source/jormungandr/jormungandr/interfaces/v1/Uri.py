@@ -103,6 +103,8 @@ class Uri(ResourceUri, ResourceUtc):
                             help="filters objects not valid after this date")
         parser.add_argument("disable_geojson", type=BooleanType(), default=False,
                             help="remove geojson from the response")
+        parser.add_argument("disable_disruption", type=BooleanType(), default=False,
+                            help="remove disruptions from the response")
 
         if is_collection:
             parser.add_argument("filter", type=six.text_type, default="",
