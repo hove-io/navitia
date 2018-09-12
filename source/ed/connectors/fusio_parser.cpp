@@ -124,6 +124,7 @@ void AgencyFusioHandler::init(Data& data) {
     if (ext_code_c == -1) { ext_code_c = csv.get_pos_col("network_external_code"); }
     sort_c = csv.get_pos_col("agency_sort");
     if (sort_c == -1) { sort_c = csv.get_pos_col("network_sort"); }
+    if (sort_c == -1) { sort_c = csv.get_pos_col("network_sort_order"); }
     agency_url_c = csv.get_pos_col("agency_url");
     if (agency_url_c == -1) { agency_url_c = csv.get_pos_col("network_url"); }
 }
@@ -839,6 +840,7 @@ void LineFusioHandler::init(Data &){
     comment_c = csv.get_pos_col("comment_id");
     commercial_mode_c = csv.get_pos_col("commercial_mode_id");
     sort_c = csv.get_pos_col("line_sort");
+    if (sort_c == -1) { sort_c = csv.get_pos_col("line_sort_order"); }
     geometry_id_c = csv.get_pos_col("geometry_id");
     opening_c = csv.get_pos_col("line_opening_time");
     closing_c = csv.get_pos_col("line_closing_time");
