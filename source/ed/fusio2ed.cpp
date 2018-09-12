@@ -81,7 +81,7 @@ int main(int argc, char * argv[])
     // Construct logger and signal handling
     std::string log_comment = "";
     if (vm.count("log_comment")) { log_comment = vm["log_comment"].as<std::string>(); }
-    navitia::init_app("ed2nav", "DEBUG", vm.count("local_syslog"), log_comment);
+    navitia::init_app("fusio2ed", "DEBUG", vm.count("local_syslog"), log_comment);
     auto logger = log4cplus::Logger::getInstance("log");
 
     if(vm.count("config-file")){
