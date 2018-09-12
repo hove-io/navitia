@@ -183,7 +183,8 @@ int ed2nav(int argc, const char * argv[])
          "database connection parameters: host=localhost user=navitia dbname=navitia password=navitia")
         ("cities-connection-string", po::value<std::string>(&cities_connection_string)->default_value(""),
          "cities database connection parameters: host=localhost user=navitia dbname=cities password=navitia")
-        ("active_syslog,l", "Active log redirection in local syslog");
+        ("local_syslog", "Active log redirection within local syslog")
+        ("log_comment", po::value<std::string>(), "optional field to add extra information like coverage name");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -195,13 +196,11 @@ int ed2nav(int argc, const char * argv[])
         return 0;
     }
 
-    if(vm.count("active_syslog")){
-        init_logger(true);
-    } else {
-        init_logger();
-    }
+    // Construct logger and signal handling
+    std::string log_comment = "";
+    if (vm.count("log_comment")) { log_comment = vm["log_comment"].as<std::string>(); }
+    navitia::init_app("ed2nav", "DEBUG", vm.count("local_syslog"), log_comment);
     auto logger = log4cplus::Logger::getInstance("log");
-    navitia::init_signal_handling();
 
     if(vm.count("config-file")){
         std::ifstream stream;

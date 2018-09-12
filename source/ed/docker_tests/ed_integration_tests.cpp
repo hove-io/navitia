@@ -41,7 +41,7 @@ www.navitia.io
 #include "routing/raptor_utils.h"
 
 struct logger_initialized {
-    logger_initialized()   { init_logger(); }
+    logger_initialized()   { navitia::init_logger(); }
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized );
 
@@ -378,9 +378,9 @@ BOOST_FIXTURE_TEST_CASE(ntfs_v5_test, ArgsFixture) {
             boost::gregorian::date_period("20150826"_d, "20150926"_d));
     BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->realtime_level == nt::RTLevel::Base, true);
     BOOST_CHECK_EQUAL(data.pt_data->datasets[0]->system, "obiti");
-    
+
     // accepted side-effect (no link) as ntfs_v5 fixture does not contain datasets.txt, which is now required
-    BOOST_CHECK(data.pt_data->vehicle_journeys[0]->dataset == nullptr); 
+    BOOST_CHECK(data.pt_data->vehicle_journeys[0]->dataset == nullptr);
 
     BOOST_REQUIRE_EQUAL(data.pt_data->networks.size(), 1);
     BOOST_CHECK_EQUAL(data.pt_data->codes.get_codes(data.pt_data->networks[0]),
@@ -409,7 +409,7 @@ BOOST_FIXTURE_TEST_CASE(osm_pois_id_should_match_mimir_naming, ArgsFixture)
     ));
 }
 
-BOOST_FIXTURE_TEST_CASE(poi2ed_pois_uri_should_match_mimir_naming, ArgsFixture) 
+BOOST_FIXTURE_TEST_CASE(poi2ed_pois_uri_should_match_mimir_naming, ArgsFixture)
 {
     navitia::type::Data data;
     BOOST_REQUIRE_NO_THROW(data.load_nav(input_file_paths.at("poi_file")););

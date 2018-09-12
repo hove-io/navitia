@@ -40,7 +40,7 @@ www.navitia.io
 #include "kraken/make_disruption_from_chaos.h"
 
 struct logger_initialized {
-    logger_initialized()   { init_logger(); }
+    logger_initialized()   { navitia::init_logger(); }
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized );
 

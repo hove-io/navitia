@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -51,7 +51,7 @@ www.navitia.io
 #include "tests/utils_test.h"
 
 struct logger_initialized {
-    logger_initialized()   { init_logger(); }
+    logger_initialized()   { navitia::init_logger(); }
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized );
 
@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(regex_toknize_without_tests){
     BOOST_CHECK(vec.find("centre") != vec.end());
     BOOST_CHECK(vec.find("commercial") != vec.end());
     BOOST_CHECK(vec.find("de") != vec.end());
-    BOOST_CHECK(vec.find("soie") != vec.end());    
+    BOOST_CHECK(vec.find("soie") != vec.end());
 }
 
 BOOST_AUTO_TEST_CASE(regex_synonyme_gare_sncf_tests){
@@ -341,7 +341,7 @@ BOOST_AUTO_TEST_CASE(parse_find_with_name_in_vector_test){
     vec.insert("jau");
     res = ac.find(vec);
     expected = {0};
-    BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());    
+    BOOST_CHECK_EQUAL_COLLECTIONS(res.begin(), res.end(), expected.begin(), expected.end());
 }
 
 /*
@@ -485,7 +485,7 @@ BOOST_AUTO_TEST_CASE(autocompletesynonym_and_weight_test){
         std::set<std::string> ghostwords;
         std::vector<std::string> admins;
         std::string admin_uri;
-        int nbmax = 10;        
+        int nbmax = 10;
         synonyms["st"]="saint";
         synonyms["ste"]="sainte";
         synonyms["cc"]="centre commercial";

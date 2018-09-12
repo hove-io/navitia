@@ -44,7 +44,7 @@ www.navitia.io
 #include "type/pb_converter.h"
 
 struct logger_initialized {
-    logger_initialized()   { init_logger(); }
+    logger_initialized()   { navitia::init_logger(); }
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized );
 
@@ -3374,7 +3374,7 @@ BOOST_FIXTURE_TEST_CASE(night_bus_filter_should_be_order_agnostic, Night_bus_fix
 BOOST_FIXTURE_TEST_CASE(night_bus_filter_change_parameters, Night_bus_fixture)
 {
     // With the default parameters, the request departure is 08:00
-    // The max_pseudo_duration is 7h, so journeys departing after 15:00 are deleted 
+    // The max_pseudo_duration is 7h, so journeys departing after 15:00 are deleted
     nr::NightBusFilter::Params filter_params = get_default_filter_params();
     {
         nr::RAPTOR::Journeys journeys = {j1, j2};
