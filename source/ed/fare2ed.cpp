@@ -60,7 +60,7 @@ int fare2ed(int argc, const char * argv[])
         ("connection-string", po::value<std::string>(&connection_string)->required(),
          "Connection parameters to database: host=localhost user=navitia dbname=navitia password=navitia")
         ("fare,f", po::value<std::string>(&fare_dir)->required(), "Directory of fare files")
-        ("local_syslog", "Active log redirection within local syslog")
+        ("local_syslog", "activate log redirection within local syslog")
         ("log_comment", po::value<std::string>(), "optional field to add extra information like coverage name");
 
     po::variables_map vm;

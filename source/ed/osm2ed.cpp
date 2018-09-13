@@ -960,7 +960,7 @@ int osm2ed(int argc, const char** argv) {
              " dbname=navitia password=navitia")
         ("poi-type,p", po::value<std::string>(&json_poi_types),
                        "a json string describing poi_types and rules to build them from OSM tags")
-        ("local_syslog", "Active log redirection within local syslog")
+        ("local_syslog", "activate log redirection within local syslog")
         ("log_comment", po::value<std::string>(), "optional field to add extra information like coverage name");
 
     po::variables_map vm;
