@@ -318,7 +318,7 @@ Une ligne du fichier "stops.txt" représente un point ou une zone où un véhicu
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
 stop_id | chaine | Requis | Identifiant de l'arrêt
-visible | entier | Optionnel | Visible dans auto complétion ?
+visible | entier | Optionnel | Indique si le stop peut être retourné dans l'autocomplétion (valeur 1) ou s'il est ignoré (valeur 0).
 stop_name | chaine | Requis | Nom de l'arrêt
 stop_lat | décimal | Requis | Latitude. Ce champ est obligatoire pour les arrêts physiques (location_type = 0) même si le champ geometry_id est renseigné afin de faciliter sa lecture. Il est conseillé pour les zones d'arrêts (location_type = 1), et inutile pour les autres cas.
 stop_lon | décimal | Requis | Longitude. Ce champ est obligatoire pour les arrêts physiques (location_type = 0) même si le champ geometry_id est renseigné afin de faciliter sa lecture. Il est conseillé pour les zones d'arrêts (location_type = 1), et inutile pour les autres cas.
@@ -460,7 +460,7 @@ Kisio Digital fournit dans ce fichier :
 ### admin_stations.txt (optionnel)
 Colonne | Type | Contrainte | Commentaire
 --- | --- | --- | ---
-admin_id | chaine | Requis | Identifiant de la commune (ou du quartier) au format "admin:44109"
+admin_id | chaine | Requis | Identifiant de la commune (ou du quartier) tel que retourné par l'API Navitia
 admin_name | chaine | Requis | Nom de la commune (ou quartier).
 stop_id | chaine | Requis | Identifiant de la zone d'arrêt utilisée comme accroche de la commune (lien vers le fichier stops). Stop de type 1 oligatoirement.
 stop_name | chaine | Optionnel | Nom de la zone d'arrêt (pour faciliter la lisibilité du fichier)
