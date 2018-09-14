@@ -43,7 +43,7 @@ www.navitia.io
 namespace bg = boost::gregorian;
 
 struct logger_initialized {
-    logger_initialized()   { init_logger(); }
+    logger_initialized()   { navitia::init_logger(); }
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized );
 
@@ -403,7 +403,7 @@ BOOST_AUTO_TEST_CASE(sync_ntfs) {
     BOOST_REQUIRE_EQUAL(data.stop_points.size(), 8);
     BOOST_CHECK_EQUAL(data.lines[0]->name, "ligne A Flexible");
     BOOST_CHECK_EQUAL(data.lines[0]->uri, "l1");
-    BOOST_CHECK_EQUAL(data.lines[0]->text_color, "FFD700");    
+    BOOST_CHECK_EQUAL(data.lines[0]->text_color, "FFD700");
     BOOST_REQUIRE_EQUAL(data.routes.size(), 4);
 
     navitia::type::hasProperties has_properties;
@@ -424,7 +424,7 @@ BOOST_AUTO_TEST_CASE(sync_ntfs) {
     BOOST_CHECK_EQUAL(data.datasets[0]->validation_period, boost::gregorian::date_period("20150826"_d, "20150926"_d));
     BOOST_CHECK_EQUAL(data.datasets[0]->realtime_level == nt::RTLevel::Base, true);
     BOOST_CHECK_EQUAL(data.datasets[0]->system, "obiti");
-    
+
     // accepted side-effect (no link) as ntfs_v5 fixture does not contain datasets.txt, which is now required
     BOOST_CHECK(data.vehicle_journeys[0]->dataset == nullptr);
 

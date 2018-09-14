@@ -1,3 +1,20 @@
+navitia2 (2.63.0) unstable; urgency=low
+
+  * Kraken & Tyr: Syslog for Ed binaries within Tyr  <https://github.com/CanalTP/navitia/pull/2533>
+  * Kraken: Handle sort_order to be navitia_model compliant  <https://github.com/CanalTP/navitia/pull/2535>
+  * Kraken: New gcc flags for coverage  <https://github.com/CanalTP/navitia/pull/2528>
+  * Jormun: Improve cache in realtimeproxy  <https://github.com/CanalTP/navitia/pull/2524>
+  * Kraken: Add disable_disruption  <https://github.com/CanalTP/navitia/pull/2525>
+  * Jormun & Kraken: First and last datetime  <https://github.com/CanalTP/navitia/pull/2509>
+  * CI: Enable Travis with submodule check  <https://github.com/CanalTP/navitia/pull/2523>
+  * Kraken: Line_reports optimisation  <https://github.com/CanalTP/navitia/pull/2522>
+  * Jormungandr: Upgrade flask to 0.12.4 and werkzeug to 0.14.1  <https://github.com/CanalTP/navitia/pull/2520>
+  * Kraken: Upgrade rabbitmq-c to v0.9.0  <https://github.com/CanalTP/navitia/pull/2521>
+  * kraken: Upgrade prometheus-cpp 0.4.2  <https://github.com/CanalTP/navitia/pull/2519>
+  * Kraken: Maintenance_worker thread interuption  <https://github.com/CanalTP/navitia/pull/2518>
+
+ -- Benoit Brisset <benoit.brisset@gmail.com>  Fri, 14 Sep 2018 14:09:25 +0100
+
 navitia2 (2.62.0) unstable; urgency=low
 
   * Jormungandr: Configure autocomplete backend of a coverage from tyr  <https://github.com/CanalTP/navitia/pull/2515>

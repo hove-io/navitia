@@ -31,7 +31,7 @@
 from __future__ import absolute_import
 import re
 
-from flask.ext.restful import Resource
+from flask_restful import Resource
 from serpy.fields import MethodField
 from flask import request
 from jormungandr import app, _version

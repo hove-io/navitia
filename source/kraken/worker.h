@@ -94,7 +94,8 @@ class Worker {
                               const pt::ptime now,
                               const pt::time_period action_period,
                               const bool disable_geojson = false,
-                              const bool disable_feedpublisher = false);
+                              const bool disable_feedpublisher = false,
+                              const bool disable_disruption = false);
 
         void metadatas();
         void feed_publisher();

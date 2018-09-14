@@ -38,13 +38,13 @@ from jormungandr.module_resource import ModuleResource
 from navitiacommon import type_pb2, request_pb2
 from jormungandr import i_manager, USE_SERPY
 from jormungandr.protobuf_to_dict import protobuf_to_dict
-from flask.ext.restful.fields import Raw
+from flask_restful.fields import Raw
 from jormungandr import bss_provider_manager
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer.api import TechnicalStatusSerializer
 from jormungandr.interfaces.v1.serializer.status import CommonStatusSerializer
 from jormungandr.interfaces.v1.fields import ListLit, beta_endpoint, context_utc, instance_status, add_common_status
-from flask.ext.restful import fields
+from flask_restful import fields
 
 
 class Index(ModuleResource):

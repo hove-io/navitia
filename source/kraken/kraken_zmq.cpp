@@ -77,9 +77,9 @@ int main(int argn, char** argv){
     auto log_level = conf.log_level();
     auto log_format = conf.log_format();
     if(log_level && log_format){
-        init_logger(*log_level, *log_format);
+        navitia::init_logger("kraken", *log_level, false, *log_format);
     }else{
-        init_logger(conf_file);
+        navitia::init_logger(conf_file);
     }
 
     DataManager<navitia::type::Data> data_manager;
@@ -102,7 +102,9 @@ int main(int argn, char** argv){
     try{
         lb.bind(zmq_socket, "inproc://workers");
     }catch(zmq::error_t& e){
-        LOG4CPLUS_ERROR(logger, "zmq::socket_t::bind() failure: " << e.what());
+        LOG4CPLUS_ERROR(logger, "zmq::socket_t::bind( "<< zmq_socket << " ) failure: " << e.what());
+        threads.interrupt_all();
+        threads.join_all();
         return 1;
     }
 

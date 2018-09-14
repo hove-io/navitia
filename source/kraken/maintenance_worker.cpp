@@ -37,6 +37,7 @@ www.navitia.io
 #include "type/pt_data.h"
 #include <boost/algorithm/string/join.hpp>
 #include <boost/optional.hpp>
+#include <boost/thread/thread.hpp>
 #include <sys/stat.h>
 #include <signal.h>
 #include <SimpleAmqpClient/Envelope.h>
@@ -252,6 +253,7 @@ void MaintenanceWorker::listen_rabbitmq(){
     LOG4CPLUS_INFO(logger, "start event loop");
     data_manager.get_data()->is_connected_to_rabbitmq = true;
     while(true){
+        boost::this_thread::interruption_point();
         auto now = pt::microsec_clock::universal_time();
         //We don't want to try to load realtime data every second
         if(now > this->next_try_realtime_loading){

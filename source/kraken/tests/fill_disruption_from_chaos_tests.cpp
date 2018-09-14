@@ -48,7 +48,7 @@ www.navitia.io
 #include <boost/algorithm/string/classification.hpp>
 
 struct logger_initialized {
-    logger_initialized()   { init_logger(); }
+    logger_initialized()   { navitia::init_logger(); }
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized );
 

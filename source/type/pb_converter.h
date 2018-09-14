@@ -181,6 +181,7 @@ struct PbCreator {
     // Do we need to disable geojson in the request
     bool disable_geojson = false;
     bool disable_feedpublisher = false;
+    bool disable_disruption = false;
     // Raptor api
     size_t nb_sections = 0;
     std::map<std::pair<pbnavitia::Journey*, size_t>, std::string> routing_section_map;
@@ -192,24 +193,29 @@ struct PbCreator {
               const pt::ptime now,
               const pt::time_period action_period,
               const bool disable_geojson = false,
-              const bool disable_feedpublisher = false):
+              const bool disable_feedpublisher = false,
+              const bool disable_disruption = false):
         data(data),
         now(now),
         action_period(action_period),
         disable_geojson(disable_geojson),
-        disable_feedpublisher(disable_feedpublisher)
+        disable_feedpublisher(disable_feedpublisher),
+        disable_disruption(disable_disruption)
         {}
 
     void init(const nt::Data* data,
-                   const pt::ptime now,
-                   const pt::time_period action_period,
-                   const bool disable_geojson = false,
-                   const bool disable_feedpublisher = false) {
+              const pt::ptime now,
+              const pt::time_period action_period,
+              const bool disable_geojson = false,
+              const bool disable_feedpublisher = false,
+              const bool disable_disruption = false
+            ) {
         this->data = data;
         this->now = now;
         this->action_period = action_period;
         this->disable_geojson = disable_geojson;
         this->disable_feedpublisher = disable_feedpublisher;
+        this->disable_disruption = disable_disruption;
         this->nb_sections = 0;
 
         this->contributors.clear();

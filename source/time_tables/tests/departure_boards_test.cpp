@@ -1,28 +1,28 @@
 /* Copyright © 2001-2014, Canal TP and/or its affiliates. All rights reserved.
-  
+
 This file is part of Navitia,
     the software to build cool stuff with public transport.
- 
+
 Hope you'll enjoy and contribute to this project,
     powered by Canal TP (www.canaltp.fr).
 Help us simplify mobility and open public transport:
     a non ending quest to the responsive locomotion way of traveling!
-  
+
 LICENCE: This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-   
+
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 GNU Affero General Public License for more details.
-   
+
 You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
-  
+
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -40,7 +40,7 @@ www.navitia.io
 #include "kraken/make_disruption_from_chaos.h"
 
 struct logger_initialized {
-    logger_initialized()   { init_logger(); }
+    logger_initialized()   { navitia::init_logger(); }
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized );
 
@@ -62,8 +62,13 @@ static pt::ptime d(std::string str) {
 
 BOOST_AUTO_TEST_CASE(departureboard_test1) {
     ed::builder b("20150615");
-    b.vj("A", "110011000001", "", true, "vj1", "")("stop1", 10*3600, 10*3600)("stop2", 10*3600 + 30*60,10*3600 + 30*60);
-    b.vj("B", "110000001111", "", true, "vj2", "")("stop1", 10*3600 + 10*60, 10*3600 + 10*60)("stop2", 10*3600 + 40*60,10*3600 + 40*60)("stop3", 10*3600 + 50*60,10*3600 + 50*60);
+    b.vj("A", "110011000001", "", true, "vj1", "")
+        ("stop1", "10:00"_t, "10:00"_t)
+        ("stop2", "10:30"_t, "10:30"_t);
+    b.vj("B", "110000001111", "", true, "vj2", "")
+        ("stop1", "10:10"_t, "10:10"_t)
+        ("stop2", "10:40"_t, "10:40"_t)
+        ("stop3", "10:50"_t, "10:50"_t);
 
     const auto it1 = b.sas.find("stop2");
     b.data->pt_data->routes.front()->destination= it1->second; // Route A
@@ -207,6 +212,194 @@ BOOST_AUTO_TEST_CASE(departureboard_test1) {
     }
 }
 
+BOOST_AUTO_TEST_CASE(first_last_test1) {
+    ed::builder b("20150615");
+    b.vj("A", "11111111111111", "", true, "vj1", "")
+        ("stop1", "06:00"_t, "06:00"_t)
+        ("stop1", "07:00"_t, "07:00"_t)
+        ("stop1", "10:00"_t, "10:00"_t)
+        ("stop2", "10:30"_t, "10:30"_t);
+
+    const auto it1 = b.sas.find("stop2");
+    b.data->pt_data->routes.front()->destination= it1->second; // Route A
+    b.finish();
+    b.data->pt_data->sort_and_index();
+    b.data->build_raptor();
+    b.data->pt_data->build_uri();
+
+    boost::gregorian::date begin = boost::gregorian::date_from_iso_string("20150615");
+    boost::gregorian::date end = boost::gregorian::date_from_iso_string("20150630");
+
+    b.data->meta->production_date = boost::gregorian::date_period(begin, end);
+    pbnavitia::Response resp;
+
+    // fisrt and last date time tests
+    {
+        // Case 0 :
+        //
+        // Note
+        // - opening and closing date time not available
+        //
+        // Input
+        // - request date time : 09:45:00
+        //
+        // Output :
+        // - route 1, first date time : none
+        // - route 1, last date time  : none
+
+        auto * data_ptr = b.data.get();
+        navitia::PbCreator pb_creator0(data_ptr, bt::second_clock::universal_time(), null_time_period);
+        departure_board(pb_creator0, "stop_point.uri=stop1", {}, {}, d("20150615T094500"), 43200, 0,
+                        10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+
+        resp = pb_creator0.get_response();
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_first_datetime(),false);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_last_datetime(), false);
+
+        // Case 1 :
+        //
+        // Note
+        // - Classical test with a closing date time the day after.
+        //
+        // Input
+        // - opening date time : 05:30:00
+        // - request date time : 09:45:00
+        //
+        // Output :
+        // - route 1, first date time : 06:00
+        // - route 1, last date time  : 10:00
+        b.data->pt_data->routes.front()->line->opening_time = boost::posix_time::duration_from_string("05:30:00.000");
+
+        data_ptr = b.data.get();
+        navitia::PbCreator pb_creator1(data_ptr, bt::second_clock::universal_time(), null_time_period);
+        departure_board(pb_creator1, "stop_point.uri=stop1", {}, {}, d("20150615T094500"), 43200, 0,
+                        10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+
+        resp = pb_creator1.get_response();
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_first_datetime(),true);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_last_datetime(), true);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().time(), "06:00"_t);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().base_date_time(), "20150615T060000"_pts);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().time(), "10:00"_t);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().base_date_time(), "20150615T100000"_pts);
+
+        // Case 2 :
+        //
+        // Note
+        // - Classical test with a closing date time the same day.
+        //
+        // Input
+        // - opening date time : 05:30:00
+        // - request date time : 09:45:00
+        //
+        // Output :
+        // - route 1, first date time : 06:00
+        // - route 1, last date time  : 10:00
+        b.data->pt_data->routes.front()->line->opening_time = boost::posix_time::duration_from_string("05:30:00.000");
+
+        data_ptr = b.data.get();
+        navitia::PbCreator pb_creator2(data_ptr, bt::second_clock::universal_time(), null_time_period);
+        departure_board(pb_creator2, "stop_point.uri=stop1", {}, {}, d("20150615T094500"), 43200, 0,
+                        10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+
+        resp = pb_creator2.get_response();
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_first_datetime(),true);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_last_datetime(), true);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().time(), "06:00"_t);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().base_date_time(), "20150615T060000"_pts);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().time(), "10:00"_t);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().base_date_time(), "20150615T100000"_pts);
+
+        // Case 3 :
+        //
+        // Note
+        // - Request date time is on the service hole.
+        //
+        // Input
+        // - opening date time : 05:30:00
+        // - request date time : 02:00:00
+        //
+        // Output :
+        // - route 1, first date time : 06:00
+        // - route 1, last date time  : 10:00
+        b.data->pt_data->routes.front()->line->opening_time = boost::posix_time::duration_from_string("05:30:00.000");
+
+        data_ptr = b.data.get();
+        navitia::PbCreator pb_creator3(data_ptr, bt::second_clock::universal_time(), null_time_period);
+        departure_board(pb_creator3, "stop_point.uri=stop1", {}, {}, d("20150616T020000"), 86400, 0,
+                        10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+
+        resp = pb_creator3.get_response();
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_first_datetime(),true);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_last_datetime(), true);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().time(), "06:00"_t);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().base_date_time(), "20150616T060000"_pts);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().time(), "10:00"_t);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().base_date_time(), "20150616T100000"_pts);
+
+        // Case 4 :
+        //
+        // Note
+        // - Request date time is on the service hole.
+        //
+        // Input
+        // - opening date time : 05:30:00
+        // - request date time : 11:00:00
+        //
+        // Output :
+        // - route 1, first date time : 06:00
+        // - route 1, last date time  : 10:00
+        b.data->pt_data->routes.front()->line->opening_time = boost::posix_time::duration_from_string("05:30:00.000");
+
+        data_ptr = b.data.get();
+        navitia::PbCreator pb_creator4(data_ptr, bt::second_clock::universal_time(), null_time_period);
+        departure_board(pb_creator4, "stop_point.uri=stop1", {}, {}, d("20150616T110000"), 86400, 0,
+                        10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+
+        resp = pb_creator4.get_response();
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_first_datetime(),true);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_last_datetime(), true);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().time(), "06:00"_t);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().base_date_time(), "20150617T060000"_pts);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().time(), "10:00"_t);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().base_date_time(), "20150617T100000"_pts);
+
+        // Case 5 :
+        //
+        // Note
+        // - opening date time is equal to the next stop time.
+        //
+        // Input
+        // - opening date time : 06:00:00
+        // - next stop time    : 06:00:00
+        // - request date time : 04:00:00
+        //
+        // Output :
+        // - route 1, first date time : 06:00
+        // - route 1, last date time  : 10:00
+        b.data->pt_data->routes.front()->line->opening_time = boost::posix_time::duration_from_string("06:00:00.000");
+        b.data->pt_data->routes.front()->line->closing_time = boost::posix_time::duration_from_string("02:00:00.000");
+
+        data_ptr = b.data.get();
+        navitia::PbCreator pb_creator5(data_ptr, bt::second_clock::universal_time(), null_time_period);
+        departure_board(pb_creator5, "stop_point.uri=stop1", {}, {}, d("20150615T040000"), 86400, 0,
+                        10, 0, nt::RTLevel::Base, std::numeric_limits<size_t>::max());
+
+        resp = pb_creator5.get_response();
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules_size(), 1);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_first_datetime(),true);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).has_last_datetime(), true);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().time(), "06:00"_t);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).first_datetime().base_date_time(), "20150615T060000"_pts);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().time(), "10:00"_t);
+        BOOST_REQUIRE_EQUAL(resp.stop_schedules(0).last_datetime().base_date_time(), "20150615T100000"_pts);
+    }
+}
 BOOST_AUTO_TEST_CASE(departureboard_test_with_impacts) {
     ed::builder b("20150615");
     b.vj("A", "110011000001", "", true, "vj1", "")("stop1", 10*3600, 10*3600)("stop2", 10*3600 + 30*60,10*3600 + 30*60);
@@ -1019,7 +1212,7 @@ BOOST_FIXTURE_TEST_CASE(test_journey, calendar_fixture) {
 }
 
 /*
- *  Calling a stop_schedule asking only for base schedule data should return base schedule data 
+ *  Calling a stop_schedule asking only for base schedule data should return base schedule data
  */
 BOOST_FIXTURE_TEST_CASE(base_stop_schedule, departure_board_fixture) {
     auto * data_ptr = b.data.get();

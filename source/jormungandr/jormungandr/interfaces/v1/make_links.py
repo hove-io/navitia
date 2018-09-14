@@ -33,7 +33,7 @@ from collections import OrderedDict
 from functools import wraps
 from jormungandr.interfaces.v1.converters_collection_type import resource_type_to_collection,\
     collections_to_resource_type
-from flask.ext.restful.utils import unpack
+from flask_restful.utils import unpack
 from jormungandr import app
 
 

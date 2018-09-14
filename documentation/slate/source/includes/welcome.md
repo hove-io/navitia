@@ -4,7 +4,7 @@ Getting started
 Overview
 --------
 
-_Navitia_ is the open API for building cool stuff with mobility data.
+**Navitia** (_pronounce [navi-sia]_) is the open API for building cool stuff with mobility data.
 
 It provides the following services:
 

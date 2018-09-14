@@ -1,4 +1,4 @@
-/* Copyright © 2001-2017, Canal TP and/or its affiliates. All rights reserved.
+/* Copyright © 2001-2018, Canal TP and/or its affiliates. All rights reserved.
 
 This file is part of Navitia,
     the software to build cool stuff with public transport.
@@ -38,7 +38,7 @@ namespace bg = boost::gregorian;
 using btp = boost::posix_time::time_period;
 
 /*
- * A dataset with a negative time offset. Cape Verde is UTC-01 without
+ * A dataset with a positive time offset. Hongkong is UTC+08 without
  * DST.
  */
 int main(int argc, const char* const argv[]) {
@@ -47,28 +47,8 @@ int main(int argc, const char* const argv[]) {
     const auto date = "20170101";
     const auto begin = boost::gregorian::date_from_iso_string(date);
     const boost::gregorian::date_period production_date = {begin, begin + boost::gregorian::years(1)};
-    navitia::type::TimeZoneHandler::dst_periods timezones = {{-"01:00"_t, {production_date}}};
-    ed::builder b("20170101", "canal tp", "Atlantic/Cape_Verde", timezones);
-
-    // UTC and local pass midnight vj
-    b.vj("line:1", "000010")
-        .uri("vj:1:1")
-        ("A", "23:00"_t)
-        ("B", "23:30"_t)
-        ("C", "24:00"_t)
-        ("D", "24:30"_t)
-        ("E", "25:00"_t)
-        ("F", "25:30"_t)
-        ("G", "26:00"_t);
-
-    // Only local pass midnight vj
-    b.vj("line:1", "000100")
-        .uri("vj:1:2")
-        ("C", "00:00"_t)
-        ("D", "00:30"_t)
-        ("E", "01:00"_t)
-        ("F", "01:30"_t)
-        ("G", "02:00"_t);
+    navitia::type::TimeZoneHandler::dst_periods timezones = {{"08:00"_t, {production_date}}};
+    ed::builder b("20170101", "canal tp", "Asia/Hong_Kong", timezones);
 
     /* The X line is used to test first/last departure of a line
      *
@@ -77,44 +57,47 @@ int main(int argc, const char* const argv[]) {
     b.vj("X", "11100111")
     		.route("route_1")
     		.uri("X:vj1")
-			("X_S1", "08:00"_t)("X_S2", "16:00"_t)("X_S3", "24:30"_t)("X_S4", "24:40"_t).make();
+			// 06:00 UTC+08       06:30 UTC+08        23:50 UTC+08        00:30 UTC+08
+			("X_S1", "22:00"_t)("X_S2", "22:30"_t)("X_S3", "39:50"_t)("X_S4", "40:30"_t).make();
     b.vj("X", "11100111")
     		.route("route_1")
     		.uri("X:vj2")
-			("X_S1", "09:00"_t)("X_S2", "17:00"_t)("X_S3", "25:30"_t)("X_S4", "25:40"_t).make();
+			("X_S1", "22:10"_t)("X_S2", "22:40"_t)("X_S3", "40:00"_t)("X_S4", "40:40"_t).make();
     b.vj("X", "11100111")
     		.route("route_1")
     		.uri("X:vj3")
-			("X_S1", "10:00"_t)("X_S2", "18:00"_t)("X_S3", "26:30"_t)("X_S4", "26:40"_t).make();
+			("X_S1", "22:20"_t)("X_S2", "22:50"_t)("X_S3", "40:10"_t)("X_S4", "40:50"_t).make();
 
     b.vj("X", "00011000")
     		.route("route_1")
     		.uri("X:vj4")
-			("X_S1", "08:05"_t)("X_S2", "16:05"_t)("X_S3", "24:45"_t)("X_S4", "24:55"_t).make();
+			("X_S1", "22:05"_t)("X_S2", "22:35"_t)("X_S3", "39:55"_t)("X_S4", "40:35"_t).make();
     b.vj("X", "00011000")
     		.route("route_1")
     		.uri("X:vj5")
-			("X_S1", "09:05"_t)("X_S2", "17:05"_t)("X_S3", "25:45"_t)("X_S4", "25:55"_t).make();
+			("X_S1", "22:15"_t)("X_S2", "22:45"_t)("X_S3", "40:05"_t)("X_S4", "40:45"_t).make();
     b.vj("X", "00011000")
     		.route("route_1")
     		.uri("X:vj6")
-			("X_S1", "10:05"_t)("X_S2", "18:05"_t)("X_S3", "26:45"_t)("X_S4", "26:55"_t).make();
+			("X_S1", "22:25"_t)("X_S2", "22:55"_t)("X_S3", "40:15"_t)("X_S4", "40:55"_t).make();
+
 
     b.vj("X", "11111111")
     		.route("route_2")
-        	.uri("X:vj7")
-			("X_S4", "08:55"_t)("X_S3", "09:05"_t)("X_S2", "17:05"_t)("X_S1", "25:45"_t).make();
+    		.uri("X:vj7")
+			("X_S4", "22:00"_t)("X_S3", "22:40"_t)("X_S2", "39:40"_t)("X_S1", "40:20"_t).make();
     b.vj("X", "11111111")
     		.route("route_2")
     		.uri("X:vj8")
-			("X_S4", "09:55"_t)("X_S3", "10:05"_t)("X_S2", "18:05"_t)("X_S1", "26:45"_t).make();
+			("X_S4", "22:05"_t)("X_S3", "22:45"_t)("X_S2", "39:45"_t)("X_S1", "40:25"_t).make();
+
 
     auto line_X = b.lines.find("X")->second;
 
-    // the opening time should be the earliest departure of all vjs of the line and it's stored as local time
-    line_X->opening_time = boost::make_optional(boost::posix_time::duration_from_string("07:00"));
-    // the closing time should be the latest arrival of all vjs of the line and it's stored as local time
-    line_X->closing_time = boost::make_optional(boost::posix_time::duration_from_string("26:55"));
+    // opening time should be the earliest departure of all vjs of the line and it's stored as local time
+    line_X->opening_time = boost::make_optional(boost::posix_time::duration_from_string("06:00"));
+    // closing time should be the latest arrival of all vjs of the line and it's stored as local time
+    line_X->closing_time = boost::make_optional(boost::posix_time::duration_from_string("00:55"));
 
     b.generate_dummy_basis();
     b.finish();
@@ -124,7 +107,7 @@ int main(int argc, const char* const argv[]) {
     b.build_autocomplete();
     b.data->meta->production_date = bg::date_period(bg::date(2017, 1, 1), bg::days(30));
 
-    mock_kraken kraken(b, "timezone_cape_verde_test", argc, argv);
+    mock_kraken kraken(b, "timezone_hong_kong_test", argc, argv);
 
     return 0;
 }

@@ -164,11 +164,15 @@ Jointures::Jointures() {
         boost::add_edge(vertex_map.at(Type_e::Impact), vertex_map.at(object), g);
     }
 
-    // Retrieve a Line from an Impact. The edge has a super heavy weight to make sure we don't go
-    // through the impact object to resolve another type. Because objects might not have impact attached,
+    // Retrieve a PT_object from an Impact. The edges have a super heavy weight to make sure we don't go
+    // through the impact object to resolve other types. Because objects might not have impact attached,
     // we would not convert object properly otherwise.
-    boost::add_edge(vertex_map.at(Type_e::Line), vertex_map.at(Type_e::Impact), Edge(100), g);
     boost::add_edge(vertex_map.at(Type_e::Network), vertex_map.at(Type_e::Impact), Edge(100), g);
+    boost::add_edge(vertex_map.at(Type_e::Line), vertex_map.at(Type_e::Impact), Edge(100), g);
+    boost::add_edge(vertex_map.at(Type_e::Route), vertex_map.at(Type_e::Impact), Edge(100), g);
+    boost::add_edge(vertex_map.at(Type_e::StopArea), vertex_map.at(Type_e::Impact), Edge(100), g);
+    boost::add_edge(vertex_map.at(Type_e::StopPoint), vertex_map.at(Type_e::Impact), Edge(100), g);
+    boost::add_edge(vertex_map.at(Type_e::MetaVehicleJourney), vertex_map.at(Type_e::Impact), Edge(100), g);
 }
 
 // Retourne un map qui indique pour chaque type par quel type on peut l'atteindre

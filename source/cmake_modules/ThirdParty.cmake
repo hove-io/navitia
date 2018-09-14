@@ -37,11 +37,13 @@ include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/third_party/")
 # We want to deactivate prometheus lib if CMake version < 2.8.12.2
 if("${CMAKE_VERSION}" VERSION_GREATER 2.8.12.1)
 
-    include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/third_party/prometheus-cpp/include/"
-                        "${CMAKE_BINARY_DIR}/third_party/prometheus-cpp/lib/cpp")
+
+    include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/third_party/prometheus-cpp/core/include/")
+    include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/third_party/prometheus-cpp/pull/include/")
     #prometheus-cpp cmake will refuse to build if the CMAKE_INSTALL_PREFIX is empty
     #setting it before will have side effects on how we build packages
     set(CMAKE_INSTALL_PREFIX "/")
+    set(ENABLE_PUSH OFF CACHE INTERNAL "" FORCE)
     add_subdirectory(third_party/prometheus-cpp)
 
     message("-- Add prometheus in third party")

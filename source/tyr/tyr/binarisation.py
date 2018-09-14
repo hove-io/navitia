@@ -171,6 +171,9 @@ def fusio2ed(self, instance_config, filename, job_id, dataset_uid):
         connection_string = make_connection_string(instance_config)
         params.append("--connection-string")
         params.append(connection_string)
+        params.append("--local_syslog")
+        params.append("--log_comment")
+        params.append(instance_config.name)
         res = None
         with collect_metric('fusio2ed', job, dataset_uid):
             res = launch_exec("fusio2ed", params, logger)
@@ -207,6 +210,9 @@ def gtfs2ed(self, instance_config, gtfs_filename, job_id, dataset_uid):
         connection_string = make_connection_string(instance_config)
         params.append("--connection-string")
         params.append(connection_string)
+        params.append("--local_syslog")
+        params.append("--log_comment")
+        params.append(instance_config.name)
         res = None
         with collect_metric('gtfs2ed', job, dataset_uid):
             res = launch_exec("gtfs2ed", params, logger)
@@ -241,6 +247,9 @@ def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
         if poi_types_json:
             args.append('-p')
             args.append(u'{}'.format(poi_types_json))
+            args.append("--local_syslog")
+            args.append("--log_comment")
+            args.append(instance_config.name)
 
         with collect_metric('osm2ed', job, dataset_uid):
             res = launch_exec('osm2ed',
@@ -268,10 +277,14 @@ def geopal2ed(self, instance_config, filename, job_id, dataset_uid):
 
         connection_string = make_connection_string(instance_config)
         res = None
+        params = ["-i", working_directory]
+        params.append("--connection-string")
+        params.append(connection_string)
+        params.append("--local_syslog")
+        params.append("--log_comment")
+        params.append(instance_config.name)
         with collect_metric('geopal2ed', job, dataset_uid):
-            res = launch_exec('geopal2ed',
-                    ["-i", working_directory, "--connection-string", connection_string],
-                    logger)
+            res = launch_exec('geopal2ed', params, logger)
         if res != 0:
             #@TODO: exception
             raise ValueError('geopal2ed failed')
@@ -294,10 +307,14 @@ def poi2ed(self, instance_config, filename, job_id, dataset_uid):
 
         connection_string = make_connection_string(instance_config)
         res = None
+        params = ["-i", working_directory]
+        params.append("--connection-string")
+        params.append(connection_string)
+        params.append("--local_syslog")
+        params.append("--log_comment")
+        params.append(instance_config.name)
         with collect_metric('poi2ed', job, dataset_uid):
-            res = launch_exec('poi2ed',
-                    ["-i", working_directory, "--connection-string", connection_string],
-                    logger)
+            res = launch_exec('poi2ed', params, logger)
         if res != 0:
             #@TODO: exception
             raise ValueError('poi2ed failed')
@@ -319,10 +336,14 @@ def synonym2ed(self, instance_config, filename, job_id, dataset_uid):
     try:
         connection_string = make_connection_string(instance_config)
         res = None
+        params = ["-i", filename]
+        params.append("--connection-string")
+        params.append(connection_string)
+        params.append("--local_syslog")
+        params.append("--log_comment")
+        params.append(instance_config.name)
         with collect_metric('synonym2ed', job, dataset_uid):
-            res = launch_exec('synonym2ed',
-                    ["-i", filename, "--connection-string", connection_string],
-                    logger)
+            res = launch_exec('synonym2ed', params, logger)
         if res != 0:
             #@TODO: exception
             raise ValueError('synonym2ed failed')
@@ -468,6 +489,8 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
             argv.extend(["--cities-connection-string", current_app.config['CITIES_DATABASE_URI']])
         if instance.full_sn_geometries:
             argv.extend(['--full_street_network_geometries'])
+            argv.extend(['--local_syslog'])
+            argv.extend(["--log_comment", instance_config.name])
 
         res = None
         with collect_metric('ed2nav', job, None):
@@ -495,10 +518,13 @@ def fare2ed(self, instance_config, filename, job_id, dataset_uid):
 
         working_directory = unzip_if_needed(filename)
 
-        res = launch_exec("fare2ed", ['-f', working_directory,
-                                      '--connection-string',
-                                      make_connection_string(instance_config)],
-                          logger)
+        params = ["-f", working_directory]
+        params.append("--connection-string")
+        params.append(make_connection_string(instance_config))
+        params.append("--local_syslog")
+        params.append("--log_comment")
+        params.append(instance_config.name)
+        res = launch_exec("fare2ed", params, logger)
         if res != 0:
             #@TODO: exception
             raise ValueError('fare2ed failed')
