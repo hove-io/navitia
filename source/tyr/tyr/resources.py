@@ -1,4 +1,4 @@
-#coding: utf-8
+# coding: utf-8
 
 # Copyright (c) 2001-2014, Canal TP and/or its affiliates. All rights reserved.
 #
@@ -46,7 +46,10 @@ import shutil
 import json
 from jsonschema import validate, ValidationError
 from tyr.formats import poi_type_conf_format, parse_error
-from navitiacommon.default_traveler_profile_params import default_traveler_profile_params, acceptable_traveler_types
+from navitiacommon.default_traveler_profile_params import (
+    default_traveler_profile_params,
+    acceptable_traveler_types,
+)
 from navitiacommon import models, utils
 from navitiacommon.models import db
 from navitiacommon.parser_args_type import CoordFormat, PositiveFloat, BooleanType, OptionValue, geojson_argument
@@ -125,21 +128,32 @@ class PoiType(flask_restful.Resource):
             poi_types_map = {}
             for p in poi_types_json.get('poi_types', []):
                 if p.get('id') in poi_types_map:
-                    abort(400, status="error",
-                          message='POI type id {} is defined multiple times'.format(p.get('id')))
+                    abort(
+                        400,
+                        status="error",
+                        message='POI type id {} is defined multiple times'.format(p.get('id')),
+                    )
                 poi_types_map[p.get('id')] = p.get('name')
 
             if not 'amenity:parking' in poi_types_map or not 'amenity:bicycle_rental' in poi_types_map:
-                abort(400, status="error",
-                      message='The 2 POI types id=amenity:parking and id=amenity:bicycle_rental must be defined')
+                abort(
+                    400,
+                    status="error",
+                    message='The 2 POI types id=amenity:parking and id=amenity:bicycle_rental must be defined',
+                )
 
             for r in poi_types_json.get('rules', []):
                 pt_id = r.get('poi_type_id')
                 if not pt_id in poi_types_map:
-                    abort(400, status="error",
-                          message='Using an undefined POI type id ({}) forbidden in rules'.format(pt_id))
+                    abort(
+                        400,
+                        status="error",
+                        message='Using an undefined POI type id ({}) forbidden in rules'.format(pt_id),
+                    )
 
-            poi_types = models.PoiTypeJson(json.dumps(poi_types_json, ensure_ascii=False).encode('utf-8', 'backslashreplace'), instance)
+            poi_types = models.PoiTypeJson(
+                json.dumps(poi_types_json, ensure_ascii=False).encode('utf-8', 'backslashreplace'), instance
+            )
             db.session.add(poi_types)
             db.session.commit()
         except Exception:
@@ -169,12 +183,21 @@ class Instance(flask_restful.Resource):
     @marshal_with(instance_fields)
     def get(self, id=None, name=None):
         parser = reqparse.RequestParser()
-        parser.add_argument('is_free', type=inputs.boolean, required=False,
-                case_sensitive=False, help='boolean for returning only free or private instances')
+        parser.add_argument(
+            'is_free',
+            type=inputs.boolean,
+            required=False,
+            case_sensitive=False,
+            help='boolean for returning only free or private instances',
+        )
         args = parser.parse_args()
         args.update({'id': id, 'name': name})
         if any(v is not None for v in args.values()):
-            return models.Instance.query_existing().filter_by(**{k: v for k, v in args.items() if v is not None}).all()
+            return (
+                models.Instance.query_existing()
+                .filter_by(**{k: v for k, v in args.items() if v is not None})
+                .all()
+            )
         else:
             return models.Instance.query_existing().all()
 
@@ -194,188 +217,382 @@ class Instance(flask_restful.Resource):
         instance = models.Instance.get_from_id_or_name(id, name)
 
         parser = reqparse.RequestParser()
-        parser.add_argument('scenario', type=str, case_sensitive=False,
-                help='the name of the scenario used by jormungandr', choices=['default',
-                                                                              'keolis',
-                                                                              'destineo',
-                                                                              'new_default',
-                                                                              'distributed'],
-                location=('json', 'values'), default=instance.scenario)
-        parser.add_argument('journey_order', type=str, case_sensitive=False,
-                help='the sort order of the journeys in jormungandr', choices=['arrival_time', 'departure_time'],
-                location=('json', 'values'), default=instance.journey_order)
-        parser.add_argument('max_walking_duration_to_pt', type=int,
-                help='the maximum duration of walking in fallback section', location=('json', 'values'),
-                default=instance.max_walking_duration_to_pt)
-        parser.add_argument('max_bike_duration_to_pt', type=int,
-                help='the maximum duration of bike in fallback section', location=('json', 'values'),
-                default=instance.max_bike_duration_to_pt)
-        parser.add_argument('max_bss_duration_to_pt', type=int,
-                help='the maximum duration of bss in fallback section', location=('json', 'values'),
-                default=instance.max_bss_duration_to_pt)
-        parser.add_argument('max_car_duration_to_pt', type=int,
-                help='the maximum duration of car in fallback section', location=('json', 'values'),
-                default=instance.max_car_duration_to_pt)
-        parser.add_argument('max_car_no_park_duration_to_pt', type=int,
-                help='the maximum duration of car in fallback section when parking aren\'t used',
-                location=('json', 'values'), default=instance.max_car_no_park_duration_to_pt)
-        parser.add_argument('max_nb_transfers', type=int,
-                help='the maximum number of transfers in a journey', location=('json', 'values'),
-                default=instance.max_nb_transfers)
-        parser.add_argument('walking_speed', type=float,
-                help='the walking speed', location=('json', 'values'), default=instance.walking_speed)
-        parser.add_argument('bike_speed', type=float,
-                help='the biking speed', location=('json', 'values'), default=instance.bike_speed)
-        parser.add_argument('bss_speed', type=float,
-                help='the speed of bss', location=('json', 'values'), default=instance.bss_speed)
-        parser.add_argument('car_speed', type=float,
-                help='the speed of car', location=('json', 'values'), default=instance.car_speed)
-        parser.add_argument('car_no_park_speed', type=float,
-                help='the speed of car when parking aren\'t used', location=('json', 'values'),
-                default=instance.car_no_park_speed)
-        parser.add_argument('min_tc_with_car', type=int,
-                help='minimum duration of tc when a car fallback is used', location=('json', 'values'),
-                default=instance.min_tc_with_car)
-        parser.add_argument('min_tc_with_bike', type=int,
-                help='minimum duration of tc when a bike fallback is used', location=('json', 'values'),
-                default=instance.min_tc_with_bike)
-        parser.add_argument('min_tc_with_bss', type=int,
-                help='minimum duration of tc when a bss fallback is used', location=('json', 'values'),
-                default=instance.min_tc_with_bss)
-        parser.add_argument('min_bike', type=int,
-                help='minimum duration of bike fallback', location=('json', 'values'),
-                default=instance.min_bike)
-        parser.add_argument('min_bss', type=int,
-                help='minimum duration of bss fallback', location=('json', 'values'),
-                default=instance.min_bss)
-        parser.add_argument('min_car', type=int,
-                help='minimum duration of car fallback', location=('json', 'values'),
-                default=instance.min_car)
-        parser.add_argument('factor_too_long_journey', type=float,
-                help='if a journey is X time longer than the earliest one we remove it', location=('json', 'values'),
-                default=instance.factor_too_long_journey)
-        parser.add_argument('min_duration_too_long_journey', type=int,
-                help='all journeys with a duration fewer than this value will be kept no matter what even if they ' \
-                        'are 20 times slower than the earliest one', location=('json', 'values'),
-                default=instance.min_duration_too_long_journey)
-        parser.add_argument('successive_physical_mode_to_limit_id', type=str,
-                help='the id of physical_mode to limit succession, as sent by kraken to jormungandr,'
-                     ' used by _max_successive_physical_mode rule', location=('json', 'values'),
-                default=instance.successive_physical_mode_to_limit_id)
-        parser.add_argument('max_duration_criteria', type=str, choices=['time', 'duration'],
-                help='', location=('json', 'values'),
-                default=instance.max_duration_criteria)
+        parser.add_argument(
+            'scenario',
+            type=str,
+            case_sensitive=False,
+            help='the name of the scenario used by jormungandr',
+            choices=['default', 'keolis', 'destineo', 'new_default', 'distributed'],
+            location=('json', 'values'),
+            default=instance.scenario,
+        )
+        parser.add_argument(
+            'journey_order',
+            type=str,
+            case_sensitive=False,
+            help='the sort order of the journeys in jormungandr',
+            choices=['arrival_time', 'departure_time'],
+            location=('json', 'values'),
+            default=instance.journey_order,
+        )
+        parser.add_argument(
+            'max_walking_duration_to_pt',
+            type=int,
+            help='the maximum duration of walking in fallback section',
+            location=('json', 'values'),
+            default=instance.max_walking_duration_to_pt,
+        )
+        parser.add_argument(
+            'max_bike_duration_to_pt',
+            type=int,
+            help='the maximum duration of bike in fallback section',
+            location=('json', 'values'),
+            default=instance.max_bike_duration_to_pt,
+        )
+        parser.add_argument(
+            'max_bss_duration_to_pt',
+            type=int,
+            help='the maximum duration of bss in fallback section',
+            location=('json', 'values'),
+            default=instance.max_bss_duration_to_pt,
+        )
+        parser.add_argument(
+            'max_car_duration_to_pt',
+            type=int,
+            help='the maximum duration of car in fallback section',
+            location=('json', 'values'),
+            default=instance.max_car_duration_to_pt,
+        )
+        parser.add_argument(
+            'max_car_no_park_duration_to_pt',
+            type=int,
+            help='the maximum duration of car in fallback section when parking aren\'t used',
+            location=('json', 'values'),
+            default=instance.max_car_no_park_duration_to_pt,
+        )
+        parser.add_argument(
+            'max_nb_transfers',
+            type=int,
+            help='the maximum number of transfers in a journey',
+            location=('json', 'values'),
+            default=instance.max_nb_transfers,
+        )
+        parser.add_argument(
+            'walking_speed',
+            type=float,
+            help='the walking speed',
+            location=('json', 'values'),
+            default=instance.walking_speed,
+        )
+        parser.add_argument(
+            'bike_speed',
+            type=float,
+            help='the biking speed',
+            location=('json', 'values'),
+            default=instance.bike_speed,
+        )
+        parser.add_argument(
+            'bss_speed',
+            type=float,
+            help='the speed of bss',
+            location=('json', 'values'),
+            default=instance.bss_speed,
+        )
+        parser.add_argument(
+            'car_speed',
+            type=float,
+            help='the speed of car',
+            location=('json', 'values'),
+            default=instance.car_speed,
+        )
+        parser.add_argument(
+            'car_no_park_speed',
+            type=float,
+            help='the speed of car when parking aren\'t used',
+            location=('json', 'values'),
+            default=instance.car_no_park_speed,
+        )
+        parser.add_argument(
+            'min_tc_with_car',
+            type=int,
+            help='minimum duration of tc when a car fallback is used',
+            location=('json', 'values'),
+            default=instance.min_tc_with_car,
+        )
+        parser.add_argument(
+            'min_tc_with_bike',
+            type=int,
+            help='minimum duration of tc when a bike fallback is used',
+            location=('json', 'values'),
+            default=instance.min_tc_with_bike,
+        )
+        parser.add_argument(
+            'min_tc_with_bss',
+            type=int,
+            help='minimum duration of tc when a bss fallback is used',
+            location=('json', 'values'),
+            default=instance.min_tc_with_bss,
+        )
+        parser.add_argument(
+            'min_bike',
+            type=int,
+            help='minimum duration of bike fallback',
+            location=('json', 'values'),
+            default=instance.min_bike,
+        )
+        parser.add_argument(
+            'min_bss',
+            type=int,
+            help='minimum duration of bss fallback',
+            location=('json', 'values'),
+            default=instance.min_bss,
+        )
+        parser.add_argument(
+            'min_car',
+            type=int,
+            help='minimum duration of car fallback',
+            location=('json', 'values'),
+            default=instance.min_car,
+        )
+        parser.add_argument(
+            'factor_too_long_journey',
+            type=float,
+            help='if a journey is X time longer than the earliest one we remove it',
+            location=('json', 'values'),
+            default=instance.factor_too_long_journey,
+        )
+        parser.add_argument(
+            'min_duration_too_long_journey',
+            type=int,
+            help='all journeys with a duration fewer than this value will be kept no matter what even if they '
+            'are 20 times slower than the earliest one',
+            location=('json', 'values'),
+            default=instance.min_duration_too_long_journey,
+        )
+        parser.add_argument(
+            'successive_physical_mode_to_limit_id',
+            type=str,
+            help='the id of physical_mode to limit succession, as sent by kraken to jormungandr,'
+            ' used by _max_successive_physical_mode rule',
+            location=('json', 'values'),
+            default=instance.successive_physical_mode_to_limit_id,
+        )
+        parser.add_argument(
+            'max_duration_criteria',
+            type=str,
+            choices=['time', 'duration'],
+            help='',
+            location=('json', 'values'),
+            default=instance.max_duration_criteria,
+        )
 
-        parser.add_argument('max_duration_fallback_mode', type=str, choices=['walking', 'bss', 'bike', 'car'],
-                help='', location=('json', 'values'),
-                default=instance.max_duration_fallback_mode)
+        parser.add_argument(
+            'max_duration_fallback_mode',
+            type=str,
+            choices=['walking', 'bss', 'bike', 'car'],
+            help='',
+            location=('json', 'values'),
+            default=instance.max_duration_fallback_mode,
+        )
 
-        parser.add_argument('max_duration', type=int, help='latest time point of research, in second',
-                            location=('json', 'values'), default=instance.max_duration)
+        parser.add_argument(
+            'max_duration',
+            type=int,
+            help='latest time point of research, in second',
+            location=('json', 'values'),
+            default=instance.max_duration,
+        )
 
-        parser.add_argument('walking_transfer_penalty', type=int, help='transfer penalty, in second',
-                            location=('json', 'values'), default=instance.walking_transfer_penalty)
+        parser.add_argument(
+            'walking_transfer_penalty',
+            type=int,
+            help='transfer penalty, in second',
+            location=('json', 'values'),
+            default=instance.walking_transfer_penalty,
+        )
 
-        parser.add_argument('night_bus_filter_max_factor', type=float, help='night bus filter param',
-                            location=('json', 'values'), default=instance.night_bus_filter_max_factor)
+        parser.add_argument(
+            'night_bus_filter_max_factor',
+            type=float,
+            help='night bus filter param',
+            location=('json', 'values'),
+            default=instance.night_bus_filter_max_factor,
+        )
 
-        parser.add_argument('night_bus_filter_base_factor', type=int, help='night bus filter param',
-                            location=('json', 'values'), default=instance.night_bus_filter_base_factor)
-        parser.add_argument('priority', type=int, help='instance priority',
-                            location=('json', 'values'), default=instance.priority)
-        parser.add_argument('bss_provider', type=inputs.boolean, help='bss provider activation',
-                            location=('json', 'values'), default=instance.bss_provider)
-        parser.add_argument('full_sn_geometries', type=inputs.boolean, help='activation of full geometries',
-                            location=('json', 'values'), default=instance.full_sn_geometries)
-        parser.add_argument('is_free', type=inputs.boolean, help='instance doesn\'t require authorization to be used',
-                            location=('json', 'values'), default=instance.is_free)
-        parser.add_argument('is_open_data', type=inputs.boolean, help='instance only use open data',
-                            location=('json', 'values'), default=instance.is_open_data)
-        parser.add_argument('import_stops_in_mimir', type=inputs.boolean,
-                            help='import stops in global autocomplete',
-                            location=('json', 'values'), default=instance.import_stops_in_mimir)
-        parser.add_argument('import_ntfs_in_mimir', type=inputs.boolean,
-                            help='import ntfs data in global autocomplete',
-                            location=('json', 'values'), default=instance.import_ntfs_in_mimir)
-        parser.add_argument('min_nb_journeys', type=int,
-                            help='minimum number of different suggested journeys', location=('json', 'values'),
-                            default=instance.min_nb_journeys)
-        parser.add_argument('max_nb_journeys', type=int, required=False,
-                            help='maximum number of different suggested journeys', location=('json', 'values'))
-        parser.add_argument('min_journeys_calls', type=int,
-                            help='minimum number of calls to kraken', location=('json', 'values'),
-                            default=instance.min_journeys_calls)
-        parser.add_argument('max_successive_physical_mode', type=int, required=False,
-                            help='maximum number of successive physical modes in an itinerary',
-                            location=('json', 'values'))
-        parser.add_argument('final_line_filter', type=inputs.boolean,
-                            help='filter on vj using same lines and same stops', location=('json', 'values'),
-                            default=instance.final_line_filter)
-        parser.add_argument('max_extra_second_pass', type=int,
-                            help='maximum number of second pass to get more itineraries',
-                            location=('json', 'values'), default=instance.max_extra_second_pass)
+        parser.add_argument(
+            'night_bus_filter_base_factor',
+            type=int,
+            help='night bus filter param',
+            location=('json', 'values'),
+            default=instance.night_bus_filter_base_factor,
+        )
+        parser.add_argument(
+            'priority',
+            type=int,
+            help='instance priority',
+            location=('json', 'values'),
+            default=instance.priority,
+        )
+        parser.add_argument(
+            'bss_provider',
+            type=inputs.boolean,
+            help='bss provider activation',
+            location=('json', 'values'),
+            default=instance.bss_provider,
+        )
+        parser.add_argument(
+            'full_sn_geometries',
+            type=inputs.boolean,
+            help='activation of full geometries',
+            location=('json', 'values'),
+            default=instance.full_sn_geometries,
+        )
+        parser.add_argument(
+            'is_free',
+            type=inputs.boolean,
+            help='instance doesn\'t require authorization to be used',
+            location=('json', 'values'),
+            default=instance.is_free,
+        )
+        parser.add_argument(
+            'is_open_data',
+            type=inputs.boolean,
+            help='instance only use open data',
+            location=('json', 'values'),
+            default=instance.is_open_data,
+        )
+        parser.add_argument(
+            'import_stops_in_mimir',
+            type=inputs.boolean,
+            help='import stops in global autocomplete',
+            location=('json', 'values'),
+            default=instance.import_stops_in_mimir,
+        )
+        parser.add_argument(
+            'import_ntfs_in_mimir',
+            type=inputs.boolean,
+            help='import ntfs data in global autocomplete',
+            location=('json', 'values'),
+            default=instance.import_ntfs_in_mimir,
+        )
+        parser.add_argument(
+            'min_nb_journeys',
+            type=int,
+            help='minimum number of different suggested journeys',
+            location=('json', 'values'),
+            default=instance.min_nb_journeys,
+        )
+        parser.add_argument(
+            'max_nb_journeys',
+            type=int,
+            required=False,
+            help='maximum number of different suggested journeys',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'min_journeys_calls',
+            type=int,
+            help='minimum number of calls to kraken',
+            location=('json', 'values'),
+            default=instance.min_journeys_calls,
+        )
+        parser.add_argument(
+            'max_successive_physical_mode',
+            type=int,
+            required=False,
+            help='maximum number of successive physical modes in an itinerary',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'final_line_filter',
+            type=inputs.boolean,
+            help='filter on vj using same lines and same stops',
+            location=('json', 'values'),
+            default=instance.final_line_filter,
+        )
+        parser.add_argument(
+            'max_extra_second_pass',
+            type=int,
+            help='maximum number of second pass to get more itineraries',
+            location=('json', 'values'),
+            default=instance.max_extra_second_pass,
+        )
 
-        parser.add_argument('max_nb_crowfly_by_mode', type=dict,
-                            help='maximum nb of crowfly, used before computing the fallback matrix,'
-                                 ' in distributed scenario',
-                            location=('json', 'values'), default=instance.max_nb_crowfly_by_mode)
+        parser.add_argument(
+            'max_nb_crowfly_by_mode',
+            type=dict,
+            help='maximum nb of crowfly, used before computing the fallback matrix,' ' in distributed scenario',
+            location=('json', 'values'),
+            default=instance.max_nb_crowfly_by_mode,
+        )
 
-        parser.add_argument('autocomplete_backend', type=str, case_sensitive=False,
-                help='the name of the backend used by jormungandr for the autocompletion',
-                choices=['kraken', 'bragi'],
-                location=('json', 'values'), default=instance.autocomplete_backend)
+        parser.add_argument(
+            'autocomplete_backend',
+            type=str,
+            case_sensitive=False,
+            help='the name of the backend used by jormungandr for the autocompletion',
+            choices=['kraken', 'bragi'],
+            location=('json', 'values'),
+            default=instance.autocomplete_backend,
+        )
 
         args = parser.parse_args()
 
         try:
+
             def map_args_to_instance(attr_name):
                 setattr(instance, attr_name, args[attr_name])
 
-            map(map_args_to_instance, ['scenario',
-                                       'journey_order',
-                                       'max_walking_duration_to_pt',
-                                       'max_bike_duration_to_pt',
-                                       'max_bss_duration_to_pt',
-                                       'max_car_duration_to_pt',
-                                       'max_car_no_park_duration_to_pt',
-                                       'max_nb_transfers',
-                                       'walking_speed',
-                                       'bike_speed',
-                                       'bss_speed',
-                                       'car_speed',
-                                       'car_no_park_speed',
-                                       'min_tc_with_car',
-                                       'min_tc_with_bike',
-                                       'min_tc_with_bss',
-                                       'min_bike',
-                                       'min_bss',
-                                       'min_car',
-                                       'min_duration_too_long_journey',
-                                       'factor_too_long_journey',
-                                       'max_duration_criteria',
-                                       'max_duration_fallback_mode',
-                                       'max_duration',
-                                       'walking_transfer_penalty',
-                                       'night_bus_filter_max_factor',
-                                       'night_bus_filter_base_factor',
-                                       'successive_physical_mode_to_limit_id',
-                                       'priority',
-                                       'bss_provider',
-                                       'full_sn_geometries',
-                                       'is_free',
-                                       'is_open_data',
-                                       'import_stops_in_mimir',
-                                       'import_ntfs_in_mimir',
-                                       'min_nb_journeys',
-                                       'max_nb_journeys',
-                                       'min_journeys_calls',
-                                       'max_successive_physical_mode',
-                                       'final_line_filter',
-                                       'max_extra_second_pass',
-                                       'autocomplete_backend',
-                                    ])
+            map(
+                map_args_to_instance,
+                [
+                    'scenario',
+                    'journey_order',
+                    'max_walking_duration_to_pt',
+                    'max_bike_duration_to_pt',
+                    'max_bss_duration_to_pt',
+                    'max_car_duration_to_pt',
+                    'max_car_no_park_duration_to_pt',
+                    'max_nb_transfers',
+                    'walking_speed',
+                    'bike_speed',
+                    'bss_speed',
+                    'car_speed',
+                    'car_no_park_speed',
+                    'min_tc_with_car',
+                    'min_tc_with_bike',
+                    'min_tc_with_bss',
+                    'min_bike',
+                    'min_bss',
+                    'min_car',
+                    'min_duration_too_long_journey',
+                    'factor_too_long_journey',
+                    'max_duration_criteria',
+                    'max_duration_fallback_mode',
+                    'max_duration',
+                    'walking_transfer_penalty',
+                    'night_bus_filter_max_factor',
+                    'night_bus_filter_base_factor',
+                    'successive_physical_mode_to_limit_id',
+                    'priority',
+                    'bss_provider',
+                    'full_sn_geometries',
+                    'is_free',
+                    'is_open_data',
+                    'import_stops_in_mimir',
+                    'import_ntfs_in_mimir',
+                    'min_nb_journeys',
+                    'max_nb_journeys',
+                    'min_journeys_calls',
+                    'max_successive_physical_mode',
+                    'final_line_filter',
+                    'max_extra_second_pass',
+                    'autocomplete_backend',
+                ],
+            )
             max_nb_crowfly_by_mode = args.get('max_nb_crowfly_by_mode')
             import copy
+
             new = copy.deepcopy(instance.max_nb_crowfly_by_mode)
             new.update(max_nb_crowfly_by_mode)
             instance.max_nb_crowfly_by_mode = new
@@ -389,11 +606,9 @@ class Instance(flask_restful.Resource):
 class User(flask_restful.Resource):
     def get(self, user_id=None):
         parser = reqparse.RequestParser()
-        parser.add_argument('disable_geojson',
-                            type=inputs.boolean,
-                            default=True,
-                            help='remove geojson from the response'
-                            )
+        parser.add_argument(
+            'disable_geojson', type=inputs.boolean, default=True, help='remove geojson from the response'
+        )
         if user_id:
             args = parser.parse_args()
             g.disable_geojson = args['disable_geojson']
@@ -401,15 +616,11 @@ class User(flask_restful.Resource):
 
             return marshal(user, user_fields_full)
         else:
-            parser.add_argument('login', type=unicode, required=False,
-                    case_sensitive=False, help='login')
-            parser.add_argument('email', type=unicode, required=False,
-                    case_sensitive=False, help='email')
-            parser.add_argument('key', type=unicode, required=False,
-                    case_sensitive=False, help='key')
+            parser.add_argument('login', type=unicode, required=False, case_sensitive=False, help='login')
+            parser.add_argument('email', type=unicode, required=False, case_sensitive=False, help='email')
+            parser.add_argument('key', type=unicode, required=False, case_sensitive=False, help='key')
             parser.add_argument('end_point_id', type=int)
-            parser.add_argument('block_until', type=datetime_format, required=False,
-                    case_sensitive=False)
+            parser.add_argument('block_until', type=datetime_format, required=False, case_sensitive=False)
 
             args = parser.parse_args()
             g.disable_geojson = args['disable_geojson']
@@ -433,27 +644,57 @@ class User(flask_restful.Resource):
     def post(self):
         user = None
         parser = reqparse.RequestParser()
-        parser.add_argument('login', type=unicode, required=True,
-                case_sensitive=False, help='login is required', location=('json', 'values'))
-        parser.add_argument('email', type=unicode, required=True,
-                case_sensitive=False, help='email is required', location=('json', 'values'))
-        parser.add_argument('block_until', type=datetime_format, required=False,
-                            help='end block date access', location=('json', 'values'))
-        parser.add_argument('end_point_id', type=int, required=False,
-                            help='id of the end_point', location=('json', 'values'))
-        parser.add_argument('billing_plan_id', type=int, required=False,
-                            help='id of the billing_plan', location=('json', 'values'))
-        parser.add_argument('type', type=str, required=False, default='with_free_instances',
-                            help='type of user: [with_free_instances, without_free_instances, super_user]',
-                            location=('json', 'values'),
-                            choices=['with_free_instances', 'without_free_instances', 'super_user'])
+        parser.add_argument(
+            'login',
+            type=unicode,
+            required=True,
+            case_sensitive=False,
+            help='login is required',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'email',
+            type=unicode,
+            required=True,
+            case_sensitive=False,
+            help='email is required',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'block_until',
+            type=datetime_format,
+            required=False,
+            help='end block date access',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'end_point_id', type=int, required=False, help='id of the end_point', location=('json', 'values')
+        )
+        parser.add_argument(
+            'billing_plan_id',
+            type=int,
+            required=False,
+            help='id of the billing_plan',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'type',
+            type=str,
+            required=False,
+            default='with_free_instances',
+            help='type of user: [with_free_instances, without_free_instances, super_user]',
+            location=('json', 'values'),
+            choices=['with_free_instances', 'without_free_instances', 'super_user'],
+        )
         parser.add_argument('shape', type=geojson_argument, required=False, location=('json', 'values'))
         parser.add_argument('default_coord', type=CoordFormat(), required=False, location=('json', 'values'))
         args = parser.parse_args()
 
-        if not validate_email(args['email'],
-                          check_mx=current_app.config['EMAIL_CHECK_MX'],
-                          verify=current_app.config['EMAIL_CHECK_SMTP']):
+        if not validate_email(
+            args['email'],
+            check_mx=current_app.config['EMAIL_CHECK_MX'],
+            verify=current_app.config['EMAIL_CHECK_SMTP'],
+        ):
             return ({'error': 'email invalid'}, 400)
 
         end_point = None
@@ -496,27 +737,69 @@ class User(flask_restful.Resource):
     def put(self, user_id):
         user = models.User.query.get_or_404(user_id)
         parser = reqparse.RequestParser()
-        parser.add_argument('login', type=unicode, required=False, default=user.login,
-                case_sensitive=False, help='user identifier', location=('json', 'values'))
-        parser.add_argument('email', type=unicode, required=False, default=user.email,
-                case_sensitive=False, help='email is required', location=('json', 'values'))
-        parser.add_argument('type', type=str, required=False, default=user.type, location=('json', 'values'),
-                            help='type of user: [with_free_instances, without_free_instances, super_user]',
-                            choices=['with_free_instances', 'without_free_instances', 'super_user'])
-        parser.add_argument('end_point_id', type=int, default=user.end_point_id,
-                            help='id of the end_point', location=('json', 'values'))
-        parser.add_argument('block_until', type=datetime_format, required=False,
-                            help='block until argument is not correct', location=('json', 'values'))
-        parser.add_argument('billing_plan_id', type=int, default=user.billing_plan_id,
-                            help='billing id of the end_point', location=('json', 'values'))
-        parser.add_argument('shape', type=geojson_argument,
-                            default=ujson.loads(user.shape), required=False, location=('json', 'values'))
+        parser.add_argument(
+            'login',
+            type=unicode,
+            required=False,
+            default=user.login,
+            case_sensitive=False,
+            help='user identifier',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'email',
+            type=unicode,
+            required=False,
+            default=user.email,
+            case_sensitive=False,
+            help='email is required',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'type',
+            type=str,
+            required=False,
+            default=user.type,
+            location=('json', 'values'),
+            help='type of user: [with_free_instances, without_free_instances, super_user]',
+            choices=['with_free_instances', 'without_free_instances', 'super_user'],
+        )
+        parser.add_argument(
+            'end_point_id',
+            type=int,
+            default=user.end_point_id,
+            help='id of the end_point',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'block_until',
+            type=datetime_format,
+            required=False,
+            help='block until argument is not correct',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'billing_plan_id',
+            type=int,
+            default=user.billing_plan_id,
+            help='billing id of the end_point',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'shape',
+            type=geojson_argument,
+            default=ujson.loads(user.shape),
+            required=False,
+            location=('json', 'values'),
+        )
         parser.add_argument('default_coord', type=CoordFormat(), required=False, location=('json', 'values'))
         args = parser.parse_args()
 
-        if not validate_email(args['email'],
-                          check_mx=current_app.config['EMAIL_CHECK_MX'],
-                          verify=current_app.config['EMAIL_CHECK_SMTP']):
+        if not validate_email(
+            args['email'],
+            check_mx=current_app.config['EMAIL_CHECK_MX'],
+            verify=current_app.config['EMAIL_CHECK_SMTP'],
+        ):
             return ({'error': 'email invalid'}, 400)
 
         end_point = models.EndPoint.query.get(args['end_point_id'])
@@ -588,10 +871,20 @@ class Key(flask_restful.Resource):
     @marshal_with(user_fields_full)
     def post(self, user_id):
         parser = reqparse.RequestParser()
-        parser.add_argument('valid_until', type=inputs.date, required=False,
-                            help='end validity date of the key', location=('json', 'values'))
-        parser.add_argument('app_name', type=str, required=True,
-                            help='app name associated to this key', location=('json', 'values'))
+        parser.add_argument(
+            'valid_until',
+            type=inputs.date,
+            required=False,
+            help='end validity date of the key',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'app_name',
+            type=str,
+            required=True,
+            help='app name associated to this key',
+            location=('json', 'values'),
+        )
         args = parser.parse_args()
         user = models.User.query.get_or_404(user_id)
         try:
@@ -619,10 +912,20 @@ class Key(flask_restful.Resource):
     @marshal_with(user_fields_full)
     def put(self, user_id, key_id):
         parser = reqparse.RequestParser()
-        parser.add_argument('valid_until', type=inputs.date, required=False,
-                help='end validity date of the key', location=('json', 'values'))
-        parser.add_argument('app_name', type=str, required=True,
-                help='app name associated to this key', location=('json', 'values'))
+        parser.add_argument(
+            'valid_until',
+            type=inputs.date,
+            required=False,
+            help='end validity date of the key',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'app_name',
+            type=str,
+            required=True,
+            help='app name associated to this key',
+            location=('json', 'values'),
+        )
         args = parser.parse_args()
         user = models.User.query.get_or_404(user_id)
         try:
@@ -645,15 +948,21 @@ class Authorization(flask_restful.Resource):
 
     def delete(self, user_id):
         parser = reqparse.RequestParser()
-        parser.add_argument('api_id', type=int, required=True,
-                            help='api_id is required', location=('json', 'values'))
-        parser.add_argument('instance_id', type=int, required=True,
-                            help='instance_id is required', location=('json', 'values'))
+        parser.add_argument(
+            'api_id', type=int, required=True, help='api_id is required', location=('json', 'values')
+        )
+        parser.add_argument(
+            'instance_id', type=int, required=True, help='instance_id is required', location=('json', 'values')
+        )
         args = parser.parse_args()
 
         try:
             user = models.User.query.get_or_404(user_id)
-            authorizations = [a for a in user.authorizations if a.api_id == args['api_id'] and  a.instance_id == args['instance_id']]
+            authorizations = [
+                a
+                for a in user.authorizations
+                if a.api_id == args['api_id'] and a.instance_id == args['instance_id']
+            ]
             if not authorizations:
                 abort(404)
             for authorization in authorizations:
@@ -666,10 +975,12 @@ class Authorization(flask_restful.Resource):
 
     def post(self, user_id):
         parser = reqparse.RequestParser()
-        parser.add_argument('api_id', type=int, required=True,
-                            help='api_id is required', location=('json', 'values'))
-        parser.add_argument('instance_id', type=int, required=True,
-                            help='instance_id is required', location=('json', 'values'))
+        parser.add_argument(
+            'api_id', type=int, required=True, help='api_id is required', location=('json', 'values')
+        )
+        parser.add_argument(
+            'instance_id', type=int, required=True, help='instance_id is required', location=('json', 'values')
+        )
         args = parser.parse_args()
 
         user = models.User.query.get_or_404(user_id)
@@ -693,15 +1004,13 @@ class Authorization(flask_restful.Resource):
 
 
 class EndPoint(flask_restful.Resource):
-
     @marshal_with(end_point_fields)
     def get(self):
         return models.EndPoint.query.all()
 
     def post(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('name', type=unicode, required=True,
-                            help='name of the endpoint', location=('json'))
+        parser.add_argument('name', type=unicode, required=True, help='name of the endpoint', location=('json'))
         args = parser.parse_args()
 
         try:
@@ -728,8 +1037,9 @@ class EndPoint(flask_restful.Resource):
     def put(self, id):
         end_point = models.EndPoint.query.get_or_404(id)
         parser = reqparse.RequestParser()
-        parser.add_argument('name', type=unicode, default=end_point.name,
-                            help='name of the endpoint', location=('json'))
+        parser.add_argument(
+            'name', type=unicode, default=end_point.name, help='name of the endpoint', location=('json')
+        )
         args = parser.parse_args()
 
         try:
@@ -773,41 +1083,71 @@ class TravelerProfile(flask_restful.Resource):
     """
     Traveler profile api for creating updating and removing
     """
+
     def __init__(self):
         # fallback modes
         fb_modes = ['walking', 'car', 'bss', 'bike', 'ridesharing']
 
         parser = reqparse.RequestParser()
-        parser.add_argument('walking_speed', type=PositiveFloat(), required=False,
-                            location=('json', 'values'))
-        parser.add_argument('bike_speed', type=PositiveFloat(), required=False,
-                            location=('json', 'values'))
-        parser.add_argument('bss_speed', type=PositiveFloat(), required=False,
-                            location=('json', 'values'))
-        parser.add_argument('car_speed', type=PositiveFloat(), required=False,
-                            location=('json', 'values'))
-        parser.add_argument('wheelchair', type=BooleanType(), required=False,
-                            location=('json', 'values'))
-        parser.add_argument('max_walking_duration_to_pt', type=PositiveFloat(), required=False,
-                            help='in second', location=('json', 'values'))
-        parser.add_argument('max_bike_duration_to_pt', type=PositiveFloat(), required=False,
-                            help='in second', location=('json', 'values'))
-        parser.add_argument('max_bss_duration_to_pt', type=PositiveFloat(), required=False,
-                            help='in second', location=('json', 'values'))
-        parser.add_argument('max_car_duration_to_pt', type=PositiveFloat(), required=False,
-                            help='in second', location=('json', 'values'))
-        parser.add_argument('first_section_mode[]',
-                            type=OptionValue(fb_modes), case_sensitive=False,
-                            required=False, action='append', dest='first_section_mode', location='values')
-        parser.add_argument('last_section_mode[]',
-                            type=OptionValue(fb_modes), case_sensitive=False,
-                            required=False, action='append', dest='last_section_mode', location='values')
+        parser.add_argument('walking_speed', type=PositiveFloat(), required=False, location=('json', 'values'))
+        parser.add_argument('bike_speed', type=PositiveFloat(), required=False, location=('json', 'values'))
+        parser.add_argument('bss_speed', type=PositiveFloat(), required=False, location=('json', 'values'))
+        parser.add_argument('car_speed', type=PositiveFloat(), required=False, location=('json', 'values'))
+        parser.add_argument('wheelchair', type=BooleanType(), required=False, location=('json', 'values'))
+        parser.add_argument(
+            'max_walking_duration_to_pt',
+            type=PositiveFloat(),
+            required=False,
+            help='in second',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'max_bike_duration_to_pt',
+            type=PositiveFloat(),
+            required=False,
+            help='in second',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'max_bss_duration_to_pt',
+            type=PositiveFloat(),
+            required=False,
+            help='in second',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'max_car_duration_to_pt',
+            type=PositiveFloat(),
+            required=False,
+            help='in second',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'first_section_mode[]',
+            type=OptionValue(fb_modes),
+            case_sensitive=False,
+            required=False,
+            action='append',
+            dest='first_section_mode',
+            location='values',
+        )
+        parser.add_argument(
+            'last_section_mode[]',
+            type=OptionValue(fb_modes),
+            case_sensitive=False,
+            required=False,
+            action='append',
+            dest='last_section_mode',
+            location='values',
+        )
 
         # flask parser returns a list for first_section_mode and last_section_mode
-        parser.add_argument('first_section_mode',
-                            type=OptionValue(fb_modes), action='append', required=False, location='json')
-        parser.add_argument('last_section_mode',
-                            type=OptionValue(fb_modes), action='append', required=False, location='json')
+        parser.add_argument(
+            'first_section_mode', type=OptionValue(fb_modes), action='append', required=False, location='json'
+        )
+        parser.add_argument(
+            'last_section_mode', type=OptionValue(fb_modes), action='append', required=False, location='json'
+        )
 
         self.args = parser.parse_args()
 
@@ -817,7 +1157,11 @@ class TravelerProfile(flask_restful.Resource):
             tp = kwds.get('traveler_type')
             if tp in acceptable_traveler_types:
                 return f(*args, **kwds)
-            return {'error': 'traveler profile: {0} is not one of in {1}'.format(tp, acceptable_traveler_types)}, 400
+            return (
+                {'error': 'traveler profile: {0} is not one of in {1}'.format(tp, acceptable_traveler_types)},
+                400,
+            )
+
         return wrapper
 
     @marshal_with(traveler_profile)
@@ -829,7 +1173,9 @@ class TravelerProfile(flask_restful.Resource):
             if traveler_type is None:
                 traveler_profiles += models.TravelerProfile.get_all_by_coverage(coverage=name)
             else:
-                profile = models.TravelerProfile.get_by_coverage_and_type(coverage=name, traveler_type=traveler_type)
+                profile = models.TravelerProfile.get_by_coverage_and_type(
+                    coverage=name, traveler_type=traveler_type
+                )
                 if profile:
                     traveler_profiles.append(profile)
 
@@ -887,7 +1233,10 @@ class TravelerProfile(flask_restful.Resource):
     def delete(self, name=None, traveler_type=None):
         profile = models.TravelerProfile.get_by_coverage_and_type(name, traveler_type)
         if profile is None:
-            return {'error': 'Instance: {0} has no such profile: {1} in db to delete'.format(name, traveler_type)}, 400
+            return (
+                {'error': 'Instance: {0} has no such profile: {1} in db to delete'.format(name, traveler_type)},
+                400,
+            )
         try:
             db.session.delete(profile)
             db.session.commit()
@@ -912,17 +1261,39 @@ class BillingPlan(flask_restful.Resource):
 
     def post(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('name', type=unicode, required=True,
-                            case_sensitive=False, help='name is required',
-                            location=('json', 'values'))
-        parser.add_argument('max_request_count', type=int, required=False,
-                            help='max request count for this billing plan', location=('json', 'values'))
-        parser.add_argument('max_object_count', type=int, required=False,
-                            help='max object count for this billing plan', location=('json', 'values'))
-        parser.add_argument('default', type=bool, required=False, default=True,
-                            help='if this plan is the default one', location=('json', 'values'))
-        parser.add_argument('end_point_id', type=int, required=False,
-                            help='id of the end_point', location=('json', 'values'))
+        parser.add_argument(
+            'name',
+            type=unicode,
+            required=True,
+            case_sensitive=False,
+            help='name is required',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'max_request_count',
+            type=int,
+            required=False,
+            help='max request count for this billing plan',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'max_object_count',
+            type=int,
+            required=False,
+            help='max object count for this billing plan',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'default',
+            type=bool,
+            required=False,
+            default=True,
+            help='if this plan is the default one',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'end_point_id', type=int, required=False, help='id of the end_point', location=('json', 'values')
+        )
         args = parser.parse_args()
 
         if args['end_point_id']:
@@ -934,8 +1305,12 @@ class BillingPlan(flask_restful.Resource):
             return ({'error': 'end_point doesn\'t exist'}, 400)
 
         try:
-            billing_plan = models.BillingPlan(name=args['name'], max_request_count=args['max_request_count'],
-                                              max_object_count=args['max_object_count'], default=args['default'])
+            billing_plan = models.BillingPlan(
+                name=args['name'],
+                max_request_count=args['max_request_count'],
+                max_object_count=args['max_object_count'],
+                default=args['default'],
+            )
             billing_plan.end_point = end_point
             db.session.add(billing_plan)
             db.session.commit()
@@ -947,16 +1322,45 @@ class BillingPlan(flask_restful.Resource):
     def put(self, billing_plan_id=None):
         billing_plan = models.BillingPlan.query.get_or_404(billing_plan_id)
         parser = reqparse.RequestParser()
-        parser.add_argument('name', type=unicode, required=False, default=billing_plan.name,
-                            case_sensitive=False, location=('json', 'values'))
-        parser.add_argument('max_request_count', type=int, required=False, default=billing_plan.max_request_count,
-                            help='max request count for this billing plan', location=('json', 'values'))
-        parser.add_argument('max_object_count', type=int, required=False, default=billing_plan.max_object_count,
-                            help='max object count for this billing plan', location=('json', 'values'))
-        parser.add_argument('default', type=bool, required=False, default=billing_plan.default,
-                            help='if this plan is the default one', location=('json', 'values'))
-        parser.add_argument('end_point_id', type=int, default=billing_plan.end_point_id,
-                            help='id of the end_point', location=('json', 'values'))
+        parser.add_argument(
+            'name',
+            type=unicode,
+            required=False,
+            default=billing_plan.name,
+            case_sensitive=False,
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'max_request_count',
+            type=int,
+            required=False,
+            default=billing_plan.max_request_count,
+            help='max request count for this billing plan',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'max_object_count',
+            type=int,
+            required=False,
+            default=billing_plan.max_object_count,
+            help='max object count for this billing plan',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'default',
+            type=bool,
+            required=False,
+            default=billing_plan.default,
+            help='if this plan is the default one',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'end_point_id',
+            type=int,
+            default=billing_plan.end_point_id,
+            help='id of the end_point',
+            location=('json', 'values'),
+        )
         args = parser.parse_args()
 
         end_point = models.EndPoint.query.get(args['end_point_id'])
@@ -987,6 +1391,7 @@ class BillingPlan(flask_restful.Resource):
             raise
         return ({}, 204)
 
+
 class AutocompleteParameter(flask_restful.Resource):
     def get(self, name=None):
         if name:
@@ -998,27 +1403,51 @@ class AutocompleteParameter(flask_restful.Resource):
 
     def post(self):
         parser = reqparse.RequestParser()
-        parser.add_argument('name', type=unicode, required=True,
-                            case_sensitive=False, help='name is required',
-                            location=('json', 'values'))
-        parser.add_argument('street', type=str, required=False, default='OSM',
-                            help='source for street: [OSM]',
-                            location=('json', 'values'),
-                            choices=utils.street_source_types)
-        parser.add_argument('address', type=str, required=False, default='BANO',
-                            help='source for address: [BANO, OpenAddresses]',
-                            location=('json', 'values'),
-                            choices=utils.address_source_types)
-        parser.add_argument('poi', type=str, required=False, default='FUSIO',
-                            help='source for poi: [FUSIO, OSM]',
-                            location=('json', 'values'),
-                            choices=utils.poi_source_types)
-        parser.add_argument('admin', type=str, required=False, default='OSM',
-                            help='source for admin: [FUSIO, OSM]',
-                            location=('json', 'values'),
-                            choices=utils.admin_source_types)
+        parser.add_argument(
+            'name',
+            type=unicode,
+            required=True,
+            case_sensitive=False,
+            help='name is required',
+            location=('json', 'values'),
+        )
+        parser.add_argument(
+            'street',
+            type=str,
+            required=False,
+            default='OSM',
+            help='source for street: [OSM]',
+            location=('json', 'values'),
+            choices=utils.street_source_types,
+        )
+        parser.add_argument(
+            'address',
+            type=str,
+            required=False,
+            default='BANO',
+            help='source for address: [BANO, OpenAddresses]',
+            location=('json', 'values'),
+            choices=utils.address_source_types,
+        )
+        parser.add_argument(
+            'poi',
+            type=str,
+            required=False,
+            default='FUSIO',
+            help='source for poi: [FUSIO, OSM]',
+            location=('json', 'values'),
+            choices=utils.poi_source_types,
+        )
+        parser.add_argument(
+            'admin',
+            type=str,
+            required=False,
+            default='OSM',
+            help='source for admin: [FUSIO, OSM]',
+            location=('json', 'values'),
+            choices=utils.admin_source_types,
+        )
         parser.add_argument('admin_level', type=int, action='append', required=True)
-
 
         args = parser.parse_args()
 
@@ -1044,24 +1473,45 @@ class AutocompleteParameter(flask_restful.Resource):
     def put(self, name=None):
         autocomplete_param = models.AutocompleteParameter.query.filter_by(name=name).first_or_404()
         parser = reqparse.RequestParser()
-        parser.add_argument('street', type=str, required=False, default=autocomplete_param.street,
-                            help='source for street: {}'.format(utils.street_source_types),
-                            location=('json', 'values'),
-                            choices=utils.street_source_types)
-        parser.add_argument('address', type=str, required=False, default=autocomplete_param.address,
-                            help='source for address: {}'.format(utils.address_source_types),
-                            location=('json', 'values'),
-                            choices=utils.address_source_types)
-        parser.add_argument('poi', type=str, required=False, default=autocomplete_param.poi,
-                            help='source for poi: {}'.format(utils.poi_source_types),
-                            location=('json', 'values'),
-                            choices=utils.poi_source_types)
-        parser.add_argument('admin', type=str, required=False, default=autocomplete_param.admin,
-                            help='source for admin: {}'.format(utils.admin_source_types),
-                            location=('json', 'values'),
-                            choices=utils.admin_source_types)
-        parser.add_argument('admin_level', type=int, action='append', required=False,
-                            default=autocomplete_param.admin_level)
+        parser.add_argument(
+            'street',
+            type=str,
+            required=False,
+            default=autocomplete_param.street,
+            help='source for street: {}'.format(utils.street_source_types),
+            location=('json', 'values'),
+            choices=utils.street_source_types,
+        )
+        parser.add_argument(
+            'address',
+            type=str,
+            required=False,
+            default=autocomplete_param.address,
+            help='source for address: {}'.format(utils.address_source_types),
+            location=('json', 'values'),
+            choices=utils.address_source_types,
+        )
+        parser.add_argument(
+            'poi',
+            type=str,
+            required=False,
+            default=autocomplete_param.poi,
+            help='source for poi: {}'.format(utils.poi_source_types),
+            location=('json', 'values'),
+            choices=utils.poi_source_types,
+        )
+        parser.add_argument(
+            'admin',
+            type=str,
+            required=False,
+            default=autocomplete_param.admin,
+            help='source for admin: {}'.format(utils.admin_source_types),
+            location=('json', 'values'),
+            choices=utils.admin_source_types,
+        )
+        parser.add_argument(
+            'admin_level', type=int, action='append', required=False, default=autocomplete_param.admin_level
+        )
 
         args = parser.parse_args()
 
@@ -1092,12 +1542,16 @@ class AutocompleteParameter(flask_restful.Resource):
 
 
 class InstanceDataset(flask_restful.Resource):
-
     def get(self, instance_name):
         parser = reqparse.RequestParser()
-        parser.add_argument('count', type=int, required=False,
-                            help='number of last dataset to dump per type',
-                            location=('json', 'values'), default=1)
+        parser.add_argument(
+            'count',
+            type=int,
+            required=False,
+            help='number of last dataset to dump per type',
+            location=('json', 'values'),
+            default=1,
+        )
         args = parser.parse_args()
         instance = models.Instance.get_by_name(instance_name)
         datasets = instance.last_datasets(args['count'])
@@ -1106,12 +1560,16 @@ class InstanceDataset(flask_restful.Resource):
 
 
 class AutocompleteDataset(flask_restful.Resource):
-
     def get(self, ac_instance_name):
         parser = reqparse.RequestParser()
-        parser.add_argument('count', type=int, required=False,
-                            help='number of last dataset to dump per type',
-                            location=('json', 'values'), default=1)
+        parser.add_argument(
+            'count',
+            type=int,
+            required=False,
+            help='number of last dataset to dump per type',
+            location=('json', 'values'),
+            default=1,
+        )
         args = parser.parse_args()
         instance = models.AutocompleteParameter.query.filter_by(name=ac_instance_name).first_or_404()
         datasets = instance.last_datasets(args['count'])
@@ -1131,12 +1589,11 @@ class AutocompleteUpdateData(flask_restful.Resource):
         logger.info('content received: %s', content)
         filename = save_in_tmp(content)
         _, job = import_autocomplete([filename], instance)
-        job = models.db.session.merge(job) #reatache the object
+        job = models.db.session.merge(job)  # reatache the object
         return marshal({'job': job}, one_job_fields), 200
 
 
 class DeleteDataset(flask_restful.Resource):
-
     def delete(self, instance_name, type):
 
         instance = models.Instance.get_by_name(instance_name)
@@ -1155,14 +1612,17 @@ class DeleteDataset(flask_restful.Resource):
 
 
 class MigrateFromPoiToOsm(flask_restful.Resource):
-
     def put(self, instance_name):
         instance = models.Instance.get_by_name(instance_name)
         if instance:
             instance_conf = load_instance_config(instance_name)
-            connection_string = "postgres://{u}:{pw}@{h}:{port}/{db}"\
-                .format(u=instance_conf.pg_username, pw=instance_conf.pg_password,
-                        h=instance_conf.pg_host, db=instance_conf.pg_dbname, port=instance_conf.pg_port)
+            connection_string = "postgres://{u}:{pw}@{h}:{port}/{db}".format(
+                u=instance_conf.pg_username,
+                pw=instance_conf.pg_password,
+                h=instance_conf.pg_host,
+                db=instance_conf.pg_dbname,
+                port=instance_conf.pg_port,
+            )
             engine = sqlalchemy.create_engine(connection_string)
 
             engine.execute("""UPDATE navitia.parameters SET parse_pois_from_osm = TRUE""").close()

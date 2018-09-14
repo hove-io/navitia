@@ -96,9 +96,11 @@ def make_connection_string(instance_config):
     connection_string += ' port=' + instance_config.pg_port
     return connection_string
 
+
 class Lock(object):
     def __init__(self, timeout):
         self.timeout = timeout
+
     def __call__(self, func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -123,10 +125,12 @@ class Lock(object):
                     return func(*args, **kwargs)
                 finally:
                     logger.debug('release lock on %s for %s', job.instance.name, func.__name__)
-                    #sometimes we are disconnected from redis when we want to release the lock,
-                    #so we retry only the release
+                    # sometimes we are disconnected from redis when we want to release the lock,
+                    # so we retry only the release
                     retrying.Retrying(stop_max_attempt_number=5, wait_fixed=1000).call(lock.release)
+
         return wrapper
+
 
 @contextmanager
 def collect_metric(task_type, job, dataset_uid):
@@ -140,15 +144,16 @@ def collect_metric(task_type, job, dataset_uid):
         metric.job = job
         metric.dataset = dataset
         metric.type = task_type
-        metric.duration = end-begin
+        metric.duration = end - begin
         models.db.session.add(metric)
         models.db.session.commit()
     except:
         logger = logging.getLogger(__name__)
         logger.exception('unable to persist Metrics data: ')
 
+
 @celery.task(bind=True)
-@Lock(timeout=30*60)
+@Lock(timeout=30 * 60)
 def fusio2ed(self, instance_config, filename, job_id, dataset_uid):
     """ Unzip fusio file and launch fusio2ed """
 
@@ -187,7 +192,7 @@ def fusio2ed(self, instance_config, filename, job_id, dataset_uid):
 
 
 @celery.task(bind=True)
-@Lock(30*60)
+@Lock(30 * 60)
 def gtfs2ed(self, instance_config, gtfs_filename, job_id, dataset_uid):
     """ Unzip gtfs file launch gtfs2ed """
 
@@ -226,7 +231,7 @@ def gtfs2ed(self, instance_config, gtfs_filename, job_id, dataset_uid):
 
 
 @celery.task(bind=True)
-@Lock(timeout=30*60)
+@Lock(timeout=30 * 60)
 def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
     """ launch osm2ed """
 
@@ -252,11 +257,9 @@ def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
             args.append(instance_config.name)
 
         with collect_metric('osm2ed', job, dataset_uid):
-            res = launch_exec('osm2ed',
-                    args,
-                    logger)
+            res = launch_exec('osm2ed', args, logger)
         if res != 0:
-            #@TODO: exception
+            # @TODO: exception
             raise ValueError('osm2ed failed')
     except:
         logger.exception('')
@@ -264,8 +267,9 @@ def osm2ed(self, instance_config, osm_filename, job_id, dataset_uid):
         models.db.session.commit()
         raise
 
+
 @celery.task(bind=True)
-@Lock(timeout=30*60)
+@Lock(timeout=30 * 60)
 def geopal2ed(self, instance_config, filename, job_id, dataset_uid):
     """ launch geopal2ed """
 
@@ -286,7 +290,7 @@ def geopal2ed(self, instance_config, filename, job_id, dataset_uid):
         with collect_metric('geopal2ed', job, dataset_uid):
             res = launch_exec('geopal2ed', params, logger)
         if res != 0:
-            #@TODO: exception
+            # @TODO: exception
             raise ValueError('geopal2ed failed')
     except:
         logger.exception('')
@@ -294,8 +298,9 @@ def geopal2ed(self, instance_config, filename, job_id, dataset_uid):
         models.db.session.commit()
         raise
 
+
 @celery.task(bind=True)
-@Lock(timeout=10*60)
+@Lock(timeout=10 * 60)
 def poi2ed(self, instance_config, filename, job_id, dataset_uid):
     """ launch poi2ed """
 
@@ -316,7 +321,7 @@ def poi2ed(self, instance_config, filename, job_id, dataset_uid):
         with collect_metric('poi2ed', job, dataset_uid):
             res = launch_exec('poi2ed', params, logger)
         if res != 0:
-            #@TODO: exception
+            # @TODO: exception
             raise ValueError('poi2ed failed')
     except:
         logger.exception('')
@@ -324,8 +329,9 @@ def poi2ed(self, instance_config, filename, job_id, dataset_uid):
         models.db.session.commit()
         raise
 
+
 @celery.task(bind=True)
-@Lock(timeout=10*60)
+@Lock(timeout=10 * 60)
 def synonym2ed(self, instance_config, filename, job_id, dataset_uid):
     """ launch synonym2ed """
 
@@ -345,7 +351,7 @@ def synonym2ed(self, instance_config, filename, job_id, dataset_uid):
         with collect_metric('synonym2ed', job, dataset_uid):
             res = launch_exec('synonym2ed', params, logger)
         if res != 0:
-            #@TODO: exception
+            # @TODO: exception
             raise ValueError('synonym2ed failed')
     except:
         logger.exception('')
@@ -416,24 +422,34 @@ def load_bounding_shape(instance_name, instance_conf, shape_path):
         logging.error("bounding_shape: {} has an unknown extension.".format(shape_path))
         return
 
-    connection_string = "postgres://{u}:{pw}@{h}:{port}/{db}"\
-        .format(u=instance_conf.pg_username, pw=instance_conf.pg_password,
-                h=instance_conf.pg_host, db=instance_conf.pg_dbname, port=instance_conf.pg_port)
+    connection_string = "postgres://{u}:{pw}@{h}:{port}/{db}".format(
+        u=instance_conf.pg_username,
+        pw=instance_conf.pg_password,
+        h=instance_conf.pg_host,
+        db=instance_conf.pg_dbname,
+        port=instance_conf.pg_port,
+    )
     engine = sqlalchemy.create_engine(connection_string)
     # create the line if it does not exists
-    engine.execute("""
+    engine.execute(
+        """
     INSERT INTO navitia.parameters (shape)
     SELECT NULL WHERE NOT EXISTS (SELECT * FROM navitia.parameters)
-    """).close()
+    """
+    ).close()
     # update the line, simplified to approx 100m
-    engine.execute("""
+    engine.execute(
+        """
     UPDATE navitia.parameters
     SET shape_computed = FALSE, shape = ST_Multi(ST_SimplifyPreserveTopology(ST_GeomFromText('{shape}'), 0.001))
-    """.format(shape=wkt.dumps(shape))).close()
+    """.format(
+            shape=wkt.dumps(shape)
+        )
+    ).close()
 
 
 @celery.task(bind=True)
-@Lock(timeout=10*60)
+@Lock(timeout=10 * 60)
 def shape2ed(self, instance_config, filename, job_id, dataset_uid):
     """load a street network shape into ed"""
     job = models.Job.query.get(job_id)
@@ -453,7 +469,9 @@ def reload_data(self, instance_config, job_id):
         task = navitiacommon.task_pb2.Task()
         task.action = navitiacommon.task_pb2.RELOAD
 
-        rabbit_mq_handler = RabbitMqHandler(current_app.config['CELERY_BROKER_URL'], instance_config.exchange, "topic")
+        rabbit_mq_handler = RabbitMqHandler(
+            current_app.config['CELERY_BROKER_URL'], instance_config.exchange, "topic"
+        )
 
         logger.info("reload kraken")
         rabbit_mq_handler.publish(task.SerializeToString(), instance.name + '.task.reload')
@@ -465,7 +483,7 @@ def reload_data(self, instance_config, job_id):
 
 
 @celery.task(bind=True)
-@Lock(10*60)
+@Lock(10 * 60)
 def ed2nav(self, instance_config, job_id, custom_output_dir):
     """ Launch ed2nav"""
     job = models.Job.query.get(job_id)
@@ -482,7 +500,6 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
             if not os.path.exists(target_path):
                 os.makedirs(target_path)
 
-
         connection_string = make_connection_string(instance_config)
         argv = ["-o", output_file, "--connection-string", connection_string]
         if 'CITIES_DATABASE_URI' in current_app.config and current_app.config['CITIES_DATABASE_URI']:
@@ -495,7 +512,7 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
         res = None
         with collect_metric('ed2nav', job, None):
             res = launch_exec('ed2nav', argv, logger)
-            os.system('sync') #we sync to be safe
+            os.system('sync')  # we sync to be safe
         if res != 0:
             raise ValueError('ed2nav failed')
     except:
@@ -506,7 +523,7 @@ def ed2nav(self, instance_config, job_id, custom_output_dir):
 
 
 @celery.task(bind=True)
-@Lock(timeout=10*60)
+@Lock(timeout=10 * 60)
 def fare2ed(self, instance_config, filename, job_id, dataset_uid):
     """ launch fare2ed """
 
@@ -526,7 +543,7 @@ def fare2ed(self, instance_config, filename, job_id, dataset_uid):
         params.append(instance_config.name)
         res = launch_exec("fare2ed", params, logger)
         if res != 0:
-            #@TODO: exception
+            # @TODO: exception
             raise ValueError('fare2ed failed')
     except:
         logger.exception('')
@@ -538,25 +555,35 @@ def fare2ed(self, instance_config, filename, job_id, dataset_uid):
 @celery.task(bind=True)
 def bano2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
     """ launch bano2mimir """
-    autocomplete_instance = models.db.session.merge(autocomplete_instance)#reatache the object
+    autocomplete_instance = models.db.session.merge(autocomplete_instance)  # reatache the object
     logger = get_autocomplete_instance_logger(autocomplete_instance, task_id=job_id)
     job = models.Job.query.get(job_id)
     cnx_string = current_app.config['MIMIR_URL']
     working_directory = unzip_if_needed(filename)
 
     if autocomplete_instance.address != 'BANO':
-        logger.warn('no bano data will be loaded for instance {} because the address are read from {}'
-                    .format(autocomplete_instance.name, autocomplete_instance.address))
+        logger.warn(
+            'no bano data will be loaded for instance {} because the address are read from {}'.format(
+                autocomplete_instance.name, autocomplete_instance.address
+            )
+        )
         return
 
     try:
-        res = launch_exec("bano2mimir",
-                          ['-i', working_directory,
-                              '--connection-string', cnx_string,
-                              '--dataset', autocomplete_instance.name],
-                          logger)
+        res = launch_exec(
+            "bano2mimir",
+            [
+                '-i',
+                working_directory,
+                '--connection-string',
+                cnx_string,
+                '--dataset',
+                autocomplete_instance.name,
+            ],
+            logger,
+        )
         if res != 0:
-            #@TODO: exception
+            # @TODO: exception
             raise ValueError('bano2mimir failed')
     except:
         logger.exception('')
@@ -568,7 +595,7 @@ def bano2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
 @celery.task(bind=True)
 def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
     """ launch osm2mimir """
-    autocomplete_instance = models.db.session.merge(autocomplete_instance)#reatache the object
+    autocomplete_instance = models.db.session.merge(autocomplete_instance)  # reatache the object
     logger = get_autocomplete_instance_logger(autocomplete_instance, task_id=job_id)
     logger.debug('running osm2mimir for {}'.format(job_id))
     job = models.Job.query.get(job_id)
@@ -588,11 +615,9 @@ def osm2mimir(self, autocomplete_instance, filename, job_id, dataset_uid):
     params.append('--dataset')
     params.append(autocomplete_instance.name)
     try:
-        res = launch_exec("osm2mimir",
-                          params,
-                          logger)
+        res = launch_exec("osm2mimir", params, logger)
         if res != 0:
-            #@TODO: exception
+            # @TODO: exception
             raise ValueError('osm2mimir failed')
     except:
         logger.exception('')
@@ -622,9 +647,7 @@ def stops2mimir(self, instance_config, input, job_id=None, dataset_uid=None):
     stops_file = os.path.join(working_directory, 'stops.txt')
 
     # Note: the dataset is for the moment the instance name, we'll need to change this when we'll aggregate
-    argv = ['--input', stops_file,
-            '--connection-string', cnx_string,
-            '--dataset', instance_config.name]
+    argv = ['--input', stops_file, '--connection-string', cnx_string, '--dataset', instance_config.name]
 
     try:
         res = launch_exec('stops2mimir', argv, logger)
@@ -644,6 +667,7 @@ def stops2mimir(self, instance_config, input, job_id=None, dataset_uid=None):
 
         raise
 
+
 @celery.task(bind=True)
 def ntfs2mimir(self, instance_config, input, job_id=None, dataset_uid=None):
     """
@@ -660,9 +684,7 @@ def ntfs2mimir(self, instance_config, input, job_id=None, dataset_uid=None):
 
     working_directory = unzip_if_needed(input)
 
-    argv = ['--input', working_directory,
-            '--connection-string', cnx_string,
-            '--dataset', instance_config.name]
+    argv = ['--input', working_directory, '--connection-string', cnx_string, '--dataset', instance_config.name]
     try:
         res = launch_exec('ntfs2mimir', argv, logger)
         if res != 0:

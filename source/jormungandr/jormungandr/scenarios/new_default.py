@@ -36,12 +36,38 @@ from flask_restful import abort
 from flask import g
 from jormungandr.scenarios import simple, journey_filter, helpers
 from jormungandr.scenarios.ridesharing.ridesharing_helper import decorate_journeys
-from jormungandr.scenarios.utils import journey_sorter, change_ids, updated_request_with_default, \
-    get_or_default, fill_uris, gen_all_combin, get_pseudo_duration, mode_weight, switch_back_to_ridesharing, nCr
+from jormungandr.scenarios.utils import (
+    journey_sorter,
+    change_ids,
+    updated_request_with_default,
+    get_or_default,
+    fill_uris,
+    gen_all_combin,
+    get_pseudo_duration,
+    mode_weight,
+    switch_back_to_ridesharing,
+    nCr,
+)
 from navitiacommon import type_pb2, response_pb2, request_pb2
-from jormungandr.scenarios.qualifier import min_from_criteria, arrival_crit, departure_crit, \
-    duration_crit, transfers_crit, nonTC_crit, trip_carac, has_no_car, has_car, has_pt, \
-    has_no_bike, has_bike, has_no_bss, has_bss, non_pt_journey, has_walk, and_filters
+from jormungandr.scenarios.qualifier import (
+    min_from_criteria,
+    arrival_crit,
+    departure_crit,
+    duration_crit,
+    transfers_crit,
+    nonTC_crit,
+    trip_carac,
+    has_no_car,
+    has_car,
+    has_pt,
+    has_no_bike,
+    has_bike,
+    has_no_bss,
+    has_bss,
+    non_pt_journey,
+    has_walk,
+    and_filters,
+)
 import numpy as np
 import collections
 from jormungandr.utils import date_to_timestamp, copy_flask_request_context, copy_context_in_greenlet_stack
@@ -78,31 +104,36 @@ def get_kraken_calls(request):
         return [(dep_modes[0], arr_modes[0])]
 
     # this allowed combination is temporary, it does not handle all the use cases at all
-    allowed_combination = [('bss', 'bss'),
-                           ('walking', 'walking'),
-                           ('bike', 'walking'),
-                           ('car', 'walking'),
-                           ('bike', 'bss'),
-                           ('car', 'bss'),
-                           ('bike', 'bike'),
-                           ('ridesharing', 'walking'),
-                           ('walking', 'ridesharing'),
-                           ('ridesharing', 'bss'),
-                           ('bss', 'ridesharing')]
+    allowed_combination = [
+        ('bss', 'bss'),
+        ('walking', 'walking'),
+        ('bike', 'walking'),
+        ('car', 'walking'),
+        ('bike', 'bss'),
+        ('car', 'bss'),
+        ('bike', 'bike'),
+        ('ridesharing', 'walking'),
+        ('walking', 'ridesharing'),
+        ('ridesharing', 'bss'),
+        ('bss', 'ridesharing'),
+    ]
     # We don't want to do ridesharing - ridesharing journeys
 
     res = [c for c in allowed_combination if c in itertools.product(dep_modes, arr_modes)]
 
     if not res:
-        abort(404, message='the asked first_section_mode[] ({}) and last_section_mode[] '
-                           '({}) combination is not yet supported'.format(dep_modes, arr_modes))
+        abort(
+            404,
+            message='the asked first_section_mode[] ({}) and last_section_mode[] '
+            '({}) combination is not yet supported'.format(dep_modes, arr_modes),
+        )
 
     return res
 
 
 def create_pb_request(requested_type, request, dep_mode, arr_mode):
     """Parse the request dict and create the protobuf version"""
-    #TODO: bench if the creation of the request each time is expensive
+    # TODO: bench if the creation of the request each time is expensive
     req = request_pb2.Request()
     req.requested_api = requested_type
     req._current_datetime = date_to_timestamp(request['_current_datetime'])
@@ -127,7 +158,7 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
             location.place = place
             location.access_duration = duration
 
-    req.journeys.datetimes.append(request["datetime"])  #TODO remove this datetime list completly in another PR
+    req.journeys.datetimes.append(request["datetime"])  # TODO remove this datetime list completly in another PR
 
     req.journeys.clockwise = request["clockwise"]
     sn_params = req.journeys.streetnetwork_params
@@ -143,10 +174,10 @@ def create_pb_request(requested_type, request, dep_mode, arr_mode):
     sn_params.car_no_park_speed = request["car_no_park_speed"]
     sn_params.origin_filter = request.get("origin_filter", "")
     sn_params.destination_filter = request.get("destination_filter", "")
-    #we always want direct path, even for car
+    # we always want direct path, even for car
     sn_params.enable_direct_path = True
 
-    #settings fallback modes
+    # settings fallback modes
     sn_params.origin_mode = dep_mode
     sn_params.destination_mode = arr_mode
 
@@ -202,7 +233,9 @@ def compute_car_co2_emission(pb_resp, api_request, instance):
     if car is None or not car.HasField('co2_emission'):
         # if there is no car journey found, we request kraken to give us an estimation of
         # co2 emission
-        co2_estimation = instance.georef.get_car_co2_emission_on_crow_fly(api_request['origin'], api_request['destination'])
+        co2_estimation = instance.georef.get_car_co2_emission_on_crow_fly(
+            api_request['origin'], api_request['destination']
+        )
         if co2_estimation:
             # Assign car_co2_emission into the resp, these value will be exposed in the final result
             pb_resp.car_co2_emission.value = co2_estimation.value
@@ -227,8 +260,7 @@ def tag_ecologic(resp):
 
 
 def _tag_direct_path(responses):
-    street_network_mode_tag_map = {response_pb2.Walking: ['non_pt_walking'],
-                                   response_pb2.Bike: ['non_pt_bike']}
+    street_network_mode_tag_map = {response_pb2.Walking: ['non_pt_walking'], response_pb2.Bike: ['non_pt_bike']}
     for j in itertools.chain.from_iterable(r.journeys for r in responses):
         if all(s.type != response_pb2.PUBLIC_TRANSPORT for s in j.sections):
             j.tags.extend(['non_pt'])
@@ -243,29 +275,32 @@ def _tag_direct_path(responses):
 
 
 def _is_bike_section(s):
-    return ((s.type == response_pb2.CROW_FLY or s.type == response_pb2.STREET_NETWORK) and
-            s.street_network.mode == response_pb2.Bike)
+    return (
+        s.type == response_pb2.CROW_FLY or s.type == response_pb2.STREET_NETWORK
+    ) and s.street_network.mode == response_pb2.Bike
 
 
 def _is_pt_bike_accepted_section(s):
     bike_ok = type_pb2.hasEquipments.has_bike_accepted
-    return (s.type == response_pb2.PUBLIC_TRANSPORT and
-            bike_ok in s.pt_display_informations.has_equipments.has_equipments and
-            bike_ok in s.origin.stop_point.has_equipments.has_equipments and
-            bike_ok in s.destination.stop_point.has_equipments.has_equipments)
+    return (
+        s.type == response_pb2.PUBLIC_TRANSPORT
+        and bike_ok in s.pt_display_informations.has_equipments.has_equipments
+        and bike_ok in s.origin.stop_point.has_equipments.has_equipments
+        and bike_ok in s.destination.stop_point.has_equipments.has_equipments
+    )
 
 
 def _is_bike_in_pt_journey(j):
-    bike_indifferent = [response_pb2.boarding,
-                        response_pb2.landing,
-                        response_pb2.WAITING,
-                        response_pb2.TRANSFER,
-                        response_pb2.ALIGHTING]
-    return _has_pt(j) and \
-           all(_is_bike_section(s)
-               or _is_pt_bike_accepted_section(s)
-               or s.type in bike_indifferent
-                   for s in j.sections)
+    bike_indifferent = [
+        response_pb2.boarding,
+        response_pb2.landing,
+        response_pb2.WAITING,
+        response_pb2.TRANSFER,
+        response_pb2.ALIGHTING,
+    ]
+    return _has_pt(j) and all(
+        _is_bike_section(s) or _is_pt_bike_accepted_section(s) or s.type in bike_indifferent for s in j.sections
+    )
 
 
 def _tag_bike_in_pt(responses):
@@ -322,6 +357,7 @@ def _build_selected_sections_matrix(sections_set, candidates_pool):
                 ind = sections_2_index_dict.get(_get_section_id(s))
                 if ind is not None:
                     yield ind
+
         selected_indexes = list(_gen_section_ind())
         section_select[selected_indexes] = 1
         selected_sections_matrix.append(section_select)
@@ -355,14 +391,18 @@ def _get_sorted_solutions_indexes(selected_sections_matrix, nb_journeys_to_find,
 
     # replace line by line
     from itertools import izip
+
     map(f, izip(xrange(shape[0]), gen_all_combin(selected_sections_matrix.shape[0], nb_journeys_to_find)))
     """
     We should cut out those combinations that don't contain must-keep journeys
     """
+
     def _contains(idx_selected_jrny):
         return set(idx_selected_jrny).issuperset(idx_of_jrny_must_keep)
 
-    selected_journeys_matrix = selected_journeys_matrix[np.apply_along_axis(_contains, 1, selected_journeys_matrix)]
+    selected_journeys_matrix = selected_journeys_matrix[
+        np.apply_along_axis(_contains, 1, selected_journeys_matrix)
+    ]
 
     selection_matrix = np.zeros((selected_journeys_matrix.shape[0], selected_sections_matrix.shape[0]))
 
@@ -401,8 +441,9 @@ def _get_sorted_solutions_indexes(selected_sections_matrix, nb_journeys_to_find,
     """
     the_best_idx = np.lexsort((nb_sections, integrity))[0]  # sort by integrity then by nb_sections
 
-    best_indexes = np.where(np.logical_and(nb_sections == nb_sections[the_best_idx],
-                                           integrity == integrity[the_best_idx]))[0]
+    best_indexes = np.where(
+        np.logical_and(nb_sections == nb_sections[the_best_idx], integrity == integrity[the_best_idx])
+    )[0]
 
     logger.debug("Best Itegrity: {0}".format(integrity[the_best_idx]))
     logger.debug("Best Nb sections: {0}".format(nb_sections[the_best_idx]))
@@ -457,17 +498,21 @@ def culling_journeys(resp, request):
     of sections are similar'), which reduces the number of possible combinations considerably 
     """
     aggregated_journeys, remaining_journeys = aggregate_journeys(resp.journeys)
-    logger.debug('aggregated_journeys: {} remaining_journeys: {}'
-                 .format(len(aggregated_journeys), len(remaining_journeys)))
+    logger.debug(
+        'aggregated_journeys: {} remaining_journeys: {}'.format(
+            len(aggregated_journeys), len(remaining_journeys)
+        )
+    )
     is_debug = request.get('debug')
 
     if max_nb_journeys >= len(aggregated_journeys):
         """
         In this case, we return all aggregated_journeys plus earliest/latest journeys in remaining journeys
         """
-        for j in remaining_journeys[max(0, max_nb_journeys - len(aggregated_journeys)):]:
-            journey_filter.mark_as_dead(j, is_debug, 'max_nb_journeys >= len(aggregated_journeys), '
-                                                     'Filtered by max_nb_journeys')
+        for j in remaining_journeys[max(0, max_nb_journeys - len(aggregated_journeys)) :]:
+            journey_filter.mark_as_dead(
+                j, is_debug, 'max_nb_journeys >= len(aggregated_journeys), ' 'Filtered by max_nb_journeys'
+            )
         journey_filter.delete_journeys((resp,), request)
         return
 
@@ -476,8 +521,9 @@ def culling_journeys(resp, request):
     those journeys already have a similar journey in aggregated_journeys
     """
     for j in remaining_journeys:
-        journey_filter.mark_as_dead(j, is_debug, 'Filtered by max_nb_journeys, '
-                                                 'max_nb_journeys < len(aggregated_journeys)')
+        journey_filter.mark_as_dead(
+            j, is_debug, 'Filtered by max_nb_journeys, ' 'max_nb_journeys < len(aggregated_journeys)'
+        )
 
     logger.debug('Trying to culling the journeys')
 
@@ -493,7 +539,9 @@ def culling_journeys(resp, request):
     The candidate pool will be like [Journey_2, Journey_3]
     The sections set will be like set([Line 14, Line 6, Line 8, Bus 165])
     """
-    candidates_pool, sections_set, idx_of_jrnys_must_keep = _build_candidate_pool_and_sections_set(aggregated_journeys)
+    candidates_pool, sections_set, idx_of_jrnys_must_keep = _build_candidate_pool_and_sections_set(
+        aggregated_journeys
+    )
 
     nb_journeys_must_have = len(idx_of_jrnys_must_keep)
     logger.debug("There are {0} journeys we must keep".format(nb_journeys_must_have))
@@ -507,15 +555,18 @@ def culling_journeys(resp, request):
 
         # Here we mark all journeys as dead that are not must-have
         for jrny in _inverse_selection(candidates_pool, idx_of_jrnys_must_keep):
-             journey_filter.mark_as_dead(jrny, is_debug, 'Filtered by max_nb_journeys')
+            journey_filter.mark_as_dead(jrny, is_debug, 'Filtered by max_nb_journeys')
 
         if max_nb_journeys == nb_journeys_must_have:
             logger.debug('max_nb_journeys equals to nb_journeys_must_have')
             journey_filter.delete_journeys((resp,), request)
             return
 
-        logger.debug('max_nb_journeys:{0} is smaller than nb_journeys_must_have:{1}'
-                     .format(request["max_nb_journeys"], nb_journeys_must_have))
+        logger.debug(
+            'max_nb_journeys:{0} is smaller than nb_journeys_must_have:{1}'.format(
+                request["max_nb_journeys"], nb_journeys_must_have
+            )
+        )
 
         # At this point, resp.journeys should contain only must-have journeys
         list_dict = collections.defaultdict(list)
@@ -533,8 +584,7 @@ def culling_journeys(resp, request):
         journey_filter.delete_journeys((resp,), request)
         return
 
-    logger.debug('Trying to find {0} journeys from {1}'.format(max_nb_journeys,
-                                                               candidates_pool.shape[0]))
+    logger.debug('Trying to find {0} journeys from {1}'.format(max_nb_journeys, candidates_pool.shape[0]))
 
     """
     Ex:
@@ -551,9 +601,9 @@ def culling_journeys(resp, request):
     """
     selected_sections_matrix = _build_selected_sections_matrix(sections_set, candidates_pool)
 
-    best_indexes, selection_matrix = _get_sorted_solutions_indexes(selected_sections_matrix,
-                                                                   max_nb_journeys,
-                                                                   idx_of_jrnys_must_keep)
+    best_indexes, selection_matrix = _get_sorted_solutions_indexes(
+        selected_sections_matrix, max_nb_journeys, idx_of_jrnys_must_keep
+    )
 
     logger.debug("Nb best solutions: {0}".format(best_indexes.shape[0]))
 
@@ -570,8 +620,13 @@ def culling_journeys(resp, request):
 
         def combinations_sorter(v):
             # Hoping to find We sort the solution by the sum of journeys' pseudo duration
-            return np.sum((get_pseudo_duration(jrny, requested_dt, is_clockwise)
-                           for jrny in np.array(candidates_pool)[np.where(selection_matrix[v, :])]))
+            return np.sum(
+                (
+                    get_pseudo_duration(jrny, requested_dt, is_clockwise)
+                    for jrny in np.array(candidates_pool)[np.where(selection_matrix[v, :])]
+                )
+            )
+
         the_best_index = min(best_indexes, key=combinations_sorter)
 
     logger.debug('Removing non selected journeys')
@@ -585,18 +640,23 @@ def _tag_journey_by_mode(journey):
     mode = 'walking'
     for i, section in enumerate(journey.sections):
         cur_mode = 'walking'
-        if ((section.type == response_pb2.BSS_RENT) or
-            (section.type == response_pb2.CROW_FLY and section.street_network.mode == response_pb2.Bss)):
+        if (section.type == response_pb2.BSS_RENT) or (
+            section.type == response_pb2.CROW_FLY and section.street_network.mode == response_pb2.Bss
+        ):
             cur_mode = 'bss'
-        elif ((section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY)
-              and section.street_network.mode == response_pb2.Bike
-              and journey.sections[i - 1].type != response_pb2.BSS_RENT):
+        elif (
+            (section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY)
+            and section.street_network.mode == response_pb2.Bike
+            and journey.sections[i - 1].type != response_pb2.BSS_RENT
+        ):
             cur_mode = 'bike'
-        elif ((section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY)
-              and section.street_network.mode == response_pb2.Car):
+        elif (
+            section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY
+        ) and section.street_network.mode == response_pb2.Car:
             cur_mode = 'car'
-        elif ((section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY)
-              and section.street_network.mode == response_pb2.Ridesharing):
+        elif (
+            section.type == response_pb2.STREET_NETWORK or section.type == response_pb2.CROW_FLY
+        ) and section.street_network.mode == response_pb2.Ridesharing:
             # When the street network data is missing, the section maybe a crow_fly
             cur_mode = 'ridesharing'
 
@@ -628,94 +688,41 @@ def type_journeys(resp, req):
     # Then, we want something like the old types
     trip_caracs = [
         # comfort tends to limit the number of transfers and fallback
-        ("comfort", trip_carac([
-            has_no_car,
-        ], [
-            transfers_crit,
-            nonTC_crit,
-            best_crit,
-            duration_crit
-        ])),
+        ("comfort", trip_carac([has_no_car], [transfers_crit, nonTC_crit, best_crit, duration_crit])),
         # for car we want at most one journey, the earliest one
-        ("car", trip_carac([
-            has_car,
-            has_pt,  # We don't want car only solution, we MUST have PT
-        ], [
-            best_crit,
-            transfers_crit,
-            nonTC_crit,
-            duration_crit
-        ])),
+        (
+            "car",
+            trip_carac(
+                [has_car, has_pt],  # We don't want car only solution, we MUST have PT
+                [best_crit, transfers_crit, nonTC_crit, duration_crit],
+            ),
+        ),
         # less_fallback tends to limit the fallback while walking
-        ("less_fallback_walk", trip_carac([
-            has_no_car,
-            has_no_bike,
-        ], [
-            nonTC_crit,
-            transfers_crit,
-            duration_crit,
-            best_crit,
-        ])),
+        (
+            "less_fallback_walk",
+            trip_carac([has_no_car, has_no_bike], [nonTC_crit, transfers_crit, duration_crit, best_crit]),
+        ),
         # less_fallback tends to limit the fallback for biking and bss
-        ("less_fallback_bike", trip_carac([
-            has_no_car,
-            has_bike,
-            has_no_bss,
-        ], [
-            nonTC_crit,
-            transfers_crit,
-            duration_crit,
-            best_crit,
-        ])),
+        (
+            "less_fallback_bike",
+            trip_carac(
+                [has_no_car, has_bike, has_no_bss], [nonTC_crit, transfers_crit, duration_crit, best_crit]
+            ),
+        ),
         # less_fallback tends to limit the fallback for biking and bss
-        ("less_fallback_bss", trip_carac([
-            has_no_car,
-            has_bss,
-        ], [
-            nonTC_crit,
-            transfers_crit,
-            duration_crit,
-            best_crit,
-        ])),
+        (
+            "less_fallback_bss",
+            trip_carac([has_no_car, has_bss], [nonTC_crit, transfers_crit, duration_crit, best_crit]),
+        ),
         # the fastest is quite explicit
-        ("fastest", trip_carac([
-            has_no_car,
-        ], [
-            duration_crit,
-            transfers_crit,
-            nonTC_crit,
-            best_crit,
-        ])),
+        ("fastest", trip_carac([has_no_car], [duration_crit, transfers_crit, nonTC_crit, best_crit])),
         # the non_pt journeys is the earliest journey without any public transport
-        ("non_pt_walk", trip_carac([
-            non_pt_journey,
-            has_no_car,
-            has_walk
-        ], [
-            best_crit
-        ])),
+        ("non_pt_walk", trip_carac([non_pt_journey, has_no_car, has_walk], [best_crit])),
         # the non_pt journey is the earliest journey without any public transport
         # only walking, biking or driving
-        ("non_pt_bike", trip_carac([
-            non_pt_journey,
-            has_no_car,
-            has_bike
-        ], [
-            best_crit
-        ])),
-        ("non_pt_bss", trip_carac([
-            non_pt_journey,
-            has_no_car,
-            has_bss,
-        ], [
-            best_crit
-        ])),
-        ("non_pt_car", trip_carac([
-            non_pt_journey,
-            has_car,
-        ], [
-            best_crit
-        ])),
+        ("non_pt_bike", trip_carac([non_pt_journey, has_no_car, has_bike], [best_crit])),
+        ("non_pt_bss", trip_carac([non_pt_journey, has_no_car, has_bss], [best_crit])),
+        ("non_pt_car", trip_carac([non_pt_journey, has_car], [best_crit])),
     ]
 
     for name, carac in trip_caracs:
@@ -759,9 +766,12 @@ def merge_responses(responses, debug):
         # Note : For BSS, it can happen that one journey in the response has returned a walking fallback.
         # If all other journeys in the response are to delete, the feed publisher will still be added
         # TODO: link feed publisher to a journey instead of a response with several journeys
-        merged_response.feed_publishers.extend(fp for fp in r.feed_publishers
-                                               if fp.id not in initial_feed_publishers
-                                               and (debug or all('to_delete' not in j.tags for j in r.journeys)))
+        merged_response.feed_publishers.extend(
+            fp
+            for fp in r.feed_publishers
+            if fp.id not in initial_feed_publishers
+            and (debug or all('to_delete' not in j.tags for j in r.journeys))
+        )
 
         # handle impacts
         for i in r.impacts:
@@ -780,8 +790,9 @@ def merge_responses(responses, debug):
         # we need to merge the errors
         elif len(errors) > 1:
             merged_response.error.id = response_pb2.Error.no_solution
-            merged_response.error.message = "several errors occured: \n * {}"\
-                .format("\n * ".join([m.message for m in errors.values()]))
+            merged_response.error.message = "several errors occured: \n * {}".format(
+                "\n * ".join([m.message for m in errors.values()])
+            )
 
     return merged_response
 
@@ -894,9 +905,9 @@ class Scenario(simple.Scenario):
         max_journeys_calls = app.config.get('MAX_JOURNEYS_CALLS', 20)
         max_nb_calls = min(min_nb_journeys, max_journeys_calls)
 
-        while request is not None and \
-                ((nb_qualified_journeys < min_nb_journeys and nb_try < max_nb_calls)\
-                 or nb_try < min_journeys_calls):
+        while request is not None and (
+            (nb_qualified_journeys < min_nb_journeys and nb_try < max_nb_calls) or nb_try < min_journeys_calls
+        ):
 
             nb_try = nb_try + 1
 
@@ -980,9 +991,10 @@ class Scenario(simple.Scenario):
         compute_car_co2_emission(pb_resp, api_request, instance)
         tag_journeys(pb_resp)
 
-        if instance.ridesharing_services and \
-                ('ridesharing' in ridesharing_req['origin_mode']
-                 or 'ridesharing' in ridesharing_req['destination_mode']):
+        if instance.ridesharing_services and (
+            'ridesharing' in ridesharing_req['origin_mode']
+            or 'ridesharing' in ridesharing_req['destination_mode']
+        ):
             logger.debug('trying to add ridesharing journeys')
             try:
                 decorate_journeys(pb_resp, instance, api_request)
@@ -1015,13 +1027,19 @@ class Scenario(simple.Scenario):
 
         def worker(dep_mode, arr_mode, instance, request, flask_request_id):
             with copy_context_in_greenlet_stack(reqctx):
-                return (dep_mode, arr_mode, instance.send_and_receive(request, flask_request_id=flask_request_id))
+                return (
+                    dep_mode,
+                    arr_mode,
+                    instance.send_and_receive(request, flask_request_id=flask_request_id),
+                )
 
         pool = gevent.pool.Pool(app.config.get('GREENLET_POOL_SIZE', 3))
         for dep_mode, arr_mode in krakens_call:
             pb_request = create_pb_request(request_type, request, dep_mode, arr_mode)
             # we spawn a new greenlet, it won't have access to our thread local request object so we pass the request_id
-            futures.append(pool.spawn(worker, dep_mode, arr_mode, instance, pb_request, flask_request_id=flask.request.id))
+            futures.append(
+                pool.spawn(worker, dep_mode, arr_mode, instance, pb_request, flask_request_id=flask.request.id)
+            )
 
         for future in gevent.iwait(futures):
             dep_mode, arr_mode, local_resp = future.get()
@@ -1037,7 +1055,9 @@ class Scenario(simple.Scenario):
 
             fill_uris(local_resp)
             resp.append(local_resp)
-            logger.debug("for mode %s|%s we have found %s journeys", dep_mode, arr_mode, len(local_resp.journeys))
+            logger.debug(
+                "for mode %s|%s we have found %s journeys", dep_mode, arr_mode, len(local_resp.journeys)
+            )
 
         return resp
 
@@ -1053,13 +1073,15 @@ class Scenario(simple.Scenario):
 
     def isochrone(self, request, instance):
         updated_request_with_default(request, instance)
-        #we don't want to filter anything!
+        # we don't want to filter anything!
         krakens_call = get_kraken_calls(request)
-        resp = merge_responses(self.call_kraken(type_pb2.ISOCHRONE, request, instance, krakens_call), request['debug'])
+        resp = merge_responses(
+            self.call_kraken(type_pb2.ISOCHRONE, request, instance, krakens_call), request['debug']
+        )
         if not request['debug']:
             # on isochrone we can filter the number of max journeys
             if request["max_nb_journeys"] and len(resp.journeys) > request["max_nb_journeys"]:
-                del resp.journeys[request["max_nb_journeys"]:]
+                del resp.journeys[request["max_nb_journeys"] :]
 
         return resp
 
@@ -1086,13 +1108,12 @@ class Scenario(simple.Scenario):
             logger.error("In response next_request_date_time does not exist")
             return None
 
-        #TODO forbid ODTs
+        # TODO forbid ODTs
         return request
 
     @staticmethod
     def __get_best_for_criteria(journeys, criteria):
-        return min_from_criteria(filter(has_pt, journeys),
-                                 [criteria, duration_crit, transfers_crit, nonTC_crit])
+        return min_from_criteria(filter(has_pt, journeys), [criteria, duration_crit, transfers_crit, nonTC_crit])
 
     def get_best(self, journeys, clockwise):
         if clockwise:

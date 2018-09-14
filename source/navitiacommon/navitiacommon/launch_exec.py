@@ -52,9 +52,10 @@ class LogLine(object):
 
         pos = line.find(' - ')
         if 0 < pos < 10:
-            self.msg = line[pos+3:]
+            self.msg = line[pos + 3 :]
         else:
             self.msg = line
+
 
 def parse_log(buff):
     logs = []
@@ -63,11 +64,11 @@ def parse_log(buff):
         logs.append(LogLine(line))
         line, sep, buff = buff.partition('\n')
     if not sep:
-        buff = line#we put back the last unterminated line in the buffer
+        buff = line  # we put back the last unterminated line in the buffer
     return (logs, buff)
 
 
-#from: http://stackoverflow.com/questions/7729336/how-can-i-print-and-display-subprocess-stdout-and-stderr-output-without-distorti/7730201#7730201
+# from: http://stackoverflow.com/questions/7729336/how-can-i-print-and-display-subprocess-stdout-and-stderr-output-without-distorti/7730201#7730201
 def make_async(fd):
     fcntl.fcntl(fd, fcntl.F_SETFL, fcntl.fcntl(fd, fcntl.F_GETFL) | os.O_NONBLOCK)
 
@@ -83,18 +84,16 @@ def read_async(fd):
         else:
             return ''
 
+
 def launch_exec_traces(exec_name, args, logger):
     """ Launch an exec with args, log the outputs """
     log = 'Launching ' + exec_name + ' ' + ' '.join(args)
-    #we hide the password in logs
+    # we hide the password in logs
     logger.info(re.sub('password=\w+', 'password=xxxxxxxxx', log))
 
     args.insert(0, exec_name)
 
-    proc = subprocess.Popen(args,
-                            stderr=subprocess.PIPE,
-                            stdout=subprocess.PIPE,
-                            close_fds=True)
+    proc = subprocess.Popen(args, stderr=subprocess.PIPE, stdout=subprocess.PIPE, close_fds=True)
     traces = ""
     try:
         make_async(proc.stderr)
@@ -116,6 +115,7 @@ def launch_exec_traces(exec_name, args, logger):
         proc.stderr.close()
 
     return proc.returncode, traces
+
 
 def launch_exec(exec_name, args, logger):
     code, _ = launch_exec_traces(exec_name, args, logger)
