@@ -119,7 +119,7 @@ class PoiType(flask_restful.Resource):
         try:
             try:
                 validate(poi_types_json, poi_type_conf_format)
-            except ValidationError, e:
+            except ValidationError as e:
                 abort(400, status="error", message='{}'.format(parse_error(e)))
 
             poi_types_map = {}
@@ -718,7 +718,7 @@ class EndPoint(flask_restful.Resource):
             tyr_events_rabbit_mq = TyrEventsRabbitMq()
             tyr_events_rabbit_mq.request(tyr_end_point_event)
 
-        except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError), e:
+        except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError) as e:
             return ({'error': str(e)}, 409)
         except Exception:
             logging.exception("fail")
@@ -746,7 +746,7 @@ class EndPoint(flask_restful.Resource):
             tyr_events_rabbit_mq = TyrEventsRabbitMq()
             tyr_events_rabbit_mq.request(tyr_end_point_event)
 
-        except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError), e:
+        except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError) as e:
             return ({'error': str(e)}, 409)
         except Exception:
             logging.exception("fail")
@@ -836,7 +836,7 @@ class TravelerProfile(flask_restful.Resource):
             if traveler_profiles:
                 return traveler_profiles
             return {'error': 'No matching traveler profiles are found in db'}, 404
-        except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError), e:
+        except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError) as e:
             return {'error': str(e)}, 409
         except Exception:
             logging.exception("fail")
@@ -858,7 +858,7 @@ class TravelerProfile(flask_restful.Resource):
             db.session.add(profile)
             db.session.commit()
             return profile
-        except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError), e:
+        except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError) as e:
             return {'error': str(e)}, 409
         except Exception:
             logging.exception("fail")
@@ -877,7 +877,7 @@ class TravelerProfile(flask_restful.Resource):
                     setattr(profile, attr, args_value)
             db.session.commit()
             return profile
-        except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError), e:
+        except (sqlalchemy.exc.IntegrityError, sqlalchemy.orm.exc.FlushError) as e:
             return {'error': str(e)}, 409
         except Exception:
             logging.exception("fail")
@@ -892,7 +892,7 @@ class TravelerProfile(flask_restful.Resource):
             db.session.delete(profile)
             db.session.commit()
             return '', 204
-        except sqlalchemy.orm.exc.FlushError, e:
+        except sqlalchemy.orm.exc.FlushError as e:
             return {'error': str(e)}, 409
         except sqlalchemy.orm.exc.UnmappedInstanceError:
             return {'error': 'no such profile in db to delete'}, 400

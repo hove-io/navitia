@@ -81,7 +81,7 @@ def move_to_backupdirectory(filename, working_directory):
     now = datetime.datetime.now()
     working_directory += "/" + now.strftime("%Y%m%d-%H%M%S%f")
     # this works even if the intermediate 'backup' dir does not exists
-    os.makedirs(working_directory, 0755)
+    os.makedirs(working_directory, 755)
     destination = working_directory + '/' + os.path.basename(filename)
     shutil.move(filename, destination)
     return destination

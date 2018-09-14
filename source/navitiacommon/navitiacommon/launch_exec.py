@@ -77,7 +77,7 @@ def make_async(fd):
 def read_async(fd):
     try:
         return fd.read()
-    except IOError, e:
+    except IOError as e:
         if e.errno != errno.EAGAIN:
             raise e
         else:

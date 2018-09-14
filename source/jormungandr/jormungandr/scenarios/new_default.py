@@ -349,7 +349,8 @@ def _get_sorted_solutions_indexes(selected_sections_matrix, nb_journeys_to_find,
     shape = (nCr(selected_sections_matrix.shape[0], nb_journeys_to_find), nb_journeys_to_find)
     selected_journeys_matrix = np.empty(shape, dtype=np.uint16)
 
-    def f((i, c)):
+    def f(pair):
+        i, c = pair
         selected_journeys_matrix[i] = c
 
     # replace line by line
