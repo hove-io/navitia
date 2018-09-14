@@ -22,7 +22,7 @@ You should have received a copy of the GNU Affero General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 Stay tuned using
-twitter @navitia 
+twitter @navitia
 IRC #navitia on freenode
 https://groups.google.com/d/forum/navitia
 www.navitia.io
@@ -945,8 +945,6 @@ void OSMCache::flag_nodes() {
 }
 
 int osm2ed(int argc, const char** argv) {
-    navitia::init_app();
-    auto logger = log4cplus::Logger::getInstance("log");
     pt::ptime start;
     std::string input, connection_string, json_poi_types;
 
@@ -961,18 +959,26 @@ int osm2ed(int argc, const char** argv) {
              "Database connection parameters: host=localhost user=navitia"
              " dbname=navitia password=navitia")
         ("poi-type,p", po::value<std::string>(&json_poi_types),
-                       "a json string describing poi_types and rules to build them from OSM tags");
+                       "a json string describing poi_types and rules to build them from OSM tags")
+        ("local_syslog", "activate log redirection within local syslog")
+        ("log_comment", po::value<std::string>(), "optional field to add extra information like coverage name");
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
 
     start = pt::microsec_clock::local_time();
-   
+
     if(vm.count("version")){
         std::cout << argv[0] << " " << navitia::config::project_version << " "
                   << navitia::config::navitia_build_type << std::endl;
         return 0;
     }
+
+    // Construct logger and signal handling
+    std::string log_comment = "";
+    if (vm.count("log_comment")) { log_comment = vm["log_comment"].as<std::string>(); }
+    navitia::init_app("osm2ed", "DEBUG", vm.count("local_syslog"), log_comment);
+    auto logger = log4cplus::Logger::getInstance("log");
 
     if(vm.count("help") || (! vm.count("input") && ! vm.count("poi-type"))) {
         std::cout << "Reads an OSM file and inserts it into a ed database" << std::endl;
@@ -998,8 +1004,8 @@ int osm2ed(int argc, const char** argv) {
 
     if (! vm.count("poi-type")) {
         json_poi_types = ed::connectors::DEFAULT_JSON_POI_TYPES;
-    } 
-    
+    }
+
     po::notify(vm);
     const ed::connectors::PoiTypeParams poi_params(json_poi_types);
 

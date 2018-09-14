@@ -69,7 +69,7 @@ end_application_daily_hour = 18h00
 active_days = 11111111
 */
 struct logger_initialized {
-    logger_initialized()   { init_logger(); }
+    logger_initialized()   { navitia::init_logger(); }
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized );
 

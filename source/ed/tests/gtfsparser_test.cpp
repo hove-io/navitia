@@ -39,7 +39,7 @@ www.navitia.io
 #include "utils/csv.h"
 
 struct logger_initialized {
-    logger_initialized()   { init_logger(); }
+    logger_initialized()   { navitia::init_logger(); }
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized );
 

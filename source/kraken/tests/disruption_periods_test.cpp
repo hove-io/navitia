@@ -40,7 +40,7 @@ www.navitia.io
 using btp = boost::posix_time::time_period;
 
 struct logger_initialized {
-    logger_initialized()   { init_logger(); }
+    logger_initialized()   { navitia::init_logger(); }
 };
 BOOST_GLOBAL_FIXTURE( logger_initialized );
 
@@ -307,12 +307,12 @@ BOOST_FIXTURE_TEST_CASE(journey_inside_pub_period_inside_application, disruption
 if ptref is queried inside the publication period, but after the application period, we display the impact
 and it's status is 'past'
 [-------------------------------------------------------------------|-----------------]  production period
-                                                                    |               
-                                                Impact              |             
+                                                                    |
+                                                Impact              |
                                     <-------------------------------|-->                 publication period
-                                                                    |          
+                                                                    |
                                                      (------------) |                    application period
-                                                                    |            
+                                                                    |
                                                                    now
 
  */
