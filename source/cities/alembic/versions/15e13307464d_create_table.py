@@ -17,18 +17,16 @@ import geoalchemy2 as ga
 
 def upgrade():
     op.create_table(
-            'administrative_regions',
-            sa.Column('id', sa.BIGINT, primary_key=True),
-            sa.Column('name', sa.TEXT, nullable=False),
-            sa.Column('uri', sa.TEXT, nullable=False),
-            sa.Column('post_code', sa.TEXT),
-            sa.Column('insee', sa.TEXT),
-            sa.Column('level', sa.INTEGER),
-            sa.Column('coord', ga.Geography(geometry_type='POINT', srid=4326,
-                spatial_index=False)),
-            sa.Column('boundary', ga.Geography(geometry_type='MULTIPOLYGON',
-                srid=4326, spatial_index=False)),
-            )
+        'administrative_regions',
+        sa.Column('id', sa.BIGINT, primary_key=True),
+        sa.Column('name', sa.TEXT, nullable=False),
+        sa.Column('uri', sa.TEXT, nullable=False),
+        sa.Column('post_code', sa.TEXT),
+        sa.Column('insee', sa.TEXT),
+        sa.Column('level', sa.INTEGER),
+        sa.Column('coord', ga.Geography(geometry_type='POINT', srid=4326, spatial_index=False)),
+        sa.Column('boundary', ga.Geography(geometry_type='MULTIPOLYGON', srid=4326, spatial_index=False)),
+    )
 
 
 def downgrade():

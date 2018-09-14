@@ -15,6 +15,7 @@ import sqlalchemy as sa
 
 def upgrade():
     import json
+
     op.add_column('instance', sa.Column('max_nb_crowfly_by_mode', sa.PickleType(pickler=json), nullable=True))
 
 

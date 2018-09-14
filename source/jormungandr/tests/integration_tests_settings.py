@@ -45,41 +45,23 @@ PUBLIC = True
 LOGGER = {
     'version': 1,
     'disable_existing_loggers': False,
-    'formatters':{
-        'default': {
-            'format': '[%(asctime)s] [%(levelname)5s] [%(process)5s] [%(name)10s] %(message)s',
-        },
+    'formatters': {
+        'default': {'format': '[%(asctime)s] [%(levelname)5s] [%(process)5s] [%(name)10s] %(message)s'}
     },
-    'handlers': {
-        'default': {
-            'level': 'INFO',
-            'class': 'logging.StreamHandler',
-            'formatter': 'default',
-        },
-    },
+    'handlers': {'default': {'level': 'INFO', 'class': 'logging.StreamHandler', 'formatter': 'default'}},
     'loggers': {
-        '': {
-            'handlers': ['default'],
-            'level': 'INFO',
-            'propagate': True
-        },
-        'navitiacommon.default_values': {
-            'handlers': ['default'],
-            'level': 'ERROR',
-            'propagate': True
-        },
-    }
+        '': {'handlers': ['default'], 'level': 'INFO', 'propagate': True},
+        'navitiacommon.default_values': {'handlers': ['default'], 'level': 'ERROR', 'propagate': True},
+    },
 }
 
-CACHE_CONFIGURATION = {
-    'CACHE_TYPE': 'null'
-}
+CACHE_CONFIGURATION = {'CACHE_TYPE': 'null'}
 
 # List of enabled modules
 MODULES = {
     'v1': {  # API v1 of Navitia
         'import_path': 'jormungandr.modules.v1_routing.v1_routing',
-        'class_name': 'V1Routing'
+        'class_name': 'V1Routing',
     }
 }
 

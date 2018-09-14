@@ -66,15 +66,10 @@ end_point_fields = {
     'id': fields.Raw,
     'name': fields.Raw,
     'default': fields.Raw,
-    'hostnames': fields.List(fields.String)
+    'hostnames': fields.List(fields.String),
 }
 
-key_fields = {
-    'id': fields.Raw,
-    'app_name': fields.Raw,
-    'token': fields.Raw,
-    'valid_until': FieldDate
-}
+key_fields = {'id': fields.Raw, 'app_name': fields.Raw, 'token': fields.Raw, 'valid_until': FieldDate}
 
 instance_fields = {
     'id': fields.Raw,
@@ -123,10 +118,7 @@ instance_fields = {
     'autocomplete_backend': fields.Raw,
 }
 
-api_fields = {
-    'id': fields.Raw,
-    'name': fields.Raw
-}
+api_fields = {'id': fields.Raw, 'name': fields.Raw}
 
 billing_plan_fields = {
     'id': fields.Raw,
@@ -142,7 +134,7 @@ billing_plan_fields_full = {
     'max_request_count': fields.Raw,
     'max_object_count': fields.Raw,
     'default': fields.Raw,
-    'end_point': fields.Nested(end_point_fields)
+    'end_point': fields.Nested(end_point_fields),
 }
 
 user_fields = {
@@ -165,10 +157,9 @@ user_fields_full = {
     'block_until': FieldDate,
     'type': fields.Raw(),
     'keys': fields.List(fields.Nested(key_fields)),
-    'authorizations': fields.List(fields.Nested({
-        'instance': fields.Nested(instance_fields),
-        'api': fields.Nested(api_fields)
-    })),
+    'authorizations': fields.List(
+        fields.Nested({'instance': fields.Nested(instance_fields), 'api': fields.Nested(api_fields)})
+    ),
     'end_point': fields.Nested(end_point_fields),
     'billing_plan': fields.Nested(billing_plan_fields),
     'has_shape': HasShape,
@@ -176,11 +167,7 @@ user_fields_full = {
     'default_coord': fields.Raw,
 }
 
-dataset_field = {
-    'type': fields.Raw,
-    'name': fields.Raw,
-    'family_type': fields.Raw,
-}
+dataset_field = {'type': fields.Raw, 'name': fields.Raw, 'family_type': fields.Raw}
 
 job_fields = {
     'id': fields.Raw,
@@ -188,23 +175,14 @@ job_fields = {
     'created_at': FieldDate,
     'updated_at': FieldDate,
     'data_sets': fields.List(fields.Nested(dataset_field)),
-    'instance': fields.Nested(instance_fields)
+    'instance': fields.Nested(instance_fields),
 }
 
-jobs_fields = {
-    'jobs': fields.List(fields.Nested(job_fields))
-}
+jobs_fields = {'jobs': fields.List(fields.Nested(job_fields))}
 
-one_job_fields = {
-    'job': fields.Nested(job_fields)
-}
+one_job_fields = {'job': fields.Nested(job_fields)}
 
-poi_types_fields = {
-    'poi_types': fields.List(fields.Nested({
-        'uri': fields.Raw,
-        'name': fields.Raw,
-    }))
-}
+poi_types_fields = {'poi_types': fields.List(fields.Nested({'uri': fields.Raw, 'name': fields.Raw}))}
 
 traveler_profile = {
     'traveler_type': fields.String,
@@ -234,6 +212,4 @@ autocomplete_parameter_fields = {
     'admin_level': fields.List(fields.Integer),
 }
 
-error_fields = {
-    'error': fields.Nested({'message': fields.String})
-}
+error_fields = {'error': fields.Nested({'message': fields.String})}

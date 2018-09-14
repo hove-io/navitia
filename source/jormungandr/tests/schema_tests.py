@@ -48,6 +48,7 @@ def collect_all_errors(validation_error):
     the ValidationError is an aggregate of dict and list to have structured errors,
     we destructure them to get a simple dict with a 'path' to the error and the error
     """
+
     def _collect(err, key):
         errors = {}
         if isinstance(err, dict):
@@ -63,6 +64,7 @@ def collect_all_errors(validation_error):
             return errors
 
         return {key: err}
+
     return _collect(validation_error.messages, key='.')
 
 
@@ -84,7 +86,8 @@ class SchemaChecker:
             content=raw_response.data,
             url=url,
             status_code=raw_response.status_code,
-            content_type='application/json')
+            content_type='application/json',
+        )
 
         obj = json.loads(raw_response.data)
 
@@ -128,7 +131,7 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
         response = self.tester.options(url)
 
         assert response, "response for url {} is null".format(url)
-        assert(response.status_code == 200)
+        assert response.status_code == 200
         data = json.loads(response.data, encoding='utf-8')
 
         # the schema should not be empty and should be valid
@@ -151,7 +154,7 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
         Test the 'OPTIONS' method without the 'schema' arg. In this case we do not return the schema
         """
         response = self.tester.options('/v1/coverage')
-        assert(response.status_code == 200)
+        assert response.status_code == 200
         assert response.allow.as_set() == {'head', 'options', 'get'}
         assert response.data == ''  # no schema dumped
 
@@ -170,7 +173,6 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
         # we also check an adress with a house number
         r = self._check_schema('/v1/coverage/main_routing_test/places?q=2 rue')
         assert any((o for o in r.get('places', []) if o.get('embedded_type') == 'address'))
-
 
     def test_stop_points_schema(self):
         """
@@ -194,10 +196,12 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
         self._check_schema('/v1/coverage/main_routing_test/disruptions')
 
     def test_journeys_schema(self):
-        self._check_schema('/v1/coverage/main_routing_test/journeys?'
-                           'from=0.001527130369323005;0.0004491559909773545&'
-                           'to=poi:station_1&'
-                           'datetime=20120615T080000')
+        self._check_schema(
+            '/v1/coverage/main_routing_test/journeys?'
+            'from=0.001527130369323005;0.0004491559909773545&'
+            'to=poi:station_1&'
+            'datetime=20120615T080000'
+        )
 
     def test_vehicle_journeys(self):
         self._check_schema('/v1/coverage/main_routing_test/vehicle_journeys')
@@ -213,8 +217,10 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
         # Note: swagger does not handle '/' in parameters, so we cannot express our '<uris>'
         # so the '/' is urlencoded as %2F to be able to test the call
 
-        obj, errors = self._check_schema('/v1/coverage/main_routing_test/stop_areas%2FstopB/stop_schedules?'
-                           'from_datetime=20120614T165200', hard_check=False)
+        obj, errors = self._check_schema(
+            '/v1/coverage/main_routing_test/stop_areas%2FstopB/stop_schedules?' 'from_datetime=20120614T165200',
+            hard_check=False,
+        )
 
         # we have some errors, but only on additional_informations
         assert len(errors) == 3
@@ -236,8 +242,10 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
         # Note: swagger does not handle '/' in parameters, so we cannot express our '<uris>'
         # so the '/' is urlencoded as %2F to be able to test the call
 
-        _, errors = self._check_schema('/v1/coverage/main_routing_test/routes%2FA:0/route_schedules?'
-                                       'from_datetime=20120614T165200', hard_check=False)
+        _, errors = self._check_schema(
+            '/v1/coverage/main_routing_test/routes%2FA:0/route_schedules?' 'from_datetime=20120614T165200',
+            hard_check=False,
+        )
 
         # we have some errors, but only on additional_informations
         assert len(errors) == 1
@@ -246,16 +254,17 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
             assert e == "Got value `None` of type `null`. Value must be of type(s): `(u'string',)`"
 
     def test_departures(self):
-        self._check_schema('/v1/coverage/main_routing_test/stop_areas%2FstopB/departures?'
-                           'from_datetime=20120614T165200')
+        self._check_schema(
+            '/v1/coverage/main_routing_test/stop_areas%2FstopB/departures?' 'from_datetime=20120614T165200'
+        )
 
     def test_arrivals(self):
-        self._check_schema('/v1/coverage/main_routing_test/stop_areas%2FstopB/arrivals?'
-                           'from_datetime=20120614T165200')
+        self._check_schema(
+            '/v1/coverage/main_routing_test/stop_areas%2FstopB/arrivals?' 'from_datetime=20120614T165200'
+        )
 
     def test_traffic_reports(self):
-        self._check_schema('/v1/coverage/main_routing_test/traffic_reports?'
-                           '_current_datetime=20120801T0000')
+        self._check_schema('/v1/coverage/main_routing_test/traffic_reports?' '_current_datetime=20120801T0000')
 
     def test_places_nearby(self):
         self._check_schema('/v1/coverage/main_routing_test/stop_areas%2FstopA/places_nearby')
@@ -278,7 +287,10 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
         _, errors = self._check_schema(query, hard_check=False)
 
         import re
-        pattern = re.compile(".*heat_maps.*items.*ref.*heat_matrix.*ref.*lines.*items.*ref.*duration.*items.*type")
+
+        pattern = re.compile(
+            ".*heat_maps.*items.*ref.*heat_matrix.*ref.*lines.*items.*ref.*duration.*items.*type"
+        )
 
         for k, e in errors.items():
             assert pattern.match(k)
@@ -287,6 +299,7 @@ class TestSwaggerSchema(AbstractTestFixture, SchemaChecker):
     def test_geo_status(self):
         query = '/v1/coverage/main_routing_test/_geo_status'
         self._check_schema(query)
+
 
 @dataset({"main_ptref_test": {}})
 class TestSwaggerSchemaPtref(AbstractTestFixture, SchemaChecker):
@@ -297,12 +310,16 @@ class TestSwaggerSchemaPtref(AbstractTestFixture, SchemaChecker):
 @dataset({"departure_board_test": {}})
 class TestSwaggerSchemaDepartureBoard(AbstractTestFixture, SchemaChecker):
     def test_departures(self):
-        self._check_schema('/v1/coverage/departure_board_test/routes%2Fline%3AA%3A0/departures?from_datetime=20120615T080000')
+        self._check_schema(
+            '/v1/coverage/departure_board_test/routes%2Fline%3AA%3A0/departures?from_datetime=20120615T080000'
+        )
 
     def test_stop_schedules(self):
-        obj, errors = self._check_schema('/v1/coverage/departure_board_test/networks%2Fbase_network/stop_schedules'
-                                         '?from_datetime=20120615T080000&count=20&',
-                                         hard_check=False)
+        obj, errors = self._check_schema(
+            '/v1/coverage/departure_board_test/networks%2Fbase_network/stop_schedules'
+            '?from_datetime=20120615T080000&count=20&',
+            hard_check=False,
+        )
 
         # we have some errors, but only on additional_informations
         assert len(errors) == 9

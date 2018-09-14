@@ -39,14 +39,30 @@ from celery.signals import task_postrun
 from flask import current_app
 import kombu
 
-from tyr.binarisation import gtfs2ed, osm2ed, ed2nav, fusio2ed, geopal2ed, fare2ed, poi2ed, synonym2ed, \
-    shape2ed, load_bounding_shape, bano2mimir, osm2mimir, stops2mimir, ntfs2mimir
+from tyr.binarisation import (
+    gtfs2ed,
+    osm2ed,
+    ed2nav,
+    fusio2ed,
+    geopal2ed,
+    fare2ed,
+    poi2ed,
+    synonym2ed,
+    shape2ed,
+    load_bounding_shape,
+    bano2mimir,
+    osm2mimir,
+    stops2mimir,
+    ntfs2mimir,
+)
 from tyr.binarisation import reload_data, move_to_backupdirectory
 from tyr import celery
 from navitiacommon import models, task_pb2, utils
 from tyr.helper import load_instance_config, get_instance_logger
 from navitiacommon.launch_exec import launch_exec
 from datetime import datetime, timedelta
+
+
 @celery.task()
 def finish_job(job_id):
     """
@@ -101,18 +117,16 @@ def import_data(files, instance, backup_file, async=True, reload=True, custom_ou
         dataset.family_type = utils.family_of_data(dataset.type)
         if dataset.type in task:
             if backup_file:
-                filename = move_to_backupdirectory(_file,
-                                                   instance_config.backup_directory)
+                filename = move_to_backupdirectory(_file, instance_config.backup_directory)
             else:
                 filename = _file
             actions.append(task[dataset.type].si(instance_config, filename, dataset_uid=dataset.uid))
         else:
-            #unknown type, we skip it
-            current_app.logger.debug("unknown file type: {} for file {}"
-                                     .format(dataset.type, _file))
+            # unknown type, we skip it
+            current_app.logger.debug("unknown file type: {} for file {}".format(dataset.type, _file))
             continue
 
-        #currently the name of a dataset is the path to it
+        # currently the name of a dataset is the path to it
         dataset.name = filename
         models.db.session.add(dataset)
         job.data_sets.append(dataset)
@@ -166,7 +180,7 @@ def send_to_mimir(instance, filename):
     dataset.family_type = 'mimir'
     dataset.type = 'fusio'
 
-    #currently the name of a dataset is the path to it
+    # currently the name of a dataset is the path to it
     dataset.name = filename
     models.db.session.add(dataset)
     job.data_sets.append(dataset)
@@ -210,8 +224,9 @@ def type_of_autocomplete_data(filename):
         - 'osm'
 
     """
+
     def files_type(files):
-        #first we try fusio, because it can load fares too
+        # first we try fusio, because it can load fares too
         if any(f for f in files if BANO_REGEXP.match(f)):
             return 'bano'
         if len(files) == 1 and files[0].endswith('.pbf'):
@@ -240,10 +255,7 @@ def import_autocomplete(files, autocomplete_instance, async=True, backup_file=Tr
     job = models.Job()
     actions = []
 
-    task = {
-        'bano': bano2mimir,
-        'osm': osm2mimir,
-    }
+    task = {'bano': bano2mimir, 'osm': osm2mimir}
     autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
 
     for _file in files:
@@ -255,15 +267,15 @@ def import_autocomplete(files, autocomplete_instance, async=True, backup_file=Tr
                 filename = move_to_backupdirectory(_file, autocomplete_instance.backup_dir(autocomplete_dir))
             else:
                 filename = _file
-            actions.append(task[dataset.type].si(autocomplete_instance,
-                                                 filename=filename, dataset_uid=dataset.uid))
+            actions.append(
+                task[dataset.type].si(autocomplete_instance, filename=filename, dataset_uid=dataset.uid)
+            )
         else:
-            #unknown type, we skip it
-            current_app.logger.debug("unknown file type: {} for file {}"
-                                     .format(dataset.type, _file))
+            # unknown type, we skip it
+            current_app.logger.debug("unknown file type: {} for file {}".format(dataset.type, _file))
             continue
 
-        #currently the name of a dataset is the path to it
+        # currently the name of a dataset is the path to it
         dataset.name = filename
         models.db.session.add(dataset)
         job.data_sets.append(dataset)
@@ -328,20 +340,25 @@ def purge_instance(instance_id, nb_to_keep):
     backups = set(glob.glob('{}/*'.format(instance_config.backup_directory)))
     logger.info('backups are: %s', backups)
     # we add the realpath not to have problems with double / or stuff like that
-    loaded = set(os.path.realpath(os.path.dirname(dataset.name))
-                 for dataset in instance.last_datasets(nb_to_keep))
+    loaded = set(
+        os.path.realpath(os.path.dirname(dataset.name)) for dataset in instance.last_datasets(nb_to_keep)
+    )
     logger.info('loaded  data are: %s', loaded)
     to_remove = [os.path.join(instance_config.backup_directory, f) for f in backups - loaded]
 
     missing = [l for l in loaded if l not in backups]
     if missing:
-        logger.error("MISSING backup files! impossible to find %s in the backup dir, "
-                     "we skip the purge, repair ASAP to fix the purge", missing)
+        logger.error(
+            "MISSING backup files! impossible to find %s in the backup dir, "
+            "we skip the purge, repair ASAP to fix the purge",
+            missing,
+        )
         return
 
     logger.info('we remove: %s', to_remove)
     for path in to_remove:
         shutil.rmtree(path)
+
 
 @celery.task()
 def purge_jobs(days_to_keep=None):
@@ -383,7 +400,7 @@ def scan_instances():
             instance = models.Instance(name=instance_name)
             instance_config = load_instance_config(instance.name)
             instance.is_free = instance_config.is_free
-            #by default we will consider an free instance as an opendata one
+            # by default we will consider an free instance as an opendata one
             instance.is_open_data = instance_config.is_free
 
             models.db.session.add(instance)
@@ -433,10 +450,9 @@ def cities(osm_path):
     """ launch cities """
     res = -1
     try:
-        res = launch_exec("cities", ['-i', osm_path,
-                                     '--connection-string',
-                                     current_app.config['CITIES_DATABASE_URI']],
-                          logging)
+        res = launch_exec(
+            "cities", ['-i', osm_path, '--connection-string', current_app.config['CITIES_DATABASE_URI']], logging
+        )
         if res != 0:
             logging.error('cities failed')
     except:
@@ -513,6 +529,7 @@ def remove_autocomplete_depot(name):
     else:
         logging.warn('no main autocomplete directory, removing nothing')
 
+
 @celery.task()
 def purge_autocomplete():
     logger = logging.getLogger(__name__)
@@ -520,12 +537,12 @@ def purge_autocomplete():
     for ac_instance in autocomplete_instances:
         logger.info('purging autocomplete backup directories for %s', ac_instance.name)
         max_backups = current_app.config.get('AUOTOCOMPLETE_MAX_BACKUPS_TO_KEEP', 5)
-        dir_to_keep = set(os.path.realpath(os.path.dirname(dataset.name))
-                          for dataset in ac_instance.last_datasets(max_backups))
+        dir_to_keep = set(
+            os.path.realpath(os.path.dirname(dataset.name)) for dataset in ac_instance.last_datasets(max_backups)
+        )
         autocomplete_dir = current_app.config['TYR_AUTOCOMPLETE_DIR']
         backup_dir = os.path.join(autocomplete_dir, ac_instance.name, 'backup')
-        all_backups = set(os.path.join(backup_dir, backup)
-                          for backup in os.listdir(backup_dir))
+        all_backups = set(os.path.join(backup_dir, backup) for backup in os.listdir(backup_dir))
         to_remove = all_backups - dir_to_keep
         for directory in to_remove:
             if os.path.exists(directory):

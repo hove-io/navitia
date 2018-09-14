@@ -47,7 +47,6 @@ import redis
 
 
 class SyntheseRoutePoint(object):
-
     def __init__(self, rt_id=None, sp_id=None, line_id=None):
         self.syn_route_id = rt_id
         self.syn_stop_point_id = sp_id
@@ -85,25 +84,45 @@ class Synthese(RealtimeProxy):
     curl -X GET 'http://bobito.fr/?SERVICE=tdg&roid=68435211116990230&rn=5&date=2018-06-11%2011:13'
     """
 
-    def __init__(self, id, service_url, timezone, object_id_tag=None, destination_id_tag=None, instance=None,
-                 timeout=10, redis_host=None, redis_db=0,
-                 redis_port=6379, redis_password=None, max_requests_by_second=15,
-                 redis_namespace='jormungandr.rate_limiter', **kwargs):
+    def __init__(
+        self,
+        id,
+        service_url,
+        timezone,
+        object_id_tag=None,
+        destination_id_tag=None,
+        instance=None,
+        timeout=10,
+        redis_host=None,
+        redis_db=0,
+        redis_port=6379,
+        redis_password=None,
+        max_requests_by_second=15,
+        redis_namespace='jormungandr.rate_limiter',
+        **kwargs
+    ):
         self.service_url = service_url
         self.timeout = timeout  # timeout in seconds
         self.rt_system_id = id
         self.object_id_tag = object_id_tag if object_id_tag else id
         self.destination_id_tag = destination_id_tag
         self.instance = instance
-        self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_SYNTHESE_FAIL'],
-                                                reset_timeout=app.config['CIRCUIT_BREAKER_SYNTHESE_TIMEOUT_S'])
+        self.breaker = pybreaker.CircuitBreaker(
+            fail_max=app.config['CIRCUIT_BREAKER_MAX_SYNTHESE_FAIL'],
+            reset_timeout=app.config['CIRCUIT_BREAKER_SYNTHESE_TIMEOUT_S'],
+        )
         self.timezone = pytz.timezone(timezone)
         if not redis_host:
             self.rate_limiter = FakeRateLimiter()
         else:
-            self.rate_limiter = RateLimiter(conditions=[{'requests': max_requests_by_second, 'seconds': 1}],
-                                            redis_host=redis_host, redis_port=redis_port, redis_db=redis_db,
-                                            redis_password=redis_password, redis_namespace=redis_namespace)
+            self.rate_limiter = RateLimiter(
+                conditions=[{'requests': max_requests_by_second, 'seconds': 1}],
+                redis_host=redis_host,
+                redis_port=redis_port,
+                redis_db=redis_db,
+                redis_password=redis_password,
+                redis_namespace=redis_namespace,
+            )
 
     def __repr__(self):
         """
@@ -124,12 +143,14 @@ class Synthese(RealtimeProxy):
                 raise RealtimeProxyError('maximum rate reached')
             return self.breaker.call(requests.get, url, timeout=self.timeout)
         except pybreaker.CircuitBreakerError as e:
-            logging.getLogger(__name__).error('Synthese RT service dead, using base '
-                                              'schedule (error: {}'.format(e))
+            logging.getLogger(__name__).error(
+                'Synthese RT service dead, using base ' 'schedule (error: {}'.format(e)
+            )
             raise RealtimeProxyError('circuit breaker open')
         except requests.Timeout as t:
-            logging.getLogger(__name__).error('Synthese RT service timeout, using base '
-                                              'schedule (error: {}'.format(t))
+            logging.getLogger(__name__).error(
+                'Synthese RT service timeout, using base ' 'schedule (error: {}'.format(t)
+            )
             raise RealtimeProxyError('timeout')
         except redis.ConnectionError:
             logging.getLogger(__name__).exception('there is an error with Redis')
@@ -138,7 +159,9 @@ class Synthese(RealtimeProxy):
             logging.getLogger(__name__).exception('Synthese RT error, using base schedule')
             raise RealtimeProxyError(str(e))
 
-    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None, duration=None):
+    def _get_next_passage_for_route_point(
+        self, route_point, count=None, from_dt=None, current_dt=None, duration=None
+    ):
         url = self._make_url(route_point, count, from_dt)
         if not url:
             return None
@@ -149,8 +172,9 @@ class Synthese(RealtimeProxy):
 
         if r.status_code != 200:
             # TODO better error handling, the response might be in 200 but in error
-            logging.getLogger(__name__).error('Synthese RT service unavailable, impossible to query : {}'
-                                              .format(r.url))
+            logging.getLogger(__name__).error(
+                'Synthese RT service unavailable, impossible to query : {}'.format(r.url)
+            )
             raise RealtimeProxyError('non 200 response')
             return None
 
@@ -168,21 +192,24 @@ class Synthese(RealtimeProxy):
 
         if not stop_id:
             # one a the id is missing, we'll not find any realtime
-            logging.getLogger(__name__).debug('missing realtime id for {obj}: stop code={s}'.
-                                              format(obj=route_point, s=stop_id))
+            logging.getLogger(__name__).debug(
+                'missing realtime id for {obj}: stop code={s}'.format(obj=route_point, s=stop_id)
+            )
             self.record_internal_failure('missing id')
             return None
 
         count_param = '&rn={c}'.format(c=count) if count else ''
 
         # if a custom datetime is provided we give it to timeo
-        dt_param = '&date={dt}'.format(
-            dt=self._timestamp_to_date(from_dt).strftime('%Y-%m-%d %H:%M')) if from_dt else ''
+        dt_param = (
+            '&date={dt}'.format(dt=self._timestamp_to_date(from_dt).strftime('%Y-%m-%d %H:%M'))
+            if from_dt
+            else ''
+        )
 
-        url = "{base_url}?SERVICE=tdg&roid={stop_id}{count}{date}".format(base_url=self.service_url,
-                                                                          stop_id=stop_id,
-                                                                          count=count_param,
-                                                                          date=dt_param)
+        url = "{base_url}?SERVICE=tdg&roid={stop_id}{count}{date}".format(
+            base_url=self.service_url, stop_id=stop_id, count=count_param, date=dt_param
+        )
 
         return url
 
@@ -203,7 +230,7 @@ class Synthese(RealtimeProxy):
         dt = DateTimeFormat()(xml_journey.get('dateTime'))
         utc_dt = self.timezone.normalize(self.timezone.localize(dt)).astimezone(pytz.utc)
         passage = RealTimePassage(utc_dt)
-        passage.is_real_time = (xml_journey.get('realTime') == 'yes')
+        passage.is_real_time = xml_journey.get('realTime') == 'yes'
         return passage
 
     @staticmethod
@@ -219,9 +246,11 @@ class Synthese(RealtimeProxy):
     def _get_synthese_passages(self, xml):
         result = {}
         for xml_journey in self._build(xml):
-            route_point = SyntheseRoutePoint(xml_journey.get('routeId'),
-                                             self._get_value(xml_journey, 'stop', 'id'),
-                                             self._get_value(xml_journey, 'line', 'id'))
+            route_point = SyntheseRoutePoint(
+                xml_journey.get('routeId'),
+                self._get_value(xml_journey, 'stop', 'id'),
+                self._get_value(xml_journey, 'line', 'id'),
+            )
             if route_point not in result:
                 result[route_point] = []
             passage = self._get_real_time_passage(xml_journey)
@@ -229,12 +258,15 @@ class Synthese(RealtimeProxy):
         return result
 
     def status(self):
-        return {'id': unicode(self.rt_system_id),
-                'timeout': self.timeout,
-                'circuit_breaker': {'current_state': self.breaker.current_state,
-                                    'fail_counter': self.breaker.fail_counter,
-                                    'reset_timeout': self.breaker.reset_timeout},
-                }
+        return {
+            'id': unicode(self.rt_system_id),
+            'timeout': self.timeout,
+            'circuit_breaker': {
+                'current_state': self.breaker.current_state,
+                'fail_counter': self.breaker.fail_counter,
+                'reset_timeout': self.breaker.reset_timeout,
+            },
+        }
 
     def _timestamp_to_date(self, timestamp):
         dt = datetime.utcfromtimestamp(timestamp)
@@ -261,44 +293,54 @@ class Synthese(RealtimeProxy):
         log = logging.getLogger(__name__)
         stop_point_id = str(route_point.fetch_stop_id(self.object_id_tag))
         is_same_route = lambda syn_rp: syn_rp.syn_route_id in route_point.fetch_all_route_id(self.object_id_tag)
-        route_passages = [p for syn_rp, p in passages.items()
-                          if is_same_route(syn_rp) and stop_point_id == syn_rp.syn_stop_point_id]
+        route_passages = [
+            p
+            for syn_rp, p in passages.items()
+            if is_same_route(syn_rp) and stop_point_id == syn_rp.syn_stop_point_id
+        ]
 
         if route_passages:
             return sorted(list(itertools.chain(*route_passages)), key=lambda p: p.datetime)
 
-        log.debug('impossible to find the route in synthese response, '
-                  'looking for the line {}'.format(route_point.fetch_line_uri()))
+        log.debug(
+            'impossible to find the route in synthese response, '
+            'looking for the line {}'.format(route_point.fetch_line_uri())
+        )
 
-        routes_gen = self.instance.ptref.get_objs(type_pb2.ROUTE,
-                                                  'stop_point.uri = {stop} and line.uri = {line}'.format(
-                                                      stop=route_point.pb_stop_point.uri,
-                                                      line=route_point.fetch_line_uri()))
+        routes_gen = self.instance.ptref.get_objs(
+            type_pb2.ROUTE,
+            'stop_point.uri = {stop} and line.uri = {line}'.format(
+                stop=route_point.pb_stop_point.uri, line=route_point.fetch_line_uri()
+            ),
+        )
 
         first_routes = list(itertools.islice(routes_gen, 2))
 
         if len(first_routes) == 1:
             # there is only one route that pass through our stoppoint for the line of the routepoint
             # we can concatenate all synthese's route of this line
-            line_passages = [p for syn_rp, p in passages.items() if syn_rp.syn_line_id ==
-                             route_point.fetch_line_id(self.object_id_tag)]
+            line_passages = [
+                p
+                for syn_rp, p in passages.items()
+                if syn_rp.syn_line_id == route_point.fetch_line_id(self.object_id_tag)
+            ]
 
             if line_passages:
                 return sorted(list(itertools.chain(*line_passages)), key=lambda p: p.datetime)
 
-            log.debug('stoppoint {sp} has {nb_r} routes for line {l} ({l_codes}) in navitia and {nb_syn_r} '
-                      'in synthese (lines: {syn_lines})'
-                      .format(sp=route_point.pb_stop_point.uri,
-                              nb_r=len(first_routes),
-                              l=route_point.fetch_line_uri(),
-                              l_codes=route_point.fetch_line_id(self.object_id_tag),
-                              nb_syn_r=len(passages),
-                              syn_lines=[l.syn_line_id for l in passages.keys()]))
+            log.debug(
+                'stoppoint {sp} has {nb_r} routes for line {l} ({l_codes}) in navitia and {nb_syn_r} '
+                'in synthese (lines: {syn_lines})'.format(
+                    sp=route_point.pb_stop_point.uri,
+                    nb_r=len(first_routes),
+                    l=route_point.fetch_line_uri(),
+                    l_codes=route_point.fetch_line_id(self.object_id_tag),
+                    nb_syn_r=len(passages),
+                    syn_lines=[l.syn_line_id for l in passages.keys()],
+                )
+            )
 
         if passages:
-            log.info('impossible to find a valid passage for {} (passage = {})'
-                     .format(route_point, passages))
+            log.info('impossible to find a valid passage for {} (passage = {})'.format(route_point, passages))
 
         return None
-
-

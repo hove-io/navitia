@@ -47,24 +47,25 @@ def authentication_required(func):
     decorateur chargé de l'authentification des requetes
     fonctionne pour chaque API prenant un paramétre la région
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         region = None
         if 'region' in kwargs:
             region = kwargs['region']
-            #TODO revoir comment on gere le lon/lat
+            # TODO revoir comment on gere le lon/lat
         elif 'lon' in kwargs and 'lat' in kwargs:
             try:  # quick fix to avoid circular dependencies
                 from jormungandr import i_manager
-                region = i_manager.get_region(lon=kwargs['lon'],
-                                                lat=kwargs['lat'])
+
+                region = i_manager.get_region(lon=kwargs['lon'], lat=kwargs['lat'])
             except RegionNotFound:
                 pass
-        elif current_app.config.get('DEFAULT_REGION'): # if a default region is defined in config
-            region = current_app.config.get('DEFAULT_REGION') # we use it
+        elif current_app.config.get('DEFAULT_REGION'):  # if a default region is defined in config
+            region = current_app.config.get('DEFAULT_REGION')  # we use it
         user = get_user(token=get_token())
         if not region:
-            #we could not find any regions, we abort
+            # we could not find any regions, we abort
             abort_request(user=user)
         if has_access(region, 'ALL', abort=True, user=user):
             return func(*args, **kwargs)
@@ -113,11 +114,11 @@ def has_access(region, api, abort, user):
     dependent of the request context, so keep it as a pure function.
     """
     if current_app.config.get('PUBLIC', False):
-        #if jormungandr is on public mode we skip the authentification process
+        # if jormungandr is on public mode we skip the authentification process
         return True
 
     if not user:
-        #no user --> no need to continue, we can abort, a user is mandatory even for free region
+        # no user --> no need to continue, we can abort, a user is mandatory even for free region
         abort_request(user=user)
 
     model_instance = Instance.get_by_name(region)
@@ -127,7 +128,9 @@ def has_access(region, api, abort, user):
             raise RegionNotFound(region)
         return False
 
-    if (model_instance.is_free and user.have_access_to_free_instances) or user.has_access(model_instance.id, api):
+    if (model_instance.is_free and user.have_access_to_free_instances) or user.has_access(
+        model_instance.id, api
+    ):
         return True
     else:
         if abort:
@@ -161,6 +164,7 @@ def get_all_available_instances(user):
     """
     if current_app.config.get('PUBLIC', False) or current_app.config.get('DISABLE_DATABASE', False):
         from jormungandr import i_manager
+
         return i_manager.instances.values()
 
     if not user:
@@ -181,10 +185,13 @@ def get_user(token, abort_if_no_token=True):
         return g.user
     else:
         if not token:
-            #a token is mandatory for non public jormungandr
+            # a token is mandatory for non public jormungandr
             if not current_app.config.get('PUBLIC', False):
                 if abort_if_no_token:
-                    flask_restful.abort(401, message='no token. You can get one at http://www.navitia.io or contact your support if you’re using the opensource version of Navitia https://github.com/CanalTP/navitia')
+                    flask_restful.abort(
+                        401,
+                        message='no token. You can get one at http://www.navitia.io or contact your support if you’re using the opensource version of Navitia https://github.com/CanalTP/navitia',
+                    )
                 else:
                     return None
             else:  # for public one we allow unknown user
@@ -194,6 +201,7 @@ def get_user(token, abort_if_no_token=True):
             g.user = cache_get_user(token)
 
         return g.user
+
 
 def get_app_name(token):
     """
@@ -216,6 +224,7 @@ def abort_request(user=None):
     else:
         flask_restful.abort(401)
 
+
 def get_used_coverages():
     """
     return the list of coverages used to generate the response
@@ -226,6 +235,7 @@ def get_used_coverages():
         return g.used_coverages
     else:
         return []
+
 
 def register_used_coverages(coverages):
     if hasattr(coverages, '__iter__'):

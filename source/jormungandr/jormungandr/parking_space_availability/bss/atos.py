@@ -43,16 +43,25 @@ DEFAULT_ATOS_FEED_PUBLISHER = None
 
 
 class AtosProvider(CommonBssProvider):
-
-    def __init__(self, id_ao, network, url, operators={'keolis'}, timeout=5,
-                 feed_publisher=DEFAULT_ATOS_FEED_PUBLISHER, **kwargs):
+    def __init__(
+        self,
+        id_ao,
+        network,
+        url,
+        operators={'keolis'},
+        timeout=5,
+        feed_publisher=DEFAULT_ATOS_FEED_PUBLISHER,
+        **kwargs
+    ):
         self.id_ao = id_ao
         self.network = network.lower()
         self.WS_URL = url
         self.operators = [o.lower() for o in operators]
         self.timeout = timeout
         self._client = None
-        self.breaker = pybreaker.CircuitBreaker(fail_max=kwargs.get('fail_max', 5), reset_timeout=kwargs.get('reset_timeout', 120))
+        self.breaker = pybreaker.CircuitBreaker(
+            fail_max=kwargs.get('fail_max', 5), reset_timeout=kwargs.get('reset_timeout', 120)
+        )
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
 
     def __repr__(self):
@@ -60,8 +69,10 @@ class AtosProvider(CommonBssProvider):
 
     def support_poi(self, poi):
         properties = poi.get('properties', {})
-        return properties.get('operator', '').lower() in self.operators and \
-               properties.get('network', '').lower() == self.network
+        return (
+            properties.get('operator', '').lower() in self.operators
+            and properties.get('network', '').lower() == self.network
+        )
 
     def _get_informations(self, poi):
         logging.debug('building stands')
@@ -87,9 +98,14 @@ class AtosProvider(CommonBssProvider):
     def _get_all_stands(self):
         with self._get_client() as client:
             all_stands = client.service.getSummaryInformationTerminals(self.id_ao)
-            return {stands.libelle: Stands(stands.nbPlacesDispo, stands.nbVelosDispo,
-                                           StandsStatus.open if stands.etatConnexion == 'CONNECTEE' else StandsStatus.unavailable)
-                    for stands in all_stands}
+            return {
+                stands.libelle: Stands(
+                    stands.nbPlacesDispo,
+                    stands.nbVelosDispo,
+                    StandsStatus.open if stands.etatConnexion == 'CONNECTEE' else StandsStatus.unavailable,
+                )
+                for stands in all_stands
+            }
 
     @contextmanager
     def _get_client(self):

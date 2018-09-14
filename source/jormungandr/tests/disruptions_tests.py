@@ -32,8 +32,10 @@ from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
 import jmespath
 
+
 def get_impacts(response):
     return {d['id']: d for d in response['disruptions']}
+
 
 # for the tests we need custom datetime to display the disruptions
 default_date_filter = '_current_datetime=20120801T000000'
@@ -131,7 +133,8 @@ class TestDisruptions(AbstractTestFixture):
         # (since the coords in the # datasets are very close, we find all)
 
         coord_traffic_report = self.query_region(
-            'coords/{s}/traffic_reports?{dt_filter}'.format(s=s_coord, dt_filter=default_date_filter))
+            'coords/{s}/traffic_reports?{dt_filter}'.format(s=s_coord, dt_filter=default_date_filter)
+        )
 
         check_response(get_not_null(coord_traffic_report, 'traffic_reports'))
 
@@ -196,15 +199,19 @@ class TestDisruptions(AbstractTestFixture):
         :param disruption_time: dict of disruption application_periods
         :return: True if stop_time is within disruption time, else False
         """
-        return disruption_time['begin'] < stop_time['arrival_date_time'] < disruption_time['end'] or \
-                disruption_time['begin'] < stop_time['departure_date_time'] < disruption_time['end']
+        return (
+            disruption_time['begin'] < stop_time['arrival_date_time'] < disruption_time['end']
+            or disruption_time['begin'] < stop_time['departure_date_time'] < disruption_time['end']
+        )
 
     def test_disruption_with_departures(self):
         """
         on a '/departure' call on stopB, we should get its disruptions
         """
-        response = self.query_region('stop_points/stop_point:stopB/departures?'
-                                     'from_datetime=20120614T080000&_current_datetime=20120614T080000')
+        response = self.query_region(
+            'stop_points/stop_point:stopB/departures?'
+            'from_datetime=20120614T080000&_current_datetime=20120614T080000'
+        )
 
         departures = get_not_null(response, 'departures')
         assert len(departures) >= 2
@@ -231,7 +238,9 @@ class TestDisruptions(AbstractTestFixture):
         for l in impacted_lines:
             departure = jmespath.search("[?route.line.name=='{}']".format(l), departures)
             departure_disruptions = get_all_element_disruptions(departure, response)
-            if self.is_in_disprution_time(departure[0]['stop_date_time'], disruptions[0]['application_periods'][0]):
+            if self.is_in_disprution_time(
+                departure[0]['stop_date_time'], disruptions[0]['application_periods'][0]
+            ):
                 assert departure_disruptions
                 assert len(departure_disruptions) == 1
                 assert 'too_bad_all_lines' in departure_disruptions
@@ -243,8 +252,10 @@ class TestDisruptions(AbstractTestFixture):
         """
         on a '/arrivals' call on stopA, we should get its disruptions
         """
-        response = self.query_region('stop_points/stop_point:stopA/arrivals?'
-                                     'from_datetime=20120614T070000&_current_datetime=20120614T080000')
+        response = self.query_region(
+            'stop_points/stop_point:stopA/arrivals?'
+            'from_datetime=20120614T070000&_current_datetime=20120614T080000'
+        )
 
         arrivals = get_not_null(response, 'arrivals')
         assert len(arrivals) >= 2
@@ -271,7 +282,9 @@ class TestDisruptions(AbstractTestFixture):
         for l in impacted_lines:
             departure = jmespath.search("[?route.line.name=='{}']".format(l), arrivals)
             departure_disruptions = get_all_element_disruptions(departure, response)
-            if self.is_in_disprution_time(departure[0]['stop_date_time'], disruptions[0]['application_periods'][0]):
+            if self.is_in_disprution_time(
+                departure[0]['stop_date_time'], disruptions[0]['application_periods'][0]
+            ):
                 assert departure_disruptions
                 assert len(departure_disruptions) == 1
                 assert 'too_bad_all_lines' in departure_disruptions
@@ -356,28 +369,28 @@ class TestDisruptions(AbstractTestFixture):
         """
         response = self.query_region('stop_areas/stopB/traffic_reports?_current_datetime=20120801T000000Z')
 
-        #we should have disruptions at this date
+        # we should have disruptions at this date
         assert len(response['disruptions']) > 0
 
         response = self.query_region('stop_areas/stopB/traffic_reports?_current_datetime=20120731T235959Z')
 
-        #before the start of the period => no disruptions
+        # before the start of the period => no disruptions
         assert len(response['disruptions']) == 0
 
-        #%2B is the code for '+'
+        # %2B is the code for '+'
         response = self.query_region('stop_areas/stopB/traffic_reports?_current_datetime=20120801T005959%2B0100')
 
-        #UTC + 1, so in UTC it's 23h59 the day before => no disruption
+        # UTC + 1, so in UTC it's 23h59 the day before => no disruption
         assert len(response['disruptions']) == 0
 
         response = self.query_region('stop_areas/stopB/traffic_reports?_current_datetime=20120801T000000-0100')
 
-        #UTC - 1, so in UTC it's 01h => disruptions
+        # UTC - 1, so in UTC it's 01h => disruptions
         assert len(response['disruptions']) > 0
 
         response = self.query_region('stop_areas/stopB/traffic_reports?_current_datetime=20120731T235959-0100')
 
-        #UTC - 1, so in UTC it's 00h59 => disruptions
+        # UTC - 1, so in UTC it's 00h59 => disruptions
         assert len(response['disruptions']) > 0
 
     def test_disruption_on_route(self):
@@ -410,7 +423,7 @@ class TestDisruptions(AbstractTestFixture):
         assert lines_disrupt[0]['disruption_id'] == 'disruption_route_A:0'
         assert lines_disrupt[0]['uri'] == 'too_bad_route_A:0'
 
-        #Check message, channel and types
+        # Check message, channel and types
         disruption_message = get_not_null(response, 'disruptions')
         assert len(disruption_message) == 1
         message = get_not_null(disruption_message[0], 'messages')
@@ -423,7 +436,6 @@ class TestDisruptions(AbstractTestFixture):
         assert channel_types[0] == 'web'
         assert channel_types[1] == 'sms'
 
-
         assert message[1]['text'] == 'try again'
         channel = get_not_null(message[1], 'channel')
         assert channel['id'] == 'email'
@@ -432,7 +444,6 @@ class TestDisruptions(AbstractTestFixture):
         assert len(channel_types) == 2
         assert channel_types[0] == 'web'
         assert channel_types[1] == 'email'
-
 
     def test_disruption_on_route_and_line(self):
         """
@@ -466,7 +477,7 @@ class TestDisruptions(AbstractTestFixture):
         assert lines_disrupt[0]['disruption_id'] == 'disruption_route_A:0_and_line'
         assert lines_disrupt[0]['uri'] == 'too_bad_route_A:0_and_line'
 
-        #Verify message and channel without any channel type
+        # Verify message and channel without any channel type
         message = get_not_null(lines_disrupt[0], 'messages')
         assert len(message) == 3
         assert message[0]['text'] == 'no luck'
@@ -502,7 +513,7 @@ class TestDisruptions(AbstractTestFixture):
         # No filtering results in the whole 5 disruptions
         assert len(disruptions) == 5
 
-        #in the disruptoins the earliest one is called 'too_bad_all_lines'
+        # in the disruptoins the earliest one is called 'too_bad_all_lines'
         # and is active on [20120614T060000, 20120614T115959[
         too_bad_all_line = next(d for d in disruptions if d['id'] == 'too_bad_all_lines')
         assert too_bad_all_line['application_periods'][0]['begin'] == '20120614T060000'
@@ -542,16 +553,21 @@ class TestDisruptions(AbstractTestFixture):
          * [20121201T000000, 20121215T115959]
         """
         # we query it with a period that intersect one of 'later_impact periods, we got the impact
-        disrup = self.query_region('lines/A/disruptions?since=20121016T000000&until=20121217T000000')['disruptions']
+        disrup = self.query_region('lines/A/disruptions?since=20121016T000000&until=20121217T000000')[
+            'disruptions'
+        ]
         assert {d['id'] for d in disrup} == {'later_impact'}
 
         # we query it with a period that doest not intersect one of 'later_impact periods, we got nothing
-        _, code = self.query_region('lines/A/disruptions?since=20121016T000000&until=20121017T000000',
-                                    check=False)
+        _, code = self.query_region(
+            'lines/A/disruptions?since=20121016T000000&until=20121017T000000', check=False
+        )
         assert code == 404
 
         # we query it with a period [d, d] that intersect one of 'later_impact periods, we got the impact
-        disrup = self.query_region('lines/A/disruptions?since=20121001T000000&until=20121001T000000')['disruptions']
+        disrup = self.query_region('lines/A/disruptions?since=20121001T000000&until=20121001T000000')[
+            'disruptions'
+        ]
         assert {d['id'] for d in disrup} == {'later_impact'}
 
     def test_disruption_invalid_period_filtering(self):
@@ -571,7 +587,7 @@ class TestDisruptions(AbstractTestFixture):
         disruptions = get_not_null(response, 'disruptions')
         assert len(disruptions) == 10
 
-        #filtering disruptions on line A
+        # filtering disruptions on line A
         response, code = self.query_no_assert("v1/coverage/main_routing_test/disruptions?forbidden_uris[]=A")
         assert code == 200
         disruptions = get_not_null(response, 'disruptions')
@@ -584,7 +600,9 @@ class TestDisruptions(AbstractTestFixture):
         assert len(disruptions) == 5
 
         # when we forbid another id, we find again all our disruptions
-        response, code = self.query_no_assert("v1/coverage/main_routing_test/disruptions?forbidden_id[]=bloubliblou")
+        response, code = self.query_no_assert(
+            "v1/coverage/main_routing_test/disruptions?forbidden_id[]=bloubliblou"
+        )
         assert code == 200
         disruptions = get_not_null(response, 'disruptions')
         assert len(disruptions) == 10
@@ -617,8 +635,9 @@ class TestDisruptions(AbstractTestFixture):
             assert line_report['pt_objects'][1]['id'] == 'stopA'
 
     def test_line_reports_with_since_and_until(self):
-        response = self.query_region("line_reports?_current_datetime=20120801T000000"
-                                     "&since=20120801T000000&until=20120803T000000")
+        response = self.query_region(
+            "line_reports?_current_datetime=20120801T000000" "&since=20120801T000000&until=20120803T000000"
+        )
         warnings = get_not_null(response, 'warnings')
         assert len(warnings) == 1
         assert warnings[0]['id'] == 'beta_endpoint'
@@ -650,10 +669,10 @@ class TestDisruptions(AbstractTestFixture):
 
 @dataset({"line_sections_test": {}})
 class TestDisruptionsLineSections(AbstractTestFixture):
-    #Information about the data in line_section_test
-    #The data is valid from "20170101T000000" to "20170131T000000"
-    #The disruption has publication_period from "20170101T000000" to "20170110T000000"
-    #and one application_period from "20170102T000000" to "20170105T000000"
+    # Information about the data in line_section_test
+    # The data is valid from "20170101T000000" to "20170131T000000"
+    # The disruption has publication_period from "20170101T000000" to "20170110T000000"
+    # and one application_period from "20170102T000000" to "20170105T000000"
     def test_line_reports(self):
         response = self.query_region("line_reports?_current_datetime=20170103T120000")
         disruptions = get_not_null(response, 'disruptions')
@@ -673,18 +692,25 @@ class TestDisruptionsLineSections(AbstractTestFixture):
             assert len(pt_object['stop_point']['links']) == (2 if pt_object['id'] == 'E_1' else 1)
             if pt_object['id'] != 'F_1':
                 assert pt_object['stop_point']['links'][0]['id'] == 'line_section_on_line_1'
-        assert line_reports[0]['pt_objects'][3]['stop_point']['links'][1]['id'] == 'line_section_on_line_1_other_effect'
-        assert line_reports[0]['pt_objects'][4]['stop_point']['links'][0]['id'] == 'line_section_on_line_1_other_effect'
+        assert (
+            line_reports[0]['pt_objects'][3]['stop_point']['links'][1]['id']
+            == 'line_section_on_line_1_other_effect'
+        )
+        assert (
+            line_reports[0]['pt_objects'][4]['stop_point']['links'][0]['id']
+            == 'line_section_on_line_1_other_effect'
+        )
 
     def test_line_reports_with_current_datetime_outof_application_period(self):
-        #without since/until we use since=production_date.begin and until = production_date.end
-        #application period intersects with active period of the disruption but not publication period
+        # without since/until we use since=production_date.begin and until = production_date.end
+        # application period intersects with active period of the disruption but not publication period
         response = self.query_region("line_reports?_current_datetime=20170111T130000")
         assert len(response['disruptions']) == 0
 
     def test_line_reports_with_since_until_intersects_application_period(self):
-        response = self.query_region("line_reports?_current_datetime=20170101T120000"
-                                     "&since=20170104T130000&until=20170106T000000")
+        response = self.query_region(
+            "line_reports?_current_datetime=20170101T120000" "&since=20170104T130000&until=20170106T000000"
+        )
         disruptions = get_not_null(response, 'disruptions')
         assert len(disruptions) == 2
         line_reports = get_not_null(response, 'line_reports')
@@ -702,8 +728,14 @@ class TestDisruptionsLineSections(AbstractTestFixture):
             assert len(pt_object['stop_point']['links']) == (2 if pt_object['id'] == 'E_1' else 1)
             if pt_object['id'] != 'F_1':
                 assert pt_object['stop_point']['links'][0]['id'] == 'line_section_on_line_1'
-        assert line_reports[0]['pt_objects'][3]['stop_point']['links'][1]['id'] == 'line_section_on_line_1_other_effect'
-        assert line_reports[0]['pt_objects'][4]['stop_point']['links'][0]['id'] == 'line_section_on_line_1_other_effect'
+        assert (
+            line_reports[0]['pt_objects'][3]['stop_point']['links'][1]['id']
+            == 'line_section_on_line_1_other_effect'
+        )
+        assert (
+            line_reports[0]['pt_objects'][4]['stop_point']['links'][0]['id']
+            == 'line_section_on_line_1_other_effect'
+        )
 
     def test_line_reports_with_since_intersects_application_period(self):
         response = self.query_region("line_reports?_current_datetime=20170101T120000&since=20170104T130000")
@@ -724,16 +756,25 @@ class TestDisruptionsLineSections(AbstractTestFixture):
             assert len(pt_object['stop_point']['links']) == (2 if pt_object['id'] == 'E_1' else 1)
             if pt_object['id'] != 'F_1':
                 assert pt_object['stop_point']['links'][0]['id'] == 'line_section_on_line_1'
-        assert line_reports[0]['pt_objects'][3]['stop_point']['links'][1]['id'] == 'line_section_on_line_1_other_effect'
-        assert line_reports[0]['pt_objects'][4]['stop_point']['links'][0]['id'] == 'line_section_on_line_1_other_effect'
+        assert (
+            line_reports[0]['pt_objects'][3]['stop_point']['links'][1]['id']
+            == 'line_section_on_line_1_other_effect'
+        )
+        assert (
+            line_reports[0]['pt_objects'][4]['stop_point']['links'][0]['id']
+            == 'line_section_on_line_1_other_effect'
+        )
 
     def test_line_reports_with_since_until_outof_application_period(self):
-        response = self.query_region("line_reports?_current_datetime=20170101T120000"
-                                     "&since=20170105T130000&until=20170108T000000")
+        response = self.query_region(
+            "line_reports?_current_datetime=20170101T120000" "&since=20170105T130000&until=20170108T000000"
+        )
         assert len(response['disruptions']) == 0
 
     def test_line_reports_with_since_until_value_not_valid(self):
-        response, code = self.query_region("line_reports?_current_datetime=20170101T120000"
-                                           "&since=20170108T130000&until=20170105T000000", check=False)
+        response, code = self.query_region(
+            "line_reports?_current_datetime=20170101T120000" "&since=20170108T130000&until=20170105T000000",
+            check=False,
+        )
         assert code == 404
         assert response['error']['message'] == 'invalid filtering period (since > until)'

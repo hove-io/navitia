@@ -43,7 +43,13 @@ from jormungandr import bss_provider_manager
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer.api import TechnicalStatusSerializer
 from jormungandr.interfaces.v1.serializer.status import CommonStatusSerializer
-from jormungandr.interfaces.v1.fields import ListLit, beta_endpoint, context_utc, instance_status, add_common_status
+from jormungandr.interfaces.v1.fields import (
+    ListLit,
+    beta_endpoint,
+    context_utc,
+    instance_status,
+    add_common_status,
+)
 from flask_restful import fields
 
 
@@ -51,30 +57,33 @@ class Index(ModuleResource):
     def get(self):
         response = {
             "links": [
-                create_external_link(self.module_name + '.coverage',
-                                     rel='coverage',
-                                     description='Coverage of navitia'),
+                create_external_link(
+                    self.module_name + '.coverage', rel='coverage', description='Coverage of navitia'
+                ),
                 # TODO find a way to display {long:lat} in the url
-                create_external_link(self.module_name + '.coord', rel='coord',
-                                     templated=True,
-                                     description='Inverted geocoding for a given coordinate',
-                                     lon=.0, lat=.0),
-                create_external_link(self.module_name + '.journeys',
-                                     rel='journeys',
-                                     description='Compute journeys'),
-                create_external_link(self.module_name + '.places',
-                                     rel='places',
-                                     description='Autocomplete api'),
+                create_external_link(
+                    self.module_name + '.coord',
+                    rel='coord',
+                    templated=True,
+                    description='Inverted geocoding for a given coordinate',
+                    lon=.0,
+                    lat=.0,
+                ),
+                create_external_link(
+                    self.module_name + '.journeys', rel='journeys', description='Compute journeys'
+                ),
+                create_external_link(self.module_name + '.places', rel='places', description='Autocomplete api'),
             ]
         }
         return response, 200
+
 
 technical_status = {
     "bss_providers": Raw,
     "regions": Raw,
     "jormungandr_version": Raw,
     "context": context_utc,
-    "warnings": ListLit([fields.Nested(beta_endpoint)])
+    "warnings": ListLit([fields.Nested(beta_endpoint)]),
 }
 
 
@@ -111,10 +120,7 @@ class TechnicalStatus(ModuleResource):
                 resp_dict = {
                     "status": "dead",
                     "realtime_proxies": [],
-                    "error": {
-                        "code": "dead_socket",
-                        "value": "The region {} is dead".format(key_region)
-                    }
+                    "error": {"code": "dead_socket", "value": "The region {} is dead".format(key_region)},
                 }
             resp_dict['region_id'] = key_region
             response['regions'].append(resp_dict)

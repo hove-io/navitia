@@ -35,12 +35,11 @@ from pythonjsonlogger import jsonlogger
 
 
 class IdFilter(logging.Filter):
-
     def filter(self, record):
         try:
             record.request_id = request.id
         except RuntimeError:
-            #if we are outside of a application context
+            # if we are outside of a application context
             record.request_id = None
         return True
 
@@ -50,6 +49,7 @@ class CustomJsonFormatter(jsonlogger.JsonFormatter):
     jsonformatter with extra params
     you can add additional params to it (like the environment name) at configuration time
     """
+
     def __init__(self, *args, **kwargs):
         self.extras = kwargs.pop('extras', {})
         jsonlogger.JsonFormatter.__init__(self, *args, **kwargs)

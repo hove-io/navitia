@@ -16,7 +16,11 @@ import geoalchemy2 as ga
 
 
 def upgrade():
-    op.add_column('physical_mode', sa.Column('co2_emission', sa.FLOAT(), nullable=False, server_default='0'), schema='navitia')
+    op.add_column(
+        'physical_mode',
+        sa.Column('co2_emission', sa.FLOAT(), nullable=False, server_default='0'),
+        schema='navitia',
+    )
 
 
 def downgrade():

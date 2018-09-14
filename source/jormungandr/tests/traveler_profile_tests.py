@@ -45,28 +45,29 @@ def test_get_traveler_profile_and_override():
     traveler_type = 'standard'
     traveler_profile = TravelerProfile.make_traveler_profile(region, traveler_type)
 
-    args = {'walking_speed': 42424242,
-            'bike_speed':    42424242}
+    args = {'walking_speed': 42424242, 'bike_speed': 42424242}
     traveler_profile.override_params(args)
 
-    assert(args['walking_speed'] == 42424242)
-    assert(args['bike_speed'] == 42424242)
+    assert args['walking_speed'] == 42424242
+    assert args['bike_speed'] == 42424242
 
-    arg_vs_profile_attr = (('bss_speed',                  'bss_speed'),
-                           ('car_speed',                  'car_speed'),
-                           ('max_walking_duration_to_pt', 'max_walking_duration_to_pt'),
-                           ('max_bike_duration_to_pt',    'max_bike_duration_to_pt'),
-                           ('max_bss_duration_to_pt',     'max_bss_duration_to_pt'),
-                           ('max_car_duration_to_pt',     'max_car_duration_to_pt'),
-                           ('origin_mode',                'first_section_mode'),
-                           ('destination_mode',           'last_section_mode'),
-                           ('wheelchair',                 'wheelchair'))
+    arg_vs_profile_attr = (
+        ('bss_speed', 'bss_speed'),
+        ('car_speed', 'car_speed'),
+        ('max_walking_duration_to_pt', 'max_walking_duration_to_pt'),
+        ('max_bike_duration_to_pt', 'max_bike_duration_to_pt'),
+        ('max_bss_duration_to_pt', 'max_bss_duration_to_pt'),
+        ('max_car_duration_to_pt', 'max_car_duration_to_pt'),
+        ('origin_mode', 'first_section_mode'),
+        ('destination_mode', 'last_section_mode'),
+        ('wheelchair', 'wheelchair'),
+    )
 
     standard_profile = default_traveler_profiles['standard']
 
     def check(arg_attr):
         (arg, attr) = arg_attr
-        assert(args[arg] == getattr(standard_profile, attr))
+        assert args[arg] == getattr(standard_profile, attr)
 
     list(map(check, arg_vs_profile_attr))
 
@@ -79,4 +80,4 @@ def test_make_profile_cache_decorator():
     traveler_profile_1 = TravelerProfile.make_traveler_profile(region, traveler_type)
     traveler_profile_2 = TravelerProfile.make_traveler_profile(region, traveler_type)
 
-    assert(traveler_profile_1 is traveler_profile_2)
+    assert traveler_profile_1 is traveler_profile_2

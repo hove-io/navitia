@@ -30,8 +30,15 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from jormungandr.interfaces.v1.Calendars import calendar
 from jormungandr.interfaces.v1 import fields
-from jormungandr.interfaces.v1.fields import NonNullList, NonNullNested, NonNullProtobufNested, PbField, FirstComment, \
-    comment, DisruptionLinks
+from jormungandr.interfaces.v1.fields import (
+    NonNullList,
+    NonNullNested,
+    NonNullProtobufNested,
+    PbField,
+    FirstComment,
+    comment,
+    DisruptionLinks,
+)
 
 vehicle_journey = {
     "id": fields.fields.String(attribute="uri"),

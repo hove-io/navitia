@@ -37,16 +37,18 @@ from .journey_common_tests import *
 This unit runs all the common tests in journey_common_tests.py.
 '''
 
+
 @config()
 class TestJourneysDefault(JourneyCommon, AbstractTestFixture):
-
     def test_max_duration_equals_to_0(self):
-        query = journey_basic_query + \
-            "&first_section_mode[]=bss" + \
-            "&first_section_mode[]=walking" + \
-            "&first_section_mode[]=bike" + \
-            "&first_section_mode[]=car" + \
-            "&debug=true"
+        query = (
+            journey_basic_query
+            + "&first_section_mode[]=bss"
+            + "&first_section_mode[]=walking"
+            + "&first_section_mode[]=bike"
+            + "&first_section_mode[]=car"
+            + "&debug=true"
+        )
         response = self.query_region(query)
         check_best(response)
         assert len(response['journeys']) == 4
@@ -57,23 +59,24 @@ class TestJourneysDefault(JourneyCommon, AbstractTestFixture):
         assert len(response['journeys']) == 3
 
         # first is bike
-        assert('non_pt_bike' == response['journeys'][0]['type'])
+        assert 'non_pt_bike' == response['journeys'][0]['type']
         assert len(response['journeys'][0]['sections']) == 1
 
         # second is empty
-        assert('' == response['journeys'][1]['type'])
+        assert '' == response['journeys'][1]['type']
         assert len(response['journeys'][1]['sections']) == 3
 
         # last is bss
-        assert('non_pt_bss' == response['journeys'][2]['type'])
+        assert 'non_pt_bss' == response['journeys'][2]['type']
         assert len(response['journeys'][-1]['sections']) == 5
 
     def test_journey_stop_area_to_stop_point(self):
         """
         When the departure is stop_area:A and the destination is stop_point:B belonging to stop_area:B
         """
-        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}"\
-            .format(from_sa='stopA', to_sa='stop_point:stopB', datetime="20120614T080000")
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}".format(
+            from_sa='stopA', to_sa='stop_point:stopB', datetime="20120614T080000"
+        )
         response = self.query_region(query)
         check_best(response)
         jrnys = response['journeys']
@@ -96,6 +99,7 @@ class TestJourneysDefault(JourneyCommon, AbstractTestFixture):
         """
         pass
 
+
 @config()
 class TestJourneysNoRegionDefault(JourneysNoRegion, AbstractTestFixture):
     pass
@@ -103,7 +107,6 @@ class TestJourneysNoRegionDefault(JourneysNoRegion, AbstractTestFixture):
 
 @config()
 class TestOnBasicRoutingDefault(OnBasicRouting, AbstractTestFixture):
-
     def test_novalidjourney_on_first_call_debug(self):
         """
         On this call the first call to kraken returns a journey
@@ -111,8 +114,9 @@ class TestOnBasicRoutingDefault(OnBasicRouting, AbstractTestFixture):
         The second call to kraken must return a valid journey
         We had a debug argument, hence 2 journeys are returned, only one is typed
         """
-        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&debug=true"\
-            .format(from_sa="A", to_sa="D", datetime="20120614T080000")
+        query = "journeys?from={from_sa}&to={to_sa}&datetime={datetime}&debug=true".format(
+            from_sa="A", to_sa="D", datetime="20120614T080000"
+        )
 
         response = self.query_region(query, display=False)
         assert len(response['journeys']) == 2
@@ -120,6 +124,7 @@ class TestOnBasicRoutingDefault(OnBasicRouting, AbstractTestFixture):
         assert response['journeys'][0]['type'] == ""
         assert response['journeys'][1]['arrival_date_time'] == "20120614T160000"
         assert response['journeys'][1]['type'] == "best"
+
 
 @config()
 class TestOneDeadRegionDefault(OneDeadRegion, AbstractTestFixture):

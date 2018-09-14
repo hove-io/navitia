@@ -113,8 +113,9 @@ def extend_journey_for_build_from_test():
     # create a response having on single section CROW_FLY journey
     cf_origin = make_pt_object(type_pb2.ADDRESS, 1.0, 1.0, "address_1")
     cf_destination = make_pt_object(type_pb2.STOP_POINT, 2.0, 2.0, "stop_point_1_bis")
-    response = create_response_with_crow_fly(start_date="20180618T060000", end_date="20180618T060500",
-                                             origin=cf_origin, destination=cf_destination)
+    response = create_response_with_crow_fly(
+        start_date="20180618T060000", end_date="20180618T060500", origin=cf_origin, destination=cf_destination
+    )
 
     _extend_journey(pt_journey, response, fallback_extremity)
 
@@ -124,8 +125,8 @@ def extend_journey_for_build_from_test():
     # We should have CROW_FLY section at the begining of the journey following by a section PUBLIC_TRANSPORT
     crowfly_section = pt_journey.sections[0]
     pt_section = pt_journey.sections[1]
-    assert (crowfly_section.type == response_pb2.CROW_FLY)
-    assert (pt_section.type == response_pb2.PUBLIC_TRANSPORT)
+    assert crowfly_section.type == response_pb2.CROW_FLY
+    assert pt_section.type == response_pb2.PUBLIC_TRANSPORT
 
     # We should have the same object used for crowfly_section.destination and pt_section.origin
     assert crowfly_section.destination == pt_section.origin
@@ -142,8 +143,9 @@ def extend_journey_for_build_to_test():
     # create a response having on single section CROW_FLY journey
     cf_origin = make_pt_object(type_pb2.STOP_POINT, 4.0, 4.0, "stop_point_4_bis")
     cf_destination = make_pt_object(type_pb2.ADDRESS, 5.0, 5.0, "address_1")
-    response = create_response_with_crow_fly(start_date="20180618T075000", end_date="20180618T075500",
-                                             origin=cf_origin, destination=cf_destination)
+    response = create_response_with_crow_fly(
+        start_date="20180618T075000", end_date="20180618T075500", origin=cf_origin, destination=cf_destination
+    )
     _extend_journey(pt_journey, response, fallback_extremity)
 
     pt_journey.sections.sort(SectionSorter())
@@ -152,8 +154,8 @@ def extend_journey_for_build_to_test():
     # We should have CROW_FLY section at the end of last section PUBLIC_TRANSPORT
     crowfly_section = pt_journey.sections[-1]
     pt_section = pt_journey.sections[-2]
-    assert (crowfly_section.type == response_pb2.CROW_FLY)
-    assert (pt_section.type == response_pb2.PUBLIC_TRANSPORT)
+    assert crowfly_section.type == response_pb2.CROW_FLY
+    assert pt_section.type == response_pb2.PUBLIC_TRANSPORT
 
     # We should have the same object used for the last pt_section.destination and crowfly_section.origin
     assert crowfly_section.origin == pt_section.destination

@@ -53,6 +53,7 @@ def format_args(rule):
     formatted_rule = ARGS_REGEXP.sub(lambda m: '{' + m.group('name') + '}', rule)
     return formatted_rule
 
+
 base_path_regexp = re.compile('^/{base}'.format(base=BASE_PATH))
 
 
@@ -92,7 +93,8 @@ def get_all_described_paths():
 class JsonSchemaInfo(serpy.Serializer):
     title = LiteralField('navitia')
     version = LiteralField(_version.__version__)
-    description = LiteralField("""
+    description = LiteralField(
+        """
     navitia.io is the open API for building cool stuff with mobility data. It provides the following services
 
     * journeys computation
@@ -102,43 +104,30 @@ class JsonSchemaInfo(serpy.Serializer):
     * and sexy things such as isochrones
 
     navitia is a HATEOAS API that returns JSON formated results
-    """)
-    contact = LiteralField({
-        'name': 'Navitia',
-        'url': 'https://www.navitia.io/',
-        'email': 'navitia@googlegroups.com'
-    })
-    license = LiteralField({
-        'name': 'license',
-        'url': 'https://www.navitia.io/api-term-of-use'
-    })
+    """
+    )
+    contact = LiteralField(
+        {'name': 'Navitia', 'url': 'https://www.navitia.io/', 'email': 'navitia@googlegroups.com'}
+    )
+    license = LiteralField({'name': 'license', 'url': 'https://www.navitia.io/api-term-of-use'})
 
 
 class SecurityDefinitionsSerializer(serpy.Serializer):
-    basicAuth = LiteralField({
-        'type': 'basic'
-    })
+    basicAuth = LiteralField({'type': 'basic'})
 
 
 class JsonSchemaEndpointsSerializer(serpy.Serializer):
     basePath = LiteralField('/' + BASE_PATH)
     swagger = LiteralField('2.0')
-    host = LambdaField(lambda *args: request.url_root
-                       .replace('http://', '')
-                       .replace('https://', '')
-                       .rstrip('/'))
+    host = LambdaField(lambda *args: request.url_root.replace('http://', '').replace('https://', '').rstrip('/'))
     paths = MethodField()
     definitions = serpy.Field()
     info = LambdaField(lambda s, o: JsonSchemaInfo(o).data)
     securityDefinitions = LambdaField(lambda s, o: SecurityDefinitionsSerializer(o).data)
-    security = LiteralField([{
-        'basicAuth': []
-    }])
+    security = LiteralField([{'basicAuth': []}])
 
     def get_paths(self, obj):
-        return {
-            k: SwaggerPathSerializer(v).data for k, v in obj.paths.items()
-        }
+        return {k: SwaggerPathSerializer(v).data for k, v in obj.paths.items()}
 
 
 class Schema(Resource):

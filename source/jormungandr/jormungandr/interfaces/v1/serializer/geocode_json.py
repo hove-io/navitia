@@ -27,26 +27,35 @@
 
 from __future__ import absolute_import
 import serpy
-from .base import LiteralField, NestedPropertyField, IntNestedPropertyField, value_by_path, \
-    BetaEndpointsSerializer
+from .base import (
+    LiteralField,
+    NestedPropertyField,
+    IntNestedPropertyField,
+    value_by_path,
+    BetaEndpointsSerializer,
+)
 import logging
 from jormungandr.interfaces.v1.serializer import jsonschema
 from jormungandr.interfaces.v1.fields import raw_feed_publisher_bano, raw_feed_publisher_osm
-from jormungandr.interfaces.v1.serializer.base import NestedDictGenericField, NestedDictCodeField, NestedPropertiesField, NestedDictCommentField
+from jormungandr.interfaces.v1.serializer.base import (
+    NestedDictGenericField,
+    NestedDictCodeField,
+    NestedPropertiesField,
+    NestedDictCommentField,
+)
 from jormungandr.utils import get_house_number
 from jormungandr.autocomplete.geocodejson import create_address_field, get_lon_lat
 
 
 class CoordField(jsonschema.Field):
     def __init__(self, schema_type=None, schema_metadata={}, **kwargs):
-        schema_metadata.update({
-            "type": "object",
-            "properties": {
-                "lat": { "type": ["string", "null"] },
-                "lon": { "type": ["string", "null"] }
-            },
-            "required": ["lat", "lon"]
-        })
+        schema_metadata.update(
+            {
+                "type": "object",
+                "properties": {"lat": {"type": ["string", "null"]}, "lon": {"type": ["string", "null"]}},
+                "required": ["lat", "lon"],
+            }
+        )
         super(CoordField, self).__init__(schema_type, schema_metadata, **kwargs)
 
     def as_getter(self, serializer_field_name, serializer_cls):
@@ -62,9 +71,7 @@ class CoordField(jsonschema.Field):
 
 class CoordId(jsonschema.Field):
     def __init__(self, schema_type=None, schema_metadata={}, **kwargs):
-        schema_metadata.update({
-            "type": ["string", "null"]
-        })
+        schema_metadata.update({"type": ["string", "null"]})
         super(CoordId, self).__init__(schema_type, schema_metadata, **kwargs)
 
     def as_getter(self, serializer_field_name, serializer_cls):
@@ -84,6 +91,7 @@ class AdministrativeRegionsSerializer(serpy.Field):
     def make(self, obj):
         admins = value_by_path(obj, 'properties.geocoding.administrative_regions', [])
         if admins:
+
             def make_admin(admin):
                 res = {
                     'id': admin['id'],
@@ -91,10 +99,7 @@ class AdministrativeRegionsSerializer(serpy.Field):
                     'name': admin['name'],
                     'label': admin['label'],
                     'level': admin['level'],
-                    'coord': {
-                        'lon': str(admin['coord']['lon']),
-                        'lat': str(admin['coord']['lat']),
-                    },
+                    'coord': {'lon': str(admin['coord']['lon']), 'lat': str(admin['coord']['lat'])},
                 }
                 zip_codes = admin.get('zip_codes', [])
                 if all(zip_code == "" for zip_code in zip_codes):
@@ -104,6 +109,7 @@ class AdministrativeRegionsSerializer(serpy.Field):
                 else:
                     res['zip_code'] = '{}-{}'.format(min(zip_codes), max(zip_codes))
                 return res
+
             return [make_admin(admin) for admin in admins]
         admins = obj.get('properties', {}).get('geocoding', {}).get('admin', {})
         return [
@@ -114,7 +120,7 @@ class AdministrativeRegionsSerializer(serpy.Field):
                 "coord": {"lat": None, "lon": None},
                 "label": None,
                 "id": None,
-                "zip_code": None
+                "zip_code": None,
             }
             for level, name in admins.items()
         ]
@@ -163,8 +169,10 @@ class PoiSerializer(serpy.DictSerializer):
         return PoiTypeSerializer(poi_types[0]).data if isinstance(poi_types, list) and poi_types else None
 
     def get_properties(self, obj):
-        return {p.get("key"): p.get("value") 
-                for p in obj.get('properties', {}).get('geocoding', {}).get('properties', [])}
+        return {
+            p.get("key"): p.get("value")
+            for p in obj.get('properties', {}).get('geocoding', {}).get('properties', [])
+        }
 
     def get_address(self, obj):
         address = obj.get('properties', {}).get('geocoding', {}).get('address', None)
@@ -258,7 +266,7 @@ class GeocodePlacesSerializer(serpy.DictSerializer):
             'street': GeocodeAddressSerializer,
             'house': GeocodeAddressSerializer,
             'poi': GeocodePoiSerializer,
-            'public_transport:stop_area': GeocodeStopAreaSerializer
+            'public_transport:stop_area': GeocodeStopAreaSerializer,
         }
         res = []
         for feature in obj.get('features', []):

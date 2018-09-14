@@ -50,6 +50,7 @@ import retrying
 
 f_datetime = "%Y%m%dT%H%M%S"
 
+
 def init_journey(stat_journey):
     stat_journey.requested_date_time = 0
     stat_journey.departure_date_time = 0
@@ -57,6 +58,7 @@ def init_journey(stat_journey):
     stat_journey.duration = 0
     stat_journey.nb_transfers = 0
     stat_journey.type = ''
+
 
 def get_mode(mode, previous_section):
     if mode == 'bike' and previous_section:
@@ -114,7 +116,6 @@ def tz_str_to_utc_timestamp(dt_str, timezone):
 
 
 class StatManager(object):
-
     def __init__(self):
         self.connection = None
         self.producer = None
@@ -154,38 +155,42 @@ class StatManager(object):
         try:
             self._manage_stat(start_time, call_result)
         except Exception as e:
-            #if stat are not working we don't want jormungandr to stop.
+            # if stat are not working we don't want jormungandr to stop.
             logging.getLogger(__name__).exception('Error during stat management')
 
     def _manage_stat(self, start_time, call_result):
         end_time = time.time()
         stat_request = stat_pb2.StatRequest()
-        stat_request.request_duration = int((end_time - start_time) * 1000) #In milliseconds
+        stat_request.request_duration = int((end_time - start_time) * 1000)  # In milliseconds
         self.fill_request(stat_request, start_time, call_result)
         self.fill_coverages(stat_request)
         self.fill_parameters(stat_request)
         self.fill_result(stat_request, call_result)
 
-        retry = retrying.Retrying(stop_max_attempt_number=2,
-                retry_on_exception=lambda e: not isinstance(e, pybreaker.CircuitBreakerError))
+        retry = retrying.Retrying(
+            stop_max_attempt_number=2,
+            retry_on_exception=lambda e: not isinstance(e, pybreaker.CircuitBreakerError),
+        )
         retry.call(self.breaker.call, self.publish_request, stat_request.api, stat_request.SerializeToString())
 
     def fill_info_response(self, stat_info_response, call_result):
         """
         store data from response of all requests
         """
-        if 'pagination' in call_result[0] and call_result[0]['pagination'] \
-                and 'items_on_page' in call_result[0]['pagination']:
+        if (
+            'pagination' in call_result[0]
+            and call_result[0]['pagination']
+            and 'items_on_page' in call_result[0]['pagination']
+        ):
             stat_info_response.object_count = call_result[0]['pagination']['items_on_page']
 
     def fill_result(self, stat_request, call_result):
         if 'error' in call_result[0] and call_result[0]['error']:
             self.fill_error(stat_request, call_result[0]['error'])
 
-        #We do not save informations of journeys and sections for a request
-        #Isochron (parameter "&to" is absent for API Journeys )
-        if 'journeys' in request.endpoint and \
-                'to' in request.args:
+        # We do not save informations of journeys and sections for a request
+        # Isochron (parameter "&to" is absent for API Journeys )
+        if 'journeys' in request.endpoint and 'to' in request.args:
             self.fill_journeys(stat_request, call_result)
 
     def fill_request(self, stat_request, start_time, call_result):
@@ -204,7 +209,7 @@ class StatManager(object):
             if user.end_point_id:
                 stat_request.end_point_id = user.end_point_id
                 stat_request.end_point_name = user.end_point.name
-        if (token is not None):
+        if token is not None:
             stat_request.token = token
         stat_request.application_id = -1
         app_name = get_app_name(token)
@@ -214,8 +219,7 @@ class StatManager(object):
             stat_request.application_name = ''
         stat_request.api = request.endpoint
         stat_request.host = request.host_url
-        if request.remote_addr and \
-                not request.headers.getlist("X-Forwarded-For"):
+        if request.remote_addr and not request.headers.getlist("X-Forwarded-For"):
             stat_request.client = request.remote_addr
         elif request.headers.getlist("X-Forwarded-For"):
             stat_request.client = request.headers.getlist("X-Forwarded-For")[0]
@@ -225,13 +229,11 @@ class StatManager(object):
 
         self.fill_info_response(stat_request.info_response, call_result)
 
-
     def register_interpreted_parameters(self, args):
         """
         allow to add calculated parameters for a request
         """
         g.stat_interpreted_parameters = args
-
 
     def fill_parameters(self, stat_request):
         for key in request.args:
@@ -253,9 +255,8 @@ class StatManager(object):
                     stat_parameter.key = item[0]
                     stat_parameter.value = six.text_type(item[1])
                     if item[0] in ('filter', 'departure_filter', 'arrival_filter'):
-                        #we parse ptref filter here
+                        # we parse ptref filter here
                         self.fill_filters(item[1], stat_parameter)
-
 
     def fill_filters(self, value, stat_parameter):
         """
@@ -273,7 +274,6 @@ class StatManager(object):
                 filter.value = match.group(4)
             else:
                 logging.getLogger(__name__).warn('impossible to parse: %s', elem)
-
 
     def fill_coverages(self, stat_request):
         coverages = get_used_coverages()
@@ -330,7 +330,10 @@ class StatManager(object):
         if first_pt_section and last_pt_section:
             stat_journey.first_pt_id = first_pt_section['from']['id']
             stat_journey.first_pt_name = first_pt_section['from']['name']
-            self.fill_coord(stat_journey.first_pt_coord, first_pt_section['from'][first_pt_section['from']['embedded_type']]['coord'])
+            self.fill_coord(
+                stat_journey.first_pt_coord,
+                first_pt_section['from'][first_pt_section['from']['embedded_type']]['coord'],
+            )
             admin = find_admin(first_pt_section['from'])
             if admin[0]:
                 stat_journey.first_pt_admin_id = admin[0]
@@ -341,7 +344,10 @@ class StatManager(object):
 
             stat_journey.last_pt_id = last_pt_section['to']['id']
             stat_journey.last_pt_name = last_pt_section['to']['name']
-            self.fill_coord(stat_journey.last_pt_coord, last_pt_section['to'][last_pt_section['to']['embedded_type']]['coord'])
+            self.fill_coord(
+                stat_journey.last_pt_coord,
+                last_pt_section['to'][last_pt_section['to']['embedded_type']]['coord'],
+            )
             admin = find_admin(last_pt_section['to'])
             if admin[0]:
                 stat_journey.last_pt_admin_id = admin[0]
@@ -435,8 +441,7 @@ class StatManager(object):
         stat_section.from_embedded_type = section_point['embedded_type']
         self.fill_admin_from(stat_section, find_admin(section_point))
 
-        if stat_section.from_embedded_type == 'stop_point'\
-            and 'stop_area' in section_point['stop_point']:
+        if stat_section.from_embedded_type == 'stop_point' and 'stop_area' in section_point['stop_point']:
             section_point = section_point['stop_point']['stop_area']
             stat_section.from_embedded_type = 'stop_area'
         else:
@@ -457,8 +462,7 @@ class StatManager(object):
 
         self.fill_admin_to(stat_section, find_admin(section_point))
 
-        if stat_section.to_embedded_type == 'stop_point' \
-            and 'stop_area' in section_point['stop_point']:
+        if stat_section.to_embedded_type == 'stop_point' and 'stop_area' in section_point['stop_point']:
             section_point = section_point['stop_point']['stop_area']
             stat_section.to_embedded_type = 'stop_area'
         else:
@@ -492,12 +496,12 @@ class StatManager(object):
         with self.lock:
             try:
                 if self.producer is None:
-                    #if the initialization failed we have to retry the creation of the objects
+                    # if the initialization failed we have to retry the creation of the objects
                     self._init_rabbitmq()
                 self.producer.publish(pbf, routing_key=api)
             except self.connection.connection_errors + self.connection.channel_errors:
                 logging.getLogger(__name__).exception('Server went away, will be reconnected..')
-                #Relese and close the previous connection
+                # Relese and close the previous connection
                 if self.connection and self.connection.connected:
                     self.connection.release()
                 self.producer = None
@@ -510,7 +514,6 @@ class StatManager(object):
             stat_section.from_admin_name = admin[2]
         if admin[1]:
             stat_section.from_admin_insee = admin[1]
-
 
     def fill_admin_to(self, stat_section, admin):
         if admin[0]:
@@ -538,7 +541,6 @@ class StatManager(object):
 
 
 class manage_stat_caller:
-
     def __init__(self, stat_mana):
         self.manager = stat_mana
 
@@ -549,4 +551,5 @@ class manage_stat_caller:
             call_result = f(*args, **kwargs)
             self.manager.manage_stat(start_time, call_result)
             return call_result
+
         return wrapper

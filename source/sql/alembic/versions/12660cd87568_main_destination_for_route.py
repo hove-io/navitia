@@ -15,7 +15,11 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('route', sa.Column('destination_stop_area_id', sa.BIGINT(), primary_key=False, nullable=True), schema='navitia')
+    op.add_column(
+        'route',
+        sa.Column('destination_stop_area_id', sa.BIGINT(), primary_key=False, nullable=True),
+        schema='navitia',
+    )
 
 
 def downgrade():

@@ -32,6 +32,7 @@ from flask_restful.utils import unpack
 from .api import LinesSerializer
 from .api import DisruptionsSerializer
 
+
 class serialize_with(object):
     def __init__(self, serializer, many=False):
         self.serializer = serializer
@@ -46,4 +47,5 @@ class serialize_with(object):
                 return self.serializer(data, many=self.many).data, code, headers
             else:
                 return self.serializer(resp, many=self.many).data
+
         return wrapper

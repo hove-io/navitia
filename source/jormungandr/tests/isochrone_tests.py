@@ -40,15 +40,15 @@ class TestIsochrone(AbstractTestFixture):
     """
 
     def test_from_isochrone_coord(self):
-        #NOTE: we query /v1/coverage/basic_routing_test/journeys and not directly /v1/journeys
-        #not to use the jormungandr database
+        # NOTE: we query /v1/coverage/basic_routing_test/journeys and not directly /v1/journeys
+        # not to use the jormungandr database
         query = "v1/coverage/basic_routing_test/journeys?from={}&datetime={}"
         query = query.format(s_coord, "20120614T080000")
         self.query(query)
 
     def test_stop_point_isochrone_coord(self):
-        #NOTE: we query /v1/coverage/basic_routing_test/journeys and not directly /v1/journeys
-        #not to use the jormungandr database
+        # NOTE: we query /v1/coverage/basic_routing_test/journeys and not directly /v1/journeys
+        # not to use the jormungandr database
         query = "v1/coverage/basic_routing_test/stop_points/A/journeys?max_duration=400&datetime=20120614T080000"
         response = self.query(query, display=True)
         is_valid_isochrone_response(response, self.tester, query)
@@ -56,7 +56,9 @@ class TestIsochrone(AbstractTestFixture):
         assert response["journeys"][0]["duration"] == 300
         assert response["journeys"][0]["to"]["stop_point"]["id"] == "B"
         assert response["journeys"][0]["from"]["id"] == "A"
-        query = "v1/coverage/basic_routing_test/stop_points/A/journeys?max_duration=25500&datetime=20120614T080000"
+        query = (
+            "v1/coverage/basic_routing_test/stop_points/A/journeys?max_duration=25500&datetime=20120614T080000"
+        )
         response = self.query(query)
         is_valid_isochrone_response(response, self.tester, query)
         assert len(response["journeys"]) == 2
@@ -71,11 +73,9 @@ class TestIsochrone(AbstractTestFixture):
         assert len(response['disruptions']) == 0
 
     def test_stop_point_isochrone_coord_no_transfers(self):
-        #same query as the test_stop_point_isochrone_coord test, but this time we forbid to do a transfers
-        #we should be able to touch only 'B'
-        query = "v1/coverage/basic_routing_test/stop_points/A/journeys?" \
-                "max_duration=25500&datetime=20120614T080000" \
-                "&max_nb_transfers=0"
+        # same query as the test_stop_point_isochrone_coord test, but this time we forbid to do a transfers
+        # we should be able to touch only 'B'
+        query = "v1/coverage/basic_routing_test/stop_points/A/journeys?" "max_duration=25500&datetime=20120614T080000" "&max_nb_transfers=0"
         response = self.query(query)
         is_valid_isochrone_response(response, self.tester, query)
         assert len(response["journeys"]) == 1
@@ -88,9 +88,9 @@ class TestIsochrone(AbstractTestFixture):
         query = query.format(s_coord, "20120614T080000")
         response = self.query(query)
 
-    #In the previous version, the result contained no_solution with error message : 'several errors occured: \n * '
-    #with status code 200.
-    #After this correction, since the EntryPoint is absent an error is raised.
+    # In the previous version, the result contained no_solution with error message : 'several errors occured: \n * '
+    # with status code 200.
+    # After this correction, since the EntryPoint is absent an error is raised.
     def test_isochrone_from_unkown_sa(self):
         query = "v1/coverage/basic_routing_test/journeys?from={}&datetime={}"
         query = query.format("bob", "20120614T080000")
@@ -113,8 +113,7 @@ class TestIsochrone(AbstractTestFixture):
         assert len(normal_response["journeys"]) == 1
 
     def test_reverse_isochrone_coord(self):
-        q = "v1/coverage/basic_routing_test/journeys?max_duration=100000" \
-            "&datetime=20120615T200000&datetime_represents=arrival&to=D"
+        q = "v1/coverage/basic_routing_test/journeys?max_duration=100000" "&datetime=20120615T200000&datetime_represents=arrival&to=D"
         normal_response = self.query(q, display=True)
         is_valid_isochrone_response(normal_response, self.tester, q)
         assert len(normal_response["journeys"]) == 2
@@ -134,7 +133,9 @@ class TestIsochrone(AbstractTestFixture):
         assert 'isochrone works only for clockwise request' in normal_response['error']['message']
 
     def test_isochrone_count(self):
-        query = "v1/coverage/basic_routing_test/stop_points/A/journeys?max_duration=25500&datetime=20120614T080000"
+        query = (
+            "v1/coverage/basic_routing_test/stop_points/A/journeys?max_duration=25500&datetime=20120614T080000"
+        )
         response = self.query(query)
         assert len(response["journeys"]) == 2
         is_valid_isochrone_response(response, self.tester, query)
@@ -144,7 +145,9 @@ class TestIsochrone(AbstractTestFixture):
         is_valid_isochrone_response(response, self.tester, query)
 
     def test_invalid_count(self):
-        query = "v1/coverage/basic_routing_test/stop_points/A/journeys?max_duration=25500&datetime=20120614T080000"
+        query = (
+            "v1/coverage/basic_routing_test/stop_points/A/journeys?max_duration=25500&datetime=20120614T080000"
+        )
         response = self.query(query)
         assert len(response["journeys"]) == 2
         # invalid count

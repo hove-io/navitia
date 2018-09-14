@@ -43,7 +43,6 @@ def always_in_error(self, start_time, func_call):
 
 @dataset({'main_routing_test': {}})
 class TestNoStats(AbstractTestFixture):
-
     def setUp(self):
         """
          change the persist stat method of the stat manager with a mock function that always fail
@@ -64,7 +63,7 @@ class TestNoStats(AbstractTestFixture):
         test on a valid journey (tested in routing_tests.py).
         stats deactivation should not alter results
         """
-        stat_manager.save_stat = False # we disable the stats
+        stat_manager.save_stat = False  # we disable the stats
         response = self.query_region(journey_basic_query)
 
         self.is_valid_journey_response(response, journey_basic_query)

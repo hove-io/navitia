@@ -52,9 +52,9 @@ def configure_logger(app):
         app.logger.addHandler(handler)
         app.logger.setLevel('INFO')
 
+
 def make_celery(app):
-    celery_app = celery.Celery(app.import_name,
-                               broker=app.config['CELERY_BROKER_URL'])
+    celery_app = celery.Celery(app.import_name, broker=app.config['CELERY_BROKER_URL'])
     celery_app.conf.update(app.config)
     TaskBase = celery_app.Task
 
@@ -107,19 +107,17 @@ def load_instance_config(instance_name):
     confspec.append(b'password = string()')
     confspec.append(b'port = string(default="5432")')
 
-    ini_file = b'%s/%s.ini' % \
-               (os.path.realpath(current_app.config['INSTANCES_DIR']), instance_name)
+    ini_file = b'%s/%s.ini' % (os.path.realpath(current_app.config['INSTANCES_DIR']), instance_name)
     if not os.path.isfile(ini_file):
         raise ValueError("File doesn't exists or is not a file %s" % ini_file)
 
     config = ConfigObj(ini_file, configspec=confspec, stringify=True)
     val = Validator()
     res = config.validate(val, preserve_errors=True)
-    #validate retourne true, ou un dictionaire  ...
+    # validate retourne true, ou un dictionaire  ...
     if type(res) is dict:
         error = build_error(config, res)
-        raise ValueError("Config is not valid: %s in %s"
-                % (error, ini_file))
+        raise ValueError("Config is not valid: %s in %s" % (error, ini_file))
     instance = InstanceConfig()
     instance.source_directory = config['instance']['source-directory']
     instance.backup_directory = config['instance']['backup-directory']
@@ -162,7 +160,7 @@ def get_instance_logger(instance, task_id=None):
 
 
 def get_autocomplete_instance_logger(a_instance, task_id=None):
-    #Note: it is called instance.autocomplete to use by default the same logger as 'instance'
+    # Note: it is called instance.autocomplete to use by default the same logger as 'instance'
     return _get_individual_logger('instance.autocomplete.{}'.format(a_instance.name), a_instance.name, task_id)
 
 
@@ -181,9 +179,9 @@ def _get_individual_logger(logger_name, name, task_id=None):
         return get_task_logger(logger, task_id)
 
     for handler in logger.parent.handlers:
-        #trick for FileHandler, we change the file name
+        # trick for FileHandler, we change the file name
         if isinstance(handler, logging.FileHandler):
-            #we use the %(name) notation to use the same grammar as the python module
+            # we use the %(name) notation to use the same grammar as the python module
             log_filename = handler.stream.name.replace('%(name)', name)
             new_handler = logging.FileHandler(log_filename)
             new_handler.setFormatter(handler.formatter)

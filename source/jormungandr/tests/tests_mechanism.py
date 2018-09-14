@@ -32,6 +32,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 import unittest
 from copy import deepcopy
 import os
+
 # set default config file if not defined in other tests
 from datetime import timedelta
 import mock
@@ -40,8 +41,9 @@ from retrying import RetryError
 import six
 
 if not 'JORMUNGANDR_CONFIG_FILE' in os.environ:
-    os.environ['JORMUNGANDR_CONFIG_FILE'] = os.path.dirname(os.path.realpath(__file__)) \
-        + '/integration_tests_settings.py'
+    os.environ['JORMUNGANDR_CONFIG_FILE'] = (
+        os.path.dirname(os.path.realpath(__file__)) + '/integration_tests_settings.py'
+    )
 
 import subprocess
 from .check_utils import *
@@ -72,6 +74,7 @@ class AbstractTestFixture(unittest.TestCase):
 
     (the setup() and teardown() methods are called once at the initialization and destruction of the integration tests)
     """
+
     @classmethod
     def launch_all_krakens(cls):
         for (kraken_name, conf) in cls.data_sets.items():
@@ -105,18 +108,15 @@ class AbstractTestFixture(unittest.TestCase):
         for name in cls.krakens_pool:
             instance_config = {
                 "key": name,
-                "zmq_socket": "ipc:///tmp/{instance_name}".format(instance_name=name)
+                "zmq_socket": "ipc:///tmp/{instance_name}".format(instance_name=name),
             }
             instance_config.update(cls.data_sets[name].get('instance_config', {}))
             with open(os.path.join(krakens_dir, name) + '.json', 'w') as f:
                 logging.debug("writing ini file {} for {}".format(f.name, name))
                 f.write(json.dumps(instance_config, indent=4))
 
-        #we set the env var that will be used to init jormun
-        return [
-            os.path.join(os.environ['KRAKEN_BUILD_DIR'], 'tests', k + '.json')
-            for k in cls.krakens_pool
-        ]
+        # we set the env var that will be used to init jormun
+        return [os.path.join(os.environ['KRAKEN_BUILD_DIR'], 'tests', k + '.json') for k in cls.krakens_pool]
 
     @classmethod
     def global_jormun_setup(cls):
@@ -130,15 +130,17 @@ class AbstractTestFixture(unittest.TestCase):
 
             # we want to keep the same address for global_autocomplete as others might have references on it
             jormungandr.global_autocomplete.clear()
-            jormungandr.global_autocomplete.update({
-                'bragi': utils.create_object({
-                    'class': 'jormungandr.autocomplete.geocodejson.GeocodeJson',
-                    'args': {
-                        "host": "https://host_of_bragi"
-                    }
-                }),
-                'kraken': utils.create_object({'class': 'jormungandr.autocomplete.kraken.Kraken'})
-            })
+            jormungandr.global_autocomplete.update(
+                {
+                    'bragi': utils.create_object(
+                        {
+                            'class': 'jormungandr.autocomplete.geocodejson.GeocodeJson',
+                            'args': {"host": "https://host_of_bragi"},
+                        }
+                    ),
+                    'kraken': utils.create_object({'class': 'jormungandr.autocomplete.kraken.Kraken'}),
+                }
+            )
 
     @classmethod
     def global_jormun_teardown(cls):
@@ -147,7 +149,7 @@ class AbstractTestFixture(unittest.TestCase):
         """
         if hasattr(cls, 'old_global_autocompletes'):
             logging.info("putting back the old global autoconfig for {}".format(cls.__name__))
-            #if we changed the global_autocomplete variable, we put the old value back
+            # if we changed the global_autocomplete variable, we put the old value back
             # we want to keep the same address for global_autocomplete as others might have references on it
             jormungandr.global_autocomplete.clear()
             jormungandr.global_autocomplete.update(cls.old_global_autocompletes)
@@ -169,9 +171,13 @@ class AbstractTestFixture(unittest.TestCase):
             is_free = cls.data_sets[name].get('is_free', False)
             is_open_data = cls.data_sets[name].get('is_open_data', False)
             scenario = cls.data_sets[name].get('scenario', 'default')
-            cls.mocks.append(mock.patch.object(i_manager.instances[name],
-                                               'get_models',
-                                               return_value=FakeModel(priority, is_free, is_open_data, scenario)))
+            cls.mocks.append(
+                mock.patch.object(
+                    i_manager.instances[name],
+                    'get_models',
+                    return_value=FakeModel(priority, is_free, is_open_data, scenario),
+                )
+            )
 
         for m in cls.mocks:
             m.start()
@@ -180,42 +186,43 @@ class AbstractTestFixture(unittest.TestCase):
         for name in cls.krakens_pool:
             instance = i_manager.instances[name]
             try:
-                retrying.Retrying(stop_max_delay=5000,
-                                  wait_fixed=10,
-                                  retry_on_result=lambda x: not instance.is_initialized).call(instance.init)
+                retrying.Retrying(
+                    stop_max_delay=5000, wait_fixed=10, retry_on_result=lambda x: not instance.is_initialized
+                ).call(instance.init)
             except RetryError:
                 logging.exception('impossible to start kraken {}'.format(name))
                 assert False, 'impossible to start a kraken'
 
-        #we block the stat manager not to send anything to rabbit mq
+        # we block the stat manager not to send anything to rabbit mq
         def mock_publish(self, stat, pbf):
             pass
 
-        #we don't want to initialize rabbit for test.
+        # we don't want to initialize rabbit for test.
         def mock_init():
             pass
 
         StatManager.publish_request = mock_publish
         StatManager._init_rabbitmq = mock_init
 
-        #we don't want to have anything to do with the jormun database either
+        # we don't want to have anything to do with the jormun database either
         class bob:
             @classmethod
             def mock_get_token(cls, token, valid_until):
-                #note, since get_from_token is a class method, we need to wrap it.
-                #change that with a real mock framework
+                # note, since get_from_token is a class method, we need to wrap it.
+                # change that with a real mock framework
                 pass
+
         User.get_from_token = bob.mock_get_token
 
         @property
         def mock_journey_order(self):
             return 'arrival_time'
+
         Instance.journey_order = mock_journey_order
 
     @classmethod
     def teardown_class(cls):
-        logging.info("Tearing down the tests {}, time to hunt the krakens down"
-                     .format(cls.__name__))
+        logging.info("Tearing down the tests {}, time to hunt the krakens down".format(cls.__name__))
         cls.global_jormun_teardown()
         cls.kill_all_krakens()
         for m in cls.mocks:
@@ -275,7 +282,7 @@ class AbstractTestFixture(unittest.TestCase):
         clockwise = query_dict.get('datetime_represents', 'departure') == "departure"
         has_pt = any(s['type'] == 'public_transport' for j in response['journeys'] for s in j['sections'])
         for l in ["prev", "next", "first", "last"]:
-            if l in ["prev", "next"] and not has_pt:# no prev and next if no pt
+            if l in ["prev", "next"] and not has_pt:  # no prev and next if no pt
                 continue
 
             assert l in journeys_links
@@ -355,16 +362,23 @@ class AbstractTestFixture(unittest.TestCase):
 
         # journeys[n].links
         for j in journeys:
-            has_stop_point = any((o for s in j.get('sections', []) if 'from' in s
-                                    for o in (s['from'], s['to']) if 'stop_point' in o))
+            has_stop_point = any(
+                (
+                    o
+                    for s in j.get('sections', [])
+                    if 'from' in s
+                    for o in (s['from'], s['to'])
+                    if 'stop_point' in o
+                )
+            )
             if 'sections' not in j:
-                assert len(j['links']) == 1 # isochone link
+                assert len(j['links']) == 1  # isochone link
                 assert j['links'][0]['rel'] == 'journeys'
                 assert '/journeys?' in j['links'][0]['href']
                 assert 'from=' in j['links'][0]['href']
                 assert 'to=' in j['links'][0]['href']
             elif has_stop_point and 'public_transport' in (s['type'] for s in j['sections']):
-                assert len(j['links']) == 1 # same_journey_schedules link
+                assert len(j['links']) == 1  # same_journey_schedules link
                 assert j['links'][0]['rel'] == 'same_journey_schedules'
                 assert j['links'][0]['type'] == 'journeys'
                 assert '/journeys?' in j['links'][0]['href']
@@ -395,8 +409,9 @@ class AbstractTestFixture(unittest.TestCase):
         if not response.get('journeys'):
             return
         """default next behaviour is 1 min after the best or the soonest"""
-        j_to_compare = next((j for j in response.get('journeys', []) if j['type'] == 'best'), None) or\
-             next((j for j in response.get('journeys', [])), None)
+        j_to_compare = next((j for j in response.get('journeys', []) if j['type'] == 'best'), None) or next(
+            (j for j in response.get('journeys', [])), None
+        )
 
         j_departure = get_valid_datetime(j_to_compare['departure_date_time'])
         assert j_departure + timedelta(minutes=1) == dt
@@ -406,8 +421,9 @@ class AbstractTestFixture(unittest.TestCase):
         if not response.get('journeys'):
             return
         """default previous behaviour is 1 min before the best or the latest """
-        j_to_compare = next((j for j in response.get('journeys', []) if j['type'] == 'best'), None) or\
-             next((j for j in response.get('journeys', [])), None)
+        j_to_compare = next((j for j in response.get('journeys', []) if j['type'] == 'best'), None) or next(
+            (j for j in response.get('journeys', [])), None
+        )
 
         j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
         assert j_departure - timedelta(minutes=1) == dt
@@ -420,8 +436,10 @@ class NewDefaultScenarioAbstractTestFixture(AbstractTestFixture):
             return
         """default next behaviour is 1s after the best or the soonest"""
         from jormungandr.scenarios.qualifier import min_from_criteria
-        j_to_compare = min_from_criteria(generate_pt_journeys(response),
-                                         new_default_pagination_journey_comparator(clockwise=clockwise))
+
+        j_to_compare = min_from_criteria(
+            generate_pt_journeys(response), new_default_pagination_journey_comparator(clockwise=clockwise)
+        )
 
         j_departure = get_valid_datetime(j_to_compare['departure_date_time'])
         assert j_departure + timedelta(seconds=1) == dt
@@ -432,8 +450,10 @@ class NewDefaultScenarioAbstractTestFixture(AbstractTestFixture):
             return
         """default previous behaviour is 1s before the best or the latest """
         from jormungandr.scenarios.qualifier import min_from_criteria
-        j_to_compare = min_from_criteria(generate_pt_journeys(response),
-                                         new_default_pagination_journey_comparator(clockwise=clockwise))
+
+        j_to_compare = min_from_criteria(
+            generate_pt_journeys(response), new_default_pagination_journey_comparator(clockwise=clockwise)
+        )
 
         j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
         assert j_departure - timedelta(seconds=1) == dt
@@ -449,15 +469,18 @@ def dataset(datasets, global_config={}):
     just a string with the kraken name,
     or a pair with the kraken name and a list with additional arguments for the kraken
     """
+
     def deco(cls):
         cls.data_sets = datasets
         cls.global_config = global_config
         return cls
+
     return deco
 
 
 def config(configs=None):
     import copy
+
     if not configs:
         configs = {"scenario": "default"}
 
@@ -470,4 +493,5 @@ def config(configs=None):
                     orig_config.update(configs)
                     cls.data_sets.update({key: orig_config})
         return cls
+
     return deco

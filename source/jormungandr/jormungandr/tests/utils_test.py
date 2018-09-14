@@ -43,6 +43,7 @@ class MockResponse(object):
     """
     small class to mock an http response
     """
+
     def __init__(self, data, status_code, url=None, *args, **kwargs):
         self.data = data
         self.status_code = status_code
@@ -64,12 +65,14 @@ class MockRequests(object):
     """
     small class to mock an http request
     """
+
     def __init__(self, responses):
         self.responses = responses
 
     def get(self, url, *args, **kwargs):
         if kwargs.get('params'):
             from six.moves.urllib.parse import urlencode
+
             url += "?{}".format(urlencode(kwargs.get('params'), doseq=True))
 
         return MockResponse(self.responses[url][0], self.responses[url][1], url)
@@ -82,9 +85,17 @@ class FakeUser(models.User):
     """
     We create a user independent from a database
     """
-    def __init__(self, name, id,
-                 have_access_to_free_instances=True, is_super_user=False, is_blocked=False, shape=None,
-                 default_coord=None):
+
+    def __init__(
+        self,
+        name,
+        id,
+        have_access_to_free_instances=True,
+        is_super_user=False,
+        is_blocked=False,
+        shape=None,
+        default_coord=None,
+    ):
         """
         We just need a fake user, we don't really care about its identity
         """
@@ -123,6 +134,7 @@ def user_set(app, fake_user_type, user_name):
 
     def handler(sender, **kwargs):
         g.user = fake_user_type.get_from_token(user_name, valid_until=None)
+
     with appcontext_pushed.connected_to(handler, app):
         yield
 

@@ -38,18 +38,24 @@ from jormungandr.parking_space_availability.bss.stands import Stands, StandsStat
 from jormungandr.parking_space_availability.bss.common_bss_provider import CommonBssProvider, BssProxyError
 
 
-DEFAULT_CYKLEO_FEED_PUBLISHER = {
-    'id': 'cykleo',
-    'name': 'cykleo',
-    'license': 'Private',
-    'url': 'www.cykleo.fr'
-}
+DEFAULT_CYKLEO_FEED_PUBLISHER = {'id': 'cykleo', 'name': 'cykleo', 'license': 'Private', 'url': 'www.cykleo.fr'}
 
 
 class CykleoProvider(CommonBssProvider):
-    def __init__(self, url, network, username, password, operators={'cykleo'}, verify_certificate=False,
-                 service_id=None, organization_id=None, timeout=2,
-                 feed_publisher=DEFAULT_CYKLEO_FEED_PUBLISHER, **kwargs):
+    def __init__(
+        self,
+        url,
+        network,
+        username,
+        password,
+        operators={'cykleo'},
+        verify_certificate=False,
+        service_id=None,
+        organization_id=None,
+        timeout=2,
+        feed_publisher=DEFAULT_CYKLEO_FEED_PUBLISHER,
+        **kwargs
+    ):
         self.url = url
         self.network = network.lower()
         self.service_id = service_id
@@ -61,7 +67,10 @@ class CykleoProvider(CommonBssProvider):
         self.timeout = timeout
         self.breaker = pybreaker.CircuitBreaker(
             fail_max=kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_CYKLEO_FAIL']),
-            reset_timeout=kwargs.get('circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_CYKLEO_TIMEOUT_S']))
+            reset_timeout=kwargs.get(
+                'circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_CYKLEO_TIMEOUT_S']
+            ),
+        )
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
 
     def service_caller(self, method, url, headers, data=None, params=None):
@@ -73,8 +82,9 @@ class CykleoProvider(CommonBssProvider):
                 kwargs.update({'params': params})
             response = self.breaker.call(method, url, **kwargs)
             if not response or response.status_code != 200:
-                logging.getLogger(__name__).error('cykleo, Invalid response, status_code: {}'.format(
-                    response.status_code))
+                logging.getLogger(__name__).error(
+                    'cykleo, Invalid response, status_code: {}'.format(response.status_code)
+                )
                 raise BssProxyError('non 200 response')
             return response
         except pybreaker.CircuitBreakerError as e:
@@ -87,18 +97,16 @@ class CykleoProvider(CommonBssProvider):
             logging.getLogger(__name__).exception('cykleo error : {}'.format(str(e)))
             raise BssProxyError(str(e))
 
-    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_CYKLEO_JETON', 10*60))
+    @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_CYKLEO_JETON', 10 * 60))
     def get_access_token(self):
-        headers = {
-            "Content-Type": "application/json",
-            "Accept": "application/json"
-        }
+        headers = {"Content-Type": "application/json", "Accept": "application/json"}
         data = {"username": self.username, "password": self.password, "sphere": "VLS"}
         if self.service_id is not None:
             data.update({"serviceId": self.service_id})
 
-        response = self.service_caller(method=requests.post, url='{}/bo/auth'.format(self.url),
-                                       headers=headers, data=json.dumps(data))
+        response = self.service_caller(
+            method=requests.post, url='{}/bo/auth'.format(self.url), headers=headers, data=json.dumps(data)
+        )
         if not response:
             return None
         content = response.json()
@@ -113,10 +121,12 @@ class CykleoProvider(CommonBssProvider):
         access_token = self.get_access_token()
         headers = {'Authorization': 'Bearer {}'.format(access_token)}
         params = None if self.organization_id is None else {'organization_id': self.organization_id}
-        data = self.service_caller(method=requests.get,
-                                   url='{}/bo/stations/availability'.format(self.url),
-                                   headers=headers,
-                                   params=params)
+        data = self.service_caller(
+            method=requests.get,
+            url='{}/bo/stations/availability'.format(self.url),
+            headers=headers,
+            params=params,
+        )
         stands = {}
         if not data:
             return stands
@@ -126,8 +136,10 @@ class CykleoProvider(CommonBssProvider):
 
     def support_poi(self, poi):
         properties = poi.get('properties', {})
-        return properties.get('operator', '').lower() in self.operators and \
-               properties.get('network', '').lower() == self.network
+        return (
+            properties.get('operator', '').lower() in self.operators
+            and properties.get('network', '').lower() == self.network
+        )
 
     def status(self):
         return {'network': self.network, 'operators': self.operators}
@@ -153,12 +165,13 @@ class CykleoProvider(CommonBssProvider):
             return Stands(0, 0, StandsStatus.unavailable)
 
         if obj_station.get('station', {}).get('status') == 'IN_SERVICE' and 'availableDockCount' in obj_station:
-            return Stands(obj_station.get('availableDockCount', 0),
-                          obj_station.get('availableClassicBikeCount', 0) +
-                          obj_station.get('availableElectricBikeCount', 0),
-                          StandsStatus.open)
+            return Stands(
+                obj_station.get('availableDockCount', 0),
+                obj_station.get('availableClassicBikeCount', 0)
+                + obj_station.get('availableElectricBikeCount', 0),
+                StandsStatus.open,
+            )
         elif obj_station.get('station', {}).get('status') in ('OUT_OF_SERVICE', 'DECOMMISSIONED'):
             return Stands(0, 0, StandsStatus.closed)
         else:
             return Stands(0, 0, StandsStatus.unavailable)
-

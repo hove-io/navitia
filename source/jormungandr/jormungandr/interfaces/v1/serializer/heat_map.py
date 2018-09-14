@@ -70,4 +70,3 @@ class HeatMapSerializer(serpy.Serializer):
     origin = PlaceSerializer(label='from')
     to = PlaceSerializer(attr='destination', label='to')
     requested_date_time = DateTimeField()
-

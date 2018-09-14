@@ -61,35 +61,51 @@ class Timeo(RealtimeProxy):
     curl -X GET 'http://bobimeo.fr/cgi/api_compagnon.cgi?serviceID=9&EntityID=289&Media=spec_navit_comp&StopDescription=?StopTimeoCode=1586&NextStopTimeNumber=10&LineTimeoCode=52&Way=A&StopTimeType=TR;'
     """
 
-    def __init__(self, id, service_url, service_args, timezone,
-                 object_id_tag=None, destination_id_tag=None, instance=None, timeout=10, **kwargs):
+    def __init__(
+        self,
+        id,
+        service_url,
+        service_args,
+        timezone,
+        object_id_tag=None,
+        destination_id_tag=None,
+        instance=None,
+        timeout=10,
+        **kwargs
+    ):
         self.service_url = service_url
         self.service_args = service_args
-        self.timeout = timeout  #timeout in seconds
+        self.timeout = timeout  # timeout in seconds
         self.rt_system_id = id
         self.object_id_tag = object_id_tag if object_id_tag else id
         self.destination_id_tag = destination_id_tag
         self.instance = instance
         fail_max = kwargs.get('circuit_breaker_max_fail', app.config['CIRCUIT_BREAKER_MAX_TIMEO_FAIL'])
-        reset_timeout = kwargs.get('circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_TIMEO_TIMEOUT_S'])
+        reset_timeout = kwargs.get(
+            'circuit_breaker_reset_timeout', app.config['CIRCUIT_BREAKER_TIMEO_TIMEOUT_S']
+        )
         self.breaker = pybreaker.CircuitBreaker(fail_max=fail_max, reset_timeout=reset_timeout)
         # A step is applied on from_datetime to discretize calls and allow caching them
-        self.from_datetime_step = kwargs.get('from_datetime_step', app.config['CACHE_CONFIGURATION'].get('TIMEOUT_TIMEO', 60))
+        self.from_datetime_step = kwargs.get(
+            'from_datetime_step', app.config['CACHE_CONFIGURATION'].get('TIMEOUT_TIMEO', 60)
+        )
 
         # Note: if the timezone is not know, pytz raise an error
         self.timezone = pytz.timezone(timezone)
 
         if kwargs.get('redis_host') and kwargs.get('rate_limit_count'):
-            self.rate_limiter = RateLimiter(conditions=[{'requests': kwargs.get('rate_limit_count'),
-                                                         'seconds': kwargs.get('rate_limit_duration', 1)}],
-                                            redis_host=kwargs.get('redis_host'),
-                                            redis_port=kwargs.get('redis_port', 6379),
-                                            redis_db=kwargs.get('redis_db', 0),
-                                            redis_password=kwargs.get('redis_password'),
-                                            redis_namespace=kwargs.get('redis_namespace', 'jormungandr.rate_limiter'))
+            self.rate_limiter = RateLimiter(
+                conditions=[
+                    {'requests': kwargs.get('rate_limit_count'), 'seconds': kwargs.get('rate_limit_duration', 1)}
+                ],
+                redis_host=kwargs.get('redis_host'),
+                redis_port=kwargs.get('redis_port', 6379),
+                redis_db=kwargs.get('redis_db', 0),
+                redis_password=kwargs.get('redis_password'),
+                redis_namespace=kwargs.get('redis_namespace', 'jormungandr.rate_limiter'),
+            )
         else:
             self.rate_limiter = FakeRateLimiter()
-
 
     def __repr__(self):
         """
@@ -114,16 +130,21 @@ class Timeo(RealtimeProxy):
                 return None
             return self.breaker.call(requests.get, url, timeout=self.timeout)
         except pybreaker.CircuitBreakerError as e:
-            logging.getLogger(__name__).error('Timeo RT service dead, using base schedule (error: {}'.format(e),
-                                              extra={'rt_system_id': unicode(self.rt_system_id)})
+            logging.getLogger(__name__).error(
+                'Timeo RT service dead, using base schedule (error: {}'.format(e),
+                extra={'rt_system_id': unicode(self.rt_system_id)},
+            )
             raise RealtimeProxyError('circuit breaker open')
         except requests.Timeout as t:
-            logging.getLogger(__name__).error('Timeo RT service timeout, using base schedule (error: {}'.format(t),
-                                              extra={'rt_system_id': unicode(self.rt_system_id)})
+            logging.getLogger(__name__).error(
+                'Timeo RT service timeout, using base schedule (error: {}'.format(t),
+                extra={'rt_system_id': unicode(self.rt_system_id)},
+            )
             raise RealtimeProxyError('timeout')
         except Exception as e:
-            logging.getLogger(__name__).exception('Timeo RT error, using base schedule',
-                                                  extra={'rt_system_id': unicode(self.rt_system_id)})
+            logging.getLogger(__name__).exception(
+                'Timeo RT error, using base schedule', extra={'rt_system_id': unicode(self.rt_system_id)}
+            )
             raise RealtimeProxyError(str(e))
 
     def _get_dt_local(self, utc_dt):
@@ -139,37 +160,47 @@ class Timeo(RealtimeProxy):
         req_dt = self._timestamp_to_date(request_dt)
         return now.date() < req_dt.date()
 
-    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None, duration=None):
+    def _get_next_passage_for_route_point(
+        self, route_point, count=None, from_dt=None, current_dt=None, duration=None
+    ):
         if self._is_tomorrow(from_dt, current_dt):
-            logging.getLogger(__name__).info('Timeo RT service , Can not call Timeo for tomorrow.',
-                                             extra={'rt_system_id': unicode(self.rt_system_id)})
+            logging.getLogger(__name__).info(
+                'Timeo RT service , Can not call Timeo for tomorrow.',
+                extra={'rt_system_id': unicode(self.rt_system_id)},
+            )
             return None
         url = self._make_url(route_point, count, from_dt)
         if not url:
             return None
-        logging.getLogger(__name__).debug('Timeo RT service , call url : {}'.format(url),
-                                          extra={'rt_system_id': unicode(self.rt_system_id)})
+        logging.getLogger(__name__).debug(
+            'Timeo RT service , call url : {}'.format(url), extra={'rt_system_id': unicode(self.rt_system_id)}
+        )
         r = self._call_timeo(url)
         if not r:
             return None
 
         if r.status_code != 200:
             # TODO better error handling, the response might be in 200 but in error
-            logging.getLogger(__name__).error('Timeo RT service unavailable, impossible to query : {}'.format(r.url),
-                    extra={'rt_system_id': unicode(self.rt_system_id), 'status_code': r.status_code})
+            logging.getLogger(__name__).error(
+                'Timeo RT service unavailable, impossible to query : {}'.format(r.url),
+                extra={'rt_system_id': unicode(self.rt_system_id), 'status_code': r.status_code},
+            )
             raise RealtimeProxyError('non 200 response')
 
         return self._get_passages(r.json(), current_dt, route_point.fetch_line_uri())
 
     def _get_passages(self, timeo_resp, current_dt, line_uri=None):
-        logging.getLogger(__name__).debug('timeo response: {}'.format(timeo_resp),
-                                          extra={'rt_system_id': unicode(self.rt_system_id)})
+        logging.getLogger(__name__).debug(
+            'timeo response: {}'.format(timeo_resp), extra={'rt_system_id': unicode(self.rt_system_id)}
+        )
 
         st_responses = timeo_resp.get('StopTimesResponse')
         # by construction there should be only one StopTimesResponse
         if not st_responses or len(st_responses) != 1:
-            logging.getLogger(__name__).warning('invalid timeo response: {}'.format(timeo_resp),
-                                                extra={'rt_system_id': unicode(self.rt_system_id)})
+            logging.getLogger(__name__).warning(
+                'invalid timeo response: {}'.format(timeo_resp),
+                extra={'rt_system_id': unicode(self.rt_system_id)},
+            )
             raise RealtimeProxyError('invalid response')
 
         next_st = st_responses[0]['NextStopTimesMessage']
@@ -178,9 +209,11 @@ class Timeo(RealtimeProxy):
         for next_expected_st in next_st.get('NextExpectedStopTime', []):
             # for the moment we handle only the NextStop and the direction
             dt = self._get_dt(next_expected_st['NextStop'], current_dt)
-            direction = self._get_direction_name(line_uri=line_uri,
-                                                 object_code=next_expected_st.get('Terminus'),
-                                                 default_value=next_expected_st.get('Destination'))
+            direction = self._get_direction_name(
+                line_uri=line_uri,
+                object_code=next_expected_st.get('Terminus'),
+                default_value=next_expected_st.get('Destination'),
+            )
             next_passage = RealTimePassage(dt, direction)
             next_passages.append(next_passage)
 
@@ -209,38 +242,42 @@ class Timeo(RealtimeProxy):
 
         if not all((stop, line, route)):
             # one a the id is missing, we'll not find any realtime
-            logging.getLogger(__name__).debug('missing realtime id for {obj}: '
-                                              'stop code={s}, line code={l}, route code={r}'.
-                                              format(obj=route_point, s=stop, l=line, r=route),
-                                              extra={'rt_system_id': unicode(self.rt_system_id)})
+            logging.getLogger(__name__).debug(
+                'missing realtime id for {obj}: '
+                'stop code={s}, line code={l}, route code={r}'.format(obj=route_point, s=stop, l=line, r=route),
+                extra={'rt_system_id': unicode(self.rt_system_id)},
+            )
             self.record_internal_failure('missing id')
             return None
 
         # timeo can only handle items_per_schedule if it's < 5
-        count = min(count or 5, 5)# if no value defined we ask for 5 passages
+        count = min(count or 5, 5)  # if no value defined we ask for 5 passages
 
         # if a custom datetime is provided we give it to timeo but we round it to improve cachability
-        dt_param = '&NextStopReferenceTime={dt}'\
-            .format(dt=floor_datetime(self._timestamp_to_date(from_dt), self.from_datetime_step).strftime('%Y-%m-%dT%H:%M:%S')) \
-            if from_dt else ''
+        dt_param = (
+            '&NextStopReferenceTime={dt}'.format(
+                dt=floor_datetime(self._timestamp_to_date(from_dt), self.from_datetime_step).strftime(
+                    '%Y-%m-%dT%H:%M:%S'
+                )
+            )
+            if from_dt
+            else ''
+        )
 
-        #We want to have StopTimeType as it make parsing of the request way easier
-        #for alternative implementation of timeo since we can ignore this params
-        stop_id_url = ("StopDescription=?"
-                       "StopTimeType={data_freshness}"
-                       "&LineTimeoCode={line}"
-                       "&Way={route}"
-                       "&NextStopTimeNumber={count}"
-                       "&StopTimeoCode={stop}{dt};").format(stop=stop,
-                                                                 line=line,
-                                                                 route=route,
-                                                                 count=count,
-                                                                 data_freshness='TR',
-                                                                 dt=dt_param)
+        # We want to have StopTimeType as it make parsing of the request way easier
+        # for alternative implementation of timeo since we can ignore this params
+        stop_id_url = (
+            "StopDescription=?"
+            "StopTimeType={data_freshness}"
+            "&LineTimeoCode={line}"
+            "&Way={route}"
+            "&NextStopTimeNumber={count}"
+            "&StopTimeoCode={stop}{dt};"
+        ).format(stop=stop, line=line, route=route, count=count, data_freshness='TR', dt=dt_param)
 
-        url = "{base_url}?{base_params}&{stop_id}".format(base_url=self.service_url,
-                                                          base_params=base_params,
-                                                          stop_id=stop_id_url)
+        url = "{base_url}?{base_params}&{stop_id}".format(
+            base_url=self.service_url, base_params=base_params, stop_id=stop_id_url
+        )
 
         return url
 
@@ -259,19 +296,25 @@ class Timeo(RealtimeProxy):
         return self._get_dt_local(dt)
 
     def status(self):
-        return {'id': unicode(self.rt_system_id),
-                'timeout': self.timeout,
-                'circuit_breaker': {'current_state': self.breaker.current_state,
-                                    'fail_counter': self.breaker.fail_counter,
-                                    'reset_timeout': self.breaker.reset_timeout},
-                }
+        return {
+            'id': unicode(self.rt_system_id),
+            'timeout': self.timeout,
+            'circuit_breaker': {
+                'current_state': self.breaker.current_state,
+                'fail_counter': self.breaker.fail_counter,
+                'reset_timeout': self.breaker.reset_timeout,
+            },
+        }
 
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_PTOBJECTS', 600))
     def _get_direction_name(self, line_uri, object_code, default_value):
         stop_point = self.instance.ptref.get_stop_point(line_uri, self.destination_id_tag, object_code)
 
-        if stop_point and stop_point.HasField('stop_area') \
-                and stop_point.stop_area.HasField('label') \
-                and stop_point.stop_area.label != '':
+        if (
+            stop_point
+            and stop_point.HasField('stop_area')
+            and stop_point.stop_area.HasField('label')
+            and stop_point.stop_area.label != ''
+        ):
             return stop_point.stop_area.label
         return default_value

@@ -30,15 +30,14 @@
 # www.navitia.io
 
 from __future__ import absolute_import
-from jormungandr.interfaces.v1.serializer.jsonschema.fields import Field, StrField, MethodField, IntField, FloatField, \
-    BoolField, JsonStrField
+from jormungandr.interfaces.v1.serializer.jsonschema.fields import (
+    Field,
+    StrField,
+    MethodField,
+    IntField,
+    FloatField,
+    BoolField,
+    JsonStrField,
+)
 
-__all__ = [
-    'Field',
-    'StrField',
-    'IntField',
-    'FloatField',
-    'BoolField',
-    'MethodField',
-    'JsonStrField'
-]
+__all__ = ['Field', 'StrField', 'IntField', 'FloatField', 'BoolField', 'MethodField', 'JsonStrField']

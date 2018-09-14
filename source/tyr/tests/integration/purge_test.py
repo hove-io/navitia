@@ -37,6 +37,7 @@ from datetime import datetime, timedelta
 from tyr import app, tasks
 from navitiacommon import models
 from tests.check_utils import api_get, api_delete
+
 try:
     import ConfigParser
 except:
@@ -82,7 +83,7 @@ def create_jobs_with_same_datasets(name, backup_dir):
             job.state = 'done'
             job.data_sets.append(dataset)
             job.metrics.append(metric)
-            job.created_at = datetime.utcnow()-timedelta(days=i)
+            job.created_at = datetime.utcnow() - timedelta(days=i)
             models.db.session.add(job)
             job_list.append(job)
 
@@ -107,7 +108,7 @@ def create_instance_with_one_type_dataset(name, backup_dir):
     with app.app_context():
         job_list = []
         for index, dataset_type in enumerate(['fusio', 'osm', 'poi']):
-            job_list.append(create_job(datetime.utcnow()-timedelta(days=index), dataset_type, backup_dir))
+            job_list.append(create_job(datetime.utcnow() - timedelta(days=index), dataset_type, backup_dir))
         create_instance(name, job_list)
 
 
@@ -150,6 +151,7 @@ def test_purge_old_jobs():
 
     folders = set(glob.glob('{}/*'.format(backup_dir)))
     assert len(folders) == 1
+
 
 @pytest.mark.usefixtures("init_instances_dir")
 def test_purge_old_jobs_no_delete():

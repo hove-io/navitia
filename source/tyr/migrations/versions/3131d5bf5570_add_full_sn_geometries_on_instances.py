@@ -15,7 +15,9 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('instance', sa.Column('full_sn_geometries', sa.Boolean(), server_default='false', nullable=False))
+    op.add_column(
+        'instance', sa.Column('full_sn_geometries', sa.Boolean(), server_default='false', nullable=False)
+    )
 
 
 def downgrade():

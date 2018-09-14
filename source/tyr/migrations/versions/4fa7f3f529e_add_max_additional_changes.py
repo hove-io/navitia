@@ -15,9 +15,10 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('instance', sa.Column('max_additional_connections', sa.Integer(), server_default='2', nullable=False))
+    op.add_column(
+        'instance', sa.Column('max_additional_connections', sa.Integer(), server_default='2', nullable=False)
+    )
 
 
 def downgrade():
     op.drop_column('instance', 'max_additional_connections')
-

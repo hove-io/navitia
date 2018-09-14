@@ -40,4 +40,3 @@ def bounding_shape(instance_name, bounding_shape_filename):
     logging.info("Run command bounding shape")
 
     tasks.bounding_shape(instance_name, bounding_shape_filename)
-

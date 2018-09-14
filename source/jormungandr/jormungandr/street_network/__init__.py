@@ -33,4 +33,3 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 
 from jormungandr.street_network.kraken import Kraken
 from jormungandr.street_network.street_network import StreetNetwork
-

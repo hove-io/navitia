@@ -16,7 +16,7 @@ import sqlalchemy as sa
 
 def upgrade():
     user = sa.table('user', sa.column('shape'))
-    op.execute(user.update().values(shape='null').where(user.c.shape==None))
+    op.execute(user.update().values(shape='null').where(user.c.shape == None))
 
 
 def downgrade():

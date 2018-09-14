@@ -54,63 +54,89 @@ from navitiacommon.parser_args_type import BooleanType, OptionValue
 
 
 class Uri(ResourceUri, ResourceUtc):
-
     def __init__(self, is_collection, collection, *args, **kwargs):
         kwargs['authentication'] = False
         ResourceUri.__init__(self, *args, **kwargs)
         ResourceUtc.__init__(self)
         parser = self.parsers["get"]
-        parser.add_argument("start_page", type=int, default=0,
-                            help="The page where you want to start")
-        parser.add_argument("count", type=default_count_arg_type, default=25,
-                            help="Number of objects you want on a page")
-        parser.add_argument("depth", type=depth_argument,
-                            schema_type=int,
-                            default=1,
-                            help="The depth of your object")
-        parser.add_argument("forbidden_id[]", type=six.text_type,
-                            help="DEPRECATED, replaced by `forbidden_uris[]`",
-                            dest="__temporary_forbidden_id[]",
-                            default=[],
-                            action="append", schema_metadata={'format': 'pt-object'})
-        parser.add_argument("forbidden_uris[]", type=six.text_type,
-                            help="forbidden uris",
-                            dest="forbidden_uris[]",
-                            default=[],
-                            action="append", schema_metadata={'format': 'pt-object'})
+        parser.add_argument("start_page", type=int, default=0, help="The page where you want to start")
+        parser.add_argument(
+            "count", type=default_count_arg_type, default=25, help="Number of objects you want on a page"
+        )
+        parser.add_argument(
+            "depth", type=depth_argument, schema_type=int, default=1, help="The depth of your object"
+        )
+        parser.add_argument(
+            "forbidden_id[]",
+            type=six.text_type,
+            help="DEPRECATED, replaced by `forbidden_uris[]`",
+            dest="__temporary_forbidden_id[]",
+            default=[],
+            action="append",
+            schema_metadata={'format': 'pt-object'},
+        )
+        parser.add_argument(
+            "forbidden_uris[]",
+            type=six.text_type,
+            help="forbidden uris",
+            dest="forbidden_uris[]",
+            default=[],
+            action="append",
+            schema_metadata={'format': 'pt-object'},
+        )
         # for the top level collection apis (/v1/networks, /v1/lines, ...) the external_code is mandatory
         external_code_mandatory = '.external_codes' in self.endpoint
-        parser.add_argument("external_code", type=six.text_type,
-                            help="An external code to query", required=external_code_mandatory)
-        parser.add_argument("headsign", type=six.text_type,
-                            help="filter vehicle journeys on headsign")
-        parser.add_argument("show_codes", type=BooleanType(), default=False,
-                            help="show more identification codes")
-        parser.add_argument("odt_level", type=OptionValue(odt_levels), default="all",
-                            schema_type=str, schema_metadata={"enum": odt_levels},
-                            help="odt level")
-        parser.add_argument("_current_datetime", type=DateTimeFormat(),
-                            schema_metadata={'default': 'now'}, hidden=True,
-                            default=datetime.utcnow(),
-                            help='The datetime considered as "now". Used for debug, default is '
-                                 'the moment of the request. It will mainly change the output '
-                                 'of the disruptions.')
-        parser.add_argument("distance", type=int, default=200,
-                            help="Distance range of the query. Used only if a coord is in the query")
-        parser.add_argument("since", type=DateTimeFormat(),
-                            help="filters objects not valid before this date")
-        parser.add_argument("until", type=DateTimeFormat(),
-                            help="filters objects not valid after this date")
-        parser.add_argument("disable_geojson", type=BooleanType(), default=False,
-                            help="remove geojson from the response")
-        parser.add_argument("disable_disruption", type=BooleanType(), default=False,
-                            help="remove disruptions from the response")
+        parser.add_argument(
+            "external_code",
+            type=six.text_type,
+            help="An external code to query",
+            required=external_code_mandatory,
+        )
+        parser.add_argument("headsign", type=six.text_type, help="filter vehicle journeys on headsign")
+        parser.add_argument(
+            "show_codes", type=BooleanType(), default=False, help="show more identification codes"
+        )
+        parser.add_argument(
+            "odt_level",
+            type=OptionValue(odt_levels),
+            default="all",
+            schema_type=str,
+            schema_metadata={"enum": odt_levels},
+            help="odt level",
+        )
+        parser.add_argument(
+            "_current_datetime",
+            type=DateTimeFormat(),
+            schema_metadata={'default': 'now'},
+            hidden=True,
+            default=datetime.utcnow(),
+            help='The datetime considered as "now". Used for debug, default is '
+            'the moment of the request. It will mainly change the output '
+            'of the disruptions.',
+        )
+        parser.add_argument(
+            "distance",
+            type=int,
+            default=200,
+            help="Distance range of the query. Used only if a coord is in the query",
+        )
+        parser.add_argument("since", type=DateTimeFormat(), help="filters objects not valid before this date")
+        parser.add_argument("until", type=DateTimeFormat(), help="filters objects not valid after this date")
+        parser.add_argument(
+            "disable_geojson", type=BooleanType(), default=False, help="remove geojson from the response"
+        )
+        parser.add_argument(
+            "disable_disruption", type=BooleanType(), default=False, help="remove disruptions from the response"
+        )
 
         if is_collection:
-            parser.add_argument("filter", type=six.text_type, default="",
-                                help="The filter parameter")
-        parser.add_argument("tags[]", type=six.text_type, action="append",
-                            help="If filled, will restrain the search within the given disruption tags")
+            parser.add_argument("filter", type=six.text_type, default="", help="The filter parameter")
+        parser.add_argument(
+            "tags[]",
+            type=six.text_type,
+            action="append",
+            help="If filled, will restrain the search within the given disruption tags",
+        )
         self.collection = collection
         self.get_decorators.insert(0, ManageError())
 
@@ -139,14 +165,13 @@ class Uri(ResourceUri, ResourceUtc):
                         id = res
                         break
                 if not region:
-                    abort(404, message="Unable to find an object for the uri %s"
-                          % args["external_code"])
+                    abort(404, message="Unable to find an object for the uri %s" % args["external_code"])
             else:
                 abort(503, message="Not implemented yet")
 
         self.region = i_manager.get_region(region, lon, lat)
 
-        #we store the region in the 'g' object, which is local to a request
+        # we store the region in the 'g' object, which is local to a request
         set_request_timezone(self.region)
 
         # change dt to utc
@@ -175,8 +200,7 @@ class Uri(ResourceUri, ResourceUtc):
             else:
                 args["filter"] = f
 
-        response = i_manager.dispatch(args, collection,
-                                      instance_name=self.region)
+        response = i_manager.dispatch(args, collection, instance_name=self.region)
         return response
 
     def options(self, **kwargs):
@@ -189,10 +213,15 @@ def journey_pattern_points(is_collection):
         """ Retrieves journey pattern points"""
 
         def __init__(self):
-            Uri.__init__(self, is_collection, "journey_pattern_points",
-                         output_type_serializer=api.JourneyPatternPointsSerializer)
+            Uri.__init__(
+                self,
+                is_collection,
+                "journey_pattern_points",
+                output_type_serializer=api.JourneyPatternPointsSerializer,
+            )
             self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
+
     return JourneyPatternPoints
 
 
@@ -202,9 +231,12 @@ def commercial_modes(is_collection):
         """ Retrieves commercial modes"""
 
         def __init__(self):
-            Uri.__init__(self, is_collection, "commercial_modes", output_type_serializer=api.CommercialModesSerializer)
+            Uri.__init__(
+                self, is_collection, "commercial_modes", output_type_serializer=api.CommercialModesSerializer
+            )
             self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
+
     return CommercialModes
 
 
@@ -214,9 +246,12 @@ def journey_patterns(is_collection):
         """ Retrieves journey patterns"""
 
         def __init__(self):
-            Uri.__init__(self, is_collection, "journey_patterns", output_type_serializer=api.JourneyPatternsSerializer)
+            Uri.__init__(
+                self, is_collection, "journey_patterns", output_type_serializer=api.JourneyPatternsSerializer
+            )
             self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
+
     return JourneyPatterns
 
 
@@ -226,9 +261,12 @@ def vehicle_journeys(is_collection):
         """ Retrieves vehicle journeys"""
 
         def __init__(self):
-            Uri.__init__(self, is_collection, "vehicle_journeys", output_type_serializer=api.VehicleJourneysSerializer)
+            Uri.__init__(
+                self, is_collection, "vehicle_journeys", output_type_serializer=api.VehicleJourneysSerializer
+            )
             self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
+
     return VehicleJourneys
 
 
@@ -241,6 +279,7 @@ def trips(is_collection):
             Uri.__init__(self, is_collection, "trips", output_type_serializer=api.TripsSerializer)
             self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
+
     return Trips
 
 
@@ -250,9 +289,12 @@ def physical_modes(is_collection):
         """ Retrieves physical modes"""
 
         def __init__(self):
-            Uri.__init__(self, is_collection, "physical_modes", output_type_serializer=api.PhysicalModesSerializer)
+            Uri.__init__(
+                self, is_collection, "physical_modes", output_type_serializer=api.PhysicalModesSerializer
+            )
             self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
+
     return PhysicalModes
 
 
@@ -262,12 +304,20 @@ def stop_points(is_collection):
         """ Retrieves stop points """
 
         def __init__(self, *args, **kwargs):
-            Uri.__init__(self, is_collection, "stop_points", output_type_serializer=api.StopPointsSerializer,
-                         *args, **kwargs)
+            Uri.__init__(
+                self,
+                is_collection,
+                "stop_points",
+                output_type_serializer=api.StopPointsSerializer,
+                *args,
+                **kwargs
+            )
             self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument("original_id", type=six.text_type,
-                                             help="original uri of the object you want to query")
+            self.parsers["get"].add_argument(
+                "original_id", type=six.text_type, help="original uri of the object you want to query"
+            )
+
     return StopPoints
 
 
@@ -280,8 +330,10 @@ def stop_areas(is_collection):
             Uri.__init__(self, is_collection, "stop_areas", output_type_serializer=api.StopAreasSerializer)
             self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument("original_id", type=six.text_type,
-                                             help="original uri of the object you want to query")
+            self.parsers["get"].add_argument(
+                "original_id", type=six.text_type, help="original uri of the object you want to query"
+            )
+
     return StopAreas
 
 
@@ -294,6 +346,7 @@ def connections(is_collection):
             Uri.__init__(self, is_collection, "connections", output_type_serializer=api.ConnectionsSerializer)
             self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
+
     return Connections
 
 
@@ -306,6 +359,7 @@ def companies(is_collection):
             Uri.__init__(self, is_collection, "companies", output_type_serializer=api.CompaniesSerializer)
             self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
+
     return Companies
 
 
@@ -318,6 +372,7 @@ def poi_types(is_collection):
             Uri.__init__(self, is_collection, "poi_types", output_type_serializer=api.PoiTypesSerializer)
             self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
+
     return PoiTypes
 
 
@@ -330,8 +385,10 @@ def routes(is_collection):
             Uri.__init__(self, is_collection, "routes", output_type_serializer=api.RoutesSerializer)
             self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument("original_id", type=six.text_type,
-                                             help="original uri of the object you want to query")
+            self.parsers["get"].add_argument(
+                "original_id", type=six.text_type, help="original uri of the object you want to query"
+            )
+
     return Routes
 
 
@@ -343,8 +400,10 @@ def line_groups(is_collection):
             Uri.__init__(self, is_collection, "line_groups", output_type_serializer=api.LineGroupsSerializer)
             self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument("original_id", type=six.text_type,
-                                             help="original uri of the object you want to query")
+            self.parsers["get"].add_argument(
+                "original_id", type=six.text_type, help="original uri of the object you want to query"
+            )
+
     return LineGroups
 
 
@@ -358,8 +417,10 @@ def lines(is_collection):
             self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
 
-            self.parsers["get"].add_argument("original_id", type=six.text_type,
-                                             help="original uri of the object you want to query")
+            self.parsers["get"].add_argument(
+                "original_id", type=six.text_type, help="original uri of the object you want to query"
+            )
+
     return Lines
 
 
@@ -372,16 +433,25 @@ def pois(is_collection):
             Uri.__init__(self, is_collection, "pois", output_type_serializer=api.PoisSerializer)
             self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument("original_id", type=six.text_type,
-                                             help="original uri of the object you want to query")
-            self.parsers["get"].add_argument("bss_stands", type=BooleanType(), default=False,
-                                             help="Deprecated - Use add_poi_infos[]=bss_stands")
-            self.parsers["get"].add_argument("add_poi_infos[]", type=OptionValue(add_poi_infos_types),
-                                             default=['bss_stands', 'car_park'],
-                                             dest="add_poi_infos", action="append",
-                                             help="Show more information about the poi if it's available, for instance,"
-                                                  " show BSS/car park availability in the pois(BSS/car park) of the "
-                                                  "response")
+            self.parsers["get"].add_argument(
+                "original_id", type=six.text_type, help="original uri of the object you want to query"
+            )
+            self.parsers["get"].add_argument(
+                "bss_stands",
+                type=BooleanType(),
+                default=False,
+                help="Deprecated - Use add_poi_infos[]=bss_stands",
+            )
+            self.parsers["get"].add_argument(
+                "add_poi_infos[]",
+                type=OptionValue(add_poi_infos_types),
+                default=['bss_stands', 'car_park'],
+                dest="add_poi_infos",
+                action="append",
+                help="Show more information about the poi if it's available, for instance,"
+                " show BSS/car park availability in the pois(BSS/car park) of the "
+                "response",
+            )
 
             args = self.parsers["get"].parse_args()
             if handle_poi_infos(args["add_poi_infos"], args["bss_stands"]):
@@ -399,21 +469,23 @@ def networks(is_collection):
             Uri.__init__(self, is_collection, "networks", output_type_serializer=api.NetworksSerializer)
             self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument("original_id", type=six.text_type,
-                                             help="original uri of the object you want to query")
+            self.parsers["get"].add_argument(
+                "original_id", type=six.text_type, help="original uri of the object you want to query"
+            )
+
     return Networks
 
 
 def disruptions(is_collection):
-
     class Disruptions(Uri):
-
         def __init__(self):
             Uri.__init__(self, is_collection, "disruptions", output_type_serializer=api.DisruptionsSerializer)
             self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
-            self.parsers["get"].add_argument("original_id", type=six.text_type,
-                                             help="original uri of the object you want to query")
+            self.parsers["get"].add_argument(
+                "original_id", type=six.text_type, help="original uri of the object you want to query"
+            )
+
     return Disruptions
 
 
@@ -426,6 +498,7 @@ def contributors(is_collection):
             Uri.__init__(self, is_collection, "contributors", output_type_serializer=api.ContributorsSerializer)
             self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
+
     return Contributors
 
 
@@ -438,6 +511,7 @@ def datasets(is_collection):
             Uri.__init__(self, is_collection, "datasets", output_type_serializer=api.DatasetsSerializer)
             self.collections = get_collections(self.collection)
             self.get_decorators.insert(1, get_obj_serializer(self))
+
     return Datasets
 
 
@@ -445,6 +519,7 @@ def addresses(is_collection):
     class Addresses(Coord):
 
         """ Not implemented yet"""
+
         pass
 
     return Addresses
@@ -453,7 +528,10 @@ def addresses(is_collection):
 def coords(is_collection):
     class Coords(Coord):
         """ Not implemented yet"""
+
         pass
+
     return Coords
+
 
 coord = coords

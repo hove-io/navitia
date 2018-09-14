@@ -32,7 +32,8 @@ from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
 from jormungandr import stat_manager
 from jormungandr.stat_manager import StatManager
-#from mock import patch
+
+# from mock import patch
 from jormungandr.utils import str_to_time_stamp
 from jormungandr import app
 import time
@@ -41,9 +42,8 @@ from navitiacommon import stat_pb2
 
 
 class MockWrapper:
-
     def __init__(self):
-        self.called = False #TODO: use mock!
+        self.called = False  # TODO: use mock!
 
     def mock_journey_stat(self, api, pbf):
         stat = stat_pb2.StatRequest()
@@ -60,15 +60,15 @@ class MockWrapper:
         self.called = True
 
     def check_stat_coverage_to_publish(self, stat):
-        #Verify request elements
+        # Verify request elements
         assert stat.user_id != ""
         assert stat.api == "v1.coverage"
         assert len(stat.parameters) == 0
         assert len(stat.coverages) == 1
-        #Here we verify id of region in request.view_args of the request.
+        # Here we verify id of region in request.view_args of the request.
         assert stat.coverages[0].region_id == ""
         assert len(stat.journeys) == 0
-        #Verify elements of request.error
+        # Verify elements of request.error
         assert stat.error.id == ""
 
     def mock_places_stat(self, api, pbf):
@@ -78,27 +78,29 @@ class MockWrapper:
         self.check_stat_places_to_publish(stat)
 
     def check_stat_journey_to_publish(self, stat):
-        #Verify request elements
+        # Verify request elements
         assert stat.user_id != ""
         assert stat.api == "v1.journeys"
 
         epsilon = 1e-5
-        #Verify elements of request.parameters
+        # Verify elements of request.parameters
         assert len(stat.parameters) == 3
-        assert {(param.key, param.value) for param in stat.parameters} >\
-               {("to", "0.00188646;0.00071865"), ("from", "0.0000898312;0.0000898312")}
+        assert {(param.key, param.value) for param in stat.parameters} > {
+            ("to", "0.00188646;0.00071865"),
+            ("from", "0.0000898312;0.0000898312"),
+        }
 
-        #Verify elements of request.coverages
+        # Verify elements of request.coverages
         assert len(stat.coverages) == 1
         assert stat.coverages[0].region_id == "main_routing_test"
 
-        #Verify elements of request.error
+        # Verify elements of request.error
         assert stat.error.id == ""
 
-        #Verify elements of request.journeys
+        # Verify elements of request.journeys
         assert len(stat.journeys) == 2
 
-        #datetimes stored in UTC, no matter instance or jormun TZ (here instance is UTC)
+        # datetimes stored in UTC, no matter instance or jormun TZ (here instance is UTC)
         assert stat.journeys[0].requested_date_time == str_to_time_stamp("20120614T080000")
         assert stat.journeys[0].departure_date_time == str_to_time_stamp("20120614T080043")
         assert stat.journeys[0].arrival_date_time == str_to_time_stamp("20120614T080222")
@@ -106,7 +108,7 @@ class MockWrapper:
         assert stat.journeys[0].type == "best"
         assert stat.journeys[0].nb_transfers == 0
 
-        #Verify elements of request.journeys.sections
+        # Verify elements of request.journeys.sections
         assert len(stat.journeys[0].sections) == 3
         assert stat.journeys[0].sections[1].departure_date_time == str_to_time_stamp("20120614T080100")
         assert stat.journeys[0].sections[1].arrival_date_time == str_to_time_stamp("20120614T080102")
@@ -138,7 +140,7 @@ class MockWrapper:
         assert stat.journeys[1].sections[0].to_name == "rue ag"
         assert stat.journeys[1].sections[0].type == "street_network"
 
-        #journey_request is stored UTC no matter instance or jormun TZ (but instance TZ is in UTC)
+        # journey_request is stored UTC no matter instance or jormun TZ (but instance TZ is in UTC)
         assert stat.journey_request.requested_date_time == str_to_time_stamp("20120614T080000")
         assert stat.journey_request.clockwise
         assert stat.journey_request.departure_insee == '03430'
@@ -151,7 +153,7 @@ class MockWrapper:
         assert stat.api == "v1.place_uri"
         assert len(stat.parameters) == 0
         assert len(stat.coverages) == 1
-        #Here we verify id of region in request.view_args of the request.
+        # Here we verify id of region in request.view_args of the request.
         assert stat.coverages[0].region_id == "main_ptref_test"
         assert stat.error.id == ""
 
@@ -160,7 +162,6 @@ class MockWrapper:
 
 @dataset({"main_routing_test": {}})
 class TestStatJourneys(AbstractTestFixture):
-
     def setUp(self):
         """
         We save the original publish_method to be able to put it back after the tests
@@ -203,7 +204,6 @@ class TestStatJourneys(AbstractTestFixture):
 
 @dataset({"main_ptref_test": {}})
 class TestStatPlaces(AbstractTestFixture):
-
     def setUp(self):
         """
         We save the original publish_method to be able to put it back after the tests
@@ -230,20 +230,20 @@ class TestStatPlaces(AbstractTestFixture):
         response = self.query_region("places/stop_area:stop1", display=False)
         assert mock.called
 
+
 class TestError(object):
-        @mock.patch.object(stat_manager, 'publish_request')
-        def test_simple_error(self, mock):
-            response = ({"places_nearby": None, "error": None}, 200)
-            #should not raise any exception
-            with app.test_request_context('/v1/places'):
-                stat_manager._manage_stat(time.time(), response)
-            assert mock.called
+    @mock.patch.object(stat_manager, 'publish_request')
+    def test_simple_error(self, mock):
+        response = ({"places_nearby": None, "error": None}, 200)
+        # should not raise any exception
+        with app.test_request_context('/v1/places'):
+            stat_manager._manage_stat(time.time(), response)
+        assert mock.called
 
-        @mock.patch.object(stat_manager, 'publish_request')
-        def test_pagination(self, mock):
-            response = ({"places_nearby": [], "pagination": None}, 200)
-            #should not raise any exception
-            with app.test_request_context('/v1/places'):
-                stat_manager._manage_stat(time.time(), response)
-            assert mock.called
-
+    @mock.patch.object(stat_manager, 'publish_request')
+    def test_pagination(self, mock):
+        response = ({"places_nearby": [], "pagination": None}, 200)
+        # should not raise any exception
+        with app.test_request_context('/v1/places'):
+            stat_manager._manage_stat(time.time(), response)
+        assert mock.called

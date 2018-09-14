@@ -16,7 +16,11 @@ import geoalchemy2 as ga
 
 
 def upgrade():
-    op.add_column('vehicle_journey', sa.Column('is_frequency', sa.BOOLEAN(), nullable=True, default=False), schema='navitia')
+    op.add_column(
+        'vehicle_journey',
+        sa.Column('is_frequency', sa.BOOLEAN(), nullable=True, default=False),
+        schema='navitia',
+    )
 
 
 def downgrade():

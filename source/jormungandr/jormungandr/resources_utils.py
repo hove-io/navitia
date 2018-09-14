@@ -40,8 +40,10 @@ import logging
 import pytz
 from jormungandr.exceptions import RegionNotFound, UnableToParse
 from jormungandr.interfaces.argument import ArgumentDoc
-from jormungandr.interfaces.v1.serializer.jsonschema.serializer import SwaggerPathSerializer, \
-    SwaggerOptionPathSerializer
+from jormungandr.interfaces.v1.serializer.jsonschema.serializer import (
+    SwaggerPathSerializer,
+    SwaggerOptionPathSerializer,
+)
 from jormungandr.interfaces.v1.swagger_schema import make_schema
 from navitiacommon.parser_args_type import BooleanType
 
@@ -60,8 +62,7 @@ class ResourceUtc(object):
             tz_name = instance.timezone  # TODO store directly the tz?
 
             if not tz_name:
-                logging.Logger(__name__).warn("unknown timezone for region {}"
-                                              .format(self.region))
+                logging.Logger(__name__).warn("unknown timezone for region {}".format(self.region))
                 return None
             self._tz = (pytz.timezone(tz_name),)
         return self._tz[0]
@@ -113,9 +114,9 @@ class DocumentedResource(Resource):
         super(Resource, self).__init__()
         self.parsers = defaultdict(lambda: reqparse.RequestParser(argument_class=ArgumentDoc))
         self.output_type_serializer = output_type_serializer
-        self.parsers["options"].add_argument('schema',
-                                             help='dump the swagger schema of the API',
-                                             type=BooleanType(), default=False)
+        self.parsers["options"].add_argument(
+            'schema', help='dump the swagger schema of the API', type=BooleanType(), default=False
+        )
 
     def api_description(self, **kwargs):
         """
@@ -129,5 +130,6 @@ class DocumentedResource(Resource):
         if not args['schema']:
             return options_response
         from flask import request
+
         schema = make_schema(resource=self, rule=request.url_rule)
         return SwaggerOptionPathSerializer(schema).data, 200, {'Allow': options_response.allow}

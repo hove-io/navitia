@@ -30,5 +30,6 @@
 # www.navitia.io
 from __future__ import absolute_import, print_function, unicode_literals, division
 
+
 def transform_id(id):
     return id  # TODO remove the call to this method

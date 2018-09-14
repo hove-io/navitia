@@ -36,15 +36,15 @@ This parameters can be used directly by jormungandr if the instance is not known
 import logging
 import sys
 
-max_walking_duration_to_pt = 30*60
+max_walking_duration_to_pt = 30 * 60
 
-max_bike_duration_to_pt = 30*60
+max_bike_duration_to_pt = 30 * 60
 
-max_bss_duration_to_pt = 30*60
+max_bss_duration_to_pt = 30 * 60
 
-max_car_duration_to_pt = 30*60
+max_car_duration_to_pt = 30 * 60
 
-max_car_no_park_duration_to_pt = 30*60
+max_car_no_park_duration_to_pt = 30 * 60
 
 walking_speed = 1.12
 
@@ -54,38 +54,38 @@ bss_speed = 4.1
 
 car_speed = 11.11
 
-car_no_park_speed = 6.94 #25km/h
+car_no_park_speed = 6.94  # 25km/h
 
 max_nb_transfers = 10
 
 journey_order = 'arrival_time'
 
-min_tc_with_car = 5*60
+min_tc_with_car = 5 * 60
 
-min_tc_with_bike = 5*60
+min_tc_with_bike = 5 * 60
 
-min_tc_with_bss = 5*60
+min_tc_with_bss = 5 * 60
 
-min_bike = 4*60
+min_bike = 4 * 60
 
-min_bss = 4*60 + 3*60 #we want 4minute on the bike, so we add the time to pick and put back the bss
+min_bss = 4 * 60 + 3 * 60  # we want 4minute on the bike, so we add the time to pick and put back the bss
 
-min_car = 5*60
+min_car = 5 * 60
 
-#if a journey is X time longer than the earliest one we remove it
+# if a journey is X time longer than the earliest one we remove it
 factor_too_long_journey = 4
 
-#all journeys with a duration fewer than this value will be kept no matter what even if they are 20 times slower than the earliest one
-min_duration_too_long_journey = 15*60
+# all journeys with a duration fewer than this value will be kept no matter what even if they are 20 times slower than the earliest one
+min_duration_too_long_journey = 15 * 60
 
-#criteria used for select the journey used for calculate the max duration
+# criteria used for select the journey used for calculate the max duration
 max_duration_criteria = 'time'
 
-#only journey with this mode (or slower mode) will be used for calculate the max_duration
+# only journey with this mode (or slower mode) will be used for calculate the max_duration
 max_duration_fallback_mode = 'walking'
 
 # specify the latest time point of request, relative to datetime, in second
-max_duration = 60*60*24  # seconds
+max_duration = 60 * 60 * 24  # seconds
 
 # the penalty for each walking transfer
 walking_transfer_penalty = 120  # seconds
@@ -94,9 +94,9 @@ walking_transfer_penalty = 120  # seconds
 night_bus_filter_max_factor = 1.5
 
 # night bus filtering parameter
-night_bus_filter_base_factor = 15*60  # seconds
+night_bus_filter_base_factor = 15 * 60  # seconds
 
-#priority value to be used to choose a kraken instance among valid instances. The greater it is, the more the instance
+# priority value to be used to choose a kraken instance among valid instances. The greater it is, the more the instance
 # will be chosen.
 priority = 0
 
@@ -106,11 +106,11 @@ bss_provider = True
 # activate / desactivate call to car parking provider
 car_park_provider = True
 
-#Maximum number of connections allowed in journeys is calculated as
-#max_additional_connections + minimum connections among the journeys
+# Maximum number of connections allowed in journeys is calculated as
+# max_additional_connections + minimum connections among the journeys
 max_additional_connections = 2
 
-#the id of physical_mode, as sent by kraken to jormungandr, used by _max_successive_physical_mode rule
+# the id of physical_mode, as sent by kraken to jormungandr, used by _max_successive_physical_mode rule
 successive_physical_mode_to_limit_id = 'physical_mode:Bus'
 
 # Number of greenlets simultaneously used for Real-Time proxies calls
@@ -138,11 +138,17 @@ max_nb_crowfly_by_mode = {'walking': 5000, 'car': 5000, 'bike': 5000, 'bss': 500
 
 autocomplete_backend = 'kraken'
 
+
 def get_value_or_default(attr, instance, instance_name):
     if not instance or getattr(instance, attr, None) == None:
         logger = logging.getLogger(__name__)
         value = getattr(sys.modules[__name__], attr)
-        logger.warn('instance %s not found in db, we use the default value (%s) for the param %s', instance_name, value, attr)
+        logger.warn(
+            'instance %s not found in db, we use the default value (%s) for the param %s',
+            instance_name,
+            value,
+            attr,
+        )
         return value
     else:
         return getattr(instance, attr)

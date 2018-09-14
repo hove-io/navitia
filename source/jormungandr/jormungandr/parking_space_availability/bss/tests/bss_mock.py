@@ -34,7 +34,6 @@ from jormungandr.ptref import FeedPublisher
 
 
 class BssMockProvider(AbstractParkingPlacesProvider):
-
     def support_poi(self, poi):
         return poi['id'] == 'station_1'
 

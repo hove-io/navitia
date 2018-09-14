@@ -36,26 +36,12 @@ from mock import MagicMock
 
 network = u'DiviaVélodi'
 poi = {
-    'properties': {
-        'network': network,
-        'operator': 'CYKLEO',
-        'ref': '2'
-    },
-    'poi_type': {
-        'name': 'station vls',
-        'id': 'poi_type:amenity:bicycle_rental'
-    }
+    'properties': {'network': network, 'operator': 'CYKLEO', 'ref': '2'},
+    'poi_type': {'name': 'station vls', 'id': 'poi_type:amenity:bicycle_rental'},
 }
 poi_with_0 = {
-    'properties': {
-        'network': network,
-        'operator': 'Cykleo',
-        'ref': '02'
-    },
-    'poi_type': {
-        'name': 'station vls',
-        'id': 'poi_type:amenity:bicycle_rental'
-    }
+    'properties': {'network': network, 'operator': 'Cykleo', 'ref': '02'},
+    'poi_type': {'name': 'station vls', 'id': 'poi_type:amenity:bicycle_rental'},
 }
 
 
@@ -92,23 +78,25 @@ def parking_space_availability_cykleo_support_poi_test():
 
 
 def parking_space_availability_cykleo_get_informations_test():
-    webservice_response = {'2': {
-        "station": {
-            "assetStation": {
-                "coordinate": {},
-                "organization": 1,
-                "commercialNumber": 1,
+    webservice_response = {
+        '2': {
+            "station": {
+                "assetStation": {
+                    "coordinate": {},
+                    "organization": 1,
+                    "commercialNumber": 1,
+                    "id": 1,
+                    "commercialName": "station 1",
+                },
+                "status": "IN_SERVICE",
                 "id": 1,
-                "commercialName": "station 1"
             },
-            "status": "IN_SERVICE",
-            "id": 1
-        },
-        "availableClassicBikeCount": 3,
-        "id": 1,
-        "availableElectricBikeCount": 1,
-        "availableDockCount": 2
-    }}
+            "availableClassicBikeCount": 3,
+            "id": 1,
+            "availableElectricBikeCount": 1,
+            "availableDockCount": 2,
+        }
+    }
     provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
     assert provider.get_informations(poi) == Stands(2, 4, StandsStatus.open)
@@ -122,23 +110,25 @@ def parking_space_availability_cykleo_get_informations_test():
 
 
 def parking_space_availability_cykleo_get_informations_with_status_Closed_test():
-    webservice_response = {'2': {
-        "station": {
-            "assetStation": {
-                "coordinate": {},
-                "organization": 1,
-                "commercialNumber": 1,
+    webservice_response = {
+        '2': {
+            "station": {
+                "assetStation": {
+                    "coordinate": {},
+                    "organization": 1,
+                    "commercialNumber": 1,
+                    "id": 1,
+                    "commercialName": "station 1",
+                },
+                "status": "OUT_OF_SERVICE",
                 "id": 1,
-                "commercialName": "station 1"
             },
-            "status": "OUT_OF_SERVICE",
-            "id": 1
-        },
-        "availableClassicBikeCount": 3,
-        "id": 1,
-        "availableElectricBikeCount": 1,
-        "availableDockCount": 2
-    }}
+            "availableClassicBikeCount": 3,
+            "id": 1,
+            "availableElectricBikeCount": 1,
+            "availableDockCount": 2,
+        }
+    }
     provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
     assert provider.get_informations(poi) == Stands(0, 0, StandsStatus.closed)
@@ -146,23 +136,25 @@ def parking_space_availability_cykleo_get_informations_with_status_Closed_test()
 
 
 def parking_space_availability_cykleo_get_informations_with_status_unavailable_test():
-    webservice_response = {'2': {
-        "station": {
-            "assetStation": {
-                "coordinate": {},
-                "organization": 1,
-                "commercialNumber": 1,
+    webservice_response = {
+        '2': {
+            "station": {
+                "assetStation": {
+                    "coordinate": {},
+                    "organization": 1,
+                    "commercialNumber": 1,
+                    "id": 1,
+                    "commercialName": "station 1",
+                },
+                "status": "DISCONNECTED",
                 "id": 1,
-                "commercialName": "station 1"
             },
-            "status": "DISCONNECTED",
-            "id": 1
-        },
-        "availableClassicBikeCount": 3,
-        "id": 1,
-        "availableElectricBikeCount": 1,
-        "availableDockCount": 2
-    }}
+            "availableClassicBikeCount": 3,
+            "id": 1,
+            "availableElectricBikeCount": 1,
+            "availableDockCount": 2,
+        }
+    }
     provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
     assert provider.get_informations(poi) == Stands(0, 0, StandsStatus.unavailable)
@@ -170,22 +162,24 @@ def parking_space_availability_cykleo_get_informations_with_status_unavailable_t
 
 
 def available_classic_bike_count_only_test():
-    webservice_response = {'2': {
-        "station": {
-            "assetStation": {
-                "coordinate": {},
-                "organization": 1,
-                "commercialNumber": 1,
+    webservice_response = {
+        '2': {
+            "station": {
+                "assetStation": {
+                    "coordinate": {},
+                    "organization": 1,
+                    "commercialNumber": 1,
+                    "id": 1,
+                    "commercialName": "station 1",
+                },
+                "status": "IN_SERVICE",
                 "id": 1,
-                "commercialName": "station 1"
             },
-            "status": "IN_SERVICE",
-            "id": 1
-        },
-        "id": 1,
-        "availableClassicBikeCount": 1,
-        "availableDockCount": 2
-    }}
+            "id": 1,
+            "availableClassicBikeCount": 1,
+            "availableDockCount": 2,
+        }
+    }
     provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
     assert provider.get_informations(poi) == Stands(2, 1, StandsStatus.open)
@@ -193,22 +187,24 @@ def available_classic_bike_count_only_test():
 
 
 def available_electric_bike_count_only_test():
-    webservice_response = {'2': {
-        "station": {
-            "assetStation": {
-                "coordinate": {},
-                "organization": 1,
-                "commercialNumber": 1,
+    webservice_response = {
+        '2': {
+            "station": {
+                "assetStation": {
+                    "coordinate": {},
+                    "organization": 1,
+                    "commercialNumber": 1,
+                    "id": 1,
+                    "commercialName": "station 1",
+                },
+                "status": "IN_SERVICE",
                 "id": 1,
-                "commercialName": "station 1"
             },
-            "status": "IN_SERVICE",
-            "id": 1
-        },
-        "id": 1,
-        "availableElectricBikeCount": 1,
-        "availableDockCount": 2
-    }}
+            "id": 1,
+            "availableElectricBikeCount": 1,
+            "availableDockCount": 2,
+        }
+    }
     provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
     assert provider.get_informations(poi) == Stands(2, 1, StandsStatus.open)
@@ -216,21 +212,23 @@ def available_electric_bike_count_only_test():
 
 
 def witout_available_dock_count_test():
-    webservice_response = {'2': {
-        "station": {
-            "assetStation": {
-                "coordinate": {},
-                "organization": 1,
-                "commercialNumber": 1,
+    webservice_response = {
+        '2': {
+            "station": {
+                "assetStation": {
+                    "coordinate": {},
+                    "organization": 1,
+                    "commercialNumber": 1,
+                    "id": 1,
+                    "commercialName": "station 1",
+                },
+                "status": "IN_SERVICE",
                 "id": 1,
-                "commercialName": "station 1"
             },
-            "status": "IN_SERVICE",
-            "id": 1
-        },
-        "id": 1,
-        "availableElectricBikeCount": 1,
-    }}
+            "id": 1,
+            "availableElectricBikeCount": 1,
+        }
+    }
     provider = CykleoProvider('http://bob', network, 'big', 'big', {'CYKLEO'})
     provider._call_webservice = MagicMock(return_value=webservice_response)
     res_stands = provider.get_informations(poi)

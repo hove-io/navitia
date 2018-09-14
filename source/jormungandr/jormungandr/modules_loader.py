@@ -56,18 +56,35 @@ class ModulesLoader(object):
                 module_inst.setup()
             elif isinstance(module_inst, ABlueprint):
                 module_inst.setup()
-                self.api.app.register_blueprint(module_inst,
-                                                url_prefix='/' + module_inst.name)
+                self.api.app.register_blueprint(module_inst, url_prefix='/' + module_inst.name)
 
 
 class ABlueprint(Blueprint):
-    def __init__(self, api, name, import_name, description=None,
-                 status=None, index_endpoint=None, static_folder=None,
-                 static_url_path=None, template_folder=None,
-                 url_prefix=None, subdomain=None, url_defaults=None):
-        super(ABlueprint, self).__init__(name, import_name, static_folder,
-                                         static_url_path, template_folder,
-                                         url_prefix, subdomain, url_defaults)
+    def __init__(
+        self,
+        api,
+        name,
+        import_name,
+        description=None,
+        status=None,
+        index_endpoint=None,
+        static_folder=None,
+        static_url_path=None,
+        template_folder=None,
+        url_prefix=None,
+        subdomain=None,
+        url_defaults=None,
+    ):
+        super(ABlueprint, self).__init__(
+            name,
+            import_name,
+            static_folder,
+            static_url_path,
+            template_folder,
+            url_prefix,
+            subdomain,
+            url_defaults,
+        )
         self.api = api
         self.description = description
         self.status = status
@@ -82,8 +99,7 @@ class AModule(object):
         Abstract class for routing modules.
     """
 
-    def __init__(self, api, name, description=None, status=None,
-                 index_endpoint=None):
+    def __init__(self, api, name, description=None, status=None, index_endpoint=None):
         """
 
         :type api: flask_restful.Api
@@ -110,7 +126,7 @@ class AModule(object):
         :type kwargs:
         """
         if 'endpoint' in kwargs:
-            #on python2 we got a str ascii and in pytho 3 a str unicode, it's what we want!
+            # on python2 we got a str ascii and in pytho 3 a str unicode, it's what we want!
             kwargs['endpoint'] = str(self.name + '.' + kwargs['endpoint'])
 
         urls_list = list()

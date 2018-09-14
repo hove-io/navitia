@@ -16,12 +16,13 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.create_table('poi_type',
+    op.create_table(
+        'poi_type',
         sa.Column('uri', sa.Text(), nullable=False),
         sa.Column('name', sa.Text(), nullable=True),
         sa.Column('instance_id', sa.Integer(), nullable=False),
-        sa.ForeignKeyConstraint(['instance_id'], ['instance.id'], ),
-        sa.PrimaryKeyConstraint('instance_id', 'uri')
+        sa.ForeignKeyConstraint(['instance_id'], ['instance.id']),
+        sa.PrimaryKeyConstraint('instance_id', 'uri'),
     )
 
 

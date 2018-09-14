@@ -16,8 +16,21 @@ import geoalchemy2 as ga
 
 
 def upgrade():
-    op.add_column('stop_point', sa.Column('is_zonal', sa.BOOLEAN(), primary_key=False, nullable=False, server_default='false'), schema='navitia')
-    op.add_column('stop_point', sa.Column('area', ga.Geography(geometry_type='MULTIPOLYGON', srid=4326, spatial_index=False), primary_key=False, nullable=True), schema='navitia')
+    op.add_column(
+        'stop_point',
+        sa.Column('is_zonal', sa.BOOLEAN(), primary_key=False, nullable=False, server_default='false'),
+        schema='navitia',
+    )
+    op.add_column(
+        'stop_point',
+        sa.Column(
+            'area',
+            ga.Geography(geometry_type='MULTIPOLYGON', srid=4326, spatial_index=False),
+            primary_key=False,
+            nullable=True,
+        ),
+        schema='navitia',
+    )
 
 
 def downgrade():

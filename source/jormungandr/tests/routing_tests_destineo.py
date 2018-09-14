@@ -44,7 +44,7 @@ def filter_prev_next_journeys(journeys):
 
     list_journeys = list(filter(filter_journey_pure_tc, journeys))
     if not list_journeys:
-        #if there is no pure tc journeys, we consider all journeys with TC
+        # if there is no pure tc journeys, we consider all journeys with TC
         list_journeys = list(filter(filter_journey, journeys))
     return list_journeys
 
@@ -62,8 +62,10 @@ class TestJourneysDestineo(AbstractTestFixture):
         if not response.get('journeys'):
             return
         """destineo prev/next link mechanism is different"""
-        j_to_compare = max(filter_prev_next_journeys(response.get('journeys', [])),
-                           key=lambda j: get_valid_datetime(j['departure_date_time']))
+        j_to_compare = max(
+            filter_prev_next_journeys(response.get('journeys', [])),
+            key=lambda j: get_valid_datetime(j['departure_date_time']),
+        )
 
         j_departure = get_valid_datetime(j_to_compare['departure_date_time'])
         assert j_departure + timedelta(minutes=1) == dt
@@ -73,16 +75,18 @@ class TestJourneysDestineo(AbstractTestFixture):
         if not response.get('journeys'):
             return
         """destineo prev/next link mechanism is different"""
-        j_to_compare = min(filter_prev_next_journeys(response.get('journeys', [])),
-                           key=lambda j: get_valid_datetime(j['arrival_date_time']))
+        j_to_compare = min(
+            filter_prev_next_journeys(response.get('journeys', [])),
+            key=lambda j: get_valid_datetime(j['arrival_date_time']),
+        )
 
         j_departure = get_valid_datetime(j_to_compare['arrival_date_time'])
         assert j_departure - timedelta(minutes=1) == dt
 
     def test_journeys(self):
-        #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
+        # NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
         response = self.query_region(journey_basic_query)
-        #not to use the jormungandr database
+        # not to use the jormungandr database
 
         self.is_valid_journey_response(response, journey_basic_query)
         assert len(response['journeys']) == 2
@@ -90,10 +94,12 @@ class TestJourneysDestineo(AbstractTestFixture):
         assert response['journeys'][1]['type'] == 'non_pt_walk'
 
     def test_journeys_destineo_with_bss(self):
-        #NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
-        #not to use the jormungandr database
-        query = journey_basic_query + "&first_section_mode=bss&first_section_mode=bike&first_section_mode=car" \
-                "&last_section_mode=bss&last_section_mode=car"
+        # NOTE: we query /v1/coverage/main_routing_test/journeys and not directly /v1/journeys
+        # not to use the jormungandr database
+        query = (
+            journey_basic_query + "&first_section_mode=bss&first_section_mode=bike&first_section_mode=car"
+            "&last_section_mode=bss&last_section_mode=car"
+        )
         response = self.query_region(query)
 
         self.is_valid_journey_response(response, query)

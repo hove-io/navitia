@@ -34,9 +34,11 @@ from pytest_mock import mocker
 
 from jormungandr import app
 
-class FakeInstance():
+
+class FakeInstance:
     def __init__(self, name):
         self.name = name
+
 
 @fixture
 def manager():
@@ -58,6 +60,7 @@ def get_instances_test(manager):
 
         assert manager.get_instances('foo') is None
 
+
 def get_instances_by_coord_test(manager, mocker):
     mock = mocker.patch.object(manager, '_all_keys_of_coord', return_value=['paris'])
     with app.test_request_context('/'):
@@ -66,6 +69,7 @@ def get_instances_by_coord_test(manager, mocker):
         assert 'paris' == instances[0].name
         assert mock.called
 
+
 def get_instances_by_object_id_test(manager, mocker):
     mock = mocker.patch.object(manager, '_all_keys_of_id', return_value=['pdl'])
     with app.test_request_context('/'):
@@ -73,5 +77,3 @@ def get_instances_by_object_id_test(manager, mocker):
         assert len(instances) == 1
         assert 'pdl' == instances[0].name
         assert mock.called
-
-

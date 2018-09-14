@@ -44,26 +44,10 @@ def valid_here_matrix():
     return {
         "response": {
             "matrixEntry": [
-                {
-                    "destinationIndex": 0,
-                    "startIndex": 0,
-                    "summary": {
-                        "travelTime": 440
-                    }
-                },
-                {
-                    "destinationIndex": 1,
-                    "startIndex": 0,
-                    "status": "failed"
-                },
-                {
-                    "destinationIndex": 2,
-                    "startIndex": 0,
-                    "summary": {
-                        "travelTime": 701
-                    }
-                },
-            ],
+                {"destinationIndex": 0, "startIndex": 0, "summary": {"travelTime": 440}},
+                {"destinationIndex": 1, "startIndex": 0, "status": "failed"},
+                {"destinationIndex": 2, "startIndex": 0, "summary": {"travelTime": 701}},
+            ]
         }
     }
 
@@ -72,73 +56,60 @@ def valid_here_matrix():
 def valid_here_routing_response():
     # it's not a real response, it's a truncated to reduce its size
     return {
-            "response": {
-                "route": [
-                    {
-                        "leg": [
-                            {
-                                "length": 4012,
-                                "maneuver": [
-                                    {
-                                        "_type": "PrivateTransportManeuverType",
-                                        "id": "M1",
-                                        "instruction": "Head <span class=\"heading\">southeast</span> on "
-                                                       "<span class=\"street\">Bob street</span>. <span "
-                                                       "class=\"distance-description\">Go for <span class=\"length\">46 m</span>.</span>",
-                                        "length": 46,
-                                        "position": {
-                                            "latitude": 52.4999825,
-                                            "longitude": 13.3999652
-                                        },
-                                        "travelTime": 27
-                                    },
-                                    {
-                                        "_type": "PrivateTransportManeuverType",
-                                        "id": "M10",
-                                        "instruction": "Arrive at <span class=\"street\">Schleusenufer</span>.",
-                                        "length": 0,
-                                        "position": {
-                                            "latitude": 52.4987912,
-                                            "longitude": 13.4510744
-                                        },
-                                        "travelTime": 0
-                                    }
-                                ],
-                                "travelTime": 588
-                            }
-                        ],
-                        "mode": {
-                            "feature": [],
-                            "trafficMode": "disabled",
-                            "transportModes": [
-                                "car"
+        "response": {
+            "route": [
+                {
+                    "leg": [
+                        {
+                            "length": 4012,
+                            "maneuver": [
+                                {
+                                    "_type": "PrivateTransportManeuverType",
+                                    "id": "M1",
+                                    "instruction": "Head <span class=\"heading\">southeast</span> on "
+                                    "<span class=\"street\">Bob street</span>. <span "
+                                    "class=\"distance-description\">Go for <span class=\"length\">46 m</span>.</span>",
+                                    "length": 46,
+                                    "position": {"latitude": 52.4999825, "longitude": 13.3999652},
+                                    "travelTime": 27,
+                                },
+                                {
+                                    "_type": "PrivateTransportManeuverType",
+                                    "id": "M10",
+                                    "instruction": "Arrive at <span class=\"street\">Schleusenufer</span>.",
+                                    "length": 0,
+                                    "position": {"latitude": 52.4987912, "longitude": 13.4510744},
+                                    "travelTime": 0,
+                                },
                             ],
-                            "type": "fastest"
-                        },
-                        "shape": [
-                            "52.4999825,13.3999652",
-                            "52.4999607,13.3999944",
-                            "52.4972355,13.4488964",
-                            "52.4987912,13.4510744"
-                        ],
-                        "summary": {
-                            "_type": "RouteSummaryType",
-                            "baseTime": 588,
-                            "distance": 4012,
-                            "flags": [
-                                "noThroughRoad",
-                                "builtUpArea",
-                                "park",
-                                "privateRoad"
-                            ],
-                            "text": "The trip takes <span class=\"length\">4.0 km</span> and <span class=\"time\">10 mins</span>.",
-                            "trafficTime": 1036,
-                            "travelTime": 588
+                            "travelTime": 588,
                         }
-                    }
-                ]
-            }
+                    ],
+                    "mode": {
+                        "feature": [],
+                        "trafficMode": "disabled",
+                        "transportModes": ["car"],
+                        "type": "fastest",
+                    },
+                    "shape": [
+                        "52.4999825,13.3999652",
+                        "52.4999607,13.3999944",
+                        "52.4972355,13.4488964",
+                        "52.4987912,13.4510744",
+                    ],
+                    "summary": {
+                        "_type": "RouteSummaryType",
+                        "baseTime": 588,
+                        "distance": 4012,
+                        "flags": ["noThroughRoad", "builtUpArea", "park", "privateRoad"],
+                        "text": "The trip takes <span class=\"length\">4.0 km</span> and <span class=\"time\">10 mins</span>.",
+                        "trafficTime": 1036,
+                        "travelTime": 588,
+                    },
+                }
+            ]
         }
+    }
 
 
 def test_matrix(valid_here_matrix):
@@ -148,15 +119,14 @@ def test_matrix(valid_here_matrix):
     origin = make_pt_object(type_pb2.ADDRESS, 2.439938, 48.572841)
     destination = make_pt_object(type_pb2.ADDRESS, 2.440548, 48.57307)
     with requests_mock.Mocker() as req:
-        req.get(requests_mock.ANY,
-                json=valid_here_matrix,
-                status_code=200)
+        req.get(requests_mock.ANY, json=valid_here_matrix, status_code=200)
         response = here.get_street_network_routing_matrix(
             [origin],
             [destination, destination, destination],
             mode='walking',
             max_duration=42,
-            request={'datetime': str_to_time_stamp('20170621T174600')})
+            request={'datetime': str_to_time_stamp('20170621T174600')},
+        )
         assert response.rows[0].routing_response[0].duration == 440
         assert response.rows[0].routing_response[0].routing_status == response_pb2.reached
         assert response.rows[0].routing_response[1].duration == -1
@@ -180,19 +150,22 @@ def test_matrix_timeout():
                 [destination, destination, destination],
                 mode='walking',
                 max_duration=42,
-                request={'datetime': str_to_time_stamp('20170621T174600')})
+                request={'datetime': str_to_time_stamp('20170621T174600')},
+            )
 
 
 def here_basic_routing_test(valid_here_routing_response):
     origin = make_pt_object(type_pb2.POI, 2.439938, 48.572841)
     destination = make_pt_object(type_pb2.STOP_AREA, 2.440548, 48.57307)
     fallback_extremity = PeriodExtremity(str_to_time_stamp('20161010T152000'), True)
-    response = Here._read_response(response=valid_here_routing_response,
-                                   mode='walking',
-                                   origin=origin,
-                                   destination=destination,
-                                   fallback_extremity=fallback_extremity,
-                                   request={'datetime': str_to_time_stamp('20170621T174600')})
+    response = Here._read_response(
+        response=valid_here_routing_response,
+        mode='walking',
+        origin=origin,
+        destination=destination,
+        fallback_extremity=fallback_extremity,
+        request={'datetime': str_to_time_stamp('20170621T174600')},
+    )
     assert response.status_code == 200
     assert response.response_type == response_pb2.ITINERARY_FOUND
     assert len(response.journeys) == 1

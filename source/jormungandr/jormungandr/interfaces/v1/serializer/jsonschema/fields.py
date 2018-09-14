@@ -56,6 +56,7 @@ class Field(serpy.Field):
     """
     A :class:`Field` that hold metadata for schema.
     """
+
     def __init__(self, schema_type=None, schema_metadata=None, **kwargs):
         _init(self, serpy.Field, schema_type=schema_type, schema_metadata=schema_metadata, **kwargs)
 
@@ -101,10 +102,21 @@ class MethodField(serpy.MethodField):
     A :class:`MethodField` that hold metadata for schema.
     """
 
-    def __init__(self, method=None, schema_type=None, schema_metadata=None,
-                 attr=None, call=False, label=None, required=True, display_none=False, **kwargs):
-        super(MethodField, self).__init__(method=method, attr=attr, call=call, label=label,
-                                          required=required, display_none=display_none)
+    def __init__(
+        self,
+        method=None,
+        schema_type=None,
+        schema_metadata=None,
+        attr=None,
+        call=False,
+        label=None,
+        required=True,
+        display_none=False,
+        **kwargs
+    ):
+        super(MethodField, self).__init__(
+            method=method, attr=attr, call=call, label=label, required=required, display_none=display_none
+        )
 
         self.schema_type = schema_type
         self.schema_metadata = schema_metadata or {}
@@ -115,38 +127,37 @@ class MethodField(serpy.MethodField):
 
 class DateTimeType(CustomSchemaType):
     # we do not respect the official swagger datetime format :(
-    _schema = TypeSchema(type=str,
-                         metadata={'format': 'navitia-date-time',
-                                   'pattern': '\d{4}\d{2}\d{2}T\d{2}\d{2}\d{2}'})
+    _schema = TypeSchema(
+        type=str, metadata={'format': 'navitia-date-time', 'pattern': '\d{4}\d{2}\d{2}T\d{2}\d{2}\d{2}'}
+    )
 
 
 class DateType(CustomSchemaType):
     # we do not respect the official swagger datetime format :(
-    _schema = TypeSchema(type=str,
-                         metadata={'format': 'navitia-date',
-                                   'pattern': '\d{4}\d{2}\d{2}'})
+    _schema = TypeSchema(type=str, metadata={'format': 'navitia-date', 'pattern': '\d{4}\d{2}\d{2}'})
 
 
 class TimeType(CustomSchemaType):
-    _schema = TypeSchema(type=str,
-                         metadata={'format': 'navitia-time',
-                                   'pattern': '\d{2}\d{2}\d{2}'})
+    _schema = TypeSchema(type=str, metadata={'format': 'navitia-time', 'pattern': '\d{2}\d{2}\d{2}'})
 
 
 class TimeOrDateTimeType(CustomSchemaType):
     # either a time or a datetime
-    _schema = TypeSchema(type=str,
-                         metadata={'format': 'navitia-time-or-date-time',
-                                   'pattern': '(\d{4}\d{2}\d{2}T)?\d{2}\d{2}\d{2}'})
+    _schema = TypeSchema(
+        type=str,
+        metadata={'format': 'navitia-time-or-date-time', 'pattern': '(\d{4}\d{2}\d{2}T)?\d{2}\d{2}\d{2}'},
+    )
 
 
 class JsonStrField(Field):
     """
     A :class:`JsonStrField` a json parser
     """
+
     def __init__(self, schema_type=None, schema_metadata=None, **kwargs):
         super(JsonStrField, self).__init__(schema_type=schema_type, schema_metadata=schema_metadata, **kwargs)
 
     def to_value(self, value):
         import ujson
+
         return ujson.loads(value)

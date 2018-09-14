@@ -2,6 +2,7 @@
 
 from tyr import tyr_rabbit_mq_handler
 
+
 class EndPointEventMessage(object):
 
     CREATE = 'create_end_point'
@@ -19,8 +20,8 @@ class EndPointEventMessage(object):
             'data': {
                 'name': self._end_point.name,
                 'default': self._end_point.default,
-                'hostnames': self._end_point.hostnames
-            }
+                'hostnames': self._end_point.hostnames,
+            },
         }
 
         if self._event_name == self.UPDATE:
@@ -30,6 +31,5 @@ class EndPointEventMessage(object):
 
 
 class TyrEventsRabbitMq(object):
-
     def request(self, end_point_event_message):
         tyr_rabbit_mq_handler.publish(end_point_event_message.get_message(), None, 'json')

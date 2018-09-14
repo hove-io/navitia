@@ -38,9 +38,16 @@ from operator import indexOf, attrgetter
 from datetime import datetime
 import pytz
 from collections import defaultdict, OrderedDict
-from jormungandr.scenarios.helpers import has_bss_first_and_walking_last, has_walking_first_and_bss_last, \
-        has_bss_first_and_bss_last, has_bike_first_and_walking_last, has_bike_first_and_bss_last, \
-        is_non_pt_bss, is_non_pt_bike, is_non_pt_walk
+from jormungandr.scenarios.helpers import (
+    has_bss_first_and_walking_last,
+    has_walking_first_and_bss_last,
+    has_bss_first_and_bss_last,
+    has_bike_first_and_walking_last,
+    has_bike_first_and_bss_last,
+    is_non_pt_bss,
+    is_non_pt_bike,
+    is_non_pt_walk,
+)
 import itertools
 from jormungandr.utils import pb_del_if, timestamp_to_str
 from six.moves import filter
@@ -48,11 +55,14 @@ from six.moves import range
 
 non_pt_types = ['non_pt_walk', 'non_pt_bike', 'non_pt_bss']
 
+
 def is_pure_tc(journey):
     has_tc = False
     for section in journey.sections:
-        if section.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY) \
-                and section.street_network.mode in (response_pb2.Bike, response_pb2.Car, response_pb2.Bss):
+        if section.type in (
+            response_pb2.STREET_NETWORK,
+            response_pb2.CROW_FLY,
+        ) and section.street_network.mode in (response_pb2.Bike, response_pb2.Car, response_pb2.Bss):
             return False
         if section.type == response_pb2.PUBLIC_TRANSPORT:
             has_tc = True
@@ -69,14 +79,17 @@ def has_bike_and_tc(journey):
             in_bss = True
         if section.type == response_pb2.BSS_PUT_BACK:
             in_bss = False
-        if section.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY) \
-                and section.street_network.mode == response_pb2.Bike \
-                and not in_bss:
+        if (
+            section.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY)
+            and section.street_network.mode == response_pb2.Bike
+            and not in_bss
+        ):
             has_bike = True
         if section.type == response_pb2.PUBLIC_TRANSPORT:
             has_tc = True
 
     return has_tc and has_bike
+
 
 def has_bss_and_tc(journey):
     has_tc = False
@@ -87,20 +100,25 @@ def has_bss_and_tc(journey):
             has_bss = True
         if section.type == response_pb2.PUBLIC_TRANSPORT:
             has_tc = True
-        if section.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY) \
-                and section.street_network.mode in (response_pb2.Bike, response_pb2.Car, response_pb2.Bss) \
-                and not has_bss:
-            #if we take a bike before renting a bss then we have a bike mode and not a bss
+        if (
+            section.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY)
+            and section.street_network.mode in (response_pb2.Bike, response_pb2.Car, response_pb2.Bss)
+            and not has_bss
+        ):
+            # if we take a bike before renting a bss then we have a bike mode and not a bss
             has_other_fallback_mode = True
 
     return has_tc and has_bss and not has_other_fallback_mode
+
 
 def has_car_and_tc(journey):
     has_tc = False
     has_car = False
     for section in journey.sections:
-        if section.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY) \
-                and section.street_network.mode == response_pb2.Car:
+        if (
+            section.type in (response_pb2.STREET_NETWORK, response_pb2.CROW_FLY)
+            and section.street_network.mode == response_pb2.Car
+        ):
             has_car = True
         if section.type == response_pb2.PUBLIC_TRANSPORT:
             has_tc = True
@@ -110,7 +128,6 @@ def has_car_and_tc(journey):
 
 def is_alternative(journey):
     return is_non_pt_bike(journey) or is_non_pt_walk(journey)
-
 
 
 class DestineoJourneySorter(JourneySorter):
@@ -126,6 +143,7 @@ class DestineoJourneySorter(JourneySorter):
          - 1 direct bike journey
 
     """
+
     def __init__(self, clockwise, timezone):
         super(DestineoJourneySorter, self).__init__(clockwise)
         self.timezone = timezone
@@ -144,14 +162,14 @@ class DestineoJourneySorter(JourneySorter):
         j1_date = pytz.utc.localize(j1_dt).astimezone(pytz.timezone(self.timezone)).date()
         j2_date = pytz.utc.localize(j2_dt).astimezone(pytz.timezone(self.timezone)).date()
 
-        #we first sort by date, we want the journey of the first day in first even if it's a non_pt
+        # we first sort by date, we want the journey of the first day in first even if it's a non_pt
         if j1_date != j2_date:
             if j1_date < j2_date:
                 return -1
             else:
                 return 1
 
-        #first we want the pure tc journey
+        # first we want the pure tc journey
         if is_pure_tc(j1) and is_pure_tc(j2):
             return self.sort_by_time(j1, j2)
         elif is_pure_tc(j1):
@@ -159,7 +177,7 @@ class DestineoJourneySorter(JourneySorter):
         elif is_pure_tc(j2):
             return 1
 
-        #after that we want the non pt bss
+        # after that we want the non pt bss
         if is_non_pt_bss(j1) and is_non_pt_bss(j2):
             return self.sort_by_time(j1, j2)
         elif is_non_pt_bss(j1):
@@ -167,7 +185,7 @@ class DestineoJourneySorter(JourneySorter):
         elif is_non_pt_bss(j2):
             return 1
 
-        #then the TC with bss fallback
+        # then the TC with bss fallback
         if has_bss_and_tc(j1) and has_bss_and_tc(j2):
             return self.sort_by_time(j1, j2)
         elif has_bss_and_tc(j1):
@@ -175,7 +193,7 @@ class DestineoJourneySorter(JourneySorter):
         elif has_bss_and_tc(j2):
             return 1
 
-        #then the TC with bike fallback
+        # then the TC with bike fallback
         if has_bike_and_tc(j1) and has_bike_and_tc(j2):
             return self.sort_by_time(j1, j2)
         elif has_bike_and_tc(j1):
@@ -183,7 +201,7 @@ class DestineoJourneySorter(JourneySorter):
         elif has_bike_and_tc(j2):
             return 1
 
-        #if there is any, the car fallback with TC
+        # if there is any, the car fallback with TC
         if has_car_and_tc(j1) and has_car_and_tc(j2):
             return self.sort_by_time(j1, j2)
         elif has_car_and_tc(j1):
@@ -191,7 +209,7 @@ class DestineoJourneySorter(JourneySorter):
         elif has_car_and_tc(j2):
             return 1
 
-        #the walking only trip
+        # the walking only trip
         if is_non_pt_walk(j1) and is_non_pt_walk(j2):
             return self.sort_by_time(j1, j2)
         elif is_non_pt_walk(j1):
@@ -199,7 +217,7 @@ class DestineoJourneySorter(JourneySorter):
         elif is_non_pt_walk(j2):
             return 1
 
-        #the bike only trip
+        # the bike only trip
         if is_non_pt_bike(j1) and is_non_pt_bike(j2):
             return self.sort_by_time(j1, j2)
         elif is_non_pt_bike(j1):
@@ -211,7 +229,6 @@ class DestineoJourneySorter(JourneySorter):
 
 
 class Scenario(default.Scenario):
-
     def journeys(self, request, instance):
         logger = logging.getLogger(__name__)
         request_tc = copy.deepcopy(request)
@@ -223,23 +240,24 @@ class Scenario(default.Scenario):
         request_alternative = copy.deepcopy(request)
         request_alternative['min_nb_journeys'] = None
         request_alternative['max_nb_journeys'] = None
-        if 'walking' in request_alternative['origin_mode'] \
-                and len(set(request_alternative['origin_mode'])) > 1:
+        if 'walking' in request_alternative['origin_mode'] and len(set(request_alternative['origin_mode'])) > 1:
             request_alternative['origin_mode'].remove('walking')
-        if 'walking' in request_alternative['destination_mode'] \
-                and len(set(request_alternative['destination_mode'])) > 1:
+        if (
+            'walking' in request_alternative['destination_mode']
+            and len(set(request_alternative['destination_mode'])) > 1
+        ):
             request_alternative['destination_mode'].remove('walking')
         logger.debug('journeys only on TC')
         response_tc = super(Scenario, self).journeys(request_tc, instance)
 
         if not request['debug']:
-            self._remove_extra_journeys(response_tc.journeys, max_nb_journeys,
-                                        request['clockwise'],
-                                        timezone=instance.timezone)
+            self._remove_extra_journeys(
+                response_tc.journeys, max_nb_journeys, request['clockwise'], timezone=instance.timezone
+            )
 
         max_duration = self._find_max_duration(response_tc.journeys, instance, request['clockwise'])
         if max_duration:
-            #we find the max_duration with the pure tc call, so we use it for the alternatives
+            # we find the max_duration with the pure tc call, so we use it for the alternatives
             request_alternative['max_duration'] = int(max_duration)
 
         if not all([is_admin(request['origin']), is_admin(request['destination'])]):
@@ -260,7 +278,7 @@ class Scenario(default.Scenario):
             if is_alternative(journey):
                 journey.tags.append('alternative')
             if is_pure_tc(journey):
-                #we need this for the pagination
+                # we need this for the pagination
                 journey.tags.append('is_pure_tc')
 
         # for destineo, we use a custom pagination
@@ -272,7 +290,7 @@ class Scenario(default.Scenario):
     def _get_alternatives(self, args, instance, tc_journeys):
         logger = logging.getLogger(__name__)
         response_alternative = super(Scenario, self).journeys(args, instance)
-        #we don't want to choose an alternative already in the pure_pt solutions, it can happens since bss allow walking solutions
+        # we don't want to choose an alternative already in the pure_pt solutions, it can happens since bss allow walking solutions
         self._remove_already_present_journey(response_alternative.journeys, tc_journeys)
 
         if not args['debug']:
@@ -287,12 +305,14 @@ class Scenario(default.Scenario):
             for journey_tc in tc_journeys:
                 if are_equals(journey, journey_tc):
                     to_delete.append(idx)
-        logger.debug('remove %s alternative journey already present in TC response: %s',
-                len(to_delete), [alternative_journeys[i].type for i in to_delete])
+        logger.debug(
+            'remove %s alternative journey already present in TC response: %s',
+            len(to_delete),
+            [alternative_journeys[i].type for i in to_delete],
+        )
         to_delete.sort(reverse=True)
         for idx in to_delete:
             del alternative_journeys[idx]
-
 
     def _remove_extra_journeys(self, journeys, max_nb_journeys, clockwise, timezone):
         """
@@ -310,7 +330,7 @@ class Scenario(default.Scenario):
         to_delete = []
 
         def same_vjs(j):
-            #same departure date and vjs
+            # same departure date and vjs
             journey_dt = datetime.utcfromtimestamp(j.departure_date_time)
             journey_date = pytz.utc.localize(journey_dt).astimezone(pytz.timezone(timezone)).date()
             yield journey_date
@@ -357,7 +377,6 @@ class Scenario(default.Scenario):
         for idx in to_delete:
             del journeys[idx]
 
-
     def _remove_non_pt_walk(self, journeys):
         nb_deleted = pb_del_if(journeys, lambda j: j.type == 'non_pt_walk')
         logger = logging.getLogger(__name__)
@@ -367,14 +386,16 @@ class Scenario(default.Scenario):
         to_keep = []
         mapping = defaultdict(list)
         best = None
-        functors = OrderedDict([
-            ('bss_walking', has_bss_first_and_walking_last),
-            ('walking_bss', has_walking_first_and_bss_last),
-            ('bss_bss', has_bss_first_and_bss_last),
-            ('bike_walking', has_bike_first_and_walking_last),
-            ('bike_bss', has_bike_first_and_bss_last),
-            ('car', has_car_and_tc)
-        ])
+        functors = OrderedDict(
+            [
+                ('bss_walking', has_bss_first_and_walking_last),
+                ('walking_bss', has_walking_first_and_bss_last),
+                ('bss_bss', has_bss_first_and_bss_last),
+                ('bike_walking', has_bike_first_and_walking_last),
+                ('bike_bss', has_bike_first_and_bss_last),
+                ('car', has_car_and_tc),
+            ]
+        )
         for idx, journey in enumerate(journeys):
             if journey.type in non_pt_types:
                 to_keep.append(idx)
@@ -406,7 +427,7 @@ class Scenario(default.Scenario):
 
         list_journeys = list(filter(filter_journey_pure_tc, journeys))
         if not list_journeys:
-            #if there is no pure tc journeys, we consider all journeys with TC
+            # if there is no pure tc journeys, we consider all journeys with TC
             list_journeys = list(filter(filter_journey, journeys))
         return list_journeys
 
@@ -427,4 +448,3 @@ class Scenario(default.Scenario):
         params['datetime'] = timestamp_to_str(next_journey.arrival_date_time - 60)
         params['datetime_represents'] = 'arrival'
         add_link(resp, rel='prev', **params)
-

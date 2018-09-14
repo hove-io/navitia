@@ -16,11 +16,12 @@ import geoalchemy2 as ga
 
 
 def upgrade():
-    op.create_table('feed_info',
-    sa.Column('key', sa.TEXT(), primary_key=True, nullable=False),
-    sa.Column('value', sa.TEXT(), primary_key=False, nullable=True),
-    sa.PrimaryKeyConstraint('key'),
-    schema='navitia'
+    op.create_table(
+        'feed_info',
+        sa.Column('key', sa.TEXT(), primary_key=True, nullable=False),
+        sa.Column('value', sa.TEXT(), primary_key=False, nullable=True),
+        sa.PrimaryKeyConstraint('key'),
+        schema='navitia',
     )
 
 

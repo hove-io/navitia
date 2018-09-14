@@ -43,14 +43,22 @@ DEFAULT_GEOVELO_FEED_PUBLISHER = {
     'id': 'geovelo',
     'name': 'geovelo',
     'license': 'Private',
-    'url': 'http://about.geovelo.fr/cgu/'
+    'url': 'http://about.geovelo.fr/cgu/',
 }
 
 
 class Geovelo(AbstractStreetNetworkService):
-
-    def __init__(self, instance, service_url, modes=[], id='geovelo', timeout=10, api_key=None,
-                 feed_publisher=DEFAULT_GEOVELO_FEED_PUBLISHER, **kwargs):
+    def __init__(
+        self,
+        instance,
+        service_url,
+        modes=[],
+        id='geovelo',
+        timeout=10,
+        api_key=None,
+        feed_publisher=DEFAULT_GEOVELO_FEED_PUBLISHER,
+        **kwargs
+    ):
         self.instance = instance
         self.sn_system_id = id
         if not is_url(service_url):
@@ -59,19 +67,24 @@ class Geovelo(AbstractStreetNetworkService):
         self.api_key = api_key
         self.timeout = timeout
         self.modes = modes
-        self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_GEOVELO_FAIL'],
-                                                reset_timeout=app.config['CIRCUIT_BREAKER_GEOVELO_TIMEOUT_S'])
+        self.breaker = pybreaker.CircuitBreaker(
+            fail_max=app.config['CIRCUIT_BREAKER_MAX_GEOVELO_FAIL'],
+            reset_timeout=app.config['CIRCUIT_BREAKER_GEOVELO_TIMEOUT_S'],
+        )
         self._feed_publisher = FeedPublisher(**feed_publisher) if feed_publisher else None
 
     def status(self):
-        return {'id': unicode(self.sn_system_id),
-                'class': self.__class__.__name__,
-                'modes': self.modes,
-                'timeout': self.timeout,
-                'circuit_breaker': {'current_state': self.breaker.current_state,
-                                    'fail_counter': self.breaker.fail_counter,
-                                    'reset_timeout': self.breaker.reset_timeout},
-            }
+        return {
+            'id': unicode(self.sn_system_id),
+            'class': self.__class__.__name__,
+            'modes': self.modes,
+            'timeout': self.timeout,
+            'circuit_breaker': {
+                'current_state': self.breaker.current_state,
+                'fail_counter': self.breaker.fail_counter,
+                'reset_timeout': self.breaker.reset_timeout,
+            },
+        }
 
     @classmethod
     def _pt_object_summary_isochrone(cls, pt_object):
@@ -85,7 +98,7 @@ class Geovelo(AbstractStreetNetworkService):
         return {
             'profile': 'MEDIAN',  # can be BEGINNER, EXPERT
             'bikeType': 'TRADITIONAL',  # can be 'BSS'
-            'averageSpeed': bike_speed  # in km/h, BEGINNER sets it to 13
+            'averageSpeed': bike_speed,  # in km/h, BEGINNER sets it to 13
         }
 
     @classmethod
@@ -94,7 +107,7 @@ class Geovelo(AbstractStreetNetworkService):
             'starts': [cls._pt_object_summary_isochrone(o) for o in origins],
             'ends': [cls._pt_object_summary_isochrone(o) for o in destinations],
             'bikeDetails': cls._make_request_arguments_bike_details(bike_speed_mps),
-            'transportMode': 'BIKE'
+            'transportMode': 'BIKE',
         }
 
     @classmethod
@@ -104,18 +117,22 @@ class Geovelo(AbstractStreetNetworkService):
         return {
             'waypoints': [
                 {'latitude': coord_orig.lat, 'longitude': coord_orig.lon},
-                {'latitude': coord_dest.lat, 'longitude': coord_dest.lon}
+                {'latitude': coord_dest.lat, 'longitude': coord_dest.lon},
             ],
             'transportModes': ['BIKE'],
-            'bikeDetails': cls._make_request_arguments_bike_details(bike_speed_mps)
+            'bikeDetails': cls._make_request_arguments_bike_details(bike_speed_mps),
         }
 
     def _call_geovelo(self, url, method=requests.post, data=None):
         logging.getLogger(__name__).debug('Geovelo routing service , call url : {}'.format(url))
         try:
-            return self.breaker.call(method, url, timeout=self.timeout, data=data,
-                                     headers={'content-type': 'application/json',
-                                              'Api-Key': self.api_key})
+            return self.breaker.call(
+                method,
+                url,
+                timeout=self.timeout,
+                data=data,
+                headers={'content-type': 'application/json', 'Api-Key': self.api_key},
+            )
         except pybreaker.CircuitBreakerError as e:
             logging.getLogger(__name__).error('Geovelo routing service dead (error: {})'.format(e))
             self.record_external_failure('circuit breaker open')
@@ -136,7 +153,7 @@ class Geovelo(AbstractStreetNetworkService):
         '''
         sn_routing_matrix = response_pb2.StreetNetworkRoutingMatrix()
         row = sn_routing_matrix.rows.add()
-        #checking header of geovelo's response
+        # checking header of geovelo's response
         if json_response[0] != ["start_reference", "end_reference", "duration"]:
             logging.getLogger(__name__).error('Geovelo parsing error. Response: {}'.format(json_response))
             raise UnableToParse('Geovelo parsing error. Response: {}'.format(json_response))
@@ -155,25 +172,34 @@ class Geovelo(AbstractStreetNetworkService):
         if response is None:
             raise TechnicalError('impossible to access geovelo service')
         if response.status_code != 200:
-            logging.getLogger(__name__).error('Geovelo service unavailable, impossible to query : {}'
-                                              ' with response : {}'
-                                              .format(response.url, response.text))
-            raise TechnicalError('Geovelo service unavailable, impossible to query : {}'.
-                                 format(response.url))
+            logging.getLogger(__name__).error(
+                'Geovelo service unavailable, impossible to query : {}'
+                ' with response : {}'.format(response.url, response.text)
+            )
+            raise TechnicalError('Geovelo service unavailable, impossible to query : {}'.format(response.url))
 
-    def get_street_network_routing_matrix(self, origins, destinations, street_network_mode, max_duration, request, **kwargs):
+    def get_street_network_routing_matrix(
+        self, origins, destinations, street_network_mode, max_duration, request, **kwargs
+    ):
         if street_network_mode != "bike":
             logging.getLogger(__name__).error('Geovelo, mode {} not implemented'.format(street_network_mode))
             raise InvalidArguments('Geovelo, mode {} not implemented'.format(street_network_mode))
         if len(origins) != 1 and len(destinations) != 1:
-            logging.getLogger(__name__).error('Geovelo, managing only 1-n in connector, requested {}-{}'
-                                              .format(len(origins), len(destinations)))
-            raise InvalidArguments('Geovelo, managing only 1-n in connector, requested {}-{}'
-                                   .format(len(origins), len(destinations)))
+            logging.getLogger(__name__).error(
+                'Geovelo, managing only 1-n in connector, requested {}-{}'.format(
+                    len(origins), len(destinations)
+                )
+            )
+            raise InvalidArguments(
+                'Geovelo, managing only 1-n in connector, requested {}-{}'.format(
+                    len(origins), len(destinations)
+                )
+            )
 
         data = self._make_request_arguments_isochrone(origins, destinations, request['bike_speed'])
-        r = self._call_geovelo('{}/{}'.format(self.service_url, 'api/v2/routes_m2m'),
-                               requests.post, json.dumps(data))
+        r = self._call_geovelo(
+            '{}/{}'.format(self.service_url, 'api/v2/routes_m2m'), requests.post, json.dumps(data)
+        )
         self._check_response(r)
         resp_json = r.json()
 
@@ -209,7 +235,7 @@ class Geovelo(AbstractStreetNetworkService):
             'TURN_LEFT': -90,
             'TURN_SHARP_RIGHT': 135,
             'TURN_SHARP_LEFT': -135,
-            'U-TURN': 180
+            'U-TURN': 180,
         }
 
         resp = response_pb2.Response()
@@ -272,20 +298,30 @@ class Geovelo(AbstractStreetNetworkService):
 
         return resp
 
-    def _direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
+    def _direct_path(
+        self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
+    ):
         if mode != "bike":
             logging.getLogger(__name__).error('Geovelo, mode {} not implemented'.format(mode))
             raise InvalidArguments('Geovelo, mode {} not implemented'.format(mode))
 
-        data = self._make_request_arguments_direct_path(pt_object_origin, pt_object_destination, request['bike_speed'])
-        r = self._call_geovelo('{}/{}'.format(self.service_url, 'api/v2/computedroutes?'
-                                                                'instructions=true&'
-                                                                'elevations=false&'
-                                                                'geometry=true&'
-                                                                'single_result=true&'
-                                                                'bike_stations=false&'
-                                                                'objects_as_ids=true&'),
-                               requests.post, json.dumps(data))
+        data = self._make_request_arguments_direct_path(
+            pt_object_origin, pt_object_destination, request['bike_speed']
+        )
+        r = self._call_geovelo(
+            '{}/{}'.format(
+                self.service_url,
+                'api/v2/computedroutes?'
+                'instructions=true&'
+                'elevations=false&'
+                'geometry=true&'
+                'single_result=true&'
+                'bike_stations=false&'
+                'objects_as_ids=true&',
+            ),
+            requests.post,
+            json.dumps(data),
+        )
         self._check_response(r)
         resp_json = r.json()
 

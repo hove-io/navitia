@@ -54,41 +54,41 @@ authorizations = {
     'bob': {
         "main_routing_test": {'ALL': True},
         "departure_board_test": {'ALL': False},
-        "empty_routing_test": {'ALL': False}
+        "empty_routing_test": {'ALL': False},
     },
     'bobette': {
-        #bobette cannot access anything
+        # bobette cannot access anything
         "main_routing_test": {'ALL': False},
         "departure_board_test": {'ALL': False},
-        "empty_routing_test": {'ALL': False}
+        "empty_routing_test": {'ALL': False},
     },
     'bobitto': {
-        #bobitto can access all since empty_routing_test is free
+        # bobitto can access all since empty_routing_test is free
         "main_routing_test": {'ALL': True},
         "departure_board_test": {'ALL': True},
-        "empty_routing_test": {'ALL': False}
+        "empty_routing_test": {'ALL': False},
     },
     'tgv': {
-        #tgv can only access main_routing_test
+        # tgv can only access main_routing_test
         "main_routing_test": {'ALL': True},
         "departure_board_test": {'ALL': False},
-        "empty_routing_test": {'ALL': False}
+        "empty_routing_test": {'ALL': False},
     },
     'test_user_blocked': {
         "main_routing_test": {'ALL': True},
         "departure_board_test": {'ALL': True},
-        "empty_routing_test": {'ALL': True}
+        "empty_routing_test": {'ALL': True},
     },
     'test_user_not_blocked': {
         "main_routing_test": {'ALL': True},
         "departure_board_test": {'ALL': True},
-        "empty_routing_test": {'ALL': True}
+        "empty_routing_test": {'ALL': True},
     },
     'user_without_any_coverage': {
         "main_routing_test": {'ALL': False},
         "departure_board_test": {'ALL': False},
-        "empty_routing_test": {'ALL': False}
-    }
+        "empty_routing_test": {'ALL': False},
+    },
 }
 
 
@@ -120,19 +120,18 @@ class FakeUserAuth(FakeUser):
     def _get_all_instances(self):
         return mock_instances.values()
 
+
 user_in_db_auth = {
     'bob': FakeUserAuth('bob', 1),
     'bobette': FakeUserAuth('bobette', 2),
     'bobitto': FakeUserAuth('bobitto', 3),
-    'tgv': FakeUserAuth('tgv', 4,
-                        have_access_to_free_instances=False),
-    'test_user_blocked': FakeUserAuth('test_user_blocked', 5,
-                                      True, False, True),
-    'test_user_not_blocked': FakeUserAuth('test_user_not_blocked', 6,
-                                          True, False, False),
+    'tgv': FakeUserAuth('tgv', 4, have_access_to_free_instances=False),
+    'test_user_blocked': FakeUserAuth('test_user_blocked', 5, True, False, True),
+    'test_user_not_blocked': FakeUserAuth('test_user_not_blocked', 6, True, False, False),
     'super_user': FakeUserAuth('super_user', 7, is_super_user=True),
-    'user_without_any_coverage': FakeUserAuth('user_without_any_coverage', 8,
-                                              have_access_to_free_instances=False)
+    'user_without_any_coverage': FakeUserAuth(
+        'user_without_any_coverage', 8, have_access_to_free_instances=False
+    ),
 }
 
 
@@ -146,6 +145,7 @@ class FakeInstance(models.Instance):
     def get_by_name(cls, name):
         return mock_instances.get(name)
 
+
 mock_instances = {
     'main_routing_test': FakeInstance('main_routing_test', is_free=False),
     'departure_board_test': FakeInstance('departure_board_test', is_free=False),
@@ -154,7 +154,6 @@ mock_instances = {
 
 
 class AbstractTestAuthentication(AbstractTestFixture):
-
     def setUp(self):
         self.old_public_val = app.config['PUBLIC']
         app.config['PUBLIC'] = False
@@ -173,7 +172,6 @@ class AbstractTestAuthentication(AbstractTestFixture):
 
 @dataset({"main_routing_test": {}, "departure_board_test": {}})
 class TestBasicAuthentication(AbstractTestAuthentication):
-
     def test_coverage(self):
         """
         User only has access to the first region
@@ -181,9 +179,9 @@ class TestBasicAuthentication(AbstractTestAuthentication):
         with user_set(app, FakeUserAuth, 'bob'):
             response_obj = self.app.get('/v1/coverage')
             response = json.loads(response_obj.data)
-            assert('regions' in response)
-            assert(len(response['regions']) == 1)
-            assert(response['regions'][0]['id'] == "main_routing_test")
+            assert 'regions' in response
+            assert len(response['regions']) == 1
+            assert response['regions'][0]['id'] == "main_routing_test"
 
     def test_auth_required(self):
         """
@@ -205,12 +203,12 @@ class TestBasicAuthentication(AbstractTestAuthentication):
             # stop1 is in departure board -> KO
             ('/v1/journeys?from=stopA&to=stop2&datetime=20120614T080000', 403),
             # stop1 and stop2 are in departure board -> KO
-            ('/v1/journeys?from=stop1&to=stop2&datetime=20120614T080000', 403)
+            ('/v1/journeys?from=stop1&to=stop2&datetime=20120614T080000', 403),
         ]
 
         with user_set(app, FakeUserAuth, 'bob'):
             for request, status_code in requests_status_codes:
-                assert(self.app.get(request).status_code == status_code)
+                assert self.app.get(request).status_code == status_code
 
     def test_unkown_region(self):
         """
@@ -221,30 +219,29 @@ class TestBasicAuthentication(AbstractTestAuthentication):
 
             assert status == 404
             assert 'error' in r
-            assert get_not_null(r, 'error')['message'] \
-                   == "The region the_marvelous_unknown_region doesn't exists"
+            assert (
+                get_not_null(r, 'error')['message'] == "The region the_marvelous_unknown_region doesn't exists"
+            )
 
 
 @dataset({"main_routing_test": {}})
 class TestIfUserIsBlocked(AbstractTestAuthentication):
-
     def test_status_code(self):
         """
         We query the api with user 5 who must be blocked
         """
         requests_status_codes = [
             ('/v1/coverage/main_routing_test', 429),
-            ('/v1/coverage/departure_board_test', 429)
+            ('/v1/coverage/departure_board_test', 429),
         ]
 
         with user_set(app, FakeUserAuth, 'test_user_blocked'):
             for request, status_code in requests_status_codes:
-                assert(self.app.get(request).status_code == status_code)
+                assert self.app.get(request).status_code == status_code
 
 
 @dataset({"main_routing_test": {}})
 class TestIfUserIsNotBlocked(AbstractTestAuthentication):
-
     def test_status_code(self):
         """
         We query the api with user 6 who must not be blocked
@@ -253,13 +250,14 @@ class TestIfUserIsNotBlocked(AbstractTestAuthentication):
 
         with user_set(app, FakeUserAuth, 'test_user_not_blocked'):
             for request, status_code in requests_status_codes:
-                assert(self.app.get(request).status_code == status_code)
-                
+                assert self.app.get(request).status_code == status_code
 
-@dataset({"main_routing_test": {}, "departure_board_test": {}, "empty_routing_test": {}},
-         global_config={'activate_bragi': True})
+
+@dataset(
+    {"main_routing_test": {}, "departure_board_test": {}, "empty_routing_test": {}},
+    global_config={'activate_bragi': True},
+)
 class TestOverlappingAuthentication(AbstractTestAuthentication):
-
     def test_coverage(self):
         with user_set(app, FakeUserAuth, 'bobitto'):
             response = self.query('v1/coverage')
@@ -299,7 +297,7 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             response = self.query('v1/coverage/departure_board_test/stop_points')
             assert 'error' not in response
 
-            #the empty region is empty, so no stop points. but we check that we have no authentication errors
+            # the empty region is empty, so no stop points. but we check that we have no authentication errors
             response, status = self.query_no_assert('v1/coverage/empty_routing_test/stop_points')
             assert status == 404
             assert 'error' in response
@@ -321,32 +319,41 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             assert status == 403
             _, status = self.query_no_assert('v1/coverage/departure_board_test/stop_areas/stop1/stop_schedules')
             assert status == 403
-            #we get a 404 (because 'stopbidon' cannot be found) and not a 403
-            _, status = self.query_no_assert('v1/coverage/empty_routing_test/stop_areas/'
-                                             'stopbidon/stop_schedules')
+            # we get a 404 (because 'stopbidon' cannot be found) and not a 403
+            _, status = self.query_no_assert(
+                'v1/coverage/empty_routing_test/stop_areas/' 'stopbidon/stop_schedules'
+            )
             assert status == 404
 
     def test_stop_schedules_for_tgv(self):
         with user_set(app, FakeUserAuth, 'tgv'):
-            response = self.query('v1/coverage/main_routing_test/stop_areas/stopA/stop_schedules?from_datetime=20120614T080000')
+            response = self.query(
+                'v1/coverage/main_routing_test/stop_areas/stopA/stop_schedules?from_datetime=20120614T080000'
+            )
             assert 'error' not in response
             _, status = self.query_no_assert('v1/coverage/departure_board_test/stop_areas/stop1/stop_schedules')
             assert status == 403
-            _, status = self.query_no_assert('v1/coverage/empty_routing_test/stop_areas/'
-                                             'stopbidon/stop_schedules')
+            _, status = self.query_no_assert(
+                'v1/coverage/empty_routing_test/stop_areas/' 'stopbidon/stop_schedules'
+            )
             assert status == 403
 
     def test_stop_schedules_for_bobitto(self):
         with user_set(app, FakeUserAuth, 'bobitto'):
-            response = self.query('v1/coverage/main_routing_test/stop_areas/'
-                                  'stopA/stop_schedules?from_datetime=20120614T080000')
+            response = self.query(
+                'v1/coverage/main_routing_test/stop_areas/' 'stopA/stop_schedules?from_datetime=20120614T080000'
+            )
             assert 'error' not in response
-            response = self.query('v1/coverage/departure_board_test/stop_areas/'
-                                  'stop1/stop_schedules?from_datetime=20120614T080000')
+            response = self.query(
+                'v1/coverage/departure_board_test/stop_areas/'
+                'stop1/stop_schedules?from_datetime=20120614T080000'
+            )
             assert 'error' not in response
 
-            _, status = self.query_no_assert('v1/coverage/empty_routing_test/stop_areas/'
-                                             'stopbidon/stop_schedules?from_datetime=20120614T080000')
+            _, status = self.query_no_assert(
+                'v1/coverage/empty_routing_test/stop_areas/'
+                'stopbidon/stop_schedules?from_datetime=20120614T080000'
+            )
             assert status == 404
 
     def test_journeys_for_bobitto(self):
@@ -363,7 +370,9 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             _, status = self.query_no_assert('/v1/journeys?from=stop1&to=stop2&datetime=20120614T080000')
             assert status == 403
 
-            _, status = self.query_no_assert('/v1/coverage/empty_routing_test/journeys?from=stop1&to=stop2&datetime=20120614T080000')
+            _, status = self.query_no_assert(
+                '/v1/coverage/empty_routing_test/journeys?from=stop1&to=stop2&datetime=20120614T080000'
+            )
             assert status == 403
 
     def test_wrong_journeys_for_bobitto(self):
@@ -388,8 +397,11 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             response, status = self.query_no_assert('/v1/journeys?from=stop1&to=stop2&datetime=20120614T080000')
             assert status == 403
 
-            response, status = self.query_no_assert('/v1/journeys?from={from_coord}&to={to_coord}&datetime={d}'
-                                                    .format(from_coord=s_coord, to_coord=r_coord, d='20120614T08'))
+            response, status = self.query_no_assert(
+                '/v1/journeys?from={from_coord}&to={to_coord}&datetime={d}'.format(
+                    from_coord=s_coord, to_coord=r_coord, d='20120614T08'
+                )
+            )
             assert 'error' in response
             assert response['error']['id'] == "no_origin_nor_destination"
             assert status == 404
@@ -486,7 +498,9 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             stop_points = get_not_null(response, 'stop_points')
             assert len(stop_points) == 4
 
-            response = self.query('v1/coverage/{coords}/stop_points/{id}'.format(coords=s_coord, id='stop_point:stopB'))
+            response = self.query(
+                'v1/coverage/{coords}/stop_points/{id}'.format(coords=s_coord, id='stop_point:stopB')
+            )
             stop_points = get_not_null(response, 'stop_points')
             assert len(stop_points) == 1
             assert stop_points[0]['id'] == 'stop_point:stopB'
@@ -526,9 +540,10 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
 
         # super_user can use all the instances
         with user_set(app, FakeUserAuth, 'super_user'):
-            with mock.patch('requests.get', DatasetChecker({'main_routing_test',
-                                                            'empty_routing_test',
-                                                            'departure_board_test'})):
+            with mock.patch(
+                'requests.get',
+                DatasetChecker({'main_routing_test', 'empty_routing_test', 'departure_board_test'}),
+            ):
                 _, status = self.query_no_assert('/v1/places?q=bob')
                 assert status == 200
 
@@ -550,17 +565,20 @@ class TestOverlappingAuthentication(AbstractTestAuthentication):
             assert status == 401
 
 
-@dataset({"main_routing_test": {}, "departure_board_test": {}, "empty_routing_test": {}},
-         global_config={'activate_bragi': True})
+@dataset(
+    {"main_routing_test": {}, "departure_board_test": {}, "empty_routing_test": {}},
+    global_config={'activate_bragi': True},
+)
 class AuthenticationPublicNavitia(AbstractTestFixture):
     def test_global_places_authentication(self):
         """
         On a public navitia, a user can use all the instances
         """
         with user_set(app, FakeUserAuth, 'bob'):
-            with mock.patch('requests.get', DatasetChecker({'main_routing_test',
-                                                            'empty_routing_test',
-                                                            'departure_board_test'})):
+            with mock.patch(
+                'requests.get',
+                DatasetChecker({'main_routing_test', 'empty_routing_test', 'departure_board_test'}),
+            ):
                 r, status = self.query_no_assert('/v1/places?q=bob')
                 assert status == 200
 
@@ -578,9 +596,9 @@ class AuthenticationPublicNavitia(AbstractTestFixture):
         with mock.patch('requests.get', DatasetChecker({'main_routing_test'})):
             _, status = self.query_no_assert('/v1/coverage/main_routing_test/places?q=bob')
             assert status == 200
-        with mock.patch('requests.get', DatasetChecker({'main_routing_test',
-                                                        'empty_routing_test',
-                                                        'departure_board_test'})):
+        with mock.patch(
+            'requests.get', DatasetChecker({'main_routing_test', 'empty_routing_test', 'departure_board_test'})
+        ):
             _, status = self.query_no_assert('/v1/places?q=bob')
             assert status == 200
 

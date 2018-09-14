@@ -39,10 +39,20 @@ def get_duration(coord, response):
     lat = float(lat)
     lon = float(lon)
     heat_map = response['heat_maps'][0]
-    i = next((i for i, h in enumerate(heat_map['heat_matrix']['line_headers'])
-              if h['cell_lat']['min_lat'] <= lat and lat <= h['cell_lat']['max_lat']))
-    duration = next((l['duration'][i] for l in heat_map['heat_matrix']['lines']
-                     if l['cell_lon']['min_lon'] <= lon and lon <= l['cell_lon']['max_lon']))
+    i = next(
+        (
+            i
+            for i, h in enumerate(heat_map['heat_matrix']['line_headers'])
+            if h['cell_lat']['min_lat'] <= lat and lat <= h['cell_lat']['max_lat']
+        )
+    )
+    duration = next(
+        (
+            l['duration'][i]
+            for l in heat_map['heat_matrix']['lines']
+            if l['cell_lon']['min_lon'] <= lon and lon <= l['cell_lon']['max_lon']
+        )
+    )
     return duration
 
 
@@ -104,10 +114,10 @@ class TestHeatMap(AbstractTestFixture):
         response = self.query(q)
 
         is_valid_heat_maps(response, self.tester, q)
-        assert(get_duration(stopB_coord, response) == 7)# about 0
-        assert(get_duration(s_coord, response) == 20)# about 18
-        assert(get_duration(stopA_coord, response) == 9)# about 2
-        assert(get_duration(r_coord, response) == 74)# about 2 + 81
+        assert get_duration(stopB_coord, response) == 7  # about 0
+        assert get_duration(s_coord, response) == 20  # about 18
+        assert get_duration(stopA_coord, response) == 9  # about 2
+        assert get_duration(r_coord, response) == 74  # about 2 + 81
         self.check_context(response)
 
     def test_heat_maps_to_stop_point(self):
@@ -117,10 +127,10 @@ class TestHeatMap(AbstractTestFixture):
         response = self.query(q)
 
         is_valid_heat_maps(response, self.tester, q)
-        assert(get_duration(stopA_coord, response) == 9)# about 0
-        assert(get_duration(r_coord, response) == 87)# about 81
-        assert(get_duration(stopB_coord, response) == 67)# about 60
-        assert(get_duration(s_coord, response) == 73)# about 60 + 18
+        assert get_duration(stopA_coord, response) == 9  # about 0
+        assert get_duration(r_coord, response) == 87  # about 81
+        assert get_duration(stopB_coord, response) == 67  # about 60
+        assert get_duration(s_coord, response) == 73  # about 60 + 18
         self.check_context(response)
 
     def test_heat_maps_no_datetime(self):
@@ -130,10 +140,7 @@ class TestHeatMap(AbstractTestFixture):
         response_no_dt = self.query(q_no_dt)
 
         is_valid_heat_maps(response_no_dt, self.tester, q_no_dt)
-        excepted_context = {
-            'current_datetime': current_datetime,
-            'timezone': 'UTC'
-        }
+        excepted_context = {'current_datetime': current_datetime, 'timezone': 'UTC'}
         self.check_context(response_no_dt)
 
         for key, value in excepted_context.items():
@@ -174,7 +181,9 @@ class TestHeatMap(AbstractTestFixture):
         normal_response, error_code = self.query_no_assert(p)
 
         assert error_code == 400
-        assert 'Unable to evaluate, invalid literal for int() with base 10: \'toto\'' in normal_response['message']
+        assert (
+            'Unable to evaluate, invalid literal for int() with base 10: \'toto\'' in normal_response['message']
+        )
 
     def test_heat_maps_null_speed(self):
         q = "v1/coverage/main_routing_test/heat_maps?datetime={}&from={}&max_duration={}&walking_speed=0"
@@ -216,7 +225,6 @@ class TestHeatMap(AbstractTestFixture):
         assert error_code == 400
         assert 'unable to parse datetime, unknown string format' in normal_response['message'].lower()
 
-
     def test_graphical_heat_maps_no_heat_maps(self):
         q = "v1/coverage/main_routing_test/heat_maps?datetime={}&from={}&max_duration={}"
         q = q.format('20120614T080000', 'stop_area:OIF:SA:toto', '3600')
@@ -225,7 +233,6 @@ class TestHeatMap(AbstractTestFixture):
         assert error_code == 404
         assert normal_response['error']['id'] == "unknown_object"
         assert normal_response['error']['message'] == 'The entry point: stop_area:OIF:SA:toto is not valid'
-
 
     def test_heat_maps_with_from_and_to(self):
         q = "v1/coverage/main_routing_test/" + heat_map_basic_query + "&to={}"

@@ -49,13 +49,13 @@ def init(config):
         logging.getLogger(__name__).error('%s doesn\'t exist, newrelic disabled', config)
 
 
-
 def record_exception():
     """
     record the exception currently handled to newrelic
     """
     if agent:
-        agent.record_exception()#will record the exception currently handled
+        agent.record_exception()  # will record the exception currently handled
+
 
 def record_custom_parameter(name, value):
     """
@@ -63,6 +63,7 @@ def record_custom_parameter(name, value):
     """
     if agent:
         agent.add_custom_parameter(name, value)
+
 
 def record_custom_event(event_type, params):
     """
@@ -75,12 +76,13 @@ def record_custom_event(event_type, params):
                 params = {}
             params['navitia_request_id'] = flask.request.id
         except RuntimeError:
-            pass#we are outside of a flask context :(
+            pass  # we are outside of a flask context :(
         try:
             agent.record_custom_event(event_type, params)
         except:
             logger = logging.getLogger(__name__)
             logger.exception('failure while reporting to newrelic')
+
 
 def ignore():
     """

@@ -31,6 +31,7 @@ from navitiacommon import type_pb2
 from jormungandr.scenarios.helpers import *
 from jormungandr.scenarios.new_default import _is_bike_in_pt_journey
 
+
 def get_walking_walking_journey():
     journey = response_pb2.Journey()
 
@@ -48,6 +49,7 @@ def get_walking_walking_journey():
 
     return journey
 
+
 def get_walking_journey():
     journey = response_pb2.Journey()
 
@@ -57,6 +59,7 @@ def get_walking_journey():
     section.duration = 60
 
     return journey
+
 
 def get_walking_bike_journey():
     journey = response_pb2.Journey()
@@ -74,6 +77,7 @@ def get_walking_bike_journey():
     section.duration = 40
 
     return journey
+
 
 def get_walking_bss_journey():
     journey = response_pb2.Journey()
@@ -106,6 +110,7 @@ def get_walking_bss_journey():
 
     return journey
 
+
 def get_walking_car_journey():
     journey = response_pb2.Journey()
 
@@ -133,6 +138,7 @@ def get_walking_car_journey():
 
     return journey
 
+
 def get_car_walking_journey():
     journey = response_pb2.Journey()
 
@@ -157,6 +163,7 @@ def get_car_walking_journey():
 
     return journey
 
+
 def get_car_journey():
     journey = response_pb2.Journey()
 
@@ -173,6 +180,7 @@ def get_car_journey():
     section.duration = 5
 
     return journey
+
 
 def get_bike_walking_journey():
     journey = response_pb2.Journey()
@@ -191,6 +199,7 @@ def get_bike_walking_journey():
 
     return journey
 
+
 def get_bike_bike_journey():
     journey = response_pb2.Journey()
 
@@ -208,6 +217,7 @@ def get_bike_bike_journey():
 
     return journey
 
+
 def get_bike_pt_bike_journey():
     journey = response_pb2.Journey()
 
@@ -218,7 +228,9 @@ def get_bike_pt_bike_journey():
     section = journey.sections.add()
     section.type = response_pb2.PUBLIC_TRANSPORT
     section.duration = 15
-    section.pt_display_informations.has_equipments.has_equipments.append(type_pb2.hasEquipments.has_bike_accepted)
+    section.pt_display_informations.has_equipments.has_equipments.append(
+        type_pb2.hasEquipments.has_bike_accepted
+    )
     section.origin.stop_point.has_equipments.has_equipments.append(type_pb2.hasEquipments.has_bike_accepted)
     section.destination.stop_point.has_equipments.has_equipments.append(type_pb2.hasEquipments.has_bike_accepted)
     section = journey.sections.add()
@@ -227,6 +239,7 @@ def get_bike_pt_bike_journey():
     section.duration = 5
 
     return journey
+
 
 def get_bike_bss_journey():
     journey = response_pb2.Journey()
@@ -259,6 +272,7 @@ def get_bike_bss_journey():
 
     return journey
 
+
 def get_bike_car_journey():
     journey = response_pb2.Journey()
 
@@ -285,6 +299,7 @@ def get_bike_car_journey():
     section.duration = 10
 
     return journey
+
 
 def get_bss_walking_journey():
     journey = response_pb2.Journey()
@@ -317,6 +332,7 @@ def get_bss_walking_journey():
 
     return journey
 
+
 def get_bss_bike_journey():
     journey = response_pb2.Journey()
 
@@ -347,6 +363,7 @@ def get_bss_bike_journey():
     section.duration = 200
 
     return journey
+
 
 def get_bss_bss_journey():
     journey = response_pb2.Journey()
@@ -393,6 +410,7 @@ def get_bss_bss_journey():
 
     return journey
 
+
 def get_bss_car_journey():
     journey = response_pb2.Journey()
 
@@ -434,6 +452,7 @@ def get_bss_car_journey():
 
     return journey
 
+
 def get_ridesharing_with_crowfly_journey():
     journey = response_pb2.Journey()
 
@@ -449,6 +468,7 @@ def get_ridesharing_with_crowfly_journey():
     section.street_network.mode = response_pb2.Walking
     section.duration = 35
     return journey
+
 
 def get_ridesharing_with_car_journey():
     journey = response_pb2.Journey()
@@ -466,266 +486,337 @@ def get_ridesharing_with_car_journey():
     section.duration = 35
     return journey
 
-#==============================================================================
+
+# ==============================================================================
 # has_bss_first_and_walking_last test
-#==============================================================================
+# ==============================================================================
 def has_bss_first_and_walking_last__walking_walking_test():
     assert not has_bss_first_and_walking_last(get_walking_walking_journey())
+
 
 def has_bss_first_and_walking_last__walking_bike_test():
     assert not has_bss_first_and_walking_last(get_walking_bike_journey())
 
+
 def has_bss_first_and_walking_last__walking_bss_test():
     assert not has_bss_first_and_walking_last(get_walking_bss_journey())
+
 
 def has_bss_first_and_walking_last__walking_car_test():
     assert not has_bss_first_and_walking_last(get_walking_car_journey())
 
+
 def has_bss_first_and_walking_last__bss_walking_test():
     assert has_bss_first_and_walking_last(get_bss_walking_journey())
+
 
 def has_bss_first_and_walking_last__bss_bike_test():
     assert not has_bss_first_and_walking_last(get_bss_bike_journey())
 
+
 def has_bss_first_and_walking_last__bss_bss_test():
     assert not has_bss_first_and_walking_last(get_bss_bss_journey())
+
 
 def has_bss_first_and_walking_last__bss_car_test():
     assert not has_bss_first_and_walking_last(get_bss_car_journey())
 
+
 def has_bss_first_and_walking_last__bike_walking_test():
     assert not has_bss_first_and_walking_last(get_bike_walking_journey())
+
 
 def has_bss_first_and_walking_last__bike_bike_test():
     assert not has_bss_first_and_walking_last(get_bike_bike_journey())
 
+
 def has_bss_first_and_walking_last__bike_bss_test():
     assert not has_bss_first_and_walking_last(get_bike_bss_journey())
+
 
 def has_bss_first_and_walking_last__bike_car_test():
     assert not has_bss_first_and_walking_last(get_bike_car_journey())
 
 
-#==============================================================================
+# ==============================================================================
 # has_walking_first_and_bss_last test
-#==============================================================================
+# ==============================================================================
 def has_walking_first_and_bss_last__walking_walking_test():
     assert not has_walking_first_and_bss_last(get_walking_walking_journey())
+
 
 def has_walking_first_and_bss_last__walking_bike_test():
     assert not has_walking_first_and_bss_last(get_walking_bike_journey())
 
+
 def has_walking_first_and_bss_last__walking_bss_test():
     assert has_walking_first_and_bss_last(get_walking_bss_journey())
+
 
 def has_walking_first_and_bss_last__walking_car_test():
     assert not has_walking_first_and_bss_last(get_walking_car_journey())
 
+
 def has_walking_first_and_bss_last__bss_walking_test():
     assert not has_walking_first_and_bss_last(get_bss_walking_journey())
+
 
 def has_walking_first_and_bss_last__bss_bike_test():
     assert not has_walking_first_and_bss_last(get_bss_bike_journey())
 
+
 def has_walking_first_and_bss_last__bss_bss_test():
     assert not has_walking_first_and_bss_last(get_bss_bss_journey())
+
 
 def has_walking_first_and_bss_last__bss_car_test():
     assert not has_walking_first_and_bss_last(get_bss_car_journey())
 
+
 def has_walking_first_and_bss_last__bike_walking_test():
     assert not has_walking_first_and_bss_last(get_bike_walking_journey())
+
 
 def has_walking_first_and_bss_last__bike_bike_test():
     assert not has_walking_first_and_bss_last(get_bike_bike_journey())
 
+
 def has_walking_first_and_bss_last__bike_bss_test():
     assert not has_walking_first_and_bss_last(get_bike_bss_journey())
+
 
 def has_walking_first_and_bss_last__bike_car_test():
     assert not has_walking_first_and_bss_last(get_bike_car_journey())
 
-#==============================================================================
+
+# ==============================================================================
 # has_bss_first_and_bss_last test
-#==============================================================================
+# ==============================================================================
 def has_bss_first_and_bss_last__walking_walking_test():
     assert not has_bss_first_and_bss_last(get_walking_walking_journey())
+
 
 def has_bss_first_and_bss_last__walking_bike_test():
     assert not has_bss_first_and_bss_last(get_walking_bike_journey())
 
+
 def has_bss_first_and_bss_last__walking_bss_test():
     assert not has_bss_first_and_bss_last(get_walking_bss_journey())
+
 
 def has_bss_first_and_bss_last__walking_car_test():
     assert not has_bss_first_and_bss_last(get_walking_car_journey())
 
+
 def has_bss_first_and_bss_last__bss_walking_test():
     assert not has_bss_first_and_bss_last(get_bss_walking_journey())
+
 
 def has_bss_first_and_bss_last__bss_bike_test():
     assert not has_bss_first_and_bss_last(get_bss_bike_journey())
 
+
 def has_bss_first_and_bss_last__bss_bss_test():
     assert has_bss_first_and_bss_last(get_bss_bss_journey())
+
 
 def has_bss_first_and_bss_last__bss_car_test():
     assert not has_bss_first_and_bss_last(get_bss_car_journey())
 
+
 def has_bss_first_and_bss_last__bike_walking_test():
     assert not has_bss_first_and_bss_last(get_bike_walking_journey())
+
 
 def has_bss_first_and_bss_last__bike_bike_test():
     assert not has_bss_first_and_bss_last(get_bike_bike_journey())
 
+
 def has_bss_first_and_bss_last__bike_bss_test():
     assert not has_bss_first_and_bss_last(get_bike_bss_journey())
+
 
 def has_bss_first_and_bss_last__bike_car_test():
     assert not has_bss_first_and_bss_last(get_bike_car_journey())
 
-#==============================================================================
+
+# ==============================================================================
 # has_bike_first_and_walking_last test
-#==============================================================================
+# ==============================================================================
 def has_bike_first_and_walking_last__walking_walking_test():
     assert not has_bike_first_and_walking_last(get_walking_walking_journey())
+
 
 def has_bike_first_and_walking_last__walking_bike_test():
     assert not has_bike_first_and_walking_last(get_walking_bike_journey())
 
+
 def has_bike_first_and_walking_last__walking_bss_test():
     assert not has_bike_first_and_walking_last(get_walking_bss_journey())
+
 
 def has_bike_first_and_walking_last__walking_car_test():
     assert not has_bike_first_and_walking_last(get_walking_car_journey())
 
+
 def has_bike_first_and_walking_last__bss_walking_test():
     assert not has_bike_first_and_walking_last(get_bss_walking_journey())
+
 
 def has_bike_first_and_walking_last__bss_bike_test():
     assert not has_bike_first_and_walking_last(get_bss_bike_journey())
 
+
 def has_bike_first_and_walking_last__bss_bss_test():
     assert not has_bike_first_and_walking_last(get_bss_bss_journey())
+
 
 def has_bike_first_and_walking_last__bss_car_test():
     assert not has_bike_first_and_walking_last(get_bss_car_journey())
 
+
 def has_bike_first_and_walking_last__bike_walking_test():
     assert has_bike_first_and_walking_last(get_bike_walking_journey())
+
 
 def has_bike_first_and_walking_last__bike_bike_test():
     assert not has_bike_first_and_walking_last(get_bike_bike_journey())
 
+
 def has_bike_first_and_walking_last__bike_bss_test():
     assert not has_bike_first_and_walking_last(get_bike_bss_journey())
+
 
 def has_bike_first_and_walking_last__bike_car_test():
     assert not has_bike_first_and_walking_last(get_bike_car_journey())
 
-#==============================================================================
+
+# ==============================================================================
 # has_bike_first_and_bss_last test
-#==============================================================================
+# ==============================================================================
 def has_bike_first_and_bss_last__walking_walking_test():
     assert not has_bike_first_and_bss_last(get_walking_walking_journey())
+
 
 def has_bike_first_and_bss_last__walking_bike_test():
     assert not has_bike_first_and_bss_last(get_walking_bike_journey())
 
+
 def has_bike_first_and_bss_last__walking_bss_test():
     assert not has_bike_first_and_bss_last(get_walking_bss_journey())
+
 
 def has_bike_first_and_bss_last__walking_car_test():
     assert not has_bike_first_and_bss_last(get_walking_car_journey())
 
+
 def has_bike_first_and_bss_last__bss_walking_test():
     assert not has_bike_first_and_bss_last(get_bss_walking_journey())
+
 
 def has_bike_first_and_bss_last__bss_bike_test():
     assert not has_bike_first_and_bss_last(get_bss_bike_journey())
 
+
 def has_bike_first_and_bss_last__bss_bss_test():
     assert not has_bike_first_and_bss_last(get_bss_bss_journey())
+
 
 def has_bike_first_and_bss_last__bss_car_test():
     assert not has_bike_first_and_bss_last(get_bss_car_journey())
 
+
 def has_bike_first_and_bss_last__bike_walking_test():
     assert not has_bike_first_and_bss_last(get_bike_walking_journey())
+
 
 def has_bike_first_and_bss_last__bike_bike_test():
     assert not has_bike_first_and_bss_last(get_bike_bike_journey())
 
+
 def has_bike_first_and_bss_last__bike_bss_test():
     assert has_bike_first_and_bss_last(get_bike_bss_journey())
+
 
 def has_bike_first_and_bss_last__bike_car_test():
     assert not has_bike_first_and_bss_last(get_bike_car_journey())
 
-#==============================================================================
+
+# ==============================================================================
 # has_bike_first_and_bike_last test
-#==============================================================================
+# ==============================================================================
 def has_bike_first_and_bike_last__walking_walking_test():
     assert not has_bike_first_and_bike_last(get_walking_walking_journey())
+
 
 def has_bike_first_and_bike_last__walking_bike_test():
     assert not has_bike_first_and_bike_last(get_walking_bike_journey())
 
+
 def has_bike_first_and_bike_last__walking_bss_test():
     assert not has_bike_first_and_bike_last(get_walking_bss_journey())
+
 
 def has_bike_first_and_bike_last__walking_car_test():
     assert not has_bike_first_and_bike_last(get_walking_car_journey())
 
+
 def has_bike_first_and_bike_last__bss_walking_test():
     assert not has_bike_first_and_bike_last(get_bss_walking_journey())
+
 
 def has_bike_first_and_bike_last__bss_bike_test():
     assert not has_bike_first_and_bike_last(get_bss_bike_journey())
 
+
 def has_bike_first_and_bike_last__bss_bss_test():
     assert not has_bike_first_and_bike_last(get_bss_bss_journey())
+
 
 def has_bike_first_and_bike_last__bss_car_test():
     assert not has_bike_first_and_bike_last(get_bss_car_journey())
 
+
 def has_bike_first_and_bike_last__bike_walking_test():
     assert not has_bike_first_and_bike_last(get_bike_walking_journey())
+
 
 def has_bike_first_and_bike_last__bike_bike_test():
     assert has_bike_first_and_bike_last(get_bike_bike_journey())
 
+
 def has_bike_first_and_bike_last__bike_bss_test():
     assert not has_bike_first_and_bike_last(get_bike_bss_journey())
+
 
 def has_bike_first_and_bike_last__bike_car_test():
     assert not has_bike_first_and_bike_last(get_bike_car_journey())
 
 
 def bike_duration_test():
-    assert bike_duration(get_walking_walking_journey()) ==  0
+    assert bike_duration(get_walking_walking_journey()) == 0
 
-    assert bike_duration(get_walking_bike_journey()) ==  40
+    assert bike_duration(get_walking_bike_journey()) == 40
 
-    assert bike_duration(get_walking_bss_journey()) ==  0
+    assert bike_duration(get_walking_bss_journey()) == 0
 
-    assert bike_duration(get_walking_car_journey()) ==  0
+    assert bike_duration(get_walking_car_journey()) == 0
 
-    assert bike_duration(get_bss_walking_journey()) ==  0
+    assert bike_duration(get_bss_walking_journey()) == 0
 
-    assert bike_duration(get_bss_bike_journey()) ==  200
+    assert bike_duration(get_bss_bike_journey()) == 200
 
-    assert bike_duration(get_bss_bss_journey()) ==  0
+    assert bike_duration(get_bss_bss_journey()) == 0
 
-    assert bike_duration(get_bss_car_journey()) ==  0
+    assert bike_duration(get_bss_car_journey()) == 0
 
-    assert bike_duration(get_bike_walking_journey()) ==  55
+    assert bike_duration(get_bike_walking_journey()) == 55
 
-    assert bike_duration(get_bike_bike_journey()) ==  30
+    assert bike_duration(get_bike_bike_journey()) == 30
 
-    assert bike_duration(get_bike_bss_journey()) ==  25
+    assert bike_duration(get_bike_bss_journey()) == 25
 
-    assert bike_duration(get_bike_car_journey()) ==  25
+    assert bike_duration(get_bike_car_journey()) == 25
 
 
 def bike_in_pt_test():
@@ -745,29 +836,29 @@ def bike_in_pt_test():
 
 
 def car_duration_walking_test():
-    assert car_duration(get_walking_walking_journey()) ==  0
+    assert car_duration(get_walking_walking_journey()) == 0
 
-    assert car_duration(get_walking_bike_journey()) ==  0
+    assert car_duration(get_walking_bike_journey()) == 0
 
-    assert car_duration(get_walking_bss_journey()) ==  0
+    assert car_duration(get_walking_bss_journey()) == 0
 
-    assert car_duration(get_walking_car_journey()) ==  70
+    assert car_duration(get_walking_car_journey()) == 70
 
-    assert car_duration(get_bss_walking_journey()) ==  0
+    assert car_duration(get_bss_walking_journey()) == 0
 
-    assert car_duration(get_bss_bike_journey()) ==  0
+    assert car_duration(get_bss_bike_journey()) == 0
 
-    assert car_duration(get_bss_bss_journey()) ==  0
+    assert car_duration(get_bss_bss_journey()) == 0
 
-    assert car_duration(get_bss_car_journey()) ==  70
+    assert car_duration(get_bss_car_journey()) == 70
 
-    assert car_duration(get_bike_walking_journey()) ==  0
+    assert car_duration(get_bike_walking_journey()) == 0
 
-    assert car_duration(get_bike_bike_journey()) ==  0
+    assert car_duration(get_bike_bike_journey()) == 0
 
-    assert car_duration(get_bike_bss_journey()) ==  0
+    assert car_duration(get_bike_bss_journey()) == 0
 
-    assert car_duration(get_bike_car_journey()) ==  30
+    assert car_duration(get_bike_car_journey()) == 30
 
 
 def pt_duration_walking_test():
@@ -785,7 +876,8 @@ def pt_duration_walking_test():
     section.street_network.mode = response_pb2.Walking
     section.duration = 60
 
-    assert pt_duration(journey) ==  80
+    assert pt_duration(journey) == 80
+
 
 def pt_duration_bike_test():
     journey = response_pb2.Journey()
@@ -811,7 +903,7 @@ def pt_duration_bike_test():
     section.street_network.mode = response_pb2.Walking
     section.duration = 70
 
-    assert pt_duration(journey) ==  120
+    assert pt_duration(journey) == 120
 
 
 def pt_duration_bss_test():
@@ -843,70 +935,74 @@ def pt_duration_bss_test():
     section.street_network.mode = response_pb2.Bike
     section.duration = 5
 
-    assert pt_duration(journey) ==  80
+    assert pt_duration(journey) == 80
+
 
 def walking_duration_test():
-    assert walking_duration(get_walking_walking_journey()) ==  120
+    assert walking_duration(get_walking_walking_journey()) == 120
 
-    assert walking_duration(get_walking_bike_journey()) ==  30
+    assert walking_duration(get_walking_bike_journey()) == 30
 
-    assert walking_duration(get_walking_bss_journey()) ==  75
+    assert walking_duration(get_walking_bss_journey()) == 75
 
-    assert walking_duration(get_walking_car_journey()) ==  15
+    assert walking_duration(get_walking_car_journey()) == 15
 
-    assert walking_duration(get_bss_walking_journey()) ==  40
+    assert walking_duration(get_bss_walking_journey()) == 40
 
-    assert walking_duration(get_bss_bike_journey()) ==  40
+    assert walking_duration(get_bss_bike_journey()) == 40
 
-    assert walking_duration(get_bss_bss_journey()) ==  70
+    assert walking_duration(get_bss_bss_journey()) == 70
 
-    assert walking_duration(get_bss_car_journey()) ==  75
+    assert walking_duration(get_bss_car_journey()) == 75
 
-    assert walking_duration(get_bike_walking_journey()) ==  7
+    assert walking_duration(get_bike_walking_journey()) == 7
 
-    assert walking_duration(get_bike_bike_journey()) ==  0
+    assert walking_duration(get_bike_bike_journey()) == 0
 
-    assert walking_duration(get_bike_bss_journey()) ==  10
+    assert walking_duration(get_bike_bss_journey()) == 10
 
-    assert walking_duration(get_bike_car_journey()) ==  5
+    assert walking_duration(get_bike_car_journey()) == 5
+
 
 def bss_duration_test():
-    assert bss_duration(get_walking_walking_journey()) ==  0
+    assert bss_duration(get_walking_walking_journey()) == 0
 
-    assert bss_duration(get_walking_bike_journey()) ==  0
+    assert bss_duration(get_walking_bike_journey()) == 0
 
-    assert bss_duration(get_walking_bss_journey()) ==  85
+    assert bss_duration(get_walking_bss_journey()) == 85
 
-    assert bss_duration(get_walking_car_journey()) ==  0
+    assert bss_duration(get_walking_car_journey()) == 0
 
-    assert bss_duration(get_bss_walking_journey()) ==  45
+    assert bss_duration(get_bss_walking_journey()) == 45
 
-    assert bss_duration(get_bss_bike_journey()) ==  85
+    assert bss_duration(get_bss_bike_journey()) == 85
 
-    assert bss_duration(get_bss_bss_journey()) ==  100
+    assert bss_duration(get_bss_bss_journey()) == 100
 
-    assert bss_duration(get_bss_car_journey()) ==  25
+    assert bss_duration(get_bss_car_journey()) == 25
 
-    assert bss_duration(get_bike_walking_journey()) ==  0
+    assert bss_duration(get_bike_walking_journey()) == 0
 
-    assert bss_duration(get_bike_bike_journey()) ==  0
+    assert bss_duration(get_bike_bike_journey()) == 0
 
-    assert bss_duration(get_bike_bss_journey()) ==  70
+    assert bss_duration(get_bike_bss_journey()) == 70
 
-    assert bss_duration(get_bike_car_journey()) ==  0
+    assert bss_duration(get_bike_car_journey()) == 0
+
 
 def fallback_mode_sort_test():
     l = ['car', 'walking']
     l.sort(fallback_mode_comparator)
-    assert l[0] ==  'walking'
-    assert l[1] ==  'car'
+    assert l[0] == 'walking'
+    assert l[1] == 'car'
 
     l = ['bss', 'bike', 'car', 'walking']
     l.sort(fallback_mode_comparator)
-    assert l[0] ==  'walking'
-    assert l[1] ==  'bss'
-    assert l[2] ==  'bike'
-    assert l[3] ==  'car'
+    assert l[0] == 'walking'
+    assert l[1] == 'bss'
+    assert l[2] == 'bike'
+    assert l[3] == 'car'
+
 
 def is_car_direct_path_test():
     assert not is_car_direct_path(get_walking_journey())

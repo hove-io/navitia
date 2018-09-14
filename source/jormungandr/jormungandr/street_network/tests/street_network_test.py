@@ -39,10 +39,7 @@ ALL_MODES = ['walking', 'bike', 'bss', 'car']
 
 
 def kraken_class_test():
-    kraken_conf = [{
-        'modes': ALL_MODES,
-        'class': KRAKEN_CLASS
-    }]
+    kraken_conf = [{'modes': ALL_MODES, 'class': KRAKEN_CLASS}]
     services = StreetNetwork.get_street_network_services(None, kraken_conf)
     assert len(services) == 1
     assert isinstance(services[0], Kraken)
@@ -50,130 +47,105 @@ def kraken_class_test():
 
 def valhalla_class_without_url_test():
     with pytest.raises(ValueError) as excinfo:
-        valhalla_without_url = [{
-            'modes': ALL_MODES,
-            'class': VALHALLA_CLASS,
-        }]
+        valhalla_without_url = [{'modes': ALL_MODES, 'class': VALHALLA_CLASS}]
         StreetNetwork.get_street_network_services(None, valhalla_without_url)
     assert 'service_url None is not a valid url' in str(excinfo.value)
 
 
 def valhalla_class_wit_empty_url_test():
     with pytest.raises(ValueError) as excinfo:
-        kraken_conf = [{
-            'modes': ALL_MODES,
-            'class': VALHALLA_CLASS,
-            'args': {
-                "service_url": ""
-            }
-        }]
+        kraken_conf = [{'modes': ALL_MODES, 'class': VALHALLA_CLASS, 'args': {"service_url": ""}}]
         StreetNetwork.get_street_network_services(None, kraken_conf)
     assert 'service_url  is not a valid url' in str(excinfo.value)
 
 
 def valhalla_class_with_invalid_url_test():
     with pytest.raises(ValueError) as excinfo:
-        kraken_conf = [{
-            'modes': ALL_MODES,
-            'class': VALHALLA_CLASS,
-            'args': {
-                "service_url": "bob"
-            }
-        }]
+        kraken_conf = [{'modes': ALL_MODES, 'class': VALHALLA_CLASS, 'args': {"service_url": "bob"}}]
         StreetNetwork.get_street_network_services(None, kraken_conf)
     assert 'service_url bob is not a valid url' in str(excinfo.value)
 
 
 def valhalla_class_without_costing_options_test():
-    kraken_conf = [{
-        'modes': ALL_MODES,
-        'class': VALHALLA_CLASS,
-        'args': {
-            "service_url": "http://localhost:8002"
-        }
-    }]
+    kraken_conf = [
+        {'modes': ALL_MODES, 'class': VALHALLA_CLASS, 'args': {"service_url": "http://localhost:8002"}}
+    ]
     services = StreetNetwork.get_street_network_services(None, kraken_conf)
     assert len(services) == 1
     assert isinstance(services[0], Valhalla)
 
 
 def valhalla_class_with_empty_costing_options_test():
-    kraken_conf = [{
-        'modes': ALL_MODES,
-        'class': VALHALLA_CLASS,
-        'args': {
-            "service_url": "http://localhost:8002",
-            "costing_options": {}
+    kraken_conf = [
+        {
+            'modes': ALL_MODES,
+            'class': VALHALLA_CLASS,
+            'args': {"service_url": "http://localhost:8002", "costing_options": {}},
         }
-    }]
+    ]
     services = StreetNetwork.get_street_network_services(None, kraken_conf)
     assert len(services) == 1
     assert isinstance(services[0], Valhalla)
 
 
 def valhalla_class_with_url_valid_test():
-    kraken_conf = [{
-        'modes': ALL_MODES,
-        'class': VALHALLA_CLASS,
-        'args': {
-            "service_url": "http://localhost:8002",
-            "costing_options": {
-                "pedestrian": {
-                    "walking_speed": 50.1
-                }
-            }
+    kraken_conf = [
+        {
+            'modes': ALL_MODES,
+            'class': VALHALLA_CLASS,
+            'args': {
+                "service_url": "http://localhost:8002",
+                "costing_options": {"pedestrian": {"walking_speed": 50.1}},
+            },
         }
-    }]
+    ]
     services = StreetNetwork.get_street_network_services(None, kraken_conf)
     assert len(services) == 1
     assert isinstance(services[0], Valhalla)
 
+
 def street_network_without_class_test():
     with pytest.raises(KeyError) as excinfo:
-        kraken_conf = [{
-            'modes': ['walking'],
-            'args': {
-                "service_url": "http://localhost:8002",
-            "costing_options": {
-                "pedestrian": {
-                    "walking_speed": 50.1
-                }
+        kraken_conf = [
+            {
+                'modes': ['walking'],
+                'args': {
+                    "service_url": "http://localhost:8002",
+                    "costing_options": {"pedestrian": {"walking_speed": 50.1}},
+                },
             }
-            }
-        }]
+        ]
         StreetNetwork.get_street_network_services(None, kraken_conf)
-    assert 'impossible to build a StreetNetwork, missing mandatory field in configuration: class' in str(excinfo.value)
+    assert 'impossible to build a StreetNetwork, missing mandatory field in configuration: class' in str(
+        excinfo.value
+    )
 
 
 def valhalla_class_with_class_invalid_test():
     with pytest.raises(ConfigException) as excinfo:
-        kraken_conf = [{
-            'class': 'jormungandr',
-            'modes': ['walking'],
-            'args': {
-                "service_url": "http://localhost:8002",
-                "costing_options": {
-                    "pedestrian": {
-                        "walking_speed": 50.1
-                    }
-                }
+        kraken_conf = [
+            {
+                'class': 'jormungandr',
+                'modes': ['walking'],
+                'args': {
+                    "service_url": "http://localhost:8002",
+                    "costing_options": {"pedestrian": {"walking_speed": 50.1}},
+                },
             }
-        }]
+        ]
         StreetNetwork.get_street_network_services(None, kraken_conf)
 
 
 def valhalla_class_with_class_not_exist_test():
     with pytest.raises(ConfigException) as excinfo:
-        kraken_conf = [{
-            'class': 'jormungandr.street_network.valhalla.bob',
-            'modes': ['walking'],
-            'args': {
-                "service_url": "http://localhost:8002",
-                "costing_options": {
-                    "pedestrian": {
-                        "walking_speed": 50.1
-                    }
-                }
+        kraken_conf = [
+            {
+                'class': 'jormungandr.street_network.valhalla.bob',
+                'modes': ['walking'],
+                'args': {
+                    "service_url": "http://localhost:8002",
+                    "costing_options": {"pedestrian": {"walking_speed": 50.1}},
+                },
             }
-        }]
+        ]
         StreetNetwork.get_street_network_services(None, kraken_conf)

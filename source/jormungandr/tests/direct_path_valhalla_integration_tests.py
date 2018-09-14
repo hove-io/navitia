@@ -34,98 +34,60 @@ import requests as requests
 from mock import MagicMock
 import json
 
-MOCKED_VALHALLA_CONF = [{
-    "modes": ['walking', 'car', 'bss', 'bike'],
-    "class": "tests.direct_path_valhalla_integration_tests.MockValhalla",
-    "args": {
-        "service_url": "http://bob.com",
-        "costing_options": {
-            "bicycle": {
-                "bicycle_type": "Hybrid",
-                "cycling_speed": 18
+MOCKED_VALHALLA_CONF = [
+    {
+        "modes": ['walking', 'car', 'bss', 'bike'],
+        "class": "tests.direct_path_valhalla_integration_tests.MockValhalla",
+        "args": {
+            "service_url": "http://bob.com",
+            "costing_options": {
+                "bicycle": {"bicycle_type": "Hybrid", "cycling_speed": 18},
+                "pedestrian": {"walking_speed": 50.1},
             },
-            "pedestrian": {
-                "walking_speed": 50.1
-            }
-        }
+        },
     }
-}]
+]
 s_coord = "0.0000898312;0.0000898312"  # coordinate of S in the dataset
 r_coord = "0.00188646;0.00071865"  # coordinate of R in the dataset
 
-journey_basic_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}"\
-    .format(from_coord=s_coord, to_coord=r_coord, datetime="20120614T080000")
+journey_basic_query = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}".format(
+    from_coord=s_coord, to_coord=r_coord, datetime="20120614T080000"
+)
 
 
 def route_response(mode):
-    map_mod = {"pedestrian": 20,
-               "auto": 5,
-               "bicycle": 10}
+    map_mod = {"pedestrian": 20, "auto": 5, "bicycle": 10}
     return {
         "trip": {
-            "summary": {
-                "time": map_mod.get(mode, 6),
-                "length": 0.052
-            },
+            "summary": {"time": map_mod.get(mode, 6), "length": 0.052},
             "units": "kilometers",
             "legs": [
                 {
                     "shape": "qyss{Aco|sCF?kBkHeJw[",
-                    "summary": {
-                        "time": map_mod.get(mode, 6),
-                        "length": 0.052
-                    },
+                    "summary": {"time": map_mod.get(mode, 6), "length": 0.052},
                     "maneuvers": [
                         {
                             "end_shape_index": 3,
                             "time": map_mod.get(mode, 6),
                             "length": 0.052,
-                            "begin_shape_index": 0
+                            "begin_shape_index": 0,
                         },
-                        {
-                            "begin_shape_index": 3,
-                            "time": 0,
-                            "end_shape_index": 3,
-                            "length": 0
-                        }
-                    ]
+                        {"begin_shape_index": 3, "time": 0, "end_shape_index": 3, "length": 0},
+                    ],
                 }
             ],
             "status_message": "Found route between points",
-            "status": 0
+            "status": 0,
         }
     }
 
 
 def sources_to_targets_response():
     return {
-        "sources": [
-            [
-                {
-                    "lon": 2.428405,
-                    "lat": 48.625626
-                }
-            ]
-        ],
-        "targets": [
-            [
-                {
-                    "lon": 2.428379,
-                    "lat": 48.625679
-                }
-            ]
-        ],
+        "sources": [[{"lon": 2.428405, "lat": 48.625626}]],
+        "targets": [[{"lon": 2.428379, "lat": 48.625679}]],
         "units": "kilometers",
-        "sources_to_targets": [
-            [
-                {
-                    "distance": 0.227,
-                    "time": 177,
-                    "to_index": 0,
-                    "from_index": 0
-                }
-            ]
-        ]
+        "sources_to_targets": [[{"distance": 0.227, "time": 177, "to_index": 0, "from_index": 0}]],
     }
 
 
@@ -145,7 +107,6 @@ def get_api(url):
 
 
 class MockValhalla(Valhalla):
-
     def __init__(self, instance, service_url, modes=[], id='valhalla', timeout=10, api_key=None, **kwargs):
         Valhalla.__init__(self, instance, service_url, modes, id, timeout, api_key, **kwargs)
 
@@ -162,91 +123,96 @@ class MockValhalla(Valhalla):
         return response
 
 
-@dataset({'main_routing_test': {'scenario': 'distributed',
-                                'instance_config': {'street_network': MOCKED_VALHALLA_CONF}}})
+@dataset(
+    {
+        'main_routing_test': {
+            'scenario': 'distributed',
+            'instance_config': {'street_network': MOCKED_VALHALLA_CONF},
+        }
+    }
+)
 class TestValhallaDirectPath(AbstractTestFixture):
-
     def test_journey_with_bike_direct_path(self):
-        query = journey_basic_query + \
-                "&first_section_mode[]=bss" + \
-                "&first_section_mode[]=walking" + \
-                "&first_section_mode[]=bike" + \
-                "&first_section_mode[]=car" + \
-                "&debug=true"
+        query = (
+            journey_basic_query
+            + "&first_section_mode[]=bss"
+            + "&first_section_mode[]=walking"
+            + "&first_section_mode[]=bike"
+            + "&first_section_mode[]=car"
+            + "&debug=true"
+        )
         response = self.query_region(query)
         check_journeys(response)
         assert len(response['journeys']) == 3
 
         # car from valhalla
-        assert('car' in response['journeys'][0]['tags'])
+        assert 'car' in response['journeys'][0]['tags']
         assert len(response['journeys'][0]['sections']) == 1
         assert response['journeys'][0]['duration'] == 5
 
         # bike from valhalla
-        assert('bike' in response['journeys'][1]['tags'])
+        assert 'bike' in response['journeys'][1]['tags']
         assert len(response['journeys'][1]['sections']) == 1
         assert response['journeys'][1]['duration'] == 10
 
         # walking from valhalla
-        assert('walking' in response['journeys'][2]['tags'])
+        assert 'walking' in response['journeys'][2]['tags']
         assert len(response['journeys'][2]['sections']) == 1
         assert response['journeys'][2]['duration'] == 20
 
         assert not response.get('feed_publishers')
 
 
-@dataset({
-    'main_routing_test': {
-        'scenario': 'distributed',
-        'instance_config': {
-            'street_network': [{
-                "modes": ['walking', 'car', 'bss', 'bike'],
-                "class": "tests.direct_path_valhalla_integration_tests.MockValhalla",
-                "args": {
-                    "service_url": "http://bob.com",
-                    "costing_options": {
-                        "bicycle": {
-                            "bicycle_type": "Hybrid",
-                            "cycling_speed": 18
+@dataset(
+    {
+        'main_routing_test': {
+            'scenario': 'distributed',
+            'instance_config': {
+                'street_network': [
+                    {
+                        "modes": ['walking', 'car', 'bss', 'bike'],
+                        "class": "tests.direct_path_valhalla_integration_tests.MockValhalla",
+                        "args": {
+                            "service_url": "http://bob.com",
+                            "costing_options": {
+                                "bicycle": {"bicycle_type": "Hybrid", "cycling_speed": 18},
+                                "pedestrian": {"walking_speed": 50.1},
+                            },
+                            "mode_park_cost": {"car": 5 * 60, "bike": 30},
                         },
-                        "pedestrian": {
-                            "walking_speed": 50.1
-                        }
-                    },
-                    "mode_park_cost": {
-                        "car": 5 * 60,
-                        "bike": 30,
-                    },
-                }
-            }]
+                    }
+                ]
+            },
         }
     }
-})
+)
 class TestValhallaParkingCost(AbstractTestFixture):
     def test_with_a_car_park_cost(self):
-        query = journey_basic_query + \
-                "&first_section_mode[]=bss" + \
-                "&first_section_mode[]=walking" + \
-                "&first_section_mode[]=bike" + \
-                "&first_section_mode[]=car" + \
-                "&debug=true"
+        query = (
+            journey_basic_query
+            + "&first_section_mode[]=bss"
+            + "&first_section_mode[]=walking"
+            + "&first_section_mode[]=bike"
+            + "&first_section_mode[]=car"
+            + "&debug=true"
+        )
         response = self.query_region(query)
         check_journeys(response)
         assert len(response['journeys']) == 3
 
-        assert('walking' in response['journeys'][0]['tags'])
+        assert 'walking' in response['journeys'][0]['tags']
         assert len(response['journeys'][0]['sections']) == 1
         assert response['journeys'][0]['duration'] == 20
         # no park section
 
         # bike from valhalla
-        assert('bike' in response['journeys'][1]['tags'])
+        assert 'bike' in response['journeys'][1]['tags']
         assert len(response['journeys'][1]['sections']) == 2
         assert response['journeys'][1]['duration'] == 10 + 30
         assert response['journeys'][1]['sections'][1]['type'] == 'park'
 
         # car from valhalla
-        assert('car' in response['journeys'][2]['tags'])
+        assert 'car' in response['journeys'][2]['tags']
         assert len(response['journeys'][2]['sections']) == 2
         assert response['journeys'][2]['duration'] == 5 + 5 * 60
         assert response['journeys'][2]['sections'][1]['type'] == 'park'

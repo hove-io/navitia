@@ -34,18 +34,16 @@ class Gender(object):
     """
     Used as an enum
     """
+
     __slots__ = ('UNKNOWN', 'MALE', 'FEMALE')
     UNKNOWN = 0
     MALE = 1
     FEMALE = 2
 
+
 class Individual(object):
     # https://stackoverflow.com/a/28059785/1614576
-    __slots__ = ('alias',
-                 'gender',
-                 'image',
-                 'rate',
-                 'rate_count',)
+    __slots__ = ('alias', 'gender', 'image', 'rate', 'rate_count')
 
     def __init__(self, alias, gender, image, rate, rate_count):
         self.alias = alias
@@ -56,9 +54,7 @@ class Individual(object):
 
 
 class Place(object):
-    __slots__ = ('addr',
-                 'lat',
-                 'lon',)
+    __slots__ = ('addr', 'lat', 'lon')
 
     def __init__(self, addr, lat, lon):
         self.addr = addr
@@ -67,10 +63,7 @@ class Place(object):
 
 
 class MetaData(object):
-    __slots__ = ('system_id',
-                 'network',
-                 'rating_scale_min',
-                 'rating_scale_max')
+    __slots__ = ('system_id', 'network', 'rating_scale_min', 'rating_scale_max')
 
     def __init__(self, system_id, network, rating_scale_min, rating_scale_max):
         self.system_id = system_id
@@ -80,17 +73,19 @@ class MetaData(object):
 
 
 class RidesharingJourney(object):
-    __slots__ = ('metadata',
-                 'distance',
-                 'shape', # a list of type_pb2.GeographicalCoord()
-                 'ridesharing_ad',
-                 'pickup_place',
-                 'dropoff_place',
-                 'pickup_date_time',
-                 'dropoff_date_time',
-                 # driver will be Individual
-                 'driver',
-                 'price',
-                 'currency', # "centime" (EURO cents) is the preferred currency (price is filled accordingly)
-                 'total_seats',
-                 'available_seats',)
+    __slots__ = (
+        'metadata',
+        'distance',
+        'shape',  # a list of type_pb2.GeographicalCoord()
+        'ridesharing_ad',
+        'pickup_place',
+        'dropoff_place',
+        'pickup_date_time',
+        'dropoff_date_time',
+        # driver will be Individual
+        'driver',
+        'price',
+        'currency',  # "centime" (EURO cents) is the preferred currency (price is filled accordingly)
+        'total_seats',
+        'available_seats',
+    )

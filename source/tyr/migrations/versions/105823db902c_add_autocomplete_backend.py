@@ -15,7 +15,9 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('instance', sa.Column('autocomplete_backend', sa.Text(), nullable=False, server_default='kraken'))
+    op.add_column(
+        'instance', sa.Column('autocomplete_backend', sa.Text(), nullable=False, server_default='kraken')
+    )
 
 
 def downgrade():

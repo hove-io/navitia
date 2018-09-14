@@ -80,7 +80,8 @@ def floor_datetime(dt, step):
     dt = dt.replace(microsecond=0)
     base = dt.replace(hour=0, minute=0, second=0)
     delta = dt - base
-    return base + datetime.timedelta(seconds=int(math.floor(delta.total_seconds()/float(step))*step))
+    return base + datetime.timedelta(seconds=int(math.floor(delta.total_seconds() / float(step)) * step))
+
 
 class RealtimeProxyError(RuntimeError):
     pass
@@ -124,14 +125,18 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
 
         return passages
 
-    def next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None, duration=86400, timezone=None):
+    def next_passage_for_route_point(
+        self, route_point, count=None, from_dt=None, current_dt=None, duration=86400, timezone=None
+    ):
         """
         Main method for the proxy
 
         returns the next realtime passages
         """
         try:
-            next_passages = self._get_next_passage_for_route_point(route_point, count, from_dt, current_dt, duration)
+            next_passages = self._get_next_passage_for_route_point(
+                route_point, count, from_dt, current_dt, duration
+            )
             filtered_passage = self._filter_passages(next_passages, count, from_dt, duration, timezone)
 
             self.record_call('ok')
@@ -159,8 +164,9 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
         if next_realtime_passages is None:
             return
 
-        logging.getLogger(__name__).debug('next passages: : {}'
-                                         .format(["dt: {}".format(d.datetime) for d in next_realtime_passages]))
+        logging.getLogger(__name__).debug(
+            'next passages: : {}'.format(["dt: {}".format(d.datetime) for d in next_realtime_passages])
+        )
 
         # we clean up the old schedule
         pb_del_if(stop_schedule.date_times, self._filter_base_stop_schedule)
@@ -182,7 +188,9 @@ class RealtimeProxy(six.with_metaclass(ABCMeta, object)):
                 note = type_pb2.Note()
                 note.note = passage.direction
                 note_uri = hashlib.md5(note.note.encode('utf-8', 'backslashreplace')).hexdigest()
-                note.uri = 'note:{md5}'.format(md5=note_uri)  # the id is a md5 of the direction to factorize them
+                note.uri = 'note:{md5}'.format(
+                    md5=note_uri
+                )  # the id is a md5 of the direction to factorize them
                 new_dt.properties.notes.extend([note])
         stop_schedule.date_times.sort(key=lambda dt: dt.date + dt.time)
 

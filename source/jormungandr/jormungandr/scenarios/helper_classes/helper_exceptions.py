@@ -41,10 +41,12 @@ class PtException(Exception):
 
 def _make_error_response(message, error_id):
     from navitiacommon import response_pb2
+
     r = response_pb2.Response()
     r.error.message = message
     r.error.id = error_id
     return r
+
 
 class EntryPointException(Exception):
     def __init__(self, error_id, error_message):

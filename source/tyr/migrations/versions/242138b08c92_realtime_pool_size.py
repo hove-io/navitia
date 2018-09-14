@@ -19,5 +19,6 @@ import sqlalchemy as sa
 def upgrade():
     op.add_column('instance', sa.Column('realtime_pool_size', sa.Integer(), nullable=True))
 
+
 def downgrade():
     op.drop_column('instance', 'realtime_pool_size')

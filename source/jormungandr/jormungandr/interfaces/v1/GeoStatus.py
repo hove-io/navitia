@@ -36,15 +36,18 @@ from jormungandr.interfaces.v1.StatedResource import StatedResource
 from jormungandr.interfaces.v1.fields import context_utc
 
 geo_status = {
-        'geo_status': fields.Nested({'street_network_sources': fields.List(fields.String),
+    'geo_status': fields.Nested(
+        {
+            'street_network_sources': fields.List(fields.String),
             'nb_admins': fields.Raw,
             'nb_admins_from_cities': fields.Raw,
             'nb_ways': fields.Raw,
             'nb_addresses': fields.Raw,
             'nb_pois': fields.Raw,
             'poi_sources': fields.List(fields.String),
-        }),
-        'context': context_utc
+        }
+    ),
+    'context': context_utc,
 }
 
 

@@ -36,37 +36,22 @@ from jormungandr.interfaces.v1.serializer.jsonschema import IntField
 from jormungandr.interfaces.v1.serializer.jsonschema.fields import StrField, BoolField, Field, DateTimeType
 from navitiacommon import response_pb2
 
-point_2D_schema = {
-    'type': 'array',
-    'items': {
-        'type': 'array',
-        'items': {
-            'type': 'number',
-            'format': 'float'
-        }
-    }
-}
+point_2D_schema = {'type': 'array', 'items': {'type': 'array', 'items': {'type': 'number', 'format': 'float'}}}
 
-properties_schema = {
-    'type': 'array',
-    'items': {
-        'length': 'integer'
-    }
-}
+properties_schema = {'type': 'array', 'items': {'length': 'integer'}}
 
 
 class MultiLineStringField(jsonschema.Field):
     class MultiLineStringSchema(serpy.Serializer):
         """used not as a serializer, but only for the schema"""
+
         type = StrField()
-        coordinates = jsonschema.Field(schema_metadata={
-            'type': 'array',
-            'items': point_2D_schema
-        })
+        coordinates = jsonschema.Field(schema_metadata={'type': 'array', 'items': point_2D_schema})
 
     def __init__(self, **kwargs):
-        super(MultiLineStringField, self).__init__(schema_type=MultiLineStringField.MultiLineStringSchema,
-                                                   **kwargs)
+        super(MultiLineStringField, self).__init__(
+            schema_type=MultiLineStringField.MultiLineStringSchema, **kwargs
+        )
 
     def to_value(self, value):
         if getattr(g, 'disable_geojson', False):
@@ -76,10 +61,7 @@ class MultiLineStringField(jsonschema.Field):
         for l in value.lines:
             lines.append([[c.lon, c.lat] for c in l.coordinates])
 
-        return {
-            "type": "MultiLineString",
-            "coordinates": lines,
-        }
+        return {"type": "MultiLineString", "coordinates": lines}
 
 
 class PropertySerializer(serpy.Serializer):
@@ -121,14 +103,18 @@ class FareZoneSerializer(serpy.Serializer):
 class FirstCommentField(jsonschema.Field):
     def __init__(self, **kwargs):
         super(FirstCommentField, self).__init__(schema_type=str, **kwargs)
+
     """
     for compatibility issue we want to continue to output a 'comment' field
     even if now we have a list of comments, so we take the first one
     """
+
     def as_getter(self, serializer_field_name, serializer_cls):
         op = operator.attrgetter(self.attr or serializer_field_name)
+
         def getter(v):
             return next(iter(op(v)), None)
+
         return getter
 
     def to_value(self, item):
@@ -147,6 +133,7 @@ class RoundedField(IntField):
 
 class LinkSchema(serpy.Serializer):
     """This Class is not used as a serializer, but here only to get the schema of a link"""
+
     id = StrField()
     title = StrField()
     rel = StrField()
@@ -160,12 +147,12 @@ class DisruptionLinkSerializer(jsonschema.Field):
     """
     Add link to disruptions on a pt object
     """
+
     def __init__(self, **kwargs):
         super(DisruptionLinkSerializer, self).__init__(schema_type=LinkSchema(many=True), **kwargs)
 
     def to_value(self, value):
-        return [create_internal_link(_type="disruption", rel="disruptions", id=uri)
-                for uri in value]
+        return [create_internal_link(_type="disruption", rel="disruptions", id=uri) for uri in value]
 
 
 class PaginationSerializer(serpy.Serializer):
@@ -178,17 +165,18 @@ class PaginationSerializer(serpy.Serializer):
 class SectionGeoJsonField(jsonschema.Field):
     class SectionGeoJsonSchema(serpy.Serializer):
         """used not as a serializer, but only for the schema"""
+
         type = StrField()
         properties = jsonschema.Field(schema_metadata=properties_schema)
         coordinates = jsonschema.Field(schema_metadata=point_2D_schema)
 
     def __init__(self, **kwargs):
-        super(SectionGeoJsonField, self).__init__(schema_type=SectionGeoJsonField.SectionGeoJsonSchema,
-                                                  **kwargs)
+        super(SectionGeoJsonField, self).__init__(schema_type=SectionGeoJsonField.SectionGeoJsonSchema, **kwargs)
 
     def as_getter(self, serializer_field_name, serializer_cls):
         def getter(v):
             return v
+
         return getter
 
     def to_value(self, value):
@@ -213,9 +201,7 @@ class SectionGeoJsonField(jsonschema.Field):
         response = {
             "type": "LineString",
             "coordinates": [],
-            "properties": [{
-                "length": 0 if not value.HasField(str("length")) else value.length
-            }]
+            "properties": [{"length": 0 if not value.HasField(str("length")) else value.length}],
         }
         for coord in coords:
             response["coordinates"].append([coord.lon, coord.lat])
