@@ -21,4 +21,3 @@ def upgrade():
 
 def downgrade():
     op.add_column('parameters', sa.Column('timezone', sa.TEXT(), nullable=True), schema='navitia')
-

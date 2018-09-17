@@ -58,17 +58,18 @@ import itertools
 import six
 
 type_to_pttype = {
-      "stop_area": request_pb2.PlaceCodeRequest.StopArea,
-      "network": request_pb2.PlaceCodeRequest.Network,
-      "company": request_pb2.PlaceCodeRequest.Company,
-      "line": request_pb2.PlaceCodeRequest.Line,
-      "route": request_pb2.PlaceCodeRequest.Route,
-      "vehicle_journey": request_pb2.PlaceCodeRequest.VehicleJourney,
-      "stop_point": request_pb2.PlaceCodeRequest.StopPoint,
-      "calendar": request_pb2.PlaceCodeRequest.Calendar
+    "stop_area": request_pb2.PlaceCodeRequest.StopArea,
+    "network": request_pb2.PlaceCodeRequest.Network,
+    "company": request_pb2.PlaceCodeRequest.Company,
+    "line": request_pb2.PlaceCodeRequest.Line,
+    "route": request_pb2.PlaceCodeRequest.Route,
+    "vehicle_journey": request_pb2.PlaceCodeRequest.VehicleJourney,
+    "stop_point": request_pb2.PlaceCodeRequest.StopPoint,
+    "calendar": request_pb2.PlaceCodeRequest.Calendar,
 }
 
 STREET_NETWORK_MODES = ('walking', 'car', 'bss', 'bike', 'ridesharing')
+
 
 @app.before_request
 def _init_g():
@@ -82,26 +83,27 @@ def _set_default_street_network_config(street_network_configs):
         street_network_configs = []
     default_sn_class = 'jormungandr.street_network.kraken.Kraken'
 
-    modes_in_configs = set(list(itertools.chain.from_iterable(config.get('modes', []) for config in \
-            street_network_configs)))
+    modes_in_configs = set(
+        list(itertools.chain.from_iterable(config.get('modes', []) for config in street_network_configs))
+    )
     modes_not_set = set(STREET_NETWORK_MODES) - modes_in_configs
     if modes_not_set:
-        street_network_configs.append({"modes": list(modes_not_set),
-                                       "class": default_sn_class})
+        street_network_configs.append({"modes": list(modes_not_set), "class": default_sn_class})
     return street_network_configs
 
 
 class Instance(object):
-
-    def __init__(self,
-                 context,
-                 name,
-                 zmq_socket,
-                 street_network_configurations,
-                 ridesharing_configurations,
-                 realtime_proxies_configuration,
-                 zmq_socket_type,
-                 autocomplete_type):
+    def __init__(
+        self,
+        context,
+        name,
+        zmq_socket,
+        street_network_configurations,
+        ridesharing_configurations,
+        realtime_proxies_configuration,
+        zmq_socket_type,
+        autocomplete_type,
+    ):
         self.geom = None
         self._sockets = queue.Queue()
         self.socket_path = zmq_socket
@@ -112,29 +114,37 @@ class Instance(object):
         self.name = name
         self.timezone = None  # timezone will be fetched from the kraken
         self.publication_date = -1
-        self.is_initialized = False #kraken hasn't been called yet we don't have geom nor timezone
-        self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_INSTANCE_FAIL'],
-                                                reset_timeout=app.config['CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S'])
+        self.is_initialized = False  # kraken hasn't been called yet we don't have geom nor timezone
+        self.breaker = pybreaker.CircuitBreaker(
+            fail_max=app.config['CIRCUIT_BREAKER_MAX_INSTANCE_FAIL'],
+            reset_timeout=app.config['CIRCUIT_BREAKER_INSTANCE_TIMEOUT_S'],
+        )
         self.georef = georef.Kraken(self)
         self.planner = planner.Kraken(self)
 
         street_network_configurations = _set_default_street_network_config(street_network_configurations)
-        self.street_network_services = street_network.StreetNetwork.get_street_network_services(self,
-                                                                                                street_network_configurations)
+        self.street_network_services = street_network.StreetNetwork.get_street_network_services(
+            self, street_network_configurations
+        )
         self.ridesharing_services = []
         if ridesharing_configurations is not None:
-            self.ridesharing_services = ridesharing_service.Ridesharing.\
-                get_ridesharing_services(self, ridesharing_configurations)
+            self.ridesharing_services = ridesharing_service.Ridesharing.get_ridesharing_services(
+                self, ridesharing_configurations
+            )
 
         self.ptref = ptref.PtRef(self)
 
         self.schedule = schedule.MixedSchedule(self)
-        self.realtime_proxy_manager = realtime_schedule.RealtimeProxyManager(realtime_proxies_configuration, self)
+        self.realtime_proxy_manager = realtime_schedule.RealtimeProxyManager(
+            realtime_proxies_configuration, self
+        )
 
         self._autocomplete_type = autocomplete_type
         if self._autocomplete_type is not None and self._autocomplete_type not in global_autocomplete:
-            raise RuntimeError('impossible to find autocomplete system {} '
-                                 'cannot initialize instance {}'.format(autocomplete_type, name))
+            raise RuntimeError(
+                'impossible to find autocomplete system {} '
+                'cannot initialize instance {}'.format(autocomplete_type, name)
+            )
 
         self.zmq_socket_type = zmq_socket_type
 
@@ -146,10 +156,10 @@ class Instance(object):
             return global_autocomplete.get(self._autocomplete_type)
         backend = global_autocomplete.get(self.autocomplete_backend)
         if backend is None:
-            raise RuntimeError('impossible to find autocomplete {} for instance {}'
-                               .format(self.autocomplete_backend, self.name))
+            raise RuntimeError(
+                'impossible to find autocomplete {} for instance {}'.format(self.autocomplete_backend, self.name)
+            )
         return backend
-
 
     def get_models(self):
         if self.name not in g.instances_model:
@@ -200,7 +210,7 @@ class Instance(object):
             module = import_module('jormungandr.scenarios.{}'.format(scenario_name))
             self._scenario = module.Scenario()
 
-        #we save the used scenario for future use
+        # we save the used scenario for future use
         g.scenario = self._scenario
         return self._scenario
 
@@ -453,11 +463,9 @@ class Instance(object):
         except pybreaker.CircuitBreakerError as e:
             raise DeadSocketException(self.name, self.socket_path)
 
-    def _send_and_receive(self,
-                         request,
-                         timeout=app.config.get('INSTANCE_TIMEOUT', 10000),
-                         quiet=False,
-                         **kwargs):
+    def _send_and_receive(
+        self, request, timeout=app.config.get('INSTANCE_TIMEOUT', 10000), quiet=False, **kwargs
+    ):
         logger = logging.getLogger(__name__)
         with self.socket(self.context) as socket:
             try:
@@ -472,7 +480,7 @@ class Instance(object):
                 pb = socket.recv()
                 resp = response_pb2.Response()
                 resp.ParseFromString(pb)
-                self.update_property(resp)#we update the timezone and geom of the instances at each request
+                self.update_property(resp)  # we update the timezone and geom of the instances at each request
                 return resp
             else:
                 socket.setsockopt(zmq.LINGER, 0)
@@ -519,7 +527,7 @@ class Instance(object):
         req.place_code.type = type_to_pttype[type_]
         req.place_code.type_code = "external_code"
         req.place_code.code = id_
-        #we set the timeout to 1s
+        # we set the timeout to 1s
         return self.send_and_receive(req, timeout=app.config.get('INSTANCE_FAST_TIMEOUT', 1000))
 
     def has_external_code(self, type_, id_):
@@ -539,7 +547,7 @@ class Instance(object):
         """
         update the property of an instance from a response if the metadatas field if present
         """
-        #after a successful call we consider the instance initialised even if no data were loaded
+        # after a successful call we consider the instance initialised even if no data were loaded
         self.is_initialized = True
         if response.HasField(str("metadatas")) and response.publication_date != self.publication_date:
             logging.getLogger(__name__).debug('updating metadata for %s', self.name)
@@ -564,9 +572,9 @@ class Instance(object):
         req = request_pb2.Request()
         req.requested_api = type_pb2.METADATAS
         try:
-            #we use _send_and_receive to avoid the circuit breaker, we don't want fast fail on init :)
+            # we use _send_and_receive to avoid the circuit breaker, we don't want fast fail on init :)
             resp = self._send_and_receive(req, timeout=1000, quiet=True)
-            #the instance is automatically updated on a call
+            # the instance is automatically updated on a call
             if self.publication_date != pub_date:
                 return True
         except DeadSocketException:
@@ -578,41 +586,44 @@ class Instance(object):
     def get_street_network(self, mode, request):
         overriden_sn_id = request.get('_street_network')
         if overriden_sn_id:
+
             def predicate(s):
                 return s.sn_system_id == overriden_sn_id
+
         else:
+
             def predicate(s):
                 return mode in s.modes
+
         sn = next((s for s in self.street_network_services if predicate(s)), None)
         if sn is None:
-            raise TechnicalError('impossible to find a streetnetwork module for {} ({})'.format(
-                mode, overriden_sn_id))
+            raise TechnicalError(
+                'impossible to find a streetnetwork module for {} ({})'.format(mode, overriden_sn_id)
+            )
         return sn
 
-    def get_street_network_routing_matrix(self, origins, destinations, mode, max_duration_to_pt, request, **kwargs):
+    def get_street_network_routing_matrix(
+        self, origins, destinations, mode, max_duration_to_pt, request, **kwargs
+    ):
         service = self.get_street_network(mode, request)
         if not service:
             return None
-        return service.get_street_network_routing_matrix(origins,
-                                                         destinations,
-                                                         mode,
-                                                         max_duration_to_pt,
-                                                         request,
-                                                         **kwargs)
+        return service.get_street_network_routing_matrix(
+            origins, destinations, mode, max_duration_to_pt, request, **kwargs
+        )
 
-    def direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
+    def direct_path(
+        self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
+    ):
         """
         :param fallback_extremity: is a PeriodExtremity (a datetime and its meaning on the fallback period)
         """
         service = self.get_street_network(mode, request)
         if not service:
             return None
-        return service.direct_path_with_fp(mode,
-                                           pt_object_origin,
-                                           pt_object_destination,
-                                           fallback_extremity,
-                                           request,
-                                           direct_path_type)
+        return service.direct_path_with_fp(
+            mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
+        )
 
     def get_autocomplete(self, requested_autocomplete):
         if not requested_autocomplete:
@@ -626,7 +637,9 @@ class Instance(object):
         res = []
         fps = set()
         for service in self.ridesharing_services:
-            rsjs, fp = service.request_journeys_with_feed_publisher(from_coord, to_coord, period_extremity, limit)
+            rsjs, fp = service.request_journeys_with_feed_publisher(
+                from_coord, to_coord, period_extremity, limit
+            )
             res.extend(rsjs)
             fps.add(fp)
         return res, fps

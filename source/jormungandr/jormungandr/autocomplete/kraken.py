@@ -34,8 +34,15 @@ from jormungandr.exceptions import InvalidArguments
 from jormungandr.interfaces.v1.decorators import get_serializer
 from jormungandr.interfaces.v1.serializer import api
 from jormungandr.scenarios.utils import build_pagination, places_type
-from jormungandr.interfaces.v1.fields import NonNullList, place, NonNullNested, PbField, error, feed_publisher,\
-    disruption_marshaller
+from jormungandr.interfaces.v1.fields import (
+    NonNullList,
+    place,
+    NonNullNested,
+    PbField,
+    error,
+    feed_publisher,
+    disruption_marshaller,
+)
 from flask_restful import marshal_with, fields, abort
 import navitiacommon.request_pb2 as request_pb2
 import navitiacommon.type_pb2 as type_pb2
@@ -46,12 +53,11 @@ places = {
     "places": NonNullList(NonNullNested(place)),
     "error": PbField(error, attribute='error'),
     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
-    "feed_publishers": fields.List(NonNullNested(feed_publisher))
+    "feed_publishers": fields.List(NonNullNested(feed_publisher)),
 }
 
 
 class Kraken(AbstractAutocomplete):
-
     @get_serializer(serpy=api.PlacesSerializer, marshall=places)
     def get(self, request, instances):
         if len(instances) != 1:

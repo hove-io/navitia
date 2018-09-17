@@ -37,8 +37,12 @@ import pytest
 
 
 def make_url_test():
-    cleverage = Cleverage(id='tata', timezone='Europe/Paris', service_url='http://bob.com/',
-                          service_args={'a': 'bobette', 'b': '12'})
+    cleverage = Cleverage(
+        id='tata',
+        timezone='Europe/Paris',
+        service_url='http://bob.com/',
+        service_args={'a': 'bobette', 'b': '12'},
+    )
 
     url = cleverage._make_url(MockRoutePoint(line_code='line_toto', stop_id='stop_tutu'))
 
@@ -54,8 +58,12 @@ def make_url_invalid_code_test():
 
     we should not get any url
     """
-    cleverage = Cleverage(id='tata', timezone='Europe/Paris', service_url='http://bob.com/',
-                          service_args={'a': 'bobette', 'b': '12'})
+    cleverage = Cleverage(
+        id='tata',
+        timezone='Europe/Paris',
+        service_url='http://bob.com/',
+        service_args={'a': 'bobette', 'b': '12'},
+    )
 
     url = cleverage._make_url(MockRoutePoint(line_code='line_toto', stop_id=None))
 
@@ -108,7 +116,7 @@ def mock_good_response():
                     "updated_at": "2016-04-11 14:26:21",
                     "vehicle_id": "2662",
                     "vehicle_position_updated_at": "2016-04-11 14:26:21",
-                    "origin": "bdsi"
+                    "origin": "bdsi",
                 },
                 {
                     "vehicle_lattitude": "44.814043370749",
@@ -130,9 +138,9 @@ def mock_good_response():
                     "updated_at": "2016-04-11 14:25:41",
                     "vehicle_id": "2660",
                     "vehicle_position_updated_at": "2016-04-11 14:26:21",
-                    "origin": "bdsi"
-                }
-            ]
+                    "origin": "bdsi",
+                },
+            ],
         },
         {
             "name": "Lianes 4",
@@ -159,7 +167,7 @@ def mock_good_response():
                     "updated_at": "2016-04-11 14:26:21",
                     "vehicle_id": "2662",
                     "vehicle_position_updated_at": "2016-04-11 14:26:21",
-                    "origin": "bdsi"
+                    "origin": "bdsi",
                 },
                 {
                     "vehicle_lattitude": "44.814043370749",
@@ -181,10 +189,11 @@ def mock_good_response():
                     "updated_at": "2016-04-11 14:25:41",
                     "vehicle_id": "2660",
                     "vehicle_position_updated_at": "2016-04-11 14:26:21",
-                    "origin": "bdsi"
-                }
-            ]
-        }]
+                    "origin": "bdsi",
+                },
+            ],
+        },
+    ]
 
 
 @pytest.fixture(scope="module")
@@ -220,7 +229,7 @@ def mock_missing_line_response():
                     "updated_at": "2016-04-11 14:26:21",
                     "vehicle_id": "2662",
                     "vehicle_position_updated_at": "2016-04-11 14:26:21",
-                    "origin": "bdsi"
+                    "origin": "bdsi",
                 },
                 {
                     "vehicle_lattitude": "44.814043370749",
@@ -242,10 +251,11 @@ def mock_missing_line_response():
                     "updated_at": "2016-04-11 14:25:41",
                     "vehicle_id": "2660",
                     "vehicle_position_updated_at": "2016-04-11 14:26:21",
-                    "origin": "bdsi"
-                }
-            ]
-        }]
+                    "origin": "bdsi",
+                },
+            ],
+        }
+    ]
 
 
 @pytest.fixture(scope="module")
@@ -276,7 +286,7 @@ def mock_theoric_response():
                     "updated_at": "2016-04-11 14:26:21",
                     "vehicle_id": "2662",
                     "vehicle_position_updated_at": "2016-04-11 14:26:21",
-                    "origin": "bdsi"
+                    "origin": "bdsi",
                 },
                 {
                     "vehicle_lattitude": "44.814043370749",
@@ -298,9 +308,9 @@ def mock_theoric_response():
                     "updated_at": "2016-04-11 14:25:41",
                     "vehicle_id": "2660",
                     "vehicle_position_updated_at": "2016-04-11 14:26:21",
-                    "origin": "bdsi"
-                }
-            ]
+                    "origin": "bdsi",
+                },
+            ],
         },
         {
             "name": "Lianes 4",
@@ -327,7 +337,7 @@ def mock_theoric_response():
                     "updated_at": "2016-04-11 14:26:21",
                     "vehicle_id": "2662",
                     "vehicle_position_updated_at": "2016-04-11 14:26:21",
-                    "origin": "bdsi"
+                    "origin": "bdsi",
                 },
                 {
                     "vehicle_lattitude": "44.814043370749",
@@ -349,10 +359,11 @@ def mock_theoric_response():
                     "updated_at": "2016-04-11 14:25:41",
                     "vehicle_id": "2660",
                     "vehicle_position_updated_at": "2016-04-11 14:26:21",
-                    "origin": "bdsi"
-                }
-            ]
-        }]
+                    "origin": "bdsi",
+                },
+            ],
+        },
+    ]
 
 
 class MockRoutePoint(object):
@@ -372,13 +383,11 @@ def next_passage_for_route_point_test(mock_good_response):
     test the whole next_passage_for_route_point
     mock the http call to return a good response, we should get some next_passages
     """
-    cleverage = Cleverage(id='tata', timezone='UTC', service_url='http://bob.com/',
-                          service_args={'a': 'bobette', 'b': '12'})
+    cleverage = Cleverage(
+        id='tata', timezone='UTC', service_url='http://bob.com/', service_args={'a': 'bobette', 'b': '12'}
+    )
 
-    mock_requests = MockRequests({
-        'http://bob.com/stop_tutu':
-            (mock_good_response, 200)
-    })
+    mock_requests = MockRequests({'http://bob.com/stop_tutu': (mock_good_response, 200)})
 
     route_point = MockRoutePoint(line_code='05', stop_id='stop_tutu')
 
@@ -398,13 +407,14 @@ def next_passage_for_route_point_local_timezone_test(mock_good_response):
     test the whole next_passage_for_route_point
     mock the http call to return a good response, we should get some next_passages
     """
-    cleverage = Cleverage(id='tata', timezone='Europe/Paris', service_url='http://bob.com/',
-                          service_args={'a': 'bobette', 'b': '12'})
+    cleverage = Cleverage(
+        id='tata',
+        timezone='Europe/Paris',
+        service_url='http://bob.com/',
+        service_args={'a': 'bobette', 'b': '12'},
+    )
 
-    mock_requests = MockRequests({
-        'http://bob.com/stop_tutu':
-            (mock_good_response, 200)
-    })
+    mock_requests = MockRequests({'http://bob.com/stop_tutu': (mock_good_response, 200)})
 
     route_point = MockRoutePoint(line_code='05', stop_id='stop_tutu')
 
@@ -424,13 +434,11 @@ def next_passage_for_empty_response_test(mock_empty_response):
     test the whole next_passage_for_route_point
     mock the http call to return a empty response, we should get no departure
     """
-    cleverage = Cleverage(id='tata', timezone='UTC', service_url='http://bob.com/',
-                          service_args={'a': 'bobette', 'b': '12'})
+    cleverage = Cleverage(
+        id='tata', timezone='UTC', service_url='http://bob.com/', service_args={'a': 'bobette', 'b': '12'}
+    )
 
-    mock_requests = MockRequests({
-        'http://bob.com/stop_tutu':
-            (mock_empty_response, 200)
-    })
+    mock_requests = MockRequests({'http://bob.com/stop_tutu': (mock_empty_response, 200)})
 
     route_point = MockRoutePoint(line_code='05', stop_id='stop_tutu')
 
@@ -445,13 +453,11 @@ def next_passage_for_missing_line_response_test(mock_missing_line_response):
     test the whole next_passage_for_route_point
     mock the http call to return a response without wanted line  we should get no departure
     """
-    cleverage = Cleverage(id='tata', timezone='UTC', service_url='http://bob.com/',
-                          service_args={'a': 'bobette', 'b': '12'})
+    cleverage = Cleverage(
+        id='tata', timezone='UTC', service_url='http://bob.com/', service_args={'a': 'bobette', 'b': '12'}
+    )
 
-    mock_requests = MockRequests({
-        'http://bob.com/stop_tutu':
-            (mock_missing_line_response, 200)
-    })
+    mock_requests = MockRequests({'http://bob.com/stop_tutu': (mock_missing_line_response, 200)})
 
     route_point = MockRoutePoint(line_code='05', stop_id='stop_tutu')
 
@@ -466,13 +472,11 @@ def next_passage_with_theoric_time_response_test(mock_theoric_response):
     test the whole next_passage_for_route_point
     mock the http call to return a response with a theoric time we should get one departure
     """
-    cleverage = Cleverage(id='tata', timezone='UTC', service_url='http://bob.com/',
-                          service_args={'a': 'bobette', 'b': '12'})
+    cleverage = Cleverage(
+        id='tata', timezone='UTC', service_url='http://bob.com/', service_args={'a': 'bobette', 'b': '12'}
+    )
 
-    mock_requests = MockRequests({
-        'http://bob.com/stop_tutu':
-            (mock_theoric_response, 200)
-    })
+    mock_requests = MockRequests({'http://bob.com/stop_tutu': (mock_theoric_response, 200)})
 
     route_point = MockRoutePoint(line_code='05', stop_id='stop_tutu')
 
@@ -488,7 +492,11 @@ def next_passage_with_theoric_time_response_test(mock_theoric_response):
 
 
 def status_test():
-    cleverage = Cleverage(id=u'tata-é$~#@"*!\'`§èû', timezone='Europe/Paris', service_url='http://bob.com/',
-                          service_args={'a': 'bobette', 'b': '12'})
+    cleverage = Cleverage(
+        id=u'tata-é$~#@"*!\'`§èû',
+        timezone='Europe/Paris',
+        service_url='http://bob.com/',
+        service_args={'a': 'bobette', 'b': '12'},
+    )
     status = cleverage.status()
     assert status['id'] == u"tata-é$~#@\"*!'`§èû"

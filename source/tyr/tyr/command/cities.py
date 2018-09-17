@@ -32,6 +32,7 @@ from tyr import tasks
 import logging
 from tyr import manager
 
+
 @manager.command
 def cities(osm_path, background=False):
     """

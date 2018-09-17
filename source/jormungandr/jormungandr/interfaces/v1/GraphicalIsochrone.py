@@ -31,10 +31,19 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask_restful import fields, abort
 from jormungandr import i_manager
-from jormungandr.interfaces.v1.fields import error,\
-    PbField, NonNullList, NonNullNested,\
-    feed_publisher, Links, JsonString, place, \
-    ListLit, beta_endpoint, context
+from jormungandr.interfaces.v1.fields import (
+    error,
+    PbField,
+    NonNullList,
+    NonNullNested,
+    feed_publisher,
+    Links,
+    JsonString,
+    place,
+    ListLit,
+    beta_endpoint,
+    context,
+)
 from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.utils import date_to_timestamp
@@ -52,7 +61,7 @@ graphical_isochrone = {
     "to": PbField(place, attribute="destination"),
     'requested_date_time': DateTime(),
     'min_date_time': DateTime(),
-    'max_date_time': DateTime()
+    'max_date_time': DateTime(),
 }
 
 
@@ -62,12 +71,11 @@ graphical_isochrones = {
     "feed_publishers": fields.List(NonNullNested(feed_publisher)),
     "links": fields.List(Links()),
     "warnings": ListLit([fields.Nested(beta_endpoint)]),
-    'context': context
+    'context': context,
 }
 
 
 class GraphicalIsochrone(JourneyCommon):
-
     def __init__(self):
         super(GraphicalIsochrone, self).__init__(output_type_serializer=GraphicalIsrochoneSerializer)
         parser_get = self.parsers["get"]

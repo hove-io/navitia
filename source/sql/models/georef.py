@@ -7,111 +7,196 @@ from sqlalchemy.dialects.postgresql import *
 from models import metadata
 from geoalchemy2 import Geography
 
-synonym = Table('synonym', metadata,*[
-    Column('id', BIGINT(), primary_key=True, nullable=False),
-    Column('key', TEXT(), primary_key=False, nullable=False),
-    Column('value', TEXT(), primary_key=False, nullable=False),],
-    schema='georef')
-
-
-poi = Table('poi', metadata,*[
-    Column('id', BIGINT(), primary_key=True, nullable=False),
-    Column('weight', INTEGER(), primary_key=False, nullable=False),
-    Column('coord', Geography(geometry_type='POINT', srid=4326, spatial_index=False), primary_key=False),
-    Column('name', TEXT(), primary_key=False, nullable=False),
-    Column('uri', TEXT(), primary_key=False, nullable=False),
-    Column('visible', BOOLEAN(), primary_key=False, nullable=False, default=text(u'true')),
-    Column('poi_type_id', BIGINT(), primary_key=False, nullable=False),
-    Column('address_name', TEXT(), primary_key=False),
-    Column('address_number', TEXT(), primary_key=False),
-    ForeignKeyConstraint(['poi_type_id'], [u'georef.poi_type.id'], name=u'poi_poi_type_id_fkey'),
+synonym = Table(
+    'synonym',
+    metadata,
+    *[
+        Column('id', BIGINT(), primary_key=True, nullable=False),
+        Column('key', TEXT(), primary_key=False, nullable=False),
+        Column('value', TEXT(), primary_key=False, nullable=False),
     ],
-    schema='georef')
+    schema='georef'
+)
 
 
-poi_properties = Table('poi_properties', metadata,*[
-    Column('poi_id', BIGINT(), primary_key=False, nullable=False),
-    Column('key', TEXT(), primary_key=False),
-    Column('value', TEXT(), primary_key=False),
-    ForeignKeyConstraint(['poi_id'], [u'georef.poi.id'], name=u'poi_properties_poi_id_fkey'),],
-    schema='georef')
-
-
-poi_type = Table('poi_type', metadata,*[
-    Column('id', BIGINT(), primary_key=True, nullable=False),
-    Column('uri', TEXT(), primary_key=False, nullable=False),
-    Column('name', TEXT(), primary_key=False, nullable=False),],
-    schema='georef')
-
-
-rel_admin_admin = Table('rel_admin_admin', metadata,*[
-    Column('master_admin_id', BIGINT(), primary_key=True, nullable=False),
-    Column('admin_id', BIGINT(), primary_key=True, nullable=False),
-    ForeignKeyConstraint(['admin_id'], [u'georef.admin.id'], name=u'rel_admin_admin_admin_id_fkey'),
-    ForeignKeyConstraint(['master_admin_id'], [u'georef.admin.id'], name=u'rel_admin_admin_master_admin_id_fkey'),],
-    schema='georef')
-
-
-rel_way_admin = Table('rel_way_admin', metadata,*[
-    Column('admin_id', BIGINT(), primary_key=True, nullable=False),
-    Column('way_id', BIGINT(), primary_key=True, nullable=False),
-    ForeignKeyConstraint(['way_id'], [u'georef.way.id'], name=u'rel_way_admin_way_id_fkey'),
-    ForeignKeyConstraint(['admin_id'], [u'georef.admin.id'], name=u'rel_way_admin_admin_id_fkey'),],
-    schema='georef')
-
-
-way = Table('way', metadata,*[
-    Column('id', BIGINT(), primary_key=True, nullable=False, default=text(u"nextval('georef.way_id_seq'::regclass)")),
-    Column('name', TEXT(), primary_key=False, nullable=False),
-    Column('uri', TEXT(), primary_key=False, nullable=False),
-    Column('type', TEXT(), primary_key=False),],
-    schema='georef')
-
-
-edge = Table('edge', metadata,*[
-    Column('source_node_id', BIGINT(), primary_key=False, nullable=False),
-    Column('target_node_id', BIGINT(), primary_key=False, nullable=False),
-    Column('way_id', BIGINT(), primary_key=False, nullable=False),
-    Column('the_geog', Geography(geometry_type='LINESTRING', srid=4326, spatial_index=False), primary_key=False, nullable=False),
-    Column('pedestrian_allowed', BOOLEAN(), primary_key=False, nullable=False),
-    Column('cycles_allowed', BOOLEAN(), primary_key=False, nullable=False),
-    Column('cars_allowed', BOOLEAN(), primary_key=False, nullable=False),
-    ForeignKeyConstraint(['source_node_id'], [u'georef.node.id'], name=u'edge_source_node_id_fkey'),
-    ForeignKeyConstraint(['target_node_id'], [u'georef.node.id'], name=u'edge_target_node_id_fkey'),],
-    schema='georef')
-
-
-house_number = Table('house_number', metadata,*[
-    Column('way_id', BIGINT(), primary_key=False),
-    Column('coord', Geography(geometry_type='POINT', srid=4326, spatial_index=False), primary_key=False, nullable=False),
-    Column('number', TEXT(), primary_key=False, nullable=False),
-    Column('left_side', BOOLEAN(), primary_key=False, nullable=False),
-    ForeignKeyConstraint(['way_id'], [u'georef.way.id'], name=u'house_number_way_id_fkey'),],
-    schema='georef')
-
-
-node = Table('node', metadata,*[
-    Column('id', BIGINT(), primary_key=True, nullable=False, default=text(u"nextval('georef.node_id_seq'::regclass)")),
-    Column('coord', Geography(geometry_type='POINT', srid=4326, spatial_index=False), primary_key=False),],
-    schema='georef')
-
-
-admin = Table('admin', metadata,*[
-    Column('id', BIGINT(), primary_key=True, nullable=False),
-    Column('name', TEXT(), primary_key=False, nullable=False),
-    Column('comment', TEXT(), primary_key=False),
-    Column('insee', TEXT(), primary_key=False),
-    Column('level', INTEGER(), primary_key=False, nullable=False),
-    Column('coord', Geography(geometry_type='POINT', srid=4326, spatial_index=False), primary_key=False),
-    Column('boundary', Geography(geometry_type='MULTIPOLYGON', srid=4326, spatial_index=False), primary_key=False),
-    Column('uri', TEXT(), primary_key=False, nullable=False),],
-    schema='georef')
-
-
-postal_codes = Table('postal_codes', metadata,*[
-    Column('admin_id', TEXT(), primary_key=False, nullable=False),
-    Column('postal_code', TEXT(), primary_key=False, nullable=False),
-    ForeignKeyConstraint(['admin_id'], [u'georef.admin.id'], name=u'postal_codes_admin_id_fkey')
+poi = Table(
+    'poi',
+    metadata,
+    *[
+        Column('id', BIGINT(), primary_key=True, nullable=False),
+        Column('weight', INTEGER(), primary_key=False, nullable=False),
+        Column('coord', Geography(geometry_type='POINT', srid=4326, spatial_index=False), primary_key=False),
+        Column('name', TEXT(), primary_key=False, nullable=False),
+        Column('uri', TEXT(), primary_key=False, nullable=False),
+        Column('visible', BOOLEAN(), primary_key=False, nullable=False, default=text(u'true')),
+        Column('poi_type_id', BIGINT(), primary_key=False, nullable=False),
+        Column('address_name', TEXT(), primary_key=False),
+        Column('address_number', TEXT(), primary_key=False),
+        ForeignKeyConstraint(['poi_type_id'], [u'georef.poi_type.id'], name=u'poi_poi_type_id_fkey'),
     ],
-    schema='georef')
+    schema='georef'
+)
 
+
+poi_properties = Table(
+    'poi_properties',
+    metadata,
+    *[
+        Column('poi_id', BIGINT(), primary_key=False, nullable=False),
+        Column('key', TEXT(), primary_key=False),
+        Column('value', TEXT(), primary_key=False),
+        ForeignKeyConstraint(['poi_id'], [u'georef.poi.id'], name=u'poi_properties_poi_id_fkey'),
+    ],
+    schema='georef'
+)
+
+
+poi_type = Table(
+    'poi_type',
+    metadata,
+    *[
+        Column('id', BIGINT(), primary_key=True, nullable=False),
+        Column('uri', TEXT(), primary_key=False, nullable=False),
+        Column('name', TEXT(), primary_key=False, nullable=False),
+    ],
+    schema='georef'
+)
+
+
+rel_admin_admin = Table(
+    'rel_admin_admin',
+    metadata,
+    *[
+        Column('master_admin_id', BIGINT(), primary_key=True, nullable=False),
+        Column('admin_id', BIGINT(), primary_key=True, nullable=False),
+        ForeignKeyConstraint(['admin_id'], [u'georef.admin.id'], name=u'rel_admin_admin_admin_id_fkey'),
+        ForeignKeyConstraint(
+            ['master_admin_id'], [u'georef.admin.id'], name=u'rel_admin_admin_master_admin_id_fkey'
+        ),
+    ],
+    schema='georef'
+)
+
+
+rel_way_admin = Table(
+    'rel_way_admin',
+    metadata,
+    *[
+        Column('admin_id', BIGINT(), primary_key=True, nullable=False),
+        Column('way_id', BIGINT(), primary_key=True, nullable=False),
+        ForeignKeyConstraint(['way_id'], [u'georef.way.id'], name=u'rel_way_admin_way_id_fkey'),
+        ForeignKeyConstraint(['admin_id'], [u'georef.admin.id'], name=u'rel_way_admin_admin_id_fkey'),
+    ],
+    schema='georef'
+)
+
+
+way = Table(
+    'way',
+    metadata,
+    *[
+        Column(
+            'id',
+            BIGINT(),
+            primary_key=True,
+            nullable=False,
+            default=text(u"nextval('georef.way_id_seq'::regclass)"),
+        ),
+        Column('name', TEXT(), primary_key=False, nullable=False),
+        Column('uri', TEXT(), primary_key=False, nullable=False),
+        Column('type', TEXT(), primary_key=False),
+    ],
+    schema='georef'
+)
+
+
+edge = Table(
+    'edge',
+    metadata,
+    *[
+        Column('source_node_id', BIGINT(), primary_key=False, nullable=False),
+        Column('target_node_id', BIGINT(), primary_key=False, nullable=False),
+        Column('way_id', BIGINT(), primary_key=False, nullable=False),
+        Column(
+            'the_geog',
+            Geography(geometry_type='LINESTRING', srid=4326, spatial_index=False),
+            primary_key=False,
+            nullable=False,
+        ),
+        Column('pedestrian_allowed', BOOLEAN(), primary_key=False, nullable=False),
+        Column('cycles_allowed', BOOLEAN(), primary_key=False, nullable=False),
+        Column('cars_allowed', BOOLEAN(), primary_key=False, nullable=False),
+        ForeignKeyConstraint(['source_node_id'], [u'georef.node.id'], name=u'edge_source_node_id_fkey'),
+        ForeignKeyConstraint(['target_node_id'], [u'georef.node.id'], name=u'edge_target_node_id_fkey'),
+    ],
+    schema='georef'
+)
+
+
+house_number = Table(
+    'house_number',
+    metadata,
+    *[
+        Column('way_id', BIGINT(), primary_key=False),
+        Column(
+            'coord',
+            Geography(geometry_type='POINT', srid=4326, spatial_index=False),
+            primary_key=False,
+            nullable=False,
+        ),
+        Column('number', TEXT(), primary_key=False, nullable=False),
+        Column('left_side', BOOLEAN(), primary_key=False, nullable=False),
+        ForeignKeyConstraint(['way_id'], [u'georef.way.id'], name=u'house_number_way_id_fkey'),
+    ],
+    schema='georef'
+)
+
+
+node = Table(
+    'node',
+    metadata,
+    *[
+        Column(
+            'id',
+            BIGINT(),
+            primary_key=True,
+            nullable=False,
+            default=text(u"nextval('georef.node_id_seq'::regclass)"),
+        ),
+        Column('coord', Geography(geometry_type='POINT', srid=4326, spatial_index=False), primary_key=False),
+    ],
+    schema='georef'
+)
+
+
+admin = Table(
+    'admin',
+    metadata,
+    *[
+        Column('id', BIGINT(), primary_key=True, nullable=False),
+        Column('name', TEXT(), primary_key=False, nullable=False),
+        Column('comment', TEXT(), primary_key=False),
+        Column('insee', TEXT(), primary_key=False),
+        Column('level', INTEGER(), primary_key=False, nullable=False),
+        Column('coord', Geography(geometry_type='POINT', srid=4326, spatial_index=False), primary_key=False),
+        Column(
+            'boundary',
+            Geography(geometry_type='MULTIPOLYGON', srid=4326, spatial_index=False),
+            primary_key=False,
+        ),
+        Column('uri', TEXT(), primary_key=False, nullable=False),
+    ],
+    schema='georef'
+)
+
+
+postal_codes = Table(
+    'postal_codes',
+    metadata,
+    *[
+        Column('admin_id', TEXT(), primary_key=False, nullable=False),
+        Column('postal_code', TEXT(), primary_key=False, nullable=False),
+        ForeignKeyConstraint(['admin_id'], [u'georef.admin.id'], name=u'postal_codes_admin_id_fkey'),
+    ],
+    schema='georef'
+)

@@ -17,7 +17,10 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('instance', sa.Column('max_car_no_park_duration_to_pt', sa.Integer(), nullable=False, server_default='1800'))
+    op.add_column(
+        'instance',
+        sa.Column('max_car_no_park_duration_to_pt', sa.Integer(), nullable=False, server_default='1800'),
+    )
     op.add_column('instance', sa.Column('car_no_park_speed', sa.Float(), nullable=False, server_default='6.94'))
 
 

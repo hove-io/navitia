@@ -38,8 +38,11 @@ import requests as requests
 from jormungandr import utils
 from jormungandr import app
 import jormungandr.scenarios.ridesharing.ridesharing_journey as rsj
-from jormungandr.scenarios.ridesharing.ridesharing_service import AbstractRidesharingService, RsFeedPublisher, \
-    RidesharingServiceError
+from jormungandr.scenarios.ridesharing.ridesharing_service import (
+    AbstractRidesharingService,
+    RsFeedPublisher,
+    RidesharingServiceError,
+)
 from jormungandr.utils import decode_polyline
 from navitiacommon import type_pb2
 
@@ -47,14 +50,22 @@ DEFAULT_INSTANT_SYSTEM_FEED_PUBLISHER = {
     'id': 'Instant System',
     'name': 'Instant System',
     'license': 'Private',
-    'url': 'https://instant-system.com/disclaimers/disclaimer_XX.html'
+    'url': 'https://instant-system.com/disclaimers/disclaimer_XX.html',
 }
 
 
 class InstantSystem(AbstractRidesharingService):
-
-    def __init__(self, instance, service_url, api_key, network, feed_publisher=DEFAULT_INSTANT_SYSTEM_FEED_PUBLISHER,
-                 rating_scale_min=None, rating_scale_max=None, timeout=2):
+    def __init__(
+        self,
+        instance,
+        service_url,
+        api_key,
+        network,
+        feed_publisher=DEFAULT_INSTANT_SYSTEM_FEED_PUBLISHER,
+        rating_scale_min=None,
+        rating_scale_max=None,
+        timeout=2,
+    ):
         self.instance = instance
         self.service_url = service_url
         self.api_key = api_key
@@ -65,43 +76,55 @@ class InstantSystem(AbstractRidesharingService):
         self.timeout = timeout
         self.feed_publisher = None if feed_publisher is None else RsFeedPublisher(**feed_publisher)
 
-        self.journey_metadata = rsj.MetaData(system_id=self.system_id,
-                                             network=self.network,
-                                             rating_scale_min=self.rating_scale_min,
-                                             rating_scale_max=self.rating_scale_max)
+        self.journey_metadata = rsj.MetaData(
+            system_id=self.system_id,
+            network=self.network,
+            rating_scale_min=self.rating_scale_min,
+            rating_scale_max=self.rating_scale_max,
+        )
 
-        self.logger = logging.getLogger("{} {}".format(__name__,
-                                                       self.system_id))
+        self.logger = logging.getLogger("{} {}".format(__name__, self.system_id))
 
-        self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_INSTANT_SYSTEM_FAIL'],
-                                                reset_timeout=app.config['CIRCUIT_BREAKER_INSTANT_SYSTEM_TIMEOUT_S'])
+        self.breaker = pybreaker.CircuitBreaker(
+            fail_max=app.config['CIRCUIT_BREAKER_MAX_INSTANT_SYSTEM_FAIL'],
+            reset_timeout=app.config['CIRCUIT_BREAKER_INSTANT_SYSTEM_TIMEOUT_S'],
+        )
 
     def status(self):
-        return {'id': self.system_id,
-                'class': self.__class__.__name__,
-                'circuit_breaker': {'current_state': self.breaker.current_state,
-                                    'fail_counter': self.breaker.fail_counter,
-                                    'reset_timeout': self.breaker.reset_timeout},
-                }
+        return {
+            'id': self.system_id,
+            'class': self.__class__.__name__,
+            'circuit_breaker': {
+                'current_state': self.breaker.current_state,
+                'fail_counter': self.breaker.fail_counter,
+                'reset_timeout': self.breaker.reset_timeout,
+            },
+        }
 
     def _call_service(self, params):
         self.logger.debug("requesting instant system")
 
         headers = {'Authorization': 'apiKey {}'.format(self.api_key)}
         try:
-            return self.breaker.call(requests.get, url=self.service_url, headers=headers,
-                                     params=params, timeout=self.timeout)
+            return self.breaker.call(
+                requests.get, url=self.service_url, headers=headers, params=params, timeout=self.timeout
+            )
         except pybreaker.CircuitBreakerError as e:
-            logging.getLogger(__name__).error('Instant System service dead (error: %s)', e,
-                                              extra={'ridesharing_service_id': self._get_rs_id()})
+            logging.getLogger(__name__).error(
+                'Instant System service dead (error: %s)', e, extra={'ridesharing_service_id': self._get_rs_id()}
+            )
             raise RidesharingServiceError('circuit breaker open')
         except requests.Timeout as t:
-            logging.getLogger(__name__).error('Instant System service timeout (error: %s)', t,
-                                              extra={'ridesharing_service_id': self._get_rs_id()})
+            logging.getLogger(__name__).error(
+                'Instant System service timeout (error: %s)',
+                t,
+                extra={'ridesharing_service_id': self._get_rs_id()},
+            )
             raise RidesharingServiceError('timeout')
         except Exception as e:
-            logging.getLogger(__name__).exception('Instant System service error',
-                                                  extra={'ridesharing_service_id': self._get_rs_id()})
+            logging.getLogger(__name__).exception(
+                'Instant System service error', extra={'ridesharing_service_id': self._get_rs_id()}
+            )
             raise RidesharingServiceError(str(e))
 
     @staticmethod
@@ -112,9 +135,10 @@ class InstantSystem(AbstractRidesharingService):
         :param raw_journeys:
         :return:
         """
+
         def has_ridesharing_path(j):
-            return next((p for p in j.get('paths', [])
-                         if p.get('mode') == 'RIDESHARINGAD'), None)
+            return next((p for p in j.get('paths', []) if p.get('mode') == 'RIDESHARINGAD'), None)
+
         return (j for j in raw_journeys if has_ridesharing_path(j))
 
     def _make_response(self, raw_json):
@@ -143,15 +167,15 @@ class InstantSystem(AbstractRidesharingService):
                 ridesharing_ad = p['rideSharingAd']
                 from_data = p['from']
 
-                res.pickup_place = rsj.Place(addr=from_data.get('name'),
-                                             lat=from_data.get('lat'),
-                                             lon=from_data.get('lon'))
+                res.pickup_place = rsj.Place(
+                    addr=from_data.get('name'), lat=from_data.get('lat'), lon=from_data.get('lon')
+                )
 
                 to_data = p['to']
 
-                res.dropoff_place = rsj.Place(addr=to_data.get('name'),
-                                              lat=to_data.get('lat'),
-                                              lon=to_data.get('lon'))
+                res.dropoff_place = rsj.Place(
+                    addr=to_data.get('name'), lat=to_data.get('lat'), lon=to_data.get('lon')
+                )
 
                 # shape is a list of type_pb2.GeographicalCoord()
                 res.shape = []
@@ -178,14 +202,15 @@ class InstantSystem(AbstractRidesharingService):
                 user = ridesharing_ad['user']
 
                 gender = user.get('gender')
-                gender_map = {'MALE': rsj.Gender.MALE,
-                              'FEMALE': rsj.Gender.FEMALE}
+                gender_map = {'MALE': rsj.Gender.MALE, 'FEMALE': rsj.Gender.FEMALE}
 
-                res.driver = rsj.Individual(alias=user.get('alias'),
-                                            gender=gender_map.get(gender, rsj.Gender.UNKNOWN),
-                                            image=user.get('imageUrl'),
-                                            rate=user.get('rating', {}).get('rate'),
-                                            rate_count=user.get('rating', {}).get('count'))
+                res.driver = rsj.Individual(
+                    alias=user.get('alias'),
+                    gender=gender_map.get(gender, rsj.Gender.UNKNOWN),
+                    image=user.get('imageUrl'),
+                    rate=user.get('rating', {}).get('rate'),
+                    rate_count=user.get('rating', {}).get('count'),
+                )
 
                 # the usual form of the price for InstantSystem is: "170 EUR"
                 # which means "170 EURO cents" also equals "1.70 EURO"
@@ -214,12 +239,15 @@ class InstantSystem(AbstractRidesharingService):
         :return:
         """
         # format of datetime: 2017-12-25T07:00:00Z
-        datetime_str = datetime.datetime.fromtimestamp(period_extremity.datetime, pytz.utc)\
-            .strftime('%Y-%m-%dT%H:%M:%SZ')
+        datetime_str = datetime.datetime.fromtimestamp(period_extremity.datetime, pytz.utc).strftime(
+            '%Y-%m-%dT%H:%M:%SZ'
+        )
 
-        params = {'from': from_coord,
-                  'to': to_coord,
-                  ('arrivalDate', 'departureDate')[bool(period_extremity.represents_start)]: datetime_str}
+        params = {
+            'from': from_coord,
+            'to': to_coord,
+            ('arrivalDate', 'departureDate')[bool(period_extremity.represents_start)]: datetime_str,
+        }
 
         if limit is not None:
             params.update({'limit', limit})
@@ -228,22 +256,27 @@ class InstantSystem(AbstractRidesharingService):
 
         if resp.status_code != 200:
             # TODO better error handling, the response might be in 200 but in error
-            logging.getLogger(__name__).error('Instant System service unavailable, impossible to query : %s', resp.url,
-                    extra={'ridesharing_service_id': self._get_rs_id(), 'status_code': resp.status_code})
+            logging.getLogger(__name__).error(
+                'Instant System service unavailable, impossible to query : %s',
+                resp.url,
+                extra={'ridesharing_service_id': self._get_rs_id(), 'status_code': resp.status_code},
+            )
             raise RidesharingServiceError('non 200 response')
 
         if resp:
             r = self._make_response(resp.json())
             self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=len(r))
-            logging.getLogger('stat.ridesharing.instant-system').info('Received ridesharing offers : %s',
-                              len(r),
-                              extra={'ridesharing_service_id': self._get_rs_id(),
-                                     'nb_ridesharing_offers': len(r)})
+            logging.getLogger('stat.ridesharing.instant-system').info(
+                'Received ridesharing offers : %s',
+                len(r),
+                extra={'ridesharing_service_id': self._get_rs_id(), 'nb_ridesharing_offers': len(r)},
+            )
             return r
         self.record_additional_info('Received ridesharing offers', nb_ridesharing_offers=0)
-        logging.getLogger('stat.ridesharing.instant-system').info('Received ridesharing offers : 0',
-                          extra={'ridesharing_service_id': self._get_rs_id(),
-                                 'nb_ridesharing_offers': 0})
+        logging.getLogger('stat.ridesharing.instant-system').info(
+            'Received ridesharing offers : 0',
+            extra={'ridesharing_service_id': self._get_rs_id(), 'nb_ridesharing_offers': 0},
+        )
         return []
 
     def _get_feed_publisher(self):

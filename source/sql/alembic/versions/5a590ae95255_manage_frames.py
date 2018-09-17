@@ -13,18 +13,20 @@ down_revision = '14346346596e'
 from alembic import op
 import sqlalchemy as sa
 
+
 def upgrade():
-    op.create_table('frame',
-    sa.Column('id', sa.BIGINT(), nullable=False),
-    sa.Column('uri', sa.TEXT(), nullable=False),
-    sa.Column('description', sa.TEXT(), nullable=True),
-    sa.Column('system', sa.TEXT(), nullable=True),
-    sa.Column('start_date', sa.DATE(), nullable=False),
-    sa.Column('end_date', sa.DATE(), nullable=False),
-    sa.Column('contributor_id', sa.BIGINT(), nullable=False),
-    sa.ForeignKeyConstraint(['contributor_id'], [u'navitia.contributor.id'], name=u'contributor_frame_fkey'),
-    sa.PrimaryKeyConstraint('id'),
-    schema='navitia'
+    op.create_table(
+        'frame',
+        sa.Column('id', sa.BIGINT(), nullable=False),
+        sa.Column('uri', sa.TEXT(), nullable=False),
+        sa.Column('description', sa.TEXT(), nullable=True),
+        sa.Column('system', sa.TEXT(), nullable=True),
+        sa.Column('start_date', sa.DATE(), nullable=False),
+        sa.Column('end_date', sa.DATE(), nullable=False),
+        sa.Column('contributor_id', sa.BIGINT(), nullable=False),
+        sa.ForeignKeyConstraint(['contributor_id'], [u'navitia.contributor.id'], name=u'contributor_frame_fkey'),
+        sa.PrimaryKeyConstraint('id'),
+        schema='navitia',
     )
     op.add_column('vehicle_journey', sa.Column('frame_id', sa.BIGINT(), nullable=True), schema='navitia')
 

@@ -59,7 +59,6 @@ from flask import request
 
 
 class ManageError(object):
-
     def __call__(self, f):
         @wraps(f)
         def wrapper(*args, **kwargs):
@@ -77,10 +76,9 @@ class ManageError(object):
                 response_pb2.Error.bad_filter: 400,
                 response_pb2.Error.unknown_api: 400,
                 response_pb2.Error.bad_format: 400,
-                response_pb2.Error.no_solution: 200
+                response_pb2.Error.no_solution: 200,
             }
-            if response.HasField(str("error")) and\
-               response.error.id in errors:
+            if response.HasField(str("error")) and response.error.id in errors:
                 code = errors[response.error.id]
                 if code == 400 and "filter" not in request.args:
                     response.error.id = response_pb2.Error.unknown_object
@@ -89,4 +87,5 @@ class ManageError(object):
             else:
                 response.ClearField(str("error"))
             return response, code
+
         return wrapper

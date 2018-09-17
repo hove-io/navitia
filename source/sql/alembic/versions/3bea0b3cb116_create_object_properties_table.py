@@ -16,12 +16,13 @@ import geoalchemy2 as ga
 
 
 def upgrade():
-    op.create_table('object_properties',
-    sa.Column('object_id', sa.BIGINT(), nullable=False),
-    sa.Column('object_type', sa.TEXT(), nullable=False),
-    sa.Column('property_name', sa.TEXT(), nullable=False),
-    sa.Column('property_value', sa.TEXT(), nullable=False),
-    schema='navitia'
+    op.create_table(
+        'object_properties',
+        sa.Column('object_id', sa.BIGINT(), nullable=False),
+        sa.Column('object_type', sa.TEXT(), nullable=False),
+        sa.Column('property_name', sa.TEXT(), nullable=False),
+        sa.Column('property_value', sa.TEXT(), nullable=False),
+        schema='navitia',
     )
 
 

@@ -17,9 +17,7 @@ import sqlalchemy as sa
 def upgrade():
     op.add_column('job', sa.Column('autocomplete_params_id', sa.Integer(), nullable=True))
     op.create_foreign_key(
-        "fk_job_autocomplete_parameter",
-        "job", "autocomplete_parameter",
-        ["autocomplete_params_id"], ["id"]
+        "fk_job_autocomplete_parameter", "job", "autocomplete_parameter", ["autocomplete_params_id"], ["id"]
     )
 
 

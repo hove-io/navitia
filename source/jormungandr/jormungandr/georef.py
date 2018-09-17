@@ -34,7 +34,6 @@ from jormungandr import utils
 
 
 class Kraken(object):
-
     def __init__(self, instance):
         self.instance = instance
 
@@ -69,10 +68,8 @@ class Kraken(object):
         req.car_co2_emission.destination.access_duration = 0
 
         response = self.instance.send_and_receive(req)
-        if response.error and response.error.id == \
-                response_pb2.Error.error_id.Value('no_solution'):
-            logger.error("Cannot compute car co2 emission from {} to {}"
-                         .format(origin, destination))
+        if response.error and response.error.id == response_pb2.Error.error_id.Value('no_solution'):
+            logger.error("Cannot compute car co2 emission from {} to {}".format(origin, destination))
             return None
         return response.car_co2_emission
 
@@ -83,8 +80,7 @@ class Kraken(object):
         req = request_pb2.Request()
         req.requested_api = type_pb2.places_nearby
         req.places_nearby.uri = origin
-        req.places_nearby.distance = kwargs.get(streetnetwork_mode,
-                                                        kwargs.get("walking")) * max_duration
+        req.places_nearby.distance = kwargs.get(streetnetwork_mode, kwargs.get("walking")) * max_duration
         req.places_nearby.depth = 0
         req.places_nearby.count = max_nb_crowfly
         req.places_nearby.start_page = 0
@@ -108,8 +104,9 @@ class Kraken(object):
 
         result = self.instance.send_and_receive(req)
         if not result.stop_points:
-            logging.getLogger(__name__).info('PtRef, Unable to find stop_point with filter {}'.
-                                             format(req.ptref.filter))
+            logging.getLogger(__name__).info(
+                'PtRef, Unable to find stop_point with filter {}'.format(req.ptref.filter)
+            )
         return result.stop_points
 
     def get_stop_points_from_uri(self, uri):

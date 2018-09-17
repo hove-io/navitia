@@ -15,12 +15,8 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.alter_column('instance', 'max_duration',
-               existing_type=sa.INTEGER(),
-               server_default='86400')
+    op.alter_column('instance', 'max_duration', existing_type=sa.INTEGER(), server_default='86400')
 
 
 def downgrade():
-    op.alter_column('instance', 'max_duration',
-               existing_type=sa.INTEGER(),
-               server_default='14400')
+    op.alter_column('instance', 'max_duration', existing_type=sa.INTEGER(), server_default='14400')

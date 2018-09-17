@@ -97,19 +97,32 @@ class Siri(RealtimeProxy):
     </x:Envelope>'
     """
 
-    def __init__(self, id, service_url, requestor_ref,
-                 object_id_tag=None, destination_id_tag=None, instance=None, timeout=10, **kwargs):
+    def __init__(
+        self,
+        id,
+        service_url,
+        requestor_ref,
+        object_id_tag=None,
+        destination_id_tag=None,
+        instance=None,
+        timeout=10,
+        **kwargs
+    ):
         self.service_url = service_url
-        self.requestor_ref = requestor_ref # login for siri
-        self.timeout = timeout  #timeout in seconds
+        self.requestor_ref = requestor_ref  # login for siri
+        self.timeout = timeout  # timeout in seconds
         self.rt_system_id = id
         self.object_id_tag = object_id_tag if object_id_tag else id
         self.destination_id_tag = destination_id_tag
         self.instance = instance
-        self.breaker = pybreaker.CircuitBreaker(fail_max=app.config.get('CIRCUIT_BREAKER_MAX_SIRI_FAIL', 5),
-                                                reset_timeout=app.config.get('CIRCUIT_BREAKER_SIRI_TIMEOUT_S', 60))
+        self.breaker = pybreaker.CircuitBreaker(
+            fail_max=app.config.get('CIRCUIT_BREAKER_MAX_SIRI_FAIL', 5),
+            reset_timeout=app.config.get('CIRCUIT_BREAKER_SIRI_TIMEOUT_S', 60),
+        )
         # A step is applied on from_datetime to discretize calls and allow caching them
-        self.from_datetime_step = kwargs.get('from_datetime_step', app.config['CACHE_CONFIGURATION'].get('TIMEOUT_SIRI', 60))
+        self.from_datetime_step = kwargs.get(
+            'from_datetime_step', app.config['CACHE_CONFIGURATION'].get('TIMEOUT_SIRI', 60)
+        )
 
     def __repr__(self):
         """
@@ -138,7 +151,7 @@ class Siri(RealtimeProxy):
             'circuit_breaker': {
                 'current_state': self.breaker.current_state,
                 'fail_counter': self.breaker.fail_counter,
-                'reset_timeout': self.breaker.reset_timeout
+                'reset_timeout': self.breaker.reset_timeout,
             },
         }
 
@@ -174,36 +187,36 @@ class Siri(RealtimeProxy):
     @cache.memoize(app.config['CACHE_CONFIGURATION'].get('TIMEOUT_SIRI', 60))
     def _call_siri(self, request):
         encoded_request = request.encode('utf-8', 'backslashreplace')
-        headers = {
-            "Content-Type": "text/xml; charset=UTF-8",
-            "Content-Length": len(encoded_request)
-        }
+        headers = {"Content-Type": "text/xml; charset=UTF-8", "Content-Length": len(encoded_request)}
 
         logging.getLogger(__name__).debug('siri RT service, post at {}: {}'.format(self.service_url, request))
         try:
-            return self.breaker.call(requests.post,
-                                     url=self.service_url,
-                                     headers=headers,
-                                     data=encoded_request,
-                                     verify=False,
-                                     timeout=self.timeout)
+            return self.breaker.call(
+                requests.post,
+                url=self.service_url,
+                headers=headers,
+                data=encoded_request,
+                verify=False,
+                timeout=self.timeout,
+            )
         except pybreaker.CircuitBreakerError as e:
-            logging.getLogger(__name__).error('siri RT service dead, using base '
-                                              'schedule (error: {}'.format(e))
+            logging.getLogger(__name__).error(
+                'siri RT service dead, using base ' 'schedule (error: {}'.format(e)
+            )
             raise RealtimeProxyError('circuit breaker open')
         except requests.Timeout as t:
-            logging.getLogger(__name__).error('siri RT service timeout, using base '
-                                              'schedule (error: {}'.format(t))
+            logging.getLogger(__name__).error(
+                'siri RT service timeout, using base ' 'schedule (error: {}'.format(t)
+            )
             raise RealtimeProxyError('timeout')
         except Exception as e:
             logging.getLogger(__name__).exception('siri RT error, using base schedule')
             raise RealtimeProxyError(str(e))
 
-
     def _make_request(self, dt, count, monitoring_ref):
-        #we don't want to ask 1000 next departure to SIRI :)
-        count = min(count or 5, 5)# if no value defined we ask for 5 passages
-        message_identifier='IDontCare'
+        # we don't want to ask 1000 next departure to SIRI :)
+        count = min(count or 5, 5)  # if no value defined we ask for 5 passages
+        message_identifier = 'IDontCare'
         request = """<?xml version="1.0" encoding="UTF-8"?>
         <x:Envelope xmlns:x="http://schemas.xmlsoap.org/soap/envelope/"
                     xmlns:wsd="http://wsdl.siri.org.uk" xmlns:siri="http://www.siri.org.uk/siri">
@@ -225,13 +238,11 @@ class Siri(RealtimeProxy):
             </GetStopMonitoring>
           </x:Body>
         </x:Envelope>
-        """.format(dt=floor_datetime(datetime.utcfromtimestamp(dt), self.from_datetime_step).isoformat(),
-                   count=count,
-                   RequestorRef=self.requestor_ref,
-                   MessageIdentifier=message_identifier,
-                   MonitoringRef=monitoring_ref)
+        """.format(
+            dt=floor_datetime(datetime.utcfromtimestamp(dt), self.from_datetime_step).isoformat(),
+            count=count,
+            RequestorRef=self.requestor_ref,
+            MessageIdentifier=message_identifier,
+            MonitoringRef=monitoring_ref,
+        )
         return request
-
-
-
-

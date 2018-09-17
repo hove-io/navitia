@@ -48,6 +48,7 @@ class ReverseProxied(object):
 
     :param app: the WSGI application
     """
+
     def __init__(self, app):
         self.app = app
         self.re = re.compile('^https?$')
@@ -63,6 +64,7 @@ class NavitiaRequest(Request):
     """
     override the request of flask to add an id on all request
     """
+
     def __init__(self, *args, **kwargs):
         super(Request, self).__init__(*args, **kwargs)
         self.id = str(uuid.uuid4())
@@ -72,6 +74,7 @@ class NavitiaRule(Rule):
     """
     custom class to add a 'hide' variable to hide a rule in swagger
     """
+
     def __init__(self, name, **kwargs):
         routes_to_hide = kwargs.pop('hide_routes', [])
         name_no_version = name.replace('/v1', '')

@@ -42,7 +42,9 @@ import six
 
 
 class Asgard(Valhalla):
-    def __init__(self, instance, service_url, asgard_socket, modes=[], id='asgard', timeout=10, api_key=None, **kwargs):
+    def __init__(
+        self, instance, service_url, asgard_socket, modes=[], id='asgard', timeout=10, api_key=None, **kwargs
+    ):
         super(Asgard, self).__init__(instance, service_url, modes, id, timeout, api_key, **kwargs)
         self.asgard_socket = asgard_socket
         self._sockets = queue.Queue()
@@ -71,7 +73,7 @@ class Asgard(Valhalla):
         req.sn_routing_matrix.max_duration = max_duration
 
         res = self._call_asgard(req)
-        #TODO handle car park
+        # TODO handle car park
         if res.HasField('error'):
             logging.getLogger(__name__).error('routing matrix query error {}'.format(res.error))
             raise TechnicalError('routing matrix fail')
@@ -91,12 +93,11 @@ class Asgard(Valhalla):
             if not socket.closed:
                 self._sockets.put(socket)
 
-
     def _call_asgard(self, request):
         with self.socket(self.instance.context) as socket:
             socket.send(request.SerializeToString())
-            #timeout is in second, we need it on millisecond
-            if socket.poll(timeout=self.timeout*1000) > 0:
+            # timeout is in second, we need it on millisecond
+            if socket.poll(timeout=self.timeout * 1000) > 0:
                 pb = socket.recv()
                 resp = response_pb2.Response()
                 resp.ParseFromString(pb)

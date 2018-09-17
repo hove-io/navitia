@@ -56,17 +56,30 @@ class Cleverage(RealtimeProxy):
     In practice it will look like:
     curl -X GET -H 'X-Keolis-Api-Version: 1.0, X-Keolis-Api-Key: BLA-68764125-BOB' 'http://api.bobito.fr/api/schedule/3763'
     """
-    def __init__(self, id, service_url, service_args, timezone, object_id_tag=None,
-                 destination_id_tag=None, instance=None, timeout=10, **kwargs):
-        self.service_url = service_url if (service_url[-1] == u'/') else (service_url+'/')
+
+    def __init__(
+        self,
+        id,
+        service_url,
+        service_args,
+        timezone,
+        object_id_tag=None,
+        destination_id_tag=None,
+        instance=None,
+        timeout=10,
+        **kwargs
+    ):
+        self.service_url = service_url if (service_url[-1] == u'/') else (service_url + '/')
         self.service_args = service_args
         self.timeout = timeout  # timeout in seconds
         self.rt_system_id = id
         self.object_id_tag = object_id_tag if object_id_tag else id
         self.destination_id_tag = destination_id_tag
         self.instance = instance
-        self.breaker = pybreaker.CircuitBreaker(fail_max=app.config['CIRCUIT_BREAKER_MAX_CLEVERAGE_FAIL'],
-                                                reset_timeout=app.config['CIRCUIT_BREAKER_CLEVERAGE_TIMEOUT_S'])
+        self.breaker = pybreaker.CircuitBreaker(
+            fail_max=app.config['CIRCUIT_BREAKER_MAX_CLEVERAGE_FAIL'],
+            reset_timeout=app.config['CIRCUIT_BREAKER_CLEVERAGE_TIMEOUT_S'],
+        )
         self.timezone = pytz.timezone(timezone)
 
     def __repr__(self):
@@ -87,12 +100,14 @@ class Cleverage(RealtimeProxy):
         try:
             return self.breaker.call(requests.get, url, timeout=self.timeout, headers=self.service_args)
         except pybreaker.CircuitBreakerError as e:
-            logging.getLogger(__name__).error('Cleverage RT service dead, using base '
-                                              'schedule (error: {}'.format(e))
+            logging.getLogger(__name__).error(
+                'Cleverage RT service dead, using base ' 'schedule (error: {}'.format(e)
+            )
             raise RealtimeProxyError('circuit breaker open')
         except requests.Timeout as t:
-            logging.getLogger(__name__).error('Cleverage RT service timeout, using base '
-                                              'schedule (error: {}'.format(t))
+            logging.getLogger(__name__).error(
+                'Cleverage RT service timeout, using base ' 'schedule (error: {}'.format(t)
+            )
             raise RealtimeProxyError('timeout')
         except Exception as e:
             logging.getLogger(__name__).exception('Cleverage RT error, using base schedule')
@@ -107,8 +122,9 @@ class Cleverage(RealtimeProxy):
 
         if not stop_id:
             # one a the id is missing, we'll not find any realtime
-            logging.getLogger(__name__).debug('missing realtime id for {obj}: stop code={s}'.
-                                              format(obj=route_point, s=stop_id))
+            logging.getLogger(__name__).debug(
+                'missing realtime id for {obj}: stop code={s}'.format(obj=route_point, s=stop_id)
+            )
             self.record_internal_failure('missing id')
             return None
 
@@ -128,7 +144,9 @@ class Cleverage(RealtimeProxy):
 
         line_code = route_point.fetch_line_id(self.object_id_tag)
 
-        schedules = next((line['schedules'] for line in cleverage_resp if line['code'].lower() == line_code.lower()), None)
+        schedules = next(
+            (line['schedules'] for line in cleverage_resp if line['code'].lower() == line_code.lower()), None
+        )
 
         if schedules:
             next_passages = []
@@ -144,7 +162,9 @@ class Cleverage(RealtimeProxy):
         else:
             return None
 
-    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None, duration=None):
+    def _get_next_passage_for_route_point(
+        self, route_point, count=None, from_dt=None, current_dt=None, duration=None
+    ):
         url = self._make_url(route_point)
         if not url:
             return None
@@ -154,16 +174,20 @@ class Cleverage(RealtimeProxy):
 
         if r.status_code != 200:
             # TODO better error handling, the response might be in 200 but in error
-            logging.getLogger(__name__).error('Cleverage RT service unavailable, impossible to query : {}'
-                                              .format(r.url))
+            logging.getLogger(__name__).error(
+                'Cleverage RT service unavailable, impossible to query : {}'.format(r.url)
+            )
             raise RealtimeProxyError('non 200 response')
 
         return self._get_passages(route_point, r.json())
 
     def status(self):
-        return {'id': unicode(self.rt_system_id),
-                'timeout': self.timeout,
-                'circuit_breaker': {'current_state': self.breaker.current_state,
-                                    'fail_counter': self.breaker.fail_counter,
-                                    'reset_timeout': self.breaker.reset_timeout},
-                }
+        return {
+            'id': unicode(self.rt_system_id),
+            'timeout': self.timeout,
+            'circuit_breaker': {
+                'current_state': self.breaker.current_state,
+                'fail_counter': self.breaker.fail_counter,
+                'reset_timeout': self.breaker.reset_timeout,
+            },
+        }

@@ -34,10 +34,11 @@ import pytest
 from navitiacommon import models
 from tyr import app
 
+
 @pytest.fixture
 def create_autocomplete_parameter():
     with app.app_context():
-        autocomplete_param = models.AutocompleteParameter('idf', 'OSM', 'BANO','FUSIO', 'OSM', [8, 9])
+        autocomplete_param = models.AutocompleteParameter('idf', 'OSM', 'BANO', 'FUSIO', 'OSM', [8, 9])
         models.db.session.add(autocomplete_param)
         models.db.session.commit()
 
@@ -70,8 +71,14 @@ def create_two_autocomplete_parameters():
 
 @pytest.fixture
 def autocomplete_parameter_json():
-    return {"name": "peru", "street": "OSM", "address": "BANO", "poi": "FUSIO", "admin": "OSM",
-            "admin_level": [8]}
+    return {
+        "name": "peru",
+        "street": "OSM",
+        "address": "BANO",
+        "poi": "FUSIO",
+        "admin": "OSM",
+        "admin_level": [8],
+    }
 
 
 def test_get_autocomplete_parameters_empty():
@@ -104,7 +111,11 @@ def test_get_autocomplete_by_name(create_two_autocomplete_parameters):
 
 
 def test_post_autocomplete(autocomplete_parameter_json):
-    resp = api_post('/v0/autocomplete_parameters', data=json.dumps(autocomplete_parameter_json), content_type='application/json')
+    resp = api_post(
+        '/v0/autocomplete_parameters',
+        data=json.dumps(autocomplete_parameter_json),
+        content_type='application/json',
+    )
 
     assert resp['name'] == 'peru'
     assert resp['street'] == 'OSM'
@@ -112,6 +123,7 @@ def test_post_autocomplete(autocomplete_parameter_json):
     assert resp['poi'] == 'FUSIO'
     assert resp['admin'] == 'OSM'
     assert resp['admin_level'] == [8]
+
 
 def test_put_autocomplete(create_two_autocomplete_parameters, autocomplete_parameter_json):
     resp = api_get('/v0/autocomplete_parameters/france')
@@ -122,7 +134,11 @@ def test_put_autocomplete(create_two_autocomplete_parameters, autocomplete_param
     assert resp['admin'] == 'OSM'
     assert resp['admin_level'] == [8, 9]
 
-    resp = api_put('/v0/autocomplete_parameters/france', data=json.dumps(autocomplete_parameter_json), content_type='application/json')
+    resp = api_put(
+        '/v0/autocomplete_parameters/france',
+        data=json.dumps(autocomplete_parameter_json),
+        content_type='application/json',
+    )
 
     assert resp['street'] == 'OSM'
     assert resp['address'] == 'BANO'

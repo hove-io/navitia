@@ -44,8 +44,8 @@ MOCKED_PROXY_CONF = [
             "destination_id_tag": "Kisio数字",
             "timezone": "Europe/Paris",
             "service_url": "http://siri.com?apikey=bob",
-            "timeout": 15
-        }
+            "timeout": 15,
+        },
     }
 ]
 
@@ -54,11 +54,12 @@ def _get_formated_schedule(scs, sp, route):
     """ small helper that extract the information from a route point stop schedule """
     return [
         {'rt': r['data_freshness'] == 'realtime', 'dt': r['date_time']}
-        for r in next(rp_sched['date_times']
-                      for rp_sched in scs
-                      if rp_sched['stop_point']['id'] == sp
-                      and rp_sched['route']['id'] == route)
-        ]
+        for r in next(
+            rp_sched['date_times']
+            for rp_sched in scs
+            if rp_sched['stop_point']['id'] == sp and rp_sched['route']['id'] == route
+        )
+    ]
 
 
 @dataset({"multiple_schedules": {'instance_config': {'realtime_proxies': MOCKED_PROXY_CONF}}})
@@ -81,139 +82,142 @@ class TestSiriLite(AbstractTestFixture):
         - 1 with an unknown line ref
         - 1 with an unknown destination
         """
-        mock_requests = MockRequests({
-            'http://siri.com?apikey=bob&MonitoringRef=syn_stoppoint21':
-                (
-{
-    "Siri": {
-        "ServiceDelivery": {
-            "ProducerRef": "bob",
-            "ResponseMessageIdentifier": "bob_id",
-            "ResponseTimestamp": "2017-07-19T13:01:59Z",
-            "StopMonitoringDelivery": [
-                {
-                    "MonitoredStopVisit": [
-                        {
-                            "ItemIdentifier": "complex_id_for_syn_stoppoint1",
-                            "MonitoredVehicleJourney": {
-                                "DestinationName": [{"value": "to stop 22"}],
-                                "DestinationRef": {"value": "syn_stoppoint22"},
-                                "LineRef": {"value": "syn_lineC"},
-                                "MonitoredCall": {
-                                    "ExpectedDepartureTime": "2016-01-02T10:02:42.000Z",
-                                    "StopPointName": [{"value": "the stop"}],
-                                    "VehicleAtStop": False
-                                }
-                            },
-                            "MonitoringRef": {"value": "syn_stoppoint21"},
-                            "RecordedAtTime": "2017-07-19T13:01:54.727Z"
-                        },
-                        # we add another passage on to stop 22 (route C)
-                        {
-                            "ItemIdentifier": "complex_id_for_syn_stoppoint1",
-                            "MonitoredVehicleJourney": {
-                                "DestinationName": [{"value": "to stop 22"}],
-                                "DestinationRef": {"value": "syn_stoppoint22"},
-                                "LineRef": {"value": "syn_lineC"},
-                                "MonitoredCall": {
-                                    "ExpectedDepartureTime": "2016-01-02T10:05:42.000Z",
-                                    "StopPointName": [{"value": "the stop"}],
-                                    "VehicleAtStop": False
-                                }
-                            },
-                            "MonitoringRef": {"value": "syn_stoppoint21"},
-                            "RecordedAtTime": "2017-07-19T13:01:54.727Z"
-                        },
-                        # we add a passage to SP_20 (route C-backward)
-                        {
-                            "ItemIdentifier": "complex_id_for_syn_stoppoint1",
-                            "MonitoredVehicleJourney": {
-                                "DestinationName": [{"value": "to stop 20"}],
-                                "DestinationRef": {"value": "syn_stoppoint20"},
-                                "LineRef": {"value": "syn_lineC"},
-                                "MonitoredCall": {
-                                    "ExpectedDepartureTime": "2016-01-02T10:03:42.000Z",
-                                    "StopPointName": [{"value": "the stop"}],
-                                    "VehicleAtStop": False
-                                }
-                            },
-                            "MonitoringRef": {"value": "syn_stoppoint21"},
-                            "RecordedAtTime": "2017-07-19T13:01:54.727Z"
-                        },
-                        # we add a passage with no departure time (we should not consider it)
-                        {
-                            "ItemIdentifier": "complex_id_for_syn_stoppoint1",
-                            "MonitoredVehicleJourney": {
-                                "DestinationName": [{"value": "to stop 20"}],
-                                "DestinationRef": {"value": "syn_stoppoint22"},
-                                "LineRef": {"value": "syn_lineC"},
-                                "MonitoredCall": {
-                                    "ExpectedDepartureTime": "",
-                                    "StopPointName": [{"value": "the stop"}],
-                                    "VehicleAtStop": False
-                                }
-                            },
-                            "MonitoringRef": {"value": "syn_stoppoint21"},
-                            "RecordedAtTime": "2017-07-19T13:01:54.727Z"
-                        },
-                        # we add a passage with departure time in the past (we should not consider it)
-                        {
-                            "ItemIdentifier": "complex_id_for_syn_stoppoint1",
-                            "MonitoredVehicleJourney": {
-                                "DestinationName": [{"value": "to stop 20"}],
-                                "DestinationRef": {"value": "syn_stoppoint22"},
-                                "LineRef": {"value": "syn_lineC"},
-                                "MonitoredCall": {
-                                    "ExpectedDepartureTime": "2016-01-02T02:06:42.000Z",
-                                    "StopPointName": [{"value": "the stop"}],
-                                    "VehicleAtStop": False
-                                }
-                            },
-                            "MonitoringRef": {"value": "syn_stoppoint21"},
-                            "RecordedAtTime": "2017-07-19T13:01:54.727Z"
-                        },
-                        # we add a passage on an unknown line (we should not consider it)
-                        {
-                            "ItemIdentifier": "complex_id_for_syn_stoppoint1",
-                            "MonitoredVehicleJourney": {
-                                "DestinationName": [{"value": "to stop 20"}],
-                                "DestinationRef": {"value": "syn_stoppoint20"},
-                                "LineRef": {"value": "an_unkonwn_line"},
-                                "MonitoredCall": {
-                                    "ExpectedDepartureTime": "2016-01-02T10:13:42.000Z",
-                                    "StopPointName": [{"value": "the stop"}],
-                                    "VehicleAtStop": False
-                                }
-                            },
-                            "MonitoringRef": {"value": "syn_stoppoint21"},
-                            "RecordedAtTime": "2017-07-19T13:01:54.727Z"
-                        },
-                        # we add a passage on an unknown destination, we should skip it too
-                        {
-                            "ItemIdentifier": "complex_id_for_syn_stoppoint1",
-                            "MonitoredVehicleJourney": {
-                                "DestinationName": [{"value": "to stop bob"}],
-                                "DestinationRef": {"value": "an_unknown_stop"},
-                                "LineRef": {"value": "syn_lineC"},
-                                "MonitoredCall": {
-                                    "ExpectedDepartureTime": "2016-01-02T10:23:42.000Z",
-                                    "StopPointName": [{"value": "the stop"}],
-                                    "VehicleAtStop": False
-                                }
-                            },
-                            "MonitoringRef": {"value": "syn_stoppoint21"},
-                            "RecordedAtTime": "2017-07-19T13:01:54.727Z"
-                        },
-                    ],
-                    "ResponseTimestamp": "2017-07-19T13:01:59Z",
-                    "Status": "true",
-                    "Version": "2.0"
-                }
-            ]
-        }
-    }
-}, 200)
-        })
+        mock_requests = MockRequests(
+            {
+                'http://siri.com?apikey=bob&MonitoringRef=syn_stoppoint21': (
+                    {
+                        "Siri": {
+                            "ServiceDelivery": {
+                                "ProducerRef": "bob",
+                                "ResponseMessageIdentifier": "bob_id",
+                                "ResponseTimestamp": "2017-07-19T13:01:59Z",
+                                "StopMonitoringDelivery": [
+                                    {
+                                        "MonitoredStopVisit": [
+                                            {
+                                                "ItemIdentifier": "complex_id_for_syn_stoppoint1",
+                                                "MonitoredVehicleJourney": {
+                                                    "DestinationName": [{"value": "to stop 22"}],
+                                                    "DestinationRef": {"value": "syn_stoppoint22"},
+                                                    "LineRef": {"value": "syn_lineC"},
+                                                    "MonitoredCall": {
+                                                        "ExpectedDepartureTime": "2016-01-02T10:02:42.000Z",
+                                                        "StopPointName": [{"value": "the stop"}],
+                                                        "VehicleAtStop": False,
+                                                    },
+                                                },
+                                                "MonitoringRef": {"value": "syn_stoppoint21"},
+                                                "RecordedAtTime": "2017-07-19T13:01:54.727Z",
+                                            },
+                                            # we add another passage on to stop 22 (route C)
+                                            {
+                                                "ItemIdentifier": "complex_id_for_syn_stoppoint1",
+                                                "MonitoredVehicleJourney": {
+                                                    "DestinationName": [{"value": "to stop 22"}],
+                                                    "DestinationRef": {"value": "syn_stoppoint22"},
+                                                    "LineRef": {"value": "syn_lineC"},
+                                                    "MonitoredCall": {
+                                                        "ExpectedDepartureTime": "2016-01-02T10:05:42.000Z",
+                                                        "StopPointName": [{"value": "the stop"}],
+                                                        "VehicleAtStop": False,
+                                                    },
+                                                },
+                                                "MonitoringRef": {"value": "syn_stoppoint21"},
+                                                "RecordedAtTime": "2017-07-19T13:01:54.727Z",
+                                            },
+                                            # we add a passage to SP_20 (route C-backward)
+                                            {
+                                                "ItemIdentifier": "complex_id_for_syn_stoppoint1",
+                                                "MonitoredVehicleJourney": {
+                                                    "DestinationName": [{"value": "to stop 20"}],
+                                                    "DestinationRef": {"value": "syn_stoppoint20"},
+                                                    "LineRef": {"value": "syn_lineC"},
+                                                    "MonitoredCall": {
+                                                        "ExpectedDepartureTime": "2016-01-02T10:03:42.000Z",
+                                                        "StopPointName": [{"value": "the stop"}],
+                                                        "VehicleAtStop": False,
+                                                    },
+                                                },
+                                                "MonitoringRef": {"value": "syn_stoppoint21"},
+                                                "RecordedAtTime": "2017-07-19T13:01:54.727Z",
+                                            },
+                                            # we add a passage with no departure time (we should not consider it)
+                                            {
+                                                "ItemIdentifier": "complex_id_for_syn_stoppoint1",
+                                                "MonitoredVehicleJourney": {
+                                                    "DestinationName": [{"value": "to stop 20"}],
+                                                    "DestinationRef": {"value": "syn_stoppoint22"},
+                                                    "LineRef": {"value": "syn_lineC"},
+                                                    "MonitoredCall": {
+                                                        "ExpectedDepartureTime": "",
+                                                        "StopPointName": [{"value": "the stop"}],
+                                                        "VehicleAtStop": False,
+                                                    },
+                                                },
+                                                "MonitoringRef": {"value": "syn_stoppoint21"},
+                                                "RecordedAtTime": "2017-07-19T13:01:54.727Z",
+                                            },
+                                            # we add a passage with departure time in the past (we should not consider it)
+                                            {
+                                                "ItemIdentifier": "complex_id_for_syn_stoppoint1",
+                                                "MonitoredVehicleJourney": {
+                                                    "DestinationName": [{"value": "to stop 20"}],
+                                                    "DestinationRef": {"value": "syn_stoppoint22"},
+                                                    "LineRef": {"value": "syn_lineC"},
+                                                    "MonitoredCall": {
+                                                        "ExpectedDepartureTime": "2016-01-02T02:06:42.000Z",
+                                                        "StopPointName": [{"value": "the stop"}],
+                                                        "VehicleAtStop": False,
+                                                    },
+                                                },
+                                                "MonitoringRef": {"value": "syn_stoppoint21"},
+                                                "RecordedAtTime": "2017-07-19T13:01:54.727Z",
+                                            },
+                                            # we add a passage on an unknown line (we should not consider it)
+                                            {
+                                                "ItemIdentifier": "complex_id_for_syn_stoppoint1",
+                                                "MonitoredVehicleJourney": {
+                                                    "DestinationName": [{"value": "to stop 20"}],
+                                                    "DestinationRef": {"value": "syn_stoppoint20"},
+                                                    "LineRef": {"value": "an_unkonwn_line"},
+                                                    "MonitoredCall": {
+                                                        "ExpectedDepartureTime": "2016-01-02T10:13:42.000Z",
+                                                        "StopPointName": [{"value": "the stop"}],
+                                                        "VehicleAtStop": False,
+                                                    },
+                                                },
+                                                "MonitoringRef": {"value": "syn_stoppoint21"},
+                                                "RecordedAtTime": "2017-07-19T13:01:54.727Z",
+                                            },
+                                            # we add a passage on an unknown destination, we should skip it too
+                                            {
+                                                "ItemIdentifier": "complex_id_for_syn_stoppoint1",
+                                                "MonitoredVehicleJourney": {
+                                                    "DestinationName": [{"value": "to stop bob"}],
+                                                    "DestinationRef": {"value": "an_unknown_stop"},
+                                                    "LineRef": {"value": "syn_lineC"},
+                                                    "MonitoredCall": {
+                                                        "ExpectedDepartureTime": "2016-01-02T10:23:42.000Z",
+                                                        "StopPointName": [{"value": "the stop"}],
+                                                        "VehicleAtStop": False,
+                                                    },
+                                                },
+                                                "MonitoringRef": {"value": "syn_stoppoint21"},
+                                                "RecordedAtTime": "2017-07-19T13:01:54.727Z",
+                                            },
+                                        ],
+                                        "ResponseTimestamp": "2017-07-19T13:01:59Z",
+                                        "Status": "true",
+                                        "Version": "2.0",
+                                    }
+                                ],
+                            }
+                        }
+                    },
+                    200,
+                )
+            }
+        )
         with mock.patch('requests.get', mock_requests.get):
             # first we make a base schedule call for the test to be more readable
             query = self.query_template.format(sp='SP_21') + "&data_freshness=base_schedule"
@@ -246,8 +250,8 @@ class TestSiriLite(AbstractTestFixture):
             # c1 and c2 have the same destination, so we cannot know at which route it is from the
             # realtime passage data, so we have the realtime passage on both routes
             # this is not great, but it will do for the moment
-            assert _get_formated_schedule(scs, sp='SP_21', route='C1') ==\
-                   _get_formated_schedule(scs, sp='SP_21', route='C2') == [
-                {'rt': True, 'dt': '20160102T100242'},
-                {'rt': True, 'dt': '20160102T100542'}
-            ]
+            assert (
+                _get_formated_schedule(scs, sp='SP_21', route='C1')
+                == _get_formated_schedule(scs, sp='SP_21', route='C2')
+                == [{'rt': True, 'dt': '20160102T100242'}, {'rt': True, 'dt': '20160102T100542'}]
+            )

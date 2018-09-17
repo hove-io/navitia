@@ -43,6 +43,7 @@ def valid_autocomplete_with_one_stop_area(response):
     assert places[0]['embedded_type'] == 'stop_area'
     assert places[0]['name'] == 'Gare (Quimper)'
 
+
 def valid_autocomplete_with_multi_object(response):
     """
     response contains 10 elements
@@ -76,6 +77,7 @@ class TestAutocomplete(AbstractTestFixture):
     """
     Test the autocomplete responses
     """
+
     def test_autocomplete_without(self):
         """
         Test of empty result
@@ -101,16 +103,18 @@ class TestAutocomplete(AbstractTestFixture):
 
     def test_places_coords(self):
         coords = '{lon};{lat}'.format(lon=2, lat=3)
-        response = self.query('v1/coverage/{coords}/places?q={q}&type[]=stop_point'.
-                              format(coords=coords, q='Becharles'))
+        response = self.query(
+            'v1/coverage/{coords}/places?q={q}&type[]=stop_point'.format(coords=coords, q='Becharles')
+        )
         places = get_not_null(response, 'places')
         assert len(places) == 1
         assert places[0]['id'] == 'stop_point:Becharles'
 
     def test_place_uri_coords(self):
         coords = '{lon};{lat}'.format(lon=2, lat=3)
-        response = self.query('v1/coverage/{coords}/places/{id}'.
-                              format(coords=coords, id='stop_point:Becharles'))
+        response = self.query(
+            'v1/coverage/{coords}/places/{id}'.format(coords=coords, id='stop_point:Becharles')
+        )
         places = get_not_null(response, 'places')
         assert len(places) == 1
         assert places[0]['id'] == 'stop_point:Becharles'
@@ -132,6 +136,7 @@ class TestAutocomplete(AbstractTestFixture):
         multipolygon = '{"type":"Feature","geometry":{"type":"MultiPolygo","coordiates":\
         [[[[2.4,48.6],[2.8,48.6],[2.7,48.9],[2.4,48.6]]],\
         [[[2.1,48.9],[2.2,48.6],[2.4,48.9],[2.1,48.9]]]]}}'
-        _, status = self.query_no_assert('/v1/coverage/main_autocomplete_test/places?q=Gare&shape={}'
-                                         .format(multipolygon))
+        _, status = self.query_no_assert(
+            '/v1/coverage/main_autocomplete_test/places?q=Gare&shape={}'.format(multipolygon)
+        )
         assert status == 400

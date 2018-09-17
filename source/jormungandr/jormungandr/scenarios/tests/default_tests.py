@@ -42,20 +42,31 @@ class Instance(object):
 
 
 def find_max_duration_clockwise_test():
-    resp_builder = ResponseBuilder()\
-        .journey(sections=[
-            {'mode': 'Walking', 'duration': 240},
-            {'type': 'PT', 'duration': 300},
-            {'mode': 'Walking', 'duration': 120},
-        ], type='best', arrival='T1501')\
-        .journey(uri='rapid', sections=[
-            {'mode': 'Walking', 'duration': 120},
-            {'type': 'PT', 'duration': 300},
-            {'mode': 'Walking', 'duration': 120},
-        ], type='rapid', arrival='T1501')\
-        .journey(uri='non pt', sections=[
-            {'mode': 'Walking', 'duration': 130},
-        ], type='non_pt_walk', arrival='T1231')
+    resp_builder = (
+        ResponseBuilder()
+        .journey(
+            sections=[
+                {'mode': 'Walking', 'duration': 240},
+                {'type': 'PT', 'duration': 300},
+                {'mode': 'Walking', 'duration': 120},
+            ],
+            type='best',
+            arrival='T1501',
+        )
+        .journey(
+            uri='rapid',
+            sections=[
+                {'mode': 'Walking', 'duration': 120},
+                {'type': 'PT', 'duration': 300},
+                {'mode': 'Walking', 'duration': 120},
+            ],
+            type='rapid',
+            arrival='T1501',
+        )
+        .journey(
+            uri='non pt', sections=[{'mode': 'Walking', 'duration': 130}], type='non_pt_walk', arrival='T1231'
+        )
+    )
 
     response = resp_builder.response
 
@@ -68,20 +79,31 @@ def find_max_duration_clockwise_test():
 
 
 def find_max_duration__counterclockwise_test():
-    resp_builder = ResponseBuilder()\
-        .journey(sections=[
-            {'mode': 'Walking', 'duration': 240},
-            {'type': 'PT', 'duration': 300},
-            {'mode': 'Walking', 'duration': 120},
-        ], type='best', arrival='T1231')\
-        .journey(uri='rapid', sections=[
-            {'mode': 'Walking', 'duration': 120},
-            {'type': 'PT', 'duration': 300},
-            {'mode': 'Walking', 'duration': 120},
-        ], type='rapid', arrival='T1501')\
-        .journey(uri='non pt', sections=[
-            {'mode': 'Walking', 'duration': 130},
-        ], type='non_pt_walk', arrival='T1534')
+    resp_builder = (
+        ResponseBuilder()
+        .journey(
+            sections=[
+                {'mode': 'Walking', 'duration': 240},
+                {'type': 'PT', 'duration': 300},
+                {'mode': 'Walking', 'duration': 120},
+            ],
+            type='best',
+            arrival='T1231',
+        )
+        .journey(
+            uri='rapid',
+            sections=[
+                {'mode': 'Walking', 'duration': 120},
+                {'type': 'PT', 'duration': 300},
+                {'mode': 'Walking', 'duration': 120},
+            ],
+            type='rapid',
+            arrival='T1501',
+        )
+        .journey(
+            uri='non pt', sections=[{'mode': 'Walking', 'duration': 130}], type='non_pt_walk', arrival='T1534'
+        )
+    )
 
     response = resp_builder.response
 
@@ -97,17 +119,29 @@ def find_max_duration_clockwise_no_walk_test():
     """
     we don't have a journey with walking so max_duration is None, and we keep all journeys
     """
-    resp_builder = ResponseBuilder()\
-        .journey(uri='best', sections=[
-            {'mode': 'Bike', 'duration': 240},
-            {'type': 'PT', 'duration': 300},
-            {'mode': 'Walking', 'duration': 120},
-        ], type='best', arrival='T1534')\
-        .journey(uri='rapid', sections=[
-            {'mode': 'Walking', 'duration': 120},
-            {'type': 'PT', 'duration': 300},
-            {'mode': 'Bike', 'duration': 120},
-        ], type='rapid', arrival='T1534')
+    resp_builder = (
+        ResponseBuilder()
+        .journey(
+            uri='best',
+            sections=[
+                {'mode': 'Bike', 'duration': 240},
+                {'type': 'PT', 'duration': 300},
+                {'mode': 'Walking', 'duration': 120},
+            ],
+            type='best',
+            arrival='T1534',
+        )
+        .journey(
+            uri='rapid',
+            sections=[
+                {'mode': 'Walking', 'duration': 120},
+                {'type': 'PT', 'duration': 300},
+                {'mode': 'Bike', 'duration': 120},
+            ],
+            type='rapid',
+            arrival='T1534',
+        )
+    )
     response = resp_builder.response
 
     scenario = default.Scenario()
@@ -120,49 +154,65 @@ def find_max_duration_clockwise_no_walk_test():
 
 def next_journey_test():
     """ In the default scenario, the next journey is one minute after the first 'rapid' if we get one"""
-    builder = ResponseBuilder(default_date=datetime.date(2016, 10, 10))\
-        .journey(type='rapid', departure='T1200', arrival='T1500')\
-        .journey(type='fastest', departure='T1100', arrival='T1700')\
-        .journey(type='non_pt_walk', departure='T1000', arrival='T1534')\
+    builder = (
+        ResponseBuilder(default_date=datetime.date(2016, 10, 10))
+        .journey(type='rapid', departure='T1200', arrival='T1500')
+        .journey(type='fastest', departure='T1100', arrival='T1700')
+        .journey(type='non_pt_walk', departure='T1000', arrival='T1534')
         .journey(type='car', departure='T1300', arrival='T1534')
+    )
 
     scenario = default.Scenario()
-    assert scenario.next_journey_datetime(builder.get_journeys(), clockwise=True) == str_to_time_stamp('20161010T120100')
+    assert scenario.next_journey_datetime(builder.get_journeys(), clockwise=True) == str_to_time_stamp(
+        '20161010T120100'
+    )
 
 
 def next_journey_test_no_rapid_test():
     """ In the default scenario, if we don't get a rapid,
     the next journey is one minute after the earliest journey
     """
-    builder = ResponseBuilder(default_date=datetime.date(2016, 10, 10))\
-        .journey(type='fastest', departure='T1100', arrival='T1700')\
-        .journey(type='non_pt_walk', departure='T1000', arrival='T1534')\
+    builder = (
+        ResponseBuilder(default_date=datetime.date(2016, 10, 10))
+        .journey(type='fastest', departure='T1100', arrival='T1700')
+        .journey(type='non_pt_walk', departure='T1000', arrival='T1534')
         .journey(type='car', departure='T2000', arrival='T1534')
+    )
 
     scenario = default.Scenario()
-    assert scenario.next_journey_datetime(builder.get_journeys(), clockwise=True) == str_to_time_stamp('20161010T100100')
+    assert scenario.next_journey_datetime(builder.get_journeys(), clockwise=True) == str_to_time_stamp(
+        '20161010T100100'
+    )
 
 
 def previous_journey_test():
     """ In the default scenario, the previous journey is one minute before the first 'rapid' if we get one"""
-    builder = ResponseBuilder(default_date=datetime.date(2016, 10, 10))\
-        .journey(type='rapid', departure='T1200', arrival='T1500')\
-        .journey(type='fastest', departure='T1100', arrival='T1700')\
-        .journey(type='non_pt_walk', departure='T1000', arrival='T1534')\
+    builder = (
+        ResponseBuilder(default_date=datetime.date(2016, 10, 10))
+        .journey(type='rapid', departure='T1200', arrival='T1500')
+        .journey(type='fastest', departure='T1100', arrival='T1700')
+        .journey(type='non_pt_walk', departure='T1000', arrival='T1534')
         .journey(type='car', departure='T1300', arrival='T1534')
+    )
 
     scenario = default.Scenario()
-    assert scenario.previous_journey_datetime(builder.get_journeys(), clockwise=True) == str_to_time_stamp('20161010T145900')
+    assert scenario.previous_journey_datetime(builder.get_journeys(), clockwise=True) == str_to_time_stamp(
+        '20161010T145900'
+    )
 
 
 def previous_journey_no_rapid_test():
     """ In the default scenario, if we don't get a rapid,
     the previous journey is one minute before the tardiest journey
     """
-    builder = ResponseBuilder(default_date=datetime.date(2016, 10, 10))\
-        .journey(type='fastest', departure='T1100', arrival='T1700')\
-        .journey(type='non_pt_walk', departure='T1000', arrival='T1534')\
+    builder = (
+        ResponseBuilder(default_date=datetime.date(2016, 10, 10))
+        .journey(type='fastest', departure='T1100', arrival='T1700')
+        .journey(type='non_pt_walk', departure='T1000', arrival='T1534')
         .journey(type='car', departure='T2000', arrival='T1534')
+    )
 
     scenario = default.Scenario()
-    assert scenario.previous_journey_datetime(builder.get_journeys(), clockwise=True) == str_to_time_stamp('20161010T165900')
+    assert scenario.previous_journey_datetime(builder.get_journeys(), clockwise=True) == str_to_time_stamp(
+        '20161010T165900'
+    )

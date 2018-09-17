@@ -31,6 +31,7 @@ from __future__ import absolute_import, print_function, unicode_literals, divisi
 from .tests_mechanism import AbstractTestFixture, dataset
 from .check_utils import *
 
+
 @dataset({})
 class TestEmptyEndPoint(AbstractTestFixture):
     """
@@ -51,13 +52,13 @@ class TestEmptyEndPoint(AbstractTestFixture):
             assert status in ["deprecated", "current", "testing"]
 
             if v["status"] == "current":
-                #we want one and only one 'current' api version
+                # we want one and only one 'current' api version
                 assert not current_found, "we can have only one current version of the api"
                 current_found = True
 
-            #all non templated links must be valid
-            #TODO use get_links_dict to ensure the same link format
-            #check_links(v, self.tester)
+            # all non templated links must be valid
+            # TODO use get_links_dict to ensure the same link format
+            # check_links(v, self.tester)
 
         assert current_found, "we must have one current version of the api"
 
@@ -88,11 +89,12 @@ class TestHttps(AbstractTestFixture):
         assert versions[0]['links'][0]['href'].startswith('http://')
 
 
-@dataset({'main_routing_test':{},  'main_ptref_test': {}})
+@dataset({'main_routing_test': {}, 'main_ptref_test': {}})
 class TestEndPoint(AbstractTestFixture):
     """
     Test the end point with 2 regions loaded
     """
+
     def test_coverage(self):
         json_response = self.query("/v1/coverage")
 
@@ -109,9 +111,9 @@ class TestEndPoint(AbstractTestFixture):
 
             get_not_null(region, 'status')
 
-            #shapes are not filled in dataset for the moment
-            #shape = get_not_null(region, 'shape')
-            #TODO check the shape with regexp ?
+            # shapes are not filled in dataset for the moment
+            # shape = get_not_null(region, 'shape')
+            # TODO check the shape with regexp ?
 
             region_id = get_not_null(region, 'id')
 
@@ -125,7 +127,7 @@ class TestEndPoint(AbstractTestFixture):
         assert is_valid_navitia_version_number(jormun_version)
         assert json_response['context']['timezone'] == 'Africa/Abidjan'
 
-        #we also must have an empty regions list
+        # we also must have an empty regions list
         all_status = get_not_null(json_response, 'regions')
         assert len(all_status) == 2
 

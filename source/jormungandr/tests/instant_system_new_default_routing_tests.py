@@ -33,12 +33,7 @@ from jormungandr.tests.utils_test import MockResponse
 from tests.check_utils import get_not_null, s_coord, r_coord, journey_basic_query
 from tests.tests_mechanism import dataset, NewDefaultScenarioAbstractTestFixture
 
-DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER = {
-    'id': '42',
-    'name': '42',
-    'license': 'I dunno',
-    'url': 'http://w.tf'
-}
+DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER = {'id': '42', 'name': '42', 'license': 'I dunno', 'url': 'http://w.tf'}
 
 MOCKED_INSTANCE_CONF = {
     'scenario': 'new_default',
@@ -53,10 +48,10 @@ MOCKED_INSTANCE_CONF = {
                     "rating_scale_max": 5,
                     "feed_publisher": DUMMY_INSTANT_SYSTEM_FEED_PUBLISHER,
                 },
-                "class": "jormungandr.scenarios.ridesharing.instant_system.InstantSystem"
+                "class": "jormungandr.scenarios.ridesharing.instant_system.InstantSystem",
             }
         ]
-    }
+    },
 }
 
 INSTANCE_SYSTEM_RESPONSE = {
@@ -72,54 +67,30 @@ INSTANCE_SYSTEM_RESPONSE = {
             "paths": [
                 {
                     "mode": "RIDESHARINGAD",
-                    "from": {
-                        "name": "",
-                        "lat": 0.0000898312,
-                        "lon": 0.0000898312
-                    },
-                    "to": {
-                        "name": "",
-                        "lat": 0.00071865,
-                        "lon": 0.00188646
-                    },
+                    "from": {"name": "", "lat": 0.0000898312, "lon": 0.0000898312},
+                    "to": {"name": "", "lat": 0.00071865, "lon": 0.00188646},
                     "departureDate": "2017-12-25T08:07:59+01:00",
                     "arrivalDate": "2017-12-25T08:25:36+01:00",
                     "shape": "wosdH|ihIRVDTFDzBjPNhADJ\\`C?TJt@Hj@h@tDp@bFR?bAFRBZDR@JCL@~AJl@Df@DfBNv@B~@DjAFh@HXH~@VbEfANDh@PdAl@\\RdAZnBHpADvBDf@@d@Gv@S\\OlAOl@EbAHjAVNDd@Dd@Mt@u@FGrE{EtBaBr@zCp@dDd@~BRtAHj@X`BFXlAjDLd@v@dDXlAh@TVl@hBtIB`ANpAh@nBf@xATf@Xd@JFPD@JHRLBLKDBbCbBbBbBjApA?VHPPBL`@\\^|BrBDHJ`@AP?PDRFL\\TRAJGRD`Al@jBhA~BbBx@VfALl@PHVDHPFNCVNdCnBpHzDdB|AfAjAj@h@^d@jAhBhAvA?^BNFJPHPCFGVNpBhApBt@ZL|B^dCJfDAZFLRHBNEJQZIdUa@b@JJ`@TXTFTAPKNUH]nBGtOb@vDd@`C`ArAp@zAjAnBnBJJh@h@`_@l`@fIvIfMhNl@t@dAzBnAnDx@xDh@jFfBbRdAnMdBnSjB|JbDbIhMj[rN`_@nEfJzCxDrCtDl@pBDtE^Bn@?h@?t@IdAe@XUFIvBaBvBaBf@Wl@OdAEfAJJXJHJBLCbAbAx@j@fBn@p@X`HfDdAd@NB\\CBLJDFCBI?OGILYn@gDb@uAVe@\\_@jEgDlFgARElBa@|G}AxFwA`AWv@YNI~AaArAg@bEw@pA[t@Y`B{@~BmAtAo@fAk@TYBBH?DGBKTEd@U^QlBcA^QvEcCP@Le@Cm@Eo@Ia@AI",
                     "rideSharingAd": {
                         "id": "24bab9de-653c-4cc4-a947-389c59cf0423",
                         "type": "DRIVER",
-                        "from": {
-                            "name": "9 Allee Rochester, Rennes",
-                            "lat": 0.0000998312,
-                            "lon": 0.0000998312
-                        },
-                        "to": {
-                            "name": "2 Avenue Alphonse Legault, Bruz",
-                            "lat": 0.00081865,
-                            "lon": 0.00198646
-                        },
+                        "from": {"name": "9 Allee Rochester, Rennes", "lat": 0.0000998312, "lon": 0.0000998312},
+                        "to": {"name": "2 Avenue Alphonse Legault, Bruz", "lat": 0.00081865, "lon": 0.00198646},
                         "user": {
                             "alias": "Jean P.",
                             "gender": "MALE",
                             "imageUrl": "https://dummyimage.com/128x128/C8E6C9/000.png&text=JP",
-                            "rating": {
-                                "rate": 0,
-                                "count": 0
-                            }
+                            "rating": {"rate": 0, "count": 0},
                         },
-                        "price": {
-                            "amount": 170.0,
-                            "currency": "EUR"
-                        },
-                        "vehicle": {
-                            "availableSeats": 4
-                        }
-                    }
+                        "price": {"amount": 170.0, "currency": "EUR"},
+                        "vehicle": {"availableSeats": 4},
+                    },
                 }
-            ]
+            ],
         }
     ],
-    "url": "https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&ibi=&isi=&utm_campaign=KISIO&link=https%3A%2F%2Fwww.star.fr%2Fsearch%2F%3FfeatureName%3DsearchResults%26networkId%3D33%26from%3D48.109377%252C-1.682103%26to%3D48.020335%252C-1.743929%26multimodal%3Dfalse%26departureDate%3D2017-12-25T08%253A00%253A00%252B01%253A00"
+    "url": "https://jky8k.app.goo.gl/?efr=1&apn=com.is.android.rennes&ibi=&isi=&utm_campaign=KISIO&link=https%3A%2F%2Fwww.star.fr%2Fsearch%2F%3FfeatureName%3DsearchResults%26networkId%3D33%26from%3D48.109377%252C-1.682103%26to%3D48.020335%252C-1.743929%26multimodal%3Dfalse%26departureDate%3D2017-12-25T08%253A00%253A00%252B01%253A00",
 }
 
 
@@ -129,8 +100,9 @@ def mock_instance_system(_, params):
 
 @pytest.fixture(scope="function", autouse=True)
 def mock_http_instance_system(monkeypatch):
-    monkeypatch.setattr('jormungandr.scenarios.ridesharing.instant_system.InstantSystem._call_service',
-                        mock_instance_system)
+    monkeypatch.setattr(
+        'jormungandr.scenarios.ridesharing.instant_system.InstantSystem._call_service', mock_instance_system
+    )
 
 
 @dataset({'main_routing_test': MOCKED_INSTANCE_CONF})
@@ -143,9 +115,10 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         """
         test ridesharing_jouneys details
         """
-        q = "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"\
-            "first_section_mode[]={first}&last_section_mode[]={last}"\
-            .format(first='ridesharing', last='walking')
+        q = (
+            "journeys?from=0.0000898312;0.0000898312&to=0.00188646;0.00071865&datetime=20120614T075500&"
+            "first_section_mode[]={first}&last_section_mode[]={last}".format(first='ridesharing', last='walking')
+        )
         response = self.query_region(q)
         self.is_valid_journey_response(response, q, check_journey_links=False)
 
@@ -175,7 +148,7 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         rs_journeys = sections[0].get('ridesharing_journeys')
         assert len(rs_journeys) == 1
         assert rs_journeys[0].get('distances').get('ridesharing') == 224
-        assert rs_journeys[0].get('durations').get('walking') == 0 #two crow_fly sections have 0 duration
+        assert rs_journeys[0].get('durations').get('walking') == 0  # two crow_fly sections have 0 duration
         assert rs_journeys[0].get('durations').get('ridesharing') == 1057
         assert 'ridesharing' in rs_journeys[0].get('tags')
         rsj_sections = rs_journeys[0].get('sections')
@@ -197,8 +170,8 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         assert rsj_info.get('operator') == 'Instant System'
         assert rsj_info.get('seats').get('available') == 4
 
-        #TODO we should have none but we get 0 with marshall, it works with serpy
-        #assert 'total' not in rsj_info.get('seats')
+        # TODO we should have none but we get 0 with marshall, it works with serpy
+        # assert 'total' not in rsj_info.get('seats')
 
         rsj_links = rsj_sections[1].get('links')
         assert len(rsj_links) == 2
@@ -226,17 +199,19 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         """
         test ridesharing_jouneys details
         """
-        q = journey_basic_query + \
-            "&first_section_mode[]=ridesharing" + \
-            "&last_section_mode[]=walking" + \
-            "&ridesharing_speed=2.5"
+        q = (
+            journey_basic_query
+            + "&first_section_mode[]=ridesharing"
+            + "&last_section_mode[]=walking"
+            + "&ridesharing_speed=2.5"
+        )
         response = self.query_region(q)
         self.is_valid_journey_response(response, q, check_journey_links=False)
 
         journeys = get_not_null(response, 'journeys')
         assert len(journeys) == 2
 
-        #The first journey is direct ridesharing
+        # The first journey is direct ridesharing
         assert 'ridesharing' in journeys[0].get('tags')
         assert 'non_pt' in journeys[0].get('tags')
         assert journeys[0].get('type') == 'best'
@@ -246,7 +221,7 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         assert journeys[0].get('durations').get('ridesharing') == 37
         assert journeys[0].get('durations').get('total') == 37
 
-        #The second one is of combination of ridesharing + public_transport + walking
+        # The second one is of combination of ridesharing + public_transport + walking
         assert 'ridesharing' in journeys[1].get('tags')
         assert 'non_pt' not in journeys[1].get('tags')
         assert journeys[1].get('type') == 'rapid'
@@ -256,7 +231,7 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         assert journeys[1].get('durations').get('walking') == 80
         assert journeys[1].get('durations').get('total') == 89
 
-        #first section is of ridesharing
+        # first section is of ridesharing
         rs_section = sections[0]
         assert rs_section.get('mode') == 'ridesharing'
         assert rs_section.get('type') == 'street_network'
@@ -264,14 +239,14 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         assert rs_section.get('to').get('id') == 'stop_point:stopB'
         assert rs_section.get('duration') == 7
 
-        #second section is of public transport
+        # second section is of public transport
         pt_section = sections[1]
         assert pt_section.get('type') == 'public_transport'
         assert pt_section.get('from').get('id') == 'stop_point:stopB'
         assert pt_section.get('to').get('id') == 'stop_point:stopA'
         assert pt_section.get('duration') == 2
 
-        #third section is of walking
+        # third section is of walking
         walking_section = sections[2]
         assert walking_section.get('mode') == 'walking'
         assert walking_section.get('type') == 'street_network'
@@ -279,12 +254,14 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         assert walking_section.get('to').get('id') == '0.00188646;0.00071865'
         assert walking_section.get('duration') == 80
 
-        #with the use of &max_ridesharing_duration_to_pt=0 we have only direct ridesharing
-        q = journey_basic_query + \
-            "&first_section_mode[]=ridesharing" + \
-            "&last_section_mode[]=walking" + \
-            "&ridesharing_speed=2.5" + \
-            "&max_ridesharing_duration_to_pt=0"
+        # with the use of &max_ridesharing_duration_to_pt=0 we have only direct ridesharing
+        q = (
+            journey_basic_query
+            + "&first_section_mode[]=ridesharing"
+            + "&last_section_mode[]=walking"
+            + "&ridesharing_speed=2.5"
+            + "&max_ridesharing_duration_to_pt=0"
+        )
         response = self.query_region(q)
         self.is_valid_journey_response(response, q, check_journey_links=False)
         journeys = get_not_null(response, 'journeys')
@@ -292,12 +269,13 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         assert 'ridesharing' in journeys[0].get('tags')
         assert journeys[0].get('durations').get('ridesharing') == 37
 
-        q = journey_basic_query + \
-            ("&first_section_mode[]=ridesharing"
-             "&first_section_mode[]=car"
-             "&last_section_mode[]=walking"
-             "&ridesharing_speed=2.5"
-             "&car_speed=2.5")
+        q = journey_basic_query + (
+            "&first_section_mode[]=ridesharing"
+            "&first_section_mode[]=car"
+            "&last_section_mode[]=walking"
+            "&ridesharing_speed=2.5"
+            "&car_speed=2.5"
+        )
         response = self.query_region(q)
         self.is_valid_journey_response(response, q, check_journey_links=False)
         journeys = get_not_null(response, 'journeys')
@@ -345,8 +323,6 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         assert journeys[2].get('durations').get('ridesharing') == 0
         assert journeys[3].get('durations').get('ridesharing') == 0
 
-
-
     def test_end_ridesharing_with_pt(self):
         """
         test that we get a ridesharing_jouney when requesting with no ridesharing in first_section_mode[],
@@ -355,16 +331,19 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         Nota: response provided by InstantSystem mock won't be consistent (same as the other way),
         but the goal is to check it's correctly called, not that InstantSystem returns a consistent response.
         """
-        q = "journeys?from=0.00188646;0.00071865&to=0.0000898312;0.0000898312&datetime=20120614T080000&"\
-            "ridesharing_speed=2.5&first_section_mode[]={first}&last_section_mode[]={last}"\
-            .format(first='walking', last='ridesharing')
+        q = (
+            "journeys?from=0.00188646;0.00071865&to=0.0000898312;0.0000898312&datetime=20120614T080000&"
+            "ridesharing_speed=2.5&first_section_mode[]={first}&last_section_mode[]={last}".format(
+                first='walking', last='ridesharing'
+            )
+        )
         response = self.query_region(q)
         self.is_valid_journey_response(response, q, check_journey_links=False)
 
         journeys = get_not_null(response, 'journeys')
         assert len(journeys) == 2
 
-        #The first journey is direct walking
+        # The first journey is direct walking
         assert 'walking' in journeys[0].get('tags')
         assert 'ridesharing' not in journeys[0].get('tags')
         assert 'non_pt' in journeys[0].get('tags')
@@ -375,17 +354,17 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         assert journeys[0].get('durations').get('walking') == 276
         assert journeys[0].get('durations').get('total') == 276
 
-        #The second one is of combination of walking + public_transport + ridesharing
+        # The second one is of combination of walking + public_transport + ridesharing
         assert 'ridesharing' in journeys[1].get('tags')
         assert 'non_pt' not in journeys[1].get('tags')
         assert journeys[1].get('type') == 'rapid'
         sections = journeys[1].get('sections')
-        assert len(sections) == 5 # we get also boarding and alighting sections (doesn't matter)
+        assert len(sections) == 5  # we get also boarding and alighting sections (doesn't matter)
         assert journeys[1].get('durations').get('ridesharing') == 7
         assert journeys[1].get('durations').get('walking') == 80
         assert journeys[1].get('durations').get('total') == 3867
 
-        #first section is of walking
+        # first section is of walking
         walking_section = sections[0]
         assert walking_section.get('mode') == 'walking'
         assert walking_section.get('type') == 'street_network'
@@ -393,14 +372,14 @@ class TestInstanceSystem(NewDefaultScenarioAbstractTestFixture):
         assert walking_section.get('to').get('id') == 'stop_point:stopA'
         assert walking_section.get('duration') == 80
 
-        #third section is of public transport
+        # third section is of public transport
         pt_section = sections[2]
         assert pt_section.get('type') == 'public_transport'
         assert pt_section.get('from').get('id') == 'stop_point:stopA'
         assert pt_section.get('to').get('id') == 'stop_point:stopB'
         assert pt_section.get('duration') == 180
 
-        #last section is of ridesharing
+        # last section is of ridesharing
         rs_section = sections[4]
         assert rs_section.get('mode') == 'ridesharing'
         assert rs_section.get('type') == 'street_network'

@@ -29,17 +29,18 @@
 
 import flask_sqlalchemy
 
-class SQLAlchemy(flask_sqlalchemy.SQLAlchemy):
 
+class SQLAlchemy(flask_sqlalchemy.SQLAlchemy):
     def init_app(self, app):
         super(SQLAlchemy, self).init_app(app)
         app.config.setdefault('SQLALCHEMY_POOLCLASS', None)
 
-
     def apply_pool_defaults(self, app, options):
         super(SQLAlchemy, self).apply_pool_defaults(app, options)
+
         def _setdefault(optionkey, configkey):
             value = app.config[configkey]
             if value is not None:
                 options[optionkey] = value
+
         _setdefault('poolclass', 'SQLALCHEMY_POOLCLASS')

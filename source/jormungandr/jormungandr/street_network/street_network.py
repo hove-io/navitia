@@ -44,31 +44,39 @@ class StreetNetworkPathType:
     BEGINNING_FALLBACK = 1
     ENDING_FALLBACK = 2
 
+
 from collections import namedtuple
-StreetNetworkPathKey = namedtuple('StreetNetworkPathKey', ['mode', 'orig_uri', 'dest_uri',
-                                                           'streetnetwork_path_type', 'period_extremity'])
+
+StreetNetworkPathKey = namedtuple(
+    'StreetNetworkPathKey', ['mode', 'orig_uri', 'dest_uri', 'streetnetwork_path_type', 'period_extremity']
+)
 
 
 class AbstractStreetNetworkService(ABC):
     @abc.abstractmethod
-    def get_street_network_routing_matrix(self, origins, destinations, street_network_mode, max_duration, request, **kwargs):
+    def get_street_network_routing_matrix(
+        self, origins, destinations, street_network_mode, max_duration, request, **kwargs
+    ):
         pass
 
     @abc.abstractmethod
     def status(self):
         pass
 
-    def direct_path_with_fp(self, mode, pt_object_origin, pt_object_destination,
-                            fallback_extremity, request, direct_path_type):
-        resp = self._direct_path(mode, pt_object_origin, pt_object_destination,
-                                 fallback_extremity, request, direct_path_type)
+    def direct_path_with_fp(
+        self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
+    ):
+        resp = self._direct_path(
+            mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
+        )
 
         self._add_feed_publisher(resp)
         return resp
 
-
     @abc.abstractmethod
-    def _direct_path(self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type):
+    def _direct_path(
+        self, mode, pt_object_origin, pt_object_destination, fallback_extremity, request, direct_path_type
+    ):
         '''
         :param fallback_extremity: is a PeriodExtremity (a datetime and it's meaning on the fallback period)
         :param direct_path_type : direct_path need to be treated differently regarding to the used connector
@@ -112,7 +120,6 @@ class AbstractStreetNetworkService(ABC):
 
 
 class StreetNetwork(object):
-
     @staticmethod
     def get_street_network_services(instance, street_network_configurations):
         log = logging.getLogger(__name__)
@@ -132,10 +139,16 @@ class StreetNetwork(object):
             try:
                 service = utils.create_object(config)
             except KeyError as e:
-                raise KeyError('impossible to build a StreetNetwork, missing mandatory field in configuration: {}'
-                               .format(e.message))
+                raise KeyError(
+                    'impossible to build a StreetNetwork, missing mandatory field in configuration: {}'.format(
+                        e.message
+                    )
+                )
 
             street_network_services.append(service)
-            log.info('** StreetNetwork {} used for direct_path with mode: {} **'
-                     .format(type(service).__name__, service.modes))
+            log.info(
+                '** StreetNetwork {} used for direct_path with mode: {} **'.format(
+                    type(service).__name__, service.modes
+                )
+            )
         return street_network_services

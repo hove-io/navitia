@@ -36,8 +36,16 @@ from jormungandr.interfaces.v1.serializer.time import TimeField, PeriodSerialize
 from jormungandr.interfaces.v1.serializer.fields import *
 from jormungandr.interfaces.v1.serializer import jsonschema, base
 from jormungandr.parking_space_availability.bss import stands
-from navitiacommon.type_pb2 import ActiveStatus, Channel, hasEquipments, Properties, NavitiaType, Severity, \
-    StopTimeUpdateStatus, RTLevel
+from navitiacommon.type_pb2 import (
+    ActiveStatus,
+    Channel,
+    hasEquipments,
+    Properties,
+    NavitiaType,
+    Severity,
+    StopTimeUpdateStatus,
+    RTLevel,
+)
 
 
 LABEL_DESCRIPTION = """
@@ -45,23 +53,27 @@ Label of the stop area. The name is directly taken from the data whereas the lab
  something we compute for better traveler information. If you don't know what to display, display the label.
 """
 
+
 class Equipments(EnumListField):
     """
     hack for equipments as there is a useless level in the proto
     """
+
     def __init__(self, **kwargs):
         super(Equipments, self).__init__(hasEquipments.Equipment, **kwargs)
 
     def as_getter(self, serializer_field_name, serializer_cls):
-        #For enum we need the full object :(
+        # For enum we need the full object :(
         return lambda x: x.has_equipments
+
 
 class AdditionalInformation(EnumListField):
     """
     hack for AdditionalInformation as there is a useless level in the proto
     """
+
     def as_getter(self, serializer_field_name, serializer_cls):
-        #For enum we need the full object :(
+        # For enum we need the full object :(
         return lambda x: x.properties
 
 
@@ -175,12 +187,15 @@ class CalendarExceptionSerializer(PbNestedSerializer):
 
 class CalendarSerializer(PbNestedSerializer):
     id = jsonschema.MethodField(schema_type=str, display_none=False, description='Identifier of the object')
+
     def get_id(self, obj):
         if obj.HasField(str('uri')) and obj.uri:
             return obj.uri
         else:
             return None
+
     name = jsonschema.MethodField(schema_type=str, description='Name of the object')
+
     def get_name(self, obj):
         if obj.HasField(str('name')) and obj.name:
             return obj.name
@@ -234,10 +249,12 @@ class StringListField(Field):
     def as_getter(self, serializer_field_name, serializer_cls):
         obj_op = operator.attrgetter(self.attr or serializer_field_name)
         dic_op = operator.itemgetter(self.attr or serializer_field_name)
+
         def getter(v):
             if isinstance(v, dict):
                 return list(dic_op(v))
             return list(obj_op(v))
+
         return getter
 
 
@@ -246,7 +263,7 @@ class DisruptionSerializer(PbNestedSerializer):
 
     disruption_id = jsonschema.Field(schema_type=str, attr='disruption_uri')
     impact_id = jsonschema.Field(schema_type=str, attr='uri')
-    title = jsonschema.Field(schema_type=str),
+    title = (jsonschema.Field(schema_type=str),)
     application_periods = PeriodSerializer(many=True)
     status = EnumField(attr='status', pb_type=ActiveStatus)
     updated_at = DateTimeField()
@@ -276,7 +293,9 @@ class StandsSerializer(PbNestedSerializer):
     available_places = jsonschema.IntField()
     available_bikes = jsonschema.IntField()
     total_stands = jsonschema.IntField()
-    status = jsonschema.StrField(schema_metadata={"enum": [v.name for v in stands.StandsStatus], "type": "string"})
+    status = jsonschema.StrField(
+        schema_metadata={"enum": [v.name for v in stands.StandsStatus], "type": "string"}
+    )
 
 
 class AdminSerializer(PbGenericSerializer):
@@ -299,7 +318,9 @@ class PoiSerializer(PbGenericSerializer):
     label = jsonschema.Field(schema_type=str)
     administrative_regions = AdminSerializer(many=True, display_none=False)
     poi_type = PoiTypeSerializer(display_none=False)
-    properties = jsonschema.MethodField(schema_metadata={'type': 'object', 'additionalProperties': {'type': 'string'}})
+    properties = jsonschema.MethodField(
+        schema_metadata={'type': 'object', 'additionalProperties': {'type': 'string'}}
+    )
     address = AddressSerializer()
     stands = LiteralField(None, schema_type=StandsSerializer, display_none=False)
 
@@ -353,11 +374,14 @@ class StopAreaSerializer(PbGenericSerializer):
     links = DisruptionLinkSerializer(attr='impact_uris', display_none=True)
     commercial_modes = CommercialModeSerializer(many=True, display_none=False)
     physical_modes = PhysicalModeSerializer(many=True, display_none=False)
-    administrative_regions = AdminSerializer(many=True, display_none=False,
-                                             description='Administrative regions of the stop area '
-                                                         'in which is the stop area')
-    stop_points = StopPointSerializer(many=True, display_none=False,
-                                      description='Stop points contained in this stop area')
+    administrative_regions = AdminSerializer(
+        many=True,
+        display_none=False,
+        description='Administrative regions of the stop area ' 'in which is the stop area',
+    )
+    stop_points = StopPointSerializer(
+        many=True, display_none=False, description='Stop points contained in this stop area'
+    )
 
 
 class PlaceSerializer(PbGenericSerializer):
@@ -470,15 +494,25 @@ class VehicleJourneySerializer(PbGenericSerializer):
 class ConnectionSerializer(PbNestedSerializer):
     origin = StopPointSerializer()
     destination = StopPointSerializer()
-    duration = jsonschema.Field(schema_type=int, display_none=True,
-                                description='Duration of connection (seconds). '
-                                            'The duration really used to compute connection with a margin')
-    display_duration = jsonschema.Field(schema_type=int, display_none=True,
-                                        description='The duration (seconds) of the connection as it should be '
-                                                    'displayed to traveler, without margin')
-    max_duration = jsonschema.Field(schema_type=int, display_none=True, deprecated=True,
-                                    description='Parameter used to specify the maximum length allowed '
-                                                'for a traveler to stay at a connection (seconds)')
+    duration = jsonschema.Field(
+        schema_type=int,
+        display_none=True,
+        description='Duration of connection (seconds). '
+        'The duration really used to compute connection with a margin',
+    )
+    display_duration = jsonschema.Field(
+        schema_type=int,
+        display_none=True,
+        description='The duration (seconds) of the connection as it should be '
+        'displayed to traveler, without margin',
+    )
+    max_duration = jsonschema.Field(
+        schema_type=int,
+        display_none=True,
+        deprecated=True,
+        description='Parameter used to specify the maximum length allowed '
+        'for a traveler to stay at a connection (seconds)',
+    )
 
 
 class CompanieSerializer(PbGenericSerializer):
@@ -491,8 +525,7 @@ class ContributorSerializer(PbGenericSerializer):
 
 
 class DatasetSerializer(PbNestedSerializer):
-    id = jsonschema.Field(schema_type=str, display_none=True, attr='uri',
-                          description='Identifier of the object')
+    id = jsonschema.Field(schema_type=str, display_none=True, attr='uri', description='Identifier of the object')
     description = jsonschema.Field(schema_type=str, attr='desc')
     start_validation_date = DateTimeField(description='Start of the validity period for the dataset')
     end_validation_date = DateTimeField(description='End of the validity period for the dataset')
@@ -536,39 +569,54 @@ def make_properties_links(properties):
 
     response = base.make_notes(properties.notes)
 
-    response.extend([{"type": "exceptions", # type should be 'exception' but retrocompatibility...
-                      "rel": "exceptions",
-                      "id": exception.uri,
-                      "date": exception.date,
-                      "except_type": exception.type,
-                      "internal": True}
-                     for exception in properties.exceptions])
+    response.extend(
+        [
+            {
+                "type": "exceptions",  # type should be 'exception' but retrocompatibility...
+                "rel": "exceptions",
+                "id": exception.uri,
+                "date": exception.date,
+                "except_type": exception.type,
+                "internal": True,
+            }
+            for exception in properties.exceptions
+        ]
+    )
 
     if properties.HasField(str("destination")) and properties.destination.HasField(str("uri")):
-        response.append({"type": "notes",
-                         "rel": "notes",
-                         "category": "terminus",
-                         "id": properties.destination.uri,
-                         "value": properties.destination.destination,
-                         "internal": True})
+        response.append(
+            {
+                "type": "notes",
+                "rel": "notes",
+                "category": "terminus",
+                "id": properties.destination.uri,
+                "value": properties.destination.destination,
+                "internal": True,
+            }
+        )
 
     if properties.HasField(str("vehicle_journey_id")):
-        response.append({"type": "vehicle_journey",
-                         "rel": "vehicle_journeys",
-                         "value": properties.vehicle_journey_id,# to remove for the v2
-                         "id": properties.vehicle_journey_id})
+        response.append(
+            {
+                "type": "vehicle_journey",
+                "rel": "vehicle_journeys",
+                "value": properties.vehicle_journey_id,  # to remove for the v2
+                "id": properties.vehicle_journey_id,
+            }
+        )
 
     return response
 
 
 class PropertiesLinksSerializer(PbNestedSerializer):
     def __init__(self, **kwargs):
-        super(PropertiesLinksSerializer, self).__init__(schema_type=LinkSchema(many=True),
-                                                        display_none=True,
-                                                        **kwargs)
+        super(PropertiesLinksSerializer, self).__init__(
+            schema_type=LinkSchema(many=True), display_none=True, **kwargs
+        )
 
     def to_value(self, properties):
         return make_properties_links(properties)
+
 
 class StopDateTimeSerializer(PbNestedSerializer):
     departure_date_time = DateTimeField()
@@ -577,6 +625,8 @@ class StopDateTimeSerializer(PbNestedSerializer):
     base_arrival_date_time = DateTimeField()
     stop_point = StopPointSerializer()
     # additional_informations is a nullable field, add nullable=True when we migrate to swagger 3
-    additional_informations = AdditionalInformation(attr='additional_informations', display_none=True, pb_type=Properties.AdditionalInformation)
+    additional_informations = AdditionalInformation(
+        attr='additional_informations', display_none=True, pb_type=Properties.AdditionalInformation
+    )
     links = PropertiesLinksSerializer(attr="properties")
     data_freshness = EnumField(pb_type=RTLevel)

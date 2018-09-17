@@ -37,7 +37,6 @@ class BssProxyError(RuntimeError):
 
 
 class CommonBssProvider(AbstractParkingPlacesProvider):
-
     @abstractmethod
     def _get_informations(self, poi):
         pass

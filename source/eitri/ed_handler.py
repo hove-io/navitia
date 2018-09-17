@@ -57,9 +57,11 @@ def binarize(db_params, output, ed_component_path):
     ed2nav = 'ed2nav'
     if ed_component_path:
         ed2nav = os.path.join(ed_component_path, ed2nav)
-    launch_exec(ed2nav,
-                ["-o", output,
-                 "--connection-string", db_params.old_school_cnx_string()], logging.getLogger(__name__))
+    launch_exec(
+        ed2nav,
+        ["-o", output, "--connection-string", db_params.old_school_cnx_string()],
+        logging.getLogger(__name__),
+    )
 
 
 def import_data(data_dir, db_params, ed_component_path):
@@ -81,16 +83,15 @@ def import_data(data_dir, db_params, ed_component_path):
         import_component = os.path.join(ed_component_path, import_component)
 
     if file_to_load.endswith('.zip') or file_to_load.endswith('.geopal'):
-        #TODO: handle geopal as non zip
+        # TODO: handle geopal as non zip
         # if it's a zip, we unzip it
         zip_file = zipfile.ZipFile(file_to_load)
         zip_file.extractall(path=data_dir)
         file_to_load = data_dir
 
-    if launch_exec(import_component,
-                ["-i", file_to_load,
-                 "--connection-string", db_params.old_school_cnx_string()],
-                log):
+    if launch_exec(
+        import_component, ["-i", file_to_load, "--connection-string", db_params.old_school_cnx_string()], log
+    ):
         log.error('problem with running {}, stoping'.format(import_component))
         exit(1)
 
@@ -108,12 +109,9 @@ def update_db(db_params):
     """
     cnx_string = db_params.cnx_string()
 
-    #we need to enable postgis on the db
+    # we need to enable postgis on the db
     cnx = psycopg2.connect(
-        database=db_params.dbname,
-        user=db_params.user,
-        password=db_params.password,
-        host=db_params.host
+        database=db_params.dbname, user=db_params.user, password=db_params.password, host=db_params.host
     )
     c = cnx.cursor()
     c.execute("create extension postgis;")
@@ -123,8 +121,11 @@ def update_db(db_params):
     logging.getLogger(__name__).info('message = {}'.format(c.statusmessage))
 
     with cd(ALEMBIC_PATH):
-        res = os.system('PYTHONPATH=. alembic -x dbname="{cnx}" upgrade head'.
-                        format(alembic_dir=ALEMBIC_PATH, cnx=cnx_string))
+        res = os.system(
+            'PYTHONPATH=. alembic -x dbname="{cnx}" upgrade head'.format(
+                alembic_dir=ALEMBIC_PATH, cnx=cnx_string
+            )
+        )
 
         if res:
             raise Exception('problem with db update')
@@ -137,9 +138,11 @@ def generate_nav(data_dir, db_params, output_file, ed_component_path):
     if not os.path.exists(data_dir):
         logging.getLogger(__name__).error('impossible to find {}, exiting'.format(data_dir))
 
-    data_dirs = [os.path.join(data_dir, sub_dir_name)
-                 for sub_dir_name in os.listdir(data_dir)
-                 if os.path.isdir(os.path.join(data_dir, sub_dir_name))]
+    data_dirs = [
+        os.path.join(data_dir, sub_dir_name)
+        for sub_dir_name in os.listdir(data_dir)
+        if os.path.isdir(os.path.join(data_dir, sub_dir_name))
+    ]
 
     if not data_dirs:
         # if there is no sub dir, we import only the files in the dir

@@ -36,6 +36,7 @@ class ResponseBuilder(object):
     """
     Object to build protobuf in tests
     """
+
     def __init__(self, default_date=datetime.date(2016, 3, 25)):
         self.response = response_pb2.Response()
         self._journeys = {}

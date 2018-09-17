@@ -15,6 +15,7 @@ import sqlalchemy as sa
 import geoalchemy2 as ga
 from sqlalchemy.dialects import postgresql
 
+
 def upgrade():
     op.add_column('line', sa.Column('text_color', sa.TEXT(), nullable=True), schema='navitia')
 

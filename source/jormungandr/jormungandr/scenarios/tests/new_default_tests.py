@@ -158,8 +158,9 @@ def create_candidate_pool_and_sections_set_test():
     Given response, the tested function should return a candidate pool and a section set
     """
     mocked_pb_response = build_mocked_response()
-    candidates_pool, sections_set, idx_jrny_must_keep = \
-        new_default._build_candidate_pool_and_sections_set(mocked_pb_response.journeys)
+    candidates_pool, sections_set, idx_jrny_must_keep = new_default._build_candidate_pool_and_sections_set(
+        mocked_pb_response.journeys
+    )
 
     # We got 19 journeys in all and 4 of them are tagged with 'best', 'comfort', 'non_pt_bike', 'non_pt_walk'
     assert candidates_pool.shape[0] == 19
@@ -170,8 +171,9 @@ def create_candidate_pool_and_sections_set_test():
 
 def build_candidate_pool_and_sections_set_test():
     mocked_pb_response = build_mocked_response()
-    candidates_pool, sections_set, idx_jrny_must_keep = \
-        new_default._build_candidate_pool_and_sections_set(mocked_pb_response.journeys)
+    candidates_pool, sections_set, idx_jrny_must_keep = new_default._build_candidate_pool_and_sections_set(
+        mocked_pb_response.journeys
+    )
     selected_sections_matrix = new_default._build_selected_sections_matrix(sections_set, candidates_pool)
 
     # selected_sections_matrix should have 19 lines(19 journeys) and 11 columns(11 sections)
@@ -184,12 +186,14 @@ def build_candidate_pool_and_sections_set_test():
 
 def get_sorted_solutions_indexes_test():
     mocked_pb_response = build_mocked_response()
-    candidates_pool, sections_set, idx_jrny_must_keep = \
-        new_default._build_candidate_pool_and_sections_set(mocked_pb_response.journeys)
+    candidates_pool, sections_set, idx_jrny_must_keep = new_default._build_candidate_pool_and_sections_set(
+        mocked_pb_response.journeys
+    )
     selected_sections_matrix = new_default._build_selected_sections_matrix(sections_set, candidates_pool)
     # 4 journeys are must-have, we'd like to select another 5 journeys
-    best_indexes, selection_matrix = \
-        new_default._get_sorted_solutions_indexes(selected_sections_matrix, (5 + 4), idx_jrny_must_keep)
+    best_indexes, selection_matrix = new_default._get_sorted_solutions_indexes(
+        selected_sections_matrix, (5 + 4), idx_jrny_must_keep
+    )
 
     assert best_indexes.shape[0] == 33
     assert all(selection_matrix[best_indexes[0]] == [0, 0, 1, 1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0])
@@ -215,8 +219,8 @@ def culling_jounreys_2_test():
     mocked_request = {'max_nb_journeys': 2, 'debug': False}
     new_default.culling_journeys(mocked_pb_response, mocked_request)
     assert len(mocked_pb_response.journeys) == 2
-    assert all([j.type in new_default.JOURNEY_TYPES_TO_RETAIN
-                for j in mocked_pb_response.journeys])
+    assert all([j.type in new_default.JOURNEY_TYPES_TO_RETAIN for j in mocked_pb_response.journeys])
+
 
 def culling_jounreys_2_bis_test():
     """
@@ -227,8 +231,8 @@ def culling_jounreys_2_bis_test():
     mocked_request = {'max_nb_journeys': 4, 'debug': False}
     new_default.culling_journeys(mocked_pb_response, mocked_request)
     assert len(mocked_pb_response.journeys) == 4
-    assert all([j.type in new_default.JOURNEY_TYPES_TO_RETAIN
-                for j in mocked_pb_response.journeys])
+    assert all([j.type in new_default.JOURNEY_TYPES_TO_RETAIN for j in mocked_pb_response.journeys])
+
 
 def culling_jounreys_3_test():
     mocked_pb_response = build_mocked_response()
@@ -236,13 +240,15 @@ def culling_jounreys_3_test():
     new_default.culling_journeys(mocked_pb_response, mocked_request)
     assert len(mocked_pb_response.journeys) == 6
 
-    journey_uris = {((u'uri_1', u'uri_2', u'uri_5', u'uri_6', u'walking'), 1444905300),
-                    ((u'uri_2', u'uri_3', u'uri_4', u'walking'), 1444905600),
-                    ((u'bike', u'uri_2', u'uri_7', u'walking'), 1444907700),
-                    ((u'bike', u'uri_9'), 1444905000),
-                    ((u'bike', u'uri_8', u'uri_9'), 1444903680),
-                    ((u'bike',), 1444903680),
-                    ((u'walking',), 1444903500)}
+    journey_uris = {
+        ((u'uri_1', u'uri_2', u'uri_5', u'uri_6', u'walking'), 1444905300),
+        ((u'uri_2', u'uri_3', u'uri_4', u'walking'), 1444905600),
+        ((u'bike', u'uri_2', u'uri_7', u'walking'), 1444907700),
+        ((u'bike', u'uri_9'), 1444905000),
+        ((u'bike', u'uri_8', u'uri_9'), 1444903680),
+        ((u'bike',), 1444903680),
+        ((u'walking',), 1444903500),
+    }
     for j in mocked_pb_response.journeys:
         assert (tuple(s.uris.line for s in j.sections), j.arrival_date_time) in journey_uris
 
@@ -278,9 +284,9 @@ def merge_responses_on_errors_test():
     resp2.error.id = response_pb2.Error.bad_format
     resp2.error.message = "you've been bad"
     r = [resp1, resp2]
-    
+
     merged_response = new_default.merge_responses(r, False)
-    
+
     assert merged_response.HasField(str('error'))
     assert merged_response.error.id == response_pb2.Error.no_solution
     # both messages must be in the composite error
@@ -468,6 +474,7 @@ def tag_by_mode_test():
     rs_crowfly = helpers_tests.get_ridesharing_with_crowfly_journey()
     _tag_journey_by_mode(rs_crowfly)
     assert 'ridesharing' in rs_crowfly.tags
+
 
 def tag_direct_path_test():
     response = response_pb2.Response()

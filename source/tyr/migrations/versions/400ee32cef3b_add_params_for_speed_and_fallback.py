@@ -20,11 +20,19 @@ def upgrade():
     op.add_column('instance', sa.Column('bike_speed', sa.Float(), nullable=False, server_default='4.1'))
     op.add_column('instance', sa.Column('bss_speed', sa.Float(), nullable=False, server_default='4.1'))
     op.add_column('instance', sa.Column('car_speed', sa.Float(), nullable=False, server_default='11.11'))
-    op.add_column('instance', sa.Column('max_bike_duration_to_pt', sa.Integer(), nullable=False, server_default='900'))
-    op.add_column('instance', sa.Column('max_bss_duration_to_pt', sa.Integer(), nullable=False, server_default='900'))
-    op.add_column('instance', sa.Column('max_car_duration_to_pt', sa.Integer(), nullable=False, server_default='1800'))
+    op.add_column(
+        'instance', sa.Column('max_bike_duration_to_pt', sa.Integer(), nullable=False, server_default='900')
+    )
+    op.add_column(
+        'instance', sa.Column('max_bss_duration_to_pt', sa.Integer(), nullable=False, server_default='900')
+    )
+    op.add_column(
+        'instance', sa.Column('max_car_duration_to_pt', sa.Integer(), nullable=False, server_default='1800')
+    )
     op.add_column('instance', sa.Column('max_nb_transfers', sa.Integer(), nullable=False, server_default='10'))
-    op.add_column('instance', sa.Column('max_walking_duration_to_pt', sa.Integer(), nullable=False, server_default='900'))
+    op.add_column(
+        'instance', sa.Column('max_walking_duration_to_pt', sa.Integer(), nullable=False, server_default='900')
+    )
     op.add_column('instance', sa.Column('walking_speed', sa.Float(), nullable=False, server_default='1.12'))
     ### end Alembic commands ###
 

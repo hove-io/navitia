@@ -42,54 +42,25 @@ MOCKED_INSTANCE_CONF = {
                     "api_id": "bob_id",
                     "api_code": "bob_code",
                     "service_base_url": "route.bob.here.com/routing/7.2/",
-                    "timeout": 20
+                    "timeout": 20,
                 },
-                "modes": [
-                    "car"
-                ],
-                "class": "jormungandr.street_network.here.Here"
+                "modes": ["car"],
+                "class": "jormungandr.street_network.here.Here",
             },
-            {
-                "modes": [
-                    "walking",
-                    "bike",
-                    "bss"
-                ],
-                "class": "jormungandr.street_network.kraken.Kraken"
-            }
+            {"modes": ["walking", "bike", "bss"], "class": "jormungandr.street_network.kraken.Kraken"},
         ]
-    }
+    },
 }
 
 # the destinations are B, C, A and useless_a
 HERE_BEGGINING_MATRIX_RESPONSE = {
     "response": {
         "matrixEntry": [
-            {
-                "destinationIndex": 0,
-                "startIndex": 0,
-                "summary": {
-                    "travelTime": 15
-                }
-            },
-            {
-                "destinationIndex": 0,
-                "startIndex": 0,
-                "summary": {
-                    "travelTime": 100
-                }
-            },
-            {
-                "destinationIndex": 2,
-                "startIndex": 0,
-                "status": "failed"
-            },
-            {
-                "destinationIndex": 2,
-                "startIndex": 0,
-                "status": "failed"
-            },
-        ],
+            {"destinationIndex": 0, "startIndex": 0, "summary": {"travelTime": 15}},
+            {"destinationIndex": 0, "startIndex": 0, "summary": {"travelTime": 100}},
+            {"destinationIndex": 2, "startIndex": 0, "status": "failed"},
+            {"destinationIndex": 2, "startIndex": 0, "status": "failed"},
+        ]
     }
 }
 
@@ -97,26 +68,10 @@ HERE_BEGGINING_MATRIX_RESPONSE = {
 HERE_END_MATRIX_RESPONSE = {
     "response": {
         "matrixEntry": [
-            {
-                "destinationIndex": 0,
-                "startIndex": 0,
-                "summary": {
-                    "travelTime": 60
-                }
-            },
-            {
-                "destinationIndex": 0,
-                "startIndex": 0,
-                "summary": {
-                    "travelTime": 60
-                }
-            },
-            {
-                "destinationIndex": 2,
-                "startIndex": 0,
-                "status": "failed"
-            },
-        ],
+            {"destinationIndex": 0, "startIndex": 0, "summary": {"travelTime": 60}},
+            {"destinationIndex": 0, "startIndex": 0, "summary": {"travelTime": 60}},
+            {"destinationIndex": 2, "startIndex": 0, "status": "failed"},
+        ]
     }
 }
 
@@ -124,29 +79,15 @@ HERE_ROUTING_RESPONSE_BEGINNING_FALLBACK_PATH = {
     "response": {
         "route": [
             {
-                "leg": [
-                    {
-                        "length": 10,
-                        "maneuver": [
-                            {
-                                "length": 10,
-                                "travelTime": 15
-                            }
-                        ],
-                        "travelTime": 15
-                    }
-                ],
-                "shape": [
-                    "52.4999825,13.3999652",
-                    "52.4987912,13.4510744"
-                ],
+                "leg": [{"length": 10, "maneuver": [{"length": 10, "travelTime": 15}], "travelTime": 15}],
+                "shape": ["52.4999825,13.3999652", "52.4987912,13.4510744"],
                 "summary": {
                     "_type": "RouteSummaryType",
                     "baseTime": 13,
                     "distance": 10,
                     "trafficTime": 2,
-                    "travelTime": 15
-                }
+                    "travelTime": 15,
+                },
             }
         ]
     }
@@ -160,31 +101,19 @@ HERE_ROUTING_RESPONSE_END_FALLBACK_PATH = {
                 "leg": [
                     {
                         "length": 100,
-                        "maneuver": [
-                            {
-                                "length": 10,
-                                "travelTime": 10
-                            },
-                            {
-                                "length": 90,
-                                "travelTime": 50
-                            }
-                        ],
+                        "maneuver": [{"length": 10, "travelTime": 10}, {"length": 90, "travelTime": 50}],
                         "travelTime": 60,
-                        'BaseTime': 60
+                        'BaseTime': 60,
                     }
                 ],
-                "shape": [
-                    "52.4999825,13.3999652",
-                    "52.4987912,13.4510744"
-                ],
+                "shape": ["52.4999825,13.3999652", "52.4987912,13.4510744"],
                 "summary": {
                     "_type": "RouteSummaryType",
                     "baseTime": 50,
                     "distance": 100,
                     "trafficTime": 10,
-                    "travelTime": 60
-                }
+                    "travelTime": 60,
+                },
             }
         ]
     }
@@ -198,31 +127,19 @@ HERE_ROUTING_RESPONSE_DIRECT_PATH = {
                 "leg": [
                     {
                         "length": 100,
-                        "maneuver": [
-                            {
-                                "length": 20,
-                                "travelTime": 100
-                            },
-                            {
-                                "length": 80,
-                                "travelTime": 200
-                            },
-                        ],
+                        "maneuver": [{"length": 20, "travelTime": 100}, {"length": 80, "travelTime": 200}],
                         "travelTime": 300,
-                        'BaseTime': 200
+                        'BaseTime': 200,
                     }
                 ],
-                "shape": [
-                    "52.4999825,13.3999652",
-                    "52.4987912,13.4510744"
-                ],
+                "shape": ["52.4999825,13.3999652", "52.4987912,13.4510744"],
                 "summary": {
                     "_type": "RouteSummaryType",
                     "baseTime": 200,
                     "distance": 1000,
                     "trafficTime": 100,
-                    "travelTime": 300
-                }
+                    "travelTime": 300,
+                },
             }
         ]
     }
@@ -301,9 +218,12 @@ class TestHere(NewDefaultScenarioAbstractTestFixture):
         """
         test with car fallback and car direct path
         """
-        q = "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&first_section_mode[]=car" \
-            "&last_section_mode[]=car&debug=true&min_nb_journeys=0"\
-            .format(from_coord=s_coord, to_coord=r_coord, datetime=QUERY_DATETIME_STR)
+        q = (
+            "journeys?from={from_coord}&to={to_coord}&datetime={datetime}&first_section_mode[]=car"
+            "&last_section_mode[]=car&debug=true&min_nb_journeys=0".format(
+                from_coord=s_coord, to_coord=r_coord, datetime=QUERY_DATETIME_STR
+            )
+        )
         response = self.query_region(q)
         # we don't want to check the journeys links as that will make more HERE call (when testing the links)
         self.is_valid_journey_response(response, q, check_journey_links=False)

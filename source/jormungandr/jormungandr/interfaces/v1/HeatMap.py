@@ -31,10 +31,18 @@
 from __future__ import absolute_import, print_function, unicode_literals, division
 from flask_restful import fields, abort
 from jormungandr import i_manager
-from jormungandr.interfaces.v1.fields import error,\
-    PbField, NonNullList, NonNullNested,\
-    Links, JsonString, place,\
-    ListLit, beta_endpoint, feed_publisher
+from jormungandr.interfaces.v1.fields import (
+    error,
+    PbField,
+    NonNullList,
+    NonNullNested,
+    Links,
+    JsonString,
+    place,
+    ListLit,
+    beta_endpoint,
+    feed_publisher,
+)
 from jormungandr.timezone import set_request_timezone
 from jormungandr.interfaces.v1.errors import ManageError
 from jormungandr.utils import date_to_timestamp
@@ -48,7 +56,7 @@ heat_map = {
     "heat_matrix": JsonString(),
     'from': PbField(place, attribute='origin'),
     "to": PbField(place, attribute="destination"),
-    'requested_date_time': DateTime()
+    'requested_date_time': DateTime(),
 }
 
 
@@ -58,12 +66,11 @@ heat_maps = {
     "links": fields.List(Links()),
     "warnings": ListLit([fields.Nested(beta_endpoint)]),
     "feed_publishers": fields.List(NonNullNested(feed_publisher)),
-    "context": context
+    "context": context,
 }
 
 
 class HeatMap(JourneyCommon):
-
     def __init__(self):
         super(HeatMap, self).__init__(output_type_serializer=HeatMapSerializer)
         parser_get = self.parsers["get"]

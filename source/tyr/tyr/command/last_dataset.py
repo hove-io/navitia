@@ -30,6 +30,7 @@
 from navitiacommon import models
 from tyr import manager
 
+
 @manager.command
 def last_dataset(instance_name):
     """

@@ -16,18 +16,37 @@ import geoalchemy2 as ga
 
 
 def upgrade():
-    op.create_table('shape',
+    op.create_table(
+        'shape',
         sa.Column('id', sa.BIGINT(), nullable=False),
-        sa.Column('geom', ga.Geography(geometry_type='LINESTRING', srid=4326, spatial_index=False), nullable=True),
+        sa.Column(
+            'geom', ga.Geography(geometry_type='LINESTRING', srid=4326, spatial_index=False), nullable=True
+        ),
         sa.PrimaryKeyConstraint('id'),
-        schema='navitia'
+        schema='navitia',
     )
     op.drop_column('stop_time', 'shape_from_prev', schema='navitia')
     op.add_column('stop_time', sa.Column('shape_from_prev_id', sa.BIGINT(), nullable=True), schema='navitia')
-    op.create_foreign_key('fk_stop_time_shape', 'stop_time', 'shape', ['shape_from_prev_id'], ['id'], referent_schema='navitia', source_schema='navitia')
+    op.create_foreign_key(
+        'fk_stop_time_shape',
+        'stop_time',
+        'shape',
+        ['shape_from_prev_id'],
+        ['id'],
+        referent_schema='navitia',
+        source_schema='navitia',
+    )
 
 
 def downgrade():
     op.drop_column('stop_time', 'shape_from_prev_id', schema='navitia')
-    op.add_column('stop_time', sa.Column('shape_from_prev', ga.Geography(geometry_type='LINESTRING', srid=4326, spatial_index=False), nullable=True), schema='navitia')
+    op.add_column(
+        'stop_time',
+        sa.Column(
+            'shape_from_prev',
+            ga.Geography(geometry_type='LINESTRING', srid=4326, spatial_index=False),
+            nullable=True,
+        ),
+        schema='navitia',
+    )
     op.drop_table('shape', schema='navitia')

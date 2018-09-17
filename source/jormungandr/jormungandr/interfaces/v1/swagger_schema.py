@@ -39,23 +39,13 @@ from jormungandr.interfaces.v1.serializer.jsonschema.fields import CustomSchemaT
 class SwaggerDefinitions(object):
     pass
 
+
 TYPE_MAP = {
-    str: {
-        'type': 'string',
-    },
-    six.text_type: {
-        'type': 'string',
-    },
-    int: {
-        'type': 'integer'
-    },
-    float: {
-        'type': 'number',
-        'format': 'float'
-    },
-    bool: {
-        'type': 'boolean',
-    },
+    str: {'type': 'string'},
+    six.text_type: {'type': 'string'},
+    int: {'type': 'integer'},
+    float: {'type': 'number', 'format': 'float'},
+    bool: {'type': 'boolean'},
 }
 
 
@@ -67,9 +57,22 @@ def convert_to_swagger_type(type_):
 
 
 class SwaggerParam(object):
-    def __init__(self, description=None, name=None, required=None, type=None, pattern=None,
-                 default=None, enum=None, minimum=None, maximum=None, format=None, location=None, items=None,
-                 collection_format=None):
+    def __init__(
+        self,
+        description=None,
+        name=None,
+        required=None,
+        type=None,
+        pattern=None,
+        default=None,
+        enum=None,
+        minimum=None,
+        maximum=None,
+        format=None,
+        location=None,
+        items=None,
+        collection_format=None,
+    ):
         self.description = description
         self.name = name
         self.required = required
@@ -105,7 +108,7 @@ class SwaggerParam(object):
             # we check if the flask's type checker can give a description
             if isinstance(argument.type, CustomSchemaType):
                 ts = argument.type.schema()
-                param_type = ts.type # overwrite if already set
+                param_type = ts.type  # overwrite if already set
                 if ts.metadata:
                     metadata.update(ts.metadata)
 
@@ -139,19 +142,23 @@ class SwaggerParam(object):
             items = None
             collection_format = None
             if argument.action == 'append':
-                items = SwaggerParam(type=swagger_type,
-                                     format=metadata.pop('format', None),
-                                     enum=metadata.pop('enum', None))
+                items = SwaggerParam(
+                    type=swagger_type, format=metadata.pop('format', None), enum=metadata.pop('enum', None)
+                )
                 swagger_type = 'array'
                 collection_format = 'multi'
 
-            args.append(SwaggerParam(name=argument.name,
-                                     type=swagger_type,
-                                     location=location,
-                                     required=argument.required,
-                                     items=items,
-                                     collection_format=collection_format,
-                                     **metadata))
+            args.append(
+                SwaggerParam(
+                    name=argument.name,
+                    type=swagger_type,
+                    location=location,
+                    required=argument.required,
+                    items=items,
+                    collection_format=collection_format,
+                    **metadata
+                )
+            )
 
         return args
 
@@ -163,12 +170,16 @@ class SwaggerParam(object):
             custom_format = getattr(converter, 'regex', None)
             if custom_format:
                 swagger_format = custom_format
-            args.append(SwaggerParam(name=name,
-                                     description=converter.__doc__,
-                                     type=swagger_type,
-                                     format=swagger_format,
-                                     location='path',
-                                     required=True))
+            args.append(
+                SwaggerParam(
+                    name=name,
+                    description=converter.__doc__,
+                    type=swagger_type,
+                    format=swagger_format,
+                    location='path',
+                    required=True,
+                )
+            )
 
         return args
 
@@ -178,9 +189,7 @@ def _from_nested_schema(field):
     return reference and a list of nested definitions from a Serializer
     or schema depending on param onlyRef
     """
-    schema = {
-        '$ref': '#/definitions/' + get_serializer_name(field)
-    }
+    schema = {'$ref': '#/definitions/' + get_serializer_name(field)}
 
     return schema, field
 
@@ -188,14 +197,9 @@ def _from_nested_schema(field):
 def get_schema(serializer):
     properties_schema, definitions = get_schema_properties(serializer)
     required_properties = [
-        field.label or field_name
-        for field_name, field in serializer._field_map.items()
-        if field.required
+        field.label or field_name for field_name, field in serializer._field_map.items() if field.required
     ]
-    schema = {
-        "type": "object",
-        "properties": properties_schema,
-    }
+    schema = {"type": "object", "properties": properties_schema}
     if required_properties:  # swagger is a bit rigid not to have empty required properties
         schema['required'] = required_properties
     return schema, definitions
@@ -234,8 +238,10 @@ def get_schema_properties(serializer):
             schema = copy.deepcopy(ts.metadata)
             schema['type'] = swagger_type
         elif not schema_metadata:
-            raise ValueError('unsupported field type %s for attr %s in object %s' % (
-                rendered_field, field_name, get_serializer_name(serializer)))
+            raise ValueError(
+                'unsupported field type %s for attr %s in object %s'
+                % (rendered_field, field_name, get_serializer_name(serializer))
+            )
 
         if schema_metadata:
             if 'deprecated' in schema_metadata:
@@ -246,10 +252,7 @@ def get_schema_properties(serializer):
             schema.update(schema_metadata)
         name = field.label if hasattr(field, 'label') and field.label else field_name
         if getattr(field, 'many', False) or getattr(rendered_field, 'many', False):
-            schema = {
-                'type': "array",
-                'items': schema,
-            }
+            schema = {'type': "array", 'items': schema}
         properties[name] = schema
 
     return properties, external_definitions
@@ -341,12 +344,7 @@ class SwaggerMethod(object):
         # for the api responses, we add a title for better SDK integration
         output_type['title'] = get_serializer_name(obj)
 
-        self.output_type = {
-            "200": {
-                "schema": output_type,
-                'description': resource.__doc__ or ''
-            }
-        }
+        self.output_type = {"200": {"schema": output_type, 'description': resource.__doc__ or ''}}
         return external_definitions
 
 

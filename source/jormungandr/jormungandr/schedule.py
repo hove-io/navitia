@@ -127,8 +127,9 @@ class RoutePoint(object):
             return None
         if len(tags) > 1:
             # there is more than one RT id for the given object, which shouldn't happen
-            logging.getLogger(__name__).warning('Object {o} has multiple RealTime codes for tag {t}'.
-                                                format(o=obj.uri, t=object_id_tag))
+            logging.getLogger(__name__).warning(
+                'Object {o} has multiple RealTime codes for tag {t}'.format(o=obj.uri, t=object_id_tag)
+            )
         return tags[0]
 
     # Cache this ?
@@ -180,8 +181,9 @@ class MixedSchedule(object):
         rt_system = self.instance.realtime_proxy_manager.get(rt_system_code)
         if not rt_system:
             log.info('impossible to find {}, no realtime added'.format(rt_system_code))
-            new_relic.record_custom_event('realtime_internal_failure', {'rt_system_id': rt_system_code,
-                                                                        'message': 'no handler found'})
+            new_relic.record_custom_event(
+                'realtime_internal_failure', {'rt_system_id': rt_system_code, 'message': 'no handler found'}
+            )
             return None
         return rt_system
 
@@ -190,16 +192,21 @@ class MixedSchedule(object):
         next_rt_passages = None
 
         try:
-            next_rt_passages = rt_system.next_passage_for_route_point(route_point,
-                                                                      request['items_per_schedule'],
-                                                                      request['from_datetime'],
-                                                                      request['_current_datetime'],
-                                                                      request['duration'],
-                                                                      request['timezone'])
+            next_rt_passages = rt_system.next_passage_for_route_point(
+                route_point,
+                request['items_per_schedule'],
+                request['from_datetime'],
+                request['_current_datetime'],
+                request['duration'],
+                request['timezone'],
+            )
         except Exception as e:
-            log.exception('failure while requesting next passages to external RT system {}'.format(rt_system.rt_system_id))
-            new_relic.record_custom_event('realtime_internal_failure', {'rt_system_id': unicode(rt_system.rt_system_id),
-                                                                        'message': str(e)})
+            log.exception(
+                'failure while requesting next passages to external RT system {}'.format(rt_system.rt_system_id)
+            )
+            new_relic.record_custom_event(
+                'realtime_internal_failure', {'rt_system_id': unicode(rt_system.rt_system_id), 'message': str(e)}
+            )
 
         if next_rt_passages is None:
             log.debug('no next passages, using base schedule')
@@ -253,12 +260,16 @@ class MixedSchedule(object):
         if request['data_freshness'] != RT_PROXY_DATA_FRESHNESS:
             return resp
 
-        route_points = {RoutePoint(stop_point=passage.stop_point, route=passage.route):
-                        _create_template_from_passage(passage)
-                        for passage in resp.next_departures}
-        route_points.update((RoutePoint(rp.route, rp.stop_point),
-                             _create_template_from_pb_route_point(rp))
-                            for rp in resp.route_points)
+        route_points = {
+            RoutePoint(stop_point=passage.stop_point, route=passage.route): _create_template_from_passage(
+                passage
+            )
+            for passage in resp.next_departures
+        }
+        route_points.update(
+            (RoutePoint(rp.route, rp.stop_point), _create_template_from_pb_route_point(rp))
+            for rp in resp.route_points
+        )
 
         rt_proxy = None
         futures = []
@@ -270,7 +281,13 @@ class MixedSchedule(object):
         def worker(rt_proxy, route_point, template, request, resp):
             # Use the copied request context in greenlet
             with utils.copy_context_in_greenlet_stack(reqctx):
-                return resp, rt_proxy, route_point, template, self._get_next_realtime_passages(rt_proxy, route_point, request)
+                return (
+                    resp,
+                    rt_proxy,
+                    route_point,
+                    template,
+                    self._get_next_realtime_passages(rt_proxy, route_point, request),
+                )
 
         for route_point, template in route_points.items():
             rt_proxy = self._get_realtime_proxy(route_point)
@@ -283,8 +300,8 @@ class MixedSchedule(object):
 
         # sort
         def comparator(p1, p2):
-            return cmp(p1.stop_date_time.departure_date_time,
-                       p2.stop_date_time.departure_date_time)
+            return cmp(p1.stop_date_time.departure_date_time, p2.stop_date_time.departure_date_time)
+
         resp.next_departures.sort(comparator)
 
         # handle pagination :

@@ -46,12 +46,8 @@ MOCKED_PROXY_CONF = [
             "timezone": "UTC",
             "service_url": "http://XXXX",
             "timeout": 15,
-            "service_args": {
-                "serviceID": "X",
-                "EntityID": "XX",
-                "Media": "XXX"
-            }
-        }
+            "service_args": {"serviceID": "X", "EntityID": "XX", "Media": "XXX"},
+        },
     }
 ]
 
@@ -59,20 +55,25 @@ MOCKED_PROXY_CONF = [
 def _get_departure(dep, sp_uri, line_code):
     """ small helper that extract the information from a route point departures """
     return [
-        {'rt': r['stop_date_time']['data_freshness'] == 'realtime', 'dt': r['stop_date_time']['departure_date_time']}
-        for r in dep if r['stop_point']['id'] == sp_uri and r['route']['line']['code'] == line_code
-        ]
+        {
+            'rt': r['stop_date_time']['data_freshness'] == 'realtime',
+            'dt': r['stop_date_time']['departure_date_time'],
+        }
+        for r in dep
+        if r['stop_point']['id'] == sp_uri and r['route']['line']['code'] == line_code
+    ]
 
 
 def _get_schedule(scs, sp_uri, line_code):
     """ small helper that extract the information from a route point stop schedule """
     return [
         {'rt': r['data_freshness'] == 'realtime', 'dt': r['date_time']}
-        for r in next(rp_sched['date_times']
-                      for rp_sched in scs
-                      if rp_sched['stop_point']['id'] == sp_uri
-                      and rp_sched['route']['line']['code'] == line_code)
-        ]
+        for r in next(
+            rp_sched['date_times']
+            for rp_sched in scs
+            if rp_sched['stop_point']['id'] == sp_uri and rp_sched['route']['line']['code'] == line_code
+        )
+    ]
 
 
 @dataset({'multiple_schedules': {'instance_config': {'realtime_proxies': MOCKED_PROXY_CONF}}})
@@ -81,66 +82,73 @@ class TestCleverageSchedules(AbstractTestFixture):
     integration tests for cleverage
 
     """
-    query_template_scs = 'stop_points/{sp}/stop_schedules?data_freshness=realtime&_current_datetime=20160102T0800'
+
+    query_template_scs = (
+        'stop_points/{sp}/stop_schedules?data_freshness=realtime&_current_datetime=20160102T0800'
+    )
     query_template_dep = 'stop_points/{sp}/departures?data_freshness=realtime&_current_datetime=20160102T0800'
 
     def test_stop_schedule_with_realtime_only(self):
-        mock_requests = MockRequests({
-            'http://XXXX/syn_stoppoint1':
-                ([
-                 {
-                     "name": "Lianes 5",
-                     "code": "Kisio数字 A",
-                     "type": "Bus",
-                     "schedules": [
-                         {
-                             "vehicle_lattitude": "44.792112483318",
-                             "vehicle_longitude": "-0.56718390706918",
-                             "waittime_text": "11 minutes",
-                             "trip_id": "268436451",
-                             "schedule_id": "268476273",
-                             "destination_id": "3341",
-                             "destination_name": "Piscine Chambéry",
-                             "departure": "2016-01-02 08:17:17",
-                             "departure_commande": "2016-01-02 08:17:17",
-                             "departure_theorique": "2016-01-02 08:17:17",
-                             "arrival": "2016-01-02 08:16:00",
-                             "arrival_commande": "2016-01-02 08:16:00",
-                             "arrival_theorique": "2016-01-02 08:16:00",
-                             "comment": "",
-                             "realtime": "1",
-                             "waittime": "00:10:53",
-                             "updated_at": "2016-01-02 08:16:00",
-                             "vehicle_id": "2662",
-                             "vehicle_position_updated_at": "2016-01-02 08:16:00",
-                             "origin": "bdsi"
-                         },
-                         {
-                             "vehicle_lattitude": "44.814043370749",
-                             "vehicle_longitude": "-0.57294492449656",
-                             "waittime_text": "19 minutes",
-                             "trip_id": "268436310",
-                             "schedule_id": "268468351",
-                             "destination_id": "3341",
-                             "destination_name": "Piscine Chambéry",
-                             "departure": "2016-01-02 09:17:17",
-                             "departure_commande": "2016-01-02 09:17:17",
-                             "departure_theorique": "2016-01-02 09:17:17",
-                             "arrival": "2016-01-02 14:45:35",
-                             "arrival_commande": "2016-01-02 09:16:00",
-                             "arrival_theorique": "2016-01-02 09:16:00",
-                             "comment": "",
-                             "realtime": "1",
-                             "waittime": "00:19:13",
-                             "updated_at": "2016-01-02 09:16:00",
-                             "vehicle_id": "2660",
-                             "vehicle_position_updated_at": "2016-01-02 09:16:00",
-                             "origin": "bdsi"
-                         }
-                     ]
-                 }
-                 ], 200)
-        })
+        mock_requests = MockRequests(
+            {
+                'http://XXXX/syn_stoppoint1': (
+                    [
+                        {
+                            "name": "Lianes 5",
+                            "code": "Kisio数字 A",
+                            "type": "Bus",
+                            "schedules": [
+                                {
+                                    "vehicle_lattitude": "44.792112483318",
+                                    "vehicle_longitude": "-0.56718390706918",
+                                    "waittime_text": "11 minutes",
+                                    "trip_id": "268436451",
+                                    "schedule_id": "268476273",
+                                    "destination_id": "3341",
+                                    "destination_name": "Piscine Chambéry",
+                                    "departure": "2016-01-02 08:17:17",
+                                    "departure_commande": "2016-01-02 08:17:17",
+                                    "departure_theorique": "2016-01-02 08:17:17",
+                                    "arrival": "2016-01-02 08:16:00",
+                                    "arrival_commande": "2016-01-02 08:16:00",
+                                    "arrival_theorique": "2016-01-02 08:16:00",
+                                    "comment": "",
+                                    "realtime": "1",
+                                    "waittime": "00:10:53",
+                                    "updated_at": "2016-01-02 08:16:00",
+                                    "vehicle_id": "2662",
+                                    "vehicle_position_updated_at": "2016-01-02 08:16:00",
+                                    "origin": "bdsi",
+                                },
+                                {
+                                    "vehicle_lattitude": "44.814043370749",
+                                    "vehicle_longitude": "-0.57294492449656",
+                                    "waittime_text": "19 minutes",
+                                    "trip_id": "268436310",
+                                    "schedule_id": "268468351",
+                                    "destination_id": "3341",
+                                    "destination_name": "Piscine Chambéry",
+                                    "departure": "2016-01-02 09:17:17",
+                                    "departure_commande": "2016-01-02 09:17:17",
+                                    "departure_theorique": "2016-01-02 09:17:17",
+                                    "arrival": "2016-01-02 14:45:35",
+                                    "arrival_commande": "2016-01-02 09:16:00",
+                                    "arrival_theorique": "2016-01-02 09:16:00",
+                                    "comment": "",
+                                    "realtime": "1",
+                                    "waittime": "00:19:13",
+                                    "updated_at": "2016-01-02 09:16:00",
+                                    "vehicle_id": "2660",
+                                    "vehicle_position_updated_at": "2016-01-02 09:16:00",
+                                    "origin": "bdsi",
+                                },
+                            ],
+                        }
+                    ],
+                    200,
+                )
+            }
+        )
         with mock.patch('requests.get', mock_requests.get):
             query = self.query_template_scs.format(sp='SP_1')
             response = self.query_region(query)
@@ -149,7 +157,7 @@ class TestCleverageSchedules(AbstractTestFixture):
             # 2016-01-02 08:17:00
             assert _get_schedule(scs, 'SP_1', 'code A') == [
                 {'rt': True, 'dt': '20160102T081717'},
-                {'rt': True, 'dt': '20160102T091717'}
+                {'rt': True, 'dt': '20160102T091717'},
             ]
 
             query = self.query_template_dep.format(sp='SP_1')
@@ -158,66 +166,70 @@ class TestCleverageSchedules(AbstractTestFixture):
             assert len(dep) == 2
             assert _get_departure(dep, 'SP_1', 'code A') == [
                 {'rt': True, 'dt': '20160102T081717'},
-                {'rt': True, 'dt': '20160102T091717'}
+                {'rt': True, 'dt': '20160102T091717'},
             ]
 
     def test_stop_schedule_with_theoric_and_realtime(self):
-        mock_requests = MockRequests({
-            'http://XXXX/syn_stoppoint1':
-                ([
-                 {
-                     "name": "Lianes 5",
-                     "code": "Kisio数字 A",
-                     "type": "Bus",
-                     "schedules": [
-                         {
-                             "vehicle_lattitude": "44.792112483318",
-                             "vehicle_longitude": "-0.56718390706918",
-                             "waittime_text": "11 minutes",
-                             "trip_id": "268436451",
-                             "schedule_id": "268476273",
-                             "destination_id": "3341",
-                             "destination_name": "Piscine Chambéry",
-                             "departure": "2016-01-02 08:17:17",
-                             "departure_commande": "2016-01-02 08:17:17",
-                             "departure_theorique": "2016-01-02 08:17:17",
-                             "arrival": "2016-01-02 08:16:00",
-                             "arrival_commande": "2016-01-02 08:16:00",
-                             "arrival_theorique": "2016-01-02 08:16:00",
-                             "comment": "",
-                             "realtime": "1",
-                             "waittime": "00:10:53",
-                             "updated_at": "2016-01-02 08:16:00",
-                             "vehicle_id": "2662",
-                             "vehicle_position_updated_at": "2016-01-02 08:16:00",
-                             "origin": "bdsi"
-                         },
-                         {
-                             "vehicle_lattitude": "44.814043370749",
-                             "vehicle_longitude": "-0.57294492449656",
-                             "waittime_text": "19 minutes",
-                             "trip_id": "268436310",
-                             "schedule_id": "268468351",
-                             "destination_id": "3341",
-                             "destination_name": "Piscine Chambéry",
-                             "departure": "2016-01-02 09:17:17",
-                             "departure_commande": "2016-01-02 09:17:17",
-                             "departure_theorique": "2016-01-02 09:17:17",
-                             "arrival": "2016-01-02 14:45:35",
-                             "arrival_commande": "2016-01-02 09:16:00",
-                             "arrival_theorique": "2016-01-02 09:16:00",
-                             "comment": "",
-                             "realtime": "0",
-                             "waittime": "00:19:13",
-                             "updated_at": "2016-01-02 09:16:00",
-                             "vehicle_id": "2660",
-                             "vehicle_position_updated_at": "2016-01-02 09:16:00",
-                             "origin": "bdsi"
-                         }
-                     ]
-                 }
-                 ], 200)
-        })
+        mock_requests = MockRequests(
+            {
+                'http://XXXX/syn_stoppoint1': (
+                    [
+                        {
+                            "name": "Lianes 5",
+                            "code": "Kisio数字 A",
+                            "type": "Bus",
+                            "schedules": [
+                                {
+                                    "vehicle_lattitude": "44.792112483318",
+                                    "vehicle_longitude": "-0.56718390706918",
+                                    "waittime_text": "11 minutes",
+                                    "trip_id": "268436451",
+                                    "schedule_id": "268476273",
+                                    "destination_id": "3341",
+                                    "destination_name": "Piscine Chambéry",
+                                    "departure": "2016-01-02 08:17:17",
+                                    "departure_commande": "2016-01-02 08:17:17",
+                                    "departure_theorique": "2016-01-02 08:17:17",
+                                    "arrival": "2016-01-02 08:16:00",
+                                    "arrival_commande": "2016-01-02 08:16:00",
+                                    "arrival_theorique": "2016-01-02 08:16:00",
+                                    "comment": "",
+                                    "realtime": "1",
+                                    "waittime": "00:10:53",
+                                    "updated_at": "2016-01-02 08:16:00",
+                                    "vehicle_id": "2662",
+                                    "vehicle_position_updated_at": "2016-01-02 08:16:00",
+                                    "origin": "bdsi",
+                                },
+                                {
+                                    "vehicle_lattitude": "44.814043370749",
+                                    "vehicle_longitude": "-0.57294492449656",
+                                    "waittime_text": "19 minutes",
+                                    "trip_id": "268436310",
+                                    "schedule_id": "268468351",
+                                    "destination_id": "3341",
+                                    "destination_name": "Piscine Chambéry",
+                                    "departure": "2016-01-02 09:17:17",
+                                    "departure_commande": "2016-01-02 09:17:17",
+                                    "departure_theorique": "2016-01-02 09:17:17",
+                                    "arrival": "2016-01-02 14:45:35",
+                                    "arrival_commande": "2016-01-02 09:16:00",
+                                    "arrival_theorique": "2016-01-02 09:16:00",
+                                    "comment": "",
+                                    "realtime": "0",
+                                    "waittime": "00:19:13",
+                                    "updated_at": "2016-01-02 09:16:00",
+                                    "vehicle_id": "2660",
+                                    "vehicle_position_updated_at": "2016-01-02 09:16:00",
+                                    "origin": "bdsi",
+                                },
+                            ],
+                        }
+                    ],
+                    200,
+                )
+            }
+        )
         with mock.patch('requests.get', mock_requests.get):
             query = self.query_template_scs.format(sp='SP_1')
             response = self.query_region(query)
@@ -226,7 +238,7 @@ class TestCleverageSchedules(AbstractTestFixture):
             # 2016-01-02 08:17:00
             assert _get_schedule(scs, 'SP_1', 'code A') == [
                 {'rt': True, 'dt': '20160102T081717'},
-                {'rt': False, 'dt': '20160102T091717'}
+                {'rt': False, 'dt': '20160102T091717'},
             ]
 
             query = self.query_template_dep.format(sp='SP_1')
@@ -235,5 +247,5 @@ class TestCleverageSchedules(AbstractTestFixture):
             assert len(dep) == 2
             assert _get_departure(dep, 'SP_1', 'code A') == [
                 {'rt': True, 'dt': '20160102T081717'},
-                {'rt': False, 'dt': '20160102T091717'}
+                {'rt': False, 'dt': '20160102T091717'},
             ]

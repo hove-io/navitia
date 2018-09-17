@@ -30,13 +30,13 @@
 from __future__ import absolute_import
 import navitiacommon.type_pb2 as type_pb2
 
-odt_levels = {"scheduled","with_stops", "zonal", "all"}
+odt_levels = {"scheduled", "with_stops", "zonal", "all"}
 
 pb_odt_level = {
     'scheduled': type_pb2.scheduled,
     'with_stops': type_pb2.with_stops,
     'zonal': type_pb2.zonal,
-    'all': type_pb2.all
+    'all': type_pb2.all,
 }
 
 # When an emtpy string or 'none' is passed, it deactivates all
@@ -48,4 +48,3 @@ def handle_poi_infos(add_poi_info_param, bss_stands_param):
         add_poi_info_param.append("bss_stands")
 
     return any(value in add_poi_info_param for value in ['bss_stands', 'car_park'])
-

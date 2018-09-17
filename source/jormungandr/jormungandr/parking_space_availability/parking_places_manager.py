@@ -53,7 +53,6 @@ def _handle(response, provider_manager, attr, logger, err_msg):
 
 
 class ManageParkingPlaces(object):
-
     def __init__(self, resource, attribute):
         """
         resource: the element to apply the decorator
@@ -76,12 +75,23 @@ class ManageParkingPlaces(object):
                 show_car_park = 'car_park' in resource_args.get('add_poi_infos')
 
                 if show_bss_stands and instance and instance.bss_provider:
-                    _handle(response, bss_provider_manager, self.attribute, self.logger,
-                            'Error while handling BSS realtime availability')
+                    _handle(
+                        response,
+                        bss_provider_manager,
+                        self.attribute,
+                        self.logger,
+                        'Error while handling BSS realtime availability',
+                    )
 
                 if show_car_park and instance and instance.car_park_provider:
-                    _handle(response, car_park_provider_manager, self.attribute, self.logger,
-                            'Error while handling car park realtime availability')
+                    _handle(
+                        response,
+                        car_park_provider_manager,
+                        self.attribute,
+                        self.logger,
+                        'Error while handling car park realtime availability',
+                    )
 
             return response, status, h
+
         return wrapper

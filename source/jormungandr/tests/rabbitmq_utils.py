@@ -36,7 +36,7 @@ from kombu.pools import producers
 from retrying import Retrying
 
 
-#we need to generate a unique topic not to have conflict between tests
+# we need to generate a unique topic not to have conflict between tests
 rt_topic = 'rt_test_{}'.format(uuid.uuid1())
 
 
@@ -44,23 +44,24 @@ class RabbitMQCnxFixture(AbstractTestFixture):
     """
     Mock a message over RabbitMQ
     """
+
     def _get_producer(self):
         producer = producers[self._mock_rabbit_connection].acquire(block=True, timeout=2)
         self._connections.add(producer.connection)
         return producer
 
     def setUp(self):
-        #Note: not a setup_class method, not to conflict with AbstractTestFixture's setup
+        # Note: not a setup_class method, not to conflict with AbstractTestFixture's setup
         self._mock_rabbit_connection = BrokerConnection("pyamqp://guest:guest@localhost:5672")
         self._connections = {self._mock_rabbit_connection}
         self._exchange = Exchange('navitia', durable=True, delivry_mode=2, type='topic')
         self._mock_rabbit_connection.connect()
 
-        #wait for the cnx to run the test
+        # wait for the cnx to run the test
         self._wait_for_rabbitmq_cnx()
 
     def tearDown(self):
-        #we need to release the amqp connection
+        # we need to release the amqp connection
         self._mock_rabbit_connection.release()
 
     def _publish(self, item):
@@ -78,7 +79,7 @@ class RabbitMQCnxFixture(AbstractTestFixture):
         last_loaded_data = get_not_null(status['status'], 'last_rt_data_loaded')
         item = self._make_mock_item(*args, **kwargs)
         self._publish(item)
-        #we sleep a bit to let kraken reload the data
+        # we sleep a bit to let kraken reload the data
         self._poll_until_reload(last_loaded_data)
 
     def _poll_until_reload(self, previous_val):
@@ -87,9 +88,11 @@ class RabbitMQCnxFixture(AbstractTestFixture):
 
         check that the last_rt_data_loaded field is different from the first call
         """
-        Retrying(stop_max_delay=10 * 1000, wait_fixed=100,
-                 retry_on_result=lambda status: get_not_null(status['status'], 'last_rt_data_loaded') == previous_val) \
-            .call(lambda: self.query_region('status'))
+        Retrying(
+            stop_max_delay=10 * 1000,
+            wait_fixed=100,
+            retry_on_result=lambda status: get_not_null(status['status'], 'last_rt_data_loaded') == previous_val,
+        ).call(lambda: self.query_region('status'))
 
     def _wait_for_rabbitmq_cnx(self):
         """
@@ -97,6 +100,8 @@ class RabbitMQCnxFixture(AbstractTestFixture):
 
         small timeout because it must not be long (otherwise it way be a server configuration problem)
         """
-        Retrying(stop_max_delay=1 * 1000, wait_fixed=50,
-                 retry_on_result=lambda status: get_not_null(status['status'], 'is_connected_to_rabbitmq') is False) \
-            .call(lambda: self.query_region('status'))
+        Retrying(
+            stop_max_delay=1 * 1000,
+            wait_fixed=50,
+            retry_on_result=lambda status: get_not_null(status['status'], 'is_connected_to_rabbitmq') is False,
+        ).call(lambda: self.query_region('status'))

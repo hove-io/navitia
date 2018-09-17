@@ -16,13 +16,18 @@ import geoalchemy2 as ga
 
 
 def upgrade():
-    op.execute ("""CREATE OR REPLACE FUNCTION georef.compute_bounding_shape() RETURNS GEOMETRY AS $$
+    op.execute(
+        """CREATE OR REPLACE FUNCTION georef.compute_bounding_shape() RETURNS GEOMETRY AS $$
                 SELECT ST_Multi(ST_ConvexHull(ST_Collect(ARRAY(select coord::geometry from georef.node))))
                 $$
-                LANGUAGE SQL;""")
+                LANGUAGE SQL;"""
+    )
+
 
 def downgrade():
-    op.execute ("""CREATE OR REPLACE FUNCTION georef.compute_bounding_shape() RETURNS GEOMETRY AS $$
+    op.execute(
+        """CREATE OR REPLACE FUNCTION georef.compute_bounding_shape() RETURNS GEOMETRY AS $$
                 SELECT ST_ConvexHull(ST_Collect(ARRAY(select coord::geometry from georef.node)))
                 $$
-                LANGUAGE SQL;""")
+                LANGUAGE SQL;"""
+    )

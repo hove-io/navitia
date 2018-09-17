@@ -37,10 +37,12 @@ import os, sys
     Import in this module should be done as late as possible to prevent side effect with the monkey patching
 """
 
+
 def load_configuration(app):
     app.config.from_object('jormungandr.default_settings')
     if 'JORMUNGANDR_CONFIG_FILE' in os.environ:
         app.config.from_envvar('JORMUNGANDR_CONFIG_FILE')
+
 
 def logger(app):
     if 'LOGGER' in app.config:
@@ -50,6 +52,7 @@ def logger(app):
         app.logger.addHandler(handler)
         app.logger.setLevel('INFO')
 
+
 def patch_http():
     logger = logging.getLogger(__name__)
     logger.info(
@@ -57,6 +60,6 @@ def patch_http():
     )
 
     from gevent import monkey
+
     monkey.patch_ssl()
     monkey.patch_socket()
-

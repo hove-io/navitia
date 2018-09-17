@@ -51,7 +51,7 @@ def mock_stop_schedules():
                                 "internal": "True",
                                 "rel": "notes",
                                 "type": "notes",
-                                "id": "note:b5b328cb593ae7b1d73228345fe634fc"
+                                "id": "note:b5b328cb593ae7b1d73228345fe634fc",
                             },
                             {
                                 "internal": "True",
@@ -59,9 +59,9 @@ def mock_stop_schedules():
                                 "rel": "exceptions",
                                 "date": "20120619",
                                 "type": "exceptions",
-                                "id": "exception:120120619"
-                            }
-                        ]
+                                "id": "exception:120120619",
+                            },
+                        ],
                     },
                     {
                         "date_time": "20160102T091352",
@@ -72,7 +72,7 @@ def mock_stop_schedules():
                                 "internal": "True",
                                 "rel": "notes",
                                 "type": "notes",
-                                "id": "note:b5b328cb593ae7b1d73228345fe634fc"
+                                "id": "note:b5b328cb593ae7b1d73228345fe634fc",
                             },
                             {
                                 "internal": "True",
@@ -80,10 +80,10 @@ def mock_stop_schedules():
                                 "rel": "exceptions",
                                 "date": "20120619",
                                 "type": "exceptions",
-                                "id": "exception:120120620"
-                            }
-                        ]
-                    }
+                                "id": "exception:120120620",
+                            },
+                        ],
+                    },
                 ]
             }
         ]
@@ -115,4 +115,3 @@ def test_complete_links():
             items = link.keys()
             for key in items:
                 assert key in ["category", "internal", "rel", "type", "id"]
-

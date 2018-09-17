@@ -42,15 +42,14 @@ app.config.from_object('monitor_kraken.default_settings')
 app.config.from_envvar('MONITOR_CONFIG_FILE', silent=True)
 context = zmq.Context()
 
+
 @app.route('/')
 def monitor():
     if 'instance' not in request.args:
         return json.dumps({'error': ['instance invalid']}), 400
 
     instance = request.args['instance']
-    config_file = '{path}/{instance}/kraken.ini'.format(
-                                            path=app.config['KRAKEN_DIR'],
-                                            instance=instance)
+    config_file = '{path}/{instance}/kraken.ini'.format(path=app.config['KRAKEN_DIR'], instance=instance)
     parser = ConfigParser()
     parser.read(config_file)
     try:

@@ -37,7 +37,7 @@ from jormungandr.utils import timestamp_to_str
 
 # a time null value is represented by the max value (since 0 is a perfectly valid value)
 # WARNING! be careful to change that value if the time type change (from uint64 to uint32 for example)
-__date_time_null_value__ = 2**64 - 1
+__date_time_null_value__ = 2 ** 64 - 1
 
 
 class TimeField(NestedPbField, TimeType):
@@ -45,6 +45,7 @@ class TimeField(NestedPbField, TimeType):
     This field convert a number of second from midnight to a string with the format: HH:MM:SS
     No conversion from UTC will be done, we expect the time to already be in desired timezone
     """
+
     def to_value(self, value):
         if value == __date_time_null_value__:
             return ""
@@ -55,6 +56,7 @@ class DateTimeField(PbField, DateTimeType):
     """
     custom date format from timestamp
     """
+
     def to_value(self, value):
         return timestamp_to_str(value)
 
@@ -63,6 +65,7 @@ class DateTimeDictField(Field, DateTimeType):
     """
     custom date format from timestamp
     """
+
     def to_value(self, value):
         return timestamp_to_str(value) if value else None
         super(DateTimeDictField, self).__init__(schema_type=str, schema_metadata=schema_metadata, **kwargs)
@@ -71,4 +74,3 @@ class DateTimeDictField(Field, DateTimeType):
 class PeriodSerializer(PbNestedSerializer):
     begin = DateTimeField()
     end = DateTimeField()
-

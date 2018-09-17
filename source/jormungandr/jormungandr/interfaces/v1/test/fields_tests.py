@@ -37,5 +37,5 @@ def test_invalid_collection_name():
 
 
 def test_disruption_collection_name():
-        disruptions = get_collections('disruptions')
-        assert len(disruptions) == 5
+    disruptions = get_collections('disruptions')
+    assert len(disruptions) == 5

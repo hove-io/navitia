@@ -15,23 +15,30 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.execute("""
+    op.execute(
+        """
     INSERT INTO navitia.connection_type (id, name) VALUES
     (0, 'StopPoint'), (1, 'StopArea'),
     (2, 'Walking'), (3, 'VJ'), (4, 'Guaranteed'),
     (5, 'Default');
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
     INSERT INTO navitia.connection_kind (id, name) VALUES
     (0, 'extension'), (1, 'guarantee'), (2, 'undefined'), (6, 'stay_in');
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
     INSERT INTO navitia.odt_type (id, name) VALUES
     (0, 'regular_line'), (1, 'virtual_with_stop_time'),
     (2, 'virtual_without_stop_time'), (3, 'stop_point_to_stop_point'),
     (4, 'adress_to_stop_point'), (5, 'odt_point_to_point');
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
     insert into navitia.object_type VALUES
     (0, 'ValidityPattern'),
     (1, 'Line'),
@@ -56,12 +63,15 @@ def upgrade():
     (21, 'Way'),
     (22, 'Admin'),
     (23, 'POIType');
-    """)
-    op.execute("""
+    """
+    )
+    op.execute(
+        """
         insert into realtime.message_status values (0, 'information'),
         (1, 'warning'),
         (2, 'disrupt');
-    """)
+    """
+    )
 
 
 def downgrade():

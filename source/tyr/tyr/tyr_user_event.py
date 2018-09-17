@@ -2,8 +2,8 @@
 
 from tyr import tyr_rabbit_mq_handler
 
-class RabbitMqMessage(object):
 
+class RabbitMqMessage(object):
     def __init__(self):
         self._event_name = None
         self._billing_plan_name = None
@@ -26,9 +26,9 @@ class RabbitMqMessage(object):
                 'username': self._login,
                 'block_until': self._block_until,
                 'email': self._email,
-                'type': self._type
+                'type': self._type,
             },
-            'event': self._event_name
+            'event': self._event_name,
         }
 
     def get_message_with_last_login(self):
@@ -38,17 +38,14 @@ class RabbitMqMessage(object):
         return message
 
     def get_end_point(self):
-        return {
-            'name': self._end_point_name,
-            'default': self._end_point_default
-        }
+        return {'name': self._end_point_name, 'default': self._end_point_default}
 
     def get_billing_plan(self):
         return {
             'name': self._billing_plan_name,
             'max_object_count': self._billing_plan_max_object_count,
             'max_request_count': self._billing_plan_max_request_count,
-            'max_default_count': self._billing_plan_default
+            'max_default_count': self._billing_plan_default,
         }
 
     def set_event_name(self, event_name):
@@ -70,8 +67,8 @@ class RabbitMqMessage(object):
         self._end_point_name = user.end_point.name
         self._end_point_default = user.end_point.default
 
-class TyrUserEvent(object):
 
+class TyrUserEvent(object):
     def __init__(self):
         self._rabbit_mq_message = RabbitMqMessage()
 

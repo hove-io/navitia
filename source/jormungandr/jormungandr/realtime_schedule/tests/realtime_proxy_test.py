@@ -41,6 +41,7 @@ class CustomProxy(RealtimeProxy):
     """
     mock proxy that return a fixed next passages
     """
+
     def __init__(self, passages):
         self.hard_coded_passages = passages
         self.rt_system_id = 'test'
@@ -48,7 +49,9 @@ class CustomProxy(RealtimeProxy):
     def status(self):
         return None
 
-    def _get_next_passage_for_route_point(self, route_point, count=None, from_dt=None, current_dt=None, duration=None):
+    def _get_next_passage_for_route_point(
+        self, route_point, count=None, from_dt=None, current_dt=None, duration=None
+    ):
         return self.hard_coded_passages
 
 
@@ -124,6 +127,7 @@ def filter_filter_dt_all_test(mocker):
 
     r = proxy.next_passage_for_route_point(None, count=1, from_dt=d2t(dt("15:00")))
     assert r is None
+
 
 def filter_filter_dt_duration_test(mocker):
     mocker.patch('jormungandr.utils.get_timezone', return_value=pytz.timezone('UTC'))

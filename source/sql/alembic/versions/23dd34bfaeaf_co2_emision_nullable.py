@@ -19,6 +19,7 @@ def upgrade():
     op.alter_column("physical_mode", "co2_emission", nullable=True, schema='navitia')
     op.execute(""" UPDATE navitia.physical_mode SET co2_emission=NULL WHERE co2_emission=-1;""")
 
+
 def downgrade():
     op.execute(""" UPDATE navitia.physical_mode SET co2_emission=-1 WHERE co2_emission=NULL;""")
     op.alter_column("physical_mode", "co2_emission", nullable=False, server_default='0', schema='navitia')

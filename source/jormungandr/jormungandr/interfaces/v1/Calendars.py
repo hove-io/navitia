@@ -35,9 +35,19 @@ from jormungandr.interfaces.v1.ResourceUri import ResourceUri
 from jormungandr.interfaces.parsers import default_count_arg_type, DateTimeFormat, depth_argument
 from jormungandr.interfaces.v1.decorators import get_obj_serializer
 from jormungandr.interfaces.v1.errors import ManageError
-from jormungandr.interfaces.v1.fields import fields, enum_type, NonNullList,\
-    NonNullNested, NonNullProtobufNested, PbField, error, pagination, NonNullString, \
-    feed_publisher, disruption_marshaller
+from jormungandr.interfaces.v1.fields import (
+    fields,
+    enum_type,
+    NonNullList,
+    NonNullNested,
+    NonNullProtobufNested,
+    PbField,
+    error,
+    pagination,
+    NonNullString,
+    feed_publisher,
+    disruption_marshaller,
+)
 from jormungandr.interfaces.v1.serializer import api
 
 from datetime import datetime
@@ -54,26 +64,17 @@ week_pattern = {
     "sunday": fields.Boolean(),
 }
 
-calendar_period = {
-    "begin": fields.String(),
-    "end": fields.String(),
-}
+calendar_period = {"begin": fields.String(), "end": fields.String()}
 
-calendar_exception = {
-    "datetime": fields.String(attribute="date"),
-    "type": enum_type(),
-}
-validity_pattern = {
-    'beginning_date': fields.String(),
-    'days': fields.String(),
-}
+calendar_exception = {"datetime": fields.String(attribute="date"), "type": enum_type()}
+validity_pattern = {'beginning_date': fields.String(), 'days': fields.String()}
 calendar = {
     "id": NonNullString(attribute="uri"),
     "name": NonNullString(),
     "week_pattern": NonNullNested(week_pattern),
     "active_periods": NonNullList(NonNullNested(calendar_period)),
     "exceptions": NonNullList(NonNullNested(calendar_exception)),
-    "validity_pattern": NonNullProtobufNested(validity_pattern)
+    "validity_pattern": NonNullProtobufNested(validity_pattern),
 }
 
 calendars = {
@@ -81,7 +82,7 @@ calendars = {
     "error": PbField(error, attribute='error'),
     "pagination": NonNullNested(pagination),
     "disruptions": fields.List(NonNullNested(disruption_marshaller), attribute="impacts"),
-    "feed_publishers": fields.List(NonNullNested(feed_publisher))
+    "feed_publishers": fields.List(NonNullNested(feed_publisher)),
 }
 
 
@@ -89,36 +90,48 @@ class Calendars(ResourceUri):
     def __init__(self):
         ResourceUri.__init__(self, output_type_serializer=api.CalendarsSerializer)
         parser_get = self.parsers["get"]
-        parser_get.add_argument("depth", type=depth_argument, default=1,
-                                help="The depth of your object")
-        parser_get.add_argument("count", type=default_count_arg_type, default=10,
-                                help="Number of calendars per page")
-        parser_get.add_argument("start_page", type=int, default=0,
-                                help="The current page")
-        parser_get.add_argument("start_date", type=six.text_type, default="",
-                                help="Start date")
-        parser_get.add_argument("end_date", type=six.text_type, default="",
-                                help="End date")
-        parser_get.add_argument("forbidden_id[]", type=six.text_type, deprecated=True,
-                                help="DEPRECATED, replaced by `forbidden_uris[]`",
-                                dest="__temporary_forbidden_id[]",
-                                default=[],
-                                action='append',
-                                schema_metadata={'format': 'pt-object'})
-        parser_get.add_argument("forbidden_uris[]", type=six.text_type,
-                                help="forbidden uris",
-                                dest="forbidden_uris[]",
-                                default=[],
-                                action="append",
-                                schema_metadata={'format': 'pt-object'})
-        parser_get.add_argument("distance", type=int, default=200,
-                                help="Distance range of the query. Used only if a coord is in the query")
-        parser_get.add_argument("_current_datetime", type=DateTimeFormat(),
-                                schema_metadata={'default': 'now'}, hidden=True,
-                                default=datetime.utcnow(),
-                                help='The datetime considered as "now". Used for debug, default is '
-                                     'the moment of the request. It will mainly change the output '
-                                     'of the disruptions.')
+        parser_get.add_argument("depth", type=depth_argument, default=1, help="The depth of your object")
+        parser_get.add_argument(
+            "count", type=default_count_arg_type, default=10, help="Number of calendars per page"
+        )
+        parser_get.add_argument("start_page", type=int, default=0, help="The current page")
+        parser_get.add_argument("start_date", type=six.text_type, default="", help="Start date")
+        parser_get.add_argument("end_date", type=six.text_type, default="", help="End date")
+        parser_get.add_argument(
+            "forbidden_id[]",
+            type=six.text_type,
+            deprecated=True,
+            help="DEPRECATED, replaced by `forbidden_uris[]`",
+            dest="__temporary_forbidden_id[]",
+            default=[],
+            action='append',
+            schema_metadata={'format': 'pt-object'},
+        )
+        parser_get.add_argument(
+            "forbidden_uris[]",
+            type=six.text_type,
+            help="forbidden uris",
+            dest="forbidden_uris[]",
+            default=[],
+            action="append",
+            schema_metadata={'format': 'pt-object'},
+        )
+        parser_get.add_argument(
+            "distance",
+            type=int,
+            default=200,
+            help="Distance range of the query. Used only if a coord is in the query",
+        )
+        parser_get.add_argument(
+            "_current_datetime",
+            type=DateTimeFormat(),
+            schema_metadata={'default': 'now'},
+            hidden=True,
+            default=datetime.utcnow(),
+            help='The datetime considered as "now". Used for debug, default is '
+            'the moment of the request. It will mainly change the output '
+            'of the disruptions.',
+        )
         self.collection = 'calendars'
         self.collections = calendars
         self.get_decorators.insert(0, ManageError())
@@ -147,6 +160,5 @@ class Calendars(ResourceUri):
             args["filter"] = ""
 
         self._register_interpreted_parameters(args)
-        response = i_manager.dispatch(args, "calendars",
-                                      instance_name=self.region)
+        response = i_manager.dispatch(args, "calendars", instance_name=self.region)
         return response

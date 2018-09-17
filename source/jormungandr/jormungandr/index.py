@@ -46,13 +46,8 @@ class Index(Resource):
                 'description': module.description,
                 'status': module.status,
                 'links': [
-                    create_external_link(
-                        module_name + '.' + module.index_endpoint,
-                        rel='api',
-                        _type='api')
-                ]
+                    create_external_link(module_name + '.' + module.index_endpoint, rel='api', _type='api')
+                ],
             }
             resp['versions'].append(mod)
         return resp
-
-

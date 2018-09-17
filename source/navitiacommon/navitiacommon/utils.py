@@ -36,6 +36,7 @@ address_source_types = ['BANO', 'OSM']
 poi_source_types = ['FUSIO', 'OSM']
 admin_source_types = ['OSM']
 
+
 def type_of_data(filename):
     """
     return the type of data contains in a file + the path to load it
@@ -56,8 +57,9 @@ def type_of_data(filename):
 
     for 'fusio', 'gtfs', 'fares' and 'poi', we return the directory since there are several file to load
     """
+
     def files_type(files):
-        #first we try fusio, because it can load fares too
+        # first we try fusio, because it can load fares too
         if any(f for f in files if f.endswith("contributors.txt")):
             return 'fusio'
         if any(f for f in files if f.endswith("fares.csv")):
@@ -110,12 +112,14 @@ def family_of_data(type):
     by example "geopal" and "osm" are in the "streetnework" family
     """
     mapping = {
-        'osm': 'streetnetwork', 'geopal': 'streetnetwork',
+        'osm': 'streetnetwork',
+        'geopal': 'streetnetwork',
         'synonym': 'synonym',
         'poi': 'poi',
-        'fusio': 'pt', 'gtfs': 'pt',
+        'fusio': 'pt',
+        'gtfs': 'pt',
         'fare': 'fare',
-        'shape': 'shape'
+        'shape': 'shape',
     }
     if type in mapping:
         return mapping[type]

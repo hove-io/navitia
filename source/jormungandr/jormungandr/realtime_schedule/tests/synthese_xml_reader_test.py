@@ -37,35 +37,8 @@ import pytz
 
 
 def get_xml_parser():
-    return '<timeTable xsi:noNamespaceSchemaLocation="http://synthese.rcsmobility.com/include/54_departures_table/DisplayScreenContentFunction.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" type="departure">' \
-           '<journey routeId="2533412229452279" dateTime="2016-Mar-21 12:07:37" blink="0" realTime="yes" waiting_time="00:02:59">' \
-           '<stop id="3377704015495922" operatorCode="MURQB,MNLP_**_21MUA,MNLP_**_22MUR,MNLP_**_31MUA,MNLP_**_33MUR,MNLP_**_A1MUA,MNLP_**_MUSER" name="Musée d\'Art Roger Quilliot"/>' \
-           '<line id="11821953316814877" creatorId="20" name="Ligne 20" shortName="20" longName="" color="(94,184,62)" xmlColor="#5eb83e" style="vertclair" image="ligne-20.jpg" direction="AULNAT St Exup. via Aéro." wayback="1">' \
-           '<network id="6192453782601729" name="T2C" image=""/>' \
-           '</line>' \
-           '<origin id="1970329131942197" name="GERZAT Champfleuri" cityName="Gerzat"/>' \
-           '<destination id="1970329131942194" name="AULNAT St Exupéry" cityName="Aulnat"/>' \
-           '<stopArea id="1970329131942296" name="Musée d\'Art Roger Quilliot" cityId="1688849860563049" cityName="Clermont-Ferrand" directionAlias=""/>' \
-           '</journey>' \
-           '<journey routeId="2533412229399934" dateTime="2016-Mar-21 12:15:00" blink="0" realTime="yes" waiting_time="00:10:22">' \
-           '<stop id="3377704015495922" operatorCode="MURQB,MNLP_**_21MUA,MNLP_**_22MUR,MNLP_**_31MUA,MNLP_**_33MUR,MNLP_**_A1MUA,MNLP_**_MUSER" name="Musée d\'Art Roger Quilliot"/>' \
-           '<line id="11821953316814878" creatorId="21" name="Ligne 21" shortName="21" longName="" color="(217,232,106)" xmlColor="#d9e86a" style="jaune" image="ligne-21.jpg" direction="Quartier Chambon" wayback="0">' \
-           '<network id="6192453782601729" name="T2C" image=""/>' \
-           '</line>' \
-           '<origin id="1970329131942531" name="Stade G. Montpied" cityName="Clermont-Ferrand"/>' \
-           '<destination id="1970329131941974" name="Quartier Chambon" cityName="Aubière"/>' \
-           '<stopArea id="1970329131942296" name="Musée d\'Art Roger Quilliot" cityId="1688849860563049" cityName="Clermont-Ferrand" directionAlias=""/>' \
-           '</journey>' \
-           '<journey routeId="2533412229399934" dateTime="2016-Mar-22 12:15:00" blink="0" realTime="yes" waiting_time="00:10:22">' \
-           '<stop id="3377704015495922" operatorCode="MURQB,MNLP_**_21MUA,MNLP_**_22MUR,MNLP_**_31MUA,MNLP_**_33MUR,MNLP_**_A1MUA,MNLP_**_MUSER" name="Musée d\'Art Roger Quilliot"/>' \
-           '<line id="11821953316814878" creatorId="21" name="Ligne 21" shortName="21" longName="" color="(217,232,106)" xmlColor="#d9e86a" style="jaune" image="ligne-21.jpg" direction="Quartier Chambon" wayback="0">' \
-           '<network id="6192453782601729" name="T2C" image=""/>' \
-           '</line>' \
-           '<origin id="1970329131942531" name="Stade G. Montpied" cityName="Clermont-Ferrand"/>' \
-           '<destination id="1970329131941974" name="Quartier Chambon" cityName="Aubière"/>' \
-           '<stopArea id="1970329131942296" name="Musée d\'Art Roger Quilliot" cityId="1688849860563049" cityName="Clermont-Ferrand" directionAlias=""/>' \
-           '</journey>' \
-           '</timeTable>'
+    return '<timeTable xsi:noNamespaceSchemaLocation="http://synthese.rcsmobility.com/include/54_departures_table/DisplayScreenContentFunction.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" type="departure">' '<journey routeId="2533412229452279" dateTime="2016-Mar-21 12:07:37" blink="0" realTime="yes" waiting_time="00:02:59">' '<stop id="3377704015495922" operatorCode="MURQB,MNLP_**_21MUA,MNLP_**_22MUR,MNLP_**_31MUA,MNLP_**_33MUR,MNLP_**_A1MUA,MNLP_**_MUSER" name="Musée d\'Art Roger Quilliot"/>' '<line id="11821953316814877" creatorId="20" name="Ligne 20" shortName="20" longName="" color="(94,184,62)" xmlColor="#5eb83e" style="vertclair" image="ligne-20.jpg" direction="AULNAT St Exup. via Aéro." wayback="1">' '<network id="6192453782601729" name="T2C" image=""/>' '</line>' '<origin id="1970329131942197" name="GERZAT Champfleuri" cityName="Gerzat"/>' '<destination id="1970329131942194" name="AULNAT St Exupéry" cityName="Aulnat"/>' '<stopArea id="1970329131942296" name="Musée d\'Art Roger Quilliot" cityId="1688849860563049" cityName="Clermont-Ferrand" directionAlias=""/>' '</journey>' '<journey routeId="2533412229399934" dateTime="2016-Mar-21 12:15:00" blink="0" realTime="yes" waiting_time="00:10:22">' '<stop id="3377704015495922" operatorCode="MURQB,MNLP_**_21MUA,MNLP_**_22MUR,MNLP_**_31MUA,MNLP_**_33MUR,MNLP_**_A1MUA,MNLP_**_MUSER" name="Musée d\'Art Roger Quilliot"/>' '<line id="11821953316814878" creatorId="21" name="Ligne 21" shortName="21" longName="" color="(217,232,106)" xmlColor="#d9e86a" style="jaune" image="ligne-21.jpg" direction="Quartier Chambon" wayback="0">' '<network id="6192453782601729" name="T2C" image=""/>' '</line>' '<origin id="1970329131942531" name="Stade G. Montpied" cityName="Clermont-Ferrand"/>' '<destination id="1970329131941974" name="Quartier Chambon" cityName="Aubière"/>' '<stopArea id="1970329131942296" name="Musée d\'Art Roger Quilliot" cityId="1688849860563049" cityName="Clermont-Ferrand" directionAlias=""/>' '</journey>' '<journey routeId="2533412229399934" dateTime="2016-Mar-22 12:15:00" blink="0" realTime="yes" waiting_time="00:10:22">' '<stop id="3377704015495922" operatorCode="MURQB,MNLP_**_21MUA,MNLP_**_22MUR,MNLP_**_31MUA,MNLP_**_33MUR,MNLP_**_A1MUA,MNLP_**_MUSER" name="Musée d\'Art Roger Quilliot"/>' '<line id="11821953316814878" creatorId="21" name="Ligne 21" shortName="21" longName="" color="(217,232,106)" xmlColor="#d9e86a" style="jaune" image="ligne-21.jpg" direction="Quartier Chambon" wayback="0">' '<network id="6192453782601729" name="T2C" image=""/>' '</line>' '<origin id="1970329131942531" name="Stade G. Montpied" cityName="Clermont-Ferrand"/>' '<destination id="1970329131941974" name="Quartier Chambon" cityName="Aubière"/>' '<stopArea id="1970329131942296" name="Musée d\'Art Roger Quilliot" cityId="1688849860563049" cityName="Clermont-Ferrand" directionAlias=""/>' '</journey>' '</timeTable>'
+
 
 def make_dt(str):
     tz = pytz.timezone("Europe/Paris")

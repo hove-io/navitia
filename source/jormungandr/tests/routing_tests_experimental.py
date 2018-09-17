@@ -40,7 +40,9 @@ unit for scenario experimental
 
 
 @config({'scenario': 'distributed'})
-class TestJourneysDistributed(JourneyCommon, DirectPath, JourneyMinBikeMinCar, NewDefaultScenarioAbstractTestFixture):
+class TestJourneysDistributed(
+    JourneyCommon, DirectPath, JourneyMinBikeMinCar, NewDefaultScenarioAbstractTestFixture
+):
     """
     Test the experiental scenario
     All the tests are defined in "TestJourneys" class, we only change the scenario
@@ -68,7 +70,10 @@ class TestJourneysDistributed(JourneyCommon, DirectPath, JourneyMinBikeMinCar, N
         """
         Test when max_nb_crowfly_by_car=0, we cannot fallback with car..
         """
-        query = journey_basic_query + "&first_section_mode[]=walking&last_section_mode[]=car&_max_nb_crowfly_by_car=0"
+        query = (
+            journey_basic_query
+            + "&first_section_mode[]=walking&last_section_mode[]=car&_max_nb_crowfly_by_car=0"
+        )
         response = self.query_region(query)
         check_best(response)
         jrnys = response['journeys']
@@ -95,12 +100,10 @@ class TestJourneysDistributed(JourneyCommon, DirectPath, JourneyMinBikeMinCar, N
         # we should find at least one pt journey in the response
         assert any('non_pt' not in j['tags'] for j in jrnys)
 
-
     def test_best_filtering(self):
         """
         This feature is no longer supported"""
         pass
-
 
     def test_journeys_wheelchair_profile(self):
         """
@@ -148,44 +151,50 @@ class TestJourneysDistributed(JourneyCommon, DirectPath, JourneyMinBikeMinCar, N
             "bss_speed": instance.bss_speed,
             "car_no_park_speed": instance.car_no_park_speed,
         }
-        resp = instance.get_street_network_routing_matrix([origin], [destination],
-                                                          mode, max_duration, request, **kwargs)
+        resp = instance.get_street_network_routing_matrix(
+            [origin], [destination], mode, max_duration, request, **kwargs
+        )
         assert len(resp.rows[0].routing_response) == 1
         assert resp.rows[0].routing_response[0].duration == 107
         assert resp.rows[0].routing_response[0].routing_status == response_pb2.reached
 
         max_duration = 106
-        resp = instance.get_street_network_routing_matrix([origin], [destination],
-                                                          mode, max_duration, request, **kwargs)
+        resp = instance.get_street_network_routing_matrix(
+            [origin], [destination], mode, max_duration, request, **kwargs
+        )
         assert len(resp.rows[0].routing_response) == 1
         assert resp.rows[0].routing_response[0].duration == 0
         assert resp.rows[0].routing_response[0].routing_status == response_pb2.unreached
 
     def test_intersection_objects(self):
         # The coordinates of arrival and the stop point are separated by 20m
-        r = self.query('/v1/coverage/main_routing_test/journeys?from=stopA&to=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&datetime=20120614080000&')
+        r = self.query(
+            '/v1/coverage/main_routing_test/journeys?from=stopA&to=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&datetime=20120614080000&'
+        )
         assert len(r['journeys'][0]['sections']) == 3
 
         # destination of crow_fly section and origin of next pt section should be the same object.
-        assert(r['journeys'][0]['sections'][0]['type'] == 'crow_fly')
-        assert(r['journeys'][0]['sections'][1]['type'] == 'public_transport')
-        assert(r['journeys'][0]['sections'][0]['to'] == r['journeys'][0]['sections'][1]['from'])
+        assert r['journeys'][0]['sections'][0]['type'] == 'crow_fly'
+        assert r['journeys'][0]['sections'][1]['type'] == 'public_transport'
+        assert r['journeys'][0]['sections'][0]['to'] == r['journeys'][0]['sections'][1]['from']
 
         # destination of pt section and origin of next street_network section should be the same object.
-        assert(r['journeys'][0]['sections'][-1]['type'] == 'street_network')
-        assert(r['journeys'][0]['sections'][1]['to'] == r['journeys'][0]['sections'][-1]['from'])
+        assert r['journeys'][0]['sections'][-1]['type'] == 'street_network'
+        assert r['journeys'][0]['sections'][1]['to'] == r['journeys'][0]['sections'][-1]['from']
 
-        r = self.query('/v1/coverage/main_routing_test/journeys?from=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&to=stopA&datetime=20120614080000')
+        r = self.query(
+            '/v1/coverage/main_routing_test/journeys?from=coord%3A8.98311981954709e-05%3A8.98311981954709e-05&to=stopA&datetime=20120614080000'
+        )
         assert len(r['journeys'][0]['sections']) == 3
 
         # destination of crow_fly section and origin of next pt section should be the same object.
-        assert(r['journeys'][0]['sections'][0]['type'] == 'street_network')
-        assert(r['journeys'][0]['sections'][1]['type'] == 'public_transport')
-        assert(r['journeys'][0]['sections'][0]['to'] == r['journeys'][0]['sections'][1]['from'])
+        assert r['journeys'][0]['sections'][0]['type'] == 'street_network'
+        assert r['journeys'][0]['sections'][1]['type'] == 'public_transport'
+        assert r['journeys'][0]['sections'][0]['to'] == r['journeys'][0]['sections'][1]['from']
 
         # destination of pt section and origin of next street_network section should be the same object.
-        assert(r['journeys'][0]['sections'][-1]['type'] == 'crow_fly')
-        assert(r['journeys'][0]['sections'][1]['to'] == r['journeys'][0]['sections'][-1]['from'])
+        assert r['journeys'][0]['sections'][-1]['type'] == 'crow_fly'
+        assert r['journeys'][0]['sections'][1]['to'] == r['journeys'][0]['sections'][-1]['from']
 
 
 @config({"scenario": "distributed"})
@@ -204,31 +213,39 @@ class TestDistributedOnBasicRouting(OnBasicRouting, NewDefaultScenarioAbstractTe
 class TestDistributedMinNbJourneys(JourneysMinNbJourneys, NewDefaultScenarioAbstractTestFixture):
     pass
 
+
 @config({"scenario": "distributed"})
 class TestDistributedWithNightBusFilter(JourneysWithNightBusFilter, NewDefaultScenarioAbstractTestFixture):
     pass
+
 
 @config({"scenario": "distributed"})
 class TestDistributedTimeFrameDuration(JourneysTimeFrameDuration, NewDefaultScenarioAbstractTestFixture):
     pass
 
 
-@config({"scenario": "distributed",
-         'instance_config': {
-             "ridesharing": [
-             {
-                 "class": "jormungandr.scenarios.ridesharing.instant_system.InstantSystem",
-                 "args": {
-                     "service_url": "http://distributed_ridesharing.wtf",
-                     "api_key": "key",
-                     "network": "Super Covoit 3000",
-                     "rating_scale_min": 0,
-                     "rating_scale_max": 5
-                 }
-             }
-         ]}})
-class TestJourneysRidesharingDistributed(JourneysRidesharing, JourneyCommon, DirectPath, JourneyMinBikeMinCar,
-                                         NewDefaultScenarioAbstractTestFixture):
+@config(
+    {
+        "scenario": "distributed",
+        'instance_config': {
+            "ridesharing": [
+                {
+                    "class": "jormungandr.scenarios.ridesharing.instant_system.InstantSystem",
+                    "args": {
+                        "service_url": "http://distributed_ridesharing.wtf",
+                        "api_key": "key",
+                        "network": "Super Covoit 3000",
+                        "rating_scale_min": 0,
+                        "rating_scale_max": 5,
+                    },
+                }
+            ]
+        },
+    }
+)
+class TestJourneysRidesharingDistributed(
+    JourneysRidesharing, JourneyCommon, DirectPath, JourneyMinBikeMinCar, NewDefaultScenarioAbstractTestFixture
+):
     def test_best_filtering(self):
         """
         This feature is not supported

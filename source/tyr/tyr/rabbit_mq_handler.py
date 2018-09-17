@@ -3,8 +3,8 @@
 from kombu import Exchange, Connection, Producer
 import logging
 
-class RabbitMqHandler(object):
 
+class RabbitMqHandler(object):
     def __init__(self, connection, exchange_name, type='direct', durable=True):
         self._logger = logging.getLogger(__name__)
         try:
@@ -21,11 +21,15 @@ class RabbitMqHandler(object):
 
     def publish(self, payload, routing_key=None, serializer=None):
         try:
-            publish = self._connection.ensure(self._producer, self._producer.publish, errback = self.errback, max_retries=3)
-            publish(payload,
-                    serializer=serializer,
-                    exchange=self._task_exchange,
-                    declare=[self._task_exchange],
-                    routing_key=routing_key)
+            publish = self._connection.ensure(
+                self._producer, self._producer.publish, errback=self.errback, max_retries=3
+            )
+            publish(
+                payload,
+                serializer=serializer,
+                exchange=self._task_exchange,
+                declare=[self._task_exchange],
+                routing_key=routing_key,
+            )
         except Exception as exc:
             self._logger.exception('Error occurred when publishing: %r', exc)

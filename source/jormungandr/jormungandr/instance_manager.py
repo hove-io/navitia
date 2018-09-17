@@ -37,12 +37,12 @@ from navitiacommon import type_pb2, request_pb2
 import glob
 import logging
 from jormungandr.protobuf_to_dict import protobuf_to_dict
-from jormungandr.exceptions import ApiNotFound, RegionNotFound,\
-    DeadSocketException, InvalidArguments
+from jormungandr.exceptions import ApiNotFound, RegionNotFound, DeadSocketException, InvalidArguments
 from jormungandr import authentication, cache, app
 from jormungandr.instance import Instance
 import gevent
 import os
+
 
 def instances_comparator(instance1, instance2):
     """
@@ -50,7 +50,7 @@ def instances_comparator(instance1, instance2):
 
     we want first the non free instances then the free ones following by priority
     """
-    #Here we choose the instance with greater priority.
+    # Here we choose the instance with greater priority.
     if instance1.priority != instance2.priority:
         return instance2.priority - instance1.priority
 
@@ -72,6 +72,7 @@ def choose_best_instance(instances):
             best = i
     return best
 
+
 class InstanceManager(object):
 
     """
@@ -82,7 +83,9 @@ class InstanceManager(object):
 
     def __init__(self, instances_dir=None, instance_filename_pattern='*.json', start_ping=False):
         # loads all json files found in 'instances_dir' that matches 'instance_filename_pattern'
-        self.configuration_files = glob.glob(instances_dir + '/' + instance_filename_pattern) if instances_dir else []
+        self.configuration_files = (
+            glob.glob(instances_dir + '/' + instance_filename_pattern) if instances_dir else []
+        )
         self.start_ping = start_ping
         self.instances = {}
         self.context = zmq.Context()
@@ -93,12 +96,16 @@ class InstanceManager(object):
     def register_instance(self, config):
         logging.getLogger(__name__).debug("instance configuration: %s", config)
         name = config['key']
-        instance = Instance(self.context, name, config['zmq_socket'],
-                            config.get('street_network'),
-                            config.get('ridesharing'),
-                            config.get('realtime_proxies', []),
-                            config.get('zmq_socket_type', 'persistent'),
-                            config.get('default_autocomplete', None))
+        instance = Instance(
+            self.context,
+            name,
+            config['zmq_socket'],
+            config.get('street_network'),
+            config.get('ridesharing'),
+            config.get('realtime_proxies', []),
+            config.get('zmq_socket_type', 'persistent'),
+            config.get('default_autocomplete', None),
+        )
         self.instances[instance.name] = instance
 
     def initialisation(self):
@@ -121,7 +128,7 @@ class InstanceManager(object):
                 config_data = json.load(f)
                 self.register_instance(config_data)
 
-        #we fetch the krakens metadata first
+        # we fetch the krakens metadata first
         # not on the ping thread to always have the data available (for the tests for example)
         self.init_kraken_instances()
 
@@ -133,8 +140,8 @@ class InstanceManager(object):
         try:
             cache.delete_memoized(self._all_keys_of_id)
         except RuntimeError:
-            #if there is an error with cache, flask want to access to the app, this will fail at startup
-            #with a "working outside of application context"
+            # if there is an error with cache, flask want to access to the app, this will fail at startup
+            # with a "working outside of application context"
             logger = logging.getLogger(__name__)
             logger.exception('there seem to be some kind of problems with the cache')
 
@@ -167,10 +174,10 @@ class InstanceManager(object):
 
         gevent.wait(futures)
         for future in futures:
-            #we check if an instance needs the cache to be purged
+            # we check if an instance needs the cache to be purged
             if future.get():
                 self._clear_cache()
-                break;
+                break
 
     def thread_ping(self, timer=10):
         """
@@ -189,8 +196,9 @@ class InstanceManager(object):
         if not instances:
             return None
         user = authentication.get_user(token=authentication.get_token())
-        valid_instances = [i for i in instances
-                           if authentication.has_access(i.name, abort=False, user=user, api=api)]
+        valid_instances = [
+            i for i in instances if authentication.has_access(i.name, abort=False, user=user, api=api)
+        ]
         if not valid_instances:
             authentication.abort_request(user)
         return valid_instances
@@ -223,7 +231,9 @@ class InstanceManager(object):
     def _all_keys_of_coord(self, lon, lat):
         p = geometry.Point(lon, lat)
         instances = [i.name for i in self.instances.values() if i.has_point(p)]
-        logging.getLogger(__name__).debug("all_keys_of_coord(self, {}, {}) returns {}".format(lon, lat, instances))
+        logging.getLogger(__name__).debug(
+            "all_keys_of_coord(self, {}, {}) returns {}".format(lon, lat, instances)
+        )
         if not instances:
             raise RegionNotFound(lon=lon, lat=lat)
         return instances
@@ -254,7 +264,7 @@ class InstanceManager(object):
 
         valid_instances = self._filter_authorized_instances(available_instances, api)
         if available_instances and not valid_instances:
-            #user doesn't have access to any of the instances
+            # user doesn't have access to any of the instances
             authentication.abort_request(user=authentication.get_user())
         else:
             return valid_instances
@@ -275,10 +285,7 @@ class InstanceManager(object):
             except DeadSocketException:
                 resp_dict = {
                     "status": "dead",
-                    "error": {
-                        "code": "dead_socket",
-                        "value": "The region {} is dead".format(key_region)
-                    }
+                    "error": {"code": "dead_socket", "value": "The region {} is dead".format(key_region)},
                 }
             if resp_dict.get('status') == 'no_data' and not region and not lon and not lat:
                 continue

@@ -38,15 +38,10 @@ from jormungandr.autocomplete.geocodejson import geocodejson
 from jormungandr.interfaces.v1.serializer.geocode_json import GeocodePlacesSerializer
 from jormungandr.interfaces.v1.decorators import get_serializer
 
+
 def bragi_house_jaures_feature():
     house_feature = {
-        "geometry": {
-            "coordinates": [
-                3.282103,
-                49.847586
-            ],
-            "type": "Point"
-        },
+        "geometry": {"coordinates": [3.282103, 49.847586], "type": "Point"},
         "properties": {
             "geocoding": {
                 "city": "Saint-Quentin",
@@ -66,10 +61,7 @@ def bragi_house_jaures_feature():
                         "name": "Saint-Quentin",
                         "zip_code": "02000",
                         "weight": 1,
-                        "coord": {
-                            "lat": 48.8396154,
-                            "lon": 2.3957517
-                        }
+                        "coord": {"lat": 48.8396154, "lon": 2.3957517},
                     },
                     {
                         "id": "admin:fr:248000549",
@@ -79,17 +71,15 @@ def bragi_house_jaures_feature():
                         "name": "Haute Picardie",
                         "zip_code": "80200",
                         "weight": 1,
-                        "coord": {
-                            "lat": 48.8396154,
-                            "lon": 2.3957517
-                        }
-                    }
+                        "coord": {"lat": 48.8396154, "lon": 2.3957517},
+                    },
                 ],
             }
         },
-        "type": "Feature"
+        "type": "Feature",
     }
     return house_feature
+
 
 @get_serializer(serpy=GeocodePlacesSerializer, marshall=geocodejson)
 def get_response(bragi_response):
@@ -111,12 +101,9 @@ def bragi_house_jaures_response_check(feature_response):
     assert region_list.get(7) == "Haute Picardie"
     assert region_list.get(8) == "Saint-Quentin"
 
+
 def bragi_house_reading_test():
-    bragi_response = {
-        "features": [
-            bragi_house_jaures_feature()
-        ]
-    }
+    bragi_response = {"features": [bragi_house_jaures_feature()]}
     response = get_response(bragi_response)
     assert len(response['warnings']) == 1
     assert response['warnings'][0]['id'] == 'beta_endpoint'
@@ -126,13 +113,7 @@ def bragi_house_reading_test():
 
 def bragi_street_feature():
     street_feature = {
-        "geometry": {
-            "coordinates": [
-                3.282103,
-                49.847586
-            ],
-            "type": "Point"
-        },
+        "geometry": {"coordinates": [3.282103, 49.847586], "type": "Point"},
         "properties": {
             "geocoding": {
                 "city": "Saint-Quentin",
@@ -151,10 +132,7 @@ def bragi_street_feature():
                         "name": "Saint-Quentin",
                         "zip_code": "02000",
                         "weight": 1,
-                        "coord": {
-                            "lat": 48.8396154,
-                            "lon": 2.3957517
-                        }
+                        "coord": {"lat": 48.8396154, "lon": 2.3957517},
                     },
                     {
                         "id": "admin:fr:248000549",
@@ -164,17 +142,15 @@ def bragi_street_feature():
                         "name": "Haute Picardie",
                         "zip_code": "80200",
                         "weight": 1,
-                        "coord": {
-                            "lat": 48.8396154,
-                            "lon": 2.3957517
-                        }
-                    }
+                        "coord": {"lat": 48.8396154, "lon": 2.3957517},
+                    },
                 ],
             }
         },
-        "type": "Feature"
+        "type": "Feature",
     }
     return street_feature
+
 
 def bragi_street_response_check(feature_response):
 
@@ -192,22 +168,16 @@ def bragi_street_response_check(feature_response):
     assert response.get('level') == 8
     assert response.get('name') == "Saint-Quentin"
 
+
 def bragi_street_reading_test():
-    bragi_response = {
-        "features": [
-            bragi_street_feature()
-        ]
-    }
+    bragi_response = {"features": [bragi_street_feature()]}
 
     navitia_response = get_response(bragi_response).get('places', {})
     bragi_street_response_check(navitia_response[0])
 
+
 def bragi_street_reading_without_autocomplete_attribute_test():
-    bragi_response = {
-        "features": [
-            bragi_street_feature()
-        ]
-    }
+    bragi_response = {"features": [bragi_street_feature()]}
 
     navitia_response = get_response(bragi_response).get('places', {})
     bragi_street_response_check(navitia_response[0])
@@ -215,13 +185,7 @@ def bragi_street_reading_without_autocomplete_attribute_test():
 
 def bragi_admin_feature():
     admin_feature = {
-        "geometry": {
-            "coordinates": [
-                2,
-                48
-            ],
-            "type": "Point"
-        },
+        "geometry": {"coordinates": [2, 48], "type": "Point"},
         "properties": {
             "geocoding": {
                 "citycode": "2725",
@@ -243,10 +207,7 @@ def bragi_admin_feature():
                         "name": "Sommeron",
                         "zip_code": "02000",
                         "weight": 1,
-                        "coord": {
-                            "lat": 48.8396154,
-                            "lon": 2.3957517
-                        }
+                        "coord": {"lat": 48.8396154, "lon": 2.3957517},
                     },
                     {
                         "id": "admin:fr:248000549",
@@ -256,15 +217,12 @@ def bragi_admin_feature():
                         "name": "Haute Picardie",
                         "zip_code": "80200",
                         "weight": 1,
-                        "coord": {
-                            "lat": 48.8396154,
-                            "lon": 2.3957517
-                        }
-                    }
+                        "coord": {"lat": 48.8396154, "lon": 2.3957517},
+                    },
                 ],
             }
         },
-        "type": "Feature"
+        "type": "Feature",
     }
     return admin_feature
 
@@ -285,12 +243,9 @@ def bragi_admin_response_check(feature_response):
     assert admin.get('administrative_regions')[0].get('level') == 8
     assert admin.get('administrative_regions')[0].get('name') == "Sommeron"
 
+
 def bragi_admin_reading_test():
-    bragi_response = {
-        "features": [
-            bragi_admin_feature()
-        ]
-    }
+    bragi_response = {"features": [bragi_admin_feature()]}
 
     navitia_response = get_response(bragi_response).get('places', {})
     bragi_admin_response_check(navitia_response[0])
@@ -298,13 +253,7 @@ def bragi_admin_reading_test():
 
 def bragi_house_lefebvre_feature():
     house_feature = {
-        "geometry": {
-            "coordinates": [
-                3.282103,
-                49.847586
-            ],
-            "type": "Point"
-        },
+        "geometry": {"coordinates": [3.282103, 49.847586], "type": "Point"},
         "properties": {
             "geocoding": {
                 "city": "Saint-Quentin",
@@ -324,10 +273,7 @@ def bragi_house_lefebvre_feature():
                         "name": "Oyonnax",
                         "zip_codes": ["02000"],
                         "weight": 1,
-                        "coord": {
-                            "lat": 48.8396154,
-                            "lon": 2.3957517
-                        }
+                        "coord": {"lat": 48.8396154, "lon": 2.3957517},
                     },
                     {
                         "id": "admin:fr:248000549",
@@ -337,17 +283,15 @@ def bragi_house_lefebvre_feature():
                         "name": "Haute Picardie",
                         "zip_codes": ["80200"],
                         "weight": 1,
-                        "coord": {
-                            "lat": 48.8396154,
-                            "lon": 2.3957517
-                        }
-                    }
+                        "coord": {"lat": 48.8396154, "lon": 2.3957517},
+                    },
                 ],
             }
         },
-        "type": "Feature"
+        "type": "Feature",
     }
     return house_feature
+
 
 def bragi_house_lefebvre_response_check(feature_response):
     assert feature_response.get('embedded_type') == "address"
@@ -365,13 +309,14 @@ def bragi_house_lefebvre_response_check(feature_response):
     assert region_list.get(7) == "Haute Picardie"
     assert region_list.get(8) == "Oyonnax"
 
+
 def bragi_good_geocodejson_response_test():
     bragi_response = {
         "features": [
             bragi_house_jaures_feature(),
             bragi_house_lefebvre_feature(),
             bragi_street_feature(),
-            bragi_admin_feature()
+            bragi_admin_feature(),
         ]
     }
 
@@ -382,13 +327,14 @@ def bragi_good_geocodejson_response_test():
     bragi_street_response_check(navitia_response[2])
     bragi_admin_response_check(navitia_response[3])
 
+
 def bragi_good_geocodejson_response_without_autocomplete_attribute_test():
     bragi_response = {
         "features": [
             bragi_house_jaures_feature(),
             bragi_house_lefebvre_feature(),
             bragi_street_feature(),
-            bragi_admin_feature()
+            bragi_admin_feature(),
         ]
     }
 
@@ -402,13 +348,7 @@ def bragi_good_geocodejson_response_without_autocomplete_attribute_test():
 
 def bragi_geocodejson_spec_feature():
     return {
-        "geometry": {
-            "coordinates": [
-                3.282103,
-                49.847586
-            ],
-            "type": "Point"
-        },
+        "geometry": {"coordinates": [3.282103, 49.847586], "type": "Point"},
         "properties": {
             "geocoding": {
                 "city": "Saint-Quentin",
@@ -424,20 +364,16 @@ def bragi_geocodejson_spec_feature():
                     "level4": "Nord-Pas-de-Calais-Picardie",
                     "level6": "Aisne",
                     "level7": "Saint-Quentin",
-                    "level8": "Saint-Quentin"
+                    "level8": "Saint-Quentin",
                 },
             }
         },
-        "type": "Feature"
+        "type": "Feature",
     }
 
 
 def bragi_geocodejson_compatibility_test():
-    bragi_response = {
-        "features": [
-            bragi_geocodejson_spec_feature(),
-        ]
-    }
+    bragi_response = {"features": [bragi_geocodejson_spec_feature()]}
     navitia_response = get_response(bragi_response).get('places', {})[0]
     assert navitia_response.get('embedded_type') == "address"
     assert navitia_response.get('id') == '3.282103;49.847586'
@@ -452,48 +388,38 @@ def bragi_geocodejson_compatibility_test():
 
 def bragi_poi_feature():
     return {
-        "geometry": {
-            "coordinates": [8.9028068, 42.599235500000009],
-            "type": "Point"
-        },
+        "geometry": {"coordinates": [8.9028068, 42.599235500000009], "type": "Point"},
         "properties": {
             "geocoding": {
                 "id": "poi:osm:3224270910",
                 "type": "poi",
-                "poi_types": [
-                    {"id": "poi_type:amenity:townhall", "name": "Mairie"}
-                ],
+                "poi_types": [{"id": "poi_type:amenity:townhall", "name": "Mairie"}],
                 "label": "Mairie de Pigna (Pigna)",
                 "name": "Mairie de Pigna",
                 "housenumber": None,
                 "street": None,
                 "postcode": None,
                 "city": "Pigna",
-                "administrative_regions": [{
-                    "id": "admin:fr:2B231",
-                    "insee": "2B231",
-                    "level": 8,
-                    "label": "Pigna (20220)",
-                    "name": "Pigna",
-                    "zip_codes": ["20220", "20221", "20222"],
-                    "weight": 0,
-                    "coord": {
-                        "lat": 42.5996043,
-                        "lon": 8.9027334
+                "administrative_regions": [
+                    {
+                        "id": "admin:fr:2B231",
+                        "insee": "2B231",
+                        "level": 8,
+                        "label": "Pigna (20220)",
+                        "name": "Pigna",
+                        "zip_codes": ["20220", "20221", "20222"],
+                        "weight": 0,
+                        "coord": {"lat": 42.5996043, "lon": 8.9027334},
                     }
-                }]
+                ],
             }
         },
-        "type": "Feature"
+        "type": "Feature",
     }
 
 
 def bragi_poi_reading_test():
-    bragi_response = {
-        "features": [
-            bragi_poi_feature(),
-        ]
-    }
+    bragi_response = {"features": [bragi_poi_feature()]}
     navitia_response = get_response(bragi_response).get('places', {})[0]
     assert navitia_response.get('embedded_type') == "poi"
     assert navitia_response.get('id') == 'poi:osm:3224270910'
@@ -521,13 +447,7 @@ def bragi_poi_reading_test():
 
 def bragi_stop_area_feature():
     return {
-        "geometry": {
-            "coordinates": [
-                2.389462,
-                48.87958
-            ],
-            "type": "Point"
-        },
+        "geometry": {"coordinates": [2.389462, 48.87958], "type": "Point"},
         "properties": {
             "geocoding": {
                 "administrative_regions": [],
@@ -537,19 +457,15 @@ def bragi_stop_area_feature():
                 "name": "BOTZARIS",
                 "postcode": None,
                 "type": "public_transport:stop_area",
-                "timezone": "Europe/Paris"
+                "timezone": "Europe/Paris",
             }
         },
-        "type": "Feature"
+        "type": "Feature",
     }
 
 
 def bragi_stop_area_reading_test():
-    bragi_response = {
-        "features": [
-            bragi_stop_area_feature(),
-        ]
-    }
+    bragi_response = {"features": [bragi_stop_area_feature()]}
     navitia_response = get_response(bragi_response).get('places', {})[0]
     assert navitia_response.get('embedded_type') == "stop_area"
     assert navitia_response.get('id') == 'stop_area:OIF:SA:59332'
@@ -566,10 +482,12 @@ def bragi_stop_area_reading_test():
 
 
 def geojson():
-    return {"type": "Feature",
-              "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
-              "properties": {"prop0": "value0"}
-            }
+    return {
+        "type": "Feature",
+        "geometry": {"type": "Point", "coordinates": [102.0, 0.5]},
+        "properties": {"prop0": "value0"},
+    }
+
 
 def bragi_call_test():
     """
@@ -582,14 +500,14 @@ def bragi_call_test():
             bragi_house_jaures_feature(),
             bragi_house_lefebvre_feature(),
             bragi_street_feature(),
-            bragi_admin_feature()
+            bragi_admin_feature(),
         ]
     }
-    mock_requests = MockRequests({
-        'http://bob.com/autocomplete?q=rue+bobette&limit=10&timeout=2000':
-        (bragi_response, 200)
-    })
+    mock_requests = MockRequests(
+        {'http://bob.com/autocomplete?q=rue+bobette&limit=10&timeout=2000': (bragi_response, 200)}
+    )
     from jormungandr import app
+
     with app.app_context():
         # we mock the http call to return the hard coded mock_response
         with mock.patch('requests.get', mock_requests.get):
@@ -619,10 +537,7 @@ def bragi_make_params_with_instance_test():
     instance.name = 'bib'
     bragi = GeocodeJson(host='http://bob.com/autocomplete')
 
-    request = {
-        "q": "aa",
-        "count": 20
-    }
+    request = {"q": "aa", "count": 20}
 
     params = bragi.make_params(request=request, instances=[instance], timeout=1)
     rsp = {'q': 'aa', 'limit': 20, 'pt_dataset': ['bib'], 'timeout': 1000}
@@ -632,17 +547,13 @@ def bragi_make_params_with_instance_test():
         assert value == params[key]
 
 
-
 def bragi_make_params_without_instance_test():
     """
     test of generate params without instance
     """
     bragi = GeocodeJson(host='http://bob.com/autocomplete')
 
-    request = {
-        "q": "aa",
-        "count": 20
-    }
+    request = {"q": "aa", "count": 20}
 
     params = bragi.make_params(request=request, instances=[], timeout=0.1)
     rsp = {'q': 'aa', 'limit': 20, 'timeout': 100}
@@ -650,7 +561,6 @@ def bragi_make_params_without_instance_test():
     for key, value in rsp.items():
         assert key in params
         assert value == params[key]
-
 
 
 # TODO at least a test on a invalid call to bragi + an invalid bragi response + a py breaker test ?

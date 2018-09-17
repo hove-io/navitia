@@ -71,7 +71,7 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         d = response['isochrones'][0]['geojson']
         multi_poly = asShape(d)
 
-        assert (multi_poly.contains(destination))
+        assert multi_poly.contains(destination)
         is_valid_graphical_isochrone(response, self.tester, query)
 
     def test_graphical_isochrones_from_stop_point(self):
@@ -82,7 +82,7 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         d = response['isochrones'][0]['geojson']
         multi_poly = asShape(d)
 
-        assert (multi_poly.contains(stopA))
+        assert multi_poly.contains(stopA)
         is_valid_graphical_isochrone(response, self.tester, q)
 
     def test_graphical_isochrones_to_stop_point(self):
@@ -93,7 +93,7 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         d = response['isochrones'][0]['geojson']
         multi_poly = asShape(d)
 
-        assert (multi_poly.contains(stopA))
+        assert multi_poly.contains(stopA)
         is_valid_graphical_isochrone(response, self.tester, q)
 
     def test_graphical_isochrones_no_datetime(self):
@@ -102,10 +102,7 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         q_no_dt = q_no_dt.format(s_coord, '3600', current_datetime)
         response_no_dt = self.query(q_no_dt)
 
-        excepted_context = {
-            'current_datetime': current_datetime,
-            'timezone': 'UTC'
-        }
+        excepted_context = {'current_datetime': current_datetime, 'timezone': 'UTC'}
         self.check_context(response_no_dt)
 
         for key, value in excepted_context.items():
@@ -142,7 +139,9 @@ class TestGraphicalIsochrone(AbstractTestFixture):
             assert multi_poly_no_s.equals(multi_poly)
 
     def test_graphical_isochrones_speed_factor(self):
-        q_speed_2 = "v1/coverage/main_routing_test/isochrones?from={}&max_duration={}&datetime={}&walking_speed={}"
+        q_speed_2 = (
+            "v1/coverage/main_routing_test/isochrones?from={}&max_duration={}&datetime={}&walking_speed={}"
+        )
         q_speed_2 = q_speed_2.format(s_coord, '3600', '20120614T0800', 2)
         response_speed_2 = self.query(q_speed_2)
         q_speed_1 = "v1/coverage/main_routing_test/isochrones?from={}&datetime={}&max_duration={}"
@@ -158,7 +157,9 @@ class TestGraphicalIsochrone(AbstractTestFixture):
             assert multi_poly_speed_2.contains(multi_poly)
 
     def test_graphical_isochrones_min_duration(self):
-        q_min_1200 = "v1/coverage/main_routing_test/isochrones?from={}&max_duration={}&datetime={}&min_duration={}"
+        q_min_1200 = (
+            "v1/coverage/main_routing_test/isochrones?from={}&max_duration={}&datetime={}&min_duration={}"
+        )
         q_min_1200 = q_min_1200.format(s_coord, '3600', '20120614T0800', '1200')
         response_min_1200 = self.query(q_min_1200)
 
@@ -168,8 +169,9 @@ class TestGraphicalIsochrone(AbstractTestFixture):
 
         is_valid_graphical_isochrone(response_min_1200, self.tester, q_min_1200)
 
-        for isochrone_min_1200, isochrone_max_1200 in zip(response_min_1200['isochrones'],
-                                                          response_max_1200['isochrones']):
+        for isochrone_min_1200, isochrone_max_1200 in zip(
+            response_min_1200['isochrones'], response_max_1200['isochrones']
+        ):
             multi_poly_min_1200 = asShape(isochrone_min_1200['geojson'])
             multi_poly_max_1200 = asShape(isochrone_max_1200['geojson'])
 
@@ -179,8 +181,9 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         q_max_3600 = "v1/coverage/main_routing_test/isochrones?from={}&max_duration={}&datetime={}"
         q_max_3600 = q_max_3600.format(s_coord, '3600', '20120614T0800')
         response_max_3600 = self.query(q_max_3600)
-        for isochrone_min_1200, isochrone_max_3600 in zip(response_min_1200['isochrones'],
-                                                          response_max_3600['isochrones']):
+        for isochrone_min_1200, isochrone_max_3600 in zip(
+            response_min_1200['isochrones'], response_max_3600['isochrones']
+        ):
             multi_poly_min_1200 = asShape(isochrone_min_1200['geojson'])
             multi_poly_max_3600 = asShape(isochrone_max_3600['geojson'])
 
@@ -199,9 +202,11 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         is_valid_graphical_isochrone(response_standard_walker, self.tester, q_standard_walker)
         is_valid_graphical_isochrone(response_fast_walker, self.tester, q_fast_walker)
 
-        for isochrone_slow_walker, isochrone_standard_walker, isochrone_fast_walker \
-                in zip(response_slow_walker['isochrones'], response_standard_walker['isochrones'],
-                       response_fast_walker['isochrones']):
+        for isochrone_slow_walker, isochrone_standard_walker, isochrone_fast_walker in zip(
+            response_slow_walker['isochrones'],
+            response_standard_walker['isochrones'],
+            response_fast_walker['isochrones'],
+        ):
             multi_poly_slow_walker = asShape(isochrone_slow_walker['geojson'])
             multi_poly_standard_walker = asShape(isochrone_standard_walker['geojson'])
             multi_poly_fast_walker = asShape(isochrone_fast_walker['geojson'])
@@ -210,9 +215,10 @@ class TestGraphicalIsochrone(AbstractTestFixture):
             assert multi_poly_fast_walker.contains(multi_poly_standard_walker)
 
     def test_graphical_isochrone_section_mode(self):
-        q_section_mode = "v1/coverage/main_routing_test/" + isochrone_basic_query + \
-                         "&first_section_mode[]=bike" \
-                         "&last_section_mode[]=bss"
+        q_section_mode = (
+            "v1/coverage/main_routing_test/" + isochrone_basic_query + "&first_section_mode[]=bike"
+            "&last_section_mode[]=bss"
+        )
         q_basic = "v1/coverage/main_routing_test/" + isochrone_basic_query
         response_section_mode = self.query(q_section_mode)
         response_basic = self.query(q_basic)
@@ -220,8 +226,9 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         is_valid_graphical_isochrone(response_section_mode, self.tester, q_section_mode)
         is_valid_graphical_isochrone(response_basic, self.tester, q_basic)
 
-        for isochrone_basic, isochrone_section_mode in zip(response_basic['isochrones'],
-                                                           response_section_mode['isochrones']):
+        for isochrone_basic, isochrone_section_mode in zip(
+            response_basic['isochrones'], response_section_mode['isochrones']
+        ):
             multi_poly_basic = asShape(isochrone_basic['geojson'])
             multi_poly_section_mode = asShape(isochrone_section_mode['geojson'])
 
@@ -248,8 +255,9 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         is_valid_graphical_isochrone(basic_response, self.tester, basic_query)
         is_valid_graphical_isochrone(response_forbidden_uris, self.tester, basic_query)
 
-        for basic_isochrone, isochrone_forbidden_uris in zip(basic_response['isochrones'],
-                                                             response_forbidden_uris['isochrones']):
+        for basic_isochrone, isochrone_forbidden_uris in zip(
+            basic_response['isochrones'], response_forbidden_uris['isochrones']
+        ):
             basic_multi_poly = asShape(basic_isochrone['geojson'])
             multi_poly_forbidden_uris = asShape(isochrone_forbidden_uris['geojson'])
 
@@ -266,8 +274,9 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         is_valid_graphical_isochrone(basic_response, self.tester, basic_query)
         is_valid_graphical_isochrone(response_allowed_id, self.tester, basic_query)
 
-        for basic_isochrone, isochrone_allowed_id in zip(basic_response['isochrones'],
-                                                         response_allowed_id['isochrones']):
+        for basic_isochrone, isochrone_allowed_id in zip(
+            basic_response['isochrones'], response_allowed_id['isochrones']
+        ):
             basic_multi_poly = asShape(basic_isochrone['geojson'])
             multi_poly_allowed_id = asShape(isochrone_allowed_id['geojson'])
 
@@ -301,7 +310,9 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         normal_response, error_code = self.query_no_assert(p)
 
         assert error_code == 400
-        assert 'Unable to evaluate, invalid literal for int() with base 10: \'toto\'' in normal_response['message']
+        assert (
+            'Unable to evaluate, invalid literal for int() with base 10: \'toto\'' in normal_response['message']
+        )
 
     def test_graphical_isochrones_null_speed(self):
         q = "v1/coverage/main_routing_test/isochrones?datetime={}&from={}&max_duration={}&walking_speed=0"
@@ -317,7 +328,10 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         normal_response, error_code = self.query_no_assert(q)
 
         assert error_code == 400
-        assert normal_response['message'] == "you should provide a 'boundary_duration[]' or a 'max_duration' argument"
+        assert (
+            normal_response['message']
+            == "you should provide a 'boundary_duration[]' or a 'max_duration' argument"
+        )
 
     def test_graphical_isochrones_date_out_of_bound(self):
         q = "v1/coverage/main_routing_test/isochrones?datetime={}&from={}&max_duration={}"
@@ -364,7 +378,7 @@ class TestGraphicalIsochrone(AbstractTestFixture):
         q = "v1/coverage/main_routing_test/isochrones?datetime={}&from={}"
         q = q.format('20120614T080000', r_coord)
         for i in range(20):
-            q += "&boundary_duration[]={}".format(i*60)
+            q += "&boundary_duration[]={}".format(i * 60)
         normal_response, error_code = self.query_no_assert(q)
 
         assert error_code == 400

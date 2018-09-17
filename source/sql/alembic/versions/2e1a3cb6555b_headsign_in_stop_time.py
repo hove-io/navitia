@@ -15,7 +15,9 @@ import sqlalchemy as sa
 
 
 def upgrade():
-    op.add_column('stop_time', sa.Column('headsign', sa.TEXT(), primary_key=False, nullable=True), schema='navitia')
+    op.add_column(
+        'stop_time', sa.Column('headsign', sa.TEXT(), primary_key=False, nullable=True), schema='navitia'
+    )
 
 
 def downgrade():

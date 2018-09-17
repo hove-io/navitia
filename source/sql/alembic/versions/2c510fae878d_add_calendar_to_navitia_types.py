@@ -23,4 +23,3 @@ def upgrade():
 
 def downgrade():
     op.execute("delete from navitia.object_type where id = 24;")
-

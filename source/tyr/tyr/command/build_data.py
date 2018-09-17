@@ -39,8 +39,7 @@ class BuildDataCommand(Command):
 
     def get_options(self):
         return [
-            Option(dest='instance_name',
-                   help="name of the instance to build. If non given, build all instances")
+            Option(dest='instance_name', help="name of the instance to build. If non given, build all instances")
         ]
 
     def run(self, instance_name=None):
@@ -49,4 +48,3 @@ class BuildDataCommand(Command):
             return build_all_data()
         instance = models.Instance.query_existing().filter_by(name=instance_name).first()
         return build_data(instance)
-

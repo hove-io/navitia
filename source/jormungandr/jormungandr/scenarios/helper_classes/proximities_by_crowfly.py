@@ -38,6 +38,7 @@ class ProximitiesByCrowfly:
     """
     A ProximitiesByCrowfly is a set of stop_points that are accessible by crowfly within a time of 'max_duration'.
     """
+
     def __init__(self, future_manager, instance, requested_place_obj, mode, max_duration, max_nb_crowfly):
         self._future_manager = future_manager
         self._instance = instance
@@ -57,7 +58,9 @@ class ProximitiesByCrowfly:
 
     def _do_request(self):
         logger = logging.getLogger(__name__)
-        logger.debug("requesting proximities by crowfly from %s in %s", self._requested_place_obj.uri, self._mode)
+        logger.debug(
+            "requesting proximities by crowfly from %s in %s", self._requested_place_obj.uri, self._mode
+        )
 
         # When max_duration_to_pt is 0, there is no need to compute the fallback to pt, except if place is a stop_point
         # or a stop_area
@@ -70,11 +73,17 @@ class ProximitiesByCrowfly:
 
         coord = utils.get_pt_object_coord(self._requested_place_obj)
         if coord.lat and coord.lon:
-            crow_fly = self._instance.georef.get_crow_fly(utils.get_uri_pt_object(self._requested_place_obj),
-                                                          self._mode,  self._max_duration, self._max_nb_crowfly,
-                                                          **self._speed_switcher)
+            crow_fly = self._instance.georef.get_crow_fly(
+                utils.get_uri_pt_object(self._requested_place_obj),
+                self._mode,
+                self._max_duration,
+                self._max_nb_crowfly,
+                **self._speed_switcher
+            )
 
-            logger.debug("finish proximities by crowfly from %s in %s", self._requested_place_obj.uri, self._mode)
+            logger.debug(
+                "finish proximities by crowfly from %s in %s", self._requested_place_obj.uri, self._mode
+            )
             return crow_fly
 
         logger.debug("the coord of requested places is not valid: %s", coord)
@@ -88,8 +97,16 @@ class ProximitiesByCrowfly:
 
 
 class ProximitiesByCrowflyPool:
-    def __init__(self, future_manager, instance, requested_place_obj, modes, request, direct_paths_by_mode,
-                 max_nb_crowfly_by_mode):
+    def __init__(
+        self,
+        future_manager,
+        instance,
+        requested_place_obj,
+        modes,
+        request,
+        direct_paths_by_mode,
+        max_nb_crowfly_by_mode,
+    ):
         """
         A ProximitiesByCrowflyPool is a set of ProximitiesByCrowfly grouped by mode
 
@@ -123,13 +140,17 @@ class ProximitiesByCrowflyPool:
     def _async_request(self):
 
         for mode in self._modes:
-            max_fallback_duration = get_max_fallback_duration(self._request, mode, self._direct_paths_by_mode.get(mode))
-            p = ProximitiesByCrowfly(future_manager=self._future_manager,
-                                     instance=self. _instance,
-                                     requested_place_obj=self._requested_place_obj,
-                                     mode=mode,
-                                     max_duration=max_fallback_duration,
-                                     max_nb_crowfly=self._max_nb_crowfly_by_mode.get(mode, 5000))
+            max_fallback_duration = get_max_fallback_duration(
+                self._request, mode, self._direct_paths_by_mode.get(mode)
+            )
+            p = ProximitiesByCrowfly(
+                future_manager=self._future_manager,
+                instance=self._instance,
+                requested_place_obj=self._requested_place_obj,
+                mode=mode,
+                max_duration=max_fallback_duration,
+                max_nb_crowfly=self._max_nb_crowfly_by_mode.get(mode, 5000),
+            )
 
             self._value[mode] = p
 

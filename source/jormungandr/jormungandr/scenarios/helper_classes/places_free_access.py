@@ -40,6 +40,7 @@ class PlacesFreeAccess:
     """
     stop_points that are accessible freely from a given place: odt, stop_points of a stop_area, etc.
     """
+
     def __init__(self, future_manager, instance, requested_place_obj):
         """
 
@@ -63,8 +64,7 @@ class PlacesFreeAccess:
         if place.embedded_type == type_pb2.STOP_AREA:
             stop_points = self._instance.georef.get_stop_points_for_stop_area(place.uri)
         elif place.embedded_type == type_pb2.ADMINISTRATIVE_REGION:
-            stop_points = [sp for sa in place.administrative_region.main_stop_areas
-                           for sp in sa.stop_points]
+            stop_points = [sp for sa in place.administrative_region.main_stop_areas for sp in sa.stop_points]
         elif place.embedded_type == type_pb2.STOP_POINT:
             stop_points = [place.stop_point]
 

@@ -15,9 +15,12 @@ import sqlalchemy as sa
 
 journey_order = sa.Enum('arrival_time', 'departure_time', name='journey_order')
 
+
 def upgrade():
     journey_order.create(op.get_bind())
-    op.add_column('instance', sa.Column('journey_order', journey_order, nullable=False, server_default='arrival_time'))
+    op.add_column(
+        'instance', sa.Column('journey_order', journey_order, nullable=False, server_default='arrival_time')
+    )
 
 
 def downgrade():

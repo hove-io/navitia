@@ -15,6 +15,7 @@ import sqlalchemy as sa
 
 user_type = sa.Enum('with_free_instances', 'without_free_instances', 'super_user', name='user_type')
 
+
 def upgrade():
     user_type.create(op.get_bind())
     op.add_column('user', sa.Column('type', user_type, nullable=False, server_default='with_free_instances'))
