@@ -1,10 +1,10 @@
-INSTALL_FILES(/usr/share/navitia/ed/script FILES alembic.ini alembic/env.py)
-INSTALL_FILES(/usr/share/navitia/ed/sql FILES ed/02-migration.sql)
+install(FILES alembic.ini alembic/env.py DESTINATION /usr/share/navitia/ed/script)
+install(FILES ed/02-migration.sql DESTINATION /usr/share/navitia/ed/sql)
 
-INSTALL_FILES(/usr/share/navitia/ed/alembic FILES alembic.ini alembic/env.py)
+install(FILES alembic.ini alembic/env.py DESTINATION /usr/share/navitia/ed/alembic)
 
 FILE(GLOB
     alembic_ed
     alembic/versions/*.py
     )
-INSTALL_FILES(/usr/share/navitia/ed/alembic/versions FILES ${alembic_ed})
+install(FILES ${alembic_ed} DESTINATION /usr/share/navitia/ed/alembic/versions)

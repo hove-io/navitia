@@ -41,5 +41,5 @@ target_link_libraries(kraken workers types proximitylist
     ${Boost_FILESYSTEM_LIBRARY} ${Boost_SYSTEM_LIBRARY} ${Boost_PROGRAM_OPTIONS_LIBRARY} protobuf)
 add_dependencies(kraken protobuf_files)
 
-INSTALL_TARGETS(/usr/bin/ kraken)
+install(TARGETS kraken DESTINATION ${CMAKE_INSTALL_PREFIX})
 add_subdirectory(tests)

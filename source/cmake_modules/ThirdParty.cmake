@@ -21,7 +21,6 @@ set(BUILD_API_DOCS OFF CACHE BOOL "don't build doc of librabbimq-c")
 set(BUILD_EXAMPLES OFF CACHE BOOL "don't build example of librabbimq-c")
 set(BUILD_TOOLS OFF CACHE BOOL "don't build tool of librabbimq-c")
 set(BUILD_TESTS OFF CACHE BOOL "don't build tests of librabbimq-c")
-set(CMAKE_INSTALL_PREFIX "")
 set(Rabbitmqc_INCLUDE_DIRS "${CMAKE_SOURCE_DIR}/third_party/librabbitmq-c/librabbitmq/")
 add_subdirectory(third_party/librabbitmq-c)
 add_subdirectory(third_party/SimpleAmqpClient)
@@ -42,7 +41,6 @@ if("${CMAKE_VERSION}" VERSION_GREATER 2.8.12.1)
     include_directories(SYSTEM "${CMAKE_SOURCE_DIR}/third_party/prometheus-cpp/pull/include/")
     #prometheus-cpp cmake will refuse to build if the CMAKE_INSTALL_PREFIX is empty
     #setting it before will have side effects on how we build packages
-    set(CMAKE_INSTALL_PREFIX "/")
     set(ENABLE_PUSH OFF CACHE INTERNAL "" FORCE)
     add_subdirectory(third_party/prometheus-cpp)
 
