@@ -12,8 +12,7 @@ In the Norse mythology, Jörmungandr is a sea serpent that grew so large that it
 
 ```sh
 cd navitia/source/jormungandr
-mkvirtualenv jormungandr
-pip install -r requirements.txt -r requirements_dev.txt -U
+mkvirtualenv -r requirements_dev.txt -p /usr/bin/python2 jormungandr 
 ```
 
 # Configure
