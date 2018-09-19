@@ -56,7 +56,11 @@ def _create_crowfly(pt_journey, crowfly_origin, crowfly_destination, begin, end,
     pt_journey.duration += section.duration
     section.begin_date_time = begin
     section.end_date_time = end
-    section.street_network.mode = response_pb2.Walking  # mode is always walking for a crow_fly
+    if section.duration > 0:
+        section.street_network.mode = MODE_TO_PB_MODE.get(mode)
+    # mode is always walking for a teleportation crow_fly
+    else:
+        section.street_network.mode = response_pb2.Walking
 
     # Calculate section length
     from_coord = get_pt_object_coord(section.origin)
