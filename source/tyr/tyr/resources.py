@@ -55,9 +55,11 @@ from navitiacommon.models import db
 from navitiacommon.parser_args_type import CoordFormat, PositiveFloat, BooleanType, OptionValue, geojson_argument
 from functools import wraps
 from tyr.validations import datetime_format
-from tyr.tasks import create_autocomplete_depot, remove_autocomplete_depot, import_autocomplete
+from tyr.tasks import create_autocomplete_depot, remove_autocomplete_depot, import_autocomplete, cities
 from tyr.helper import get_instance_logger, save_in_tmp
 from tyr.fields import *
+
+import werkzeug
 
 __ALL__ = ['Api', 'Instance', 'User', 'Key']
 
@@ -1634,3 +1636,34 @@ class MigrateFromPoiToOsm(flask_restful.Resource):
             return_status = 404
 
         return {'action': return_msg}, return_status
+
+
+class Cities(flask_restful.Resource):
+    def check_db(self):
+	# TODO: check db is available
+        logging.info("DB is already up-to-date")
+        return True
+
+    def get(self):
+        return {'message': 'Test OK'}, 200
+
+    def post(self):
+        if not self.check_db():
+            print('Perform db upgrade')
+        else:
+
+            parser = reqparse.RequestParser()
+            parser.add_argument('file', type=werkzeug.FileStorage, location='files')
+            args = parser.parse_args()
+
+            if not args['file']:
+                logging.info("No file provided")
+                return {'message': 'No file provided'}, 400
+
+            osm_file = args['file']
+            osm_file_path = str(os.path.join(os.path.abspath(current_app.config['CITIES_OSM_FILE_PATH']), osm_file.filename))
+            osm_file.save(osm_file_path)
+
+            cities(osm_file_path)
+
+            return {'message': 'OK'}, 200

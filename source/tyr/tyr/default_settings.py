@@ -21,6 +21,8 @@ SQLALCHEMY_DATABASE_URI = 'postgresql://navitia:navitia@localhost/jormungandr'
 # http://docs.sqlalchemy.org/en/rel_0_9/dialects/postgresql.html#psycopg2
 CITIES_DATABASE_URI = 'postgresql://navitia:navitia@localhost/cities'
 
+# Path where the cities osm file will be saved
+CITIES_OSM_FILE_PATH = '.'
 
 # Path to the directory where the configuration file of each instance of ed are defined
 INSTANCES_DIR = '.'
